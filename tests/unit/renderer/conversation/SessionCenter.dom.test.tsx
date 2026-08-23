@@ -147,7 +147,7 @@ const NOW = Date.now();
 const makeConversation = (overrides: Record<string, unknown> & { id: string }): TChatConversation =>
   ({
     name: `Conversation ${overrides.id}`,
-    type: 'aionrs',
+    type: 'dream',
     created_at: NOW,
     modified_at: NOW,
     extra: {},

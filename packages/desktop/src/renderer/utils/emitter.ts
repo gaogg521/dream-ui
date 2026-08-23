@@ -21,10 +21,10 @@ interface EventTypes {
   // conversation matches consumes the event (team renders one send box per
   // member column, so a bare type prefix alone would leak to same-type peers).
   // `undefined` = no target = any same-type box accepts (back-compat).
-  'aionrs.selected.file': [Array<string | FileOrFolderItem>, string | undefined];
-  'aionrs.selected.file.append': [Array<string | FileOrFolderItem>, string | undefined];
-  'aionrs.selected.file.clear': void;
-  'aionrs.workspace.refresh': void;
+  'dream.selected.file': [Array<string | FileOrFolderItem>, string | undefined];
+  'dream.selected.file.append': [Array<string | FileOrFolderItem>, string | undefined];
+  'dream.selected.file.clear': void;
+  'dream.workspace.refresh': void;
   'acp.selected.file': [Array<string | FileOrFolderItem>, string | undefined];
   'acp.selected.file.append': [Array<string | FileOrFolderItem>, string | undefined];
   'acp.selected.file.clear': void;

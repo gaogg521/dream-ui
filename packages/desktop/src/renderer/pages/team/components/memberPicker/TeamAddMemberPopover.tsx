@@ -15,7 +15,7 @@ import { resolveDefaultTeamAgentModel } from '../teamCreateModelResolver';
 import TeamAssistantPickerDropdown from './TeamAssistantPickerDropdown';
 
 const useAcpDraft = getSendBoxDraftHook('acp', { _type: 'acp', atPath: [], content: '', uploadFile: [] });
-const useAionrsDraft = getSendBoxDraftHook('aionrs', { _type: 'aionrs', atPath: [], content: '', uploadFile: [] });
+const useAionrsDraft = getSendBoxDraftHook('dream', { _type: 'dream', atPath: [], content: '', uploadFile: [] });
 
 type Props = {
   children: React.ReactElement;
@@ -48,7 +48,7 @@ const TeamAddMemberPopover: React.FC<Props> = ({ children, disabled = false }) =
     const text = t('team.addMember.tellLeaderPrefill', {
       defaultValue: 'Help me add a member good at ___ to the team',
     });
-    if (leader.assistant_backend === 'aionrs') {
+    if (leader.assistant_backend === 'dream') {
       aionrsDraft.mutate((prev) => ({ ...prev, content: text }));
     } else {
       acpDraft.mutate((prev) => ({ ...prev, content: text }));

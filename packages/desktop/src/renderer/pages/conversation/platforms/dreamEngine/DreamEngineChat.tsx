@@ -62,7 +62,7 @@ const DreamEngineChat: React.FC<{
     return {
       conversation_id: conversation_id,
       workspace,
-      type: 'aionrs',
+      type: 'dream',
       cron_job_id,
       loadedSkills,
       loadedMcpServers,

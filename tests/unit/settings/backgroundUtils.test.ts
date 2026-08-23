@@ -64,8 +64,8 @@ describe('backgroundUtils', () => {
     const existingCss = `${BACKGROUND_BLOCK_START}\nOLD BLOCK CONTENT\n${BACKGROUND_BLOCK_END}`;
     const result = injectBackgroundCssBlock(existingCss, testImageUrl);
     expect(result).not.toContain('OLD BLOCK CONTENT');
-    const startCount = (result.match(/\/\* AionUi Theme Background Start \*\//g) || []).length;
-    const endCount = (result.match(/\/\* AionUi Theme Background End \*\//g) || []).length;
+    const startCount = result.split(BACKGROUND_BLOCK_START).length - 1;
+    const endCount = result.split(BACKGROUND_BLOCK_END).length - 1;
     expect(startCount).toBe(1);
     expect(endCount).toBe(1);
   });

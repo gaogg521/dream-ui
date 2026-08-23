@@ -39,7 +39,7 @@ export const buildSendFailureError = (error: unknown, message: string): AgentStr
     return {
       message,
       code: workspacePathErrorCode,
-      ownership: 'aionui',
+      ownership: 'dream',
       detail: message,
       ...(workspacePath ? { workspacePath } : {}),
       retryable: false,
@@ -51,7 +51,7 @@ export const buildSendFailureError = (error: unknown, message: string): AgentStr
     return {
       message,
       code: error.code,
-      ownership: 'aionui',
+      ownership: 'dream',
       detail: message,
       retryable: true,
       feedback_recommended: true,
@@ -62,7 +62,7 @@ export const buildSendFailureError = (error: unknown, message: string): AgentStr
     return {
       message,
       code: error.code,
-      ownership: 'aionui',
+      ownership: 'dream',
       detail: message,
       retryable: false,
       feedback_recommended: false,
@@ -96,8 +96,8 @@ export const buildSendFailureError = (error: unknown, message: string): AgentStr
   if (busyError) {
     return {
       message,
-      code: 'AIONUI_CONVERSATION_BUSY',
-      ownership: 'aionui',
+      code: 'DREAM_CONVERSATION_BUSY',
+      ownership: 'dream',
       detail: message,
       retryable: false,
       feedback_recommended: false,
@@ -111,8 +111,8 @@ export const buildSendFailureError = (error: unknown, message: string): AgentStr
   const rawError = buildRawErrorSummary(error);
   return {
     message,
-    code: 'AIONUI_INTERNAL_ERROR',
-    ownership: 'aionui',
+    code: 'DREAM_INTERNAL_ERROR',
+    ownership: 'dream',
     detail: message,
     retryable: true,
     feedback_recommended: true,

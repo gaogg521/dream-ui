@@ -24,12 +24,12 @@ services:
       # down` (without -v) never touches it.
       - aionui-data:/data
     environment:
-      # AIONUI_ALLOW_REMOTE=1 is already the image default (see Dockerfile);
+      # DREAM_ALLOW_REMOTE=1 is already the image default (see Dockerfile);
       # listed here as the one setting you must never accidentally unset.
-      AIONUI_ALLOW_REMOTE: '1'
+      DREAM_ALLOW_REMOTE: '1'
       # Uncomment to change the internal port (also update the `ports:`
       # mapping and Caddyfile.example's reverse_proxy target above).
-      # AIONUI_PORT: '25808'
+      # DREAM_PORT: '25808'
 
   # ---------------------------------------------------------------------
   # Optional: Caddy in front of `app` for automatic HTTPS (Let's Encrypt).

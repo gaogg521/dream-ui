@@ -157,7 +157,7 @@ describe('resolveDefaultTeamAgentModel', () => {
 
     await expect(
       resolveDefaultTeamAgentModel({
-        assistant_backend: 'aionrs',
+        assistant_backend: 'dream',
       })
     ).resolves.toBe('deepseek-v4-pro');
   });
@@ -175,7 +175,7 @@ describe('resolveDefaultTeamAgentModel', () => {
 
     await expect(
       resolveDefaultTeamAgentModel({
-        assistant_backend: 'aionrs',
+        assistant_backend: 'dream',
       })
     ).resolves.toBe('usable-model');
   });
@@ -186,7 +186,7 @@ describe('resolveDefaultTeamAgentModel', () => {
 
     await expect(
       resolveDefaultTeamAgentModel({
-        assistant_backend: 'aionrs',
+        assistant_backend: 'dream',
       })
     ).rejects.toThrow(/no enabled model provider/i);
   });
@@ -203,7 +203,7 @@ describe('resolveDefaultTeamAgentModel — aionrs models must exist server-side'
     preferences: { last_model_id: lastModelId },
     engine: {
       agent_id: '632f31d2',
-      agent: { id: '632f31d2', type: 'aionrs', source: 'builtin' },
+      agent: { id: '632f31d2', type: 'dream', source: 'builtin' },
     },
   });
 

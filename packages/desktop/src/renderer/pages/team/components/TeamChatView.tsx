@@ -27,7 +27,7 @@ const LegacyReadOnlyConversation = React.lazy(
 );
 
 // Narrow to DreamEngine conversations so model field is always available
-type AionrsConversation = Extract<TChatConversation, { type: 'aionrs' }>;
+type AionrsConversation = Extract<TChatConversation, { type: 'dream' }>;
 type TeamSendOverride = (payload: { input: string; files: ChatFileRef[] }) => Promise<void>;
 type TeamConversationCapabilitySnapshot = {
   skills?: string[];
@@ -273,7 +273,7 @@ const TeamChatView: React.FC<TeamChatViewProps> = ({
             loadedMcpStatuses={capabilitySnapshot?.mcp_statuses}
           />
         );
-      case 'aionrs':
+      case 'dream':
         return (
           <AionrsTeamChat
             key={conversation.id}

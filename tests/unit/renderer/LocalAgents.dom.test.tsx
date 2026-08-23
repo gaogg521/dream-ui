@@ -104,9 +104,9 @@ const makeAgents = () => [
   {
     id: 'aionrs',
     name: 'Aion CLI',
-    agent_type: 'aionrs',
+    agent_type: 'dream',
     agent_source: 'internal',
-    backend: 'aionrs',
+    backend: 'dream',
     enabled: true,
     available: true,
     installed: true,

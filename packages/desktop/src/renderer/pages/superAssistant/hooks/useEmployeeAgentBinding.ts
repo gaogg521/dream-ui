@@ -35,7 +35,7 @@ import { buildAgentRuntimeModelInfo } from '@renderer/utils/model/agentRuntimeCa
 import { buildAssistantModelInfo } from '@renderer/pages/guid/hooks/useGuidAssistantSelection';
 
 /** Backends whose model is chosen from the provider list rather than an ACP catalog. */
-const AIONRS_BACKEND = 'aionrs';
+const AIONRS_BACKEND = 'dream';
 const GEMINI_BACKEND = 'gemini';
 /** dream cannot use Google-Auth providers. Same filter as the cron dialog. */
 const GOOGLE_AUTH_PLATFORM = 'gemini-with-google-auth';

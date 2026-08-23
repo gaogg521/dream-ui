@@ -135,8 +135,8 @@ const LocalAgents: React.FC = () => {
   const sortedOfficialAgents = useMemo(
     () =>
       officialAgents.toSorted((left, right) => {
-        const leftIsAionrs = left.agent_type === 'aionrs' || left.backend === 'aionrs';
-        const rightIsAionrs = right.agent_type === 'aionrs' || right.backend === 'aionrs';
+        const leftIsAionrs = left.agent_type === 'dream' || left.backend === 'dream';
+        const rightIsAionrs = right.agent_type === 'dream' || right.backend === 'dream';
         if (leftIsAionrs !== rightIsAionrs) {
           return leftIsAionrs ? -1 : 1;
         }

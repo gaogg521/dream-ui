@@ -158,8 +158,8 @@ const scenarios = [
           modelSelection={{ current_model: { use_model: 'm', id: 'p' }, providers: [] } as never}
         />
       ),
-    setEvent: 'aionrs.selected.file' as const,
-    appendEvent: 'aionrs.selected.file.append' as const,
+    setEvent: 'dream.selected.file' as const,
+    appendEvent: 'dream.selected.file.append' as const,
   },
 ];
 

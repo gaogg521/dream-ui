@@ -155,7 +155,7 @@ const byAssistantSortOrder = (a: AssistantListItem, b: AssistantListItem) => a.s
 /// Excluded on purpose: `gemini` and `codex` are legacy read-only variants kept
 /// so historical rows stay readable, and `remote` / `nanobot` /
 /// `openclaw-gateway` are not editor-driven.
-const ASSISTANT_EDITOR_AGENT_TYPES = new Set(['acp', 'aionrs', 'antigravity']);
+const ASSISTANT_EDITOR_AGENT_TYPES = new Set(['acp', 'dream', 'antigravity']);
 
 const isAssistantEditorAgent = (agent: ManagedAgent): boolean => ASSISTANT_EDITOR_AGENT_TYPES.has(agent.agent_type);
 

@@ -126,7 +126,7 @@ const GuidPage: React.FC = () => {
   // --- Hooks ---
   // Only dream uses this provider-based model picker now (Gemini runs as a
   // regular ACP backend with its own model selector).
-  const modelSelection = useGuidModelSelection('aionrs');
+  const modelSelection = useGuidModelSelection('dream');
 
   const navState = location.state as GuidNavigationState | null;
   const resetAssistantRequested = navState?.resetAssistant === true;
@@ -452,7 +452,7 @@ const GuidPage: React.FC = () => {
       },
       availableModels: {
         acp: agentSelection.currentAcpCachedModelInfo?.available_models.map((model) => model.id) ?? [],
-        aionrs: modelSelection.modelList.map((provider) => ({
+        dream: modelSelection.modelList.map((provider) => ({
           id: provider.id,
           models: provider.models,
         })),
@@ -471,7 +471,7 @@ const GuidPage: React.FC = () => {
       const shouldApplyDefaultModel = manualModelSelectionAssistantRef.current !== selectedAssistantId;
       const shouldApplyDefaultThoughtLevel = manualThoughtLevelSelectionAssistantRef.current !== selectedAssistantId;
 
-      if (shouldApplyDefaultModel && effectiveBackend === 'aionrs') {
+      if (shouldApplyDefaultModel && effectiveBackend === 'dream') {
         if (resolvedDefaults.modelId) {
           const matchedProvider = modelSelection.modelList.find((provider) =>
             provider.models.includes(resolvedDefaults.modelId!)
@@ -655,7 +655,7 @@ const GuidPage: React.FC = () => {
 
   // Agents that use configured model providers instead of ACP probe-based models.
   // Only dream now — Gemini runs as a regular ACP backend with ACP-cached models.
-  const PROVIDER_BASED_AGENTS = new Set(['aionrs']);
+  const PROVIDER_BASED_AGENTS = new Set(['dream']);
   const isGeminiMode = PROVIDER_BASED_AGENTS.has(agentSelection.selectedAssistantBackend);
 
   // Build the mention dropdown node

@@ -21,7 +21,7 @@ const startJob = vi.fn().mockResolvedValue({ job: { jobId: 'mj-2' } });
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 const emit = vi.fn();
 vi.mock('@/renderer/utils/emitter', () => ({ emitter: { emit: (...a: unknown[]) => emit(...a) } }));
-let conversationType: string | undefined = 'aionrs';
+let conversationType: string | undefined = 'dream';
 vi.mock('@/renderer/hooks/context/ConversationContext', () => ({
   useConversationContextSafe: () => (conversationType ? { type: conversationType } : undefined),
 }));
@@ -51,7 +51,7 @@ const job = (over: Partial<MediaJobView> = {}): MediaJobView => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  conversationType = 'aionrs';
+  conversationType = 'dream';
   // These cases are about the desktop host. Without this the transport takes
   // the browser branch (jsdom has no `__backendPort`) and posts over HTTP.
   (window as unknown as { __backendPort?: number }).__backendPort = 12345;
@@ -111,7 +111,7 @@ describe('MediaResultActions', () => {
   it('hands the file to the send box of this conversation type', () => {
     render(<MediaResultActions job={job()} />);
     fireEvent.click(screen.getByTestId('media-action-attach'));
-    expect(emit).toHaveBeenCalledWith('aionrs.selected.file.append', ['D:\\ws\\out.png'], 'c-1');
+    expect(emit).toHaveBeenCalledWith('dream.selected.file.append', ['D:\\ws\\out.png'], 'c-1');
   });
 
   // Event names are per platform; routing to the wrong one silently does

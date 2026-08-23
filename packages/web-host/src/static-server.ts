@@ -147,7 +147,7 @@ export function getLanIP(): string | null {
  * only ever make the backend stricter, and a remote caller must not be able to
  * strip it by sending their own.
  */
-const WEBUI_PROXY_HEADER = 'x-aionui-forwarded-origin';
+const WEBUI_PROXY_HEADER = 'x-dream-forwarded-origin';
 const WEBUI_PROXY_VALUE = 'webui';
 
 /**
@@ -166,7 +166,7 @@ const WEBUI_PROXY_VALUE = 'webui';
  * client-supplied copy is always overwritten — this can only make the
  * backend's check stricter, never let a remote caller claim a different IP.
  */
-const CLIENT_IP_HEADER = 'x-aionui-client-ip';
+const CLIENT_IP_HEADER = 'x-dream-client-ip';
 
 /** Strips the IPv4-mapped-IPv6 prefix Node sometimes reports (`::ffff:1.2.3.4` → `1.2.3.4`). */
 function normalizeIp(ip: string | undefined): string | undefined {

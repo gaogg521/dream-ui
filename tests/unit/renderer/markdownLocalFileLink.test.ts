@@ -144,7 +144,7 @@ describe('resolveLocalFileLinkPath', () => {
 
   it('formats local file paths as file URLs for browser link copying', () => {
     expect(toLocalFileHref('C:/Users/Administrator/AppData/Roaming/AionUi/report.xlsx')).toBe(
-      'file:///C:/Users/Administrator/AppData/Roaming/Dream UI/report.xlsx'
+      'file:///C:/Users/Administrator/AppData/Roaming/AionUi/report.xlsx'
     );
     expect(toLocalFileHref('/var/folders/demo/report.xlsx')).toBe('file:///var/folders/demo/report.xlsx');
   });

@@ -17,7 +17,7 @@ describe('resolveCronAgentConfig', () => {
           id: 'assistant-1',
           name: '文件规划助手',
           agent_id: 'agent-aionrs',
-          agent: agent('agent-aionrs', 'aionrs'),
+          agent: agent('agent-aionrs', 'dream'),
         }),
       ],
       selectedAionrsProvider: {
@@ -180,7 +180,7 @@ function assistant(overrides: Partial<Assistant> & Pick<Assistant, 'id' | 'name'
 function agent(_id: string, type: string, backend?: string): AssistantAgent {
   return {
     type,
-    source: type === 'aionrs' ? 'internal' : 'builtin',
+    source: type === 'dream' ? 'internal' : 'builtin',
     acp_backend: backend,
   };
 }

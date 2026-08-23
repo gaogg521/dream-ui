@@ -14,9 +14,9 @@
 # 用法：
 #   curl -fsSL https://raw.githubusercontent.com/iOfficeAI/AionUi/main/scripts/install-ubuntu.sh | bash
 #   # 或指定版本：
-#   AIONUI_VERSION=1.8.25 bash install-ubuntu.sh
+#   DREAM_VERSION=1.8.25 bash install-ubuntu.sh
 #   # 僅安裝桌面版（跳過 headless 設定）：
-#   AIONUI_MODE=desktop bash install-ubuntu.sh
+#   DREAM_MODE=desktop bash install-ubuntu.sh
 # ============================================================================
 
 set -euo pipefail
@@ -86,8 +86,8 @@ detect_arch() {
 
 # ─── 取得版本號 ──────────────────────────────────────────────────────────────
 resolve_version() {
-    if [[ -n "${AIONUI_VERSION:-}" ]]; then
-        VERSION="$AIONUI_VERSION"
+    if [[ -n "${DREAM_VERSION:-}" ]]; then
+        VERSION="$DREAM_VERSION"
         info "使用指定版本: ${BOLD}v$VERSION${NC}"
     else
         info "正在查詢最新版本..."
@@ -103,7 +103,7 @@ resolve_version() {
         fi
 
         if [[ -z "$VERSION" ]]; then
-            die "無法取得最新版本號，請手動指定: AIONUI_VERSION=1.8.25 bash $0"
+            die "無法取得最新版本號，請手動指定: DREAM_VERSION=1.8.25 bash $0"
         fi
         info "最新版本: ${BOLD}v$VERSION${NC}"
     fi
@@ -193,7 +193,7 @@ create_service_script() {
 
 PIDFILE="/var/run/aionui.pid"
 LOGFILE="/var/log/aionui.log"
-WORKDIR="${AIONUI_WORKDIR:-$HOME}"
+WORKDIR="${DREAM_WORKDIR:-$HOME}"
 
 start() {
     if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
@@ -273,7 +273,7 @@ case "${1:-}" in
         echo "用法: $0 {start|stop|restart|status|logs}"
         echo ""
         echo "環境變數:"
-        echo "  AIONUI_WORKDIR  - AionUi 工作目錄 (預設: \$HOME)"
+        echo "  DREAM_WORKDIR  - AionUi 工作目錄 (預設: \$HOME)"
         ;;
     *)
         echo "用法: $0 {start|stop|restart|status|logs}"
@@ -399,7 +399,7 @@ print_summary() {
 
     if [[ "${MODE}" == "headless" ]]; then
         echo -e "  ${YELLOW}💡 提示:${NC}"
-        echo "     • 設定工作目錄: export AIONUI_WORKDIR=/path/to/workspace"
+        echo "     • 設定工作目錄: export DREAM_WORKDIR=/path/to/workspace"
         echo "     • 遠端存取方式: SSH 隧道 / ngrok / 直接開放 25808 端口"
         echo "     • 詳細指南: docs/guides/deploy-server.md"
         echo ""
@@ -411,7 +411,7 @@ main() {
     banner
 
     # 安裝模式：headless (預設) 或 desktop
-    MODE="${AIONUI_MODE:-headless}"
+    MODE="${DREAM_MODE:-headless}"
     info "安裝模式: ${BOLD}$MODE${NC}"
 
     # Step 1: 前置檢查

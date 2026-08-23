@@ -1,7 +1,7 @@
-<h1 align="center">1ONE Work</h1>
+<h1 align="center">One Work</h1>
 
 <p align="center">
-  <img src="./resources/app.png" alt="1ONE Work" width="72">
+  <img src="./resources/app.png" alt="One Work" width="72">
 </p>
 
 <p align="center">
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  桌面客户端品牌名 <strong>1ONE Code</strong>（本仓库 <code>dream-ui</code>（对应旧仓库 1oneUI））
+  本仓库 <code>dream-ui</code>：桌面客户端 / WebUI 前端
 </p>
 
 <p align="center">
@@ -61,7 +61,7 @@
 
 ## 这是什么
 
-**1ONE Work** 不是「又一个 AI 聊天窗口」，而是一套 **Agent Cowork 平台**——AI Agent 在你的电脑上读文件、写代码、跑工具、按计划自动执行；你看得见它在做什么，并始终掌握批准权。产品定位就五件事：
+**One Work** 不是「又一个 AI 聊天窗口」，而是一套 **Agent Cowork 平台**——AI Agent 在你的电脑上读文件、写代码、跑工具、按计划自动执行；你看得见它在做什么，并始终掌握批准权。产品定位就五件事：
 
 | 定位                  | 说明                                                                                                                                                                                     |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -71,29 +71,28 @@
 | 😊 **简单好用**       | 内置引擎安装即用、38 款主流 CLI Agent 自动识别、**22 个官方助手 + 252 位行业专家**开箱即用、桌面/WebUI/手机/IM 随处访问、记忆管理免去每次重新交代项目背景                                |
 | 🔒 **隐私与信息安全** | 会话、配置、加密后的模型 API Key 全部落在本机磁盘不外传；自建后端不依赖第三方数据中台；企业版组织隔离 + SSO + 授权许可 + 内容审计/DLP + 审计日志                                         |
 
-- **1ONE Code** 是这套平台的桌面/Web 客户端品牌名（本仓库 `dream-ui`（对应旧仓库 1oneUI）），个人使用即以此身份出现。
-- **1ONE Work** 是平台整体对外名字，涵盖个人版、团队协作、企业管理后台在内的完整能力面。
+**One Work** 是平台整体对外名字，涵盖个人版、团队协作、企业管理后台在内的完整能力面，桌面客户端与 WebUI 都以这一身份出现。
 
 与旧版单仓 [1ONE ClaudeCode](https://github.com/gaogg521/1ONE-Claude-Code) 不同，v2 采用 **前端 + 后端分离**：
 
 | 仓库                                                 | 职责                                                         |
 | ---------------------------------------------------- | ------------------------------------------------------------ |
-| **1oneUI**（本仓库）                                 | Electron 桌面、React UI、WebUI 静态资源、安装包              |
+| **dream-ui**（本仓库）                               | Electron 桌面、React UI、WebUI 静态资源、安装包              |
 | **[dream-core](https://github.com/gaogg521/dream-core)** | Rust 本地服务：`dreamcore` 进程，会话/助手/Agent/MCP/企业 API |
 
-桌面启动时自动拉起 bundled 的 `aioncore`；浏览器 WebUI 通过 HTTP + WebSocket 访问同一套后端。
+桌面启动时自动拉起 bundled 的 `dreamcore`；浏览器 WebUI 通过 HTTP + WebSocket 访问同一套后端。
 
 **一句话区分**：
 
 - Cursor 帮你写下一行代码
 - Copilot 帮你补全一个函数
-- **1ONE Work 帮你统管一整支 AI 队伍，并把产出写进团队交付流程**
+- **One Work 帮你统管一整支 AI 队伍，并把产出写进团队交付流程**
 
 ---
 
 ## 和竞品比什么
 
-| 对比维度                            | **1ONE Work**                | Cursor  |   Copilot   | 原生 Claude Code |
+| 对比维度                            | **One Work**                | Cursor  |   Copilot   | 原生 Claude Code |
 | ----------------------------------- | ---------------------------- | :-----: | :---------: | :--------------: |
 | 开源                                | ✅ Apache-2.0                |   🔒    |     🔒      |        🔒        |
 | **官方 CLI 桥接自定义模型**         | ✅ **Codex/Claude 一键桥接** |   ❌    |     ❌      | ❌ 只能官方账号  |
@@ -115,11 +114,11 @@
 
 ## 核心能力
 
-> 以下截图均为真实产品界面（1oneUI 桌面客户端 / WebUI），非效果图。四组能力对应上面「这是什么」定位表格的顺序。
+> 以下截图均为真实产品界面（dream-ui 桌面客户端 / WebUI），非效果图。四组能力对应上面「这是什么」定位表格的顺序。
 
 ### 🌉 模型自由 — 官方 CLI 也能用你自己的模型
 
-**这是 1ONE Work 相比其他 AI 编程工具最大的差异化能力。** OpenAI 官方的 **Codex CLI** 和 Anthropic 官方的 **Claude Code**，都被各自厂商锁死只能连自家的 ChatGPT / Anthropic 账号——想用国产模型、自建网关或第三方中转，官方客户端无路可走。1ONE Work 在本机起一个**兼容协议的本地端点**，把 Codex/Claude 官方 CLI 的请求原样接住再转发给你自己配置的任意模型服务商，开关一键切换，全程不出本机：
+**这是 One Work 相比其他 AI 编程工具最大的差异化能力。** OpenAI 官方的 **Codex CLI** 和 Anthropic 官方的 **Claude Code**，都被各自厂商锁死只能连自家的 ChatGPT / Anthropic 账号——想用国产模型、自建网关或第三方中转，官方客户端无路可走。One Work 在本机起一个**兼容协议的本地端点**，把 Codex/Claude 官方 CLI 的请求原样接住再转发给你自己配置的任意模型服务商，开关一键切换，全程不出本机：
 
 <p align="center">
   <img src="./resources/CODEX和Claude一键桥接.png" alt="Codex / Claude 官方 CLI 一键桥接自定义模型" width="900">
@@ -207,7 +206,7 @@ Leader 也可以针对更复杂的目标（如一份跨领域调研报告）现�
 
 #### 随处 Cowork：WebUI + IM 渠道
 
-浏览器 / 手机 / 局域网 / 服务器均可访问同一套后端，扫码或密码登录，把 1ONE Work 当作 7×24 小时在线的远程助手：
+浏览器 / 手机 / 局域网 / 服务器均可访问同一套后端，扫码或密码登录，把 One Work 当作 7×24 小时在线的远程助手：
 
 <table>
   <tr>
@@ -331,7 +330,7 @@ Leader 也可以针对更复杂的目标（如一份跨领域调研报告）现�
 
 #### 内置引擎、官方助手与专家市场
 
-自带完整 Agent 引擎（品牌名 **1ONE CLI**，底层 `aionrs`），无需单独安装 CLI；粘贴任意模型 API Key 即可开聊。「助手与专家」页把可直接上岗的角色分成三档，全部配好技能与工具，启用后即可用于对话、开团与定时任务：
+自带完整 Agent 引擎（品牌名 **1ONE CLI**，底层 `dream-engine`），无需单独安装 CLI；粘贴任意模型 API Key 即可开聊。「助手与专家」页把可直接上岗的角色分成三档，全部配好技能与工具，启用后即可用于对话、开团与定时任务：
 
 | 分档         |  数量   | 说明                                                                                                           |
 | ------------ | :-----: | -------------------------------------------------------------------------------------------------------------- |
@@ -511,14 +510,14 @@ PDF、Word、Excel、PPT、代码、Markdown、图片、HTML、Diff 等 **10+ �
 
 ## 架构（v2）
 
-桌面客户端（Electron 渲染进程）通过 HTTP + WebSocket **直连** `aioncore`；远程 WebUI 走的是另一条路径——独立的 Node 静态服务器托管前端构建产物，并把 `/api/*`、`/ws`、`/login`、`/logout` 反向代理到同一个 `aioncore`，两条路径最终落在同一套后端服务与数据库上：
+桌面客户端（Electron 渲染进程）通过 HTTP + WebSocket **直连** `dreamcore`；远程 WebUI 走的是另一条路径——独立的 Node 静态服务器托管前端构建产物，并把 `/api/*`、`/ws`、`/login`、`/logout` 反向代理到同一个 `dreamcore`，两条路径最终落在同一套后端服务与数据库上：
 
 ```mermaid
 flowchart TB
-  Desktop["桌面客户端(1ONE Code)<br/>Electron + React<br/>渲染进程"]
+  Desktop["桌面客户端(One Work)<br/>Electron + React<br/>渲染进程"]
   WebHost["WebUI 静态服务器<br/>Node（@dream/web-host）<br/>托管 SPA + 反代 /api /ws /login"]
-  Browser["浏览器 / 手机<br/>远程访问 1ONE Work"]
-  Core["1oneCore · aioncore<br/>Rust 本地服务"]
+  Browser["浏览器 / 手机<br/>远程访问 One Work"]
+  Core["dream-core · dreamcore<br/>Rust 本地服务"]
   DB["SQLite<br/>会话 / 助手 / 消息 / 企业"]
   Agents["Agent 运行时<br/>1ONE CLI · ACP 子进程 · Team"]
   Channels["渠道 / Cron / MCP"]
@@ -532,8 +531,8 @@ flowchart TB
 | 层级       | 技术                                                                                                      |
 | ---------- | --------------------------------------------------------------------------------------------------------- |
 | 客户端 UI  | Electron 37 + React 19 + TypeScript + Arco Design                                                         |
-| WebUI 网关 | Node 静态服务器（`@dream/web-host`），托管构建产物 + 反向代理到 aioncore                                 |
-| 本地后端   | **1oneCore**（Rust，`aioncore` 二进制，30+ 领域 crate）                                                   |
+| WebUI 网关 | Node 静态服务器（`@dream/web-host`），托管构建产物 + 反向代理到 dreamcore                                 |
+| 本地后端   | **dream-core**（Rust，`dreamcore` 二进制，30+ 领域 crate）                                                   |
 | 企业扩展   | `one-org` · `one-enterprise` · `one-sso` · `one-billing` · `one-employee` · `one-devops` · `one-platform` |
 | 存储       | SQLite（`%APPDATA%` 下按环境隔离；知识库用内置 FTS5 + 向量做混合检索）                                    |
 | 协议       | ACP 多 Agent、MCP、Extension SDK                                                                          |
@@ -546,29 +545,29 @@ flowchart TB
 
 ### 下载安装（用户）
 
-[Releases](https://github.com/gaogg521/dream-ui/releases) → Windows `1ONE-Code-*-win-x64.exe` / macOS `.dmg` / Linux `.deb`。Windows / Linux 双击安装即可。
+[Releases](https://github.com/gaogg521/dream-ui/releases) → Windows `One-Work-*-win-x64.exe` / macOS `.dmg` / Linux `.deb`。Windows / Linux 双击安装即可。
 
 <details>
 <summary>🍎 macOS 首次打开被 Gatekeeper 拦截？点此展开解决方法</summary>
 
-当前 `.dmg` 未经 Apple 签名与公证，首次打开会被 Gatekeeper 拦截。典型弹窗是**「未打开 "1onecode"——Apple 无法验证...是否包含恶意软件」**（只有「完成 / 移到废纸篓」两个按钮），**不要**点「移到废纸篓」，按下面任一方法放行即可。
+当前 `.dmg` 未经 Apple 签名与公证，首次打开会被 Gatekeeper 拦截。典型弹窗是**「未打开 "One Work"——Apple 无法验证...是否包含恶意软件」**（只有「完成 / 移到废纸篓」两个按钮），**不要**点「移到废纸篓」，按下面任一方法放行即可。
 
-先双击 `.dmg`，把 **1ONE Code** 拖入 **Applications**，然后：
+先双击 `.dmg`，把 **One Work** 拖入 **Applications**，然后：
 
 **方法 A · 终端命令（最稳，所有 macOS 版本通用，推荐）**
 
 打开「终端」，执行下面这条命令抹掉隔离标记后再双击打开即可：
 
 ```bash
-xattr -cr "/Applications/1ONE Code.app"
+xattr -cr "/Applications/One Work.app"
 ```
 
 > 若提示找不到路径（安装包 `.app` 实际名称可能不同），直接在命令里输 `xattr -cr `（末尾留一个空格），再把「应用程序」里的 App 图标拖进终端窗口自动补全路径，回车即可。
 
 **方法 B · 系统设置放行（纯点鼠标）**
 
-- **macOS 15 (Sequoia) 及更高**：先双击 App 触发一次上面的拦截弹窗，点「完成」；再打开 **系统设置 → 隐私与安全性**，滚到底部「安全性」区，会看到一行"已阻止 1onecode..."，点右侧 **「仍要打开」** → 再确认一次并输入密码即可。（Sequoia 已移除右键打开入口，必须走这里）
-- **macOS 14 (Sonoma) 及更早**：在「应用程序」里右键（或按住 Control 点击）**1ONE Code** → 选 **打开** → 弹窗里再次点 **打开**。
+- **macOS 15 (Sequoia) 及更高**：先双击 App 触发一次上面的拦截弹窗，点「完成」；再打开 **系统设置 → 隐私与安全性**，滚到底部「安全性」区，会看到一行"已阻止 One Work..."，点右侧 **「仍要打开」** → 再确认一次并输入密码即可。（Sequoia 已移除右键打开入口，必须走这里）
+- **macOS 14 (Sonoma) 及更早**：在「应用程序」里右键（或按住 Control 点击）**One Work** → 选 **打开** → 弹窗里再次点 **打开**。
 
 > 两种方法本质相同：都是告诉系统信任这个来源。仅适用于你自己分发给已知用户的场景。彻底免弹窗需为安装包配置 Apple 开发者证书做代码签名 + 公证。
 
@@ -587,17 +586,17 @@ xattr -cr "/Applications/1ONE Code.app"
 
 ```powershell
 # 推荐工作区布局
-# D:\aionui-m0\1oneUI   ← 本仓库
-# D:\aionui-m0\1oneCore ← 后端
+# D:\dream\dream-ui    ← 本仓库
+# D:\dream\dream-core  ← 后端
 
 git clone https://github.com/gaogg521/dream-ui.git
 git clone https://github.com/gaogg521/dream-core.git
 
-cd 1oneUI && bun install
+cd dream-ui && bun install
 # 只改前端
 bun run dev
 
-# 改了 1oneCore 后必须先编译并内嵌后端，详见：
+# 改了 dream-core 后必须先编译并内嵌后端，详见：
 # docs/guides/fork-dev-onboarding.zh-CN.md
 ```
 
@@ -608,12 +607,12 @@ bun run dev
 ## 打包发行版
 
 ```powershell
-cd 1oneUI
-$env:AIONUI_BACKEND_LOCAL_PATH = '..\1oneCore\target\release\aioncore.exe'  # 先 cargo build
+cd dream-ui
+$env:DREAM_BACKEND_LOCAL_PATH = '..\dream-core\target\release\dreamcore.exe'  # 先 cargo build
 bun run dist:win    # 或 dist:mac / dist:linux
 ```
 
-产物：`out/1ONE-Code-<version>-win-x64.exe`
+产物：`out/One-Work-<version>-win-x64.exe`
 
 ---
 
@@ -642,7 +641,7 @@ v2 用 **dream-ui + dream-core** 双仓库重写本地后端；旧仓 <code>D:\1
 <details>
 <summary><strong>和 Cursor / Copilot 什么关系？</strong></summary>
 
-1ONE Work 是指挥台：可挂载 Cursor Agent、Claude Code 等 CLI，并统一管理会话、渠道、定时任务与企业协同；不替代 IDE，而是 orchestrate 整支 AI 队伍。
+One Work 是指挥台：可挂载 Cursor Agent、Claude Code 等 CLI，并统一管理会话、渠道、定时任务与企业协同；不替代 IDE，而是 orchestrate 整支 AI 队伍。
 
 </details>
 
@@ -713,7 +712,7 @@ WebUI 走构建产物 <code>out/renderer/</code>，改前端后需重新 <code>b
 
 ## 致谢
 
-**1ONE Work** 基于开源项目 [AionUi](https://github.com/iOfficeAI/AionUi)（配套后端 [AionCore](https://github.com/iOfficeAI/AionCore)）二次开发而来。感谢 iOfficeAI 团队与所有上游贡献者的开源工作，为本项目打下了坚实的基础。
+**One Work** 基于开源项目 [AionUi](https://github.com/iOfficeAI/AionUi)（配套后端 [AionCore](https://github.com/iOfficeAI/AionCore)）二次开发而来。感谢 iOfficeAI 团队与所有上游贡献者的开源工作，为本项目打下了坚实的基础。
 
 <p align="center">
   <sub>Built by <a href="https://github.com/gaogg521">gaogg521</a> · Apache-2.0</sub>

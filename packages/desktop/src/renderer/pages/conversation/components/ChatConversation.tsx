@@ -143,7 +143,7 @@ const _AddNewConversation: React.FC<{ conversation: TChatConversation }> = ({ co
   );
 };
 
-type AionrsConversation = Extract<TChatConversation, { type: 'aionrs' }>;
+type AionrsConversation = Extract<TChatConversation, { type: 'dream' }>;
 
 const AionrsConversationPanel: React.FC<{ conversation: AionrsConversation; sliderTitle: React.ReactNode }> = ({
   conversation,
@@ -231,7 +231,7 @@ const AionrsConversationPanel: React.FC<{ conversation: AionrsConversation; slid
     workspacePreferenceKey: conversation.project_id,
     isTemporaryWorkspace: (conversation.extra as { is_temporary_workspace?: boolean } | undefined)
       ?.is_temporary_workspace,
-    backend: 'aionrs' as const,
+    backend: 'dream' as const,
     presetAssistant: presetAssistantInfo ? { ...presetAssistantInfo, id: aionrsAssistantId } : undefined,
   };
 
@@ -274,7 +274,7 @@ const ChatConversation: React.FC<{
   const layout = useLayoutContext();
   const isMobile = Boolean(layout?.isMobile);
 
-  const isAionrsConversation = conversation?.type === 'aionrs';
+  const isAionrsConversation = conversation?.type === 'dream';
   const isLegacyReadOnlyConversation = isLegacyReadOnlyConversationType(conversation?.type);
   const resolvedHideSendBox = hideSendBox || isLegacyReadOnlyConversationType(conversation?.type);
 
@@ -369,7 +369,7 @@ const ChatConversation: React.FC<{
     return <GoogleModelSelector disabled={true} />;
   }, [conversation, isAionrsConversation, isMobile, isLegacyReadOnlyConversation, resolvedConversationBackend]);
 
-  if (conversation && conversation.type === 'aionrs') {
+  if (conversation && conversation.type === 'dream') {
     return <AionrsConversationPanel key={conversation.id} conversation={conversation} sliderTitle={sliderTitle} />;
   }
 

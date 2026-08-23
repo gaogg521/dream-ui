@@ -80,8 +80,8 @@ const toModeLabel = (value: string): string =>
 const modeOptionsFromCapabilities = (modes: string[]): AgentModeOption[] =>
   modes.map((value) => ({ value, label: toModeLabel(value) }));
 
-const useDreamEngineSendBoxDraft = getSendBoxDraftHook('aionrs', {
-  _type: 'aionrs',
+const useDreamEngineSendBoxDraft = getSendBoxDraftHook('dream', {
+  _type: 'dream',
   atPath: [],
   content: '',
   uploadFile: [],
@@ -153,7 +153,7 @@ const DreamEngineSendBox: React.FC<{
   const { agents: managedAgents } = useManagedAgents();
   // 'dream' is this send box's own backend; the catalog is what turns it into
   // the product name the rest of the UI uses.
-  const brandedBackend = resolveBackendLabel('aionrs', managedAgents, i18n.language);
+  const brandedBackend = resolveBackendLabel('dream', managedAgents, i18n.language);
   const { checkAndUpdateTitle } = useAutoTitle();
   const { current_model } = modelSelection;
   const teamPermission = useTeamPermission();
@@ -219,7 +219,7 @@ const DreamEngineSendBox: React.FC<{
   }, [conversation_id, prepareRuntimeSync, t]);
 
   const slash_commands = useSlashCommands(conversation_id, {
-    conversation_type: 'aionrs',
+    conversation_type: 'dream',
     agentStatus: agentWarmed ? 'active' : null,
     prepareRuntime: teamPermission ? prepareRuntimeSync : undefined,
   });
@@ -281,7 +281,7 @@ const DreamEngineSendBox: React.FC<{
           await teamSendMessage({ input, files });
           emitter.emit('chat.history.refresh');
           if (files.length > 0) {
-            emitter.emit('aionrs.workspace.refresh');
+            emitter.emit('dream.workspace.refresh');
           }
           return;
         }
@@ -297,7 +297,7 @@ const DreamEngineSendBox: React.FC<{
         markSendAccepted(res.turn_id, res.runtime, res.msg_id);
         emitter.emit('chat.history.refresh');
         if (files.length > 0) {
-          emitter.emit('aionrs.workspace.refresh');
+          emitter.emit('dream.workspace.refresh');
         }
       } catch (error) {
         const errorMessage =
@@ -408,7 +408,7 @@ const DreamEngineSendBox: React.FC<{
 
     const filesToSend = collectChatFileRefs(uploadFile, atPath);
     clearFiles();
-    emitter.emit('aionrs.selected.file.clear');
+    emitter.emit('dream.selected.file.clear');
 
     // Media mode short-circuits the agent: the user asked for a picture, not a
     // conversation about one. Same contract as the ACP send box.
@@ -447,7 +447,7 @@ const DreamEngineSendBox: React.FC<{
     const input = content;
     setContent('');
     clearFiles();
-    emitter.emit('aionrs.selected.file.clear');
+    emitter.emit('dream.selected.file.clear');
     setInterrupting(true);
     try {
       await teamRuntime.onInterruptSend({ input, files });
@@ -468,7 +468,7 @@ const DreamEngineSendBox: React.FC<{
     enqueue({ input: content, files: filesToSend });
     setContent('');
     clearFiles();
-    emitter.emit('aionrs.selected.file.clear');
+    emitter.emit('dream.selected.file.clear');
   }, [atPath, clearFiles, content, enqueue, setContent, uploadFile]);
 
   const handleEditQueuedCommand = useCallback(
@@ -481,7 +481,7 @@ const DreamEngineSendBox: React.FC<{
       const { uploadFiles, atPath: restoredAtPath } = splitChatFileRefs(item.files);
       setUploadFile(uploadFiles);
       setAtPath(restoredAtPath);
-      emitter.emit('aionrs.selected.file.clear');
+      emitter.emit('dream.selected.file.clear');
     },
     [remove, setAtPath, setContent, setUploadFile]
   );
@@ -700,14 +700,14 @@ const DreamEngineSendBox: React.FC<{
   // untargeted); stops same-type peers on the team route from receiving each
   // other's selections. See emitter EventTypes comment.
   useAddEventListener(
-    'aionrs.selected.file',
+    'dream.selected.file',
     (items: Array<string | FileOrFolderItem>, targetConversationId: string | undefined) => {
       if (targetConversationId === undefined || targetConversationId === conversation_id) setAtPath(items);
     },
     [conversation_id, setAtPath]
   );
   useAddEventListener(
-    'aionrs.selected.file.append',
+    'dream.selected.file.append',
     (selectedItems: Array<string | FileOrFolderItem>, targetConversationId: string | undefined) => {
       if (targetConversationId !== undefined && targetConversationId !== conversation_id) return;
       const merged = mergeFileSelectionItems(atPathRef.current, selectedItems);
@@ -787,7 +787,7 @@ const DreamEngineSendBox: React.FC<{
         onChange={handleContentChange}
         selectedWorkspaceItems={atPath}
         onSelectedWorkspaceItemsChange={(items) => {
-          emitter.emit('aionrs.selected.file', items, conversation_id);
+          emitter.emit('dream.selected.file', items, conversation_id);
           setAtPath(items);
         }}
         loading={teamRuntime?.loading ?? isBusy}
@@ -859,7 +859,7 @@ const DreamEngineSendBox: React.FC<{
         rightTools={
           <div className='flex items-center gap-8px min-w-0'>
             <AgentModeSelector
-              backend='aionrs'
+              backend='dream'
               conversation_id={conversation_id}
               compact
               initialMode={session_mode}
@@ -903,7 +903,7 @@ const DreamEngineSendBox: React.FC<{
                         closable
                         onClose={() => {
                           const newAtPath = atPath.filter((v) => (typeof v === 'string' ? true : v.path !== item.path));
-                          emitter.emit('aionrs.selected.file', newAtPath, conversation_id);
+                          emitter.emit('dream.selected.file', newAtPath, conversation_id);
                           setAtPath(newAtPath);
                         }}
                       >

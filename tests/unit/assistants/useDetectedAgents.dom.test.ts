@@ -60,7 +60,7 @@ describe('buildAssistantEditorBackends', () => {
       managedAgent({
         id: 'agent-aionrs',
         backend: undefined,
-        agent_type: 'aionrs',
+        agent_type: 'dream',
         name: 'Aion CLI',
         name_i18n: { 'zh-CN': 'Aion 命令行' },
         status: 'online',
@@ -71,7 +71,7 @@ describe('buildAssistantEditorBackends', () => {
       {
         id: 'agent-aionrs',
         name: 'Aion 命令行',
-        runtimeKey: 'aionrs',
+        runtimeKey: 'dream',
         modelOptions: [],
       },
     ]);

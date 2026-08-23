@@ -130,7 +130,7 @@ export interface IEnvStorageRefer {
  * Conversation source type - identifies where the conversation was created
  * 会话来源类型 - 标识会话创建的来源
  */
-export type ConversationSource = 'aionui' | 'telegram' | 'lark' | 'dingtalk' | 'weixin' | 'wecom' | (string & {});
+export type ConversationSource = 'dream' | 'telegram' | 'lark' | 'dingtalk' | 'weixin' | 'wecom' | (string & {});
 
 export type TChatConversationStatus = 'pending' | 'running' | 'finished';
 export type TConversationRuntimeStateKind =
@@ -452,7 +452,7 @@ export type TChatConversation =
       'model'
     >
   | IChatConversation<
-      'aionrs',
+      'dream',
       {
         workspace: string;
         custom_workspace?: boolean;

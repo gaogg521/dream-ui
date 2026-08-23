@@ -53,6 +53,6 @@ describe('CdnGenericProvider', () => {
       releaseDate: '2026-06-08T00:00:00.000Z',
     } satisfies UpdateInfo);
 
-    expect(files[0]?.url.href).toBe('https://static.dream.com/releases/2.1.14/Dream UI-2.1.14-mac-arm64.dmg');
+    expect(files[0]?.url.href).toBe('https://static.dream.com/releases/2.1.14/AionUi-2.1.14-mac-arm64.dmg');
   });
 });

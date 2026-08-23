@@ -155,7 +155,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
       // already in, so the follow-up ("another take", "now animate it") works
       // without switching anything.
       const conversation = await ipcBridge.conversation.create.invoke({
-        type: 'aionrs',
+        type: 'dream',
         name: input,
         model: current_model,
         extra: { workspace: finalWorkspace, custom_workspace: isCustomWorkspace },
@@ -237,7 +237,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     const assistantOverrideModel =
       selectedAcpModel ||
       currentAcpCachedModelInfo?.current_model_id ||
-      (assistantBackend === 'aionrs' ? current_model?.use_model : undefined) ||
+      (assistantBackend === 'dream' ? current_model?.use_model : undefined) ||
       undefined;
     const assistantOverrides = {
       model: assistantOverrideModel,
@@ -251,7 +251,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
       agent_id: selectedBackendAgentId || undefined,
     };
 
-    if (assistantBackend === 'aionrs') {
+    if (assistantBackend === 'dream') {
       if (!current_model) {
         Message.warning(t('conversation.noModelConfigured'));
         return;

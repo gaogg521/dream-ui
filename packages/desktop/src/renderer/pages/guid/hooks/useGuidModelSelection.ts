@@ -40,7 +40,7 @@ const isModelKeyAvailable = (key: string | null, providers?: IProvider[]) => {
 };
 
 /** Provider-based agent keys that share the model list UI */
-type ProviderAgentKey = 'aionrs';
+type ProviderAgentKey = 'dream';
 
 export type GuidModelSelectionResult = {
   modelList: IProvider[];
@@ -57,7 +57,7 @@ export type GuidModelSelectionResult = {
  * transient in-page selection.
  * @param agentKey - current provider-based agent (currently only 'dream')
  */
-export const useGuidModelSelection = (agentKey: ProviderAgentKey = 'aionrs'): GuidModelSelectionResult => {
+export const useGuidModelSelection = (agentKey: ProviderAgentKey = 'dream'): GuidModelSelectionResult => {
   const { isGoogleAuth } = useGoogleAuthModels();
   const { data: modelConfig } = useProvidersQuery();
 

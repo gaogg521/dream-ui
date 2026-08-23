@@ -368,7 +368,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     [managedAgentRuntimeCatalog]
   );
 
-  const isGeminiMode = resolvedBackend === 'gemini' || resolvedBackend === 'aionrs';
+  const isGeminiMode = resolvedBackend === 'gemini' || resolvedBackend === 'dream';
 
   // Providers compatible with dream (DreamCLI does not support Google Auth).
   // Computed independent of the current selection so assistant options backed
@@ -380,7 +380,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const hasAionrsProvider = aionrsProviders.length > 0;
 
   const filteredProviders = useMemo(
-    () => (resolvedBackend === 'aionrs' ? aionrsProviders : providers),
+    () => (resolvedBackend === 'dream' ? aionrsProviders : providers),
     [resolvedBackend, providers, aionrsProviders]
   );
 
@@ -389,10 +389,10 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   // the same model name may exist across multiple providers, so fuzzy match
   // would pick the wrong provider.
   const geminiCurrentModel = useMemo<TProviderWithModel | undefined>(() => {
-    if (resolvedBackend !== 'aionrs' || !model_id) return undefined;
+    if (resolvedBackend !== 'dream' || !model_id) return undefined;
 
     const editedProviderId =
-      resolvedBackend === 'aionrs' ? editJob?.metadata.agent_config?.model?.provider_id : undefined;
+      resolvedBackend === 'dream' ? editJob?.metadata.agent_config?.model?.provider_id : undefined;
     if (editedProviderId) {
       const byId = filteredProviders.find((p) => p.id === editedProviderId);
       if (byId && getAvailableModels(byId).includes(model_id)) {
@@ -423,7 +423,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   );
 
   const acpCachedModelInfo = useMemo<AcpModelInfo | null>(() => {
-    if (!resolvedBackend || resolvedBackend === 'gemini' || resolvedBackend === 'aionrs') return null;
+    if (!resolvedBackend || resolvedBackend === 'gemini' || resolvedBackend === 'dream') return null;
     return buildAssistantModelInfo(selectedAssistantModels);
   }, [resolvedBackend, selectedAssistantModels]);
 
@@ -431,7 +431,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   // selected but none is set yet. Source of truth is the backend provider
   // list — do NOT read from any frontend-cached default.
   useEffect(() => {
-    if (resolvedBackend !== 'aionrs' || model_id) return;
+    if (resolvedBackend !== 'dream' || model_id) return;
     for (const provider of aionrsProviders) {
       const models = getAvailableModels(provider);
       if (models.length > 0) {

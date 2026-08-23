@@ -42,7 +42,7 @@ export async function resolveDefaultTeamAgentModel(params: {
     // providers' model lists server-side, so handing it a stale name fails team
     // creation outright with "no enabled provider offers model '<name>'".
     // Verify before trusting it, and fall back to a model that exists.
-    if (runtimeKey === 'aionrs') {
+    if (runtimeKey === 'dream') {
       return resolveAionrsModel(assistantModel);
     }
 
@@ -84,7 +84,7 @@ function resolveBackendDefaultModel(assistant_backend?: string): Promise<string>
     return resolveGeminiDefaultModel();
   }
 
-  if (assistant_backend === 'aionrs') {
+  if (assistant_backend === 'dream') {
     return resolveAionrsModel();
   }
 

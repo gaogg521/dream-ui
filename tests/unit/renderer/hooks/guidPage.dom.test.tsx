@@ -39,7 +39,7 @@ const {
       description_i18n: {},
       enabled: true,
       sort_order: 10,
-      preset_agent_type: 'aionrs',
+      preset_agent_type: 'dream',
       enabled_skills: [],
       custom_skill_names: [],
       disabled_builtin_skills: [],
@@ -60,7 +60,7 @@ const {
         description_i18n: {},
         enabled: true,
         sort_order: 10,
-        preset_agent_type: 'aionrs',
+        preset_agent_type: 'dream',
         enabled_skills: [],
         custom_skill_names: [],
         disabled_builtin_skills: [],
@@ -73,7 +73,7 @@ const {
         deletable: false,
       },
     ],
-    selectedAssistantBackend: 'aionrs',
+    selectedAssistantBackend: 'dream',
     selectedAssistantAvailable: true,
     selectedMode: 'default',
     setSelectedMode: vi.fn(),
@@ -324,7 +324,7 @@ describe('GuidPage', () => {
     modelSelectionMock.resetCurrentModel.mockReset();
     agentSelectionMock.currentAgentModeOptions = [];
     agentSelectionMock.currentAcpCachedModelInfo = null;
-    agentSelectionMock.selectedAssistantBackend = 'aionrs';
+    agentSelectionMock.selectedAssistantBackend = 'dream';
     agentSelectionMock.setSelectedAcpModel.mockReset();
     agentSelectionMock.setSelectedMode.mockReset();
     agentSelectionMock.assistants = [
@@ -336,7 +336,7 @@ describe('GuidPage', () => {
         description_i18n: {},
         enabled: true,
         sort_order: 10,
-        preset_agent_type: 'aionrs',
+        preset_agent_type: 'dream',
         enabled_skills: [],
         custom_skill_names: [],
         disabled_builtin_skills: [],
@@ -481,7 +481,7 @@ describe('GuidPage', () => {
         description_i18n: {},
         enabled: true,
         sort_order: 10,
-        preset_agent_type: 'aionrs',
+        preset_agent_type: 'dream',
         enabled_skills: [],
         custom_skill_names: [],
         disabled_builtin_skills: [],
@@ -536,7 +536,7 @@ describe('GuidPage', () => {
         description_i18n: {},
         enabled: true,
         sort_order: 10,
-        preset_agent_type: 'aionrs',
+        preset_agent_type: 'dream',
         enabled_skills: ['stale-list-skill'],
         custom_skill_names: [],
         disabled_builtin_skills: ['stale-disabled-builtin'],

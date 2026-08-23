@@ -58,7 +58,7 @@ function assistant(
     sort_order: overrides.sort_order ?? 0,
     agent_id: agentId,
     agent: isAionrs
-      ? { type: 'aionrs', source: 'internal' }
+      ? { type: 'dream', source: 'internal' }
       : { type: 'acp', source: 'builtin', acp_backend: overrides.runtimeKey },
     enabled_skills: [],
     custom_skill_names: [],

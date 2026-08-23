@@ -182,7 +182,7 @@ describe('TeamChatView', () => {
       <TeamChatView
         conversation={{
           id: 'conv-1',
-          type: 'aionrs',
+          type: 'dream',
           name: 'Team - AionRS',
           created_at: Date.now(),
           updated_at: Date.now(),

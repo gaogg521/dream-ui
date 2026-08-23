@@ -190,7 +190,7 @@ describe('useGuidSend', () => {
   it('forwards local skill overrides for generated Aion CLI assistants through assistant conversation overrides', async () => {
     const deps = createDeps();
     deps.selectedAssistantId = 'bare:aionrs';
-    deps.selectedAssistantBackend = 'aionrs';
+    deps.selectedAssistantBackend = 'dream';
     deps.current_model = { provider_id: 'openai', model: 'gemini-2.5-pro', use_model: 'gemini-2.5-pro' } as never;
     deps.guidEnabledSkills = ['pdf-reader'];
     deps.guidDisabledBuiltinSkills = ['todo-tracker'];
@@ -213,7 +213,7 @@ describe('useGuidSend', () => {
   it('does not write legacy preset_assistant_id for generated Aion CLI assistant conversations', async () => {
     const deps = createDeps();
     deps.selectedAssistantId = 'bare:aionrs';
-    deps.selectedAssistantBackend = 'aionrs';
+    deps.selectedAssistantBackend = 'dream';
     deps.current_model = { provider_id: 'openai', model: 'gemini-2.5-pro', use_model: 'gemini-2.5-pro' } as never;
 
     const { result } = renderHook(() => useGuidSend(deps));
@@ -275,7 +275,7 @@ describe('useGuidSend', () => {
   it('still gives aionrs its provider model', async () => {
     // The fallback exists for dream, whose model IS the provider selection.
     const deps = createDeps();
-    deps.selectedAssistantBackend = 'aionrs';
+    deps.selectedAssistantBackend = 'dream';
     deps.selectedAcpModel = null;
     deps.currentAcpCachedModelInfo = null;
     deps.current_model = { id: 'p1', name: 'Gemini', use_model: 'gemini-3.1-pro-preview' } as never;

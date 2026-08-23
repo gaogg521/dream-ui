@@ -33,5 +33,5 @@ export function isSlashCommandListEnabled(input: SlashCommandListAvailabilityInp
   if (input.conversation_type === 'codex') {
     return input.codexStatus === 'session_active';
   }
-  return input.conversation_type === 'acp' || input.conversation_type === 'aionrs';
+  return input.conversation_type === 'acp' || input.conversation_type === 'dream';
 }

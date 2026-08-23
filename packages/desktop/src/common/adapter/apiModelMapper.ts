@@ -39,7 +39,7 @@ export function toApiModelOptional(m?: TProviderWithModel): ApiProviderWithModel
 
 /** Minimal shape of a create-conversation request consumed by the body builder. */
 export type CreateConversationBodyInput = {
-  type?: 'acp' | 'aionrs';
+  type?: 'acp' | 'dream';
   id?: string;
   name?: string;
   model?: TProviderWithModel;

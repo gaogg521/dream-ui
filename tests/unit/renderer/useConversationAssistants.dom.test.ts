@@ -30,7 +30,7 @@ describe('useConversationAssistants', () => {
         name: 'Aion CLI',
         enabled: true,
         source: 'generated',
-        agent: { type: 'aionrs', source: 'internal' },
+        agent: { type: 'dream', source: 'internal' },
       },
       { id: 'disabled-writer', name: 'Writer', enabled: false, source: 'user' },
       { id: 'assistant-1', name: 'Researcher', source: 'user' },
@@ -50,7 +50,7 @@ describe('useConversationAssistants', () => {
         name: 'Aion CLI',
         enabled: true,
         source: 'generated',
-        agent: { type: 'aionrs', source: 'internal' },
+        agent: { type: 'dream', source: 'internal' },
       },
       { id: 'assistant-1', name: 'Researcher', source: 'user' },
     ] satisfies Partial<Assistant>[];

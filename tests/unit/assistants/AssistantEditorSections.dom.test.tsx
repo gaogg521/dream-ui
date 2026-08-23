@@ -471,7 +471,7 @@ describe('AssistantEditorSections', () => {
               {
                 id: 'agent-aionrs',
                 name: 'Aionrs',
-                runtimeKey: 'aionrs',
+                runtimeKey: 'dream',
                 isExtension: false,
                 modelOptions: [{ value: 'handshake-model', label: 'Handshake Model' }],
               },

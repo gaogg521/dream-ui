@@ -231,7 +231,7 @@ export const useConversationRuntimeView = (conversation_id: string): UseConversa
 export const logStreamTerminalObserved = (
   conversation_id: string,
   turn_id: string | undefined,
-  platform: 'acp' | 'aionrs',
+  platform: 'acp' | 'dream',
   stream_type: string
 ): void => {
   const rendererLogger = ipcBridge.application?.writeRendererLog;

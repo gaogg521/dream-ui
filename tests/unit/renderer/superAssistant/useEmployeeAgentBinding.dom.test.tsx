@@ -51,7 +51,7 @@ vi.mock('@renderer/hooks/agent/useModelProviderList', () => ({
 import { NO_EXPERT_ID, useEmployeeAgentBinding } from '@/renderer/pages/superAssistant/hooks/useEmployeeAgentBinding';
 
 const CLAUDE_AGENT = { id: 'agent_claude', name: 'Claude Code', backend: 'claude', agent_type: 'acp', enabled: true };
-const AIONRS_AGENT = { id: 'agent_aionrs', name: '1ONE CLI', backend: null, agent_type: 'aionrs', enabled: true };
+const AIONRS_AGENT = { id: 'agent_aionrs', name: '1ONE CLI', backend: null, agent_type: 'dream', enabled: true };
 
 function assistant(
   id: string,
@@ -76,11 +76,11 @@ describe('useEmployeeAgentBinding', () => {
     setStateMock.mockReset();
     assistantsRef.current = [
       assistant('acp_persona', 'agent_claude', 'acp', { acpBackend: 'claude' }),
-      assistant('cli_persona', 'agent_aionrs', 'aionrs'),
+      assistant('cli_persona', 'agent_aionrs', 'dream'),
       // Bare CLI rows are backends, not experts — they must never be offered.
-      assistant('bare:632f31d2', 'agent_aionrs', 'aionrs', { source: 'generated' }),
+      assistant('bare:632f31d2', 'agent_aionrs', 'dream', { source: 'generated' }),
       // Official templates ship disabled; they must still be offered.
-      assistant('disabled_official', 'agent_aionrs', 'aionrs', { enabled: false }),
+      assistant('disabled_official', 'agent_aionrs', 'dream', { enabled: false }),
     ];
     personasRef.current = [];
     catalogRef.current = [CLAUDE_AGENT, AIONRS_AGENT];
@@ -155,7 +155,7 @@ describe('useEmployeeAgentBinding', () => {
 
     // Manual override latches...
     act(() => result.current.setBackendAgentId('agent_aionrs'));
-    await waitFor(() => expect(result.current.resolvedBackend).toBe('aionrs'));
+    await waitFor(() => expect(result.current.resolvedBackend).toBe('dream'));
 
     // ...so switching the expert must NOT snap the backend back.
     act(() => result.current.selectAssistant('cli_persona'));
@@ -170,7 +170,7 @@ describe('useEmployeeAgentBinding', () => {
     await waitFor(() => expect(result.current.buildBinding()).toBeDefined());
 
     const bound = result.current.buildBinding();
-    expect(bound?.agentType).toBe('aionrs');
+    expect(bound?.agentType).toBe('dream');
     expect(bound?.assistantId).toBe('cli_persona');
     expect(bound?.model).toEqual({ provider_id: 'prov_1', model: 'glm-5-2', use_model: 'glm-5-2' });
     // Backend equals the persona's own agent, so no override is reported.

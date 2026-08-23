@@ -1020,9 +1020,9 @@ const SendBox: React.FC<{
     targetConversationId === undefined || targetConversationId === conversationContext?.conversation_id;
 
   useAddEventListener(
-    'aionrs.selected.file.append',
+    'dream.selected.file.append',
     (items: FileSelectionItem[], targetConversationId: string | undefined) => {
-      if (conversationContext?.type === 'aionrs' && acceptsTarget(targetConversationId)) {
+      if (conversationContext?.type === 'dream' && acceptsTarget(targetConversationId)) {
         handleExternalSelectionAppend(items);
       }
     },
@@ -1053,8 +1053,8 @@ const SendBox: React.FC<{
       // here, not to same-type peers on the team route.
       const targetId = conversationContext?.conversation_id;
       switch (conversationContext?.type) {
-        case 'aionrs':
-          emitter.emit('aionrs.selected.file.append', [item], targetId);
+        case 'dream':
+          emitter.emit('dream.selected.file.append', [item], targetId);
           break;
         case 'acp':
           emitter.emit('acp.selected.file.append', [item], targetId);

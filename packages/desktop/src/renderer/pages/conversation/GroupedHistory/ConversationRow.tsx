@@ -133,7 +133,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
     // takes priority — it's frequently a different model than the chat model
     // (a text conversation with one image turn shouldn't claim its chat model
     // made that image).
-    const modelLabel = latestMedia?.model || (conversation.type === 'aionrs' ? conversation.model.use_model : '');
+    const modelLabel = latestMedia?.model || (conversation.type === 'dream' ? conversation.model.use_model : '');
     return { dateLabel, modelLabel, modeKind: resolveModeKind(latestMedia) };
   }, [detailed, conversation, i18n?.language, latestMedia]);
 

@@ -44,7 +44,7 @@ if ($buildVersions.Count -eq 0) {
 
 foreach ($version in $buildVersions) {
   Write-Host "=== build $version start: $(Get-Date -Format o) ==="
-  $env:AIONUI_DEBUG_AUTO_UPDATE_CURRENT_VERSION = $version
+  $env:DREAM_DEBUG_AUTO_UPDATE_CURRENT_VERSION = $version
 
   Push-Location $repoRoot
   try {

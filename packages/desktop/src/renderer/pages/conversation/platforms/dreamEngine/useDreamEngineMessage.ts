@@ -266,7 +266,7 @@ export const useDreamEngineMessage = (
           break;
         case 'finish':
           {
-            logStreamTerminalObserved(conversation_id, message.turn_id, 'aionrs', message.type);
+            logStreamTerminalObserved(conversation_id, message.turn_id, 'dream', message.type);
             // dream stream_end carries usage in data field
             const usageData = message.data as TokenUsage | undefined;
             if (usageData && typeof usageData === 'object' && 'input_tokens' in usageData) {
@@ -379,7 +379,7 @@ export const useDreamEngineMessage = (
           break;
         default: {
           if (message.type === 'error') {
-            logStreamTerminalObserved(conversation_id, message.turn_id, 'aionrs', message.type);
+            logStreamTerminalObserved(conversation_id, message.turn_id, 'dream', message.type);
             setStreamRunning(false);
             streamRunningRef.current = false;
             setWaitingResponse(false);
@@ -453,7 +453,7 @@ export const useDreamEngineMessage = (
       setWaitingResponse(isRunning);
       waitingResponseRef.current = isRunning;
       // Load persisted token usage stats
-      if (res.type === 'aionrs' && res.extra?.last_token_usage) {
+      if (res.type === 'dream' && res.extra?.last_token_usage) {
         const { last_token_usage } = res.extra;
         if (last_token_usage.total_tokens > 0) {
           setTokenUsage(last_token_usage);

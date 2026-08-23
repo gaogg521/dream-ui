@@ -1219,6 +1219,30 @@ const migration_v26: IMigration = {
 };
 
 /**
+ * Migration v26 -> v27: Rebrand persisted conversation type/source values
+ *
+ * The dream rebrand renamed the built-in Rust agent's wire identifier from
+ * 'aionrs' to 'dream', and this app's own conversation source from 'aionui'
+ * to 'dream'. Existing local rows still carry the old values, so update them
+ * in place (v22 already dropped the CHECK constraint, so no table rebuild
+ * is needed here — a plain UPDATE is sufficient).
+ */
+const migration_v27: IMigration = {
+  version: 27,
+  name: "Rebrand 'aionrs'/'aionui' conversation values to 'dream'",
+  up: (db) => {
+    const typeChanges = db.prepare("UPDATE conversations SET type = 'dream' WHERE type = 'aionrs'").run().changes;
+    const sourceChanges = db.prepare("UPDATE conversations SET source = 'dream' WHERE source = 'aionui'").run().changes;
+    console.log(`[Migration v27] Rebranded conversations: ${typeChanges} type row(s), ${sourceChanges} source row(s)`);
+  },
+  down: (db) => {
+    db.exec("UPDATE conversations SET type = 'aionrs' WHERE type = 'dream'");
+    db.exec("UPDATE conversations SET source = 'aionui' WHERE source = 'dream'");
+    console.log("[Migration v27] Rolled back: Restored 'aionrs'/'aionui' conversation values");
+  },
+};
+
+/**
  * All migrations in order
  */
 // prettier-ignore
@@ -1227,7 +1251,7 @@ export const ALL_MIGRATIONS: IMigration[] = [
   migration_v7, migration_v8, migration_v9, migration_v10, migration_v11, migration_v12,
   migration_v13, migration_v14, migration_v15, migration_v16, migration_v17, migration_v18,
   migration_v19, migration_v20, migration_v21, migration_v22, migration_v23, migration_v24,
-  migration_v25, migration_v26,
+  migration_v25, migration_v26, migration_v27,
 ];
 
 /**

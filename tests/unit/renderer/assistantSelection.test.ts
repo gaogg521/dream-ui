@@ -128,7 +128,7 @@ describe('isInstalledGeneratedCliAssistant', () => {
   });
 
   it('always shows the built-in aionrs assistant even when unchecked', () => {
-    const aionrs = mk('bare-aionrs', 'generated', 1, true, 'unchecked', { type: 'aionrs', source: 'internal' });
+    const aionrs = mk('bare-aionrs', 'generated', 1, true, 'unchecked', { type: 'dream', source: 'internal' });
     expect(isInstalledGeneratedCliAssistant(aionrs)).toBe(true);
   });
 
