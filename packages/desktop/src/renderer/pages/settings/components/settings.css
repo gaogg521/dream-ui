@@ -1,0 +1,75 @@
+/* Settings mobile top nav */
+@media (max-width: 767px) {
+  .settings-mobile-top-nav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-top: 14px;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+
+  .settings-mobile-top-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .settings-mobile-top-nav__item {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-base);
+    background: var(--bg-1);
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .settings-mobile-top-nav__item--active {
+    background: var(--bg-active);
+    color: var(--text-primary);
+    border-color: var(--border-base);
+  }
+
+  .settings-mobile-top-nav__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+  }
+
+  .settings-mobile-top-nav__label {
+    white-space: nowrap;
+    font-weight: 500;
+  }
+}
+
+/*
+ * Green track when a settings toggle is ON (WebUI, enterprise remote, media
+ * generation, …).
+ *
+ * ⚠️ This selector was previously wrapped in `:global(...)`, which is
+ * CSS-Modules syntax. This file is plain CSS, so the bundler dropped the rule
+ * entirely — verified in the running app: the stylesheet's other rules are
+ * loaded while this one is absent from `document.styleSheets`. Every toggle
+ * carrying `settings-switch-on` had therefore been rendering with Arco's
+ * default checked colour, which in this theme is `rgb(var(--primary-6))` — a
+ * dark slate measured at rgb(78,89,105) against an unchecked rgb(201,205,212).
+ * Two greys one shade apart is not a state indicator, which is exactly how it
+ * was reported.
+ */
+.arco-switch.settings-switch-on.arco-switch-checked {
+  background-color: rgb(var(--success-6)) !important;
+  border-color: rgb(var(--success-6)) !important;
+}
+
+/* The knob's shadow colour tracks the track colour on Arco's circle variant. */
+.arco-switch.settings-switch-on.arco-switch-checked .arco-switch-dot {
+  color: rgb(var(--success-6)) !important;
+}

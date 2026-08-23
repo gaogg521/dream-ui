@@ -1,0 +1,21 @@
+.agent-logo-frame.arco-avatar {
+  box-sizing: border-box;
+  padding: 3px;
+  overflow: hidden;
+  background: #f8fafc !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+}
+
+/*
+ * Many CLI vendors ship transparent black SVG/PNG marks. A neutral light
+ * plate preserves their brand artwork instead of applying an inaccurate
+ * invert filter, while keeping every logo legible on dark surfaces.
+ */
+[data-theme='dark'] .agent-logo-frame.arco-avatar {
+  background: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  box-shadow:
+    0 0 0 1px rgba(2, 6, 23, 0.45),
+    0 2px 7px rgba(2, 6, 23, 0.38);
+}

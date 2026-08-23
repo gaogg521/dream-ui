@@ -1,0 +1,37 @@
+/*
+ * Sizing for the generated-media tiles.
+ *
+ * Arco's `Image` puts our className on its wrapper, not on the `<img>` it
+ * renders, so the actual constraint has to reach the inner element through
+ * `:global(.arco-image-img)`.
+ */
+
+.singleImage {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.singleImage :global(.arco-image-img) {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  /* A generated image used to render up to 520px tall, which swallowed most of
+     the conversation for a single result. Full size is one click away now that
+     preview actually works. */
+  max-height: 360px;
+  object-fit: contain;
+  cursor: zoom-in;
+}
+
+.gridImage {
+  display: block;
+  width: 100%;
+}
+
+.gridImage :global(.arco-image-img) {
+  display: block;
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  cursor: zoom-in;
+}

@@ -1,0 +1,128 @@
+.root {
+  padding: 6px 10px 4px;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.trigger:hover {
+  background: var(--color-fill-2);
+}
+
+.avatar {
+  flex-shrink: 0;
+}
+
+.meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-1);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sub {
+  font-size: 11px;
+  color: var(--color-text-3);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Lift the popup card off its trigger. Both show the same workspace name, so
+   with them flush against each other the menu read as a duplicate of the pill
+   underneath it rather than as a separate surface. */
+.wsMenu {
+  margin-bottom: 8px;
+  min-width: 232px;
+  max-width: 288px;
+}
+
+.menuHeader {
+  padding: 11px 14px 9px;
+}
+
+.menuHeaderName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-1);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuHeaderSub {
+  font-size: 12px;
+  color: var(--color-text-3);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Facts as aligned label/value pairs rather than a stack of full sentences. */
+.menuFacts {
+  padding: 0 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.factRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.factLabel {
+  flex-shrink: 0;
+  width: 34px;
+  color: var(--color-text-4);
+}
+
+.factValue {
+  min-width: 0;
+  flex: 1;
+  color: var(--color-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menuHint {
+  padding: 0 14px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-3);
+}
+
+.menuDivider {
+  height: 1px;
+  margin: 0 0 4px;
+  background: var(--color-border-2);
+}
+
+.actionRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}

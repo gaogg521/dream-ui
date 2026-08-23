@@ -1,0 +1,315 @@
+name: Distribute Release Assets
+
+# Triggered after a GitHub Release is officially published.
+# Mirrors installer assets + updater metadata to the fork's own Tencent COS
+# bucket, which the desktop auto-updater reads (see updateFeed.ts →
+# CDN_UPDATE_BASE_URL). COS is S3-compatible, so the standard AWS CLI is used
+# with a custom --endpoint-url; no Tencent-specific tooling required.
+#
+# Layout produced (must match CdnGenericProvider in the app):
+#   releases/{version}/<installers + yml>   ← versioned archive
+#   releases/latest*.yml                     ← metadata the updater polls
+#
+# Credentials are NOT stored here any more. Since the company moved off
+# long-lived cloud AK/SK, this workflow signs a request to the credential-alloc
+# service with a Token + SignKey and receives short-lived ak/sk (see
+# scripts/fetch-cos-credentials.js).
+#
+# ⚠️ THIS WORKFLOW CANNOT RUN ON GITHUB-HOSTED RUNNERS.
+# Verified 2026-08-06: the credential-alloc host resolves to 10.241.5.174, an
+# RFC1918 address only routable from inside the corporate network. A public
+# runner fails at the credential step with "fetch failed" — no amount of secret
+# configuration changes that. It needs a self-hosted runner with corp network
+# access, or a publicly reachable alloc endpoint.
+# Until then, release uploads go through the LOCAL aws-cli path documented in
+# docs/guides/packaging-release-playbook.zh-CN.md §6/§6.1 — which that playbook
+# already recommends as the primary route for unrelated bandwidth reasons.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   - COS_ALLOC_TOKEN     : 凭据 Key
+#   - COS_ALLOC_SIGN_KEY  : 签名密钥
+# Optional overrides:
+#   - COS_ALLOC_URL       : secret, only if the alloc service moves off the
+#                           default endpoint in `env` below (it is a hostname,
+#                           not a credential)
+# Optional repository variable:
+#   - COS_ALLOC_SIGN_ALGO : hmac-sha256 (default) | hmac-sha1 | md5 — must match
+#                           the algorithm configured in the credential console.
+# The old COS_SECRET_ID / COS_SECRET_KEY secrets are no longer read and can be
+# deleted.
+#
+# The bucket / region / endpoint are public (not secret) and set in `env` below.
+# The bucket must be public-read so end-user machines can download without auth.
+
+on:
+  release:
+    types: [published]
+  # Manual trigger for smoke testing or for retrying a missed release:
+  # pick any existing release tag to re-run the distribution against.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to redistribute (e.g. v2.1.44)'
+        required: true
+        type: string
+      force:
+        description: 'Overwrite an existing version dir (use to retry a failed/partial publish)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  # Credential-alloc endpoint. A hostname, not a credential — the Token and
+  # SignKey are the secrets. Override with a COS_ALLOC_URL secret if it moves.
+  COS_ALLOC_URL_DEFAULT: https://codo-honeypot.123u.com/api/honeypot/oapi/qcloud/alloc
+  S3_RELEASE_PREFIX: releases
+  COS_BUCKET: 1onework-1251001122
+  COS_REGION: ap-shanghai
+  COS_ENDPOINT: https://cos.ap-shanghai.myqcloud.com
+
+jobs:
+  distribute:
+    name: Distribute release assets to COS
+    runs-on: ubuntu-latest
+    # Skip prereleases: manual dispatch always runs, automatic event runs only when not a prerelease.
+    if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false
+    env:
+      AWS_DEFAULT_REGION: ap-shanghai
+    steps:
+      # Checked out first because the credential exchange below runs a script
+      # from this repo. Full history + tags: the changelog fallback further
+      # down derives entries from the commits since the previous release tag.
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: repo
+
+      - name: Fetch temporary COS credentials
+        # Exchanges Token + SignKey for short-lived ak/sk and exports them as
+        # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (+ AWS_SESSION_TOKEN when
+        # the service returns STS-style credentials) for every later step.
+        # The script masks each value before writing it to $GITHUB_ENV.
+        env:
+          COS_ALLOC_URL: ${{ secrets.COS_ALLOC_URL || env.COS_ALLOC_URL_DEFAULT }}
+          COS_ALLOC_TOKEN: ${{ secrets.COS_ALLOC_TOKEN }}
+          COS_ALLOC_SIGN_KEY: ${{ secrets.COS_ALLOC_SIGN_KEY }}
+          COS_ALLOC_SIGN_ALGO: ${{ vars.COS_ALLOC_SIGN_ALGO }}
+        run: |
+          if [ -z "${COS_ALLOC_TOKEN}" ] || [ -z "${COS_ALLOC_SIGN_KEY}" ]; then
+            echo "::error::COS_ALLOC_TOKEN / COS_ALLOC_SIGN_KEY repository secrets are not set."
+            echo "::error::Add them under Settings → Secrets and variables → Actions before releasing."
+            exit 1
+          fi
+          if ! node repo/scripts/fetch-cos-credentials.js --format github; then
+            echo "::error::Could not obtain COS credentials."
+            echo "::error::If the message above says 'fetch failed', this runner cannot reach the alloc service — it is on an internal 10.x address (verified 2026-08-06). Use the local aws-cli path in docs/guides/packaging-release-playbook.zh-CN.md §6.1 instead."
+            exit 1
+          fi
+
+      - name: Configure COS S3 compatibility
+        # Two Tencent-COS quirks the AWS CLI must be told about:
+        #  1) Path-style is rejected (PathStyleDomainForbidden) — force virtual-hosted.
+        #  2) aws-cli multipart UploadPart streams without Content-Length, which COS
+        #     rejects (MissingContentLength). Raise the multipart threshold above the
+        #     largest artifact so files upload as a single Content-Length'd PutObject.
+        #     (COS single-PUT ceiling is 5 GB; installers are a few hundred MB.)
+        run: |
+          aws configure set default.s3.addressing_style virtual
+          aws configure set default.s3.multipart_threshold 5GB
+
+      - name: Extract version from tag
+        id: version
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          TAG="${EVENT_TAG:-$INPUT_TAG}"
+          if [ -z "$TAG" ]; then
+            echo "::error::No tag provided (event did not supply one)."
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Tag: $TAG / Version: $VERSION"
+
+      - name: Guard against same-version overwrite
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          PREFIX="${S3_RELEASE_PREFIX}/${VERSION}/"
+          DEST="s3://${COS_BUCKET}/${PREFIX}"
+          # `aws s3 ls` prints one line per object; empty output => nothing there yet.
+          EXISTING=$(aws s3 ls "$DEST" --endpoint-url "$COS_ENDPOINT" || true)
+          if [ -n "$EXISTING" ]; then
+            if [ "${{ github.event.inputs.force }}" = "true" ]; then
+              # Deliberate retry (e.g. clearing a partial/failed upload). Purge the
+              # version dir so the re-publish starts clean. Only reachable via manual
+              # workflow_dispatch with force=true — automatic release events never set it.
+              echo "::warning::force=true — clearing existing ${PREFIX} before re-publish."
+              echo "$EXISTING"
+              aws s3 rm "$DEST" --recursive --endpoint-url "$COS_ENDPOINT"
+            else
+              echo "::error::Version directory already contains files. Refusing to overwrite."
+              echo "::error::Same-version re-publish is not allowed (downstream caches would serve stale files). Release a new version instead, or re-dispatch with force=true to retry a failed publish."
+              echo "$EXISTING"
+              exit 1
+            fi
+          fi
+
+      - name: Download release assets from GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p dist
+          gh release download "${{ steps.version.outputs.tag }}" \
+            --repo "${{ github.repository }}" \
+            --dir dist \
+            --pattern "*.dmg" \
+            --pattern "*.exe" \
+            --pattern "*.msi" \
+            --pattern "*.deb" \
+            --pattern "*.zip" \
+            --pattern "latest*.yml"
+          echo "Downloaded files:"
+          ls -la dist
+
+      - name: Publish release notes alongside the installers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          # The app reads releases/{version}/release-notes.md for its "更新日志"
+          # panel: electron-builder leaves `releaseNotes` out of latest*.yml, so
+          # without this sidecar the panel has nothing to show.
+          #
+          # The Release body wins when it has content — that is where a human
+          # writes the summary. When it is empty (forgot, or `gh release create`
+          # without --notes), fall back to generate-release-notes.js, which
+          # itself prefers docs/release-notes/{version}.json (the same
+          # hand-curated source sync-changelog-to-site.js pushes to the
+          # marketing site — see docs/release-notes/README.md) and only drops
+          # to a commit-derived bullet list if that file doesn't exist yet.
+          # Either way a release never ships without a changelog.
+          gh release view "$TAG" --repo "${{ github.repository }}" --json body --jq '.body // ""' > dist/release-notes.md
+
+          if [ ! -s dist/release-notes.md ]; then
+            echo "Release body is empty — generating notes (canonical JSON if present, else commit history)."
+            node repo/scripts/generate-release-notes.js \
+              --version "$VERSION" --to "$TAG" --out "$GITHUB_WORKSPACE/dist/release-notes.md"
+          fi
+
+          if [ ! -s dist/release-notes.md ]; then
+            echo "::warning::No changelog could be produced for $VERSION."
+            rm -f dist/release-notes.md
+          else
+            echo "Release notes to publish:"
+            cat dist/release-notes.md
+          fi
+
+      - name: Validate updater metadata
+        id: metadata
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          # Validate whatever platform metadata the release actually ships:
+          # a win-only release carries just latest.yml; a full multi-platform
+          # release also carries latest-mac.yml / latest-linux.yml / etc. We
+          # require at least one and check every present file's version, instead
+          # of hardcoding all six (which blocked single-platform releases).
+          shopt -s nullglob
+          metadata_files=(dist/latest*.yml)
+          shopt -u nullglob
+
+          if [ ${#metadata_files[@]} -eq 0 ]; then
+            echo "::error::No updater metadata (dist/latest*.yml) found in release assets."
+            exit 1
+          fi
+
+          for file in "${metadata_files[@]}"; do
+            metadata_version=$(grep -E "^version:" "$file" | head -n 1 | sed -E "s/^version:[[:space:]]*['\"]?([^'\"]+).*/\1/")
+            if [ "$metadata_version" != "$VERSION" ]; then
+              echo "::error::$file version is $metadata_version, expected $VERSION."
+              exit 1
+            fi
+          done
+
+          {
+            echo "files<<EOF"
+            for file in "${metadata_files[@]}"; do
+              basename "$file"
+            done
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload versioned assets to COS
+        # A healthy upload of a few-hundred-MB installer finishes in minutes.
+        # This cap exists so a stuck GH-Actions→COS network path fails the run
+        # instead of hanging for hours (observed 2026-07-21: a single upload
+        # sat silent for 2h+ before being cancelled by hand). On timeout, retry
+        # the workflow_dispatch with force=true, or upload locally with aws-cli.
+        timeout-minutes: 20
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          aws s3 cp dist/ "s3://${COS_BUCKET}/${S3_RELEASE_PREFIX}/${VERSION}/" \
+            --recursive \
+            --endpoint-url "$COS_ENDPOINT" \
+            --acl public-read
+          echo "Uploaded release ${VERSION} to COS"
+
+      - name: Upload updater metadata to COS
+        # Metadata files are tiny (a few hundred bytes); anything beyond a few
+        # minutes means the network path is wedged, not that the file is large.
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+
+          # Metadata sits at the releases/ root — this is what the updater polls
+          # (base URL = .../releases, channel file = latest-*.yml). Short cache so
+          # a new release is picked up promptly.
+          aws s3 cp dist/ "s3://${COS_BUCKET}/${S3_RELEASE_PREFIX}/" \
+            --recursive \
+            --exclude "*" \
+            --include "latest*.yml" \
+            --endpoint-url "$COS_ENDPOINT" \
+            --acl public-read \
+            --content-type "text/yaml" \
+            --cache-control "public, max-age=60"
+          echo "Uploaded updater metadata to COS"
+
+      - name: Summary
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+          FILES: ${{ steps.metadata.outputs.files }}
+        run: |
+          {
+            echo "### Release assets distributed to COS"
+            echo ""
+            echo "- Tag: \`${TAG}\`"
+            echo "- Version: \`${VERSION}\`"
+            echo "- Bucket: \`${COS_BUCKET}\` (${COS_REGION})"
+            echo "- Asset prefix: \`${S3_RELEASE_PREFIX}/${VERSION}/\`"
+            echo "- Metadata prefix: \`${S3_RELEASE_PREFIX}/\`"
+            echo ""
+            echo "Uploaded metadata:"
+            while IFS= read -r file; do
+              [ -n "$file" ] && echo "- \`${S3_RELEASE_PREFIX}/$file\`"
+            done <<< "$FILES"
+          } >> $GITHUB_STEP_SUMMARY

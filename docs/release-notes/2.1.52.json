@@ -1,0 +1,88 @@
+{
+  "version": "2.1.52",
+  "date": "2026-08-08",
+  "zh": [
+    {
+      "t": "全新：图片与视频生成",
+      "d": "支持文生图、图生图、文生视频、图生视频。在模型列表里把模型标为图片或视频类型即可使用，选中后发送框会切换到对应的生成模式，并按该模型支持的参数给出可调项；生成结果直接在会话里预览、播放和下载。"
+    },
+    {
+      "t": "新增：一次生成多张独立图片",
+      "d": "要 4 张就得到 4 张各自独立的图，而不是一张图里挤 4 个小图。若接口单次只回一张，会自动拆成多次请求。"
+    },
+    {
+      "t": "新增：专家也能生成图片和视频",
+      "d": "此前只有发送框能用生成模型，专家在对话中调用会被告知「没有配置模型」。现在声明过的图片/视频模型对专家同样可见，可以在任务过程中直接产图产片。"
+    },
+    {
+      "t": "新增：生成花费在发送前后都可见",
+      "d": "发送前给出本次生成的预估费用，完成后显示实际花费。没有可用费率时会明说「费用未知」，而不是显示 0。"
+    },
+    {
+      "t": "新增：网页端支持生成",
+      "d": "从浏览器访问时也能发起和取消生成、看到作业列表与实时进度、加载生成的图片和视频；「打开所在目录」在远程访问时会自动换成下载。"
+    },
+    {
+      "t": "新增：企业可管控生成的成本与模型",
+      "d": "图片与视频生成此前完全绕过企业的成本上限和模型白名单，现已纳入，用量也会计入统计。"
+    },
+    {
+      "t": "修复：Claude 和 Codex 在全新安装上起不来",
+      "d": "2.1.51 的安装包漏掉了 Claude 与 Codex 所需的运行组件，全新安装的机器上这两个后端无法启动（升级的机器因本地留有旧组件而不受影响）。组件已重新入包，打包与装机两道校验也都会在缺失时直接失败。"
+    },
+    {
+      "t": "修复：运行时组件出错的弹窗关不掉",
+      "d": "该弹窗此前没有任何可见的关闭方式，只能猜着按 Esc；文案还会建议重装应用，而重装并不能解决问题。现在有明确的关闭按钮，提示也改为可实际操作的说明。"
+    },
+    {
+      "t": "修复：参考图过几天就失效",
+      "d": "选来的参考图原先留在系统临时目录，被系统清理后「重新生成」必然失败。现在参考图会随会话一起保存。"
+    },
+    {
+      "t": "修复：界面上的内部代号",
+      "d": "会话页面曾直接显示内部标识符，对外请求也仍以上游项目的名义自报来源，均已更正。"
+    }
+  ],
+  "en": [
+    {
+      "t": "New: image and video generation",
+      "d": "Text-to-image, image-to-image, text-to-video and image-to-video are all supported. Mark a model as an image or video model in the model list and it becomes usable: selecting it switches the composer into the matching generation mode and offers the parameters that model actually supports. Results preview, play and download directly in the conversation."
+    },
+    {
+      "t": "New: generate several separate images at once",
+      "d": "Ask for four images and you get four independent images, not one image split into four panels. When an endpoint returns only a single image per call, the request is split automatically."
+    },
+    {
+      "t": "New: experts can generate images and video too",
+      "d": "Previously only the composer could use generation models; an expert calling the tool was told no model was configured. Declared image and video models are now visible to experts, so they can produce images and clips as part of a task."
+    },
+    {
+      "t": "New: cost shown before and after generating",
+      "d": "You see an estimate before sending and the actual cost once it finishes. When no rate is available it says so plainly instead of showing 0."
+    },
+    {
+      "t": "New: generation works in the browser",
+      "d": "From the web UI you can start and cancel jobs, see the job list and live progress, and load generated images and video. \"Open containing folder\" becomes a download when you are connected remotely."
+    },
+    {
+      "t": "New: enterprise controls apply to generation",
+      "d": "Image and video generation used to bypass the enterprise spending cap and model allowlist entirely. Both now apply, and usage is counted."
+    },
+    {
+      "t": "Fixed: Claude and Codex would not start on a clean install",
+      "d": "The 2.1.51 installer was missing the runtime components Claude and Codex need, so neither backend started on a freshly installed machine (upgrades were unaffected because the old components were still on disk). The components are back in the package, and both the build-time and install-time checks now fail outright when they are absent."
+    },
+    {
+      "t": "Fixed: the runtime-component error dialog could not be dismissed",
+      "d": "The dialog offered no visible way to close it, and its text suggested reinstalling the app — which does not fix the problem. It now has a clear close button and actionable wording."
+    },
+    {
+      "t": "Fixed: reference images expiring after a few days",
+      "d": "Reference images used to be read from the system temp directory, so once the OS cleaned it up, \"regenerate\" always failed. They are now saved alongside the conversation."
+    },
+    {
+      "t": "Fixed: internal code names visible in the UI",
+      "d": "The conversation page showed an internal identifier, and outbound requests still identified themselves under the upstream project's name. Both are corrected."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+/**
+ * The parameter pill's label is `model · param · param` (e.g.
+ * `seedance-2-0-fast · 480p · 5s`), which is by far the longest thing in the
+ * tool row — and media mode adds three more controls next to it.
+ *
+ * `MarqueePillLabel` already clips and marquees on hover, but clipping only
+ * happens if every ancestor lets the width be constrained. Arco's button is a
+ * flex item with the default `min-width: auto`, which refuses to shrink below
+ * its content, so the pill kept its full width and *overflowed* the tool row
+ * rather than clipping — on the welcome page it rendered straight over the
+ * model selector to its right.
+ *
+ * Deliberately no `max-width`: the pill should stay fully readable whenever
+ * there is room and only give way under real pressure.
+ */
+.paramsPill {
+  min-width: 0;
+}
+
+.paramsPill :global(.arco-btn-content) {
+  min-width: 0;
+  overflow: hidden;
+}

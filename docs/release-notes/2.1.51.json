@@ -1,0 +1,104 @@
+{
+  "version": "2.1.51",
+  "date": "2026-07-31",
+  "zh": [
+    {
+      "t": "团队唤醒大幅提速",
+      "d": "打开团队时的等待明显缩短。以 Claude Code 带队的团队为例，冷启动由约 45 秒降到 6 秒左右；再次进入通常 1 秒内完成。"
+    },
+    {
+      "t": "修复：选了专家就建不了团队",
+      "d": "当专家记住的模型在你当前启用的服务商里已经不存在时，创建团队会被拒绝。现在会自动改用一个可用模型，不再中断。"
+    },
+    {
+      "t": "数字员工可以绑定专家和模型",
+      "d": "新建和管理数字员工时可直接选择专家、运行后端与模型，同时修复了此前数字员工运行必定失败的问题。"
+    },
+    {
+      "t": "专家市场",
+      "d": "内置 252 位各领域专家，可在设置页浏览搜索、一键添加，也能在聊天输入框和团队成员选择里直接挑选。"
+    },
+    {
+      "t": "团队成员按需唤醒",
+      "d": "队友默认保持休眠，收到任务时才启动；也可以在成员卡片上手动唤醒，并查看每位成员的运行状态。"
+    },
+    {
+      "t": "修复：删除的 MCP 服务仍在后台加载",
+      "d": "此前在设置页删掉的 MCP 服务，曾经勾选过它的会话仍会继续加载，既拖慢启动也与预期不符。现在删除即时生效。"
+    },
+    {
+      "t": "更清楚的错误提示",
+      "d": "模型服务商被删除或改动后，团队成员启动失败时会明确告诉你该怎么处理，而不是显示一串内部编号。"
+    },
+    {
+      "t": "企业版能力完善",
+      "d": "新增授权码激活、成员移除与席位回收、配置备份与恢复；知识库改为混合检索并接入 Agent，检索结果更准。"
+    },
+    {
+      "t": "企业与项目组界面重构",
+      "d": "项目组顶层页签由 13 个收敛为 6 个，订阅用量、备份恢复等按管理范围归入企业后台，旧链接仍然可用。"
+    },
+    {
+      "t": "项目文件浏览",
+      "d": "文件树改为项目维度，支持展开状态记忆、搜索与预览面板，目录排在文件前面。"
+    },
+    {
+      "t": "会话体验改进",
+      "d": "恢复上下文用量显示与思考计时，长链接和长路径在气泡里正确换行，权限请求面板重新设计并支持一键确认。"
+    },
+    {
+      "t": "更新日志",
+      "d": "桌面端更新面板、发布页与官网现在共用同一份更新说明，不再各写各的。"
+    }
+  ],
+  "en": [
+    {
+      "t": "Much faster team startup",
+      "d": "Opening a team now takes a fraction of the time it used to. A Claude Code-led team went from about 45 seconds to roughly 6 on a cold start, and re-entering a team is usually under a second."
+    },
+    {
+      "t": "Fixed: picking an expert could block team creation",
+      "d": "If an expert remembered a model that none of your enabled providers offers, creating the team was rejected. It now falls back to an available model instead of failing."
+    },
+    {
+      "t": "Digital employees can be bound to an expert and a model",
+      "d": "You can now choose the expert, runtime backend and model when creating or managing a digital employee. This also fixes the error that made every digital employee run fail."
+    },
+    {
+      "t": "Expert marketplace",
+      "d": "252 built-in experts across many domains. Browse and search them in Settings, add one with a single click, or pick one straight from the chat box or the team member picker."
+    },
+    {
+      "t": "Teammates wake on demand",
+      "d": "Teammates stay dormant until work arrives. You can also wake one manually from its card and see each member's runtime state."
+    },
+    {
+      "t": "Fixed: deleted MCP servers kept loading",
+      "d": "An MCP server removed in Settings was still loaded by any conversation that had previously selected it, slowing startup for no reason. Deleting one now takes effect immediately."
+    },
+    {
+      "t": "Clearer error messages",
+      "d": "When a model provider has been removed or reconfigured, a teammate that fails to start now tells you what to do about it instead of showing an internal identifier."
+    },
+    {
+      "t": "Enterprise capabilities",
+      "d": "Added license-key activation, member removal with seat reclamation, and configuration backup and restore. The knowledge base moved to hybrid retrieval and is now available to agents, improving result quality."
+    },
+    {
+      "t": "Reworked enterprise and project-group navigation",
+      "d": "Top-level project-group tabs went from 13 to 6, with subscription usage and backup grouped into the enterprise console by scope. Existing links still work."
+    },
+    {
+      "t": "Project file browser",
+      "d": "The file tree is now project-scoped, with remembered expand state, search, a preview panel, and directories sorted before files."
+    },
+    {
+      "t": "Conversation improvements",
+      "d": "Context usage and thinking timers are back, long links and paths wrap correctly inside message bubbles, and the permission request panel has been redesigned with one-click approval."
+    },
+    {
+      "t": "Release notes",
+      "d": "The desktop update panel, the release page and the website now all read from a single source instead of maintaining separate copies."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "version": "2.1.61",
+  "date": "2026-08-22",
+  "zh": [
+    {
+      "t": "单机版",
+      "d": "【新增】\n· 图片/视频生成全面打通（多家网关驱动）\n· 发送框「生成模式」（参数面板、参考图、结果卡片、花费预估与实付均可见）\n· Web 端也可发起/取消生成\n· 专家 agent 打通图片/视频模型\n· 会话中心历史列表改版（按时间分组、新增对话模式列）\n· 团队作战「导出记录」（整队作战过程导出成离线单文件 HTML）\n· 会话分叉、后台任务实时进度、对话中途插话\n· 1ONE CLI 会话新增累计花费指示器\n\n【改进】\n· 品牌统一为 One Work，补齐安装器/托盘图标/任务栏标识\n· 13 语言全量补全翻译，新增波斯语（fa-IR）RTL 支持\n· 数字与日期改为按应用语言格式化\n\n【安全修复】\n· 图片/视频生成工具此前可被诱导读写工作区之外的文件，已加边界校验\n· HTML 渲染器资源内联存在的路径穿越漏洞，已修复\n\n【修复】\n· 内置浏览器 MCP 工具描述滞后于代码更新\n· 专家市场与技能详情页缺失文件浏览入口\n· Markdown/KaTeX 公式偶发重复渲染\n· 自动更新未拦截降级安装\n· 渲染进程启动失败时的重载风暴、GPU 崩溃噪音"
+    },
+    {
+      "t": "企业版",
+      "d": "【新增】\n· 模型成本管控（成本上限、模型 allowlist、用量看板）\n· 内容审计与 DLP（策略拦截理由本地化展示，成员离开企业自动清理本机策略）\n· 通讯录同步与离职检测（对接飞书等 IdP，自动生成组织架构与移除流程）\n· 部门预算与成本分摊\n· 生成物集中账本\n· 模型渠道统一下发（密钥不落地成员端）\n· 备份恢复、运行时节点管理、审计日志导出"
+    }
+  ],
+  "en": [
+    {
+      "t": "Personal edition",
+      "d": "[New]\n· Image/video generation fully wired end to end (multiple gateway drivers)\n· A Generation Mode in the send box (parameter panel, reference images, result cards, cost estimate and actual both visible)\n· Start/cancel generation from the web client too\n· Expert agents wired to image/video models\n· A redesigned Session Center history list (grouped by time, new conversation-mode column)\n· Team Mode transcript export (the whole run as one offline HTML file)\n· Conversation forking, live background-task progress, mid-turn interjection\n· A running cost indicator for 1ONE CLI sessions\n\n[Improved]\n· Branding unified as One Work across the installer, tray icon and taskbar identity\n· Complete translations across all 13 languages, plus RTL support for Persian (fa-IR)\n· Numbers and dates formatted against the app language\n\n[Security fixes]\n· Image/video generation tools could be steered to read or write files outside the workspace — now boundary-checked\n· A path-traversal issue in the HTML renderer's resource inlining — fixed\n\n[Fixed]\n· A stale built-in browser MCP tool description\n· A missing file-browser entry point in the expert marketplace and skill detail pages\n· Occasional double-rendering of Markdown/KaTeX formulas\n· Update checks not rejecting downgrade installs\n· A renderer launch-failure reload storm and noisy GPU-crash logging"
+    },
+    {
+      "t": "Enterprise edition",
+      "d": "[New]\n· Model cost governance (cost caps, model allowlist, usage dashboard)\n· Content auditing and DLP (localized denial reasons, automatic local-policy cleanup on member departure)\n· Directory sync and offboarding detection (syncs from IdPs like Feishu, drives the removal flow)\n· Department budgets and cost allocation\n· A centralized media ledger\n· Centrally managed model channels (keys never land on member devices)\n· Backup/restore, runtime node management, and audit log export"
+    }
+  ]
+}

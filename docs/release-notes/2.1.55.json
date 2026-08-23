@@ -1,0 +1,48 @@
+{
+  "version": "2.1.55",
+  "date": "2026-08-18",
+  "zh": [
+    {
+      "t": "修复：给图片后，文本模型不再说自己看不了",
+      "d": "此前用纯文本模型发图片，模型手里没有任何能读图的工具，只拿到一个自己打不开的文件路径。现在它可以调用新的读图工具，由你已配置的、具备视觉能力的模型把图片转成文字再交回来。没有可用的视觉模型时会明确告诉你去哪里配一个，而不是含糊带过或凭空编造图片内容。"
+    },
+    {
+      "t": "修复：生图工具在只回文字时不再把内容丢掉",
+      "d": "配置的模型如果确实支持视觉，「分析这张图」完全可能只回一段文字而不产生新图片，这段文字此前被直接丢弃，智能体只拿到一句空洞的「任务已完成」，只能自己编内容。"
+    },
+    {
+      "t": "新增：会话分叉",
+      "d": "可以从历史中的任意一条消息分叉出一个新会话，原会话保持不变。会话列表里会标明它分叉自哪里。不同的智能体后端能力不同，不支持从中途分叉的后端不会显示该入口，而不是点了才报错。"
+    },
+    {
+      "t": "新增：预览面板的保存按钮",
+      "d": "Markdown、HTML 和代码预览可以直接点按钮保存改动，不必只依赖快捷键。内容被截断显示时不提供该按钮，避免把残缺内容写回原文件。"
+    },
+    {
+      "t": "优化：内置 Claude 命令行升级到 2.1.233",
+      "d": ""
+    }
+  ],
+  "en": [
+    {
+      "t": "Fixed: text-only models can read images you send",
+      "d": "Sending an image to a text-only model used to leave it with no image-reading tool at all — just a file path it could not open. It can now call a new read-image tool, which hands the picture to a vision-capable model you have already configured and returns the description as text. When no vision model is available it says exactly what to configure instead of guessing or inventing the contents."
+    },
+    {
+      "t": "Fixed: image tools no longer drop a text-only reply",
+      "d": "If the configured model really does support vision, \"analyse this image\" may legitimately return prose and no new picture. That text used to be discarded, leaving the agent with a hollow \"job done\" and nothing to work from."
+    },
+    {
+      "t": "Added: conversation forking",
+      "d": "Fork a new conversation from any message in the history, leaving the original untouched. The conversation list shows where a fork came from. Backends that cannot fork mid-history simply do not offer the entry point rather than failing on click."
+    },
+    {
+      "t": "Added: save button in the preview panel",
+      "d": "Markdown, HTML and code previews can be saved from a button instead of the keyboard shortcut alone. The button is hidden when content is shown truncated, so a clipped body is never written back over the real file."
+    },
+    {
+      "t": "Improved: bundled Claude CLI updated to 2.1.233",
+      "d": ""
+    }
+  ]
+}

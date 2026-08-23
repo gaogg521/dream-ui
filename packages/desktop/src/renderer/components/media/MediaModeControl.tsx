@@ -1,0 +1,239 @@
+/**
+ * @license
+ * Copyright 2025 AionUi (aionui.com)
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
+ * The media-generation controls that sit in the send box's tool row.
+ *
+ * Deliberately a mode on the existing input rather than a separate page: it
+ * shares one conversation, one history and one input box, so switching back is
+ * just talking again. A dedicated generation surface would become a second
+ * product line inside the app, with its own history the chat cannot see.
+ *
+ * Two controls, mirroring what people expect from generation tools: a mode
+ * switch (off / image / video) and a chip that opens the model's own parameters
+ * (`MediaParamsPanel` derives those from the catalog, so the chip never offers
+ * something the selected model would reject).
+ */
+
+import React, { useMemo } from 'react';
+import { Dropdown, Menu, Tooltip, Trigger } from '@arco-design/web-react';
+import { Close, Down, Message, Picture, VideoTwo } from '@icon-park/react';
+import styles from './MediaModeControl.module.css';
+import { useTranslation } from 'react-i18next';
+import type { MediaGenParams } from '@/common/media/types';
+import type { MediaModelSpec } from '@/common/media/catalog/types';
+import { useMediaCost } from '@renderer/hooks/media/useMediaCost';
+import MediaParamsPanel from './MediaParamsPanel';
+import RuntimeSelectorPill from '@/renderer/components/agent/RuntimeSelectorPill';
+import { useNavigate } from 'react-router-dom';
+import { iconColors } from '@/renderer/styles/colors';
+
+export type MediaMode = 'off' | 'image' | 'video';
+
+type Props = {
+  mode: MediaMode;
+  onModeChange: (mode: MediaMode) => void;
+  /** Model that will run, once resolved; shown so the choice is never implicit. */
+  model?: string;
+  /** Provider the model belongs to, so the cost uses that provider's price. */
+  providerId?: string;
+  spec: MediaModelSpec | null;
+  params: MediaGenParams;
+  onParamsChange: (next: MediaGenParams) => void;
+  disabled?: boolean;
+};
+
+/** Compact summary of the active parameters, so the chip says what it will do. */
+const summarize = (params: MediaGenParams): string[] => {
+  const parts: string[] = [];
+  if (params.aspectRatio) parts.push(params.aspectRatio);
+  if (params.size) parts.push(params.size);
+  if (params.resolution) parts.push(params.resolution);
+  if (params.durationSeconds) parts.push(`${params.durationSeconds}s`);
+  if (params.quality) parts.push(params.quality);
+  if (params.n && params.n > 1) parts.push(`×${params.n}`);
+  // Audio belongs here for the same reason as the rest: it changes what gets
+  // produced and, on some vendors, what it costs. Only shown once chosen —
+  // an untouched setting means "whatever the model does by default".
+  if (params.generateAudio !== undefined) parts.push(params.generateAudio ? '♪' : '♪✕');
+  return parts;
+};
+
+const MediaModeControl: React.FC<Props> = ({
+  mode,
+  onModeChange,
+  model,
+  providerId,
+  spec,
+  params,
+  onParamsChange,
+  disabled,
+}) => {
+  const { t } = useTranslation();
+  // Routing, not the settings modal. Mounting `SettingsModal` from this control
+  // pulled the whole settings surface — theme bootstrap and a client-settings
+  // fetch — into the send box's tool row, which took this component's own test
+  // suite down with it. `FileAttachButton`, two files over, already navigates
+  // for the same purpose.
+  const navigate = useNavigate();
+  const summary = useMemo(() => summarize(params), [params]);
+
+  // Priced off the parameters actually staged, so changing the count or the
+  // duration moves the number before the money is spent rather than after.
+  const cost = useMediaCost({
+    kind: mode === 'video' ? 'video' : 'image',
+    model,
+    providerId,
+    count: params.n ?? 1,
+    durationSeconds: params.durationSeconds ?? spec?.defaults?.durationSeconds,
+    variant: 'estimate',
+  });
+
+  const modeLabel =
+    mode === 'image'
+      ? t('conversation.mediaModeImage')
+      : mode === 'video'
+        ? t('conversation.mediaModeVideo')
+        : t('conversation.mediaModeOff');
+
+  // One icon per mode. This used to be a single `video ? VideoTwo : Picture`
+  // ternary, which quietly lumped `off` in with `image` — so the collapsed
+  // trigger sat there in chat mode wearing the picture icon, identical to the
+  // "image generation" entry it was supposed to contrast with. Three modes
+  // need three icons; once the row is crowded the icon is the fastest thing to
+  // read, and two modes sharing one made it useless.
+  //
+  // Declared above `modeMenu` on purpose: the menu calls it while building its
+  // children, so defining it below would hit the temporal dead zone.
+  const renderModeIcon = (value: MediaMode) => {
+    const Icon = value === 'image' ? Picture : value === 'video' ? VideoTwo : Message;
+    return <Icon theme='outline' size='14' fill={iconColors.secondary} />;
+  };
+  const modeIcon = renderModeIcon(mode);
+
+  // The same icons repeat in the menu, so the row the user picks and the pill
+  // they end up looking at are recognisably the same thing.
+  const modeMenu = (
+    <Menu onClickMenuItem={(key) => onModeChange(key as MediaMode)}>
+      <Menu.Item key='off'>
+        <span className='inline-flex items-center gap-8px'>
+          {renderModeIcon('off')}
+          {t('conversation.mediaModeOff')}
+        </span>
+      </Menu.Item>
+      <Menu.Item key='image'>
+        <span className='inline-flex items-center gap-8px'>
+          {renderModeIcon('image')}
+          {t('conversation.mediaModeImage')}
+        </span>
+      </Menu.Item>
+      <Menu.Item key='video'>
+        <span className='inline-flex items-center gap-8px'>
+          {renderModeIcon('video')}
+          {t('conversation.mediaModeVideo')}
+        </span>
+      </Menu.Item>
+    </Menu>
+  );
+
+  // Every other control in this tool row is a `RuntimeSelectorPill` — a round
+  // `sendbox-model-btn`. These were bare Arco buttons, so they rendered as
+  // square boxes wedged between the round model and permission pills.
+
+  return (
+    <div className='flex items-center gap-6px min-w-0'>
+      <Dropdown droplist={modeMenu} trigger='click' position='tl' disabled={disabled}>
+        <RuntimeSelectorPill
+          testId='media-mode-pill'
+          className='sendbox-model-btn agent-mode-compact-pill'
+          label={modeLabel}
+          leading={modeIcon}
+          trailing={<Down theme='outline' size='12' fill={iconColors.secondary} className='shrink-0' />}
+          disabled={disabled}
+          // Filled only while a generation mode is on: the next Enter spends
+          // money, so the state has to read differently at a glance. Green
+          // rather than the primary blue — blue is what every other pill in
+          // this row uses, so it read as "selected", not as "armed".
+          type={mode === 'off' ? 'secondary' : 'primary'}
+          status={mode === 'off' ? undefined : 'success'}
+        />
+      </Dropdown>
+
+      {mode !== 'off' && (
+        <Trigger
+          popup={() => (
+            <div className='bg-2 border border-solid b-color-border-2 rd-8px p-12px shadow-md'>
+              <MediaParamsPanel
+                spec={spec}
+                value={params}
+                onChange={onParamsChange}
+                kind={mode === 'video' ? 'video' : 'image'}
+                model={model}
+                onConfigureModel={() => void navigate('/settings/model')}
+              />
+            </div>
+          )}
+          trigger='click'
+          // Opens downward by default, like the reference-image picker on the
+          // "+" button: on the Guid welcome page there is open space below the
+          // pill row, and popping upward there covered the welcome copy above
+          // it instead. `autoFitPosition` (Arco default) still flips this to
+          // open upward when the composer sits at the bottom of the viewport
+          // (the normal conversation page), so this is a preference, not a
+          // fixed direction.
+          position='bl'
+          // A gap, so the panel does not sit flush on the pill row it came
+          // from — keeping that row visible is what tells the user where the
+          // panel is anchored. Height is the other half of this — see the
+          // grid columns in MediaParamsPanel.
+          popupAlign={{ bottom: 8 }}
+        >
+          <RuntimeSelectorPill
+            testId='media-params-pill'
+            className={`sendbox-model-btn agent-mode-compact-pill ${styles.paramsPill}`}
+            /* The model is named here because it decides both price and what
+               the parameter panel can offer — leaving it implicit is how a
+               user ends up generating with the wrong one. */
+            label={[model, ...summary].filter(Boolean).join(' · ') || t('conversation.mediaParamsOpen')}
+          />
+        </Trigger>
+      )}
+
+      {/* What this is about to cost. Placed next to the parameters because they
+          are what changes it — a count of four is four times the price, and
+          that ought to be visible at the moment it is chosen. */}
+      {mode !== 'off' && cost && (
+        <Tooltip content={cost.tooltip}>
+          <span
+            className={`text-12px whitespace-nowrap ${cost.known ? 'text-t-secondary' : 'text-t-tertiary'}`}
+            data-testid='media-cost-estimate'
+          >
+            {cost.text}
+          </span>
+        </Tooltip>
+      )}
+
+      {/* An explicit way out. The mode is sticky on purpose — iterating on a
+          prompt is the normal loop — but that makes the next message a
+          generation too, and generations cost money. One click back to talking
+          has to be visible, not buried in the mode dropdown. */}
+      {mode !== 'off' && (
+        <Tooltip content={t('conversation.mediaModeExit')}>
+          <RuntimeSelectorPill
+            testId='media-mode-exit'
+            className='sendbox-model-btn agent-mode-compact-pill !px-8px'
+            aria-label={t('conversation.mediaModeExit')}
+            leading={<Close theme='outline' size='12' fill={iconColors.secondary} />}
+            onClick={() => onModeChange('off')}
+            disabled={disabled}
+          />
+        </Tooltip>
+      )}
+    </div>
+  );
+};
+
+export default MediaModeControl;

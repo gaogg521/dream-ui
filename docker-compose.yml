@@ -1,0 +1,61 @@
+# Example compose file for the aionui-web / aioncore server deployment.
+# Full walkthrough: docs/guides/server-deployment.zh-CN.md
+#
+# Build the image first (this repo does not auto-build the tarball inside
+# `docker build` — see Dockerfile's header comment for why):
+#
+#   PACK_PLATFORM=linux PACK_ARCH=x64 node scripts/pack-web-cli.js
+#   docker compose build
+#   docker compose up -d
+#
+# First-run admin password: `docker compose logs app | grep "admin password"`.
+
+services:
+  app:
+    build: .
+    # Or, once a build is published: image: ghcr.io/<org>/aionui-web:<tag>
+    restart: unless-stopped
+    ports:
+      # Skip this if you're using the optional Caddy TLS sidecar below —
+      # let Caddy be the only thing reachable from outside the host.
+      - '25808:25808'
+    volumes:
+      # SQLite DB + logs + workspace files. Named volume so `docker compose
+      # down` (without -v) never touches it.
+      - aionui-data:/data
+    environment:
+      # AIONUI_ALLOW_REMOTE=1 is already the image default (see Dockerfile);
+      # listed here as the one setting you must never accidentally unset.
+      AIONUI_ALLOW_REMOTE: '1'
+      # Uncomment to change the internal port (also update the `ports:`
+      # mapping and Caddyfile.example's reverse_proxy target above).
+      # AIONUI_PORT: '25808'
+
+  # ---------------------------------------------------------------------
+  # Optional: Caddy in front of `app` for automatic HTTPS (Let's Encrypt).
+  # aioncore does not terminate TLS itself — same pattern as any other
+  # backend service, and consistent with the desktop's own "remote access"
+  # feature (which also assumes a reverse proxy for anything beyond LAN
+  # access, see docs/guides/*.md remote-access section).
+  #
+  # Requires a real domain pointed at this host and ports 80/443 open.
+  # Enable with: docker compose --profile tls up -d
+  # ---------------------------------------------------------------------
+  caddy:
+    image: caddy:2-alpine
+    profiles: ['tls']
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile.example:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  aionui-data:
+  caddy-data:
+  caddy-config:

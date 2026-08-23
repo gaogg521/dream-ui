@@ -1,0 +1,152 @@
+{
+  "version": "2.1.54",
+  "date": "2026-08-16",
+  "zh": [
+    {
+      "t": "新增：Markdown 预览中的图表可缩放拖动",
+      "d": "预览面板里的流程图等图表此前是静态的，大图无法看清；现在支持缩放、拖动和全屏。"
+    },
+    {
+      "t": "新增：接入 Antigravity（agy）",
+      "d": "新增一个可选的命令行智能体后端。"
+    },
+    {
+      "t": "新增：企业通讯录成员花名册",
+      "d": "此前只能看到人数和离职名单，现在可以查看完整成员列表。"
+    },
+    {
+      "t": "新增：组织架构可从通讯录映射",
+      "d": "部门结构不再需要手工维护，可直接按通讯录同步生成。"
+    },
+    {
+      "t": "新增：部门预算与成本分摊",
+      "d": "公司预算之下可再按部门设上限；部门归属在发生费用时记录，调岗不会倒灌历史支出。"
+    },
+    {
+      "t": "新增：生成物集中账本",
+      "d": "图片与视频产物统一入账，可按会话与人员追溯。提示词是否留存由公司开关决定，默认不留存。"
+    },
+    {
+      "t": "新增：Agnes 视频模型支持",
+      "d": "新增 agnes-video-v2.0 的异步任务驱动。"
+    },
+    {
+      "t": "改进：侧边栏更清爽",
+      "d": "「超级助手」「我的技能」「记忆管理」三个低频入口从主侧边栏移入设置的「工具」分组，主侧边栏只保留高频功能。原有链接会自动跳转到新位置，不需要重新找。"
+    },
+    {
+      "t": "改进：后台运行的任务有实时进度",
+      "d": "后台任务此前在开始与结束之间没有任何反馈，卡片上的计时停在 00:00；现在会持续刷新进度。"
+    },
+    {
+      "t": "改进：模型类型推断后自动确认",
+      "d": "此前推断出图片/视频类型还要手动点一次确认才生效。"
+    },
+    {
+      "t": "改进：用旧版本打开新版数据时给出明确提示",
+      "d": "此前只会报一个含糊的数据库错误，现在会说明是版本降级并指出需要回到哪个版本。"
+    },
+    {
+      "t": "改进：托管运行环境启动更稳",
+      "d": "内置 Node 运行环境的版本探测偶发失败会导致启动报错，现在会有限次重试。"
+    },
+    {
+      "t": "安全修复：图片与视频生成工具可被诱导读写工作区之外的文件",
+      "d": "生成工具此前接受模型传来的目录参数，恶意提示词可借此读取或写入任意路径。现在工作区一律由应用自己决定，并对所有解析出的路径做边界校验（含软链接绕过）。"
+    },
+    {
+      "t": "修复：部分环境下打开应用是白屏",
+      "d": "构建时 React 相关代码被拆进多个分块，加载顺序在某些环境下会出错，导致界面完全空白。现已合并为单个分块。"
+    },
+    {
+      "t": "修复：升级后可能启动失败，或此前保存的密钥全部失效",
+      "d": "两个都出在数据库升级路径上：历史数据里一些无害的不一致会让新版的完整性校验中断启动，现在升级前会自动就地修正；升级重建用户表时会丢掉数据加密密钥，导致已保存的模型、渠道、MCP 凭据全部无法解密。"
+    },
+    {
+      "t": "修复：会话与后台任务的收尾状态不正确",
+      "d": "一并修好三处：一轮对话结束时尚未跑完的后台命令被错误标成取消、空闲检测不看后台任务把正在干活的智能体当闲置关掉、会话重建或中断后进行中的卡片一直转圈没有任何事件能让它收尾。"
+    },
+    {
+      "t": "修复：Windows 上通知不送达、路径显示带系统内部前缀",
+      "d": "Windows 需要应用注册与安装包一致的标识才会送达通知，此前从未注册（开发版也会因此与正式安装版在任务栏归为一组）；另有部分界面显示的文件路径带上了 \\\\?\\ 前缀。"
+    },
+    {
+      "t": "修复：若干显示与开关不准的问题",
+      "d": "方舟直连生成的图片带着厂商水印（该开关从未被关闭过）、模型设置页的开关勾选后仍是灰蓝色看不出已启用、企业侧栏无视连接开关恒报「已连接」。"
+    }
+  ],
+  "en": [
+    {
+      "t": "New: pan and zoom diagrams in Markdown preview",
+      "d": "Diagrams in the preview panel were static, so large graphs were unreadable. They now support zoom, pan and fullscreen."
+    },
+    {
+      "t": "New: Antigravity (agy) support",
+      "d": "An additional optional command-line agent backend."
+    },
+    {
+      "t": "New: full member roster in the enterprise directory",
+      "d": "Previously only headcount and departures were visible."
+    },
+    {
+      "t": "New: build the org chart from the directory",
+      "d": "Department structure can be synced from the directory instead of maintained by hand."
+    },
+    {
+      "t": "New: department budgets and cost allocation",
+      "d": "Departments can carry their own cap beneath the company budget. Attribution is stamped when the cost occurs, so transfers do not rewrite past spend."
+    },
+    {
+      "t": "New: central ledger for generated media",
+      "d": "Images and videos are recorded per conversation and per member. Whether prompts are retained is a company setting, off by default."
+    },
+    {
+      "t": "New: Agnes video model support",
+      "d": "Adds the async task driver for agnes-video-v2.0."
+    },
+    {
+      "t": "Improved: a cleaner sidebar",
+      "d": "Super Assistant, My Skills and Memory have moved out of the main sidebar into the Tools group in Settings, leaving only the entries you reach for often. Existing links redirect to the new locations, so nothing has to be hunted down."
+    },
+    {
+      "t": "Improved: live progress for background work",
+      "d": "Background tasks previously emitted nothing between start and finish, so the card's clock sat at 00:00. Progress now refreshes continuously."
+    },
+    {
+      "t": "Improved: inferred model types are confirmed automatically",
+      "d": "Inferring an image/video type previously still required a manual confirmation click."
+    },
+    {
+      "t": "Improved: clear message when opening newer data with an older build",
+      "d": "Instead of a vague database error, it now names the downgrade and which version to return to."
+    },
+    {
+      "t": "Improved: managed runtime starts more reliably",
+      "d": "Transient failures probing the bundled Node runtime version caused startup errors; they are now retried a bounded number of times."
+    },
+    {
+      "t": "Security fix: image and video generation could be steered outside the workspace",
+      "d": "The generation tools accepted a directory argument from the model, so a crafted prompt could read or write arbitrary paths. The workspace root is now decided by the app alone, and every resolved path is boundary-checked (including symlink escapes)."
+    },
+    {
+      "t": "Fix: blank window on launch in some environments",
+      "d": "React code was split across several build chunks whose load order could break, leaving the UI completely empty. It is now a single chunk."
+    },
+    {
+      "t": "Fix: startup could fail after upgrading, or saved credentials stop decrypting",
+      "d": "Both live on the database upgrade path: harmless inconsistencies in historical data made the new integrity checks abort startup, and are now normalized in place beforehand; and rebuilding the users table dropped the data encryption key, making stored model, channel and MCP credentials unreadable."
+    },
+    {
+      "t": "Fix: sessions and background tasks did not settle correctly",
+      "d": "Three at once: commands still running when a turn ended were marked cancelled, the idle scanner ignored background work and shut down agents that were still busy, and in-progress cards spun forever after a rebuild or teardown because no event was left to settle them."
+    },
+    {
+      "t": "Fix: notifications not delivered on Windows, and internal path prefixes on display",
+      "d": "Windows only delivers notifications when the process registers the same identity the installer stamped, which was never happening (this also grouped dev builds with the installed app in the taskbar). Separately, some views showed file paths carrying the \\\\?\\ prefix."
+    },
+    {
+      "t": "Fix: assorted display and toggle inaccuracies",
+      "d": "Images from the direct Ark endpoint carried a vendor watermark (that switch had never been turned off), toggles in model settings stayed grey-blue when checked, and the enterprise sidebar reported \"connected\" regardless of the switch."
+    }
+  ]
+}

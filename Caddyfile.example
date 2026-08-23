@@ -1,0 +1,12 @@
+# Example Caddyfile for TLS termination in front of aionui-web.
+# Copy to Caddyfile, replace the placeholder domain, and enable with:
+#   docker compose --profile tls up -d
+#
+# Caddy handles Let's Encrypt certificate issuance/renewal automatically —
+# no manual certbot steps. Requires the domain's DNS A/AAAA record to point
+# at this host and ports 80/443 reachable from the internet (80 is needed
+# for the ACME HTTP-01 challenge, not just as an HTTP->HTTPS redirect).
+
+your-domain.example.com {
+	reverse_proxy app:25808
+}
