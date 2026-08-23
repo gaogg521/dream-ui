@@ -20,7 +20,7 @@ export type TranscriptMember = {
   conversation_id: string;
   /** 成员显示名（助手名，可能被用户重命名过）。 */
   name: string;
-  /** 后端标识：claude / codex / aionrs / ... */
+  /** 后端标识：claude / codex / dream / ... */
   backend: string;
   model?: string;
   /** true = 团队 Leader。 */

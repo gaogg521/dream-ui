@@ -2,8 +2,8 @@
  * WebUI static server.
  *
  * Serves out/renderer/ as the SPA and reverse-proxies /api/*, /ws, /api/stt/stream,
- * /login and /logout to aioncore. All auth goes to backend's aionui-auth crate;
- * /login and /logout are aionui-auth's top-level paths, the rest live under
+ * /login and /logout to aioncore. All auth goes to backend's dream-auth crate;
+ * /login and /logout are dream-auth's top-level paths, the rest live under
  * /api/auth/*. /ws and /api/stt/stream are WebSocket/stream upgrades spliced at
  * TCP level; /api/stt/stream is the STT streaming endpoint.
  *
@@ -506,7 +506,7 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
       const clientIp = normalizeIp(remoteIpByLocalPort.get(req.socket.remotePort ?? -1));
 
       // /api/* — reverse proxy to backend (includes /api/auth/*).
-      // /login and /logout are aionui-auth's top-level auth endpoints: proxy them too
+      // /login and /logout are dream-auth's top-level auth endpoints: proxy them too
       // so WebUI browser clients reach the backend without a path-rewrite.
       // /health was missing from this allowlist entirely: it fell through to the
       // SPA fallback below, which answers any unmatched path with `index.html`
@@ -515,7 +515,7 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
       // desktop client's "connect to remote enterprise server" probe does —
       // gets blocked by the browser's CORS policy before it can even read the
       // status code, so the probe always reported the server unreachable. The
-      // real `/health` route (in aionui-app's router) already sends CORS
+      // real `/health` route (in dream-app's router) already sends CORS
       // headers like every other `/api/*` response; it just never got a chance
       // to answer.
       if (

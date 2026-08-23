@@ -408,7 +408,7 @@ describe('getInstallationIntegrityModalActions', () => {
       } as any
     );
 
-    // The root cause is fully understood (database from a newer AionUi), so
+    // The root cause is fully understood (database from a newer Dream UI), so
     // no diagnostics button — a single unambiguous "download latest" action.
     expect(actions.downloadText).toBe('common.backendStartup.incompleteInstallation.downloadLatest');
     expect(actions.reportText).toBeUndefined();

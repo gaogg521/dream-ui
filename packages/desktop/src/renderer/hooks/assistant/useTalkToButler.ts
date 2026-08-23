@@ -12,7 +12,7 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { mutate as swrMutate } from 'swr';
 
-/** Backend manifest id of the built-in AionUi Butler assistant. */
+/** Backend manifest id of the built-in Dream UI Butler assistant. */
 const BUTLER_ASSISTANT_ID = 'aionui-assistant';
 
 export type TalkToButlerArgs = {
@@ -35,7 +35,7 @@ const findButler = (assistants: Assistant[]): Assistant | undefined => {
 
 /**
  * Shared entry point behind every "via chat" action: jump to the home page,
- * select the AionUi Butler, and pre-fill the chat input with a ready-made
+ * select the Dream UI Butler, and pre-fill the chat input with a ready-made
  * prompt (and optional attachments). Auto-enables the Butler if the user has
  * disabled it, since clicking the action is an explicit intent to use it.
  *

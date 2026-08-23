@@ -128,7 +128,7 @@ export {
   uploadAionrsFiles,
   type TProviderWithModel,
   type AionrsTestModels,
-} from './chatAionrs';
+} from './chatDreamEngine';
 export {
   installMonitorRecorder,
   monitorRecorderStatus,

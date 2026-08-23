@@ -2,7 +2,7 @@
  * Enterprise org / admin types for the one-org and one-sso crates.
  *
  * Mirrors the Rust DTOs in `crates/one-org/src/models.rs` and
- * `crates/one-sso/src/models.rs` of the AionCore fork. Most DTOs serialize
+ * `crates/one-sso/src/models.rs` of the Dream Core fork. Most DTOs serialize
  * with camelCase keys (serde rename_all = camelCase); `InviteDto` is the
  * exception — it serializes snake_case, so `OrgInvite` mirrors that.
  */
@@ -392,7 +392,7 @@ export type SetContainerConfigInput = {
 /**
  * Realtime-collaboration config (P2-2 reserved framework), redacted. Mirrors
  * Rust `CollaborationConfigDto`. Distinct from the WebSocket transport
- * (`aionui-realtime`): this is the admin-configured collaboration backend. A
+ * (`dream-realtime`): this is the admin-configured collaboration backend. A
  * probe reports `not_configured` until a real `CollaborationProvider` is wired.
  */
 export type CollaborationConfig = {

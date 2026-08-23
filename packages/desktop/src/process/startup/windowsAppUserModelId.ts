@@ -18,7 +18,7 @@ import { APP_USER_MODEL_ID, DEV_APP_USER_MODEL_ID } from '@/common/platform';
  * Squirrel.Windows installers only, so NSIS builds must do it themselves.
  * Consistency with electron-builder.yml is guarded by a unit test.
  *
- * ⚠️ Fork note: upstream hardcodes its own `com.aionui.app` here. This fork ships
+ * ⚠️ Fork note: upstream hardcodes its own `com.dream.app` here. This fork ships
  * under a different appId and already owns the value in `@/common/platform`, so
  * this module re-exports that single source rather than keeping a second copy —
  * two literals would drift the moment either side changed, and the failure is

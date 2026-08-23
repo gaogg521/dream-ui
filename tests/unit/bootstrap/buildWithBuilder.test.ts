@@ -286,7 +286,7 @@ const path = require('node:path');
 const originalLoad = Module._load;
 
 function recordPrepareCall(options) {
-  const callsPath = process.env.AIONUI_PREPARE_CALLS_FILE;
+  const callsPath = process.env.DREAM_PREPARE_CALLS_FILE;
   const calls = fs.existsSync(callsPath) ? JSON.parse(fs.readFileSync(callsPath, 'utf8')) : [];
   calls.push(options ?? null);
   fs.writeFileSync(callsPath, JSON.stringify(calls));
@@ -350,7 +350,7 @@ childProcess.execSync = function mockedExecSync(command) {
         encoding: 'utf8',
         env: {
           ...process.env,
-          AIONUI_PREPARE_CALLS_FILE: callsPath,
+          DREAM_PREPARE_CALLS_FILE: callsPath,
           NODE_OPTIONS: [process.env.NODE_OPTIONS, `--require=${hookPath}`].filter(Boolean).join(' '),
         },
       });

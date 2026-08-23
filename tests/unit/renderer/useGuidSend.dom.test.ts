@@ -273,7 +273,7 @@ describe('useGuidSend', () => {
   });
 
   it('still gives aionrs its provider model', async () => {
-    // The fallback exists for aionrs, whose model IS the provider selection.
+    // The fallback exists for dream, whose model IS the provider selection.
     const deps = createDeps();
     deps.selectedAssistantBackend = 'aionrs';
     deps.selectedAcpModel = null;

@@ -2,7 +2,7 @@
  * Resolve the aioncore binary path.
  *
  * Search order:
- *  1. AIONUI_BACKEND_BIN env override (path, resolved to absolute)
+ *  1. DREAM_BACKEND_BIN env override (path, resolved to absolute)
  *  2. Bundled with app (production)
  *  3. System PATH
  */
@@ -12,7 +12,7 @@ import { join, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
 
 const BINARY_NAME = 'aioncore';
-const BIN_ENV_VAR = 'AIONUI_BACKEND_BIN';
+const BIN_ENV_VAR = 'DREAM_BACKEND_BIN';
 const MAX_DIR_ENTRIES = 20;
 const MAX_LOOKUP_TEXT_LENGTH = 1000;
 
@@ -93,7 +93,7 @@ export function resolveBinaryPath(): string {
 }
 
 /**
- * Honor the AIONUI_BACKEND_BIN env override.
+ * Honor the DREAM_BACKEND_BIN env override.
  * The value is resolved to an absolute path (relative to process.cwd) so it
  * survives the backend launcher spawning with a different working directory.
  * Returns the path when it points at an existing file. When the variable is
@@ -118,7 +118,7 @@ function envOverridePath(diagnostics: BackendBinaryResolveDiagnostics): string |
 
 /**
  * Resolve bundled binary. Search order:
- *  1. AIONUI_BACKEND_BUNDLED_DIR (explicit override)
+ *  1. DREAM_BACKEND_BUNDLED_DIR (explicit override)
  *  2. {cwd}/resources/bundled-aioncore (dev — backend-rebuild output)
  *  3. process.resourcesPath/bundled-aioncore (packaged app; in dev this is
  *     node_modules/electron/dist/resources and is often stale)
@@ -129,7 +129,7 @@ function resolveBundledBinary(
   diagnostics: BackendBinaryResolveDiagnostics
 ): string | null {
   const bundledRoots: string[] = [];
-  const envBundledDir = process.env.AIONUI_BACKEND_BUNDLED_DIR?.trim();
+  const envBundledDir = process.env.DREAM_BACKEND_BUNDLED_DIR?.trim();
   if (envBundledDir) bundledRoots.push(envBundledDir);
   bundledRoots.push(join(process.cwd(), 'resources', 'bundled-aioncore'));
 

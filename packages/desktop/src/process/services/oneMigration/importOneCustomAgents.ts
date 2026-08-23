@@ -148,7 +148,7 @@ export function collectOneCustomAgents(sourceRoot: string): OneCustomAgentImport
  * `migrateAssistantsToBackend` contract.
  */
 export async function migrateOneCustomAgents(configFile: ConfigFile): Promise<boolean> {
-  if (process.env.AIONUI_SKIP_ELECTRON_MIGRATION === '1') {
+  if (process.env.DREAM_SKIP_ELECTRON_MIGRATION === '1') {
     return false;
   }
 

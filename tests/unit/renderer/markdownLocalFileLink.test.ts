@@ -131,20 +131,20 @@ describe('resolveLocalFileLinkPath', () => {
     expect(resolveLocalFileLinkReference('./user.ts')).toBeNull();
     expect(resolveLocalFileLinkReference('../user.ts')).toBeNull();
     expect(resolveLocalFileLinkReference('/settings')).toBeNull();
-    expect(resolveLocalFileLinkReference('https://aionui.com/docs#L10')).toBeNull();
+    expect(resolveLocalFileLinkReference('https://dream.com/docs#L10')).toBeNull();
     expect(resolveLocalFileLinkReference('https://github.com/org/repo/blob/main/file.ts#L10')).toBeNull();
     expect(resolveLocalFileLinkReference('/Users/demo/file.ts#l10')).toBeNull();
     expect(resolveLocalFileLinkReference('/Users/demo/file.ts#L10-l20')).toBeNull();
   });
 
   it('does not treat normal web links or app routes as local files', () => {
-    expect(resolveLocalFileLinkPath('https://aionui.com/docs')).toBeNull();
+    expect(resolveLocalFileLinkPath('https://dream.com/docs')).toBeNull();
     expect(resolveLocalFileLinkPath('/settings')).toBeNull();
   });
 
   it('formats local file paths as file URLs for browser link copying', () => {
     expect(toLocalFileHref('C:/Users/Administrator/AppData/Roaming/AionUi/report.xlsx')).toBe(
-      'file:///C:/Users/Administrator/AppData/Roaming/AionUi/report.xlsx'
+      'file:///C:/Users/Administrator/AppData/Roaming/Dream UI/report.xlsx'
     );
     expect(toLocalFileHref('/var/folders/demo/report.xlsx')).toBe('file:///var/folders/demo/report.xlsx');
   });

@@ -25,7 +25,7 @@
 export const DEFAULT_DEVTOOLS_CDP_PORT = 9230;
 
 /**
- * 解析 AIONUI_DEVTOOLS_CDP_PORT 的原始值。null = 不启用。
+ * 解析 DREAM_DEVTOOLS_CDP_PORT 的原始值。null = 不启用。
  *
  * 刻意**不接受 0**：Chromium 收到 `--remote-debugging-port=0` 会挑一个随机端口，只写进
  * userData 里的 DevToolsActivePort 文件，调用方拿不到号。对「我要连上去调试」这个用途等于
@@ -52,7 +52,7 @@ export function parseDevtoolsCdpPort(raw: string | undefined): number | null {
 /**
  * 两道闸的最终判定：**必须同时满足**才启用。
  *   1. 非打包（dev）；
- *   2. 显式设了合法的 AIONUI_DEVTOOLS_CDP_PORT。
+ *   2. 显式设了合法的 DREAM_DEVTOOLS_CDP_PORT。
  *
  * 闸 1 刻意放在闸 2 之后判断顺序无关，但**不能**改成「或」：这条通道是应用级、无 per-target
  * ACL、无认证的，一开就把每个 WebContents（含挂着 preload 桥的主窗口）都交出去，任意本机

@@ -7,7 +7,7 @@
 /**
  * Built-in MCP server: export_to_pdf tool.
  *
- * Spawned by the MCP client (e.g. the aionrs agent) as a stdio MCP server.
+ * Spawned by the MCP client (e.g. the dream agent) as a stdio MCP server.
  * Forwards tool calls to the main-process TCP server (exportPdfMcpServer)
  * which owns BrowserWindow/printToPDF + Office COM/soffice logic.
  *

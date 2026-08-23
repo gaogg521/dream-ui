@@ -57,13 +57,13 @@ const ONE_CONFIG_PASSTHROUGH_KEYS = [
 
 /**
  * 1one bundled these MCP servers with the app; their commands point at 1one
- * install paths and the aionui bootstrap seeds its own equivalents.
+ * install paths and the dream bootstrap seeds its own equivalents.
  */
 const ONE_BUILTIN_MCP_NAMES = new Set(['one-image-generation', 'one-web-tools', 'one-export-pdf']);
 
 const PROVIDERS_MIGRATION_FLAG = 'migration.providersMigrated_v1';
 
-/** Same on-disk encoding as the aionui legacy config file. */
+/** Same on-disk encoding as the dream legacy config file. */
 export function readOneLegacyConfig(configPath: string): Record<string, unknown> | null {
   try {
     const raw = readFileSync(configPath, 'utf8');
@@ -94,7 +94,7 @@ function isUnset(value: unknown): boolean {
 }
 
 /**
- * Merge 1one config values into the aionui legacy config file. Existing
+ * Merge 1one config values into the dream legacy config file. Existing
  * values always win — this only fills keys the user has not set here yet.
  */
 export async function importOneLegacyConfig(

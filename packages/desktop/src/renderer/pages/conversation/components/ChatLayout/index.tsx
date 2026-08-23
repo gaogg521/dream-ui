@@ -111,7 +111,7 @@ const ChatLayout: React.FC<{
     });
 
   // Capitalising the raw backend id is not a display name — it is how this
-  // header came to read "Aionrs" instead of "1ONE CLI". Resolve the branded
+  // header came to read "DreamEngine" instead of "1ONE CLI". Resolve the branded
   // name from the catalog; only if it has no row do we fall back to the raw
   // identifier, which at least matches what the rest of that screen calls it.
   const brandedBackend = resolveBackendLabel(backend, managedAgents, localeKey);

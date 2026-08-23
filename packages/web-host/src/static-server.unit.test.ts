@@ -175,7 +175,7 @@ describe('static-server', () => {
   it('stamps the proxy-origin header on every backend request', async () => {
     let seen: string | undefined;
     const backend = await startMockBackend((req, res) => {
-      seen = req.headers['x-aionui-forwarded-origin'] as string | undefined;
+      seen = req.headers['x-dream-forwarded-origin'] as string | undefined;
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end('{}');
     });
@@ -190,13 +190,13 @@ describe('static-server', () => {
   it('overwrites a client-supplied proxy-origin header', async () => {
     let seen: string | string[] | undefined;
     const backend = await startMockBackend((req, res) => {
-      seen = req.headers['x-aionui-forwarded-origin'];
+      seen = req.headers['x-dream-forwarded-origin'];
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end('{}');
     });
     stopBackend = backend.close;
     handle = await startStaticServer({ staticDir, backendPort: backend.port, port: 0 });
-    await fetch(`${handle.localUrl}/api/anything`, { headers: { 'x-aionui-forwarded-origin': 'not-webui' } });
+    await fetch(`${handle.localUrl}/api/anything`, { headers: { 'x-dream-forwarded-origin': 'not-webui' } });
     expect(seen).toBe('webui');
   });
 
@@ -207,7 +207,7 @@ describe('static-server', () => {
   it('forwards the real client IP on /api/* requests', async () => {
     let seen: string | undefined;
     const backend = await startMockBackend((req, res) => {
-      seen = req.headers['x-aionui-client-ip'] as string | undefined;
+      seen = req.headers['x-dream-client-ip'] as string | undefined;
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end('{}');
     });
@@ -225,13 +225,13 @@ describe('static-server', () => {
   it('overwrites a client-supplied client-ip header', async () => {
     let seen: string | string[] | undefined;
     const backend = await startMockBackend((req, res) => {
-      seen = req.headers['x-aionui-client-ip'];
+      seen = req.headers['x-dream-client-ip'];
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end('{}');
     });
     stopBackend = backend.close;
     handle = await startStaticServer({ staticDir, backendPort: backend.port, port: 0 });
-    await fetch(`${handle.localUrl}/api/anything`, { headers: { 'x-aionui-client-ip': '1.2.3.4' } });
+    await fetch(`${handle.localUrl}/api/anything`, { headers: { 'x-dream-client-ip': '1.2.3.4' } });
     expect(seen).toBe('127.0.0.1');
   });
 
@@ -241,7 +241,7 @@ describe('static-server', () => {
   it('forwards the real client IP on every request of a keep-alive connection', async () => {
     const seen: (string | undefined)[] = [];
     const backend = await startMockBackend((req, res) => {
-      seen.push(req.headers['x-aionui-client-ip'] as string | undefined);
+      seen.push(req.headers['x-dream-client-ip'] as string | undefined);
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end('{}');
     });
@@ -355,11 +355,11 @@ describe('static-server', () => {
 
     expect(seen.length).toBe(1);
     // Stamped, and ahead of any client-supplied copy (HeaderMap::get wins on first).
-    expect(seen[0]).toContain('x-aionui-forwarded-origin: webui');
-    expect(seen[0].indexOf('x-aionui-forwarded-origin')).toBeLessThan(seen[0].indexOf('Host:'));
+    expect(seen[0]).toContain('x-dream-forwarded-origin: webui');
+    expect(seen[0].indexOf('x-dream-forwarded-origin')).toBeLessThan(seen[0].indexOf('Host:'));
     // The client-IP header must also be stamped on this path — it bypasses
     // forwardToBackend entirely (raw byte splice), so it needs its own stamp.
-    expect(seen[0]).toContain('x-aionui-client-ip: 127.0.0.1');
+    expect(seen[0]).toContain('x-dream-client-ip: 127.0.0.1');
   });
 
   // Rendering a page of results fires one media request per asset, and

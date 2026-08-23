@@ -85,7 +85,7 @@ export type GuidSendResult = {
 };
 
 /**
- * Hook that manages the send logic for ACP and Aion CLI conversations.
+ * Hook that manages the send logic for ACP and Dream CLI conversations.
  */
 export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
   const {
@@ -149,7 +149,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
         Message.warning(t('conversation.noModelConfigured'));
         return;
       }
-      // `type` (or an assistant) is mandatory. aionrs is the right shell for a
+      // `type` (or an assistant) is mandatory. dream is the right shell for a
       // generation-only conversation: it is the one type that takes a top-level
       // model, and the send box there carries the media mode the user is
       // already in, so the follow-up ("another take", "now animate it") works
@@ -222,7 +222,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
       availableMcpServers
     );
 
-    // `current_model` is the aionrs provider selection and means nothing to a
+    // `current_model` is the dream provider selection and means nothing to a
     // CLI agent, which owns its own model list. Used as a blanket fallback it
     // leaked into the FIRST turn of every CLI conversation: before the agent's
     // catalog has been probed the two preceding options are empty, so a brand
@@ -233,7 +233,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     //
     // Omitting it lets the agent start on its own default, which is what a user
     // who has not picked a model means. The cron dialog already gates the same
-    // value this way (`resolvedBackend !== 'aionrs' → undefined`).
+    // value this way (`resolvedBackend !== 'dream' → undefined`).
     const assistantOverrideModel =
       selectedAcpModel ||
       currentAcpCachedModelInfo?.current_model_id ||

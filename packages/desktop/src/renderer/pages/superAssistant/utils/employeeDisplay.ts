@@ -1,10 +1,10 @@
 /**
  * Display helpers for digital employees.
  *
- * The employee row stores a raw backend label ('claude', 'aionrs', …). Rendering
- * it verbatim is why the roster used to show a bare "aionrs" instead of the
+ * The employee row stores a raw backend label ('claude', 'dream', …). Rendering
+ * it verbatim is why the roster used to show a bare "dream" instead of the
  * product name — the branded name lives on the managed-agent catalog row (the
- * aionrs entry reads "1ONE CLI", set by migration 019), so resolve through the
+ * dream entry reads "1ONE CLI", set by migration 019), so resolve through the
  * catalog and never hardcode a label.
  */
 

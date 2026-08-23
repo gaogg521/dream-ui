@@ -1,5 +1,5 @@
 /**
- * Aionrs Chat E2E Tests - Basic Flow (P0 Priority)
+ * DreamEngine Chat E2E Tests - Basic Flow (P0 Priority)
  *
  * Test Cases Covered:
  * - TC-A-01: Minimal path (no attachments + default model + default permission)
@@ -7,15 +7,15 @@
  * - TC-A-03: Upload single file
  *
  * Prerequisites:
- * - aionrs binary available (via ipcBridge.fs.findAionrsBinary)
+ * - dream binary available (via ipcBridge.fs.findDreamEngineBinary)
  * - User logged in
  * - At least 1 ACP model available (filtered Google Auth)
  *
  * Data-testid references:
- * - AgentPillBar: data-agent-backend="aionrs"
- * - AgentModeSelector: data-testid="agent-mode-selector-aionrs"
- * - DreamEngineSendBox: data-testid="aionrs-sendbox"
- * - FileAttachButton: data-testid="aionrs-attach-folder-btn"
+ * - AgentPillBar: data-agent-backend="dream"
+ * - AgentModeSelector: data-testid="agent-mode-selector-dream"
+ * - DreamEngineSendBox: data-testid="dream-sendbox"
+ * - FileAttachButton: data-testid="dream-attach-folder-btn"
  */
 
 import { test, expect } from '../../../fixtures';
@@ -35,12 +35,12 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 
 test.describe('Aionrs Chat - Basic Flow (P0)', () => {
-  // Set longer timeout for aionrs tests (binary calls can be slow)
-  test.setTimeout(240_000); // 4 minutes — allow 150s waitForAionrsReply + buffer
+  // Set longer timeout for dream tests (binary calls can be slow)
+  test.setTimeout(240_000); // 4 minutes — allow 150s waitForDreamEngineReply + buffer
 
   let preconditions: { binary: string | null; models: AionrsTestModels | null };
 
-  // Check aionrs binary and provider availability before all tests
+  // Check dream binary and provider availability before all tests
   test.beforeAll(async ({ page }) => {
     preconditions = await resolveAionrsPreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
@@ -60,7 +60,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
 
     // 3. Clear sessionStorage
     await page.evaluate(() => {
-      // Clear aionrs-specific sessionStorage keys
+      // Clear dream-specific sessionStorage keys
       const keysToRemove: string[] = [];
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
@@ -87,7 +87,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       await page.waitForLoadState('networkidle');
       await takeScreenshot(page, `chat-aionrs/tc-a-01/01-guid-page-initial.png`);
 
-      // Step 2: Create conversation via bridge (uses prioritized aionrs-compatible provider)
+      // Step 2: Create conversation via bridge (uses prioritized dream-compatible provider)
       const conversationId = await createAionrsConversationViaBridge(page, {
         name: conversationName,
         workspace: tempWorkspace.path,
@@ -135,7 +135,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       expect(aiMessages.length).toBeGreaterThanOrEqual(1);
 
       const aiMsg = aiMessages[0];
-      // Note: message.status is not set to 'finish' for aionrs text messages (only conv.status matters)
+      // Note: message.status is not set to 'finish' for dream text messages (only conv.status matters)
       expect(aiMsg.createdAt).toBeGreaterThan(userMsg.createdAt);
 
       // 4. Verify message count
@@ -207,7 +207,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       expect(userContent.content).toContain('What files are in the attached folder?');
 
       // 3. Verify AI reply exists
-      // Note: message.status is not set to 'finish' for aionrs text messages (only conv.status matters)
+      // Note: message.status is not set to 'finish' for dream text messages (only conv.status matters)
       const aiMessages = messages.filter((m) => m.position === 'left' && m.type === 'text');
       expect(aiMessages.length).toBeGreaterThanOrEqual(1);
     } finally {
@@ -234,7 +234,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
 
       // Step 2: Create conversation via bridge (Electron mode)
       // Note: In real usage, file would be uploaded via UI. For E2E, we create conversation
-      // with workspace containing the test file, which aionrs can access
+      // with workspace containing the test file, which dream can access
       const conversationId = await createAionrsConversationViaBridge(page, {
         name: conversationName,
         workspace: tempWorkspace.path,
@@ -272,14 +272,14 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       const userContent = userMsg.content;
       expect(userContent.content).toContain('e2e-test-file.txt');
 
-      // 2. Verify AI reply mentions file content (aionrs can read workspace files)
+      // 2. Verify AI reply mentions file content (dream can read workspace files)
       const aiMessages = messages.filter((m) => m.position === 'left' && m.type === 'text');
       expect(aiMessages.length).toBeGreaterThanOrEqual(1);
 
       const aiMsg = aiMessages[0];
-      // Note: message.status is not set to 'finish' for aionrs text messages (only conv.status matters)
+      // Note: message.status is not set to 'finish' for dream text messages (only conv.status matters)
 
-      // Note: Since aionrs has workspace access, it should be able to read the file
+      // Note: Since dream has workspace access, it should be able to read the file
       // and mention its content in the reply. This verifies file access works.
     } finally {
       await tempWorkspace.cleanup();

@@ -2,7 +2,7 @@
  * Persona × backend × model selection for a digital employee.
  *
  * Digital employees used to expose only a hardcoded three-entry "agent type"
- * dropdown, which meant an aionrs employee had no way to carry a provider and
+ * dropdown, which meant an dream employee had no way to carry a provider and
  * failed every run with `Provider '' not found`. This hook supplies the same
  * triple the scheduled-task dialog already resolves (see
  * `pages/cron/ScheduledTasksPage/CreateTaskDialog.tsx`), so the two creation
@@ -37,7 +37,7 @@ import { buildAssistantModelInfo } from '@renderer/pages/guid/hooks/useGuidAssis
 /** Backends whose model is chosen from the provider list rather than an ACP catalog. */
 const AIONRS_BACKEND = 'aionrs';
 const GEMINI_BACKEND = 'gemini';
-/** aionrs cannot use Google-Auth providers. Same filter as the cron dialog. */
+/** dream cannot use Google-Auth providers. Same filter as the cron dialog. */
 const GOOGLE_AUTH_PLATFORM = 'gemini-with-google-auth';
 
 /**
@@ -62,7 +62,7 @@ export type EmployeeBindingInitial = {
 export type BackendOption = {
   /** `agent_metadata.id` — what gets stored as the override. */
   id: string;
-  /** Already-branded name from the catalog (the aionrs row reads "1ONE CLI"). */
+  /** Already-branded name from the catalog (the dream row reads "1ONE CLI"). */
   label: string;
   backend: string;
 };
@@ -164,7 +164,7 @@ export const useEmployeeAgentBinding = (initial?: EmployeeBindingInitial): UseEm
         .filter((agent) => agent.enabled !== false && agent.installed !== false)
         .map((agent) => ({
           id: agent.id,
-          // The catalog name is already the product name — the aionrs row is
+          // The catalog name is already the product name — the dream row is
           // literally "1ONE CLI" (migration 019). Never hardcode a label here.
           label: agent.name,
           backend: agent.backend || agent.agent_type || '',
@@ -206,7 +206,7 @@ export const useEmployeeAgentBinding = (initial?: EmployeeBindingInitial): UseEm
     return buildAgentRuntimeModelInfo(selectedCatalogAgent) ?? buildAssistantModelInfo(selectedAssistant?.models ?? []);
   }, [resolvedBackend, isGeminiMode, selectedCatalogAgent, selectedAssistant?.models]);
 
-  // Auto-pick the first enabled provider model when aionrs has none yet. Source
+  // Auto-pick the first enabled provider model when dream has none yet. Source
   // of truth is the provider list, not any cached frontend default.
   useEffect(() => {
     if (!isAionrsBackend || modelId) return;

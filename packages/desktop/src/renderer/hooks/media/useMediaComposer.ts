@@ -8,7 +8,7 @@
  * State and send behaviour for the send box's media mode.
  *
  * Kept in a hook rather than inside a platform component because every
- * conversation type (acp, aionrs, …) renders its own send box and they must all
+ * conversation type (acp, dream, …) renders its own send box and they must all
  * behave identically here — a mode that worked in one and not another would be
  * indistinguishable from a bug.
  *

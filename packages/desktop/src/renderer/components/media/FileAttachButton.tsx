@@ -341,7 +341,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
         accept={referenceOnly ? 'image/*' : undefined}
         style={{ display: 'none' }}
         onChange={handleLocalFileChange}
-        data-testid='aionrs-file-upload-input'
+        data-testid='dream-file-upload-input'
       />
     </>
   );

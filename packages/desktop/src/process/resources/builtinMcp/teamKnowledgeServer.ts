@@ -11,7 +11,7 @@
  * knowledge base was only ever consulted automatically when dispatching a task
  * to a digital employee. During ordinary conversation the agent had no idea the
  * company even had a knowledge base. Exposing retrieval as an MCP tool makes it
- * reachable from every agent backend (aionrs / Claude Code / Codex CLI) because
+ * reachable from every agent backend (dream / Claude Code / Codex CLI) because
  * MCP is the one protocol all three speak.
  *
  * Spawned by the MCP client as a stdio server; forwards tool calls to the

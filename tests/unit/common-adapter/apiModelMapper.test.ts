@@ -129,7 +129,7 @@ describe('apiModelMapper', () => {
     } as TProviderWithModel;
 
     it('keeps top-level model for assistant-first creates without forwarding type', () => {
-      // Regression: aionrs creates must keep the selected top-level model,
+      // Regression: dream creates must keep the selected top-level model,
       // otherwise the backend persists a NULL model and warmup later fails with
       // "Provider '' not found".
       const body = buildCreateConversationBody({

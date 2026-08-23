@@ -10,7 +10,7 @@
  *
  * Same read-once module-level variable idiom as `useDeepLink.ts`'s
  * `pendingDeepLinkData`, kept separate rather than reused: that module is
- * specifically for OS-level `aionui://` deep links, and this is a plain
+ * specifically for OS-level `dream://` deep links, and this is a plain
  * in-app button click with nothing to do with the deep-link protocol.
  */
 

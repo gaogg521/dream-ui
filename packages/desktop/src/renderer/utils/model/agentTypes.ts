@@ -40,7 +40,7 @@ export type AgentModeOption = {
 };
 
 // Permission-mode values that mean fully-automatic (tools run without a
-// per-call confirmation), in preference order. Differs by backend: aionrs
+// per-call confirmation), in preference order. Differs by backend: dream
 // advertises "yolo"; ACP agents (claude/codex/etc.) advertise
 // "bypassPermissions"; "yoloNoSandbox" is the sandbox-less variant. All map
 // to the same full-auto label in the agentMode locale files.
@@ -113,7 +113,7 @@ export type AgentMetadata = {
 
   /** Vendor label (e.g. "claude"). Absent for agents without vendor grouping. */
   backend?: string;
-  /** Top-level runtime discriminant: "acp" | "remote" | "nanobot" | "aionrs" | … */
+  /** Top-level runtime discriminant: "acp" | "remote" | "nanobot" | "dream" | … */
   agent_type: AgentType;
   agent_source: AgentSource;
   agent_source_info?: AgentSourceInfo;
@@ -141,7 +141,7 @@ export type AgentMetadata = {
 
   behavior_policy?: BehaviorPolicy;
 
-  /** Native mode id that AionUi's legacy `yolo` / `yoloNoSandbox`
+  /** Native mode id that Dream UI's legacy `yolo` / `yoloNoSandbox`
    *  aliases resolve to before calling `session/set_mode`. Absent
    *  when the backend has no yolo equivalent. */
   yolo_id?: string;

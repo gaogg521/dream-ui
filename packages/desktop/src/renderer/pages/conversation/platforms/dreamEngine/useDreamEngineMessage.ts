@@ -267,7 +267,7 @@ export const useDreamEngineMessage = (
         case 'finish':
           {
             logStreamTerminalObserved(conversation_id, message.turn_id, 'aionrs', message.type);
-            // aionrs stream_end carries usage in data field
+            // dream stream_end carries usage in data field
             const usageData = message.data as TokenUsage | undefined;
             if (usageData && typeof usageData === 'object' && 'input_tokens' in usageData) {
               const newTokenUsage: TokenUsageData = {
@@ -281,7 +281,7 @@ export const useDreamEngineMessage = (
                 },
                 merge_extra: true,
               });
-              // aionrs has no ACP-style passive usage stream carrying a
+              // dream has no ACP-style passive usage stream carrying a
               // cumulative cost, so pull it from the billing ledger instead
               // (every turn writes a one_usage_events row regardless of
               // backend). Best-effort: a failed/slow lookup must not block
@@ -369,7 +369,7 @@ export const useDreamEngineMessage = (
             setStreamRunning(true);
             streamRunningRef.current = true;
           }
-          // Backend aionrs emits wire type 'acp_permission' but the payload is
+          // Backend dream emits wire type 'acp_permission' but the payload is
           // Confirmation-shaped (legacy), which matches MessagePermission, not
           // MessageAcpPermission. Re-tag so transformMessage routes it correctly.
           mergeLiveMessage(transformMessage({ ...message, type: 'permission' }));

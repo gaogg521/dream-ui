@@ -14,7 +14,7 @@
  * money did not.
  *
  * **This file mirrors a Rust implementation and must not drift from it.**
- * `1oneCore/crates/aionui-common/src/license.rs` owns the built-in rate table
+ * `1oneCore/crates/dream-common/src/license.rs` owns the built-in rate table
  * and `estimate_media_cost_micros`; `one-billing/src/service.rs::record_media_usage`
  * owns the user-price branch. Showing a different number here than the one the
  * ledger records would be worse than showing nothing — the user would reconcile

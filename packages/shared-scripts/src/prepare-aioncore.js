@@ -2,12 +2,12 @@
  * Prepare aioncore binary for packaging.
  *
  * Resolution order:
- *  0. Local binary when AIONUI_BACKEND_LOCAL_PATH is set (fork/local builds)
- *  1. GitHub Actions artifact download when AIONUI_BACKEND_RUN_ID is set
+ *  0. Local binary when DREAM_BACKEND_LOCAL_PATH is set (fork/local builds)
+ *  1. GitHub Actions artifact download when DREAM_BACKEND_RUN_ID is set
  *  2. GitHub release download (requires version or defaults to "latest");
- *     AIONUI_BACKEND_REPO ("owner/repo") overrides the source repository
- *  3. Complete local bundle from AIONUI_BACKEND_LOCAL_BUNDLE_DIR
- *  4. Local binary fallback from AIONUI_BACKEND_LOCAL_BINARY
+ *     DREAM_BACKEND_REPO ("owner/repo") overrides the source repository
+ *  3. Complete local bundle from DREAM_BACKEND_LOCAL_BUNDLE_DIR
+ *  4. Local binary fallback from DREAM_BACKEND_LOCAL_BINARY
  *
  * Output: {projectRoot}/resources/bundled-aioncore/{platform}-{arch}/
  *   - aioncore[.exe]
@@ -23,10 +23,10 @@ const os = require('os');
 const path = require('path');
 const { verifyBundledAioncoreResources } = require('./verify-bundled-aioncore-resources');
 
-// AIONUI_BACKEND_REPO ("owner/repo") overrides the download source. This
+// DREAM_BACKEND_REPO ("owner/repo") overrides the download source. This
 // fork defaults to its own AionCore fork releases (one-* crates included);
-// set AIONUI_BACKEND_REPO=iOfficeAI/AionCore to build against upstream.
-const REPO_SLUG = (process.env.AIONUI_BACKEND_REPO || 'gaogg521/1oneCore').split('/');
+// set DREAM_BACKEND_REPO=iOfficeAI/AionCore to build against upstream.
+const REPO_SLUG = (process.env.DREAM_BACKEND_REPO || 'gaogg521/1oneCore').split('/');
 const GITHUB_OWNER = REPO_SLUG[0];
 const GITHUB_REPO = REPO_SLUG[1] || 'AionCore';
 
@@ -134,7 +134,7 @@ function prepareManagedResources(binaryPath, targetDir) {
     stdio: 'inherit',
     env: {
       ...process.env,
-      AIONUI_BUNDLED_MANAGED_RESOURCES: '',
+      DREAM_BUNDLED_MANAGED_RESOURCES: '',
     },
   });
 
@@ -495,8 +495,8 @@ function downloadAndExtract(platform, arch, tag) {
 function prepareAioncore(options) {
   const { projectRoot, platform, arch, version = 'latest' } = options;
   const runtimeKey = `${platform}-${arch}`;
-  const actionsRunId = (process.env.AIONUI_BACKEND_RUN_ID || '').trim();
-  const localBinaryPath = (process.env.AIONUI_BACKEND_LOCAL_PATH || '').trim();
+  const actionsRunId = (process.env.DREAM_BACKEND_RUN_ID || '').trim();
+  const localBinaryPath = (process.env.DREAM_BACKEND_LOCAL_PATH || '').trim();
 
   let tag = null;
   if (!actionsRunId && !(localBinaryPath && version === 'latest')) {
@@ -524,7 +524,7 @@ function prepareAioncore(options) {
   removeDirectorySafe(targetDir);
   ensureDirectory(targetDir);
 
-  const localBundleDir = (process.env.AIONUI_BACKEND_LOCAL_BUNDLE_DIR || '').trim();
+  const localBundleDir = (process.env.DREAM_BACKEND_LOCAL_BUNDLE_DIR || '').trim();
   if (localBundleDir) {
     const resolvedLocalBundleDir = path.resolve(localBundleDir);
     const localBinaryPath = path.join(resolvedLocalBundleDir, binaryName);
@@ -559,11 +559,11 @@ function prepareAioncore(options) {
   let sourceDetail = {};
   let tempDir = null;
 
-  // 0. Use a locally built binary when AIONUI_BACKEND_LOCAL_PATH is set
+  // 0. Use a locally built binary when DREAM_BACKEND_LOCAL_PATH is set
   //    (fork development: package against cargo build output directly).
   if (localBinaryPath) {
     if (!fs.existsSync(localBinaryPath)) {
-      throw new Error(`AIONUI_BACKEND_LOCAL_PATH not found: ${localBinaryPath}`);
+      throw new Error(`DREAM_BACKEND_LOCAL_PATH not found: ${localBinaryPath}`);
     }
     sourcePath = localBinaryPath;
     sourceType = 'local';
@@ -601,7 +601,7 @@ function prepareAioncore(options) {
 
   // 3. Use an explicitly supplied local cache when network download is unavailable.
   if (!sourcePath) {
-    const localBinary = (process.env.AIONUI_BACKEND_LOCAL_BINARY || '').trim();
+    const localBinary = (process.env.DREAM_BACKEND_LOCAL_BINARY || '').trim();
     if (localBinary) {
       const resolvedLocalBinary = path.resolve(localBinary);
       if (fs.existsSync(resolvedLocalBinary) && fs.statSync(resolvedLocalBinary).isFile()) {

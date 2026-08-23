@@ -33,7 +33,7 @@ const DESCRIPTION_MAX_LENGTH = 2000;
 const MAX_SCREENSHOTS = 3;
 const ACCEPTED_IMAGE_TYPES = '.png,.jpg,.jpeg,.gif';
 
-// aionui's AuthUser is { id, username } and carries no email; aionpro's AuthUser
+// dream's AuthUser is { id, username } and carries no email; aionpro's AuthUser
 // does. Read it structurally (no AuthUser type import, no `any`) so this file
 // stays byte-identical across both repos and simply yields undefined whenever
 // the signed-in user has no email (the open-source desktop build is usually
@@ -220,7 +220,7 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
     feedbackDiagnosticsContext,
   ]);
 
-  // "Solve via chat": hand the report to the AionUi Butler for on-the-spot
+  // "Solve via chat": hand the report to the Dream UI Butler for on-the-spot
   // diagnosis instead of submitting to the team. The typed description + module
   // become a structured prompt; screenshots are uploaded to disk so they ride
   // along in the chat input (reusing the same upload path as pasted images).

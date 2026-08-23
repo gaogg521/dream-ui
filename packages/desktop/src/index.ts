@@ -92,8 +92,8 @@ import electronSquirrelStartup from 'electron-squirrel-startup';
 // at module scope rather than alongside the handler install in handleAppReady.
 registerMediaProtocolScheme();
 
-const isE2ETestMode = process.env.AIONUI_E2E_TEST === '1';
-const skipSingleInstanceLock = isE2ETestMode || process.env.AIONUI_MULTI_INSTANCE === '1';
+const isE2ETestMode = process.env.DREAM_E2E_TEST === '1';
+const skipSingleInstanceLock = isE2ETestMode || process.env.DREAM_MULTI_INSTANCE === '1';
 const deepLinkFromArgv = process.argv.find((arg) => arg.startsWith(`${PROTOCOL_SCHEME}://`));
 const gotTheLock = skipSingleInstanceLock ? true : app.requestSingleInstanceLock({ deepLinkUrl: deepLinkFromArgv });
 if (!gotTheLock) {
@@ -325,7 +325,7 @@ function broadcastBackendStartupState(state: BackendStartupFailureInfo | null): 
 function markBackendStartupFailed(error: unknown): void {
   backendStartupFailed = true;
   // Stamp the currently installed app version so failure dialogs (notably the
-  // downgrade "update AionUi" dialog) can tell the user which version they are
+  // downgrade "update Dream UI" dialog) can tell the user which version they are
   // on now — i.e. that they need something newer than this.
   backendStartupFailureInfo = { ...classifyBackendStartupFailure(error), appVersion: app.getVersion() };
   (globalThis as typeof globalThis & { __backendStartupFailed?: boolean }).__backendStartupFailed = true;
@@ -410,12 +410,12 @@ function markBackendReady(backendPort: number, source: string): void {
 }
 
 function resolveDebugBackendStartupFailure(): BackendStartupFailureInfo | null {
-  const reason = process.env.AIONUI_DEBUG_BACKEND_STARTUP_FAILURE as BackendStartupFailureInfo['reason'] | undefined;
+  const reason = process.env.DREAM_DEBUG_BACKEND_STARTUP_FAILURE as BackendStartupFailureInfo['reason'] | undefined;
   if (!reason) {
     return null;
   }
   if ((app.isPackaged && !isE2ETestMode) || isWebUIMode || isResetPasswordMode) {
-    console.warn('[AionUi] Ignoring AIONUI_DEBUG_BACKEND_STARTUP_FAILURE outside desktop dev/e2e mode.');
+    console.warn('[AionUi] Ignoring DREAM_DEBUG_BACKEND_STARTUP_FAILURE outside desktop dev/e2e mode.');
     return null;
   }
 
@@ -455,7 +455,7 @@ function resolveDebugBackendStartupFailure(): BackendStartupFailureInfo | null {
     return { reason };
   }
 
-  console.warn(`[AionUi] Ignoring unknown AIONUI_DEBUG_BACKEND_STARTUP_FAILURE value: ${reason}`);
+  console.warn(`[AionUi] Ignoring unknown DREAM_DEBUG_BACKEND_STARTUP_FAILURE value: ${reason}`);
   return null;
 }
 
@@ -557,7 +557,7 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
   // 初始化自动更新服务（通过环境变量禁用时跳过，例如 E2E / CI 场景）
   const isCiRuntime = process.env.CI === 'true' || process.env.CI === '1' || process.env.GITHUB_ACTIONS === 'true';
   const disableAutoUpdater =
-    process.env.AIONUI_DISABLE_AUTO_UPDATE === '1' || process.env.AIONUI_E2E_TEST === '1' || isCiRuntime;
+    process.env.DREAM_DISABLE_AUTO_UPDATE === '1' || process.env.DREAM_E2E_TEST === '1' || isCiRuntime;
   if (!disableAutoUpdater) {
     Promise.all([import('./process/services/autoUpdaterService'), import('./process/bridge/updateBridge')])
       .then(([{ autoUpdaterService }, { createAutoUpdateStatusBroadcast }]) => {
@@ -568,7 +568,7 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
           await backendManager.stop();
         });
         // Check for updates after 3 seconds delay. Skipped in the discontinued
-        // build: AionUi's final version guides users to the website instead of
+        // build: Dream UI's final version guides users to the website instead of
         // auto-checking, so startup stays silent. The flag is a compile-time
         // literal, so this branch is tree-shaken out of non-discontinued builds.
         // 3秒后检查更新。停更版启动静默，不做应用内检测。
@@ -792,8 +792,8 @@ const handleAppReady = async (): Promise<void> => {
        * any MCP config the user copied from there could never connect.
        */
       setActiveCdpPort(bridge.port);
-      process.env.AIONUI_CDP_ACTIVE_PORT = String(bridge.port);
-      process.env.AIONUI_CDP_BRIDGE_TOKEN = bridge.token;
+      process.env.DREAM_CDP_ACTIVE_PORT = String(bridge.port);
+      process.env.DREAM_CDP_BRIDGE_TOKEN = bridge.token;
       console.log(`[CDP] Single-target bridge listening on 127.0.0.1:${bridge.port} (token required)`);
       app.once('will-quit', () => {
         void bridge.close();
@@ -935,7 +935,7 @@ const handleAppReady = async (): Promise<void> => {
     const resolvedPort = resolveWebUIPort(userConfigInfo.config, getSwitchValue);
     const allowRemote = resolveRemoteAccess(userConfigInfo.config, isRemoteMode);
     try {
-      // Inside Electron (`AionUi --webui` or packaged `aionui-web` mode that
+      // Inside Electron (`Dream UI --webui` or packaged `dream-web` mode that
       // launches via the Electron shell), reuse the desktop app's data-dir so
       // that conversations / cron jobs created in any path show up everywhere.
       // Matches the desktop IPC path at line 493 above.
@@ -1074,7 +1074,7 @@ const handleAppReady = async (): Promise<void> => {
 };
 
 // ============ Protocol Registration ============
-// Register aionui:// as the default protocol client
+// Register dream:// as the default protocol client
 if (process.defaultApp) {
   // Dev mode: need to pass execPath explicitly
   app.setAsDefaultProtocolClient(PROTOCOL_SCHEME, process.execPath, [path.resolve(process.argv[1])]);
@@ -1082,7 +1082,7 @@ if (process.defaultApp) {
   app.setAsDefaultProtocolClient(PROTOCOL_SCHEME);
 }
 
-// macOS: handle aionui:// URLs via the open-url event
+// macOS: handle dream:// URLs via the open-url event
 app.on('open-url', (event, url) => {
   event.preventDefault();
   handleDeepLinkUrl(url);

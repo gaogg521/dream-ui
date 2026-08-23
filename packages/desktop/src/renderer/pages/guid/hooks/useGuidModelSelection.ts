@@ -55,7 +55,7 @@ export type GuidModelSelectionResult = {
  * Hook that manages the provider-backed model selection state for the Guid page.
  * Assistant-driven defaults are applied by the caller; this hook only owns the
  * transient in-page selection.
- * @param agentKey - current provider-based agent (currently only 'aionrs')
+ * @param agentKey - current provider-based agent (currently only 'dream')
  */
 export const useGuidModelSelection = (agentKey: ProviderAgentKey = 'aionrs'): GuidModelSelectionResult => {
   const { isGoogleAuth } = useGoogleAuthModels();

@@ -18,7 +18,7 @@ const read = (rel: string) => fs.readFileSync(path.join(repoRoot, rel), 'utf8');
  * The i18n checker only covers `locales/`, tsc has no opinion about copy, and no
  * feature test reads a tray tooltip. So a stale product name here ships silently
  * and is found by a user hovering their taskbar — which is exactly how the
- * tooltip stayed "AionUi" across several rebrands.
+ * tooltip stayed "Dream UI" across several rebrands.
  *
  * These assertions are cheap and they fail loudly the next time the product is
  * renamed without sweeping every surface.

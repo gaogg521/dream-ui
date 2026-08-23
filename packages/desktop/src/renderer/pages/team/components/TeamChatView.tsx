@@ -26,7 +26,7 @@ const LegacyReadOnlyConversation = React.lazy(
   () => import('@/renderer/pages/conversation/platforms/legacy/LegacyReadOnlyConversation')
 );
 
-// Narrow to Aionrs conversations so model field is always available
+// Narrow to DreamEngine conversations so model field is always available
 type AionrsConversation = Extract<TChatConversation, { type: 'aionrs' }>;
 type TeamSendOverride = (payload: { input: string; files: ChatFileRef[] }) => Promise<void>;
 type TeamConversationCapabilitySnapshot = {
@@ -54,7 +54,7 @@ const resolveAssistantDisplayName = (
   return undefined;
 };
 
-/** Aionrs sub-component manages model selection state without adding a ChatLayout wrapper */
+/** DreamEngine sub-component manages model selection state without adding a ChatLayout wrapper */
 const AionrsTeamChat: React.FC<{
   conversation: AionrsConversation;
   emptySlot?: React.ReactNode;

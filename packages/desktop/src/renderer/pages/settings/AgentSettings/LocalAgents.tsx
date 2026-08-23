@@ -140,7 +140,7 @@ const LocalAgents: React.FC = () => {
         if (leftIsAionrs !== rightIsAionrs) {
           return leftIsAionrs ? -1 : 1;
         }
-        // Strategic partner: pin Kimi right after the builtin aionrs agent.
+        // Strategic partner: pin Kimi right after the builtin dream agent.
         const leftIsKimi = left.backend === 'kimi';
         const rightIsKimi = right.backend === 'kimi';
         if (leftIsKimi !== rightIsKimi) {

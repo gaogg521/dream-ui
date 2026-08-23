@@ -33,7 +33,7 @@ type StreamRegistry = {
 
 declare global {
   interface Window {
-    __AIONUI_E2E_MESSAGE_STREAM__?: StreamRegistry;
+    __DREAM_E2E_MESSAGE_STREAM__?: StreamRegistry;
   }
 }
 
@@ -100,7 +100,7 @@ const AcpE2EStreamInjector: React.FC<{ conversationId: string }> = ({ conversati
       return;
     }
 
-    const registry = (window.__AIONUI_E2E_MESSAGE_STREAM__ ??= { controllers: {} });
+    const registry = (window.__DREAM_E2E_MESSAGE_STREAM__ ??= { controllers: {} });
 
     registry.controllers[conversationId] = {
       runScenario: async (options?: RunScenarioOptions) => {
@@ -326,8 +326,8 @@ const AcpE2EStreamInjector: React.FC<{ conversationId: string }> = ({ conversati
     };
 
     return () => {
-      if (window.__AIONUI_E2E_MESSAGE_STREAM__) {
-        delete window.__AIONUI_E2E_MESSAGE_STREAM__.controllers[conversationId];
+      if (window.__DREAM_E2E_MESSAGE_STREAM__) {
+        delete window.__DREAM_E2E_MESSAGE_STREAM__.controllers[conversationId];
       }
     };
   }, [addOrUpdateMessage, conversationId]);

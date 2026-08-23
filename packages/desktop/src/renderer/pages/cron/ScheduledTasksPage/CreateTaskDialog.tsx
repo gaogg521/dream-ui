@@ -370,9 +370,9 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
   const isGeminiMode = resolvedBackend === 'gemini' || resolvedBackend === 'aionrs';
 
-  // Providers compatible with aionrs (AionCLI does not support Google Auth).
+  // Providers compatible with dream (DreamCLI does not support Google Auth).
   // Computed independent of the current selection so assistant options backed
-  // by aionrs can be disabled when no provider is configured.
+  // by dream can be disabled when no provider is configured.
   const aionrsProviders = useMemo(
     () => providers.filter((p) => !p.platform?.toLowerCase().includes('gemini-with-google-auth')),
     [providers]
@@ -385,7 +385,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   );
 
   // Build Gemini current_model from model_id for GuidModelSelector.
-  // For aionrs edit mode, prefer the exact provider_id stored in model —
+  // For dream edit mode, prefer the exact provider_id stored in model —
   // the same model name may exist across multiple providers, so fuzzy match
   // would pick the wrong provider.
   const geminiCurrentModel = useMemo<TProviderWithModel | undefined>(() => {
@@ -427,7 +427,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     return buildAssistantModelInfo(selectedAssistantModels);
   }, [resolvedBackend, selectedAssistantModels]);
 
-  // Auto-pick the first available model from /api/providers when aionrs is
+  // Auto-pick the first available model from /api/providers when dream is
   // selected but none is set yet. Source of truth is the backend provider
   // list — do NOT read from any frontend-cached default.
   useEffect(() => {

@@ -108,7 +108,7 @@ const DreamEngineModelSelector: React.FC<{
     void onSetThoughtLevel(thoughtLevel.id, value);
   };
 
-  // aionrs models are grouped by provider. Use a composite id (see compositeId)
+  // dream models are grouped by provider. Use a composite id (see compositeId)
   // so the shared model list can track selection, and map it back on select.
   const modelGroups: RuntimeSelectorModelGroup[] = [];
   const modelLookup = new Map<string, { provider: (typeof providers)[number]; modelName: string }>();

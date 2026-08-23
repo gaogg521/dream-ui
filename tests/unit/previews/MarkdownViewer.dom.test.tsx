@@ -239,15 +239,15 @@ describe('MarkdownViewer', () => {
   });
 
   it('keeps remote links as browser anchors', () => {
-    render(<MarkdownViewer content='[docs](https://aionui.com/docs)' />);
+    render(<MarkdownViewer content='[docs](https://dream.com/docs)' />);
 
     const link = screen.getByRole('link', { name: 'docs' });
-    expect(link).toHaveAttribute('href', 'https://aionui.com/docs');
+    expect(link).toHaveAttribute('href', 'https://dream.com/docs');
   });
 
   it('suppresses Streamdown wheel-zoom over an inline mermaid diagram without blocking page scroll', () => {
     const { container } = render(<MarkdownViewer content='# doc' />);
-    // The scroll container (parent of .aionui-markdown) owns the capture-phase
+    // The scroll container (parent of .dream-markdown) owns the capture-phase
     // wheel interceptor installed by MarkdownViewer.
     const scroll = container.querySelector('.aionui-markdown')?.parentElement as HTMLElement;
     expect(scroll).toBeTruthy();

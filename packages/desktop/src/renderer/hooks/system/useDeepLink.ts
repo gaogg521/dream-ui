@@ -48,7 +48,7 @@ export const consumePendingDeepLink = (): DeepLinkAddProviderDetail | null => {
 const ALLOWED_NAVIGATE_PATTERNS = [/^\/team\/[^/]+$/, /^\/conversation\/[^/]+$/];
 
 /**
- * Hook to listen for aionui:// deep link events from main process.
+ * Hook to listen for dream:// deep link events from main process.
  * Routes 'add-provider' action to the model settings page.
  * Routes 'navigate' action to the specified route (whitelist-validated).
  * The pre-fill data is stored in a module-level variable and consumed
@@ -74,7 +74,7 @@ export const useDeepLink = () => {
       }
 
       // Enterprise remote SSO login: the remote aioncore's OAuth callback
-      // redirects the system browser to aionui://sso-callback?token=...
+      // redirects the system browser to dream://sso-callback?token=...
       // (desktop=1 flow — no Set-Cookie, the token rides the deep link).
       if (payload.action === 'sso-callback') {
         const { token, userId, username, name } = payload.params;

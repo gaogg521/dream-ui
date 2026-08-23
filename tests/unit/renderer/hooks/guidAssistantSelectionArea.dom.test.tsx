@@ -84,7 +84,7 @@ describe('AssistantSelectionArea', () => {
     );
 
     // Selection lists group by source: CLI (generated) → user → official
-    // (builtin). So the top row is [bare-aionrs, user-research, user-review,
+    // (builtin). So the top row is [bare-dream, user-research, user-review,
     // user-translate] and the official Writer + trailing user-finance overflow.
     expect(screen.getByTestId('preset-pill-bare-aionrs')).toBeInTheDocument();
     expect(screen.getByTestId('preset-pill-user-research')).toBeInTheDocument();

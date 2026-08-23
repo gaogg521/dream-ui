@@ -1,5 +1,5 @@
 /**
- * E2E test helpers for aionrs (Aion CLI) conversations.
+ * E2E test helpers for dream (Dream CLI) conversations.
  */
 import type { Page } from '@playwright/test';
 import { invokeBridge } from './bridge';
@@ -59,7 +59,7 @@ function normalizeProvider(provider: ProviderResponse): TProviderWithModel {
 }
 
 /**
- * Aionrs test models structure.
+ * DreamEngine test models structure.
  */
 export interface AionrsTestModels {
   modelA: TProviderWithModel;
@@ -67,7 +67,7 @@ export interface AionrsTestModels {
 }
 
 /**
- * Resolve aionrs binary path using `which aionrs`.
+ * Resolve dream binary path using `which dream`.
  * @returns Binary path or null if not found
  */
 export function resolveAionrsBinary(): string | null {
@@ -83,7 +83,7 @@ export function resolveAionrsBinary(): string | null {
 }
 
 /**
- * Get aionrs test models (modelA + optional modelB).
+ * Get dream test models (modelA + optional modelB).
  * @param page Playwright page
  * @returns Test models object or null if no compatible provider available
  */
@@ -95,11 +95,11 @@ export async function getAionrsTestModels(page: Page): Promise<AionrsTestModels 
     const isAionrsCompatible = (p: TProviderWithModel): boolean => {
       const platform = String(p.platform || '').toLowerCase();
       if (platform.includes('gemini-with-google-auth')) return false;
-      // `gemini` (OpenAI-compat via /v1beta/openai) has a known aionrs first-send
+      // `gemini` (OpenAI-compat via /v1beta/openai) has a known dream first-send
       // silent-hang bug on preview models, so exclude to keep E2E deterministic.
       if (platform === 'gemini') return false;
       const baseUrl = String(p.baseUrl || '');
-      // aionrs appends `/v1/chat/completions`. Compatible when:
+      // dream appends `/v1/chat/completions`. Compatible when:
       //  - non-openai-compat providers (anthropic/bedrock/vertex) — handled separately
       //  - platform is `new-api` (standard OpenAI-compatible endpoint)
       //  - platform is `custom` AND baseUrl ends with `/v1` (or `/v1/`) so stripTrailingV1 works
@@ -114,7 +114,7 @@ export async function getAionrsTestModels(page: Page): Promise<AionrsTestModels 
 
     if (candidates.length === 0) return null;
 
-    // Prefer more reliable aionrs-compatible platforms first.
+    // Prefer more reliable dream-compatible platforms first.
     // Gemini via OpenAI-compat can silently hang on preview models, so it's last.
     const platformPriority: Record<string, number> = {
       custom: 0, // Prefer user-configured OpenAI-compat endpoints (e.g. official OpenAI) first
@@ -148,7 +148,7 @@ export async function getAionrsTestModels(page: Page): Promise<AionrsTestModels 
 }
 
 /**
- * Resolve aionrs preconditions (binary + models).
+ * Resolve dream preconditions (binary + models).
  * @param page Playwright page
  * @returns Object with binary path and models, or null values if not available
  */
@@ -162,7 +162,7 @@ export async function resolveAionrsPreconditions(page: Page): Promise<{
 }
 
 /**
- * Create an aionrs conversation via IPC bridge.
+ * Create an dream conversation via IPC bridge.
  * @param page Playwright page
  * @param opts Conversation options
  * @returns Conversation ID
@@ -201,7 +201,7 @@ export async function createAionrsConversationViaBridge(
 }
 
 /**
- * Send a message in an aionrs conversation via IPC bridge.
+ * Send a message in an dream conversation via IPC bridge.
  * @param page Playwright page
  * @param conversationId Conversation ID
  * @param text Message text
@@ -228,7 +228,7 @@ export async function sendAionrsMessage(
 }
 
 /**
- * Wait for aionrs AI reply to finish.
+ * Wait for dream AI reply to finish.
  * Polls the conversation until status='finished' and AI message content is stable.
  * @param page Playwright page
  * @param conversationId Conversation ID
@@ -287,7 +287,7 @@ export async function waitForAionrsReply(page: Page, conversationId: string, tim
 }
 
 /**
- * Get aionrs conversation from database via IPC bridge.
+ * Get dream conversation from database via IPC bridge.
  * @param page Playwright page
  * @param conversationId Conversation ID
  * @returns Conversation object or null if not found
@@ -302,7 +302,7 @@ export async function getAionrsConversationDB(page: Page, conversationId: string
 }
 
 /**
- * Get all messages for an aionrs conversation from database.
+ * Get all messages for an dream conversation from database.
  * @param page Playwright page
  * @param conversationId Conversation ID
  * @returns Array of message objects
@@ -322,8 +322,8 @@ export async function getAionrsMessages(page: Page, conversationId: string): Pro
 }
 
 /**
- * Clean up all E2E aionrs conversations from database.
- * Deletes conversations with name pattern 'E2E-aionrs-%'.
+ * Clean up all E2E dream conversations from database.
+ * Deletes conversations with name pattern 'E2E-dream-%'.
  * Throws error if deletion fails (no silent failures).
  * @param page Playwright page
  */
@@ -371,7 +371,7 @@ export function createTempWorkspace(scenario: string): { path: string; cleanup: 
   };
 }
 
-/** Select an available aionrs assistant on the guid page. */
+/** Select an available dream assistant on the guid page. */
 export async function selectAionrsAgent(page: Page): Promise<void> {
   await goToGuid(page);
   const assistantId = await selectAssistantForBackend(page, 'aionrs');
@@ -381,7 +381,7 @@ export async function selectAionrsAgent(page: Page): Promise<void> {
 }
 
 /**
- * Select aionrs model from dropdown.
+ * Select dream model from dropdown.
  * Can be used on guid page or conversation page.
  * @param page Playwright page
  * @param modelId Model ID (e.g., 'claude-opus-4-7')
@@ -400,7 +400,7 @@ export async function selectAionrsModel(page: Page, modelId: string): Promise<vo
 }
 
 /**
- * Select aionrs mode (permission level) from dropdown.
+ * Select dream mode (permission level) from dropdown.
  * @param page Playwright page
  * @param mode Mode value ('default', 'auto_edit', 'yolo')
  */
@@ -418,7 +418,7 @@ export async function selectAionrsMode(page: Page, mode: string): Promise<void> 
 }
 
 /**
- * Attach a folder to aionrs conversation by clicking the file attach button.
+ * Attach a folder to dream conversation by clicking the file attach button.
  * NOTE: This requires the file tree or folder selector UI to be available.
  * For testing purposes, we skip actual folder selection and just verify the button exists.
  * @param page Playwright page
@@ -438,7 +438,7 @@ export async function attachAionrsFolder(page: Page, folderPath: string): Promis
 }
 
 /**
- * Upload files to aionrs conversation using file input.
+ * Upload files to dream conversation using file input.
  * @param page Playwright page
  * @param filePaths Array of absolute file paths
  */

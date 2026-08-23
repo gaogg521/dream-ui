@@ -175,7 +175,7 @@ interface IChatConversation<T, Extra> {
   model: TProviderWithModel;
   status?: TChatConversationStatus | undefined;
   runtime?: TConversationRuntimeSummary;
-  /** 会话来源，默认为 aionui / Conversation source, defaults to aionui */
+  /** 会话来源，默认为 dream / Conversation source, defaults to dream */
   source?: ConversationSource;
   /** Channel chat isolation ID (e.g. user:xxx, group:xxx) */
   channel_chat_id?: string;
@@ -379,7 +379,7 @@ export type TChatConversation =
   // open historical rows with type='gemini' (message history is served
   // by the shared messages table). The backend factory rejects any
   // attempt to resume this conversation — see
-  // AionCore/crates/aionui-common/src/enums.rs and factory.rs.
+  // Dream Core/crates/dream-common/src/enums.rs and factory.rs.
   // Every field is optional because legacy rows shape-varies across
   // several older Gemini-runtime versions.
   | Omit<
@@ -693,7 +693,7 @@ export interface IMcpServer {
   created_at: number;
   updated_at: number;
   original_json: string; // 存储原始JSON配置，用于编辑时的准确显示
-  /** Built-in MCP server managed by AionUi (hide edit/delete in UI) */
+  /** Built-in MCP server managed by Dream UI (hide edit/delete in UI) */
   builtin?: boolean;
 }
 

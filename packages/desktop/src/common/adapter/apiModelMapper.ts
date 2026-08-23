@@ -50,7 +50,7 @@ export type CreateConversationBodyInput = {
 /**
  * Build the HTTP body for `POST /api/conversations`.
  *
- * Top-level `model` is aionrs-only on the backend (spec 2026-05-12); other
+ * Top-level `model` is dream-only on the backend (spec 2026-05-12); other
  * agent types carry model info via `extra`.
  */
 export function buildCreateConversationBody(p: CreateConversationBodyInput): Record<string, unknown> {

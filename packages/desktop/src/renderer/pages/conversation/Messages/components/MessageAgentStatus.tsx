@@ -29,7 +29,7 @@ const MessageAgentStatus: React.FC<MessageAgentStatusProps> = ({ message }) => {
 
   // Resolve display name: explicit agent_name > the backend's branded catalog
   // name > the raw identifier. Capitalising the identifier — which is what this
-  // used to do — turns 'aionrs' into "Aionrs", an internal name shown to users.
+  // used to do — turns 'dream' into "DreamEngine", an internal name shown to users.
   const display_name = agent_name || resolveBackendLabel(backend, managedAgents, i18n.language) || backend;
 
   // Hide disconnected status from historical messages (no longer emitted but may exist in DB)

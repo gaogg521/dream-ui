@@ -9,8 +9,8 @@ import { openBrowserUrl, shouldAutoOpenBrowser } from './browser.js';
 import { ensureAdminPassword } from './ensureAdminPassword.js';
 
 // tarball layout:
-//   aionui-web/
-//   ├── aionui-web              ← bun-compiled standalone binary (process.execPath)
+//   dream-web/
+//   ├── dream-web              ← bun-compiled standalone binary (process.execPath)
 //   ├── package.json             ← for runtime version lookup
 //   ├── bundled-aioncore/<plat-arch>/aioncore[.exe]
 //   └── static/                  ← SPA assets
@@ -20,7 +20,7 @@ import { ensureAdminPassword } from './ensureAdminPassword.js';
 // sibling files. In dev (tsx/node), process.execPath is the node/bun binary,
 // so fall back to import.meta.url there.
 function resolveCliRoot(): string {
-  // Heuristic: if the executable path ends in "aionui-web" or "aionui-web.exe",
+  // Heuristic: if the executable path ends in "dream-web" or "dream-web.exe",
   // treat it as the packaged single-file binary and return its directory.
   const exe = process.execPath;
   const exeName = path.basename(exe).toLowerCase();
@@ -76,7 +76,7 @@ function parseArgs(argv: string[]): { command: string; flags: Map<string, string
 function resolveBackendBinary(flags: Map<string, string | true>): string {
   const override = flags.get('backend-bin');
   if (typeof override === 'string') return path.resolve(override);
-  const envOverride = process.env.AIONUI_BACKEND_BIN;
+  const envOverride = process.env.DREAM_BACKEND_BIN;
   if (envOverride) return path.resolve(envOverride);
   const platArch = `${process.platform}-${process.arch}`;
   const bundled = path.join(cliRoot, 'bundled-aioncore', platArch, BACKEND_BINARY);
@@ -92,7 +92,7 @@ function resolveStaticDir(flags: Map<string, string | true>): string {
 function resolveDataDir(flags: Map<string, string | true>): string {
   const override = flags.get('data-dir');
   if (typeof override === 'string') return path.resolve(override);
-  const envOverride = process.env.AIONUI_DATA_DIR;
+  const envOverride = process.env.DREAM_DATA_DIR;
   if (envOverride) return path.resolve(envOverride);
   return path.join(os.homedir(), '.aionui-web');
 }
@@ -100,7 +100,7 @@ function resolveDataDir(flags: Map<string, string | true>): string {
 function resolveLogDir(flags: Map<string, string | true>, dataDir: string): string {
   const override = flags.get('log-dir');
   if (typeof override === 'string') return path.resolve(override);
-  const envOverride = process.env.AIONUI_LOG_DIR;
+  const envOverride = process.env.DREAM_LOG_DIR;
   if (envOverride) return path.resolve(envOverride);
   return path.join(dataDir, 'logs');
 }
@@ -108,14 +108,14 @@ function resolveLogDir(flags: Map<string, string | true>, dataDir: string): stri
 function resolvePort(flags: Map<string, string | true>): number {
   const cli = flags.get('port');
   if (typeof cli === 'string' && /^\d+$/.test(cli)) return Number(cli);
-  const env = process.env.AIONUI_PORT ?? process.env.PORT;
+  const env = process.env.DREAM_PORT ?? process.env.PORT;
   if (env && /^\d+$/.test(env)) return Number(env);
   return DEFAULT_PORT;
 }
 
 function resolveAllowRemote(flags: Map<string, string | true>): boolean {
   if (flags.has('remote')) return true;
-  const env = process.env.AIONUI_ALLOW_REMOTE ?? process.env.AIONUI_REMOTE;
+  const env = process.env.DREAM_ALLOW_REMOTE ?? process.env.DREAM_REMOTE;
   if (!env) return false;
   return ['1', 'true', 'yes', 'on'].includes(env.trim().toLowerCase());
 }
@@ -170,7 +170,7 @@ async function runStart(flags: Map<string, string | true>): Promise<void> {
     console.warn('⚠️  Backend binary not found — starting in FRONTEND-ONLY mode.');
     console.warn(`   Missing: ${backendBin}`);
     console.warn('   The web UI will load but API calls will fail until a backend is available.');
-    console.warn('   To enable backend: download aioncore and set AIONUI_BACKEND_BIN.');
+    console.warn('   To enable backend: download aioncore and set DREAM_BACKEND_BIN.');
     console.warn('');
 
     const handle = await startStaticServer({
@@ -270,7 +270,7 @@ async function runStart(flags: Map<string, string | true>): Promise<void> {
 }
 
 /**
- * `aionui-web resetpass` — spin up the backend just long enough to POST
+ * `dream-web resetpass` — spin up the backend just long enough to POST
  * /api/webui/reset-password, print the new plaintext password, then tear down.
  * Uses the same data-dir resolution as `start`, so the reset targets whichever
  * DB the user normally runs against.
@@ -279,7 +279,7 @@ async function runResetPassword(flags: Map<string, string | true>): Promise<void
   const backendBin = resolveBackendBinary(flags);
   if (!fs.existsSync(backendBin)) {
     console.error(`[aionui-web] backend binary not found: ${backendBin}`);
-    console.error('  hint: pass --backend-bin <path> or set AIONUI_BACKEND_BIN');
+    console.error('  hint: pass --backend-bin <path> or set DREAM_BACKEND_BIN');
     process.exit(1);
   }
   const dataDir = resolveDataDir(flags);
@@ -395,8 +395,8 @@ Options for resetpass:
   --backend-bin <path>    Override backend binary path
 
 Environment variables:
-  AIONUI_PORT, AIONUI_ALLOW_REMOTE, AIONUI_DATA_DIR, AIONUI_LOG_DIR,
-  AIONUI_BACKEND_BIN, AIONUI_OPEN_BROWSER
+  DREAM_PORT, DREAM_ALLOW_REMOTE, DREAM_DATA_DIR, DREAM_LOG_DIR,
+  DREAM_BACKEND_BIN, AIONUI_OPEN_BROWSER
 `);
     return;
   }

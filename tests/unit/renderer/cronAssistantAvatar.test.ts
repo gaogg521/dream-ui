@@ -35,7 +35,7 @@ describe('resolveAssistantAvatar', () => {
   });
 
   it('does not expose file urls as image sources without an assistant id', () => {
-    expect(resolveAssistantAvatar('file:///Users/demo/.aionui/assistant-avatars/custom-1.jpg')).toEqual({
+    expect(resolveAssistantAvatar('file:///Users/demo/.dream/assistant-avatars/custom-1.jpg')).toEqual({
       kind: 'fallback',
     });
   });

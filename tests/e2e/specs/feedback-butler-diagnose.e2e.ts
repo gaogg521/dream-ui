@@ -60,7 +60,7 @@ test('error bubble butler chip pre-fills a diagnosis prompt in the home chat', a
     await page.waitForFunction(
       (id) =>
         Boolean(
-          (window as unknown as { __AIONUI_E2E_MESSAGE_STREAM__?: StreamRegistry }).__AIONUI_E2E_MESSAGE_STREAM__
+          (window as unknown as { __DREAM_E2E_MESSAGE_STREAM__?: StreamRegistry }).__DREAM_E2E_MESSAGE_STREAM__
             ?.controllers[id]
         ),
       conversation.id,
@@ -68,8 +68,8 @@ test('error bubble butler chip pre-fills a diagnosis prompt in the home chat', a
     );
     await page.evaluate(
       async ({ id, text }) => {
-        const registry = (window as unknown as { __AIONUI_E2E_MESSAGE_STREAM__?: StreamRegistry })
-          .__AIONUI_E2E_MESSAGE_STREAM__;
+        const registry = (window as unknown as { __DREAM_E2E_MESSAGE_STREAM__?: StreamRegistry })
+          .__DREAM_E2E_MESSAGE_STREAM__;
         await registry!.controllers[id].emitErrorTip(text);
       },
       { id: conversation.id, text: ERROR_TEXT }

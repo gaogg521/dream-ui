@@ -74,7 +74,7 @@ describe('MessageAgentStatus — FeedbackButton wiring', () => {
   });
 
   // This used to assert a JS-side capitalisation of the raw identifier, and that
-  // behaviour was deliberately removed: it turned 'aionrs' into "Aionrs" —
+  // behaviour was deliberately removed: it turned 'dream' into "DreamEngine" —
   // an internal codename shown to users. The identifier is now passed through
   // untouched and capitalised by CSS, which the DOM text does not reflect.
   //

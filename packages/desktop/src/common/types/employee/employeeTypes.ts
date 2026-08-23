@@ -2,7 +2,7 @@
  * Digital employee types for the one-employee crate.
  *
  * Mirrors the Rust `PersonalAgentRow` / `EmployeeRunRow` shapes in
- * `crates/one-employee/src/models.rs` of the AionCore fork. The backend
+ * `crates/one-employee/src/models.rs` of the Dream Core fork. The backend
  * serializes with camelCase keys (serde rename_all = camelCase), so the
  * TypeScript types use camelCase directly — no mapping layer needed.
  */
@@ -42,7 +42,7 @@ export type PersonalAgentAutomationConfig = {
 };
 
 /**
- * Provider + model pair for aionrs employees. Note the snake_case keys: the
+ * Provider + model pair for dream employees. Note the snake_case keys: the
  * Rust `ProviderWithModel` carries no `rename_all`, so it stays snake_case even
  * inside the otherwise camelCase employee payloads — the same shape already
  * used for cron jobs.
@@ -62,7 +62,7 @@ export type PersonalAgentModel = {
  *   the only channel that works: once a persona is attached, the conversation's
  *   agent type is derived from the assistant snapshot.
  * - `modelId` — plain model id, for ACP backends.
- * - `model` — provider + model, for aionrs only. The backend rejects a model on
+ * - `model` — provider + model, for dream only. The backend rejects a model on
  *   any other agent type.
  */
 export type PersonalAgentBinding = {
@@ -78,7 +78,7 @@ export type PersonalAgent = {
   tenantId: string;
   name: string;
   description?: string | null;
-  /** The effective backend ('claude', 'aionrs', …). */
+  /** The effective backend ('claude', 'dream', …). */
   agentType: string;
   /** @deprecated Legacy column, read only as a fallback source for `assistantId`. */
   customAgentId?: string | null;

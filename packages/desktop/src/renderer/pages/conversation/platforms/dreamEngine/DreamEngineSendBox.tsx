@@ -80,7 +80,7 @@ const toModeLabel = (value: string): string =>
 const modeOptionsFromCapabilities = (modes: string[]): AgentModeOption[] =>
   modes.map((value) => ({ value, label: toModeLabel(value) }));
 
-const useAionrsSendBoxDraft = getSendBoxDraftHook('aionrs', {
+const useDreamEngineSendBoxDraft = getSendBoxDraftHook('aionrs', {
   _type: 'aionrs',
   atPath: [],
   content: '',
@@ -91,7 +91,7 @@ const EMPTY_AT_PATH: Array<string | FileOrFolderItem> = [];
 const EMPTY_UPLOAD_FILES: string[] = [];
 
 const useSendBoxDraft = (conversation_id: string) => {
-  const { data, mutate } = useAionrsSendBoxDraft(conversation_id);
+  const { data, mutate } = useDreamEngineSendBoxDraft(conversation_id);
 
   const atPath = data?.atPath ?? EMPTY_AT_PATH;
   const uploadFile = data?.uploadFile ?? EMPTY_UPLOAD_FILES;
@@ -151,7 +151,7 @@ const DreamEngineSendBox: React.FC<{
     }));
   const { t, i18n } = useTranslation();
   const { agents: managedAgents } = useManagedAgents();
-  // 'aionrs' is this send box's own backend; the catalog is what turns it into
+  // 'dream' is this send box's own backend; the catalog is what turns it into
   // the product name the rest of the UI uses.
   const brandedBackend = resolveBackendLabel('aionrs', managedAgents, i18n.language);
   const { checkAndUpdateTitle } = useAutoTitle();
@@ -391,7 +391,7 @@ const DreamEngineSendBox: React.FC<{
     void processInitialMessage();
   }, [conversation_id, current_model?.use_model, executeCommand]);
 
-  // aionrs backends never support mid-turn delivery: while the agent is
+  // dream backends never support mid-turn delivery: while the agent is
   // replying, sending is hard-blocked with a toast instead of implicitly
   // enqueuing. The only way to queue a message while busy is the explicit
   // "add to queue" entry (handleAddToQueue below).
@@ -822,8 +822,8 @@ const DreamEngineSendBox: React.FC<{
               ? t('acp.sendbox.placeholder', {
                   // Never hardcode a product name here: the branded label lives
                   // on the managed-agent catalog row (migration 019 sets the
-                  // aionrs entry to "1ONE CLI"). The literal that used to sit
-                  // in this fallback is why the box read "AionCLI".
+                  // dream entry to "1ONE CLI"). The literal that used to sit
+                  // in this fallback is why the box read "DreamCLI".
                   backend: agent_name || brandedBackend || t('conversation.chat.thisAgent'),
                   defaultValue: `Send message to {{backend}}...`,
                 })
@@ -944,11 +944,11 @@ const DreamEngineSendBox: React.FC<{
               </Button>
             )}
             {tokenUsage ? (
-              // aionrs never reports a context-window size (only raw token
+              // dream never reports a context-window size (only raw token
               // counts), so context_limit is always 0 — the indicator's own
               // "window unknown" fallback renders the count without a
               // fabricated percentage. No onQueryDetail: the category-detail
-              // query is a Claude-only capability aionrs cannot serve.
+              // query is a Claude-only capability dream cannot serve.
               <ContextUsageIndicator tokenUsage={tokenUsage} context_limit={0} />
             ) : undefined}
           </>

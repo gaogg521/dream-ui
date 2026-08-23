@@ -21,11 +21,16 @@
 - `type: 'aionrs'`、`preset_agent_type: 'aionrs'` 等**小写字符串字面量**是与后端 `AgentType::serde_name()` 对应的 wire-format 判别值，后端已决定保留 `"aionrs"` 不变（见决策文档第 13 节），前端这些字符串**同步保持不变**；只有 `AionrsChat`/`AionrsModelSelector` 这类**大写开头的组件/函数标识符**被重命名，两者靠大小写严格区分，脚本按精确大小写匹配，未发生误伤。
 - `BUILTIN_IMAGE_GEN_LEGACY_NAMES = ['AionUi Image Generation', ...]`（`common/config/storage.ts`）是用于识别/迁移**存量已安装 MCP 服务器名称**的遗留匹配名单，不是普通文案，本轮**未改动**——改了会让存量用户的旧版内置图片生成 MCP 服务器识别失效。
 
+## 已完成（第二轮，2026-08-23）
+
+- [x] **注释/文档字符串里的"AionUi"/"AionCore"提及已批量清理**：用一个只识别"是否处于注释语法内"的逐字符扫描脚本（正确跳过 Rust 生命周期 `'a`/raw string/模板字符串插值，正确处理 `/** */` 跨行版权头保护），共处理 159 个文件。第一次运行有个多行版权头检测的 bug（`Copyright` 与实际改动不在同一行时漏检），已发现并修复后重跑，确认 0 处版权头被误改
+- [x] **41 个真实运行时环境变量已改名**：`AIONUI_BACKEND_*`、`AIONUI_DATA_DIR`、`AIONUI_PORT`、`AIONUI_CDP_*`、`AIONUI_MEDIA_*`、`AIONUI_IMG_*`、`AIONUI_E2E_*`、`AIONUI_HUB_*` 等（逐一用 `process.env.AIONUI_X` 实测确认是真实读取点，不是靠字符串扫描猜的），均改为 `DREAM_*`；NSIS 安装器宏名（`AIONUI_MSG_*`/`AIONUI_E_*` 等 150+ 个）按既定规则不动
+- [x] 测试文件名同步改名：`AionrsSendBox.dom.test.tsx`→`DreamEngineSendBox.dom.test.tsx` 等 4 个测试文件、`tests/e2e/features/conversations/aionrs/`→`dreamEngine/`、`tests/e2e/docs/chat-aionrs/`→`chat-dreamEngine/`、`tests/e2e/helpers/chatAionrs.ts`→`chatDreamEngine.ts`，含内部路径引用同步修正
+- [x] `npx tsc --noEmit`（`packages/desktop`）连续 4 轮验证通过
+
 ## 尚未做的事（按重要性排序）
 
-- [ ] **注释/文档字符串里的"AionUi"/"AionCore"提及**——规模比预期大得多（初步扫描仅 `packages/desktop/src` 下就有数百处 `// ... AionUi ...` 风格的代码注释、doc comment），且已经证明这类文本里混杂着类似 `BUILTIN_IMAGE_GEN_LEGACY_NAMES` 这样的真实持久化陷阱，不能批量无脑替换，需要逐类抽样核实后再处理，建议作为独立的后续任务
-- [ ] `README.md`/`readme.md` 的产品文案改写（仍称"1ONE Work"，链接指向旧仓库 `gaogg521/1oneUI`/`gaogg521/1oneCore`）——这是内容重写工作，不是机械改名
-- [ ] `AIONUI_*` 环境变量：已确认约 20 个是真正的运行时变量（`AIONUI_BACKEND_LOCAL_PATH`、`AIONUI_DATA_DIR`、`AIONUI_PORT`、`AIONUI_CDP_PORT`、`AIONUI_MEDIA_*`、`AIONUI_IMG_*` 等，见决策文档第 11.4 节），其余 150+ 个是 NSIS 安装器宏名/错误码（`AIONUI_MSG_*`、`AIONUI_E_*`），后者按既定规则不应改动；前者本轮未处理
+- [ ] `README.md`/`readme.md` 的产品文案改写（仍称"1ONE Work"，链接指向旧仓库 `gaogg521/1oneUI`/`gaogg521/1oneCore`）——这是内容重写工作，不是机械改名，本轮未做
 - [ ] `bun install` 生成的 `node_modules/@dream/web-host` 符号链接是手动创建的临时方案（完整 `bun install` 在本机异常缓慢，25 分钟未完成疑似卡住，原因未查明），提交前建议在网络/资源更充裕的环境下正式跑一次完整 `bun install` 重新生成 `bun.lock`
 - [ ] appId/exe/userData/协议 scheme（`electron-builder.yml`）：按决策文档第 12 节已确认不改，非遗漏
 - [ ] 尚未提交、尚未推送到 `https://github.com/gaogg521/dream-ui.git`

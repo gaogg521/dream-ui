@@ -7,13 +7,13 @@
 /**
  * Branded label for a conversation's agent backend.
  *
- * A conversation stores the raw backend identifier ('aionrs', 'claude', …).
+ * A conversation stores the raw backend identifier ('dream', 'claude', …).
  * Capitalising that string is not a display name — it is an internal
  * identifier with a capital letter, which is how the chat header came to read
- * "Aionrs" and the send box "AionCLI" while the rest of the product says
+ * "DreamEngine" and the send box "DreamCLI" while the rest of the product says
  * "1ONE CLI".
  *
- * The branded name lives on the managed-agent catalog row (the aionrs entry
+ * The branded name lives on the managed-agent catalog row (the dream entry
  * reads "1ONE CLI", set by migration 019), so resolve through the catalog and
  * never hardcode a label — the same rule `employeeDisplay` follows for the
  * digital-employee roster, which hit this first.

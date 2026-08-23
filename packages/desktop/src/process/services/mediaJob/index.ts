@@ -60,7 +60,7 @@ type GenerateRequest = {
   workspaceDir?: string;
   /**
    * Which conversation this generation belongs to, when the MCP shell was told
-   * (see `AIONUI_MEDIA_CONVERSATION_ID`). Attribution only — it is what lets a
+   * (see `DREAM_MEDIA_CONVERSATION_ID`). Attribution only — it is what lets a
    * company trace a media charge back to where it happened.
    */
   conversationId?: string;
@@ -343,7 +343,7 @@ export type StartMediaJobResult = { job?: MediaJobSnapshot; error?: string };
  * Keep a copy of every reference image next to the result it produced.
  *
  * An uploaded reference lands in the OS temp directory
- * (`…/Temp/aionui/<conversation>/…`), which Windows Disk Cleanup and its
+ * (`…/Temp/dream/<conversation>/…`), which Windows Disk Cleanup and its
  * equivalents delete on their own schedule. The job outlives it: the card shows
  * that image as "what this was made from", and Regenerate feeds the same path
  * back. Once temp is swept both quietly break, at a moment unrelated to

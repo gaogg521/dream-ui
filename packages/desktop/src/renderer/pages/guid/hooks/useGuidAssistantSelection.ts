@@ -319,7 +319,7 @@ export const useGuidAssistantSelection = ({
 
   useEffect(() => {
     // Default new conversations to the agent's fully-automatic permission
-    // mode (yolo for aionrs, bypassPermissions for ACP) when it offers one,
+    // mode (yolo for dream, bypassPermissions for ACP) when it offers one,
     // so tool-heavy Agent tasks don't stop for a confirmation on every call.
     // A user's explicit per-assistant preference still wins: it arrives via
     // resolvedDefaults.permissionMode in GuidPage and overrides this fallback.

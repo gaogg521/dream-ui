@@ -74,7 +74,7 @@ const configErrorMessageKey = (error: unknown) => {
   return 'agent.config.failed';
 };
 
-/** Compact aionrs model selector for the agent header */
+/** Compact dream model selector for the agent header */
 const AionrsHeaderModelSelector: React.FC<{ conversation_id: string; initialModel?: TProviderWithModel }> = ({
   conversation_id,
   initialModel,

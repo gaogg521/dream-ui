@@ -67,8 +67,8 @@ const MediaResultActions: React.FC<{ job: MediaJobView }> = ({ job }) => {
    * could not do, because it short-circuits the agent entirely and nothing
    * about the generation ever reaches it.
    *
-   * Verified 2026-08-07: aionrs rebuilds its context from its own on-disk
-   * session (`<data>/1one/aionrs-sessions/sessions/<id>/state.json`), and ACP
+   * Verified 2026-08-07: dream rebuilds its context from its own on-disk
+   * session (`<data>/1one/dream-sessions/sessions/<id>/state.json`), and ACP
    * from the CLI process transcript — **not** from the conversation message
    * table. So writing a row into that table would show in the UI and stay
    * invisible to the agent. The attachment channel is the path that actually

@@ -1199,7 +1199,7 @@ export const googleAuth = {
 };
 
 // ---------------------------------------------------------------------------
-// Google subscription status (Google OAuth provider path, used by aionrs)
+// Google subscription status (Google OAuth provider path, used by dream)
 // ---------------------------------------------------------------------------
 
 export const google = {
@@ -1776,7 +1776,7 @@ export const systemSettings = {
 // Codex compatibility bridge — lets the external Codex CLI (which only speaks
 // the OpenAI Responses wire format) reach a saved provider/model through the
 // app's own local `/v1/responses` endpoint instead of Codex's default
-// OpenAI/ChatGPT auth. See 1oneCore's `aionui-codex-bridge` crate.
+// OpenAI/ChatGPT auth. See 1oneCore's `dream-codex-bridge` crate.
 // ---------------------------------------------------------------------------
 
 export interface ICodexBridgeConfig {
@@ -1802,7 +1802,7 @@ export const codexBridge = {
 // provider/model instead of Anthropic's own account/API key. Unlike the
 // Codex bridge this needs no local HTTP proxy: Claude Code already speaks
 // the Anthropic Messages protocol, so the provider's real base_url/API key
-// are injected directly at launch time. See 1oneCore's `aionui-claude-bridge`
+// are injected directly at launch time. See 1oneCore's `dream-claude-bridge`
 // crate.
 // ---------------------------------------------------------------------------
 
@@ -2917,7 +2917,7 @@ export const oneBilling = {
     p && p.since ? `/api/one/billing/usage?since=${p.since}` : '/api/one/billing/usage'
   ),
   // Cumulative estimated cost for one conversation, self-scoped (any member,
-  // not just billing admins). aionrs ("1ONE CLI") conversations have no other
+  // not just billing admins). dream ("1ONE CLI") conversations have no other
   // way to surface a session cost — the ACP-only passive `/usage` snapshot
   // structurally never fires for them — so useDreamEngineMessage polls this
   // instead. Zero for a conversation with no turns yet, never an error.

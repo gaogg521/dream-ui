@@ -353,7 +353,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
     if (!isMobile) return [];
     const entries: MobileActionSheetEntry[] = [];
 
-    // Model — aionrs is provider-grouped, ACP is a flat cached list.
+    // Model — dream is provider-grouped, ACP is a flat cached list.
     let modelOptions: MobileActionSheetOption[] = [];
     let currentModelLabel = '';
     let onModelSelect: (key: string) => void = () => {};

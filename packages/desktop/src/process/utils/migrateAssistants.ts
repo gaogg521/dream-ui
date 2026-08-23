@@ -29,7 +29,7 @@ const RULE_FILE_RE = /^(.+?)\.([a-zA-Z-]+)\.md$/;
 
 /**
  * The legacy Electron build shipped `'gemini'` as the fallback agent type for
- * every assistant (built-in and user). The current backend ships `'aionrs'` as
+ * every assistant (built-in and user). The current backend ships `'dream'` as
  * the built-in default — the internal Gemini engine was removed, and what
  * remains with the name "gemini" is a distinct ACP backend the user must
  * install. Treat the legacy default as "no explicit choice" and promote it to
@@ -293,7 +293,7 @@ async function applyBuiltinOverrides(overrides: BuiltinOverride[]): Promise<numb
  *
  * `currentBuiltinAgentIds` is a `Map<builtin-id, agent_id>` sourced
  * from `GET /api/assistants` at migration time, so we stay aligned with
- * whatever manifest the running backend ships (e.g. current is `aionrs`, but
+ * whatever manifest the running backend ships (e.g. current is `dream`, but
  * a future manifest could pin a specific built-in back to `claude`).
  */
 function collectBuiltinAgentIdOverrides(
@@ -337,7 +337,7 @@ function collectBuiltinAgentIdOverrides(
 /**
  * Replay user-picked legacy backend choices onto `assistant_overrides`
  * via `PUT /api/assistants/{id}`. The backend accepts only `agent_id`
- * on built-in rows (see `aionui-assistant/src/service.rs`). 404 is treated as
+ * on built-in rows (see `dream-assistant/src/service.rs`). 404 is treated as
  * skip for the same reason as {@link applyBuiltinOverrides}: the built-in was
  * retired between versions and the user preference is moot.
  */
@@ -531,7 +531,7 @@ async function uploadLegacyAssistantRules(legacyAssistantIds: Set<string>): Prom
  *   3. PUT /api/assistants/{id} for each legacy built-in whose user-picked
  *      `presetAgentType` differs from the current manifest default — so a
  *      user who explicitly chose `claude`/`codex`/etc. keeps that choice
- *      across the 'gemini' → 'aionrs' default migration.
+ *      across the 'gemini' → 'dream' default migration.
  *   4. POST /api/skills/assistant-rule/write for each `<userData>/config/
  *      assistants/<id>.<locale>.md` belonging to a custom assistant — but
  *      only when the backend rule for that (id, locale) is currently empty,
@@ -548,11 +548,11 @@ async function uploadLegacyAssistantRules(legacyAssistantIds: Set<string>): Prom
  * `false` so the caller can log the partial state, but next launch
  * naturally retries the remaining work.
  *
- * Honors `AIONUI_SKIP_ELECTRON_MIGRATION=1` so E2E fixtures can seed via
+ * Honors `DREAM_SKIP_ELECTRON_MIGRATION=1` so E2E fixtures can seed via
  * `POST /api/assistants/import` directly.
  */
 export async function migrateAssistantsToBackend(configFile: ConfigFile): Promise<boolean> {
-  if (process.env.AIONUI_SKIP_ELECTRON_MIGRATION === '1') {
+  if (process.env.DREAM_SKIP_ELECTRON_MIGRATION === '1') {
     console.log('[AionUi] Assistant migration skipped (env flag set)');
     return false;
   }

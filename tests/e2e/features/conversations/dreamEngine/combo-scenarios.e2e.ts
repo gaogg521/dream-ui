@@ -1,5 +1,5 @@
 /**
- * Aionrs Chat E2E Tests - Combo Scenarios (P1)
+ * DreamEngine Chat E2E Tests - Combo Scenarios (P1)
  *
  * Test Cases Covered:
  * - TC-A-10: Folder + second model + yolo mode
@@ -7,13 +7,13 @@
  * - TC-A-12: Full combo (folder + file + second model + yolo)
  *
  * Prerequisites:
- * - aionrs binary available
+ * - dream binary available
  * - User logged in
  * - At least 2 ACP models available
  *
  * Data-testid references:
- * - DreamEngineModelSelector: data-testid="aionrs-model-selector"
- * - AgentModeSelector: data-testid="agent-mode-selector-aionrs"
+ * - DreamEngineModelSelector: data-testid="dream-model-selector"
+ * - AgentModeSelector: data-testid="agent-mode-selector-dream"
  */
 
 import { test, expect } from '../../../fixtures';
@@ -206,7 +206,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
         typeof conversation.extra === 'string' ? JSON.parse(conversation.extra || '{}') : conversation.extra || {};
       expect(extra.workspace).toBe(tempWorkspace.path);
 
-      // 2. Verify mode is default (from conversation.extra.sessionMode, aionrs doesn't use ACP bridge)
+      // 2. Verify mode is default (from conversation.extra.sessionMode, dream doesn't use ACP bridge)
       expect(extra.sessionMode).toBe('default');
 
       // 3. Verify messages exist
@@ -285,7 +285,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
         typeof conversation.extra === 'string' ? JSON.parse(conversation.extra || '{}') : conversation.extra || {};
       expect(extra.workspace).toContain('combo-folder');
 
-      // 2. Verify mode is yolo (from conversation.extra.sessionMode, aionrs doesn't use ACP bridge)
+      // 2. Verify mode is yolo (from conversation.extra.sessionMode, dream doesn't use ACP bridge)
       expect(extra.sessionMode).toBe('yolo');
 
       // 3. Verify messages exist
@@ -297,7 +297,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
 
       const aiMessages = messages.filter((m) => m.position === 'left');
       expect(aiMessages.length).toBeGreaterThanOrEqual(1);
-      // Note: message.status is not set to 'finish' for aionrs text messages (only conv.status matters)
+      // Note: message.status is not set to 'finish' for dream text messages (only conv.status matters)
     } finally {
       await tempWorkspace.cleanup();
     }

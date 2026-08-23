@@ -60,7 +60,7 @@ const PORT = parseInt(process.env.MEDIA_MCP_PORT || '0', 10);
 /// same parameter on BOTH the image and the video tool, and both are now gone.
 /// `resolveSafePath` in `imageGenCore.ts` enforces the boundary underneath —
 /// but that only holds while the root itself is trustworthy.
-const sessionWorkspaceDir = (): string => process.env.AIONUI_MEDIA_WORKSPACE_DIR?.trim() || process.cwd();
+const sessionWorkspaceDir = (): string => process.env.DREAM_MEDIA_WORKSPACE_DIR?.trim() || process.cwd();
 
 /**
  * Which conversation this server was spawned for, when the backend told us.
@@ -72,7 +72,7 @@ const sessionWorkspaceDir = (): string => process.env.AIONUI_MEDIA_WORKSPACE_DIR
  * server outside a conversation, which the job engine treats as "no
  * attribution" rather than an error.
  */
-const sessionConversationId = (): string | undefined => process.env.AIONUI_MEDIA_CONVERSATION_ID?.trim() || undefined;
+const sessionConversationId = (): string | undefined => process.env.DREAM_MEDIA_CONVERSATION_ID?.trim() || undefined;
 
 type AssetView = { filePath: string; relativePath: string; mimeType: string; kind: string };
 

@@ -104,7 +104,7 @@ describe('MediaResultActions', () => {
 
   /**
    * The whole point of this button. Verified 2026-08-07 that the agent's
-   * context comes from the aionrs on-disk session / the ACP CLI transcript and
+   * context comes from the dream on-disk session / the ACP CLI transcript and
    * *not* from the conversation message table, so the attachment channel is
    * the only route by which a send-box generation can reach the agent.
    */

@@ -44,7 +44,7 @@ import { ipcBridge } from '@/common';
 import type { DlpEventEntry, DlpRuleEntry } from '@/common/adapter/ipcBridge';
 import type { EnterpriseTenant } from '@/common/types/org/orgTypes';
 
-/** Must match `aionui_common::dlp::BUILTIN_PATTERN_IDS`. */
+/** Must match `dream_common::dlp::BUILTIN_PATTERN_IDS`. */
 const BUILTIN_PATTERNS = ['cn_id_card', 'bank_card', 'cn_mobile', 'api_key', 'private_key'] as const;
 
 type FormState = {

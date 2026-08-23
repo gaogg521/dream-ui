@@ -25,7 +25,7 @@ const t = ((_key: string, options?: { defaultValue?: string }) =>
 describe('resolveEmployeeBackendLabel', () => {
   it('shows the product name instead of the raw backend id', () => {
     // The roster used to render `agent.agentType` verbatim, which is why an
-    // aionrs employee displayed a bare "aionrs".
+    // dream employee displayed a bare "dream".
     expect(resolveEmployeeBackendLabel({ agentType: 'aionrs' }, CATALOG)).toBe('1ONE CLI');
     expect(resolveEmployeeBackendLabel({ agentType: 'claude' }, CATALOG)).toBe('Claude Code');
   });

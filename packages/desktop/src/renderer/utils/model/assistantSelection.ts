@@ -18,7 +18,7 @@ import { isAionrsAssistant } from '@/common/types/agent/assistantTypes';
  * see the assistant and act on its "needs login" state. Rows still hidden:
  *   - `missing`   — the binary is not on this machine, so it is pure noise.
  *   - `unchecked` — never probed yet; a scan flips it to installed/missing.
- * The built-in 1ONE CLI (aionrs) is always shown.
+ * The built-in 1ONE CLI (dream) is always shown.
  *
  * Built-in official templates and user-created assistants are never filtered here.
  */

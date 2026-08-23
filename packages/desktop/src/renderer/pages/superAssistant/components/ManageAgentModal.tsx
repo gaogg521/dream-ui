@@ -64,7 +64,7 @@ const ManageAgentModal: React.FC<ManageAgentModalProps> = ({ visible, agent, onC
       return;
     }
     // The binding must still be valid after editing. It resolves to `undefined`
-    // only when a required piece is missing — a backend, or a model for aionrs.
+    // only when a required piece is missing — a backend, or a model for dream.
     const bound = binding.buildBinding();
     if (!bound) {
       Message.warning(

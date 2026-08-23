@@ -9,7 +9,7 @@
  *
  * `pricing.ts` is a hand-written mirror of two Rust implementations, so the risk
  * this file exists to catch is drift: someone edits a rate in
- * `aionui-common/src/license.rs` and the app quietly starts quoting a stale
+ * `dream-common/src/license.rs` and the app quietly starts quoting a stale
  * number. **The vectors below are copied verbatim from that crate's own tests**
  * (`media_is_priced_per_asset_and_per_second`) and from `one-billing`'s
  * `record_media_usage` tests, so a change on either side lands here as a

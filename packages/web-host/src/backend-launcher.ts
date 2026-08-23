@@ -194,7 +194,7 @@ export class BackendStartupCancelledError extends Error {
 }
 
 export function buildSpawnArgs(config: SpawnConfig): string[] {
-  const logLevel = process.env.AIONUI_LOG_LEVEL || (config.isPackaged ? 'info' : 'debug');
+  const logLevel = process.env.DREAM_LOG_LEVEL || (config.isPackaged ? 'info' : 'debug');
   const args = [
     '--port',
     String(config.port),
@@ -207,7 +207,7 @@ export function buildSpawnArgs(config: SpawnConfig): string[] {
     config.appVersion,
   ];
   if (config.isPackaged) args.push('--managed-resources-mode', 'bundled');
-  if (!config.isPackaged && process.env.AIONUI_DUMP_PROMPTS === '1') args.push('--dump-prompts');
+  if (!config.isPackaged && process.env.DREAM_DUMP_PROMPTS === '1') args.push('--dump-prompts');
   if (config.logDir) args.push('--log-dir', config.logDir);
   if (config.workDir) args.push('--work-dir', config.workDir);
   if (config.local) args.push('--local');
@@ -217,9 +217,9 @@ export function buildSpawnArgs(config: SpawnConfig): string[] {
 
 /**
  * Backend reads AIONUI_{CACHE,WORK,LOG}_DIR env vars to report system dirs
- * (see AionCore/crates/aionui-system/src/sysinfo.rs). Inject them so the
+ * (see Dream Core/crates/dream-system/src/sysinfo.rs). Inject them so the
  * backend's `/api/system/info` matches what Electron main persists in
- * ProcessEnv('aionui.dir').
+ * ProcessEnv('dream.dir').
  */
 export function buildSpawnEnv(dirs?: BackendDirConfig): NodeJS.ProcessEnv {
   // PREBUILDS_ONLY protects the packaged Electron process's own node-gyp-build
@@ -231,9 +231,9 @@ export function buildSpawnEnv(dirs?: BackendDirConfig): NodeJS.ProcessEnv {
   if (!dirs) return parentEnv;
   return {
     ...parentEnv,
-    AIONUI_CACHE_DIR: dirs.cacheDir,
-    AIONUI_WORK_DIR: dirs.workDir,
-    AIONUI_LOG_DIR: dirs.logDir,
+    DREAM_CACHE_DIR: dirs.cacheDir,
+    DREAM_WORK_DIR: dirs.workDir,
+    DREAM_LOG_DIR: dirs.logDir,
   };
 }
 
@@ -247,7 +247,7 @@ const FETCH_FORBIDDEN_PORTS = new Set([
 const FETCH_COMPATIBLE_PORT_MAX_ATTEMPTS = 50;
 const AIONCORE_LISTENING_PREFIX = 'AIONCORE_LISTENING ';
 // Bare, payload-less readiness marker emitted by aioncore once `axum::serve`
-// actually begins serving (see AionCore cmd_server.rs). Authoritative "ready"
+// actually begins serving (see Dream Core cmd_server.rs). Authoritative "ready"
 // signal — matched by exact whole-line equality. The port is already known from
 // the earlier AIONCORE_LISTENING line, so this marker carries no payload.
 const AIONCORE_READY_MARKER = 'AIONCORE_READY';

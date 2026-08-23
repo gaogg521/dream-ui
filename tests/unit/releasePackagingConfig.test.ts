@@ -42,12 +42,12 @@ describe('release packaging configuration', () => {
     const workflow = readProjectFile('.github/workflows/_build-reusable.yml');
 
     expect(workflow).toContain('out/*-mac-*.zip');
-    expect(workflow).not.toContain('out/AionUi-*-win32-*.zip');
+    expect(workflow).not.toContain('out/Dream UI-*-win32-*.zip');
   });
 
   // Regression guard for a rename that shipped broken: electron-builder emits
   // "One-Work-*", while the upload glob and the release-asset validation both
-  // still matched "AionUi-*". The mac zip was therefore never uploaded (killing
+  // still matched "Dream UI-*". The mac zip was therefore never uploaded (killing
   // macOS auto-update) and validation would have reported a missing artifact.
   // It stayed green because the mock fixtures carried the same stale prefix.
   // These assertions pin the pipeline to brand-agnostic matching so the next
@@ -88,7 +88,7 @@ describe('release packaging configuration', () => {
     const artifactPrefix = builderConfig.match(/artifactName:\s*([\w-]+)-\$\{version\}/)?.[1];
 
     expect(mock).toContain(`${artifactPrefix}-1.0.0-mac-arm64.zip`);
-    expect(mock).not.toContain('AionUi-');
+    expect(mock).not.toContain('Dream UI-');
   });
 
   it('retries mac prepackaged builds with both dmg and zip targets', () => {
@@ -100,7 +100,7 @@ describe('release packaging configuration', () => {
   itWithBash(
     'fails release asset preparation when a mac zip is missing',
     () => {
-      const tempDir = mkdtempSync(resolve(tmpdir(), 'aionui-release-assets-'));
+      const tempDir = mkdtempSync(resolve(tmpdir(), 'dream-release-assets-'));
       const artifactsDir = resolve(tempDir, 'build-artifacts');
       const outputDir = resolve(tempDir, 'release-assets');
 

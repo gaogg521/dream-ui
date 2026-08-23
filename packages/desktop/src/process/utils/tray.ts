@@ -213,7 +213,7 @@ export const createOrUpdateTray = (): void => {
     tray = new Tray(icon);
     // Brand: this is what Windows shows when hovering the tray icon. It is a
     // user-visible surface that no i18n check, tsc or test covers — it shipped
-    // as 'AionUi' through several rebrands because nothing fails when it is wrong.
+    // as 'Dream UI' through several rebrands because nothing fails when it is wrong.
     tray.setToolTip(BRAND_DISPLAY_NAME);
     void buildTrayContextMenu().then((menu) => tray?.setContextMenu(menu));
 

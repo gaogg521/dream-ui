@@ -371,7 +371,7 @@ describe('LocalAgents', () => {
     render(<LocalAgents />);
 
     // Alphabetically Claude Code < Kimi, so this order proves the pin rule:
-    // aionrs stays first, Kimi jumps ahead of the localeCompare ordering.
+    // dream stays first, Kimi jumps ahead of the localeCompare ordering.
     const aion = screen.getByText('Aion CLI');
     const kimi = screen.getByText('Kimi');
     const claude = screen.getByText('Claude Code');
@@ -438,7 +438,7 @@ describe('LocalAgents', () => {
     const unavailableTab = screen.getByTestId('settings-tab-unavailable');
     expect(allTab.tagName).toBe('BUTTON');
 
-    // Default "all": both official agents visible (Aion CLI online, Claude Code missing).
+    // Default "all": both official agents visible (Dream CLI online, Claude Code missing).
     expect(screen.getByText('Aion CLI')).toBeInTheDocument();
     expect(screen.getByText('Claude Code')).toBeInTheDocument();
 

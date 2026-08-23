@@ -126,7 +126,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
           minute: '2-digit',
         }).format(time)
       : '';
-    // Only 'aionrs' (1ONE CLI) conversations carry a persisted provider/model
+    // Only 'dream' (1ONE CLI) conversations carry a persisted provider/model
     // selection — ACP-backed types (Claude Code, Codex CLI, Cursor, …) manage
     // their model differently and have no equivalent field to show here. When
     // the last turn was a media generation, the model that actually ran it

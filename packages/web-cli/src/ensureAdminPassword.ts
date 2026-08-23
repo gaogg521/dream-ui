@@ -35,7 +35,7 @@ export type EnsureAdminPasswordOptions = {
   statusPollIntervalMs?: number;
   /**
    * Command to show in fallback hints ("Forgot the password? Run ..."). Varies
-   * by launch context — packaged tarball = `aionui-web resetpass`, in-repo dev
+   * by launch context — packaged tarball = `dream-web resetpass`, in-repo dev
    * = `bun run resetpass`. Defaults to the packaged form.
    */
   resetCommand?: string;

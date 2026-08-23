@@ -2,8 +2,8 @@
  * Electron Cold Startup Benchmark
  *
  * Launches the Electron app N times and measures per-phase startup timings by
- * parsing the electron-log file for [AionUi:ready] / [AionUi:init] /
- * [AionUi:process] marks, plus `ready-to-show` / `did-finish-load` /
+ * parsing the electron-log file for [Dream UI:ready] / [Dream UI:init] /
+ * [Dream UI:process] marks, plus `ready-to-show` / `did-finish-load` /
  * time-to-interactive (chat input visible).
  *
  * Optional `--with-memory` mode samples RSS / heap in the main and renderer
@@ -111,14 +111,14 @@ type StartupTiming = {
   wallDomContentLoadedMs: number;
   wallTimeToInteractiveMs: number;
   wallTotalMs: number;
-  // Parsed from [AionUi:ready] marks
+  // Parsed from [Dream UI:ready] marks
   readyInitializeProcessMs: number;
   readyInitializeZoomFactorMs: number;
   readyCreateWindowMs: number;
   readyInitializeAcpDetectorMs: number;
-  // Parsed from [AionUi:init] marks
+  // Parsed from [Dream UI:init] marks
   initTotalMs: number;
-  // Parsed from [AionUi:process] marks
+  // Parsed from [Dream UI:process] marks
   processInitStorageMs: number;
   processExtensionRegistryMs: number;
   processChannelManagerMs: number;
@@ -178,9 +178,9 @@ function readNewLogLines(logPath: string, offset: number): string[] {
 
 // ── Log parsing ─────────────────────────────────────────────────────────────
 
-// Matches: [AionUi:ready] <label> +<ms>ms
-// Matches: [AionUi:init]  <label> +<ms>ms
-// Matches: [AionUi:process] <label> +<ms>ms
+// Matches: [Dream UI:ready] <label> +<ms>ms
+// Matches: [Dream UI:init]  <label> +<ms>ms
+// Matches: [Dream UI:process] <label> +<ms>ms
 const MARK_REGEX = /\[AionUi:(ready|init|process)\]\s+([^+]+?)\s+\+(\d+)ms/;
 
 type ParsedMarks = {
@@ -256,10 +256,10 @@ async function launchApp(timeoutMs: number, withMemory: boolean): Promise<Electr
     cwd: projectRoot,
     env: {
       ...process.env,
-      AIONUI_DISABLE_AUTO_UPDATE: '1',
-      AIONUI_E2E_TEST: '1',
+      DREAM_DISABLE_AUTO_UPDATE: '1',
+      DREAM_E2E_TEST: '1',
       AIONUI_DISABLE_DEVTOOLS: '1',
-      AIONUI_CDP_PORT: '0',
+      DREAM_CDP_PORT: '0',
       NODE_ENV: 'production',
     },
     timeout: timeoutMs,

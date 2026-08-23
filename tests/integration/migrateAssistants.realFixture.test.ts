@@ -33,14 +33,14 @@ const describeIfFixtures = FIXTURES_AVAILABLE ? describe : describe.skip;
 
 function resolveBackendBinary(): string {
   const candidates = [
-    process.env.AIONUI_BACKEND_BINARY,
+    process.env.DREAM_BACKEND_BINARY,
     path.join(os.homedir(), '.cargo', 'bin', 'aioncore'),
     path.resolve(__dirname, '../../../AionCore/target/debug/aioncore'),
   ].filter((x): x is string => typeof x === 'string' && x.length > 0);
   for (const c of candidates) {
     if (existsSync(c)) return c;
   }
-  throw new Error('aioncore binary not found (set AIONUI_BACKEND_BINARY or build it)');
+  throw new Error('aioncore binary not found (set DREAM_BACKEND_BINARY or build it)');
 }
 
 async function findFreePort(): Promise<number> {
@@ -75,7 +75,7 @@ async function waitForHealthy(port: number, timeoutMs = 30_000): Promise<void> {
 }
 
 /**
- * Decode an `aionui-config.txt` exactly the way `JsonFileBuilder` does:
+ * Decode an `dream-config.txt` exactly the way `JsonFileBuilder` does:
  *   base64(encodeURIComponent(JSON.stringify(...)))
  */
 function decodeConfigFile(file: string): Record<string, unknown> {

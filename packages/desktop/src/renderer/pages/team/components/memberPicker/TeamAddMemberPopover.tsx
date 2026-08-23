@@ -32,7 +32,7 @@ const TeamAddMemberPopover: React.FC<Props> = ({ children, disabled = false }) =
   const [pendingAssistantId, setPendingAssistantId] = useState<string | undefined>();
 
   // Leader 会话草稿：用于「告诉 Leader」预填提示词。Hook 必须无条件调用，
-  // 未知 Leader 会话时传空串（不写入）。按 Leader 后端选 acp/aionrs 草稿。
+  // 未知 Leader 会话时传空串（不写入）。按 Leader 后端选 acp/dream 草稿。
   const leader = teamMembers.find((m) => m.role === 'leader');
   const leaderConversationId = leader?.conversation_id ?? '';
   const acpDraft = useAcpDraft(leaderConversationId);

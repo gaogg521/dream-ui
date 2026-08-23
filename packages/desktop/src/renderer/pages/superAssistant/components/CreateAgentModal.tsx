@@ -2,8 +2,8 @@
  * Create digital employee modal — expert + backend + model + instructions.
  *
  * Previously this offered a hardcoded three-entry "Agent 类型" dropdown whose
- * labels were raw internal identifiers ('Aionrs' rather than the product name)
- * and which had no model field at all. That combination made every aionrs
+ * labels were raw internal identifiers ('DreamEngine' rather than the product name)
+ * and which had no model field at all. That combination made every dream
  * employee fail its first run with `Provider '' not found`, and gave no way to
  * pick one of the experts in the marketplace. Selection now runs through
  * `useEmployeeAgentBinding`, shared with ManageAgentModal.

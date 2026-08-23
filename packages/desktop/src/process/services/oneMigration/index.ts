@@ -29,11 +29,11 @@ type OneImportMarker = {
 };
 
 /**
- * Locate a 1ONE ClaudeCode install's userData root. `AIONUI_ONE_IMPORT_DIR`
+ * Locate a 1ONE ClaudeCode install's userData root. `DREAM_ONE_IMPORT_DIR`
  * overrides detection (used for tests and for importing from a dev profile).
  */
 export function resolveOneSourceRoot(): string | null {
-  const override = process.env.AIONUI_ONE_IMPORT_DIR;
+  const override = process.env.DREAM_ONE_IMPORT_DIR;
   if (override) {
     return existsSync(override) ? override : null;
   }

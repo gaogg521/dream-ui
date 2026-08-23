@@ -36,7 +36,7 @@ describe('isForkEnabled', () => {
  * 这种跨层字符串约定**不会自己报错**：后端换个措辞，用户从此永远只看到一句通用
  * 「分叉失败」，而没有任何东西会变红。所以这几条断言就是那个约定本身。
  *
- * 四个码在后端的出处（`crates/aionui-conversation/src/service.rs`，本轮核对过）：
+ * 四个码在后端的出处（`crates/dream-conversation/src/service.rs`，本轮核对过）：
  * 409 FORK_TURN_IN_FLIGHT / FORK_PARENT_UNBOUND、422 FORK_UNSUPPORTED /
  * FORK_POINT_UNSUPPORTED。
  *

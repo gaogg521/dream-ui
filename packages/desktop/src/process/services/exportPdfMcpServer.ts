@@ -7,7 +7,7 @@
 /**
  * Main-process TCP server that backs the `export_to_pdf` MCP tool.
  *
- * The MCP client (e.g. the aionrs agent) spawns `builtin-mcp-export-pdf.js` as
+ * The MCP client (e.g. the dream agent) spawns `builtin-mcp-export-pdf.js` as
  * a stdio MCP server. That script forwards tool calls here over TCP (4-byte
  * BE length header + JSON). This server invokes the shared PDF conversion
  * logic from exportBridge.ts.

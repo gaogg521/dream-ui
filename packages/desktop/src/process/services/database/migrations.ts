@@ -977,7 +977,7 @@ const migration_v20: IMigration = {
 };
 
 /**
- * Migration v20 -> v21: Add 'aionrs' to conversations type CHECK constraint
+ * Migration v20 -> v21: Add 'dream' to conversations type CHECK constraint
  */
 const migration_v21: IMigration = {
   version: 21,
@@ -1013,7 +1013,7 @@ const migration_v21: IMigration = {
     console.log("[Migration v21] Added 'aionrs' to conversations type CHECK");
   },
   down: (db) => {
-    // Remove aionrs conversations before copying to table with stricter constraint
+    // Remove dream conversations before copying to table with stricter constraint
     db.exec(`DELETE FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE type = 'aionrs')`);
     db.exec(`DELETE FROM conversations WHERE type = 'aionrs'`);
 

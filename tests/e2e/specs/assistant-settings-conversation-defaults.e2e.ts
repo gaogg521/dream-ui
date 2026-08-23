@@ -25,7 +25,7 @@ import {
 } from '../helpers';
 import { CHAT_INPUT } from '../helpers/selectors';
 import { goToNewChat, waitForAiReply } from '../helpers/conversation';
-import { getAionrsTestModels, type TProviderWithModel } from '../helpers/chatAionrs';
+import { getAionrsTestModels, type TProviderWithModel } from '../helpers/chatDreamEngine';
 
 type AssistantDetail = {
   id: string;

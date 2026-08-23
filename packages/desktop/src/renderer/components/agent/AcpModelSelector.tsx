@@ -181,7 +181,7 @@ const AcpModelSelector: React.FC<{
   /**
    * Generation models, alongside the CLI's own models.
    *
-   * ACP is the awkward case the aionrs selector did not have: its chat models
+   * ACP is the awkward case the dream selector did not have: its chat models
    * are advertised by the CLI subprocess, while generation models come from the
    * user's providers. Two sources in one list, so the CLI models get an
    * explicit group header — but only once there is something to disambiguate

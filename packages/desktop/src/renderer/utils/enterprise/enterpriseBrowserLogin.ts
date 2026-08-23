@@ -11,7 +11,7 @@ import { openExternalUrl } from '@/renderer/utils/platform';
 export type OAuthProvider = 'feishu' | 'dingtalk' | 'wecom' | 'oidc';
 
 /**
- * The OS protocol scheme THIS build claimed for `aionui://`-style deep
+ * The OS protocol scheme THIS build claimed for `dream://`-style deep
  * links (injected by preload from the main process's `PROTOCOL_SCHEME` —
  * dev and packaged builds use different schemes so they stop stealing each
  * other's OS-level registration). Told to the backend via the `scheme`

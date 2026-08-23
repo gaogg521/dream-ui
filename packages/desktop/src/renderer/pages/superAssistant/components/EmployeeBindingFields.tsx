@@ -67,7 +67,7 @@ const EmployeeBindingFields: React.FC<EmployeeBindingFieldsProps> = ({ binding }
       if (assistant.enabled === false) {
         option.installed = false;
       }
-      // An aionrs expert cannot run without a model provider — block the row
+      // An dream expert cannot run without a model provider — block the row
       // with an explanation instead of letting the run fail later.
       if (isAionrsAssistant(assistant) && !hasAionrsProvider) {
         return {

@@ -184,7 +184,7 @@ WHERE agents_version = '1.0.0'
 
 /**
  * acp_session backfill for imported ACP conversations (mirrors 002 Part E).
- * Aioncore migration 013 dropped `agent_backend` and made `agent_id` the only
+ * Dreamcore migration 013 dropped `agent_backend` and made `agent_id` the only
  * agent reference, so the post-013 variant resolves the catalog row the same
  * way 013 did for historical rows.
  */
@@ -277,14 +277,14 @@ function ensureHandoffBaseline(db: ISqliteDriver): void {
 
 /**
  * Import conversations/messages/teams/mailbox/cron_jobs from a 1ONE
- * ClaudeCode (`1one.db`) catalog into the aionui catalog.
+ * ClaudeCode (`1one.db`) catalog into the dream catalog.
  *
  * Target selection follows the backend's legacy-copy semantics
- * (`maybe_copy_legacy_database` copies `aionui.db` → `aionui-backend.db` only
+ * (`maybe_copy_legacy_database` copies `dream.db` → `dream-backend.db` only
  * when the backend catalog does not exist yet):
- * - backend catalog exists  → import into `aionui-backend.db` directly and
+ * - backend catalog exists  → import into `dream-backend.db` directly and
  *   normalize here (its one-shot 002 migration already ran);
- * - fresh install           → import into `aionui.db`; the backend picks it
+ * - fresh install           → import into `dream.db`; the backend picks it
  *   up through the regular legacy handoff on first boot.
  *
  * The source database is never opened directly — a temp copy is attached
@@ -404,7 +404,7 @@ export async function importOneLegacyDb(sourceDbPath: string, dataDir = getDataP
         )
         .run().changes;
 
-      // Aioncore migration 013 moved cron jobs to assistant-first execution
+      // Dreamcore migration 013 moved cron jobs to assistant-first execution
       // and dropped `agent_type`. On the fresh path the column still exists
       // and 013 will attempt the assistant mapping itself (disabling jobs it
       // cannot map). On the backend path 013 already ran, so 1one jobs are

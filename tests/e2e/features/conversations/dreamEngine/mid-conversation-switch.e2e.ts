@@ -1,18 +1,18 @@
 /**
- * Aionrs Chat E2E Tests - Mid-Conversation Switch (P1)
+ * DreamEngine Chat E2E Tests - Mid-Conversation Switch (P1)
  *
  * Test Cases Covered:
  * - TC-A-08: Continuous switch (model → permission → model)
  * - TC-A-09: Multi-round after switch
  *
  * Prerequisites:
- * - aionrs binary available
+ * - dream binary available
  * - User logged in
  * - At least 2 ACP models available
  *
  * Data-testid references:
- * - DreamEngineModelSelector: data-testid="aionrs-model-selector"
- * - AgentModeSelector: data-testid="agent-mode-selector-aionrs"
+ * - DreamEngineModelSelector: data-testid="dream-model-selector"
+ * - AgentModeSelector: data-testid="agent-mode-selector-dream"
  */
 
 import { test, expect } from '../../../fixtures';
@@ -66,11 +66,11 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
   // ============================================================================
 
   test.skip('TC-A-08: should handle continuous switch (model → permission → model)', async ({ page }) => {
-    // SKIP: Pending aionrs binary investigation - runtime provider+mode switch causes silent hang on subsequent messages
-    // See tests/e2e/docs/chat-aionrs/implementation-mapping.zh.md "Known Issues" section
+    // SKIP: Pending dream binary investigation - runtime provider+mode switch causes silent hang on subsequent messages
+    // See tests/e2e/docs/chat-dream/implementation-mapping.zh.md "Known Issues" section
     // Symptom: After model+permission switches, 2nd message stuck at conv.status=running/pending, no AI reply (2.7min timeout)
     // DB evidence: msg count=3 (user1, ai1, user2), missing 2nd AI reply
-    // Next: Product team investigation of aionrs binary runtime state handling
+    // Next: Product team investigation of dream binary runtime state handling
 
     if (!preconditions.models!.modelB) {
       test.skip(true, 'Need 2nd aionrs-compatible model for mid-conversation switch');
@@ -164,7 +164,7 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       const messages = await getAionrsMessages(page, conversationId);
       expect(messages.length).toBeGreaterThanOrEqual(4);
 
-      // 3. Verify all AI replies exist (message.status check not applicable for aionrs)
+      // 3. Verify all AI replies exist (message.status check not applicable for dream)
       const aiMessages = messages.filter((m) => m.position === 'left');
       expect(aiMessages.length).toBeGreaterThanOrEqual(2);
     } finally {
@@ -177,8 +177,8 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
   // ============================================================================
 
   test.skip('TC-A-09: should handle 3 rounds of conversation after model/permission switch', async ({ page }) => {
-    // SKIP: Same root cause as TC-A-08 - aionrs binary runtime state handling issue after model+permission switches
-    // See tests/e2e/docs/chat-aionrs/implementation-mapping.zh.md "Known Issues" section
+    // SKIP: Same root cause as TC-A-08 - dream binary runtime state handling issue after model+permission switches
+    // See tests/e2e/docs/chat-dream/implementation-mapping.zh.md "Known Issues" section
 
     if (!preconditions.models!.modelB) {
       test.skip(true, 'Need 2nd aionrs-compatible model for mid-conversation switch');
@@ -269,7 +269,7 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       expect(userMessages.length).toBeGreaterThanOrEqual(4);
       expect(aiMessages.length).toBeGreaterThanOrEqual(4);
 
-      // 3. Verify all AI replies exist (message.status check not applicable for aionrs)
+      // 3. Verify all AI replies exist (message.status check not applicable for dream)
       expect(aiMessages.length).toBeGreaterThanOrEqual(4);
 
       // 4. Verify chronological order

@@ -31,7 +31,7 @@ const TEAM_BACKEND_ERROR_CODE_MAP: Record<string, TeamAssistantCreateErrorCode> 
   TEAM_ASSISTANT_FIELD_UNSUPPORTED: 'TEAM_ASSISTANT_FIELD_UNSUPPORTED',
 };
 
-// Temporary fallback for older AionCore builds that still return BAD_REQUEST
+// Temporary fallback for older Dream Core builds that still return BAD_REQUEST
 // plus a human-readable message. Remove after the dedicated backend code has
 // shipped everywhere we support.
 const LEGACY_BACKEND_MESSAGE_PATTERNS: Array<{
@@ -206,7 +206,7 @@ export const getConversationRuntimeWorkspaceErrorMessage = (error: unknown, t: T
   const rawMessage = payload?.error || parseError(error) || t('common.unknownError');
 
   // A conversation resumed/continued from history can reference a provider
-  // that has since been deleted or replaced (see aionrs::build's find_by_id
+  // that has since been deleted or replaced (see dream::build's find_by_id
   // lookup) — surface a friendly explanation instead of the raw backend
   // "Provider 'xxx' not found" message.
   if (payload?.code === 'PROVIDER_NOT_FOUND') {

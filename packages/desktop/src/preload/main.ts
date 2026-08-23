@@ -60,7 +60,7 @@ const backendStartupFailure = ipcRenderer.sendSync('get-backend-startup-failure'
 const deepLinkScheme = ipcRenderer.sendSync('get-deep-link-scheme') as string;
 contextBridge.exposeInMainWorld('__backendPort', backendPort > 0 ? backendPort : 0);
 contextBridge.exposeInMainWorld('__initialLanguage', initialLanguage ?? null);
-contextBridge.exposeInMainWorld('__aionuiE2ETest', process.env.AIONUI_E2E_TEST === '1');
+contextBridge.exposeInMainWorld('__aionuiE2ETest', process.env.DREAM_E2E_TEST === '1');
 contextBridge.exposeInMainWorld('__backendStartupFailed', backendStartupFailed === true);
 contextBridge.exposeInMainWorld('__backendStartupFailure', backendStartupFailure ?? null);
 contextBridge.exposeInMainWorld('__deepLinkScheme', deepLinkScheme || 'aionui');

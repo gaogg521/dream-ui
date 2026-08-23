@@ -156,9 +156,9 @@ describe('buildSpawnArgs', () => {
     expect(args).not.toContain('--local');
   });
 
-  it('passes prompt dump flag in development only when AIONUI_DUMP_PROMPTS is enabled', () => {
-    const prev = process.env.AIONUI_DUMP_PROMPTS;
-    process.env.AIONUI_DUMP_PROMPTS = '1';
+  it('passes prompt dump flag in development only when DREAM_DUMP_PROMPTS is enabled', () => {
+    const prev = process.env.DREAM_DUMP_PROMPTS;
+    process.env.DREAM_DUMP_PROMPTS = '1';
     try {
       const args = buildSpawnArgs({
         port: 1,
@@ -170,14 +170,14 @@ describe('buildSpawnArgs', () => {
 
       expect(args).toContain('--dump-prompts');
     } finally {
-      if (prev === undefined) delete process.env.AIONUI_DUMP_PROMPTS;
-      else process.env.AIONUI_DUMP_PROMPTS = prev;
+      if (prev === undefined) delete process.env.DREAM_DUMP_PROMPTS;
+      else process.env.DREAM_DUMP_PROMPTS = prev;
     }
   });
 
   it('passes bundled managed resources mode when packaged', () => {
-    const prev = process.env.AIONUI_DUMP_PROMPTS;
-    process.env.AIONUI_DUMP_PROMPTS = '1';
+    const prev = process.env.DREAM_DUMP_PROMPTS;
+    process.env.DREAM_DUMP_PROMPTS = '1';
     try {
       const args = buildSpawnArgs({
         port: 1,
@@ -191,8 +191,8 @@ describe('buildSpawnArgs', () => {
       expect(args).toContain('bundled');
       expect(args).not.toContain('--dump-prompts');
     } finally {
-      if (prev === undefined) delete process.env.AIONUI_DUMP_PROMPTS;
-      else process.env.AIONUI_DUMP_PROMPTS = prev;
+      if (prev === undefined) delete process.env.DREAM_DUMP_PROMPTS;
+      else process.env.DREAM_DUMP_PROMPTS = prev;
     }
   });
 
@@ -209,9 +209,9 @@ describe('buildSpawnArgs', () => {
     expect(args).toContain('--recover-corrupted-database');
   });
 
-  it('respects AIONUI_LOG_LEVEL override', () => {
-    const prev = process.env.AIONUI_LOG_LEVEL;
-    process.env.AIONUI_LOG_LEVEL = 'trace';
+  it('respects DREAM_LOG_LEVEL override', () => {
+    const prev = process.env.DREAM_LOG_LEVEL;
+    process.env.DREAM_LOG_LEVEL = 'trace';
     try {
       const args = buildSpawnArgs({
         port: 1,
@@ -222,8 +222,8 @@ describe('buildSpawnArgs', () => {
       });
       expect(args).toContain('trace');
     } finally {
-      if (prev === undefined) delete process.env.AIONUI_LOG_LEVEL;
-      else process.env.AIONUI_LOG_LEVEL = prev;
+      if (prev === undefined) delete process.env.DREAM_LOG_LEVEL;
+      else process.env.DREAM_LOG_LEVEL = prev;
     }
   });
 });
@@ -235,9 +235,9 @@ describe('buildSpawnEnv', () => {
       workDir: '/w',
       logDir: '/l',
     });
-    expect(env.AIONUI_CACHE_DIR).toBe('/c');
-    expect(env.AIONUI_WORK_DIR).toBe('/w');
-    expect(env.AIONUI_LOG_DIR).toBe('/l');
+    expect(env.DREAM_CACHE_DIR).toBe('/c');
+    expect(env.DREAM_WORK_DIR).toBe('/w');
+    expect(env.DREAM_LOG_DIR).toBe('/l');
     expect(env.PATH).toBe(process.env.PATH); // inherits
   });
 
@@ -258,20 +258,20 @@ describe('buildSpawnEnv', () => {
   });
 
   it('strips PREBUILDS_ONLY and injects no dir vars when no dir config is provided', () => {
-    const keys = ['PREBUILDS_ONLY', 'AIONUI_CACHE_DIR', 'AIONUI_WORK_DIR', 'AIONUI_LOG_DIR'] as const;
+    const keys = ['PREBUILDS_ONLY', 'DREAM_CACHE_DIR', 'DREAM_WORK_DIR', 'DREAM_LOG_DIR'] as const;
     const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
     process.env.PREBUILDS_ONLY = '1';
     // Dir vars may be inherited from a dev shell; clear them so the assertion
     // below observes injection behavior, not passthrough.
-    delete process.env.AIONUI_CACHE_DIR;
-    delete process.env.AIONUI_WORK_DIR;
-    delete process.env.AIONUI_LOG_DIR;
+    delete process.env.DREAM_CACHE_DIR;
+    delete process.env.DREAM_WORK_DIR;
+    delete process.env.DREAM_LOG_DIR;
     try {
       const env = buildSpawnEnv();
       expect(env).not.toHaveProperty('PREBUILDS_ONLY');
-      expect(env).not.toHaveProperty('AIONUI_CACHE_DIR');
-      expect(env).not.toHaveProperty('AIONUI_WORK_DIR');
-      expect(env).not.toHaveProperty('AIONUI_LOG_DIR');
+      expect(env).not.toHaveProperty('DREAM_CACHE_DIR');
+      expect(env).not.toHaveProperty('DREAM_WORK_DIR');
+      expect(env).not.toHaveProperty('DREAM_LOG_DIR');
       expect(env.PATH).toBe(process.env.PATH); // inherits
     } finally {
       for (const k of keys) {
@@ -451,9 +451,9 @@ describe('BackendLifecycleManager.start (success path)', () => {
       ]);
       const opts = spawnCall[2] as { cwd?: string; env: NodeJS.ProcessEnv };
       expect(opts.cwd).toBe('/w');
-      expect(opts.env.AIONUI_CACHE_DIR).toBe('/c');
-      expect(opts.env.AIONUI_WORK_DIR).toBe('/w');
-      expect(opts.env.AIONUI_LOG_DIR).toBe('/l');
+      expect(opts.env.DREAM_CACHE_DIR).toBe('/c');
+      expect(opts.env.DREAM_WORK_DIR).toBe('/w');
+      expect(opts.env.DREAM_LOG_DIR).toBe('/l');
       expect((spawnCall[2] as { detached?: boolean }).detached).toBe(process.platform !== 'win32');
       expect(mkdirSync).toHaveBeenCalledWith('/db/path', { recursive: true });
       expect(mkdirSync).toHaveBeenCalledWith('/log/dir', { recursive: true });

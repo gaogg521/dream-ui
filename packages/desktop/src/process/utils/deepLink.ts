@@ -12,7 +12,7 @@ import { ipcBridge } from '@/common';
  * launch (see index.ts's `setAsDefaultProtocolClient` call). Since the
  * registration is a single global Windows/macOS association, whichever
  * build launched most recently silently steals it from the other — a dev
- * session started after installing the packaged app leaves `aionui://`
+ * session started after installing the packaged app leaves `dream://`
  * pointed at the dev Electron binary, so SSO deep links from a
  * subsequently-tested packaged build never reach it (login succeeds in the
  * browser, but the desktop app never sees the callback). Using a distinct
@@ -23,10 +23,10 @@ import { ipcBridge } from '@/common';
 export const PROTOCOL_SCHEME = app.isPackaged ? 'aionui' : 'aionui-dev';
 
 /**
- * Parse an aionui:// URL into action and params.
+ * Parse an dream:// URL into action and params.
  * Supports two formats:
- *   1. aionui://add-provider?base_url=xxx&api_key=xxx
- *   2. aionui://provider/add?v=1&data=<base64 JSON>  (one-api / new-api style)
+ *   1. dream://add-provider?base_url=xxx&api_key=xxx
+ *   2. dream://provider/add?v=1&data=<base64 JSON>  (one-api / new-api style)
  */
 export const parseDeepLinkUrl = (url: string): { action: string; params: Record<string, string> } | null => {
   try {

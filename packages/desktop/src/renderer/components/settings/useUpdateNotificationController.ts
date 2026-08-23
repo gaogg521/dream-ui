@@ -61,7 +61,7 @@ const reduceNotificationState = (
 
 // Fallback release page shown when the manual check fails. Never point this at
 // GitHub — gaogg521/1oneUI is a private repo (404 for end users) and the
-// upstream iOfficeAI/AionUi repo would send users to the wrong project's builds.
+// upstream iOfficeAI/Dream UI repo would send users to the wrong project's builds.
 const RELEASES_PAGE_URL = 'https://work.1oneclaw.com/';
 
 const getVersionLabelFromState = (state: UpdateNotificationState): string =>

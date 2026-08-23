@@ -1,5 +1,5 @@
 /**
- * Aionrs Chat E2E Tests - Edge Cases (P2 Priority)
+ * DreamEngine Chat E2E Tests - Edge Cases (P2 Priority)
  *
  * Test Cases Covered:
  * - TC-A-13: Binary不可达时跳过
@@ -7,7 +7,7 @@
  * - TC-A-15: 关联不存在的文件夹
  *
  * Prerequisites:
- * - aionrs binary available (via ipcBridge.fs.findAionrsBinary)
+ * - dream binary available (via ipcBridge.fs.findDreamEngineBinary)
  * - User logged in
  * - At least 1 ACP model available
  */
@@ -68,7 +68,7 @@ test.describe('Aionrs Chat - Edge Cases (P2)', () => {
   // ============================================================================
 
   test('TC-A-13: should skip when aionrs binary is not reachable', async ({ page }) => {
-    // This test verifies the skip logic in beforeAll when resolveAionrsBinary() returns null
+    // This test verifies the skip logic in beforeAll when resolveDreamEngineBinary() returns null
     // In normal test environment, this test will pass because binary IS available
     // The actual skip behavior is tested by the beforeAll hook above
 
@@ -110,7 +110,7 @@ test.describe('Aionrs Chat - Edge Cases (P2)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-14/01-before-upload.png`);
 
       // Step 2: Try to create conversation with 100MB file in workspace
-      // Note: aionrs binary may reject large files or UI may block upload
+      // Note: dream binary may reject large files or UI may block upload
       // We expect either bridge error or UI error message
       let errorOccurred = false;
       let conversationId = '';
@@ -140,7 +140,7 @@ test.describe('Aionrs Chat - Edge Cases (P2)', () => {
 
       // For now, we document the behavior:
       // - If error thrown: test passes (file size limit enforced)
-      // - If no error: file may be accessible (aionrs handles large files)
+      // - If no error: file may be accessible (dream handles large files)
       // This test primarily documents the 100MB boundary behavior
 
       console.log(`[TC-A-14] Error occurred: ${errorOccurred}`);
@@ -207,7 +207,7 @@ test.describe('Aionrs Chat - Edge Cases (P2)', () => {
 
       // Verify error handling:
       // - If error thrown: path validation enforced (preferred behavior)
-      // - If no error: aionrs may accept path but fail on access (deferred validation)
+      // - If no error: dream may accept path but fail on access (deferred validation)
       // This test documents the non-existent folder error handling behavior
 
       console.log(`[TC-A-15] Error occurred: ${errorOccurred}, message: ${errorMessage}`);

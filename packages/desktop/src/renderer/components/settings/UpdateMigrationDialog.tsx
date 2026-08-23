@@ -16,9 +16,9 @@ import { useTranslation } from 'react-i18next';
 // running any version detection.
 export const OPEN_MIGRATION_DIALOG_EVENT = 'aionui-open-migration-dialog';
 
-// Official website users are guided to for the AionUi Pro download. Kept as a
+// Official website users are guided to for the Dream UI Pro download. Kept as a
 // module constant (not i18n) — it is a URL, not translatable copy.
-const AIONUI_WEBSITE_URL = 'https://www.aionui.com/';
+const AIONUI_WEBSITE_URL = 'https://www.dream.com/';
 
 // localStorage flag remembering that the migration invite already auto-opened
 // once on this machine. First launch of the discontinued build pops the card

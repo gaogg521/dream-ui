@@ -26,7 +26,7 @@ const DMG_RETRY_DELAY_SEC = 30;
 
 // Incremental build: hash of source files to detect changes
 const INCREMENTAL_CACHE_FILE = 'out/.build-hash';
-const DEBUG_AUTO_UPDATE_CURRENT_VERSION_ENV = 'AIONUI_DEBUG_AUTO_UPDATE_CURRENT_VERSION';
+const DEBUG_AUTO_UPDATE_CURRENT_VERSION_ENV = 'DREAM_DEBUG_AUTO_UPDATE_CURRENT_VERSION';
 
 function patchElectronBuilderNsisInstaller() {
   const rootDir = path.resolve(__dirname, '..');
@@ -763,8 +763,8 @@ try {
   // 5. Prepare aioncore binary (for packaged runtime usage)
   const projectRoot = path.resolve(__dirname, '..');
   writeGeneratedSentryDsnInclude(projectRoot);
-  if (process.env.AIONUI_SKIP_AIONCORE_PREPARE === '1') {
-    console.log('⚡ AIONUI_SKIP_AIONCORE_PREPARE=1: skipping aioncore prepare step');
+  if (process.env.DREAM_SKIP_AIONCORE_PREPARE === '1') {
+    console.log('⚡ DREAM_SKIP_AIONCORE_PREPARE=1: skipping aioncore prepare step');
   } else {
     const { prepareAioncore } = require('../packages/shared-scripts/src/prepare-aioncore.js');
     const { resolveAioncoreVersion } = require('./resolveAioncoreVersion.js');

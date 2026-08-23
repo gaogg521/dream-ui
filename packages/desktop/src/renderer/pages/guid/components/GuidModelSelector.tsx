@@ -157,7 +157,7 @@ const GuidModelSelector: React.FC<GuidModelSelectorProps> = ({
     : combinedAcpButtonLabel;
 
   if (isGeminiMode) {
-    // Provider-grouped models (e.g. aionrs). Build groups + a composite-id lookup
+    // Provider-grouped models (e.g. dream). Build groups + a composite-id lookup
     // so the shared model list can search across providers and map back on select.
     const providerModelGroups: RuntimeSelectorModelGroup[] = [];
     const providerModelLookup = new Map<string, { provider: IProvider; modelName: string }>();

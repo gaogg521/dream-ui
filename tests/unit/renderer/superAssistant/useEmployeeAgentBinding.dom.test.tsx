@@ -185,7 +185,7 @@ describe('useEmployeeAgentBinding', () => {
 
     const bound = result.current.buildBinding();
     expect(bound?.agentType).toBe('claude');
-    // The conversation layer hard-rejects a top-level model on non-aionrs types.
+    // The conversation layer hard-rejects a top-level model on non-dream types.
     expect(bound?.model).toBeUndefined();
   });
 

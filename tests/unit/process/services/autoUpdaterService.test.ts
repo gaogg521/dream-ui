@@ -90,8 +90,8 @@ describe('AutoUpdaterService', () => {
     appMock.getPath.mockImplementation(() => '/tmp/aionui-test');
     delete (autoUpdaterMock as { updateInfoAndProvider?: unknown }).updateInfoAndProvider;
     appMock.isPackaged = false;
-    delete process.env.AIONUI_FORCE_DEV_AUTO_UPDATE;
-    delete process.env.AIONUI_DEBUG_AUTO_UPDATE_CURRENT_VERSION;
+    delete process.env.DREAM_FORCE_DEV_AUTO_UPDATE;
+    delete process.env.DREAM_DEBUG_AUTO_UPDATE_CURRENT_VERSION;
     nativeAutoUpdaterMock.on.mockReset();
     nativeAutoUpdaterMock.removeListener.mockReset();
     Object.defineProperty(autoUpdaterMock, 'currentVersion', {
@@ -184,7 +184,7 @@ describe('AutoUpdaterService', () => {
   });
 
   it('enables forced updater checks in unpacked dev builds when requested', async () => {
-    process.env.AIONUI_FORCE_DEV_AUTO_UPDATE = '1';
+    process.env.DREAM_FORCE_DEV_AUTO_UPDATE = '1';
 
     await import('@/process/services/autoUpdaterService');
 
@@ -192,8 +192,8 @@ describe('AutoUpdaterService', () => {
   });
 
   it('overrides the updater current version only for forced unpacked dev checks', async () => {
-    process.env.AIONUI_FORCE_DEV_AUTO_UPDATE = '1';
-    process.env.AIONUI_DEBUG_AUTO_UPDATE_CURRENT_VERSION = '2.1.12';
+    process.env.DREAM_FORCE_DEV_AUTO_UPDATE = '1';
+    process.env.DREAM_DEBUG_AUTO_UPDATE_CURRENT_VERSION = '2.1.12';
 
     await import('@/process/services/autoUpdaterService');
 
@@ -202,8 +202,8 @@ describe('AutoUpdaterService', () => {
 
   it('ignores forced updater debug env in packaged builds', async () => {
     appMock.isPackaged = true;
-    process.env.AIONUI_FORCE_DEV_AUTO_UPDATE = '1';
-    process.env.AIONUI_DEBUG_AUTO_UPDATE_CURRENT_VERSION = '2.1.12';
+    process.env.DREAM_FORCE_DEV_AUTO_UPDATE = '1';
+    process.env.DREAM_DEBUG_AUTO_UPDATE_CURRENT_VERSION = '2.1.12';
 
     await import('@/process/services/autoUpdaterService');
 
@@ -342,7 +342,7 @@ describe('AutoUpdaterService', () => {
       releaseDate: '2026-06-08T00:00:00.000Z',
     };
     const fileInfo = {
-      url: new URL('https://static.aionui.com/releases/2.1.14/AionUi-2.1.14-mac.zip'),
+      url: new URL('https://static.dream.com/releases/2.1.14/Dream UI-2.1.14-mac.zip'),
       info: { url: 'AionUi-2.1.14-mac.zip', sha512: 'sha512-value' },
     };
     const cachedUpdatePath = path.join('/cache/pending', 'AionUi-2.1.14-mac.zip');
@@ -386,7 +386,7 @@ describe('AutoUpdaterService', () => {
       releaseDate: '2026-06-08T00:00:00.000Z',
     };
     const fileInfo = {
-      url: new URL('https://static.aionui.com/releases/2.1.14/AionUi-2.1.14-mac.zip'),
+      url: new URL('https://static.dream.com/releases/2.1.14/Dream UI-2.1.14-mac.zip'),
       info: { url: 'AionUi-2.1.14-mac.zip', sha512: 'sha512-value' },
     };
     const validateDownloadedPath = vi.fn().mockResolvedValue(null);

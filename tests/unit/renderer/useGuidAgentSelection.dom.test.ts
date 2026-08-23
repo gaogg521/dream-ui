@@ -501,7 +501,7 @@ describe('useGuidAssistantSelection', () => {
 
     expect(result.current.selectedAssistantBackend).toBe('aionrs');
     // 1ONE fork diverges from upstream here: new conversations default to the
-    // agent's fully-automatic mode ('yolo' for aionrs) when offered, instead of
+    // agent's fully-automatic mode ('yolo' for dream) when offered, instead of
     // the catalog's current_mode_id ('default'). See useGuidAssistantSelection
     // pickFullAutoMode — a per-assistant preference still overrides this.
     expect(result.current.selectedMode).toBe('yolo');

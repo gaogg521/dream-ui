@@ -38,7 +38,7 @@ export async function resolveDefaultTeamAgentModel(params: {
     // An assistant-owned model is a preference, not a guarantee. `last_model_id`
     // in particular outlives the provider it came from — a marketplace persona
     // ships one, a provider gets swapped, a model is retired — and the value
-    // stays behind. The aionrs backend resolves the model against the enabled
+    // stays behind. The dream backend resolves the model against the enabled
     // providers' model lists server-side, so handing it a stale name fails team
     // creation outright with "no enabled provider offers model '<name>'".
     // Verify before trusting it, and fall back to a model that exists.
@@ -118,7 +118,7 @@ async function resolveGeminiDefaultModel(): Promise<string> {
   return 'auto';
 }
 
-// Unlike ACP, the aionrs backend resolves `model` against a real provider's
+// Unlike ACP, the dream backend resolves `model` against a real provider's
 // model list server-side (`resolve_provider_for_model` in provisioning.rs).
 // A placeholder like "default" doesn't match anything there and now fails
 // team creation outright, so this must return an actual configured model.

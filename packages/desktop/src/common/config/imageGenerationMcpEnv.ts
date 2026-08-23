@@ -8,14 +8,14 @@ import type { ImageGenerationModelSetting } from './clientSettings';
 import type { IProvider } from './storage';
 
 export const IMAGE_GEN_ENV_KEYS = {
-  providerId: 'AIONUI_IMG_PROVIDER_ID',
-  platform: 'AIONUI_IMG_PLATFORM',
-  baseUrl: 'AIONUI_IMG_BASE_URL',
-  apiKey: 'AIONUI_IMG_API_KEY',
-  model: 'AIONUI_IMG_MODEL',
+  providerId: 'DREAM_IMG_PROVIDER_ID',
+  platform: 'DREAM_IMG_PLATFORM',
+  baseUrl: 'DREAM_IMG_BASE_URL',
+  apiKey: 'DREAM_IMG_API_KEY',
+  model: 'DREAM_IMG_MODEL',
   // Real provider display name — the media catalog matches some entries by
   // provider name (e.g. antigravity), so the MCP server needs it at runtime.
-  providerName: 'AIONUI_IMG_PROVIDER_NAME',
+  providerName: 'DREAM_IMG_PROVIDER_NAME',
 } as const;
 
 type ImageGenerationSelection = Partial<ImageGenerationModelSetting>;
