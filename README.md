@@ -10,11 +10,11 @@
 </p>
 
 <p align="center">
-  桌面客户端品牌名 <strong>1ONE Code</strong>（本仓库 <code>1oneUI</code>）
+  桌面客户端品牌名 <strong>1ONE Code</strong>（本仓库 <code>dream-ui</code>（对应旧仓库 1oneUI））
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/gaogg521/1oneUI?display_name=tag&sort=semver&style=flat-square&color=32CD32" alt="Version">
+  <img src="https://img.shields.io/github/v/release/gaogg521/dream-ui?display_name=tag&sort=semver&style=flat-square&color=32CD32" alt="Version">
   &nbsp;
   <img src="https://img.shields.io/badge/license-Apache--2.0-32CD32?style=flat-square" alt="License">
   &nbsp;
@@ -26,7 +26,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/gaogg521/1oneUI/releases">
+  <a href="https://github.com/gaogg521/dream-ui/releases">
     <img src="https://img.shields.io/badge/⬇️%20立即下载-最新版本-32CD32?style=for-the-badge" alt="Download" height="45">
   </a>
   &nbsp;&nbsp;
@@ -36,7 +36,7 @@
 </p>
 
 <p align="center">
-  后端仓库：<a href="https://github.com/gaogg521/1oneCore">gaogg521/1oneCore</a>
+  后端仓库：<a href="https://github.com/gaogg521/dream-core">gaogg521/dream-core</a>
   &nbsp;·&nbsp;
   开发指南：<a href="./docs/guides/fork-dev-onboarding.zh-CN.md">fork-dev-onboarding.zh-CN.md</a>
 </p>
@@ -71,7 +71,7 @@
 | 😊 **简单好用**       | 内置引擎安装即用、38 款主流 CLI Agent 自动识别、**22 个官方助手 + 252 位行业专家**开箱即用、桌面/WebUI/手机/IM 随处访问、记忆管理免去每次重新交代项目背景                                |
 | 🔒 **隐私与信息安全** | 会话、配置、加密后的模型 API Key 全部落在本机磁盘不外传；自建后端不依赖第三方数据中台；企业版组织隔离 + SSO + 授权许可 + 内容审计/DLP + 审计日志                                         |
 
-- **1ONE Code** 是这套平台的桌面/Web 客户端品牌名（本仓库 `1oneUI`），个人使用即以此身份出现。
+- **1ONE Code** 是这套平台的桌面/Web 客户端品牌名（本仓库 `dream-ui`（对应旧仓库 1oneUI）），个人使用即以此身份出现。
 - **1ONE Work** 是平台整体对外名字，涵盖个人版、团队协作、企业管理后台在内的完整能力面。
 
 与旧版单仓 [1ONE ClaudeCode](https://github.com/gaogg521/1ONE-Claude-Code) 不同，v2 采用 **前端 + 后端分离**：
@@ -79,7 +79,7 @@
 | 仓库                                                 | 职责                                                         |
 | ---------------------------------------------------- | ------------------------------------------------------------ |
 | **1oneUI**（本仓库）                                 | Electron 桌面、React UI、WebUI 静态资源、安装包              |
-| **[1oneCore](https://github.com/gaogg521/1oneCore)** | Rust 本地服务：`aioncore` 进程，会话/助手/Agent/MCP/企业 API |
+| **[dream-core](https://github.com/gaogg521/dream-core)** | Rust 本地服务：`dreamcore` 进程，会话/助手/Agent/MCP/企业 API |
 
 桌面启动时自动拉起 bundled 的 `aioncore`；浏览器 WebUI 通过 HTTP + WebSocket 访问同一套后端。
 
@@ -395,7 +395,7 @@ PDF、Word、Excel、PPT、代码、Markdown、图片、HTML、Diff 等 **10+ �
 | **项目组** | 局域网内任何人，邀请码加入 | 团队成员与角色、共享技能 / MCP / 知识库 / 流水线、组织架构、审计日志        |
 | **企业**   | 管理员显式设立 + SSO 接入  | 跨项目组治理、企业认证（SSO）、订阅与席位、授权许可、备份恢复、模型成本管控 |
 
-对应后端 [1oneCore](https://github.com/gaogg521/1oneCore) 的 `one-org` / `one-enterprise` / `one-employee` / `one-devops` / `one-billing` / `one-platform` / `one-sso` 系列 crate。**个人单机版零影响**——上述能力全部由管理员显式配置，默认关闭且有测试锁死。
+对应后端 [dream-core](https://github.com/gaogg521/dream-core) 的 `one-org` / `one-enterprise` / `one-employee` / `one-devops` / `one-billing` / `one-platform` / `one-sso` 系列 crate。**个人单机版零影响**——上述能力全部由管理员显式配置，默认关闭且有测试锁死。
 
 ### 🗂️ 项目组 — 局域网内开箱即用的协作底座
 
@@ -546,7 +546,7 @@ flowchart TB
 
 ### 下载安装（用户）
 
-[Releases](https://github.com/gaogg521/1oneUI/releases) → Windows `1ONE-Code-*-win-x64.exe` / macOS `.dmg` / Linux `.deb`。Windows / Linux 双击安装即可。
+[Releases](https://github.com/gaogg521/dream-ui/releases) → Windows `1ONE-Code-*-win-x64.exe` / macOS `.dmg` / Linux `.deb`。Windows / Linux 双击安装即可。
 
 <details>
 <summary>🍎 macOS 首次打开被 Gatekeeper 拦截？点此展开解决方法</summary>
@@ -590,8 +590,8 @@ xattr -cr "/Applications/1ONE Code.app"
 # D:\aionui-m0\1oneUI   ← 本仓库
 # D:\aionui-m0\1oneCore ← 后端
 
-git clone -b one-main https://github.com/gaogg521/1oneUI.git 1oneUI
-git clone -b one-main https://github.com/gaogg521/1oneCore.git 1oneCore
+git clone https://github.com/gaogg521/dream-ui.git
+git clone https://github.com/gaogg521/dream-core.git
 
 cd 1oneUI && bun install
 # 只改前端
@@ -635,7 +635,7 @@ bun run dist:win    # 或 dist:mac / dist:linux
 <details>
 <summary><strong>和旧版 1ONE ClaudeCode（单仓）什么关系？</strong></summary>
 
-v2 用 **1oneUI + 1oneCore** 双仓库重写本地后端；旧仓 <code>D:\1one-command</code> 仅维护遗留问题，新功能在 <strong>本仓库 + 1oneCore</strong> 开发。
+v2 用 **dream-ui + dream-core** 双仓库重写本地后端；旧仓 <code>D:\1one-command</code> 仅维护遗留问题，新功能在 <strong>本仓库 + dream-core</strong> 开发。
 
 </details>
 
@@ -696,10 +696,10 @@ WebUI 走构建产物 <code>out/renderer/</code>，改前端后需重新 <code>b
 
 ## 参与贡献
 
-- 🐛 [Issue](https://github.com/gaogg521/1oneUI/issues)
-- 📦 [Releases](https://github.com/gaogg521/1oneUI/releases)
+- 🐛 [Issue](https://github.com/gaogg521/dream-ui/issues)
+- 📦 [Releases](https://github.com/gaogg521/dream-ui/releases)
 - 🌐 [官网](https://work.1oneclaw.com/)
-- 🔧 [后端仓库 1oneCore](https://github.com/gaogg521/1oneCore)
+- 🔧 [后端仓库 dream-core](https://github.com/gaogg521/dream-core)
 
 ### 联系作者
 
