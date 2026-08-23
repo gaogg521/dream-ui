@@ -4,6 +4,12 @@
 
 **dream-ui** 是 **One Work** 平台的桌面客户端（Electron + React）与 WebUI 前端。本项目最初基于开源项目 [AionUi](https://github.com/iOfficeAI/AionUi) 二次开发，**现已完全独立成自有平台，不再跟随或合并上游**——这是一次永久的技术身份切换，技术与协议层统一使用小写前缀 `dream`。
 
+> **新会话/新 AI 首读**：AionUi → dream 品牌独立化的完整实施过程（怎么做的、改了哪些文件、
+> 过程中发现并修复的真实 bug、踩过的坑）记录在
+> [session-2026-08-23-dream-rebrand-data-migration.zh-CN.md](./docs/guides/session-2026-08-23-dream-rebrand-data-migration.zh-CN.md)。
+> 本 CLAUDE.md 只保留长期有效的规则和结论，"怎么做到的"这类过程性细节请去读那份文档，
+> 不要假设这里的摘要已经足够完整。
+
 ## 三仓架构
 
 | 仓库 | 角色 | 关键产物 |
@@ -66,6 +72,7 @@ node scripts/prepareAioncore.js
 
 | 文档 | 说明 |
 | --- | --- |
+| [session-2026-08-23-dream-rebrand-data-migration.zh-CN.md](./docs/guides/session-2026-08-23-dream-rebrand-data-migration.zh-CN.md) | **最新**：AionUi→dream 品牌独立化的持久化数据迁移详细过程、真实 bug 清单、验证记录 |
 | [fork-dev-onboarding.zh-CN.md](./docs/guides/fork-dev-onboarding.zh-CN.md) | 克隆、dev、打包、Release |
 | [ai-handoff-conventions.zh-CN.md](./docs/guides/ai-handoff-conventions.zh-CN.md) | 改完必写文档 + 前后端加载 |
 | [repository-independence.zh-CN.md](./docs/guides/repository-independence.zh-CN.md) | 脱离上游 fork 网络的历史决策记录 |
