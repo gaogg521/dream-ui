@@ -154,11 +154,11 @@
     },
     "pendingSlow": {
       "title": "Starting up",
-      "description": "AionCore is starting up, please wait. If it doesn't respond after a while, you can quit and reopen the app."
+      "description": "One Work is starting up, please wait. If it doesn't respond after a while, you can quit and reopen the app."
     },
     "exited": {
       "title": "Startup didn't complete",
-      "description": "AionCore couldn't finish starting and has exited. Please restart the app; if this keeps happening, please send diagnostics.",
+      "description": "One Work couldn't finish starting and has exited. Please restart the app; if this keeps happening, please send diagnostics.",
       "sendDiagnostics": "Send diagnostics",
       "diagnosticsSent": "Diagnostics sent",
       "diagnosticsReportSuccess": "Diagnostics reported",
@@ -166,7 +166,7 @@
     },
     "portReportTimeout": {
       "title": "Startup timed out",
-      "description": "AionCore didn't finish starting within the expected time. Please restart the app; if this keeps happening, please send diagnostics.",
+      "description": "One Work didn't finish starting within the expected time. Please restart the app; if this keeps happening, please send diagnostics.",
       "sendDiagnostics": "Send diagnostics",
       "diagnosticsSent": "Diagnostics sent",
       "diagnosticsReportSuccess": "Diagnostics reported",
@@ -174,7 +174,7 @@
     },
     "startupFailed": {
       "title": "Startup failed",
-      "description": "AionCore failed to start. Please restart the app; if this keeps happening, please send diagnostics.",
+      "description": "One Work failed to start. Please restart the app; if this keeps happening, please send diagnostics.",
       "sendDiagnostics": "Send diagnostics",
       "diagnosticsSent": "Diagnostics sent",
       "diagnosticsReportSuccess": "Diagnostics reported",

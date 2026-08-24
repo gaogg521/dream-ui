@@ -154,11 +154,11 @@
     },
     "pendingSlow": {
       "title": "正在啟動",
-      "description": "AionCore 正在啟動，請稍候。若長時間無回應，可結束應用程式後再試。"
+      "description": "One Work 正在啟動，請稍候。若長時間無回應，可結束應用程式後再試。"
     },
     "exited": {
       "title": "啟動未完成",
-      "description": "AionCore 未能完成啟動並已結束。請重新啟動應用程式；若反覆出現，請回報診斷資訊。",
+      "description": "One Work 未能完成啟動並已結束。請重新啟動應用程式；若反覆出現，請回報診斷資訊。",
       "sendDiagnostics": "傳送診斷",
       "diagnosticsSent": "診斷已傳送",
       "diagnosticsReportSuccess": "診斷資訊已回報",
@@ -166,7 +166,7 @@
     },
     "portReportTimeout": {
       "title": "啟動逾時",
-      "description": "AionCore 未在預期時間內完成啟動。請重新啟動應用程式；若反覆出現，請傳送診斷。",
+      "description": "One Work 未在預期時間內完成啟動。請重新啟動應用程式；若反覆出現，請傳送診斷。",
       "sendDiagnostics": "傳送診斷",
       "diagnosticsSent": "診斷已傳送",
       "diagnosticsReportSuccess": "診斷資訊已回報",
@@ -174,7 +174,7 @@
     },
     "startupFailed": {
       "title": "啟動失敗",
-      "description": "AionCore 啟動失敗。請重新啟動應用程式；若反覆出現，請傳送診斷。",
+      "description": "One Work 啟動失敗。請重新啟動應用程式；若反覆出現，請傳送診斷。",
       "sendDiagnostics": "傳送診斷",
       "diagnosticsSent": "診斷已傳送",
       "diagnosticsReportSuccess": "診斷資訊已回報",

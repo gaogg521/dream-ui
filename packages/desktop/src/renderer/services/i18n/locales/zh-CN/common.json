@@ -154,11 +154,11 @@
     },
     "pendingSlow": {
       "title": "正在启动",
-      "description": "AionCore 正在启动，请稍候。若长时间无响应，可退出应用后重试。"
+      "description": "One Work 正在启动，请稍候。若长时间无响应，可退出应用后重试。"
     },
     "exited": {
       "title": "启动未完成",
-      "description": "AionCore 未能完成启动并已退出。请重启应用；若反复出现，请上报诊断信息。",
+      "description": "One Work 未能完成启动并已退出。请重启应用；若反复出现，请上报诊断信息。",
       "sendDiagnostics": "发送诊断",
       "diagnosticsSent": "诊断已发送",
       "diagnosticsReportSuccess": "诊断信息已上报",
@@ -166,7 +166,7 @@
     },
     "portReportTimeout": {
       "title": "启动超时",
-      "description": "AionCore 未在预期时间内完成启动。请重启应用；若反复出现，请发送诊断。",
+      "description": "One Work 未在预期时间内完成启动。请重启应用；若反复出现，请发送诊断。",
       "sendDiagnostics": "发送诊断",
       "diagnosticsSent": "诊断已发送",
       "diagnosticsReportSuccess": "诊断信息已上报",
@@ -174,7 +174,7 @@
     },
     "startupFailed": {
       "title": "启动失败",
-      "description": "AionCore 启动失败。请重启应用；若反复出现，请发送诊断。",
+      "description": "One Work 启动失败。请重启应用；若反复出现，请发送诊断。",
       "sendDiagnostics": "发送诊断",
       "diagnosticsSent": "诊断已发送",
       "diagnosticsReportSuccess": "诊断信息已上报",

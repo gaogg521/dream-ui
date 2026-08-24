@@ -154,11 +154,11 @@
     },
     "pendingSlow": {
       "title": "Iniciando",
-      "description": "O AionCore está iniciando, aguarde. Se não responder após um tempo, você pode sair do aplicativo e abri-lo novamente."
+      "description": "O One Work está iniciando, aguarde. Se não responder após um tempo, você pode sair do aplicativo e abri-lo novamente."
     },
     "exited": {
       "title": "A inicialização não foi concluída",
-      "description": "O AionCore não conseguiu concluir a inicialização e foi encerrado. Reinicie o aplicativo; se isso continuar acontecendo, envie o diagnóstico.",
+      "description": "O One Work não conseguiu concluir a inicialização e foi encerrado. Reinicie o aplicativo; se isso continuar acontecendo, envie o diagnóstico.",
       "sendDiagnostics": "Enviar diagnóstico",
       "diagnosticsSent": "Diagnóstico enviado",
       "diagnosticsReportSuccess": "Diagnóstico enviado",
@@ -166,7 +166,7 @@
     },
     "portReportTimeout": {
       "title": "Tempo de inicialização esgotado",
-      "description": "O AionCore não concluiu a inicialização dentro do tempo esperado. Reinicie o aplicativo; se isso continuar acontecendo, envie o diagnóstico.",
+      "description": "O One Work não concluiu a inicialização dentro do tempo esperado. Reinicie o aplicativo; se isso continuar acontecendo, envie o diagnóstico.",
       "sendDiagnostics": "Enviar diagnóstico",
       "diagnosticsSent": "Diagnóstico enviado",
       "diagnosticsReportSuccess": "Diagnóstico enviado",
@@ -174,7 +174,7 @@
     },
     "startupFailed": {
       "title": "Falha na inicialização",
-      "description": "O AionCore não conseguiu iniciar. Reinicie o aplicativo; se isso continuar acontecendo, envie o diagnóstico.",
+      "description": "O One Work não conseguiu iniciar. Reinicie o aplicativo; se isso continuar acontecendo, envie o diagnóstico.",
       "sendDiagnostics": "Enviar diagnóstico",
       "diagnosticsSent": "Diagnóstico enviado",
       "diagnosticsReportSuccess": "Diagnóstico enviado",

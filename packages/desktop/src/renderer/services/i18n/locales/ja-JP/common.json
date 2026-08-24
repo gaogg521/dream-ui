@@ -154,11 +154,11 @@
     },
     "pendingSlow": {
       "title": "起動中",
-      "description": "AionCore を起動しています。しばらくお待ちください。しばらく応答がない場合は、アプリを終了してから再度お試しください。"
+      "description": "One Work を起動しています。しばらくお待ちください。しばらく応答がない場合は、アプリを終了してから再度お試しください。"
     },
     "exited": {
       "title": "起動が完了しませんでした",
-      "description": "AionCore は起動を完了できずに終了しました。アプリを再起動してください。繰り返し発生する場合は、診断情報を送信してください。",
+      "description": "One Work は起動を完了できずに終了しました。アプリを再起動してください。繰り返し発生する場合は、診断情報を送信してください。",
       "sendDiagnostics": "診断を送信",
       "diagnosticsSent": "診断を送信しました",
       "diagnosticsReportSuccess": "診断情報を送信しました",
@@ -166,7 +166,7 @@
     },
     "portReportTimeout": {
       "title": "起動がタイムアウトしました",
-      "description": "AionCore は想定時間内に起動を完了できませんでした。アプリを再起動してください。繰り返し発生する場合は、診断情報を送信してください。",
+      "description": "One Work は想定時間内に起動を完了できませんでした。アプリを再起動してください。繰り返し発生する場合は、診断情報を送信してください。",
       "sendDiagnostics": "診断を送信",
       "diagnosticsSent": "診断を送信しました",
       "diagnosticsReportSuccess": "診断情報を送信しました",
@@ -174,7 +174,7 @@
     },
     "startupFailed": {
       "title": "起動に失敗しました",
-      "description": "AionCore を起動できませんでした。アプリを再起動してください。繰り返し発生する場合は、診断情報を送信してください。",
+      "description": "One Work を起動できませんでした。アプリを再起動してください。繰り返し発生する場合は、診断情報を送信してください。",
       "sendDiagnostics": "診断を送信",
       "diagnosticsSent": "診断を送信しました",
       "diagnosticsReportSuccess": "診断情報を送信しました",
