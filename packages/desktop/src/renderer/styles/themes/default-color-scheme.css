@@ -35,6 +35,8 @@
   --text-primary: #000000; /* 主要文字 */
   --color-text-1: #000000; /* Arco 主文字 — 与 --text-primary 对齐 */
   --text-secondary: #454d5f; /* 次要文字 — 加深至 ~7.5:1 对比度 */
+  --text-t-tertiary: #6b7280; /* 三级说明文字 — ~4.8:1 对比度，独立于 --bg-6 避免背景色兼职当文字色 */
+  --text-t-quaternary: #7d8592; /* 四级/极弱调文字 — ~3.7:1 对比度 */
   --text-disabled: #c9cdd4; /* 禁用文字 */
 
   /* Semantic Colors - Light Mode */
@@ -108,6 +110,8 @@
   --text-primary: #ffffff; /* 主要文字 */
   --color-text-1: #ffffff; /* Arco 主文字 — 与 --text-primary 对齐 */
   --text-secondary: #ced3da; /* 次要文字 — 提亮至 ~11:1 对比度 */
+  --text-t-tertiary: #9098a3; /* 三级说明文字 — ~6.6:1 对比度，独立于 --bg-6（原值 #5a5a5a 对深色背景只有 2.8:1） */
+  --text-t-quaternary: #7d858f; /* 四级/极弱调文字 — ~5.2:1 对比度 */
   --text-disabled: #737373; /* 禁用文字 */
 
   /* Semantic Colors - Dark Mode */
@@ -143,4 +147,13 @@
   --fill-0: rgba(255, 255, 255, 0.08); /* 填充色 0 - 暗色模式下为半透明白色 */
   --fill-white-to-black: #000000; /* 白到黑填充色（暗色模式下为黑色） */
   --border-special: #60677e; /* 特殊边框色 */
+}
+
+/* Cross-scheme dark fallback for --text-t-quaternary. Lower specificity than
+   any [data-color-scheme='x'][data-theme='dark'] rule, so a branded 1one-*
+   theme's own value (if ever added) still wins — this only fills the gap for
+   schemes that don't define one, e.g. today's 5 branded dark presets. Value
+   verified ≥4.9:1 against every branded dark bg-base in use. */
+[data-theme='dark'] {
+  --text-t-quaternary: #7d858f;
 }

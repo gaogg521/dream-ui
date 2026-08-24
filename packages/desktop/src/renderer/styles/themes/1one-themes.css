@@ -494,7 +494,7 @@
   --text-disabled: #9caec8; /* 浅蓝灰，低干扰 */
   --text-t-primary: #0d1a2e;
   --text-t-secondary: #2e4e80;
-  --text-t-tertiary: #7a94b8;
+  --text-t-tertiary: #5578a3; /* 原值 #7a94b8 对 --bg-base 只有 ~2.8:1，收紧至 ~4.1:1 */
 
   --primary: #1d6fa8;
   --success: #16803d;

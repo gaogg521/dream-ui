@@ -9,7 +9,8 @@ const textColors = {
   // 自定义语义化文字色 / Custom semantic text colors
   't-primary': 'var(--text-primary)', // text-t-primary - 主要文字
   't-secondary': 'var(--text-secondary)', // text-t-secondary - 次要文字
-  't-tertiary': 'var(--bg-6)', // text-t-tertiary - 三级说明/提示文字
+  't-tertiary': 'var(--text-t-tertiary)', // text-t-tertiary - 三级说明/提示文字（原为 var(--bg-6)，那是背景/边框灰阶，深色模式下当文字用对比度只有 2.8:1）
+  't-quaternary': 'var(--text-t-quaternary)', // text-t-quaternary - 四级/极弱调文字（原来没有这个 key，class 一直失效）
   't-disabled': 'var(--text-disabled)', // text-t-disabled - 禁用文字
 };
 

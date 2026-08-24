@@ -24,9 +24,9 @@ type ExpertMarketplaceGridProps = {
  * Browsable catalog of installable expert personas. Deliberately not the
  * assistant list — nothing here is a real owned assistant until the user
  * clicks "Add to my assistants" (`onInstall`), which materializes exactly
- * one real assistant on demand. The catalog now carries a `category` field
- * (`persona.category`), but this still ships as a plain searchable grid —
- * category filter pills are a natural follow-up, not built in this pass.
+ * one real assistant on demand. `persona.category` is surfaced as a plain
+ * chip for browsing context; category *filter* pills are a natural
+ * follow-up, not built in this pass.
  */
 const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas, loading, onInstall, onStartChat }) => {
   const { t } = useTranslation();
@@ -76,41 +76,54 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
         {filteredPersonas.map((persona) => {
           const hasEmojiAvatar = Boolean(persona.avatar && isEmoji(persona.avatar));
           const avatarImage = resolveAvatarImageSrc(persona.avatar);
+          const nickname = persona.role_name && persona.role_name !== persona.display_name ? persona.role_name : null;
           return (
             <div
               key={persona.id}
               data-testid={`marketplace-card-${persona.id}`}
-              className='group flex flex-col rounded-14px border border-solid border-transparent bg-base p-16px transition-all duration-180 hover:border-border-2'
+              className='group flex flex-col rounded-14px border border-solid border-transparent bg-base p-16px transition-all duration-180 hover:border-border-2 hover:shadow-[0_2px_12px_rgba(0,0,0,0.06)]'
             >
-              <div className='flex items-start justify-between'>
-                <Avatar
-                  className='border-none'
-                  shape='square'
-                  size={42}
-                  style={{ backgroundColor: 'var(--color-fill-2)', border: 'none' }}
-                >
-                  {avatarImage ? (
-                    <img
-                      src={avatarImage}
-                      alt=''
-                      className='h-full w-full rounded-inherit object-cover'
-                      style={{ display: 'block' }}
-                    />
-                  ) : hasEmojiAvatar ? (
-                    <span style={{ fontSize: 21 }}>{persona.avatar}</span>
-                  ) : (
-                    <Robot theme='outline' size={21} />
-                  )}
-                </Avatar>
-                {persona.installed ? (
-                  <span className='inline-flex items-center gap-4px text-12px text-t-tertiary'>
-                    <Check theme='filled' size={14} fill={iconColors.success} />
-                    {t('settings.marketplaceInstalled')}
+              <div className='flex items-start justify-between gap-8px'>
+                <span className='relative inline-flex shrink-0'>
+                  <Avatar
+                    className='border-none'
+                    shape='square'
+                    size={42}
+                    style={{ backgroundColor: 'var(--color-fill-2)', border: 'none' }}
+                  >
+                    {avatarImage ? (
+                      <img
+                        src={avatarImage}
+                        alt=''
+                        className='h-full w-full rounded-inherit object-cover'
+                        style={{ display: 'block' }}
+                      />
+                    ) : hasEmojiAvatar ? (
+                      <span style={{ fontSize: 21 }}>{persona.avatar}</span>
+                    ) : (
+                      <Robot theme='outline' size={21} />
+                    )}
+                  </Avatar>
+                  {persona.installed ? (
+                    <span
+                      className='absolute -bottom-2px -right-2px inline-flex h-14px w-14px items-center justify-center rounded-999px bg-base'
+                      title={t('settings.marketplaceInstalled')}
+                    >
+                      <Check theme='filled' size={14} fill={iconColors.success} />
+                    </span>
+                  ) : null}
+                </span>
+                {persona.category ? (
+                  <span className='mt-2px max-w-120px shrink-0 truncate rounded-6px bg-fill-2 px-8px py-2px text-11px text-t-secondary'>
+                    {persona.category}
                   </span>
                 ) : null}
               </div>
-              <div className='mt-12px truncate text-14px font-600 text-t-primary'>
-                {persona.display_name || persona.name}
+              <div className='mt-12px flex items-baseline gap-6px'>
+                <span className='truncate text-14px font-600 text-t-primary'>
+                  {persona.display_name || persona.name}
+                </span>
+                {nickname ? <span className='shrink-0 truncate text-12px text-t-secondary'>· {nickname}</span> : null}
               </div>
               <div className='mt-6px line-clamp-2 text-12px leading-[1.5] text-t-secondary'>
                 {persona.description || ''}
@@ -128,15 +141,16 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
                   </Button>
                 ) : (
                   <Button
-                    type='primary'
+                    type='text'
                     size='small'
                     loading={installingId === persona.id}
                     disabled={installingId !== null && installingId !== persona.id}
                     data-testid={`btn-marketplace-install-${persona.id}`}
-                    className='!inline-flex !h-28px !items-center !justify-center !rounded-9px !px-12px !leading-none'
+                    className='!inline-flex !h-28px !items-center !justify-center !rounded-9px !bg-fill-2 !px-12px !leading-none !text-t-secondary hover:!bg-primary-6 hover:!text-white'
+                    aria-label={t('settings.marketplaceInstall', { defaultValue: 'Add to My Assistants' })}
                     onClick={() => void handleInstall(persona)}
                   >
-                    {t('settings.marketplaceInstall')}
+                    {t('common.add')}
                   </Button>
                 )}
               </div>
