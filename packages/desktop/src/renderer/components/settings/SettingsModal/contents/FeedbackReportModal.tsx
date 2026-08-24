@@ -9,7 +9,7 @@ import { FEEDBACK_MODULES } from './feedbackModules';
 import { useTalkToButler } from '@/renderer/hooks/assistant/useTalkToButler';
 import { useAuth } from '@/renderer/hooks/context/AuthContext';
 import { uploadFileViaHttp } from '@/renderer/services/FileService';
-import { Button, Input, Select, Message, Upload } from '@arco-design/web-react';
+import { Button, Input, Modal, Select, Message, Upload } from '@arco-design/web-react';
 import type { UploadItem } from '@arco-design/web-react/es/Upload';
 import { Info } from '@icon-park/react';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
@@ -38,8 +38,14 @@ const ACCEPTED_IMAGE_TYPES = '.png,.jpg,.jpeg,.gif';
 // mailto: draft gives the maintainer a copy in their own inbox without wiring
 // any real SMTP sender (dream-core's only email seam today is the org-invite
 // StubEmailSender, which reports "not configured" and needs real credentials
-// nobody has supplied). mailto: needs none — the OS mail client sends it, and
-// the reporter sees exactly what goes out before clicking send.
+// nobody has supplied). mailto: needs none — it opens the reporter's own OS
+// mail client with the draft ready, and they click send themselves.
+//
+// This is opt-in, not automatic: after a successful submit we ask a separate
+// yes/no question ("send a copy of this report to the maintainer's inbox by
+// email?") and only open the mailto: draft if the reporter agrees. Sending
+// nothing extra is always a valid answer — the Sentry submission above has
+// already completed either way.
 const FEEDBACK_CONTACT_EMAIL = '475332294@qq.com';
 
 function buildFeedbackMailtoUrl(moduleLabel: string, description: string): string {
@@ -225,16 +231,30 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
         tags: feedbackTags,
       });
 
-      // Fire-and-forget: open a pre-filled mailto draft as a second delivery
-      // channel. Never block or fail the already-successful Sentry submission
-      // on this — a missing/misconfigured mail client is not a report failure.
-      openExternalUrl(buildFeedbackMailtoUrl(moduleLabel, description)).catch((mailError: unknown) => {
-        console.error('[FeedbackReport] failed to open mailto draft:', mailError);
-      });
-
       Message.success(t('settings.bugReportSuccess'));
       resetForm();
       onCancel();
+
+      // Opt-in second delivery channel, asked separately from — and after —
+      // the already-successful Sentry submission above. Only opens the
+      // mailto: draft if the reporter explicitly agrees; declining is a
+      // no-op, not a failure.
+      Modal.confirm({
+        title: t('settings.bugReportEmailConfirmTitle', { defaultValue: 'Also email this report?' }),
+        content: t('settings.bugReportEmailConfirmContent', {
+          defaultValue:
+            "Open your email app with this report pre-filled, addressed to the maintainer ({{email}})? Requires a configured mail client — if you don't have one, you can skip this.",
+          email: FEEDBACK_CONTACT_EMAIL,
+        }),
+        okText: t('settings.bugReportEmailConfirmOk', { defaultValue: 'Open email draft' }),
+        cancelText: t('settings.bugReportEmailConfirmCancel', { defaultValue: 'No thanks' }),
+        alignCenter: true,
+        onOk: () => {
+          openExternalUrl(buildFeedbackMailtoUrl(moduleLabel, description)).catch((mailError: unknown) => {
+            console.error('[FeedbackReport] failed to open mailto draft:', mailError);
+          });
+        },
+      });
     } catch {
       setError(t('settings.bugReportError'));
     } finally {

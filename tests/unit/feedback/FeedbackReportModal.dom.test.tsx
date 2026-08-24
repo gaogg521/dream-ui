@@ -14,6 +14,8 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConfigProvider } from '@arco-design/web-react';
 
+const modalConfirmMock = vi.hoisted(() => vi.fn());
+
 vi.mock('@arco-design/web-react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@arco-design/web-react')>();
   return {
@@ -21,6 +23,10 @@ vi.mock('@arco-design/web-react', async (importOriginal) => {
     Message: {
       ...actual.Message,
       success: vi.fn(),
+    },
+    Modal: {
+      ...actual.Modal,
+      confirm: modalConfirmMock,
     },
   };
 });
@@ -92,6 +98,7 @@ describe('FeedbackReportModal — prefill', () => {
     sentryMocks.captureEvent.mockClear();
     sentryMocks.withScope.mockClear();
     openExternalUrl.mockClear();
+    modalConfirmMock.mockClear();
   });
 
   afterEach(() => {
@@ -308,25 +315,7 @@ describe('FeedbackReportModal — prefill', () => {
     expect(sentryMocks.setUser).not.toHaveBeenCalled();
   });
 
-  it('opens a pre-filled mailto draft as a second delivery channel after a successful submit', async () => {
-    const user = userEvent.setup();
-    renderModal(<FeedbackReportModal visible={true} onCancel={vi.fn()} defaultModule='conversation-session' />);
-
-    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'provider failed');
-    await user.click(screen.getByText('settings.bugReportSubmit'));
-
-    await waitFor(() => {
-      expect(openExternalUrl).toHaveBeenCalledTimes(1);
-    });
-
-    const [mailtoUrl] = openExternalUrl.mock.calls[0] as [string];
-    expect(mailtoUrl.startsWith('mailto:475332294@qq.com?')).toBe(true);
-    expect(mailtoUrl).toContain(`subject=${encodeURIComponent('[One Work 反馈] settings.bugReportModuleChat')}`);
-    expect(decodeURIComponent(mailtoUrl)).toContain('provider failed');
-  });
-
-  it('does not block the success flow when opening the mailto draft fails', async () => {
-    openExternalUrl.mockRejectedValueOnce(new Error('no mail client registered'));
+  it('asks for consent before opening a mailto draft, instead of sending automatically', async () => {
     const onCancel = vi.fn();
     const user = userEvent.setup();
     renderModal(<FeedbackReportModal visible={true} onCancel={onCancel} defaultModule='conversation-session' />);
@@ -334,9 +323,59 @@ describe('FeedbackReportModal — prefill', () => {
     await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'provider failed');
     await user.click(screen.getByText('settings.bugReportSubmit'));
 
+    // The primary submission (Sentry + form close) completes on its own —
+    // the email question is a separate, later step, not a blocker.
     await waitFor(() => {
       expect(onCancel).toHaveBeenCalledTimes(1);
     });
+
+    await waitFor(() => {
+      expect(modalConfirmMock).toHaveBeenCalledTimes(1);
+    });
+    const config = modalConfirmMock.mock.calls[0][0] as {
+      title: string;
+      onOk: () => void;
+    };
+    expect(config.title).toBe('settings.bugReportEmailConfirmTitle');
+    // No consent given yet — nothing should have been sent to the OS shell.
+    expect(openExternalUrl).not.toHaveBeenCalled();
+  });
+
+  it('opens the pre-filled mailto draft only once the reporter agrees via the confirm dialog', async () => {
+    const user = userEvent.setup();
+    renderModal(<FeedbackReportModal visible={true} onCancel={vi.fn()} defaultModule='conversation-session' />);
+
+    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'provider failed');
+    await user.click(screen.getByText('settings.bugReportSubmit'));
+
+    await waitFor(() => {
+      expect(modalConfirmMock).toHaveBeenCalledTimes(1);
+    });
+    const { onOk } = modalConfirmMock.mock.calls[0][0] as { onOk: () => void };
+    onOk();
+
+    await waitFor(() => {
+      expect(openExternalUrl).toHaveBeenCalledTimes(1);
+    });
+    const [mailtoUrl] = openExternalUrl.mock.calls[0] as [string];
+    expect(mailtoUrl.startsWith('mailto:475332294@qq.com?')).toBe(true);
+    expect(mailtoUrl).toContain(`subject=${encodeURIComponent('[One Work 反馈] settings.bugReportModuleChat')}`);
+    expect(decodeURIComponent(mailtoUrl)).toContain('provider failed');
+  });
+
+  it('never opens a mailto draft when the reporter declines the confirm dialog', async () => {
+    const user = userEvent.setup();
+    renderModal(<FeedbackReportModal visible={true} onCancel={vi.fn()} defaultModule='conversation-session' />);
+
+    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'provider failed');
+    await user.click(screen.getByText('settings.bugReportSubmit'));
+
+    await waitFor(() => {
+      expect(modalConfirmMock).toHaveBeenCalledTimes(1);
+    });
+    // Simulate the reporter dismissing/declining: only onOk fires anything,
+    // so simply never invoking it must leave the shell untouched.
+    expect(openExternalUrl).not.toHaveBeenCalled();
   });
 
   it('no longer renders the contact email field or its account-fill button', () => {
