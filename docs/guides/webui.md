@@ -675,10 +675,8 @@ npm run resetpass -- username
 
 ## Additional Resources
 
-- [Main README](../readme.md)
-- [中文说明](./readme/readme_ch.md)
-- [日本語ドキュメント](./readme/readme_jp.md)
-- [GitHub Issues](https://github.com/iOfficeAI/AionUi/issues)
+- [Main README](../README.md)
+- [GitHub Issues](https://github.com/gaogg521/dream-ui/issues)
 
 ---
 
