@@ -9,7 +9,17 @@
 > 历史。如果在本仓库里发现某个功能/文件"应该存在但找不到"，先去 `D:\aionui-m0\1oneUI`
 > 翻一下——很可能是快照时点之后才在旧仓库落地的，或者是旧仓库里还没合并进 `one-main`
 > 主干的分支。`D:\aionui-m0` 三仓（`1oneUI`/`1oneCore`/`aionrs-local`）定位是只读归档，
-> 不再往里提交新代码。
+> 不再往里提交新代码——但**它们仍然是本机长期在用的真实 dev 环境**，不是废弃可随意覆盖的
+> 东西，跑本仓库的打包/安装测试前务必先看下一条。
+
+> **⚠️ dev/打包测试前必读**：`D:\aionui-m0\1oneUI` 和本仓库曾经共享同一个本地 dev 数据库
+> （`getDevAppName()` 复制时把目录名字面量也带过来了），导致 dream-core 的新迁移把
+> 1oneUI 那边跑了数月的真实测试数据往前推了版本、打不开。已修复（dev 模式默认目录名从
+> `1one-Dev`/`1one-Dev-2` 改成了 `dream-ui-Dev`/`dream-ui-Dev-2`，天然隔离），但**打包
+> 安装测试仍然共享正式版 `%APPDATA%\1ONE Code`**（`PROD_USERDATA_APP_NAME` 是刻意保留的
+> 历史值，不能改）——机器上如果还装着 1oneUI 正式版，打包安装 dream-ui 前要谨慎。完整事故
+> 记录见
+> [session-2026-08-24-dev-userdata-collision.zh-CN.md](./docs/guides/session-2026-08-24-dev-userdata-collision.zh-CN.md)。
 
 > **新会话/新 AI 首读**：AionUi → dream 品牌独立化的完整实施过程（怎么做的、改了哪些文件、
 > 过程中发现并修复的真实 bug、踩过的坑）记录在

@@ -108,9 +108,12 @@ These have each cost a debugging session in this repo:
   computed `display`.
 - **Arco dropdowns need a full PointerEvent sequence**, not a bare `click()`.
 - **Import app modules through `/@fs/`** when evaluating in the page.
-- **The dev userData directory is `%APPDATA%\1one-Dev`**, not the production one.
+- **The dev userData directory is `%APPDATA%\dream-ui-Dev`** (was `1one-Dev` before
+  2026-08-24 — renamed so this repo's dev profile can never collide with the pre-fork
+  `1oneUI` repo's own `1one-Dev`/`1one-Dev-2`, which are still in active use on the
+  same dev machines), not the production one.
 - **A stale service worker can white-screen the app.** If the window comes up blank after a
-  rebuild, clear `%APPDATA%\1one-Dev\Service Worker` — the PWA dev SW caches an old module graph.
+  rebuild, clear `%APPDATA%\dream-ui-Dev\Service Worker` — the PWA dev SW caches an old module graph.
 
 ---
 
@@ -248,9 +251,11 @@ ACL、没有任何认证**。一开就把每个 WebContents（含挂着 preload 
   「藏起来了」是错的，判据必须是 `offsetParent` + `getBoundingClientRect()` + computed `display`。
 - **Arco 下拉要发完整的 PointerEvent 序列**，光 `click()` 不行。
 - **在页面里 import 应用模块要走 `/@fs/`。**
-- **dev 的 userData 目录是 `%APPDATA%\1one-Dev`**，不是正式版那个。
+- **dev 的 userData 目录是 `%APPDATA%\dream-ui-Dev`**（2026-08-24 之前是 `1one-Dev`，改名是
+  为了不再跟没并入本仓库、仍在同一台机器上独立使用的旧仓库 `1oneUI`（用的是
+  `1one-Dev`/`1one-Dev-2`）撞车），不是正式版那个。
 - **旧的 Service Worker 会让应用白屏。** 重编之后窗口空白，清
-  `%APPDATA%\1one-Dev\Service Worker`（PWA 的 dev SW 会缓存旧的模块图）。
+  `%APPDATA%\dream-ui-Dev\Service Worker`（PWA 的 dev SW 会缓存旧的模块图）。
 
 ---
 

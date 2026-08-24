@@ -7,10 +7,22 @@ let _services: IPlatformServices | null = null;
 /**
  * Resolve the dev-mode app name for environment isolation.
  * Centralised so that every call-site stays in sync.
+ *
+ * ⚠️ MUST NOT collide with the pre-fork repo's dev app names (`1one-Dev` /
+ * `1one-Dev-2` in `1oneUI`). Both repos are deliberately kept checked out
+ * side by side on the same dev machines going forward, and their dev-mode
+ * `getDevAppName()` used to be byte-identical copy-paste — which meant
+ * `bun run dev` in either repo silently pointed at the SAME `%APPDATA%`
+ * profile (and, for anyone opting into `*_MULTI_INSTANCE=1`, the same
+ * secondary one too). dream-core's newer migrations then got applied to
+ * 1oneUI's real multi-month dev/test conversation history, which the old
+ * (pre-fork) aioncore binary can no longer open — see
+ * `docs/guides/session-2026-08-24-dev-userdata-collision.zh-CN.md`. This
+ * repo now uses a name no other repo can plausibly reuse.
  */
 export function getDevAppName(): string {
   const isMultiInstance = process.env.DREAM_MULTI_INSTANCE === '1';
-  return isMultiInstance ? '1one-Dev-2' : '1one-Dev';
+  return isMultiInstance ? 'dream-ui-Dev-2' : 'dream-ui-Dev';
 }
 
 /**
