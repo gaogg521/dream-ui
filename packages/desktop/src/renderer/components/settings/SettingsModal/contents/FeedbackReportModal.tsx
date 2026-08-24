@@ -26,12 +26,37 @@ import type {
   FeedbackDiagnosticsProfile,
 } from '@/common/types/feedbackDiagnostics';
 import { captureFeedbackRoute } from '@/renderer/services/feedback/routeContext';
+import { openExternalUrl } from '@/renderer/utils/platform';
 
 export type { FeedbackEventExtra, FeedbackEventTags } from '@/renderer/services/feedback/submitFeedbackReport';
 
 const DESCRIPTION_MAX_LENGTH = 2000;
 const MAX_SCREENSHOTS = 3;
 const ACCEPTED_IMAGE_TYPES = '.png,.jpg,.jpeg,.gif';
+
+// Duplicate delivery channel: Sentry (above) is the system of record, but a
+// mailto: draft gives the maintainer a copy in their own inbox without wiring
+// any real SMTP sender (dream-core's only email seam today is the org-invite
+// StubEmailSender, which reports "not configured" and needs real credentials
+// nobody has supplied). mailto: needs none — the OS mail client sends it, and
+// the reporter sees exactly what goes out before clicking send.
+const FEEDBACK_CONTACT_EMAIL = '475332294@qq.com';
+
+function buildFeedbackMailtoUrl(moduleLabel: string, description: string): string {
+  const subject = `[One Work 反馈] ${moduleLabel}`;
+  const body = [
+    `模块：${moduleLabel}`,
+    '',
+    description,
+    '',
+    '——',
+    '截图与应用日志已随反馈提交至 Sentry，未附加在本邮件中。',
+  ].join('\n');
+  // Manual percent-encoding (not URLSearchParams) — RFC 6068 mailto bodies use
+  // %20 for spaces, while URLSearchParams's form-urlencoded '+' would show up
+  // literally in some mail clients.
+  return `mailto:${FEEDBACK_CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
 
 // dream's AuthUser is { id, username } and carries no email; aionpro's AuthUser
 // does. Read it structurally (no AuthUser type import, no `any`) so this file
@@ -177,6 +202,8 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
         )
       ).filter((item): item is FeedbackAttachment => item !== null);
 
+      const moduleLabel = t(selectedModule?.i18nKey ?? 'settings.bugReportModuleOther');
+
       await submitFeedbackReport({
         attachments,
         collectDbDiagnostics: {
@@ -194,8 +221,15 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
         description,
         extra: feedbackExtra,
         module,
-        moduleLabel: t(selectedModule?.i18nKey ?? 'settings.bugReportModuleOther'),
+        moduleLabel,
         tags: feedbackTags,
+      });
+
+      // Fire-and-forget: open a pre-filled mailto draft as a second delivery
+      // channel. Never block or fail the already-successful Sentry submission
+      // on this — a missing/misconfigured mail client is not a report failure.
+      openExternalUrl(buildFeedbackMailtoUrl(moduleLabel, description)).catch((mailError: unknown) => {
+        console.error('[FeedbackReport] failed to open mailto draft:', mailError);
       });
 
       Message.success(t('settings.bugReportSuccess'));

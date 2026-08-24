@@ -63,6 +63,12 @@ const sentryMocks = vi.hoisted(() => {
 
 vi.mock('@sentry/electron/renderer', () => sentryMocks);
 
+const { openExternalUrl } = vi.hoisted(() => ({
+  openExternalUrl: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/renderer/utils/platform', () => ({ openExternalUrl }));
+
 import FeedbackReportModal, {
   type PrefilledScreenshot,
 } from '@/renderer/components/settings/SettingsModal/contents/FeedbackReportModal';
@@ -85,6 +91,7 @@ describe('FeedbackReportModal — prefill', () => {
     sentryMocks.setUser.mockClear();
     sentryMocks.captureEvent.mockClear();
     sentryMocks.withScope.mockClear();
+    openExternalUrl.mockClear();
   });
 
   afterEach(() => {
@@ -299,6 +306,37 @@ describe('FeedbackReportModal — prefill', () => {
     });
 
     expect(sentryMocks.setUser).not.toHaveBeenCalled();
+  });
+
+  it('opens a pre-filled mailto draft as a second delivery channel after a successful submit', async () => {
+    const user = userEvent.setup();
+    renderModal(<FeedbackReportModal visible={true} onCancel={vi.fn()} defaultModule='conversation-session' />);
+
+    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'provider failed');
+    await user.click(screen.getByText('settings.bugReportSubmit'));
+
+    await waitFor(() => {
+      expect(openExternalUrl).toHaveBeenCalledTimes(1);
+    });
+
+    const [mailtoUrl] = openExternalUrl.mock.calls[0] as [string];
+    expect(mailtoUrl.startsWith('mailto:475332294@qq.com?')).toBe(true);
+    expect(mailtoUrl).toContain(`subject=${encodeURIComponent('[One Work 反馈] settings.bugReportModuleChat')}`);
+    expect(decodeURIComponent(mailtoUrl)).toContain('provider failed');
+  });
+
+  it('does not block the success flow when opening the mailto draft fails', async () => {
+    openExternalUrl.mockRejectedValueOnce(new Error('no mail client registered'));
+    const onCancel = vi.fn();
+    const user = userEvent.setup();
+    renderModal(<FeedbackReportModal visible={true} onCancel={onCancel} defaultModule='conversation-session' />);
+
+    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'provider failed');
+    await user.click(screen.getByText('settings.bugReportSubmit'));
+
+    await waitFor(() => {
+      expect(onCancel).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('no longer renders the contact email field or its account-fill button', () => {
