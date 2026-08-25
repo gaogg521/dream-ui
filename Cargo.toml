@@ -1,0 +1,39 @@
+[package]
+name = "dream-trial-broker"
+version = "0.1.0"
+edition = "2021"
+description = "Standalone broker service that mints capped-spend OpenRouter trial API keys for first-time desktop app users."
+publish = false
+
+[[bin]]
+name = "dream-trial-broker"
+path = "src/main.rs"
+
+[lib]
+name = "dream_trial_broker"
+path = "src/lib.rs"
+
+[dependencies]
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.8", default-features = false, features = [
+    "runtime-tokio",
+    "tls-rustls",
+    "sqlite",
+    "macros",
+    "migrate",
+] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1", features = ["v4"] }
+sha2 = "0.10"
+chrono = { version = "0.4", features = ["serde", "clock"] }
+async-trait = "0.1"
+anyhow = "1"
+thiserror = "1"
+dotenvy = "0.15"
+
+[dev-dependencies]

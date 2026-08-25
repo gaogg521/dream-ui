@@ -1,0 +1,64 @@
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Json,
+};
+use serde_json::json;
+
+/// All the ways `POST /v1/trial-keys` (and friends) can fail. Each variant
+/// maps to exactly one HTTP status code and one stable `error` string in the
+/// JSON body, so callers (e.g. dream-core) can match on it.
+#[derive(Debug)]
+pub enum AppError {
+    /// install_id already has a non-disabled issuance on file. -> 409
+    AlreadyIssued,
+    /// Caller's IP exceeded the configured per-hour request budget. -> 429
+    RateLimited,
+    /// Today's estimated liability from active issuances has hit the cap. -> 503
+    BudgetExhausted,
+    /// OpenRouter's key-creation call failed or returned a non-2xx. -> 502
+    UpstreamError(String),
+    /// Anything else (bad input, DB error, etc). -> 500 / 400
+    Internal(String),
+    BadRequest(String),
+}
+
+impl AppError {
+    pub fn status_code(&self) -> StatusCode {
+        match self {
+            AppError::AlreadyIssued => StatusCode::CONFLICT,
+            AppError::RateLimited => StatusCode::TOO_MANY_REQUESTS,
+            AppError::BudgetExhausted => StatusCode::SERVICE_UNAVAILABLE,
+            AppError::UpstreamError(_) => StatusCode::BAD_GATEWAY,
+            AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
+            AppError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+
+    pub fn error_code(&self) -> &'static str {
+        match self {
+            AppError::AlreadyIssued => "already_issued",
+            AppError::RateLimited => "rate_limited",
+            AppError::BudgetExhausted => "daily_budget_exhausted",
+            AppError::UpstreamError(_) => "upstream_error",
+            AppError::BadRequest(_) => "bad_request",
+            AppError::Internal(_) => "internal_error",
+        }
+    }
+}
+
+impl std::fmt::Display for AppError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} ({})", self.error_code(), self.status_code())
+    }
+}
+
+impl std::error::Error for AppError {}
+
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        let status = self.status_code();
+        let body = Json(json!({ "error": self.error_code() }));
+        (status, body).into_response()
+    }
+}
