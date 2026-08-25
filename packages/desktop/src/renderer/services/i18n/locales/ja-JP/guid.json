@@ -19,5 +19,10 @@
     "welcome": "One Work へようこそ",
     "contact": "ご質問は作者まで",
     "qqLabel": "QQ"
+  },
+  "trialModel": {
+    "bannerTitle": "モデルがまだ設定されていません",
+    "bannerDesc": "登録不要で無料のAIモデルをすぐに体験できます",
+    "bannerButton": "無料モデルを試す"
   }
 }

@@ -19,5 +19,10 @@
     "welcome": "One Work'a hoş geldiniz",
     "contact": "Sorularınız için yazara ulaşın",
     "qqLabel": "QQ"
+  },
+  "trialModel": {
+    "bannerTitle": "Henüz model yapılandırılmadı",
+    "bannerDesc": "Kayıt olmadan ücretsiz AI modellerini hemen deneyin",
+    "bannerButton": "Ücretsiz Modelleri Deneyin"
   }
 }

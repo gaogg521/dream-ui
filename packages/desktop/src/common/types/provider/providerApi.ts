@@ -100,6 +100,21 @@ export interface ProviderHealthCheckRequest {
   model: string;
 }
 
+/**
+ * Response for `POST /api/providers/trial-key`. No request body — the
+ * per-install dedup id is resolved server-side by dream-core.
+ *
+ * Turn this straight into a `CreateProviderRequest` with `platform:
+ * 'OpenRouter'` to materialize it as a normal, user-editable provider.
+ */
+export interface TrialKeyResponse {
+  /** Plaintext OpenRouter API key. Returned once. */
+  key: string;
+  base_url: string;
+  /** A small curated starter model list, picked by the broker. */
+  models: string[];
+}
+
 export interface ProviderHealthCheckResponse {
   provider_id: string;
   platform: string;

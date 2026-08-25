@@ -24,6 +24,7 @@ import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import GuidAuthorTip from './components/GuidAuthorTip';
 import GuidInputCard from './components/GuidInputCard';
 import GuidModelSelector from './components/GuidModelSelector';
+import TrialModelBanner from './components/TrialModelBanner';
 import { useGuidAssistantSelection } from './hooks/useGuidAssistantSelection';
 import { useGuidInput } from './hooks/useGuidInput';
 import { useGuidModelSelection } from './hooks/useGuidModelSelection';
@@ -767,6 +768,8 @@ const GuidPage: React.FC = () => {
           <div className={styles.heroHeader}>
             <p className={styles.heroTitle}>{t('conversation.welcome.title')}</p>
           </div>
+
+          {isGeminiMode && modelSelection.modelList.length === 0 ? <TrialModelBanner /> : null}
 
           <BackendSelectionArea
             assistants={agentSelection.assistants}

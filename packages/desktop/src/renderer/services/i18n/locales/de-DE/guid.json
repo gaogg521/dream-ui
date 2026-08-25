@@ -37,5 +37,10 @@
     "welcome": "Willkommen bei One Work",
     "contact": "Fragen? Kontaktieren Sie",
     "qqLabel": "QQ"
+  },
+  "trialModel": {
+    "bannerTitle": "Noch kein Modell konfiguriert",
+    "bannerDesc": "Teste kostenlose KI-Modelle sofort, ohne Registrierung",
+    "bannerButton": "Kostenlose Modelle testen"
   }
 }

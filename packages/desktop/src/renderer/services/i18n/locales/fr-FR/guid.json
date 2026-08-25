@@ -13,5 +13,10 @@
     "specifyWorkspace": "Sélectionnez le dossier du projet",
     "searchPlaceholder": "Rechercher des projets…",
     "noProject": "Aucun projet"
+  },
+  "trialModel": {
+    "bannerTitle": "Aucun modèle configuré pour l'instant",
+    "bannerDesc": "Essayez des modèles d'IA gratuits instantanément, sans inscription",
+    "bannerButton": "Essayer des modèles gratuits"
   }
 }

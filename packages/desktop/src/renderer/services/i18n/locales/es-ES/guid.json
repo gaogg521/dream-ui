@@ -37,5 +37,10 @@
     "welcome": "Bienvenido a One Work",
     "contact": "¿Dudas? Contacte al autor",
     "qqLabel": "QQ"
+  },
+  "trialModel": {
+    "bannerTitle": "Aún no hay ningún modelo configurado",
+    "bannerDesc": "Prueba modelos de IA gratuitos al instante, sin registro",
+    "bannerButton": "Probar modelos gratuitos"
   }
 }

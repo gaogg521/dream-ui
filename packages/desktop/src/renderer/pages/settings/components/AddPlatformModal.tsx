@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import useModeModeList from '@renderer/hooks/agent/useModeModeList';
 import useProtocolDetection from '@renderer/hooks/system/useProtocolDetection';
 import DreamModal from '@/renderer/components/base/DreamModal';
+import TrialModelCard from './TrialModelCard';
 import {
   DEFAULT_PLATFORM_VALUE,
   MODEL_PLATFORMS,
@@ -415,6 +416,7 @@ const AddPlatformModal = ModalHOC<{
     >
       {messageContext}
       <div>
+        <TrialModelCard onClaimed={modalCtrl.close} />
         <Form form={form} layout='vertical' className='[&_.arco-form-item]:mb-12px [&_.arco-form-item:last-child]:mb-0'>
           {/* 模型平台选择（第一层）/ Model Platform Selection (first level) */}
           <Form.Item

@@ -29,11 +29,11 @@
 
 ## 三仓架构
 
-| 仓库 | 角色 | 关键产物 |
-| --- | --- | --- |
-| **dream-ui**（本仓库） | Electron 桌面、React UI、WebUI 静态资源 | 安装包（`One-Work-<version>-<os>-<arch>.<ext>`） |
-| **[dream-core](https://github.com/gaogg521/dream-core)** | Rust 本地服务，30+ 领域 crate | `dreamcore` 二进制 |
-| **[dream-engine](https://github.com/gaogg521/dream-engine)** | Agent 引擎（CLI/TUI/Provider/工具） | `dream` 二进制，随 dream-core 构建流程内嵌 |
+| 仓库                                                         | 角色                                    | 关键产物                                         |
+| ------------------------------------------------------------ | --------------------------------------- | ------------------------------------------------ |
+| **dream-ui**（本仓库）                                       | Electron 桌面、React UI、WebUI 静态资源 | 安装包（`One-Work-<version>-<os>-<arch>.<ext>`） |
+| **[dream-core](https://github.com/gaogg521/dream-core)**     | Rust 本地服务，30+ 领域 crate           | `dreamcore` 二进制                               |
+| **[dream-engine](https://github.com/gaogg521/dream-engine)** | Agent 引擎（CLI/TUI/Provider/工具）     | `dream` 二进制，随 dream-core 构建流程内嵌       |
 
 推荐开发时三仓并列：
 
@@ -48,11 +48,11 @@ dream/
 
 ## 品牌与技术身份分层
 
-| 层级 | 值 | 说明 |
-| --- | --- | --- |
-| 用户可见产品名 | **One Work**（首字母大写、中间有空格） | UI、安装器、官网、帮助文档统一用这个；来源 `common/platform/index.ts` 的 `BRAND_DISPLAY_NAME` 常量，禁止散写字面量。**这个名字容易被口头/打字误传成 "OneWork"、"ONE WORK" 等变体，改动前务必以这个常量的实际值为准，不要凭记忆或口述** |
-| 技术/协议前缀 | **`dream`**（小写） | 环境变量 `DREAM_*`、内部 HTTP 头 `x-dream-*`、Cookie `dream-session`/`dream-csrf-token`、Rust 枚举 serde 值等机器可读标识 |
-| 运行时身份（**刻意不改**） | `appId: com.huanle.oneone.ai`、`executableName: 1onecode`、深链协议 `aionui://` | 改这些会导致老用户 `%APPDATA%` 数据/`userData` 目录失联，除非同时处理迁移，否则永久保持历史值。详见 `packages/desktop/electron-builder.yml` 顶部注释与 `common/platform/index.ts` 的 `PROD_USERDATA_APP_NAME` |
+| 层级                       | 值                                                                              | 说明                                                                                                                                                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 用户可见产品名             | **One Work**（首字母大写、中间有空格）                                          | UI、安装器、官网、帮助文档统一用这个；来源 `common/platform/index.ts` 的 `BRAND_DISPLAY_NAME` 常量，禁止散写字面量。**这个名字容易被口头/打字误传成 "OneWork"、"ONE WORK" 等变体，改动前务必以这个常量的实际值为准，不要凭记忆或口述** |
+| 技术/协议前缀              | **`dream`**（小写）                                                             | 环境变量 `DREAM_*`、内部 HTTP 头 `x-dream-*`、Cookie `dream-session`/`dream-csrf-token`、Rust 枚举 serde 值等机器可读标识                                                                                                              |
+| 运行时身份（**刻意不改**） | `appId: com.huanle.oneone.ai`、`executableName: 1onecode`、深链协议 `aionui://` | 改这些会导致老用户 `%APPDATA%` 数据/`userData` 目录失联，除非同时处理迁移，否则永久保持历史值。详见 `packages/desktop/electron-builder.yml` 顶部注释与 `common/platform/index.ts` 的 `PROD_USERDATA_APP_NAME`                          |
 
 **任何改动收尾前过一遍品牌复检**：i18n 显示文案 / 渲染层与主进程硬编码 / 安装器脚本（`resources/windows/**`）/ 任务栏与窗口标识（`app.setAppUserModelId`） / 系统托盘 tooltip。品牌名只有一个来源（`BRAND_DISPLAY_NAME`），新增用户可见文案一律 import 它，不要新写字面量。**本仓库、README、GitHub 上显示的内容三者可能不同步**——本地改完必须 `git commit` + `git push` 才会反映到 GitHub，改完只在本地验证过不等于对外可见，收尾前务必确认已推送。
 
@@ -87,9 +87,10 @@ node scripts/prepareAioncore.js
 
 ## 文档索引
 
-| 文档 | 说明 |
-| --- | --- |
-| [session-2026-08-23-dream-rebrand-data-migration.zh-CN.md](./docs/guides/session-2026-08-23-dream-rebrand-data-migration.zh-CN.md) | **最新**：AionUi→dream 品牌独立化的持久化数据迁移详细过程、真实 bug 清单、验证记录 |
-| [fork-dev-onboarding.zh-CN.md](./docs/guides/fork-dev-onboarding.zh-CN.md) | 克隆、dev、打包、Release |
-| [ai-handoff-conventions.zh-CN.md](./docs/guides/ai-handoff-conventions.zh-CN.md) | 改完必写文档 + 前后端加载 |
-| [repository-independence.zh-CN.md](./docs/guides/repository-independence.zh-CN.md) | 脱离上游 fork 网络的历史决策记录 |
+| 文档                                                                                                                               | 说明                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [session-2026-08-25-openrouter-trial-model.zh-CN.md](./docs/guides/session-2026-08-25-openrouter-trial-model.zh-CN.md) | **最新**：一键体验免费模型（OpenRouter trial key），跨 dream-ui/dream-core/新建的 dream-trial-broker 三仓，含未完成事项 |
+| [session-2026-08-23-dream-rebrand-data-migration.zh-CN.md](./docs/guides/session-2026-08-23-dream-rebrand-data-migration.zh-CN.md) | AionUi→dream 品牌独立化的持久化数据迁移详细过程、真实 bug 清单、验证记录 |
+| [fork-dev-onboarding.zh-CN.md](./docs/guides/fork-dev-onboarding.zh-CN.md)                                                         | 克隆、dev、打包、Release                                                           |
+| [ai-handoff-conventions.zh-CN.md](./docs/guides/ai-handoff-conventions.zh-CN.md)                                                   | 改完必写文档 + 前后端加载                                                          |
+| [repository-independence.zh-CN.md](./docs/guides/repository-independence.zh-CN.md)                                                 | 脱离上游 fork 网络的历史决策记录                                                   |

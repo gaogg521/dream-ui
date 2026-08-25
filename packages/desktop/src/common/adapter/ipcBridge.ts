@@ -49,6 +49,7 @@ import type {
   FetchModelsResponse,
   ProviderHealthCheckRequest,
   ProviderHealthCheckResponse,
+  TrialKeyResponse,
   UpdateProviderRequest,
 } from '../types/provider/providerApi';
 import type {
@@ -1254,6 +1255,12 @@ export const mode = {
    * dropdown is still being populated.
    */
   fetchModelList: httpPost<FetchModelsResponse, FetchModelsAnonymousRequest>('/api/providers/fetch-models'),
+  /**
+   * Issue a capped-spend trial OpenRouter key for a first-time user. No
+   * request body — dream-core resolves this install's own dedup id. Turn the
+   * result into a normal provider via `createProvider`.
+   */
+  requestTrialKey: httpPost<TrialKeyResponse, void>('/api/providers/trial-key'),
   detectProtocol: httpPost<ProtocolDetectionResponse, ProtocolDetectionRequest>('/api/providers/detect-protocol'),
   /**
    * Materialize the company's model channels as local providers.
