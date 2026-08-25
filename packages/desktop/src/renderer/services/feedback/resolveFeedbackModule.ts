@@ -36,9 +36,10 @@ const ROUTE_MODULE_MAP: ReadonlyArray<readonly [prefix: string, tag: FeedbackMod
   // Extension-contributed settings tabs are channel plugins (Telegram/Slack/
   // Feishu…) today, so route their reports to the channel module.
   ['/settings/ext', 'channel'],
-  // Fork-only enterprise surfaces (`/enterprise/login`, `/enterprise/console`,
-  // and the `/enterprise` redirect). Same bucket as `/settings/enterprise`,
-  // which the `/settings` fallback below already routes to system-settings.
+  // Fork-only enterprise surfaces (`/enterprise/login` and the `/enterprise`
+  // redirect; the admin console itself now lives in a separate app). Same
+  // bucket as `/settings/enterprise`, which the `/settings` fallback below
+  // already routes to system-settings.
   ['/enterprise', 'system-settings'],
   // Fork-only top-level pages that stay outside the settings tree. `/mcp` and
   // `/sessions` are real pages; `/super-assistant`, `/skills`, and `/memory`

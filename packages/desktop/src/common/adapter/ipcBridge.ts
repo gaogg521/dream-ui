@@ -2847,8 +2847,6 @@ import type {
 
 export const oneOrg = {
   context: httpGet<OrgContext, void>('/api/one/org/context'),
-  publicInfo: httpGet<OrgPublicInfo, void>('/api/one/org/public-info'),
-  previewInvite: httpPost<{ valid: boolean }, { code: string }>('/api/one/org/invites/preview'),
   join: httpPost<OrgTenant, { code: string }>('/api/one/org/join'),
   // Phase 2 multi-membership: every project group the caller belongs to, plus
   // switching which one is active (server-side per-user active tenant — no
@@ -2860,107 +2858,18 @@ export const oneOrg = {
   allTenants: httpGet<TenantSummary[], void>('/api/one/org/tenants'),
   // Admin-only agent-run audit (P1-1): tool calls / files / commands the agents
   // ran, reconstructed from persisted messages. AuditLog-tier-gated.
-  agentAudit: httpGet<AgentAuditEntry[], AgentAuditQuery>((p) => {
-    const qs = new URLSearchParams();
-    if (p?.userId) qs.set('userId', p.userId);
-    if (p?.tool) qs.set('tool', p.tool);
-    if (p?.since != null) qs.set('since', String(p.since));
-    if (p?.limit != null) qs.set('limit', String(p.limit));
-    const s = qs.toString();
-    return s ? `/api/one/admin/agent-audit?${s}` : '/api/one/admin/agent-audit';
-  }),
-  // Member-facing read-only roster / invites (any enterprise member, incl.
-  // client-mode terminals). Mutations stay on oneAdmin.* (admin-only).
-  members: httpGet<AdminUser[], void>('/api/one/org/members'),
-  invites: httpGet<OrgInvite[], void>('/api/one/org/invites'),
-  // `tenantId` selects which group to leave; omitted = the active group.
   exit: httpPost<void, { exitCode: string; tenantId?: string }>('/api/one/org/exit'),
   create: httpPost<OrgTenant, { name: string }>('/api/one/org/create'),
   resetLocal: httpPost<ResetLocalResult, void>('/api/one/org/reset-local'),
   // Direction B: the project groups a company owns + create-on-behalf. Gated
   // system_admin OR company-admin on the backend.
-  listEnterpriseTenants: httpGet<EnterpriseTenant[], { enterpriseId: string }>(
-    (p) => `/api/one/org/enterprise/${p.enterpriseId}/tenants`
-  ),
-  createEnterpriseTenant: httpPost<
-    { tenantId: string; name: string; inviteCode: string },
-    { enterpriseId: string; name: string; initialAdminUserId?: string }
-  >(
-    (p) => `/api/one/org/enterprise/${p.enterpriseId}/tenants`,
-    (p) => ({ name: p.name, initialAdminUserId: p.initialAdminUserId })
-  ),
-  // Invite-code management for a company-owned project group. The company
-  // admin who created the group is never a member of it (it starts empty),
-  // so `oneAdmin.*` (scoped to the caller's own tenant) can't reach it —
-  // these take the tenant id explicitly instead.
-  enterpriseTenantInvites: httpGet<OrgInvite[], { enterpriseId: string; tenantId: string }>(
-    (p) => `/api/one/org/enterprise/${p.enterpriseId}/tenants/${p.tenantId}/invites`
-  ),
-  createEnterpriseTenantInvite: httpPost<
-    CreatedInvite,
-    { enterpriseId: string; tenantId: string; maxUses?: number; expiresInDays?: number }
-  >(
-    (p) => `/api/one/org/enterprise/${p.enterpriseId}/tenants/${p.tenantId}/invites`,
-    (p) => ({ maxUses: p.maxUses, expiresInDays: p.expiresInDays })
-  ),
-  revokeEnterpriseTenantInvite: httpPost<void, { enterpriseId: string; tenantId: string; inviteId: string }>(
-    (p) => `/api/one/org/enterprise/${p.enterpriseId}/tenants/${p.tenantId}/invites/${p.inviteId}/revoke`,
-    () => ({})
-  ),
 };
 
 export const oneBilling = {
-  // Caller's company plan (tier + seats + entitlements); null for personal.
-  plan: httpGet<BillingPlan | null, void>('/api/one/billing/plan'),
-  // Usage dashboard aggregation (admin). `since` = ms lower bound (default 30d).
-  usage: httpGet<UsageSummary, { since?: number }>((p) =>
-    p && p.since ? `/api/one/billing/usage?since=${p.since}` : '/api/one/billing/usage'
-  ),
-  // Cumulative estimated cost for one conversation, self-scoped (any member,
-  // not just billing admins). dream ("1ONE CLI") conversations have no other
-  // way to surface a session cost — the ACP-only passive `/usage` snapshot
-  // structurally never fires for them — so useDreamEngineMessage polls this
-  // instead. Zero for a conversation with no turns yet, never an error.
   getConversationCost: httpGet<{ conversationId: string; estimatedCostMicros: number }, { conversation_id: string }>(
     (p) => `/api/one/billing/conversation-cost?conversationId=${p.conversation_id}`
   ),
   // The vendor-signed license backing the plan; null when never activated.
-  license: httpGet<BillingLicense | null, void>('/api/one/billing/license'),
-  // Activate a vendor-signed key. This is the ONLY path that can raise a tier
-  // (`setTier` below is downgrade-only) and returns the refreshed plan.
-  activateLicense: httpPost<BillingPlan, ActivateLicenseInput>('/api/one/billing/license', (p) => p),
-  // Manual tier provisioning (billing admin) — DOWNGRADE ONLY; raising a tier
-  // is refused with UPGRADE_REQUIRES_LICENSE.
-  setTier: httpPut<BillingPlan, SetTierInput>('/api/one/billing/tier', (p) => p),
-  // Model control (P1-2): spend cap + model allowlist (billing admin).
-  setModelControl: httpPut<BillingPlan, ModelControlInput>('/api/one/billing/model-control', (p) => p),
-  // Begin an upgrade; the manual provider returns a `manual` result.
-  checkout: httpPost<CheckoutResult, { targetTier: string }>('/api/one/billing/checkout'),
-  // T7: per-department spend caps + usage, layered under the company-wide cap.
-  listDepartmentBudgets: httpGet<DepartmentBudget[], void>('/api/one/billing/department-budgets'),
-  setDepartmentBudget: httpPut<DepartmentBudget[], SetDepartmentBudgetInput>(
-    '/api/one/billing/department-budgets',
-    (p) => p
-  ),
-  // T8: the consolidated media ledger — one row per generated file, admin
-  // search, and a company-wide opt-in for prompt retention (off by default).
-  reportMediaAsset: httpPost<void, ReportMediaAssetInput>('/api/one/billing/media-ledger/report'),
-  listMediaAssets: httpGet<MediaAssetLedgerEntry[], MediaLedgerQuery>((p) => {
-    const qs = new URLSearchParams();
-    if (p?.kind) qs.set('kind', p.kind);
-    if (p?.model) qs.set('model', p.model);
-    if (p?.userId) qs.set('userId', p.userId);
-    if (p?.since != null) qs.set('since', String(p.since));
-    if (p?.promptContains) qs.set('promptContains', p.promptContains);
-    if (p?.limit != null) qs.set('limit', String(p.limit));
-    const s = qs.toString();
-    return s ? `/api/one/billing/media-ledger?${s}` : '/api/one/billing/media-ledger';
-  }),
-  getMediaLedgerSettings: httpGet<MediaLedgerSettings, void>('/api/one/billing/media-ledger/settings'),
-  setMediaLedgerSettings: httpPut<MediaLedgerSettings, MediaLedgerSettings>(
-    '/api/one/billing/media-ledger/settings',
-    (p) => p
-  ),
 };
 
 export const oneEnterprise = {
@@ -2971,153 +2880,9 @@ export const oneEnterprise = {
   me: httpGet<EnterpriseIdentity | null, void>('/api/one/enterprise/me'),
   // Direction B: the company tier ABOVE project groups.
   company: httpGet<CompanyOverview | null, void>('/api/one/enterprise/company'),
-  setupCompany: httpPost<CompanyOverview, { name: string }>('/api/one/enterprise/company/setup'),
-  renameCompany: httpPut<CompanyOverview, { name: string }>('/api/one/enterprise/company'),
-  // Irreversible: deletes every project group the company owns, every
-  // membership, every enterprise-scoped usage/billing record, and the
-  // company record itself. See EnterpriseService::disband_company.
-  disbandCompany: httpDelete<DisbandCompanyResult, void>('/api/one/enterprise/company'),
-  companyMembers: httpGet<CompanyMember[], void>('/api/one/enterprise/company/members'),
-  setCompanyMemberRole: httpPut<void, { userId: string; role: string }>(
-    (p) => `/api/one/enterprise/company/members/${p.userId}/role`,
-    (p) => ({ role: p.role })
-  ),
-  // P0-2: remove a member from the company, releasing their licensed seat.
-  removeCompanyMember: httpDelete<void, { userId: string }>((p) => `/api/one/enterprise/company/members/${p.userId}`),
-  // Self-service departure — any authenticated company member on themself.
-  // Previously the only company-side removal was admin-initiated
-  // (removeCompanyMember, which refuses actor===target) or disbanding the
-  // whole company; an ordinary member had no way to leave on their own.
-  leaveCompany: httpPost<void, void>('/api/one/enterprise/company/leave'),
-  // Invite a directory person: pre-registration only, never an access gate
-  // (SSO login auto-joins regardless — see EnterpriseService::create_invite).
-  companyInvites: httpGet<CompanyInvite[], void>('/api/one/enterprise/company/invites'),
-  createCompanyInvite: httpPost<
-    CompanyInvite,
-    {
-      provider: string;
-      externalId: string;
-      displayName?: string | null;
-      department?: string | null;
-      jobTitle?: string | null;
-    }
-  >('/api/one/enterprise/company/invites'),
-  revokeCompanyInvite: httpDelete<void, { inviteId: string }>(
-    (p) => `/api/one/enterprise/company/invites/${p.inviteId}`
-  ),
-  // T6 directory sync. Reads live here because the mirror is company-scoped
-  // data owned by one-enterprise; triggering a pull lives under
-  // `oneAdmin.runDirectorySync` because one-sso owns the Feishu credentials.
-  directoryStatus: httpGet<DirectorySyncState | null, void>('/api/one/enterprise/directory/status'),
-  directoryDeparted: httpGet<DepartedMember[], void>('/api/one/enterprise/directory/departed'),
-  directoryPeople: httpGet<DirectoryPerson[], void>('/api/one/enterprise/directory/people'),
 };
 
 export const oneAdmin = {
-  listUsers: httpGet<AdminUser[], void>('/api/one/admin/users'),
-  setUserRole: httpPut<void, { userId: string; role: string }>(
-    (p) => `/api/one/admin/users/${p.userId}/role`,
-    (p) => ({ role: p.role })
-  ),
-  /**
-   * P0-2: remove a member from the project group. Frees their seat and rotates
-   * their JWT secret, so their existing sessions stop working immediately.
-   */
-  removeUser: httpDelete<void, { userId: string }>((p) => `/api/one/admin/users/${p.userId}`),
-  // P1-1: enterprise configuration backup. The bundle is secret-redacted
-  // server-side; credentials must be re-entered after a restore.
-  exportBackup: httpGet<BackupBundle, void>('/api/one/admin/backup/export'),
-  importBackup: httpPost<BackupImportReport, BackupBundle>('/api/one/admin/backup/import', (p) => p),
-  // P2-3 organizational hierarchy: assign/clear a member's department.
-  assignMemberDepartment: httpPut<void, { userId: string; departmentId: string | null }>(
-    (p) => `/api/one/admin/users/${p.userId}/department`,
-    (p) => ({ departmentId: p.departmentId })
-  ),
-  listDepartments: httpGet<Department[], void>('/api/one/admin/departments'),
-  createDepartment: httpPost<Department, { name: string; parentId?: string | null }>('/api/one/admin/departments'),
-  renameDepartment: httpPut<Department, { departmentId: string; name: string }>(
-    (p) => `/api/one/admin/departments/${p.departmentId}`,
-    (p) => ({ name: p.name })
-  ),
-  deleteDepartment: httpDelete<void, { departmentId: string }>((p) => `/api/one/admin/departments/${p.departmentId}`),
-  // T6 stage 3: move a department without delete+recreate (which would lose
-  // member assignments and, for a directory-mapped row, the id a re-sync
-  // matches against). `parentId: null` moves it to top-level.
-  setDepartmentParent: httpPut<Department, { departmentId: string; parentId: string | null }>(
-    (p) => `/api/one/admin/departments/${p.departmentId}/parent`,
-    (p) => ({ parentId: p.parentId })
-  ),
-  // T6 stage 3: the company directory mirror, for the "pick a subtree to
-  // map" picker. Empty on personal/standalone installs or before any
-  // directory sync has run.
-  listDirectoryCandidates: httpGet<DirectoryDepartmentCandidate[], void>(
-    '/api/one/admin/departments/directory-candidates'
-  ),
-  mapFromDirectory: httpPost<DirectoryMapReport, { rootExternalId: string }>(
-    '/api/one/admin/departments/map-from-directory'
-  ),
-  listInvites: httpGet<OrgInvite[], void>('/api/one/admin/invites'),
-  createInvite: httpPost<CreatedInvite, { maxUses?: number; expiresInDays?: number }>('/api/one/admin/invites'),
-  revokeInvite: httpPost<void, { inviteId: string }>(
-    (p) => `/api/one/admin/invites/${p.inviteId}/revoke`,
-    () => ({})
-  ),
-  // P2-4 onboarding: generate many invite codes in one click.
-  createInvitesBulk: httpPost<CreatedInvite[], BulkInviteInput>('/api/one/admin/invites/bulk'),
-  // P2-4 onboarding: reserved seam — `not_configured` until SMTP is set up.
-  sendInviteEmail: httpPost<SendEmailResult, { inviteId: string; to: string }>(
-    (p) => `/api/one/admin/invites/${p.inviteId}/send-email`,
-    (p) => ({ to: p.to })
-  ),
-  // P2-4 onboarding: email domains that may auto-join without an invite code.
-  getAllowedDomains: httpGet<string[], void>('/api/one/admin/onboarding/domains'),
-  setAllowedDomains: httpPut<string[], { domains: string[] }>('/api/one/admin/onboarding/domains', (p) => ({
-    domains: p.domains,
-  })),
-  // P2-4 onboarding: reserved SMTP config for invite emails (see SmtpConfig).
-  getSmtpConfig: httpGet<SmtpConfig, void>('/api/one/admin/onboarding/smtp'),
-  setSmtpConfig: httpPut<SmtpConfig, SetSmtpConfigInput>('/api/one/admin/onboarding/smtp', (p) => p),
-  // P2-1 integration connectors: reserved framework (see Integration). Saving a
-  // connector stores its config/secret; `testIntegration` reports
-  // `not_configured` until a real provider is wired at the backend app layer.
-  listIntegrations: httpGet<Integration[], void>('/api/one/admin/integrations'),
-  setIntegration: httpPut<Integration, SetIntegrationInput>(
-    (p) => `/api/one/admin/integrations/${p.provider}`,
-    (p) => ({ baseUrl: p.baseUrl, config: p.config, secret: p.secret, enabled: p.enabled })
-  ),
-  testIntegration: httpPost<IntegrationTestResult, { provider: string }>(
-    (p) => `/api/one/admin/integrations/${p.provider}/test`,
-    () => ({})
-  ),
-  // P1-3 container runtime + P2-2 realtime collaboration: reserved platform
-  // config (see ContainerConfig / CollaborationConfig). A probe reports
-  // `not_configured` until a real runtime/provider is wired at the backend.
-  getContainerConfig: httpGet<ContainerConfig, void>('/api/one/admin/platform/container'),
-  setContainerConfig: httpPut<ContainerConfig, SetContainerConfigInput>('/api/one/admin/platform/container', (p) => p),
-  probeContainer: httpPost<PlatformProbeResult, void>('/api/one/admin/platform/container/probe', () => ({})),
-  getCollaborationConfig: httpGet<CollaborationConfig, void>('/api/one/admin/platform/collaboration'),
-  setCollaborationConfig: httpPut<CollaborationConfig, SetCollaborationConfigInput>(
-    '/api/one/admin/platform/collaboration',
-    (p) => p
-  ),
-  probeCollaboration: httpPost<PlatformProbeResult, void>('/api/one/admin/platform/collaboration/probe', () => ({})),
-  // P1-4 IP allowlist: config + a check endpoint to validate a rule (enforcement
-  // is a reserved drop-in, not wired by default).
-  getIpAllowlist: httpGet<IpAllowlistConfig, void>('/api/one/admin/platform/ip-allowlist'),
-  setIpAllowlist: httpPut<IpAllowlistConfig, SetIpAllowlistInput>('/api/one/admin/platform/ip-allowlist', (p) => p),
-  checkIpAllowlist: httpPost<{ allowed: boolean }, { ip: string }>(
-    '/api/one/admin/platform/ip-allowlist/check',
-    (p) => ({ ip: p.ip })
-  ),
-  // P1-4 SIEM export: reserved — probe reports `not_configured` until wired.
-  getSiemConfig: httpGet<SiemConfig, void>('/api/one/admin/platform/siem'),
-  setSiemConfig: httpPut<SiemConfig, SetSiemConfigInput>('/api/one/admin/platform/siem', (p) => p),
-  probeSiem: httpPost<PlatformProbeResult, void>('/api/one/admin/platform/siem/probe', () => ({})),
-  listAudit: httpGet<AuditLogEntry[], { limit: number }>((p) => `/api/one/admin/audit?limit=${p.limit}`),
-  listRuntimeNodes: httpGet<RuntimeNode[], void>('/api/one/admin/runtime/nodes'),
-  deleteRuntimeNode: httpDelete<void, { id: string }>((p) => `/api/one/admin/runtime/nodes/${p.id}`),
-  // Any enterprise member's machine may report itself in (not admin-only —
-  // the whole point is fleet-wide visibility). See useRuntimeNodeHeartbeat.
   runtimeHeartbeat: httpPost<
     { nodeId: string },
     {
@@ -3130,15 +2895,6 @@ export const oneAdmin = {
   >('/api/one/admin/runtime/heartbeat'),
   // Admin-only variant of the public /api/one/sso/providers status list:
   // includes non-secret config values so the settings form can pre-fill.
-  listSsoProviders: httpGet<SsoProviderConfig[], void>('/api/one/admin/sso/providers'),
-  upsertSsoProvider: httpPut<void, { provider: string; input: UpdateSsoProviderInput }>(
-    (p) => `/api/one/admin/sso/${p.provider}`,
-    (p) => p.input
-  ),
-  // T6: pull the company directory now instead of waiting for the timer. Same
-  // code path the scheduler runs, so pressing this can never give a different
-  // answer than the loop would.
-  runDirectorySync: httpPost<DirectorySyncResult, void>('/api/one/admin/sso/directory/sync'),
 };
 
 export const oneDevops = {

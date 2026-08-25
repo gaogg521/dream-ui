@@ -25,7 +25,6 @@ const CodexBridgeSettings = React.lazy(() => import('@renderer/pages/settings/Co
 const ClaudeBridgeSettings = React.lazy(() => import('@renderer/pages/settings/ClaudeBridgeSettings'));
 const EnterpriseSettings = React.lazy(() => import('@renderer/pages/settings/EnterpriseSettings'));
 const EnterpriseIdentitySettings = React.lazy(() => import('@renderer/pages/settings/EnterpriseIdentitySettings'));
-const CompanyConsole = React.lazy(() => import('@renderer/pages/enterprise/CompanyConsole'));
 const ExtensionSettingsPage = React.lazy(() => import('@renderer/pages/settings/ExtensionSettingsPage'));
 const LoginPage = React.lazy(() => import('@renderer/pages/login'));
 const ComponentsShowcase = React.lazy(() => import('@renderer/pages/TestShowcase'));
@@ -34,7 +33,6 @@ const TaskDetailPage = React.lazy(() => import('@renderer/pages/cron/ScheduledTa
 const TeamIndex = React.lazy(loadTeamIndex);
 const SuperAssistant = React.lazy(() => import('@renderer/pages/superAssistant'));
 const EnterpriseLoginPage = React.lazy(() => import('@renderer/pages/enterprise/EnterpriseLoginPage'));
-const EnterpriseConsole = React.lazy(() => import('@renderer/pages/enterprise/EnterpriseConsole'));
 const MemoryPage = React.lazy(() => import('@renderer/pages/memory'));
 const SessionCenter = React.lazy(() => import('@renderer/pages/SessionCenter'));
 const SkillsSettings = React.lazy(loadSkillsSettings);
@@ -89,8 +87,8 @@ const SkillDetailRedirect: React.FC = () => {
 
 /**
  * `/login` route. When already authenticated, honor a validated `redirect`
- * query param (e.g. the "WebUI 管理员登录" entry passes
- * `?redirect=/enterprise/console`) instead of always bouncing to /guid.
+ * query param (e.g. the enterprise login entry passes
+ * `?redirect=/settings/enterprise`) instead of always bouncing to /guid.
  */
 const LoginRoute: React.FC = () => {
   const { status } = useAuth();
@@ -161,7 +159,6 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/settings/claude-bridge' element={withRouteFallback(ClaudeBridgeSettings)} />
           <Route path='/settings/enterprise' element={withRouteFallback(EnterpriseSettings)} />
           <Route path='/settings/enterprise-identity' element={withRouteFallback(EnterpriseIdentitySettings)} />
-          <Route path='/settings/company' element={withRouteFallback(CompanyConsole)} />
           <Route path='/settings/system' element={withRouteFallback(SystemSettings)} />
           <Route path='/settings/about' element={withRouteFallback(SystemSettings)} />
           <Route path='/settings/ext/:tabId' element={withRouteFallback(ExtensionSettingsPage)} />
@@ -183,7 +180,6 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/skills/import-history' element={<Navigate to='/settings/skills/import-history' replace />} />
           <Route path='/skills/detail/:skillName' element={<SkillDetailRedirect />} />
           <Route path='/enterprise/login' element={withRouteFallback(EnterpriseLoginPage)} />
-          <Route path='/enterprise/console' element={withRouteFallback(EnterpriseConsole)} />
           <Route path='/enterprise' element={<Navigate to='/settings/enterprise' replace />} />
           <Route path='/sessions' element={withRouteFallback(SessionCenter)} />
           <Route path='/mcp' element={withRouteFallback(McpPage)} />

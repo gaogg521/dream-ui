@@ -264,10 +264,11 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) 
 
   if (context.isEnterprise) {
     const role = roleLabelKey[context.role] ?? roleLabelKey.member;
-    // Deep-link straight to the admin backend route. Without the hash the
-    // WebUI root redirects to /guid (the member's own chat), which is why the
-    // bare base URL looked like "the user's own web interface".
-    const adminConsoleHref = adminConsoleUrl ? `${adminConsoleUrl.replace(/\/+$/, '')}/#/enterprise/console` : '';
+    // The console is a separate SPA served at /admin by the gateway, no longer
+    // a hash route inside the WebUI. The path matters: the WebUI root redirects
+    // to /guid (the member's own chat), so a bare base URL looked like "the
+    // user's own web interface" rather than the admin backend.
+    const adminConsoleHref = adminConsoleUrl ? `${adminConsoleUrl.replace(/\/+$/, '')}/admin` : '';
 
     const descData: { label: string; value: React.ReactNode }[] = [
       { label: t('common.enterprise.fieldTenantName', { defaultValue: '企业名称' }), value: context.tenantName ?? '-' },

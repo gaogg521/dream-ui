@@ -20,7 +20,7 @@ import { useEnterpriseIdentity } from '@renderer/pages/enterprise/hooks/useEnter
 import { useCompanyIdentity } from '@renderer/pages/enterprise/hooks/useCompanyIdentity';
 import { useDeploymentRole } from '@renderer/hooks/enterprise/useDeploymentRole';
 import { isElectronDesktop } from '@renderer/utils/platform';
-import { openWebuiAdminLogin } from '@renderer/utils/enterprise/enterpriseBrowserLogin';
+import { openAdminConsole } from '@renderer/utils/enterprise/enterpriseBrowserLogin';
 import styles from './WorkspaceIdentityEntry.module.css';
 
 type WorkspaceIdentityEntryProps = {
@@ -123,9 +123,10 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
   );
 
   const handleAdminLogin = useCallback(async () => {
-    // Land on the admin console after logging in (EnterpriseConsole gates
-    // non-admins with a clear permission page), not the personal /guid chat.
-    const ok = await openWebuiAdminLogin('/enterprise/console');
+    // The console is a separate SPA served at /admin by the gateway in front of
+    // whichever dreamcore this machine defers to — so this always leaves the
+    // app, in client mode as well as server mode.
+    const ok = await openAdminConsole();
     if (!ok) {
       Message.warning(
         t('common.enterprise.loginWebuiRequired', {
@@ -185,7 +186,7 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
         if (key === 'join') handleEnterpriseLogin();
         if (key === 'joinGroup') handleJoinProjectGroup();
         if (key === 'admin') void handleAdminLogin();
-        if (key === 'console') navigate('/enterprise/console');
+        if (key === 'console') void handleAdminLogin();
         if (key === 'settings') navigate('/settings/enterprise');
       }}
     >
@@ -237,14 +238,13 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
       ) : null}
       {isEnterprise ? (
         <>
-          {/* Client mode deliberately has no in-app admin console entry —
-              enterprise/index.tsx's own "进入企业管理后台" button is gated
-              the same way (!isDeploymentClient), and the hint text shown
-              elsewhere on client terminals promises exactly this ("本机不
-              显示项目组管理后台入口"). This item used to gate on `isAdmin`
-              alone, so a client-mode org_admin still saw and could open
-              /enterprise/console in-app, contradicting that promise. */}
-          {isAdmin && !hideLocalAdmin ? (
+          {/* Client mode used to be excluded here because the entry opened the
+              console INSIDE the app, which a client terminal must not host. The
+              console now always opens in the browser against the server this
+              machine defers to, so a client-mode org_admin gets the same entry
+              — pointed at the remote deployment, which is the one they
+              administer. */}
+          {isAdmin ? (
             <Menu.Item key='console'>
               <span className={styles.actionRow}>
                 <Peoples theme='outline' size={15} />

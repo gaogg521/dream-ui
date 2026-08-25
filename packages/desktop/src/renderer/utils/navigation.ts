@@ -38,7 +38,7 @@ export const globalNavigate = (to: string, options?: NavigateOptions): void => {
  * back to `/guid` when it is missing or unsafe. Only in-app hash-router paths
  * are allowed: a single leading slash, no protocol/host (`//` or `scheme://`),
  * no backslashes. This closes the open-redirect vector while letting the WebUI
- * login honor entry points like `?redirect=/enterprise/console`.
+ * login honor entry points like `?redirect=/settings/enterprise`.
  */
 export const resolveSafeRedirect = (raw: string | null | undefined, fallback = '/guid'): string => {
   if (!raw || !raw.startsWith('/') || raw.startsWith('//') || raw.includes('://') || raw.includes('\\')) {

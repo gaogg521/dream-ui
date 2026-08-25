@@ -54,11 +54,27 @@ export async function openWebuiEnterpriseLogin(returnTo = '/settings/enterprise'
   return true;
 }
 
-export async function openWebuiAdminLogin(returnTo = '/enterprise/console'): Promise<boolean> {
+/**
+ * Open the enterprise admin console in the system browser.
+ *
+ * The console is no longer part of this app — it is a separate SPA served at
+ * `/admin` by the same gateway that fronts the backend. So the destination is
+ * whichever dreamcore this machine defers to: the remote server when running
+ * as a client, otherwise the WebUI this machine hosts.
+ *
+ * Returns false when neither is reachable (server mode with the WebUI not
+ * running and unable to start), so the caller can say why nothing happened.
+ */
+export async function openAdminConsole(path = '/'): Promise<boolean> {
+  const suffix = path.startsWith('/') ? path : `/${path}`;
+  const remote = getEnterpriseServerUrl()?.replace(/\/+$/, '') ?? null;
+  if (remote) {
+    await openExternalUrl(`${remote}/admin${suffix === '/' ? '' : suffix}`);
+    return true;
+  }
   const webui = await ensureWebuiRunning();
   if (!webui) return false;
-  const url = buildWebuiHashLoginUrl(webui.localUrl, { mode: 'admin', redirect: returnTo });
-  await openExternalUrl(url);
+  await openExternalUrl(`${webui.localUrl}/admin${suffix === '/' ? '' : suffix}`);
   return true;
 }
 
