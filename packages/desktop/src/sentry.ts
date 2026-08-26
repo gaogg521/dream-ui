@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -207,12 +207,21 @@ function getInstallPathKind(resourcesPath: unknown): string | undefined {
   if (!pathValue) return undefined;
 
   const normalized = pathValue.replace(/\//g, '\\').toLowerCase();
-  if (normalized.includes('\\appdata\\local\\programs\\aionui\\resources')) {
+  // The Windows install directory is named after `executableName` in
+  // electron-builder.yml, which is `1onecode`. Matching only the upstream
+  // `aionui` made every Windows install fall through to `custom`, hiding the
+  // exact install-location signal this tag exists to provide. The old name is
+  // kept as a second match so reports from pre-rename installs still classify.
+  const installDirs = ['1onecode', 'aionui'];
+  if (installDirs.some((dir) => normalized.includes(`\\appdata\\local\\programs\\${dir}\\resources`))) {
     return 'user_local_programs';
   }
   if (
-    normalized.includes('\\program files\\aionui\\resources') ||
-    normalized.includes('\\program files (x86)\\aionui\\resources')
+    installDirs.some(
+      (dir) =>
+        normalized.includes(`\\program files\\${dir}\\resources`) ||
+        normalized.includes(`\\program files (x86)\\${dir}\\resources`)
+    )
   ) {
     return 'program_files';
   }

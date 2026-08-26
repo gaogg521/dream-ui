@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -223,7 +223,7 @@ class AutoUpdaterService extends EventEmitter {
     }
 
     try {
-      const safeCwd = path.join(app.getPath('temp'), 'aionui-updater-cwd');
+      const safeCwd = path.join(app.getPath('temp'), 'one-updater-cwd');
       fs.mkdirSync(safeCwd, { recursive: true });
       process.chdir(safeCwd);
       log.info('[auto-update] Moved process cwd before Windows installer handoff', { cwd: safeCwd });

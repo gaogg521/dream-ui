@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -73,6 +73,8 @@ vi.mock('@icon-park/react', () => ({
   Refresh: () => <span aria-hidden='true'>refresh</span>,
   Search: () => <span aria-hidden='true'>search</span>,
   SettingTwo: () => <span>configure</span>,
+  // Rendered by TrialModelCard, which the provider form pulls in.
+  Thunderbolt: () => <span aria-hidden='true'>trial</span>,
   Write: () => <span>edit-provider</span>,
 }));
 

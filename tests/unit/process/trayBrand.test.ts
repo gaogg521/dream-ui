@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -42,9 +42,11 @@ describe('brand surfaces outside i18n', () => {
   });
 
   it('leaves no upstream product name in user-visible main-process strings', () => {
-    // Scoped to the surfaces users read. Log prefixes ("[AionUi] ..."), internal
-    // identifiers (AIONUI_*, aionui-*), copyright headers and package/URL
-    // references are deliberately out of scope — see the brand boundary rule.
+    // Scoped to the surfaces users read. Internal identifiers (AIONUI_*,
+    // aionui-*) and package/URL references are deliberately out of scope — see
+    // the brand boundary rule. Log prefixes used to be excluded too; they have
+    // since been swept to "[1ONE] ...", so the guard now covers them and a
+    // reintroduced "[AionUi]" prefix fails here.
     const files = [
       'packages/desktop/src/process/utils/tray.ts',
       'packages/desktop/src/process/startup/architectureCompatibility.ts',
@@ -60,7 +62,7 @@ describe('brand surfaces outside i18n', () => {
 
       const offenders = [...source.matchAll(/(['"`])([^'"`\n]*AionUi[^'"`\n]*)\1/g)]
         .map((match) => match[2])
-        .filter((text) => !text.startsWith('[AionUi]') && !/^aionui[-_]/i.test(text) && !text.includes('aionui.com'));
+        .filter((text) => !/^aionui[-_]/i.test(text) && !text.includes('aionui.com'));
 
       expect(offenders, `${file} carries a user-visible upstream brand string`).toEqual([]);
     }

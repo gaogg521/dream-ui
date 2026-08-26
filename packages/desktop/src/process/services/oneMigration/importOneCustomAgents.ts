@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -196,16 +196,16 @@ export async function migrateOneCustomAgents(configFile: ConfigFile): Promise<bo
   results.forEach((result, index) => {
     if (result.status === 'rejected') {
       failed += 1;
-      console.error(`[AionUi] Failed to import 1one custom agent '${toImport[index].name}':`, result.reason);
+      console.error(`[1ONE] Failed to import 1one custom agent '${toImport[index].name}':`, result.reason);
     }
   });
 
   if (failed > 0) {
-    console.error(`[AionUi] 1one custom agent migration partial: ${failed}/${toImport.length} failed`);
+    console.error(`[1ONE] 1one custom agent migration partial: ${failed}/${toImport.length} failed`);
     return false;
   }
   if (toImport.length > 0) {
-    console.log(`[AionUi] Migrated ${toImport.length} 1one custom agent(s)`);
+    console.log(`[1ONE] Migrated ${toImport.length} 1one custom agent(s)`);
   }
   await setFlag();
   return true;

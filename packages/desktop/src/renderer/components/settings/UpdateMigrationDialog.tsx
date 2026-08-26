@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -97,7 +97,7 @@ const UpdateMigrationDialog: React.FC = () => {
 
   const gotoWebsite = () => {
     void openExternalUrl(AIONUI_WEBSITE_URL).catch((error) => {
-      console.error('Failed to open AionUi Pro website:', error);
+      console.error('Failed to open the Pro website:', error);
     });
     close();
   };

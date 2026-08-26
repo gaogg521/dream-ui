@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -710,7 +710,7 @@ async function syncBuiltinMcpConfig(configFile: ConfigFile): Promise<void> {
 
   await httpRequest<void>('PUT', '/api/settings/client', { 'mcp.config': mergedMcpConfig });
   console.info(
-    '[AionUi] Synced builtin MCP config to backend settings (%d builtin servers)',
+    '[1ONE] Synced builtin MCP config to backend settings (%d builtin servers)',
     localBuiltinServers.length
   );
 }
@@ -721,9 +721,9 @@ export async function runBackendMigrations(configFile: ConfigFile): Promise<void
     const start = Date.now();
     try {
       await step.run();
-      console.info(`[AionUi] Backend migration step completed: ${step.name} (${Date.now() - start}ms)`);
+      console.info(`[1ONE] Backend migration step completed: ${step.name} (${Date.now() - start}ms)`);
     } catch (error) {
-      console.error(`[AionUi] Backend migration step failed: ${step.name} (${Date.now() - start}ms)`, error);
+      console.error(`[1ONE] Backend migration step failed: ${step.name} (${Date.now() - start}ms)`, error);
     }
   }, Promise.resolve());
 
@@ -734,21 +734,21 @@ export async function runBackendMigrations(configFile: ConfigFile): Promise<void
       const completed = await step.run(configFile);
       const elapsed = Date.now() - start;
       if (!completed) {
-        console.warn(`[AionUi] Backend migration step incomplete: ${step.name} (${elapsed}ms)`);
+        console.warn(`[1ONE] Backend migration step incomplete: ${step.name} (${elapsed}ms)`);
         return;
       }
-      console.info(`[AionUi] Backend migration step completed: ${step.name} (${elapsed}ms)`);
+      console.info(`[1ONE] Backend migration step completed: ${step.name} (${elapsed}ms)`);
     } catch (error) {
       const elapsed = Date.now() - start;
-      console.error(`[AionUi] Backend migration step failed: ${step.name} (${elapsed}ms)`, error);
+      console.error(`[1ONE] Backend migration step failed: ${step.name} (${elapsed}ms)`, error);
     }
   }, Promise.resolve());
 
   const syncStart = Date.now();
   try {
     await syncBuiltinMcpConfig(configFile);
-    console.info(`[AionUi] Backend migration step completed: syncBuiltinMcpConfig (${Date.now() - syncStart}ms)`);
+    console.info(`[1ONE] Backend migration step completed: syncBuiltinMcpConfig (${Date.now() - syncStart}ms)`);
   } catch (error) {
-    console.error(`[AionUi] Backend migration step failed: syncBuiltinMcpConfig (${Date.now() - syncStart}ms)`, error);
+    console.error(`[1ONE] Backend migration step failed: syncBuiltinMcpConfig (${Date.now() - syncStart}ms)`, error);
   }
 }

@@ -210,9 +210,9 @@ function parseStartupLog(lines: string[]): ParsedMarks {
       continue;
     }
 
-    if (line.includes('[AionUi] Renderer did-finish-load')) marks.logs.rendererDidFinishLoad = true;
-    else if (line.includes('[AionUi] Window ready-to-show')) marks.logs.windowReadyToShow = true;
-    else if (line.includes('[AionUi] Showing main window')) marks.logs.showingMainWindow = true;
+    if (line.includes('[1ONE] Renderer did-finish-load')) marks.logs.rendererDidFinishLoad = true;
+    else if (line.includes('[1ONE] Window ready-to-show')) marks.logs.windowReadyToShow = true;
+    else if (line.includes('[1ONE] Showing main window')) marks.logs.showingMainWindow = true;
   }
 
   return marks;
