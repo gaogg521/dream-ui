@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  *
  * Unit tests for the pure helpers exported from `packages/desktop/src/sentry.ts`:

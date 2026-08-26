@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  *
  * Verifies MessageToolGroup renders the FeedbackButton only when a tool call

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  *
  * Unit tests for the pure decision helper behind the one-time

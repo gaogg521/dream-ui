@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  *
  * LocalImageView resolves relative image paths in markdown against the

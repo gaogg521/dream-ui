@@ -1,7 +1,7 @@
 import React from 'react';
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  *
  * The installation-integrity dialog is shared by two paths with opposite

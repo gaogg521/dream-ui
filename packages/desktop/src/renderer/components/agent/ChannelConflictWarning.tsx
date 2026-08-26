@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 One Work (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
