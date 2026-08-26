@@ -1,13 +1,13 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { copyFileSync, existsSync, mkdtempSync, rmSync } from 'fs';
 import os from 'os';
 import path from 'path';
-import { getDataPath } from '@process/utils';
+import { getDataPath, resolveWithLegacyName } from '@process/utils';
 import type { ISqliteDriver } from '@process/services/database/drivers/ISqliteDriver';
 import { runMigrations } from '@process/services/database/migrations';
 import { repairLegacyHandoffSchema } from '@process/services/database/repairLegacyHandoffSchema';
@@ -291,7 +291,11 @@ function ensureHandoffBaseline(db: ISqliteDriver): void {
  * read-only, so the 1one install stays untouched (rollback = reinstall 1one).
  */
 export async function importOneLegacyDb(sourceDbPath: string, dataDir = getDataPath()): Promise<OneDbImportResult> {
-  const backendDbPath = path.join(dataDir, 'aionui-backend.db');
+  // Must resolve exactly the way the backend does (`data_paths::backend_db_path`):
+  // a pre-rebrand install still keeps its catalog under the old name, and probing
+  // only the current one would read "no backend catalog yet" and import into the
+  // legacy handoff DB that the backend has long since stopped reading.
+  const backendDbPath = resolveWithLegacyName(dataDir, 'one-backend.db', 'aionui-backend.db');
   const legacyDbPath = path.join(dataDir, 'aionui.db');
   const targetIsBackend = existsSync(backendDbPath);
   const targetDb = targetIsBackend ? backendDbPath : legacyDbPath;

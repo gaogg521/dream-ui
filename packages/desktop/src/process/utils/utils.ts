@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -25,6 +25,28 @@ const getElectronPathOrFallback = (name: 'temp' | 'home' | 'userData'): string =
     case 'userData':
       return paths.getDataDir();
   }
+};
+
+/**
+ * Pick the file name to use inside `parent`: the current one, unless only the
+ * pre-rebrand one is present on disk.
+ *
+ * Storage file names are the user's data, not decoration. Pointing at a name
+ * nothing on disk uses does not fail loudly — the JSON store simply starts empty
+ * and writes a fresh file, so a user's custom cache/work/log directories, their
+ * provider config and their conversation index all appear to have vanished.
+ * Nothing is moved: an existing install keeps reading and writing exactly the
+ * files it always has, and a fresh install gets the new names. Mirrors
+ * `data_paths::resolve_with_legacy` on the backend side.
+ *
+ * When both exist the current name wins, so an install that has already moved on
+ * does not fall back the moment a stale legacy file reappears beside it.
+ */
+export const resolveWithLegacyName = (parent: string, current: string, legacy: string): string => {
+  const currentPath = path.join(parent, current);
+  if (existsSync(currentPath)) return currentPath;
+  const legacyPath = path.join(parent, legacy);
+  return existsSync(legacyPath) ? legacyPath : currentPath;
 };
 
 export const getTempPath = () => {
@@ -362,7 +384,7 @@ export async function verifyDirectoryFiles(dir1: string, dir2: string): Promise<
 
     return true;
   } catch (error) {
-    console.warn('[AionUi] Error verifying directory files:', error);
+    console.warn('[1ONE] Error verifying directory files:', error);
     return false;
   }
 }
@@ -387,8 +409,8 @@ export const copyFilesToDirectory = async (
     try {
       await fs.access(absoluteFilePath);
     } catch (error) {
-      console.warn(`[AionUi] Source file does not exist, skipping: ${absoluteFilePath}`);
-      console.warn(`[AionUi] Original path: ${file}`);
+      console.warn(`[1ONE] Source file does not exist, skipping: ${absoluteFilePath}`);
+      console.warn(`[1ONE] Original path: ${file}`);
       // 跳过不存在的文件，而不是抛出错误
       continue;
     }
@@ -419,7 +441,7 @@ export const copyFilesToDirectory = async (
       await fs.copyFile(absoluteFilePath, destPath);
       copiedFiles.push(destPath);
     } catch (error) {
-      console.error(`[AionUi] Failed to copy file from ${absoluteFilePath} to ${destPath}:`, error);
+      console.error(`[1ONE] Failed to copy file from ${absoluteFilePath} to ${destPath}:`, error);
       // 继续处理其他文件，而不是完全失败
     }
 

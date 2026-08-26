@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -25,6 +25,7 @@ import {
   getDataPath,
   getTempPath,
   hasElectronAppPath,
+  resolveWithLegacyName,
   verifyDirectoryFiles,
 } from './utils';
 import { runLegacyDatabaseMigrations } from '@process/services/database/runLegacyDatabaseMigrations';
@@ -36,14 +37,34 @@ type ArchitectureType = 'x64' | 'arm64' | 'ia32' | 'arm';
 const nodePath = path;
 
 const STORAGE_PATH = {
-  config: 'aionui-config.txt',
-  chatMessage: 'aionui-chat-message.txt',
-  chat: 'aionui-chat.txt',
-  env: '.aionui-env',
+  config: 'one-config.txt',
+  chatMessage: 'one-chat-message.txt',
+  chat: 'one-chat.txt',
+  env: '.one-env',
+  chatHistory: 'one-chat-history',
   assistants: 'assistants',
   skills: 'skills',
   cronSkills: 'cron-skills',
 };
+
+/**
+ * Pre-rebrand file names, kept as a read fallback only.
+ *
+ * These files ARE the user's data — their custom cache/work/log directories,
+ * their provider config, their conversation index. Nothing is moved: an install
+ * that has them keeps reading and writing them, and only a fresh install gets
+ * the names above. See `resolveWithLegacyName`.
+ */
+const LEGACY_STORAGE_PATH = {
+  config: 'aionui-config.txt',
+  chatMessage: 'aionui-chat-message.txt',
+  chat: 'aionui-chat.txt',
+  env: '.aionui-env',
+  chatHistory: 'aionui-chat-history',
+};
+
+const storagePath = (parent: string, key: keyof typeof LEGACY_STORAGE_PATH): string =>
+  resolveWithLegacyName(parent, STORAGE_PATH[key], LEGACY_STORAGE_PATH[key]);
 
 /** Legacy builtin-skills cache directory, cleaned up at startup after the
  * backend took ownership of the corpus. */
@@ -70,7 +91,7 @@ const migrateLegacyData = async () => {
         try {
           return existsSync(newDir) && readdirSync(newDir).length === 0;
         } catch (error) {
-          console.warn('[AionUi] Warning: Could not read new directory during migration check:', error);
+          console.warn('[1ONE] Warning: Could not read new directory during migration check:', error);
           return false; // 假设非空以避免迁移覆盖
         }
       })();
@@ -91,7 +112,7 @@ const migrateLegacyData = async () => {
           try {
             await fs.rm(oldDir, { recursive: true });
           } catch (cleanupError) {
-            console.warn('[AionUi] 原目录清理失败，请手动删除:', oldDir, cleanupError);
+            console.warn('[1ONE] 原目录清理失败，请手动删除:', oldDir, cleanupError);
           }
         }
       }
@@ -99,7 +120,7 @@ const migrateLegacyData = async () => {
       return true;
     }
   } catch (error) {
-    console.error('[AionUi] 数据迁移失败:', error);
+    console.error('[1ONE] 数据迁移失败:', error);
   }
 
   return false;
@@ -234,26 +255,27 @@ const JsonFileBuilder = <S extends object = Record<string, unknown>>(file_path: 
   };
 };
 
-const envFile = JsonFileBuilder<IEnvStorageRefer>(path.join(getHomePage(), STORAGE_PATH.env));
+const envFile = JsonFileBuilder<IEnvStorageRefer>(storagePath(getHomePage(), 'env'));
 
 const dirConfig = envFile.getSync('aionui.dir');
 
 const cacheDir = dirConfig?.cacheDir || getHomePage();
 
-const configFile = JsonFileBuilder<ILegacyConfigStorageRefer>(path.join(cacheDir, STORAGE_PATH.config));
+const configFile = JsonFileBuilder<ILegacyConfigStorageRefer>(storagePath(cacheDir, 'config'));
 type ConversationHistoryData = Record<string, TMessage[]>;
 
-const _chatMessageFile = JsonFileBuilder<ConversationHistoryData>(path.join(cacheDir, STORAGE_PATH.chatMessage));
-const _chatFile = JsonFileBuilder<IChatConversationRefer>(path.join(cacheDir, STORAGE_PATH.chat));
+const _chatMessageFile = JsonFileBuilder<ConversationHistoryData>(storagePath(cacheDir, 'chatMessage'));
+const _chatFile = JsonFileBuilder<IChatConversationRefer>(storagePath(cacheDir, 'chat'));
 
 const chatFile = _chatFile;
 
 const buildMessageListStorage = (conversation_id: string, dir: string) => {
-  const fullName = path.join(dir, 'aionui-chat-history', conversation_id + '.txt');
+  const historyDir = storagePath(dir, 'chatHistory');
+  const fullName = path.join(historyDir, conversation_id + '.txt');
   if (!existsSync(fullName)) {
-    mkdirSync(path.join(dir, 'aionui-chat-history'));
+    mkdirSync(historyDir);
   }
-  return JsonFileBuilder<TMessage[]>(path.join(dir, 'aionui-chat-history', conversation_id + '.txt'));
+  return JsonFileBuilder<TMessage[]>(fullName);
 };
 
 const conversationHistoryProxy = (options: typeof _chatMessageFile, dir: string) => {
@@ -274,7 +296,7 @@ const conversationHistoryProxy = (options: typeof _chatMessageFile, dir: string)
     backup(conversation_id: string) {
       const storage = buildMessageListStorage(conversation_id, dir);
       return storage.backup(
-        path.join(dir, 'aionui-chat-history', 'backup', conversation_id + '_' + Date.now() + '.txt')
+        path.join(storagePath(dir, 'chatHistory'), 'backup', conversation_id + '_' + Date.now() + '.txt')
       );
     },
   };
@@ -315,7 +337,7 @@ const cleanupLegacyBuiltinSkillsDir = () => {
   const legacyDir = path.join(cacheDir, LEGACY_BUILTIN_SKILLS_DIR);
   if (!existsSync(legacyDir)) return;
   fs.rm(legacyDir, { recursive: true, force: true })
-    .then(() => console.log('[AionUi] Cleaned up legacy builtin-skills cache'))
+    .then(() => console.log('[1ONE] Cleaned up legacy builtin-skills cache'))
     .catch(() => {
       /* swallow — cleanup is not critical */
     });
@@ -393,7 +415,7 @@ const initStorage = async () => {
     await ensureAssistantDirs();
     mark('5. ensureAssistantDirs');
   } catch (error) {
-    console.error('[AionUi] Failed to ensure assistant dirs:', error);
+    console.error('[1ONE] Failed to ensure assistant dirs:', error);
   }
 
   // 5b. Best-effort cleanup of the legacy builtin-skills cache left behind
@@ -426,7 +448,7 @@ const initStorage = async () => {
     );
     mark(`6.5. oneLegacyImport ${oneImportSummary}`);
   } catch (error) {
-    console.error('[AionUi] 1one legacy import failed (will retry next launch):', error);
+    console.error('[1ONE] 1one legacy import failed (will retry next launch):', error);
     mark('6.5. oneLegacyImport failed');
   }
 
