@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -247,6 +247,31 @@ function buildAssetFileName(kind: MediaKind, extension: string, index: number): 
   return `${FILE_PREFIX[kind]}-${timestamp}${suffix}${extension}`;
 }
 
+/**
+ * Where generated assets land inside a conversation's workspace.
+ *
+ * A subdirectory rather than the workspace root: a conversation that generates
+ * a dozen images would otherwise bury the files the user actually works on, and
+ * the file tree is the surface where that hurts. Mirrors how reference inputs
+ * already get their own `refs/` (see `persistReferenceInputs`).
+ *
+ * Only the write target moves. Assets keep reporting `relativePath` against the
+ * *workspace* (so it reads `outputs/img-….png`), and a job's `origin.workspaceDir`
+ * stays the workspace too — `jobBelongsToWorkspace` matches a job to its
+ * conversation on that value, and pointing it at the subdirectory would break
+ * every media card exactly the way the env-name drift did.
+ */
+export const MEDIA_OUTPUT_SUBDIR = 'outputs';
+
+export const mediaOutputDir = (workspaceDir: string): string => path.join(workspaceDir, MEDIA_OUTPUT_SUBDIR);
+
+/** Resolve the write path for a generated asset, creating `outputs/` on demand. */
+async function prepareOutputPath(workspaceDir: string, fileName: string): Promise<string> {
+  const dir = mediaOutputDir(workspaceDir);
+  await fs.promises.mkdir(dir, { recursive: true });
+  return path.join(dir, fileName);
+}
+
 function toAsset(kind: MediaKind, filePath: string, workspaceDir: string): MediaAsset {
   return {
     kind,
@@ -269,12 +294,12 @@ export async function saveBase64MediaAsset(
   const extension =
     getFileExtensionFromDataUrl(base64Data) || (kind === 'video' ? DEFAULT_VIDEO_EXTENSION : DEFAULT_IMAGE_EXTENSION);
   const fileName = buildAssetFileName(kind, extension, index);
-  const filePath = path.join(workspaceDir, fileName);
 
   const base64WithoutPrefix = base64Data.replace(/^data:(image|video)\/[^;]+;base64,/, '');
   const buffer = Buffer.from(base64WithoutPrefix, 'base64');
 
   try {
+    const filePath = await prepareOutputPath(workspaceDir, fileName);
     await fs.promises.writeFile(filePath, buffer);
     return toAsset(kind, filePath, workspaceDir);
   } catch (error) {
@@ -325,10 +350,10 @@ export async function downloadUrlMediaAsset(
   }
 
   const fileName = buildAssetFileName(kind, extension, index);
-  const filePath = path.join(workspaceDir, fileName);
   const buffer = Buffer.from(await response.arrayBuffer());
 
   try {
+    const filePath = await prepareOutputPath(workspaceDir, fileName);
     await fs.promises.writeFile(filePath, buffer);
     return toAsset(kind, filePath, workspaceDir);
   } catch (error) {

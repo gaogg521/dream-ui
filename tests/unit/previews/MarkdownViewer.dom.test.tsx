@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -102,6 +102,13 @@ vi.mock('@arco-design/web-react', () => ({
     error: vi.fn(),
   },
   Tooltip: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  // A local-file link whose path is an image now renders an inline preview
+  // (LocalFileLink -> GeneratedMediaView), which goes through Arco's `Image`.
+  // This test links to `chart.jpg`, so the stub has to cover it or the
+  // component throws before the click assertion below is ever reached.
+  Image: Object.assign(({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />, {
+    PreviewGroup: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  }),
 }));
 
 vi.mock('@icon-park/react', () => ({

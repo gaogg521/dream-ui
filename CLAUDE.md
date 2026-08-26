@@ -89,7 +89,8 @@ node scripts/prepareAioncore.js
 
 | 文档                                                                                                                               | 说明                                                                               |
 | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [session-2026-08-25-openrouter-trial-model.zh-CN.md](./docs/guides/session-2026-08-25-openrouter-trial-model.zh-CN.md) | **最新**：一键体验免费模型（OpenRouter trial key），跨 dream-ui/dream-core/新建的 dream-trial-broker 三仓，含未完成事项 |
+| [session-2026-08-26-media-output-and-brand-cleanup.zh-CN.md](./docs/guides/session-2026-08-26-media-output-and-brand-cleanup.zh-CN.md) | **最新**：媒体产物错位根因（跨语言 env 契约被单边改名）、产物改落 `工作区/outputs/`、正文媒体预览、目录改名的读取回退策略 |
+| [session-2026-08-25-openrouter-trial-model.zh-CN.md](./docs/guides/session-2026-08-25-openrouter-trial-model.zh-CN.md) | 一键体验免费模型（OpenRouter trial key），跨 dream-ui/dream-core/新建的 dream-trial-broker 三仓，含未完成事项 |
 | [session-2026-08-23-dream-rebrand-data-migration.zh-CN.md](./docs/guides/session-2026-08-23-dream-rebrand-data-migration.zh-CN.md) | AionUi→dream 品牌独立化的持久化数据迁移详细过程、真实 bug 清单、验证记录 |
 | [fork-dev-onboarding.zh-CN.md](./docs/guides/fork-dev-onboarding.zh-CN.md)                                                         | 克隆、dev、打包、Release                                                           |
 | [ai-handoff-conventions.zh-CN.md](./docs/guides/ai-handoff-conventions.zh-CN.md)                                                   | 改完必写文档 + 前后端加载                                                          |

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -109,6 +109,14 @@ export const createInitStyle = (
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .markdown-local-file-preview {
+    display: block;
+    max-width: 100%;
+  }
+  .markdown-local-file-preview > .markdown-local-file-link,
+  .markdown-local-file-preview > span:first-child {
+    display: inline-flex;
   }
   .markdown-local-file-line {
     padding: 0 4px;

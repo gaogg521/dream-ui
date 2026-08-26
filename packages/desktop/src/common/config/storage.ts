@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -710,8 +710,12 @@ export interface IConversationMcpStatus {
 
 /** Stable ID for the built-in image generation MCP server */
 export const BUILTIN_IMAGE_GEN_ID = 'builtin-image-gen';
-export const BUILTIN_IMAGE_GEN_NAME = 'aionui-image-generation';
-export const BUILTIN_IMAGE_GEN_LEGACY_NAMES = ['AionUi Image Generation', BUILTIN_IMAGE_GEN_ID] as const;
+export const BUILTIN_IMAGE_GEN_NAME = 'one-image-generation';
+export const BUILTIN_IMAGE_GEN_LEGACY_NAMES = [
+  'aionui-image-generation',
+  'AionUi Image Generation',
+  BUILTIN_IMAGE_GEN_ID,
+] as const;
 
 /**
  * One reason a tool's definition will be rejected by the model API.

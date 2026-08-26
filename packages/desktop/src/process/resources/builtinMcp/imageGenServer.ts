@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 AionUi (aionui.com)
+ * Copyright 2026 1ONE
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -34,6 +34,27 @@ import { BUILTIN_IMAGE_GEN_NAME } from './constants';
 const PORT = parseInt(process.env.MEDIA_MCP_PORT || '0', 10);
 
 /**
+ * Env names the backend used before the 1ONE rebrand.
+ *
+ * The desktop app pairs with a downloaded `aioncore` release (`aioncoreVersion`
+ * in package.json), so a UI build routinely runs against a backend older than
+ * itself. Reading the legacy name as a fallback is what keeps generated media
+ * landing in the conversation workspace during that skew — without it the
+ * rename silently reverts every install to the `process.cwd()` fallback.
+ */
+const LEGACY_WORKSPACE_ENV = 'AIONUI_MEDIA_WORKSPACE_DIR';
+const LEGACY_CONVERSATION_ENV = 'AIONUI_MEDIA_CONVERSATION_ID';
+
+/** First non-empty value among `names`, trimmed. */
+const readEnv = (...names: string[]): string | undefined => {
+  for (const name of names) {
+    const value = process.env[name]?.trim();
+    if (value) return value;
+  }
+  return undefined;
+};
+
+/**
  * Where generated files should go when the caller does not say.
  *
  * `process.cwd()` is the wrong answer: this server is spawned as a child of the
@@ -60,7 +81,7 @@ const PORT = parseInt(process.env.MEDIA_MCP_PORT || '0', 10);
 /// same parameter on BOTH the image and the video tool, and both are now gone.
 /// `resolveSafePath` in `imageGenCore.ts` enforces the boundary underneath —
 /// but that only holds while the root itself is trustworthy.
-const sessionWorkspaceDir = (): string => process.env.DREAM_MEDIA_WORKSPACE_DIR?.trim() || process.cwd();
+const sessionWorkspaceDir = (): string => readEnv('DREAM_MEDIA_WORKSPACE_DIR', LEGACY_WORKSPACE_ENV) || process.cwd();
 
 /**
  * Which conversation this server was spawned for, when the backend told us.
@@ -72,7 +93,7 @@ const sessionWorkspaceDir = (): string => process.env.DREAM_MEDIA_WORKSPACE_DIR?
  * server outside a conversation, which the job engine treats as "no
  * attribution" rather than an error.
  */
-const sessionConversationId = (): string | undefined => process.env.DREAM_MEDIA_CONVERSATION_ID?.trim() || undefined;
+const sessionConversationId = (): string | undefined => readEnv('DREAM_MEDIA_CONVERSATION_ID', LEGACY_CONVERSATION_ENV);
 
 type AssetView = { filePath: string; relativePath: string; mimeType: string; kind: string };
 
@@ -236,7 +257,7 @@ async function main() {
   });
 
   server.tool(
-    'aionui_image_generation',
+    'one_image_generation',
     `The only way to reach an image-generation model. You cannot synthesise image pixels yourself, so any request for a depicted (created or edited) image has to come through here.
 
 Best for:
