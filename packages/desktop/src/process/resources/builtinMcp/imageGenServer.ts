@@ -284,7 +284,12 @@ NOT the right tool for charts, diagrams, dashboards, UI mockups, or any image th
 
 The two combine well: generate artwork or a background here, then lay the precise part (labels, figures, captions) over it in code.
 
-IMPORTANT: All prompts must be in English for optimal results.
+IMPORTANT: Write the prompt in the language the user wrote theirs in. Do not
+translate a Chinese request into English before sending it -- the configured
+models handle other languages natively, the prompt is echoed back to the user
+on the result card, and a translated one reads there as if their words were
+discarded. Translate only when the user asks you to, or when they wrote in a
+language and explicitly asked for an English prompt.
 
 Input Support:
 - Multiple local file paths in array format: ["img1.jpg", "img2.png"]
@@ -301,7 +306,7 @@ IMPORTANT: When user provides multiple images to edit/restyle, ALWAYS pass ALL i
       prompt: z
         .string()
         .describe(
-          'The text prompt in English that must clearly specify the operation type: "Generate image: [description]" for creating new images, or "Edit image: [modifications]" for editing images passed in image_uris. Never "Analyze image: ..." — this tool cannot analyse or read image content, only create or edit it.'
+          'The text prompt -- in the language the user used -- that must clearly specify the operation type: "Generate image: [description]" for creating new images, or "Edit image: [modifications]" for editing images passed in image_uris. Never "Analyze image: ..." — this tool cannot analyse or read image content, only create or edit it.'
         ),
       image_uris: z
         .array(z.string())
@@ -366,7 +371,7 @@ NOT the right tool for explainer videos built from real data, precise typography
 The two combine well: generate footage here, then cut it, caption it and lay data over it in code.
 
 IMPORTANT:
-- Prompts must be in English for best results.
+- Write the prompt in the language the user used; do not translate it for them.
 - Video generation is slow (typically 30 seconds to several minutes). This call blocks until the video is ready; do not retry or start a second job because it feels slow.
 - If the call fails with a timeout but reports a job id, the work may still be running — check it with one_media_job_status instead of regenerating.
 - Parameter support depends on the configured model; unsupported parameters are ignored.
@@ -375,7 +380,11 @@ Output:
 - Saves the video to the workspace and returns its path plus a job id.
 - You cannot view video content; describe it to the user by path, do not try to read the file.`,
     {
-      prompt: z.string().describe('Description of the video to generate, in English.'),
+      prompt: z
+        .string()
+        .describe(
+          'Description of the video to generate, written in the language the user used. Do not translate their wording.'
+        ),
       first_frame_image: z
         .string()
         .optional()
