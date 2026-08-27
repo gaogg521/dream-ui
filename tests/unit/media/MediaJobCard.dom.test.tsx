@@ -167,6 +167,18 @@ describe('MediaJobCard', () => {
     });
   });
 
+  // While the job runs the card shows a media-shaped skeleton, not the hairline
+  // bar it used to — the wait should occupy the space the result will.
+  it('shows the generating placeholder while the job is active', () => {
+    renderCard(<MediaJobCard job={job({ status: 'polling', kind: 'video' })} />);
+    expect(screen.getByTestId('media-job-placeholder')).toBeTruthy();
+  });
+
+  it('drops the placeholder once the job has settled', () => {
+    renderCard(<MediaJobCard job={job({ status: 'done', assets: [videoAsset] })} />);
+    expect(screen.queryByTestId('media-job-placeholder')).toBeNull();
+  });
+
   it('offers cancel only while the job can still be stopped', () => {
     const onCancel = vi.fn();
     const { rerender } = renderCard(<MediaJobCard job={job({ status: 'polling' })} onCancel={onCancel} />);

@@ -24,6 +24,7 @@ import { useMediaCost } from '@renderer/hooks/media/useMediaCost';
 import { classifyMediaFailure, useMediaFailureAdvice } from '@renderer/hooks/media/useMediaFailureAdvice';
 import { requestModelSettingsHighlight } from '@renderer/hooks/media/mediaSettingsHighlight';
 import GeneratedMediaView from './GeneratedMediaView';
+import MediaJobPlaceholder from './MediaJobPlaceholder';
 import MediaResultActions from './MediaResultActions';
 
 const STATUS_COLOR: Record<string, string> = {
@@ -81,21 +82,21 @@ const MediaJobCard: React.FC<{
       </div>
 
       {active && (
-        // Percent is optional — most task APIs report a stage, not a number —
-        // so fall back to an indeterminate bar rather than faking progress.
-        <Progress
-          size='small'
-          status='normal'
-          percent={job.progress?.percent ?? 0}
-          animation={job.progress?.percent === undefined}
-          showText={job.progress?.percent !== undefined}
+        // A media-shaped skeleton at the requested aspect ratio, so the wait
+        // occupies the space the result will — the hairline bar it replaced read
+        // as a system notice, not "your image is being made here".
+        <MediaJobPlaceholder
+          kind={job.kind}
+          params={job.params}
+          startedAt={job.createdAt}
+          stageLabel={job.progress?.stage ? t(`conversation.mediaJobStage_${job.progress.stage}` as never) : undefined}
         />
       )}
 
-      {active && job.progress?.stage && (
-        <span className='text-12px text-t-secondary'>
-          {t(`conversation.mediaJobStage_${job.progress.stage}` as never)}
-        </span>
+      {/* Only when the provider actually reports a number — most task APIs give a
+          stage, not a percent, and a faked bar is worse than none. */}
+      {active && typeof job.progress?.percent === 'number' && (
+        <Progress size='small' status='normal' percent={job.progress.percent} showText />
       )}
 
       {/* What was asked for. A media request never becomes a conversation

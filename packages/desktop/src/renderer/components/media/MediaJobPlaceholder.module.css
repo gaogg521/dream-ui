@@ -1,0 +1,44 @@
+/*
+ * The media-shaped skeleton shown while a generation job runs.
+ *
+ * Shimmer is the same gradient-sweep the guid skeletons use
+ * (pages/guid/index.module.css `guid-shimmer`); kept here as its own keyframe so
+ * this component carries its own styling. Colors are semantic fill tokens only.
+ */
+
+.tile {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--color-fill-2) 25%, var(--color-fill-3) 50%, var(--color-fill-2) 75%);
+  background-size: 200% 100%;
+  animation: mediaShimmer 1.6s ease-in-out infinite;
+}
+
+.caption {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  text-align: center;
+}
+
+@keyframes mediaShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile {
+    animation: none;
+  }
+}
