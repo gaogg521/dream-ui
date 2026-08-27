@@ -494,6 +494,16 @@ export type TChatConversation =
         is_health_check?: boolean;
         /** Last token usage stats */
         last_token_usage?: TokenUsageData;
+        /**
+         * Context window capacity, as the backend last reported it.
+         *
+         * Persisted next to the count so a reopened conversation shows the
+         * percentage rather than a bare number — the count alone cannot say what
+         * share of the window is gone. Absent for a backend that reports no
+         * window, which the indicator renders as "size unknown" rather than
+         * guessing a denominator.
+         */
+        last_context_limit?: number;
         /** Cron job ID that spawned this conversation */
         cron_job_id?: string;
       }

@@ -8,10 +8,10 @@
 
 ## 1. 根因：跨语言 env 契约被单边改名
 
-| 端 | 变量名 | 位置 |
-| --- | --- | --- |
+| 端        | 变量名                                                        | 位置                                    |
+| --------- | ------------------------------------------------------------- | --------------------------------------- |
 | Rust 发出 | `AIONUI_MEDIA_WORKSPACE_DIR` / `AIONUI_MEDIA_CONVERSATION_ID` | `dream-core-mcp/src/media_workspace.rs` |
-| TS 读取 | `DREAM_MEDIA_WORKSPACE_DIR` / `DREAM_MEDIA_CONVERSATION_ID` | `builtinMcp/imageGenServer.ts` |
+| TS 读取   | `DREAM_MEDIA_WORKSPACE_DIR` / `DREAM_MEDIA_CONVERSATION_ID`   | `builtinMcp/imageGenServer.ts`          |
 
 两边永不匹配 → `sessionWorkspaceDir()` 退回 `process.cwd()`（= app 数据目录根）。连锁后果：
 
@@ -67,10 +67,10 @@ UI 比后端新是常态，不兜底就得等后端发版才能验证。
 
 覆盖 `initStorage.ts` 的四个存储文件 + 聊天历史目录：
 
-| 新名 | 老名（只读兜底） |
-| --- | --- |
+| 新名                                                                    | 老名（只读兜底）           |
+| ----------------------------------------------------------------------- | -------------------------- |
 | `one-config.txt` / `one-chat-message.txt` / `one-chat.txt` / `.one-env` | `aionui-*` / `.aionui-env` |
-| `one-chat-history/` | `aionui-chat-history/` |
+| `one-chat-history/`                                                     | `aionui-chat-history/`     |
 
 **为什么不做 rename 迁移**：这些文件就是用户数据（自定义 cache/work/log 目录、provider 配置、
 会话索引）。指向一个磁盘上不存在的名字**不会报错** —— JSON store 直接当空的、写个新文件，
@@ -93,13 +93,13 @@ UI 比后端新是常态，不兜底就得等后端发版才能验证。
 
 ## 6. 刻意未改（有理由，别「顺手」改掉）
 
-| 项 | 理由 |
-| --- | --- |
-| `aionui://` 深链、`appId`、`1ONE Code` userData 目录 | CLAUDE.md 列为冻结历史值 |
-| Sentry tag 命名空间 `aionui.*` | 改了会断历史报表/告警 |
-| localStorage 键、DOM 事件名 | 前者改了会重置用户偏好，后者纯内部约定，本次不在范围 |
-| `[[AION_FILES]]` marker 值 | 活的跨进程协议，值本身不含品牌 |
-| `_aionui_` 时间戳分隔符 | 两仓都只声明未使用，死常量 |
+| 项                                                   | 理由                                                 |
+| ---------------------------------------------------- | ---------------------------------------------------- |
+| `aionui://` 深链、`appId`、`1ONE Code` userData 目录 | CLAUDE.md 列为冻结历史值                             |
+| Sentry tag 命名空间 `aionui.*`                       | 改了会断历史报表/告警                                |
+| localStorage 键、DOM 事件名                          | 前者改了会重置用户偏好，后者纯内部约定，本次不在范围 |
+| `[[AION_FILES]]` marker 值                           | 活的跨进程协议，值本身不含品牌                       |
+| `_aionui_` 时间戳分隔符                              | 两仓都只声明未使用，死常量                           |
 
 ## 7. 验证
 
@@ -134,12 +134,12 @@ npx vitest run tests/unit/media tests/unit/renderer tests/unit/process
 
 ### 安全直改（纯内部约定，从不持久化、两端都在仓库内）
 
-| 类别 | 旧 → 新 |
-| --- | --- |
+| 类别                      | 旧 → 新                                                                                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | window CustomEvent 名 ×10 | `aionui-workspace-*` / `aionui-chat-*` / `aionui-update-*` / `aionui-open-*` / `aionui:speech-to-text-config-changed` → `one-*` / `one:*` |
-| AudioWorklet processor | `aionui-pcm-capture` → `one-pcm-capture` |
-| CDP 内部协议 | WS 路径 `/aionui-cdp` → `/one-cdp`；`aionui-browser-{target,session,context}` → `one-browser-*` |
-| preload E2E 全局 | `__aionuiE2ETest` → `__oneE2ETest` |
+| AudioWorklet processor    | `aionui-pcm-capture` → `one-pcm-capture`                                                                                                  |
+| CDP 内部协议              | WS 路径 `/aionui-cdp` → `/one-cdp`；`aionui-browser-{target,session,context}` → `one-browser-*`                                           |
+| preload E2E 全局          | `__aionuiE2ETest` → `__oneE2ETest`                                                                                                        |
 
 ### 持久化 → 一律做兼容，不做破坏性改名
 
@@ -163,13 +163,13 @@ npx vitest run tests/unit/media tests/unit/renderer tests/unit/process
 
 ### 这一轮仍然不动（有硬理由）
 
-| 项 | 理由 |
-| --- | --- |
-| `aionui-assistant` | 是**已发布 SQL 迁移**里的 `source_ref`（`018_reset_builtin_assistant_enabled.sql`），迁移文件不可改 |
-| `persist:aionui-browser` session partition | 改了内嵌浏览器的 cookie / 登录态全丢 |
-| `aionui.*` Sentry tag 命名空间 | 改了断历史报表与告警 |
-| `migrations.ts` 里的 `'aionui'` source 值 | 是 schema 历史，已发布的迁移不可改 |
-| `aionui://` 深链、`appId`、`1ONE Code` 目录 | CLAUDE.md 冻结值 |
+| 项                                          | 理由                                                                                                |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `aionui-assistant`                          | 是**已发布 SQL 迁移**里的 `source_ref`（`018_reset_builtin_assistant_enabled.sql`），迁移文件不可改 |
+| `persist:aionui-browser` session partition  | 改了内嵌浏览器的 cookie / 登录态全丢                                                                |
+| `aionui.*` Sentry tag 命名空间              | 改了断历史报表与告警                                                                                |
+| `migrations.ts` 里的 `'aionui'` source 值   | 是 schema 历史，已发布的迁移不可改                                                                  |
+| `aionui://` 深链、`appId`、`1ONE Code` 目录 | CLAUDE.md 冻结值                                                                                    |
 
 ### 验证
 
@@ -263,12 +263,12 @@ partition 就是内嵌浏览器的 cookie 和登录态（Electron 存在
 
 ### 迁移 053 覆盖的列
 
-| 表 | 列 |
-| --- | --- |
+| 表                      | 列                                                                                                                                                 |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `assistant_definitions` | `assistant_id`、`source_ref`、`rule_resource_ref`、`avatar_value`、`default_skill_ids`、`default_disabled_builtin_skill_ids`、`custom_skill_names` |
-| `assistant_overrides` | `assistant_id`（它的主键就是 assistant id） |
-| `cron_jobs` | `agent_config` JSON 的 `$.assistant_id` |
-| `skills` | 四行 builtin 的 `name` |
+| `assistant_overrides`   | `assistant_id`（它的主键就是 assistant id）                                                                                                        |
+| `cron_jobs`             | `agent_config` JSON 的 `$.assistant_id`                                                                                                            |
+| `skills`                | 四行 builtin 的 `name`                                                                                                                             |
 
 **`source_ref` 是最要命的一列**：它是清单的身份列（与 `source` 组成唯一索引），而清单每次
 启动都按**新** id 重新播种。漏改的行不会匹配上，会被**再播种一遍** —— 用户会看到两个管家。
@@ -364,11 +364,11 @@ JSON 列是 TEXT，替换针对**带引号的 token**（`"aionui-config"` 而不
 同一个 `target/` 上叠了 4 个 `cargo test --workspace` 没停，加上还和 vitest 并发，
 制造出三种**看起来像产品 bug 的假故障**：
 
-| 症状 | 真相 |
-| --- | --- |
-| `LNK1104: cannot open file '…-<hash>.exe'` | 另一个 run（或被 kill 后的孤儿测试进程）占着输出文件。链接就挂了，报告显示 `0 ok / 0 failed` |
-| `stderr_monitor` / `shutdown_watchdog` 超时 `Elapsed` | CPU 饥饿。空闲机器上单独跑全过 |
-| vitest 21 个文件"消失" | worker 起不到，**但仍退出码 0 并报「524 passed」**。546 文件缩到 525，316 个测试没跑 |
+| 症状                                                  | 真相                                                                                         |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `LNK1104: cannot open file '…-<hash>.exe'`            | 另一个 run（或被 kill 后的孤儿测试进程）占着输出文件。链接就挂了，报告显示 `0 ok / 0 failed` |
+| `stderr_monitor` / `shutdown_watchdog` 超时 `Elapsed` | CPU 饥饿。空闲机器上单独跑全过                                                               |
+| vitest 21 个文件"消失"                                | worker 起不到，**但仍退出码 0 并报「524 passed」**。546 文件缩到 525，316 个测试没跑         |
 
 规则已写进 `dream-core/AGENTS.md`（新增一节 NEVER run two builds against the same target）、
 `dream-ui/AGENTS.md` 和 `.claude/skills/testing/SKILL.md`：
@@ -467,14 +467,14 @@ grep 得到——只是它们不在第一轮扫描走过的面上（一个在 cr
 
 ### 13.6 验证结果（dev app + CDP，2026-08-27）
 
-| 检查 | 结果 |
-| --- | --- |
-| 工具调用名 | `mcp__one-image-generation_one_image_generation` ✅ |
-| MCP 活跃行 | 只有 `one-*` 五个；两个 `aionui-*` 已是墓碑 ✅ |
-| localStorage | `one_cron_unread` / `one_workspace_expansion` 已由旧键复制出来，旧键保留 ✅ |
-| preload 全局 | `deepLinkScheme: dream-dev`、`browserPartition: persist:one-browser` ✅ |
-| 文件树 | `outputs/vid-*.mp4` 直接可见 ✅ |
-| 媒体卡片 DOM 顺序 | header → 提示词 → `<video>` → 操作按钮；视频下方已无文件名 ✅ |
+| 检查              | 结果                                                                        |
+| ----------------- | --------------------------------------------------------------------------- |
+| 工具调用名        | `mcp__one-image-generation_one_image_generation` ✅                         |
+| MCP 活跃行        | 只有 `one-*` 五个；两个 `aionui-*` 已是墓碑 ✅                              |
+| localStorage      | `one_cron_unread` / `one_workspace_expansion` 已由旧键复制出来，旧键保留 ✅ |
+| preload 全局      | `deepLinkScheme: dream-dev`、`browserPartition: persist:one-browser` ✅     |
+| 文件树            | `outputs/vid-*.mp4` 直接可见 ✅                                             |
+| 媒体卡片 DOM 顺序 | header → 提示词 → `<video>` → 操作按钮；视频下方已无文件名 ✅               |
 
 ---
 

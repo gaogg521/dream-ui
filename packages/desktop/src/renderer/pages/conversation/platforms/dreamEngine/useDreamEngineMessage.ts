@@ -17,6 +17,8 @@ import { isConversationProcessing } from '@/renderer/pages/conversation/utils/co
 import { beginConversationTurn, endConversationTurn } from '@/renderer/pages/conversation/utils/conversationTurnClock';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { processLocalCronResponse } from './localCronCommands';
+// Shared with the ACP hook on purpose — see the `acp_context_usage` arm.
+import { tokenUsageFromAcpUsage } from '@/renderer/pages/conversation/platforms/acp/useAcpMessage';
 
 type TokenUsage = {
   input_tokens?: number;
@@ -338,19 +340,25 @@ export const useDreamEngineMessage = (
          */
         case 'acp_context_usage': {
           const usageData = message.data as
-            | { used?: number; size?: number; cost?: { amount: number; currency: string } }
+            | {
+                used: number;
+                size?: number;
+                cost?: { amount: number; currency: string };
+                _meta?: Record<string, unknown>;
+              }
             | undefined;
           if (usageData && typeof usageData.used === 'number' && usageData.used > 0) {
             setTokenUsage((prev) => {
-              const next: TokenUsageData = { total_tokens: usageData.used as number };
-              // A mid-turn report carries no cost; keep the last one we had
-              // rather than blanking a figure the user already saw.
-              if (usageData.cost && usageData.cost.amount > 0) {
-                next.cost = { amount: usageData.cost.amount, currency: usageData.cost.currency || 'USD' };
-              } else if (prev?.cost) {
-                next.cost = prev.cost;
-              }
-              if (prev?.breakdown) next.breakdown = prev.breakdown;
+              // Parsed by the ACP hook's converter, not a second reader of the
+              // same frame: the per-turn counters ride in `_meta` (a UsageUpdate
+              // field, so they survive the typed round-trip through the backend
+              // snapshot), and two parsers would drift on which key means what.
+              const next = tokenUsageFromAcpUsage(usageData);
+              // A report without a breakdown or cost — a mid-turn one, or a
+              // backend that sends neither — must not blank figures the user has
+              // already seen.
+              if (!next.breakdown && prev?.breakdown) next.breakdown = prev.breakdown;
+              if (!next.cost && prev?.cost) next.cost = prev.cost;
               return next;
             });
             // Only when the backend actually states a window. Without it the
@@ -359,6 +367,20 @@ export const useDreamEngineMessage = (
             if (typeof usageData.size === 'number' && usageData.size > 0) {
               setContextLimit((prev) => (prev > 0 ? prev : (usageData.size as number)));
             }
+            // Persist, same as the `finish` arm does. Without this the figure
+            // survives only until the conversation is reopened — the backend
+            // snapshot covers that too, but only for a backend that stores one,
+            // and writing it here costs one call and covers both.
+            void ipcBridge.conversation.update.invoke({
+              id: conversation_id,
+              updates: {
+                extra: {
+                  last_token_usage: { total_tokens: usageData.used },
+                  ...(usageData.size && usageData.size > 0 ? { last_context_limit: usageData.size } : {}),
+                } as TChatConversation['extra'],
+              },
+              merge_extra: true,
+            });
           }
           break;
         }
@@ -506,9 +528,15 @@ export const useDreamEngineMessage = (
       waitingResponseRef.current = isRunning;
       // Load persisted token usage stats
       if (res.type === 'dream' && res.extra?.last_token_usage) {
-        const { last_token_usage } = res.extra;
+        const { last_token_usage, last_context_limit } = res.extra;
         if (last_token_usage.total_tokens > 0) {
           setTokenUsage(last_token_usage);
+        }
+        // Restored alongside the count, so a reopened conversation shows the
+        // percentage rather than falling back to a bare number. The ACP hook
+        // already did both; this side only restored the count.
+        if (last_context_limit && last_context_limit > 0) {
+          setContextLimit(last_context_limit);
         }
       }
       setHasHydratedRunningState(true);

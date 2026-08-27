@@ -226,10 +226,10 @@
 
 交接文档说有 4 个选择器，**实际是 6 个**——移动端发送框的 action sheet（`AcpSendBox` / `DreamEngineSendBox`）也各自列模型，是独立的第三处。全部覆盖：
 
-| 选择器                                                                                                            | kind 来源                                        |
-| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 选择器                                                                                                                 | kind 来源                                        |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | `DreamEngineModelSelector` / `GuidModelSelector`(gemini 分支) / `GoogleModelSelector`(含渠道设置 `variant='settings'`) | 直读 `provider.model_settings[model].model_kind` |
-| `AcpModelSelector` / `GuidModelSelector`(ACP 分支) / 两个移动端 action sheet                                      | 按模型名在 providers 里反查                      |
+| `AcpModelSelector` / `GuidModelSelector`(ACP 分支) / 两个移动端 action sheet                                           | 按模型名在 providers 里反查                      |
 
 前三个走共享的 `RuntimeSelectorModelList`（给 `RuntimeSelectorModel` 加 `kind`、`RuntimeSelectorCheckedItem` 加 `trailing`），`GoogleModelSelector` 自建菜单故单独渲染。
 

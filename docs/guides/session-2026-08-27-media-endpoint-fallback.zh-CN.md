@@ -468,3 +468,162 @@ start · thinking · content · finish
 - 它也**完全不处理 `acp_context_usage` 帧**，而 `broadcast_usage_frame` 的注释明确写着"Fires for every backend"——后端设计上是打算广播给所有后端的，前端这边没接。
 
 **修它需要**：dream-core 让 1ONE CLI 这条会话路径上报 token 用量（`UsageDelta` → 持久化 + 广播），加上 dream-ui 这两个缺口，然后 `cargo build -p dream-core-app --release` + `node scripts/prepareAioncore.js` 重编内嵌 `dreamcore` 才会在 dev 生效。跨仓 + 需要重编后端，**本轮未做**。
+
+---
+
+## 十二、§11 那两条质疑的实际修法（都已实现）
+
+§11 是查清结论，这一节是落地。A/B/C 三条并不冲突（用户自己指出的），A、C 是
+前端且互补，B 原以为跨仓、实查后也是纯前端。
+
+### 12.1 费用显示改为可选，默认关闭（用户补充的要求）
+
+新增 `tools.showMediaCost`（client setting，默认关闭）。理由用用户自己的话：
+价格是少数人关心的东西，从一个进行中的会话里多数人想看的是**上下文还剩多少、
+token 花在哪、多少是缓存命中的**，而发送键旁边一个不想看的数字就是每次发消息
+前多读一行。
+
+- 开关放在**配置单价的同一个位置**（模型配置弹窗）：那是用户唯一会主动想到
+  费用的界面，也就是他们会去找"怎么别再告诉我"的地方。
+- **全局而非按模型**：不关心价格的人不会按模型关心，而默认关闭的按模型开关
+  等于每个模型都要再开一次。
+- 实现上 `useMediaCost` 直接返回 `null`，发送框 chip 和完成卡片两个显示点
+  自动都不显示（"不显示费用"是一条规则，而且两处本来就都能处理 null——没有
+  费率的模型一直会产生 null）。
+- SWR 读取，key 导出给开关做 revalidate，改完立即生效不用重启。
+
+⚠️ **代价要说清**：这等于把"发送前就知道要花多少"从默认路径上撤了，而那正是
+媒体成本功能当初存在的理由（"Spend was invisible from both ends"）。是产品
+选择，不是技术结论。
+
+### 12.2 A：单价入口做明显
+
+两处改动：
+
+1. **加标签**。「接口协议」和「单价」此前都没有标签，单价只能靠 placeholder
+   辨认——而 placeholder 一输入就消失。上面的「模型类型」本来就有标签，现在
+   三者一致。
+2. **成本 chip 可点击**（虚线下划线 + `role=button` + 键盘可达），直接跳到该
+   模型的设置行，复用失败卡片那套 `requestModelSettingsHighlight` +
+   `navigate('/settings/model')` 惯例。tooltip 从一开始就写着"去 设置 → 模型
+   填单价"，但那个字段在 **设置 → 模型 → 展开渠道 → 编辑模型 → 先把模型类型
+   选成图片/视频** 之后才出现（`AddModelModal.tsx` 的渲染条件）——**说出一个
+   目的地不等于提供它**。只在"填了单价能让数字变准"时可点（内置费率或无费率），
+   已经精确时不给这个假动作。
+
+### 12.3 C：说清估算不含分辨率
+
+`mediaCostFromBuiltinRate` 改为明说"只算数量（视频还算时长），不区分分辨率和
+清晰度"。13 语言正式译文。这条在 B 之后**依然需要**：B 修的是**用户自填**单价
+的分档能力，内置费率表本身仍然不分档（要分档就得有各厂商真实价格数据，那是
+另一件事，不该靠猜）。
+
+### 12.4 B：单价支持按分辨率分档
+
+**先确认了这不需要动 Rust**——`record_media_usage` 收到的是客户端**已解析好的**
+`unit_price_micros`，而 `model_settings` 在 Rust 侧是不透明 JSON。所以分档是纯
+dream-ui 改动，计费算式和内置费率表都不变，也就不触碰 `pricing.ts` 顶部那条
+"must not drift from the Rust implementation"。
+
+新增 `model_settings[model].media_unit_prices_usd`：按档位字符串索引，键就是该
+模型 spec 提供的那个值（`params.resolutions` 的 `'480p'`/`'1080p'`，或
+`params.sizes` 的 `'1280x720'`），也正是生成时 `params.resolution` /
+`params.size` 里travel的同一个字符串。**完全附加**：没有这一项的模型继续用 flat
+单价，某个档位留空也回落到 flat，所以什么都不填就跟改动前一样。
+
+⚠️ **关键不变量：解析只有一处。** `pricing.ts` 新增 `resolveUserUnitPriceUsd`，
+成本显示（`useMediaCost`）和用量上报（`mediaJob` 的 `reportJobUsage`）都调它，
+而不是各自去读 `model_settings`——两处查表就会让卡片上的数字和账单里的数字
+漂移，而发现的人是用户，发现的方式是对账。档位价为 0/负/NaN 一律当"没填"而不是
+"免费"，跟 flat 单价同一条规则。
+
+UI 只在**编辑单个已有模型**时按 spec 实际提供的档位渲染输入框：多选"添加模型"
+那条路没有唯一的 spec 可读，给出可能不适用于每个所选模型的档位等于邀请用户把
+价格填到不存在的东西上。spec 没有分辨率列表的模型（多数图片模型）自动折叠回
+单个 flat 字段。
+
+真机验证：`seedance-2-0-fast` 渲染出 480p/720p/1080p 三档。
+
+### 12.5 上下文指示器：跨仓修完（dream-core + dream-ui）
+
+§11.2 查明的根因是**后端根本不上报**。这一轮修掉了，而且**不需要改
+dream-engine**——`AgentEngine::context_status()` 是公开的。
+
+**dream-core**（`8d3e8bc`）：`manager/dream_engine/agent.rs` 此前把
+`engine.run_with_blocks()` 的返回值直接丢掉（`Some(Ok(_))`），而
+`AgentResult.usage` 里 input/output/cache_creation/cache_read 全在那儿。改为
+接住它，并在 **Finish 之前**发一帧 `AcpContextUsage`（relay 一看到 Finish 就
+停止转发这一轮，发在后面会被丢）。窗口大小取 `context_status()`。
+
+⚠️ **一个语义反转，是这块最容易出错的地方**：引擎的
+`TokenUsage::input_tokens` 是**完整**的 provider 输入，**含** cache 读和
+cache 写（见其文档注释）；渲染层 breakdown 里同名字段的含义**正相反**——是
+缓存**没有**覆盖的那部分新输入，因为缓存命中率要拿它当分母。原样透传会双算
+缓存 token、把命中率报得远低于真实值。所以帧构造抽成纯函数
+`build_turn_usage_frame` 并加了 5 条单测，包括饱和减（厂商报出比输入总量还大的
+缓存数时钳到 0 而不是下溢成天文数字）。
+
+**dream-ui**：补 `acp_context_usage` 帧的处理（后端的
+`broadcast_usage_frame` 注释自己写着 "Fires for every backend"，前端这边一直
+没接）、从 `getUsage` 恢复快照、`context_limit` 从硬编码 0 改为接出来的真值、
+新帧也持久化 `last_token_usage` + `last_context_limit`，hydration 一并恢复窗口
+（此前只恢复了 token 数，所以重开会话只有裸数字没有百分比）。
+
+⚠️ **改了 dream-core 必须重编内嵌二进制才在 dev 生效**：
+`cargo build -p dream-core-app --release` + `node scripts/prepareAioncore.js`。
+参见 §9.1 那条更隐蔽的同类陷阱（改 `common/` 后主进程 HMR 的假阳性）。
+
+### 12.6 缓存命中率（用户点名想看的指标）
+
+`ContextUsageIndicator` 新增一行，按 `缓存读 / (缓存读 + 未缓存输入)` 计算。
+分母用未缓存输入是因为 breakdown 里的 `input_tokens` 就是缓存没覆盖的那部分；
+**用会话总量当分母会把输出和思考 token 折进一个纯输入侧的比率里，静默低估**。
+单独一行而不是塞进 breakdown 串里：它是这里唯一一个比率而非计数的数字，而且
+一眼回答"这个会话继续下去还便宜吗"。只在真有缓存活动时显示——对不用 prompt
+缓存的后端显示 0% 会被读成故障而不是"不适用"。
+
+### 12.7 真机验证（重编内嵌后端之后）
+
+`cargo build -p dream-core-app --release` + 同步 `resources/bundled-aioncore/`
+之后重启 dev，发一轮对话，抓到的帧序列多了用量帧且位置正确：
+
+```
+start · thinking · content · acp_context_usage · finish
+                              ^^^^^^^^^^^^^^^^ 在 finish 之前
+```
+
+帧内容：
+
+```json
+{
+  "used": 7459,
+  "size": 200000,
+  "_meta": { "input_tokens": 20200, "output_tokens": 12700, "cached_read_tokens": 23800, "cached_write_tokens": 0 }
+}
+```
+
+圆环出现，悬停后三行：
+
+```
+3.7% · 7.5K / 200K 上下文已使用
+缓存命中率 54.1%
+输入 20.2K · 输出 12.7K · 缓存读 23.8K
+```
+
+命中率验算：`23.8K / (23.8K + 20.2K) = 54.1%` ✓——分母是未缓存输入，没有双算。
+
+⚠️ **本轮自己踩的一个坑**：第一次真机只出了第一行（百分比对了），明细和命中率
+都没有。原因是我那个 `acp_context_usage` arm 只取了 `used`/`size`，把后端发来的
+`_meta` 丢掉了。改为复用 ACP hook 导出的 `tokenUsageFromAcpUsage` 解析——不是
+再写一个读同一帧的解析器，因为两个解析器会在"哪个键是什么意思"上漂移。
+
+⚠️ **顺带修正一条过时断言**：`useAutoAcceptInferredModelKinds` 的测试原本断言
+`agnes-video-v2.0` 会被写入 `model_kind: 'video'`。加了 §8.2 那条 host-pinned
+目录条目之后，该模型的 kind 变成**目录已知**而不是按名字推断，所以它正确地退出
+了"待接受的推断"集合（测试 provider 的 `base_url` 恰好就是 `apihub.agnes-ai.com`）。
+断言已更新并写明原因——目录已经知道的事情，没必要再写一份 declaration。
+
+⚠️ **`prepareAioncore.js` 的两个坑**：① dev 在跑时会 `EPERM`（二进制被占用），
+必须先停 dev 并确认 `Get-Process electron`/`dreamcore` 清零；② 拷完二进制后它还
+会去 npm 拉 managed resources，本轮那步网络超时失败——**但二进制已经同步好了**
+（比对时间戳和字节数即可确认），那一步失败不影响后端改动生效。

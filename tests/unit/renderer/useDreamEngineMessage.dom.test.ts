@@ -11,15 +11,24 @@ import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conve
 import { resetConversationTurnClockForTests } from '@/renderer/pages/conversation/utils/conversationTurnClock';
 import type { IResponseMessage } from '@/common/adapter/ipcBridge';
 
-const { addOrUpdateMessageMock, conversationUpdateInvokeMock, responseStreamOnMock, responseStreamHandlerRef } =
-  vi.hoisted(() => ({
-    addOrUpdateMessageMock: vi.fn(),
-    conversationUpdateInvokeMock: vi.fn(),
-    responseStreamOnMock: vi.fn(),
-    responseStreamHandlerRef: {
-      current: undefined as ((message: IResponseMessage) => void) | undefined,
-    },
-  }));
+const {
+  addOrUpdateMessageMock,
+  conversationUpdateInvokeMock,
+  conversationGetUsageInvokeMock,
+  responseStreamOnMock,
+  responseStreamHandlerRef,
+} = vi.hoisted(() => ({
+  addOrUpdateMessageMock: vi.fn(),
+  conversationUpdateInvokeMock: vi.fn(),
+  // The hook now hydrates the context meter from the backend's usage
+  // snapshot; without this the mount effect throws on an undefined bridge
+  // method and every case in this file fails on an unrelated assertion.
+  conversationGetUsageInvokeMock: vi.fn(),
+  responseStreamOnMock: vi.fn(),
+  responseStreamHandlerRef: {
+    current: undefined as ((message: IResponseMessage) => void) | undefined,
+  },
+}));
 
 vi.mock('@/renderer/pages/conversation/Messages/hooks', () => ({
   useAddOrUpdateMessage: () => addOrUpdateMessageMock,
@@ -42,6 +51,9 @@ vi.mock('@/common', () => ({
       update: {
         invoke: conversationUpdateInvokeMock,
       },
+      getUsage: {
+        invoke: conversationGetUsageInvokeMock,
+      },
     },
   },
 }));
@@ -51,6 +63,9 @@ describe('useDreamEngineMessage turn clock', () => {
     vi.clearAllMocks();
     resetConversationTurnClockForTests();
     conversationUpdateInvokeMock.mockResolvedValue(undefined);
+    // No snapshot is the normal case for a conversation that has not run a
+    // turn; the hook treats it as "nothing to restore".
+    conversationGetUsageInvokeMock.mockResolvedValue(undefined);
     responseStreamHandlerRef.current = undefined;
   });
 
