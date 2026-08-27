@@ -17,7 +17,9 @@
       // Synchronously restore theme appearance from localStorage to prevent theme flash
       (function () {
         try {
-          var theme = localStorage.getItem('__aionui_theme');
+          // Both names: this runs before any module loads, so it cannot rely on
+          // the legacy-key migration in main.tsx having happened yet.
+          var theme = localStorage.getItem('__one_theme') || localStorage.getItem('__aionui_theme');
           if (theme) document.documentElement.setAttribute('data-theme', theme);
         } catch (e) {}
       })();
@@ -38,7 +40,7 @@
     <script>
       // Set arco-theme on body synchronously
       try {
-        var t = localStorage.getItem('__aionui_theme');
+        var t = localStorage.getItem('__one_theme') || localStorage.getItem('__aionui_theme');
         if (t) document.body.setAttribute('arco-theme', t);
       } catch (e) {}
     </script>

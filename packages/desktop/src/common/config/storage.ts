@@ -118,12 +118,20 @@ export interface ILegacyConfigStorageRefer extends IConfigStorageRefer {
   'model.config'?: unknown;
 }
 
+type DirConfig = {
+  workDir: string;
+  cacheDir: string;
+  logDir?: string;
+};
+
 export interface IEnvStorageRefer {
-  'aionui.dir': {
-    workDir: string;
-    cacheDir: string;
-    logDir?: string;
-  };
+  'one.dir': DirConfig;
+  /**
+   * Pre-rebrand key for the same value. Still written alongside the current one
+   * so a downgrade keeps finding the user's custom cache/work/log directories,
+   * and still read as a fallback for installs written before the rename.
+   */
+  'aionui.dir'?: DirConfig;
 }
 
 /**

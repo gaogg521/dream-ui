@@ -59,7 +59,7 @@ vi.mock('@/renderer/components/settings/updateReadyState', () => ({
 }));
 
 vi.mock('@/renderer/components/settings/useUpdateNotificationController', () => ({
-  UPDATE_AVAILABLE_EVENT: 'aionui-update-available',
+  UPDATE_AVAILABLE_EVENT: 'one-update-available',
 }));
 
 vi.mock('@/renderer/components/settings/SettingsModal/contents/FeedbackReportModal', () => ({ default: () => null }));

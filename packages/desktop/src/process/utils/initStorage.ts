@@ -257,7 +257,10 @@ const JsonFileBuilder = <S extends object = Record<string, unknown>>(file_path: 
 
 const envFile = JsonFileBuilder<IEnvStorageRefer>(storagePath(getHomePage(), 'env'));
 
-const dirConfig = envFile.getSync('aionui.dir');
+// Legacy key as a fallback: an install written before the rename carries only
+// that one, and reading nothing here silently discards the user's custom
+// cache/work/log directories back to the defaults.
+const dirConfig = envFile.getSync('one.dir') ?? envFile.getSync('aionui.dir');
 
 const cacheDir = dirConfig?.cacheDir || getHomePage();
 

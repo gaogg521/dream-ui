@@ -15,16 +15,16 @@
  */
 export const STORAGE_KEYS = {
   /** Workspace tree collapse state / 工作空间目录树折叠状态 */
-  WORKSPACE_TREE_COLLAPSE: 'aionui_workspace_collapse_state',
+  WORKSPACE_TREE_COLLAPSE: 'one_workspace_collapse_state',
 
   /** Sidebar collapse state / 侧边栏折叠状态 */
-  SIDEBAR_COLLAPSE: 'aionui_sider_collapsed',
+  SIDEBAR_COLLAPSE: 'one_sider_collapsed',
 
   /** Theme preference / 主题偏好 */
-  THEME: 'aionui_theme',
+  THEME: 'one_theme',
 
   /** Language preference / 语言偏好 */
-  LANGUAGE: 'aionui_language',
+  LANGUAGE: 'one_language',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

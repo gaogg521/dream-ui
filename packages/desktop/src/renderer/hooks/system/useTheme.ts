@@ -15,7 +15,7 @@ import { LIGHT_THEME_ID } from '@/common/theme/constants';
 import type { Theme } from '@/common/theme/types';
 import { useCallback, useEffect, useState } from 'react';
 
-const APPEARANCE_CACHE_KEY = '__aionui_theme';
+const APPEARANCE_CACHE_KEY = '__one_theme';
 
 function cacheAppearance(theme: Theme): void {
   try {

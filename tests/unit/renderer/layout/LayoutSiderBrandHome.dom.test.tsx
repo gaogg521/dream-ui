@@ -213,7 +213,7 @@ describe('Layout sider brand Home button', () => {
   it('opens the update notification directly for tray update checks', () => {
     platformMocks.isElectronDesktopMock.mockReturnValue(true);
     const openListener = vi.fn();
-    window.addEventListener('aionui-open-update-modal', openListener);
+    window.addEventListener('one-open-update-modal', openListener);
 
     try {
       renderLayout();
@@ -225,7 +225,7 @@ describe('Layout sider brand Home button', () => {
       const event = openListener.mock.calls[0][0] as CustomEvent;
       expect(event.detail).toEqual({ source: 'tray' });
     } finally {
-      window.removeEventListener('aionui-open-update-modal', openListener);
+      window.removeEventListener('one-open-update-modal', openListener);
     }
   });
 });

@@ -4,6 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { migrateLegacyLocalStorageKeys } from '@renderer/utils/storage/legacyStorageKeys';
+
+// Before anything reads a preference: carry pre-rebrand localStorage entries
+// over to their current key names, or an upgrade silently resets the user's
+// theme, language, sidebar state and recent workspaces.
+migrateLegacyLocalStorageKeys();
+
 // Sentry must be initialized first
 // Use electron-specific renderer package only inside Electron; fall back to the
 // browser SDK when running as a web server (no window.electronAPI).

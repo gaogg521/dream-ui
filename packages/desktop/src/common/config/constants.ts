@@ -45,7 +45,17 @@ export const BROWSER_SESSION_PARTITION = 'persist:aionui-browser';
  * light up the activity badge. Both sides must agree exactly; separate copies would
  * eventually drift, and the symptom of drift is a badge that silently never lights.
  */
-export const BUILTIN_BROWSER_MCP_NAME = 'aionui-browser';
+export const BUILTIN_BROWSER_MCP_NAME = 'one-browser';
+
+/**
+ * Pre-rebrand registration names.
+ *
+ * "Already registered" is decided by name, so an install whose row still
+ * carries the old name would not match the current one and a SECOND browser MCP
+ * would be inserted beside it — two servers, both enabled, driving the same
+ * embedded browser. Bootstrap matches these too and renames the row forward.
+ */
+export const BUILTIN_BROWSER_MCP_LEGACY_NAMES = ['aionui-browser'] as const;
 
 // ===== 文件处理相关常量 =====
 

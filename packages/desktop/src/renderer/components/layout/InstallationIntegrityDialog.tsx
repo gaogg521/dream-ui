@@ -163,7 +163,7 @@ export async function reportInstallationIntegrityDiagnostics(
     tags: buildInstallationIntegrityTags(diagnostics),
   });
 
-  if (typeof window !== 'undefined' && window.__aionuiE2ETest) {
+  if (typeof window !== 'undefined' && window.__oneE2ETest) {
     window.__installationIntegrityReportCount = (window.__installationIntegrityReportCount ?? 0) + 1;
     window.__lastInstallationIntegrityReportMessage = 'installation-integrity-user-report';
   }

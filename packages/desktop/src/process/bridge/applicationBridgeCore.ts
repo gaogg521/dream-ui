@@ -35,7 +35,11 @@ export function initApplicationBridgeCore(): void {
     if (oldDir.cacheDir !== safeCacheDir) {
       await copyDirectoryRecursively(oldDir.cacheDir, safeCacheDir);
     }
-    await ProcessEnv.set('aionui.dir', { cacheDir: safeCacheDir, workDir: safeWorkDir, logDir: safeLogDir });
+    const dirConfig = { cacheDir: safeCacheDir, workDir: safeWorkDir, logDir: safeLogDir };
+    await ProcessEnv.set('one.dir', dirConfig);
+    // Also under the pre-rebrand key, so rolling back to an older build does not
+    // lose the directories the user just chose.
+    await ProcessEnv.set('aionui.dir', dirConfig);
   });
 
   ipcBridge.application.getPath.provider(({ name }) => {

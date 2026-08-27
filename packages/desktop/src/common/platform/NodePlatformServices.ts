@@ -1,5 +1,5 @@
 import { fork as cpFork, type ChildProcess } from 'child_process';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import os from 'os';
 import path from 'path';
 import type { IPlatformServices, IWorkerProcess } from './IPlatformServices';
@@ -29,20 +29,35 @@ const _pkg = (() => {
       version?: string;
     };
   } catch {
-    return { name: 'aionui', version: '0.0.0' };
+    return { name: 'one', version: '0.0.0' };
   }
 })();
 
+/**
+ * Data directory for headless (non-Electron) runs.
+ *
+ * Prefers the current name but keeps using the pre-rebrand directory when that
+ * is the one on disk: pointing a running server at a fresh empty directory does
+ * not fail, it just comes up with none of its data.
+ */
+const serverDir = (): string => {
+  const home = os.homedir();
+  const current = path.join(home, '.one-server');
+  if (existsSync(current)) return current;
+  const legacy = path.join(home, '.aionui-server');
+  return existsSync(legacy) ? legacy : current;
+};
+
 export class NodePlatformServices implements IPlatformServices {
   paths = {
-    getDataDir: () => process.env.DATA_DIR ?? path.join(os.homedir(), '.aionui-server'),
+    getDataDir: () => process.env.DATA_DIR ?? serverDir(),
     getTempDir: () => os.tmpdir(),
     getHomeDir: () => os.homedir(),
-    getLogsDir: () => process.env.LOGS_DIR ?? path.join(os.homedir(), '.aionui-server', 'logs'),
+    getLogsDir: () => process.env.LOGS_DIR ?? path.join(serverDir(), 'logs'),
     getAppPath: (): string | null => process.cwd(),
     isPackaged: () => process.env.IS_PACKAGED === 'true',
     getSystemPath: (_name: 'desktop' | 'home' | 'downloads'): string | null => null,
-    getName: () => _pkg.name ?? 'aionui',
+    getName: () => _pkg.name ?? 'one',
     getVersion: () => _pkg.version ?? '0.0.0',
     needsCliSafeSymlinks: () => false,
   };

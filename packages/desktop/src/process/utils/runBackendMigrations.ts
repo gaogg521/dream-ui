@@ -9,7 +9,7 @@ import { migrateConfigStorage, migrateLegacyMcpConfigToDb, migrateProviders } fr
 import { httpRequest } from '@/common/adapter/httpBridge';
 import { mcpService } from '@/common/adapter/ipcBridge';
 import type { ImageGenerationModelSetting } from '@/common/config/clientSettings';
-import { BUILTIN_BROWSER_MCP_NAME } from '@/common/config/constants';
+import { BUILTIN_BROWSER_MCP_LEGACY_NAMES, BUILTIN_BROWSER_MCP_NAME } from '@/common/config/constants';
 import {
   removeImageGenerationEnvKeys,
   resolveImageGenerationMcpEnv,
@@ -626,7 +626,8 @@ async function ensureBootstrapMcpServersInDb(configFile: ConfigFile): Promise<vo
    * is decided by name, it is never re-inserted, leaving the browser tools broken with
    * no self-heal. Reconcile against the real path on every startup instead.
    */
-  const existingBrowserServer = existing.find((server) => server.name === BUILTIN_BROWSER_MCP_NAME);
+  const browserNames = new Set<string>([BUILTIN_BROWSER_MCP_NAME, ...BUILTIN_BROWSER_MCP_LEGACY_NAMES]);
+  const existingBrowserServer = existing.find((server) => browserNames.has(server.name));
   let browserServerUpdated = false;
   if (existingBrowserServer) {
     const desiredBrowserServer = buildBuiltinBrowserServer();
@@ -639,7 +640,11 @@ async function ensureBootstrapMcpServersInDb(configFile: ConfigFile): Promise<vo
     // wording/brand fix in code silently never reaches an already-provisioned install
     // without this, same failure shape as the transport-path drift above.
     const browserDescriptionChanged = existingBrowserServer.description !== desiredBrowserServer.description;
-    if (browserTransportChanged || browserJsonChanged || browserDescriptionChanged) {
+    // A row still under a pre-rebrand name has to be renamed forward, or the
+    // renderer's badge — which matches the current name in the tool-call stream
+    // — silently never lights for this install.
+    const browserNameChanged = existingBrowserServer.name !== BUILTIN_BROWSER_MCP_NAME;
+    if (browserTransportChanged || browserJsonChanged || browserDescriptionChanged || browserNameChanged) {
       console.info(
         '[Migration] browser MCP path drifted, server id: %s, transport changed: %s, json changed: %s, description changed: %s',
         existingBrowserServer.id,
@@ -650,6 +655,7 @@ async function ensureBootstrapMcpServersInDb(configFile: ConfigFile): Promise<vo
       await mcpService.updateServer.invoke({
         id: existingBrowserServer.id,
         data: {
+          name: BUILTIN_BROWSER_MCP_NAME,
           transport: desiredBrowserServer.transport,
           original_json: desiredBrowserServer.original_json,
           description: desiredBrowserServer.description,
@@ -709,10 +715,7 @@ async function syncBuiltinMcpConfig(configFile: ConfigFile): Promise<void> {
   }
 
   await httpRequest<void>('PUT', '/api/settings/client', { 'mcp.config': mergedMcpConfig });
-  console.info(
-    '[1ONE] Synced builtin MCP config to backend settings (%d builtin servers)',
-    localBuiltinServers.length
-  );
+  console.info('[1ONE] Synced builtin MCP config to backend settings (%d builtin servers)', localBuiltinServers.length);
 }
 
 export async function runBackendMigrations(configFile: ConfigFile): Promise<void> {

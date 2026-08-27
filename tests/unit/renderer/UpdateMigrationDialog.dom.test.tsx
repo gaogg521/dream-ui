@@ -33,7 +33,7 @@ const openDialog = () => {
   fireEvent(window, new CustomEvent(OPEN_MIGRATION_DIALOG_EVENT));
 };
 
-const INVITE_SHOWN_KEY = 'aionui.migration-invite-shown';
+const INVITE_SHOWN_KEY = 'one.migration-invite-shown';
 
 describe('UpdateMigrationDialog', () => {
   beforeEach(() => {

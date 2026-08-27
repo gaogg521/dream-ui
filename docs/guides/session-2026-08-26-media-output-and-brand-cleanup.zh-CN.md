@@ -125,3 +125,53 @@ npx vitest run tests/unit/media tests/unit/renderer tests/unit/process
 - `npx oxlint` 跑不起来：配置里引用了不存在的规则 `no-await-thenable`
 - dream-core 在 HEAD 时不是 fmt-clean，`cargo fmt --all` 会连带重排大量无关文件；
   本次把格式化拆成了独立提交
+
+---
+
+## 9. 第二轮：剩余品牌残留清理（同日追加）
+
+第一轮刻意跳过的那批，按「持久化与否」分两类处理完了。
+
+### 安全直改（纯内部约定，从不持久化、两端都在仓库内）
+
+| 类别 | 旧 → 新 |
+| --- | --- |
+| window CustomEvent 名 ×10 | `aionui-workspace-*` / `aionui-chat-*` / `aionui-update-*` / `aionui-open-*` / `aionui:speech-to-text-config-changed` → `one-*` / `one:*` |
+| AudioWorklet processor | `aionui-pcm-capture` → `one-pcm-capture` |
+| CDP 内部协议 | WS 路径 `/aionui-cdp` → `/one-cdp`；`aionui-browser-{target,session,context}` → `one-browser-*` |
+| preload E2E 全局 | `__aionuiE2ETest` → `__oneE2ETest` |
+
+### 持久化 → 一律做兼容，不做破坏性改名
+
+**localStorage 键**（11 个）：新增 `renderer/utils/storage/legacyStorageKeys.ts`，
+在 `main.tsx` 最开头跑一次 `migrateLegacyLocalStorageKeys()`——**拷贝而非移动**，
+老键留在原地，降级回旧版本仍能读到。
+
+> `__aionui_theme` 是例外：`index.html` 的内联脚本在任何模块加载前就要读它（防闪白），
+> JS 迁移来不及，所以那两处直接写成 `getItem('__one_theme') || getItem('__aionui_theme')`。
+
+**`aionui.dir` env 键**：读时 `getSync('one.dir') ?? getSync('aionui.dir')`，
+写时**两个键都写**，降级不丢用户自定义的 cache/work/log 目录。
+
+**内置浏览器 MCP 名** `aionui-browser` → `one-browser`：新增
+`BUILTIN_BROWSER_MCP_LEGACY_NAMES`。这里**必须**做兼容——「是否已注册」是按名字判断的
+（`runBackendMigrations.ts` 的 `existing.find(...)`），只认新名会给存量安装**再插一条**，
+变成两个都启用的浏览器 MCP 驱动同一个内嵌浏览器。命中老名时顺便把 `name` 一起 update 改写前进，
+否则渲染层那个「Agent 正在操作浏览器」的角标（按当前名匹配工具调用流）永远不亮。
+
+**headless 数据目录** `~/.aionui-server` → `~/.one-server`：同样是「新名不存在且老名存在就用老名」。
+
+### 这一轮仍然不动（有硬理由）
+
+| 项 | 理由 |
+| --- | --- |
+| `aionui-assistant` | 是**已发布 SQL 迁移**里的 `source_ref`（`018_reset_builtin_assistant_enabled.sql`），迁移文件不可改 |
+| `persist:aionui-browser` session partition | 改了内嵌浏览器的 cookie / 登录态全丢 |
+| `aionui.*` Sentry tag 命名空间 | 改了断历史报表与告警 |
+| `migrations.ts` 里的 `'aionui'` source 值 | 是 schema 历史，已发布的迁移不可改 |
+| `aionui://` 深链、`appId`、`1ONE Code` 目录 | CLAUDE.md 冻结值 |
+
+### 验证
+
+`tsc` 0 错误；`npx vitest run` **544 文件 / 5059 测试全绿，0 失败**。
+dream-engine 全仓扫描无任何 `aionui` 残留。
