@@ -545,7 +545,8 @@
     "output": "출력",
     "thought": "사고",
     "cachedRead": "캐시 읽기",
-    "cachedWrite": "캐시 쓰기"
+    "cachedWrite": "캐시 쓰기",
+    "cacheHitRate": "캐시 적중률"
   },
   "skill_generator": {
     "title": "스킬/규칙 생성",
@@ -851,7 +852,7 @@
   "mediaCostActual": "비용 {{amount}}",
   "mediaCostUnknown": "비용 알 수 없음",
   "mediaCostFromUserPrice": "이 모델에 설정한 단가를 기준으로 계산했습니다.",
-  "mediaCostFromBuiltinRate": "내장 참고 요율로 추정한 값이며 실제 청구액과 다를 수 있습니다. 설정 → 모델에서 단가를 입력하면 정확한 금액이 표시됩니다.",
+  "mediaCostFromBuiltinRate": "내장 참고 요율로 추정한 금액입니다. 수량(동영상은 길이까지)은 반영하지만 해상도와 화질은 구분하지 않으므로 실제 청구액과 다를 수 있습니다. 설정 → 모델에서 이 모델의 단가를 입력하면 정확한 금액이 표시됩니다.",
   "mediaCostNoRate": "이 모델에는 단가도 내장 참고 요율도 없습니다. 설정 → 모델에서 단가를 입력하면 표시됩니다.",
   "mediaModeNoModel": "생성 모델이 아직 선택되지 않았습니다. 설정 → 기능 확장 → 도구에서 선택하세요.",
   "mediaModeStartFailed": "생성을 시작하지 못했습니다: {{reason}}",

@@ -27,6 +27,7 @@ import type { MediaGenParams } from '@/common/media/types';
 import type { MediaModelSpec } from '@/common/media/catalog/types';
 import { useMediaCost } from '@renderer/hooks/media/useMediaCost';
 import { useAutoEndpointWarning } from '@renderer/hooks/media/useAutoEndpointWarning';
+import { requestModelSettingsHighlight } from '@renderer/hooks/media/mediaSettingsHighlight';
 import MediaParamsPanel from './MediaParamsPanel';
 import RuntimeSelectorPill from '@/renderer/components/agent/RuntimeSelectorPill';
 import { useNavigate } from 'react-router-dom';
@@ -210,15 +211,46 @@ const MediaModeControl: React.FC<Props> = ({
 
       {/* What this is about to cost. Placed next to the parameters because they
           are what changes it — a count of four is four times the price, and
-          that ought to be visible at the moment it is chosen. */}
+          that ought to be visible at the moment it is chosen.
+
+          Clickable exactly when declaring a price would replace the figure with
+          an exact one. The tooltip has always ended with "go to Settings >
+          Models and fill in the unit price", but that field sits behind
+          Settings > Models > expand the provider > edit the model > declare it
+          as image/video first — deep enough that naming it in a sentence is not
+          the same as offering it. Same one-shot highlight intent the failed-job
+          card uses, so the target row is scrolled to and marked on arrival. */}
       {mode !== 'off' && cost && (
         <Tooltip content={cost.tooltip}>
-          <span
-            className={`text-12px whitespace-nowrap ${cost.known ? 'text-t-secondary' : 'text-t-tertiary'}`}
-            data-testid='media-cost-estimate'
-          >
-            {cost.text}
-          </span>
+          {cost.actionable && providerId ? (
+            <span
+              role='button'
+              tabIndex={0}
+              className={`text-12px whitespace-nowrap cursor-pointer underline decoration-dotted underline-offset-2 ${
+                cost.known ? 'text-t-secondary' : 'text-t-tertiary'
+              }`}
+              data-testid='media-cost-estimate'
+              onClick={() => {
+                requestModelSettingsHighlight(providerId);
+                navigate('/settings/model');
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                requestModelSettingsHighlight(providerId);
+                navigate('/settings/model');
+              }}
+            >
+              {cost.text}
+            </span>
+          ) : (
+            <span
+              className={`text-12px whitespace-nowrap ${cost.known ? 'text-t-secondary' : 'text-t-tertiary'}`}
+              data-testid='media-cost-estimate'
+            >
+              {cost.text}
+            </span>
+          )}
         </Tooltip>
       )}
 

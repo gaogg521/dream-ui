@@ -159,15 +159,23 @@ const DreamEngineSendBox: React.FC<{
   const teamPermission = useTeamPermission();
   const propagateMode = teamPermission?.propagateMode;
 
-  const { thought, running, turnStartedAtMs, setActiveMsgId, setWaitingResponse, resetState, tokenUsage } =
-    useDreamEngineMessage(conversation_id, {
-      onConfigChanged: (capabilities) => {
-        const modes = (capabilities as { modes?: string[] })?.modes;
-        if (modes && modes.length > 0) {
-          setDynamicModes(modeOptionsFromCapabilities(modes));
-        }
-      },
-    });
+  const {
+    thought,
+    running,
+    turnStartedAtMs,
+    setActiveMsgId,
+    setWaitingResponse,
+    resetState,
+    tokenUsage,
+    context_limit,
+  } = useDreamEngineMessage(conversation_id, {
+    onConfigChanged: (capabilities) => {
+      const modes = (capabilities as { modes?: string[] })?.modes;
+      if (modes && modes.length > 0) {
+        setDynamicModes(modeOptionsFromCapabilities(modes));
+      }
+    },
+  });
   const runtimeView = useConversationRuntimeView(conversation_id);
   const { markSendStarted, markSendAccepted, markSendFailed } = runtimeView;
 
@@ -944,12 +952,15 @@ const DreamEngineSendBox: React.FC<{
               </Button>
             )}
             {tokenUsage ? (
-              // dream never reports a context-window size (only raw token
-              // counts), so context_limit is always 0 — the indicator's own
-              // "window unknown" fallback renders the count without a
-              // fabricated percentage. No onQueryDetail: the category-detail
-              // query is a Claude-only capability dream cannot serve.
-              <ContextUsageIndicator tokenUsage={tokenUsage} context_limit={0} />
+              // The window size is whatever the backend stated, 0 when it
+              // stated none — the indicator's own "window unknown" fallback
+              // then renders the raw count rather than a fabricated
+              // percentage. It used to be hard-coded to 0 on the grounds that
+              // dream never reports a size; passing the real value costs
+              // nothing while that holds and starts showing the percentage the
+              // moment a backend does report one. No onQueryDetail: the
+              // category-detail query is a Claude-only capability.
+              <ContextUsageIndicator tokenUsage={tokenUsage} context_limit={context_limit} />
             ) : undefined}
           </>
         }

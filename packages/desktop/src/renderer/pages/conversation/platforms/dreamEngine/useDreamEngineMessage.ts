@@ -43,6 +43,15 @@ export const useDreamEngineMessage = (
     subject: '',
   });
   const [tokenUsage, setTokenUsage] = useState<TokenUsageData | null>(null);
+  /**
+   * Context window size, when the backend states one.
+   *
+   * Stays 0 for a backend that reports raw token counts without a window — the
+   * indicator then shows the count instead of a percentage against a guessed
+   * denominator. Plumbed rather than hard-coded so a backend that does report a
+   * size gets the percentage the feature exists for.
+   */
+  const [context_limit, setContextLimit] = useState<number>(0);
   // Turn start origin for the elapsed indicator; backed by the module-level
   // conversation turn clock so it survives unmount on conversation switches.
   const [turnStartedAtMs, setTurnStartedAtMs] = useState<number | null>(null);
@@ -312,6 +321,47 @@ export const useDreamEngineMessage = (
             }
           }
           break;
+        /**
+         * The conversation-scoped usage report.
+         *
+         * Not an ACP-only frame despite the name: `broadcast_usage_frame` in
+         * dream-core says so itself — "Fires for every backend" — because a
+         * usage report is conversation state, not turn state, and some backends
+         * only produce it after their turn has already closed. This arm was
+         * missing, so for a dream conversation the frame was broadcast into an
+         * empty room and the context indicator stayed blank.
+         *
+         * The `finish` arm above reads usage too, and both are kept: the two
+         * carry it at different times depending on backend, and whichever
+         * arrives replaces wholesale (the same idempotence the broadcaster
+         * relies on for backends that deliver both).
+         */
+        case 'acp_context_usage': {
+          const usageData = message.data as
+            | { used?: number; size?: number; cost?: { amount: number; currency: string } }
+            | undefined;
+          if (usageData && typeof usageData.used === 'number' && usageData.used > 0) {
+            setTokenUsage((prev) => {
+              const next: TokenUsageData = { total_tokens: usageData.used as number };
+              // A mid-turn report carries no cost; keep the last one we had
+              // rather than blanking a figure the user already saw.
+              if (usageData.cost && usageData.cost.amount > 0) {
+                next.cost = { amount: usageData.cost.amount, currency: usageData.cost.currency || 'USD' };
+              } else if (prev?.cost) {
+                next.cost = prev.cost;
+              }
+              if (prev?.breakdown) next.breakdown = prev.breakdown;
+              return next;
+            });
+            // Only when the backend actually states a window. Without it the
+            // indicator shows the raw count rather than a percentage against a
+            // guessed denominator.
+            if (typeof usageData.size === 'number' && usageData.size > 0) {
+              setContextLimit((prev) => (prev > 0 ? prev : (usageData.size as number)));
+            }
+          }
+          break;
+        }
         case 'tool_group':
           {
             // Mark that current turn has content output
@@ -414,6 +464,8 @@ export const useDreamEngineMessage = (
 
     setThought({ subject: '', description: '' });
     setTokenUsage(null);
+    // Belongs to the conversation being left, not the one being opened.
+    setContextLimit(0);
     hasContentInTurnRef.current = false;
     setHasHydratedRunningState(false);
 
@@ -467,6 +519,44 @@ export const useDreamEngineMessage = (
     };
   }, [conversation_id]);
 
+  /**
+   * Hydrate the context indicator from the backend's own usage snapshot.
+   *
+   * `extra.last_token_usage` above only exists once THIS client has seen a turn
+   * finish and written it back, so a conversation opened on a fresh install, on
+   * a second machine, or after that write failed showed nothing even though the
+   * backend had the figure all along. The ACP hook already reads this endpoint;
+   * the dream side never did.
+   *
+   * Never overwrites a value already set: a live frame may land first, and it is
+   * newer than any snapshot.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    void ipcBridge.conversation.getUsage
+      .invoke({ conversation_id })
+      .then((usage) => {
+        if (cancelled || !usage || typeof usage.used !== 'number' || usage.used <= 0) return;
+        setTokenUsage((prev) => {
+          if (prev) return prev;
+          const next: TokenUsageData = { total_tokens: usage.used };
+          if (usage.cost && usage.cost.amount > 0) {
+            next.cost = { amount: usage.cost.amount, currency: usage.cost.currency || 'USD' };
+          }
+          return next;
+        });
+        if (typeof usage.size === 'number' && usage.size > 0) {
+          setContextLimit((prev) => (prev > 0 ? prev : usage.size));
+        }
+      })
+      // A missing snapshot is the normal case for a conversation that has not
+      // run a turn yet, not an error worth surfacing.
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [conversation_id]);
+
   const resetState = useCallback(() => {
     setWaitingResponse(false);
     waitingResponseRef.current = false;
@@ -487,6 +577,7 @@ export const useDreamEngineMessage = (
     hasHydratedRunningState,
     turnStartedAtMs,
     tokenUsage,
+    context_limit,
     setActiveMsgId,
     setWaitingResponse,
     resetState,

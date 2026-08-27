@@ -545,7 +545,8 @@
     "output": "出力",
     "thought": "思考",
     "cachedRead": "キャッシュ読み取り",
-    "cachedWrite": "キャッシュ書き込み"
+    "cachedWrite": "キャッシュ書き込み",
+    "cacheHitRate": "キャッシュヒット率"
   },
   "skill_generator": {
     "title": "Generate Skill/Rule",
@@ -851,7 +852,7 @@
   "mediaCostActual": "費用 {{amount}}",
   "mediaCostUnknown": "費用不明",
   "mediaCostFromUserPrice": "このモデルに設定した単価に基づく金額です。",
-  "mediaCostFromBuiltinRate": "組み込みの参考レートによる概算です。実際の請求額とは異なる場合があります。設定 → モデル で単価を設定すると正確な金額が表示されます。",
+  "mediaCostFromBuiltinRate": "組み込みの参考レートによる概算です。数量（動画は再生時間も）は計算に入りますが、解像度や画質は区別しないため、実際の請求額と異なる場合があります。設定 → モデル でこのモデルの単価を設定すると正確な金額を表示できます。",
   "mediaCostNoRate": "このモデルには単価も組み込みの参考レートもありません。設定 → モデル で単価を設定すると表示されます。",
   "mediaModeNoModel": "生成モデルが未選択です。設定 → 拡張機能 → ツール で選んでください。",
   "mediaModeStartFailed": "生成を開始できませんでした: {{reason}}",

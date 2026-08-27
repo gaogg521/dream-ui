@@ -545,7 +545,8 @@
     "output": "輸出",
     "thought": "思考",
     "cachedRead": "快取讀取",
-    "cachedWrite": "快取寫入"
+    "cachedWrite": "快取寫入",
+    "cacheHitRate": "快取命中率"
   },
   "skill_generator": {
     "title": "Generate Skill/Rule",
@@ -851,7 +852,7 @@
   "mediaCostActual": "花費 {{amount}}",
   "mediaCostUnknown": "費用未知",
   "mediaCostFromUserPrice": "依你為此模型填寫的單價計算。",
-  "mediaCostFromBuiltinRate": "依內建參考費率估算，可能與你的實際計費不同。在 設定 → 模型 中為此模型填寫單價可顯示準確金額。",
+  "mediaCostFromBuiltinRate": "以內建參考費率估算：只計算數量（影片另計時長），不區分解析度與畫質，因此可能與你的實際計費不同。在 設定 → 模型 中為該模型填寫單價即可顯示準確金額。",
   "mediaCostNoRate": "此模型沒有單價，也沒有內建參考費率。在 設定 → 模型 中填寫單價後即可顯示。",
   "mediaModeNoModel": "還沒有選生成模型。到「設定 → 能力擴展 → 工具」裡選一個。",
   "mediaModeStartFailed": "生成沒能開始：{{reason}}",

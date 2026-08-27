@@ -530,7 +530,8 @@
     "output": "Çıktı",
     "thought": "Düşünme",
     "cachedRead": "Önbellek okuma",
-    "cachedWrite": "Önbellek yazma"
+    "cachedWrite": "Önbellek yazma",
+    "cacheHitRate": "Önbellek isabet oranı"
   },
   "skill_generator": {
     "title": "Yetenek/Kural Oluştur",
@@ -853,7 +854,7 @@
   "mediaCostActual": "Maliyet {{amount}}",
   "mediaCostUnknown": "Maliyet bilinmiyor",
   "mediaCostFromUserPrice": "Bu model için girdiğiniz birim fiyata göre hesaplandı.",
-  "mediaCostFromBuiltinRate": "Yerleşik referans tarifeye göre tahmin edilmiştir; gerçek faturanız farklı olabilir. Kesin tutar için Ayarlar → Modeller bölümünde birim fiyat girin.",
+  "mediaCostFromBuiltinRate": "Yerleşik bir referans tarifeye göre tahmin edilmiştir. Adet (videoda ayrıca süre) hesaba katılır, ancak çözünürlük ve kalite ayırt edilmez; bu nedenle gerçek faturanız farklı olabilir. Tam tutarı görmek için Ayarlar → Modeller bölümünde bu model için birim fiyat girin.",
   "mediaCostNoRate": "Bu modelin birim fiyatı da yerleşik referans tarifesi de yok. Ayarlar → Modeller bölümünde bir fiyat girin.",
   "mediaModeNoModel": "Henüz bir üretim modeli seçilmedi. Ayarlar → Yetenekler → Araçlar bölümünden seçin.",
   "mediaModeStartFailed": "Üretim başlatılamadı: {{reason}}",

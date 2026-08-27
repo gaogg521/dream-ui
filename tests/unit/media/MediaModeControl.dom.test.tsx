@@ -34,6 +34,34 @@ vi.mock('@renderer/hooks/agent/useModelProviderList', () => ({
   useProvidersQuery: () => ({ data: providerList.value }),
 }));
 
+/**
+ * Cost display is opt-in (`tools.showMediaCost`, default off), so every case
+ * that asserts a figure has to turn it on. The default-off behaviour gets its
+ * own case rather than being the implicit background of the others.
+ */
+const showCost = vi.hoisted(() => ({ value: true }));
+vi.mock('@/renderer/services/clientBusinessSettings', () => ({
+  getClientBusinessSetting: (key: string) =>
+    Promise.resolve(key === 'tools.showMediaCost' ? showCost.value : undefined),
+  setClientBusinessSetting: () => Promise.resolve(),
+}));
+
+// SWR would resolve the preference a tick later than the first render, which is
+// enough to make these synchronous assertions flaky. Reading it directly keeps
+// the component's own gate under test without a timing dance.
+vi.mock('swr', () => ({
+  default: (_key: string, fetcher: () => Promise<unknown>) => {
+    void fetcher;
+    return { data: showCost.value };
+  },
+  mutate: () => Promise.resolve(),
+}));
+
+const highlighted = vi.hoisted(() => ({ value: [] as string[] }));
+vi.mock('@renderer/hooks/media/mediaSettingsHighlight', () => ({
+  requestModelSettingsHighlight: (id: string) => highlighted.value.push(id),
+}));
+
 const MediaModeControl = (await import('@/renderer/components/media/MediaModeControl')).default;
 
 type Mode = 'off' | 'image' | 'video';
@@ -89,6 +117,8 @@ describe('MediaModeControl cost estimate', () => {
   afterEach(() => {
     cleanup();
     providerList.value = [];
+    showCost.value = true;
+    highlighted.value = [];
   });
 
   it('quotes the built-in rate as an estimate before sending', () => {
@@ -120,5 +150,37 @@ describe('MediaModeControl cost estimate', () => {
   it('shows no cost while the send box is in conversation mode', () => {
     renderControl({ mode: 'off' });
     expect(screen.queryByTestId('media-cost-estimate')).toBeNull();
+  });
+
+  /**
+   * Price is a minority interest: what most people want from a running
+   * conversation is context left, tokens spent and cache hits — so the figure
+   * is not shown until asked for.
+   */
+  it('shows nothing at all until the user opts in', () => {
+    showCost.value = false;
+    renderControl({ params: { n: 4 } });
+    expect(screen.queryByTestId('media-cost-estimate')).toBeNull();
+  });
+
+  /**
+   * The tooltip has always said "set a unit price in Settings > Models", but
+   * that field is behind several clicks and only appears after the model is
+   * declared as image/video. Naming a destination is not the same as offering
+   * it, so the chip itself is the way there.
+   */
+  it('jumps to the model settings row when a price would sharpen the figure', () => {
+    renderControl({ providerId: 'p-1' });
+    const chip = screen.getByTestId('media-cost-estimate');
+    expect(chip.getAttribute('role')).toBe('button');
+    chip.click();
+    expect(highlighted.value).toEqual(['p-1']);
+  });
+
+  it('is inert once the figure is already exact', () => {
+    providerList.value = [{ id: 'p-1', model_settings: { 'gpt-image-2': { media_unit_price_usd: 0.02 } } }];
+    renderControl({ providerId: 'p-1' });
+    // Nothing to improve, so no affordance offering to improve it.
+    expect(screen.getByTestId('media-cost-estimate').getAttribute('role')).toBeNull();
   });
 });

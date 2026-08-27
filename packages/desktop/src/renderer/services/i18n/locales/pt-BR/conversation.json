@@ -551,7 +551,8 @@
     "output": "Saída",
     "thought": "Raciocínio",
     "cachedRead": "Leitura de cache",
-    "cachedWrite": "Escrita de cache"
+    "cachedWrite": "Escrita de cache",
+    "cacheHitRate": "Taxa de acerto do cache"
   },
   "skill_generator": {
     "title": "Gerar Habilidade/Regra",
@@ -857,7 +858,7 @@
   "mediaCostActual": "Custo {{amount}}",
   "mediaCostUnknown": "Custo desconhecido",
   "mediaCostFromUserPrice": "Calculado com o preço unitário que você definiu para este modelo.",
-  "mediaCostFromBuiltinRate": "Estimado por uma tarifa de referência interna; sua cobrança real pode diferir. Defina um preço unitário em Configurações → Modelos para ver o valor exato.",
+  "mediaCostFromBuiltinRate": "Estimativa com base em uma tarifa de referência interna. Considera a quantidade (e a duração, no caso de vídeo), mas não a resolução nem a qualidade, portanto sua cobrança real pode ser diferente. Defina um preço unitário para este modelo em Configurações → Modelos para ver o valor exato.",
   "mediaCostNoRate": "Este modelo não tem preço unitário nem tarifa de referência interna. Defina um em Configurações → Modelos.",
   "mediaModeNoModel": "Nenhum modelo de geração selecionado. Escolha um em Configurações → Capacidades → Ferramentas.",
   "mediaModeStartFailed": "Não foi possível iniciar a geração: {{reason}}",

@@ -119,8 +119,37 @@ const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({
     }
   }
 
+  /**
+   * Share of prompt tokens that came from cache rather than being re-sent.
+   *
+   * `cached_read + input` is the denominator because `input_tokens` in this
+   * breakdown is the FRESH input — what cache did not cover. Anything else
+   * (dividing by the session total, say) would fold output and thinking tokens
+   * into a prompt-side ratio and quietly understate it.
+   *
+   * Null unless there was cache activity at all: 0% against a backend that does
+   * not use prompt caching reads as a problem rather than as "not applicable".
+   */
+  const cacheHitRate = useMemo(() => {
+    const read = breakdown?.cached_read_tokens;
+    const fresh = breakdown?.input_tokens;
+    if (typeof read !== 'number' || read <= 0) return null;
+    if (typeof fresh !== 'number' || fresh < 0) return null;
+    const denominator = read + fresh;
+    if (denominator <= 0) return null;
+    return (read / denominator) * 100;
+  }, [breakdown?.cached_read_tokens, breakdown?.input_tokens]);
+
   const details = (
     <>
+      {cacheHitRate !== null && (
+        // Its own line rather than another entry in the breakdown chain: it is
+        // the one figure here that is a ratio instead of a count, and it answers
+        // "is this conversation still cheap to continue" at a glance.
+        <div className='text-12px text-t-secondary mt-4px'>
+          {t('conversation.contextUsage.cacheHitRate', 'Cache hit rate')} {cacheHitRate.toFixed(1)}%
+        </div>
+      )}
       {tokenUsage.cost && (
         <div className='text-12px text-t-secondary mt-4px'>
           {t('conversation.contextUsage.sessionCost', 'Session cost')} ≈ {formatCostAmount(tokenUsage.cost, locale)}

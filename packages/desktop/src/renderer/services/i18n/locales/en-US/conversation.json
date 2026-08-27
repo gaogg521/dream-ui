@@ -549,7 +549,8 @@
     "output": "Output",
     "thought": "Thinking",
     "cachedRead": "Cache read",
-    "cachedWrite": "Cache write"
+    "cachedWrite": "Cache write",
+    "cacheHitRate": "Cache hit rate"
   },
   "skill_generator": {
     "title": "Generate Skill/Rule",
@@ -865,7 +866,7 @@
   "mediaCostActual": "Cost {{amount}}",
   "mediaCostUnknown": "Cost unknown",
   "mediaCostFromUserPrice": "Based on the unit price you set for this model.",
-  "mediaCostFromBuiltinRate": "Estimated from a built-in reference rate; your actual billing may differ. Set a unit price for this model in Settings → Models for an exact figure.",
+  "mediaCostFromBuiltinRate": "Estimated from a built-in reference rate. It counts quantity (and video duration), but not resolution or quality, so your actual billing may differ. Set a unit price for this model in Settings → Models for an exact figure.",
   "mediaCostNoRate": "This model has no unit price and no built-in reference rate. Set one in Settings → Models to see a figure.",
   "mediaModeNoModel": "No generation model selected yet. Pick one under Settings → Capabilities → Tools.",
   "mediaModeStartFailed": "Could not start the generation: {{reason}}",

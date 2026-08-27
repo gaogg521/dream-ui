@@ -13,8 +13,11 @@ import {
   updateModelSettings,
 } from '@/common/utils/modelCapabilities';
 import ModalHOC from '@/renderer/utils/ui/ModalHOC';
+import { getClientBusinessSetting, setClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
+import { SHOW_MEDIA_COST_SWR_KEY } from '@renderer/hooks/media/useMediaCost';
+import { mutate as globalMutate } from 'swr';
 import DreamModal from '@/renderer/components/base/DreamModal';
-import { Input, Select } from '@arco-design/web-react';
+import { Input, Select, Switch } from '@arco-design/web-react';
 import { PreviewOpen } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -35,6 +38,7 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
     const [modelKind, setModelKind] = useState<ModelKindChoice>('auto');
     const [mediaEndpoint, setMediaEndpoint] = useState<string>('');
     const [mediaUnitPrice, setMediaUnitPrice] = useState<string>('');
+    const [showMediaCost, setShowMediaCost] = useState(false);
     const isNewApi = isNewApiPlatform(data?.platform ?? '');
     const isEditing = Boolean(editingModel);
     const { data: modelList, isLoading } = useModeModeList(data?.platform, data?.base_url, data?.api_key);
@@ -87,6 +91,12 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
         typeof settings?.media_unit_price_usd === 'number' ? String(settings.media_unit_price_usd) : ''
       );
       setModelProtocol(editingModel ? (data?.model_protocols?.[editingModel] ?? 'openai') : 'openai');
+      // The cost-display preference is global, so it is read here rather than
+      // from this model's settings — and re-read on every open so a change made
+      // from another model's dialog is reflected.
+      void getClientBusinessSetting('tools.showMediaCost')
+        .then((value) => setShowMediaCost(value === true))
+        .catch(() => setShowMediaCost(false));
     }, [data, editingModel, modalProps.visible]);
 
     const handleConfirm = useCallback(() => {
@@ -215,6 +225,11 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
             <div className='text-11px text-t-secondary leading-4'>{t('settings.modelKindTip')}</div>
             {(modelKind === 'image' || modelKind === 'video') && (
               <>
+                {/* Both of these fields used to carry no label at all — the
+                    protocol select was bare and the price was identifiable only
+                    from its placeholder, which disappears the moment anything is
+                    typed. `modelKind` above always had one; these now match it. */}
+                <span>{t('settings.mediaEndpointLabel')}</span>
                 <Select
                   value={mediaEndpoint || 'auto'}
                   onChange={(value) => setMediaEndpoint(value === 'auto' ? '' : String(value))}
@@ -251,6 +266,7 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
                     <span>{endpointMismatchWarning}</span>
                   </div>
                 )}
+                <span>{t('settings.mediaUnitPriceLabel')}</span>
                 <Input
                   value={mediaUnitPrice}
                   onChange={setMediaUnitPrice}
@@ -260,6 +276,34 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
                 <div className='text-11px text-t-secondary leading-4'>
                   {modelKind === 'video' ? t('settings.mediaUnitPriceTipVideo') : t('settings.mediaUnitPriceTipImage')}
                 </div>
+                {/* Whether to show cost figures anywhere at all.
+                    Deliberately here rather than in a general preferences page:
+                    this is the one screen where a user is already thinking about
+                    what a generation costs, so it is where they will look for
+                    the way to stop being told. Global, not per-model — someone
+                    who does not care about price does not care per model, and a
+                    default-off per-model flag would have to be flipped on every
+                    one of them. Applies immediately: the SWR key both display
+                    sites read is revalidated on change. */}
+                <div className='flex items-center justify-between gap-8px pt-4px'>
+                  <span className='text-12px'>{t('settings.showMediaCostLabel')}</span>
+                  <Switch
+                    size='small'
+                    checked={showMediaCost}
+                    onChange={(checked) => {
+                      setShowMediaCost(checked);
+                      void setClientBusinessSetting('tools.showMediaCost', checked)
+                        .then(() => globalMutate(SHOW_MEDIA_COST_SWR_KEY))
+                        .catch(() => {
+                          // Persisting failed: put the switch back rather than
+                          // leaving the UI claiming a preference that was not
+                          // stored.
+                          setShowMediaCost(!checked);
+                        });
+                    }}
+                  />
+                </div>
+                <div className='text-11px text-t-secondary leading-4'>{t('settings.showMediaCostTip')}</div>
               </>
             )}
           </div>

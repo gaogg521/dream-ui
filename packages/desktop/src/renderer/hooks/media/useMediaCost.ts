@@ -23,15 +23,54 @@
 
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import useSWR from 'swr';
 import { computeMediaCost, formatUsd } from '@/common/media/pricing';
 import type { MediaKind } from '@/common/media/types';
+import { getClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
 import { useProvidersQuery } from '@renderer/hooks/agent/useModelProviderList';
+
+/**
+ * SWR key for the cost-display preference. Exported so the settings switch can
+ * revalidate it and every send box / job card updates without a reload.
+ */
+export const SHOW_MEDIA_COST_SWR_KEY = 'client-setting:tools.showMediaCost';
+
+/**
+ * Whether the user asked to see cost figures at all.
+ *
+ * Off unless explicitly enabled — see `tools.showMediaCost` in
+ * `clientSettings.ts` for why the default is off. Read through SWR rather than
+ * an effect so the two display sites share one fetch and both react to the
+ * switch immediately.
+ */
+export const useShowMediaCost = (): boolean => {
+  const { data } = useSWR<boolean>(
+    SHOW_MEDIA_COST_SWR_KEY,
+    () => getClientBusinessSetting('tools.showMediaCost').then((value) => value === true),
+    { revalidateOnFocus: false }
+  );
+  return data === true;
+};
 
 export type MediaCostDisplay = {
   text: string;
   tooltip: string;
   /** False when no rate exists — callers may want to style that differently. */
   known: boolean;
+  /**
+   * True when the user declaring a price would replace this figure with an
+   * exact one — i.e. the number came from the built-in table, or there is no
+   * number at all.
+   *
+   * Exposed so the display sites can offer the way there instead of only naming
+   * it in prose: the tooltip has said "go to Settings > Models" since this
+   * shipped, but the field it points at is several clicks deep and only appears
+   * after the model is declared as image/video, which is not something a user
+   * can be expected to discover from that sentence.
+   *
+   * False for a user-declared price: there is nothing to improve.
+   */
+  actionable: boolean;
 };
 
 /**
@@ -63,13 +102,23 @@ export const useMediaCost = (input: {
   const { t } = useTranslation();
   const { kind, model, providerId, count, durationSeconds, variant } = input;
   const userUnitPriceUsd = useDeclaredUnitPriceUsd(providerId, model);
+  const showCost = useShowMediaCost();
 
   return useMemo(() => {
+    // Returning null rather than gating at each call site: "do not show a cost"
+    // is one rule, and both display sites already handle a null (a model with
+    // no rate has always produced one).
+    if (!showCost) return null;
     if (!model) return null;
     const cost = computeMediaCost({ kind, model, count, durationSeconds, userUnitPriceUsd });
 
     if (cost.source === 'unknown' || cost.totalUsd === undefined) {
-      return { text: t('conversation.mediaCostUnknown'), tooltip: t('conversation.mediaCostNoRate'), known: false };
+      return {
+        text: t('conversation.mediaCostUnknown'),
+        tooltip: t('conversation.mediaCostNoRate'),
+        known: false,
+        actionable: true,
+      };
     }
 
     // The built-in table is a coarse illustration keyed off model names; saying
@@ -81,6 +130,7 @@ export const useMediaCost = (input: {
         cost.source === 'builtin' ? 'conversation.mediaCostFromBuiltinRate' : 'conversation.mediaCostFromUserPrice'
       ),
       known: true,
+      actionable: cost.source === 'builtin',
     };
-  }, [count, durationSeconds, kind, model, t, userUnitPriceUsd, variant]);
+  }, [count, durationSeconds, kind, model, showCost, t, userUnitPriceUsd, variant]);
 };

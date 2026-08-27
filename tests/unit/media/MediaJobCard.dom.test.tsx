@@ -23,6 +23,23 @@ vi.mock('@renderer/hooks/agent/useModelProviderList', () => ({
   useProvidersQuery: () => ({ data: providerList.value }),
 }));
 
+/**
+ * Cost display is opt-in (`tools.showMediaCost`, default off), so the cost
+ * cases below have to turn it on; the default-off behaviour has its own case.
+ * SWR is read synchronously for the same reason as in
+ * MediaModeControl.dom.test.tsx — the real one resolves a tick late.
+ */
+const showCost = vi.hoisted(() => ({ value: true }));
+vi.mock('@/renderer/services/clientBusinessSettings', () => ({
+  getClientBusinessSetting: (key: string) =>
+    Promise.resolve(key === 'tools.showMediaCost' ? showCost.value : undefined),
+  setClientBusinessSetting: () => Promise.resolve(),
+}));
+vi.mock('swr', () => ({
+  default: () => ({ data: showCost.value }),
+  mutate: () => Promise.resolve(),
+}));
+
 const MediaJobCard = (await import('@/renderer/components/media/MediaJobCard')).default;
 
 const videoAsset = {
@@ -77,6 +94,7 @@ describe('MediaJobCard', () => {
   describe('cost', () => {
     afterEach(() => {
       providerList.value = [];
+      showCost.value = true;
     });
 
     it('marks a figure derived from the built-in table as an estimate', () => {
@@ -108,6 +126,15 @@ describe('MediaJobCard', () => {
 
     it('shows no cost until the job has actually produced something', () => {
       renderCard(<MediaJobCard job={job({ status: 'polling' })} />);
+      expect(screen.queryByTestId('media-cost')).toBeNull();
+    });
+
+    // Opt-in: the figure most people want off a finished card is the media
+    // itself, not a price. Someone who does want it turns it on beside the unit
+    // price they had to enter for it to be exact anyway.
+    it('shows nothing at all until the user opts in', () => {
+      showCost.value = false;
+      renderCard(<MediaJobCard job={job({ status: 'done', assets: [videoAsset] })} />);
       expect(screen.queryByTestId('media-cost')).toBeNull();
     });
   });

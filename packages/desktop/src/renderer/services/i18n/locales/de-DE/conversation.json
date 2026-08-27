@@ -546,7 +546,8 @@
     "output": "Ausgabe",
     "thought": "Denken",
     "cachedRead": "Cache-Lesen",
-    "cachedWrite": "Cache-Schreiben"
+    "cachedWrite": "Cache-Schreiben",
+    "cacheHitRate": "Cache-Trefferquote"
   },
   "skill_generator": {
     "title": "Skill/Regel generieren",
@@ -852,7 +853,7 @@
   "mediaCostActual": "Kosten {{amount}}",
   "mediaCostUnknown": "Kosten unbekannt",
   "mediaCostFromUserPrice": "Basierend auf dem Preis, den du für dieses Modell hinterlegt hast.",
-  "mediaCostFromBuiltinRate": "Geschätzt anhand eines integrierten Referenzpreises; deine tatsächliche Abrechnung kann abweichen. Hinterlege in Einstellungen → Modelle einen Preis für einen genauen Betrag.",
+  "mediaCostFromBuiltinRate": "Geschätzt anhand eines integrierten Referenztarifs. Die Menge (bei Video auch die Dauer) wird berücksichtigt, Auflösung und Qualität jedoch nicht — deine tatsächliche Abrechnung kann daher abweichen. Lege unter Einstellungen → Modelle einen Stückpreis für dieses Modell fest, um den genauen Betrag zu sehen.",
   "mediaCostNoRate": "Für dieses Modell gibt es weder einen Preis noch einen integrierten Referenzpreis. Hinterlege einen in Einstellungen → Modelle.",
   "mediaModeNoModel": "Noch kein Generierungsmodell gewählt. Wählen Sie eines unter Einstellungen → Fähigkeiten → Werkzeuge.",
   "mediaModeStartFailed": "Generierung konnte nicht gestartet werden: {{reason}}",

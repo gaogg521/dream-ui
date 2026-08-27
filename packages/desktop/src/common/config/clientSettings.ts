@@ -20,6 +20,19 @@ export type ClientBusinessSettingMap = {
    * release. Parsed and validated by `common/media/catalog/overrides.ts`.
    */
   'tools.mediaCatalogOverrides': string | undefined;
+  /**
+   * Whether to show what a generation costs.
+   *
+   * Off unless asked for. Price is a minority interest — the figure most people
+   * want from a running conversation is how much context is left, how many
+   * tokens went where, and how much of it was served from cache — and an
+   * unwanted number sitting next to the send button is one more thing to read
+   * before every message. Anyone who does care turns it on next to the unit
+   * price they had to enter for it to be exact anyway.
+   *
+   * `undefined` means never configured, which reads as off.
+   */
+  'tools.showMediaCost': boolean | undefined;
   'tools.speechToText': SpeechToTextConfig | undefined;
   'acp.promptTimeout': number | undefined;
   'acp.agentIdleTimeout': number | undefined;
