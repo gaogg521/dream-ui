@@ -36,6 +36,13 @@ export const LEGACY_LOCAL_STORAGE_KEYS: Readonly<Record<string, string>> = {
   'one.emoji.recent': 'aionui.emoji.recent',
   'one.sttStreamUnsupported': 'aionui.sttStreamUnsupported',
   'one.migration-invite-shown': 'aionui.migration-invite-shown',
+  // Found by reading a real install's localStorage, not by grepping source.
+  // Both are plain literals -- they were simply outside the surface the first
+  // sweep walked (a cron page hook and a history-tree hook, neither of which
+  // looks like storage code from its path). Grepping the prefix across the
+  // whole renderer is the cheap check that would have caught them.
+  one_cron_unread: 'aionui_cron_unread',
+  one_workspace_expansion: 'aionui_workspace_expansion',
 };
 
 /**

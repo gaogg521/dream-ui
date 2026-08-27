@@ -74,7 +74,12 @@ const GeneratedMediaView: React.FC<{ assets: ParsedMediaAsset[] }> = ({ assets }
 
       {videos.map((asset) => (
         <div key={asset.filePath} className='overflow-hidden rd-8px border border-solid b-color-border-2 p-8px'>
-          <LocalVideoView src={asset.filePath} caption={asset.fileName} className='max-w-full max-h-[520px] rd-4px' />
+          {/* No filename caption: images never had one, and the card above
+              already carries the prompt while the actions below open the
+              containing folder — which the file tree now shows too, since
+              generated media lands in the workspace's `outputs/`. A line
+              only videos showed read as an inconsistency, not information. */}
+          <LocalVideoView src={asset.filePath} className='max-w-full max-h-[520px] rd-4px' />
         </div>
       ))}
     </div>

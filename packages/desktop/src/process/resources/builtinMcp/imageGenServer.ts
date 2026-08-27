@@ -209,6 +209,18 @@ export function renderJob(job: JobView | undefined, fallback: string): string {
         `Do not retry with the same parameter(s) — say what you got.`
     );
   }
+  // Everything above is this tool's wire format, and it is English no matter
+  // what the user wrote. A model reads a long English frame as evidence about
+  // which language the conversation is in: a Chinese prompt produced a correct
+  // image and an English write-up. Say plainly that the frame is machine text.
+  // Only when there is a result to report - an empty or errored job has nothing
+  // to write up, and the instruction would just be noise.
+  if (job.assets?.length || job.resultText) {
+    lines.push(
+      'Reply to the user in the language they wrote in. The English above is ' +
+        "this tool's wire format, not a hint about which language to answer in."
+    );
+  }
   return lines.join('\n');
 }
 

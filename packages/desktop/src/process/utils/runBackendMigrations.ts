@@ -15,7 +15,12 @@ import {
   resolveImageGenerationMcpEnv,
   type ImageGenerationMcpEnvResolveResult,
 } from '@/common/config/imageGenerationMcpEnv';
-import { BUILTIN_IMAGE_GEN_NAME, type IMcpServer, type IProvider } from '@/common/config/storage';
+import {
+  BUILTIN_IMAGE_GEN_LEGACY_NAMES,
+  BUILTIN_IMAGE_GEN_NAME,
+  type IMcpServer,
+  type IProvider,
+} from '@/common/config/storage';
 import { hasDeclaredMediaModel } from '@/common/media/declaredModel';
 import { BUILTIN_EXPORT_PDF_NAME, BUILTIN_TEAM_KNOWLEDGE_NAME } from '@process/resources/builtinMcp/constants';
 import { startExportPdfMcpServer } from '@process/services/exportPdfMcpServer';
@@ -412,6 +417,61 @@ function buildOriginalJsonFromTransport(server: Pick<IMcpServer, 'name' | 'descr
   );
 }
 
+/** Built-in servers whose name changed in the rebrand, and the names they used to carry. */
+const BUILTIN_MCP_RENAMES: ReadonlyArray<{ current: string; legacy: readonly string[] }> = [
+  { current: BUILTIN_IMAGE_GEN_NAME, legacy: BUILTIN_IMAGE_GEN_LEGACY_NAMES },
+  { current: BUILTIN_BROWSER_MCP_NAME, legacy: BUILTIN_BROWSER_MCP_LEGACY_NAMES },
+];
+
+/**
+ * Bring pre-rebrand built-in rows forward to their current name, before anything
+ * downstream decides what is already registered.
+ *
+ * That decision is made by exact current name, so an install still carrying
+ * `aionui-image-generation` looked like it had no image server at all: a second
+ * row was inserted under `one-image-generation` and the legacy one was left in
+ * place, still enabled. The user then had two of every media tool and the agent
+ * used whichever it saw first, which is how a tool call came back labelled
+ * `mcp__aionui-image-generation_one_image_generation` after the rename shipped.
+ *
+ * Doing it here rather than inside each reconcile block is what makes it correct:
+ * the browser block below already renamed forward, but it runs after the insert,
+ * so it matched the freshly created row and left the duplicate untouched.
+ *
+ * Returns the reconciled list so callers do not re-read rows this just changed.
+ */
+async function renameLegacyBuiltinMcpServers(servers: IMcpServer[]): Promise<IMcpServer[]> {
+  let next = servers;
+
+  for (const { current, legacy } of BUILTIN_MCP_RENAMES) {
+    const legacyNames = new Set<string>(legacy);
+    const stale = next.filter((server) => legacyNames.has(server.name));
+    if (stale.length === 0) continue;
+
+    for (const server of stale) {
+      // Re-checked on every iteration: the first rename in this loop creates the
+      // current-named row that any later duplicate must defer to.
+      const currentExists = next.some((candidate) => candidate.name === current);
+      try {
+        if (currentExists) {
+          console.info('[Migration] removing duplicate builtin MCP row %s (superseded by %s)', server.name, current);
+          await mcpService.deleteServer.invoke({ id: server.id });
+          next = next.filter((candidate) => candidate.id !== server.id);
+        } else {
+          console.info('[Migration] renaming builtin MCP row %s to %s', server.name, current);
+          await mcpService.updateServer.invoke({ id: server.id, data: { name: current } });
+          next = next.map((candidate) => (candidate.id === server.id ? { ...candidate, name: current } : candidate));
+        }
+      } catch (error) {
+        // One unreconcilable row must not abort MCP bootstrap for all the rest.
+        console.warn('[Migration] failed to reconcile legacy builtin MCP row %s', server.name, error);
+      }
+    }
+  }
+
+  return next;
+}
+
 async function ensureBootstrapMcpServersInDb(configFile: ConfigFile): Promise<void> {
   const [backendPrefs, fileImageConfig, providers] = await Promise.all([
     fetchBackendClientPreferences(),
@@ -420,7 +480,7 @@ async function ensureBootstrapMcpServersInDb(configFile: ConfigFile): Promise<vo
   ]);
   const imageConfig = resolveImageGenerationMigrationConfig(backendPrefs, fileImageConfig);
   const imageConfigSource = resolveImageGenerationMigrationConfigSource(backendPrefs, fileImageConfig);
-  const existing = await mcpService.listServers.invoke();
+  const existing = await renameLegacyBuiltinMcpServers((await mcpService.listServers.invoke()) ?? []);
   const existingByName = new Map((existing ?? []).map((server) => [server.name, server]));
   const existingImageServer = existingByName.get(BUILTIN_IMAGE_GEN_NAME);
   const existingImageEnv =

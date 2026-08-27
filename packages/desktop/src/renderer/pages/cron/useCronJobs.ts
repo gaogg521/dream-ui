@@ -13,6 +13,13 @@ import { repairCronJobTimeZones } from '@renderer/pages/cron/repairCronJobTimeZo
 import { formatCronRunConversationTitle } from '@renderer/pages/cron/cronUtils';
 import { getActivityTime } from '@/renderer/utils/chat/timeline';
 
+/**
+ * Read and written through the current name; `migrateLegacyLocalStorageKeys`
+ * copies an existing `aionui_cron_unread` over at renderer start, so an upgrade
+ * does not resurrect every cron notification the user had already dismissed.
+ */
+const CRON_UNREAD_STORAGE_KEY = 'one_cron_unread';
+
 const isJobErrorLike = (job: ICronJob): boolean => {
   return job.state.last_status === 'error' || job.state.last_status === 'missed';
 };
@@ -283,7 +290,7 @@ export function useCronJobsMap() {
   const [unreadConversations, setUnreadConversations] = useState<Set<string>>(() => {
     // Restore from localStorage
     try {
-      const stored = localStorage.getItem('aionui_cron_unread');
+      const stored = localStorage.getItem(CRON_UNREAD_STORAGE_KEY);
       if (stored) {
         return new Set(JSON.parse(stored));
       }
@@ -300,7 +307,7 @@ export function useCronJobsMap() {
   // Persist unread state to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('aionui_cron_unread', JSON.stringify([...unreadConversations]));
+      localStorage.setItem(CRON_UNREAD_STORAGE_KEY, JSON.stringify([...unreadConversations]));
     } catch {
       // ignore
     }

@@ -96,4 +96,39 @@ describe('renderJob', () => {
     expect(text).not.toContain('Image generated successfully.');
     expect(text).toContain('Generated image saved to: D:/ws/img-1.jpg');
   });
+
+  /**
+   * Regression guard for a cross-language leak. Every line this function emits
+   * is English machine text, and a model reads a long English frame as evidence
+   * about which language the conversation is in: a Chinese prompt produced a
+   * correct image and an English write-up. The instruction below is the only
+   * thing that tells the model the frame is not a language cue.
+   */
+  describe('language instruction', () => {
+    const LANG = 'Reply to the user in the language they wrote in';
+
+    it('tells the model to answer in the user language when assets came back', () => {
+      expect(renderJob(doneJob(), 'x')).toContain(LANG);
+    });
+
+    it('tells the model the same for a text-only reply', () => {
+      const text = renderJob(doneJob({ assets: [], resultText: 'A terminal screenshot.' }), 'x');
+
+      expect(text).toContain(LANG);
+    });
+
+    it('stays quiet on a job that produced nothing to write up', () => {
+      const text = renderJob(doneJob({ assets: [], status: 'failed', error: 'upstream 500' }), 'x');
+
+      expect(text).toContain('Error: upstream 500');
+      expect(text).not.toContain(LANG);
+    });
+
+    it('comes last, after the dropped-parameter note', () => {
+      const lines = renderJob(doneJob({ droppedParams: ['n'] }), 'x').split('\n');
+
+      expect(lines[lines.length - 1]).toContain(LANG);
+      expect(lines.some((line) => line.includes('does not support n'))).toBe(true);
+    });
+  });
 });
