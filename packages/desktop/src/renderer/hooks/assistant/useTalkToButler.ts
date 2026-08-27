@@ -12,8 +12,18 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { mutate as swrMutate } from 'swr';
 
-/** Backend manifest id of the built-in Dream UI Butler assistant. */
-const BUTLER_ASSISTANT_ID = 'aionui-assistant';
+/** Backend manifest id of the built-in butler assistant. */
+const BUTLER_ASSISTANT_ID = 'one-assistant';
+
+/**
+ * Pre-rebrand manifest id.
+ *
+ * A backend older than the rename still seeds the butler under the old id, and
+ * this app pairs with a pinned aioncore release — so matching only the current
+ * id would make "talk to the butler" silently resolve to nothing on exactly the
+ * installs that have not upgraded yet.
+ */
+const LEGACY_BUTLER_ASSISTANT_ID = 'aionui-assistant';
 
 export type TalkToButlerArgs = {
   /** Prompt pre-filled into the home chat input. */
@@ -27,9 +37,10 @@ export type TalkToButlerArgs = {
  * prefix the frontend sometimes carries on built-in ids.
  */
 const findButler = (assistants: Assistant[]): Assistant | undefined => {
-  const candidates = new Set([BUTLER_ASSISTANT_ID, `builtin-${BUTLER_ASSISTANT_ID}`]);
+  const ids = [BUTLER_ASSISTANT_ID, LEGACY_BUTLER_ASSISTANT_ID];
+  const candidates = new Set(ids.flatMap((id) => [id, `builtin-${id}`]));
   return assistants.find(
-    (assistant) => candidates.has(assistant.id) || assistant.id.replace(/^builtin-/, '') === BUTLER_ASSISTANT_ID
+    (assistant) => candidates.has(assistant.id) || ids.includes(assistant.id.replace(/^builtin-/, ''))
   );
 };
 

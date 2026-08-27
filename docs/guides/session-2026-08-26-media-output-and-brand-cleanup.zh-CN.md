@@ -231,3 +231,153 @@ partition 就是内嵌浏览器的 cookie 和登录态（Electron 存在
 `tsc` 0 错误；`npx vitest run` **545 文件 / 5066 测试全绿**。
 新增 `tests/unit/process/deepLinkSchemes.test.ts` 钉住「新旧 scheme 都认、其它一律拒绝」。
 `cargo test -p dream-domain-sso` 68 passed。
+
+---
+
+## 11. 第四轮：内置管家与技能改名（迁移 053）
+
+这是最后一块「新用户也会看到」的上游品牌。与 `migrations.ts`（Electron 侧遗留库，
+新装机根本不执行）不同，**dream-core 的迁移在新库上是全跑的**，所以不改的话
+全新用户依然会拿到 `aionui-assistant`，工作区文件树里依然是 `.dream/skills/aionui-config`。
+
+### 涉及 5 个标识符
+
+`aionui-assistant` → `one-assistant`，以及四个技能
+`aionui-config` / `aionui-troubleshooting` / `aionui-webui-public` / `aionui-webui-setup`
+→ `one-*`。
+
+改动面：1 个头像 + 3 个 rule markdown + 4 个技能目录 + 1 个 references 文档全部改名；
+`assistants.json` 的 `id` / `avatar` / `rule_file` / 两处技能列表；技能 markdown 里的互相引用。
+
+### 运行时环境变量同批改掉
+
+`AIONUI_{USER_ID,CONVERSATION_ID,HELPER_BIN,BASE_URL,RUNTIME_TOKEN}` → `ONE_*`
+（定义在 `dream-core-ai-agent/src/types.rs`）。
+
+**新旧两套都注入**：内置技能和 helper CLI 跟后端同一个二进制发布、不存在版本偏移，
+但**技能是用户可自己写的** —— 谁的自定义技能里写了 `$AIONUI_BASE_URL`，只发新名会让
+那条命令收到空字符串，坏了还没地方看。
+
+`CONVERSATION_RUNTIME_ENV_NAMES` 列全 10 个名字，重新 apply 时两套一起清，
+漏一个会把上一个会话的 id 泄漏到下一个。
+
+### 迁移 053 覆盖的列
+
+| 表 | 列 |
+| --- | --- |
+| `assistant_definitions` | `assistant_id`、`source_ref`、`rule_resource_ref`、`avatar_value`、`default_skill_ids`、`default_disabled_builtin_skill_ids`、`custom_skill_names` |
+| `assistant_overrides` | `assistant_id`（它的主键就是 assistant id） |
+| `cron_jobs` | `agent_config` JSON 的 `$.assistant_id` |
+| `skills` | 四行 builtin 的 `name` |
+
+**`source_ref` 是最要命的一列**：它是清单的身份列（与 `source` 组成唯一索引），而清单每次
+启动都按**新** id 重新播种。漏改的行不会匹配上，会被**再播种一遍** —— 用户会看到两个管家。
+
+JSON 列是 TEXT，替换针对**带引号的 token**（`"aionui-config"` 而不是裸名），
+否则 `aionui-config-extra` 这种更长的 id 会被误伤。测试里专门钉了这一条。
+
+`skills` 用 `UPDATE OR IGNORE ... SET name` 而不是删除重建，保住用户的单技能开关；
+`path` 仍指向旧目录，由启动时的 builtin 技能同步按 name 修正。
+
+### 测试姿势的坑
+
+新增 `crates/dream-core-db/tests/builtin_assistant_rebrand_migration.rs`（5 个用例）。
+两个踩过的坑：
+
+1. **手搓 `Migrator` 跑全链路会挂在 042**（`no such table: _assistant_definitions_old`）。
+   改用项目标准的 `init_database_memory()`。
+2. 但 `init_database_memory()` 已经跑过 053，sqlx 的版本账本会让 `Migrator` **跳过**它 ——
+   种下的旧行原封不动，5 个断言全部「假通过」。所以测试改成
+   **直接 `include_str!` 迁移文件并执行 SQL**，测的才是真语句。
+
+### 前端
+
+`useTalkToButler.ts` 的 `BUTLER_ASSISTANT_ID` 改为 `one-assistant`，
+但**新旧 id 都匹配** —— 桌面端配的是固定版本 aioncore，比后端新是常态，
+只认新 id 会让「找管家」在没升级后端的装机上静默返回空。
+
+### 仍未改
+
+`AIONUI_LOG_DIR` / `AIONUI_FONTS_DIR` / `AIONUI_CHANNEL_SEND`：全仓扫过，
+**没有任何代码设置或解析它们**（只出现在技能文本和一个 bundled JS 里）。
+改了只有「仓外某处在用」的风险、没有收益，留着。
+
+---
+
+## 12. 第五轮：`AIONUI_*` 环境变量家族彻底改名
+
+### 先确认了一件事：这批**不是**跨仓契约
+
+一开始以为 dream-ui 拉起后端时会设 `AIONUI_{CACHE,WORK,LOG}_DIR`（`index.ts` 里有句注释这么提）。
+实际查下来 **dream-ui 一个都没设** —— 它用的是 `DREAM_BACKEND_*`；`AIONUI_WORK_DIR` 是后端
+`bootstrap/environment.rs` **自己设给自己子进程**的。所以这批是后端内部 + 运维可设的 CLI 变量，
+可以彻底改。
+
+### 做法：一次性采纳，而不是 50 个回退
+
+`AIONUI_*` → `ONE_*` 共 38 个变量。没有在每个读取点写回退（其中一半是 clap 的
+`#[arg(env = "...")]`，只接受一个名字），而是在 `main()` / `admin.rs` 最开头调用
+`dream_core_common::adopt_legacy_env()`：
+
+> 遍历 `ADOPTED_ENV_SUFFIXES`，凡 `ONE_X` 未设而 `AIONUI_X` 有值就拷过去。新名永远优先。
+
+必须在 clap 解析前、runtime 起来前调用（`set_var` 在多线程下是 unsound 的，函数标了 `unsafe`
+并在文档里写明了这个契约）。运维那边设了老名字的启动脚本继续生效，读取点全部只认新名。
+
+改动量：272 处带引号的 env 名、88 处散文/标识符、12 处技能资源、11 个文件的常量改名
+（`AIONUI_FILES_MARKER` → `ONE_FILES_MARKER` 等，**只改标识符，wire 值 `[[AION_FILES]]` 不动**）。
+`cmd_capabilities.rs` 对外声明的也换成新名。
+
+### 差点引入的安全回归
+
+`registry.rs::is_blocked_override_env_key` 是道护栏：禁止用户自定义的 env override 覆盖内部变量，
+判断依据是 `AIONUI_` 前缀。改名后如果不同步，**用户就能覆盖 `ONE_RUNTIME_TOKEN` / `ONE_BASE_URL`**。
+已改成两个前缀都拦，测试补了大小写两种写法。
+
+### 两次「改名把自己的兜底改没了」
+
+批量正则改名会打到**记录旧值的代码本身**，今天中了两次：
+
+1. `legacy_env.rs` 的测试 —— 本来是「设 `AIONUI_DATA_DIR`、断言 `ONE_DATA_DIR` 拿到值」，
+   被扫描改成设置和断言同一个变量，测试全绿但什么都没测。
+2. `types.rs` 的 `LEGACY_*` 常量 —— 值被改成新名，于是「双注入」变成同一个名字写两遍，
+   **旧名兜底整个消失**。这个是靠一个 `count() == 1` 断言碰巧抓到的。
+
+两处都改成 `concat!("AIONUI", "_X")` 构造，未来的字面量扫描碰不到；`types.rs` 另加了个测试
+断言两种拼写必须不同。**教训：写完批量改名，要专门回头检查"负责兼容旧值"的那些文件。**
+
+### 仍未改
+
+`AIONUI_LOG_DIR`（skill 文本里）、`AIONUI_FONTS_DIR`、`AIONUI_CHANNEL_SEND`：
+全仓扫过没有任何代码设置或解析，只出现在技能文本和一个 bundled JS 里。
+改了只有「仓外某处在用」的风险、没有收益。
+
+### 验证
+
+`cargo nextest run --workspace`：**9636 测试全过**（1982s）。
+`npx vitest run`：**546 文件 / 5076 测试全过，Unhandled Error 0**。
+
+⚠️ 这两个数字来之不易 —— 中途因为并发跑出过一堆假故障，见下节。
+
+## 13. 测试执行踩的坑（已写进 AGENTS.md）
+
+同一个 `target/` 上叠了 4 个 `cargo test --workspace` 没停，加上还和 vitest 并发，
+制造出三种**看起来像产品 bug 的假故障**：
+
+| 症状 | 真相 |
+| --- | --- |
+| `LNK1104: cannot open file '…-<hash>.exe'` | 另一个 run（或被 kill 后的孤儿测试进程）占着输出文件。链接就挂了，报告显示 `0 ok / 0 failed` |
+| `stderr_monitor` / `shutdown_watchdog` 超时 `Elapsed` | CPU 饥饿。空闲机器上单独跑全过 |
+| vitest 21 个文件"消失" | worker 起不到，**但仍退出码 0 并报「524 passed」**。546 文件缩到 525，316 个测试没跑 |
+
+规则已写进 `dream-core/AGENTS.md`（新增一节 NEVER run two builds against the same target）、
+`dream-ui/AGENTS.md` 和 `.claude/skills/testing/SKILL.md`：
+
+1. 起新的 workspace run 前先停旧的
+2. kill 之后要清孤儿测试进程（`cargo` 不一定带走子进程）
+3. 不要和 vitest 并发
+4. 改了源码就作废当前跑的结果
+5. **按文件/用例计数判断，不要只看退出码**
+
+顺带把 `dream-core/AGENTS.md` 里推荐命令从 `cargo test` 换成 `cargo nextest run`
+（本机快约 10 倍），并修掉 10 处残留的 `aionui-<crate>` 占位符。

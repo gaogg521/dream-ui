@@ -89,6 +89,19 @@ bun run test              # Run all tests (REQUIRED before every commit)
 bun run test:coverage     # Check coverage (before opening a PR)
 ```
 
+**Verify the run actually ran.** Vitest exits 0 and prints a passing summary
+even when whole files never executed — under CPU contention its workers fail to
+start (`Failed to start forks worker … Timeout waiting for worker to respond`)
+and those files just vanish from the totals. Observed here: 546 files → 525,
+~316 tests skipped, exit code 0.
+
+- Compare `Test Files` / `Tests` against the last known-good full run. A green
+  summary over a smaller denominator is not a pass.
+- Grep the output for `Unhandled Errors` before treating a run as verification.
+- Never run vitest at the same time as a Rust build in the sibling `dream-core`
+  checkout — that contention is the usual cause. Run them sequentially.
+- Editing source mid-run invalidates that run for both the old and the new code.
+
 ### Step 4: Verify Coverage
 
 **Coverage target**: ≥ 80% for all source files matched by `vitest.config.ts` → `coverage.include` (currently `src/**/*.{ts,tsx}` plus a few scripts).

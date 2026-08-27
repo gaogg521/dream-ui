@@ -74,6 +74,32 @@ bun run test:coverage     # with coverage report
 
 See the `testing` skill (`.claude/skills/testing/SKILL.md`) for complete workflow and quality rules.
 
+### A green vitest summary is not automatically a pass
+
+Vitest **exits 0 and prints a passing summary even when whole test files never
+ran.** Under CPU contention its workers fail to start:
+
+```text
+Vitest caught 21 unhandled errors during the test run.
+Error: [vitest-pool]: Failed to start forks worker for test files …
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+```
+
+Those files are simply absent from the totals. Observed on this repo: **546
+files → 525, ~316 tests never executed, exit code 0** — while a full run at the
+same commit was 546/5076.
+
+So:
+
+1. **Check the counts, not the exit code.** Compare `Test Files` / `Tests`
+   against the last known-good full run. A smaller denominator means files were
+   skipped, not that they passed.
+2. **Never run vitest concurrently with a Rust build.** `cargo test` /
+   `cargo nextest` in the sibling `dream-core` checkout starves vitest's worker
+   pool and is the usual cause. Run them one after the other.
+3. **Grep the output for `Unhandled Errors`** on any run you intend to treat as
+   verification.
+
 ## Workflow
 
 ### Scope & Enforcement
