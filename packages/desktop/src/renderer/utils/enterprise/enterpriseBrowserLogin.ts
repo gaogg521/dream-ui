@@ -19,7 +19,7 @@ export type OAuthProvider = 'feishu' | 'dingtalk' | 'wecom' | 'oidc';
  * token back to whichever build actually initiated the login.
  */
 function getDeepLinkScheme(): string {
-  return window.__deepLinkScheme || 'aionui';
+  return window.__deepLinkScheme || 'dream';
 }
 
 export async function ensureWebuiRunning(): Promise<{ localUrl: string } | null> {

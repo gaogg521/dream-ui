@@ -175,3 +175,59 @@ npx vitest run tests/unit/media tests/unit/renderer tests/unit/process
 
 `tsc` 0 错误；`npx vitest run` **544 文件 / 5059 测试全绿，0 失败**。
 dream-engine 全仓扫描无任何 `aionui` 残留。
+
+---
+
+## 10. 第三轮：`aionui://` → `dream://`，浏览器 partition
+
+### 深链 scheme：**后端必须先放行**
+
+`aionui://` 能改，但有个致命前置：dream-core 的 `sanitize_deep_link_scheme`
+（`dream-domain-sso/src/routes.rs`）对**任何不认识的值都 fallback 回 `"aionui"`**。
+桌面端配的是固定版本 aioncore，所以如果 UI 单方面改成只发/只认 `dream://`：
+
+> 用户在浏览器里登录成功 → 后端回调页拿 `aionui://sso-callback` → UI 不认 → 静默丢弃 →
+> **SSO 登录直接坏掉，且界面上没有任何报错**。
+
+正确顺序（本次已按此执行）：
+
+1. **dream-core 先放行**：`sanitize_deep_link_scheme` 增加 `dream` / `dream-dev`，
+   保留 `aionui` / `aionui-dev`；**默认 fallback 仍是 `aionui`** —— 不发 `scheme` 参数的
+   是老客户端，它只向 OS 注册过 `aionui://`。
+2. **UI 两个都注册、两个都认**：
+   - `PROTOCOL_SCHEME = 'dream' / 'dream-dev'`（唯一对外发出的值）
+   - 新增 `LEGACY_PROTOCOL_SCHEMES` / `ACCEPTED_PROTOCOL_SCHEMES` / `isDeepLinkUrl()`
+   - `parseDeepLinkUrl` 由严格单值比较改为 `ACCEPTED_PROTOCOL_SCHEMES.includes(...)`
+   - `index.ts` 的 argv 匹配（两处）与 `setAsDefaultProtocolClient` 改为遍历全部 accepted scheme
+   - `electron-builder.yml` 的 `protocols.schemes` 两个都列
+
+⚠️ 这意味着**后端不发版的话，新 UI 走的仍是 `aionui://` 回调路径**（后端 fallback），
+但因为两个都注册、两个都认，功能是好的。发版后自动切到 `dream://`。
+
+### 浏览器 session partition
+
+`persist:aionui-browser` → `persist:one-browser`，但**不是无条件改名**。
+partition 就是内嵌浏览器的 cookie 和登录态（Electron 存在
+`userData/Partitions/<name>`），直接改名不会报错，只会开一个空 profile —— 用户替 Agent
+过的所有登录全部消失，且没有任何提示。
+
+新增 `process/utils/browserPartition.ts` 的 `resolveBrowserPartition()`：
+**老 partition 目录存在就继续用老的，只有新装才拿新名**。进程内只解析一次（值中途变会把
+浏览器状态劈成两个 profile）。渲染进程通过 preload 的 `__browserPartition` 拿解析结果，
+主进程 `applicationBridge` 也走同一个函数。
+
+### 这两个确认「新用户不受影响」，因此无需处理
+
+- **`migrations.ts` 里的 `'aionui'`**：`runLegacyDatabaseMigrations` 在
+  `aionui.db` 不存在时直接 early return。新装机**从来不会执行**这些迁移，那些字符串是
+  纯历史 schema。而且已发布的迁移内容改了会破坏校验和。
+- **`aionui-assistant`**：是 dream-core 已发布 SQL 迁移
+  （`018_reset_builtin_assistant_enabled.sql`）里的 `source_ref`。与上一条不同的是，
+  新装机**会**跑这些迁移，所以新用户库里确实带这个值 —— 但改它需要「改 manifest + 新增一条
+  正向迁移改写存量行」，属于独立变更，本次未做。
+
+### 验证
+
+`tsc` 0 错误；`npx vitest run` **545 文件 / 5066 测试全绿**。
+新增 `tests/unit/process/deepLinkSchemes.test.ts` 钉住「新旧 scheme 都认、其它一律拒绝」。
+`cargo test -p dream-domain-sso` 68 passed。

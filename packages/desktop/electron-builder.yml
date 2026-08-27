@@ -10,6 +10,10 @@ copyright: Copyright © 2025 1ONE
 protocols:
   - name: One Work Protocol
     schemes:
+      # `dream` is the current scheme. `aionui` stays registered so callbacks
+      # from an older bundled aioncore (which maps unknown schemes back to it)
+      # and links already stored by existing installs still open the app.
+      - dream
       - aionui
 
 asar:

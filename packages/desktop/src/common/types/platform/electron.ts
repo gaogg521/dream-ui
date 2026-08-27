@@ -97,5 +97,7 @@ declare global {
     __lastInstallationIntegrityReportMessage?: string;
     /** OS protocol scheme this build registered for `dream://`-style deep links (dev vs packaged differ — see process/utils/deepLink.ts). */
     __deepLinkScheme?: string;
+    /** Embedded-browser session partition resolved by the main process. */
+    __browserPartition?: string;
   }
 }

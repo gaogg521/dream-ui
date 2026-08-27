@@ -58,12 +58,14 @@ const initialLanguage = ipcRenderer.sendSync('get-initial-language') as string |
 const backendStartupFailed = ipcRenderer.sendSync('get-backend-startup-failed') as boolean;
 const backendStartupFailure = ipcRenderer.sendSync('get-backend-startup-failure') as unknown;
 const deepLinkScheme = ipcRenderer.sendSync('get-deep-link-scheme') as string;
+const browserPartition = ipcRenderer.sendSync('get-browser-partition') as string;
 contextBridge.exposeInMainWorld('__backendPort', backendPort > 0 ? backendPort : 0);
 contextBridge.exposeInMainWorld('__initialLanguage', initialLanguage ?? null);
 contextBridge.exposeInMainWorld('__oneE2ETest', process.env.DREAM_E2E_TEST === '1');
 contextBridge.exposeInMainWorld('__backendStartupFailed', backendStartupFailed === true);
 contextBridge.exposeInMainWorld('__backendStartupFailure', backendStartupFailure ?? null);
-contextBridge.exposeInMainWorld('__deepLinkScheme', deepLinkScheme || 'aionui');
+contextBridge.exposeInMainWorld('__deepLinkScheme', deepLinkScheme || 'dream');
+contextBridge.exposeInMainWorld('__browserPartition', browserPartition || 'persist:one-browser');
 
 // Backend startup state bridge: `getState` re-reads the current failure info on
 // mount (resolves the "READY arrived before the renderer subscribed" race), and

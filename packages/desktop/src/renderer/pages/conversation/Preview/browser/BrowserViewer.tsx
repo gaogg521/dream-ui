@@ -68,7 +68,7 @@ const BrowserViewer: React.FC<BrowserViewerProps> = ({ url, tabId, onUrlChange, 
   return (
     <WebviewHost
       url={url || BROWSER_BLANK_URL}
-      partition={BROWSER_SESSION_PARTITION}
+      partition={window.__browserPartition || BROWSER_SESSION_PARTITION}
       showNavBar
       className='bg-bg-1'
       resolveUrlInput={resolveAddressBarInput}

@@ -28,7 +28,20 @@
  * state must be shared across all tabs and projects and survive restarts, so a
  * user can log in once on the agent's behalf.
  */
-export const BROWSER_SESSION_PARTITION = 'persist:aionui-browser';
+export const BROWSER_SESSION_PARTITION = 'persist:one-browser';
+
+/**
+ * Pre-rebrand partition name.
+ *
+ * A partition IS the stored cookies and sign-in state — Electron keeps it under
+ * `userData/Partitions/<name>`. Switching an existing install to the new name
+ * does not migrate anything, it just starts an empty profile, and the user is
+ * silently signed out of every site they had logged into on the agent's behalf.
+ * So the main process keeps using this one when its directory is on disk, and
+ * only a fresh install gets the current name; the resolved value reaches the
+ * renderer through `__browserPartition` (see preload).
+ */
+export const LEGACY_BROWSER_SESSION_PARTITION = 'persist:aionui-browser';
 
 /**
  * 内置浏览器 MCP 的注册名。

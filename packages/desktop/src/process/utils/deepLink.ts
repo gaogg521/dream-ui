@@ -20,7 +20,26 @@ import { ipcBridge } from '@/common';
  * The backend mirrors this via the `scheme` query param on
  * `/api/one/sso/{provider}/authorize` (see one-sso's `sanitize_deep_link_scheme`).
  */
-export const PROTOCOL_SCHEME = app.isPackaged ? 'aionui' : 'aionui-dev';
+export const PROTOCOL_SCHEME = app.isPackaged ? 'dream' : 'dream-dev';
+
+/**
+ * Schemes this build still answers to, newest first.
+ *
+ * The OS registration is not the only place the old name survives: an aioncore
+ * older than the rename maps any scheme it does not know back to `aionui`, so a
+ * new app talking to a pinned older backend gets an `aionui://` callback even
+ * though it asked for `dream://`. Dropping that on the floor would mean login
+ * succeeding in the browser and never arriving in the app. Both names are
+ * registered with the OS and accepted here; only `PROTOCOL_SCHEME` is ever
+ * handed out.
+ */
+export const LEGACY_PROTOCOL_SCHEMES = ['aionui', 'aionui-dev'] as const;
+
+export const ACCEPTED_PROTOCOL_SCHEMES: readonly string[] = [PROTOCOL_SCHEME, ...LEGACY_PROTOCOL_SCHEMES];
+
+/** Does `url` use any scheme this build answers to? */
+export const isDeepLinkUrl = (url: string): boolean =>
+  ACCEPTED_PROTOCOL_SCHEMES.some((scheme) => url.startsWith(`${scheme}://`));
 
 /**
  * Parse an dream:// URL into action and params.
@@ -31,7 +50,7 @@ export const PROTOCOL_SCHEME = app.isPackaged ? 'aionui' : 'aionui-dev';
 export const parseDeepLinkUrl = (url: string): { action: string; params: Record<string, string> } | null => {
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== `${PROTOCOL_SCHEME}:`) return null;
+    if (!ACCEPTED_PROTOCOL_SCHEMES.includes(parsed.protocol.replace(/:$/, ''))) return null;
 
     const hostname = parsed.hostname || '';
     const pathname = parsed.pathname.replace(/^\/+/, '');

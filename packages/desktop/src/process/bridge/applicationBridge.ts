@@ -10,7 +10,7 @@ import * as os from 'os';
 import type { BrowserWindow } from 'electron';
 import { app, session } from 'electron';
 import { ipcBridge } from '@/common';
-import { BROWSER_SESSION_PARTITION } from '@/common/config/constants';
+import { resolveBrowserPartition } from '@process/utils/browserPartition';
 import { ProcessConfig } from '@process/utils/initStorage';
 import { getZoomFactor, setZoomFactor } from '@process/utils/zoom';
 import { getCdpStatus, updateCdpConfig } from '@process/utils/configureChromium';
@@ -266,7 +266,7 @@ export function initApplicationBridge(): void {
    */
   ipcBridge.application.clearBrowserData.provider(async () => {
     try {
-      const browserSession = session.fromPartition(BROWSER_SESSION_PARTITION);
+      const browserSession = session.fromPartition(resolveBrowserPartition());
       // clearStorageData 只清 cookie 和各类 storage，不含 HTTP 缓存和认证缓存 ——
       // 而设置里的文案承诺了「清理缓存」，所以三个都要清。
       //

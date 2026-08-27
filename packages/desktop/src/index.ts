@@ -20,6 +20,7 @@ import { app, BrowserWindow, ipcMain, nativeImage, powerMonitor } from 'electron
 import fixPath from 'fix-path';
 import * as fs from 'fs';
 import * as path from 'path';
+import { resolveBrowserPartition } from '@process/utils/browserPartition';
 import { initMainAdapterWithWindow } from './common/adapter/main';
 import { ipcBridge } from './common';
 import { initializeProcess } from './process';
@@ -55,6 +56,8 @@ import {
   clearPendingDeepLinkUrl,
   getPendingDeepLinkUrl,
   handleDeepLinkUrl,
+  ACCEPTED_PROTOCOL_SCHEMES,
+  isDeepLinkUrl,
   PROTOCOL_SCHEME,
 } from './process/utils/deepLink';
 import {
@@ -94,7 +97,7 @@ registerMediaProtocolScheme();
 
 const isE2ETestMode = process.env.DREAM_E2E_TEST === '1';
 const skipSingleInstanceLock = isE2ETestMode || process.env.DREAM_MULTI_INSTANCE === '1';
-const deepLinkFromArgv = process.argv.find((arg) => arg.startsWith(`${PROTOCOL_SCHEME}://`));
+const deepLinkFromArgv = process.argv.find((arg) => isDeepLinkUrl(arg));
 const gotTheLock = skipSingleInstanceLock ? true : app.requestSingleInstanceLock({ deepLinkUrl: deepLinkFromArgv });
 if (!gotTheLock) {
   console.warn('[1ONE] Another instance is already running; current process will exit.');
@@ -103,8 +106,7 @@ if (!gotTheLock) {
   app.on('second-instance', (_event, argv, _workingDirectory, additionalData) => {
     // Prefer additionalData (reliable on all platforms), fallback to argv scan
     const deepLinkUrl =
-      (additionalData as { deepLinkUrl?: string })?.deepLinkUrl ||
-      argv.find((arg) => arg.startsWith(`${PROTOCOL_SCHEME}://`));
+      (additionalData as { deepLinkUrl?: string })?.deepLinkUrl || argv.find((arg) => isDeepLinkUrl(arg));
     if (deepLinkUrl) {
       handleDeepLinkUrl(deepLinkUrl);
     }
@@ -245,6 +247,10 @@ ipcMain.on('get-backend-port', (event) => {
 
 ipcMain.on('get-deep-link-scheme', (event) => {
   event.returnValue = PROTOCOL_SCHEME;
+});
+
+ipcMain.on('get-browser-partition', (event) => {
+  event.returnValue = resolveBrowserPartition();
 });
 
 ipcMain.on('get-initial-language', (event) => {
@@ -1077,12 +1083,18 @@ const handleAppReady = async (): Promise<void> => {
 };
 
 // ============ Protocol Registration ============
-// Register dream:// as the default protocol client
-if (process.defaultApp) {
-  // Dev mode: need to pass execPath explicitly
-  app.setAsDefaultProtocolClient(PROTOCOL_SCHEME, process.execPath, [path.resolve(process.argv[1])]);
-} else {
-  app.setAsDefaultProtocolClient(PROTOCOL_SCHEME);
+// Claim every scheme this build answers to, not just the current one: an
+// aioncore older than the rename still emits `aionui://` callbacks (it maps
+// unknown schemes back to that), and an existing install already has the old
+// association pointing here. Registering only the new name would make those
+// callbacks open nothing at all.
+for (const scheme of ACCEPTED_PROTOCOL_SCHEMES) {
+  if (process.defaultApp) {
+    // Dev mode: need to pass execPath explicitly
+    app.setAsDefaultProtocolClient(scheme, process.execPath, [path.resolve(process.argv[1])]);
+  } else {
+    app.setAsDefaultProtocolClient(scheme);
+  }
 }
 
 // macOS: handle dream:// URLs via the open-url event
