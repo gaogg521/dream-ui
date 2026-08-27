@@ -89,7 +89,24 @@ const MediaJobCard: React.FC<{
           kind={job.kind}
           params={job.params}
           startedAt={job.createdAt}
-          stageLabel={job.progress?.stage ? t(`conversation.mediaJobStage_${job.progress.stage}` as never) : undefined}
+          /**
+           * The `running` stage is deliberately not passed through. Its label
+           * ("生成中") is the same sentence the placeholder's own title already
+           * makes ("视频正在生成中…") and the same word the status tag above
+           * shows — three lines saying one thing, and it is the stage a job
+           * spends almost all of its time in, so that is what users actually
+           * see. Withholding it lets the placeholder fall back to its generic
+           * hint, which tells them something they do not already know (roughly
+           * how long, and that they can go do other things).
+           *
+           * Every other stage carries real information the title does not
+           * ("服务端排队中", "下载结果中", "保存中"), so those still show.
+           */
+          stageLabel={
+            job.progress?.stage && job.progress.stage !== 'running'
+              ? t(`conversation.mediaJobStage_${job.progress.stage}` as never)
+              : undefined
+          }
         />
       )}
 

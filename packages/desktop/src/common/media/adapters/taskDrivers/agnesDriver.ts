@@ -15,9 +15,14 @@
  *
  * Submit: POST /v1/videos → { video_id, task_id, status: 'queued', ... }.
  * Poll (recommended): GET /agnesapi?video_id=<id> → status queued/in_progress/
- * completed/failed, final URL at `metadata.url`. `video_id` and `task_id` are
- * usually the same value; `video_id` is what the docs recommend for new
- * integrations, so `submit()` returns that as the driver's `taskId`.
+ * completed/failed. `video_id` and `task_id` are usually the same value;
+ * `video_id` is what the docs recommend for new integrations, so `submit()`
+ * returns that as the driver's `taskId`.
+ *
+ * ⚠ The finished address is at the response's **top-level `url`**, not at
+ * `metadata.url` as the docs state — measured against the live host on
+ * 2026-08-27, where the completed task object has no `metadata` key at all.
+ * See the `completed` branch in `poll` for the full payload shape.
  */
 
 import {
@@ -70,6 +75,9 @@ const DEFAULT_SIZE = SIZE_BY_ASPECT['16:9'];
 type AgnesTaskPayload = {
   status?: string;
   progress?: number;
+  /** Where the live API puts the finished video. See the `completed` branch. */
+  url?: string;
+  /** What the docs say. Kept as a fallback. */
   metadata?: { url?: string };
   error?: unknown;
 };
@@ -135,9 +143,34 @@ export const agnesDriver: TaskDriver = {
       case 'in_progress':
         return { state: 'running', percent: typeof payload.progress === 'number' ? payload.progress : undefined };
       case 'completed': {
-        const url = payload.metadata?.url;
+        /**
+         * Top-level `url` first — that is where the live API actually puts it.
+         *
+         * The docs say `metadata.url`, and this driver believed them; measured
+         * against `apihub.agnes-ai.com` on 2026-08-27 the completed task object
+         * has no `metadata` key at all and carries the address at the top level
+         * (`url: https://platform-outputs.agnes-ai.space/videos/<model>/<id>.mp4`),
+         * alongside `status`/`progress`/`size`/`perf_*`. Reading only
+         * `metadata.url` failed every completed generation with "returned no
+         * metadata.url" — after the video had been produced and paid for.
+         *
+         * This went unnoticed because it was unreachable: `agnes-task` had no
+         * catalog entry, so an Agnes video model resolved to null and was
+         * hidden from the picker (see `videoModels.ts`). The two bugs concealed
+         * each other; fixing the catalog is what exposed this one.
+         *
+         * `metadata.url` is kept as a fallback rather than replaced: it costs
+         * one `??` and covers a deployment that does answer the documented way.
+         */
+        const url = payload.url || payload.metadata?.url;
         if (!url) {
-          return { state: 'failed', error: 'Agnes reported completed but returned no metadata.url' };
+          return {
+            state: 'failed',
+            // Name both places we looked, and show what came back — the old
+            // message named one field and dropped the payload, which is why
+            // this took a real generation to diagnose.
+            error: `Agnes reported completed but returned no video URL (checked \`url\` and \`metadata.url\`): ${JSON.stringify(payload).slice(0, 300)}`,
+          };
         }
         return { state: 'succeeded', items: [{ url }] };
       }

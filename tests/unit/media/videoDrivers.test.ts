@@ -339,6 +339,51 @@ describe('agnes driver', () => {
     expect(await driver.poll(pollCtx, 'video_1')).toEqual({ state: 'failed', error: 'content policy' });
   });
 
+  /**
+   * The shape the LIVE host actually returns, captured from
+   * `apihub.agnes-ai.com` on 2026-08-27: the address is at the top level and
+   * there is no `metadata` key at all. The driver used to read only
+   * `metadata.url` (what the docs claim), so every completed generation failed
+   * with "returned no metadata.url" — after the video had been paid for. The
+   * test above encoded the same wrong assumption, which is why nothing caught
+   * it; this one pins the measured reality.
+   */
+  it('takes the finished URL from top-level `url`, which is where the live API puts it', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          id: 'video_94dbd3cc',
+          object: 'video',
+          status: 'completed',
+          internal_status: 'completed',
+          progress: 100,
+          seconds: '3',
+          size: '1088x832',
+          perf_output_size: 911629,
+          url: 'https://platform-outputs.agnes-ai.space/videos/agnes-video-v2.0/video_94dbd3cc.mp4',
+        })
+      )
+    );
+    expect(await driver.poll(pollCtx, 'video_1')).toEqual({
+      state: 'succeeded',
+      items: [{ url: 'https://platform-outputs.agnes-ai.space/videos/agnes-video-v2.0/video_94dbd3cc.mp4' }],
+    });
+  });
+
+  it('reports what came back when a completed task carries no URL at all', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ status: 'completed', id: 'video_1', progress: 100 }))
+    );
+    const result = await driver.poll(pollCtx, 'video_1');
+    expect(result.state).toBe('failed');
+    // Both places are named, and the payload is included — the old message did
+    // neither, which is what made this cost a real generation to diagnose.
+    expect(result.error).toContain('metadata.url');
+    expect(result.error).toContain('video_1');
+  });
+
   it('polls the recommended video_id endpoint, not the legacy task_id path', async () => {
     const fetchMock = vi.fn(async () => jsonResponse({ status: 'queued' }));
     vi.stubGlobal('fetch', fetchMock);

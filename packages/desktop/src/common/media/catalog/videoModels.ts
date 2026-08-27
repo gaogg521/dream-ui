@@ -103,4 +103,53 @@ export const BUILTIN_VIDEO_MODELS: MediaModelSpec[] = [
     defaults: { durationSeconds: 5, resolution: '1080p' },
     polling: { intervalMs: 5000, timeoutMs: 600_000 },
   },
+  {
+    /**
+     * Agnes AI video (`POST /v1/videos` + `GET /agnesapi`).
+     *
+     * `agnes-task` was the only implemented driver with no catalog entry, which
+     * made an Agnes video model unreachable in practice: video deliberately
+     * refuses to guess an endpoint style (`specFromDeclaration`), so declaring
+     * the model as video resolved to `null` and `isMediaGenSupported` then hid
+     * it from the picker entirely — with nothing telling the user that picking
+     * `agnes-task` by hand in model settings was all it needed.
+     *
+     * Pinned to the vendor host on purpose, unlike the name-only entries above.
+     * Two reasons, and they point the same way:
+     *
+     * - The driver ignores `base_url` completely and always calls
+     *   `apihub.agnes-ai.com` (the docs hardcode it). Matching on the name
+     *   alone would send an Agnes-named model served by some relay gateway
+     *   straight past that gateway to the vendor, with the gateway's key — a
+     *   worse failure than not resolving, because the request leaves.
+     * - Name-only matching for a host-fixed protocol is exactly the shape that
+     *   broke Seedance behind a relay gateway (see `endpointFallbacks.ts`), and
+     *   `agnes-task` has no sibling protocol to fall back to.
+     *
+     * So a gateway-served Agnes model still resolves to nothing and still needs
+     * an explicit `media_endpoint` — correct, since only the user knows what
+     * their gateway speaks. This entry fixes the case that is unambiguous: the
+     * provider points at Agnes itself.
+     *
+     * No `resolutions`: the driver has no resolution knob. It derives
+     * width/height from `aspectRatio` at the vendor's 720p tier and lets the
+     * vendor normalize, so offering a resolution list would offer a choice that
+     * goes nowhere. Durations are the vendor's own documented table (24fps,
+     * `8n + 1` frames).
+     */
+    id: 'agnes-video',
+    kind: 'video',
+    form: 'C',
+    endpointStyle: 'agnes-task',
+    match: { model: /agnes.*video|video.*agnes/i, baseUrlIncludes: ['agnes-ai.com'] },
+    params: {
+      durations: [3, 5, 10, 18],
+      aspectRatios: ['16:9', '9:16', '1:1', '4:3', '3:4'],
+      imageToVideo: true,
+      seed: true,
+      negativePrompt: true,
+    },
+    defaults: { durationSeconds: 5, aspectRatio: '16:9' },
+    polling: { intervalMs: 5000, timeoutMs: 600_000 },
+  },
 ];

@@ -202,4 +202,59 @@ describe('media catalog resolution', () => {
       expect(dropped).toEqual(expect.arrayContaining(['size', 'seed']));
     });
   });
+
+  describe('Agnes video (host-pinned entry)', () => {
+    const MODEL = 'agnes-video-v2.0';
+    const atVendor = {
+      platform: 'custom',
+      name: 'Agnes',
+      base_url: 'https://apihub.agnes-ai.com/v1',
+      model_settings: { [MODEL]: { model_kind: 'video' } },
+    };
+    const behindRelay = {
+      platform: 'custom',
+      name: 'Relay',
+      base_url: 'https://litellm-internal.example.com/v1',
+      model_settings: { [MODEL]: { model_kind: 'video' } },
+    };
+
+    /**
+     * The gap this closes: `agnes-task` was the only implemented driver with no
+     * catalog entry, and video refuses to guess an endpoint style, so declaring
+     * the model as video resolved to null and the picker hid it outright.
+     */
+    it('resolves to the agnes driver when the provider points at the vendor', () => {
+      const spec = resolveMediaModelSpec('video', atVendor, MODEL);
+      expect(spec?.id).toBe('agnes-video');
+      expect(spec?.form).toBe('C');
+      expect(spec?.endpointStyle).toBe('agnes-task');
+      expect(isMediaGenSupported('video', atVendor, MODEL)).toBe(true);
+    });
+
+    /**
+     * Deliberately NOT matched by name alone. The driver ignores `base_url` and
+     * always calls the vendor host, so a name-only match would push a
+     * gateway-served model past its gateway with the gateway's key — and
+     * `agnes-task` has no sibling protocol to recover with. Staying unresolved
+     * is the conservative answer; the user declares the style if they know it.
+     */
+    it('stays unresolved for an agnes-named model served by some other host', () => {
+      expect(resolveMediaModelSpec('video', behindRelay, MODEL)).toBeNull();
+      expect(isMediaGenSupported('video', behindRelay, MODEL)).toBe(false);
+    });
+
+    it('still honours an explicit endpoint choice behind a relay', () => {
+      const declared = {
+        ...behindRelay,
+        model_settings: { [MODEL]: { model_kind: 'video', media_endpoint: 'agnes-task' } },
+      };
+      expect(resolveMediaModelSpec('video', declared, MODEL)?.endpointStyle).toBe('agnes-task');
+    });
+
+    it('offers no resolution list, because the driver has no resolution knob', () => {
+      const spec = resolveMediaModelSpec('video', atVendor, MODEL);
+      expect(spec?.params?.resolutions).toBeUndefined();
+      expect(spec?.params?.aspectRatios).toContain('16:9');
+    });
+  });
 });

@@ -161,11 +161,39 @@ export const ENDPOINT_STYLE_FALLBACKS = {
 - `node scripts/check-i18n.js` 通过（类型定义 in sync；85 条 unknown literal key 警告是 `superAssistant` 既有的，与本次无关）。
 - oxlint **0 error**（用 `oxlint@1.56.0` 跑的，原因见 §7）。
 
-### 5.3 没做真机
+### 5.3 真机验证（CDP，dream-ui 上重做过一遍）
 
-**本轮没有在 dream-ui 上做真机（Electron + 假网关）验证**，只做了单测 + 负向验证 + 静态确认。旧仓那次做了完整真机，请求序列是硬证据；由于移植后的代码路径与旧仓逐字等价（§1 的比对表），本轮判断单测足够。
+在 dev 里起一个本地假中转网关（只复现那一个行为：不路由的路径回 200 空 body，但**确实**代理 `seedance-gateway` 协议），配一条 provider 指向它，走**真实渲染进程 → ipcBridge → 主进程任务引擎 → adapter → driver**。
 
-如果要补真机，**先读旧仓文档 §6.1 和 §6.2 那两个坑**（下面 §6.3 复述了要点），别重新踩。
+**前提复现**（按旧仓 §6.1 的教训，探测 provider 用了唯一模型名 `seedance-probe-fallback-xyz`，名字里仍带 `seedance` 才会被目录匹配成 `ark-task`）：
+
+- `ownersOfThisModelName` = `["ZZ-Probe-FakeGateway"]` —— 模型名唯一，没有误命中 dev profile 里真实的 litellm 网关
+- `specBefore` = `ark-seedance` / `ark-task` —— 目录猜错，用户处境精确复现
+- `warningBefore` = `hostMismatch` —— A 的诊断真机触发
+- `model_settings` 只有 `model_kind`，无 `media_endpoint`
+
+**假网关侧收到的请求序列（硬证据）**：
+
+```
+POST /v1/contents/generations/tasks   ← 目录猜的原生 Ark，回 200 空 body
+POST /api/seedance/createVideo        ← fallback 触发，换兄弟协议
+POST /api/seedance/getVideoResult ×2  ← 轮询走 gateway 协议（running → succeeded）
+GET  /out.mp4                         ← 下载
+```
+
+任务 `done`、视频落盘、`model_settings` 写回成 `{model_kind:'video', media_endpoint:'seedance-gateway'}`（修复前此处必然 `failed`）。
+
+**写回的幂等性也验了**：清空日志后再生成一次，请求序列里**完全没有** `POST /v1/contents/generations/tasks` —— 探测只买一次，这正是 `persistEndpointStyle` 存在的理由。
+
+**自愈后预警自动消失**：`warningBefore` = `hostMismatch` → `warningAfter` = `null`，不会修好了还挂着一个警告。
+
+**A 的 UI 真机渲染**：切到视频模式后 `[data-testid="media-endpoint-warning"]` 出现 1 个，Caution 图标画在参数 pill 右边，**布局零溢出**（这正是刻意用图标而非文字行的原因）；悬停 tooltip 文案完整、插值正确：
+
+> 这个模型按名称被识别为厂商原生接口，但当前渠道地址（http://127.0.0.1:8791/v1）看起来不是 volces.com。提交失败时会自动改用网关协议重试；也可在 设置 → 模型 里手动指定接口协议。
+
+**真机残留已清理**：假 provider 删除、`tools.videoGenerationModel` 恢复成用户自己的选择、假网关进程关闭、假产物删除。
+
+旧仓 §6.1 / §6.2 那两个坑（模型名要唯一、`MediaJobView` 主键是 `jobId`）本轮都规避掉了，要点复述在 §6.3。CDP 的用法见 §8。
 
 ---
 
@@ -213,3 +241,128 @@ export const ENDPOINT_STYLE_FALLBACKS = {
 
 - **`tests/unit/renderer/mermaidBlockPanZoom.dom.test.tsx` 在大批量并跑时失败过一次**，与本次改动无关（本次没碰 mermaid）：单独跑 2/2 绿，整个 `tests/unit/renderer`（261 文件 / 2327 条）也全绿，属于并行顺序相关的既有 flake。
 - **`.claude/worktrees/` 下有一份完整的仓库副本**，全仓 grep / sweep 时会被误扫进来（本轮所有改动都只落在主工作树，未动 worktree）。
+
+---
+
+## 八、真机验证顺带挖出的另一条链：AGNES 视频从来没能用过
+
+用户问"这个修复对其他视频模型接入友好吗，比如我加的 AGNES 视频和图片"。查下来**不友好**，而且是两个 bug 互相掩盖了近三周。三个都已修，都有真机证据。
+
+### 8.1 视频侧有两种失败模式，本轮原本只修了一种
+
+| 失败模式                                 | 例子                    | 表现                                                                                    | 本轮                |
+| ---------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------- | ------------------- |
+| 目录按名字匹配上了，但**协议猜错**       | `seedance-*` 挂中转网关 | 每次生成必失败，报错文案清楚                                                            | §4 已修             |
+| 目录**不认识**这个名字，用户又没手选协议 | `agnes-video-v2.0`      | spec = `null` → `isMediaGenSupported` 返回 false → **从选择器里静默消失**，没有任何提示 | 原本没覆盖，§8.2 补 |
+
+第二种对用户更难自查：驱动 `agnes-task` 明明存在、模型也被自动声明成 `video` 了，但视频模式里就是看不到它，也没有一句话告诉他"去设置里选 agnes-task 就能用"。
+
+真机确认（不是读代码推断）：`isMediaGenSupported('video', agnesProvider, 'agnes-video-v2.0')` = **false**，而两个 agnes 图片模型都是 true。
+
+### 8.2 根因一：`agnes-task` 是唯一有驱动却没有目录条目的协议
+
+`IMPLEMENTED_ENDPOINT_STYLES` 里六个协议，`ark-task` / `dashscope-task` / `kling` / `openai-video` / `cogvideox` 都有目录条目，只有 `agnes-task` 没有。代码和文档里都找不到排除它的理由——是漏了。
+
+而 video 分支**刻意不猜** endpoint style（`specFromDeclaration` 里写明了：视频厂商在线路协议上互不兼容，猜错就是"能选但永远调不通"），所以没有目录条目 = 除非用户手动指定，否则永久不可用。
+
+**修法**：给 `videoModels.ts` 补一条 **host-pinned** 的 `agnes-video` 条目（`match: { model: /agnes.*video|video.*agnes/i, baseUrlIncludes: ['agnes-ai.com'] }`）。
+
+⚠️ **为什么这里必须 host-pin，而上面五条都是只按名字匹配**——两个理由指向同一个方向：
+
+1. `agnesDriver` **完全无视 `base_url`**，永远打硬编码的 `apihub.agnes-ai.com`（文档就是这么写的）。只按名字匹配的话，一个挂在别人网关上的 agnes 模型会带着**那个网关的 key** 直接绕过网关打到厂商——比"解析不出来"更糟，因为请求真的发出去了。
+2. 给一个 host 固定的协议做名字匹配，正是 seedance 挂中转网关时爆掉的那个形状（§二），而 `agnes-task` **没有兄弟协议**可以 fallback 兜底。
+
+所以挂在中转网关上的 agnes 视频**依然**解析为 null、依然需要手选 `media_endpoint`——这是对的，只有用户知道自己的网关讲什么。这条条目只修那个毫无歧义的情况：provider 就指着 Agnes 自己。
+
+真机三种情况全验过：
+
+```
+直连 apihub.agnes-ai.com        → agnes-video / C / agnes-task   ✅ 自动可用
+挂中转网关、没手选               → null                          ✅ 保守，不猜
+挂中转网关、手选 agnes-task      → declared:… / C / agnes-task    ✅ 尊重用户声明
+```
+
+### 8.3 根因二：驱动读错了 URL 字段，每次生成都在付钱之后失败
+
+补上目录条目、重启主进程后，生成第一次真正跑起来了——然后失败在：
+
+```
+Agnes reported completed but returned no metadata.url
+```
+
+驱动读的是 `payload.metadata?.url`（文档原话："final URL at `metadata.url`"）。拿那次已付费任务的 `remoteTaskId` 去直接问真实 API（免费，不用再生成一次），实测响应：
+
+```json
+{
+  "id": "video_94db…",
+  "object": "video",
+  "status": "completed",
+  "progress": 100,
+  "seconds": "3",
+  "size": "1088x832",
+  "perf_output_size": 911629,
+  "url": "https://platform-outputs.agnes-ai.space/videos/agnes-video-v2.0/video_94db….mp4"
+}
+```
+
+**地址在顶层 `url`，`metadata` 这个键根本不存在。** 视频真的生成好了（`perf_output_size: 911629`，那个 URL curl 下来正好 911629 字节），只是驱动取不到它。
+
+顺带排除了"是不是协议选错了"：同一个 task id 打 `openai-video` 的两条路径，`GET /v1/videos/{id}` 回 400 `task_not_exist`、`/content` 回 404。所以 `agnes-task` 的 `GET /agnesapi?video_id=` **是对的**，纯粹是字段名错。
+
+**为什么三周没人发现**：这两个 bug 互相掩盖——目录缺条目让模型不可达，不可达就没人跑到过驱动的 `completed` 分支。而 `videoDrivers.test.ts` 里那条 completed 测试**喂的正是文档里的 `metadata.url`**，跟驱动犯了同一个假设，所以测试也是绿的。补目录条目才把它暴露出来。
+
+**修法**：`payload.url || payload.metadata?.url`（顶层优先，文档形状保留兜底，成本一个 `??`），失败文案改成同时点名两个字段**并附上真实 payload**——旧文案只点一个字段又把 payload 丢了，这才是它需要花一次真实生成才能诊断出来的原因。测试补了真实响应形状那条。
+
+### 8.4 顺带修：占位卡里"生成中"重复三遍
+
+用户在真机上截图指出来的。`mediaJobStatus_polling` 和 `mediaJobStage_running` 两个不同的 key 恰好都翻译成"生成中"，于是运行中的卡片上，顶部状态 Tag、占位图标题「视频正在生成中…」、标题下面那行阶段文案，**三处说同一件事**——而 `running` 正是任务绝大部分时间所处的阶段，所以用户看到的基本就是这个样子。
+
+修法：`running` 阶段不再往下传，让占位组件退回它那句真正有信息量的提示（「通常需要一到几分钟，期间可以继续做别的事」）。其他阶段（`准备中` / `已提交到服务端` / `服务端排队中` / `下载结果中` / `保存中`）都携带标题没有的信息，继续显示。
+
+### 8.5 每条媒体能力的真机结果
+
+| 路径                                             | 协议                                       | 结果                                                                                                                                                                                         |
+| ------------------------------------------------ | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 视频 · seedance 挂假中转网关（本轮修复的主目标） | `ark-task` → fallback → `seedance-gateway` | ✅ `done`，落盘，写回，幂等                                                                                                                                                                  |
+| 视频 · `agnes-video-v2.0`                        | `agnes-task`（本轮新增目录条目 + 修驱动）  | ✅ `done`，落盘 840379 字节真 MP4（`ftypisom`）                                                                                                                                              |
+| 图片 · `agnes-image-2.0-flash`                   | Form A 默认（OpenAI images）               | ✅ `done`，落盘 1.4MB 真 PNG                                                                                                                                                                 |
+| 图片 · `doubao-seedream-5-0-pro`                 | `seedream-gateway`（同步 Form A）          | ✅ `done`，落盘 1.5MB 真 PNG                                                                                                                                                                 |
+| 图片 · `gemini-3-pro-image`                      | Form A 默认                                | ❌ 渠道侧 `404 model not found`，**不是本仓问题**（该模型在那个 litellm 网关上不存在，`model_health` 里早有记录）。分类为 `modelNotFound` 而非 `notRouted`，所以 fallback **正确地没有触发** |
+
+⚠️ **`gemini-3-pro-image` 那条同时是个正面证据**：它证明"只有 `notRouted` 才换协议"这条规则在真机上生效——一个诚实的 404 没有被 fallback 变成两个误导的错误。Agnes 提交时撞到的厂商侧 `503 no available server` 同理，也没触发 fallback。
+
+⚠️ **顺带发现、未修**：`model_health` 对媒体模型的判断不适用。`doubao-seedream-5-0-pro` 在 `model_health` 里记的是 `unhealthy / 404 model not found`，但实际生成**成功**——因为健康检查打的是 chat 接口，而生成走的是 gateway 的图像路径。会让用户误以为模型坏了。不在本轮范围。
+
+---
+
+## 九、CDP 真机验证怎么做（本轮实测可用的做法）
+
+- **dev 下 CDP 默认关闭**，必须 `DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev`（注意 P4 改名后前缀是 `DREAM_*`，不是 `AIONUI_*`）。日志里会出现 `[CDP] Developer app-wide debugging ENABLED on http://127.0.0.1:9230`。
+- **`chrome-devtools` MCP 连的是独立浏览器**，看不到 Electron 窗口。要驱动真实 UI 只能自己连 9230。
+- **Node 内置 `WebSocket`（v22+）够用**，不必依赖项目的 `ws`。
+- **`/@fs/` 动态 import 应用模块**比模拟 Arco 组件点击稳得多：
+  ```js
+  const bridge = await import('/@fs/D:/dream/dream-ui/packages/desktop/src/common/adapter/ipcBridge.ts');
+  await bridge.media.startJob.invoke({ kind: 'video', prompt: '…', model: '…' });
+  ```
+- **provider 管理的 ipcBridge 导出名是 `mode`**（不是 `provider`）：`mode.listProviders` / `createProvider` / `updateProvider` / `deleteProvider`。
+- **Arco 的 `Dropdown`/`Trigger` 不响应 `element.click()`**，必须走 CDP `Input.dispatchMouseEvent`（mouseMoved → mousePressed → mouseReleased）。按文本找元素时不能只挑叶子节点，Arco 会把文案包在带子元素的 span 里——按"文本完全相等且外接矩形面积最小"来选。
+
+### 9.1 ⚠️ 改 `common/media` 下的目录后必须重启主进程
+
+**renderer 的 vite HMR 会给你一个假的"已生效"。** 本轮踩了：补完 `videoModels.ts` 后，用 `/@fs/` 在渲染进程里探测，`isMediaGenSupported` 已经是 `true`；但 `media.startJob` 走的是**主进程**，主进程还在跑旧 bundle，于是任务直接以 `unsupported-model` 失败。
+
+`common/` 下的模块两个进程都用，electron-vite 在这种改动下**不一定**重启主进程（本轮日志里就没重启）。**判据**：探测显示"好了"但 `startJob` 报 `unsupported-model`，就是主进程没更新。停掉 dev、确认 `Get-Process electron` 清零、再起。
+
+### 9.2 免费验证已付费任务的技巧
+
+Form C 的任务在厂商侧完成后会留一段时间。失败的 job 在 `%APPDATA%\dream-ui-Dev\config\media-jobs.json` 里留着 `remoteTaskId`，可以：
+
+- 直接调 `driver.poll(ctx, remoteTaskId)` 验证轮询分支——本轮就是这么在不再花钱的情况下确认 §8.3 的修复的；
+- 或者给 `TaskPollAdapter.generate()` 传 `resumeTaskId`，跳过提交、走完轮询+下载+落盘。
+
+⚠️ 但**下载那步不要在渲染进程里验**：跨源产物地址会被 CORS 拦掉，报 `Failed to fetch (platform-outputs.agnes-ai.space)`，看起来像 bug 其实是探针位置的问题。真实 adapter 跑在主进程没有这个限制。判据是拿 `curl` 直接拉那个 URL——本轮拉到 HTTP 200 / 911629 字节，跟 API 自报的 `perf_output_size` 完全一致。
+
+### 9.3 个人版的 `media-precheck` 404 是预期的
+
+dev 日志里会看到 `POST /api/one/billing/media-precheck → 404 Route not found`。路由在 `dream-core` 里**是存在的**（`dream-domain-billing/src/routes.rs:39`），只是个人版没挂载 billing 域。`governance.ts` 的 `checkMediaPolicy` 注释里写明了 "fails open on transport errors"，catch 掉返回 allow。**不是缺陷，别去"修"它。**

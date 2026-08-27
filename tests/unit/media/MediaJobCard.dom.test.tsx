@@ -179,6 +179,24 @@ describe('MediaJobCard', () => {
     expect(screen.queryByTestId('media-job-placeholder')).toBeNull();
   });
 
+  /**
+   * The `running` stage label is the same sentence as the placeholder's title
+   * and the same word as the status tag, and it is the stage a job spends
+   * almost all its time in — so the card showed "生成中" three times over.
+   * Suppressing it lets the placeholder show its generic hint instead.
+   */
+  it('does not repeat the running stage under a title that already says it', () => {
+    renderCard(<MediaJobCard job={job({ status: 'polling', progress: { stage: 'running' } })} />);
+    expect(screen.queryByText('conversation.mediaJobStage_running')).toBeNull();
+    expect(screen.getByText('conversation.mediaJobGeneratingHint')).toBeTruthy();
+  });
+
+  it('still shows a stage that tells the user something new', () => {
+    renderCard(<MediaJobCard job={job({ status: 'polling', progress: { stage: 'queued' } })} />);
+    expect(screen.getByText('conversation.mediaJobStage_queued')).toBeTruthy();
+    expect(screen.queryByText('conversation.mediaJobGeneratingHint')).toBeNull();
+  });
+
   it('offers cancel only while the job can still be stopped', () => {
     const onCancel = vi.fn();
     const { rerender } = renderCard(<MediaJobCard job={job({ status: 'polling' })} onCancel={onCancel} />);
