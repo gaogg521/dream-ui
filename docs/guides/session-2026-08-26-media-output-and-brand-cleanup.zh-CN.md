@@ -381,3 +381,119 @@ JSON 列是 TEXT，替换针对**带引号的 token**（`"aionui-config"` 而不
 
 顺带把 `dream-core/AGENTS.md` 里推荐命令从 `cargo test` 换成 `cargo nextest run`
 （本机快约 10 倍），并修掉 10 处残留的 `aionui-<crate>` 占位符。
+
+---
+
+## 13. 第六轮：真机 CDP 验证暴露的四件事
+
+前五轮全部「编译过、测试绿」。这一轮把 dev app 跑起来、用 CDP 问运行中的进程要状态，
+四个问题里**没有一个是读代码能看出来的**——它们的共同形状是：源码读起来是对的，
+跑起来不是。
+
+### 13.1 内置 MCP 出现重复行（用户报的）
+
+现象：生成图片时工具名是 `mcp__aionui-image-generation_one_image_generation`——
+server 名还是旧的，tool 名已经是新的。
+
+根因在 `runBackendMigrations.ts`：
+
+```ts
+const missing = [...].filter((server) => !existingByName.has(server.name));
+```
+
+`existingByName` 按**当前名精确匹配**。存量库里那行叫 `aionui-image-generation`，
+于是「缺 image server」判定成立，`batchImportServers` 又插了一行叫 `one-image-generation`，
+**旧行原封不动、而且仍然 enabled**。用户于是有两套媒体工具，agent 用它先看到的那套。
+
+更隐蔽的是：浏览器那块**已经有**改名向前的代码，但它跑在 insert **之后**，
+所以它匹配到的是刚插进去的新行，重复行反而被跳过。
+
+修法是新增 `renameLegacyBuiltinMcpServers()`，跑在 `existingByName` 计算**之前**：
+旧名行改名向前；当前名行已存在时删掉旧行。返回 reconcile 后的数组，
+避免下游再读到刚被改动的行。
+
+> **查 DB 时注意软删除**：`mcp_servers` 有 `deleted_at` 列。直接
+> `SELECT name FROM mcp_servers` 会把墓碑一起查出来，看上去像「清理没生效」。
+> 必须带 `WHERE deleted_at IS NULL`。本次就因为漏了这个条件误判过一次。
+
+测试见 `tests/unit/bootstrap/runBackendMigrations.test.ts` 的 `pre-rebrand builtin rows`
+（4 条，其中 3 条在旁路掉修复后确实失败——**验过**；第 4 条是「本来就是新名」的对照组）。
+
+### 13.2 `sysinfo.rs` 的目录字面量：注释改了，代码没改
+
+问 运行中的后端要 system info，它报的 `cache_dir` 是 `AppData\Local\<旧名>`、
+`log_dir` 是 `Roaming\<旧名>/logs`。翻代码，**文档注释写的是 `/dream`**，
+下面的 `p.join(...)` 还是旧字面量。品牌迁移那轮只改了注释。
+
+这是最值得记的一类：**注释是改名扫描最容易「改到」的地方，也是最不会报错的地方**。
+注释改了、字面量没改，代码读起来完全正确，`cargo check` / 测试全绿，
+而且当时的三个测试断言的正是 `dir.contains("<旧名>")`——测试在给 bug 背书。
+
+修成走 `resolve_with_legacy`，三个断字面量的测试换成断解析规则
+（新装取新名 / 老目录存在时取老名 / 老目录不存在时不选它）。
+
+### 13.3 两个 localStorage 键漏网
+
+`one_cron_unread`、`one_workspace_expansion`。两个都是**普通字面量**，
+grep 得到——只是它们不在第一轮扫描走过的面上（一个在 cron 页面的 hook 里，
+一个在历史树的 hook 里，从路径看都不像存储代码）。
+
+发现方式是读**真实安装的 localStorage**，不是读源码。
+便宜的补救是收尾时对整个 renderer 直接 grep 一次旧前缀。
+
+### 13.4 工具回帧是英文，模型跟着用英文回话
+
+`renderJob()` 产出的每一行都是英文机器文本。模型会把一大段英文当成
+「这个对话是英文的」的证据：用户用中文提问，图生对了，**总结用英文写**。
+
+修法是在有产物可汇报时追加一行，明说这段是 wire format、不是语言线索。
+只在 `job.assets?.length || job.resultText` 时加——空任务/失败任务没有可汇报的东西，
+加了只是噪声。
+
+> **另一件事，性质不同，未改**：卡片上回显的提示词是英文的。
+> 那不是 bug——`one_image_generation` 的工具描述里明写着
+> `IMPORTANT: All prompts must be in English for optimal results.`，
+> 视频工具的 `prompt` 入参描述是 `Description of the video to generate, in English.`。
+> agent 是在**正确执行契约**。这条规则来自上游、面向 DALL·E/SD 那代英文模型；
+> 现在配的是 doubao-seedream / seedance（中文原生），它大概率是反效果。
+> 属于产品取舍，需要显式决定，不能顺手改。
+
+### 13.5 视频卡片比图片卡片多一行
+
+`GeneratedMediaView` 给视频传了 `caption={asset.fileName}`，图片没有。
+已去掉：卡片上方本来就有提示词、下方有「打开所在目录」，
+产物现在落在 `工作区/outputs/`、文件树里直接能看到文件名。
+`LocalVideoView` 的 `caption` prop 保留（组件 API 合理，且错误分支仍要显示路径）。
+
+### 13.6 验证结果（dev app + CDP，2026-08-27）
+
+| 检查 | 结果 |
+| --- | --- |
+| 工具调用名 | `mcp__one-image-generation_one_image_generation` ✅ |
+| MCP 活跃行 | 只有 `one-*` 五个；两个 `aionui-*` 已是墓碑 ✅ |
+| localStorage | `one_cron_unread` / `one_workspace_expansion` 已由旧键复制出来，旧键保留 ✅ |
+| preload 全局 | `deepLinkScheme: dream-dev`、`browserPartition: persist:one-browser` ✅ |
+| 文件树 | `outputs/vid-*.mp4` 直接可见 ✅ |
+| 媒体卡片 DOM 顺序 | header → 提示词 → `<video>` → 操作按钮；视频下方已无文件名 ✅ |
+
+---
+
+## 14. 多会话并发改同一个仓库
+
+本轮和另一个 Claude 会话同时在 dream-ui 上干活。它跑了全仓 `bun run format`
+（oxfmt 重排了上百个无关文件，因为 **HEAD 本来就不是 fmt-clean**），
+然后为了清掉这批格式噪声跑了 `git checkout -- <一批文件>`——
+**把另一个会话的未提交 WIP 一起还原了**，两次。
+
+丢掉的东西里有一半特别隐蔽：`legacyStorageKeys.ts` 的别名映射保住了、
+但两个**写入端**（`useCronJobs.ts` / `useWorkspaceExpansionState.ts`）被还原了。
+只看别名表会以为改完了，实际上写入端还在写旧键。
+
+规则：
+
+1. **别在这个仓库跑全仓 `bun run format`**。HEAD 不是 fmt-clean，全仓跑必然产生
+   大量无关噪声，然后你就要用 `git checkout` 去清——误伤就是这么来的。
+   只格式化自己改的文件。
+2. `git checkout -- <path>` 前先 `git status`，确认那个路径确实是你弄脏的。
+3. 改完尽快提交。已提交的东西不会被别人的 `checkout` 带走。
+4. 两个会话不要同时跑 vitest（见上一节的静默跳过问题）。
