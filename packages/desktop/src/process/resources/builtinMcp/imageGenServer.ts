@@ -272,6 +272,13 @@ async function main() {
     'one_image_generation',
     `The only way to reach an image-generation model. You cannot synthesise image pixels yourself, so any request for a depicted (created or edited) image has to come through here.
 
+PROMPT LANGUAGE — read before anything else: pass the user's own words through in
+THEIR language. Do NOT translate a Chinese (or Japanese, Korean, ...) request into
+English first, however strong the habit. These models are natively multilingual, the
+prompt is echoed back to the user on the result card, and a translated one reads there
+as though their wording was thrown away — along with the cultural specifics that a
+translation flattens. Translate only when the user asks you to.
+
 Best for:
 - Photographic, illustrative or artistic content — concept art, characters, scenery, mood, style
 - Editing or re-styling images the user supplied (pass them in image_uris)
@@ -283,13 +290,6 @@ This tool ONLY produces new or edited image pixels. It CANNOT read, describe, OC
 NOT the right tool for charts, diagrams, dashboards, UI mockups, or any image that has to render specific data or text accurately. A generation model approximates: it will invent plausible-looking numbers and misspell labels, and you cannot correct one afterwards. If you are able to produce those by writing code — SVG, HTML/CSS, a plotting library — do that instead; it is exact, reviewable and re-runnable.
 
 The two combine well: generate artwork or a background here, then lay the precise part (labels, figures, captions) over it in code.
-
-IMPORTANT: Write the prompt in the language the user wrote theirs in. Do not
-translate a Chinese request into English before sending it -- the configured
-models handle other languages natively, the prompt is echoed back to the user
-on the result card, and a translated one reads there as if their words were
-discarded. Translate only when the user asks you to, or when they wrote in a
-language and explicitly asked for an English prompt.
 
 Input Support:
 - Multiple local file paths in array format: ["img1.jpg", "img2.png"]
@@ -306,7 +306,7 @@ IMPORTANT: When user provides multiple images to edit/restyle, ALWAYS pass ALL i
       prompt: z
         .string()
         .describe(
-          'The text prompt -- in the language the user used -- that must clearly specify the operation type: "Generate image: [description]" for creating new images, or "Edit image: [modifications]" for editing images passed in image_uris. Never "Analyze image: ..." — this tool cannot analyse or read image content, only create or edit it.'
+          'Written in the SAME LANGUAGE the user used — never translated to English. Must clearly specify the operation type: "Generate image: [description]" for creating new images, or "Edit image: [modifications]" for editing images passed in image_uris. Never "Analyze image: ..." — this tool cannot analyse or read image content, only create or edit it.'
         ),
       image_uris: z
         .array(z.string())
@@ -371,7 +371,6 @@ NOT the right tool for explainer videos built from real data, precise typography
 The two combine well: generate footage here, then cut it, caption it and lay data over it in code.
 
 IMPORTANT:
-- Write the prompt in the language the user used; do not translate it for them.
 - Video generation is slow (typically 30 seconds to several minutes). This call blocks until the video is ready; do not retry or start a second job because it feels slow.
 - If the call fails with a timeout but reports a job id, the work may still be running — check it with one_media_job_status instead of regenerating.
 - Parameter support depends on the configured model; unsupported parameters are ignored.
@@ -383,7 +382,7 @@ Output:
       prompt: z
         .string()
         .describe(
-          'Description of the video to generate, written in the language the user used. Do not translate their wording.'
+          'Written in the SAME LANGUAGE the user used — never translated to English. Describes the video to generate.'
         ),
       first_frame_image: z
         .string()
