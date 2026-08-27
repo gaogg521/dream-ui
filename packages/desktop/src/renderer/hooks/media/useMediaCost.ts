@@ -24,8 +24,8 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
-import { computeMediaCost, formatUsd } from '@/common/media/pricing';
-import type { MediaKind } from '@/common/media/types';
+import { computeMediaCost, formatUsd, resolveUserUnitPriceUsd } from '@/common/media/pricing';
+import type { MediaGenParams, MediaKind } from '@/common/media/types';
 import { getClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
 import { useProvidersQuery } from '@renderer/hooks/agent/useModelProviderList';
 
@@ -74,20 +74,28 @@ export type MediaCostDisplay = {
 };
 
 /**
- * The price the user declared for this exact model on this exact provider.
+ * The price the user declared for this exact model on this exact provider, for
+ * the resolution this request is asking for.
  *
  * Looked up by provider id, not by model name: two providers can carry the same
  * model name at different prices, and a figure attributed to the wrong one is
  * worse than no figure.
+ *
+ * `params` decides which per-resolution entry applies. The lookup itself lives
+ * in `pricing.ts` because the usage report performs the same one — see
+ * `resolveUserUnitPriceUsd`.
  */
-export const useDeclaredUnitPriceUsd = (providerId?: string, model?: string): number | undefined => {
+export const useDeclaredUnitPriceUsd = (
+  providerId?: string,
+  model?: string,
+  params?: MediaGenParams
+): number | undefined => {
   const { data: providers } = useProvidersQuery();
   return useMemo(() => {
     if (!providerId || !model) return undefined;
-    const price = providers?.find((provider) => provider.id === providerId)?.model_settings?.[model]
-      ?.media_unit_price_usd;
-    return typeof price === 'number' && Number.isFinite(price) && price > 0 ? price : undefined;
-  }, [providers, providerId, model]);
+    const settings = providers?.find((provider) => provider.id === providerId)?.model_settings?.[model];
+    return resolveUserUnitPriceUsd(settings, params);
+  }, [providers, providerId, model, params]);
 };
 
 export const useMediaCost = (input: {
@@ -96,12 +104,17 @@ export const useMediaCost = (input: {
   providerId?: string;
   count: number;
   durationSeconds?: number;
+  /**
+   * The request's parameters, for picking the per-resolution price. Optional:
+   * a caller with no parameters simply gets the flat rate.
+   */
+  params?: MediaGenParams;
   /** `estimate` reads "about to spend", `actual` reads "did spend". */
   variant: 'estimate' | 'actual';
 }): MediaCostDisplay | null => {
   const { t } = useTranslation();
-  const { kind, model, providerId, count, durationSeconds, variant } = input;
-  const userUnitPriceUsd = useDeclaredUnitPriceUsd(providerId, model);
+  const { kind, model, providerId, count, durationSeconds, params, variant } = input;
+  const userUnitPriceUsd = useDeclaredUnitPriceUsd(providerId, model, params);
   const showCost = useShowMediaCost();
 
   return useMemo(() => {

@@ -109,6 +109,48 @@ export const estimateMediaCostMicros = (
 };
 
 /**
+ * Which resolution tier a request falls in, as the key a price is stored under.
+ *
+ * `resolution` and `size` are the two shapes a spec offers ('1080p' vs
+ * '1280x720'); a model uses one or the other, never both, so the first present
+ * one is the answer. Returns undefined when the request named neither, which is
+ * the normal case for an image model with no size list.
+ */
+export const priceTierOf = (params: MediaGenParams | undefined): string | undefined => {
+  const tier = params?.resolution ?? params?.size;
+  return typeof tier === 'string' && tier.trim() ? tier.trim() : undefined;
+};
+
+/**
+ * The user's price for this exact request — per-resolution entry if they set
+ * one for the tier being generated, otherwise their flat rate.
+ *
+ * **The single lookup.** The cost display and the usage report both call this
+ * rather than reading `model_settings` themselves: the number shown on the card
+ * and the number written to the ledger must be the same one, and this file's
+ * whole premise is that a figure the user can reconcile against an invoice is
+ * worse than no figure when it disagrees.
+ *
+ * A tier price of 0 (or negative, or NaN) is treated as absent rather than
+ * free, same rule as the flat rate — the one wrong answer worth avoiding here
+ * is telling someone a paid generation cost nothing.
+ */
+export const resolveUserUnitPriceUsd = (
+  settings: { media_unit_price_usd?: number; media_unit_prices_usd?: Record<string, number> } | undefined,
+  params: MediaGenParams | undefined
+): number | undefined => {
+  const usable = (value: unknown): number | undefined =>
+    typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : undefined;
+
+  const tier = priceTierOf(params);
+  if (tier) {
+    const perTier = usable(settings?.media_unit_prices_usd?.[tier]);
+    if (perTier !== undefined) return perTier;
+  }
+  return usable(settings?.media_unit_price_usd);
+};
+
+/**
  * What this generation costs.
  *
  * A price the user entered for their own provider beats the built-in table —

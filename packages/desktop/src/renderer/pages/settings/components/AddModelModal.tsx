@@ -3,6 +3,7 @@ import {
   diagnoseEndpointMismatch,
   ENDPOINT_STYLE_INFO,
   IMPLEMENTED_ENDPOINT_STYLES,
+  resolveMediaModelSpec,
   SYNC_IMAGE_ENDPOINT_STYLES,
 } from '@/common/media/catalog';
 import {
@@ -39,6 +40,8 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
     const [mediaEndpoint, setMediaEndpoint] = useState<string>('');
     const [mediaUnitPrice, setMediaUnitPrice] = useState<string>('');
     const [showMediaCost, setShowMediaCost] = useState(false);
+    /** Per-resolution prices as typed, keyed by tier. Parsed on save. */
+    const [tierPrices, setTierPrices] = useState<Record<string, string>>({});
     const isNewApi = isNewApiPlatform(data?.platform ?? '');
     const isEditing = Boolean(editingModel);
     const { data: modelList, isLoading } = useModeModeList(data?.platform, data?.base_url, data?.api_key);
@@ -90,6 +93,11 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
       setMediaUnitPrice(
         typeof settings?.media_unit_price_usd === 'number' ? String(settings.media_unit_price_usd) : ''
       );
+      setTierPrices(
+        Object.fromEntries(
+          Object.entries(settings?.media_unit_prices_usd ?? {}).map(([tier, value]) => [tier, String(value)])
+        )
+      );
       setModelProtocol(editingModel ? (data?.model_protocols?.[editingModel] ?? 'openai') : 'openai');
       // The cost-display preference is global, so it is read here rather than
       // from this model's settings — and re-read on every open so a change made
@@ -98,6 +106,23 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
         .then((value) => setShowMediaCost(value === true))
         .catch(() => setShowMediaCost(false));
     }, [data, editingModel, modalProps.visible]);
+
+    /**
+     * The resolution tiers this model actually offers, so a price can be given
+     * per tier instead of one flat rate for all of them.
+     *
+     * Only when editing a single existing model: the multi-select "add models"
+     * path has no one spec to read, and offering tiers that may not apply to
+     * every selected model would invite prices attached to nothing. Empty for a
+     * model whose spec lists no resolutions (most image models), which collapses
+     * this back to the single flat field.
+     */
+    const priceTiers = useMemo(() => {
+      if (!editingModel || !data) return [] as string[];
+      if (modelKind !== 'image' && modelKind !== 'video') return [] as string[];
+      const spec = resolveMediaModelSpec(modelKind, data, editingModel);
+      return spec?.params?.resolutions ?? spec?.params?.sizes ?? [];
+    }, [data, editingModel, modelKind]);
 
     const handleConfirm = useCallback(() => {
       if (!data || (!editingModel && !models.length)) return;
@@ -112,7 +137,12 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
           showOpenAiApiMode ? openAiApiMode : 'auto',
           modelKind,
           mediaEndpoint,
-          mediaUnitPrice.trim() ? Number(mediaUnitPrice) : undefined
+          mediaUnitPrice.trim() ? Number(mediaUnitPrice) : undefined,
+          Object.fromEntries(
+            Object.entries(tierPrices)
+              .filter(([, raw]) => raw.trim() !== '')
+              .map(([tier, raw]) => [tier, Number(raw)])
+          )
         ),
       };
 
@@ -276,6 +306,30 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
                 <div className='text-11px text-t-secondary leading-4'>
                   {modelKind === 'video' ? t('settings.mediaUnitPriceTipVideo') : t('settings.mediaUnitPriceTipImage')}
                 </div>
+                {/* One field per resolution the model offers.
+                    A single rate cannot describe what these actually cost:
+                    vendors price tiers several-fold apart, so whichever tier was
+                    not the one entered is billed wrong. Optional throughout — a
+                    blank tier falls back to the flat rate above, so nothing here
+                    has to be filled in. */}
+                {priceTiers.length > 0 && (
+                  <div className='flex flex-col gap-4px pt-4px' data-testid='media-tier-prices'>
+                    <span className='text-12px'>{t('settings.mediaTierPriceLabel')}</span>
+                    {priceTiers.map((tier) => (
+                      <div key={tier} className='flex items-center gap-8px'>
+                        <span className='text-12px text-t-secondary w-64px shrink-0'>{tier}</span>
+                        <Input
+                          value={tierPrices[tier] ?? ''}
+                          onChange={(value) => setTierPrices((prev) => ({ ...prev, [tier]: value }))}
+                          placeholder={t('settings.mediaTierPricePlaceholder')}
+                          allowClear
+                          data-testid={`media-tier-price-${tier}`}
+                        />
+                      </div>
+                    ))}
+                    <div className='text-11px text-t-secondary leading-4'>{t('settings.mediaTierPriceTip')}</div>
+                  </div>
+                )}
                 {/* Whether to show cost figures anywhere at all.
                     Deliberately here rather than in a general preferences page:
                     this is the one screen where a user is already thinking about

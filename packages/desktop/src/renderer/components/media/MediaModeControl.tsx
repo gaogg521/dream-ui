@@ -91,6 +91,9 @@ const MediaModeControl: React.FC<Props> = ({
     providerId,
     count: params.n ?? 1,
     durationSeconds: params.durationSeconds ?? spec?.defaults?.durationSeconds,
+    // Carries the chosen resolution, so a per-resolution price is used the
+    // moment the user changes the tier in the parameter panel.
+    params,
     variant: 'estimate',
   });
 

@@ -23,6 +23,8 @@ import {
   estimateMediaCostMicros,
   formatUsd,
   meterMediaJob,
+  priceTierOf,
+  resolveUserUnitPriceUsd,
 } from '@/common/media/pricing';
 
 describe('built-in rate table (mirrors aionui-common/src/license.rs)', () => {
@@ -151,5 +153,71 @@ describe('formatUsd', () => {
     expect(formatUsd(0.004)).toBe('$0.0040');
     expect(formatUsd(0.04)).toBe('$0.04');
     expect(formatUsd(1.5)).toBe('$1.50');
+  });
+});
+
+/**
+ * A single scalar could not describe what a media model actually costs: vendors
+ * price resolution tiers several-fold apart, so one rate is wrong for whichever
+ * tier was not the one entered.
+ */
+describe('per-resolution price resolution', () => {
+  const settings = {
+    media_unit_price_usd: 0.1,
+    media_unit_prices_usd: { '480p': 0.05, '1080p': 0.4 },
+  };
+
+  it('reads the tier from resolution, or from size when that is what the spec offers', () => {
+    expect(priceTierOf({ resolution: '1080p' })).toBe('1080p');
+    expect(priceTierOf({ size: '1280x720' })).toBe('1280x720');
+    // resolution wins when a caller somehow carries both; a model uses one.
+    expect(priceTierOf({ resolution: '720p', size: '1280x720' })).toBe('720p');
+    expect(priceTierOf({})).toBeUndefined();
+    expect(priceTierOf(undefined)).toBeUndefined();
+  });
+
+  it('prefers the price entered for the tier being generated', () => {
+    expect(resolveUserUnitPriceUsd(settings, { resolution: '1080p' })).toBe(0.4);
+    expect(resolveUserUnitPriceUsd(settings, { resolution: '480p' })).toBe(0.05);
+  });
+
+  // Additive by design: nothing has to be filled in for the previous behaviour
+  // to hold, and a tier left blank is not a tier priced at zero.
+  it('falls back to the flat rate for a tier with no entry, or no tier at all', () => {
+    expect(resolveUserUnitPriceUsd(settings, { resolution: '720p' })).toBe(0.1);
+    expect(resolveUserUnitPriceUsd(settings, {})).toBe(0.1);
+    expect(resolveUserUnitPriceUsd({ media_unit_price_usd: 0.1 }, { resolution: '1080p' })).toBe(0.1);
+  });
+
+  // Saying a paid generation cost nothing is the one wrong answer to avoid, so
+  // a zero is absence rather than free — same rule the flat rate follows.
+  it('treats a zero or unusable tier price as absent, not as free', () => {
+    const zeroed = { media_unit_price_usd: 0.1, media_unit_prices_usd: { '1080p': 0 } };
+    expect(resolveUserUnitPriceUsd(zeroed, { resolution: '1080p' })).toBe(0.1);
+    const nonsense = { media_unit_prices_usd: { '1080p': Number.NaN } };
+    expect(resolveUserUnitPriceUsd(nonsense, { resolution: '1080p' })).toBeUndefined();
+  });
+
+  it('reports nothing when neither a tier nor a flat rate is set', () => {
+    expect(resolveUserUnitPriceUsd(undefined, { resolution: '1080p' })).toBeUndefined();
+    expect(resolveUserUnitPriceUsd({}, { resolution: '1080p' })).toBeUndefined();
+  });
+
+  /**
+   * The reason the resolver exists as one shared function: the figure on the
+   * card and the figure written to the ledger have to be the same number, and
+   * the user is the one who would find out otherwise — against an invoice.
+   */
+  it('feeds computeMediaCost so the tier price drives the total', () => {
+    const price = resolveUserUnitPriceUsd(settings, { resolution: '1080p' });
+    const cost = computeMediaCost({
+      kind: 'video',
+      model: 'seedance-2-0-fast',
+      count: 1,
+      durationSeconds: 10,
+      userUnitPriceUsd: price,
+    });
+    // 10s at the 1080p rate, not at the flat 0.1 and not at the built-in 0.2/s.
+    expect(cost).toEqual({ source: 'user', totalUsd: 4 });
   });
 });

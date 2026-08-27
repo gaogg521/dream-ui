@@ -89,7 +89,13 @@ export const updateModelSettings = (
   openAiApiMode: ModelOpenAiApiModeChoice,
   modelKind: ModelKindChoice = 'auto',
   mediaEndpoint = '',
-  mediaUnitPriceUsd?: number
+  mediaUnitPriceUsd?: number,
+  /**
+   * Per-resolution prices, keyed by the tier string the model's spec offers.
+   * Entries that are not positive finite numbers are dropped rather than
+   * stored — a 0 would read as "this tier is free".
+   */
+  mediaUnitPricesUsd?: Record<string, number>
 ): Record<string, ModelSettings> => {
   const next = { ...current };
   const endpoint = mediaEndpoint.trim();
@@ -100,7 +106,13 @@ export const updateModelSettings = (
   for (const modelId of modelIds) {
     const hasPrice =
       typeof mediaUnitPriceUsd === 'number' && Number.isFinite(mediaUnitPriceUsd) && mediaUnitPriceUsd > 0;
-    if (imageInput === 'auto' && openAiApiMode === 'auto' && modelKind === 'auto' && !hasPrice) {
+    const tierPrices = Object.fromEntries(
+      Object.entries(mediaUnitPricesUsd ?? {}).filter(
+        ([, value]) => typeof value === 'number' && Number.isFinite(value) && value > 0
+      )
+    );
+    const hasTierPrices = Object.keys(tierPrices).length > 0;
+    if (imageInput === 'auto' && openAiApiMode === 'auto' && modelKind === 'auto' && !hasPrice && !hasTierPrices) {
       delete next[modelId];
       continue;
     }
@@ -114,6 +126,9 @@ export const updateModelSettings = (
     // would leave a stale figure behind after a kind change.
     if (hasPrice && (modelKind === 'image' || modelKind === 'video')) {
       settings.media_unit_price_usd = mediaUnitPriceUsd;
+    }
+    if (hasTierPrices && (modelKind === 'image' || modelKind === 'video')) {
+      settings.media_unit_prices_usd = tierPrices;
     }
     next[modelId] = settings;
   }

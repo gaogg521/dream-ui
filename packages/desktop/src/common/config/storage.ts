@@ -561,8 +561,30 @@ export type ModelSettings = {
    * built-in rate everywhere — the figure shown next to a generation and the
    * one recorded in the company usage rollup both become real rather than
    * illustrative, and the UI drops the "≈" that marks an estimate.
+   *
+   * The flat rate for this model. `media_unit_prices_usd` overrides it for a
+   * resolution that has its own entry.
    */
   media_unit_price_usd?: number;
+  /**
+   * Per-resolution prices, keyed by the exact value the model's spec offers
+   * (`'480p'` / `'1080p'` from `params.resolutions`, or `'1280x720'` from
+   * `params.sizes`) — the same string that travels in `params.resolution` /
+   * `params.size` when the generation runs.
+   *
+   * Vendors price resolution tiers differently, often several-fold, so a single
+   * scalar could not express what the user is actually charged: a 1080p second
+   * and a 480p second billed at one rate is wrong for whichever tier was not
+   * the one entered. This is additive — a model with no entry here keeps using
+   * `media_unit_price_usd`, and a resolution with no entry falls back to it too,
+   * so nothing has to be filled in to keep working as before.
+   *
+   * Resolved by `resolveUserUnitPriceUsd` in `common/media/pricing.ts`, which
+   * the cost display AND the usage report both call: two lookups would let the
+   * number on the card drift from the number in the ledger, and the user would
+   * find out by reconciling against an invoice.
+   */
+  media_unit_prices_usd?: Record<string, number>;
 };
 
 export interface IProvider {

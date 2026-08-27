@@ -51,6 +51,9 @@ const MediaJobCard: React.FC<{
     providerId: job.providerId,
     count: units.count,
     durationSeconds: units.durationSeconds,
+    // The resolution this job actually ran at — the same params the usage
+    // report resolves its price from, so card and ledger agree.
+    params: job.params,
     variant: 'actual',
   });
   const advice = useMediaFailureAdvice(job.error);

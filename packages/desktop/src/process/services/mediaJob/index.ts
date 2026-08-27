@@ -33,7 +33,7 @@ import type { IProvider, TProviderWithModel } from '@/common/config/storage';
 import { executeMediaGeneration } from '@/common/media';
 import { applyCatalogOverridesJson, resolveMediaModelSpec } from '@/common/media/catalog';
 import { findDeclaredMediaModel } from '@/common/media/declaredModel';
-import { meterMediaJob } from '@/common/media/pricing';
+import { meterMediaJob, resolveUserUnitPriceUsd } from '@/common/media/pricing';
 import type { MediaKind } from '@/common/media/types';
 import { getConfigPath } from '@process/utils/utils';
 import { MediaJobManager } from './jobManager';
@@ -292,7 +292,10 @@ async function reportJobUsage(job: MediaJobSnapshot): Promise<void> {
     job.model,
     units.count,
     units.durationSeconds,
-    provider?.model_settings?.[job.model]?.media_unit_price_usd,
+    // Resolved rather than read: a per-resolution price overrides the flat one,
+    // and this is the same call the card's figure goes through so the ledger
+    // cannot disagree with what the user was shown.
+    resolveUserUnitPriceUsd(provider?.model_settings?.[job.model], job.params),
     // Without this the ledger row says only "someone spent this". The agent
     // audit sees tool calls, so an agent-driven generation is traceable there —
     // but one started straight from the compose box writes no message at all
