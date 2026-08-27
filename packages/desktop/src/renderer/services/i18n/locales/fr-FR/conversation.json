@@ -808,6 +808,7 @@
   "mediaResultRevealFailed": "Impossible d’ouvrir le dossier : {{reason}}",
   "mediaResultRegenerateFailed": "Échec de la régénération : {{reason}}",
   "mediaResultRetry": "Réessayer",
+  "mediaEndpointAutoMismatch": "Ce modèle a été associé à une API native du fournisseur d'après son nom, mais l'adresse du canal ({{baseUrl}}) ne ressemble pas à {{hints}}. Un envoi en échec est automatiquement réessayé avec le protocole de passerelle ; vous pouvez aussi le définir dans Paramètres → Modèles.",
   "mediaFailureAdvice_notRouted": "Ce canal ne relaie pas cette API de génération ; changer de clé n'y changera rien. Pointez ce modèle vers un endpoint qui la propose, dans Paramètres → Modèles.",
   "mediaFailureAdvice_modelNotFound": "Le canal ne reconnaît pas ce nom de modèle. Vérifiez-le dans Paramètres → Modèles, ou choisissez un modèle réellement proposé par le canal.",
   "mediaFailureAdvice_auth": "Les identifiants ont été refusés. Vérifiez dans Paramètres → Modèles la clé API de ce canal et si elle couvre ce modèle.",

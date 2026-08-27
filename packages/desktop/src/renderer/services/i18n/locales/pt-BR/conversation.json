@@ -814,6 +814,7 @@
   "mediaResultRevealFailed": "Não foi possível abrir a pasta: {{reason}}",
   "mediaResultRegenerateFailed": "Falha ao gerar novamente: {{reason}}",
   "mediaResultRetry": "Tentar novamente",
+  "mediaEndpointAutoMismatch": "Este modelo foi associado a uma API nativa do fornecedor pelo nome, mas o endereço do canal ({{baseUrl}}) não parece ser {{hints}}. Um envio que falhar é repetido automaticamente com o protocolo de gateway; você também pode definir isso em Configurações → Modelos.",
   "mediaFailureAdvice_notRouted": "Este canal não encaminha essa API de geração — trocar a chave não vai adiantar. Aponte este modelo para um endpoint que a ofereça, em Configurações → Modelos.",
   "mediaFailureAdvice_modelNotFound": "O canal não reconhece este nome de modelo. Verifique em Configurações → Modelos ou escolha um modelo que o canal realmente ofereça.",
   "mediaFailureAdvice_auth": "As credenciais foram recusadas. Verifique em Configurações → Modelos a chave de API deste canal e se ela cobre este modelo.",

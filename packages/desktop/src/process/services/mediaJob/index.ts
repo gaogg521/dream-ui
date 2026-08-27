@@ -192,6 +192,41 @@ async function resolveSelectedProvider(kind: MediaKind, explicitModel?: string):
 
 // ===== engine =====
 
+/**
+ * Remember which protocol this deployment actually speaks.
+ *
+ * The adapter can discover it (it just submitted successfully under a sibling
+ * style) but cannot store it: `common/` has no configuration access. Without
+ * the write-back the discovery would be thrown away and re-bought on every
+ * generation — one wasted request each time — and a job resumed after a restart
+ * would poll under the style the catalog still guesses, looking up a task id
+ * that host never issued.
+ *
+ * Best effort by design: the media is already submitted and will be delivered.
+ * A failed bookkeeping write must not turn a working generation into a failed
+ * one, so nothing here throws into the job.
+ */
+async function persistEndpointStyle(providerId: string, model: string, endpointStyle: string): Promise<void> {
+  // Re-read instead of reusing the job's provider snapshot. `PUT` merges
+  // fields, not map entries, so `model_settings` travels whole — writing a
+  // stale copy would silently revert whatever the user changed for any other
+  // model since this job started.
+  const providers = await fetchProviders();
+  const provider = providers.find((item) => item.id === providerId);
+  if (!provider) return;
+
+  const settings = provider.model_settings ?? {};
+  const current = settings[model];
+  // Already recorded (a second job that raced this one, or the user got there
+  // first). Skipping keeps this idempotent rather than rewriting the provider
+  // on every generation.
+  if (current?.media_endpoint === endpointStyle) return;
+
+  await httpRequest('PUT', `/api/providers/${encodeURIComponent(providerId)}`, {
+    model_settings: { ...settings, [model]: { ...current, media_endpoint: endpointStyle } },
+  });
+}
+
 function getManager(): MediaJobManager {
   if (manager) return manager;
   const store = new MediaJobStore(path.join(getConfigPath(), 'media-jobs.json'));
@@ -211,6 +246,15 @@ function getManager(): MediaJobManager {
         onProgress,
         onTaskSubmitted,
         resumeTaskId,
+        onEndpointStyleSwitched: (endpointStyle) => {
+          // Fire and forget: the task is already submitted upstream and will be
+          // delivered either way. Swallowed explicitly rather than left as a
+          // floating promise — an unhandled rejection here would surface as if
+          // the generation itself had failed.
+          void persistEndpointStyle(job.providerId, job.model, endpointStyle).catch((error) => {
+            console.warn('[mediaJob] could not persist the endpoint style that worked:', error);
+          });
+        },
       }),
   });
   manager.onJobUpdate((job) => {

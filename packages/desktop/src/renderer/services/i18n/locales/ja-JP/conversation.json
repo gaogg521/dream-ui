@@ -808,6 +808,7 @@
   "mediaResultRevealFailed": "フォルダーを開けませんでした：{{reason}}",
   "mediaResultRegenerateFailed": "再生成に失敗しました：{{reason}}",
   "mediaResultRetry": "再試行",
+  "mediaEndpointAutoMismatch": "このモデルは名前からベンダー独自の API と判定されましたが、チャネルのアドレス（{{baseUrl}}）は {{hints}} には見えません。送信が失敗した場合はゲートウェイのプロトコルで自動的に再試行します。設定 → モデル で手動指定もできます。",
   "mediaFailureAdvice_notRouted": "このチャネルはその生成 API を中継していません。キーを変えても解決しません。設定 → モデル で、その API を提供するエンドポイントを指定してください。",
   "mediaFailureAdvice_modelNotFound": "チャネルがこのモデル名を認識していません。設定 → モデル で名称を確認するか、そのチャネルが実際に提供するモデルを選んでください。",
   "mediaFailureAdvice_auth": "認証が拒否されました。設定 → モデル で、このチャネルの API キーが有効か、このモデルを含むかを確認してください。",

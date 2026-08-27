@@ -822,6 +822,7 @@
   "mediaResultRevealFailed": "Could not open the folder: {{reason}}",
   "mediaResultRegenerateFailed": "Regeneration failed: {{reason}}",
   "mediaResultRetry": "Retry",
+  "mediaEndpointAutoMismatch": "This model was matched to a vendor-native API by its name, but the channel address ({{baseUrl}}) does not look like {{hints}}. A failed submission is retried under the gateway protocol automatically; you can also set the protocol yourself in Settings → Models.",
   "mediaFailureAdvice_notRouted": "This channel does not proxy that generation API — a different key will not help. Point this model at an endpoint that serves it, in Settings → Models.",
   "mediaFailureAdvice_modelNotFound": "The channel does not recognize this model name. Check it in Settings → Models, or pick a model the channel actually offers.",
   "mediaFailureAdvice_auth": "The credentials were rejected. Check this channel's API key, and whether it covers this model, in Settings → Models.",

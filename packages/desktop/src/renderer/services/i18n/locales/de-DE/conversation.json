@@ -809,6 +809,7 @@
   "mediaResultRevealFailed": "Ordner konnte nicht geöffnet werden: {{reason}}",
   "mediaResultRegenerateFailed": "Neu generieren fehlgeschlagen: {{reason}}",
   "mediaResultRetry": "Erneut versuchen",
+  "mediaEndpointAutoMismatch": "Dieses Modell wurde anhand seines Namens einer herstellereigenen API zugeordnet, aber die Kanaladresse ({{baseUrl}}) sieht nicht wie {{hints}} aus. Eine fehlgeschlagene Übermittlung wird automatisch mit dem Gateway-Protokoll wiederholt; du kannst das Protokoll auch selbst unter Einstellungen → Modelle festlegen.",
   "mediaFailureAdvice_notRouted": "Dieser Kanal leitet diese Generierungs-API nicht weiter – ein anderer Schlüssel hilft nicht. Verweise das Modell unter Einstellungen → Modelle auf einen Endpunkt, der sie bereitstellt.",
   "mediaFailureAdvice_modelNotFound": "Der Kanal kennt diesen Modellnamen nicht. Prüfe ihn unter Einstellungen → Modelle oder wähle ein Modell, das der Kanal tatsächlich anbietet.",
   "mediaFailureAdvice_auth": "Die Zugangsdaten wurden abgelehnt. Prüfe unter Einstellungen → Modelle den API-Schlüssel dieses Kanals und ob er dieses Modell abdeckt.",

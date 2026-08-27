@@ -32,6 +32,8 @@ export type ExecuteMediaGenerationInput = {
   resumeTaskId?: string;
   /** Form C: receives the remote task id as soon as it exists (persist it here). */
   onTaskSubmitted?: (taskId: string) => void;
+  /** Form C: receives the endpoint style that worked, when it was not the configured one. */
+  onEndpointStyleSwitched?: (endpointStyle: string) => void;
 };
 
 /**
@@ -111,7 +113,18 @@ async function fanOut(
 }
 
 export async function executeMediaGeneration(input: ExecuteMediaGenerationInput): Promise<MediaGenOutcome> {
-  const { kind, prompt, provider, workspaceDir, proxy, signal, onProgress, resumeTaskId, onTaskSubmitted } = input;
+  const {
+    kind,
+    prompt,
+    provider,
+    workspaceDir,
+    proxy,
+    signal,
+    onProgress,
+    resumeTaskId,
+    onTaskSubmitted,
+    onEndpointStyleSwitched,
+  } = input;
   const requestedParams = input.params ?? {};
   const inputUris = input.inputUris ?? [];
 
@@ -178,6 +191,7 @@ export async function executeMediaGeneration(input: ExecuteMediaGenerationInput)
       onProgress,
       resumeTaskId,
       onTaskSubmitted,
+      onEndpointStyleSwitched,
     });
 
   const outcome = willFanOut ? await fanOut(runOnce, requestedCount, perRequest, signal) : await runOnce(perRequest);

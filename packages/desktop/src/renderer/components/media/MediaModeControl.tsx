@@ -20,12 +20,13 @@
 
 import React, { useMemo } from 'react';
 import { Dropdown, Menu, Tooltip, Trigger } from '@arco-design/web-react';
-import { Close, Down, Message, Picture, VideoTwo } from '@icon-park/react';
+import { Caution, Close, Down, Message, Picture, VideoTwo } from '@icon-park/react';
 import styles from './MediaModeControl.module.css';
 import { useTranslation } from 'react-i18next';
 import type { MediaGenParams } from '@/common/media/types';
 import type { MediaModelSpec } from '@/common/media/catalog/types';
 import { useMediaCost } from '@renderer/hooks/media/useMediaCost';
+import { useAutoEndpointWarning } from '@renderer/hooks/media/useAutoEndpointWarning';
 import MediaParamsPanel from './MediaParamsPanel';
 import RuntimeSelectorPill from '@/renderer/components/agent/RuntimeSelectorPill';
 import { useNavigate } from 'react-router-dom';
@@ -91,6 +92,11 @@ const MediaModeControl: React.FC<Props> = ({
     durationSeconds: params.durationSeconds ?? spec?.defaults?.durationSeconds,
     variant: 'estimate',
   });
+
+  // Second line of defence for a protocol the catalog guessed: the executor
+  // retries the sibling style on a failed submission, but saying so up front
+  // is cheaper than a failed generation the user has to interpret.
+  const endpointWarning = useAutoEndpointWarning(mode === 'video' ? 'video' : 'image', providerId, model);
 
   const modeLabel =
     mode === 'image'
@@ -212,6 +218,18 @@ const MediaModeControl: React.FC<Props> = ({
             data-testid='media-cost-estimate'
           >
             {cost.text}
+          </span>
+        </Tooltip>
+      )}
+
+      {/* The guessed-protocol hint. An icon rather than a line of text: this row
+          already overflows onto the model selector when it grows (the reason
+          MediaModeControl.module.css constrains it), and the explanation is
+          long enough that it belongs in a tooltip either way. */}
+      {mode !== 'off' && endpointWarning && (
+        <Tooltip content={endpointWarning}>
+          <span className='inline-flex items-center' data-testid='media-endpoint-warning'>
+            <Caution theme='outline' size='12' fill={iconColors.warning} />
           </span>
         </Tooltip>
       )}

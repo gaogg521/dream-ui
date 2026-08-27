@@ -14,7 +14,9 @@
 
 import { downloadUrlMediaAsset, isHttpUrl, resolveLocalInputPath, saveBase64MediaAsset } from '../mediaAssets';
 import type { MediaAsset, MediaGenOutcome, MediaGenParams, MediaGenRequest, MediaProviderAdapter } from '../types';
-import { getTaskDriver, type TaskPollContext, type TaskSubmitContext } from './taskDrivers';
+import { fallbackEndpointStyles } from '../catalog/endpointFallbacks';
+import { classifyMediaFailure } from '../failureClass';
+import { getTaskDriver, type TaskDriver, type TaskPollContext, type TaskSubmitContext } from './taskDrivers';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -55,8 +57,8 @@ export class TaskPollAdapter implements MediaProviderAdapter {
         error: 'no-spec',
       };
     }
-    const driver = getTaskDriver(spec.endpointStyle);
-    if (!driver) {
+    const primaryDriver = getTaskDriver(spec.endpointStyle);
+    if (!primaryDriver) {
       return {
         success: false,
         assets: [],
@@ -65,7 +67,7 @@ export class TaskPollAdapter implements MediaProviderAdapter {
       };
     }
 
-    const pollCtx: TaskPollContext = {
+    let pollCtx: TaskPollContext = {
       kind,
       model: provider.use_model,
       baseUrl: provider.base_url,
@@ -75,6 +77,7 @@ export class TaskPollAdapter implements MediaProviderAdapter {
     };
 
     try {
+      let driver: TaskDriver = primaryDriver;
       let taskId = req.resumeTaskId;
 
       if (!taskId) {
@@ -88,8 +91,10 @@ export class TaskPollAdapter implements MediaProviderAdapter {
         // one rule for every driver instead of each re-deriving it.
         const normalizedParams = await normalizeFrameParams(params, workspaceDir);
         const submitCtx: TaskSubmitContext = { ...pollCtx, prompt, params: normalizedParams, inputs };
-        const submitted = await driver.submit(submitCtx);
-        taskId = submitted.taskId;
+        const attempt = await this.submitWithFallback(primaryDriver, pollCtx, submitCtx, req);
+        taskId = attempt.taskId;
+        driver = attempt.driver;
+        pollCtx = attempt.pollCtx;
         // Hand the id up before the first poll: a crash after submission but
         // before persistence would orphan a task the user already paid for.
         req.onTaskSubmitted?.(taskId);
@@ -136,14 +141,80 @@ export class TaskPollAdapter implements MediaProviderAdapter {
     }
   }
 
+  /**
+   * Submit, and when the configured protocol turns out not to be served at this
+   * host, try its sibling before giving up.
+   *
+   * Why this lives in the executor rather than in the catalog: the catalog
+   * matches Seedance on the model name alone and resolves it to Ark's native
+   * task API, on purpose — pinning it to a host would write one deployment's
+   * address into the product. That leaves the same model behind a relay gateway
+   * resolving to an API the gateway does not proxy, and the only recovery was
+   * for the user to know to pick the gateway protocol by hand. A submission is
+   * the one moment we can find out for free which protocol this host actually
+   * speaks, so that is where the question gets settled.
+   *
+   * Only `notRouted` triggers it. Every other class of failure means the path
+   * WAS routed and the request itself was refused (bad key, unknown model,
+   * quota, content policy) — retrying that under a different protocol would
+   * turn one honest error into two misleading ones.
+   *
+   * A fallback that succeeds also replaces the poll context: the task id was
+   * issued by the sibling protocol, and polling it with the configured one
+   * would look up an id that host never heard of.
+   */
+  private async submitWithFallback(
+    primaryDriver: TaskDriver,
+    pollCtx: TaskPollContext,
+    submitCtx: TaskSubmitContext,
+    req: MediaGenRequest
+  ): Promise<{ taskId: string; driver: TaskDriver; pollCtx: TaskPollContext }> {
+    try {
+      const submitted = await primaryDriver.submit(submitCtx);
+      return { taskId: submitted.taskId, driver: primaryDriver, pollCtx };
+    } catch (error) {
+      if (isAbortError(error) || req.signal?.aborted) throw error;
+      const message = error instanceof Error ? error.message : String(error);
+      if (classifyMediaFailure(message) !== 'notRouted') throw error;
+
+      const tried: string[] = [];
+      for (const style of fallbackEndpointStyles(pollCtx.spec.endpointStyle)) {
+        const driver = getTaskDriver(style);
+        if (!driver) continue;
+        const spec = { ...pollCtx.spec, endpointStyle: style };
+        try {
+          const submitted = await driver.submit({ ...submitCtx, spec });
+          // Report before returning: the job engine persists the discovery, and
+          // without it every later generation would pay for this same probe.
+          req.onEndpointStyleSwitched?.(style);
+          return { taskId: submitted.taskId, driver, pollCtx: { ...pollCtx, spec } };
+        } catch (fallbackError) {
+          if (isAbortError(fallbackError) || req.signal?.aborted) throw fallbackError;
+          tried.push(style);
+        }
+      }
+
+      // Nothing to fall back to, or every sibling answered the same way. The
+      // original error is the one to report — it names the protocol the user
+      // configured — with the attempts appended so the advice line that follows
+      // ("go change the endpoint") is not read as an untried suggestion.
+      if (tried.length === 0) throw error;
+      throw new Error(`${message} Automatically retried under ${tried.join(', ')}, with the same result.`, {
+        cause: error,
+      });
+    }
+  }
+
   private async pollUntilDone(
     driver: NonNullable<ReturnType<typeof getTaskDriver>>,
     ctx: TaskPollContext,
     taskId: string,
     req: MediaGenRequest
   ) {
-    const intervalBase = req.spec?.polling?.intervalMs ?? 3000;
-    const timeoutMs = req.spec?.polling?.timeoutMs ?? 300_000;
+    // Read off the context, not `req`: after a protocol fallback the effective
+    // spec is the one in `ctx`.
+    const intervalBase = ctx.spec.polling?.intervalMs ?? 3000;
+    const timeoutMs = ctx.spec.polling?.timeoutMs ?? 300_000;
     const deadline = Date.now() + timeoutMs;
 
     let interval = intervalBase;

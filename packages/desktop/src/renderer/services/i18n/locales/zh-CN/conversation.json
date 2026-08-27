@@ -822,6 +822,7 @@
   "mediaResultRevealFailed": "打开目录失败：{{reason}}",
   "mediaResultRegenerateFailed": "重新生成失败：{{reason}}",
   "mediaResultRetry": "重试",
+  "mediaEndpointAutoMismatch": "这个模型按名称被识别为厂商原生接口，但当前渠道地址（{{baseUrl}}）看起来不是 {{hints}}。提交失败时会自动改用网关协议重试；也可在 设置 → 模型 里手动指定接口协议。",
   "mediaFailureAdvice_notRouted": "当前渠道没有代理这个生成接口，换 key 也不会好。去 设置 → 模型 把该模型指向能提供该接口的地址。",
   "mediaFailureAdvice_modelNotFound": "渠道不认识这个模型名。去 设置 → 模型 核对模型名，或换一个该渠道确实提供的模型。",
   "mediaFailureAdvice_auth": "凭据被拒。去 设置 → 模型 检查该渠道的 API Key 是否有效、是否覆盖这个模型。",

@@ -808,6 +808,7 @@
   "mediaResultRevealFailed": "폴더를 열지 못했습니다: {{reason}}",
   "mediaResultRegenerateFailed": "다시 생성 실패: {{reason}}",
   "mediaResultRetry": "다시 시도",
+  "mediaEndpointAutoMismatch": "이 모델은 이름을 기준으로 공급자 자체 API로 인식되었지만, 채널 주소({{baseUrl}})는 {{hints}}처럼 보이지 않습니다. 제출이 실패하면 게이트웨이 프로토콜로 자동 재시도합니다. 설정 → 모델에서 직접 지정할 수도 있습니다.",
   "mediaFailureAdvice_notRouted": "이 채널은 해당 생성 API를 중계하지 않습니다. 키를 바꿔도 해결되지 않습니다. 설정 → 모델에서 해당 API를 제공하는 엔드포인트를 지정하세요.",
   "mediaFailureAdvice_modelNotFound": "채널이 이 모델 이름을 인식하지 못합니다. 설정 → 모델에서 이름을 확인하거나 채널이 실제로 제공하는 모델을 선택하세요.",
   "mediaFailureAdvice_auth": "자격 증명이 거부되었습니다. 설정 → 모델에서 이 채널의 API 키가 유효한지, 이 모델을 포함하는지 확인하세요.",

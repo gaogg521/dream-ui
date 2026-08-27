@@ -14,6 +14,7 @@ import type { CatalogApiForm, CatalogMediaKind, MediaModelMatch, MediaModelSpec 
 import { BUILTIN_IMAGE_MODELS } from './imageModels';
 import { BUILTIN_VIDEO_MODELS } from './videoModels';
 import { getUserMediaModelSpecs } from './userSpecs';
+import { diagnoseEndpointMismatch, type EndpointMismatchDiagnosis } from './endpointStyleInfo';
 
 /**
  * Provider fields needed for matching. Kept structural (not IProvider) so both
@@ -475,4 +476,41 @@ export const clipParamsToSpec = (params: MediaGenParams, spec: MediaModelSpec | 
   }
 
   return { params: out, dropped };
+};
+
+/**
+ * "The catalog guessed a protocol for you, and the guess looks wrong."
+ *
+ * The settings modal already warns about a mismatch, but only for a style the
+ * user picked by hand (`if (!mediaEndpoint) return null` — a deliberate guard,
+ * since there is nothing to second-guess when the user chose nothing). That
+ * leaves the default path completely unwatched, and the default path is where
+ * the common failure lives: the built-in catalog matches Seedance on the model
+ * name alone and resolves it to Ark's native task API, so the same model served
+ * by a relay gateway is silently pointed at an API that gateway does not proxy.
+ * The user sees no hint until the generation fails.
+ *
+ * Only `hostMismatch` is reported. The other two diagnoses answer "what is this
+ * protocol" for someone who just picked it from a dropdown; surfacing them next
+ * to a model the user never configured would be noise attached to a choice they
+ * did not make.
+ *
+ * Display only — never gates. A base_url substring comparison is a heuristic,
+ * and the executor now retries the sibling protocol on its own, so being wrong
+ * here costs one unnecessary sentence rather than a blocked generation.
+ */
+export const diagnoseAutoEndpointMismatch = (
+  kind: CatalogMediaKind,
+  provider: MediaProviderShape,
+  modelName: string
+): EndpointMismatchDiagnosis => {
+  if (!modelName) return null;
+  // An explicit choice is the settings modal's business, not this one's.
+  if (provider.model_settings?.[modelName]?.media_endpoint?.trim()) return null;
+
+  const spec = resolveMediaModelSpec(kind, provider, modelName);
+  if (!spec?.endpointStyle) return null;
+
+  const diagnosis = diagnoseEndpointMismatch(spec.endpointStyle, provider.base_url);
+  return diagnosis?.kind === 'hostMismatch' ? diagnosis : null;
 };

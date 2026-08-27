@@ -810,6 +810,7 @@
   "mediaResultRevealFailed": "Klasör açılamadı: {{reason}}",
   "mediaResultRegenerateFailed": "Yeniden oluşturma başarısız: {{reason}}",
   "mediaResultRetry": "Yeniden dene",
+  "mediaEndpointAutoMismatch": "Bu model adına göre sağlayıcının kendi API’siyle eşleştirildi, ancak kanal adresi ({{baseUrl}}) {{hints}} gibi görünmüyor. Gönderim başarısız olursa ağ geçidi protokolüyle otomatik olarak yeniden denenir; protokolü Ayarlar → Modeller bölümünden kendiniz de seçebilirsiniz.",
   "mediaFailureAdvice_notRouted": "Bu kanal söz konusu üretim API’sini yönlendirmiyor; farklı bir anahtar işe yaramaz. Ayarlar → Modeller bölümünden bu modeli, o API’yi sunan bir uç noktaya yönlendirin.",
   "mediaFailureAdvice_modelNotFound": "Kanal bu model adını tanımıyor. Ayarlar → Modeller bölümünden adı kontrol edin veya kanalın gerçekten sunduğu bir model seçin.",
   "mediaFailureAdvice_auth": "Kimlik bilgileri reddedildi. Ayarlar → Modeller bölümünden bu kanalın API anahtarını ve bu modeli kapsayıp kapsamadığını kontrol edin.",

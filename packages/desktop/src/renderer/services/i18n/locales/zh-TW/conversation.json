@@ -808,6 +808,7 @@
   "mediaResultRevealFailed": "開啟資料夾失敗：{{reason}}",
   "mediaResultRegenerateFailed": "重新產生失敗：{{reason}}",
   "mediaResultRetry": "重試",
+  "mediaEndpointAutoMismatch": "這個模型按名稱被識別為廠商原生介面，但目前渠道位址（{{baseUrl}}）看起來不是 {{hints}}。送出失敗時會自動改用閘道協定重試；也可在 設定 → 模型 手動指定介面協定。",
   "mediaFailureAdvice_notRouted": "目前渠道沒有代理這個生成介面，換 key 也不會好。到 設定 → 模型 將此模型指向能提供該介面的位址。",
   "mediaFailureAdvice_modelNotFound": "渠道不認識這個模型名稱。到 設定 → 模型 核對名稱，或改用該渠道確實提供的模型。",
   "mediaFailureAdvice_auth": "憑證遭拒。到 設定 → 模型 檢查此渠道的 API Key 是否有效、是否涵蓋這個模型。",

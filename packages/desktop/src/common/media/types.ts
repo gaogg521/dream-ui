@@ -126,6 +126,17 @@ export type MediaGenRequest = {
    * where a crash orphans a paid-for task.
    */
   onTaskSubmitted?: (taskId: string) => void;
+  /**
+   * Form C only: called when the submission had to fall back to a sibling
+   * endpoint style because the configured one is not routed at this host.
+   *
+   * The adapter cannot persist that discovery itself — it runs under `common/`
+   * and has no configuration access — so it reports the style that actually
+   * worked and the job engine writes it back to the model settings. Without the
+   * write-back the fallback would be re-derived on every single generation, and
+   * a job resumed after a restart would poll with the wrong protocol.
+   */
+  onEndpointStyleSwitched?: (endpointStyle: string) => void;
 };
 
 export type MediaGenOutcome = {

@@ -1077,6 +1077,7 @@ export type I18nKey =
   | 'conversation.mediaCostFromUserPrice'
   | 'conversation.mediaCostNoRate'
   | 'conversation.mediaCostUnknown'
+  | 'conversation.mediaEndpointAutoMismatch'
   | 'conversation.mediaFailureAdvice_auth'
   | 'conversation.mediaFailureAdvice_contentPolicy'
   | 'conversation.mediaFailureAdvice_modelNotFound'

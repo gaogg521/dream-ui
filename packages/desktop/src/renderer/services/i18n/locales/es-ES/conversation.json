@@ -809,6 +809,7 @@
   "mediaResultRevealFailed": "No se pudo abrir la carpeta: {{reason}}",
   "mediaResultRegenerateFailed": "Error al volver a generar: {{reason}}",
   "mediaResultRetry": "Reintentar",
+  "mediaEndpointAutoMismatch": "Este modelo se asoció a una API nativa del proveedor por su nombre, pero la dirección del canal ({{baseUrl}}) no parece {{hints}}. Si el envío falla, se reintenta automáticamente con el protocolo de pasarela; también puedes indicarlo en Ajustes → Modelos.",
   "mediaFailureAdvice_notRouted": "Este canal no redirige esa API de generación; cambiar de clave no servirá. Apunta este modelo a un endpoint que la ofrezca, en Ajustes → Modelos.",
   "mediaFailureAdvice_modelNotFound": "El canal no reconoce este nombre de modelo. Compruébalo en Ajustes → Modelos o elige un modelo que el canal sí ofrezca.",
   "mediaFailureAdvice_auth": "Se rechazaron las credenciales. Comprueba en Ajustes → Modelos la clave API de este canal y si cubre este modelo.",
