@@ -366,3 +366,105 @@ Form C 的任务在厂商侧完成后会留一段时间。失败的 job 在 `%AP
 ### 9.3 个人版的 `media-precheck` 404 是预期的
 
 dev 日志里会看到 `POST /api/one/billing/media-precheck → 404 Route not found`。路由在 `dream-core` 里**是存在的**（`dream-domain-billing/src/routes.rs:39`），只是个人版没挂载 billing 域。`governance.ts` 的 `checkMediaPolicy` 注释里写明了 "fails open on transport errors"，catch 掉返回 allow。**不是缺陷，别去"修"它。**
+
+---
+
+## 十、oxlint 跑不起来：是真 BUG，已修
+
+§7 记为"顺带发现、未修"，本轮查清并修掉了。**它比表面严重：lint 门禁对任何 fresh install 的人都是死的**，而 `AGENTS.md` 写着"任何一步失败就中止 push"——一个跑不起来的门禁不会挡任何东西。
+
+### 10.1 根因：规则名从来就是错的，1.79 把它纠正了
+
+`package.json` 写 `oxlint: ^1.56.0`，caret 会解析到最新 1.x（本机装到 `1.79.0`）。而 `.oxlintrc.json` 里写的是裸名 `no-await-thenable`：
+
+| 版本   | `no-await-thenable`                              | 结果                                   |
+| ------ | ------------------------------------------------ | -------------------------------------- |
+| 1.56.0 | 存在                                             | 配置能解析，93 条规则跑起来            |
+| 1.79.0 | **不存在**（eslint 和 typescript plugin 都没有） | **整份配置解析失败 → lint 完全跑不了** |
+
+从 1.79 自带的 `configuration_schema.json` 里查到真名是 **`typescript/await-thenable`**——`no-` 前缀被去掉，改成与 typescript-eslint 上游一致（上游确实是 `@typescript-eslint/await-thenable`，本来就没有 `no-`）。所以本仓这个名字一开始就写的是 oxlint 早期那个错误别名。
+
+⚠️ **失败形态是"跑不起来"而不是"报错"**，退出码仍是 0，很容易被当成通过。
+
+### 10.2 修法
+
+`.oxlintrc.json` 里 4 处 `no-await-thenable` → `typescript/await-thenable`，并把 4 处 `no-floating-promises` 一并补全前缀成 `typescript/no-floating-promises`（消除 plugin 解析的歧义）。**两个版本都实测接受**：1.79 恢复正常（262 条 warning、0 error、退出码 0），1.56 照旧（1043 warning、0 error）——所以不会反过来破坏还装着旧版本的环境。
+
+不锁版本，因为改名之后两边都能跑；真要彻底防这类漂移，可以把 `^1.56.0` 换成锁定版本。
+
+### 10.3 ⚠️ 顺带查明：这两条 `"error"` 级规则从来没有强制过任何东西
+
+`typescript/await-thenable` 和 `typescript/no-floating-promises` **都是类型感知规则**，需要 `oxlint-tsgolint`——本仓 `package.json` 和 `node_modules` 里都没有。实测：
+
+- 对一段必然违规的代码（`await 42`、以及丢弃一个 Promise 的调用），1.79 和 1.56 **都报 0 条**；
+- 同一次运行里 `no-debugger` 正常触发，证明 lint 本身在跑，是这两条规则inert。
+- `oxlint --type-aware` 会直接报 `Failed to find tsgolint executable`。
+
+所以那三个 `overrides`（给 `*.js` / `tests/**` / `gemini/cli/**` 关掉这两条）同样一直是空操作。
+
+**本轮刻意不装 `oxlint-tsgolint`**：真开起来会一次性冒出大量 floating-promise 报错（这类问题在任何 Electron 仓里都很常见），是产品级决策而不是顺手修。要开的话建议先装上、把两条降到 `warn` 看清存量、再逐步收紧。
+
+（想在 `.oxlintrc.json` 里留注释是不行的：两个版本都会因 `unknown field \`$comment\`` 拒绝解析，已实测并回滚。）
+
+---
+
+## 十一、两个用户提出的质疑：查清结论
+
+### 11.1 媒体计费：时长和张数是算了的，**清晰度完全没算**；单价入口确实很深
+
+用户质疑"5秒/10秒、1张/2张、清晰度都不一样，价格怎么弄"。实测 `computeMediaCost`（真机跑的实际数字）：
+
+| 输入                   | 来源        | 金额                                |
+| ---------------------- | ----------- | ----------------------------------- |
+| 视频 seedance 5秒 ×1   | builtin     | $1                                  |
+| 视频 seedance 10秒 ×1  | builtin     | **$2** ← 时长有区分                 |
+| 视频 seedance 5秒 ×2   | builtin     | **$2** ← 张数有区分                 |
+| 图片 gpt-image ×1 / ×4 | builtin     | $0.04 / **$0.16** ← 张数有区分      |
+| 视频 未声明时长        | builtin     | $1（默认按 5 秒兜底）               |
+| agnes-video-v2.0       | **unknown** | 不显示金额（目录里没有 agnes 费率） |
+
+所以质疑**部分成立**：
+
+- ✅ **时长、张数都已经正确计入**（视频是 `张数 × 秒数 × 每秒费率`，图片是 `张数 × 每张费率`）。
+- ❌ **清晰度/分辨率完全不参与计价**：`computeMediaCost` 的参数里根本没有 `resolution`/`size`，480p 与 1080p、1K 与 4K 同价。而厂商实际定价几乎都跟分辨率强相关，这是真实缺口。
+- ❌ **用户自填单价是单一标量**（`media_unit_price_usd`：每张图 / 每秒视频），**结构上无法表达**"480p 每秒 $x、1080p 每秒 $y"。即使用户认真填了，分辨率差异也表达不出来。
+- ❌ **入口确实很深**：设置 → 模型 → 展开某个 provider → 编辑某个模型 → **先把「模型类型」选成图片/视频**（`AddModelModal.tsx:216` 的条件），单价输入框才会出现；而且它是个没有独立标签的 `Input`，只有 placeholder「单价（美元，选填）」。用户不先知道"要先声明类型"就不可能找到它。
+
+⚠️ **为什么不能顺手改**：`pricing.ts` 顶部写明"**This file mirrors a Rust implementation and must not drift from it**"——费率表在 `dream-core-common/src/license.rs`，用户单价分支在 `dream-domain-billing/src/service.rs::record_media_usage`，两边算出来的数必须一致，否则用户拿界面数字去对企业账单会发现我们的数是错的。把单价从标量改成"按分辨率分档"是**跨仓的数据结构 + 计费改动**，必须两边同时改并重编 `dreamcore`。属于产品决策，不在本轮范围。
+
+### 11.2 对话模式的上下文/成本指示器：功能没丢，但对 `dream` 类型会话不显示
+
+用户说"记得做过一个上下文花费和 token 使用的小功能，好像没找到了"。查清了：
+
+**功能完好**（`ContextUsageIndicator.tsx` + ACP/dream 两个 hook 都接了线），渲染条件是 `tokenUsage ? <Indicator/> : undefined`，**与媒体模式无关**（用户两张截图的差别其实是"欢迎页 vs 会话内"：欢迎页还没有任何用量，所以本来就没有圆环）。
+
+**但在 `dream`（1ONE CLI）类型会话里它永远不出现**，真机抓帧证据——发一轮对话（"3+3=?"，正常完成），整轮收到的帧类型只有：
+
+```
+start · thinking · content · finish
+```
+
+**没有任何用量帧**，而 `finish` 的 data 是：
+
+```json
+{ "session_id": null }
+```
+
+`FinishEventData` 上 `model` / `input_tokens` / `output_tokens` 三个字段带 `skip_serializing_if = "Option::is_none"`，所以它们**整个键都不存在**，说明构造时全是 `None`。前端 `useDreamEngineMessage.ts:272` 的守卫是 `'input_tokens' in usageData`，不成立 → `setTokenUsage` 从不调用 → 圆环从不出现。
+
+`GET /api/conversations/{id}/usage` 对所有会话都返回 200 但 `used: null`，包括刚跑完两轮对话的那个——**后端也没有落下用量**。
+
+根因在 dream-core，不在 dream-ui：
+
+- 带用量的发射点 `BackendOutputSink::emit_stream_end`（`input_tokens`/`output_tokens`/`model` 都填）本轮没有被调用；
+- 实际走的是 `session_agent.rs` 的路径，它三处 `emit_finish_once()` 都是 `FinishEventData { session_id, ..Default::default() }`；
+- `session_agent.rs:3325` 的注释说明这条路径**故意不把用量放在 Finish 上**，而是"pump 把每个 `UsageDelta` 持久化到 `context_usage` 并直接广播"；而 `broadcast_usage_frame` 的过滤是 `UsageDelta { total_tokens, .. } if *total_tokens > 0`——本轮一个用量帧都没广播，说明这条后端路径压根没产出 `UsageDelta`。
+
+**ACP 会话（Claude Code / Codex CLI）是好的**：`useAcpMessage` 三条来源都接了（`acp_context_usage` 实时帧、`GET /usage` 快照、`last_token_usage` 持久化恢复），用户截图 2 里 1M 上下文 + 缓存读写明细正是 Claude 经 ACP 的形状。
+
+**顺带发现的两个前端缺口**（即使后端修好也要一起补）：
+
+- `useDreamEngineMessage` **零次**调用 `getUsage`，没有从后端快照恢复的路径（ACP 那个 hook 有）；
+- 它也**完全不处理 `acp_context_usage` 帧**，而 `broadcast_usage_frame` 的注释明确写着"Fires for every backend"——后端设计上是打算广播给所有后端的，前端这边没接。
+
+**修它需要**：dream-core 让 1ONE CLI 这条会话路径上报 token 用量（`UsageDelta` → 持久化 + 广播），加上 dream-ui 这两个缺口，然后 `cargo build -p dream-core-app --release` + `node scripts/prepareAioncore.js` 重编内嵌 `dreamcore` 才会在 dev 生效。跨仓 + 需要重编后端，**本轮未做**。
