@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { IMAGE_GEN_ENV_KEYS } from '@/common/config/imageGenerationMcpEnv';
-import { BUILTIN_IMAGE_GEN_NAME, type IMcpServer, type IProvider } from '@/common/config/storage';
+import {
+  BUILTIN_IMAGE_GEN_LEGACY_NAMES,
+  BUILTIN_IMAGE_GEN_NAME,
+  type IMcpServer,
+  type IProvider,
+} from '@/common/config/storage';
 import { resolveImageGenerationMigrationConfig, runBackendMigrations } from '@/process/utils/runBackendMigrations';
 
 const {
@@ -9,12 +14,14 @@ const {
   configFileGetMock,
   configFileSetMock,
   httpRequestMock,
+  deleteServerMock,
   listServersMock,
   testMcpConnectionMock,
   updateServerMock,
 } = vi.hoisted(() => ({
   batchImportServersMock: vi.fn(),
   configFileGetMock: vi.fn(),
+  deleteServerMock: vi.fn(),
   configFileSetMock: vi.fn(),
   httpRequestMock: vi.fn(),
   listServersMock: vi.fn(),
@@ -31,6 +38,7 @@ vi.mock('@/common/adapter/ipcBridge', () => ({
     listServers: { invoke: listServersMock },
     batchImportServers: { invoke: batchImportServersMock },
     updateServer: { invoke: updateServerMock },
+    deleteServer: { invoke: deleteServerMock },
     testMcpConnection: { invoke: testMcpConnectionMock },
   },
 }));
@@ -117,6 +125,7 @@ beforeEach(() => {
   configFileGetMock.mockResolvedValue(undefined);
   configFileSetMock.mockResolvedValue(undefined);
   batchImportServersMock.mockResolvedValue([]);
+  deleteServerMock.mockResolvedValue(undefined);
   updateServerMock.mockImplementation(async ({ id, data }) => ({
     ...imageServer(),
     id,
@@ -241,5 +250,73 @@ describe('runBackendMigrations', () => {
       'yes',
       'yes'
     );
+  });
+
+  /**
+   * The bug these pin: "already registered" was decided by exact current name,
+   * so a row still called `aionui-image-generation` was invisible to the check
+   * and a second row was inserted beside it. Both stayed enabled, so every
+   * media tool existed twice and the agent used whichever it saw first.
+   */
+  describe('pre-rebrand builtin rows', () => {
+    const LEGACY_IMAGE_NAME = BUILTIN_IMAGE_GEN_LEGACY_NAMES[0];
+
+    it('renames a legacy image row forward instead of inserting a second one', async () => {
+      listServersMock.mockResolvedValue([{ ...imageServer(), name: LEGACY_IMAGE_NAME }]);
+
+      await runBackendMigrations(configFile as never);
+
+      const renames = updateServerMock.mock.calls.filter(
+        (call) => call[0].data?.name === BUILTIN_IMAGE_GEN_NAME
+      );
+      expect(renames).toHaveLength(1);
+      expect(renames[0][0].id).toBe('image-server-id');
+      expect(deleteServerMock).not.toHaveBeenCalled();
+
+      const imported = batchImportServersMock.mock.calls.flatMap((call) => call[0].servers as IMcpServer[]);
+      expect(imported.map((server) => server.name)).not.toContain(BUILTIN_IMAGE_GEN_NAME);
+    });
+
+    it('drops the legacy row when a current-named one already exists', async () => {
+      listServersMock.mockResolvedValue([
+        imageServer(),
+        { ...imageServer(), id: 'legacy-image-id', name: LEGACY_IMAGE_NAME },
+      ]);
+
+      await runBackendMigrations(configFile as never);
+
+      expect(deleteServerMock).toHaveBeenCalledOnce();
+      expect(deleteServerMock).toHaveBeenCalledWith({ id: 'legacy-image-id' });
+      expect(
+        updateServerMock.mock.calls.some((call) => call[0].data?.name === BUILTIN_IMAGE_GEN_NAME)
+      ).toBe(false);
+    });
+
+    it('leaves an install that is already on the current name alone', async () => {
+      listServersMock.mockResolvedValue([imageServer()]);
+
+      await runBackendMigrations(configFile as never);
+
+      expect(deleteServerMock).not.toHaveBeenCalled();
+      expect(updateServerMock).not.toHaveBeenCalled();
+    });
+
+    it('keeps going when one row cannot be reconciled', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      deleteServerMock.mockRejectedValueOnce(new Error('row is locked'));
+      listServersMock.mockResolvedValue([
+        imageServer(),
+        { ...imageServer(), id: 'legacy-image-id', name: LEGACY_IMAGE_NAME },
+      ]);
+
+      // A single unreconcilable row must not abort MCP bootstrap for the rest:
+      // the reward for throwing here is an install with no builtin servers.
+      await expect(runBackendMigrations(configFile as never)).resolves.not.toThrow();
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[Migration] failed to reconcile legacy builtin MCP row %s',
+        LEGACY_IMAGE_NAME,
+        expect.any(Error)
+      );
+    });
   });
 });
