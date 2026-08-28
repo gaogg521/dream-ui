@@ -54,6 +54,11 @@ vi.mock('@/common', () => ({
       getUsage: {
         invoke: conversationGetUsageInvokeMock,
       },
+      // The usage query is chained after the runtime is up (asking before the
+      // task exists gets a null), so the hook now reaches for this too.
+      ensureRuntime: {
+        invoke: () => Promise.resolve({}),
+      },
     },
   },
 }));

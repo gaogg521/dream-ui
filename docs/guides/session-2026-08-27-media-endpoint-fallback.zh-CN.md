@@ -331,7 +331,13 @@ Agnes reported completed but returned no metadata.url
 
 ⚠️ **`gemini-3-pro-image` 那条同时是个正面证据**：它证明"只有 `notRouted` 才换协议"这条规则在真机上生效——一个诚实的 404 没有被 fallback 变成两个误导的错误。Agnes 提交时撞到的厂商侧 `503 no available server` 同理，也没触发 fallback。
 
-⚠️ **顺带发现、未修**：`model_health` 对媒体模型的判断不适用。`doubao-seedream-5-0-pro` 在 `model_health` 里记的是 `unhealthy / 404 model not found`，但实际生成**成功**——因为健康检查打的是 chat 接口，而生成走的是 gateway 的图像路径。会让用户误以为模型坏了。不在本轮范围。
+❌ **上一版这里写错了，已纠正。** 曾记为“`model_health` 对媒体模型误报、会让用户以为模型坏了、未修”——**不成立**，前端本来就处理好了：
+
+- `ModelModalContent.tsx` 的 `canHealthCheck = isChatCapableModel(platform, model)` 同时 gate 住了**健康指示器**和**检测按钮**，注释里就写着“Form A/C image and video models have no chat endpoint at all — probing them always 404s”。
+- 没有任何批量/自动健康检测路径；`model_health` 只由健康检测自己写、只被那一处被 gate 的指示器读。
+- 设置页还有个「清除状态」按钮专门清残留。
+
+我当时看到的是**数据库里的历史残留**（那个 guard 之前写进去的），却直接跳到了一个从未验证的界面结论。**判据**：声明为 image/video 的模型在设置页上既没有健康小点也没有心跳按钮——看到 `model_health` 里有脏数据不等于用户看得到它。
 
 ---
 

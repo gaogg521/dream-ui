@@ -14,6 +14,7 @@ import { useMergeLiveMessage } from '@/renderer/pages/conversation/Messages/hook
 import { logStreamTerminalObserved } from '@/renderer/pages/conversation/runtime/useConversationRuntimeView';
 import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
 import { isConversationProcessing } from '@/renderer/pages/conversation/utils/conversationRuntime';
+import { ensureConversationRuntime } from '@/renderer/pages/conversation/utils/ensureConversationRuntime';
 import { beginConversationTurn, endConversationTurn } from '@/renderer/pages/conversation/utils/conversationTurnClock';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { processLocalCronResponse } from './localCronCommands';
@@ -561,8 +562,13 @@ export const useDreamEngineMessage = (
    */
   useEffect(() => {
     let cancelled = false;
-    void ipcBridge.conversation.getUsage
-      .invoke({ conversation_id })
+    // Chained after the runtime is up, not fired on mount. The backend answers
+    // this from the live task's engine, so asking before the task exists gets a
+    // null and restores nothing — which is exactly the cold-conversation case
+    // this path was added for (a fresh install or a second machine has no
+    // `extra.last_token_usage` to fall back on). Same ordering the ACP hook uses.
+    void ensureConversationRuntime(conversation_id)
+      .then(() => ipcBridge.conversation.getUsage.invoke({ conversation_id }))
       .then((usage) => {
         if (cancelled || !usage || typeof usage.used !== 'number' || usage.used <= 0) return;
         setTokenUsage((prev) => {
