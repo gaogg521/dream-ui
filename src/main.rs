@@ -4,10 +4,11 @@ use std::time::Duration;
 
 use dream_trial_broker::config::Config;
 use dream_trial_broker::db;
-use dream_trial_broker::openrouter::RealOpenRouterClient;
 use dream_trial_broker::rate_limit::RateLimiter;
 use dream_trial_broker::routes::build_router;
 use dream_trial_broker::service::AppState;
+use dream_trial_broker::vendor::openrouter::OpenRouterVendor;
+use dream_trial_broker::vendor::TokenVendor;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -23,7 +24,9 @@ async fn main() -> anyhow::Result<()> {
     let listen_addr: SocketAddr = config.listen_addr.parse()?;
 
     let pool = db::init_pool(&config.database_url).await?;
-    let openrouter = Arc::new(RealOpenRouterClient::new(
+    // One vendor for now. When there are several this becomes a lookup keyed
+    // by config; the trait boundary is already where it needs to be.
+    let vendor: Arc<dyn TokenVendor> = Arc::new(OpenRouterVendor::new(
         config.openrouter_management_key.clone(),
     ));
     let rate_limiter = Arc::new(RateLimiter::new(
@@ -34,13 +37,13 @@ async fn main() -> anyhow::Result<()> {
     let state = Arc::new(AppState {
         pool,
         config: Arc::new(config),
-        openrouter,
+        vendor,
         rate_limiter,
     });
 
-    let app = build_router(state);
+    tracing::info!(%listen_addr, vendor = state.vendor.id(), "starting dream-trial-broker");
 
-    tracing::info!(%listen_addr, "starting dream-trial-broker");
+    let app = build_router(state);
 
     let listener = tokio::net::TcpListener::bind(listen_addr).await?;
     axum::serve(

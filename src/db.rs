@@ -7,9 +7,13 @@ use std::str::FromStr;
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct Issuance {
     pub id: String,
+    /// Which upstream platform minted this key (`TokenVendor::id`).
+    pub vendor: String,
     pub install_id: String,
     pub ip: String,
-    pub openrouter_key_hash: String,
+    /// The vendor's own opaque identifier for the key. Not the key itself —
+    /// the plaintext is returned once, at creation, and never stored.
+    pub vendor_key_handle: String,
     pub issued_at: i64,
     pub expires_at: i64,
     pub disabled: i64,
@@ -32,16 +36,21 @@ pub async fn init_pool(database_url: &str) -> anyhow::Result<SqlitePool> {
     Ok(pool)
 }
 
-/// Looks up a non-disabled issuance for this install_id (dedup check).
+const COLUMNS: &str =
+    "id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, disabled";
+
+/// Looks up a non-disabled issuance for this install on this vendor (dedup
+/// check). Scoped per vendor: one device may hold one key per platform.
 pub async fn find_active_by_install_id(
     pool: &SqlitePool,
+    vendor: &str,
     install_id: &str,
 ) -> sqlx::Result<Option<Issuance>> {
-    sqlx::query_as::<_, Issuance>(
-        "SELECT id, install_id, ip, openrouter_key_hash, issued_at, expires_at, disabled
-         FROM issuances
-         WHERE install_id = ? AND disabled = 0",
-    )
+    sqlx::query_as::<_, Issuance>(&format!(
+        "SELECT {COLUMNS} FROM issuances
+         WHERE vendor = ? AND install_id = ? AND disabled = 0"
+    ))
+    .bind(vendor)
     .bind(install_id)
     .fetch_optional(pool)
     .await
@@ -69,13 +78,14 @@ pub async fn count_active_issued_since(
 
 pub async fn insert_issuance(pool: &SqlitePool, issuance: &Issuance) -> sqlx::Result<()> {
     sqlx::query(
-        "INSERT INTO issuances (id, install_id, ip, openrouter_key_hash, issued_at, expires_at, disabled)
-         VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO issuances (id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, disabled)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&issuance.id)
+    .bind(&issuance.vendor)
     .bind(&issuance.install_id)
     .bind(&issuance.ip)
-    .bind(&issuance.openrouter_key_hash)
+    .bind(&issuance.vendor_key_handle)
     .bind(issuance.issued_at)
     .bind(issuance.expires_at)
     .bind(issuance.disabled)

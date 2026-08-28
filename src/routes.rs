@@ -5,15 +5,20 @@ use axum::extract::{ConnectInfo, State};
 use axum::http::HeaderMap;
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use serde::Deserialize;
 use serde_json::json;
 
 use crate::db;
 use crate::error::AppError;
-use crate::service::{issue_trial_key, AppState, TrialKeyRequest, TrialKeyResponse};
+use crate::service::{
+    issue_trial_key, read_quota_status, AppState, QuotaStatusResponse, TrialKeyRequest,
+    TrialKeyResponse,
+};
 
 pub fn build_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/v1/trial-keys", post(create_trial_key))
+        .route("/v1/quota/status", post(quota_status))
         .route("/internal/stats", get(stats))
         .with_state(state)
 }
@@ -29,9 +34,22 @@ async fn create_trial_key(
     Ok(Json(response))
 }
 
-async fn stats(
+#[derive(Debug, Deserialize)]
+struct QuotaStatusRequest {
+    install_id: String,
+}
+
+/// POST rather than GET so the install id travels in the body: it is a stable
+/// per-device identifier, and a query string is the one place it would be
+/// written to proxy and access logs on the way through.
+async fn quota_status(
     State(state): State<Arc<AppState>>,
-) -> Result<Json<serde_json::Value>, AppError> {
+    Json(payload): Json<QuotaStatusRequest>,
+) -> Result<Json<QuotaStatusResponse>, AppError> {
+    Ok(Json(read_quota_status(&state, &payload.install_id).await?))
+}
+
+async fn stats(State(state): State<Arc<AppState>>) -> Result<Json<serde_json::Value>, AppError> {
     let now = chrono::Utc::now();
     let today_start_ms = now
         .date_naive()
@@ -55,11 +73,12 @@ async fn stats(
     let liability_added_today_usd = issued_today as f64 * state.config.trial_key_limit_usd;
 
     Ok(Json(json!({
+        "vendor": state.vendor.id(),
         "issued_today": issued_today,
         "issuance_budget_cap_usd": state.config.daily_budget_usd_cap,
         "liability_added_today_usd": liability_added_today_usd,
         "per_key_limit_usd": state.config.trial_key_limit_usd,
-        "per_key_limit_reset": state.config.trial_key_limit_reset,
+        "per_key_limit_reset": state.config.trial_key_limit_reset.as_str(),
     })))
 }
 

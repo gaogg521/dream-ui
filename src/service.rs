@@ -7,11 +7,11 @@ use sha2::{Digest, Sha256};
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
-use crate::config::{Config, DEFAULT_TRIAL_MODELS, OPENROUTER_BASE_URL};
+use crate::config::Config;
 use crate::db::{self, Issuance};
 use crate::error::AppError;
-use crate::openrouter::{CreateKeyRequest, OpenRouterClient, OpenRouterError};
 use crate::rate_limit::RateLimiter;
+use crate::vendor::{KeySpec, ProvisioningMode, TokenVendor, VendorError};
 
 #[derive(Debug, Deserialize)]
 pub struct TrialKeyRequest {
@@ -23,18 +23,54 @@ pub struct TrialKeyResponse {
     pub key: String,
     pub base_url: String,
     pub models: Vec<String>,
+    /// Which provider platform the client should create this as. Sent so the
+    /// client does not have to hardcode one vendor's name to use the key.
+    pub platform: String,
+    /// Stable vendor id, for anything that needs to distinguish issuers
+    /// without parsing the platform label.
+    pub vendor: String,
+}
+
+/// A key's spend position, for the client's quota display.
+#[derive(Debug, Serialize, PartialEq)]
+pub struct QuotaStatusResponse {
+    pub vendor: String,
+    pub limit_usd: Option<f64>,
+    pub used_usd: f64,
+    pub remaining_usd: Option<f64>,
+    /// `monthly`, `daily`, or `cumulative`.
+    pub reset: Option<String>,
+    pub exhausted: bool,
 }
 
 /// Shared application state handed to every request handler.
 pub struct AppState {
     pub pool: SqlitePool,
     pub config: Arc<Config>,
-    pub openrouter: Arc<dyn OpenRouterClient>,
+    pub vendor: Arc<dyn TokenVendor>,
     pub rate_limiter: Arc<RateLimiter>,
 }
 
+fn log_vendor_error(error: &VendorError) {
+    match error {
+        VendorError::Upstream {
+            vendor,
+            status,
+            body,
+        } => {
+            tracing::error!(vendor, status, body = %body, "vendor call returned an error status");
+        }
+        VendorError::Request { vendor, message } => {
+            tracing::error!(vendor, error = %message, "vendor call failed");
+        }
+        VendorError::Unsupported { vendor, operation } => {
+            tracing::error!(vendor, operation, "vendor does not support this operation");
+        }
+    }
+}
+
 /// The full `POST /v1/trial-keys` flow: dedup -> rate limit -> circuit
-/// breaker -> call OpenRouter -> persist -> respond. Kept independent of the
+/// breaker -> mint upstream -> persist -> respond. Kept independent of the
 /// HTTP layer so it can be unit tested directly.
 pub async fn issue_trial_key(
     state: &AppState,
@@ -45,10 +81,26 @@ pub async fn issue_trial_key(
         return Err(AppError::BadRequest("install_id must not be empty".into()));
     }
 
-    // 1. Dedup by install_id.
-    match db::find_active_by_install_id(&state.pool, install_id).await {
+    let vendor_id = state.vendor.id();
+
+    // Refuse before spending anything if this vendor cannot cap a key at all.
+    // Issuing an uncapped key would be worse than issuing none.
+    if state.vendor.provisioning_mode() != ProvisioningMode::IssuedKey {
+        tracing::error!(
+            vendor = vendor_id,
+            "configured vendor cannot issue capped keys"
+        );
+        return Err(AppError::Internal("vendor cannot issue capped keys".into()));
+    }
+
+    // 1. Dedup by (vendor, install_id).
+    match db::find_active_by_install_id(&state.pool, vendor_id, install_id).await {
         Ok(Some(_)) => {
-            tracing::info!(install_id_hash = %hash_prefix(install_id), "dedup rejection: install_id already issued");
+            tracing::info!(
+                vendor = vendor_id,
+                install_id_hash = %hash_prefix(install_id),
+                "dedup rejection: install_id already issued"
+            );
             return Err(AppError::AlreadyIssued);
         }
         Ok(None) => {}
@@ -91,54 +143,96 @@ pub async fn issue_trial_key(
         return Err(AppError::BudgetExhausted);
     }
 
-    // 4. Call OpenRouter to mint the key.
+    // 4. Mint upstream.
     let expires_at = now + ChronoDuration::days(state.config.trial_key_expires_days);
-    let request = CreateKeyRequest {
-        name: format!("onework-trial-{}", short_uuid()),
-        limit: state.config.trial_key_limit_usd,
-        limit_reset: state.config.trial_key_limit_reset.clone(),
-        expires_at: expires_at.to_rfc3339_opts(SecondsFormat::Secs, true),
+    let spec = KeySpec {
+        label: format!("onework-trial-{}", short_uuid()),
+        limit_usd: state.config.trial_key_limit_usd,
+        reset: state.config.trial_key_limit_reset,
+        expires_at: Some(expires_at.to_rfc3339_opts(SecondsFormat::Secs, true)),
     };
 
-    let or_response = state
-        .openrouter
-        .create_key(request)
-        .await
-        .map_err(|e| {
-            match &e {
-                OpenRouterError::Upstream { status, body } => {
-                    tracing::error!(status = status, body = %body, "openrouter create-key call returned an error status");
-                }
-                OpenRouterError::Request(msg) => {
-                    tracing::error!(error = %msg, "openrouter create-key request failed");
-                }
-            }
-            AppError::UpstreamError("failed to issue upstream key".into())
-        })?;
+    let issued = state.vendor.issue_key(spec).await.map_err(|e| {
+        log_vendor_error(&e);
+        AppError::UpstreamError("failed to issue upstream key".into())
+    })?;
 
-    // 5. Persist the issuance (never store the plaintext key).
+    // 5. Persist the issuance (never the plaintext key).
     let issuance = Issuance {
         id: Uuid::new_v4().to_string(),
+        vendor: vendor_id.to_string(),
         install_id: install_id.to_string(),
         ip: ip.to_string(),
-        openrouter_key_hash: sha256_hex(&or_response.key),
+        vendor_key_handle: issued.handle,
         issued_at: now_ms,
         expires_at: expires_at.timestamp_millis(),
         disabled: 0,
     };
 
-    db::insert_issuance(&state.pool, &issuance).await.map_err(|e| {
-        tracing::error!(error = %e, "failed to persist issuance");
-        AppError::Internal("database error".into())
-    })?;
+    db::insert_issuance(&state.pool, &issuance)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "failed to persist issuance");
+            AppError::Internal("database error".into())
+        })?;
 
-    tracing::info!(install_id_hash = %hash_prefix(install_id), "issued trial key");
+    tracing::info!(
+        vendor = vendor_id,
+        install_id_hash = %hash_prefix(install_id),
+        "issued trial key"
+    );
 
     // 6. Respond.
+    let client = state.vendor.client_config();
     Ok(TrialKeyResponse {
-        key: or_response.key,
-        base_url: OPENROUTER_BASE_URL.to_string(),
-        models: DEFAULT_TRIAL_MODELS.iter().map(|s| s.to_string()).collect(),
+        key: issued.secret,
+        base_url: client.base_url.to_string(),
+        models: client.models.iter().map(|s| s.to_string()).collect(),
+        platform: client.platform.to_string(),
+        vendor: vendor_id.to_string(),
+    })
+}
+
+/// The `POST /v1/quota/status` flow: find this install's key, ask the vendor
+/// where its spend stands.
+///
+/// Reads by the stored handle, so it never needs the plaintext key — the
+/// client holds the only copy of that, and this stays true for the paid tier.
+pub async fn read_quota_status(
+    state: &AppState,
+    install_id: &str,
+) -> Result<QuotaStatusResponse, AppError> {
+    if install_id.trim().is_empty() {
+        return Err(AppError::BadRequest("install_id must not be empty".into()));
+    }
+
+    let vendor_id = state.vendor.id();
+    let issuance = db::find_active_by_install_id(&state.pool, vendor_id, install_id)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "db error during quota lookup");
+            AppError::Internal("database error".into())
+        })?
+        // Not an error state worth its own code: the caller asked about a key
+        // this service never issued. 404 says exactly that.
+        .ok_or(AppError::NotIssued)?;
+
+    let usage = state
+        .vendor
+        .read_usage(&issuance.vendor_key_handle)
+        .await
+        .map_err(|e| {
+            log_vendor_error(&e);
+            AppError::UpstreamError("failed to read upstream usage".into())
+        })?;
+
+    Ok(QuotaStatusResponse {
+        vendor: vendor_id.to_string(),
+        limit_usd: usage.limit_usd,
+        used_usd: usage.used_usd,
+        remaining_usd: usage.remaining_usd,
+        reset: usage.reset.map(|r| r.as_str().to_string()),
+        exhausted: usage.is_exhausted(),
     })
 }
 
@@ -147,11 +241,6 @@ pub async fn issue_trial_key(
 fn hash_prefix(s: &str) -> String {
     let digest = Sha256::digest(s.as_bytes());
     digest[..4].iter().map(|b| format!("{b:02x}")).collect()
-}
-
-fn sha256_hex(s: &str) -> String {
-    let digest = Sha256::digest(s.as_bytes());
-    digest.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 fn short_uuid() -> String {

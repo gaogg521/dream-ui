@@ -12,6 +12,8 @@ use serde_json::json;
 pub enum AppError {
     /// install_id already has a non-disabled issuance on file. -> 409
     AlreadyIssued,
+    /// Asked about a key this service never issued to that install. -> 404
+    NotIssued,
     /// Caller's IP exceeded the configured per-hour request budget. -> 429
     RateLimited,
     /// Today's estimated liability from active issuances has hit the cap. -> 503
@@ -27,6 +29,7 @@ impl AppError {
     pub fn status_code(&self) -> StatusCode {
         match self {
             AppError::AlreadyIssued => StatusCode::CONFLICT,
+            AppError::NotIssued => StatusCode::NOT_FOUND,
             AppError::RateLimited => StatusCode::TOO_MANY_REQUESTS,
             AppError::BudgetExhausted => StatusCode::SERVICE_UNAVAILABLE,
             AppError::UpstreamError(_) => StatusCode::BAD_GATEWAY,
@@ -38,6 +41,7 @@ impl AppError {
     pub fn error_code(&self) -> &'static str {
         match self {
             AppError::AlreadyIssued => "already_issued",
+            AppError::NotIssued => "not_issued",
             AppError::RateLimited => "rate_limited",
             AppError::BudgetExhausted => "daily_budget_exhausted",
             AppError::UpstreamError(_) => "upstream_error",
