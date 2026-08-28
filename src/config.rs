@@ -1,19 +1,26 @@
 use std::env;
 
 /// Curated list of trial models handed back to callers alongside the issued
-/// key. Order is meaningful: the client selects the first entry as the
-/// active model, so this runs cheapest-first and ends on a paid fallback.
+/// key. **Order is meaningful: the client selects the first entry as the
+/// active model.**
 ///
 /// Every slug here was verified against `GET /api/v1/models` — in particular
 /// the leading `~` on the DeepSeek entry is part of the real slug, not URL
 /// decoration (`deepseek/deepseek-v4-flash-latest` without it does not exist).
 ///
-/// Cost note: `openrouter/free` spends none of the key's daily USD cap, but
-/// OpenRouter meters free-tier *requests* per account, globally — so that
-/// ceiling is shared across every trial user, not per key. The routers and
-/// the paid fallback below are what the per-key $1/day cap actually governs.
+/// Free-first while the product is still in its promotion phase: a new user's
+/// first impression costs them nothing and costs us nothing.
+///
+/// Know the trade-off this makes. `openrouter/free` is $0, so it spends none
+/// of the key's allowance — a user who stays on the default will never reach
+/// the cap and never see a top-up prompt. What actually constrains them is
+/// OpenRouter's free-tier *request* quota, which is metered per account
+/// **globally** and therefore shared across every trial user at once, not
+/// per key. Reordering so a paid model leads is the one-line change that
+/// turns the allowance back into the binding constraint.
 pub const DEFAULT_TRIAL_MODELS: &[&str] = &[
-    // Free models only — costs nothing, draws on the account-wide free quota.
+    // Default. Free models only, $0, no allowance spent — see the note above
+    // for what this costs us in conversion.
     "openrouter/free",
     // Task-aware router: classifies each request, then picks the most popular
     // model for that task, billed at the routed model's rate.
@@ -26,9 +33,10 @@ pub const DEFAULT_TRIAL_MODELS: &[&str] = &[
     // entries both reading "Auto Router" would also just confuse a first-time
     // user picking a model.
     "openrouter/auto-beta",
-    // Paid fallback that is always available when the routers or the free
-    // pool are not ($0.03/M in, $0.10/M out — ~33M input tokens inside the
-    // $1/day cap).
+    // Cheapest per token of the paid options ($0.03/M in, $0.10/M out —
+    // roughly 33M input tokens inside a $1 allowance) and the fastest measured
+    // (~1s vs ~4-5s for the router). An alias that always points at the newest
+    // V4 Flash build.
     "~deepseek/deepseek-v4-flash-latest",
 ];
 
