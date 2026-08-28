@@ -674,6 +674,8 @@ export type I18nKey =
   | 'conversation.agentError.codes.DREAM_STATE_INCONSISTENT.title'
   | 'conversation.agentError.codes.DREAM_STREAM_BROKEN.body'
   | 'conversation.agentError.codes.DREAM_STREAM_BROKEN.title'
+  | 'conversation.agentError.codes.DREAM_TURN_LIMIT_REACHED.body'
+  | 'conversation.agentError.codes.DREAM_TURN_LIMIT_REACHED.title'
   | 'conversation.agentError.codes.MCP_HTTP_RESPONSE_READ_FAILED.body'
   | 'conversation.agentError.codes.MCP_HTTP_RESPONSE_READ_FAILED.title'
   | 'conversation.agentError.codes.MCP_TCP_READ_FAILED.body'

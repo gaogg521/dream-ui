@@ -160,6 +160,10 @@
         "title": "Anfrage in der App fehlgeschlagen",
         "body": "Die Anfrage ist fehlgeschlagen, während die App sie verarbeitete. Bitte versuche es einmal erneut; wenn es wiederholt passiert, sende Feedback."
       },
+      "DREAM_TURN_LIMIT_REACHED": {
+        "title": "Abgebrochen – die Anfrage kam zu keinem Ergebnis",
+        "body": "Die Anfrage lief immer weiter, ohne zu einem Ergebnis zu kommen, und wurde deshalb gestoppt. Versuche es erneut oder formuliere sie konkreter."
+      },
       "DREAM_CONVERSATION_BUSY": {
         "title": "Unterhaltung ist beschäftigt",
         "body": "Eine weitere Antwort wird noch verarbeitet. Warte, bis sie fertig ist, bevor du eine neue Nachricht sendest."

@@ -160,6 +160,10 @@
         "title": "La solicitud falló en la aplicación",
         "body": "La solicitud falló mientras la aplicación la procesaba. Por favor reintenta una vez; si se repite, envía comentarios."
       },
+      "DREAM_TURN_LIMIT_REACHED": {
+        "title": "Detenido: la solicitud no llegaba a nada",
+        "body": "Esta solicitud siguió trabajando sin llegar a una respuesta, así que se detuvo en vez de dejarla corriendo. Reinténtalo o sé más específico."
+      },
       "DREAM_CONVERSATION_BUSY": {
         "title": "La conversación está ocupada",
         "body": "Otra respuesta aún está en ejecución. Espera a que termine antes de enviar un nuevo mensaje."

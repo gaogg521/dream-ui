@@ -160,6 +160,10 @@
         "title": "La demande a échoué dans l'application",
         "body": "La demande a échoué pendant que l'application la traitait. Veuillez réessayer une fois ; si cela se répète, envoyez des commentaires."
       },
+      "DREAM_TURN_LIMIT_REACHED": {
+        "title": "Arrêté : la requête n'aboutissait pas",
+        "body": "Cette requête continuait sans jamais aboutir ; elle a été arrêtée plutôt que laissée en cours. Réessayez, ou soyez plus précis."
+      },
       "DREAM_CONVERSATION_BUSY": {
         "title": "La conversation est occupée",
         "body": "Une autre réponse est toujours en cours. Attendez qu'il soit terminé avant d'envoyer un nouveau message."

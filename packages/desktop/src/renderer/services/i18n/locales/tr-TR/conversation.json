@@ -143,6 +143,10 @@
         "title": "İstek uygulamada başarısız oldu",
         "body": "Uygulama isteği işlerken hata oluştu. Bir kez yeniden deneyin; tekrarlanırsa geri bildirim gönderin."
       },
+      "DREAM_TURN_LIMIT_REACHED": {
+        "title": "Durduruldu: istek bir sonuca varmadı",
+        "body": "Bu istek bir sonuca ulaşmadan çalışmaya devam etti, bu yüzden açık bırakılmak yerine durduruldu. Yeniden deneyin veya daha belirgin yazın."
+      },
       "DREAM_CONVERSATION_BUSY": {
         "title": "Konuşma meşgul",
         "body": "Başka bir yanıt hâlâ çalışıyor. Yeni mesaj göndermeden önce bitmesini bekleyin."

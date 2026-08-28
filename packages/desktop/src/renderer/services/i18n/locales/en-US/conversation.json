@@ -160,6 +160,10 @@
         "title": "Request failed in the app",
         "body": "The request failed while the app was processing it. Please retry once; if it repeats, send feedback."
       },
+      "DREAM_TURN_LIMIT_REACHED": {
+        "title": "Stopped — the request wasn't converging",
+        "body": "This request kept working without arriving at an answer, so it was stopped rather than left running. Retry it, or try being more specific."
+      },
       "DREAM_CONVERSATION_BUSY": {
         "title": "Conversation is busy",
         "body": "Another response is still running. Wait for it to finish before sending a new message."

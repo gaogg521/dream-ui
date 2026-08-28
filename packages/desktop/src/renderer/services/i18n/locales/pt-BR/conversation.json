@@ -161,6 +161,10 @@
         "title": "A solicitação falhou no aplicativo",
         "body": "A solicitação falhou enquanto o aplicativo a estava processando. Tente novamente uma vez; se se repetir, envie feedback."
       },
+      "DREAM_TURN_LIMIT_REACHED": {
+        "title": "Interrompido: a solicitação não convergia",
+        "body": "Esta solicitação continuou trabalhando sem chegar a uma resposta, então foi interrompida em vez de ficar rodando. Tente de novo ou seja mais específico."
+      },
       "DREAM_CONVERSATION_BUSY": {
         "title": "A conversa está ocupada",
         "body": "Ainda há outra resposta em execução. Espere ela terminar antes de enviar uma nova mensagem."
