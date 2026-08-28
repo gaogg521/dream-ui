@@ -35,6 +35,8 @@ import { cleanupRegisteredAgentProcesses } from './agent-process-registry.js';
 import {
   buildSpawnArgs,
   buildSpawnEnv,
+  resolveTrialBrokerUrl,
+  TRIAL_BROKER_URL_DEFAULT,
   findAvailablePort,
   BackendLifecycleManager,
   BackendStartupError,
@@ -254,6 +256,32 @@ describe('buildSpawnEnv', () => {
     } finally {
       if (prev === undefined) delete process.env.PREBUILDS_ONLY;
       else process.env.PREBUILDS_ONLY = prev;
+    }
+  });
+
+  it('injects the default trial-broker URL when DREAM_TRIAL_BROKER_URL is unset', () => {
+    const prev = process.env.DREAM_TRIAL_BROKER_URL;
+    delete process.env.DREAM_TRIAL_BROKER_URL;
+    try {
+      expect(buildSpawnEnv({ cacheDir: '/c', workDir: '/w', logDir: '/l' }).DREAM_TRIAL_BROKER_URL).toBe(
+        TRIAL_BROKER_URL_DEFAULT
+      );
+    } finally {
+      if (prev === undefined) delete process.env.DREAM_TRIAL_BROKER_URL;
+      else process.env.DREAM_TRIAL_BROKER_URL = prev;
+    }
+  });
+
+  it('honors an explicit DREAM_TRIAL_BROKER_URL override and drops an empty one', () => {
+    const prev = process.env.DREAM_TRIAL_BROKER_URL;
+    try {
+      process.env.DREAM_TRIAL_BROKER_URL = 'http://127.0.0.1:8787';
+      expect(buildSpawnEnv().DREAM_TRIAL_BROKER_URL).toBe('http://127.0.0.1:8787');
+      process.env.DREAM_TRIAL_BROKER_URL = '   ';
+      expect(buildSpawnEnv()).not.toHaveProperty('DREAM_TRIAL_BROKER_URL');
+    } finally {
+      if (prev === undefined) delete process.env.DREAM_TRIAL_BROKER_URL;
+      else process.env.DREAM_TRIAL_BROKER_URL = prev;
     }
   });
 

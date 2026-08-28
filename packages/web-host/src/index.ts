@@ -10,6 +10,8 @@ export {
   BackendLifecycleManager,
   buildSpawnArgs,
   buildSpawnEnv,
+  resolveTrialBrokerUrl,
+  TRIAL_BROKER_URL_DEFAULT,
   findAvailablePort,
   startBackend,
   stopBackend,

@@ -136,10 +136,64 @@ dream-ui：拿到结果后直接调用已有的 POST /api/providers（CreateProv
 
 ## 后续谁接手需要做什么
 
-1. 决定 `dream-trial-broker` 部署在哪、怎么发布（这仍然是全新基础设施，不在原有三仓的
-   CI/CD 范围内）
-2. 部署后设置 `DREAM_TRIAL_BROKER_URL` 环境变量，功能才会真正生效
-3. 补一次桌面端手动冒烟：两个入口点击 → 出现 provider → 能正常发消息 → 二次点击/重启后
-   正确显示"已体验"
+1. ~~决定 `dream-trial-broker` 部署在哪、怎么发布~~ → 已部署，见下方"2026-08-28 补充"
+2. ~~部署后设置 `DREAM_TRIAL_BROKER_URL` 环境变量~~ → 已由 `packages/web-host` 内置默认值
+3. 补一次**打包桌面端**手动冒烟：两个入口点击 → 出现 provider → 能正常发消息 → 二次点击/
+   重启后正确显示"已体验"（2026-08-28 只用 headless 的 aioncore 二进制验到 `POST
+   /api/providers/trial-key` 这一层，没点过真实 UI）
 4. 如果要做 Phase 2 付费订阅，重新读一遍本文档"背景"一节里关于 `limit_reset` 不认支付
    状态的坑（订阅到期必须主动 `PATCH` 降额/禁用 key，不能只靠 OpenRouter 自动重置）
+
+---
+
+## 2026-08-28 补充：broker 已部署 + dream-ui 接线
+
+### broker 部署（生产环境已上线）
+
+| | |
+|---|---|
+| 机器 | `43.163.105.71`（Rocky Linux 10，腾讯云，跑着 nginx + certbot + `operone`） |
+| 方式 | **不用 Docker**，源码在服务器上 `cargo build --release`，systemd 拉起，跑在 `127.0.0.1:8787` |
+| 服务用户 | `dreambroker`（system / nologin），app 目录 `/opt/dream-trial-broker/` |
+| 公网入口 | `https://work.1oneclaw.com/trial-broker` —— 复用已有证书的 `work.1oneclaw.com`，nginx 加一段 `location`（`/etc/nginx/conf.d/1onework-www.conf`），**没有新加 DNS、没有新签证书** |
+| `/internal/stats` | 公网返回 404，只有 `127.0.0.1:8787` 能访问 |
+| 熔断/额度 | 默认值：`$50/天` 全局熔断、`$1/key/天` 硬顶、90 天过期、每 IP 5 次/小时 |
+| Management Key | 存在服务器 `/opt/dream-trial-broker/.env`（0600，仅 `dreambroker` 可读），代码里从不出现 |
+| 源码 + 工具链 | 服务器 `/root/build/dream-trial-broker` 留着源码 + rustup，更新跑 `deploy/redeploy.sh` |
+
+部署脚本、systemd unit、nginx 片段、运维手册都进了 broker 仓库的 `deploy/` 目录
+（`deploy/DEPLOY.md` 是完整手册）。
+
+**真实链路已验证**（当天用真实 Management Key 跑通，测试 key 已全部 `DELETE` 清理、broker
+DB 已重置）：
+
+- `POST /trial-broker/v1/trial-keys` → OpenRouter 真实签发一把 key，返回 `{key, base_url, models}`
+- 签出来的 key：`limit=1` / `limit_reset="daily"` / `expires_at=+90d`，与设计完全一致
+- 用这把 key 真实调 `deepseek/deepseek-chat` → 正常返回
+- 同一 `install_id` 二次请求 → 409 `already_issued`
+- 用**打包用的 bundled aioncore 二进制**（`resources/bundled-aioncore/win32-x64/`，当天构建）
+  设 `DREAM_TRIAL_BROKER_URL` 后打 `POST /api/providers/trial-key` → 200 拿到真实 key；
+  二次 → 409 "this device has already claimed a trial model key"
+
+### dream-ui 接线（`packages/web-host`）
+
+`aioncore` 只有拿到 `DREAM_TRIAL_BROKER_URL` 才会开这个端点。为了"开箱即用"，改成由
+`packages/web-host/src/backend-launcher.ts` 在 spawn aioncore 时注入默认值：
+
+- 新增常量 `TRIAL_BROKER_URL_DEFAULT = 'https://work.1oneclaw.com/trial-broker'`
+- 新增 `resolveTrialBrokerUrl()`：显式非空 env 覆盖 > 显式空值 = 关闭 > 未设 = 用默认
+- `buildSpawnEnv()` 里统一 normalize，保证 aioncore 只会看到"一个可用 URL"或"完全没有"，
+  不会拿到继承来的空串（dream-core 会把空串当成配错了的值）
+- 测试：`backend-launcher.test.ts` 新增 2 条，`bunx vitest run` 该文件 46 passed；
+  `tsc --noEmit`（web-host tsconfig）无错
+
+**影响面提醒**：这个默认值对**所有经 web-host 启动的 aioncore**生效——打包桌面版、
+`bun run webui` 自建、以及企业 SSO 部署。企业部署若不想让成员领体验 key（成本落在公司
+OpenRouter 账号上，虽然有 `$50/天` 熔断兜底），在该部署的环境里设 `DREAM_TRIAL_BROKER_URL=`
+空值即可关闭。是否要收窄成"仅打包版默认开"，看后续需要。
+
+### 仍未做
+
+- 没跑真实打包桌面端的 UI 点击冒烟（要等一次打包）
+- dream-ui 这个改动**还没发版**——需要重新打包 + 走 release 流程，桌面用户才拿得到
+- Phase 2（$7/月订阅）没动

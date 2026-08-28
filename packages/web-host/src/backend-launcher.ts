@@ -216,6 +216,26 @@ export function buildSpawnArgs(config: SpawnConfig): string[] {
 }
 
 /**
+ * Company-run broker that mints capped-spend OpenRouter trial keys for the
+ * "try a free model" flow (see dream-core `trial_key.rs`). aioncore only
+ * enables that endpoint when `DREAM_TRIAL_BROKER_URL` is set, so the desktop
+ * app injects this default to make the feature work out of the box.
+ */
+export const TRIAL_BROKER_URL_DEFAULT = 'https://work.1oneclaw.com/trial-broker';
+
+/**
+ * Resolves the trial-key broker URL passed to aioncore:
+ *  - an explicit non-empty `DREAM_TRIAL_BROKER_URL` wins (dev / self-host override);
+ *  - an explicit empty value opts out (feature stays disabled);
+ *  - unset falls back to {@link TRIAL_BROKER_URL_DEFAULT}.
+ */
+export function resolveTrialBrokerUrl(raw = process.env.DREAM_TRIAL_BROKER_URL): string | undefined {
+  if (raw === undefined) return TRIAL_BROKER_URL_DEFAULT;
+  const trimmed = raw.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
+/**
  * Backend reads AIONUI_{CACHE,WORK,LOG}_DIR env vars to report system dirs
  * (see Dream Core/crates/dream-system/src/sysinfo.rs). Inject them so the
  * backend's `/api/system/info` matches what Electron main persists in
@@ -228,6 +248,14 @@ export function buildSpawnEnv(dirs?: BackendDirConfig): NodeJS.ProcessEnv {
   // build/Release only, and node-gyp-build skips that directory for any
   // non-empty value, aborting the agent before the ACP handshake (#4070).
   const { PREBUILDS_ONLY: _prebuildsOnly, ...parentEnv } = process.env;
+
+  // Normalize the trial-broker URL so aioncore sees exactly one of "a usable
+  // URL" or "unset" — never an inherited empty string, which it would treat as
+  // a (broken) configured value.
+  const trialBrokerUrl = resolveTrialBrokerUrl();
+  if (trialBrokerUrl) parentEnv.DREAM_TRIAL_BROKER_URL = trialBrokerUrl;
+  else delete parentEnv.DREAM_TRIAL_BROKER_URL;
+
   if (!dirs) return parentEnv;
   return {
     ...parentEnv,
