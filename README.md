@@ -37,8 +37,9 @@ migrates a local SQLite file at `DATABASE_URL` (default
 |---|---|---|---|
 | `OPENROUTER_MANAGEMENT_KEY` | yes | — | Secret. Never logged. |
 | `DATABASE_URL` | no | `sqlite://trial-broker.db` | sqlx SQLite connection URL. |
-| `DAILY_BUDGET_USD_CAP` | no | `50.0` | Circuit breaker: stop issuing once today's estimated liability hits this. |
-| `TRIAL_KEY_LIMIT_USD` | no | `1.0` | Per-key USD spend cap sent to OpenRouter. |
+| `DAILY_BUDGET_USD_CAP` | no | `50.0` | Circuit breaker on *new liability handed out per day* — at the defaults, at most 50 new trial users per day. |
+| `TRIAL_KEY_LIMIT_USD` | no | `1.0` | Per-key USD spend cap sent to OpenRouter, per reset period. |
+| `TRIAL_KEY_LIMIT_RESET` | no | `monthly` | `monthly` or `daily`. `monthly` caps each trial user at $1/month; `daily` would allow ~$30/month each. Rejected at startup if it is anything else. |
 | `TRIAL_KEY_EXPIRES_DAYS` | no | `90` | Key lifetime from issuance. |
 | `LISTEN_ADDR` | no | `0.0.0.0:8787` | HTTP bind address. |
 | `PER_IP_RATE_LIMIT_PER_HOUR` | no | `5` | In-memory sliding-window cap per caller IP. |
@@ -60,9 +61,9 @@ Success response (`200`):
   "key": "sk-or-v1-....",
   "base_url": "https://openrouter.ai/api/v1",
   "models": [
-    "deepseek/deepseek-chat",
-    "qwen/qwen-2.5-72b-instruct",
-    "google/gemini-2.0-flash-001"
+    "openrouter/free",
+    "openrouter/auto-beta",
+    "~deepseek/deepseek-v4-flash-latest"
   ]
 }
 ```
@@ -85,10 +86,16 @@ Manually-checked ops endpoint, no auth. Returns:
 ```json
 {
   "issued_today": 3,
-  "budget_cap_usd": 50.0,
-  "estimated_daily_liability_usd": 3.0
+  "issuance_budget_cap_usd": 50.0,
+  "liability_added_today_usd": 3.0,
+  "per_key_limit_usd": 1.0,
+  "per_key_limit_reset": "monthly"
 }
 ```
+
+`liability_added_today_usd` is liability *created* today, not spend incurred:
+each key issued today may spend up to `per_key_limit_usd` per
+`per_key_limit_reset` period for as long as it lives.
 
 ## Data model
 

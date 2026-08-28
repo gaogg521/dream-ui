@@ -48,12 +48,18 @@ async fn stats(
             AppError::Internal("database error".into())
         })?;
 
-    let estimated_daily_liability_usd = issued_today as f64 * state.config.trial_key_limit_usd;
+    // Liability *added today*, not spend incurred today: each key issued today
+    // can spend up to `trial_key_limit_usd` per `limit_reset` period for as
+    // long as it lives. Naming it "daily spend" would badly understate the
+    // commitment under the default monthly reset.
+    let liability_added_today_usd = issued_today as f64 * state.config.trial_key_limit_usd;
 
     Ok(Json(json!({
         "issued_today": issued_today,
-        "budget_cap_usd": state.config.daily_budget_usd_cap,
-        "estimated_daily_liability_usd": estimated_daily_liability_usd,
+        "issuance_budget_cap_usd": state.config.daily_budget_usd_cap,
+        "liability_added_today_usd": liability_added_today_usd,
+        "per_key_limit_usd": state.config.trial_key_limit_usd,
+        "per_key_limit_reset": state.config.trial_key_limit_reset,
     })))
 }
 

@@ -1,5 +1,5 @@
 use std::net::{IpAddr, Ipv4Addr};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use async_trait::async_trait;
@@ -17,6 +17,18 @@ use dream_trial_broker::service::{issue_trial_key, AppState};
 /// succeed or to simulate an upstream failure.
 struct MockOpenRouter {
     should_fail: bool,
+    /// Last request handed to the upstream, so tests can assert on the spend
+    /// cap we actually asked OpenRouter to enforce.
+    last_request: Mutex<Option<CreateKeyRequest>>,
+}
+
+impl MockOpenRouter {
+    fn new(should_fail: bool) -> Self {
+        Self {
+            should_fail,
+            last_request: Mutex::new(None),
+        }
+    }
 }
 
 #[async_trait]
@@ -25,6 +37,7 @@ impl OpenRouterClient for MockOpenRouter {
         &self,
         _req: CreateKeyRequest,
     ) -> Result<CreateKeyResponse, OpenRouterError> {
+        *self.last_request.lock().unwrap() = Some(_req.clone());
         if self.should_fail {
             return Err(OpenRouterError::Upstream {
                 status: 500,
@@ -51,6 +64,7 @@ fn base_config() -> Config {
         database_url: "sqlite::memory:".to_string(),
         daily_budget_usd_cap: 50.0,
         trial_key_limit_usd: 1.0,
+        trial_key_limit_reset: "monthly".to_string(),
         trial_key_expires_days: 90,
         listen_addr: "0.0.0.0:8787".to_string(),
         per_ip_rate_limit_per_hour: 5,
@@ -69,9 +83,28 @@ async fn make_state(should_fail: bool, daily_budget_usd_cap: f64, rate_limit: u3
     AppState {
         pool,
         config: Arc::new(config),
-        openrouter: Arc::new(MockOpenRouter { should_fail }),
+        openrouter: Arc::new(MockOpenRouter::new(should_fail)),
         rate_limiter: Arc::new(RateLimiter::new(rate_limit, Duration::from_secs(3600))),
     }
+}
+
+/// Same as `make_state`, but with the config overridden and the mock handed
+/// back so the test can inspect what was actually sent upstream.
+async fn make_state_with(config: Config) -> (AppState, Arc<MockOpenRouter>) {
+    let pool = db::init_pool("sqlite::memory:")
+        .await
+        .expect("in-memory db should initialize");
+
+    let rate_limit = config.per_ip_rate_limit_per_hour;
+    let mock = Arc::new(MockOpenRouter::new(false));
+
+    let state = AppState {
+        pool,
+        config: Arc::new(config),
+        openrouter: mock.clone(),
+        rate_limiter: Arc::new(RateLimiter::new(rate_limit, Duration::from_secs(3600))),
+    };
+    (state, mock)
 }
 
 fn ip(a: u8, b: u8, c: u8, d: u8) -> IpAddr {
@@ -157,6 +190,46 @@ async fn daily_budget_cap_returns_503() {
     assert_eq!(
         err.status_code(),
         axum::http::StatusCode::SERVICE_UNAVAILABLE
+    );
+}
+
+/// The spend cap is the whole safety story of this service, and it is a plain
+/// string handed to a third party — nothing else in the system would notice if
+/// it silently became "daily" (30x the intended monthly commitment per user)
+/// or went missing entirely. So assert on the exact request we send.
+#[tokio::test]
+async fn issued_keys_carry_the_configured_monthly_spend_cap() {
+    let (state, mock) = make_state_with(base_config()).await;
+
+    issue_trial_key(&state, "install-cap", ip(127, 0, 0, 9))
+        .await
+        .expect("issuance should succeed");
+
+    let req = mock
+        .last_request
+        .lock()
+        .unwrap()
+        .clone()
+        .expect("upstream should have been called");
+    assert_eq!(req.limit, 1.0, "per-key spend cap");
+    assert_eq!(req.limit_reset, "monthly", "cap must reset monthly, not daily");
+    assert!(req.name.starts_with("onework-trial-"));
+    assert!(!req.expires_at.is_empty(), "keys must always carry an expiry");
+}
+
+#[tokio::test]
+async fn limit_reset_is_configurable_for_deployments_that_want_daily() {
+    let mut config = base_config();
+    config.trial_key_limit_reset = "daily".to_string();
+    let (state, mock) = make_state_with(config).await;
+
+    issue_trial_key(&state, "install-daily", ip(127, 0, 0, 10))
+        .await
+        .expect("issuance should succeed");
+
+    assert_eq!(
+        mock.last_request.lock().unwrap().clone().unwrap().limit_reset,
+        "daily"
     );
 }
 

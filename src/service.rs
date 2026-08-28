@@ -96,7 +96,7 @@ pub async fn issue_trial_key(
     let request = CreateKeyRequest {
         name: format!("onework-trial-{}", short_uuid()),
         limit: state.config.trial_key_limit_usd,
-        limit_reset: "daily".to_string(),
+        limit_reset: state.config.trial_key_limit_reset.clone(),
         expires_at: expires_at.to_rfc3339_opts(SecondsFormat::Secs, true),
     };
 
