@@ -50,6 +50,7 @@ import type {
   ProviderHealthCheckRequest,
   ProviderHealthCheckResponse,
   TrialKeyResponse,
+  TrialQuotaStatusResponse,
   UpdateProviderRequest,
 } from '../types/provider/providerApi';
 import type {
@@ -1261,6 +1262,13 @@ export const mode = {
    * result into a normal provider via `createProvider`.
    */
   requestTrialKey: httpPost<TrialKeyResponse, void>('/api/providers/trial-key'),
+  /**
+   * Where this install's trial allowance stands. The desktop talks to the
+   * model provider directly, so without this it only learns the allowance is
+   * spent by being refused mid-request; this asks first. 404 means this device
+   * never claimed a key.
+   */
+  trialKeyQuota: httpGet<TrialQuotaStatusResponse, void>('/api/providers/trial-key/quota'),
   detectProtocol: httpPost<ProtocolDetectionResponse, ProtocolDetectionRequest>('/api/providers/detect-protocol'),
   /**
    * Materialize the company's model channels as local providers.

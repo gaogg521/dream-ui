@@ -108,11 +108,34 @@ export interface ProviderHealthCheckRequest {
  * 'OpenRouter'` to materialize it as a normal, user-editable provider.
  */
 export interface TrialKeyResponse {
-  /** Plaintext OpenRouter API key. Returned once. */
+  /** Plaintext API key. Returned once; the broker cannot retrieve it again. */
   key: string;
   base_url: string;
   /** A small curated starter model list, picked by the broker. */
   models: string[];
+  /**
+   * Which provider platform to create this key as.
+   *
+   * Comes from the broker rather than being named here: the broker can be
+   * pointed at a different token platform without a client release, and a
+   * hardcoded platform would silently mis-create the provider that day.
+   * Optional so an older broker still works.
+   */
+  platform?: string;
+  /** Stable id of the platform that issued the key. */
+  vendor?: string;
+}
+
+/** Where a trial key's spend allowance stands, as the broker reports it. */
+export interface TrialQuotaStatusResponse {
+  vendor: string;
+  /** `null` when the upstream reports no cap — not the same as a cap of zero. */
+  limit_usd: number | null;
+  used_usd: number;
+  remaining_usd: number | null;
+  /** How the allowance renews: `monthly`, `daily`, or `cumulative` (never). */
+  reset: string | null;
+  exhausted: boolean;
 }
 
 export interface ProviderHealthCheckResponse {

@@ -63,7 +63,11 @@ export async function claimTrialModel(displayName: string): Promise<TrialClaimRe
   try {
     const provider = await ipcBridge.mode.createProvider.invoke({
       id: TRIAL_PROVIDER_ID,
-      platform: 'OpenRouter',
+      // The broker names the platform, because the broker is what decides
+      // which upstream issued this key — it can be repointed at a different
+      // token platform without a client release. The fallback is only for a
+      // broker deployed before it started sending the field.
+      platform: trial.platform || 'OpenRouter',
       name: displayName,
       base_url: trial.base_url,
       api_key: trial.key,
