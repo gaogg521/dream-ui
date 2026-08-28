@@ -157,9 +157,14 @@ export const ENDPOINT_STYLE_FALLBACKS = {
 - **负向验证（在 dream-ui 上重做过，不是照抄旧仓结论）**：把 `if (classifyMediaFailure(message) !== 'notRouted') throw error;` 改成无条件 `throw error;`，**正是那 3 条 fallback 测试失败、其余 8 条不动**。已还原并复跑绿。这一步证明测试真的在考修复本身，不是空过。
 - media 全套 **375 条 / 35 文件全绿**（旧仓当时是 357/33，dream-ui 多出的是它自己后续的媒体工作）。
 - 更大范围 `tests/unit/{media,settings,providers,conversation,renderer}` **3062 条 / 341 文件**：见 §7 关于那 1 条无关 flake 的说明。
+
+> ℹ️ 本节的数字是**当时那一步**的验证记录。后续几批改动（AGNES、计费分档、上下文指示器）各自又添了测试，**会话结束时的实际规模是
+> media 套件 393 条 / 35 文件、广范套件 3080 条 / 341 文件**（均全绿）。看到本节数字与
+> 你跑出来的不一致，不是回归。
+
 - `tsc --noEmit` 0 错。
 - `node scripts/check-i18n.js` 通过（类型定义 in sync；85 条 unknown literal key 警告是 `superAssistant` 既有的，与本次无关）。
-- oxlint **0 error**（用 `oxlint@1.56.0` 跑的，原因见 §7）。
+- oxlint **0 error**（当时是用 `oxlint@1.56.0` 跑的，因为配置在 1.79 下解析失败——那个问题本轮已修，见 §10；现在项目自带的 oxlint 就能直接跑）。
 
 ### 5.3 真机验证（CDP，dream-ui 上重做过一遍）
 
@@ -230,14 +235,13 @@ GET  /out.mp4                         ← 下载
 
 - **已知假阳性**：若某网关确实代理了 DashScope / OpenAI 的任务 API，那些模型会显示预警图标但其实能用（它们没有兄弟协议，B 也帮不到）。文案是"看起来不是"而非断言，且不阻塞发送。要收窄的话，可以把 A 限制到"有 fallback 兄弟的协议"。
 - **图片侧未覆盖**：`seedream-gateway` ↔ OpenAI images 跨 Form A / Form C，换协议要跨 adapter，本轮刻意不做。
-- **顺带发现、未修：`oxlint` 在本仓当前 `node_modules` 下跑不起来。** `package.json` 是 `^1.56.0`，实际装成了 `1.79.0`，而 1.79 把 `no-await-thenable` 从 `eslint` plugin 移走了，于是 `.oxlintrc.json` 直接解析失败：
+- **`oxlint` 在本仓跑不起来** → **已在本轮修掉，见 §10。**
 
-  ```
-  Failed to parse oxlint configuration file.
-    x Rule 'no-await-thenable' not found in plugin 'eslint'
-  ```
-
-  与本次改动无关（没碰任何配置文件），旧仓装的是 1.56.0 所以正常。**本轮 lint 是用 `npx oxlint@1.56.0` 跑的，0 error。** 要根治就把 `oxlint` 从 `^1.56.0` 改成锁定版本，或把那条规则移到 `typescript` plugin 下。
+  ⚠️ 这一条最初写在这里时，除了状态是"未修"，**根因也写错了**：曾说"1.79 把
+  `no-await-thenable` 从 `eslint` plugin 移走了"，并建议"把那条规则移到
+  `typescript` plugin 下"。实际是**改名**——1.79 里这个名字在任何 plugin 下都不
+  存在，真名是 `typescript/await-thenable`（去掉了 `no-` 前缀，与 typescript-eslint
+  上游一致）。**以 §10 为准，别照这条旧说法去改配置。**
 
 - **`tests/unit/renderer/mermaidBlockPanZoom.dom.test.tsx` 在大批量并跑时失败过一次**，与本次改动无关（本次没碰 mermaid）：单独跑 2/2 绿，整个 `tests/unit/renderer`（261 文件 / 2327 条）也全绿，属于并行顺序相关的既有 flake。
 - **`.claude/worktrees/` 下有一份完整的仓库副本**，全仓 grep / sweep 时会被误扫进来（本轮所有改动都只落在主工作树，未动 worktree）。
@@ -436,7 +440,11 @@ dev 日志里会看到 `POST /api/one/billing/media-precheck → 404 Route not f
 - ❌ **用户自填单价是单一标量**（`media_unit_price_usd`：每张图 / 每秒视频），**结构上无法表达**"480p 每秒 $x、1080p 每秒 $y"。即使用户认真填了，分辨率差异也表达不出来。
 - ❌ **入口确实很深**：设置 → 模型 → 展开某个 provider → 编辑某个模型 → **先把「模型类型」选成图片/视频**（`AddModelModal.tsx:216` 的条件），单价输入框才会出现；而且它是个没有独立标签的 `Input`，只有 placeholder「单价（美元，选填）」。用户不先知道"要先声明类型"就不可能找到它。
 
-⚠️ **为什么不能顺手改**：`pricing.ts` 顶部写明"**This file mirrors a Rust implementation and must not drift from it**"——费率表在 `dream-core-common/src/license.rs`，用户单价分支在 `dream-domain-billing/src/service.rs::record_media_usage`，两边算出来的数必须一致，否则用户拿界面数字去对企业账单会发现我们的数是错的。把单价从标量改成"按分辨率分档"是**跨仓的数据结构 + 计费改动**，必须两边同时改并重编 `dreamcore`。属于产品决策，不在本轮范围。
+⚠️ **为什么不能顺手改**：`pricing.ts` 顶部写明"**This file mirrors a Rust implementation and must not drift from it**"——费率表在 `dream-core-common/src/license.rs`，用户单价分支在 `dream-domain-billing/src/service.rs::record_media_usage`，两边算出来的数必须一致，否则用户拿界面数字去对企业账单会发现我们的数是错的。把单价从标量改成"按分辨率分档"是**跨仓的数据结构 + 计费改动**，必须两边同时改并重编 `dreamcore`。看上去是跨仓改动。
+
+> ✅ **后来查明不是，已在 §12.4 做掉**：`record_media_usage` 收到的是客户端**已解析好的** `unit_price_micros`，而 `model_settings` 在 Rust 侧是不透明 JSON——所以
+> 分档是**纯 dream-ui 改动**，Rust 的计式与内置费率表都不变，也就不触碰上面那条红线。
+> **估算范围前先看数据怎么流，别从“它写在 Rust 里”直接推“要改 Rust”。**
 
 ### 11.2 对话模式的上下文/成本指示器：功能没丢，但对 `dream` 类型会话不显示
 
@@ -473,7 +481,11 @@ start · thinking · content · finish
 - `useDreamEngineMessage` **零次**调用 `getUsage`，没有从后端快照恢复的路径（ACP 那个 hook 有）；
 - 它也**完全不处理 `acp_context_usage` 帧**，而 `broadcast_usage_frame` 的注释明确写着"Fires for every backend"——后端设计上是打算广播给所有后端的，前端这边没接。
 
-**修它需要**：dream-core 让 1ONE CLI 这条会话路径上报 token 用量（`UsageDelta` → 持久化 + 广播），加上 dream-ui 这两个缺口，然后 `cargo build -p dream-core-app --release` + `node scripts/prepareAioncore.js` 重编内嵌 `dreamcore` 才会在 dev 生效。跨仓 + 需要重编后端，**本轮未做**。
+**修它需要**：dream-core 让 1ONE CLI 这条会话路径上报 token 用量（`UsageDelta` → 持久化 + 广播），加上 dream-ui 这两个缺口，然后 `cargo build -p dream-core-app --release` + `node scripts/prepareAioncore.js` 重编内嵌 `dreamcore` 才会在 dev 生效。
+
+> ✅ **已在 §12.5 做完**（dream-core `e4d2279`）。而且**不需要改 dream-engine**——
+> `AgentEngine::context_status()` 本来就是公开的，带用量的 `AgentResult` 也一直在
+> `run_with_blocks()` 的返回值里，只是被丢掉了。
 
 ---
 
@@ -578,6 +590,27 @@ cache 写（见其文档注释）；渲染层 breakdown 里同名字段的含义
 ⚠️ **改了 dream-core 必须重编内嵌二进制才在 dev 生效**：
 `cargo build -p dream-core-app --release` + `node scripts/prepareAioncore.js`。
 参见 §9.1 那条更隐蔽的同类陷阱（改 `common/` 后主进程 HMR 的假阳性）。
+
+**随后的两轮修正**（真机验证之后才发现的，都已落地）：
+
+- ⚠️ **`getUsage` 那条必须等运行时就绪再发**。第一版写成了**挂载即查**，而后端是
+  从**活任务**里引擎的 `context_status()` 答这个请求的——冷会话上查到 `null` 就
+  什么都不恢复，**而那恰恰是这条路径存在的理由**（新装 / 换台机器时
+  `extra.last_token_usage` 里没有东西可回落）。已改成
+  `ensureConversationRuntime(id).then(() => getUsage(...))`，与 ACP hook 同一顺序。
+  测试侧要一并 mock `conversation.ensureRuntime`，否则该文件每条用例都会挂在一个
+  无关的断言上。
+- ⚠️ **`acp_context_usage` 的 `_meta` 一开始被丢掉了**，见 §12.7。
+
+**dream-core 侧后续补的两条**（`e4d2279`，详见该仓
+[session-2026-08-27-dream-turn-usage-reporting.zh-CN.md](https://github.com/gaogg521/dream-core/blob/main/docs/guides/session-2026-08-27-dream-turn-usage-reporting.zh-CN.md)）：
+`GET /usage` 现在对 dream 会话有数（此前是 `agent_task.rs` 一个 match arm 没写，
+不是缺持久化层）；取消/失败的轮次也会上报占用（`_meta` 省略而非置零）。
+
+⚠️ **残留边界**：`GET /usage` 在**没有活任务**时会回落去读仓库里的
+`context_usage_json`，而 dream 那条路仍不写该字段。打开会话会 `ensureRuntime`
+把任务拉起来，所以正常使用路径覆盖到了；没覆盖的是"没有任何客户端打开过它"时的
+纯服务端查询。
 
 ### 12.6 缓存命中率（用户点名想看的指标）
 
