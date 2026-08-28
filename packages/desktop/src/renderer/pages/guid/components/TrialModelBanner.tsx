@@ -6,9 +6,12 @@
 
 import { Message } from '@arco-design/web-react';
 import { CloseSmall, Lightning, Right } from '@icon-park/react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTrialModelClaim, type TrialClaimOutcome } from '@/renderer/hooks/agent/useTrialModelClaim';
+import { isTrialOfferRedundant, readTrialOfferDismissed, persistTrialOfferDismissed } from './trialOfferVisibility';
+import type { IProvider } from '@/common/config/storage';
+import styles from './TrialModelBanner.module.css';
 
 const ERROR_KEY_BY_OUTCOME: Partial<Record<TrialClaimOutcome, string>> = {
   already_claimed: 'settings.trialModelErrorAlreadyClaimed',
@@ -19,62 +22,75 @@ const ERROR_KEY_BY_OUTCOME: Partial<Record<TrialClaimOutcome, string>> = {
 };
 
 /**
- * Welcome-page empty-state banner: shown only while the `dream` backend has
- * zero configured providers, so a brand-new install has an obvious next
- * step besides opening Settings. Dismissible per-session (not persisted) —
- * a user who dismisses it can still reach the same flow via the
- * Add-Platform modal's `TrialModelCard`.
+ * Corner offer for the built-in free models.
+ *
+ * Sits bottom-right rather than in the page column: it is a standing promotion
+ * now, not an empty-state hint — a user who already has their own providers
+ * sees it too — and the flow from title to composer should not be interrupted
+ * for something that is not part of it.
+ *
+ * On motion: the card animates in, and the bolt has a slow one-off shimmer.
+ * There is deliberately no perpetual animation. A pinned element that keeps
+ * moving in peripheral vision is the single reason floating promos get hated,
+ * and it competes for attention with the thing the user actually came to do.
+ * The entrance is enough to be noticed; after that it holds still and the hover
+ * state carries the interactivity. `prefers-reduced-motion` skips all of it.
  */
-const TrialModelBanner: React.FC = () => {
+const TrialModelBanner: React.FC<{ providers?: IProvider[] }> = ({ providers }) => {
   const { t } = useTranslation();
   const { claim, claiming } = useTrialModelClaim();
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => readTrialOfferDismissed());
 
   const handleClick = useCallback(async () => {
     const result = await claim(t('settings.trialModelProviderName'));
     if (result.outcome === 'claimed') {
       Message.success(t('settings.trialModelClaimSuccess'));
-      setDismissed(true);
+      // No dismiss needed: the offer hides itself once the models are there.
       return;
     }
     const key = ERROR_KEY_BY_OUTCOME[result.outcome] ?? 'settings.trialModelErrorGeneric';
     Message.warning(t(key));
+    // "Already claimed" on a device with no trial models means the models were
+    // removed after claiming, and the broker will refuse forever — the offer
+    // can never succeed again, so stop showing it rather than leave a button
+    // that is guaranteed to fail.
+    if (result.outcome === 'already_claimed') {
+      persistTrialOfferDismissed();
+      setDismissed(true);
+    }
   }, [claim, t]);
 
-  if (dismissed) return null;
+  const handleDismiss = useCallback(() => {
+    persistTrialOfferDismissed();
+    setDismissed(true);
+  }, []);
+
+  const redundant = useMemo(() => isTrialOfferRedundant(providers), [providers]);
+  if (dismissed || redundant) return null;
 
   return (
-    <div className='mt-16px flex w-full animate-fade-in items-center ps-14px'>
-      <div className='group inline-flex max-w-full items-center gap-2px'>
+    <div className={styles.anchor}>
+      <div className={styles.card}>
         <button
           type='button'
           disabled={claiming}
           onClick={handleClick}
-          className='inline-flex min-w-0 cursor-pointer items-center gap-7px rounded-999px border-none bg-transparent px-6px py-4px text-12.5px text-t-secondary transition-colors hover:bg-transparent hover:text-t-primary disabled:cursor-not-allowed disabled:opacity-60'
+          className={styles.action}
+          aria-label={t('guid.trialModel.bannerButton')}
         >
-          {/* IconPark icons in this app are globally configured with a fixed
-              `stroke`, so a text-color class does not tint them — the color has
-              to go through the `fill` prop. */}
-          <Lightning theme='outline' size={13} strokeWidth={4} fill='currentColor' className='shrink-0 text-primary' />
-          <span className='truncate'>{t('guid.trialModel.bannerTitle')}</span>
-          <span aria-hidden className='text-t-quaternary'>
-            ·
+          <span className={styles.icon}>
+            <Lightning theme='outline' size={16} strokeWidth={4} fill='currentColor' />
           </span>
-          <span className='shrink-0 font-medium text-primary'>
-            {claiming ? t('settings.trialModelClaiming') : t('guid.trialModel.bannerButton')}
+          <span className={styles.text}>
+            <span className={styles.title}>{t('guid.trialModel.bannerTitle')}</span>
+            <span className={styles.desc}>
+              {claiming ? t('settings.trialModelClaiming') : t('guid.trialModel.bannerDesc')}
+            </span>
           </span>
-          <Right theme='outline' size={12} strokeWidth={4} fill='currentColor' className='shrink-0 text-primary' />
+          <Right theme='outline' size={14} strokeWidth={4} fill='currentColor' className={styles.chevron} />
         </button>
-        {/* Escape hatch, but this is a first-run hint on an app that cannot do
-            anything without a model — so it stays out of the way until hovered
-            rather than taking a permanent slot next to the call to action. */}
-        <button
-          type='button'
-          aria-label={t('common.close')}
-          className='flex h-18px w-18px shrink-0 cursor-pointer items-center justify-center rounded-999px border-none bg-transparent p-0 text-t-quaternary opacity-0 transition-opacity hover:text-t-secondary group-hover:opacity-100'
-          onClick={() => setDismissed(true)}
-        >
-          <CloseSmall theme='outline' size={12} />
+        <button type='button' aria-label={t('common.close')} className={styles.close} onClick={handleDismiss}>
+          <CloseSmall theme='outline' size={12} strokeWidth={4} fill='currentColor' />
         </button>
       </div>
     </div>

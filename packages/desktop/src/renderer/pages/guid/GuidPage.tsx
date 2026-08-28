@@ -800,13 +800,6 @@ const GuidPage: React.FC = () => {
             onClearWorkspace={() => guidInput.setDir('')}
           />
 
-          {/* Sits under the composer rather than above it: with no model
-              configured the composer's model selector is the control that is
-              actually empty, so the offer belongs next to it — and keeping the
-              hero → agent → composer column uninterrupted stops a first-run
-              hint from reading like an ad wedged into the middle of the page. */}
-          {isGeminiMode && modelSelection.modelList.length === 0 ? <TrialModelBanner /> : null}
-
           {selectedAssistantPrompts.length > 0 ? (
             <div className='mt-18px w-full animate-fade-in ps-20px'>
               <div className={`${styles.assistantPromptHint} mb-10px text-start`}>
@@ -835,6 +828,12 @@ const GuidPage: React.FC = () => {
             </div>
           ) : null}
         </div>
+        {/* Outside the content column on purpose. It is a standing promotion,
+            not part of the hero → agent → composer flow, and pinning it to the
+            corner keeps that flow uninterrupted. Visibility is decided inside
+            the component: it hides once any provider already serves the free
+            models, and a dismissal sticks across launches. */}
+        {isGeminiMode ? <TrialModelBanner providers={mediaProviders} /> : null}
         <GuidAuthorTip />
       </div>
     </ConfigProvider>

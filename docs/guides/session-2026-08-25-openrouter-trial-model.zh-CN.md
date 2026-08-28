@@ -242,3 +242,56 @@ dev/打包测试警告）。
 
 - dream-ui 这个改动**还没发版**——需要走 release 流程（版本号 + tag + 产物），桌面用户才拿得到
 - Phase 2（$7/月订阅）没动
+
+## 2026-08-28 补充三：入口改成右下角推广位
+
+### 从"空状态提示"变成"常驻推广位"
+
+原来的显示条件是 `modelList.length === 0`，只有零模型的新用户能看到。改成：
+**没有任何 provider 提供内置免费模型时就显示**——有自己 provider 的老用户也会看到。
+
+判定逻辑在 `trialOfferVisibility.ts::isTrialOfferRedundant`，满足**任一**即隐藏：
+
+1. 已领过（存在 `trial-openrouter` provider）
+2. **任何** provider 的模型列表里有 `openrouter/free`
+
+第 2 条很关键：只按第 1 条判断的话，会去骚扰那些**自己动手配好 OpenRouter key** 的用户——
+他们已经能用免费模型了，再推一遍毫无意义。
+
+### 位置与动效
+
+移出内容列，`position: absolute` 挂在 `.guidContainer`（它本来就是 `position: relative`）
+的右下角。主轴 标题 → CLI 胶囊 → 输入框 完全不被打断。
+
+动效三层：入场滑入淡入（420ms）→ 边框绕行光（conic-gradient + `@property` 动画角度，
+6s 一圈）→ 图标呼吸光晕（4s）。全部走 GPU（`transform`/`opacity`/遮罩伪元素），
+不触发 layout；`prefers-reduced-motion` 下全部关闭。
+
+> `@property --trial-offer-angle` 是必需的：不注册的话自定义属性对动画引擎就是个字符串，
+> 会**跳变**而不是平滑扫过。
+
+### 两个必须配套的改动
+
+1. **关闭要持久化。** 原来是 `useState`，刷新就回来。零模型用户看不到无所谓（他们本来
+   就需要，而且有模型后自动消失），但作为**给所有人常驻**的推广位，关不掉就是骚扰。
+   现在存 `localStorage`，异常（隐私模式/存储被禁）一律降级成"未关闭"——推广位多显示
+   一次远好过页面渲染不出来。
+2. **× 常驻可见**，不是 hover 才出现。推广位把关闭藏在悬停后面，对触屏和不知道要悬停的
+   用户不友好。
+
+### 修的一个碰撞
+
+第一版 `bottom: 24px` **压住了右下角的作者信息**（"遇到问题请联系作者 allenzhao · QQ..."）。
+把客服联系方式盖在推广位下面正好是最不该盖的东西。已抬到 `bottom: 68px`
+（实测角标 743–799，作者信息 817–855，隔 18px）。
+
+### 已领取但删掉 provider 的死角
+
+这种情况 broker 会**永久返回 409**，按钮点了必然失败。所以收到 409 时组件直接自我关闭
+并持久化，不给用户留一个注定点不动的按钮。
+
+### 测试
+
+`tests/unit/providers/trialOfferVisibility.dom.test.ts` 9 条，覆盖可见性四种组合 +
+localStorage 读写异常兜底。注意文件名必须是 `.dom.test.ts`——`vitest.config.ts` 里
+只有这个后缀跑 jsdom，普通 `.test.ts` 是 node 环境、没有 `window`。

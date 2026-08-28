@@ -1,0 +1,256 @@
+/**
+ * Corner offer for the built-in free models.
+ *
+ * Motion policy: an entrance, then two slow ambient loops — a light travelling
+ * around the border and a breath on the icon.
+ *
+ * Both are deliberately at the low end of what reads as "alive". This thing is
+ * pinned in peripheral vision next to the composer, and fast or high-contrast
+ * motion there is the single reason floating promos get hated: the eye is
+ * pulled back to it on every cycle while the user is trying to type. Six and
+ * four second periods with a soft accent stay noticeable without demanding
+ * anything, and both stop entirely under `prefers-reduced-motion`.
+ *
+ * Everything animated is `transform`/`opacity` or a masked pseudo-element, so
+ * it composites on the GPU and never triggers layout.
+ */
+
+/* Registered so the conic gradient's angle can be animated at all — a plain
+   custom property is a string to the animation engine and would jump rather
+   than sweep. */
+@property --trial-offer-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.anchor {
+  position: absolute;
+  right: 24px;
+  /* Clears the author tip, which is pinned to the same corner at bottom:12px
+     and stands about 38px tall over two lines. Overlapping it hid the support
+     contact behind a promotion — exactly the wrong thing to cover. */
+  bottom: 68px;
+  z-index: 10;
+  /* Never wider than the window on a narrow one. */
+  max-width: min(320px, calc(100% - 48px));
+}
+
+.card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 14px;
+  /* Tinted rather than filled: a saturated fill of the theme accent puts white
+     text at ~1.8:1 on the cyan default, well under the 4.5:1 minimum. */
+  background: var(--aou-2, rgb(255 255 255 / 6%));
+  border: 1px solid var(--fill-3, rgb(255 255 255 / 10%));
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  animation: trial-offer-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* A light travelling around the border. Drawn as a 1px ring by masking the
+   pseudo-element's own padding box out of its border box, so it follows the
+   rounded corners exactly and costs no layout. */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--trial-offer-angle),
+    transparent 0deg,
+    var(--primary) 34deg,
+    transparent 92deg,
+    transparent 360deg
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  opacity: 0.85;
+  pointer-events: none;
+  /* Starts after the entrance settles, so the two do not read as one busy move. */
+  animation: trial-offer-orbit 6s linear 420ms infinite;
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+.action {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 14px;
+  text-align: start;
+  transition: background-color 160ms ease;
+}
+
+.action:hover:enabled {
+  background: var(--fill-2, rgb(255 255 255 / 6%));
+}
+
+.action:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: var(--primary);
+  background: var(--color-primary-light-1, rgb(34 211 238 / 14%));
+  /* One sweep on entrance, then a slow breath that never fully fades — the
+     halo only varies between a faint and a slightly less faint ring. */
+  animation:
+    trial-offer-shimmer 1600ms ease-out 420ms 1 both,
+    trial-offer-breathe 4s ease-in-out 2s infinite;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.desc {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--primary);
+  transition: transform 160ms ease;
+}
+
+.action:hover:enabled .chevron {
+  transform: translateX(3px);
+}
+
+.close {
+  display: flex;
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--fill-3, rgb(255 255 255 / 12%));
+  border-radius: 999px;
+  background: var(--bg-2, rgb(20 25 40));
+  color: var(--text-t-tertiary);
+  cursor: pointer;
+  /* Always present, not hover-revealed. This is a standing promotion shown to
+     people who did not ask for it, so the way out has to be visible without
+     discovering it — and there is no hover at all on a touch screen. Kept dim
+     so it does not compete with the offer itself. */
+  opacity: 0.55;
+  transition:
+    opacity 160ms ease,
+    color 160ms ease;
+}
+
+.card:hover .close,
+.close:hover,
+.close:focus-visible {
+  opacity: 1;
+  color: var(--text-secondary);
+}
+
+@keyframes trial-offer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* A single sweep of the accent across the icon, then done. */
+@keyframes trial-offer-shimmer {
+  0% {
+    box-shadow: 0 0 0 0 var(--color-primary-light-2, rgb(34 211 238 / 35%));
+  }
+
+  60% {
+    box-shadow: 0 0 0 8px rgb(34 211 238 / 0%);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgb(34 211 238 / 0%);
+  }
+}
+
+@keyframes trial-offer-orbit {
+  to {
+    --trial-offer-angle: 360deg;
+  }
+}
+
+/* Amplitude is the whole point: 0.5 -> 1 on a soft halo, never to nothing and
+   never to full. A pulse that visibly appears and disappears in the corner of
+   the eye is the version people turn off. */
+@keyframes trial-offer-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(34 211 238 / 0%);
+    opacity: 0.92;
+  }
+
+  50% {
+    box-shadow: 0 0 10px 1px var(--color-primary-light-2, rgb(34 211 238 / 22%));
+    opacity: 1;
+  }
+}
+
+/* Motion is decoration here; the offer reads identically without any of it. */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card::before,
+  .icon {
+    animation: none;
+  }
+
+  .action,
+  .chevron,
+  .close {
+    transition: none;
+  }
+}
