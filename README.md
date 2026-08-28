@@ -10,6 +10,13 @@ This is a fully independent project (its own git repo, its own
 `Cargo.toml`), not part of any workspace with `dream-core` / `dream-ui` /
 `dream-engine`.
 
+## Deployment
+
+Live since 2026-08-28 at **`https://work.1oneclaw.com/trial-broker`**
+(host `43.163.105.71`, systemd, no Docker). aioncore reaches it via
+`DREAM_TRIAL_BROKER_URL`, which dream-ui `packages/web-host` now defaults to
+that URL. Full runbook: [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
+
 ## Tech stack
 
 Rust, Axum, sqlx (SQLite), reqwest, tokio, serde, tracing.
