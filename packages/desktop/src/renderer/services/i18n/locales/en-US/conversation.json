@@ -280,6 +280,10 @@
         "title": "Model provider billing is required",
         "body": "The selected provider needs active billing, credits, or quota before it can complete this request."
       },
+      "USER_LLM_PROVIDER_QUOTA_EXHAUSTED": {
+        "title": "Model allowance used up",
+        "body": "This model key has spent its allowance. Top up to keep going, or switch to your own model provider in Settings."
+      },
       "USER_LLM_PROVIDER_UNSUPPORTED_MODEL": {
         "title": "Model does not support this request",
         "body": "The selected model is unavailable or does not support the requested capability. Choose a supported model and retry."

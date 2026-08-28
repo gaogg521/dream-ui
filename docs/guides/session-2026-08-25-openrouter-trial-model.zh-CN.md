@@ -181,19 +181,64 @@ DB 已重置）：
 `packages/web-host/src/backend-launcher.ts` 在 spawn aioncore 时注入默认值：
 
 - 新增常量 `TRIAL_BROKER_URL_DEFAULT = 'https://work.1oneclaw.com/trial-broker'`
-- 新增 `resolveTrialBrokerUrl()`：显式非空 env 覆盖 > 显式空值 = 关闭 > 未设 = 用默认
-- `buildSpawnEnv()` 里统一 normalize，保证 aioncore 只会看到"一个可用 URL"或"完全没有"，
-  不会拿到继承来的空串（dream-core 会把空串当成配错了的值）
-- 测试：`backend-launcher.test.ts` 新增 2 条，`bunx vitest run` 该文件 46 passed；
-  `tsc --noEmit`（web-host tsconfig）无错
+- 新增 `resolveTrialBrokerUrl(isPackaged, raw?)`，优先级：
+  **显式非空 env 覆盖 > 显式空值（关闭）> 未设时看 `isPackaged`**
+- `buildSpawnEnv(dirs, { isPackaged })` 统一 normalize，保证 aioncore 只会看到"一个可用
+  URL"或"完全没有"，不会拿到继承来的空串（dream-core 会把空串当成配错了的值）
 
-**影响面提醒**：这个默认值对**所有经 web-host 启动的 aioncore**生效——打包桌面版、
-`bun run webui` 自建、以及企业 SSO 部署。企业部署若不想让成员领体验 key（成本落在公司
-OpenRouter 账号上，虽然有 `$50/天` 熔断兜底），在该部署的环境里设 `DREAM_TRIAL_BROKER_URL=`
-空值即可关闭。是否要收窄成"仅打包版默认开"，看后续需要。
+**关键决策：默认值只在打包版生效**（`app.isPackaged === true`）。理由是这个 broker 签出的
+每一把 key 花的都是**公司自己的 OpenRouter 预算**，所以：
+
+| 场景 | `isPackaged` | 默认行为 |
+| --- | --- | --- |
+| 打包发布的桌面安装包 | `true` | **开** —— 新用户开箱即用 |
+| `bun run dev` / `bun start` | `false` | 关（想测就显式设 env） |
+| `bun run webui` 自建服务端 | `false`（`scripts/webui.ts` 写死） | 关 |
+| 企业 SSO / Docker 部署 | `false` | 关 —— 不会让别人的部署替公司花钱 |
+
+任何一档都能用显式 `DREAM_TRIAL_BROKER_URL=<url>` 强开、用空值强关。
+
+测试：`backend-launcher.test.ts` 新增 6 条（3 条直接测 `resolveTrialBrokerUrl` 的优先级矩阵、
+3 条测 `buildSpawnEnv` 的注入/剔除），该文件 49 passed；`tsc --noEmit`（web-host tsconfig）无错。
+
+### dev 真机验证（2026-08-28，CDP 逐一验证）
+
+用 `DREAM_MULTI_INSTANCE=1`（`dream-ui-Dev-2`，一个**全新空 profile**，才能触发首页空状态
+横幅）+ `DREAM_DEVTOOLS_CDP_PORT=9231` 起 dev，用 CDP 驱动真实点击。六项全过：
+
+| # | 场景 | 结果 |
+| --- | --- | --- |
+| 1 | 全新 profile 打开首页 | 空状态横幅"还没有配置模型 / 一键体验免费模型"正常出现 |
+| 2 | 点横幅按钮 | broker 真实签发 → provider 落库（`id=trial-openrouter`，3 个模型）→ 横幅自动消失 → 成功 toast → 模型选择器自动切到 `deepseek/deepseek-chat` |
+| 3 | 用领到的模型真实发消息 | 发"只回复两个字：收到"→ 模型回"收到"。**开箱即用这条链路是真的通的** |
+| 4 | 「添加模型 → 手动添加」弹窗里的卡片 | 显示对勾 + 已领取文案，`disabled` 属性在位 |
+| 5 | 删掉这条 provider 后再点横幅 | 409 → toast"这台设备已经体验过了"（**注意**：Arco 的 Message 3 秒就消失，验证时若隔太久再断言会误判成"没有任何提示"，我第一次就踩了这个坑） |
+| 6 | 完整重启 App 后再领 | 仍然 409 —— `install_id` 确实持久化在 `client_pref` 里，**重启不能绕过去重** |
+
+另外单独验证了本次改动的核心行为：**dev 下不设 `DREAM_TRIAL_BROKER_URL` 时**，
+`POST /api/providers/trial-key` 返回 400 `trial key issuance is not configured on this
+deployment` —— isPackaged 门禁在真实运行链路里生效，不只是单测里成立。
+
+测试期间签出的真实 key 已全部从 OpenRouter `DELETE`，broker 的 `issuances` 表已清空。
+
+### 一个未修的既有问题（不是本次引入）
+
+首页横幅的 CTA 按钮用的是全仓通用的 `bg-primary text-white`，而当前主题
+`--primary: #22d3ee`（青色），实测对比度只有 **1.81:1**，远低于 WCAG 的 4.5:1。
+但这是**主题层面的既有问题**，不是这个组件引入的——同屏的"1ONE CLI"徽章 2.34:1、
+"对话模式" 1.33:1 同样不达标，`bg-primary text-white` 在仓库里另有 6 处在用。
+按 AGENTS.md 的 ratchet 规则，改主题的 on-primary 文字色是独立一件事，没有在本次改动里做。
+
+### 打包版验证
+
+`bun run build-win:x64:fast` 产出 `out/win-unpacked/1onecode.exe`，用 Playwright 的
+`_electron.launch()` 拉起（**CDP 在打包版被代码明确拒绝**，见 `devtoolsCdp.ts`，所以打包版
+只能走 Playwright 这条路），并用仓库自带的 `DREAM_E2E_TEST=1` +
+`DREAM_E2E_USER_DATA_DIR=<沙箱>` 把 userData 指到一次性目录——**绝对不能直接裸跑打包版**，
+否则会写进 `%APPDATA%\1ONE Code` 这个本机真实生产数据目录（见 CLAUDE.md 顶部的
+dev/打包测试警告）。
 
 ### 仍未做
 
-- 没跑真实打包桌面端的 UI 点击冒烟（要等一次打包）
-- dream-ui 这个改动**还没发版**——需要重新打包 + 走 release 流程，桌面用户才拿得到
+- dream-ui 这个改动**还没发版**——需要走 release 流程（版本号 + tag + 产物），桌面用户才拿得到
 - Phase 2（$7/月订阅）没动

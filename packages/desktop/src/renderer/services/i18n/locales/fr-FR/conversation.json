@@ -280,6 +280,10 @@
         "title": "La facturation du fournisseur modèle est requise",
         "body": "Le fournisseur sélectionné a besoin d'une facturation active, de crédits ou d'un quota avant de pouvoir répondre à cette demande."
       },
+      "USER_LLM_PROVIDER_QUOTA_EXHAUSTED": {
+        "title": "Crédit du modèle épuisé",
+        "body": "Le crédit de cette clé de modèle est épuisé. Rechargez pour continuer, ou passez à votre propre fournisseur dans les Réglages."
+      },
       "USER_LLM_PROVIDER_UNSUPPORTED_MODEL": {
         "title": "Le modèle ne prend pas en charge cette demande",
         "body": "Le modèle sélectionné n'est pas disponible ou ne prend pas en charge la fonctionnalité demandée. Choisissez un modèle pris en charge et réessayez."

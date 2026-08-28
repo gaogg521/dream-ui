@@ -281,6 +281,10 @@
         "title": "É necessário faturamento no provedor de modelo",
         "body": "O provedor selecionado precisa de faturamento, créditos ou cota ativos para concluir esta solicitação."
       },
+      "USER_LLM_PROVIDER_QUOTA_EXHAUSTED": {
+        "title": "Crédito do modelo esgotado",
+        "body": "Esta chave de modelo esgotou o crédito. Recarregue para continuar ou troque para o seu próprio provedor em Configurações."
+      },
       "USER_LLM_PROVIDER_UNSUPPORTED_MODEL": {
         "title": "O modelo não oferece suporte a esta solicitação",
         "body": "O modelo selecionado não está disponível ou não oferece suporte ao recurso solicitado. Escolha um modelo compatível e tente novamente."

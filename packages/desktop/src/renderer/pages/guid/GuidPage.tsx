@@ -769,8 +769,6 @@ const GuidPage: React.FC = () => {
             <p className={styles.heroTitle}>{t('conversation.welcome.title')}</p>
           </div>
 
-          {isGeminiMode && modelSelection.modelList.length === 0 ? <TrialModelBanner /> : null}
-
           <BackendSelectionArea
             assistants={agentSelection.assistants}
             selectedBackendAgentId={agentSelection.selectedBackendAgentId}
@@ -801,6 +799,13 @@ const GuidPage: React.FC = () => {
             onSelectWorkspace={(dir) => guidInput.setDir(dir)}
             onClearWorkspace={() => guidInput.setDir('')}
           />
+
+          {/* Sits under the composer rather than above it: with no model
+              configured the composer's model selector is the control that is
+              actually empty, so the offer belongs next to it — and keeping the
+              hero → agent → composer column uninterrupted stops a first-run
+              hint from reading like an ad wedged into the middle of the page. */}
+          {isGeminiMode && modelSelection.modelList.length === 0 ? <TrialModelBanner /> : null}
 
           {selectedAssistantPrompts.length > 0 ? (
             <div className='mt-18px w-full animate-fade-in ps-20px'>

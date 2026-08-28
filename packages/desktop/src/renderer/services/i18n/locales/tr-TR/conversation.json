@@ -263,6 +263,10 @@
         "title": "Model sağlayıcı için faturalandırma gerekiyor",
         "body": "Seçili sağlayıcının bu isteği tamamlamak için etkin faturalandırma, kredi veya kotaya ihtiyacı var."
       },
+      "USER_LLM_PROVIDER_QUOTA_EXHAUSTED": {
+        "title": "Model kotası doldu",
+        "body": "Bu model anahtarının kotası doldu. Devam etmek için yükleme yapın ya da Ayarlar'dan kendi model sağlayıcınıza geçin."
+      },
       "USER_LLM_PROVIDER_UNSUPPORTED_MODEL": {
         "title": "Model bu isteği desteklemiyor",
         "body": "Seçili model kullanılamıyor veya istenen yeteneği desteklemiyor. Desteklenen bir model seçip yeniden deneyin."

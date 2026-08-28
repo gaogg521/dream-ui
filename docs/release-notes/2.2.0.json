@@ -1,0 +1,24 @@
+{
+  "version": "2.2.0",
+  "date": "2026-08-28",
+  "zh": [
+    {
+      "t": "一键体验免费模型",
+      "d": "第一次打开 One Work 不用再自己去注册模型服务、复制粘贴 API Key。首页会出现「一键体验免费模型」，点一下就能拿到一个可以直接对话的模型，每台设备一次。领到的模型会作为一条普通的模型服务出现在设置里，可以随时修改或删除。"
+    },
+    {
+      "t": "全新的构建架构",
+      "d": "从这个版本起，One Work 由我们自己的三个代码仓库独立构建，不再跟随此前的开源上游项目。这次换代对使用没有影响，版本号从 2.2.0 重新起步作为分界。"
+    }
+  ],
+  "en": [
+    {
+      "t": "Try a free model in one click",
+      "d": "Opening One Work for the first time no longer means signing up for a model provider and pasting an API key. A \"Try Free Models\" option now appears on the home screen — one click gets you a working model, once per device. It lands in Settings as an ordinary model service you can edit or remove at any time."
+    },
+    {
+      "t": "A new build architecture",
+      "d": "From this release, One Work is built entirely from our own three repositories rather than following the previous open-source upstream. Nothing changes for you day to day; the version restarts at 2.2.0 to mark the line."
+    }
+  ]
+}

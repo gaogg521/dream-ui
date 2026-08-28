@@ -230,6 +230,23 @@ describe('buildSpawnArgs', () => {
   });
 });
 
+describe('resolveTrialBrokerUrl', () => {
+  it('defaults only when packaged, since every minted key spends the company budget', () => {
+    expect(resolveTrialBrokerUrl(true, undefined)).toBe(TRIAL_BROKER_URL_DEFAULT);
+    expect(resolveTrialBrokerUrl(false, undefined)).toBeUndefined();
+  });
+
+  it('lets an explicit value override the packaged/unpackaged default in both directions', () => {
+    expect(resolveTrialBrokerUrl(false, 'http://localhost:8787')).toBe('http://localhost:8787');
+    expect(resolveTrialBrokerUrl(true, '')).toBeUndefined();
+    expect(resolveTrialBrokerUrl(true, '  ')).toBeUndefined();
+  });
+
+  it('trims surrounding whitespace off an explicit value', () => {
+    expect(resolveTrialBrokerUrl(false, '  https://broker.example.com  ')).toBe('https://broker.example.com');
+  });
+});
+
 describe('buildSpawnEnv', () => {
   it('merges process.env with AIONUI_* dir vars', () => {
     const env = buildSpawnEnv({
@@ -259,13 +276,16 @@ describe('buildSpawnEnv', () => {
     }
   });
 
-  it('injects the default trial-broker URL when DREAM_TRIAL_BROKER_URL is unset', () => {
+  it('defaults the trial-broker URL only in a packaged build', () => {
     const prev = process.env.DREAM_TRIAL_BROKER_URL;
     delete process.env.DREAM_TRIAL_BROKER_URL;
+    const dirs = { cacheDir: '/c', workDir: '/w', logDir: '/l' };
     try {
-      expect(buildSpawnEnv({ cacheDir: '/c', workDir: '/w', logDir: '/l' }).DREAM_TRIAL_BROKER_URL).toBe(
-        TRIAL_BROKER_URL_DEFAULT
-      );
+      expect(buildSpawnEnv(dirs, { isPackaged: true }).DREAM_TRIAL_BROKER_URL).toBe(TRIAL_BROKER_URL_DEFAULT);
+      // dev / `bun run webui` / self-hosted server: every minted key spends the
+      // company's OpenRouter budget, so stay off unless explicitly opted in.
+      expect(buildSpawnEnv(dirs, { isPackaged: false })).not.toHaveProperty('DREAM_TRIAL_BROKER_URL');
+      expect(buildSpawnEnv(dirs)).not.toHaveProperty('DREAM_TRIAL_BROKER_URL');
     } finally {
       if (prev === undefined) delete process.env.DREAM_TRIAL_BROKER_URL;
       else process.env.DREAM_TRIAL_BROKER_URL = prev;
@@ -275,10 +295,12 @@ describe('buildSpawnEnv', () => {
   it('honors an explicit DREAM_TRIAL_BROKER_URL override and drops an empty one', () => {
     const prev = process.env.DREAM_TRIAL_BROKER_URL;
     try {
+      // An explicit value opts an unpackaged build *in*...
       process.env.DREAM_TRIAL_BROKER_URL = 'http://127.0.0.1:8787';
-      expect(buildSpawnEnv().DREAM_TRIAL_BROKER_URL).toBe('http://127.0.0.1:8787');
+      expect(buildSpawnEnv(undefined, { isPackaged: false }).DREAM_TRIAL_BROKER_URL).toBe('http://127.0.0.1:8787');
+      // ...and an explicit empty value opts a packaged build *out*.
       process.env.DREAM_TRIAL_BROKER_URL = '   ';
-      expect(buildSpawnEnv()).not.toHaveProperty('DREAM_TRIAL_BROKER_URL');
+      expect(buildSpawnEnv(undefined, { isPackaged: true })).not.toHaveProperty('DREAM_TRIAL_BROKER_URL');
     } finally {
       if (prev === undefined) delete process.env.DREAM_TRIAL_BROKER_URL;
       else process.env.DREAM_TRIAL_BROKER_URL = prev;

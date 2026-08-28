@@ -280,6 +280,10 @@
         "title": "Abrechnung des Modellanbieters erforderlich",
         "body": "Der ausgewählte Anbieter benötigt aktive Abrechnung, Gutschriften oder Kontingent, bevor diese Anfrage abgeschlossen werden kann."
       },
+      "USER_LLM_PROVIDER_QUOTA_EXHAUSTED": {
+        "title": "Modellguthaben aufgebraucht",
+        "body": "Das Guthaben dieses Modellschlüssels ist aufgebraucht. Lade auf, um weiterzumachen, oder wechsle in den Einstellungen zu deinem eigenen Anbieter."
+      },
       "USER_LLM_PROVIDER_UNSUPPORTED_MODEL": {
         "title": "Modell unterstützt diese Anfrage nicht",
         "body": "Das ausgewählte Modell ist nicht verfügbar oder unterstützt die angeforderte Funktion nicht. Wähle ein unterstütztes Modell und versuche es erneut."

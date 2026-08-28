@@ -260,6 +260,10 @@
         "title": "Se requiere facturación del proveedor",
         "body": "El proveedor seleccionado necesita facturación activa, créditos o cuota para completar esta solicitud."
       },
+      "USER_LLM_PROVIDER_QUOTA_EXHAUSTED": {
+        "title": "Crédito del modelo agotado",
+        "body": "Esta clave de modelo ha agotado su crédito. Recarga para seguir, o cambia a tu propio proveedor en Ajustes."
+      },
       "USER_LLM_PROVIDER_UNSUPPORTED_MODEL": {
         "title": "El modelo no admite esta solicitud",
         "body": "El modelo seleccionado no está disponible o no admite la capacidad solicitada. Elige un modelo compatible y reintenta."

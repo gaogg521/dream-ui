@@ -1,5 +1,29 @@
 # Changelog
 
+> 从 `2.2.0` 起，本项目构建自 `dream-ui` / `dream-core` / `dream-engine` 三个独立仓库，
+> 不再跟随开源上游 AionUi。`2.1.x` 及更早条目里指向 `iOfficeAI/AionUi` 的链接是旧仓库
+> 时期的历史事实，保留不改。版本号规则见
+> [`docs/contributing/versioning.md`](docs/contributing/versioning.md)。
+
+## [2.2.0](https://github.com/gaogg521/dream-ui/compare/v2.1.61...v2.2.0) (2026-08-28)
+
+新架构（dream 三仓）的第一个版本。
+
+### Desktop
+
+#### Features
+
+- **provider:** 一键体验免费模型——新用户无需注册 OpenRouter、无需粘贴 API Key，
+  在首页空状态横幅或「添加模型 → 手动添加」的卡片点一下，即可领到一把每日 $1 硬顶的
+  真实 OpenRouter key 并落成一条可编辑的普通 provider
+- **web-host:** 打包桌面版默认接入体验 key 签发服务（`DREAM_TRIAL_BROKER_URL`）；
+  dev / `bun run webui` / 自建服务端默认不启用，可用环境变量显式开关
+
+### Infrastructure
+
+- **dream-trial-broker:** 新增独立的云端签发服务（Rust + Axum + SQLite），唯一持有
+  OpenRouter Management Key，带 install_id 去重、按 IP 限流与每日额度熔断
+
 ## [2.1.59](https://github.com/iOfficeAI/AionUi/compare/v2.1.58...v2.1.59) (2026-08-19)
 
 ### Desktop

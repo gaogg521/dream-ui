@@ -218,19 +218,26 @@ export function buildSpawnArgs(config: SpawnConfig): string[] {
 /**
  * Company-run broker that mints capped-spend OpenRouter trial keys for the
  * "try a free model" flow (see dream-core `trial_key.rs`). aioncore only
- * enables that endpoint when `DREAM_TRIAL_BROKER_URL` is set, so the desktop
- * app injects this default to make the feature work out of the box.
+ * enables that endpoint when `DREAM_TRIAL_BROKER_URL` is set.
  */
 export const TRIAL_BROKER_URL_DEFAULT = 'https://work.1oneclaw.com/trial-broker';
 
 /**
  * Resolves the trial-key broker URL passed to aioncore:
- *  - an explicit non-empty `DREAM_TRIAL_BROKER_URL` wins (dev / self-host override);
- *  - an explicit empty value opts out (feature stays disabled);
- *  - unset falls back to {@link TRIAL_BROKER_URL_DEFAULT}.
+ *  - an explicit non-empty `DREAM_TRIAL_BROKER_URL` always wins (dev override,
+ *    or a self-hosted deployment pointing at its own broker);
+ *  - an explicit empty value opts out, even in a packaged build;
+ *  - unset defaults to {@link TRIAL_BROKER_URL_DEFAULT} **only in a packaged
+ *    build**. Every key the default broker mints spends the company's own
+ *    OpenRouter budget, so shipped desktop installs get the out-of-the-box
+ *    experience while `bun run dev` / `bun run webui` / self-hosted server
+ *    deployments stay off unless they opt in.
  */
-export function resolveTrialBrokerUrl(raw = process.env.DREAM_TRIAL_BROKER_URL): string | undefined {
-  if (raw === undefined) return TRIAL_BROKER_URL_DEFAULT;
+export function resolveTrialBrokerUrl(
+  isPackaged: boolean,
+  raw = process.env.DREAM_TRIAL_BROKER_URL
+): string | undefined {
+  if (raw === undefined) return isPackaged ? TRIAL_BROKER_URL_DEFAULT : undefined;
   const trimmed = raw.trim();
   return trimmed === '' ? undefined : trimmed;
 }
@@ -241,7 +248,7 @@ export function resolveTrialBrokerUrl(raw = process.env.DREAM_TRIAL_BROKER_URL):
  * backend's `/api/system/info` matches what Electron main persists in
  * ProcessEnv('dream.dir').
  */
-export function buildSpawnEnv(dirs?: BackendDirConfig): NodeJS.ProcessEnv {
+export function buildSpawnEnv(dirs?: BackendDirConfig, opts?: { isPackaged?: boolean }): NodeJS.ProcessEnv {
   // PREBUILDS_ONLY protects the packaged Electron process's own node-gyp-build
   // natives (see desktop process/index.ts) and must stay scoped to it. Agent
   // CLIs spawned under aioncore (e.g. cursor-agent) ship natives under
@@ -252,7 +259,7 @@ export function buildSpawnEnv(dirs?: BackendDirConfig): NodeJS.ProcessEnv {
   // Normalize the trial-broker URL so aioncore sees exactly one of "a usable
   // URL" or "unset" — never an inherited empty string, which it would treat as
   // a (broken) configured value.
-  const trialBrokerUrl = resolveTrialBrokerUrl();
+  const trialBrokerUrl = resolveTrialBrokerUrl(opts?.isPackaged === true);
   if (trialBrokerUrl) parentEnv.DREAM_TRIAL_BROKER_URL = trialBrokerUrl;
   else delete parentEnv.DREAM_TRIAL_BROKER_URL;
 
@@ -717,7 +724,7 @@ export class BackendLifecycleManager {
     try {
       this.childProcess = spawn(binaryPath, args, {
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: buildSpawnEnv(dirs),
+        env: buildSpawnEnv(dirs, { isPackaged: this.appMeta.isPackaged }),
         cwd: dirs?.workDir ?? dbPath,
         detached: process.platform !== 'win32',
       });

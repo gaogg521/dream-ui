@@ -760,6 +760,8 @@ export type I18nKey =
   | 'conversation.agentError.codes.USER_LLM_PROVIDER_NETWORK_ERROR.title'
   | 'conversation.agentError.codes.USER_LLM_PROVIDER_PERMISSION_DENIED.body'
   | 'conversation.agentError.codes.USER_LLM_PROVIDER_PERMISSION_DENIED.title'
+  | 'conversation.agentError.codes.USER_LLM_PROVIDER_QUOTA_EXHAUSTED.body'
+  | 'conversation.agentError.codes.USER_LLM_PROVIDER_QUOTA_EXHAUSTED.title'
   | 'conversation.agentError.codes.USER_LLM_PROVIDER_RATE_LIMITED.body'
   | 'conversation.agentError.codes.USER_LLM_PROVIDER_RATE_LIMITED.title'
   | 'conversation.agentError.codes.USER_LLM_PROVIDER_TIMEOUT.body'
