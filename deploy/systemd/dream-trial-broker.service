@@ -1,0 +1,31 @@
+[Unit]
+Description=dream-trial-broker (OpenRouter trial key issuer)
+Documentation=file:///opt/dream-trial-broker/README-DEPLOY.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dreambroker
+Group=dreambroker
+WorkingDirectory=/opt/dream-trial-broker
+EnvironmentFile=/opt/dream-trial-broker/.env
+ExecStart=/opt/dream-trial-broker/bin/dream-trial-broker
+Restart=always
+RestartSec=3
+LimitNOFILE=65536
+
+# hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/dream-trial-broker/data
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+RestrictRealtime=true
+
+[Install]
+WantedBy=multi-user.target
