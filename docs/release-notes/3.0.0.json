@@ -3,54 +3,22 @@
   "date": "2026-08-30",
   "zh": [
     {
-      "t": "品牌战略升级：Dream 引擎",
-      "d": "One Work 从这一版起完整运行在自有的 Dream 引擎之上，拥有独立的代码库、构建流水线与更新体系，不再跟随任何开源上游。这是产品换代的分界，也是后续能力扩展的基础。"
+      "t": "单机版",
+      "d": "【新增】\n· 品牌战略升级：One Work 完整运行在自有的 Dream 引擎之上，拥有独立的三仓代码库、构建流水线与更新体系，不再跟随任何开源上游\n· 内置模型，开箱即用：首次打开无需注册模型服务、无需粘贴 API Key，首页一键领取可直接对话的免费模型（每台设备一次），落成一条可随时编辑或删除的普通模型服务\n· 知识库开箱即用：内置文本向量化服务，新建知识库与文档检索不再需要单独配置嵌入模型地址\n\n【改进】\n· 免费体验模型的入口改为界面角落的常驻推广位，新用户不容易再错过\n· 一轮对话被系统自行中止时，用当前界面语言说明原因，不再留下一段没有说明的空白\n· 深链协议迁移到 dream://，仍兼容旧的 aionui://\n· 媒体生成产物统一落到工作区 outputs/ 目录，正文内可直接内联预览\n· 媒体单价按分辨率分档，费用显示改为可选（默认关闭）\n· 上下文指示器对 dream 会话不再空白，并显示缓存命中率\n\n【修复】\n· 视频生成「有几率报错」根治，协议猜错时自动换用兄弟协议重试\n· 媒体 MCP 的跨语言环境变量契约在品牌迁移中被破坏，导致生成的图片/视频错位、正文卡片不渲染\n· 费用与 token 用量在被取消的对话轮次上报不正确"
     },
     {
-      "t": "内置模型，开箱即用",
-      "d": "第一次打开 One Work 不再需要注册模型服务、复制粘贴 API Key。首页点一下「一键体验免费模型」就能拿到一个可以直接对话的模型，每台设备一次；它会作为一条普通的模型服务出现在设置里，随时可以修改或删除。"
-    },
-    {
-      "t": "免费体验入口更好找",
-      "d": "免费体验模型的入口改为界面角落的常驻推广位，新用户不容易再错过。"
-    },
-    {
-      "t": "对话被中止时给出解释",
-      "d": "当一轮对话被系统自行中止时，会用你当前使用的语言说明原因，而不是留下一段没有说明的空白。"
-    },
-    {
-      "t": "知识库开箱即用",
-      "d": "内置了文本向量化服务，新建知识库、使用文档检索不再需要单独配置嵌入模型地址。"
-    },
-    {
-      "t": "企业版架构升级起步",
-      "d": "企业版的治理能力、管理进程与主存储做了结构性重构，为规模化部署打底。个人版的使用体验不受影响。"
+      "t": "企业版",
+      "d": "企业版 3.0.0 的架构重构已就绪，安装包随后单独发布。这一版企业侧的改动量不亚于单机版：\n\n【架构重构】\n· 治理面（组织 / SSO / 企业 / 计费 / 平台）改为编译期门控，单机版零企业代码；管理后台独立为单独进程\n· 企业主存储支持切换到 MySQL\n· 一键离线安装包，支持内网 air-gap 部署\n· 内置文本向量化容器，知识库 / RAG 开箱即用\n\n【授权与身份】\n· 资源授权矩阵：成员 / 部门 × 技能 / 工具 / 数字员工 / 模型 / 通道\n· 工作场景：工作台菜单 + 授权包 + 工作职能打包，5 个内置场景\n· License 详情页 + 逐模块授权 + 四项配额\n· 通讯录同步与离职检测（对接飞书等 IdP）；开放集成 API Key（路径白名单 + 策略绑定）\n\n【资源与内容】\n· 内容市场：管理员指定远端源，一键同步技能 / 工具 / 数字员工，SHA-256 增量更新\n· API 资产库：导入 OpenAPI / Swagger，发布为可调用的 agent 技能\n· 数字员工预置目录、知识库管理页（建库 / 上传 / 重建索引）\n· 配置金库：命名配置集，敏感值只写不读，实时引用计数\n\n【可观测与治理】\n· 数据报表四子页（用量总览 / 通道&模型 / 用户分析 / 审批&安全）+ KPI + CSV 导出\n· 智能体会话视图 + 逐次 LLM Trace + 智能体节点控制面（接入审批 / 可见性）\n· 三级记忆集合（全局 / 部门 / 个人）+ 提炼任务 + 记忆授权\n· 审批工作流（创作 / 资源 / 工具 / Prompt / 安全策略五类，终端工具阻塞式）、站内消息、个人文件仓库\n\n【安全策略】\n· 安全策略基线三档（宽松 / 标准 / 严格）+ 策略模板层\n· 破坏性命令 / 外连下载拦截、会话限流、消息脱敏、内容审计与 DLP\n· 模型渠道统一下发（密钥不落地成员端）、部门预算与成本分摊、模型成本管控\n\n【修复】\n· 对策略执行接线做了一次深度审计，修掉 10 个真实缺陷（含 3 个高危）"
     }
   ],
   "en": [
     {
-      "t": "A brand milestone: the Dream engine",
-      "d": "From this release, One Work runs entirely on our own Dream engine, with its own codebase, build pipeline and update system, no longer tracking any open-source upstream. This marks the product's next generation and the foundation for what comes next."
+      "t": "Personal edition",
+      "d": "[New]\n· A brand milestone: One Work now runs entirely on our own Dream engine, with its own three-repo codebase, build pipeline and update system, no longer tracking any open-source upstream\n· A built-in model, ready out of the box: no signing up for a provider or pasting an API key on first launch — one click on the home screen gets you a working free model (once per device) that lands in Settings as an ordinary model service you can edit or remove\n· Knowledge bases work out of the box: a text-embedding service is bundled, so creating a knowledge base and using document retrieval no longer requires configuring an embedding endpoint\n\n[Improved]\n· The free-trial model entry point is now a persistent promotion in the corner of the interface, so new users are less likely to miss it\n· When a conversation turn is stopped by the system itself, One Work explains why in your current language instead of leaving an unexplained blank\n· The OS deep-link scheme moved to dream://, with the old aionui:// still honored\n· Generated media now lands in the workspace outputs/ folder and previews inline in the conversation\n· Media unit pricing is tiered by resolution; the cost display is now optional (off by default)\n· The context indicator no longer goes blank on dream sessions and now shows the cache hit rate\n\n[Fixed]\n· A root-cause fix for intermittent video-generation errors, plus automatic retry on a sibling protocol when the guess is wrong\n· The media MCP's cross-language env contract was broken during the rebrand, misplacing generated images/videos and breaking inline cards\n· Cost and token usage were reported incorrectly for cancelled conversation turns"
     },
     {
-      "t": "A built-in model, ready out of the box",
-      "d": "Opening One Work for the first time no longer means signing up for a model provider and pasting an API key. One click on \"Try a free model\" on the home screen gets you a working model, once per device. It lands in Settings as an ordinary model service you can edit or remove at any time."
-    },
-    {
-      "t": "The free trial is easier to find",
-      "d": "The entry point for the free trial model is now a persistent promotion in the corner of the interface, so new users are less likely to miss it."
-    },
-    {
-      "t": "An explanation when a turn is stopped",
-      "d": "When a conversation turn is stopped by the system itself, One Work now explains why in your current language, instead of leaving an unexplained blank."
-    },
-    {
-      "t": "Knowledge bases work out of the box",
-      "d": "A text-embedding service is now bundled, so creating a knowledge base and using document retrieval no longer requires configuring an embedding model endpoint separately."
-    },
-    {
-      "t": "Enterprise architecture, first steps",
-      "d": "The enterprise edition's governance features, admin process and primary storage have been structurally reworked to support larger deployments. The personal edition is unaffected."
+      "t": "Enterprise edition",
+      "d": "The 3.0.0 enterprise architecture rework is ready; the installer ships separately soon after. The enterprise-side change here is no smaller than the personal edition's:\n\n[Architecture rework]\n· The governance plane (org / SSO / enterprise / billing / platform) is gated at compile time — the personal edition carries no admin code; the admin console is its own process\n· The enterprise primary store can switch to MySQL\n· One-command offline install bundle for air-gapped intranet deployment\n· A bundled text-embedding container — knowledge bases / RAG work out of the box\n\n[Authorization & identity]\n· Resource-authorization matrix: member / department × skill / tool / digital employee / model / channel\n· Work scenes: workbench menu + grant package + job function, five built-in scenes\n· A dedicated license detail page + per-module authorization + four quotas\n· Directory sync and departure detection (Feishu and other IdPs); open-integration API keys (path allowlist + policy binding)\n\n[Resources & content]\n· Content market: admin-curated remote sources, one-click sync of skills / tools / digital employees with SHA-256 incremental updates\n· API asset registry: import OpenAPI / Swagger, publish as callable agent skills\n· A pre-seeded digital-employee catalog, a knowledge-base management page (create / upload / reindex)\n· Config vault: named config sets, write-only sensitive values, live reference counts\n\n[Observability & governance]\n· A four-page data-reports suite (usage overview / channel & model / user analysis / approval & security) + KPIs + CSV export\n· Agent session views + per-call LLM trace + an agent-node control plane (access approval / visibility)\n· Three-tier memory collections (global / department / personal) + refinement jobs + read/write grants\n· An approval workflow (creation / resource / tool / prompt / security-policy, with blocking terminal-tool approvals), in-app notifications, a personal file vault\n\n[Security policy]\n· A three-level security-policy baseline (relaxed / standard / strict) + a policy-template layer\n· Destructive-command / outbound-download blocking, session rate limiting, message redaction, content audit and DLP\n· Unified model-channel distribution (keys never touch the member device), department budgets and cost allocation, model cost controls\n\n[Fixed]\n· A deep audit of the policy-enforcement wiring fixed 10 real defects, including 3 high-severity ones"
     }
   ]
 }
