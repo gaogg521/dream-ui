@@ -1,0 +1,56 @@
+{
+  "version": "3.0.0",
+  "date": "2026-08-30",
+  "zh": [
+    {
+      "t": "品牌战略升级：Dream 引擎",
+      "d": "One Work 从这一版起完整运行在自有的 Dream 引擎之上，拥有独立的代码库、构建流水线与更新体系，不再跟随任何开源上游。这是产品换代的分界，也是后续能力扩展的基础。"
+    },
+    {
+      "t": "内置模型，开箱即用",
+      "d": "第一次打开 One Work 不再需要注册模型服务、复制粘贴 API Key。首页点一下「一键体验免费模型」就能拿到一个可以直接对话的模型，每台设备一次；它会作为一条普通的模型服务出现在设置里，随时可以修改或删除。"
+    },
+    {
+      "t": "免费体验入口更好找",
+      "d": "免费体验模型的入口改为界面角落的常驻推广位，新用户不容易再错过。"
+    },
+    {
+      "t": "对话被中止时给出解释",
+      "d": "当一轮对话被系统自行中止时，会用你当前使用的语言说明原因，而不是留下一段没有说明的空白。"
+    },
+    {
+      "t": "知识库开箱即用",
+      "d": "内置了文本向量化服务，新建知识库、使用文档检索不再需要单独配置嵌入模型地址。"
+    },
+    {
+      "t": "企业版架构升级起步",
+      "d": "企业版的治理能力、管理进程与主存储做了结构性重构，为规模化部署打底。个人版的使用体验不受影响。"
+    }
+  ],
+  "en": [
+    {
+      "t": "A brand milestone: the Dream engine",
+      "d": "From this release, One Work runs entirely on our own Dream engine, with its own codebase, build pipeline and update system, no longer tracking any open-source upstream. This marks the product's next generation and the foundation for what comes next."
+    },
+    {
+      "t": "A built-in model, ready out of the box",
+      "d": "Opening One Work for the first time no longer means signing up for a model provider and pasting an API key. One click on \"Try a free model\" on the home screen gets you a working model, once per device. It lands in Settings as an ordinary model service you can edit or remove at any time."
+    },
+    {
+      "t": "The free trial is easier to find",
+      "d": "The entry point for the free trial model is now a persistent promotion in the corner of the interface, so new users are less likely to miss it."
+    },
+    {
+      "t": "An explanation when a turn is stopped",
+      "d": "When a conversation turn is stopped by the system itself, One Work now explains why in your current language, instead of leaving an unexplained blank."
+    },
+    {
+      "t": "Knowledge bases work out of the box",
+      "d": "A text-embedding service is now bundled, so creating a knowledge base and using document retrieval no longer requires configuring an embedding model endpoint separately."
+    },
+    {
+      "t": "Enterprise architecture, first steps",
+      "d": "The enterprise edition's governance features, admin process and primary storage have been structurally reworked to support larger deployments. The personal edition is unaffected."
+    }
+  ]
+}

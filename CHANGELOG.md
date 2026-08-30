@@ -5,6 +5,39 @@
 > 时期的历史事实，保留不改。版本号规则见
 > [`docs/contributing/versioning.md`](docs/contributing/versioning.md)。
 
+## [3.0.0](https://github.com/gaogg521/dream-ui/compare/v2.2.0...v3.0.0) (2026-08-30)
+
+**品牌战略升级 —— Dream 作为自有品牌与技术引擎正式确立。**
+
+`3.0.0` 是 One Work 的换代分界。从这一版起，产品完整运行在自有的 **Dream 引擎**之上，
+不再跟随任何开源上游，拥有独立的三仓代码库、构建流水线与发布源。围绕 Dream 引擎，
+这一阶段收敛了多智能体编排、工具调用与本地运行时的一致性，为后续能力扩展打底。
+
+同时打通新用户的最后一公里 —— **内置模型，开箱即用**：第一次打开无需注册第三方账号、
+无需粘贴 API Key，首页一键即可领到可直接对话的模型。企业版架构（治理面 feature 门控、
+admin 独立进程、企业主存储切换）的重构也从这一版起步。
+
+> `2.2.0` 是三仓独立化的内部分界版，从未对外发布；`3.0.0` 是新架构的首个公开版本，
+> 已涵盖 `2.2.0` 的全部内容。版本号跳到 `3.0.0` 是有意的品牌里程碑，见
+> [`docs/contributing/versioning.md`](docs/contributing/versioning.md)。
+
+### Desktop
+
+#### Features
+
+- **trial:** 免费体验模型入口改为角落常驻推广位，更易发现
+- **trial:** 体验模型的 provider 平台信息改由签发服务返回，不再前端硬编码
+- **i18n:** 一轮对话被系统自行中止时，用用户当前语言解释原因
+
+### Core ([v0.1.71-one.1](https://github.com/gaogg521/dream-core/releases/tag/v0.1.71-one.1))
+
+- **devops:** 内置 embedding 端点，知识库 / RAG 开箱即用（环境变量回落）
+- **conversation,memory:** 记忆管线接线（抽取 + 检索注入），个人版零行为变化
+- 多项企业版能力（P1 场景授权 / 内容市场 / 节点控制面 / 配置金库 / 安全策略模板等）
+  与企业主存储 P3-3 第一阶段基建。完整条目见 dream-core 的 CHANGELOG。
+
+---
+
 ## [2.2.0](https://github.com/gaogg521/dream-ui/compare/v2.1.61...v2.2.0) (2026-08-28)
 
 新架构（dream 三仓）的第一个版本。
