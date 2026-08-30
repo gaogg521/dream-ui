@@ -23,12 +23,12 @@ const os = require('os');
 const path = require('path');
 const { verifyBundledAioncoreResources } = require('./verify-bundled-aioncore-resources');
 
-// DREAM_BACKEND_REPO ("owner/repo") overrides the download source. This
-// fork defaults to its own AionCore fork releases (one-* crates included);
-// set DREAM_BACKEND_REPO=iOfficeAI/AionCore to build against upstream.
-const REPO_SLUG = (process.env.DREAM_BACKEND_REPO || 'gaogg521/1oneCore').split('/');
+// DREAM_BACKEND_REPO ("owner/repo") overrides the download source. Defaults to
+// the dream-core repo, whose release.yml publishes the aioncore-* assets this
+// script downloads.
+const REPO_SLUG = (process.env.DREAM_BACKEND_REPO || 'gaogg521/dream-core').split('/');
 const GITHUB_OWNER = REPO_SLUG[0];
-const GITHUB_REPO = REPO_SLUG[1] || 'AionCore';
+const GITHUB_REPO = REPO_SLUG[1] || 'dream-core';
 
 const ACTIONS_ARTIFACT_TARGETS = {
   'darwin-arm64': {
