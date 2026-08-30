@@ -118,7 +118,8 @@ describe('UpdateNotificationCard', () => {
           recommendedAsset: {
             name: 'AionUi-2.1.14-mac-arm64.dmg',
             url: 'https://static.dream.com/releases/2.1.14/Dream UI-2.1.14-mac-arm64.dmg',
-            fallbackUrl: 'https://github.com/iOfficeAI/Dream UI/releases/download/v2.1.14/Dream UI-2.1.14-mac-arm64.dmg',
+            fallbackUrl:
+              'https://github.com/iOfficeAI/Dream UI/releases/download/v2.1.14/Dream UI-2.1.14-mac-arm64.dmg',
             size: 123,
           },
         },

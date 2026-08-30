@@ -75,9 +75,9 @@
 
 与旧版单仓 [1ONE ClaudeCode](https://github.com/gaogg521/1ONE-Claude-Code) 不同，v2 采用 **前端 + 后端分离**：
 
-| 仓库                                                 | 职责                                                         |
-| ---------------------------------------------------- | ------------------------------------------------------------ |
-| **dream-ui**（本仓库）                               | Electron 桌面、React UI、WebUI 静态资源、安装包              |
+| 仓库                                                     | 职责                                                          |
+| -------------------------------------------------------- | ------------------------------------------------------------- |
+| **dream-ui**（本仓库）                                   | Electron 桌面、React UI、WebUI 静态资源、安装包               |
 | **[dream-core](https://github.com/gaogg521/dream-core)** | Rust 本地服务：`dreamcore` 进程，会话/助手/Agent/MCP/企业 API |
 
 桌面启动时自动拉起 bundled 的 `dreamcore`；浏览器 WebUI 通过 HTTP + WebSocket 访问同一套后端。
@@ -92,7 +92,7 @@
 
 ## 和竞品比什么
 
-| 对比维度                            | **One Work**                | Cursor  |   Copilot   | 原生 Claude Code |
+| 对比维度                            | **One Work**                 | Cursor  |   Copilot   | 原生 Claude Code |
 | ----------------------------------- | ---------------------------- | :-----: | :---------: | :--------------: |
 | 开源                                | ✅ Apache-2.0                |   🔒    |     🔒      |        🔒        |
 | **官方 CLI 桥接自定义模型**         | ✅ **Codex/Claude 一键桥接** |   ❌    |     ❌      | ❌ 只能官方账号  |
@@ -532,7 +532,7 @@ flowchart TB
 | ---------- | --------------------------------------------------------------------------------------------------------- |
 | 客户端 UI  | Electron 37 + React 19 + TypeScript + Arco Design                                                         |
 | WebUI 网关 | Node 静态服务器（`@dream/web-host`），托管构建产物 + 反向代理到 dreamcore                                 |
-| 本地后端   | **dream-core**（Rust，`dreamcore` 二进制，30+ 领域 crate）                                                   |
+| 本地后端   | **dream-core**（Rust，`dreamcore` 二进制，30+ 领域 crate）                                                |
 | 企业扩展   | `one-org` · `one-enterprise` · `one-sso` · `one-billing` · `one-employee` · `one-devops` · `one-platform` |
 | 存储       | SQLite（`%APPDATA%` 下按环境隔离；知识库用内置 FTS5 + 向量做混合检索）                                    |
 | 协议       | ACP 多 Agent、MCP、Extension SDK                                                                          |

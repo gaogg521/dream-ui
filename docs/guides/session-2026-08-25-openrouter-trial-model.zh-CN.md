@@ -140,7 +140,7 @@ dream-ui：拿到结果后直接调用已有的 POST /api/providers（CreateProv
 2. ~~部署后设置 `DREAM_TRIAL_BROKER_URL` 环境变量~~ → 已由 `packages/web-host` 内置默认值
 3. 补一次**打包桌面端**手动冒烟：两个入口点击 → 出现 provider → 能正常发消息 → 二次点击/
    重启后正确显示"已体验"（2026-08-28 只用 headless 的 aioncore 二进制验到 `POST
-   /api/providers/trial-key` 这一层，没点过真实 UI）
+/api/providers/trial-key` 这一层，没点过真实 UI）
 4. 如果要做 Phase 2 付费订阅，重新读一遍本文档"背景"一节里关于 `limit_reset` 不认支付
    状态的坑（订阅到期必须主动 `PATCH` 降额/禁用 key，不能只靠 OpenRouter 自动重置）
 
@@ -150,16 +150,16 @@ dream-ui：拿到结果后直接调用已有的 POST /api/providers（CreateProv
 
 ### broker 部署（生产环境已上线）
 
-| | |
-|---|---|
-| 机器 | `43.163.105.71`（Rocky Linux 10，腾讯云，跑着 nginx + certbot + `operone`） |
-| 方式 | **不用 Docker**，源码在服务器上 `cargo build --release`，systemd 拉起，跑在 `127.0.0.1:8787` |
-| 服务用户 | `dreambroker`（system / nologin），app 目录 `/opt/dream-trial-broker/` |
-| 公网入口 | `https://work.1oneclaw.com/trial-broker` —— 复用已有证书的 `work.1oneclaw.com`，nginx 加一段 `location`（`/etc/nginx/conf.d/1onework-www.conf`），**没有新加 DNS、没有新签证书** |
-| `/internal/stats` | 公网返回 404，只有 `127.0.0.1:8787` 能访问 |
-| 熔断/额度 | 默认值：`$50/天` 全局熔断、`$1/key/天` 硬顶、90 天过期、每 IP 5 次/小时 |
-| Management Key | 存在服务器 `/opt/dream-trial-broker/.env`（0600，仅 `dreambroker` 可读），代码里从不出现 |
-| 源码 + 工具链 | 服务器 `/root/build/dream-trial-broker` 留着源码 + rustup，更新跑 `deploy/redeploy.sh` |
+|                   |                                                                                                                                                                                  |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 机器              | `43.163.105.71`（Rocky Linux 10，腾讯云，跑着 nginx + certbot + `operone`）                                                                                                      |
+| 方式              | **不用 Docker**，源码在服务器上 `cargo build --release`，systemd 拉起，跑在 `127.0.0.1:8787`                                                                                     |
+| 服务用户          | `dreambroker`（system / nologin），app 目录 `/opt/dream-trial-broker/`                                                                                                           |
+| 公网入口          | `https://work.1oneclaw.com/trial-broker` —— 复用已有证书的 `work.1oneclaw.com`，nginx 加一段 `location`（`/etc/nginx/conf.d/1onework-www.conf`），**没有新加 DNS、没有新签证书** |
+| `/internal/stats` | 公网返回 404，只有 `127.0.0.1:8787` 能访问                                                                                                                                       |
+| 熔断/额度         | 默认值：`$50/天` 全局熔断、`$1/key/天` 硬顶、90 天过期、每 IP 5 次/小时                                                                                                          |
+| Management Key    | 存在服务器 `/opt/dream-trial-broker/.env`（0600，仅 `dreambroker` 可读），代码里从不出现                                                                                         |
+| 源码 + 工具链     | 服务器 `/root/build/dream-trial-broker` 留着源码 + rustup，更新跑 `deploy/redeploy.sh`                                                                                           |
 
 部署脚本、systemd unit、nginx 片段、运维手册都进了 broker 仓库的 `deploy/` 目录
 （`deploy/DEPLOY.md` 是完整手册）。
@@ -189,12 +189,12 @@ DB 已重置）：
 **关键决策：默认值只在打包版生效**（`app.isPackaged === true`）。理由是这个 broker 签出的
 每一把 key 花的都是**公司自己的 OpenRouter 预算**，所以：
 
-| 场景 | `isPackaged` | 默认行为 |
-| --- | --- | --- |
-| 打包发布的桌面安装包 | `true` | **开** —— 新用户开箱即用 |
-| `bun run dev` / `bun start` | `false` | 关（想测就显式设 env） |
-| `bun run webui` 自建服务端 | `false`（`scripts/webui.ts` 写死） | 关 |
-| 企业 SSO / Docker 部署 | `false` | 关 —— 不会让别人的部署替公司花钱 |
+| 场景                        | `isPackaged`                       | 默认行为                         |
+| --------------------------- | ---------------------------------- | -------------------------------- |
+| 打包发布的桌面安装包        | `true`                             | **开** —— 新用户开箱即用         |
+| `bun run dev` / `bun start` | `false`                            | 关（想测就显式设 env）           |
+| `bun run webui` 自建服务端  | `false`（`scripts/webui.ts` 写死） | 关                               |
+| 企业 SSO / Docker 部署      | `false`                            | 关 —— 不会让别人的部署替公司花钱 |
 
 任何一档都能用显式 `DREAM_TRIAL_BROKER_URL=<url>` 强开、用空值强关。
 
@@ -206,14 +206,14 @@ DB 已重置）：
 用 `DREAM_MULTI_INSTANCE=1`（`dream-ui-Dev-2`，一个**全新空 profile**，才能触发首页空状态
 横幅）+ `DREAM_DEVTOOLS_CDP_PORT=9231` 起 dev，用 CDP 驱动真实点击。六项全过：
 
-| # | 场景 | 结果 |
-| --- | --- | --- |
-| 1 | 全新 profile 打开首页 | 空状态横幅"还没有配置模型 / 一键体验免费模型"正常出现 |
-| 2 | 点横幅按钮 | broker 真实签发 → provider 落库（`id=trial-openrouter`，3 个模型）→ 横幅自动消失 → 成功 toast → 模型选择器自动切到 `deepseek/deepseek-chat` |
-| 3 | 用领到的模型真实发消息 | 发"只回复两个字：收到"→ 模型回"收到"。**开箱即用这条链路是真的通的** |
-| 4 | 「添加模型 → 手动添加」弹窗里的卡片 | 显示对勾 + 已领取文案，`disabled` 属性在位 |
-| 5 | 删掉这条 provider 后再点横幅 | 409 → toast"这台设备已经体验过了"（**注意**：Arco 的 Message 3 秒就消失，验证时若隔太久再断言会误判成"没有任何提示"，我第一次就踩了这个坑） |
-| 6 | 完整重启 App 后再领 | 仍然 409 —— `install_id` 确实持久化在 `client_pref` 里，**重启不能绕过去重** |
+| #   | 场景                                | 结果                                                                                                                                        |
+| --- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 全新 profile 打开首页               | 空状态横幅"还没有配置模型 / 一键体验免费模型"正常出现                                                                                       |
+| 2   | 点横幅按钮                          | broker 真实签发 → provider 落库（`id=trial-openrouter`，3 个模型）→ 横幅自动消失 → 成功 toast → 模型选择器自动切到 `deepseek/deepseek-chat` |
+| 3   | 用领到的模型真实发消息              | 发"只回复两个字：收到"→ 模型回"收到"。**开箱即用这条链路是真的通的**                                                                        |
+| 4   | 「添加模型 → 手动添加」弹窗里的卡片 | 显示对勾 + 已领取文案，`disabled` 属性在位                                                                                                  |
+| 5   | 删掉这条 provider 后再点横幅        | 409 → toast"这台设备已经体验过了"（**注意**：Arco 的 Message 3 秒就消失，验证时若隔太久再断言会误判成"没有任何提示"，我第一次就踩了这个坑） |
+| 6   | 完整重启 App 后再领                 | 仍然 409 —— `install_id` 确实持久化在 `client_pref` 里，**重启不能绕过去重**                                                                |
 
 另外单独验证了本次改动的核心行为：**dev 下不设 `DREAM_TRIAL_BROKER_URL` 时**，
 `POST /api/providers/trial-key` 返回 400 `trial key issuance is not configured on this

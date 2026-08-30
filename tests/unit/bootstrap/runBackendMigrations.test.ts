@@ -266,9 +266,7 @@ describe('runBackendMigrations', () => {
 
       await runBackendMigrations(configFile as never);
 
-      const renames = updateServerMock.mock.calls.filter(
-        (call) => call[0].data?.name === BUILTIN_IMAGE_GEN_NAME
-      );
+      const renames = updateServerMock.mock.calls.filter((call) => call[0].data?.name === BUILTIN_IMAGE_GEN_NAME);
       expect(renames).toHaveLength(1);
       expect(renames[0][0].id).toBe('image-server-id');
       expect(deleteServerMock).not.toHaveBeenCalled();
@@ -287,9 +285,7 @@ describe('runBackendMigrations', () => {
 
       expect(deleteServerMock).toHaveBeenCalledOnce();
       expect(deleteServerMock).toHaveBeenCalledWith({ id: 'legacy-image-id' });
-      expect(
-        updateServerMock.mock.calls.some((call) => call[0].data?.name === BUILTIN_IMAGE_GEN_NAME)
-      ).toBe(false);
+      expect(updateServerMock.mock.calls.some((call) => call[0].data?.name === BUILTIN_IMAGE_GEN_NAME)).toBe(false);
     });
 
     it('leaves an install that is already on the current name alone', async () => {

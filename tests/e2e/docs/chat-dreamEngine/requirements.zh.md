@@ -44,12 +44,12 @@
 
 ### 2.1 维度定义表
 
-| 维度           | 档位 | 说明                                   | 源码追溯                                                 |
-| -------------- | ---- | -------------------------------------- | -------------------------------------------------------- |
+| 维度           | 档位 | 说明                                   | 源码追溯                                                      |
+| -------------- | ---- | -------------------------------------- | ------------------------------------------------------------- |
 | **文件夹关联** | 2 档 | 无关联 / 关联                          | `DreamEngineSendBox.tsx:331-337` atPath 状态 + event listener |
 | **文件上传**   | 2 档 | 无上传 / 上传                          | `DreamEngineSendBox.tsx:103-125` file input handler           |
-| **模型**       | 2 档 | 从 ACP 模型列表挑 2 个（推荐配置见下） | `GuidModelSelector.tsx` + `useGuidModelSelection.ts`     |
-| **权限模式**   | 3 档 | default / auto_edit / yolo             | aionrs runtime capabilities + `AgentModeSelector`        |
+| **模型**       | 2 档 | 从 ACP 模型列表挑 2 个（推荐配置见下） | `GuidModelSelector.tsx` + `useGuidModelSelection.ts`          |
+| **权限模式**   | 3 档 | default / auto_edit / yolo             | aionrs runtime capabilities + `AgentModeSelector`             |
 | **对话中切换** | 必测 | 切换模型 + 切换权限                    | `DreamEngineModelSelector.tsx` + `AgentModeSelector`          |
 
 ### 2.2 维度详细说明
@@ -924,20 +924,20 @@ test.beforeAll(async ({ page }) => {
 
 ## 附录: 源码文件清单
 
-| 文件                                                                          | 行号   | 关键功能                                                            |
-| ----------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------- |
-| `src/renderer/pages/guid/GuidPage.tsx`                                        | 83-100 | providerAgentKey 状态（aionrs/gemini）                              |
-| `src/renderer/pages/guid/components/AgentPillBar.tsx`                         | 79-82  | agent pill 渲染 + data-testid                                       |
-| `src/renderer/pages/guid/components/GuidActionRow.tsx`                        | 67-330 | 文件附件 + 模式选择器 + 发送按钮                                    |
-| `src/renderer/pages/guid/components/GuidModelSelector.tsx`                    | 35-100 | 模型选择器（guid 页）                                               |
-| `src/renderer/hooks/agent/useModelProviderList.ts`                            | 30     | `ipcBridge.mode.getModelConfig.invoke()` — 用户配置的 provider 列表 |
+| 文件                                                                                    | 行号   | 关键功能                                                            |
+| --------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------- |
+| `src/renderer/pages/guid/GuidPage.tsx`                                                  | 83-100 | providerAgentKey 状态（aionrs/gemini）                              |
+| `src/renderer/pages/guid/components/AgentPillBar.tsx`                                   | 79-82  | agent pill 渲染 + data-testid                                       |
+| `src/renderer/pages/guid/components/GuidActionRow.tsx`                                  | 67-330 | 文件附件 + 模式选择器 + 发送按钮                                    |
+| `src/renderer/pages/guid/components/GuidModelSelector.tsx`                              | 35-100 | 模型选择器（guid 页）                                               |
+| `src/renderer/hooks/agent/useModelProviderList.ts`                                      | 30     | `ipcBridge.mode.getModelConfig.invoke()` — 用户配置的 provider 列表 |
 | `src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineChat.tsx`             | 19-57  | 对话页容器 + MessageList + SendBox                                  |
 | `src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineSendBox.tsx`          | 88-459 | 发送框逻辑 + 文件附件 + 权限选择                                    |
 | `src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineModelSelector.tsx`    | 19-135 | 模型选择器（对话页）                                                |
 | `src/renderer/pages/conversation/platforms/dreamEngine/useDreamEngineModelSelection.ts` | 24-73  | 模型选择 hook（过滤 google auth）                                   |
 | `src/renderer/pages/conversation/platforms/dreamEngine/useDreamEngineMessage.ts`        | 20-321 | 流式消息处理 + 工具状态                                             |
 | `src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineSendBox.tsx`          | —      | aionrs runtime capabilities 转换为权限选项                          |
-| `src/process/task/AionrsManager.ts`                                           | 78-781 | 进程管理 + 权限审批 + DB 持久化                                     |
-| `src/process/agent/aionrs/index.ts`                                           | 54-450 | binary 启动 + stdin/stdout 协议                                     |
-| `src/process/agent/aionrs/binaryResolver.ts`                                  | —      | binary 路径解析逻辑                                                 |
-| `aioncore aionui.db`                                                          | —      | conversations + messages 由 backend 独占持久化                      |
+| `src/process/task/AionrsManager.ts`                                                     | 78-781 | 进程管理 + 权限审批 + DB 持久化                                     |
+| `src/process/agent/aionrs/index.ts`                                                     | 54-450 | binary 启动 + stdin/stdout 协议                                     |
+| `src/process/agent/aionrs/binaryResolver.ts`                                            | —      | binary 路径解析逻辑                                                 |
+| `aioncore aionui.db`                                                                    | —      | conversations + messages 由 backend 独占持久化                      |
