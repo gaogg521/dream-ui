@@ -42,11 +42,16 @@ aionrs 改完推 master
 >
 > **后端 tag 必须先发**：`package.json` 的 `aioncoreVersion` 指向的 1oneCore Release 必须真实存在，CI 才下得到 aioncore。这个 tag 不会自己产生——2026-07-31 打 2.1.51 时 `aioncoreVersion` 已是 `v0.1.53-one.1` 而 1oneCore 最新 Release 只到 `v0.1.49-one.3`，必须先去 1oneCore 打 tag（`release.yml` 由 `v*` 触发，六平台约 22 分钟）再触发前端构建。
 
-触发方式：`gh workflow run build-manual.yml --repo gaogg521/1oneUI --ref one-main -f branch=one-main -f platform=macos-arm64 -f skip_code_quality=false`
+触发方式（dream-ui，默认分支就是 `main`）：
+`gh workflow run build-manual.yml --repo gaogg521/dream-ui --ref main -f branch=main -f platform=macos-arm64 -f installers_only=false`
 
-### 1.1 ⚠️ `branch` 输入必须填 `one-main`，不是 `main`
+- `platform` 是单选，没有"两个 Mac 一起"选项——arm64 / x64 各触发一次（或 `all`，但会连 win/linux 一起打，浪费）。
+- **要发版就 `installers_only=false`**（默认 `true`）：`true` 会在上传 artifact 前删掉 `.zip`/`.yml`，而 Mac 自动更新的 `latest*.yml` 指向的是 `.zip` 不是 `.dmg`——只留 `.dmg` 的包等于没自动更新。
 
-workflow 的 `branch` input 默认值是 `main`，但**这个 fork 的默认分支是 `one-main`**。不改会 checkout 到不存在/过期的 `main`。`--ref one-main` 和 `-f branch=one-main` 都要给。
+### 1.1 `branch` 输入：dream-ui 填 `main`（旧 1oneUI 是 `one-main`）
+
+workflow 的 `branch` input 默认值是 `main`。**dream-ui 的默认分支就是 `main`**，直接用即可。
+（历史遗留：旧仓库 `gaogg521/1oneUI` 的默认分支是 `one-main`，那边要 `--ref one-main` + `-f branch=one-main` 都给；别把两仓搞混。）
 
 ### 1.2 GitHub Actions 计费拦截（私有仓库）——3 秒零步骤失败，错误藏得很深
 
@@ -85,19 +90,65 @@ gh api "repos/gaogg521/1oneUI/check-runs/<jobId>/annotations" \
 
 > 判断"失败是否既有/无关"：本次 diff 有没有碰 `.ts/.tsx`？没碰就是既有失败。`git log --oneline v<上个tag>..HEAD -- 'packages/**/*.tsx'` 一看便知。
 
-### 1.4 macOS 签名/公证的坑（⚠️ dream-ui 的 `IDENTITY` secret 现在是错的，见下）
+### 1.4 macOS 签名/公证的坑
 
-- **`IDENTITY` secret 不能带 `Developer ID Application:` 前缀**，只要公司名部分（electron-builder 自己加前缀）。带了 electron-builder 26.x 直接报 `Please remove prefix "Developer ID Application:" from the specified name`，签名失败。
-  - **2026-08-31 在 dream-ui 真踩过**：配 secret 时把证书完整 CN（`Developer ID Application: Huanle Entertainment (Shanghai)Technology Co., Ltd. (HKT9687899)`）原样填进了 `IDENTITY`，3.0.0 的 arm64/x64 两个 Mac 包都签名失败、兜底打出未签名包发了出去（用户装机"已损坏"）。正确值是去掉前缀的 `Huanle Entertainment (Shanghai)Technology Co., Ltd. (HKT9687899)`。1oneUI 的 secret 一直是对的，dream-ui 配错了。
-  - 现在 `build-with-builder.js` 的 `normalizeSigningIdentityEnv()` 会在跑 electron-builder 前**自动剥掉** `CSC_NAME`/`identity` 的 `Developer ID Application:` / `Developer ID Installer:` 前缀，日志里会打 `🔑 Stripped "Developer ID …:" prefix`。但 secret 本身也该改对。
-- **DMG 重试兜底曾造成假阳性 success（已修）**：`build-with-builder.js` 检测到 ".app 有了但 .dmg 没生成"会用 `--prepackaged` 重试，这条路**跳过签名**。现在 `buildWithDmgRetry` 在重试前会先判断：配了签名但 `.app` 没有 `Authority=Developer ID Application` → 判定为签名失败，**直接 throw 让 CI 红**，不再兜底；`createMacArtifactsWithPrepackaged` 产物也会复查同一条件。CI 的 `_build-reusable.yml` "Build with electron-builder (macOS)" step 也加了：日志出现 `remove prefix "Developer ID` / `code signing failed` 一律 `exit 1`。所以现在只有"真签好了、只有公证挂"才会降级为 warning。仍建议日志里确认 `Notarization completed successfully`。
-- **`codesign` 偶发挂死近 6 小时**：`codesign` 默认做在线证书吊销检查（OCSP），网络请求卡住且它没内部超时会死等。是 flaky，不是配置问题；`build` step 卡几小时不动就是它，取消重跑。
-- 需要的 6 个 secrets：`BUILD_CERTIFICATE_BASE64` / `P12_PASSWORD` / `IDENTITY` / `TEAM_ID` / `APPLE_ID` / `APPLE_ID_PASSWORD`（涉及证书/密码的 base64/导入都由用户自己在 GitHub 网页做，AI 不经手明文）。
+- **`IDENTITY` secret 不能带 `Developer ID Application:` 前缀**，只要公司名部分（electron-builder 自己加前缀）。带了 electron-builder 26.x 直接报 `⨯ Please remove prefix "Developer ID Application:" from the specified name — appropriate certificate will be chosen automatically`，签名失败。正确值：`Huanle Entertainment (Shanghai)Technology Co., Ltd. (HKT9687899)`（去掉 `Developer ID Application: ` 前缀）。
+  - **2026-08-31 在 dream-ui 真踩过并已修**：配 secret 时把证书完整 CN 原样填进了 `IDENTITY`，3.0.0 的 arm64/x64 两个 Mac 包都签名失败、兜底打出未签名包发了出去、CI 报绿、用户装机"已损坏"。已 `gh secret set IDENTITY --repo gaogg521/dream-ui` 改对（值非机密——证书 CN 在任何已签名二进制里都可见）。1oneUI 的 secret 一直是对的。
+  - `build-with-builder.js` 的 `normalizeSigningIdentityEnv()` 现在跑 electron-builder 前**自动剥掉** `CSC_NAME`/`identity` 的 `Developer ID Application:` / `Developer ID Installer:` 前缀（日志打 `🔑 Stripped "Developer ID …:" prefix`），secret 写错也不再连累签名——但 secret 本身也该是对的。
+- **DMG 重试兜底曾造成假阳性 success（已修，2026-08-31）**：`buildWithDmgRetry` 检测到 ".app 有了但 .dmg 没生成"会用 `--prepackaged` 重试，这条路**跳过签名**、只把已有的 `.app`（`afterSign.js` 的 ad-hoc 兜底签名）塞进 DMG。而 CI 只看"DMG 是否存在"就报绿——于是 3.0.0 一路把 ad-hoc 包发到了 COS。
+  - 现在 `buildWithDmgRetry` 重试前先判断：配了签名（`CSC_LINK`/`CSC_NAME`/`CSC_KEYCHAIN` 任一存在）但 `.app` 的 `codesign -dv` 里没有 `Authority=Developer ID Application` → 判定签名失败，**直接 throw 让 CI 红**，不再兜底；`createMacArtifactsWithPrepackaged` 产物也复查同条件。
+  - `_build-reusable.yml` "Build with electron-builder (macOS)" step：`build.log` 出现 `remove prefix "Developer ID` / `code signing failed` / `No identity found` → `::error` + `exit 1`；只有 `build.log` 里**真有** `signing … Developer ID Application` 成功行、且只是 `notariz`/`staple` 挂了，才降级 warning。
+  - **验收判据永远是日志三连**：`• signing file=out/mac-*/One Work.app … identityName=Developer ID Application:` → `App One Work is properly code signed` → `Notarization completed successfully`，且**没有** `Retrying … --prepackaged`。别只看 CI 绿灯。
+- **`codesign` 偶发挂死近 6 小时**：`codesign` 默认做在线证书吊销检查（OCSP），网络请求卡住且它没内部超时会死等。是 flaky，不是配置问题；`build` step 卡几小时不动就是它，取消重跑（现有 `timeout-minutes: 60` 会兜底）。
+- 需要的 6 个 secrets：`BUILD_CERTIFICATE_BASE64` / `P12_PASSWORD` / `IDENTITY` / `TEAM_ID` / `APPLE_ID` / `APPLE_ID_PASSWORD`（涉及证书/密码的 base64/导入都由用户自己在 GitHub 网页做，AI 不经手明文；`IDENTITY` 是证书 CN、非机密，AI 可以 `gh secret set`）。`afterSign.js` 读的是小写 `appleId`/`appleIdPassword`/`teamId` env，workflow 已同时喂 `appleId=APPLE_ID` 等。
 - macOS 老系统（Big Sur 11.x）兼容：内置托管 Node 已按平台降到 22.11.0（新 Xcode 的 chained-fixups 格式老 dyld 加载不了），见 1oneCore `1797fcf7`。
 
 ### 1.5 ⚠️ `Build and Release`（打 tag 自动发布）在本 fork 从未真正触发过
 
-`1oneUI/.github/workflows/build-and-release.yml`（`on: push tags`）历史上 `total_count: 0`，从没跑过（GitHub 层面某设置卡着，未查明）。**别指望打 1oneUI tag 自动出包**。正式路径是：`build-manual.yml` 手动出各平台产物 → `gh release create/upload` 手动拼 Release。（注意：**1oneCore 的 `release.yml` 是好的**，`v*` tag 能正常触发产 6 资产，别和 1oneUI 的搞混。）
+`build-and-release.yml`（`on: push tags`）历史上 `total_count: 0`，从没跑过（GitHub 层面某设置卡着，未查明）。**别指望打 dream-ui tag 自动出包**。正式路径是：`build-manual.yml` 手动出各平台产物 → 本地 aws-cli 传 COS（**不发 GitHub Release**，见 memory `release-channel-cos-website-only` 和 §6）。（注意：**dream-core 的 `release.yml` 是好的**，`v*` tag 能正常触发产 6 资产，别和 dream-ui 的搞混。）
+
+### 1.6 复盘：2026-08-31 v3.0.0 Mac 发布（"已损坏"根治 + `1onecode`→`One Work` 改名）
+
+一次把「用户下的 Mac 包已损坏」查到底 + 顺手清掉历史品牌名的完整过程。踩到的坑按出现顺序：
+
+**A. `.app` / DMG / Gatekeeper 弹窗显示的是 `1onecode` 不是 `One Work`——不是拉了老资源**
+
+`electron-builder.yml` 里的 `executableName: 1onecode`。electron-builder 26.x（`app-builder-lib/out/appInfo.js`）：
+
+```js
+this.productFilename = executableName != null ? sanitizeFileName(executableName) : this.sanitizedProductName;
+```
+
+`productFilename` 决定 **`.app` 目录名、DMG 卷标题、Windows `.exe` 名、Windows 默认安装目录**——`productName: One Work` 在这几处**全不生效**。装完启动后窗口标题 / Dock / 关于页都对（那些读 `CFBundleName`），只有「装之前的壳」是 `1onecode`。已验证 2.1.61 发布包内部就是 `1onecode.app`，每个包都这样，不是回归。
+
+- **修法**：直接删 `executableName`（回落 `productName`）。Linux 单独加 `linux.executableName: one-work`（deb / 二进制名不要空格）+ `desktop.entry.Icon: one-work`。
+- **`executableName` 冻结跟 userData 无关**——生产 userData 是 `configureChromium.ts` / `common/platform/index.ts` 用 `app.setName(PROD_USERDATA_APP_NAME)` + 显式 `app.setPath('userData', …)` 钉的，跟 `executableName` / `productName` 都无关。CLAUDE.md 旧「运行时身份·刻意不改」表把三个值绑一起是过度保守，实际只有 `appId` 真必须冻结（Squirrel.Mac 按 `CFBundleIdentifier` 匹配升级包、Win 卸载注册表 GUID 由它派生、签名证书 team 也绑它）。
+- 连带要一起改的 fork 自有文件：`resources/installer.nsh`（`$LOCALAPPDATA\Programs\1onecode` → `One Work`）、`resources/windows/installer-observability.nsh`（`AIONUI_APP_EXECUTABLE_FILENAME`）、`resources/windows/support/query-lockers.ps1`、`scripts/build-with-builder.js` 的进程 kill 列表、`scripts/packaged-launch.mjs`、`scripts/dev-bootstrap.mjs`、`tests/e2e/fixtures.ts`、`packages/desktop/src/sentry.ts` 的 `installDirs`。旧名一律留作兜底，别删。
+
+**B. `PROD_USERDATA_APP_NAME` 改名要配首启迁移**
+
+`1ONE Code` → `One Work` 直接改会让存量用户开 3.0.0 看到空白（数据没删、只是不读了）。加了 `common/platform/index.ts` 的 `migrateAndResolveProdUserDataDir(appSupportDir)`：目标目录已存在就用它；否则旧目录（`LEGACY_PROD_USERDATA_APP_NAMES`）存在就 `renameSync` 搬过去；rename 失败（跨卷 / 被锁）就**就地用旧目录**，数据绝不丢。`configureChromium.ts` + `getPlatformServices()` 两个调用点都换成它。
+
+- ⚠️ `LEGACY_PROD_USERDATA_APP_NAMES` **刻意只放 `1ONE Code`，不放 `AionUi`**——`AionUi` 是上游的目录名，同机跑着上游 App 的人会被误搬数据（跟 `getDevAppName` 撞库同一类事故）。
+- **Windows 真机验迁移的正确姿势**：Electron 在 Windows 读 `SHGetKnownFolderPath(FOLDERID_RoamingAppData)`，**不认 `%APPDATA%` 环境变量**——`Start-Process` 前 `$env:APPDATA=...` 没用，会打到真实目录去。用 Chromium 开关 `--user-data-dir=<沙箱>`：`app.getPath('userData')` 会返回它，迁移里的 `path.dirname(userData)` 就落在沙箱里，预置 `<沙箱>\1ONE Code\` 就能安全验。跑完 `1ONE Code` 消失、`One Work` 出现、marker 文件原样保留 = 通过。
+- Mac 侧同一函数、同一 `configureChromium.ts` 生产分支，只有 `dirname(userData)` 落点不同（`~/Library/Application Support`）。本地无 Mac 时单测 + Win 真机 + 代码同源可作为可接受的信心，但**能上真 Mac 就上**。
+- 全仓无 `safeStorage`/`keytar` → 模型 key 在 SQLite，迁移 = 纯目录搬移，不涉及 keychain 重新加密。
+
+**C. `gh run download` 从公司专线拉 CI 产物：慢 + 抽风，必须带重试**
+
+跟 §6 说的"内网→GitHub 上传慢"是同一条链路，下载同样慢（实测 ~1-2.5 MiB/s，一个 ~1.4GB 的 Mac artifact 要 10-20 分钟）而且会中途报 `error extracting zip archive` / `The file exists`（上一次失败留的半成品）。**每个 artifact 单独 `gh run download --name <artifact> -D <dir>` + 5 次重试 + 每次先 `rm -rf` 目标目录 + 下完检查预期文件在不在**。别用一条 `gh run download <run>`（多 artifact 顺序下、中间挂了前功尽弃）。
+
+**D. 后台跑长脚本：用 Bash 工具原生 `run_in_background`，别 `nohup … &` 套娃**
+
+`nohup cmd & ` 塞进一个 `run_in_background` 调用里，外层 wrapper 一退，MSYS 会把子进程连带杀掉（实测第一次上传脚本这么死的）。直接 `bash publish.sh > log 2>&1` 配 `run_in_background: true`——那个能稳跑 20+ 分钟。
+
+**E. `format:check` 是整仓跑，不是只跑改动文件**
+
+两个 PR 都改了 `CLAUDE.md` 的**不同段落**，各自分支 `oxfmt <changed files>` 都过；合进 main 后，同一张 Markdown 表格的列宽要按所有行重算，`bun run format:check`（整仓）挂。**合并涉及 `.md` 的多个分支后，务必再 `bun run format:check` 整仓跑一遍**，别只信各分支的 changed-files 检查。playbook §1.3 早写了"未格式化的 docs 会挂"，这是它的一个新变种。
+
+**F. 发布 = 覆盖 COS `releases/3.0.0/` + 更新根 `latest*.yml`（不发 GitHub Release）**
+
+官网 `site.config.js` 的下载地址是 `releases/{version}/One-Work-{version}-{os}-{arch}.{ext}` 按版本号拼的。3.0.0 那几个对象**已经在**（是坏的），发新版 = **原地覆盖同名对象** + 重算 `latest*.yml`（`.zip` 的 sha512/size）传 `releases/3.0.0/` 和 `releases/` 根两处。根的 `latest-arm64-mac.yml`（darwin arm64）/ `latest-mac.yml`（darwin x64 默认）/ `latest.yml`（win）是自动更新轮询点，改它 = 存量用户会被推自动升级——发数据迁移类版本前**先跟用户确认要不要推**。官网 `dist/` 和 `site.config.js` 若版本号没变就不用动，直接覆盖 COS 对象即可。
 
 ---
 
@@ -398,7 +449,9 @@ gh run list --repo gaogg521/1oneUI --workflow=build-manual.yml --limit 4 --json 
 
 ## 8. 相关文档
 
+- **v3.0.0 Mac"已损坏"根治 + `1onecode`→`One Work` 改名的完整过程**（含 §1.6 每条坑的现场细节、迁移代码、真机验证方法）：[`session-2026-08-31-mac-signing-and-brand-executable.zh-CN.md`](session-2026-08-31-mac-signing-and-brand-executable.zh-CN.md)
 - 发布链路当前状态 + `release-distribute.yml` 4 个 CI bug 诊断：[`session-2026-07-21-brand-rename-and-release-fixes.zh-CN.md`](session-2026-07-21-brand-rename-and-release-fixes.zh-CN.md) §6
 - Mac 签名/公证配置 + 老系统 Node 兼容 + 打 tag 流水线排障：[`session-2026-07-21-mac-signing-and-node-compat.zh-CN.md`](session-2026-07-21-mac-signing-and-node-compat.zh-CN.md)
 - Fork 上手 / 本地 dev / 打包：[`fork-dev-onboarding.zh-CN.md`](fork-dev-onboarding.zh-CN.md)
+- 发版只走官网 + COS、不发 GitHub Release：见 memory `release-channel-cos-website-only`
 - 自动升级改指向自建 COS：见 memory `autoupdate-cos-repoint`
