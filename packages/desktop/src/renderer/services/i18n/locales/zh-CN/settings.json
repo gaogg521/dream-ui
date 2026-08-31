@@ -1581,5 +1581,6 @@
     "newBalance": "新余额：{{amount}}",
     "pollTimeout": "仍在等待支付结果，到账后余额会自动更新。",
     "orderFailed": "充值未完成，请重试。"
-  }
+  },
+  "mediaModelUndeclared": "尚未设置 —— 在「模型」页把某个模型标为图片或视频类型"
 }

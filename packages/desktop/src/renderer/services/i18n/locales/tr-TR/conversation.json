@@ -864,7 +864,7 @@
   "mediaCostFromUserPrice": "Bu model için girdiğiniz birim fiyata göre hesaplandı.",
   "mediaCostFromBuiltinRate": "Yerleşik bir referans tarifeye göre tahmin edilmiştir. Adet (videoda ayrıca süre) hesaba katılır, ancak çözünürlük ve kalite ayırt edilmez; bu nedenle gerçek faturanız farklı olabilir. Tam tutarı görmek için Ayarlar → Modeller bölümünde bu model için birim fiyat girin.",
   "mediaCostNoRate": "Bu modelin birim fiyatı da yerleşik referans tarifesi de yok. Ayarlar → Modeller bölümünde bir fiyat girin.",
-  "mediaModeNoModel": "Henüz bir üretim modeli seçilmedi. Ayarlar → Yetenekler → Araçlar bölümünden seçin.",
+  "mediaModeNoModel": "Henüz bir oluşturma modeli seçilmedi. Gönderme kutusundaki model düğmesinden seçin veya Ayarlar → Modeller bölümünden ekleyin.",
   "mediaModeStartFailed": "Üretim başlatılamadı: {{reason}}",
   "mediaJobSourceImages": "Kaynak görseller",
   "policyDenied_seatLimitExceeded": "Kuruluşunuzun koltuk sınırına ulaşıldı; bir yönetici koltuk boşaltana veya planı yükseltene kadar mesaj gönderemezsiniz.",

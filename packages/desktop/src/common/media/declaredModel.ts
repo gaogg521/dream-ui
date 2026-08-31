@@ -32,6 +32,27 @@ import type { IProvider } from '@/common/config/storage';
 import { isMediaGenSupported } from '@/common/media/catalog';
 import type { MediaKind } from '@/common/media/types';
 
+/** A provider+model pair usable for a media kind, for pickers and fallbacks. */
+export type DeclaredMediaModel = { providerId: string; providerName: string; platform: string; model: string };
+
+/**
+ * Every provider+model the runtime can drive for this kind, in provider order.
+ *
+ * One list, consumed by the send box's media picker, the conversation header
+ * dropdown, and `findDeclaredMediaModel` below — so "which models can I generate
+ * with" has exactly one answer no matter which surface asks.
+ */
+export const listMediaModels = (kind: MediaKind, providers: IProvider[] | undefined): DeclaredMediaModel[] => {
+  const out: DeclaredMediaModel[] = [];
+  for (const provider of providers || []) {
+    for (const model of provider.models || []) {
+      if (!isMediaGenSupported(kind, provider, model)) continue;
+      out.push({ providerId: provider.id, providerName: provider.name, platform: provider.platform, model });
+    }
+  }
+  return out;
+};
+
 /**
  * The first model any provider offers for this kind, shaped as the selection
  * the resolver expects.
@@ -45,20 +66,16 @@ export const findDeclaredMediaModel = (
   kind: MediaKind,
   providers: IProvider[] | undefined
 ): ImageGenerationModelSetting | undefined => {
-  for (const provider of providers || []) {
-    for (const model of provider.models || []) {
-      if (!isMediaGenSupported(kind, provider, model)) continue;
-      return {
-        id: provider.id,
-        name: provider.name,
-        platform: provider.platform,
-        base_url: '',
-        api_key: '',
-        use_model: model,
-      };
-    }
-  }
-  return undefined;
+  const first = listMediaModels(kind, providers)[0];
+  if (!first) return undefined;
+  return {
+    id: first.providerId,
+    name: first.providerName,
+    platform: first.platform,
+    base_url: '',
+    api_key: '',
+    use_model: first.model,
+  };
 };
 
 /**

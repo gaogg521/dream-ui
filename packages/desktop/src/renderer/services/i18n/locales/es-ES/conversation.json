@@ -863,7 +863,7 @@
   "mediaCostFromUserPrice": "Calculado con el precio unitario que has definido para este modelo.",
   "mediaCostFromBuiltinRate": "Estimación basada en una tarifa de referencia integrada. Tiene en cuenta la cantidad (y la duración en el caso del vídeo), pero no la resolución ni la calidad, por lo que tu facturación real puede diferir. Define un precio unitario para este modelo en Ajustes → Modelos para ver el importe exacto.",
   "mediaCostNoRate": "Este modelo no tiene precio unitario ni tarifa de referencia integrada. Defínelo en Ajustes → Modelos para verlo.",
-  "mediaModeNoModel": "Aún no has elegido un modelo de generación. Selecciona uno en Ajustes → Capacidades → Herramientas.",
+  "mediaModeNoModel": "Aún no se ha seleccionado un modelo de generación. Elige uno en el botón de modelo del cuadro de envío o añade uno en Ajustes → Modelos.",
   "mediaModeStartFailed": "No se pudo iniciar la generación: {{reason}}",
   "mediaJobSourceImages": "Imágenes de origen",
   "policyDenied_seatLimitExceeded": "Se alcanzó el límite de licencias de su empresa; no podrá enviar mensajes hasta que un administrador libere una licencia o mejore el plan.",
