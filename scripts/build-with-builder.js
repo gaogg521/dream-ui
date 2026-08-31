@@ -24,6 +24,47 @@ const crypto = require('crypto');
 const DMG_RETRY_MAX = 3;
 const DMG_RETRY_DELAY_SEC = 30;
 
+// electron-builder 26.x rejects a signing identity name that still carries the
+// "Developer ID Application:" / "Developer ID Installer:" prefix — it errors
+// with `Please remove prefix "Developer ID Application:" from the specified name`
+// and macOS signing fails outright. The prefix is easy to leave in a CI secret
+// (the cert's full CN reads that way). Strip it defensively so a misconfigured
+// `IDENTITY` / `CSC_NAME` no longer breaks signing. Mutating process.env here is
+// enough: every electron-builder invocation below is a child that inherits it.
+function normalizeSigningIdentityEnv() {
+  const prefixRe = /^\s*Developer ID (?:Application|Installer):\s*/i;
+  for (const key of ['CSC_NAME', 'identity']) {
+    const value = process.env[key];
+    if (value && prefixRe.test(value)) {
+      const stripped = value.replace(prefixRe, '').trim();
+      process.env[key] = stripped;
+      console.log(
+        `🔑 Stripped "Developer ID …:" prefix from ${key} (electron-builder wants the bare name): "${stripped}"`
+      );
+    }
+  }
+}
+
+// True when macOS code signing is configured for this build (CI provides a cert).
+function macSigningConfigured() {
+  return Boolean(process.env.CSC_LINK || process.env.CSC_NAME || process.env.CSC_KEYCHAIN);
+}
+
+// Inspect a built .app: is it signed with a real "Developer ID Application"
+// authority (as opposed to unsigned / ad-hoc)? Used to tell a genuine signing
+// failure apart from a transient hdiutil/DMG error before deciding to retry.
+function isAppDeveloperIdSigned(appDir) {
+  if (process.platform !== 'darwin') return false;
+  const appName = fs.readdirSync(appDir).find((f) => f.endsWith('.app'));
+  if (!appName) return false;
+  try {
+    const out = execSync(`codesign -dv --verbose=4 "${path.join(appDir, appName)}" 2>&1`, { encoding: 'utf8' });
+    return /Authority=Developer ID Application/.test(out);
+  } catch {
+    return false;
+  }
+}
+
 // Incremental build: hash of source files to detect changes
 const INCREMENTAL_CACHE_FILE = 'out/.build-hash';
 const DEBUG_AUTO_UPDATE_CURRENT_VERSION_ENV = 'DREAM_DEBUG_AUTO_UPDATE_CURRENT_VERSION';
@@ -537,6 +578,17 @@ function createMacArtifactsWithPrepackaged(appDir, targetArch) {
       shell: process.platform === 'win32',
     }
   );
+
+  // --prepackaged reuses whatever signature the .app already carries. If signing
+  // was configured for this build but the .app is not Developer ID signed, we
+  // would ship an unsigned/ad-hoc DMG that Gatekeeper flags as "damaged". Never
+  // let that pass as a green build.
+  if (macSigningConfigured() && !isAppDeveloperIdSigned(appDir)) {
+    throw new Error(
+      'macOS signing was configured but the packaged .app is not Developer ID signed. ' +
+        'Refusing to emit an unsigned distributable. Check CSC_NAME / IDENTITY.'
+    );
+  }
 }
 
 function buildWithDmgRetry(cmd, targetArch) {
@@ -551,7 +603,23 @@ function buildWithDmgRetry(cmd, targetArch) {
     const appDir = isMac ? findAppDir(outDir) : null;
     if (!appDir || dmgExists(outDir)) throw error;
 
-    // .app exists but no .dmg → DMG creation failed
+    // Distinguish a genuine code-signing failure from a transient hdiutil/DMG
+    // error. If signing was configured but the built .app is not Developer ID
+    // signed, the electron-builder run failed at the signing step (e.g. a
+    // CSC_NAME still carrying the "Developer ID Application:" prefix). Retrying
+    // with --prepackaged would silently emit an unsigned package that users see
+    // as "damaged". Fail loudly instead.
+    if (isMac && macSigningConfigured() && !isAppDeveloperIdSigned(appDir)) {
+      console.error('\n❌ macOS signing was configured but the built .app is not Developer ID signed.');
+      console.error('   This is a signing failure, not a transient DMG error — NOT retrying with --prepackaged.');
+      console.error(
+        '   Check the CSC_NAME / IDENTITY value (it must NOT include the "Developer ID Application:" prefix).'
+      );
+      throw error;
+    }
+
+    // .app exists, is validly signed (or signing was not configured), but no
+    // .dmg → transient DMG creation failure. Retry just the DMG/zip step.
     console.log('\n🔄 Build failed during DMG creation (.app exists, .dmg missing)');
     console.log('   Retrying macOS distributable creation with --prepackaged...');
 
@@ -605,6 +673,9 @@ function cleanupWindowsPackOutput() {
 // Parse command line arguments
 const args = process.argv.slice(2);
 const archList = ['x64', 'arm64', 'ia32', 'armv7l'];
+
+// Normalize the macOS signing identity before any electron-builder invocation.
+normalizeSigningIdentityEnv();
 
 // Check for special flags
 const skipVite = args.includes('--skip-vite');

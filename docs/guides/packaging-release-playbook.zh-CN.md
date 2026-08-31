@@ -85,10 +85,12 @@ gh api "repos/gaogg521/1oneUI/check-runs/<jobId>/annotations" \
 
 > 判断"失败是否既有/无关"：本次 diff 有没有碰 `.ts/.tsx`？没碰就是既有失败。`git log --oneline v<上个tag>..HEAD -- 'packages/**/*.tsx'` 一看便知。
 
-### 1.4 macOS 签名/公证的坑（已配好，出问题查这里）
+### 1.4 macOS 签名/公证的坑（⚠️ dream-ui 的 `IDENTITY` secret 现在是错的，见下）
 
-- **`IDENTITY` secret 不能带 `Developer ID Application:` 前缀**，只要公司名部分（electron-builder 自己加前缀）。带了会签名失败。
-- **DMG 重试兜底会造成假阳性 success**：`build-with-builder.js` 检测到 ".app 有了但 .dmg 没生成"会用 `--prepackaged` 重试，这会**跳过签名**打出未签名 DMG，而 CI 只看"DMG 是否存在"就报绿。日志里要确认真出现 `App ... is properly code signed` → `Notarization completed successfully`，别只看 CI 绿灯。
+- **`IDENTITY` secret 不能带 `Developer ID Application:` 前缀**，只要公司名部分（electron-builder 自己加前缀）。带了 electron-builder 26.x 直接报 `Please remove prefix "Developer ID Application:" from the specified name`，签名失败。
+  - **2026-08-31 在 dream-ui 真踩过**：配 secret 时把证书完整 CN（`Developer ID Application: Huanle Entertainment (Shanghai)Technology Co., Ltd. (HKT9687899)`）原样填进了 `IDENTITY`，3.0.0 的 arm64/x64 两个 Mac 包都签名失败、兜底打出未签名包发了出去（用户装机"已损坏"）。正确值是去掉前缀的 `Huanle Entertainment (Shanghai)Technology Co., Ltd. (HKT9687899)`。1oneUI 的 secret 一直是对的，dream-ui 配错了。
+  - 现在 `build-with-builder.js` 的 `normalizeSigningIdentityEnv()` 会在跑 electron-builder 前**自动剥掉** `CSC_NAME`/`identity` 的 `Developer ID Application:` / `Developer ID Installer:` 前缀，日志里会打 `🔑 Stripped "Developer ID …:" prefix`。但 secret 本身也该改对。
+- **DMG 重试兜底曾造成假阳性 success（已修）**：`build-with-builder.js` 检测到 ".app 有了但 .dmg 没生成"会用 `--prepackaged` 重试，这条路**跳过签名**。现在 `buildWithDmgRetry` 在重试前会先判断：配了签名但 `.app` 没有 `Authority=Developer ID Application` → 判定为签名失败，**直接 throw 让 CI 红**，不再兜底；`createMacArtifactsWithPrepackaged` 产物也会复查同一条件。CI 的 `_build-reusable.yml` "Build with electron-builder (macOS)" step 也加了：日志出现 `remove prefix "Developer ID` / `code signing failed` 一律 `exit 1`。所以现在只有"真签好了、只有公证挂"才会降级为 warning。仍建议日志里确认 `Notarization completed successfully`。
 - **`codesign` 偶发挂死近 6 小时**：`codesign` 默认做在线证书吊销检查（OCSP），网络请求卡住且它没内部超时会死等。是 flaky，不是配置问题；`build` step 卡几小时不动就是它，取消重跑。
 - 需要的 6 个 secrets：`BUILD_CERTIFICATE_BASE64` / `P12_PASSWORD` / `IDENTITY` / `TEAM_ID` / `APPLE_ID` / `APPLE_ID_PASSWORD`（涉及证书/密码的 base64/导入都由用户自己在 GitHub 网页做，AI 不经手明文）。
 - macOS 老系统（Big Sur 11.x）兼容：内置托管 Node 已按平台降到 22.11.0（新 Xcode 的 chained-fixups 格式老 dyld 加载不了），见 1oneCore `1797fcf7`。
