@@ -101,7 +101,8 @@ Mac 上 `xcrun stapler validate` / `spctl -a -t install` 通过；双击不再"�
 
 ## 二、`1onecode` / `1ONE Code` —— 历史品牌名，3.0.0 起清掉
 
-（阶段二，单独 PR，需双平台真机验收后再发 3.0.x）
+（已并入 3.0.0：PR #2 签名修复 + PR #3 改名/迁移 + #4 格式。Win 迁移真机验过，Mac 同代码路径
+未单独真机验——见下方「真机 / CI 验证」。）
 
 ### 为什么 `.app` / DMG 是 `1onecode` 不是 `One Work`
 
@@ -134,18 +135,38 @@ this.productFilename = executableName != null ? sanitizeFileName(executableName)
 | B   | `PROD_USERDATA_APP_NAME: '1ONE Code'` | 改 `One Work` + 首启迁移（旧目录存在就 `renameSync` 搬过去，失败就就地用旧目录不丢数据） |
 | C   | `appId: com.huanle.oneone.ai`         | **不动** —— 绑死自动更新匹配、Win 卸载注册表 GUID、签名证书 team                         |
 
-### 改动清单（阶段二 PR 落地时补完本节）
+### 落地（PR #3 `fd56226`，+ CLAUDE.md 表格重排 #4 `ce5b4f5`）
 
-- A 层约 10 个文件：`electron-builder.yml`、`packages/desktop/resources/installer.nsh`、
-  `resources/windows/installer-observability.nsh`、`resources/windows/support/query-lockers.ps1`、
-  `scripts/build-with-builder.js`（进程 kill 列表）、`scripts/packaged-launch.mjs`、
-  `scripts/dev-bootstrap.mjs`、`tests/e2e/fixtures.ts`、`packages/desktop/src/sentry.ts`
-  （旧名留作历史安装兜底）、`common/platform/index.ts` 注释。
-- B 层：`common/platform/index.ts` 加 `migrateAndResolveProdUserDataDir()` +
-  `LEGACY_PROD_USERDATA_APP_NAMES`；`configureChromium.ts` + `platform/index.ts` 两个调用点；
-  `resources/windows/support/report-installer-failure.ps1` 分析文件路径回退；
-  `package.json` `description`。
-- 测试：`tests/unit/process/migrateAndResolveProdUserDataDir.test.ts` 新建；
-  `tests/unit/common/platformConstants.test.ts` 扩展。
-- `CLAUDE.md` "品牌与技术身份分层"表更新（`executableName` 移出"刻意不改"行，
-  `PROD_USERDATA_APP_NAME` 行改为"3.0.0 起 = One Work，1ONE Code 仅作首启迁移源"）。
+- A 层：`electron-builder.yml`（删 `executableName`，Linux 加 `executableName: one-work` +
+  `desktop.Icon: one-work`）、`packages/desktop/resources/installer.nsh`（安装目录 →
+  `$LOCALAPPDATA\Programs\One Work`）、`resources/windows/installer-observability.nsh`
+  （`AIONUI_APP_EXECUTABLE_FILENAME "One Work.exe"`）、`resources/windows/support/query-lockers.ps1`
+  （加 `One Work.exe` / `Uninstall One Work.exe`，旧名保留）、`scripts/build-with-builder.js`
+  （kill 列表 + winExePath 加 `One Work.exe`）、`scripts/packaged-launch.mjs`、`scripts/dev-bootstrap.mjs`、
+  `tests/e2e/fixtures.ts`、`packages/desktop/src/sentry.ts`（`installDirs` 加 `one work`）。
+- B 层：`common/platform/index.ts` 新增 `migrateAndResolveProdUserDataDir()` +
+  `LEGACY_PROD_USERDATA_APP_NAMES = ['1ONE Code']`（**刻意不含 `AionUi`**——那是上游目录名，
+  会误搬同机跑上游的人的数据）；`PROD_USERDATA_APP_NAME` 改 `One Work`（`=== BRAND_DISPLAY_NAME`）；
+  `configureChromium.ts` + `getPlatformServices()` 两个调用点接入迁移；
+  `report-installer-failure.ps1` 先探 `One Work` 再探 `1ONE Code`；`package.json` `description`。
+- 测试：新增 `tests/unit/common/prodUserDataDirMigration.test.ts`（6 例：迁移 + 内容保留 /
+  目标已存在不动旧目录 / 全新安装 / 旧路径是文件时忽略 / 常量断言）。
+- `CLAUDE.md` "品牌与技术身份分层"表：`appId` 单列为"冻结"行，`executableName` +
+  `PROD_USERDATA_APP_NAME` 归入"曾冻结、3.0.0 起已改"行。
+
+### 真机 / CI 验证（2026-08-31）
+
+- **Win 迁移真机验证过**：本地打 `out/win-unpacked/One Work.exe`，用 `--user-data-dir=<沙箱>`
+  启动（Electron 在 Windows 读 `SHGetKnownFolderPath` 不认 `%APPDATA%` 环境变量，只有
+  `--user-data-dir` 能重定向）。沙箱里预置 `<父>\1ONE Code\`（放 `MARKER.txt` + 假 db），
+  启动后：`1ONE Code` 消失、`One Work` 出现、`MARKER.txt` 和 `db\aioncore.sqlite` 原样保留，
+  app 正常接着用 `One Work\`。真实 `%APPDATA%\1ONE Code` 未被触碰。
+  - Mac 侧用同一 `migrateAndResolveProdUserDataDir`、同一 `configureChromium.ts` 生产分支，
+    只有 `dirname(userData)` 落点不同（`~/Library/Application Support`），本地无 Mac 未单独真机验。
+- **CI（main，`ce5b4f5`）**：mac-arm64 / mac-x64 / linux-x64 / linux-arm64 四个 `build-manual.yml`
+  全绿；Mac 两个日志确认 `• signing file=out/mac-*/One Work.app … Developer ID Application` →
+  `App One Work is properly code signed` → `Notarization completed successfully`，无 `--prepackaged`。
+- **发布**（走 COS + 官网，不发 GitHub Release，见 memory `release-channel-cos-website-only`）：
+  本地 aws-cli 覆盖 `releases/3.0.0/` 的 mac dmg/zip + win exe（+ linux deb）、重算 `latest*.yml`，
+  并同步 `releases/` 根的 `latest-arm64-mac.yml` / `latest-mac.yml` / `latest.yml`（存量用户自动更新
+  从 2.1.61 切到 3.0.0）。官网 `site.config.js` 早已是 3.0.0，无需改动。
