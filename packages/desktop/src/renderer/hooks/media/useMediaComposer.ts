@@ -19,11 +19,11 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ipcBridge } from '@/common';
 import { resolveMediaModelSpec } from '@/common/media/catalog';
-import { findDeclaredMediaModel } from '@/common/media/declaredModel';
+import { type DeclaredMediaModel, findDeclaredMediaModel, listMediaModels } from '@/common/media/declaredModel';
 import type { MediaGenParams } from '@/common/media/types';
 import { startMediaJob } from './mediaJobsTransport';
+import { persistMediaModelSelection } from './mediaModelSettings';
 import type { IProvider } from '@/common/config/storage';
 import type { MediaMode } from '@renderer/components/media/MediaModeControl';
 import { getClientBusinessSetting } from '@renderer/services/clientBusinessSettings';
@@ -40,6 +40,33 @@ export const useMediaComposer = (conversationId: string | undefined, providers: 
   const [mode, setMode] = useState<MediaMode>('off');
   const [params, setParams] = useState<MediaGenParams>({});
   const [selection, setSelection] = useState<Record<'image' | 'video', Selection>>({ image: {}, video: {} });
+
+  // Every model the runtime can drive for each kind, shared with the
+  // conversation header dropdown so the two pickers never disagree.
+  const mediaModels = useMemo<Record<'image' | 'video', DeclaredMediaModel[]>>(
+    () => ({ image: listMediaModels('image', providers), video: listMediaModels('video', providers) }),
+    [providers]
+  );
+
+  // A model chosen for a kind: applied to this send box now, and written back to
+  // the global setting so the next conversation starts on it. One writer for
+  // both the send-box picker and the header dropdown (via `requestMediaMode`).
+  const selectModel = useCallback(
+    (kind: 'image' | 'video', providerId: string, model: string) => {
+      setSelection((prev) => ({ ...prev, [kind]: { providerId, model } }));
+      const provider = providers?.find((item) => item.id === providerId);
+      if (!provider) return;
+      void persistMediaModelSelection(kind, {
+        id: provider.id,
+        name: provider.name,
+        platform: provider.platform,
+        use_model: model,
+      }).catch((error) => {
+        console.error('[useMediaComposer] Failed to persist media model selection:', error);
+      });
+    },
+    [providers]
+  );
 
   // The globally configured model is the starting point; a per-conversation
   // override would layer on top of this.
@@ -90,15 +117,15 @@ export const useMediaComposer = (conversationId: string | undefined, providers: 
     // reason as `changeMode` below.
     setParams({});
     if (request.mode !== 'off' && request.providerId && request.model) {
-      const kind = request.mode;
-      setSelection((prev) => ({ ...prev, [kind]: { providerId: request.providerId, model: request.model } }));
+      // Same path as the send-box picker: apply here and remember it globally.
+      selectModel(request.mode, request.providerId, request.model);
     }
     // The ref above only guards this component instance. Remounting the send
     // box (switching conversations and back, HMR) resets it to 0, and a request
     // left in the store would then be applied a second time — pulling the user
     // back into a mode they had already exited. A request is one-shot: drop it.
     consumeMediaModeRequest(conversationId, request.seq);
-  }, [request, conversationId]);
+  }, [request, conversationId, selectModel]);
 
   const active = mode === 'off' ? undefined : selection[mode];
 
@@ -124,6 +151,16 @@ export const useMediaComposer = (conversationId: string | undefined, providers: 
     setMode(next);
     setParams({});
   }, []);
+
+  // The send box's own model picker. Bound to the active kind — off has no
+  // model to pick — and routed through the same `selectModel` the header uses.
+  const chooseModel = useCallback(
+    (providerId: string, model: string) => {
+      if (mode === 'off') return;
+      selectModel(mode, providerId, model);
+    },
+    [mode, selectModel]
+  );
 
   const submit = useCallback(
     async (
@@ -165,6 +202,10 @@ export const useMediaComposer = (conversationId: string | undefined, providers: 
     providerId: active?.providerId,
     spec,
     submit,
+    /** Models the send box can offer for the active kind (empty when off). */
+    models: mode === 'off' ? [] : mediaModels[mode],
+    /** Pick a model for the active kind — applied now, remembered globally. */
+    chooseModel,
     /** True when the mode is on but nothing can run — the caller should say why. */
     needsModel: mode !== 'off' && !active?.model,
     /**

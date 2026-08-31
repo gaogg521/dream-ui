@@ -1529,5 +1529,6 @@
     "newBalance": "Novo saldo: {{amount}}",
     "pollTimeout": "Ainda aguardando o pagamento. Seu saldo será atualizado assim que for confirmado.",
     "orderFailed": "Não foi possível concluir a recarga. Tente novamente."
-  }
+  },
+  "mediaModelUndeclared": "Não definido —— declare um modelo como Imagem ou Vídeo na página Modelos"
 }

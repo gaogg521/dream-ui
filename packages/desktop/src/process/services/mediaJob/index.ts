@@ -179,7 +179,7 @@ async function resolveSelectedProvider(kind: MediaKind, explicitModel?: string):
 
   if (!selection) {
     return {
-      error: `No ${kind} generation model is configured. Declare one as a ${kind} model in Settings > Models, or pick one in Settings > Tools.`,
+      error: `No ${kind} generation model is configured. Declare one as a ${kind} model in Settings > Models, or pick one in a conversation's ${kind}-generation mode.`,
     };
   }
   const resolution = resolveImageGenerationMcpEnv(selection, providers);

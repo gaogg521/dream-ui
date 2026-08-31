@@ -1580,5 +1580,6 @@
     "newBalance": "New balance: {{amount}}",
     "pollTimeout": "Still waiting on the payment. Your balance will update once it clears.",
     "orderFailed": "Couldn't complete the top-up. Please try again."
-  }
+  },
+  "mediaModelUndeclared": "Not set — declare a model as Image or Video on the Models page"
 }

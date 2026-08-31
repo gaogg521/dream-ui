@@ -1526,5 +1526,6 @@
     "newBalance": "Yeni bakiye: {{amount}}",
     "pollTimeout": "Ödeme hâlâ bekleniyor. Onaylandığında bakiyeniz güncellenecek.",
     "orderFailed": "Yükleme tamamlanamadı. Lütfen tekrar deneyin."
-  }
+  },
+  "mediaModelUndeclared": "Ayarlanmadı —— Modeller sayfasında bir modeli Görsel veya Video olarak işaretleyin"
 }

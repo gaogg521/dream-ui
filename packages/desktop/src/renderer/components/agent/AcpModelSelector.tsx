@@ -5,7 +5,7 @@
  */
 
 import { declaredModelKindByName } from '@/common/utils/modelCapabilities';
-import { isMediaGenSupported } from '@/common/media/catalog';
+import { listMediaModels } from '@/common/media/declaredModel';
 import { requestMediaMode, useMediaModeSnapshot } from '@/renderer/hooks/media/mediaModeStore';
 import { useAcpModelInfo } from '@/renderer/hooks/agent/useAcpModelInfo';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
@@ -194,13 +194,10 @@ const AcpModelSelector: React.FC<{
     const lookup = new Map<string, { kind: 'image' | 'video'; providerId: string; modelName: string }>();
     for (const kind of ['image', 'video'] as const) {
       const models: RuntimeSelectorModelGroup['models'] = [];
-      for (const provider of providers ?? []) {
-        for (const modelName of provider.models ?? []) {
-          if (!isMediaGenSupported(kind, provider, modelName)) continue;
-          const id = `media:${kind}:${provider.id}::${modelName}`;
-          lookup.set(id, { kind, providerId: provider.id, modelName });
-          models.push({ id, label: modelName, kind });
-        }
+      for (const { providerId, model: modelName } of listMediaModels(kind, providers)) {
+        const id = `media:${kind}:${providerId}::${modelName}`;
+        lookup.set(id, { kind, providerId, modelName });
+        models.push({ id, label: modelName, kind });
       }
       if (models.length) {
         groups.push({
