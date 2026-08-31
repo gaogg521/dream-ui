@@ -232,7 +232,7 @@ const MediaModeControl: React.FC<Props> = ({
           >
             <RuntimeSelectorPill
               testId='media-model-pill'
-              className='sendbox-model-btn agent-mode-compact-pill'
+              className={`sendbox-model-btn agent-mode-compact-pill ${styles.modelPill}`}
               label={model || t('conversation.welcome.selectModel')}
               trailing={<Down theme='outline' size='12' fill={iconColors.secondary} className='shrink-0' />}
               disabled={disabled}
