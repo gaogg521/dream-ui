@@ -81,6 +81,22 @@ gh workflow run build-manual.yml --repo gaogg521/dream-ui --ref <分支> \
 （x64 同理）验收：日志有 `Notarization completed successfully`、无 `Retrying … --prepackaged`；
 Mac 上 `xcrun stapler validate` / `spctl -a -t install` 通过；双击不再"已损坏"。
 
+### 验证结果（2026-08-31）
+
+`IDENTITY` secret 已用 `gh secret set` 改成去前缀的纯名字。从 `fix/mac-signing-identity-prefix`
+（commit `5b85128`）重跑：
+
+| run                                                                                      | 结果       | 关键日志                                                                                                                                                  |
+| ---------------------------------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [33357644552](https://github.com/gaogg521/dream-ui/actions/runs/33357644552) macos-arm64 | ✅ success | `• signing … identityName=Developer ID Application: *** identityHash=F34F7D42…` → `App … is properly code signed` → `Notarization completed successfully` |
+| [33357647221](https://github.com/gaogg521/dream-ui/actions/runs/33357647221) macos-x64   | ✅ success | 同上                                                                                                                                                      |
+
+两条 run 都**没有** `remove prefix` 报错、**没有** `Retrying … --prepackaged`。产物
+`macos-build-arm64-5b85128` / `macos-build-x64-5b85128`（含签名+公证的 `.dmg`/`.zip`/`.yml`）。
+剩下真机 `stapler validate` / 双击安装由用户在 Mac 上过一遍。
+
+> 注意这两个包的 `.app` 仍是 `1onecode.app`——`.app`/DMG 改名是 PR #3（阶段二）的事。
+
 ---
 
 ## 二、`1onecode` / `1ONE Code` —— 历史品牌名，3.0.0 起清掉
