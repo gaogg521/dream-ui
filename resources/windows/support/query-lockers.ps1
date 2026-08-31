@@ -78,6 +78,8 @@ try {
   } elseif ($targetPathFull -and (Test-Path -LiteralPath $targetPathFull -PathType Container)) {
     $topLevel = @(Get-ChildItem -LiteralPath $targetPathFull -Force -File -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
     $knownRelative = @(
+      'One Work.exe',
+      'Uninstall One Work.exe',
       '1onecode.exe',
       'Uninstall 1onecode.exe',
       'resources\app.asar',

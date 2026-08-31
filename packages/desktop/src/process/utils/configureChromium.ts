@@ -9,7 +9,13 @@ import http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
 import os from 'os';
-import { APP_USER_MODEL_ID, DEV_APP_USER_MODEL_ID, getDevAppName, PROD_USERDATA_APP_NAME } from '@/common/platform';
+import {
+  APP_USER_MODEL_ID,
+  DEV_APP_USER_MODEL_ID,
+  getDevAppName,
+  migrateAndResolveProdUserDataDir,
+  PROD_USERDATA_APP_NAME,
+} from '@/common/platform';
 import { applyGpuRecoveryFlags } from './gpuRecovery';
 import { resolveDevtoolsCdpPort } from './devtoolsCdp';
 
@@ -44,15 +50,16 @@ if (!app.isPackaged && !e2eUserDataDir) {
   // even though both of those were correctly branded. No-op on non-Windows.
   app.setAppUserModelId(DEV_APP_USER_MODEL_ID);
 } else if (app.isPackaged && !e2eUserDataDir) {
-  // Production: pin the app name (and userData path) to the historical
-  // productName so rebranding productName ("1ONE Code" → "One Work") does NOT
-  // relocate %APPDATA%\<name> and orphan existing users' data. This keeps
-  // runtime identity decoupled from the display/product name. See
-  // PROD_USERDATA_APP_NAME. Same setName-then-setPath dance as dev because
-  // Electron 28+ does not retroactively move userData on setName (macOS).
+  // Production: pin the app name + userData path to PROD_USERDATA_APP_NAME
+  // ("One Work"), independent of any future productName change. A pre-3.0
+  // install has its data under the legacy "1ONE Code" directory —
+  // migrateAndResolveProdUserDataDir moves it on first launch so upgrading
+  // users keep their conversations / model keys / licence. Same
+  // setName-then-setPath dance as dev because Electron 28+ does not
+  // retroactively move userData on setName (macOS).
   app.setName(PROD_USERDATA_APP_NAME);
   const appSupportDir = path.dirname(app.getPath('userData'));
-  app.setPath('userData', path.join(appSupportDir, PROD_USERDATA_APP_NAME));
+  app.setPath('userData', migrateAndResolveProdUserDataDir(appSupportDir));
   app.setAppUserModelId(APP_USER_MODEL_ID);
 }
 

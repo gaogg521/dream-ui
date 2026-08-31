@@ -4,7 +4,16 @@ import path from 'node:path';
 import process from 'node:process';
 
 const DEFAULT_PORTS = [5173, 9230];
-const KILLABLE_NAMES = new Set(['electron', 'aionui', 'aionui.exe', '1onecode', '1onecode.exe']);
+const KILLABLE_NAMES = new Set([
+  'electron',
+  'aionui',
+  'aionui.exe',
+  '1onecode',
+  '1onecode.exe',
+  'one work',
+  'one work.exe',
+  'one-work',
+]);
 
 const log = (...args) => console.log('[dev-bootstrap]', ...args);
 const warn = (...args) => console.warn('[dev-bootstrap]', ...args);

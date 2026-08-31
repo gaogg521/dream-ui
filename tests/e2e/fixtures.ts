@@ -153,35 +153,39 @@ function resolvePackagedApp(): { executablePath: string; cwd: string } | null {
 
   const platform = process.platform;
 
+  // electron-builder.yml has no `executableName` override, so the binary name
+  // follows productName ("One Work") on win/mac and linux.executableName
+  // ("one-work") on Linux. Older names kept as fallbacks for pre-3.0 builds.
   if (platform === 'win32') {
-    // out/win-unpacked/1onecode.exe  or  out/win-x64-unpacked/1onecode.exe
-    // executableName is pinned to "1onecode" in electron-builder.yml (see comment there);
-    // it does NOT follow productName ("One Work").
+    // out/win-unpacked/One Work.exe
     for (const dir of ['win-unpacked', 'win-x64-unpacked', 'win-arm64-unpacked']) {
-      const exe = path.join(outDir, dir, '1onecode.exe');
-      if (fs.existsSync(exe)) return { executablePath: exe, cwd: path.join(outDir, dir) };
+      for (const name of ['One Work.exe', '1onecode.exe']) {
+        const exe = path.join(outDir, dir, name);
+        if (fs.existsSync(exe)) return { executablePath: exe, cwd: path.join(outDir, dir) };
+      }
     }
   } else if (platform === 'darwin') {
-    // out/mac-arm64/One Work.app/Contents/MacOS/1onecode  or  out/mac/One Work.app/...
-    // The .app bundle name follows productName, but the binary inside it follows
-    // the pinned executableName ("1onecode"), so discover the bundle dynamically
-    // and hardcode only the binary name.
+    // out/mac-arm64/One Work.app/Contents/MacOS/One Work
     for (const dir of ['mac-arm64', 'mac-x64', 'mac', 'mac-universal']) {
       const macDir = path.join(outDir, dir);
       if (!fs.existsSync(macDir)) continue;
       const appBundle = fs.readdirSync(macDir).find((f) => f.endsWith('.app'));
       if (appBundle) {
-        const exe = path.join(macDir, appBundle, 'Contents', 'MacOS', '1onecode');
-        if (fs.existsSync(exe)) return { executablePath: exe, cwd: macDir };
+        for (const name of ['One Work', '1onecode']) {
+          const exe = path.join(macDir, appBundle, 'Contents', 'MacOS', name);
+          if (fs.existsSync(exe)) return { executablePath: exe, cwd: macDir };
+        }
       }
     }
   } else {
-    // Linux: out/linux-unpacked/1onecode
+    // Linux: out/linux-unpacked/one-work
     for (const dir of ['linux-unpacked', 'linux-x64-unpacked', 'linux-arm64-unpacked']) {
       const dirPath = path.join(outDir, dir);
       if (!fs.existsSync(dirPath)) continue;
-      const exe = path.join(dirPath, '1onecode');
-      if (fs.existsSync(exe)) return { executablePath: exe, cwd: dirPath };
+      for (const name of ['one-work', '1onecode']) {
+        const exe = path.join(dirPath, name);
+        if (fs.existsSync(exe)) return { executablePath: exe, cwd: dirPath };
+      }
     }
   }
 

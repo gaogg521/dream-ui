@@ -30,7 +30,7 @@ function resolvePackagedApp(projectRoot) {
 
   if (process.platform === 'win32') {
     for (const dir of ['win-unpacked', 'win-x64-unpacked', 'win-arm64-unpacked']) {
-      for (const name of ['1onecode.exe', 'AionUi.exe']) {
+      for (const name of ['One Work.exe', '1onecode.exe', 'AionUi.exe']) {
         const exe = path.join(outDir, dir, name);
         if (fs.existsSync(exe)) return { executablePath: exe, cwd: path.join(outDir, dir) };
       }
@@ -41,14 +41,18 @@ function resolvePackagedApp(projectRoot) {
       if (!fs.existsSync(macDir)) continue;
       const appBundle = fs.readdirSync(macDir).find((f) => f.endsWith('.app'));
       if (!appBundle) continue;
-      const exe = path.join(macDir, appBundle, 'Contents', 'MacOS', 'AionUi');
-      if (fs.existsSync(exe)) return { executablePath: exe, cwd: macDir };
+      // The binary inside Contents/MacOS follows electron-builder's executableName
+      // (now productName-derived "One Work"); keep old names for older builds.
+      for (const name of ['One Work', '1onecode', 'AionUi']) {
+        const exe = path.join(macDir, appBundle, 'Contents', 'MacOS', name);
+        if (fs.existsSync(exe)) return { executablePath: exe, cwd: macDir };
+      }
     }
   } else {
     for (const dir of ['linux-unpacked', 'linux-x64-unpacked', 'linux-arm64-unpacked']) {
       const dirPath = path.join(outDir, dir);
       if (!fs.existsSync(dirPath)) continue;
-      for (const name of ['1onecode', 'aionui', 'AionUi']) {
+      for (const name of ['one-work', '1onecode', 'aionui', 'AionUi']) {
         const exe = path.join(dirPath, name);
         if (fs.existsSync(exe)) return { executablePath: exe, cwd: dirPath };
       }
@@ -72,6 +76,9 @@ async function main() {
   }
 
   if (shouldClean) {
+    await killProcessByName('One Work.exe');
+    await killProcessByName('One Work');
+    await killProcessByName('one-work');
     await killProcessByName('1onecode.exe');
     await killProcessByName('1onecode');
     await killProcessByName('AionUi.exe');

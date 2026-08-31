@@ -26,16 +26,75 @@ export function getDevAppName(): string {
 }
 
 /**
- * Stable on-disk identity for the PRODUCTION userData directory.
+ * On-disk identity for the PRODUCTION userData directory — the folder that holds
+ * every user's conversations, model keys, licence and config.
  *
- * Electron derives `app.getName()` (and therefore the userData path) from
- * `productName` when no explicit name is set. Rebranding `productName` to
- * "One Work" would relocate `%APPDATA%\<name>` and orphan every existing
- * user's data (conversations, model keys, config live under userData). We pin
- * the production name to the historical productName so the on-disk path never
- * moves. This value MUST equal the productName shipped before the rebrand.
+ * As of 3.0.0 this is "One Work" (=== BRAND_DISPLAY_NAME). Earlier builds shipped
+ * it as "1ONE Code" (see LEGACY_PROD_USERDATA_APP_NAMES). Electron derives
+ * `app.getName()` — and therefore the userData path — from `productName` unless a
+ * name is set explicitly, so `configureChromium.ts` / `getPlatformServices()`
+ * call `app.setName()` + `app.setPath('userData', …)` with the value returned by
+ * `migrateAndResolveProdUserDataDir()` before any userData access.
  */
-export const PROD_USERDATA_APP_NAME = '1ONE Code';
+export const PROD_USERDATA_APP_NAME = 'One Work';
+
+/**
+ * Legacy production userData directory names this fork has shipped, newest
+ * first. Consumed only by `migrateAndResolveProdUserDataDir` to find a pre-3.0
+ * directory to move onto `PROD_USERDATA_APP_NAME` on first launch.
+ *
+ * ⚠️ Only names unambiguously owned by THIS fork belong here. Do NOT add
+ * "AionUi" — that is upstream's directory name, and a user running both apps
+ * would have their upstream data hijacked.
+ */
+export const LEGACY_PROD_USERDATA_APP_NAMES: readonly string[] = ['1ONE Code'];
+
+/**
+ * Move a legacy-named production userData directory onto `PROD_USERDATA_APP_NAME`
+ * and return the directory to use. `appSupportDir` is the PARENT directory
+ * (macOS: `~/Library/Application Support`, Windows: `%APPDATA%`).
+ *
+ * - target already exists                 → use it (no-op)
+ * - legacy dir exists, target does not     → rename legacy → target, use target
+ * - rename fails (locked / cross-device)   → use the legacy dir in place
+ *                                            (never lose access to the data)
+ * - nothing exists                         → return target path (fresh install)
+ *
+ * Must run in the main process, before any `app.getPath('userData')` call.
+ */
+export function migrateAndResolveProdUserDataDir(appSupportDir: string): string {
+  // Lazy require: this module is shared with the renderer bundle, which must not
+  // pull in 'fs' at the top level. Every caller of this function is main-only.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require('fs') as typeof import('fs');
+  const isDir = (p: string): boolean => {
+    try {
+      return fs.statSync(p).isDirectory();
+    } catch {
+      return false;
+    }
+  };
+
+  const target = path.join(appSupportDir, PROD_USERDATA_APP_NAME);
+  if (isDir(target)) return target;
+
+  for (const legacyName of LEGACY_PROD_USERDATA_APP_NAMES) {
+    const legacyPath = path.join(appSupportDir, legacyName);
+    if (legacyPath === target || !isDir(legacyPath)) continue;
+    try {
+      fs.renameSync(legacyPath, target);
+      console.log(`[platform] migrated userData directory: "${legacyName}" -> "${PROD_USERDATA_APP_NAME}"`);
+      return target;
+    } catch (error) {
+      console.warn(
+        `[platform] could not migrate userData "${legacyName}" -> "${PROD_USERDATA_APP_NAME}"; using the legacy directory in place`,
+        error
+      );
+      return legacyPath;
+    }
+  }
+  return target;
+}
 
 /**
  * The product name users actually read. MUST equal `productName` in
@@ -48,9 +107,12 @@ export const PROD_USERDATA_APP_NAME = '1ONE Code';
  * and is found by a user looking at their screen. A shared constant is the only
  * thing that makes the next rename mechanical.
  *
- * NOT the same as `PROD_USERDATA_APP_NAME` above (that one is pinned to the
- * pre-rebrand name so `%APPDATA%` never moves) and NOT the same as the
- * executable name (`1onecode.exe`, deliberately frozen).
+ * As of 3.0.0 this equals `PROD_USERDATA_APP_NAME` (the userData directory was
+ * migrated off the historical "1ONE Code"). It is still a separate constant:
+ * the two answer different questions (what the user reads vs. where data lives)
+ * and could diverge again. `appId` (`com.huanle.oneone.ai`) is a third, frozen
+ * identity — Squirrel.Mac update matching and the Windows uninstall registry key
+ * are derived from it.
  */
 export const BRAND_DISPLAY_NAME = 'One Work';
 
@@ -100,9 +162,10 @@ export function getPlatformServices(): IPlatformServices {
           app.setPath('userData', path.join(path.dirname(app.getPath('userData')), devAppName));
           app.setAppUserModelId(DEV_APP_USER_MODEL_ID);
         } else {
-          // Production: pin name so a rebranded productName does not move userData.
+          // Production: pin the userData directory to PROD_USERDATA_APP_NAME,
+          // migrating a legacy-named directory ("1ONE Code") on first launch.
           app.setName(PROD_USERDATA_APP_NAME);
-          app.setPath('userData', path.join(path.dirname(app.getPath('userData')), PROD_USERDATA_APP_NAME));
+          app.setPath('userData', migrateAndResolveProdUserDataDir(path.dirname(app.getPath('userData'))));
           app.setAppUserModelId(APP_USER_MODEL_ID);
         }
         // Typed as IPlatformPaths so tsc enforces completeness: any new method

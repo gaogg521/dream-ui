@@ -207,12 +207,11 @@ function getInstallPathKind(resourcesPath: unknown): string | undefined {
   if (!pathValue) return undefined;
 
   const normalized = pathValue.replace(/\//g, '\\').toLowerCase();
-  // The Windows install directory is named after `executableName` in
-  // electron-builder.yml, which is `1onecode`. Matching only the upstream
-  // `aionui` made every Windows install fall through to `custom`, hiding the
-  // exact install-location signal this tag exists to provide. The old name is
-  // kept as a second match so reports from pre-rename installs still classify.
-  const installDirs = ['1onecode', 'aionui'];
+  // The Windows install directory is named after productFilename, which now
+  // follows productName ("One Work"). `1onecode` (the old executableName) and
+  // `aionui` (upstream) are kept so reports from pre-3.0 installs still classify
+  // instead of falling through to `custom`.
+  const installDirs = ['one work', '1onecode', 'aionui'];
   if (installDirs.some((dir) => normalized.includes(`\\appdata\\local\\programs\\${dir}\\resources`))) {
     return 'user_local_programs';
   }

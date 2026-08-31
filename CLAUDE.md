@@ -15,10 +15,11 @@
 > **⚠️ dev/打包测试前必读**：`D:\aionui-m0\1oneUI` 和本仓库曾经共享同一个本地 dev 数据库
 > （`getDevAppName()` 复制时把目录名字面量也带过来了），导致 dream-core 的新迁移把
 > 1oneUI 那边跑了数月的真实测试数据往前推了版本、打不开。已修复（dev 模式默认目录名从
-> `1one-Dev`/`1one-Dev-2` 改成了 `dream-ui-Dev`/`dream-ui-Dev-2`，天然隔离），但**打包
-> 安装测试仍然共享正式版 `%APPDATA%\1ONE Code`**（`PROD_USERDATA_APP_NAME` 是刻意保留的
-> 历史值，不能改）——机器上如果还装着 1oneUI 正式版，打包安装 dream-ui 前要谨慎。完整事故
-> 记录见
+> `1one-Dev`/`1one-Dev-2` 改成了 `dream-ui-Dev`/`dream-ui-Dev-2`，天然隔离）。
+> **3.0.0 起正式版 userData 目录从 `%APPDATA%\1ONE Code` 改成了 `%APPDATA%\One Work`**
+> （`PROD_USERDATA_APP_NAME`；首启 `migrateAndResolveProdUserDataDir` 把旧目录 rename 过去）——
+> 装过 1oneUI 正式版（它写 `1ONE Code`）的机器上打包安装 dream-ui 3.0.0，会把 1oneUI 的
+> `1ONE Code` 目录搬成 `One Work`，务必谨慎。完整事故记录见
 > [session-2026-08-24-dev-userdata-collision.zh-CN.md](./docs/guides/session-2026-08-24-dev-userdata-collision.zh-CN.md)。
 
 > **新会话/新 AI 首读**：AionUi → dream 品牌独立化的完整实施过程（怎么做的、改了哪些文件、
@@ -52,7 +53,8 @@ dream/
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 用户可见产品名             | **One Work**（首字母大写、中间有空格）                                                                                                 | UI、安装器、官网、帮助文档统一用这个；来源 `common/platform/index.ts` 的 `BRAND_DISPLAY_NAME` 常量，禁止散写字面量。**这个名字容易被口头/打字误传成 "OneWork"、"ONE WORK" 等变体，改动前务必以这个常量的实际值为准，不要凭记忆或口述**                                                         |
 | 技术/协议前缀              | **`dream`**（小写）                                                                                                                    | 环境变量 `DREAM_*`、内部 HTTP 头 `x-dream-*`、Cookie `dream-session`/`dream-csrf-token`、Rust 枚举 serde 值等机器可读标识                                                                                                                                                                      |
-| 运行时身份（**刻意不改**） | `appId: com.huanle.oneone.ai`、`executableName: 1onecode`、`PROD_USERDATA_APP_NAME: 1ONE Code`                                         | 改这些会导致老用户 `%APPDATA%` 数据/`userData` 目录失联，除非同时处理迁移，否则永久保持历史值。详见 `packages/desktop/electron-builder.yml` 顶部注释与 `common/platform/index.ts` 的 `PROD_USERDATA_APP_NAME`                                                                                  |
+| 运行时身份（**冻结**）     | `appId: com.huanle.oneone.ai`                                                                                                         | Squirrel.Mac 自动更新按 `CFBundleIdentifier` 匹配包、Windows 卸载注册表 GUID 由它派生、签名证书 team 也绑它。改了 = 老用户自动更新全断。它不是用户可见品牌名，永久保持                                                                                                                          |
+| 曾冻结、3.0.0 起已改       | `executableName`（`1onecode` → 删除，回落 `productName`=One Work）、`PROD_USERDATA_APP_NAME`（`1ONE Code` → `One Work`）               | `executableName` 决定 `.app`/DMG/Win exe/Win 安装目录名——改它对数据零风险（userData 靠 `app.setName` 另钉）。userData 目录名改动配了首启迁移 `migrateAndResolveProdUserDataDir`（旧目录存在就 rename，失败就就地用旧目录）。详见 [session-2026-08-31-mac-signing-and-brand-executable.zh-CN.md](./docs/guides/session-2026-08-31-mac-signing-and-brand-executable.zh-CN.md) |
 | 已改名、旧值仅作兼容保留   | 深链 `dream://`、浏览器 partition `persist:one-browser`、内置 MCP `one-image-generation` / `one-browser`、存储文件名与 localStorage 键 | 2026-08-26 起的统一做法：**新装用新值，存量安装靠「新值不存在就用旧值」的解析继续工作，一个文件都不搬**。深链两个 scheme 都向 OS 注册、`parseDeepLinkUrl` 两个都认；⚠️ 后端 `sanitize_deep_link_scheme` 必须**先**放行新 scheme，否则它会把不认识的值 fallback 回 `aionui`，SSO 回调被静默丢弃 |
 
 **任何改动收尾前过一遍品牌复检**：i18n 显示文案 / 渲染层与主进程硬编码 / 安装器脚本（`resources/windows/**`）/ 任务栏与窗口标识（`app.setAppUserModelId`） / 系统托盘 tooltip。品牌名只有一个来源（`BRAND_DISPLAY_NAME`），新增用户可见文案一律 import 它，不要新写字面量。**本仓库、README、GitHub 上显示的内容三者可能不同步**——本地改完必须 `git commit` + `git push` 才会反映到 GitHub，改完只在本地验证过不等于对外可见，收尾前务必确认已推送。
