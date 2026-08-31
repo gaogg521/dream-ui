@@ -66,16 +66,20 @@ function Write-InstallerLog([string]$event, [hashtable]$properties = @{}) {
 }
 
 function Read-AionUiAnalyticsId {
-  # `userData` is pinned to this historical name in production so a rebranded
-  # productName never moves the on-disk path — see
-  # `common/platform/index.ts`'s `PROD_USERDATA_APP_NAME`. This script must
-  # look up the same path the app actually writes `analytics.json` to.
+  # `userData` is pinned to PROD_USERDATA_APP_NAME in production (see
+  # `common/platform/index.ts`). As of 3.0.0 that is "One Work"; a pre-3.0
+  # install (or one whose first-launch migration has not run yet) still has it
+  # under the legacy "1ONE Code" directory. Probe the current name first, then
+  # the legacy one — the app writes `analytics.json` to exactly one of them.
+  $appNames = @('One Work', '1ONE Code')
   $candidates = @()
-  if ($env:APPDATA) {
-    $candidates += (Join-Path $env:APPDATA '1ONE Code\analytics.json')
-  }
-  if ($env:LOCALAPPDATA) {
-    $candidates += (Join-Path $env:LOCALAPPDATA '1ONE Code\analytics.json')
+  foreach ($appName in $appNames) {
+    if ($env:APPDATA) {
+      $candidates += (Join-Path $env:APPDATA "$appName\analytics.json")
+    }
+    if ($env:LOCALAPPDATA) {
+      $candidates += (Join-Path $env:LOCALAPPDATA "$appName\analytics.json")
+    }
   }
 
   foreach ($candidate in $candidates) {

@@ -2,12 +2,13 @@
 !define AIONUI_INSTALLER_OBSERVABILITY_NSH
 
 ; Fork-owned single source of truth for the packaged app executable name.
-; Must match `executableName` in packages/desktop/electron-builder.yml (1onecode).
+; electron-builder derives it from productName ("One Work") now that
+; electron-builder.yml has no `executableName` override.
 ; Consumed here (extract check) and by installer-update-verify / process-control /
 ; repair-heal. electron-builder also exposes ${APP_EXECUTABLE_FILENAME} = the same
 ; value, but its include order relative to this file is not guaranteed, so we keep
-; a self-contained literal (mirrors the hardcoded "1onecode" in resources/installer.nsh).
-!define AIONUI_APP_EXECUTABLE_FILENAME "1onecode.exe"
+; a self-contained literal.
+!define AIONUI_APP_EXECUTABLE_FILENAME "One Work.exe"
 !define AIONUI_FALLBACK_LOG "aionui-installer-${VERSION}-fallback-log.jsonl"
 
 !pragma warning disable 6001

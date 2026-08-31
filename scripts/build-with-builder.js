@@ -845,14 +845,17 @@ try {
     const winUnpackedDir = path.join(outDir, 'win-unpacked');
     let cleaned = tryRemoveDir(winUnpackedDir);
     if (!cleaned) {
-      const aionRunning = isProcessRunningWindows('1onecode.exe') || isProcessRunningWindows('AionUi.exe');
+      const aionRunning =
+        isProcessRunningWindows('One Work.exe') ||
+        isProcessRunningWindows('1onecode.exe') ||
+        isProcessRunningWindows('AionUi.exe');
       const electronRunning = isProcessRunningWindows('electron.exe');
       if (aionRunning || electronRunning) {
-        console.log('⚠️  Detected running 1onecode/Electron process. Attempting to close...');
-        killWindowsProcesses(['1onecode.exe', 'AionUi.exe', 'electron.exe']);
+        console.log('⚠️  Detected running One Work/Electron process. Attempting to close...');
+        killWindowsProcesses(['One Work.exe', '1onecode.exe', 'AionUi.exe', 'electron.exe']);
         cleaned = tryRemoveDir(winUnpackedDir);
         if (!cleaned) {
-          console.log('⚠️  Directory still locked. Please close any running AionUi/Electron processes and retry.');
+          console.log('⚠️  Directory still locked. Please close any running One Work/Electron processes and retry.');
         }
       }
     }
@@ -868,7 +871,7 @@ try {
   try {
     buildWithDmgRetry(builderCommand, targetArch);
   } catch (error) {
-    const winExePath = ['1onecode.exe', 'AionUi.exe']
+    const winExePath = ['One Work.exe', '1onecode.exe', 'AionUi.exe']
       .map((name) => path.join(outDir, 'win-unpacked', name))
       .find((p) => fs.existsSync(p));
     const firstError = formatExecError(error);
@@ -892,7 +895,7 @@ try {
     }
     console.log('   Retrying local build with win.signAndEditExecutable=false...');
     console.log('   This fallback is intended for transient rcedit / file-lock failures on developer machines.');
-    killWindowsProcesses(['1onecode.exe', 'AionUi.exe', 'electron.exe']);
+    killWindowsProcesses(['One Work.exe', '1onecode.exe', 'AionUi.exe', 'electron.exe']);
     cleanupWindowsPackOutput();
 
     try {
