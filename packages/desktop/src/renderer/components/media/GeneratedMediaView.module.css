@@ -23,6 +23,19 @@
   cursor: zoom-in;
 }
 
+/*
+ * The grid adapts to how many images came back: more images -> more columns
+ * and a shorter per-tile cap, so a two-up result reads big while an eight-up
+ * result stays a contact sheet instead of running the conversation off screen.
+ * Both knobs are set as custom properties on the container (see the component),
+ * and they inherit down to the Arco-rendered `<img>`.
+ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--media-grid-cols, 2), minmax(0, 1fr));
+  gap: 8px;
+}
+
 .gridImage {
   display: block;
   width: 100%;
@@ -34,11 +47,11 @@
   /* Fill the column width and let height follow the image's aspect ratio — no
      crop (the old 160px + `cover` was a thumbnail strip) and no side bands
      (a fixed height + `contain` letterboxed near-square images). Results from
-     one request share a size, so the two tiles come out equal. `max-height`
-     only caps a very tall portrait, and `cover` crops it top/bottom rather
-     than banding the sides; full size is one click away via the preview. */
+     one request share a size, so tiles in a row come out equal. The cap only
+     bites a very tall portrait, and `cover` crops it top/bottom rather than
+     banding the sides; full size is one click away via the preview. */
   height: auto;
-  max-height: 560px;
+  max-height: var(--media-tile-max-h, 560px);
   object-fit: cover;
   cursor: zoom-in;
 }

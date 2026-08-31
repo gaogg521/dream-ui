@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import { parseGeneratedMediaAssets } from '@/common/media/mediaResultText';
 
 vi.mock('react-i18next', () => ({
@@ -55,6 +55,28 @@ describe('GeneratedMediaView', () => {
     );
     const { container } = render(<GeneratedMediaView assets={assets} />);
     expect(container.querySelectorAll('img')).toHaveLength(2);
+  });
+
+  // More images -> more columns and a shorter per-tile cap, so a large result
+  // stays a contact sheet instead of taking over the conversation.
+  it('adapts the grid columns and tile height to the image count', () => {
+    const gridFor = (n: number) => {
+      const assets = parseGeneratedMediaAssets(
+        Array.from({ length: n }, (_, i) => `Generated image saved to: /ws/${i}.png`).join('\n')
+      );
+      const { container } = render(<GeneratedMediaView assets={assets} />);
+      let node: HTMLElement | null = container.querySelector('img');
+      while (node && !node.style.getPropertyValue('--media-grid-cols')) node = node.parentElement;
+      return {
+        cols: node?.style.getPropertyValue('--media-grid-cols'),
+        maxH: node?.style.getPropertyValue('--media-tile-max-h'),
+      };
+    };
+
+    expect(gridFor(2)).toEqual({ cols: '2', maxH: '520px' });
+    expect(gridFor(4)).toEqual({ cols: '2', maxH: '340px' });
+    expect(gridFor(6)).toEqual({ cols: '3', maxH: '300px' });
+    expect(gridFor(8)).toEqual({ cols: '4', maxH: '220px' });
   });
 
   it('plays a video through the one-media protocol, never a file:// url', () => {
