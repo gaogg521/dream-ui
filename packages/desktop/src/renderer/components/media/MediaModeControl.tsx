@@ -236,6 +236,10 @@ const MediaModeControl: React.FC<Props> = ({
               label={model || t('conversation.welcome.selectModel')}
               trailing={<Down theme='outline' size='12' fill={iconColors.secondary} className='shrink-0' />}
               disabled={disabled}
+              // Green like the mode pill: the model and its parameters are part
+              // of the same armed control, and the next Enter runs them.
+              type='primary'
+              status='success'
             />
           </Dropdown>
         ) : (
@@ -288,6 +292,9 @@ const MediaModeControl: React.FC<Props> = ({
             className={`sendbox-model-btn agent-mode-compact-pill ${styles.paramsPill}`}
             /* Parameters only — the model now has its own pill to the left. */
             label={summary.filter(Boolean).join(' · ') || t('conversation.mediaParamsOpen')}
+            // Green, matching the mode and model pills — one armed cluster.
+            type='primary'
+            status='success'
           />
         </Trigger>
       )}
