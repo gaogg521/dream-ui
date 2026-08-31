@@ -31,13 +31,14 @@
 .gridImage :global(.arco-image-img) {
   display: block;
   width: 100%;
-  /* Was 160px + `cover`, which both cropped the image and left a two-up
-     result looking like a strip of thumbnails. Taller, and `contain` so the
-     whole frame is visible — the neutral fill takes up any letterboxing when
-     the aspect ratio does not match. Still capped so a four-image result does
-     not run the conversation off the screen; full size is one click away. */
-  height: 260px;
-  object-fit: contain;
-  background: var(--color-fill-2);
+  /* Fill the column width and let height follow the image's aspect ratio — no
+     crop (the old 160px + `cover` was a thumbnail strip) and no side bands
+     (a fixed height + `contain` letterboxed near-square images). Results from
+     one request share a size, so the two tiles come out equal. `max-height`
+     only caps a very tall portrait, and `cover` crops it top/bottom rather
+     than banding the sides; full size is one click away via the preview. */
+  height: auto;
+  max-height: 560px;
+  object-fit: cover;
   cursor: zoom-in;
 }
