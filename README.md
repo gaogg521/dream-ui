@@ -286,7 +286,7 @@ cd dream-ui && bun install && bun run dev
 
 ### 联系作者
 
-<img src="./resources/wx-21.png" alt="微信交流群 / 作者微信" width="420">
+<img src="./resources/作者微信.png" alt="作者微信" width="220">
 
 <br>
 
