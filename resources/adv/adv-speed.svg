@@ -172,7 +172,7 @@
       <g transform="translate(20, 16)">
         <text y="14" fill="#64748b" font-size="11" font-weight="700">某 Buddy 单线程串行</text>
         <rect x="150" y="4" width="520" height="12" rx="6" fill="#1e293b" stroke="rgba(148,163,184,.2)" stroke-width="1"/>
-        <text x="685" y="14" fill="#94a3b8" font-size="11" font-weight="700">8.0 分钟</text>
+        <text x="685" y="14" fill="#94a3b8" font-size="11" font-weight="700">23.3 分钟</text>
       </g>
 
       <!-- One Work row -->
@@ -181,7 +181,7 @@
         <rect x="150" y="4" width="104" height="14" rx="7" fill="url(#sp-accent)" stroke="#38bdf8" stroke-width="1"/>
         <rect x="264" y="2" width="76" height="18" rx="9" fill="rgba(34,197,94,.2)" stroke="rgba(74,222,128,.5)"/>
         <text x="302" y="15" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="900">⚡ 提速 5×</text>
-        <text x="685" y="15" fill="#38bdf8" font-size="12" font-weight="900">1.6 分钟 (95s)</text>
+        <text x="685" y="15" fill="#38bdf8" font-size="12" font-weight="900">4.7 分钟 (279s)</text>
       </g>
     </g>
     
