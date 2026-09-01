@@ -104,7 +104,10 @@ for (const name of ADV_SVGS) {
     continue;
   }
   copyFileSync(from, join(advDir, name));
-  await sharp(from, { density: 144 }).png().toFile(join(advDir, name.replace(".svg", ".png")));
+  const pngDest = join(advDir, name.replace(".svg", ".png"));
+  const pngSrcDest = join(srcDir, name.replace(".svg", ".png"));
+  await sharp(from, { density: 144 }).png().toFile(pngDest);
+  copyFileSync(pngDest, pngSrcDest);
   advOk++;
 }
-console.log(`Synced ${advOk} advantage SVGs → resources/adv/ (+ PNG)`);
+console.log(`Synced ${advOk} advantage SVGs → resources/adv/ (+ PNG) & D:\\dream\\image\\`);
