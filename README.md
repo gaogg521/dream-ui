@@ -8,7 +8,7 @@
 
 <br>
 
-<img src="https://work.1oneclaw.com/screens/home.png" alt="One Work 工作台" width="960">
+<img src="./resources/screens/home.png" alt="One Work 工作台" width="960">
 
 <br>
 
@@ -58,7 +58,7 @@ Team Mode 多 Agent **并行执行**：Leader 拆任务、Teammate 同时跑。�
 
 `Team Mode 并行` · `多成员同时执行` · `作战记录可导出`
 
-<img src="https://work.1oneclaw.com/screens/team-work.png" alt="Team Mode 多 Agent 并行" width="100%">
+<img src="./resources/screens/team-work.png" alt="Team Mode 多 Agent 并行" width="100%">
 
 </td>
 </tr>
@@ -77,7 +77,7 @@ Team Mode 多 Agent **并行执行**：Leader 拆任务、Teammate 同时跑。�
 
 `记忆本地存储` · `Key 不外传` · `操作可批准可审计`
 
-<img src="https://work.1oneclaw.com/screens/memory.png" alt="三层记忆架构" width="100%">
+<img src="./resources/screens/memory.png" alt="三层记忆架构" width="100%">
 
 </td>
 </tr>
@@ -96,7 +96,7 @@ Team Mode 多 Agent **并行执行**：Leader 拆任务、Teammate 同时跑。�
 
 `252 内置专家` · `Skill 复用` · `任意模型 API`
 
-<img src="https://work.1oneclaw.com/screens/experts.png" alt="252 行业专家" width="100%">
+<img src="./resources/screens/experts.png" alt="252 行业专家" width="100%">
 
 </td>
 </tr>
@@ -115,8 +115,8 @@ OpenAI **Codex CLI** 和 Anthropic **Claude Code** 被厂商锁死在官方账�
 
 <table>
 <tr>
-<td width="50%"><img src="https://work.1oneclaw.com/screens/bridge-codex.png" alt="Codex 桥接" width="100%"><br><sub>Codex CLI → 自配模型</sub></td>
-<td width="50%"><img src="https://work.1oneclaw.com/screens/bridge-claude.png" alt="Claude 桥接" width="100%"><br><sub>Claude Code → 自配模型</sub></td>
+<td width="50%"><img src="./resources/screens/bridge-codex.png" alt="Codex 桥接" width="100%"><br><sub>Codex CLI → 自配模型</sub></td>
+<td width="50%"><img src="./resources/screens/bridge-claude.png" alt="Claude 桥接" width="100%"><br><sub>Claude Code → 自配模型</sub></td>
 </tr>
 </table>
 
@@ -137,7 +137,7 @@ WebUI 局域网 / 内网部署，配合 Issues 审计、数字员工与**离线�
 
 `WebUI 内网` · `Issues 审计` · `离线授权 ONEWORK-…`
 
-<img src="https://work.1oneclaw.com/screens/enterprise-login.png" alt="企业版内网部署" width="100%">
+<img src="./resources/screens/enterprise-login.png" alt="企业版内网部署" width="100%">
 
 </td>
 </tr>
@@ -150,7 +150,7 @@ WebUI 局域网 / 内网部署，配合 Issues 审计、数字员工与**离线�
 首次启动 **一键启用内置免费模型**，无需先填 API Key。22 位官方助手 + 252 位行业专家编译期内置，断网也有完整目录。
 
 <p align="center">
-  <img src="https://work.1oneclaw.com/screens/quickstart-3.png" alt="v3.0 开箱即用" width="720">
+  <img src="./resources/screens/quickstart-3.png" alt="v3.0 开箱即用" width="720">
 </p>
 
 ---
@@ -162,10 +162,10 @@ WebUI 局域网 / 内网部署，配合 Issues 审计、数字员工与**离线�
 <br>
 <table>
 <tr>
-<td width="25%"><img src="https://work.1oneclaw.com/screens/team-create.png" width="100%"><br><sub>① 发起编队</sub></td>
-<td width="25%"><img src="https://work.1oneclaw.com/screens/team-create-2.png" width="100%"><br><sub>② 选成员</sub></td>
-<td width="25%"><img src="https://work.1oneclaw.com/screens/team-create-3.png" width="100%"><br><sub>③ 指定 Leader</sub></td>
-<td width="25%"><img src="https://work.1oneclaw.com/screens/team-work.png" width="100%"><br><sub>④ 并行交付</sub></td>
+<td width="25%"><img src="./resources/screens/team-create.png" width="100%"><br><sub>① 发起编队</sub></td>
+<td width="25%"><img src="./resources/screens/team-create-2.png" width="100%"><br><sub>② 选成员</sub></td>
+<td width="25%"><img src="./resources/screens/team-create-3.png" width="100%"><br><sub>③ 指定 Leader</sub></td>
+<td width="25%"><img src="./resources/screens/team-work.png" width="100%"><br><sub>④ 并行交付</sub></td>
 </tr>
 </table>
 作战记录可一键导出离线 HTML，工具调用全量保留。
@@ -174,7 +174,7 @@ WebUI 局域网 / 内网部署，配合 Issues 审计、数字员工与**离线�
 <details>
 <summary><strong>📋 Issues 看板 · 产出写进交付流程</strong></summary>
 <br>
-<p align="center"><img src="https://work.1oneclaw.com/screens/issues.png" alt="Issues 看板" width="800"></p>
+<p align="center"><img src="./resources/screens/issues.png" alt="Issues 看板" width="800"></p>
 AI 一键拆单，任务直接交给 Agent，进度团队可见。
 </details>
 
@@ -183,9 +183,9 @@ AI 一键拆单，任务直接交给 Agent，进度团队可见。
 <br>
 <table>
 <tr>
-<td width="33%"><img src="https://work.1oneclaw.com/screens/gen-text2img.png" width="100%"><br><sub>文生图</sub></td>
-<td width="33%"><img src="https://work.1oneclaw.com/screens/gen-text2video.png" width="100%"><br><sub>文生视频</sub></td>
-<td width="33%"><img src="https://work.1oneclaw.com/screens/content-video.png" width="100%"><br><sub>内容创作</sub></td>
+<td width="33%"><img src="./resources/screens/gen-text2img.png" width="100%"><br><sub>文生图</sub></td>
+<td width="33%"><img src="./resources/screens/gen-text2video.png" width="100%"><br><sub>文生视频</sub></td>
+<td width="33%"><img src="./resources/screens/content-video.png" width="100%"><br><sub>内容创作</sub></td>
 </tr>
 </table>
 </details>
@@ -195,8 +195,8 @@ AI 一键拆单，任务直接交给 Agent，进度团队可见。
 <br>
 <table>
 <tr>
-<td width="50%"><img src="https://work.1oneclaw.com/screens/webui.png" width="100%"><br><sub>WebUI 远程 · 手机扫码</sub></td>
-<td width="50%"><img src="https://work.1oneclaw.com/screens/channels-control.png" width="100%"><br><sub>飞书 / 钉钉 / 微信 / Telegram</sub></td>
+<td width="50%"><img src="./resources/screens/webui.png" width="100%"><br><sub>WebUI 远程 · 手机扫码</sub></td>
+<td width="50%"><img src="./resources/screens/channels-control.png" width="100%"><br><sub>飞书 / 钉钉 / 微信 / Telegram</sub></td>
 </tr>
 </table>
 </details>
@@ -206,8 +206,8 @@ AI 一键拆单，任务直接交给 Agent，进度团队可见。
 <br>
 <table>
 <tr>
-<td width="50%"><img src="https://work.1oneclaw.com/screens/agents.png" width="100%"><br><sub>38 款 CLI 自动识别</sub></td>
-<td width="50%"><img src="https://work.1oneclaw.com/screens/game-oneshot-1.png" width="100%"><br><sub>一句话生成可玩 Demo</sub></td>
+<td width="50%"><img src="./resources/screens/agents.png" width="100%"><br><sub>38 款 CLI 自动识别</sub></td>
+<td width="50%"><img src="./resources/screens/game-oneshot-1.png" width="100%"><br><sub>一句话生成可玩 Demo</sub></td>
 </tr>
 </table>
 </details>
@@ -291,7 +291,7 @@ cd dream-ui && bun install && bun run dev
 
 ### 联系作者
 
-<img src="https://work.1oneclaw.com/screens/author-wechat.png" alt="微信" width="200">
+<img src="./resources/screens/author-wechat.png" alt="微信" width="200">
 
 <br>
 
