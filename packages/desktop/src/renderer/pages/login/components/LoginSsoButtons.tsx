@@ -51,7 +51,7 @@ const LoginSsoButtons: React.FC = () => {
         const json = (await response.json()) as { data?: SsoProviderStatus[] };
         setProviders((json.data ?? []).filter((p) => p.enabled && p.configured));
       } catch {
-        // No SSO available (or non-aioncore backend) — render nothing.
+        // No SSO available (or non-dreamcore backend) — render nothing.
       } finally {
         window.clearTimeout(timeout);
       }

@@ -219,7 +219,7 @@ export async function startDesktopWebUI(opts: { port?: number; allowRemote?: boo
   // Spawning a second backend here would race the first on the same SQLite file.
   const backendPort = (globalThis as typeof globalThis & { __backendPort?: number }).__backendPort;
   if (!backendPort) {
-    throw new Error('[WebUI] Cannot start: aioncore is not running (globalThis.__backendPort unset)');
+    throw new Error('[WebUI] Cannot start: dreamcore is not running (globalThis.__backendPort unset)');
   }
 
   const handle = await startWebHost({
@@ -242,7 +242,7 @@ export async function startDesktopWebUI(opts: { port?: number; allowRemote?: boo
     // bundle (and 404'd in a fresh worktree that never ran a build).
     rendererDevServerUrl: process.env['ELECTRON_RENDERER_URL'],
     // These routes read local files and start paid generations, and they do
-    // NOT pass through aioncore, so its auth never sees them. Named here
+    // NOT pass through dreamcore, so its auth never sees them. Named here
     // rather than inferred by the host: gating on "this server has handlers"
     // instead of "this request is for one" also 401s the login page itself.
     sessionGuardedPrefixes: ['/media/'],

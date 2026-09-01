@@ -100,7 +100,7 @@ test.describe('Agent browser control (single-target CDP bridge)', () => {
      * is the difference between driving the in-app browser and driving a hidden Chrome the
      * user cannot see.
      *
-     * Note this only checks the *root* of the tree. The aioncore assertion below is what
+     * Note this only checks the *root* of the tree. The dreamcore assertion below is what
      * verifies the values actually propagate — see the comment there.
      */
     const { port, token } = await readBridgeEnv(electronApp);
@@ -113,9 +113,9 @@ test.describe('Agent browser control (single-target CDP bridge)', () => {
     /**
      * Regression test for a bug that shipped past the whole rest of this file.
      *
-     * The port and token reach the agent purely by process inheritance: aioncore is spawned
-     * with `{ ...process.env }`, and the browser MCP is aioncore's child. Inheritance is a
-     * snapshot taken at spawn time, so if the bridge starts *after* aioncore, aioncore
+     * The port and token reach the agent purely by process inheritance: dreamcore is spawned
+     * with `{ ...process.env }`, and the browser MCP is dreamcore's child. Inheritance is a
+     * snapshot taken at spawn time, so if the bridge starts *after* dreamcore, dreamcore
      * inherits no token and a stale port, the MCP exits(1) for want of credentials, and
      * agent browser control is dead — while manual browsing, tabs and history all keep
      * working, so nothing looks broken.

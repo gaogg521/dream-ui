@@ -29,21 +29,21 @@ export type {
   ModalHeaderConfig,
   ModalFooterConfig,
   ModalContentStyleConfig,
-  AionModalProps,
+  DreamModalProps,
 } from './DreamModal';
 export { MODAL_SIZES } from './DreamModal';
 
 // DreamCollapse 类型 / DreamCollapse types
-export type { AionCollapseProps, AionCollapseItemProps } from './DreamCollapse';
+export type { DreamCollapseProps, DreamCollapseItemProps } from './DreamCollapse';
 
 // DreamSelect 类型 / DreamSelect types
-export type { AionSelectProps } from './DreamSelect';
+export type { DreamSelectProps } from './DreamSelect';
 
 // DreamSteps 类型 / DreamSteps types
-export type { AionStepsProps } from './DreamSteps';
+export type { DreamStepsProps } from './DreamSteps';
 
 // DreamSearchInput 类型 / DreamSearchInput types
-export type { AionSearchInputProps } from './DreamSearchInput';
+export type { DreamSearchInputProps } from './DreamSearchInput';
 
 // DreamInlineSearchInput 类型 / DreamInlineSearchInput types
-export type { AionInlineSearchInputProps } from './DreamInlineSearchInput';
+export type { DreamInlineSearchInputProps } from './DreamInlineSearchInput';

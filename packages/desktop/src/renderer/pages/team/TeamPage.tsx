@@ -75,7 +75,7 @@ const configErrorMessageKey = (error: unknown) => {
 };
 
 /** Compact dream model selector for the agent header */
-const AionrsHeaderModelSelector: React.FC<{ conversation_id: string; initialModel?: TProviderWithModel }> = ({
+const DreamEngineHeaderModelSelector: React.FC<{ conversation_id: string; initialModel?: TProviderWithModel }> = ({
   conversation_id,
   initialModel,
 }) => {
@@ -399,7 +399,7 @@ const AssistantChatSlot: React.FC<{
     () => getConversationOrNull(assistant.conversation_id)
   );
 
-  const isAionrs = conversation?.type === 'dream';
+  const isDreamEngine = conversation?.type === 'dream';
   const initialModelId = (conversation?.extra as { current_model_id?: string })?.current_model_id;
   const isAcpLike = conversation?.type === 'acp' || isAcpLikeBackend(assistant.assistant_backend);
   const cronJobId = resolveCronJobId(conversation?.extra);
@@ -450,7 +450,7 @@ const AssistantChatSlot: React.FC<{
         />
         <div className='flex items-center gap-8px shrink-0'>
           {conversation && <CronJobManager conversation_id={conversation.id} cron_job_id={cronJobId} />}
-          {!isMobile && assistant.conversation_id && !isAionrs && isAcpLike && (
+          {!isMobile && assistant.conversation_id && !isDreamEngine && isAcpLike && (
             <div className='min-w-0 max-w-140px [&_button]:max-w-full [&_button_span]:truncate'>
               <AcpModelSelector
                 key={assistant.conversation_id}
@@ -463,7 +463,7 @@ const AssistantChatSlot: React.FC<{
               />
             </div>
           )}
-          {assistant.conversation_id && !isAionrs && isAcpLike && isLeader && (
+          {assistant.conversation_id && !isDreamEngine && isAcpLike && isLeader && (
             <div className='shrink-0'>
               <AcpRuntimeRestartButton
                 conversation_id={assistant.conversation_id}
@@ -476,7 +476,7 @@ const AssistantChatSlot: React.FC<{
               />
             </div>
           )}
-          {assistant.conversation_id && !isAionrs && isAcpLike && !isLeader && (
+          {assistant.conversation_id && !isDreamEngine && isAcpLike && !isLeader && (
             <div className='shrink-0'>
               <TeamAgentActions
                 assistant={assistant}
@@ -487,9 +487,9 @@ const AssistantChatSlot: React.FC<{
               />
             </div>
           )}
-          {!isMobile && isAionrs && assistant.conversation_id && (
+          {!isMobile && isDreamEngine && assistant.conversation_id && (
             <div className='min-w-0 max-w-140px [&_button]:max-w-full [&_button_span]:truncate'>
-              <AionrsHeaderModelSelector
+              <DreamEngineHeaderModelSelector
                 key={assistant.conversation_id}
                 conversation_id={assistant.conversation_id}
                 initialModel={conversation?.model as TProviderWithModel | undefined}

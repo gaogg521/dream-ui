@@ -166,7 +166,7 @@ vi.mock('@/renderer/hooks/agent/useAcpConfigOptions', async () => {
 
 vi.mock('@/renderer/pages/conversation/platforms/dreamEngine/DreamEngineModelSelector', () => ({
   __esModule: true,
-  default: () => <div data-testid='mock-aionrs-model-selector' />,
+  default: () => <div data-testid='mock-dream-engine-model-selector' />,
 }));
 
 vi.mock('@/renderer/pages/team/components/TeamChatView', () => ({

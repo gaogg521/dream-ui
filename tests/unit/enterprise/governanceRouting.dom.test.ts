@@ -8,7 +8,7 @@
  * Which API paths reach the company server in enterprise client mode.
  *
  * This is the renderer half of the same problem `governanceEndpoint.test.ts`
- * pins for the main process: a member's machine runs its own aioncore, and any
+ * pins for the main process: a member's machine runs its own dreamcore, and any
  * enterprise-scoped path that resolves there reads empty local tables. The
  * failure is silent in the worst way — "no licence, no budget, no members"
  * looks exactly like "everything is permitted".

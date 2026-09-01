@@ -1,15 +1,15 @@
 appId: com.huanle.oneone.ai
 productName: One Work
-# No `executableName` override: electron-builder derives productFilename (the
-# `.app` bundle name, the DMG volume title, the Windows `.exe` name and its
-# default install dir) from executableName when set, so the old
-# `executableName: 1onecode` leaked the pre-rebrand name into every pre-launch
-# surface. Dropping it lets productFilename fall back to productName ("One Work").
+# `executableName: onework` names every pre-launch surface: the Windows
+# `onework.exe`, its default install dir (`Programs\onework`), the `.app`
+# bundle and the DMG volume title. Dock/window/About still read CFBundleName
+# ("One Work"). History: `1onecode` leaked the pre-rebrand name; it was then
+# dropped entirely so productFilename fell back to "One Work" (spaces in a
+# process name are awkward); `onework` is the final, space-free process name.
 # Runtime identity (app.getName / userData dir) is independent — it is pinned in
 # common/platform/index.ts (PROD_USERDATA_APP_NAME) and migrated on first launch.
 # appId stays com.huanle.oneone.ai (Squirrel.Mac update matching + Windows
 # uninstall registry GUID + signing-cert team are all keyed on it).
-# Linux keeps a hyphenated binary/package name (see linux.executableName below).
 copyright: Copyright © 2026 1ONE
 
 protocols:
@@ -187,10 +187,9 @@ linux:
   target:
     - deb
   icon: resources/app.png
-  # Hyphenated, no spaces: a Linux binary / .deb package name with a space in it
-  # is awkward on PATH and in apt. productName ("One Work") still drives the
-  # window title and the desktop-entry Name.
-  executableName: one-work
+  # Same space-free name as win/mac (see top-level executableName). productName
+  # ("One Work") still drives the window title and the desktop-entry Name.
+  executableName: onework
   # No spaces: GitHub silently rewrites spaces to dots in release asset
   # filenames on upload, but electron-updater's generated latest.yml keeps
   # the original (space-sanitized-to-hyphen) name — the two diverge and

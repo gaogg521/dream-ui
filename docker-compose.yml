@@ -1,4 +1,4 @@
-# Example compose file for the aionui-web / aioncore server deployment.
+# Example compose file for the dream-web / dreamcore server deployment.
 # Full walkthrough: docs/guides/server-deployment.zh-CN.md
 #
 # Build the image first (this repo does not auto-build the tarball inside
@@ -13,7 +13,7 @@
 services:
   app:
     build: .
-    # Or, once a build is published: image: ghcr.io/<org>/aionui-web:<tag>
+    # Or, once a build is published: image: ghcr.io/<org>/dream-web:<tag>
     restart: unless-stopped
     ports:
       # Skip this if you're using the optional Caddy TLS sidecar below —
@@ -22,7 +22,7 @@ services:
     volumes:
       # SQLite DB + logs + workspace files. Named volume so `docker compose
       # down` (without -v) never touches it.
-      - aionui-data:/data
+      - dream-data:/data
     environment:
       # DREAM_ALLOW_REMOTE=1 is already the image default (see Dockerfile);
       # listed here as the one setting you must never accidentally unset.
@@ -33,7 +33,7 @@ services:
 
   # ---------------------------------------------------------------------
   # Optional: Caddy in front of `app` for automatic HTTPS (Let's Encrypt).
-  # aioncore does not terminate TLS itself — same pattern as any other
+  # dreamcore does not terminate TLS itself — same pattern as any other
   # backend service, and consistent with the desktop's own "remote access"
   # feature (which also assumes a reverse proxy for anything beyond LAN
   # access, see docs/guides/*.md remote-access section).
@@ -56,6 +56,6 @@ services:
       - app
 
 volumes:
-  aionui-data:
+  dream-data:
   caddy-data:
   caddy-config:

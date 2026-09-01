@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { assistantRuntimeKey, isAionrsAssistant, type Assistant } from '@/common/types/agent/assistantTypes';
+import { assistantRuntimeKey, isDreamEngineAssistant, type Assistant } from '@/common/types/agent/assistantTypes';
 import { configService } from '@/common/config/configService';
 import type { AcpModelInfo } from '../types';
 import { pickFullAutoMode, type AgentModeOption } from '@/renderer/utils/model/agentTypes';
@@ -115,8 +115,8 @@ export function pickDefaultAssistantSelectionKey(assistants: Assistant[]): strin
     (assistant) => assistant.enabled !== false && assistant.agent_status === 'online'
   );
   const preferred =
-    enabledAssistants.find((assistant) => assistant.source === 'generated' && isAionrsAssistant(assistant)) ??
-    enabledAssistants.find((assistant) => isAionrsAssistant(assistant)) ??
+    enabledAssistants.find((assistant) => assistant.source === 'generated' && isDreamEngineAssistant(assistant)) ??
+    enabledAssistants.find((assistant) => isDreamEngineAssistant(assistant)) ??
     enabledAssistants[0];
   return preferred?.id ?? null;
 }

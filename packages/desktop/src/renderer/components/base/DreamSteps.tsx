@@ -12,7 +12,7 @@ import React from 'react';
 /**
  * 步骤条组件属性 / Steps component props
  */
-export interface AionStepsProps extends StepsProps {
+export interface DreamStepsProps extends StepsProps {
   /** 额外的类名 / Additional class name */
   className?: string;
 }
@@ -60,7 +60,7 @@ export interface AionStepsProps extends StepsProps {
  *
  * @see arco-override.css for custom styles (.dream-steps)
  */
-const DreamSteps: React.FC<AionStepsProps> & { Step: typeof Steps.Step } = ({ className, ...props }) => {
+const DreamSteps: React.FC<DreamStepsProps> & { Step: typeof Steps.Step } = ({ className, ...props }) => {
   return <Steps {...props} className={classNames('aionui-steps', className)} />;
 };
 

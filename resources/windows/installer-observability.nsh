@@ -8,26 +8,26 @@
 ; repair-heal. electron-builder also exposes ${APP_EXECUTABLE_FILENAME} = the same
 ; value, but its include order relative to this file is not guaranteed, so we keep
 ; a self-contained literal.
-!define AIONUI_APP_EXECUTABLE_FILENAME "One Work.exe"
+!define AIONUI_APP_EXECUTABLE_FILENAME "onework.exe"
 !define AIONUI_FALLBACK_LOG "aionui-installer-${VERSION}-fallback-log.jsonl"
 
 !pragma warning disable 6001
-Var /GLOBAL AionUiSessionId
+Var /GLOBAL OneWorkSessionId
 Var /GLOBAL AionUiIsUpdated
 Var /GLOBAL AionUiSessionLogResult
-Var /GLOBAL AionUiSessionLogPath
+Var /GLOBAL OneWorkSessionLogPath
 
 !macro AIONUI_SESSION_HEADER
-  !insertmacro AIONUI_SLOG "event=header arch=${AIONUI_TARGET_ARCH} updated=$AionUiIsUpdated instDir=$INSTDIR version=${VERSION} log=$AionUiSessionLogPath detail=customHeader"
+  !insertmacro AIONUI_SLOG "event=header arch=${AIONUI_TARGET_ARCH} updated=$AionUiIsUpdated instDir=$INSTDIR version=${VERSION} log=$OneWorkSessionLogPath detail=customHeader"
 !macroend
 
 !macro AIONUI_SLOG _MESSAGE
   Push $9
   nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& { \
     $$ErrorActionPreference = 'SilentlyContinue'; \
-    $$log = '$AionUiSessionLogPath'; \
+    $$log = '$OneWorkSessionLogPath'; \
     if (-not $$log) { $$log = Join-Path $$env:TEMP '${AIONUI_FALLBACK_LOG}' }; \
-    $$session = '$AionUiSessionId'; \
+    $$session = '$OneWorkSessionId'; \
     if (-not $$session) { $$session = 'uninitialized' }; \
     $$message = '${_MESSAGE}'; \
     $$event = 'log'; \
@@ -44,9 +44,9 @@ Var /GLOBAL AionUiSessionLogPath
   Push $9
   nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& { \
     $$ErrorActionPreference = 'SilentlyContinue'; \
-    $$log = '$AionUiSessionLogPath'; \
+    $$log = '$OneWorkSessionLogPath'; \
     if (-not $$log) { $$log = Join-Path $$env:TEMP '${AIONUI_FALLBACK_LOG}' }; \
-    $$session = '$AionUiSessionId'; \
+    $$session = '$OneWorkSessionId'; \
     if (-not $$session) { $$session = 'uninitialized' }; \
     $$message = '${_MESSAGE}'; \
     $$event = 'log'; \
@@ -63,9 +63,9 @@ Var /GLOBAL AionUiSessionLogPath
   Push $9
   nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& { \
     $$ErrorActionPreference = 'SilentlyContinue'; \
-    $$log = '$AionUiSessionLogPath'; \
+    $$log = '$OneWorkSessionLogPath'; \
     if (-not $$log) { $$log = Join-Path $$env:TEMP '${AIONUI_FALLBACK_LOG}' }; \
-    $$session = '$AionUiSessionId'; \
+    $$session = '$OneWorkSessionId'; \
     if (-not $$session) { $$session = 'uninitialized' }; \
     $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = $$session; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = '${_EVENT}' }; \
     ${_JSON_FIELDS}; \
@@ -81,25 +81,25 @@ Var /GLOBAL AionUiSessionLogPath
   ClearErrors
   ${GetOptions} $R9 "--installer-log=" $R8
   ${IfNot} ${Errors}
-    StrCpy $AionUiSessionLogPath $R8
+    StrCpy $OneWorkSessionLogPath $R8
   ${EndIf}
   ClearErrors
   ${GetOptions} $R9 "--installer-session=" $R8
   ${IfNot} ${Errors}
-    StrCpy $AionUiSessionId $R8
+    StrCpy $OneWorkSessionId $R8
   ${EndIf}
 
-  ${If} $AionUiSessionLogPath == ""
-    nsExec::ExecToStack `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "$$id = '$AionUiSessionId'; if (-not $$id) { $$id = [guid]::NewGuid().ToString('N').Substring(0,12) }; $$stamp = Get-Date -Format 'yyyyMMdd'; $$name = 'aionui-installer-${VERSION}-' + $$stamp + '-log.jsonl'; $$log = Join-Path $$env:TEMP $$name; [Console]::Out.Write($$id + '|' + $$log)"`
+  ${If} $OneWorkSessionLogPath == ""
+    nsExec::ExecToStack `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "$$id = '$OneWorkSessionId'; if (-not $$id) { $$id = [guid]::NewGuid().ToString('N').Substring(0,12) }; $$stamp = Get-Date -Format 'yyyyMMdd'; $$name = 'aionui-installer-${VERSION}-' + $$stamp + '-log.jsonl'; $$log = Join-Path $$env:TEMP $$name; [Console]::Out.Write($$id + '|' + $$log)"`
     Pop $AionUiSessionLogResult
     Pop $AionUiSessionLogResult
-    StrCpy $AionUiSessionId $AionUiSessionLogResult 12
-    StrCpy $AionUiSessionLogPath $AionUiSessionLogResult 1024 13
-  ${ElseIf} $AionUiSessionId == ""
+    StrCpy $OneWorkSessionId $AionUiSessionLogResult 12
+    StrCpy $OneWorkSessionLogPath $AionUiSessionLogResult 1024 13
+  ${ElseIf} $OneWorkSessionId == ""
     nsExec::ExecToStack `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "[Console]::Out.Write([guid]::NewGuid().ToString('N').Substring(0,12))"`
     Pop $AionUiSessionLogResult
     Pop $AionUiSessionLogResult
-    StrCpy $AionUiSessionId $AionUiSessionLogResult
+    StrCpy $OneWorkSessionId $AionUiSessionLogResult
   ${EndIf}
 
   ClearErrors

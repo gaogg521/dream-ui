@@ -22,7 +22,7 @@ function Write-VerifyLog {
     arch = $RuntimeKey
     updated = $false
     instDir = $InstallDir
-    event = 'verify-bundled-aioncore'
+    event = 'verify-bundled-dreamcore'
     message = $Message
   }
   Add-Content -LiteralPath $LogPath -Encoding UTF8 -Value ($payload | ConvertTo-Json -Compress -Depth 8)
@@ -457,25 +457,25 @@ function Test-BundledResourcesOnce {
   $expectedPlatform = $runtimeParts[0]
   $expectedArch = $runtimeParts[1]
   $resourcesDir = Join-Path $InstallDir 'resources'
-  $baseDir = Join-Path $resourcesDir "bundled-aioncore\$RuntimeKey"
+  $baseDir = Join-Path $resourcesDir "bundled-dreamcore\$RuntimeKey"
 
-  if (-not (Test-Directory $failures 'aioncore' '' $baseDir)) {
+  if (-not (Test-Directory $failures 'dreamcore' '' $baseDir)) {
     return $failures
   }
 
-  Test-NonEmptyFile $failures 'aioncore' '' (Join-Path $baseDir 'aioncore.exe') $true $baseDir | Out-Null
+  Test-NonEmptyFile $failures 'dreamcore' '' (Join-Path $baseDir 'dreamcore.exe') $true $baseDir | Out-Null
 
   $bundleManifestPath = Join-Path $baseDir 'manifest.json'
-  if (Test-NonEmptyFile $failures 'aioncore-manifest' '' $bundleManifestPath $false $baseDir) {
+  if (Test-NonEmptyFile $failures 'dreamcore-manifest' '' $bundleManifestPath $false $baseDir) {
     $bundleManifest = Read-JsonFile $bundleManifestPath
     if (-not $bundleManifest) {
-      $failures.Add((New-Failure 'publish_or_install_missing' 'aioncore-manifest' '' $bundleManifestPath 'invalid_json')) | Out-Null
+      $failures.Add((New-Failure 'publish_or_install_missing' 'dreamcore-manifest' '' $bundleManifestPath 'invalid_json')) | Out-Null
     } else {
       if ($bundleManifest.platform -ne $expectedPlatform) {
-        $failures.Add((New-Failure 'publish_or_install_missing' 'aioncore-manifest' '' $bundleManifestPath "platform_mismatch:$($bundleManifest.platform)")) | Out-Null
+        $failures.Add((New-Failure 'publish_or_install_missing' 'dreamcore-manifest' '' $bundleManifestPath "platform_mismatch:$($bundleManifest.platform)")) | Out-Null
       }
       if ($bundleManifest.arch -ne $expectedArch) {
-        $failures.Add((New-Failure 'publish_or_install_missing' 'aioncore-manifest' '' $bundleManifestPath "arch_mismatch:$($bundleManifest.arch)")) | Out-Null
+        $failures.Add((New-Failure 'publish_or_install_missing' 'dreamcore-manifest' '' $bundleManifestPath "arch_mismatch:$($bundleManifest.arch)")) | Out-Null
       }
     }
   }
@@ -491,16 +491,16 @@ function Test-BundledResourcesOnce {
 for ($attempt = 1; $attempt -le 5; $attempt++) {
   $failures = @(Test-BundledResourcesOnce)
   if ($failures.Count -eq 0) {
-    Write-VerifyLog "verify-bundled-aioncore result=ok runtime=$RuntimeKey attempts=$attempt"
+    Write-VerifyLog "verify-bundled-dreamcore result=ok runtime=$RuntimeKey attempts=$attempt"
     exit 0
   }
 
   $summary = ($failures | ConvertTo-Json -Compress -Depth 5)
   if ($attempt -lt 5) {
-    Write-VerifyLog "verify-bundled-aioncore result=retry classification=resource_pending_landing runtime=$RuntimeKey attempt=$attempt failures=$summary"
+    Write-VerifyLog "verify-bundled-dreamcore result=retry classification=resource_pending_landing runtime=$RuntimeKey attempt=$attempt failures=$summary"
     Start-Sleep -Milliseconds 500
   } else {
-    Write-VerifyLog "verify-bundled-aioncore result=fail runtime=$RuntimeKey failures=$summary"
+    Write-VerifyLog "verify-bundled-dreamcore result=fail runtime=$RuntimeKey failures=$summary"
   }
 }
 

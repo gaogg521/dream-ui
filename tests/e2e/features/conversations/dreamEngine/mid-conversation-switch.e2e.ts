@@ -17,25 +17,25 @@
 
 import { test, expect } from '../../../fixtures';
 import {
-  resolveAionrsPreconditions,
-  cleanupE2EAionrsConversations,
-  createAionrsConversationViaBridge,
-  sendAionrsMessage,
-  waitForAionrsReply,
-  getAionrsConversationDB,
-  getAionrsMessages,
+  resolveDreamEnginePreconditions,
+  cleanupE2EDreamEngineConversations,
+  createDreamEngineConversationViaBridge,
+  sendDreamEngineMessage,
+  waitForDreamEngineReply,
+  getDreamEngineConversationDB,
+  getDreamEngineMessages,
   createTempWorkspace,
-  type AionrsTestModels,
+  type DreamEngineTestModels,
 } from '../../../helpers';
 import { takeScreenshot } from '../../../helpers/screenshots';
 
-test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
+test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
   test.setTimeout(180000); // 3 minutes (longer for multi-round tests)
 
-  let preconditions: { binary: string | null; models: AionrsTestModels | null };
+  let preconditions: { binary: string | null; models: DreamEngineTestModels | null };
 
   test.beforeAll(async ({ page }) => {
-    preconditions = await resolveAionrsPreconditions(page);
+    preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
       test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
     }
@@ -47,7 +47,7 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       await page.keyboard.press('Escape');
     }
 
-    await cleanupE2EAionrsConversations(page);
+    await cleanupE2EDreamEngineConversations(page);
 
     await page.evaluate(() => {
       const keysToRemove: string[] = [];
@@ -77,12 +77,12 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
     }
 
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-continuous-switch`;
+    const conversationName = `E2E-dream-engine-${timestamp}-continuous-switch`;
     const tempWorkspace = createTempWorkspace(`tc-a-08-${timestamp}`);
 
     try {
       // Step 1: Create conversation via bridge with modelA
-      const conversationId = await createAionrsConversationViaBridge(page, {
+      const conversationId = await createDreamEngineConversationViaBridge(page, {
         name: conversationName,
         workspace: tempWorkspace.path,
         provider: preconditions.models!.modelA,
@@ -93,8 +93,8 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-08/01-created.png`);
 
       // Step 2: Send initial message
-      await sendAionrsMessage(page, conversationId, 'Hello, initial message.');
-      await waitForAionrsReply(page, conversationId);
+      await sendDreamEngineMessage(page, conversationId, 'Hello, initial message.');
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 02: initial reply
       await takeScreenshot(page, `chat-aionrs/tc-a-08/02-initial-reply.png`);
@@ -104,12 +104,12 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       await page.waitForLoadState('networkidle');
 
       // Step 4: Switch to modelB (model switch #1)
-      const modelSelector = page.locator('[data-testid="aionrs-model-selector"]');
+      const modelSelector = page.locator('[data-testid="dream-engine-model-selector"]');
       await expect(modelSelector).toBeVisible({ timeout: 10000 });
       await modelSelector.click();
       await page.waitForTimeout(500);
 
-      const secondModel = page.locator(`[data-testid="aionrs-model-option-${preconditions.models!.modelB.useModel}"]`);
+      const secondModel = page.locator(`[data-testid="dream-engine-model-option-${preconditions.models!.modelB.useModel}"]`);
       await secondModel.waitFor({ state: 'visible', timeout: 5000 });
       await secondModel.click();
       await page.waitForTimeout(1000);
@@ -118,12 +118,12 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-08/03-model-switched.png`);
 
       // Step 5: Switch permission (mode switch)
-      const modeSelector = page.locator('[data-testid="agent-mode-selector-aionrs"]');
+      const modeSelector = page.locator('[data-testid="agent-mode-selector-dream-engine"]');
       await expect(modeSelector).toBeVisible({ timeout: 10000 });
       await modeSelector.click();
       await page.waitForTimeout(500);
 
-      const yoloOption = page.locator('[data-testid="aionrs-mode-option-yolo"]');
+      const yoloOption = page.locator('[data-testid="dream-engine-mode-option-yolo"]');
       await expect(yoloOption).toBeVisible();
       await yoloOption.click();
       await page.waitForTimeout(1000);
@@ -135,7 +135,7 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       await modelSelector.click();
       await page.waitForTimeout(500);
 
-      const firstModel = page.locator(`[data-testid="aionrs-model-option-${preconditions.models!.modelA.useModel}"]`);
+      const firstModel = page.locator(`[data-testid="dream-engine-model-option-${preconditions.models!.modelA.useModel}"]`);
       await firstModel.waitFor({ state: 'visible', timeout: 5000 });
       await firstModel.click();
       await page.waitForTimeout(1000);
@@ -144,8 +144,8 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-08/05-model-switched-again.png`);
 
       // Step 7: Send message after all switches
-      await sendAionrsMessage(page, conversationId, 'After all switches.');
-      await waitForAionrsReply(page, conversationId);
+      await sendDreamEngineMessage(page, conversationId, 'After all switches.');
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 06: final reply
       await takeScreenshot(page, `chat-aionrs/tc-a-08/06-final-reply.png`);
@@ -155,13 +155,13 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       // ============================================================================
 
       // 1. Verify final mode is yolo
-      const conversation = await getAionrsConversationDB(page, conversationId);
+      const conversation = await getDreamEngineConversationDB(page, conversationId);
       const extra =
         typeof conversation.extra === 'string' ? JSON.parse(conversation.extra || '{}') : conversation.extra || {};
       expect(extra.sessionMode).toBe('yolo');
 
       // 2. Verify message count (at least 4: initial user/ai + final user/ai)
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
       expect(messages.length).toBeGreaterThanOrEqual(4);
 
       // 3. Verify all AI replies exist (message.status check not applicable for dream)
@@ -185,12 +185,12 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
     }
 
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-multi-round`;
+    const conversationName = `E2E-dream-engine-${timestamp}-multi-round`;
     const tempWorkspace = createTempWorkspace(`tc-a-09-${timestamp}`);
 
     try {
       // Step 1: Create conversation via bridge with modelA
-      const conversationId = await createAionrsConversationViaBridge(page, {
+      const conversationId = await createDreamEngineConversationViaBridge(page, {
         name: conversationName,
         workspace: tempWorkspace.path,
         provider: preconditions.models!.modelA,
@@ -198,8 +198,8 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       });
 
       // Step 2: Send initial message
-      await sendAionrsMessage(page, conversationId, 'Round 1: Initial message.');
-      await waitForAionrsReply(page, conversationId);
+      await sendDreamEngineMessage(page, conversationId, 'Round 1: Initial message.');
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 01: after round 1
       await takeScreenshot(page, `chat-aionrs/tc-a-09/01-round1.png`);
@@ -209,23 +209,23 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       await page.waitForLoadState('networkidle');
 
       // Step 4: Switch to modelB
-      const modelSelector = page.locator('[data-testid="aionrs-model-selector"]');
+      const modelSelector = page.locator('[data-testid="dream-engine-model-selector"]');
       await expect(modelSelector).toBeVisible({ timeout: 10000 });
       await modelSelector.click();
       await page.waitForTimeout(500);
 
-      const secondModel = page.locator(`[data-testid="aionrs-model-option-${preconditions.models!.modelB.useModel}"]`);
+      const secondModel = page.locator(`[data-testid="dream-engine-model-option-${preconditions.models!.modelB.useModel}"]`);
       await secondModel.waitFor({ state: 'visible', timeout: 5000 });
       await secondModel.click();
       await page.waitForTimeout(1000);
 
       // Step 5: Switch permission
-      const modeSelector = page.locator('[data-testid="agent-mode-selector-aionrs"]');
+      const modeSelector = page.locator('[data-testid="agent-mode-selector-dream-engine"]');
       await expect(modeSelector).toBeVisible({ timeout: 10000 });
       await modeSelector.click();
       await page.waitForTimeout(500);
 
-      const yoloOption = page.locator('[data-testid="aionrs-mode-option-yolo"]');
+      const yoloOption = page.locator('[data-testid="dream-engine-mode-option-yolo"]');
       await expect(yoloOption).toBeVisible();
       await yoloOption.click();
       await page.waitForTimeout(1000);
@@ -234,22 +234,22 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-09/02-after-switches.png`);
 
       // Step 6: Round 2 - send and wait
-      await sendAionrsMessage(page, conversationId, 'Round 2: After model and permission switch.');
-      await waitForAionrsReply(page, conversationId);
+      await sendDreamEngineMessage(page, conversationId, 'Round 2: After model and permission switch.');
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: after round 2
       await takeScreenshot(page, `chat-aionrs/tc-a-09/03-round2.png`);
 
       // Step 7: Round 3 - send and wait
-      await sendAionrsMessage(page, conversationId, 'Round 3: Continue with switched config.');
-      await waitForAionrsReply(page, conversationId);
+      await sendDreamEngineMessage(page, conversationId, 'Round 3: Continue with switched config.');
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 04: after round 3
       await takeScreenshot(page, `chat-aionrs/tc-a-09/04-round3.png`);
 
       // Step 8: Round 4 (bonus) - send and wait
-      await sendAionrsMessage(page, conversationId, 'Round 4: Final message.');
-      await waitForAionrsReply(page, conversationId);
+      await sendDreamEngineMessage(page, conversationId, 'Round 4: Final message.');
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 05: after round 4
       await takeScreenshot(page, `chat-aionrs/tc-a-09/05-round4.png`);
@@ -259,7 +259,7 @@ test.describe('Aionrs Chat - Mid-Conversation Switch (P1)', () => {
       // ============================================================================
 
       // 1. Verify message count (at least 8: 4 user + 4 ai)
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
       expect(messages.length).toBeGreaterThanOrEqual(8);
 
       // 2. Verify all rounds have replies

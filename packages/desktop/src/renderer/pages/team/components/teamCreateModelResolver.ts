@@ -43,7 +43,7 @@ export async function resolveDefaultTeamAgentModel(params: {
     // creation outright with "no enabled provider offers model '<name>'".
     // Verify before trusting it, and fall back to a model that exists.
     if (runtimeKey === 'dream') {
-      return resolveAionrsModel(assistantModel);
+      return resolveDreamEngineModel(assistantModel);
     }
 
     if (assistantModel) {
@@ -85,7 +85,7 @@ function resolveBackendDefaultModel(assistant_backend?: string): Promise<string>
   }
 
   if (assistant_backend === 'dream') {
-    return resolveAionrsModel();
+    return resolveDreamEngineModel();
   }
 
   if (assistant_backend === 'antigravity') {
@@ -126,7 +126,7 @@ async function resolveGeminiDefaultModel(): Promise<string> {
 // `preferred` is honoured only when an enabled provider actually offers it;
 // otherwise the first usable model wins. Both the placeholder case and the
 // stale-preference case therefore end up on a model the server can resolve.
-async function resolveAionrsModel(preferred?: string): Promise<string> {
+async function resolveDreamEngineModel(preferred?: string): Promise<string> {
   const providers = await ipcBridge.mode.listProviders.invoke();
   const usable = (provider: (typeof providers)[number], model: string) =>
     provider.enabled !== false && provider.model_enabled?.[model] !== false;

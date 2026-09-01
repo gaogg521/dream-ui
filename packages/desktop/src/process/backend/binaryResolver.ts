@@ -1,5 +1,5 @@
 /**
- * Resolve the aioncore binary path.
+ * Resolve the dreamcore binary path.
  *
  * Search order:
  *  1. DREAM_BACKEND_BIN env override (path, resolved to absolute)
@@ -11,7 +11,12 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
 
-const BINARY_NAME = 'aioncore';
+const BINARY_NAME = 'dreamcore';
+// Backend bundles published before the rebrand shipped the binary (and its
+// enclosing resources dir) under the legacy `aioncore` name. Keep resolving
+// them so a not-yet-rebuilt dev bundle or an in-place upgrade still boots.
+const LEGACY_BINARY_NAME = 'aioncore';
+const BUNDLED_DIR_NAMES = ['bundled-dreamcore', 'bundled-aioncore'] as const;
 const BIN_ENV_VAR = 'DREAM_BACKEND_BIN';
 const MAX_DIR_ENTRIES = 20;
 const MAX_LOOKUP_TEXT_LENGTH = 1000;
@@ -42,8 +47,12 @@ class BackendBinaryResolveError extends Error {
   }
 }
 
+function binaryExt(): string {
+  return process.platform === 'win32' ? '.exe' : '';
+}
+
 function getBinaryName(): string {
-  return process.platform === 'win32' ? `${BINARY_NAME}.exe` : BINARY_NAME;
+  return `${BINARY_NAME}${binaryExt()}`;
 }
 
 function getRuntimeKey(): string {
@@ -65,7 +74,7 @@ function trimLookupText(text: string): string {
 }
 
 /**
- * Resolve the aioncore binary path.
+ * Resolve the dreamcore binary path.
  * Returns the absolute path to the binary, or throws if not found.
  */
 export function resolveBinaryPath(): string {
@@ -87,7 +96,7 @@ export function resolveBinaryPath(): string {
   if (fromPath) return fromPath;
 
   throw new BackendBinaryResolveError(
-    `Cannot find "${BINARY_NAME}" binary. Checked bundled location and system PATH.`,
+    `Cannot find "${BINARY_NAME}" (or legacy "${LEGACY_BINARY_NAME}") binary. Checked bundled location and system PATH.`,
     diagnostics
   );
 }
@@ -119,8 +128,9 @@ function envOverridePath(diagnostics: BackendBinaryResolveDiagnostics): string |
 /**
  * Resolve bundled binary. Search order:
  *  1. DREAM_BACKEND_BUNDLED_DIR (explicit override)
- *  2. {cwd}/resources/bundled-aioncore (dev — backend-rebuild output)
- *  3. process.resourcesPath/bundled-aioncore (packaged app; in dev this is
+ *  2. {cwd}/resources/bundled-dreamcore (dev — backend-rebuild output; the
+ *     legacy bundled-aioncore dir is still honored)
+ *  3. process.resourcesPath/bundled-dreamcore (packaged app; in dev this is
  *     node_modules/electron/dist/resources and is often stale)
  */
 function resolveBundledBinary(
@@ -128,24 +138,38 @@ function resolveBundledBinary(
   binaryName: string,
   diagnostics: BackendBinaryResolveDiagnostics
 ): string | null {
-  const bundledRoots: string[] = [];
+  // Each entry is a bundle dir candidate. The env override points at the
+  // bundle dir itself; the standard roots are parents that may hold either
+  // bundle dir name.
+  const bundleDirs: Array<{ dir: string; currentName: boolean }> = [];
   const envBundledDir = process.env.DREAM_BACKEND_BUNDLED_DIR?.trim();
-  if (envBundledDir) bundledRoots.push(envBundledDir);
-  bundledRoots.push(join(process.cwd(), 'resources', 'bundled-aioncore'));
+  if (envBundledDir) bundleDirs.push({ dir: envBundledDir, currentName: true });
+  for (const root of [join(process.cwd(), 'resources'), (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath]) {
+    if (!root) continue;
+    for (const dirName of BUNDLED_DIR_NAMES) {
+      bundleDirs.push({ dir: join(root, dirName), currentName: dirName === BUNDLED_DIR_NAMES[0] });
+    }
+  }
 
-  const resourcesPath = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
-  if (resourcesPath) bundledRoots.push(join(resourcesPath, 'bundled-aioncore'));
-
-  for (const bundledDir of bundledRoots) {
+  const binaryNames =
+    binaryName === `${BINARY_NAME}${binaryExt()}` ? [`${BINARY_NAME}${binaryExt()}`, `${LEGACY_BINARY_NAME}${binaryExt()}`] : [binaryName];
+  const primaryName = binaryNames[0];
+  for (const { dir: bundledDir, currentName } of bundleDirs) {
     const runtimeDir = join(bundledDir, runtimeKey);
-    const candidate = join(runtimeDir, binaryName);
-    diagnostics.resourcesPath = join(bundledDir, '..');
-    diagnostics.checkedBundledPath = candidate;
-    diagnostics.bundledDirExists = existsSync(bundledDir);
-    diagnostics.runtimeDirExists = existsSync(runtimeDir);
-    diagnostics.resourcesDirEntries = listDirEntries(diagnostics.resourcesPath);
-    diagnostics.runtimeDirEntries = listDirEntries(runtimeDir);
-    if (existsSync(candidate)) return candidate;
+    for (const name of binaryNames) {
+      const candidate = join(runtimeDir, name);
+      // Diagnostics follow the primary name in the current-name bundle dir
+      // (the standard location); legacy-name fallback attempts are noise.
+      if (name === primaryName && currentName) {
+        diagnostics.resourcesPath = join(bundledDir, '..');
+        diagnostics.checkedBundledPath = candidate;
+        diagnostics.bundledDirExists = existsSync(bundledDir);
+        diagnostics.runtimeDirExists = existsSync(runtimeDir);
+        diagnostics.resourcesDirEntries = listDirEntries(diagnostics.resourcesPath);
+        diagnostics.runtimeDirEntries = listDirEntries(runtimeDir);
+      }
+      if (existsSync(candidate)) return candidate;
+    }
   }
   return null;
 }

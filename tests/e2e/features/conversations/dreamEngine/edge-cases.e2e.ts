@@ -14,27 +14,27 @@
 
 import { test, expect } from '../../../fixtures';
 import {
-  resolveAionrsPreconditions,
-  cleanupE2EAionrsConversations,
-  createAionrsConversationViaBridge,
-  sendAionrsMessage,
-  getAionrsMessages,
-  waitForAionrsReply,
-  getAionrsConversationDB,
+  resolveDreamEnginePreconditions,
+  cleanupE2EDreamEngineConversations,
+  createDreamEngineConversationViaBridge,
+  sendDreamEngineMessage,
+  getDreamEngineMessages,
+  waitForDreamEngineReply,
+  getDreamEngineConversationDB,
   createTempWorkspace,
-  type AionrsTestModels,
+  type DreamEngineTestModels,
 } from '../../../helpers';
 import { takeScreenshot } from '../../../helpers/screenshots';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-test.describe('Aionrs Chat - Edge Cases (P2)', () => {
+test.describe('DreamEngine Chat - Edge Cases (P2)', () => {
   test.setTimeout(240_000); // 4 minutes for edge case tests
 
-  let preconditions: { binary: string | null; models: AionrsTestModels | null };
+  let preconditions: { binary: string | null; models: DreamEngineTestModels | null };
 
   test.beforeAll(async ({ page }) => {
-    preconditions = await resolveAionrsPreconditions(page);
+    preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
       test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
     }
@@ -48,7 +48,7 @@ test.describe('Aionrs Chat - Edge Cases (P2)', () => {
     }
 
     // 2. Delete E2E conversations from DB (cascades to messages)
-    await cleanupE2EAionrsConversations(page);
+    await cleanupE2EDreamEngineConversations(page);
 
     // 3. Clear sessionStorage
     await page.evaluate(() => {
@@ -87,7 +87,7 @@ test.describe('Aionrs Chat - Edge Cases (P2)', () => {
 
   test('TC-A-14: should show error when uploading file exceeding 100MB limit', async ({ page }) => {
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-large-file`;
+    const conversationName = `E2E-dream-engine-${timestamp}-large-file`;
     const tempWorkspace = createTempWorkspace(`tc-a-14-${timestamp}`);
 
     try {
@@ -116,7 +116,7 @@ test.describe('Aionrs Chat - Edge Cases (P2)', () => {
       let conversationId = '';
 
       try {
-        conversationId = await createAionrsConversationViaBridge(page, {
+        conversationId = await createDreamEngineConversationViaBridge(page, {
           name: conversationName,
           workspace: tempWorkspace.path,
           provider: preconditions.models!.modelA,
@@ -124,7 +124,7 @@ test.describe('Aionrs Chat - Edge Cases (P2)', () => {
         });
 
         // If conversation created, try to trigger file access
-        await sendAionrsMessage(page, conversationId, `Read the file: ${largeFilePath}`);
+        await sendDreamEngineMessage(page, conversationId, `Read the file: ${largeFilePath}`);
         await page.waitForTimeout(2000); // Wait for potential error
       } catch (error) {
         errorOccurred = true;
@@ -155,7 +155,7 @@ test.describe('Aionrs Chat - Edge Cases (P2)', () => {
 
   test('TC-A-15: should show error when associating deleted folder path', async ({ page }) => {
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-deleted-folder`;
+    const conversationName = `E2E-dream-engine-${timestamp}-deleted-folder`;
     const tempWorkspace = createTempWorkspace(`tc-a-15-${timestamp}`);
 
     try {
@@ -183,7 +183,7 @@ test.describe('Aionrs Chat - Edge Cases (P2)', () => {
       let errorMessage = '';
 
       try {
-        const conversationId = await createAionrsConversationViaBridge(page, {
+        const conversationId = await createDreamEngineConversationViaBridge(page, {
           name: conversationName,
           workspace: deletedFolderPath,
           provider: preconditions.models!.modelA,

@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 const {
-  verifyBundledAioncoreResources,
-} = require('../../../packages/shared-scripts/src/verify-bundled-aioncore-resources');
+  verifyBundledDreamcoreResources,
+} = require('../../../packages/shared-scripts/src/verify-bundled-dreamcore-resources');
 
 const CODEX_ENTRYPOINT = 'node_modules/@agentclientprotocol/codex-acp/dist/index.js';
 const CLAUDE_ENTRYPOINT = 'node_modules/@agentclientprotocol/claude-agent-acp/dist/index.js';
@@ -110,7 +110,7 @@ function writeManagedResourcesContract(managedResourcesDir: string, runtimeKey =
   });
 }
 
-describe('verifyBundledAioncoreResources', () => {
+describe('verifyBundledDreamcoreResources', () => {
   let tmp: string;
   let resourcesDir: string;
   let managedResourcesDir: string;
@@ -119,11 +119,11 @@ describe('verifyBundledAioncoreResources', () => {
   beforeEach(() => {
     tmp = mkdtempSync(join(tmpdir(), 'aionui-bundled-resources-'));
     resourcesDir = join(tmp, 'resources');
-    managedResourcesDir = join(resourcesDir, 'bundled-aioncore', 'win32-x64', 'managed-resources');
+    managedResourcesDir = join(resourcesDir, 'bundled-dreamcore', 'win32-x64', 'managed-resources');
 
-    mkdirSync(join(resourcesDir, 'bundled-aioncore', 'win32-x64'), { recursive: true });
-    writeFile(join(resourcesDir, 'bundled-aioncore', 'win32-x64', 'aioncore.exe'));
-    writeJson(join(resourcesDir, 'bundled-aioncore', 'win32-x64', 'manifest.json'), {
+    mkdirSync(join(resourcesDir, 'bundled-dreamcore', 'win32-x64'), { recursive: true });
+    writeFile(join(resourcesDir, 'bundled-dreamcore', 'win32-x64', 'dreamcore.exe'));
+    writeJson(join(resourcesDir, 'bundled-dreamcore', 'win32-x64', 'manifest.json'), {
       platform: 'win32',
       arch: 'x64',
     });
@@ -153,7 +153,7 @@ describe('verifyBundledAioncoreResources', () => {
   });
 
   it('passes when the managed resources contract points to existing resources', () => {
-    const result = verifyBundledAioncoreResources({
+    const result = verifyBundledDreamcoreResources({
       resourcesDir,
       electronPlatformName: 'win32',
       targetArch: 'x64',
@@ -167,13 +167,13 @@ describe('verifyBundledAioncoreResources', () => {
   it('fails when managed resources contract is missing', () => {
     rmSync(join(managedResourcesDir, 'manifest.json'));
 
-    const result = verifyBundledAioncoreResources({
+    const result = verifyBundledDreamcoreResources({
       resourcesDir,
       electronPlatformName: 'win32',
       targetArch: 'x64',
     });
 
-    expect(result.missing).toContain('bundled-aioncore/win32-x64/managed-resources/manifest.json');
+    expect(result.missing).toContain('bundled-dreamcore/win32-x64/managed-resources/manifest.json');
     expect(result.failures).toContainEqual(
       expect.objectContaining({
         component: 'managed-resources',
@@ -193,14 +193,14 @@ describe('verifyBundledAioncoreResources', () => {
       platformExecutable: CODEX_WIN32_X64_EXECUTABLE,
     });
 
-    const result = verifyBundledAioncoreResources({
+    const result = verifyBundledDreamcoreResources({
       resourcesDir,
       electronPlatformName: 'win32',
       targetArch: 'x64',
     });
 
     expect(result.missing).toContain(
-      'bundled-aioncore/win32-x64/managed-resources/acp/codex-acp/1.1.2/win32-x64/manifest.json'
+      'bundled-dreamcore/win32-x64/managed-resources/acp/codex-acp/1.1.2/win32-x64/manifest.json'
     );
   });
 
@@ -208,14 +208,14 @@ describe('verifyBundledAioncoreResources', () => {
     rmSync(join(managedResourcesDir, 'node', 'node-v24.11.0-win-x64'), { recursive: true, force: true });
     writeFile(join(managedResourcesDir, 'node', 'node-v20.0.0-win-x64', 'node.exe'));
 
-    const result = verifyBundledAioncoreResources({
+    const result = verifyBundledDreamcoreResources({
       resourcesDir,
       electronPlatformName: 'win32',
       targetArch: 'x64',
     });
 
     expect(result.missing).toContain(
-      'bundled-aioncore/win32-x64/managed-resources/node/node-v24.11.0-win-x64/node.exe'
+      'bundled-dreamcore/win32-x64/managed-resources/node/node-v24.11.0-win-x64/node.exe'
     );
   });
 
@@ -226,7 +226,7 @@ describe('verifyBundledAioncoreResources', () => {
     manifest.acpTools.push({ ...manifest.acpTools[0] });
     writeJson(manifestPath, manifest);
 
-    const result = verifyBundledAioncoreResources({
+    const result = verifyBundledDreamcoreResources({
       resourcesDir,
       electronPlatformName: 'win32',
       targetArch: 'x64',
@@ -238,13 +238,13 @@ describe('verifyBundledAioncoreResources', () => {
         reason: 'duplicate_tool_slug',
       })
     );
-    expect(result.missing).toContain('bundled-aioncore/win32-x64/managed-resources/manifest.json<contract_failure>');
+    expect(result.missing).toContain('bundled-dreamcore/win32-x64/managed-resources/manifest.json<contract_failure>');
   });
 
   it('fails when the contract is invalid JSON', () => {
     writeFileSync(join(managedResourcesDir, 'manifest.json'), '{');
 
-    const result = verifyBundledAioncoreResources({
+    const result = verifyBundledDreamcoreResources({
       resourcesDir,
       electronPlatformName: 'win32',
       targetArch: 'x64',
@@ -261,7 +261,7 @@ describe('verifyBundledAioncoreResources', () => {
     manifest.schemaVersion = 99;
     writeJson(manifestPath, manifest);
 
-    const result = verifyBundledAioncoreResources({
+    const result = verifyBundledDreamcoreResources({
       resourcesDir,
       electronPlatformName: 'win32',
       targetArch: 'x64',
@@ -345,7 +345,7 @@ describe('verifyBundledAioncoreResources', () => {
     };
 
     const verify = () =>
-      verifyBundledAioncoreResources({ resourcesDir, electronPlatformName: 'win32', targetArch: 'x64' });
+      verifyBundledDreamcoreResources({ resourcesDir, electronPlatformName: 'win32', targetArch: 'x64' });
 
     it('passes when every declared CLI is present', () => {
       writeV2Contract();
@@ -457,7 +457,7 @@ describe('verifyBundledAioncoreResources', () => {
     manifest.node.root = 42;
     writeJson(manifestPath, manifest);
 
-    const result = verifyBundledAioncoreResources({
+    const result = verifyBundledDreamcoreResources({
       resourcesDir,
       electronPlatformName: 'win32',
       targetArch: 'x64',
@@ -472,7 +472,7 @@ describe('verifyBundledAioncoreResources', () => {
     manifest.acpTools[0].platformDirectory = 'linux-x64';
     writeJson(manifestPath, manifest);
 
-    const result = verifyBundledAioncoreResources({
+    const result = verifyBundledDreamcoreResources({
       resourcesDir,
       electronPlatformName: 'win32',
       targetArch: 'x64',
@@ -487,7 +487,7 @@ describe('verifyBundledAioncoreResources', () => {
       path_entries: ['node_modules/.bin'],
     });
 
-    const result = verifyBundledAioncoreResources({
+    const result = verifyBundledDreamcoreResources({
       resourcesDir,
       electronPlatformName: 'win32',
       targetArch: 'x64',

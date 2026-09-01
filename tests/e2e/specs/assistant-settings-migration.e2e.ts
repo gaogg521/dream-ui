@@ -71,7 +71,7 @@ function resolveBackendBinary(): string {
   const projectRoot = process.cwd();
   const candidates = [
     process.env.DREAM_BACKEND_BINARY,
-    path.join(projectRoot, '../aionCore/target/debug/aioncore'),
+    path.join(projectRoot, '../dream-core/target/debug/dreamcore'),
     path.join(os.homedir(), '.cargo', 'bin', 'aioncore'),
   ].filter((value): value is string => Boolean(value));
 
@@ -81,11 +81,11 @@ function resolveBackendBinary(): string {
     }
   }
 
-  throw new Error('aioncore binary not found for migration e2e');
+  throw new Error('dreamcore binary not found for migration e2e');
 }
 
 function schemaPath(): string {
-  return path.join(process.cwd(), '../aionCore/crates/aionui-db/migrations/001_initial_schema.sql');
+  return path.join(process.cwd(), '../dream-core/crates/dream-core-db/migrations/001_initial_schema.sql');
 }
 
 function querySqliteValue(dataDir: string, sql: string): string {

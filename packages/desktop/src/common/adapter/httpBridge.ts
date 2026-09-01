@@ -1,6 +1,6 @@
 /**
  * HTTP/WS bridge factory — drop-in replacement for bridge.buildProvider / bridge.buildEmitter
- * that routes calls to aioncore via REST API and WebSocket.
+ * that routes calls to dreamcore via REST API and WebSocket.
  *
  * Exported helpers produce objects with the same shape as the local IPC bridge,
  * so existing renderer code works without changes.
@@ -55,7 +55,7 @@ export function isWebUiBrowserMode(): boolean {
  * Enterprise GOVERNANCE surfaces that live on the server even for a desktop
  * client: org context/membership, admin (users/invites/audit/SSO), the
  * one-devops registries + collaboration board, and licence / spend / usage.
- * Everything NOT matching these runs on the member's local co-located aioncore.
+ * Everything NOT matching these runs on the member's local co-located dreamcore.
  *
  * ⚠️ `/api/one/billing` belongs here for the same reason `/api/one/org` does:
  * the licence, the budget and the usage ledger are enterprise-scoped rows that
@@ -81,7 +81,7 @@ function isGovernancePath(path: string): boolean {
  * Are shell operations happening on a machine the user cannot see?
  *
  * `/api/shell/*` (open file, reveal in folder) is not a governance path, so by
- * the rule above it always reaches the **local** aioncore for a desktop client —
+ * the rule above it always reaches the **local** dreamcore for a desktop client —
  * including in enterprise remote mode, where media jobs are local too. Revealing
  * a folder there is correct and must keep working.
  *
@@ -107,7 +107,7 @@ export function isShellHostUnreachable(): boolean {
 /**
  * D1 — local-first routing. The whole refactor is "local base + team
  * additive": a member's agent, conversations, skills/MCP and personal data
- * always run on the LOCAL co-located aioncore, so they keep working when the
+ * always run on the LOCAL co-located dreamcore, so they keep working when the
  * server is down and consume the locally-materialized team resources. Only
  * enterprise governance (org/admin/sso/devops) reaches the remote server in
  * client mode. Standalone & server-host modes are unaffected (no remote).
@@ -127,7 +127,7 @@ export function getBaseUrl(): string {
 }
 
 /**
- * Always targets the co-located aioncore spawned by the desktop shell.
+ * Always targets the co-located dreamcore spawned by the desktop shell.
  */
 export function getLocalBaseUrl(): string {
   if (isWebUiBrowserMode()) {
@@ -148,7 +148,7 @@ function resolveRequestBaseUrl(path: string, options?: HttpRequestOptions): stri
 
 function getWsUrl(): string {
   // D1: the conversation/agent event stream is LOCAL — a client-mode member's
-  // agent runs on the co-located aioncore, not the remote server. (Governance
+  // agent runs on the co-located dreamcore, not the remote server. (Governance
   // is REST-only; nothing on the remote server needs this WS.) Browser WebUI
   // sessions are same-origin against whatever host served them.
   if (isWebUiBrowserMode()) {
@@ -242,7 +242,7 @@ export function isBackendHttpError(error: unknown): error is BackendHttpError {
  */
 export type HttpRequestOptions = {
   silentStatuses?: number[];
-  /** Route to the local co-located aioncore instead of the enterprise remote server. */
+  /** Route to the local co-located dreamcore instead of the enterprise remote server. */
   preferLocalBackend?: boolean;
   /**
    * Client-side request timeout in milliseconds. Defaults to
@@ -300,7 +300,7 @@ export async function httpRequest<T>(
 
   // Only remote governance requests carry the enterprise Bearer token (no
   // cross-origin cookie jar; the backend skips CSRF for Bearer requests).
-  // Local requests hit the co-located aioncore which runs without a session.
+  // Local requests hit the co-located dreamcore which runs without a session.
   if (remote) {
     const session = getEnterpriseSession();
     if (session) {
@@ -333,7 +333,7 @@ export async function httpRequest<T>(
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller?.signal,
-      // Local co-located aioncore runs with --local in dev (no session cookie).
+      // Local co-located dreamcore runs with --local in dev (no session cookie).
       // Sending credentials cross-origin (localhost:5173 → 127.0.0.1:port) makes
       // the browser reject responses when CORS uses Allow-Origin: *.
     });
@@ -474,7 +474,7 @@ export function httpDelete<Data, Params = undefined>(
   };
 }
 
-/** Personal digital-employee APIs — always local aioncore on desktop (see getLocalBaseUrl). */
+/** Personal digital-employee APIs — always local dreamcore on desktop (see getLocalBaseUrl). */
 const LOCAL_BACKEND: HttpRequestOptions = { preferLocalBackend: true };
 
 export function httpGetLocal<Data, Params = undefined>(

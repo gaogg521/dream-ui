@@ -76,7 +76,6 @@ const PRESET_ID_WHITELIST = new Set<string>([
   'planning-with-files',
   'human-3-coach',
   'social-job-publisher',
-  'moltbook',
   'beautiful-mermaid',
   'story-roleplay',
 ]);

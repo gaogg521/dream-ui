@@ -47,7 +47,7 @@ export function getGovernanceEndpoint(): GovernanceEndpoint | null {
   return governanceEndpoint;
 }
 
-/** Base URL of the co-located aioncore, or null before the backend is up. */
+/** Base URL of the co-located dreamcore, or null before the backend is up. */
 export function localBackendBaseUrl(): string | null {
   const port = (globalThis as typeof globalThis & { __backendPort?: number }).__backendPort;
   return port ? `http://127.0.0.1:${port}` : null;

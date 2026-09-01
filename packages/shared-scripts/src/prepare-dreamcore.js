@@ -1,5 +1,5 @@
 /**
- * Prepare aioncore binary for packaging.
+ * Prepare the dreamcore binary for packaging.
  *
  * Resolution order:
  *  0. Local binary when DREAM_BACKEND_LOCAL_PATH is set (fork/local builds)
@@ -9,50 +9,57 @@
  *  3. Complete local bundle from DREAM_BACKEND_LOCAL_BUNDLE_DIR
  *  4. Local binary fallback from DREAM_BACKEND_LOCAL_BINARY
  *
- * Output: {projectRoot}/resources/bundled-aioncore/{platform}-{arch}/
- *   - aioncore[.exe]
+ * Output: {projectRoot}/resources/bundled-dreamcore/{platform}-{arch}/
+ *   - dreamcore[.exe]
  *   - manifest.json
  *   - managed-resources/...
  *
- * @module prepare-aioncore
+ * @module prepare-dreamcore
  */
 
 const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { verifyBundledAioncoreResources } = require('./verify-bundled-aioncore-resources');
+const { verifyBundledDreamcoreResources } = require('./verify-bundled-dreamcore-resources');
 
 // DREAM_BACKEND_REPO ("owner/repo") overrides the download source. Defaults to
-// the dream-core repo, whose release.yml publishes the aioncore-* assets this
-// script downloads.
+// the dream-core repo, whose release.yml publishes the dreamcore-* assets this
+// script downloads. Releases published before the rebrand carried aioncore-*
+// asset/binary names; those stay accepted as a download fallback.
 const REPO_SLUG = (process.env.DREAM_BACKEND_REPO || 'gaogg521/dream-core').split('/');
 const GITHUB_OWNER = REPO_SLUG[0];
 const GITHUB_REPO = REPO_SLUG[1] || 'dream-core';
 
 const ACTIONS_ARTIFACT_TARGETS = {
   'darwin-arm64': {
-    artifactName: 'aioncore-manual-macos-arm64',
+    artifactName: 'dreamcore-manual-macos-arm64',
+    legacyArtifactName: 'aioncore-manual-macos-arm64',
     manualPlatform: 'macos-arm64',
   },
   'darwin-x64': {
-    artifactName: 'aioncore-manual-macos-x64',
+    artifactName: 'dreamcore-manual-macos-x64',
+    legacyArtifactName: 'aioncore-manual-macos-x64',
     manualPlatform: 'macos-x64',
   },
   'linux-arm64': {
-    artifactName: 'aioncore-manual-linux-arm64',
+    artifactName: 'dreamcore-manual-linux-arm64',
+    legacyArtifactName: 'aioncore-manual-linux-arm64',
     manualPlatform: 'linux-arm64',
   },
   'linux-x64': {
-    artifactName: 'aioncore-manual-linux-x64',
+    artifactName: 'dreamcore-manual-linux-x64',
+    legacyArtifactName: 'aioncore-manual-linux-x64',
     manualPlatform: 'linux-x64',
   },
   'win32-arm64': {
-    artifactName: 'aioncore-manual-windows-arm64',
+    artifactName: 'dreamcore-manual-windows-arm64',
+    legacyArtifactName: 'aioncore-manual-windows-arm64',
     manualPlatform: 'windows-arm64',
   },
   'win32-x64': {
-    artifactName: 'aioncore-manual-windows-x64',
+    artifactName: 'dreamcore-manual-windows-x64',
+    legacyArtifactName: 'aioncore-manual-windows-x64',
     manualPlatform: 'windows-x64',
   },
 };
@@ -93,7 +100,7 @@ function writeJson(filePath, payload) {
 }
 
 function getBinaryName(platform) {
-  return platform === 'win32' ? 'aioncore.exe' : 'aioncore';
+  return platform === 'win32' ? 'dreamcore.exe' : 'dreamcore';
 }
 
 function getActionsTarget(platform, arch) {
@@ -114,9 +121,9 @@ function getActionsArtifactMissingMessage({ runId, platform, arch, expectedArtif
       ? availableArtifactNames.join(', ')
       : '(none)';
   return [
-    `AionCore run ${runId} does not contain artifact [ ${expectedArtifactName} ] required for [ ${platform}-${arch} ].`,
+    `DreamCore run ${runId} does not contain artifact [ ${expectedArtifactName} ] required for [ ${platform}-${arch} ].`,
     `Available artifacts: ${available}.`,
-    `Re-run AionCore Manual Build with platform [ ${getActionsManualPlatform(platform, arch)} ] or all.`,
+    `Re-run DreamCore Manual Build with platform [ ${getActionsManualPlatform(platform, arch)} ] or all.`,
   ].join(' ');
 }
 
@@ -142,15 +149,15 @@ function prepareManagedResources(binaryPath, targetDir) {
   return bundleOut;
 }
 
-function verifyPreparedAioncoreBundle(projectRoot, platform, arch) {
-  const result = verifyBundledAioncoreResources({
+function verifyPreparedDreamcoreBundle(projectRoot, platform, arch) {
+  const result = verifyBundledDreamcoreResources({
     resourcesDir: path.join(projectRoot, 'resources'),
     electronPlatformName: platform,
     targetArch: arch,
   });
   if (result.missing.length > 0 || result.failures.length > 0) {
     const summary = result.missing.length > 0 ? result.missing.join(', ') : JSON.stringify(result.failures);
-    throw new Error(`Prepared aioncore bundle is missing required bundled resource(s): ${summary}`);
+    throw new Error(`Prepared dreamcore bundle is missing required bundled resource(s): ${summary}`);
   }
   return result;
 }
@@ -196,7 +203,8 @@ function resolveLatestTag() {
  * Build the release asset filename for the given platform/arch/tag.
  *
  * Expected asset naming convention:
- *   aioncore-v0.1.0-aarch64-apple-darwin.tar.gz
+ *   dreamcore-v0.1.0-aarch64-apple-darwin.tar.gz
+ * (pre-rebrand releases used aioncore-<...>; tried as a fallback)
  */
 function getAssetName(platform, arch, tag) {
   const archMap = { x64: 'x86_64', arm64: 'aarch64' };
@@ -209,7 +217,13 @@ function getAssetName(platform, arch, tag) {
   const normalizedPlatform = platformMap[platform];
   if (!normalizedArch || !normalizedPlatform) return null;
   const ext = platform === 'win32' ? '.zip' : '.tar.gz';
-  return `aioncore-${tag}-${normalizedArch}-${normalizedPlatform}${ext}`;
+  return `dreamcore-${tag}-${normalizedArch}-${normalizedPlatform}${ext}`;
+}
+
+// Pre-rebrand releases published the same archive under the legacy prefix.
+function getLegacyAssetName(platform, arch, tag) {
+  const assetName = getAssetName(platform, arch, tag);
+  return assetName ? assetName.replace('dreamcore-', 'aioncore-') : null;
 }
 
 function getDownloadUrl(assetName, tag) {
@@ -217,7 +231,7 @@ function getDownloadUrl(assetName, tag) {
 }
 
 function downloadFile(url, outputPath) {
-  console.log(`  Downloading aioncore from ${url}`);
+  console.log(`  Downloading dreamcore from ${url}`);
   if (process.platform === 'win32') {
     const ps = `$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri '${url}' -OutFile '${outputPath.replace(/'/g, "''")}'`;
     execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', ps], {
@@ -254,7 +268,7 @@ function downloadReleaseAsset(assetName, tag, outputPath) {
     const asset = (release?.assets || []).find((candidate) => candidate.name === assetName);
     if (!asset) throw new Error(`asset ${assetName} not found in release ${tag}`);
 
-    console.log(`  Downloading aioncore from ${GITHUB_OWNER}/${GITHUB_REPO} release asset ${asset.id} (authenticated)`);
+    console.log(`  Downloading dreamcore from ${GITHUB_OWNER}/${GITHUB_REPO} release asset ${asset.id} (authenticated)`);
     execFileSync(
       'curl',
       [
@@ -305,19 +319,19 @@ function findBinaryInDir(dir, binaryName) {
   return null;
 }
 
-function findAioncoreArchiveInDir(dir) {
+function findDreamcoreArchiveInDir(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (
       entry.isFile() &&
-      entry.name.startsWith('aioncore-') &&
+      (entry.name.startsWith('dreamcore-') || entry.name.startsWith('aioncore-')) &&
       (entry.name.endsWith('.zip') || entry.name.endsWith('.tar.gz'))
     ) {
       return fullPath;
     }
     if (entry.isDirectory()) {
-      const found = findAioncoreArchiveInDir(fullPath);
+      const found = findDreamcoreArchiveInDir(fullPath);
       if (found) return found;
     }
   }
@@ -394,7 +408,7 @@ function listActionsArtifacts(runId) {
 function downloadAndExtractActionsArtifact(platform, arch, runId) {
   const expectedArtifactName = getActionsArtifactName(platform, arch);
   if (!expectedArtifactName) {
-    throw new Error(`Unsupported AionCore Actions artifact target: ${platform}-${arch}`);
+    throw new Error(`Unsupported DreamCore Actions artifact target: ${platform}-${arch}`);
   }
 
   const artifacts = listActionsArtifacts(runId);
@@ -402,7 +416,15 @@ function downloadAndExtractActionsArtifact(platform, arch, runId) {
     .map((artifact) => artifact.name)
     .filter(Boolean)
     .toSorted();
-  const artifact = artifacts.find((candidate) => candidate.name === expectedArtifactName);
+  const artifact =
+    artifacts.find((candidate) => candidate.name === expectedArtifactName) ??
+    // Runs produced before the rebrand published the legacy artifact name;
+    // normalize to the expected name so downstream logging stays uniform.
+    (() => {
+      const legacyName = getActionsTarget(platform, arch)?.legacyArtifactName;
+      const found = legacyName ? artifacts.find((candidate) => candidate.name === legacyName) : null;
+      return found ? { ...found, name: expectedArtifactName } : null;
+    })();
   if (!artifact) {
     throw new Error(
       getActionsArtifactMissingMessage({
@@ -415,7 +437,7 @@ function downloadAndExtractActionsArtifact(platform, arch, runId) {
     );
   }
 
-  const tempDir = path.join(os.tmpdir(), 'aioncore-prepare-actions', runId, `${platform}-${arch}`);
+  const tempDir = path.join(os.tmpdir(), 'dreamcore-prepare-actions', runId, `${platform}-${arch}`);
   const artifactZipPath = path.join(tempDir, `${expectedArtifactName}.zip`);
   const artifactExtractDir = path.join(tempDir, 'artifact');
   const binaryExtractDir = path.join(tempDir, 'binary');
@@ -426,13 +448,13 @@ function downloadAndExtractActionsArtifact(platform, arch, runId) {
   const downloadUrl =
     artifact.archive_download_url ||
     `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/artifacts/${artifact.id}/zip`;
-  console.log(`  Downloading aioncore from AionCore run ${runId} artifact ${expectedArtifactName}`);
+  console.log(`  Downloading dreamcore from DreamCore run ${runId} artifact ${expectedArtifactName}`);
   downloadFileWithAuth(downloadUrl, artifactZipPath);
   extractArchive(artifactZipPath, artifactExtractDir, platform);
 
   const archivePath = findAioncoreArchiveInDir(artifactExtractDir);
   if (!archivePath) {
-    throw new Error(`AionCore artifact ${expectedArtifactName} from run ${runId} does not contain an aioncore archive`);
+    throw new Error(`DreamCore artifact ${expectedArtifactName} from run ${runId} does not contain a dreamcore archive`);
   }
 
   extractArchive(archivePath, binaryExtractDir, platform);
@@ -440,7 +462,7 @@ function downloadAndExtractActionsArtifact(platform, arch, runId) {
   const binaryName = getBinaryName(platform);
   const binaryPath = findBinaryInDir(binaryExtractDir, binaryName);
   if (!binaryPath) {
-    throw new Error(`Binary ${binaryName} not found in AionCore artifact ${expectedArtifactName} from run ${runId}`);
+    throw new Error(`Binary ${binaryName} (or legacy aioncore binary) not found in DreamCore artifact ${expectedArtifactName} from run ${runId}`);
   }
 
   return {
@@ -455,18 +477,26 @@ function downloadAndExtractActionsArtifact(platform, arch, runId) {
 function downloadAndExtract(platform, arch, tag) {
   const assetName = getAssetName(platform, arch, tag);
   if (!assetName) {
-    throw new Error(`Unsupported aioncore target: ${platform}-${arch}`);
+    throw new Error(`Unsupported dreamcore target: ${platform}-${arch}`);
   }
 
   const url = getDownloadUrl(assetName, tag);
-  const tempDir = path.join(os.tmpdir(), 'aioncore-prepare', tag, `${platform}-${arch}`);
+  const tempDir = path.join(os.tmpdir(), 'dreamcore-prepare', tag, `${platform}-${arch}`);
   const archivePath = path.join(tempDir, assetName);
   const extractDir = path.join(tempDir, 'extracted');
 
   removeDirectorySafe(tempDir);
   ensureDirectory(tempDir);
 
-  downloadReleaseAsset(assetName, tag, archivePath);
+  try {
+    downloadReleaseAsset(assetName, tag, archivePath);
+  } catch (error) {
+    // Releases published before the rebrand carry the legacy asset name.
+    const legacyName = getLegacyAssetName(platform, arch, tag);
+    if (!legacyName) throw error;
+    console.warn(`  Asset ${assetName} not found, retrying with legacy name ${legacyName}`);
+    downloadReleaseAsset(legacyName, tag, archivePath);
+  }
   extractArchive(archivePath, extractDir, platform);
 
   const binaryName = getBinaryName(platform);
@@ -475,7 +505,16 @@ function downloadAndExtract(platform, arch, tag) {
     throw new Error(`Binary ${binaryName} not found in downloaded archive`);
   }
 
-  return { binaryPath, tempDir, url };
+  return { binaryPath: renameLegacyBinary(binaryPath, binaryName), tempDir, url };
+}
+
+// Pre-rebrand archives contain the `aioncore` binary; normalize it to the
+// current name so downstream consumers only ever see `dreamcore`.
+function renameLegacyBinary(binaryPath, binaryName) {
+  if (path.basename(binaryPath) === binaryName) return binaryPath;
+  const renamed = path.join(path.dirname(binaryPath), binaryName);
+  fs.copyFileSync(binaryPath, renamed);
+  return renamed;
 }
 
 // ---------------------------------------------------------------------------
@@ -483,7 +522,7 @@ function downloadAndExtract(platform, arch, tag) {
 // ---------------------------------------------------------------------------
 
 /**
- * Prepare aioncore binary for packaging.
+ * Prepare the dreamcore binary for packaging.
  *
  * @param {object} options - Configuration options
  * @param {string} options.projectRoot - Project root directory
@@ -492,7 +531,7 @@ function downloadAndExtract(platform, arch, tag) {
  * @param {string} options.version - Backend version (default: 'latest')
  * @returns {{ prepared: true; dir: string; sourceType: string }}
  */
-function prepareAioncore(options) {
+function prepareDreamcore(options) {
   const { projectRoot, platform, arch, version = 'latest' } = options;
   const runtimeKey = `${platform}-${arch}`;
   const actionsRunId = (process.env.DREAM_BACKEND_RUN_ID || '').trim();
@@ -504,21 +543,21 @@ function prepareAioncore(options) {
     if (version === 'latest') {
       const resolved = resolveLatestTag();
       if (!resolved) {
-        throw new Error('Failed to resolve latest aioncore release tag from GitHub API');
+        throw new Error('Failed to resolve latest dreamcore release tag from GitHub API');
       }
       tag = resolved;
-      console.log(`Resolved aioncore "latest" → ${tag}`);
+      console.log(`Resolved dreamcore "latest" → ${tag}`);
     } else {
       tag = version.startsWith('v') ? version : `v${version}`;
     }
   }
 
-  const targetDir = path.join(projectRoot, 'resources', 'bundled-aioncore', runtimeKey);
+  const targetDir = path.join(projectRoot, 'resources', 'bundled-dreamcore', runtimeKey);
   const binaryName = getBinaryName(platform);
   const targetBinaryPath = path.join(targetDir, binaryName);
 
   console.log(
-    `Preparing aioncore for ${runtimeKey} (${actionsRunId ? `actions run: ${actionsRunId}` : `version: ${tag}`})`
+    `Preparing dreamcore for ${runtimeKey} (${actionsRunId ? `actions run: ${actionsRunId}` : `version: ${tag}`})`
   );
 
   removeDirectorySafe(targetDir);
@@ -547,11 +586,11 @@ function prepareAioncore(options) {
         files: [binaryName, 'managed-resources/'],
       };
       writeJson(path.join(targetDir, 'manifest.json'), manifest);
-      verifyPreparedAioncoreBundle(projectRoot, platform, arch);
-      console.log(`  Using local aioncore bundle: ${resolvedLocalBundleDir}`);
+      verifyPreparedDreamcoreBundle(projectRoot, platform, arch);
+      console.log(`  Using local dreamcore bundle: ${resolvedLocalBundleDir}`);
       return { prepared: true, dir: targetDir, sourceType: 'local-bundle' };
     }
-    console.warn(`  Local aioncore bundle is incomplete or missing: ${resolvedLocalBundleDir}`);
+    console.warn(`  Local dreamcore bundle is incomplete or missing: ${resolvedLocalBundleDir}`);
   }
 
   let sourcePath = null;
@@ -608,9 +647,9 @@ function prepareAioncore(options) {
         sourcePath = resolvedLocalBinary;
         sourceType = 'local-binary';
         sourceDetail = { path: resolvedLocalBinary };
-        console.log(`  Using local aioncore binary: ${resolvedLocalBinary}`);
+        console.log(`  Using local dreamcore binary: ${resolvedLocalBinary}`);
       } else {
-        console.warn(`  Local aioncore binary not found: ${resolvedLocalBinary}`);
+        console.warn(`  Local dreamcore binary not found: ${resolvedLocalBinary}`);
       }
     }
   }
@@ -621,7 +660,7 @@ function prepareAioncore(options) {
     ensureExecutableMode(targetBinaryPath);
     const bundledManagedResourcesDir = prepareManagedResources(targetBinaryPath, targetDir);
 
-    // The release tag is the authoritative version — the aioncore
+    // The release tag is the authoritative version — the dreamcore
     // binary does not expose a --version flag (it has --app-version which
     // takes a value, not a self-report).
     const manifest = {
@@ -635,9 +674,9 @@ function prepareAioncore(options) {
     };
 
     writeJson(path.join(targetDir, 'manifest.json'), manifest);
-    verifyPreparedAioncoreBundle(projectRoot, platform, arch);
+    verifyPreparedDreamcoreBundle(projectRoot, platform, arch);
     console.log(
-      `  Bundled aioncore prepared: resources/bundled-aioncore/${runtimeKey}/${binaryName} [source=${sourceType}]`
+      `  Bundled dreamcore prepared: resources/bundled-dreamcore/${runtimeKey}/${binaryName} [source=${sourceType}]`
     );
     console.log(`  Bundled managed resources prepared: ${bundledManagedResourcesDir}`);
 
@@ -645,12 +684,12 @@ function prepareAioncore(options) {
     return { prepared: true, dir: targetDir, sourceType };
   }
 
-  throw new Error(`aioncore binary not found for ${runtimeKey} (tag: ${tag})`);
+  throw new Error(`dreamcore binary not found for ${runtimeKey} (tag: ${tag})`);
 }
 
 module.exports = {
   getActionsArtifactMissingMessage,
   getActionsArtifactName,
-  prepareAioncore,
-  verifyPreparedAioncoreBundle,
+  prepareDreamcore,
+  verifyPreparedDreamcoreBundle,
 };

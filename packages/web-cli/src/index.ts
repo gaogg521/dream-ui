@@ -12,7 +12,7 @@ import { ensureAdminPassword } from './ensureAdminPassword.js';
 //   dream-web/
 //   ├── dream-web              ← bun-compiled standalone binary (process.execPath)
 //   ├── package.json             ← for runtime version lookup
-//   ├── bundled-aioncore/<plat-arch>/aioncore[.exe]
+//   ├── bundled-dreamcore/<plat-arch>/dreamcore[.exe]
 //   └── static/                  ← SPA assets
 //
 // Under `bun build --compile`, import.meta.url resolves to a virtual /$bunfs/
@@ -24,7 +24,7 @@ function resolveCliRoot(): string {
   // treat it as the packaged single-file binary and return its directory.
   const exe = process.execPath;
   const exeName = path.basename(exe).toLowerCase();
-  if (exeName === 'aionui-web' || exeName === 'aionui-web.exe') {
+  if (exeName === 'dream-web' || exeName === 'dream-web.exe') {
     return path.dirname(exe);
   }
   // Dev mode (tsx/node/bun running from source): use import.meta.url
@@ -46,12 +46,14 @@ const cliRoot = resolveCliRoot();
 // binary itself can do about first-launch quarantine.
 const isPackaged = (() => {
   const exeName = path.basename(process.execPath).toLowerCase();
-  return exeName === 'aionui-web' || exeName === 'aionui-web.exe';
+  return exeName === 'dream-web' || exeName === 'dream-web.exe';
 })();
 
-const BACKEND_BINARY = process.platform === 'win32' ? 'aioncore.exe' : 'aioncore';
+const BACKEND_BINARY = process.platform === 'win32' ? 'dreamcore.exe' : 'dreamcore';
+// Bundles built before the rebrand shipped the backend as `dreamcore`.
+const LEGACY_BINARY = process.platform === 'win32' ? 'aioncore.exe' : 'aioncore';
 const DEFAULT_PORT = 25808;
-const RESET_COMMAND = isPackaged ? 'aionui-web resetpass' : 'bun run resetpass';
+const RESET_COMMAND = isPackaged ? 'dream-web resetpass' : 'bun run resetpass';
 
 let currentHandle: WebHostHandle | StaticServerHandle | null = null;
 
@@ -79,7 +81,9 @@ function resolveBackendBinary(flags: Map<string, string | true>): string {
   const envOverride = process.env.DREAM_BACKEND_BIN;
   if (envOverride) return path.resolve(envOverride);
   const platArch = `${process.platform}-${process.arch}`;
-  const bundled = path.join(cliRoot, 'bundled-aioncore', platArch, BACKEND_BINARY);
+  const legacy = path.join(cliRoot, 'bundled-aioncore', platArch, LEGACY_BINARY);
+  if (fs.existsSync(legacy)) return legacy;
+  return path.join(cliRoot, 'bundled-dreamcore', platArch, BACKEND_BINARY);
   return bundled;
 }
 
@@ -94,7 +98,12 @@ function resolveDataDir(flags: Map<string, string | true>): string {
   if (typeof override === 'string') return path.resolve(override);
   const envOverride = process.env.DREAM_DATA_DIR;
   if (envOverride) return path.resolve(envOverride);
-  return path.join(os.homedir(), '.aionui-web');
+  const current = path.join(os.homedir(), '.dream-web');
+  if (fs.existsSync(current)) return current;
+  // Installs created before the rebrand keep their on-disk data dir.
+  const legacyData = path.join(os.homedir(), '.aionui-web');
+  if (fs.existsSync(legacyData)) return legacyData;
+  return current;
 }
 
 function resolveLogDir(flags: Map<string, string | true>, dataDir: string): string {
@@ -148,17 +157,17 @@ async function runStart(flags: Map<string, string | true>): Promise<void> {
   });
 
   if (!fs.existsSync(staticDir)) {
-    console.error(`[aionui-web] static dir not found: ${staticDir}`);
+    console.error(`[dream-web] static dir not found: ${staticDir}`);
     console.error(`  hint: pass --static-dir <path> pointing to the SPA build output`);
     process.exit(1);
   }
 
-  console.log(`[aionui-web] version    : ${version}`);
-  console.log(`[aionui-web] data dir   : ${dataDir}`);
-  console.log(`[aionui-web] log dir    : ${logDir}`);
-  console.log(`[aionui-web] static dir : ${staticDir}`);
-  console.log(`[aionui-web] backend bin: ${backendBin}`);
-  console.log(`[aionui-web] launching  : port=${port} allowRemote=${allowRemote}`);
+  console.log(`[dream-web] version    : ${version}`);
+  console.log(`[dream-web] data dir   : ${dataDir}`);
+  console.log(`[dream-web] log dir    : ${logDir}`);
+  console.log(`[dream-web] static dir : ${staticDir}`);
+  console.log(`[dream-web] backend bin: ${backendBin}`);
+  console.log(`[dream-web] launching  : port=${port} allowRemote=${allowRemote}`);
 
   const backendAvailable = fs.existsSync(backendBin);
 
@@ -170,7 +179,7 @@ async function runStart(flags: Map<string, string | true>): Promise<void> {
     console.warn('⚠️  Backend binary not found — starting in FRONTEND-ONLY mode.');
     console.warn(`   Missing: ${backendBin}`);
     console.warn('   The web UI will load but API calls will fail until a backend is available.');
-    console.warn('   To enable backend: download aioncore and set DREAM_BACKEND_BIN.');
+    console.warn('   To enable backend: download dreamcore and set DREAM_BACKEND_BIN.');
     console.warn('');
 
     const handle = await startStaticServer({

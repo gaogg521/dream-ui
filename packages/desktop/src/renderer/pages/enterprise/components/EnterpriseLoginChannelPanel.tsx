@@ -30,7 +30,7 @@ type ChannelMeta = {
 };
 
 type EnterpriseLoginChannelPanelProps = {
-  /** Remote aioncore origin when connecting as enterprise client. */
+  /** Remote dreamcore origin when connecting as enterprise client. */
   remoteOrigin?: string | null;
   oauthRedirect?: string;
 };
@@ -56,7 +56,7 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
   useEffect(() => {
     const controller = new AbortController();
     // Desktop renderer pages are file:// based, so a bare relative `/api/...`
-    // fetch never reaches the co-located aioncore (which listens on
+    // fetch never reaches the co-located dreamcore (which listens on
     // http://127.0.0.1:{port}). Resolve against the backend origin: an explicit
     // remote server when connecting as an enterprise client, otherwise always
     // the LOCAL co-located backend (never an ambient remote-mode toggle that

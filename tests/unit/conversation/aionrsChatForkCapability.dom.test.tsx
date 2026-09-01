@@ -68,14 +68,14 @@ vi.mock('@renderer/components/media/LocalImageView', () => {
 });
 
 import DreamEngineChat from '@renderer/pages/conversation/platforms/dreamEngine/DreamEngineChat';
-import type { AionrsModelSelection } from '@renderer/pages/conversation/platforms/dreamEngine/useDreamEngineModelSelection';
+import type { DreamEngineModelSelection } from '@renderer/pages/conversation/platforms/dreamEngine/useDreamEngineModelSelection';
 
 const renderChat = (forkCapability?: { at_turn: boolean }) =>
   render(
     <DreamEngineChat
       conversation_id='conv-aionrs-1'
       workspace='/workspace/demo'
-      modelSelection={{} as AionrsModelSelection}
+      modelSelection={{} as DreamEngineModelSelection}
       forkCapability={forkCapability}
     />
   );

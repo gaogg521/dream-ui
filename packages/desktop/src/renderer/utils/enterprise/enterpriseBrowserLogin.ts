@@ -1,6 +1,6 @@
 /**
  * Desktop enterprise login — always hand off SSO / LDAP / local auth to the
- * system browser (WebUI or remote aioncore). The desktop app only provides
+ * system browser (WebUI or remote dreamcore). The desktop app only provides
  * entry points; credentials never belong in the Electron UI.
  */
 

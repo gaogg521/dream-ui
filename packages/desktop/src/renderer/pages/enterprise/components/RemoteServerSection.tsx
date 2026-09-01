@@ -2,7 +2,7 @@
  * Desktop-only "sign in to remote enterprise server" section.
  *
  * Enterprise client mode is local-first (see httpBridge D1): the co-located
- * aioncore still serves conversations / agents / skills / personal data;
+ * dreamcore still serves conversations / agents / skills / personal data;
  * only enterprise GOVERNANCE (org / admin / sso / devops) is fetched from the
  * remote server with the Bearer token. The server ADDRESS *and* the connect
  * toggle both live in the "项目组部署模式" card on 设置 → 远程连接 now —

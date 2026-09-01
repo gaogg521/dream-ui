@@ -66,7 +66,7 @@ describe('submitFeedbackReport', () => {
       module: 'installation-integrity',
       moduleLabel: 'AionUi installation is incomplete',
       tags: {
-        'aionui.installation_integrity.report_source': 'backend_startup_failure',
+        'dream.installation_integrity.report_source': 'backend_startup_failure',
       },
     });
 
@@ -74,7 +74,7 @@ describe('submitFeedbackReport', () => {
     expect(sentryMocks.setTag).toHaveBeenCalledWith('type', 'user-feedback');
     expect(sentryMocks.setTag).toHaveBeenCalledWith('module', 'installation-integrity');
     expect(sentryMocks.setTag).toHaveBeenCalledWith(
-      'aionui.installation_integrity.report_source',
+      'dream.installation_integrity.report_source',
       'backend_startup_failure'
     );
     expect(sentryMocks.captureEvent).toHaveBeenCalledWith(

@@ -147,7 +147,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
         shape='circle'
         icon={plusIcon}
         onClick={() => openFileSelector(referenceOnly)}
-        data-testid='aionrs-attach-folder-btn'
+        data-testid='dream-engine-attach-folder-btn'
       />
     );
   }
@@ -329,7 +329,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
           icon={plusIcon}
           loading={uploading}
           disabled={uploading}
-          data-testid='aionrs-attach-folder-btn'
+          data-testid='dream-engine-attach-folder-btn'
         />
       </Trigger>
       <input

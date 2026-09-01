@@ -61,7 +61,7 @@ import { resolveBackendLabel } from '@/renderer/utils/model/backendDisplay';
 import { classifyConversationBusyError } from '../conversationBusyError';
 import { getPolicyDenialMessage } from '../policyDenialError';
 import { useDreamEngineMessage } from './useDreamEngineMessage';
-import type { AionrsModelSelection } from './useDreamEngineModelSelection';
+import type { DreamEngineModelSelection } from './useDreamEngineModelSelection';
 
 const configErrorMessageKey = (error: unknown) => {
   const errorKind = classifyConfigSetError(error);
@@ -125,7 +125,7 @@ const useSendBoxDraft = (conversation_id: string) => {
 
 const DreamEngineSendBox: React.FC<{
   conversation_id: string;
-  modelSelection: AionrsModelSelection;
+  modelSelection: DreamEngineModelSelection;
   session_mode?: string;
   agent_name?: string;
   teamSendMessage?: (payload: { input: string; files: ChatFileRef[] }) => Promise<void>;
@@ -281,7 +281,7 @@ const DreamEngineSendBox: React.FC<{
       }
 
       // The message body is plain user text; the backend resolves each
-      // ChatFileRef to an absolute path and injects the [[AION_FILES]] marker at
+      // ChatFileRef to an absolute path and injects the [[DREAM_FILES]] marker at
       // the send edge — the front-end no longer builds paths nor the marker.
       try {
         void checkAndUpdateTitle(conversation_id, input);
@@ -890,7 +890,7 @@ const DreamEngineSendBox: React.FC<{
                 {uploadFile.map((path) => (
                   <FilePreview
                     key={path}
-                    data-testid={`aionrs-file-tag-${uploadFile.indexOf(path)}`}
+                    data-testid={`dream-engine-file-tag-${uploadFile.indexOf(path)}`}
                     path={path}
                     onRemove={() => setUploadFile(uploadFile.filter((v) => v !== path))}
                   />

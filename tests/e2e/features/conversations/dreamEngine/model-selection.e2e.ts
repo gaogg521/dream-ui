@@ -17,25 +17,25 @@
 
 import { test, expect } from '../../../fixtures';
 import {
-  resolveAionrsPreconditions,
-  cleanupE2EAionrsConversations,
-  createAionrsConversationViaBridge,
-  sendAionrsMessage,
-  waitForAionrsReply,
-  getAionrsConversationDB,
-  getAionrsMessages,
+  resolveDreamEnginePreconditions,
+  cleanupE2EDreamEngineConversations,
+  createDreamEngineConversationViaBridge,
+  sendDreamEngineMessage,
+  waitForDreamEngineReply,
+  getDreamEngineConversationDB,
+  getDreamEngineMessages,
   createTempWorkspace,
-  type AionrsTestModels,
+  type DreamEngineTestModels,
 } from '../../../helpers';
 import { takeScreenshot } from '../../../helpers/screenshots';
 
-test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
+test.describe('DreamEngine Chat - Model Selection (P0 + P1)', () => {
   test.setTimeout(120000); // 2 minutes
 
-  let preconditions: { binary: string | null; models: AionrsTestModels | null };
+  let preconditions: { binary: string | null; models: DreamEngineTestModels | null };
 
   test.beforeAll(async ({ page }) => {
-    preconditions = await resolveAionrsPreconditions(page);
+    preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
       test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
     }
@@ -45,7 +45,7 @@ test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
     // Cleanup order: ESC × 5 → DB → sessionStorage
     await Promise.all(Array.from({ length: 5 }, () => page.keyboard.press('Escape')));
 
-    await cleanupE2EAionrsConversations(page);
+    await cleanupE2EDreamEngineConversations(page);
 
     await page.evaluate(() => {
       const keysToRemove: string[] = [];
@@ -74,7 +74,7 @@ test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
     }
 
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-model-second`;
+    const conversationName = `E2E-dream-engine-${timestamp}-model-second`;
     const tempWorkspace = createTempWorkspace(`tc-a-04-${timestamp}`);
 
     try {
@@ -84,7 +84,7 @@ test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-04/01-guid-page-initial.png`);
 
       // Step 2: Create conversation via bridge using modelB (bypasses UI selector issues)
-      const conversationId = await createAionrsConversationViaBridge(page, {
+      const conversationId = await createDreamEngineConversationViaBridge(page, {
         name: conversationName,
         workspace: tempWorkspace.path,
         provider: preconditions.models!.modelB,
@@ -93,11 +93,11 @@ test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-04/02-conversation-created.png`);
 
       // Step 3: Send message
-      await sendAionrsMessage(page, conversationId, 'Say hi in one word.');
+      await sendDreamEngineMessage(page, conversationId, 'Say hi in one word.');
       await takeScreenshot(page, `chat-aionrs/tc-a-04/03-message-sent.png`);
 
       // Step 4: Wait for AI reply
-      await waitForAionrsReply(page, conversationId);
+      await waitForDreamEngineReply(page, conversationId);
       await takeScreenshot(page, `chat-aionrs/tc-a-04/04-reply-completed.png`);
 
       // ============================================================================
@@ -105,7 +105,7 @@ test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
       // ============================================================================
 
       // 1. Verify conversation uses modelB
-      const conversation = await getAionrsConversationDB(page, conversationId);
+      const conversation = await getDreamEngineConversationDB(page, conversationId);
       expect(conversation).toBeDefined();
 
       const extra =
@@ -114,7 +114,7 @@ test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
       expect(actualModelUse).toBe(preconditions.models!.modelB.useModel);
 
       // 2. Verify messages exist
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
       expect(messages.length).toBeGreaterThanOrEqual(2);
       const aiMessages = messages.filter((m) => m.position === 'left');
       expect(aiMessages.length).toBeGreaterThanOrEqual(1);
@@ -138,12 +138,12 @@ test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
     }
 
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-switch-model`;
+    const conversationName = `E2E-dream-engine-${timestamp}-switch-model`;
     const tempWorkspace = createTempWorkspace(`tc-a-07-${timestamp}`);
 
     try {
       // Step 1: Create conversation via bridge with modelA
-      const conversationId = await createAionrsConversationViaBridge(page, {
+      const conversationId = await createDreamEngineConversationViaBridge(page, {
         name: conversationName,
         workspace: tempWorkspace.path,
         provider: preconditions.models!.modelA,
@@ -154,10 +154,10 @@ test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-07/01-conversation-created.png`);
 
       // Step 2: Send first message
-      await sendAionrsMessage(page, conversationId, 'Hello, please respond.');
+      await sendDreamEngineMessage(page, conversationId, 'Hello, please respond.');
 
       // Step 3: Wait for first AI reply
-      await waitForAionrsReply(page, conversationId);
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 02: first reply completed
       await takeScreenshot(page, `chat-aionrs/tc-a-07/02-first-reply.png`);
@@ -167,7 +167,7 @@ test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
       await page.waitForLoadState('networkidle');
 
       // Step 5: Switch to modelB by exact data-testid
-      const modelSelector = page.locator('[data-testid="aionrs-model-selector"]');
+      const modelSelector = page.locator('[data-testid="dream-engine-model-selector"]');
       await expect(modelSelector).toBeVisible({ timeout: 10000 });
       await modelSelector.click();
       await page.waitForTimeout(500);
@@ -176,17 +176,17 @@ test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-07/03-model-selector-open.png`);
 
       const secondModelOption = page.locator(
-        `[data-testid="aionrs-model-option-${preconditions.models!.modelB.useModel}"]`
+        `[data-testid="dream-engine-model-option-${preconditions.models!.modelB.useModel}"]`
       );
       await secondModelOption.waitFor({ state: 'visible', timeout: 5000 });
       await secondModelOption.click();
       await page.waitForTimeout(1000);
 
       // Step 6: Send second message
-      await sendAionrsMessage(page, conversationId, 'What model are you using now?');
+      await sendDreamEngineMessage(page, conversationId, 'What model are you using now?');
 
       // Step 7: Wait for second AI reply
-      await waitForAionrsReply(page, conversationId);
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 04: second reply completed
       await takeScreenshot(page, `chat-aionrs/tc-a-07/04-second-reply.png`);
@@ -196,14 +196,14 @@ test.describe('Aionrs Chat - Model Selection (P0 + P1)', () => {
       // ============================================================================
 
       // 1. Verify model switched to modelB in DB
-      const conversation = await getAionrsConversationDB(page, conversationId);
+      const conversation = await getDreamEngineConversationDB(page, conversationId);
       const extra =
         typeof conversation.extra === 'string' ? JSON.parse(conversation.extra || '{}') : conversation.extra || {};
       const currentModel = extra.model?.useModel;
       expect(currentModel).toBe(preconditions.models!.modelB.useModel);
 
       // 2. Verify message count (at least 4: user1, ai1, user2, ai2)
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
       expect(messages.length).toBeGreaterThanOrEqual(4);
 
       // 3. Verify both AI replies exist

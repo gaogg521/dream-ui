@@ -27,7 +27,7 @@ import { getConversationCreateErrorMessage } from '@renderer/pages/conversation/
 import { resolveAssistantAvatar } from '@renderer/utils/model/assistantAvatar';
 import { resolveAssistantName } from '@renderer/utils/model/assistantDisplay';
 import { resolveCronAgentConfig } from './resolveCronAgentConfig';
-import { assistantRuntimeKey, isAionrsAssistant } from '@/common/types/agent/assistantTypes';
+import { assistantRuntimeKey, isDreamEngineAssistant } from '@/common/types/agent/assistantTypes';
 
 const FormItem = Form.Item;
 const TextArea = Input.TextArea;
@@ -373,15 +373,15 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   // Providers compatible with dream (DreamCLI does not support Google Auth).
   // Computed independent of the current selection so assistant options backed
   // by dream can be disabled when no provider is configured.
-  const aionrsProviders = useMemo(
+  const dreamEngineProviders = useMemo(
     () => providers.filter((p) => !p.platform?.toLowerCase().includes('gemini-with-google-auth')),
     [providers]
   );
-  const hasAionrsProvider = aionrsProviders.length > 0;
+  const hasDreamEngineProvider = dreamEngineProviders.length > 0;
 
   const filteredProviders = useMemo(
-    () => (resolvedBackend === 'dream' ? aionrsProviders : providers),
-    [resolvedBackend, providers, aionrsProviders]
+    () => (resolvedBackend === 'dream' ? dreamEngineProviders : providers),
+    [resolvedBackend, providers, dreamEngineProviders]
   );
 
   // Build Gemini current_model from model_id for GuidModelSelector.
@@ -432,14 +432,14 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   // list — do NOT read from any frontend-cached default.
   useEffect(() => {
     if (resolvedBackend !== 'dream' || model_id) return;
-    for (const provider of aionrsProviders) {
+    for (const provider of dreamEngineProviders) {
       const models = getAvailableModels(provider);
       if (models.length > 0) {
         setModelId(models[0]);
         return;
       }
     }
-  }, [resolvedBackend, model_id, aionrsProviders, getAvailableModels]);
+  }, [resolvedBackend, model_id, dreamEngineProviders, getAvailableModels]);
 
   const showTimePicker = frequency === 'daily' || frequency === 'weekdays' || frequency === 'weekly';
   const showWeekdayPicker = frequency === 'weekly';
@@ -541,7 +541,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         agent_config = resolveCronAgentConfig({
           agentValue: assistantValue,
           presetAssistants,
-          selectedAionrsProvider: geminiCurrentModel
+          selectedDreamEngineProvider: geminiCurrentModel
             ? {
                 id: geminiCurrentModel.id as string | undefined,
                 name: geminiCurrentModel.name,
@@ -552,7 +552,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           workspace,
           localeKey,
           getMode: resolveAutoApproveModeFromAgentMetadata,
-          aionrsModelRequiredMessage: t('cron.page.form.aionrsModelRequired'),
+          dreamEngineModelRequiredMessage: t('cron.page.form.dreamEngineModelRequired'),
         }).agent_config;
       }
 
@@ -668,12 +668,12 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               {presetAssistants.map((assistant) => {
                 const name = resolveAssistantName(assistant, localeKey, assistant.name);
                 const avatar = resolveAssistantAvatar(assistant.avatar);
-                const disabled = isAionrsAssistant(assistant) && !hasAionrsProvider;
+                const disabled = isDreamEngineAssistant(assistant) && !hasDreamEngineProvider;
                 return (
                   <Option key={assistant.id} value={assistant.id} disabled={disabled}>
                     <div
                       className='flex items-center gap-8px'
-                      title={disabled ? t('cron.page.form.aionrsNoProvider') : undefined}
+                      title={disabled ? t('cron.page.form.dreamEngineNoProvider') : undefined}
                     >
                       {avatar.kind === 'image' ? (
                         <ThemedLogo src={avatar.value} alt={name} className='w-16px h-16px object-contain' />
@@ -684,7 +684,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                       )}
                       <span>{name}</span>
                       {disabled && (
-                        <span className='text-12px text-t-tertiary'>{t('cron.page.form.aionrsNoProvider')}</span>
+                        <span className='text-12px text-t-tertiary'>{t('cron.page.form.dreamEngineNoProvider')}</span>
                       )}
                     </div>
                   </Option>

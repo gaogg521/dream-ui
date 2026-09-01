@@ -154,7 +154,7 @@ describe('captureBackendStartupFailure', () => {
     expect(Sentry.flush).toHaveBeenCalledWith(2000);
     expect(Sentry.withScope).toHaveBeenCalledOnce();
     expect(scopeSetContext).toHaveBeenCalledWith(
-      'aioncore_install_diagnostics',
+      'dreamcore_install_diagnostics',
       expect.objectContaining({
         appVersion: '0.0.0-test',
         isPackaged: false,
@@ -186,7 +186,7 @@ describe('captureBackendStartupFailure', () => {
         stage: 'resolve_binary',
         isPackaged: true,
         runtimeKey: 'win32-x64',
-        binaryName: 'aioncore.exe',
+        binaryName: 'dreamcore.exe',
         resourcesPath: 'C:\\Users\\alice\\AppData\\Local\\Programs\\AionUi\\resources',
         bundledDirExists: false,
         runtimeDirExists: false,
@@ -204,21 +204,21 @@ describe('captureBackendStartupFailure', () => {
       await captureBackendStartupFailure(error);
 
       expect(scopeSetTag).toHaveBeenCalledWith(
-        'aionui.backend_startup.incomplete_installation_kind',
+        'dream.backend_startup.incomplete_installation_kind',
         'missing_directory_resources'
       );
-      expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.missing_bundled_dir', 'true');
-      expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.missing_runtime_dir', 'true');
-      expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.missing_binary', 'true');
-      expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.missing_hub_dir', 'true');
-      expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.last_update_status', 'quit-and-install');
-      expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.seconds_since_quit_and_install', '46');
-      expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.install_path_kind', 'user_local_programs');
+      expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.missing_bundled_dir', 'true');
+      expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.missing_runtime_dir', 'true');
+      expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.missing_binary', 'true');
+      expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.missing_hub_dir', 'true');
+      expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.last_update_status', 'quit-and-install');
+      expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.seconds_since_quit_and_install', '46');
+      expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.install_path_kind', 'user_local_programs');
       expect(scopeSetContext).toHaveBeenCalledWith(
-        'aioncore_startup_classification',
+        'dreamcore_startup_classification',
         expect.objectContaining({
           incompleteInstallationKind: 'missing_directory_resources',
-          missingBundledAioncoreDir: true,
+          missingBundledDreamcoreDir: true,
           missingRuntimeDir: true,
           missingBackendBinary: true,
         })
@@ -249,11 +249,11 @@ describe('captureBackendStartupFailure', () => {
 
     await captureBackendStartupFailure(error);
 
-    expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.health_polling_delayed', 'true');
-    expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.health_attempts_bucket', '1');
-    expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.health_attempt_deficit_bucket', '76-150');
-    expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.health_timeout_overrun_bucket', 'over_60s');
-    expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.health_max_attempt_gap_bucket', '0ms');
+    expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.health_polling_delayed', 'true');
+    expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.health_attempts_bucket', '1');
+    expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.health_attempt_deficit_bucket', '76-150');
+    expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.health_timeout_overrun_bucket', 'over_60s');
+    expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.health_max_attempt_gap_bucket', '0ms');
   });
 
   it('sets backend data migration reason and boundary tags', async () => {
@@ -271,9 +271,9 @@ describe('captureBackendStartupFailure', () => {
 
     await captureBackendStartupFailure(error);
 
-    expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.reason', 'backend_data_migration_failed');
-    expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.boundary_code', 'BOOTSTRAP_DATA_INIT_FAILED');
-    expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.boundary_stage', 'database.migration');
+    expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.reason', 'backend_data_migration_failed');
+    expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.boundary_code', 'BOOTSTRAP_DATA_INIT_FAILED');
+    expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.boundary_stage', 'database.migration');
   });
 
   it('sets local data repair reason and issue-kind tags', async () => {
@@ -291,13 +291,13 @@ describe('captureBackendStartupFailure', () => {
 
     await captureBackendStartupFailure(error);
 
-    expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.reason', 'backend_local_data_repair_failed');
+    expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.reason', 'backend_local_data_repair_failed');
     expect(scopeSetTag).toHaveBeenCalledWith(
-      'aionui.backend_startup.local_data_issue_kind',
+      'dream.backend_startup.local_data_issue_kind',
       'agent_metadata_invalid_utf8'
     );
-    expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.boundary_code', 'BOOTSTRAP_SERVICE_INIT_FAILED');
-    expect(scopeSetTag).toHaveBeenCalledWith('aionui.backend_startup.boundary_stage', 'services.init');
+    expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.boundary_code', 'BOOTSTRAP_SERVICE_INIT_FAILED');
+    expect(scopeSetTag).toHaveBeenCalledWith('dream.backend_startup.boundary_stage', 'services.init');
   });
 });
 
@@ -383,7 +383,7 @@ describe('initSentry beforeSend', () => {
       exception: {
         values: [
           {
-            value: '[WebUI] Cannot start: aioncore is not running (globalThis.__backendPort unset)',
+            value: '[WebUI] Cannot start: dreamcore is not running (globalThis.__backendPort unset)',
           },
         ],
       },
@@ -400,7 +400,7 @@ describe('initSentry beforeSend', () => {
 
     const event = {
       tags: {
-        'aionui.failure': 'backend_startup',
+        'dream.failure': 'backend_startup',
       },
       exception: {
         values: [
@@ -423,7 +423,7 @@ describe('initSentry beforeSend', () => {
     const event = {
       tags: {
         type: 'user-feedback',
-        'aionui.installation_integrity.user_report': 'true',
+        'dream.installation_integrity.user_report': 'true',
       },
       extra: {
         installation_integrity: {

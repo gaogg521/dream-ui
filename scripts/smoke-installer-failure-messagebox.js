@@ -60,12 +60,12 @@ const INSTALLER_ERROR_SCENARIOS = [
     diagnostics: 'scenario=disk-insufficient phase=preflight requiredMb=1024 availableMb=0',
   },
   {
-    id: 'bundled-aioncore-incomplete',
+    id: 'bundled-dreamcore-incomplete',
     defineName: 'AIONUI_E_BUNDLED_AIONCORE_INCOMPLETE',
     code: 'E1030',
     message: 'One Work installed, but the bundled One Work Core resources are incomplete.',
     action: 'Download a fresh installer and run it again.',
-    diagnostics: 'scenario=bundled-aioncore-incomplete phase=verify-bundled-aioncore runtime=win32-x64 result=1',
+    diagnostics: 'scenario=bundled-dreamcore-incomplete phase=verify-bundled-dreamcore runtime=win32-x64 result=1',
   },
   {
     id: 'core-app-files-incomplete',
@@ -398,9 +398,9 @@ SilentInstall normal
 
 Section
   StrCpy $INSTDIR "$TEMP\\AionUi-messagebox-smoke"
-  StrCpy $AionUiSessionId "smokembox-${nsisQuote(scenario.code)}"
+  StrCpy $OneWorkSessionId "smokembox-${nsisQuote(scenario.code)}"
   StrCpy $AionUiIsUpdated "1"
-  StrCpy $AionUiSessionLogPath "${nsisQuote(logPath)}"
+  StrCpy $OneWorkSessionLogPath "${nsisQuote(logPath)}"
   BringToFront
   !insertmacro AIONUI_FAIL_UX \
     "${nsisQuote(scenario.code)}" \

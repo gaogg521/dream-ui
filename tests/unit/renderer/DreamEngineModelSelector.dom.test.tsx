@@ -10,7 +10,7 @@ import React from 'react';
 import DreamEngineModelSelector from '@/renderer/pages/conversation/platforms/dreamEngine/DreamEngineModelSelector';
 import type { IProvider, TProviderWithModel } from '@/common/config/storage';
 import type { AcpDerivedOption } from '@/renderer/hooks/agent/useAcpConfigOptions';
-import type { AionrsModelSelection } from '@/renderer/pages/conversation/platforms/dreamEngine/useDreamEngineModelSelection';
+import type { DreamEngineModelSelection } from '@/renderer/pages/conversation/platforms/dreamEngine/useDreamEngineModelSelection';
 
 const provider: IProvider = {
   id: 'openai',
@@ -30,7 +30,7 @@ const thoughtLevel: AcpDerivedOption = {
   ],
 };
 
-const makeSelection = (overrides: Partial<AionrsModelSelection> = {}): AionrsModelSelection => ({
+const makeSelection = (overrides: Partial<DreamEngineModelSelection> = {}): DreamEngineModelSelection => ({
   current_model: {
     ...provider,
     use_model: 'gpt-5.2',
@@ -159,7 +159,7 @@ describe('DreamEngineModelSelector runtime options', () => {
       />
     );
 
-    expect(screen.getByTestId('aionrs-model-selector')).toHaveTextContent('gpt-5.2 · High');
+    expect(screen.getByTestId('dream-engine-model-selector')).toHaveTextContent('gpt-5.2 · High');
   });
 
   it('shows the model submenu before the thought level submenu, each with its current value', () => {
@@ -268,7 +268,7 @@ describe('DreamEngineModelSelector runtime options', () => {
   it('renders the model list directly (no submenu) when thought level is unavailable', () => {
     render(<DreamEngineModelSelector selection={makeSelection()} />);
 
-    expect(screen.getByTestId('aionrs-model-selector')).toHaveTextContent('gpt-5.2');
+    expect(screen.getByTestId('dream-engine-model-selector')).toHaveTextContent('gpt-5.2');
     expect(screen.queryAllByTestId('submenu-title')).toHaveLength(0);
     // Still grouped by provider even without a submenu wrapper.
     expect(screen.getByRole('group', { name: 'OpenAI' })).toBeInTheDocument();

@@ -34,7 +34,7 @@ const GLIBC_VERSION_RE = /GLIBC_(\d+\.\d+)/g;
 const GLIBC_NOT_FOUND_RE = /GLIBC_\d+\.\d+[\s\S]{0,160}not found|not found[\s\S]{0,160}GLIBC_\d+\.\d+/i;
 const PACKAGED_APP_MARKER_ENTRIES = new Set(['app.asar', 'app.asar.unpacked/']);
 const DATA_MIGRATION_BOUNDARY_STAGES = new Set(['database.migration', 'database.schema_repair']);
-// aioncore's downgrade detection: the local database was written by a NEWER
+// dreamcore's downgrade detection: the local database was written by a NEWER
 // Dream UI than the one currently running (see Dream Core `database.rs`,
 // DATABASE_NEWER_THAN_APP_STAGE). The database is intact — the fix is
 // upgrading, so this must not fall into the generic migration-failure bucket.
@@ -52,7 +52,7 @@ const STARTUP_DIRECTORY_PERMISSION_RE = /\b(?:EACCES|EPERM)\b|permission denied|
 const STARTUP_DIRECTORY_UNAVAILABLE_RE =
   /startup directory preparation failed|(?:\b(?:ENOENT|ENOTDIR|EEXIST)\b[\s\S]{0,160}\bmkdir\b)|(?:\bmkdir\b[\s\S]{0,160}\b(?:ENOENT|ENOTDIR|EEXIST)\b)/i;
 const ASSISTANT_STORAGE_BOOTSTRAP_BOUNDARY_CODE = 'BOOTSTRAP_SERVER_FAILED';
-// Benign boundary code emitted by an aioncore instance that yielded the
+// Benign boundary code emitted by an dreamcore instance that yielded the
 // data-dir instance guard to a peer (Sentry 135525166 Option A).
 const TRANSIENT_CONCURRENT_STARTUP_PEER_CODE = 'BOOTSTRAP_PEER_ALREADY_RUNNING';
 // Distinct bootstrap stage emitted when assistant storage bootstrap loses a
@@ -132,11 +132,12 @@ function classifyIncompleteInstallation(details: ErrorWithDetails['details']): B
   const hasPackagedApp = resourcesDirEntries.some((entry) => PACKAGED_APP_MARKER_ENTRIES.has(entry));
   if (!hasPackagedApp) return undefined;
 
-  const missingBundledAioncoreDir = !resourcesDirEntries.includes('bundled-aioncore/');
+  const missingBundledDreamcoreDir =
+    !resourcesDirEntries.includes('bundled-dreamcore/') && !resourcesDirEntries.includes('bundled-aioncore/');
   const missingRuntimeDir = details.runtimeDirExists === false && typeof details.runtimeKey === 'string';
-  const missingResources = missingBundledAioncoreDir ? ['bundled-aioncore/'] : [];
+  const missingResources = missingBundledDreamcoreDir ? ['bundled-dreamcore/'] : [];
   if (details.runtimeDirExists === false && typeof details.runtimeKey === 'string') {
-    missingResources.push(`bundled-aioncore/${details.runtimeKey}/`);
+    missingResources.push(`bundled-dreamcore/${details.runtimeKey}/`);
   }
   const runtimeDirEntries = getStringArray(details.runtimeDirEntries);
   const missingManagedResourcesDir =
@@ -145,7 +146,7 @@ function classifyIncompleteInstallation(details: ErrorWithDetails['details']): B
     runtimeDirEntries !== undefined &&
     !runtimeDirEntries.includes('managed-resources/');
   if (missingManagedResourcesDir && typeof details.runtimeKey === 'string') {
-    missingResources.push(`bundled-aioncore/${details.runtimeKey}/managed-resources/`);
+    missingResources.push(`bundled-dreamcore/${details.runtimeKey}/managed-resources/`);
   }
   const missingRuntimeBinary =
     details.runtimeDirExists === true &&
@@ -154,19 +155,19 @@ function classifyIncompleteInstallation(details: ErrorWithDetails['details']): B
     runtimeDirEntries !== undefined &&
     !runtimeDirEntries.includes(details.binaryName);
   if (missingRuntimeBinary && typeof details.runtimeKey === 'string' && typeof details.binaryName === 'string') {
-    missingResources.push(`bundled-aioncore/${details.runtimeKey}/${details.binaryName}`);
+    missingResources.push(`bundled-dreamcore/${details.runtimeKey}/${details.binaryName}`);
   }
 
   if (missingResources.length === 0) return undefined;
 
   return {
     incompleteInstallationKind:
-      missingBundledAioncoreDir || missingRuntimeDir || missingManagedResourcesDir
+      missingBundledDreamcoreDir || missingRuntimeDir || missingManagedResourcesDir
         ? 'missing_directory_resources'
         : 'missing_backend_binary',
     missingBackendBinary:
-      missingBundledAioncoreDir || missingRuntimeDir || missingManagedResourcesDir || missingRuntimeBinary,
-    missingBundledAioncoreDir,
+      missingBundledDreamcoreDir || missingRuntimeDir || missingManagedResourcesDir || missingRuntimeBinary,
+    missingBundledDreamcoreDir,
     missingHubDir: getMissingDirectoryFlag(resourcesDirEntries, 'hub/'),
     missingPetStatesDir: getMissingDirectoryFlag(resourcesDirEntries, 'pet-states/'),
     missingPwaDir: getMissingDirectoryFlag(resourcesDirEntries, 'pwa/'),
@@ -196,7 +197,7 @@ function classifyLocalDataRepairFailure(
   };
 }
 
-// A transient concurrent-startup race (two aioncore instances briefly bootstrapping
+// A transient concurrent-startup race (two dreamcore instances briefly bootstrapping
 // the same data directory) is self-recoverable and must NOT be reported as local
 // data corruption. It is signalled either by the benign peer-yield boundary code
 // (Option A) or by the assistant-bootstrap contention stage after retries are

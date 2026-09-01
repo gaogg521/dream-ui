@@ -21,7 +21,7 @@
  *
  * Prerequisites:
  * - `agy` on PATH and signed in (otherwise the assistant is not `online`)
- * - `aioncore` on PATH with Antigravity support
+ * - `dreamcore` on PATH with Antigravity support
  */
 
 import { test, expect } from '../../../fixtures';

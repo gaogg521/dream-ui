@@ -21,7 +21,7 @@ import styles from './DreamInlineSearchInput.module.css';
  * API 与 DreamSearchInput 对齐（value/onChange/placeholder），只负责外观与录入，
  * 过滤/防抖等逻辑仍由调用方持有。
  */
-export type AionInlineSearchInputProps = {
+export type DreamInlineSearchInputProps = {
   /** 当前输入值（受控） */
   value: string;
   /** 值变化回调，返回最新字符串 */
@@ -42,7 +42,7 @@ export type AionInlineSearchInputProps = {
   >;
 };
 
-const DreamInlineSearchInput = forwardRef<HTMLInputElement, AionInlineSearchInputProps>((props, ref) => {
+const DreamInlineSearchInput = forwardRef<HTMLInputElement, DreamInlineSearchInputProps>((props, ref) => {
   const { value, onChange, placeholder, className, style, autoFocus, disabled, wrapTestId, inputProps } = props;
 
   return (

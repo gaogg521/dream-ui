@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Message } from '@arco-design/web-react';
 import { BackendHttpError } from '@/common/adapter/httpBridge';
 import DreamEngineSendBox from '@/renderer/pages/conversation/platforms/dreamEngine/DreamEngineSendBox';
-import type { AionrsModelSelection } from '@/renderer/pages/conversation/platforms/dreamEngine/useDreamEngineModelSelection';
+import type { DreamEngineModelSelection } from '@/renderer/pages/conversation/platforms/dreamEngine/useDreamEngineModelSelection';
 import type { TeamSendBoxRuntime } from '@/renderer/pages/team/components/teamSendRuntime';
 
 const {
@@ -285,7 +285,7 @@ const modelSelection = {
     model: 'gpt-4.1',
     use_model: 'openai/gpt-4.1',
   },
-} as AionrsModelSelection;
+} as DreamEngineModelSelection;
 
 describe('DreamEngineSendBox', () => {
   beforeEach(() => {

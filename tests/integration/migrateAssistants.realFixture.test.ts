@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  * Integration test for `migrateAssistantsToBackend` against a real
- * aioncore binary using the user-provided fixtures
+ * dreamcore binary using the user-provided fixtures
  * (`/Users/zhoukai/Downloads/aionui-config.txt` + `Archive/*.md`).
  *
  * The unit suite (`tests/unit/assistants/migrateAssistants.test.ts`)
@@ -13,7 +13,7 @@
  *
  *   1. Decode the legacy `aionui-config.txt` exactly as ConfigStorage would.
  *   2. Stage `Archive/*.md` as `<userData>/config/assistants/<id>.<locale>.md`.
- *   3. Spawn a real aioncore bound to a throw-away data-dir.
+ *   3. Spawn a real dreamcore bound to a throw-away data-dir.
  *   4. Run `migrateAssistantsToBackend`.
  *   5. Assert: 3 user assistants in db, 4 rule .md files in
  *      `<dataDir>/assistant-rules/`, completion flag set, legacy

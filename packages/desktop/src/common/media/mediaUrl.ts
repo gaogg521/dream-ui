@@ -36,7 +36,7 @@ export const MEDIA_HTTP_ROUTE = '/media/file';
  *
  * The job store lives in the Electron main process and is exposed to the
  * renderer over the Electron IPC bridge. A browser has no such bridge — its
- * adapter is a WebSocket to aioncore, which has no `media.jobs.*` channel at
+ * adapter is a WebSocket to dreamcore, which has no `media.jobs.*` channel at
  * all — so the WebUI received **no jobs**, rendered no cards, and therefore
  * never even reached the point of loading a media URL. Serving the bytes was
  * necessary but not sufficient.

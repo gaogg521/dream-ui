@@ -21,7 +21,7 @@ import { resolveDevtoolsCdpPort } from './devtoolsCdp';
 
 // ============ E2E test isolation ============
 // When running under E2E with an explicit sandbox dir, redirect userData there
-// BEFORE any getPath() call so the whole data tree (config, aioncore DB, logs)
+// BEFORE any getPath() call so the whole data tree (config, dreamcore DB, logs)
 // lives in a disposable directory. This keeps tests off the developer's real
 // database — critical because Dream Core refuses to boot when a shared DB fails
 // migration. Guarded by DREAM_E2E_TEST so it never affects dev/production.

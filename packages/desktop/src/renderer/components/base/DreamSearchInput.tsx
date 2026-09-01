@@ -18,7 +18,7 @@ import styles from './DreamSearchInput.module.css';
  * 38px 高、10px 圆角、focus 主色描边。各调用处只需传 placeholder 文案，
  * 搜索逻辑（过滤、防抖、结果展示）仍由调用方持有 —— 本组件只负责外观与录入。
  */
-export type AionSearchInputProps = {
+export type DreamSearchInputProps = {
   /** 当前输入值（受控） */
   value: string;
   /** 值变化回调，返回最新字符串 */
@@ -43,7 +43,7 @@ export type AionSearchInputProps = {
   >;
 };
 
-const DreamSearchInput = forwardRef<HTMLInputElement, AionSearchInputProps>((props, ref) => {
+const DreamSearchInput = forwardRef<HTMLInputElement, DreamSearchInputProps>((props, ref) => {
   const {
     value,
     onChange,

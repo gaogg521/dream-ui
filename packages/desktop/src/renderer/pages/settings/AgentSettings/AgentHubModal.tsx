@@ -21,7 +21,7 @@ export const AgentHubModal: React.FC<AgentHubModalProps> = ({ visible, onCancel 
   const logos = useAgentLogos();
   const { agents, loading, error, install, retryInstall, update } = useHubAgents();
   const actionButtonClassName = '!min-w-80px !rounded-9px !px-10px';
-  const openAionHubRepo = () => {
+  const openDreamHubRepo = () => {
     void openExternalUrl(AION_HUB_REPO_URL).catch(console.error);
   };
 
@@ -101,7 +101,7 @@ export const AgentHubModal: React.FC<AgentHubModalProps> = ({ visible, onCancel 
               defaultValue: 'Want a new Agent listed here?',
             })}
           </Typography.Text>
-          <Link className='text-12px leading-18px' onClick={openAionHubRepo}>
+          <Link className='text-12px leading-18px' onClick={openDreamHubRepo}>
             {t('settings.agentManagement.marketContributionAction', {
               defaultValue: 'Open a PR on AionHub',
             })}

@@ -295,7 +295,7 @@ test.describe('Built-in Skill Migration (T3)', () => {
 
   // ── Scenarios 6 & 8 — require a fresh data-dir / cold boot ────────────────
   //
-  // Run against a sibling `aioncore` process on port 25903 against a
+  // Run against a sibling `dreamcore` process on port 25903 against a
   // tmp data-dir (same pattern as the assistant-user-data pilot's
   // S8/S9/S10). This lets us seed pre-existing state and observe the
   // startup/legacy-cleanup behaviour without tearing down the main

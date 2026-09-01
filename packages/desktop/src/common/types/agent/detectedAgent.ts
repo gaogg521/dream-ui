@@ -90,7 +90,7 @@ export type DetectedAgent<K extends DetectedAgentKind = DetectedAgentKind> = {
 // Convenience aliases
 export type AcpDetectedAgent = DetectedAgent<'acp'>;
 export type RemoteDetectedAgent = DetectedAgent<'remote'>;
-export type AionrsDetectedAgent = DetectedAgent<'dream'>;
+export type DreamEngineDetectedAgent = DetectedAgent<'dream'>;
 export type NanobotDetectedAgent = DetectedAgent<'nanobot'>;
 export type OpenClawDetectedAgent = DetectedAgent<'openclaw-gateway'>;
 
