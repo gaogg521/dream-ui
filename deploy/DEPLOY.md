@@ -17,7 +17,7 @@ services on the target box (`operone`) are deployed.
 | systemd unit | `/etc/systemd/system/dream-trial-broker.service` (copy of `deploy/systemd/`) |
 | Source checkout | `/root/build/dream-trial-broker` (+ rustup toolchain, for rebuilds) |
 
-`DREAM_TRIAL_BROKER_URL` for aioncore: **`https://work.1oneclaw.com/trial-broker`**
+`DREAM_TRIAL_BROKER_URL` for dreamcore: **`https://work.1oneclaw.com/trial-broker`**
 (dream-ui `packages/web-host` injects this as the default).
 
 ## First-time install
@@ -86,5 +86,5 @@ bash deploy/redeploy.sh /root/build/dream-trial-broker
 - Logs: `journalctl -u dream-trial-broker -f`
 - Today's issuance count / remaining budget: `curl -s localhost:8787/internal/stats`
 - Rotate the management key: edit `.env`, `systemctl restart dream-trial-broker`.
-- Kill switch: `systemctl stop dream-trial-broker` — aioncore then reports
+- Kill switch: `systemctl stop dream-trial-broker` — dreamcore then reports
   "could not reach trial key broker" and the desktop button surfaces a soft error.
