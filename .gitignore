@@ -248,5 +248,5 @@ graphify-out/
 temp/
 .playwright-mcp/
 
-release-assets/
-mac-artifacts/
+# Copied marketing screenshots — never commit; README uses resources/*.png
+resources/screens/
