@@ -397,8 +397,8 @@ test.describe('Assistant User Data Migration (T5)', () => {
       const logFd = fs.openSync(logPath, 'a');
       // Scrub env vars that would drag the main Electron's backend state in.
       const parentEnv = { ...process.env };
-      delete parentEnv.DREAM_EXTENSIONS_PATH;
-      delete parentEnv.DREAM_EXTENSION_STATES_FILE;
+      delete parentEnv.ONE_EXTENSIONS_PATH;
+      delete parentEnv.ONE_EXTENSION_STATES_FILE;
       delete parentEnv.DREAM_E2E_TEST;
       delete parentEnv.DREAM_CDP_PORT;
       backend = spawn(bin, ['--local', '--port', String(MIGRATION_BACKEND_PORT), '--data-dir', dataDir], {
