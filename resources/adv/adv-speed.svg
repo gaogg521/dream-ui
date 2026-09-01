@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="500" viewBox="0 0 880 500" fill="none">
+  <defs>
+    <linearGradient id="sp-bg" x1="0" y1="0" x2="880" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#090f1a"/><stop offset="1" stop-color="#05080e"/>
+    </linearGradient>
+    <linearGradient id="sp-accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#3b82f6"/><stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="sp-green" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#10b981"/><stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="sp-card" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#141d2d" stop-opacity=".95"/><stop offset="1" stop-color="#0d1422" stop-opacity=".98"/>
+    </linearGradient>
+    <pattern id="sp-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r=".7" fill="#334155" fill-opacity=".3"/>
+    </pattern>
+    <filter id="sp-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="880" height="500" rx="12" fill="url(#sp-bg)"/>
+  <rect width="880" height="500" rx="12" fill="url(#sp-grid)" opacity=".6"/>
+  <rect x="1" y="1" width="878" height="498" rx="11" stroke="rgba(255,255,255,.07)" fill="none"/>
+
+  <!-- Top Header Bar -->
+  <g transform="translate(24, 20)">
+    <rect width="832" height="38" rx="8" fill="#0d1524" stroke="rgba(255,255,255,.08)"/>
+    <rect x="12" y="10" width="160" height="20" rx="4" fill="rgba(59,130,246,.15)"/>
+    <text x="20" y="24" fill="#60a5fa" font-family="system-ui,-apple-system,sans-serif" font-size="11" font-weight="800" letter-spacing=".04em">⚡ TEAM MODE 并行交付架构</text>
+    <g transform="translate(700, 11)">
+      <circle cx="8" cy="8" r="4" fill="#22c55e"/>
+      <text x="20" y="12" fill="#94a3b8" font-family="system-ui,-apple-system,sans-serif" font-size="11" font-weight="600">4 任务并行中</text>
+    </g>
+  </g>
+
+  <!-- Main Canvas Area -->
+  
+    <!-- Leader Hub Node -->
+    <g transform="translate(440, 95)" filter="url(#sp-glow)">
+      <rect x="-140" y="-22" width="280" height="44" rx="10" fill="#132035" stroke="url(#sp-accent)" stroke-width="1.5"/>
+      <circle cx="-110" cy="0" r="12" fill="url(#sp-accent)"/>
+      <text x="-110" y="4" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="11" font-weight="900">👑</text>
+      <text x="-88" y="-2" fill="#fff" font-family="system-ui,-apple-system,sans-serif" font-size="12" font-weight="800">Leader Agent (调度中心)</text>
+      <text x="-88" y="12" fill="#60a5fa" font-family="system-ui,-apple-system,sans-serif" font-size="10" font-weight="600">宏观需求 → 拆解 4 项独立子任务</text>
+    </g>
+
+    <!-- Connectors -->
+    <g stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 4" opacity=".6">
+      <path d="M440 117 L120 160"/>
+      <path d="M440 117 L330 160"/>
+      <path d="M440 117 L550 160"/>
+      <path d="M440 117 L760 160"/>
+    </g>
+
+    <!-- 4 Parallel Lanes -->
+    <g font-family="system-ui,-apple-system,sans-serif">
+      <!-- Lane 1 -->
+      <g transform="translate(24, 160)">
+        <rect width="196" height="210" rx="10" fill="url(#sp-card)" stroke="rgba(255,255,255,.08)"/>
+        <rect x="12" y="12" width="172" height="26" rx="6" fill="#0b121e" stroke="rgba(59,130,246,.25)"/>
+        <text x="22" y="29" fill="#93c5fd" font-size="11" font-weight="800">🎨 交互与前端</text>
+        <text x="174" y="29" text-anchor="end" fill="#64748b" font-size="10">Agent #1</text>
+        
+        <g transform="translate(14, 52)">
+          <text fill="#64748b" font-size="10">代码增量</text>
+          <text x="168" text-anchor="end" fill="#e2e8f0" font-size="10" font-weight="700">+342 lines</text>
+          <rect y="16" width="168" height="6" rx="3" fill="#1e293b"/>
+          <rect y="16" width="168" height="6" rx="3" fill="url(#sp-green)"/>
+        </g>
+        <g transform="translate(14, 96)">
+          <text fill="#64748b" font-size="10">组件单元</text>
+          <text x="168" text-anchor="end" fill="#e2e8f0" font-size="10" font-weight="700">8 / 8 完成</text>
+          <rect y="16" width="168" height="6" rx="3" fill="#1e293b"/>
+          <rect y="16" width="168" height="6" rx="3" fill="url(#sp-green)"/>
+        </g>
+        
+        <rect x="14" y="156" width="168" height="38" rx="8" fill="rgba(34,197,94,.1)" stroke="rgba(34,197,94,.3)"/>
+        <circle cx="32" cy="175" r="8" fill="#22c55e"/>
+        <path d="M29 175 l2 2 l4 -5" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <text x="46" y="179" fill="#4ade80" font-size="11" font-weight="800">已交付 · 耗时 28s</text>
+      </g>
+
+      <!-- Lane 2 -->
+      <g transform="translate(236, 160)">
+        <rect width="196" height="210" rx="10" fill="url(#sp-card)" stroke="rgba(255,255,255,.08)"/>
+        <rect x="12" y="12" width="172" height="26" rx="6" fill="#0b121e" stroke="rgba(59,130,246,.25)"/>
+        <text x="22" y="29" fill="#93c5fd" font-size="11" font-weight="800">⚙️ 核心后端服务</text>
+        <text x="174" y="29" text-anchor="end" fill="#64748b" font-size="10">Agent #2</text>
+        
+        <g transform="translate(14, 52)">
+          <text fill="#64748b" font-size="10">API 路由</text>
+          <text x="168" text-anchor="end" fill="#e2e8f0" font-size="10" font-weight="700">POST /stream</text>
+          <rect y="16" width="168" height="6" rx="3" fill="#1e293b"/>
+          <rect y="16" width="168" height="6" rx="3" fill="url(#sp-green)"/>
+        </g>
+        <g transform="translate(14, 96)">
+          <text fill="#64748b" font-size="10">逻辑测试</text>
+          <text x="168" text-anchor="end" fill="#e2e8f0" font-size="10" font-weight="700">100% 通过</text>
+          <rect y="16" width="168" height="6" rx="3" fill="#1e293b"/>
+          <rect y="16" width="168" height="6" rx="3" fill="url(#sp-green)"/>
+        </g>
+        
+        <rect x="14" y="156" width="168" height="38" rx="8" fill="rgba(34,197,94,.1)" stroke="rgba(34,197,94,.3)"/>
+        <circle cx="32" cy="175" r="8" fill="#22c55e"/>
+        <path d="M29 175 l2 2 l4 -5" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <text x="46" y="179" fill="#4ade80" font-size="11" font-weight="800">已交付 · 耗时 32s</text>
+      </g>
+
+      <!-- Lane 3 -->
+      <g transform="translate(448, 160)">
+        <rect width="196" height="210" rx="10" fill="url(#sp-card)" stroke="rgba(255,255,255,.08)"/>
+        <rect x="12" y="12" width="172" height="26" rx="6" fill="#0b121e" stroke="rgba(59,130,246,.25)"/>
+        <text x="22" y="29" fill="#93c5fd" font-size="11" font-weight="800">🛡️ 安全与合规</text>
+        <text x="174" y="29" text-anchor="end" fill="#64748b" font-size="10">Agent #3</text>
+        
+        <g transform="translate(14, 52)">
+          <text fill="#64748b" font-size="10">静态检查</text>
+          <text x="168" text-anchor="end" fill="#e2e8f0" font-size="10" font-weight="700">0 缺陷 / 0 警告</text>
+          <rect y="16" width="168" height="6" rx="3" fill="#1e293b"/>
+          <rect y="16" width="168" height="6" rx="3" fill="url(#sp-green)"/>
+        </g>
+        <g transform="translate(14, 96)">
+          <text fill="#64748b" font-size="10">DLP 审计</text>
+          <text x="168" text-anchor="end" fill="#e2e8f0" font-size="10" font-weight="700">合规通过</text>
+          <rect y="16" width="168" height="6" rx="3" fill="#1e293b"/>
+          <rect y="16" width="168" height="6" rx="3" fill="url(#sp-green)"/>
+        </g>
+        
+        <rect x="14" y="156" width="168" height="38" rx="8" fill="rgba(34,197,94,.1)" stroke="rgba(34,197,94,.3)"/>
+        <circle cx="32" cy="175" r="8" fill="#22c55e"/>
+        <path d="M29 175 l2 2 l4 -5" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <text x="46" y="179" fill="#4ade80" font-size="11" font-weight="800">已交付 · 耗时 19s</text>
+      </g>
+
+      <!-- Lane 4 -->
+      <g transform="translate(660, 160)">
+        <rect width="196" height="210" rx="10" fill="url(#sp-card)" stroke="rgba(255,255,255,.08)"/>
+        <rect x="12" y="12" width="172" height="26" rx="6" fill="#0b121e" stroke="rgba(59,130,246,.25)"/>
+        <text x="22" y="29" fill="#93c5fd" font-size="11" font-weight="800">🧪 自动化测试</text>
+        <text x="174" y="29" text-anchor="end" fill="#64748b" font-size="10">Agent #4</text>
+        
+        <g transform="translate(14, 52)">
+          <text fill="#64748b" font-size="10">用例执行</text>
+          <text x="168" text-anchor="end" fill="#e2e8f0" font-size="10" font-weight="700">42 / 42 全部通过</text>
+          <rect y="16" width="168" height="6" rx="3" fill="#1e293b"/>
+          <rect y="16" width="168" height="6" rx="3" fill="url(#sp-green)"/>
+        </g>
+        <g transform="translate(14, 96)">
+          <text fill="#64748b" font-size="10">代码覆盖率</text>
+          <text x="168" text-anchor="end" fill="#e2e8f0" font-size="10" font-weight="700">94.8%</text>
+          <rect y="16" width="168" height="6" rx="3" fill="#1e293b"/>
+          <rect y="16" width="168" height="6" rx="3" fill="url(#sp-green)"/>
+        </g>
+        
+        <rect x="14" y="156" width="168" height="38" rx="8" fill="rgba(34,197,94,.1)" stroke="rgba(34,197,94,.3)"/>
+        <circle cx="32" cy="175" r="8" fill="#22c55e"/>
+        <path d="M29 175 l2 2 l4 -5" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <text x="46" y="179" fill="#4ade80" font-size="11" font-weight="800">已交付 · 耗时 15s</text>
+      </g>
+    </g>
+
+    <!-- Bottom Speed Comparison Bar -->
+    <g transform="translate(24, 390)" font-family="system-ui,-apple-system,sans-serif">
+      <rect width="832" height="85" rx="10" fill="#0c1322" stroke="rgba(255,255,255,.08)"/>
+      
+      <!-- Buddy row -->
+      <g transform="translate(20, 16)">
+        <text y="14" fill="#64748b" font-size="11" font-weight="700">某 Buddy 单线程串行</text>
+        <rect x="150" y="4" width="520" height="12" rx="6" fill="#1e293b"/>
+        <text x="685" y="14" fill="#94a3b8" font-size="11" font-weight="700">16.1 分钟</text>
+      </g>
+
+      <!-- One Work row -->
+      <g transform="translate(20, 46)">
+        <text y="15" fill="#60a5fa" font-size="11" font-weight="900">One Work Team Mode</text>
+        <rect x="150" y="4" width="104" height="14" rx="7" fill="url(#sp-accent)"/>
+        <rect x="264" y="2" width="76" height="18" rx="9" fill="rgba(34,197,94,.2)" stroke="rgba(34,197,94,.4)"/>
+        <text x="302" y="15" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="900">⚡ 提速 5×</text>
+        <text x="685" y="15" fill="#60a5fa" font-size="12" font-weight="900">3.2 分钟</text>
+      </g>
+    </g>
+    
+</svg>

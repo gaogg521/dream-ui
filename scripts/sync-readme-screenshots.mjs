@@ -1,14 +1,27 @@
 /**
- * Sync product screenshots from D:\dream\image → resources/screens/
+ * Sync README assets from D:\dream\image
+ * - resources/screens/  product screenshots (PNG)
+ * - resources/adv/      five-advantage SVGs + PNG for GitHub README
  */
 import { copyFileSync, mkdirSync, existsSync, readdirSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import sharp from "sharp";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 const srcDir = "D:\\dream\\image";
 const outDir = join(root, "resources", "screens");
+const advDir = join(root, "resources", "adv");
+
+/** @type {string[]} */
+const ADV_SVGS = [
+  "adv-speed.svg",
+  "adv-privacy.svg",
+  "adv-cost.svg",
+  "adv-bridge.svg",
+  "adv-local.svg",
+];
 
 /** @type {Array<[string, string]>} */
 const MAP = [
@@ -81,3 +94,17 @@ for (const [src, dest] of MAP) {
   ok++;
 }
 console.log(`Synced ${ok} → resources/screens/`);
+
+mkdirSync(advDir, { recursive: true });
+let advOk = 0;
+for (const name of ADV_SVGS) {
+  const from = join(srcDir, name);
+  if (!existsSync(from)) {
+    console.warn(`SKIP adv: ${name}`);
+    continue;
+  }
+  copyFileSync(from, join(advDir, name));
+  await sharp(from, { density: 144 }).png().toFile(join(advDir, name.replace(".svg", ".png")));
+  advOk++;
+}
+console.log(`Synced ${advOk} advantage SVGs → resources/adv/ (+ PNG)`);
