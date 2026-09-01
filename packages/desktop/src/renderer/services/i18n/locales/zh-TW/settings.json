@@ -425,6 +425,9 @@
   "openAiApiModeChatCompletions": "Chat Completions",
   "openAiApiModeResponses": "Responses",
   "openAiApiModeTip": "僅對使用 OpenAI 相容協議的模型顯示。",
+  "contextWindow": "上下文視窗",
+  "contextWindowPlaceholder": "例如 32768",
+  "contextWindowTip": "留空則使用模型預設值。本地部署的模型（如 Ollama）預設上下文可能只有 4096，建議依模型實際能力設定。",
   "modelSettingsApplyToSelected": "這些設定會套用至全部已選模型，新增後仍可分別修改。",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {

@@ -37,6 +37,8 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
     const [imageInput, setImageInput] = useState<ModelImageInputChoice>('auto');
     const [openAiApiMode, setOpenAiApiMode] = useState<ModelOpenAiApiModeChoice>('auto');
     const [modelKind, setModelKind] = useState<ModelKindChoice>('auto');
+    /** Context window as typed; parsed to tokens on save. Empty = engine default. */
+    const [contextWindow, setContextWindow] = useState<string>('');
     const [mediaEndpoint, setMediaEndpoint] = useState<string>('');
     const [mediaUnitPrice, setMediaUnitPrice] = useState<string>('');
     const [showMediaCost, setShowMediaCost] = useState(false);
@@ -89,6 +91,7 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
       setImageInput(settings?.image_input ?? 'auto');
       setOpenAiApiMode(settings?.openai_api_mode ?? 'auto');
       setModelKind(settings?.model_kind ?? 'auto');
+      setContextWindow(typeof settings?.context_window === 'number' ? String(settings.context_window) : '');
       setMediaEndpoint(settings?.media_endpoint ?? '');
       setMediaUnitPrice(
         typeof settings?.media_unit_price_usd === 'number' ? String(settings.media_unit_price_usd) : ''
@@ -142,7 +145,8 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
             Object.entries(tierPrices)
               .filter(([, raw]) => raw.trim() !== '')
               .map(([tier, raw]) => [tier, Number(raw)])
-          )
+          ),
+          contextWindow.trim() ? Number(contextWindow) : undefined
         ),
       };
 
@@ -157,6 +161,7 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
       onSubmit(updatedData);
       modalCtrl.close();
     }, [
+      contextWindow,
       data,
       editingModel,
       existingModels,
@@ -240,6 +245,21 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
             />
             <div className='text-11px text-t-secondary leading-4'>{t('settings.imageInputTip')}</div>
           </div>
+          {/* Context window — text models only. Carrying a token limit on an
+              image/video model would be a stale number after a kind change,
+              the same reason the media price fields are gated below. */}
+          {modelKind !== 'image' && modelKind !== 'video' && (
+            <div className='space-y-8px'>
+              <div className='text-13px font-500 text-t-secondary'>{t('settings.contextWindow')}</div>
+              <Input
+                value={contextWindow}
+                onChange={setContextWindow}
+                placeholder={t('settings.contextWindowPlaceholder')}
+                allowClear
+              />
+              <div className='text-11px text-t-secondary leading-4'>{t('settings.contextWindowTip')}</div>
+            </div>
+          )}
           <div className='flex flex-col gap-4px'>
             <div className='flex items-center gap-4px'>
               <span>{t('settings.modelKind')}</span>

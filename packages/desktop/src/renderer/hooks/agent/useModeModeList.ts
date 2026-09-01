@@ -51,8 +51,10 @@ const useModeModeList = (
     }> => {
       // Only call the backend when we have credentials it can actually use:
       // - bedrock: bedrock_config carries the credentials (api_key not required)
+      // - ollama: a local daemon has no credentials at all — the base_url is enough
       // - everything else: api_key is mandatory per backend validator
-      const hasUsableCredentials = platform === 'bedrock' ? !!bedrock_config : !!api_key;
+      const hasUsableCredentials =
+        platform === 'bedrock' ? !!bedrock_config : platform === 'ollama' ? !!base_url : !!api_key;
       if (hasUsableCredentials) {
         const res = await ipcBridge.mode.fetchModelList.invoke({
           base_url,

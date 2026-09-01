@@ -76,7 +76,8 @@ export type ModelImageInputChoice = ModelImageInputCapability | 'auto';
 /** Whether a provider/model protocol can select an OpenAI wire API. */
 export const supportsOpenAiApiMode = (platform: string, modelProtocol = 'openai'): boolean => {
   if (platform === 'new-api') return modelProtocol === 'openai';
-  return !['anthropic', 'bedrock', 'gemini', 'gemini-vertex-ai'].includes(platform);
+  // Ollama speaks its own native API — there is no chat/responses split to pick.
+  return !['anthropic', 'bedrock', 'gemini', 'gemini-vertex-ai', 'ollama'].includes(platform);
 };
 
 /** Apply explicit settings to models while keeping automatic values absent on the wire. */
@@ -95,13 +96,21 @@ export const updateModelSettings = (
    * Entries that are not positive finite numbers are dropped rather than
    * stored — a 0 would read as "this tier is free".
    */
-  mediaUnitPricesUsd?: Record<string, number>
+  mediaUnitPricesUsd?: Record<string, number>,
+  /**
+   * User-declared context window in tokens. Absent/invalid = the engine keeps
+   * its own default. Meaningful for text models only — carried on an image or
+   * video model it would be a stale number after a kind change.
+   */
+  contextWindow?: number
 ): Record<string, ModelSettings> => {
   const next = { ...current };
   const endpoint = mediaEndpoint.trim();
   // Only meaningful for models that produce media; carrying it on a text model
   // would leave a stale value behind if the kind is later changed.
   const keepEndpoint = endpoint && (modelKind === 'image' || modelKind === 'video');
+  const hasContextWindow =
+    typeof contextWindow === 'number' && Number.isFinite(contextWindow) && contextWindow > 0;
 
   for (const modelId of modelIds) {
     const hasPrice =
@@ -112,7 +121,14 @@ export const updateModelSettings = (
       )
     );
     const hasTierPrices = Object.keys(tierPrices).length > 0;
-    if (imageInput === 'auto' && openAiApiMode === 'auto' && modelKind === 'auto' && !hasPrice && !hasTierPrices) {
+    if (
+      imageInput === 'auto' &&
+      openAiApiMode === 'auto' &&
+      modelKind === 'auto' &&
+      !hasPrice &&
+      !hasTierPrices &&
+      !hasContextWindow
+    ) {
       delete next[modelId];
       continue;
     }
@@ -122,6 +138,9 @@ export const updateModelSettings = (
     if (openAiApiMode !== 'auto') settings.openai_api_mode = openAiApiMode;
     if (modelKind !== 'auto') settings.model_kind = modelKind;
     if (keepEndpoint) settings.media_endpoint = endpoint;
+    if (hasContextWindow && modelKind !== 'image' && modelKind !== 'video') {
+      settings.context_window = Math.floor(contextWindow);
+    }
     // Price only makes sense for a media model; keeping it on a text model
     // would leave a stale figure behind after a kind change.
     if (hasPrice && (modelKind === 'image' || modelKind === 'video')) {

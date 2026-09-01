@@ -22,7 +22,7 @@ const buildLogoAssetUrl = (path: string): string => {
  * 平台类型
  * Platform type
  */
-export type PlatformType = 'gemini' | 'gemini-vertex-ai' | 'anthropic' | 'custom' | 'new-api' | 'bedrock';
+export type PlatformType = 'gemini' | 'gemini-vertex-ai' | 'anthropic' | 'custom' | 'new-api' | 'bedrock' | 'ollama';
 
 /**
  * 模型平台配置接口
@@ -80,6 +80,15 @@ export const MODEL_PLATFORMS: PlatformConfig[] = [
     logo: buildLogoAssetUrl('ai-cloud/newapi.svg'),
     platform: 'new-api',
     i18nKey: 'settings.platformNewApi',
+  },
+
+  // Ollama 本地模型服务 / Ollama local model server
+  {
+    name: 'Ollama',
+    value: 'Ollama',
+    logo: buildLogoAssetUrl('ai-major/ollama.svg'),
+    platform: 'ollama',
+    base_url: 'http://localhost:11434',
   },
 
   // 官方 Gemini 平台

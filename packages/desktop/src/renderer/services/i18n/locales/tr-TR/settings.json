@@ -425,6 +425,9 @@
   "openAiApiModeChatCompletions": "Chat Completions",
   "openAiApiModeResponses": "Responses",
   "openAiApiModeTip": "Yalnızca OpenAI uyumlu protokol kullanan modellerde kullanılabilir.",
+  "contextWindow": "Bağlam penceresi",
+  "contextWindowPlaceholder": "örn. 32768",
+  "contextWindowTip": "Model varsayılanını kullanmak için boş bırakın. Yerel modeller (örn. Ollama) genellikle 4096 gibi küçük bir varsayılan bağlama sahiptir — modelin gerçek kapasitesine ayarlayın.",
   "modelSettingsApplyToSelected": "Bu ayarlar seçilen tüm modellere uygulanır ve daha sonra ayrı ayrı değiştirilebilir.",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {

@@ -425,6 +425,9 @@
   "openAiApiModeChatCompletions": "Chat Completions",
   "openAiApiModeResponses": "Responses",
   "openAiApiModeTip": "OpenAI互換プロトコルを使用するモデルでのみ利用できます。",
+  "contextWindow": "コンテキストウィンドウ",
+  "contextWindowPlaceholder": "例：32768",
+  "contextWindowTip": "空欄の場合はモデルのデフォルト値を使用します。ローカルモデル（Ollama など）はデフォルトのコンテキストが 4096 と小さい場合があるため、モデルが実際に対応する値を設定してください。",
   "modelSettingsApplyToSelected": "これらの設定は選択したすべてのモデルに適用され、後から個別に変更できます。",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {

@@ -227,6 +227,7 @@ const AddPlatformModal = ModalHOC<{
   // 判断是否为"自定义"选项（没有预设 base_url） / Check if "Custom" option (no preset base_url)
   const isCustom = isCustomOption(platformValue);
   const isBedrock = platform === 'bedrock';
+  const isOllama = platform === 'ollama';
   const isGemini = isGeminiPlatform(platform);
   const isNewApi = isNewApiPlatform(platform);
 
@@ -264,8 +265,10 @@ const AddPlatformModal = ModalHOC<{
   // Enable detection when:
   // 1. Custom platform OR user entered a custom base URL (non-official, like local proxy)
   // 2. Input values differ from last "accepted suggestion" (avoid redundant detection after platform switch)
+  // Ollama speaks its own API — probing it for OpenAI/Gemini/Anthropic protocol
+  // would only produce misleading "switch platform" suggestions for localhost.
   const isNonOfficialBaseUrl = base_url && !isGoogleApisHost(base_url);
-  const shouldEnableDetection = isCustom || isNonOfficialBaseUrl;
+  const shouldEnableDetection = (isCustom || isNonOfficialBaseUrl) && !isOllama;
   // 只有在用户修改了输入值（相对于上次采纳建议时）才触发检测
   // Only trigger detection when input changed since last accepted suggestion
   const inputChangedSinceLastSwitch =
@@ -354,7 +357,7 @@ const AddPlatformModal = ModalHOC<{
           // 优先使用用户输入的 base_url，否则使用平台预设值
           // Prefer user input base_url, fallback to platform preset
           base_url: isBedrock ? '' : values.base_url || selectedPlatform?.base_url || '',
-          api_key: isBedrock ? '' : values.api_key,
+          api_key: isBedrock || isOllama ? '' : values.api_key,
           // The model Select is multi-select: values.model is a string[], but
           // keep the single-value fallback for safety.
           models: Array.isArray(values.model) ? values.model : [values.model],
@@ -520,12 +523,13 @@ const AddPlatformModal = ModalHOC<{
             </div>
           )}
 
-          {/* API Key */}
+          {/* API Key — hidden for Bedrock (uses AWS credentials) and Ollama
+              (a local daemon has no credentials at all) */}
           <Form.Item
-            hidden={isBedrock}
+            hidden={isBedrock || isOllama}
             label={t('settings.apiKey')}
-            required={!isBedrock}
-            rules={[{ required: !isBedrock }]}
+            required={!isBedrock && !isOllama}
+            rules={[{ required: !isBedrock && !isOllama }]}
             field={'api_key'}
             extra={
               <div className='space-y-2px'>
@@ -701,8 +705,9 @@ const AddPlatformModal = ModalHOC<{
                         }
                         return;
                       }
-                      // For Gemini, no api_key check needed
-                      if (!isGemini && !api_key) {
+                      // Gemini and Ollama need no api_key — a local Ollama
+                      // daemon is identified by its base_url alone.
+                      if (!isGemini && !isOllama && !api_key) {
                         message.warning(t('settings.pleaseEnterApiKey'));
                         return;
                       }

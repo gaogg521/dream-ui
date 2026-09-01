@@ -433,6 +433,9 @@
   "openAiApiModeChatCompletions": "Chat Completions",
   "openAiApiModeResponses": "Responses",
   "openAiApiModeTip": "Доступно лише для моделей з OpenAI-сумісним протоколом.",
+  "contextWindow": "Контекстне вікно",
+  "contextWindowPlaceholder": "наприклад, 32768",
+  "contextWindowTip": "Залиште порожнім, щоб використовувати значення за замовчуванням. Локальні моделі (наприклад, Ollama) можуть мати контекст лише 4096 — вкажіть реальну місткість моделі.",
   "modelSettingsApplyToSelected": "Ці налаштування застосовуються до всіх вибраних моделей і згодом можуть змінюватися окремо.",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {
