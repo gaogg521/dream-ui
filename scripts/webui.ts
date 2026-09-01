@@ -14,9 +14,9 @@
  *   DREAM_DATA_DIR       : override userData path (default Electron-compatible)
  *   DREAM_LOG_DIR        : override log dir (default <dataDir>/logs)
  *   DREAM_STATIC_DIR     : override static dir (default out/renderer)
- *   DREAM_BACKEND_BIN    : absolute path to aioncore binary (else PATH lookup)
- *   DREAM_BACKEND_BUNDLED_DIR : dir containing bundled-aioncore/<plat-arch>/binary
- *   AIONUI_OPEN_BROWSER   : "1"/"true" to force open, "0"/"false" to disable
+ *   DREAM_BACKEND_BIN    : absolute path to dreamcore binary (else PATH lookup)
+ *   DREAM_BACKEND_BUNDLED_DIR : dir containing bundled-dreamcore/<plat-arch>/binary
+ *   DREAM_OPEN_BROWSER   : "1"/"true" to force open, "0"/"false" to disable
  */
 
 import { execSync } from 'child_process';
@@ -33,7 +33,7 @@ const DEFAULT_PORT = (() => {
   if (process.env.DREAM_MULTI_INSTANCE === '1') return 25810;
   return 25809;
 })();
-const BACKEND_BINARY = process.platform === 'win32' ? 'aioncore.exe' : 'aioncore';
+const BACKEND_BINARY = process.platform === 'win32' ? 'dreamcore.exe' : 'dreamcore';
 
 const __filename = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(__filename), '..');
@@ -48,7 +48,7 @@ const getFlag = (name: string): string | undefined => {
 };
 
 /**
- * Resolve the directory where aioncore persists its SQLite DB.
+ * Resolve the directory where dreamcore persists its SQLite DB.
  *
  * `bun run webui` runs **independently of the Electron desktop app** — it must
  * work on hosts that never installed Dream UI.app, and its default work dir must
@@ -87,9 +87,13 @@ function resolveBackendDataDir(): string {
   }
   const suffix =
     process.env.NODE_ENV === 'production' ? '' : process.env.DREAM_MULTI_INSTANCE === '1' ? '-dev-2' : '-dev';
-  const dir = path.join(os.homedir(), `.aionui-web${suffix}`);
-  fs.mkdirSync(dir, { recursive: true });
-  return dir;
+  const current = path.join(os.homedir(), `.dream-web${suffix}`);
+  if (fs.existsSync(current)) return current;
+  // Installs created before the rebrand keep their on-disk data dir.
+  const legacy = path.join(os.homedir(), `.aionui-web${suffix}`);
+  if (fs.existsSync(legacy)) return legacy;
+  fs.mkdirSync(current, { recursive: true });
+  return current;
 }
 
 function parseBoolean(v: string | undefined): boolean {
@@ -139,7 +143,7 @@ function runPackageIfNeeded(): void {
 function resolveBackendBinary(): string {
   if (process.env.DREAM_BACKEND_BIN) return process.env.DREAM_BACKEND_BIN;
 
-  const bundledBase = process.env.DREAM_BACKEND_BUNDLED_DIR ?? path.join(repoRoot, 'resources', 'bundled-aioncore');
+  const bundledBase = process.env.DREAM_BACKEND_BUNDLED_DIR ?? path.join(repoRoot, 'resources', 'bundled-dreamcore');
   const runtimeKey = `${process.platform}-${process.arch}`;
   const bundled = path.join(bundledBase, runtimeKey, BACKEND_BINARY);
   if (fs.existsSync(bundled)) return bundled;

@@ -49,10 +49,22 @@ export type BackendInstallDiagnostics = {
   runtimeDirMtimeMs?: number;
   runtimeDirPath?: string;
   runtimeKey?: string;
+  /** Present when only the pre-rebrand resources dir name exists on disk. */
+  legacyBundledDirPath?: string;
 };
 
 const MANIFEST_FILE_NAME = 'manifest.json';
-const BUNDLED_AIONCORE_DIR = 'bundled-aioncore';
+const BUNDLED_DREAMCORE_DIR = 'bundled-dreamcore';
+// Bundles built before the rebrand use the legacy resources dir name.
+const LEGACY_BUNDLED_AIONCORE_DIR = 'bundled-aioncore';
+
+function existsNoThrow(dirPath: string, stat: (filePath: string) => FileStat | undefined): boolean {
+  try {
+    return fs.existsSync(dirPath);
+  } catch {
+    return Boolean(stat(dirPath));
+  }
+}
 
 function getString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
@@ -143,9 +155,10 @@ export function collectBackendInstallDiagnostics(
   const resourcesPath = getString(details?.resourcesPath) ?? env.resourcesPath;
   const runtimeKey = getString(details?.runtimeKey);
   const binaryName = getString(details?.binaryName);
-  const bundledDirPath = resourcesPath ? pathApi.join(resourcesPath, BUNDLED_AIONCORE_DIR) : undefined;
+  const bundledDirPath = resourcesPath ? pathApi.join(resourcesPath, BUNDLED_DREAMCORE_DIR) : undefined;
+  const legacyBundledDirPath = resourcesPath ? pathApi.join(resourcesPath, LEGACY_BUNDLED_AIONCORE_DIR) : undefined;
   const runtimeDirPath =
-    resourcesPath && runtimeKey ? pathApi.join(resourcesPath, BUNDLED_AIONCORE_DIR, runtimeKey) : undefined;
+    resourcesPath && runtimeKey ? pathApi.join(resourcesPath, BUNDLED_DREAMCORE_DIR, runtimeKey) : undefined;
   const binaryPath =
     getString(details?.checkedBundledPath) ??
     (runtimeDirPath && binaryName ? pathApi.join(runtimeDirPath, binaryName) : undefined);
@@ -163,6 +176,9 @@ export function collectBackendInstallDiagnostics(
   if (runtimeKey) diagnostics.runtimeKey = runtimeKey;
   if (binaryName) diagnostics.binaryName = binaryName;
   if (bundledDirPath) diagnostics.bundledDirPath = bundledDirPath;
+  if (legacyBundledDirPath && !existsNoThrow(legacyBundledDirPath, stat)) {
+    diagnostics.legacyBundledDirPath = legacyBundledDirPath;
+  }
   if (runtimeDirPath) diagnostics.runtimeDirPath = runtimeDirPath;
   if (binaryPath) diagnostics.binaryPath = binaryPath;
   if (manifestPath) diagnostics.manifestPath = manifestPath;

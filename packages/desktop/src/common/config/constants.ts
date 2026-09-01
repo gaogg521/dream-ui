@@ -77,7 +77,10 @@ export const AIONUI_TIMESTAMP_SEPARATOR = '_aionui_';
 
 /** 用于匹配和清理时间戳后缀的正则表达式 */
 export const AIONUI_TIMESTAMP_REGEX = /_aionui_\d{13}(\.\w+)?$/;
-export const AIONUI_FILES_MARKER = '[[AION_FILES]]';
+export const FILES_MARKER = '[[DREAM_FILES]]';
+/** Conversations that predate the rebrand persist the legacy marker. */
+export const LEGACY_FILES_MARKER = '[[AION_FILES]]';
+export const ALL_FILES_MARKERS = [FILES_MARKER, LEGACY_FILES_MARKER] as const;
 
 // ===== 媒体类型相关常量 =====
 

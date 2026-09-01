@@ -5,7 +5,7 @@
  *
  * Two modes:
  *   1. **Packaged mode** (CI default): Launches from electron-builder's unpacked output
- *      (e.g. out/linux-unpacked/1onecode, out/mac-arm64/One Work.app, out/win-unpacked/1onecode.exe).
+ *      (e.g. out/linux-unpacked/onework, out/mac-arm64/onework.app, out/win-unpacked/onework.exe).
  *      This validates that packaged resources are intact.
  *   2. **Dev mode** (local default): Launches via `electron .` from project root with
  *      the Vite dev server (electron-vite dev).
@@ -157,9 +157,9 @@ function resolvePackagedApp(): { executablePath: string; cwd: string } | null {
   // follows productName ("One Work") on win/mac and linux.executableName
   // ("one-work") on Linux. Older names kept as fallbacks for pre-3.0 builds.
   if (platform === 'win32') {
-    // out/win-unpacked/One Work.exe
+    // out/win-unpacked/onework.exe
     for (const dir of ['win-unpacked', 'win-x64-unpacked', 'win-arm64-unpacked']) {
-      for (const name of ['One Work.exe', '1onecode.exe']) {
+      for (const name of ['onework.exe', 'One Work.exe', '1onecode.exe']) {
         const exe = path.join(outDir, dir, name);
         if (fs.existsSync(exe)) return { executablePath: exe, cwd: path.join(outDir, dir) };
       }
@@ -171,7 +171,7 @@ function resolvePackagedApp(): { executablePath: string; cwd: string } | null {
       if (!fs.existsSync(macDir)) continue;
       const appBundle = fs.readdirSync(macDir).find((f) => f.endsWith('.app'));
       if (appBundle) {
-        for (const name of ['One Work', '1onecode']) {
+        for (const name of ['onework', 'One Work', '1onecode']) {
           const exe = path.join(macDir, appBundle, 'Contents', 'MacOS', name);
           if (fs.existsSync(exe)) return { executablePath: exe, cwd: macDir };
         }
@@ -182,7 +182,7 @@ function resolvePackagedApp(): { executablePath: string; cwd: string } | null {
     for (const dir of ['linux-unpacked', 'linux-x64-unpacked', 'linux-arm64-unpacked']) {
       const dirPath = path.join(outDir, dir);
       if (!fs.existsSync(dirPath)) continue;
-      for (const name of ['one-work', '1onecode']) {
+      for (const name of ['onework', 'one-work', '1onecode']) {
         const exe = path.join(dirPath, name);
         if (fs.existsSync(exe)) return { executablePath: exe, cwd: dirPath };
       }

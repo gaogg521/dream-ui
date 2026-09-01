@@ -29,7 +29,7 @@ import {
   httpGet,
   httpPost,
   httpDelete,
-  resolveAionrsPreconditions,
+  resolveDreamEnginePreconditions,
 } from '../helpers';
 
 // Generous timeout for AI responses
@@ -1256,7 +1256,7 @@ test.describe('Conversation Full Cycle', () => {
           .waitForFunction(() => (document.body.textContent?.length ?? 0) > 200, { timeout: 15_000 })
           .catch(() => {});
         if (backend === 'aionrs') {
-          const preconditions = await resolveAionrsPreconditions(page);
+          const preconditions = await resolveDreamEnginePreconditions(page);
           if (!preconditions.binary || !preconditions.models) {
             test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
             return;

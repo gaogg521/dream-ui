@@ -20,29 +20,29 @@
 
 import { test, expect } from '../../../fixtures';
 import {
-  resolveAionrsPreconditions,
-  cleanupE2EAionrsConversations,
-  createAionrsConversationViaBridge,
-  sendAionrsMessage,
-  getAionrsMessages,
-  waitForAionrsReply,
-  getAionrsConversationDB,
+  resolveDreamEnginePreconditions,
+  cleanupE2EDreamEngineConversations,
+  createDreamEngineConversationViaBridge,
+  sendDreamEngineMessage,
+  getDreamEngineMessages,
+  waitForDreamEngineReply,
+  getDreamEngineConversationDB,
   createTempWorkspace,
-  type AionrsTestModels,
+  type DreamEngineTestModels,
 } from '../../../helpers';
 import { takeScreenshot } from '../../../helpers/screenshots';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-test.describe('Aionrs Chat - Basic Flow (P0)', () => {
+test.describe('DreamEngine Chat - Basic Flow (P0)', () => {
   // Set longer timeout for dream tests (binary calls can be slow)
   test.setTimeout(240_000); // 4 minutes — allow 150s waitForDreamEngineReply + buffer
 
-  let preconditions: { binary: string | null; models: AionrsTestModels | null };
+  let preconditions: { binary: string | null; models: DreamEngineTestModels | null };
 
   // Check dream binary and provider availability before all tests
   test.beforeAll(async ({ page }) => {
-    preconditions = await resolveAionrsPreconditions(page);
+    preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
       test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
     }
@@ -56,7 +56,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
     }
 
     // 2. Delete E2E conversations from DB (cascades to messages)
-    await cleanupE2EAionrsConversations(page);
+    await cleanupE2EDreamEngineConversations(page);
 
     // 3. Clear sessionStorage
     await page.evaluate(() => {
@@ -78,7 +78,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
 
   test('TC-A-01: should complete minimal conversation with no attachments', async ({ page }) => {
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-minimal-path`;
+    const conversationName = `E2E-dream-engine-${timestamp}-minimal-path`;
     const tempWorkspace = createTempWorkspace(`tc-a-01-${timestamp}`);
 
     try {
@@ -88,7 +88,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-01/01-guid-page-initial.png`);
 
       // Step 2: Create conversation via bridge (uses prioritized dream-compatible provider)
-      const conversationId = await createAionrsConversationViaBridge(page, {
+      const conversationId = await createDreamEngineConversationViaBridge(page, {
         name: conversationName,
         workspace: tempWorkspace.path,
         provider: preconditions.models!.modelA,
@@ -97,11 +97,11 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-01/02-conversation-created.png`);
 
       // Step 3: Send simple message
-      await sendAionrsMessage(page, conversationId, 'Say hi in one word.');
+      await sendDreamEngineMessage(page, conversationId, 'Say hi in one word.');
       await takeScreenshot(page, `chat-aionrs/tc-a-01/03-message-sent.png`);
 
       // Step 4: Wait for AI reply
-      await waitForAionrsReply(page, conversationId);
+      await waitForDreamEngineReply(page, conversationId);
       await takeScreenshot(page, `chat-aionrs/tc-a-01/04-reply-completed.png`);
 
       // ============================================================================
@@ -109,7 +109,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       // ============================================================================
 
       // 1. Verify conversation created
-      const conversation = await getAionrsConversationDB(page, conversationId);
+      const conversation = await getDreamEngineConversationDB(page, conversationId);
       expect(conversation).toBeDefined();
       expect(conversation.type).toBe('aionrs');
 
@@ -119,7 +119,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       expect(['default', 'auto_edit', 'yolo']).toContain(extra.sessionMode);
 
       // 2. Verify user message
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
       expect(messages.length).toBeGreaterThanOrEqual(2); // At least user + AI
 
       const userMessages = messages.filter((m) => m.position === 'right');
@@ -152,7 +152,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
 
   test('TC-A-02: should associate single folder and reference in message', async ({ page }) => {
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-folder-single`;
+    const conversationName = `E2E-dream-engine-${timestamp}-folder-single`;
     const tempWorkspace = createTempWorkspace(`tc-a-02-${timestamp}`);
 
     try {
@@ -165,7 +165,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-02/01-guid-page-before-create.png`);
 
       // Step 2: Create conversation via bridge with workspace pre-configured
-      const conversationId = await createAionrsConversationViaBridge(page, {
+      const conversationId = await createDreamEngineConversationViaBridge(page, {
         name: conversationName,
         workspace: testFolderPath,
         provider: preconditions.models!.modelA,
@@ -173,13 +173,13 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       });
 
       // Step 3: Send message asking about folder (via bridge, no UI interaction needed)
-      await sendAionrsMessage(page, conversationId, 'What files are in the attached folder?');
+      await sendDreamEngineMessage(page, conversationId, 'What files are in the attached folder?');
 
       // Screenshot 02: message sent
       await takeScreenshot(page, `chat-aionrs/tc-a-02/02-message-sent.png`);
 
       // Step 4: Wait for AI reply
-      await waitForAionrsReply(page, conversationId);
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: AI reply completed
       await takeScreenshot(page, `chat-aionrs/tc-a-02/03-reply-completed.png`);
@@ -188,7 +188,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       // DB Assertions
       // ============================================================================
 
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
 
       // 1. Verify user message contains folder reference
       const userMessages = messages.filter((m) => m.position === 'right');
@@ -221,7 +221,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
 
   test('TC-A-03: should upload single file and binary receives file parameter', async ({ page }) => {
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-file-single`;
+    const conversationName = `E2E-dream-engine-${timestamp}-file-single`;
     const tempWorkspace = createTempWorkspace(`tc-a-03-${timestamp}`);
 
     try {
@@ -235,7 +235,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       // Step 2: Create conversation via bridge (Electron mode)
       // Note: In real usage, file would be uploaded via UI. For E2E, we create conversation
       // with workspace containing the test file, which dream can access
-      const conversationId = await createAionrsConversationViaBridge(page, {
+      const conversationId = await createDreamEngineConversationViaBridge(page, {
         name: conversationName,
         workspace: tempWorkspace.path,
         provider: preconditions.models!.modelA,
@@ -243,7 +243,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       });
 
       // Step 3: Send message about file (via bridge)
-      await sendAionrsMessage(
+      await sendDreamEngineMessage(
         page,
         conversationId,
         'What is the content of the file e2e-test-file.txt in the workspace?'
@@ -253,7 +253,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-03/02-message-sent.png`);
 
       // Step 4: Wait for AI reply
-      await waitForAionrsReply(page, conversationId);
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: reply completed
       await takeScreenshot(page, `chat-aionrs/tc-a-03/03-reply-completed.png`);
@@ -262,7 +262,7 @@ test.describe('Aionrs Chat - Basic Flow (P0)', () => {
       // DB Assertions
       // ============================================================================
 
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
 
       // 1. Verify user message exists
       const userMessages = messages.filter((m) => m.position === 'right');

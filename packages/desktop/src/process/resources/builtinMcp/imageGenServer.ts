@@ -36,7 +36,7 @@ const PORT = parseInt(process.env.MEDIA_MCP_PORT || '0', 10);
 /**
  * Env names the backend used before the 1ONE rebrand.
  *
- * The desktop app pairs with a downloaded `aioncore` release (`aioncoreVersion`
+ * The desktop app pairs with a downloaded `dreamcore` release (`dreamcoreVersion`
  * in package.json), so a UI build routinely runs against a backend older than
  * itself. Reading the legacy name as a fallback is what keeps generated media
  * landing in the conversation workspace during that skew — without it the

@@ -1,5 +1,5 @@
 /**
- * Enterprise remote mode — desktop client pointing at a remote aioncore.
+ * Enterprise remote mode — desktop client pointing at a remote dreamcore.
  *
  * State lives in renderer localStorage: httpBridge reads it synchronously on
  * every request to pick the base URL and attach the Bearer token. The main

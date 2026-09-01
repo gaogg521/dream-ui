@@ -8,7 +8,7 @@ import type { IProvider, TProviderWithModel } from '@/common/config/storage';
 import { useModelProviderList } from '@/renderer/hooks/agent/useModelProviderList';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-export type AionrsModelSelection = {
+export type DreamEngineModelSelection = {
   current_model?: TProviderWithModel;
   providers: IProvider[];
   getAvailableModels: (provider: IProvider) => string[];
@@ -16,7 +16,7 @@ export type AionrsModelSelection = {
   getDisplayModelName: (modelName?: string) => string;
 };
 
-export type UseAionrsModelSelectionOptions = {
+export type UseDreamEngineModelSelectionOptions = {
   initialModel: TProviderWithModel | undefined;
   onSelectModel: (provider: IProvider, modelName: string) => Promise<boolean>;
 };
@@ -24,7 +24,7 @@ export type UseAionrsModelSelectionOptions = {
 export const useDreamEngineModelSelection = ({
   initialModel,
   onSelectModel,
-}: UseAionrsModelSelectionOptions): AionrsModelSelection => {
+}: UseDreamEngineModelSelectionOptions): DreamEngineModelSelection => {
   const [current_model, setCurrentModel] = useState<TProviderWithModel | undefined>(initialModel);
 
   useEffect(() => {

@@ -366,8 +366,8 @@ describe('findAvailablePort', () => {
 
       expect(port).toBe(40404);
       expect(createServer).toHaveBeenCalledTimes(2);
-      expect(infoSpy).toHaveBeenCalledWith('[aioncore] skipped fetch-blocked backend port 1720');
-      expect(infoSpy).toHaveBeenCalledWith('[aioncore] selected backend port 40404 after 2 attempts');
+      expect(infoSpy).toHaveBeenCalledWith('[dreamcore] skipped fetch-blocked backend port 1720');
+      expect(infoSpy).toHaveBeenCalledWith('[dreamcore] selected backend port 40404 after 2 attempts');
     } finally {
       infoSpy.mockRestore();
     }
@@ -512,7 +512,7 @@ describe('BackendLifecycleManager.start (success path)', () => {
 
       expect(fetchSpy).toHaveBeenCalled();
       expect(infoSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[aioncore] health ready on port 55555 after 1 attempts, elapsed_ms=')
+        expect.stringContaining('[dreamcore] health ready on port 55555 after 1 attempts, elapsed_ms=')
       );
     } finally {
       fetchSpy.mockRestore();
@@ -1074,7 +1074,7 @@ describe('BackendLifecycleManager.start (AIONCORE_READY consumption)', () => {
     await expect(startPromise).resolves.toBe(33343);
     expect(mgr.status).toBe('running');
     // /health was polled but never returned ok; readiness came from the marker.
-    expect(fetchSpy).not.toHaveBeenCalledWith(expect.stringContaining('AIONCORE_READY'));
+    expect(fetchSpy).not.toHaveBeenCalledWith(expect.stringContaining('DREAMCORE_READY'));
 
     fetchSpy.mockRestore();
   }, 15_000);
@@ -1354,7 +1354,7 @@ describe('BackendLifecycleManager crash restart', () => {
     (child1 as unknown as EventEmitter).emit('exit', 1, 'SIGABRT');
     await new Promise((r) => setTimeout(r, 1_200));
 
-    expect(warnSpy).toHaveBeenCalledWith('[aioncore] child exited unexpectedly; scheduling restart', {
+    expect(warnSpy).toHaveBeenCalledWith('[dreamcore] child exited unexpectedly; scheduling restart', {
       exitCode: 1,
       signal: 'SIGABRT',
       port: 65303,
@@ -1411,7 +1411,7 @@ describe('BackendLifecycleManager crash restart', () => {
     mgr.handleCrash(1, 'SIGABRT');
 
     expect(mgr.status).toBe('error');
-    expect(errorSpy).toHaveBeenCalledWith('[aioncore] child exited unexpectedly; restart limit exceeded', {
+    expect(errorSpy).toHaveBeenCalledWith('[dreamcore] child exited unexpectedly; restart limit exceeded', {
       exitCode: 1,
       signal: 'SIGABRT',
       port: 0,

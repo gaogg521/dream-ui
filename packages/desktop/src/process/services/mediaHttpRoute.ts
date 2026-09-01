@@ -16,7 +16,7 @@
  *
  * ## Why this is not under `/api/`
  *
- * The static server reverse-proxies all of `/api/*` to aioncore, and aioncore
+ * The static server reverse-proxies all of `/api/*` to dreamcore, and dreamcore
  * has no knowledge of the media job store (a JSON file owned by this process).
  * A route there could not enforce the fence below. This one is served by the
  * static server itself, which runs here.

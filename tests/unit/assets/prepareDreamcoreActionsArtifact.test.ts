@@ -6,8 +6,8 @@ import { delimiter, dirname, join } from 'node:path';
 const {
   getActionsArtifactName,
   getActionsArtifactMissingMessage,
-  prepareAioncore,
-} = require('../../../packages/shared-scripts/src/prepare-aioncore');
+  prepareDreamcore,
+} = require('../../../packages/shared-scripts/src/prepare-dreamcore');
 
 const posixFakeToolchainIt = process.platform === 'win32' ? it.skip : it;
 
@@ -52,7 +52,7 @@ printf 'archive' > "$out"
     join(binDir, 'gh'),
     `#!/usr/bin/env bash
 cat <<'JSON'
-{"artifacts":[{"id":123,"name":"aioncore-manual-linux-x64","archive_download_url":"https://example.invalid/artifact.zip"}]}
+{"artifacts":[{"id":123,"name":"dreamcore-manual-linux-x64","archive_download_url":"https://example.invalid/artifact.zip"}]}
 JSON
 `
   );
@@ -103,37 +103,37 @@ afterEach(() => {
   rmSync(join(tmpdir(), 'aioncore-prepare-actions', '123'), { recursive: true, force: true });
 });
 
-describe('prepare-aioncore GitHub Actions artifact resolver', () => {
+describe('prepare-dreamcore GitHub Actions artifact resolver', () => {
   it.each([
-    ['win32', 'x64', 'aioncore-manual-windows-x64'],
-    ['win32', 'arm64', 'aioncore-manual-windows-arm64'],
-    ['darwin', 'x64', 'aioncore-manual-macos-x64'],
-    ['darwin', 'arm64', 'aioncore-manual-macos-arm64'],
-    ['linux', 'x64', 'aioncore-manual-linux-x64'],
-    ['linux', 'arm64', 'aioncore-manual-linux-arm64'],
+    ['win32', 'x64', 'dreamcore-manual-windows-x64'],
+    ['win32', 'arm64', 'dreamcore-manual-windows-arm64'],
+    ['darwin', 'x64', 'dreamcore-manual-macos-x64'],
+    ['darwin', 'arm64', 'dreamcore-manual-macos-arm64'],
+    ['linux', 'x64', 'dreamcore-manual-linux-x64'],
+    ['linux', 'arm64', 'dreamcore-manual-linux-arm64'],
   ])('maps %s-%s to %s', (platform, arch, artifactName) => {
     expect(getActionsArtifactName(platform, arch)).toBe(artifactName);
   });
 
-  it('explains which AionCore manual artifact is missing for the requested platform', () => {
+  it('explains which DreamCore manual artifact is missing for the requested platform', () => {
     expect(
       getActionsArtifactMissingMessage({
         runId: '27319522909',
         platform: 'win32',
         arch: 'x64',
-        expectedArtifactName: 'aioncore-manual-windows-x64',
-        availableArtifactNames: ['aioncore-manual-macos-arm64', 'aioncore-manual-linux-x64'],
+        expectedArtifactName: 'dreamcore-manual-windows-x64',
+        availableArtifactNames: ['dreamcore-manual-macos-arm64', 'dreamcore-manual-linux-x64'],
       })
     ).toBe(
       [
-        'AionCore run 27319522909 does not contain artifact [ aioncore-manual-windows-x64 ] required for [ win32-x64 ].',
-        'Available artifacts: aioncore-manual-macos-arm64, aioncore-manual-linux-x64.',
-        'Re-run AionCore Manual Build with platform [ windows-x64 ] or all.',
+        'DreamCore run 27319522909 does not contain artifact [ dreamcore-manual-windows-x64 ] required for [ win32-x64 ].',
+        'Available artifacts: dreamcore-manual-macos-arm64, dreamcore-manual-linux-x64.',
+        'Re-run DreamCore Manual Build with platform [ windows-x64 ] or all.',
       ].join(' ')
     );
   });
 
-  // These cases execute a temporary POSIX shell-script aioncore binary. Windows
+  // These cases execute a temporary POSIX shell-script dreamcore binary. Windows
   // coverage for contract rejection lives in the verifier/local-bundle tests.
   posixFakeToolchainIt('hard fails Actions artifact input when prepared managed resources lack contract', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'aionui-actions-gate-'));
@@ -144,7 +144,7 @@ describe('prepare-aioncore GitHub Actions artifact resolver', () => {
 
     try {
       expect(() =>
-        prepareAioncore({
+        prepareDreamcore({
           projectRoot: join(tmp, 'project'),
           platform: 'linux',
           arch: 'x64',
@@ -166,7 +166,7 @@ describe('prepare-aioncore GitHub Actions artifact resolver', () => {
 
     try {
       expect(() =>
-        prepareAioncore({
+        prepareDreamcore({
           projectRoot: join(tmp, 'project'),
           platform: 'linux',
           arch: 'x64',
@@ -191,7 +191,7 @@ describe('prepare-aioncore GitHub Actions artifact resolver', () => {
 
     try {
       expect(() =>
-        prepareAioncore({
+        prepareDreamcore({
           projectRoot: join(tmp, 'project'),
           platform: 'linux',
           arch: 'x64',

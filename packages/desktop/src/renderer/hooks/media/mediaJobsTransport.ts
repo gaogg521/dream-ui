@@ -9,7 +9,7 @@
  *
  * The store lives in the Electron main process. The desktop renderer reaches it
  * over the Electron IPC bridge; a browser has no such bridge — its bridge
- * adapter is a WebSocket to aioncore, which has no `media.jobs.*` channel at
+ * adapter is a WebSocket to dreamcore, which has no `media.jobs.*` channel at
  * all. So in the WebUI `listJobs` resolved to nothing and `jobUpdated` never
  * fired: no cards, for any conversation, ever. That looked like "the images are
  * broken" but nothing had got as far as an image.

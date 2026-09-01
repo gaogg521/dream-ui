@@ -113,34 +113,34 @@ export function getInstallationIntegrityDiagnosticsSentText(
 
 function buildInstallationIntegrityTags(diagnostics: InstallationIntegrityDiagnostics): FeedbackEventTags {
   const tags: FeedbackEventTags = {
-    'aionui.installation_integrity.user_report': 'true',
-    'aionui.installation_integrity.report_source': diagnostics.source,
+    'dream.installation_integrity.user_report': 'true',
+    'dream.installation_integrity.report_source': diagnostics.source,
   };
 
   if (diagnostics.runtime?.failureKind) {
-    tags['aionui.installation_integrity.failure_kind'] = diagnostics.runtime.failureKind;
+    tags['dream.installation_integrity.failure_kind'] = diagnostics.runtime.failureKind;
   }
   if (diagnostics.runtime?.resource) {
-    tags['aionui.runtime_resource'] = diagnostics.runtime.resource;
+    tags['dream.runtime_resource'] = diagnostics.runtime.resource;
   }
   if (diagnostics.runtime?.resourceId) {
-    tags['aionui.runtime_resource_id'] = diagnostics.runtime.resourceId;
+    tags['dream.runtime_resource_id'] = diagnostics.runtime.resourceId;
   }
   if (diagnostics.runtime?.scopeKind) {
-    tags['aionui.runtime_scope'] = diagnostics.runtime.scopeKind;
+    tags['dream.runtime_scope'] = diagnostics.runtime.scopeKind;
   }
 
   const reason = diagnostics.backendStartupFailure?.reason;
   if (typeof reason === 'string') {
-    tags['aionui.backend_startup_failure.reason'] = reason;
+    tags['dream.backend_startup_failure.reason'] = reason;
   }
   const backendBoundaryCode = diagnostics.backendStartupFailure?.backendBoundaryCode;
   if (typeof backendBoundaryCode === 'string') {
-    tags['aionui.backend_startup_failure.backend_boundary_code'] = backendBoundaryCode;
+    tags['dream.backend_startup_failure.backend_boundary_code'] = backendBoundaryCode;
   }
   const backendBoundaryStage = diagnostics.backendStartupFailure?.backendBoundaryStage;
   if (typeof backendBoundaryStage === 'string') {
-    tags['aionui.backend_startup_failure.backend_boundary_stage'] = backendBoundaryStage;
+    tags['dream.backend_startup_failure.backend_boundary_stage'] = backendBoundaryStage;
   }
 
   return tags;

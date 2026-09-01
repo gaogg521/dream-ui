@@ -20,7 +20,7 @@ import {
 
 const DEFAULT_USER_ID = 'system_default_user';
 
-/** Tables present in the 1one catalog that have no aioncore counterpart. */
+/** Tables present in the 1one catalog that have no dreamcore counterpart. */
 export const ONE_SKIPPED_TABLES = [
   'tasks',
   'team_memberships',
@@ -40,13 +40,13 @@ export type OneDbImportResult = {
 };
 
 /**
- * 1one stored a few things differently from the aioncore baseline:
+ * 1one stored a few things differently from the dreamcore baseline:
  * - `pinned` / `pinnedAt` lived inside `conversations.extra` (no columns) —
  *   promoted to the real columns at INSERT time, stripped here.
  * - `enabledSkills` / `excludeBuiltinSkills` are camelCase; the backend's
  *   legacy-alias path reads `enabled_skills` / `exclude_builtin_skills`.
  * All statements are key-guarded and idempotent, mirroring the style of
- * aioncore migration 002.
+ * dreamcore migration 002.
  */
 const ONE_EXTRA_NORMALIZE_SQL = `
 UPDATE conversations SET extra = json_remove(extra, '$.pinned', '$.pinnedAt')
@@ -64,7 +64,7 @@ WHERE json_extract(extra, '$.excludeBuiltinSkills') IS NOT NULL
 `;
 
 /**
- * Verbatim copy of aioncore migration 002 Parts A/B/C (data normalization).
+ * Verbatim copy of dreamcore migration 002 Parts A/B/C (data normalization).
  * The backend runs 002 exactly once per database, so rows imported after that
  * point must be normalized here. Every statement is conditional / idempotent,
  * so re-running over already-normalized rows is a no-op. Part D (table

@@ -3,21 +3,21 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const { prepareAioncore } = require('../../../packages/shared-scripts/src/prepare-aioncore');
+const { prepareDreamcore } = require('../../../packages/shared-scripts/src/prepare-dreamcore');
 
-describe('prepare-aioncore local bundle input', () => {
+describe('prepare-dreamcore local bundle input', () => {
   it('hard fails local bundle input that lacks managed-resources manifest', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'aionui-local-bundle-'));
     const projectRoot = join(tmp, 'project');
     const localBundle = join(tmp, 'bundle');
     mkdirSync(join(localBundle, 'managed-resources'), { recursive: true });
-    writeFileSync(join(localBundle, 'aioncore.exe'), '');
+    writeFileSync(join(localBundle, 'dreamcore.exe'), '');
 
     const previous = process.env.DREAM_BACKEND_LOCAL_BUNDLE_DIR;
     process.env.DREAM_BACKEND_LOCAL_BUNDLE_DIR = localBundle;
     try {
       expect(() =>
-        prepareAioncore({
+        prepareDreamcore({
           projectRoot,
           platform: 'win32',
           arch: 'x64',

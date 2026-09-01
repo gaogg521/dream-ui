@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { AionrsModelSelection } from './useDreamEngineModelSelection';
+import type { DreamEngineModelSelection } from './useDreamEngineModelSelection';
 import type { AcpConfigSetStatus, AcpDerivedOption } from '@/renderer/hooks/agent/useAcpConfigOptions';
 import {
   composeRuntimeSelectorLabel,
@@ -32,7 +32,7 @@ import classNames from 'classnames';
 const compositeId = (providerId: string, modelName: string) => `${providerId}::${modelName}`;
 
 const DreamEngineModelSelector: React.FC<{
-  selection?: AionrsModelSelection;
+  selection?: DreamEngineModelSelection;
   disabled?: boolean;
   thoughtLevel?: AcpDerivedOption | null;
   /** Kept for call-site compatibility; the two-level submenu no longer gates on set status here. */
@@ -239,7 +239,7 @@ const DreamEngineModelSelector: React.FC<{
       }
     >
       <Button
-        data-testid='aionrs-model-selector'
+        data-testid='dream-engine-model-selector'
         className={classNames(
           'sendbox-model-btn header-model-btn',
           compact && '!max-w-[120px]',

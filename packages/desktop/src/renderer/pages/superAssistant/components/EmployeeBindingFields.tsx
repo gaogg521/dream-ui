@@ -18,7 +18,7 @@ import { Button, Form, Message, Select } from '@arco-design/web-react';
 import { Down, Robot } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { resolveLocaleKey } from '@/common/utils';
-import { isAionrsAssistant } from '@/common/types/agent/assistantTypes';
+import { isDreamEngineAssistant } from '@/common/types/agent/assistantTypes';
 import { resolveAssistantAvatar } from '@renderer/utils/model/assistantAvatar';
 import GuidModelSelector from '@renderer/pages/guid/components/GuidModelSelector';
 import TeamAssistantPickerDropdown from '@renderer/pages/team/components/memberPicker/TeamAssistantPickerDropdown';
@@ -48,7 +48,7 @@ const EmployeeBindingFields: React.FC<EmployeeBindingFieldsProps> = ({ binding }
     backendOptions,
     selectedBackendAgentId,
     setBackendAgentId,
-    hasAionrsProvider,
+    hasDreamEngineProvider,
     showModelSelector,
     modelSelectorProps,
   } = binding;
@@ -69,7 +69,7 @@ const EmployeeBindingFields: React.FC<EmployeeBindingFieldsProps> = ({ binding }
       }
       // An dream expert cannot run without a model provider — block the row
       // with an explanation instead of letting the run fail later.
-      if (isAionrsAssistant(assistant) && !hasAionrsProvider) {
+      if (isDreamEngineAssistant(assistant) && !hasDreamEngineProvider) {
         return {
           ...option,
           team_selectable: false,
@@ -90,7 +90,7 @@ const EmployeeBindingFields: React.FC<EmployeeBindingFieldsProps> = ({ binding }
       .map(marketplacePersonaToOption);
 
     return [noExpert, ...installed, ...fromMarketplace];
-  }, [assistants, marketplacePersonas, localeKey, hasAionrsProvider, t]);
+  }, [assistants, marketplacePersonas, localeKey, hasDreamEngineProvider, t]);
 
   const handleSelect = (option: TeamAssistantOption) => {
     selectAssistant(option.id);

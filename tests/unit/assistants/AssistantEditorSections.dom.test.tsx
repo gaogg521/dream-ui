@@ -470,7 +470,7 @@ describe('AssistantEditorSections', () => {
             availableBackends: [
               {
                 id: 'agent-aionrs',
-                name: 'Aionrs',
+                name: 'DreamEngine',
                 runtimeKey: 'dream',
                 isExtension: false,
                 modelOptions: [{ value: 'handshake-model', label: 'Handshake Model' }],

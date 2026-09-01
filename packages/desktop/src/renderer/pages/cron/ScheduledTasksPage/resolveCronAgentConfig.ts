@@ -5,10 +5,10 @@
  */
 
 import type { ICronAgentConfigWrite } from '@/common/adapter/ipcBridge';
-import { isAionrsAssistant, type Assistant } from '@/common/types/agent/assistantTypes';
+import { isDreamEngineAssistant, type Assistant } from '@/common/types/agent/assistantTypes';
 import { resolveAssistantName } from '@renderer/utils/model/assistantDisplay';
 
-type SelectedAionrsProvider = {
+type SelectedDreamEngineProvider = {
   id?: string;
   name?: string;
 };
@@ -16,13 +16,13 @@ type SelectedAionrsProvider = {
 type ResolveCronAgentConfigInput = {
   agentValue: string;
   presetAssistants: Assistant[];
-  selectedAionrsProvider?: SelectedAionrsProvider;
+  selectedDreamEngineProvider?: SelectedDreamEngineProvider;
   model_id?: string;
   config_options?: Record<string, string>;
   workspace?: string;
   localeKey?: string;
   getMode: (assistant: Assistant) => string | undefined;
-  aionrsModelRequiredMessage: string;
+  dreamEngineModelRequiredMessage: string;
 };
 
 type ResolveCronAgentConfigResult = {
@@ -33,13 +33,13 @@ export function resolveCronAgentConfig(input: ResolveCronAgentConfigInput): Reso
   const {
     agentValue,
     presetAssistants,
-    selectedAionrsProvider,
+    selectedDreamEngineProvider,
     model_id,
     config_options,
     workspace,
     localeKey = 'en-US',
     getMode,
-    aionrsModelRequiredMessage,
+    dreamEngineModelRequiredMessage,
   } = input;
 
   const colonIdx = agentValue.indexOf(':');
@@ -55,9 +55,9 @@ export function resolveCronAgentConfig(input: ResolveCronAgentConfigInput): Reso
   const assistantName = resolveAssistantName(assistant, localeKey, assistant.name);
   const mode = getMode(assistant);
 
-  if (isAionrsAssistant(assistant)) {
-    if (!selectedAionrsProvider?.id || !model_id) {
-      throw new Error(aionrsModelRequiredMessage);
+  if (isDreamEngineAssistant(assistant)) {
+    if (!selectedDreamEngineProvider?.id || !model_id) {
+      throw new Error(dreamEngineModelRequiredMessage);
     }
     agent_config = {
       name: assistantName,
@@ -65,7 +65,7 @@ export function resolveCronAgentConfig(input: ResolveCronAgentConfigInput): Reso
       mode,
       model_id,
       model: {
-        provider_id: selectedAionrsProvider.id,
+        provider_id: selectedDreamEngineProvider.id,
         model: model_id,
         use_model: model_id,
       },

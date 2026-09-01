@@ -11,7 +11,7 @@
  * per asset — that line is a deliberate agent-facing contract (existing prompts
  * and habits depend on it), which makes it a stable thing for the renderer to
  * key off as well. Rendering keys off this instead of a structured message
- * field because media deliberately never became part of the aioncore message
+ * field because media deliberately never became part of the dreamcore message
  * schema (design doc §8 Q4); the text carries the paths, the renderer layers a
  * richer view on top.
  *

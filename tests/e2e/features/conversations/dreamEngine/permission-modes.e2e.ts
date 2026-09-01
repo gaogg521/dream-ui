@@ -17,26 +17,26 @@
 
 import { test, expect } from '../../../fixtures';
 import {
-  resolveAionrsPreconditions,
-  cleanupE2EAionrsConversations,
-  createAionrsConversationViaBridge,
-  sendAionrsMessage,
-  waitForAionrsReply,
-  getAionrsConversationDB,
-  getAionrsMessages,
+  resolveDreamEnginePreconditions,
+  cleanupE2EDreamEngineConversations,
+  createDreamEngineConversationViaBridge,
+  sendDreamEngineMessage,
+  waitForDreamEngineReply,
+  getDreamEngineConversationDB,
+  getDreamEngineMessages,
   createTempWorkspace,
-  selectAionrsAgent,
-  type AionrsTestModels,
+  selectDreamEngineAgent,
+  type DreamEngineTestModels,
 } from '../../../helpers';
 import { takeScreenshot } from '../../../helpers/screenshots';
 
-test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
+test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
   test.setTimeout(120000); // 2 minutes
 
-  let preconditions: { binary: string | null; models: AionrsTestModels | null };
+  let preconditions: { binary: string | null; models: DreamEngineTestModels | null };
 
   test.beforeAll(async ({ page }) => {
-    preconditions = await resolveAionrsPreconditions(page);
+    preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
       test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
     }
@@ -48,7 +48,7 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
       await page.keyboard.press('Escape');
     }
 
-    await cleanupE2EAionrsConversations(page);
+    await cleanupE2EDreamEngineConversations(page);
 
     await page.evaluate(() => {
       const keysToRemove: string[] = [];
@@ -68,7 +68,7 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
 
   test('TC-A-05: should use yolo permission selected on guid page', async ({ page }) => {
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-mode-yolo`;
+    const conversationName = `E2E-dream-engine-${timestamp}-mode-yolo`;
     const tempWorkspace = createTempWorkspace(`tc-a-05-${timestamp}`);
 
     try {
@@ -80,10 +80,10 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-05/01-guid-page.png`);
 
       // Step 2: Select dream agent
-      await selectAionrsAgent(page);
+      await selectDreamEngineAgent(page);
 
       // Step 3: Select yolo mode
-      const modeSelector = page.locator('[data-testid="agent-mode-selector-aionrs"]');
+      const modeSelector = page.locator('[data-testid="agent-mode-selector-dream-engine"]');
       await expect(modeSelector).toBeVisible({ timeout: 10000 });
       await modeSelector.click();
       await page.waitForTimeout(500);
@@ -92,7 +92,7 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-05/02-mode-selector-open.png`);
 
       // Select yolo option
-      const yoloOption = page.locator('[data-testid="aionrs-mode-option-yolo"]');
+      const yoloOption = page.locator('[data-testid="dream-engine-mode-option-yolo"]');
       await expect(yoloOption).toBeVisible();
       await yoloOption.click();
       await page.waitForTimeout(500);
@@ -116,7 +116,7 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
       const conversationId = match![1];
 
       // Step 6: Wait for AI reply
-      await waitForAionrsReply(page, conversationId);
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 04: reply completed
       await takeScreenshot(page, `chat-aionrs/tc-a-05/04-reply-completed.png`);
@@ -126,7 +126,7 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
       // ============================================================================
 
       // 1. Verify conversation created with yolo mode
-      const conversation = await getAionrsConversationDB(page, conversationId);
+      const conversation = await getDreamEngineConversationDB(page, conversationId);
       expect(conversation).toBeDefined();
 
       // 2. Verify mode from conversation.extra.sessionMode (dream doesn't use ACP bridge)
@@ -135,7 +135,7 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
       expect(extra.sessionMode).toBe('yolo');
 
       // 3. Verify messages exist
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
       expect(messages.length).toBeGreaterThanOrEqual(2);
 
       const aiMessages = messages.filter((m) => m.position === 'left');
@@ -152,12 +152,12 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
 
   test('TC-A-06: should switch permission mid-conversation and persist to DB', async ({ page }) => {
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-switch-mode`;
+    const conversationName = `E2E-dream-engine-${timestamp}-switch-mode`;
     const tempWorkspace = createTempWorkspace(`tc-a-06-${timestamp}`);
 
     try {
       // Step 1: Create conversation via bridge with default mode
-      const conversationId = await createAionrsConversationViaBridge(page, {
+      const conversationId = await createDreamEngineConversationViaBridge(page, {
         name: conversationName,
         workspace: tempWorkspace.path,
         provider: preconditions.models!.modelA,
@@ -168,10 +168,10 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-06/01-conversation-created.png`);
 
       // Step 2: Send first message
-      await sendAionrsMessage(page, conversationId, 'Hello, please respond.');
+      await sendDreamEngineMessage(page, conversationId, 'Hello, please respond.');
 
       // Step 3: Wait for first AI reply
-      await waitForAionrsReply(page, conversationId);
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 02: first reply completed
       await takeScreenshot(page, `chat-aionrs/tc-a-06/02-first-reply.png`);
@@ -181,7 +181,7 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
       await page.waitForLoadState('networkidle');
 
       // Step 5: Switch to yolo mode
-      const modeSelector = page.locator('[data-testid="agent-mode-selector-aionrs"]');
+      const modeSelector = page.locator('[data-testid="agent-mode-selector-dream-engine"]');
       await expect(modeSelector).toBeVisible({ timeout: 10000 });
       await modeSelector.click();
       await page.waitForTimeout(500);
@@ -189,7 +189,7 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
       // Screenshot 03: mode selector open
       await takeScreenshot(page, `chat-aionrs/tc-a-06/03-mode-selector-open.png`);
 
-      const yoloOption = page.locator('[data-testid="aionrs-mode-option-yolo"]');
+      const yoloOption = page.locator('[data-testid="dream-engine-mode-option-yolo"]');
       await expect(yoloOption).toBeVisible();
       await yoloOption.click();
       await page.waitForTimeout(1000);
@@ -198,10 +198,10 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-06/04-mode-switched.png`);
 
       // Step 6: Send second message
-      await sendAionrsMessage(page, conversationId, 'What mode are we using now?');
+      await sendDreamEngineMessage(page, conversationId, 'What mode are we using now?');
 
       // Step 7: Wait for second AI reply
-      await waitForAionrsReply(page, conversationId);
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 05: second reply completed
       await takeScreenshot(page, `chat-aionrs/tc-a-06/05-second-reply.png`);
@@ -211,13 +211,13 @@ test.describe('Aionrs Chat - Permission Modes (P0 + P1)', () => {
       // ============================================================================
 
       // 1. Verify mode switched to yolo
-      const conversation = await getAionrsConversationDB(page, conversationId);
+      const conversation = await getDreamEngineConversationDB(page, conversationId);
       const extra =
         typeof conversation.extra === 'string' ? JSON.parse(conversation.extra || '{}') : conversation.extra || {};
       expect(extra.sessionMode).toBe('yolo');
 
       // 2. Verify message count (at least 4: user1, ai1, user2, ai2)
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
       expect(messages.length).toBeGreaterThanOrEqual(4);
 
       // 3. Verify both AI replies exist

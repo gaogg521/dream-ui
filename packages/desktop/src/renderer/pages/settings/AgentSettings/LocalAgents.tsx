@@ -135,10 +135,10 @@ const LocalAgents: React.FC = () => {
   const sortedOfficialAgents = useMemo(
     () =>
       officialAgents.toSorted((left, right) => {
-        const leftIsAionrs = left.agent_type === 'dream' || left.backend === 'dream';
-        const rightIsAionrs = right.agent_type === 'dream' || right.backend === 'dream';
-        if (leftIsAionrs !== rightIsAionrs) {
-          return leftIsAionrs ? -1 : 1;
+        const leftIsDreamEngine = left.agent_type === 'dream' || left.backend === 'dream';
+        const rightIsDreamEngine = right.agent_type === 'dream' || right.backend === 'dream';
+        if (leftIsDreamEngine !== rightIsDreamEngine) {
+          return leftIsDreamEngine ? -1 : 1;
         }
         // Strategic partner: pin Kimi right after the builtin dream agent.
         const leftIsKimi = left.backend === 'kimi';

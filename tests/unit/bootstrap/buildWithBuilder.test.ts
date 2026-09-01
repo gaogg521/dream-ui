@@ -144,7 +144,7 @@ childProcess.execSync = function mockedExecSync(command) {
     expect(queryScript).toContain("'installer-self-lock'");
     expect(queryScript).toContain('outerInstallerPid');
     expect(queryScript).toContain('currentOutDir');
-    expect(queryScript).toContain("name = 'One Work installer'");
+    expect(queryScript).toContain("name = 'onework installer'");
   });
 
   it('continues with the bundled uninstaller when installed-uninstaller repair remains locked', () => {
@@ -268,7 +268,7 @@ childProcess.execSync = function mockedExecSync(command) {
       args: ['auto', '--mac', '--x64'],
       expectedArch: 'x64',
     },
-  ])('prepares bundled AionCore for $expectedArch with args $args', ({ args, expectedArch }) => {
+  ])('prepares bundled DreamCore for $expectedArch with args $args', ({ args, expectedArch }) => {
     const tempDir = mkdtempSync(join(tmpdir(), 'aionui-build-test-'));
     const hookPath = join(tempDir, 'hook.cjs');
     const callsPath = join(tempDir, 'prepare-calls.json');
@@ -290,20 +290,20 @@ function recordPrepareCall(options) {
   const calls = fs.existsSync(callsPath) ? JSON.parse(fs.readFileSync(callsPath, 'utf8')) : [];
   calls.push(options ?? null);
   fs.writeFileSync(callsPath, JSON.stringify(calls));
-  return { prepared: true, dir: 'mock-bundled-aioncore', sourceType: 'mock' };
+  return { prepared: true, dir: 'mock-bundled-dreamcore', sourceType: 'mock' };
 }
 
 Module._load = function patchedLoad(request, parent, isMain) {
-  if (request === './prepareAioncore' || request.endsWith('/prepareAioncore')) {
+  if (request === './prepareDreamcore' || request.endsWith('/prepareDreamcore')) {
     return recordPrepareCall;
   }
 
-  if (request.endsWith('packages/shared-scripts/src/prepare-aioncore.js')) {
-    return { prepareAioncore: recordPrepareCall };
+  if (request.endsWith('packages/shared-scripts/src/prepare-dreamcore.js')) {
+    return { prepareDreamcore: recordPrepareCall };
   }
 
-  if (request === './resolveAioncoreVersion.js' || request.endsWith('/resolveAioncoreVersion.js')) {
-    return { resolveAioncoreVersion: () => 'v-test' };
+  if (request === './resolveDreamcoreVersion.js' || request.endsWith('/resolveDreamcoreVersion.js')) {
+    return { resolveDreamcoreVersion: () => 'v-test' };
   }
 
   return originalLoad.call(this, request, parent, isMain);
@@ -362,9 +362,9 @@ childProcess.execSync = function mockedExecSync(command) {
 
       if (args.includes('--win')) {
         const installUtil = readFileSync(resolveAppBuilderInstallUtil(), 'utf8');
-        expect(installUtil).toContain('AionUi-bundled-uninstaller override source');
-        expect(installUtil).toContain('$PLUGINSDIR\\AionUi-fixed-uninstaller.exe');
-        expect(installUtil.match(/AionUi-bundled-uninstaller override source/g)).toHaveLength(1);
+        expect(installUtil).toContain('onework-bundled-uninstaller override source');
+        expect(installUtil).toContain('$PLUGINSDIR\\OneWork-fixed-uninstaller.exe');
+        expect(installUtil.match(/onework-bundled-uninstaller override source/g)).toHaveLength(1);
       }
 
       const calls = JSON.parse(readFileSync(callsPath, 'utf8')) as Array<{ arch?: string } | null>;

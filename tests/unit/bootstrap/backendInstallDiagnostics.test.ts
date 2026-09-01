@@ -6,9 +6,9 @@ describe('collectBackendInstallDiagnostics', () => {
   it('records packaged runtime manifest and missing backend binary metadata', () => {
     const files = new Map<string, { mtimeMs: number; size: number; content?: string }>([
       ['C:\\AionUi\\resources', { mtimeMs: 1000, size: 0 }],
-      ['C:\\AionUi\\resources\\bundled-aioncore\\win32-x64', { mtimeMs: 2000, size: 0 }],
+      ['C:\\AionUi\\resources\\bundled-dreamcore\\win32-x64', { mtimeMs: 2000, size: 0 }],
       [
-        'C:\\AionUi\\resources\\bundled-aioncore\\win32-x64\\manifest.json',
+        'C:\\AionUi\\resources\\bundled-dreamcore\\win32-x64\\manifest.json',
         {
           mtimeMs: 3000,
           size: 88,
@@ -16,7 +16,7 @@ describe('collectBackendInstallDiagnostics', () => {
             version: 'v0.9.0',
             generatedAt: '2026-05-29T12:00:00.000Z',
             sourceType: 'download',
-            files: ['aioncore.exe', 'managed-resources/'],
+            files: ['dreamcore.exe', 'managed-resources/'],
           }),
         },
       ],
@@ -25,9 +25,9 @@ describe('collectBackendInstallDiagnostics', () => {
     const diagnostics = collectBackendInstallDiagnostics(
       {
         runtimeKey: 'win32-x64',
-        binaryName: 'aioncore.exe',
+        binaryName: 'dreamcore.exe',
         resourcesPath: 'C:\\AionUi\\resources',
-        checkedBundledPath: 'C:\\AionUi\\resources\\bundled-aioncore\\win32-x64\\aioncore.exe',
+        checkedBundledPath: 'C:\\AionUi\\resources\\bundled-dreamcore\\win32-x64\\dreamcore.exe',
       },
       {
         appVersion: '2.1.7',
@@ -44,15 +44,16 @@ describe('collectBackendInstallDiagnostics', () => {
       appVersion: '2.1.7',
       arch: 'x64',
       binaryExists: false,
-      binaryName: 'aioncore.exe',
-      binaryPath: 'C:\\AionUi\\resources\\bundled-aioncore\\win32-x64\\aioncore.exe',
-      bundledDirPath: 'C:\\AionUi\\resources\\bundled-aioncore',
+      binaryName: 'dreamcore.exe',
+      binaryPath: 'C:\\AionUi\\resources\\bundled-dreamcore\\win32-x64\\dreamcore.exe',
+      bundledDirPath: 'C:\\AionUi\\resources\\bundled-dreamcore',
+      legacyBundledDirPath: 'C:\\AionUi\\resources\\bundled-aioncore',
       execPath: 'C:\\AionUi\\AionUi.exe',
       isPackaged: true,
       manifestExists: true,
-      manifestFiles: ['aioncore.exe', 'managed-resources/'],
+      manifestFiles: ['dreamcore.exe', 'managed-resources/'],
       manifestGeneratedAt: '2026-05-29T12:00:00.000Z',
-      manifestPath: 'C:\\AionUi\\resources\\bundled-aioncore\\win32-x64\\manifest.json',
+      manifestPath: 'C:\\AionUi\\resources\\bundled-dreamcore\\win32-x64\\manifest.json',
       manifestSize: 88,
       manifestMtimeMs: 3000,
       manifestSourceType: 'download',
@@ -61,7 +62,7 @@ describe('collectBackendInstallDiagnostics', () => {
       resourcesDirMtimeMs: 1000,
       resourcesPath: 'C:\\AionUi\\resources',
       runtimeDirMtimeMs: 2000,
-      runtimeDirPath: 'C:\\AionUi\\resources\\bundled-aioncore\\win32-x64',
+      runtimeDirPath: 'C:\\AionUi\\resources\\bundled-dreamcore\\win32-x64',
       runtimeKey: 'win32-x64',
     });
   });

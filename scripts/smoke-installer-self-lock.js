@@ -101,16 +101,16 @@ SilentInstall silent
 !include LogicLib.nsh
 !include "${nsisQuote(processControlPath)}"
 
-Var AionUiSessionId
+Var OneWorkSessionId
 Var AionUiIsUpdated
-Var AionUiSessionLogPath
+Var OneWorkSessionLogPath
 Var ResultFile
 
 Section
   StrCpy $INSTDIR "${nsisQuote(installDir)}"
-  StrCpy $AionUiSessionId "selflock"
+  StrCpy $OneWorkSessionId "selflock"
   StrCpy $AionUiIsUpdated "1"
-  StrCpy $AionUiSessionLogPath "${nsisQuote(logPath)}"
+  StrCpy $OneWorkSessionLogPath "${nsisQuote(logPath)}"
   StrCpy $ResultFile "${nsisQuote(resultPath)}"
   InitPluginsDir
   SetOutPath $INSTDIR
@@ -118,7 +118,7 @@ Section
   !insertmacro AIONUI_QUERY_LOCKERS "$INSTDIR" $AionUiLockerResult
   FileOpen $0 "$ResultFile" w
   FileWrite $0 "$AionUiLockerResult"
-  FileWrite $0 "|$AionUiCurrentOutDir|$AionUiSessionLogPath"
+  FileWrite $0 "|$AionUiCurrentOutDir|$OneWorkSessionLogPath"
   FileClose $0
   \${If} $AionUiLockerResult != 0
     SetErrorLevel 10

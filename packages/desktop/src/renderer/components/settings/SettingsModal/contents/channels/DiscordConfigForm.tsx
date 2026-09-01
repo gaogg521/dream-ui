@@ -6,7 +6,7 @@
 
 import type { IChannelPairingRequest, IChannelPluginStatus, IChannelUser } from '@/common/types/channel/channel';
 import { assistants, channel } from '@/common/adapter/ipcBridge';
-import { isAionrsAssistant, type Assistant } from '@/common/types/agent/assistantTypes';
+import { isDreamEngineAssistant, type Assistant } from '@/common/types/agent/assistantTypes';
 import { resolveLocaleKey } from '@/common/utils';
 import { resolveAssistantName } from '@/renderer/utils/model/assistantDisplay';
 import { formatDateTime } from '@/renderer/services/i18n/format';
@@ -306,7 +306,7 @@ const DiscordConfigForm: React.FC<DiscordConfigFormProps> = ({
     return Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000 / 60));
   };
 
-  const showModelSelector = isAionrsAssistant(selectedAssistant);
+  const showModelSelector = isDreamEngineAssistant(selectedAssistant);
   const assistantOptions = availableAssistants;
   const selectedAssistantName = selectedAssistant
     ? resolveAssistantName(selectedAssistant, localeKey, selectedAssistant.name)
@@ -410,7 +410,7 @@ const DiscordConfigForm: React.FC<DiscordConfigFormProps> = ({
                         setSelectedAssistant(assistant);
                         void persistSelectedAssistant(assistant);
 
-                        if (isAionrsAssistant(assistant)) {
+                        if (isDreamEngineAssistant(assistant)) {
                           const providers = modelSelection.providers;
                           const savedProviderExists =
                             modelSelection.current_model?.id &&

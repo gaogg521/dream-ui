@@ -15,22 +15,22 @@ import React from 'react';
  */
 type NativeSelectProps = Omit<SelectProps, 'size'>;
 type NativeSelectSize = NonNullable<SelectProps['size']>;
-type AionSelectSize = NativeSelectSize | 'middle';
+type DreamSelectSize = NativeSelectSize | 'middle';
 
-export interface AionSelectProps extends NativeSelectProps {
+export interface DreamSelectProps extends NativeSelectProps {
   /** 额外的类名 / Additional class name */
   className?: string;
   /** 统一尺寸，新增 middle（32px）/ Unified size with additional "middle" (32px) */
-  size?: AionSelectSize;
+  size?: DreamSelectSize;
 }
 
 /**
  * 基础样式类名
- * 注意：主题相关样式（背景色、边框色）在 arco-override.css 的 .aion-select 类中定义
- * Note: Theme-related styles (background, border colors) are defined in .aion-select class in arco-override.css
+ * 注意：主题相关样式（背景色、边框色）在 arco-override.css 的 .dream-select 类中定义
+ * Note: Theme-related styles (background, border colors) are defined in .dream-select class in arco-override.css
  */
 const BASE_CLASS = classNames(
-  'aion-select',
+  'dream-select',
   '[&_.arco-select-view]:rounded-[4px]',
   '[&_.arco-select-view]:border',
   '[&_.arco-select-view]:border-solid',
@@ -97,20 +97,20 @@ const defaultGetPopupContainer = (): HTMLElement => {
  * </DreamSelect>
  * ```
  *
- * @see arco-override.css for theme-related styles (.aion-select)
+ * @see arco-override.css for theme-related styles (.dream-select)
  */
-const mapSizeToNative = (size?: AionSelectSize): NativeSelectSize | undefined => {
+const mapSizeToNative = (size?: DreamSelectSize): NativeSelectSize | undefined => {
   if (!size) return undefined;
   if (size === 'middle') return 'default';
   return size;
 };
 
-type AionSelectComponent = React.ForwardRefExoticComponent<AionSelectProps & React.RefAttributes<SelectHandle>> & {
+type DreamSelectComponent = React.ForwardRefExoticComponent<DreamSelectProps & React.RefAttributes<SelectHandle>> & {
   Option: typeof Select.Option;
   OptGroup: typeof Select.OptGroup;
 };
 
-const InternalSelect = React.forwardRef<SelectHandle, AionSelectProps>(
+const InternalSelect = React.forwardRef<SelectHandle, DreamSelectProps>(
   ({ className, getPopupContainer, size = 'middle', ...rest }, ref) => {
     const normalizedSize = mapSizeToNative(size);
     return (
@@ -125,7 +125,7 @@ const InternalSelect = React.forwardRef<SelectHandle, AionSelectProps>(
   }
 );
 
-const DreamSelect = InternalSelect as AionSelectComponent;
+const DreamSelect = InternalSelect as DreamSelectComponent;
 
 DreamSelect.displayName = 'DreamSelect';
 

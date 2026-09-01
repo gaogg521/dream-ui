@@ -1,5 +1,5 @@
 /**
- * Records `aioncore` WebSocket notifications inside the renderer so tests can
+ * Records `dreamcore` WebSocket notifications inside the renderer so tests can
  * assert on the backend→frontend signal path.
  *
  * Why this exists as a helper rather than inline in one spec: the renderer is

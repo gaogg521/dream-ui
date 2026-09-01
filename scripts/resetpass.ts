@@ -12,7 +12,7 @@
  *   1. A `bun run webui` is already running on the default port → reach its
  *      reverse-proxied /api/webui/reset-password directly. Users don't have to
  *      stop the server first; the just-reset password can be used immediately.
- *   2. No webui running → spawn a short-lived aioncore against the same
+ *   2. No webui running → spawn a short-lived dreamcore against the same
  *      data-dir, POST /api/webui/reset-password, and stop the backend. This is
  *      the offline / cold-start path.
  *
@@ -30,7 +30,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { startBackend, stopBackend } from '@dream/web-host';
 
-const BACKEND_BINARY = process.platform === 'win32' ? 'aioncore.exe' : 'aioncore';
+const BACKEND_BINARY = process.platform === 'win32' ? 'dreamcore.exe' : 'dreamcore';
 
 const __filename = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(__filename), '..');
@@ -74,7 +74,12 @@ function resolveWorkDir(): string {
   }
   const suffix =
     process.env.NODE_ENV === 'production' ? '' : process.env.DREAM_MULTI_INSTANCE === '1' ? '-dev-2' : '-dev';
-  const dir = path.join(os.homedir(), `.aionui-web${suffix}`);
+  const current = path.join(os.homedir(), `.dream-web${suffix}`);
+  if (fs.existsSync(current)) return current;
+  // Installs created before the rebrand keep their on-disk data dir.
+  const legacy = path.join(os.homedir(), `.aionui-web${suffix}`);
+  if (fs.existsSync(legacy)) return legacy;
+  const dir = current;
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -82,7 +87,7 @@ function resolveWorkDir(): string {
 function resolveBackendBinary(): string {
   if (process.env.DREAM_BACKEND_BIN) return process.env.DREAM_BACKEND_BIN;
 
-  const bundledBase = process.env.DREAM_BACKEND_BUNDLED_DIR ?? path.join(repoRoot, 'resources', 'bundled-aioncore');
+  const bundledBase = process.env.DREAM_BACKEND_BUNDLED_DIR ?? path.join(repoRoot, 'resources', 'bundled-dreamcore');
   const runtimeKey = `${process.platform}-${process.arch}`;
   const bundled = path.join(bundledBase, runtimeKey, BACKEND_BINARY);
   if (fs.existsSync(bundled)) return bundled;

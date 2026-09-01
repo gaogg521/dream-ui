@@ -81,8 +81,8 @@ export type UseEmployeeAgentBindingResult = {
   selectedBackendAgentId?: string;
   setBackendAgentId: (agentId: string) => void;
   resolvedBackend: string;
-  isAionrsBackend: boolean;
-  hasAionrsProvider: boolean;
+  isDreamEngineBackend: boolean;
+  hasDreamEngineProvider: boolean;
 
   showModelSelector: boolean;
   /** Spread straight into `GuidModelSelector`. */
@@ -155,8 +155,8 @@ export const useEmployeeAgentBinding = (initial?: EmployeeBindingInitial): UseEm
 
   const resolvedBackend =
     selectedCatalogAgent?.backend || selectedCatalogAgent?.agent_type || assistantRuntimeKey(selectedAssistant);
-  const isAionrsBackend = resolvedBackend === AIONRS_BACKEND;
-  const isGeminiMode = isAionrsBackend || resolvedBackend === GEMINI_BACKEND;
+  const isDreamEngineBackend = resolvedBackend === AIONRS_BACKEND;
+  const isGeminiMode = isDreamEngineBackend || resolvedBackend === GEMINI_BACKEND;
 
   const backendOptions = useMemo<BackendOption[]>(
     () =>
@@ -172,18 +172,18 @@ export const useEmployeeAgentBinding = (initial?: EmployeeBindingInitial): UseEm
     [managedAgentRuntimeCatalog]
   );
 
-  const aionrsProviders = useMemo(
+  const dreamEngineProviders = useMemo(
     () => providers.filter((p) => !p.platform?.toLowerCase().includes(GOOGLE_AUTH_PLATFORM)),
     [providers]
   );
-  const hasAionrsProvider = aionrsProviders.length > 0;
+  const hasDreamEngineProvider = dreamEngineProviders.length > 0;
   const filteredProviders = useMemo(
-    () => (isAionrsBackend ? aionrsProviders : providers),
-    [isAionrsBackend, providers, aionrsProviders]
+    () => (isDreamEngineBackend ? dreamEngineProviders : providers),
+    [isDreamEngineBackend, providers, dreamEngineProviders]
   );
 
   const currentProviderModel = useMemo<TProviderWithModel | undefined>(() => {
-    if (!isAionrsBackend || !modelId) return undefined;
+    if (!isDreamEngineBackend || !modelId) return undefined;
     const preferredProviderId = initialProviderIdRef.current;
     if (preferredProviderId) {
       const byId = filteredProviders.find((p) => p.id === preferredProviderId);
@@ -197,7 +197,7 @@ export const useEmployeeAgentBinding = (initial?: EmployeeBindingInitial): UseEm
       }
     }
     return undefined;
-  }, [isAionrsBackend, modelId, filteredProviders, getAvailableModels]);
+  }, [isDreamEngineBackend, modelId, filteredProviders, getAvailableModels]);
 
   // Prefer the selected backend's own runtime catalog entry: with a manual
   // backend override the persona's model list would describe the wrong agent.
@@ -209,8 +209,8 @@ export const useEmployeeAgentBinding = (initial?: EmployeeBindingInitial): UseEm
   // Auto-pick the first enabled provider model when dream has none yet. Source
   // of truth is the provider list, not any cached frontend default.
   useEffect(() => {
-    if (!isAionrsBackend || modelId) return;
-    for (const provider of aionrsProviders) {
+    if (!isDreamEngineBackend || modelId) return;
+    for (const provider of dreamEngineProviders) {
       const models = getAvailableModels(provider);
       if (models.length > 0) {
         initialProviderIdRef.current = provider.id;
@@ -218,7 +218,7 @@ export const useEmployeeAgentBinding = (initial?: EmployeeBindingInitial): UseEm
         return;
       }
     }
-  }, [isAionrsBackend, modelId, aionrsProviders, getAvailableModels]);
+  }, [isDreamEngineBackend, modelId, dreamEngineProviders, getAvailableModels]);
 
   const selectAssistant = useCallback((assistantId: string) => {
     // The explicit "no expert" choice clears the persona; the backend field then
@@ -291,7 +291,7 @@ export const useEmployeeAgentBinding = (initial?: EmployeeBindingInitial): UseEm
       modelId,
     };
 
-    if (isAionrsBackend) {
+    if (isDreamEngineBackend) {
       if (!currentProviderModel?.id || !modelId) return undefined;
       return {
         ...base,
@@ -299,7 +299,7 @@ export const useEmployeeAgentBinding = (initial?: EmployeeBindingInitial): UseEm
       };
     }
     return base;
-  }, [selectedAssistant, resolvedBackend, selectedBackendAgentId, isAionrsBackend, currentProviderModel, modelId]);
+  }, [selectedAssistant, resolvedBackend, selectedBackendAgentId, isDreamEngineBackend, currentProviderModel, modelId]);
 
   const reset = useCallback((next?: EmployeeBindingInitial) => {
     backendOverriddenRef.current = Boolean(next?.agentIdOverride);
@@ -324,8 +324,8 @@ export const useEmployeeAgentBinding = (initial?: EmployeeBindingInitial): UseEm
     selectedBackendAgentId,
     setBackendAgentId,
     resolvedBackend,
-    isAionrsBackend,
-    hasAionrsProvider,
+    isDreamEngineBackend,
+    hasDreamEngineProvider,
 
     showModelSelector: Boolean(resolvedBackend && (isGeminiMode || acpCachedModelInfo)),
     modelSelectorProps: {

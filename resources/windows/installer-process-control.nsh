@@ -12,7 +12,7 @@ Var /GLOBAL AionUiCurrentOutDir
 !macro AIONUI_FIND_APP_PROCESS _RETURN
   nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& { \
     $$ErrorActionPreference = 'SilentlyContinue'; \
-    $$log = '$AionUiSessionLogPath'; \
+    $$log = '$OneWorkSessionLogPath'; \
     if (-not $$log) { $$log = Join-Path $$env:TEMP '${AIONUI_FALLBACK_LOG}' }; \
     $$instDir = [System.IO.Path]::GetFullPath('$INSTDIR'); \
     $$ownedPrefix = $$instDir.TrimEnd('\') + '\'; \
@@ -26,9 +26,9 @@ Var /GLOBAL AionUiCurrentOutDir
       return $$proc.ProcessId -ne $$installerPid -and $$full.StartsWith($$ownedPrefix, [System.StringComparison]::CurrentCultureIgnoreCase) \
     } \
     $$hits = @(Get-CimInstance -ClassName Win32_Process | Where-Object { Test-AionUiOwnedProcess $$_ }); \
-    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-find'; ownedPrefix = $$ownedPrefix; installerPid = $$installerPid; hits = $$hits.Count; owned = ($$hits.Count -gt 0) }; \
+    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-find'; ownedPrefix = $$ownedPrefix; installerPid = $$installerPid; hits = $$hits.Count; owned = ($$hits.Count -gt 0) }; \
     Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$payload | ConvertTo-Json -Compress -Depth 8); \
-    if ($$hits.Count -gt 0) { $$hitPayload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-find-hits'; processes = @($$hits | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,Path,CommandLine) }; Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$hitPayload | ConvertTo-Json -Compress -Depth 10); exit 0 } \
+    if ($$hits.Count -gt 0) { $$hitPayload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-find-hits'; processes = @($$hits | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,Path,CommandLine) }; Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$hitPayload | ConvertTo-Json -Compress -Depth 10); exit 0 } \
     exit 1 \
   }"`
   Pop ${_RETURN}
@@ -37,7 +37,7 @@ Var /GLOBAL AionUiCurrentOutDir
 !macro AIONUI_STOP_APP_PROCESSES
   nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& { \
     $$ErrorActionPreference = 'SilentlyContinue'; \
-    $$log = '$AionUiSessionLogPath'; \
+    $$log = '$OneWorkSessionLogPath'; \
     if (-not $$log) { $$log = Join-Path $$env:TEMP '${AIONUI_FALLBACK_LOG}' }; \
     $$instDir = [System.IO.Path]::GetFullPath('$INSTDIR'); \
     $$ownedPrefix = $$instDir.TrimEnd('\') + '\'; \
@@ -60,10 +60,10 @@ Var /GLOBAL AionUiCurrentOutDir
       $$ids = @($$ids + $$childIds | Select-Object -Unique); \
       $$frontier = $$childIds; \
     } \
-    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-stop'; ids = @($$ids); result = 'start' }; \
+    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-stop'; ids = @($$ids); result = 'start' }; \
     Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$payload | ConvertTo-Json -Compress -Depth 8); \
     foreach ($$id in ($$ids | Sort-Object -Descending)) { Stop-Process -Id $$id -Force -ErrorAction SilentlyContinue } \
-    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-stop'; ids = @($$ids); result = 'done' }; \
+    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-stop'; ids = @($$ids); result = 'done' }; \
     Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$payload | ConvertTo-Json -Compress -Depth 8); \
     exit 0 \
   }"`
@@ -73,7 +73,7 @@ Var /GLOBAL AionUiCurrentOutDir
 !macro AIONUI_QUERY_LOCKERS_INLINE_LEGACY _TARGET_PATH _RETURN
   nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& { \
     $$ErrorActionPreference = 'SilentlyContinue'; \
-    $$log = '$AionUiSessionLogPath'; \
+    $$log = '$OneWorkSessionLogPath'; \
     if (-not $$log) { $$log = Join-Path $$env:TEMP '${AIONUI_FALLBACK_LOG}' }; \
     $$instDir = [System.IO.Path]::GetFullPath('$INSTDIR'); \
     $$targetPath = '${_TARGET_PATH}'; \
@@ -110,18 +110,18 @@ Var /GLOBAL AionUiCurrentOutDir
           $$known = @($$knownRelative | ForEach-Object { Join-Path $$root $$_ } | Where-Object { Test-Path -LiteralPath $$_ -PathType Leaf }); \
           $$resources = @($$topLevel + $$known | Where-Object { $$_ -and $$_.Trim().Length -gt 0 } | Select-Object -Unique | Select-Object -First 512); \
         } \
-        $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'rm-query-start'; target = $$targetPath; resources = $$resources.Count; outerInstallerPid = $$installerPid; currentOutDir = $$currentOutDir; installerSelfLock = $$installerSelfLock }; \
+        $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'rm-query-start'; target = $$targetPath; resources = $$resources.Count; outerInstallerPid = $$installerPid; currentOutDir = $$currentOutDir; installerSelfLock = $$installerSelfLock }; \
         Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$payload | ConvertTo-Json -Compress -Depth 8); \
         if ($$resources.Count -eq 0) { \
           if ($$installerSelfLock -and $$installerPid -gt 0) { \
             $$lockerText = 'One Work installer(' + $$installerPid + ')'; \
             [System.IO.File]::WriteAllText($$lockerListPath, $$lockerText, (New-Object System.Text.UTF8Encoding $$false)); \
             $$selfLockers = @([pscustomobject]@{ name = 'One Work installer'; pid = [int]$$installerPid }); \
-            $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'rm-lockers'; target = $$targetPath; resources = 0; count = 1; blockingProcesses = @($$selfLockers); fallbackReason = 'installer-self-lock'; message = 'The installer process is using the install directory as its current output directory.'; outerInstallerPid = $$installerPid; currentOutDir = $$currentOutDir; installerSelfLock = $$true }; \
+            $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'rm-lockers'; target = $$targetPath; resources = 0; count = 1; blockingProcesses = @($$selfLockers); fallbackReason = 'installer-self-lock'; message = 'The installer process is using the install directory as its current output directory.'; outerInstallerPid = $$installerPid; currentOutDir = $$currentOutDir; installerSelfLock = $$true }; \
             Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$payload | ConvertTo-Json -Compress -Depth 10); \
             exit 0 \
           }; \
-          $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'rm-lockers'; target = $$targetPath; resources = 0; count = 0; blockingProcesses = @(); fallbackReason = 'restart-manager-no-resources'; message = 'Restart Manager had no existing files to query for this path.'; outerInstallerPid = $$installerPid; currentOutDir = $$currentOutDir; installerSelfLock = $$installerSelfLock }; \
+          $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'rm-lockers'; target = $$targetPath; resources = 0; count = 0; blockingProcesses = @(); fallbackReason = 'restart-manager-no-resources'; message = 'Restart Manager had no existing files to query for this path.'; outerInstallerPid = $$installerPid; currentOutDir = $$currentOutDir; installerSelfLock = $$installerSelfLock }; \
           Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$payload | ConvertTo-Json -Compress -Depth 8); \
           exit 1 \
         } \
@@ -159,13 +159,13 @@ Var /GLOBAL AionUiCurrentOutDir
         if ($$lockers.Count -eq 0 -and $$installerSelfLock -and $$installerPid -gt 0) { $$lockers = @([pscustomobject]@{ name = 'One Work installer'; pid = [int]$$installerPid }) }; \
         $$lockerText = @($$lockers | ForEach-Object { $$_.name + '(' + $$_.pid + ')' }) -join ', '; \
         [System.IO.File]::WriteAllText($$lockerListPath, $$lockerText, (New-Object System.Text.UTF8Encoding $$false)); \
-        $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'rm-lockers'; target = $$targetPath; resources = $$resources.Count; count = $$needed; blockingProcesses = @($$lockers); fallbackReason = ''; message = ''; outerInstallerPid = $$installerPid; currentOutDir = $$currentOutDir; installerSelfLock = $$installerSelfLock }; \
+        $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'rm-lockers'; target = $$targetPath; resources = $$resources.Count; count = $$needed; blockingProcesses = @($$lockers); fallbackReason = ''; message = ''; outerInstallerPid = $$installerPid; currentOutDir = $$currentOutDir; installerSelfLock = $$installerSelfLock }; \
         if ($$installerSelfLock -and $$lockers.Count -gt 0) { $$payload.fallbackReason = 'installer-self-lock'; $$payload.message = 'The installer process is using the install directory as its current output directory.' } elseif ($$lockers.Count -eq 0) { $$payload.fallbackReason = 'restart-manager-no-process'; $$payload.message = 'Windows did not identify a specific locking process. Close terminals, editors, and file managers opened in the install folder.' }; \
         Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$payload | ConvertTo-Json -Compress -Depth 10); \
         if ($$lockers.Count -gt 0) { exit 0 } else { exit 1 } \
       } finally { [void][AionUi.RestartManager.Native]::RmEndSession($$session) } \
     } catch { \
-      $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'rm-error'; target = $$targetPath; error = $$_.Exception.Message }; \
+      $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'rm-error'; target = $$targetPath; error = $$_.Exception.Message }; \
       Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$payload | ConvertTo-Json -Compress -Depth 8); \
       exit 1 \
     } \
@@ -176,7 +176,7 @@ Var /GLOBAL AionUiCurrentOutDir
 !macro AIONUI_QUERY_LOCKERS _TARGET_PATH _RETURN
   InitPluginsDir
   File /oname=$PLUGINSDIR\aionui-query-lockers.ps1 "${PROJECT_DIR}\resources\windows\support\query-lockers.ps1"
-  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\aionui-query-lockers.ps1" -LogPath "$AionUiSessionLogPath" -InstDir "$INSTDIR" -TargetPath "${_TARGET_PATH}" -LockerListPath "$PLUGINSDIR\aionui-rm-lockers.txt" -Session "$AionUiSessionId" -Version "${VERSION}" -Arch "${AIONUI_TARGET_ARCH}" -Updated "$AionUiIsUpdated" -CurrentOutDir "$AionUiCurrentOutDir"`
+  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\aionui-query-lockers.ps1" -LogPath "$OneWorkSessionLogPath" -InstDir "$INSTDIR" -TargetPath "${_TARGET_PATH}" -LockerListPath "$PLUGINSDIR\aionui-rm-lockers.txt" -Session "$OneWorkSessionId" -Version "${VERSION}" -Arch "${AIONUI_TARGET_ARCH}" -Updated "$AionUiIsUpdated" -CurrentOutDir "$AionUiCurrentOutDir"`
   Pop ${_RETURN}
 !macroend
 
@@ -211,7 +211,7 @@ Var /GLOBAL AionUiCurrentOutDir
   !insertmacro AIONUI_CAPTURE_FAILED_PATH_LOCKERS "${_FAILED_PATH}"
   ${If} $AionUiLockerResult == 0
     ${IfNot} ${Silent}
-      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_ZH}$\r$\n${_FAILED_PATH}$\r$\n$\r$\n${AIONUI_MSG_APPLICATION_USING_IT_ZH}$\r$\n$AionUiLockerListZh$\r$\n$\r$\n${AIONUI_MSG_CLOSE_LISTED_RETRY_ZH}$\r$\n$\r$\n${AIONUI_MSG_INSTALLER_LOG_ZH}:$\r$\n$AionUiSessionLogPath$\r$\n$\r$\n${AIONUI_MSG_BLOCK_SEPARATOR}$\r$\n$\r$\n${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_EN}$\r$\n${_FAILED_PATH}$\r$\n$\r$\n${AIONUI_MSG_APPLICATION_USING_IT_EN}$\r$\n$AionUiLockerListEn$\r$\n$\r$\n${AIONUI_MSG_CLOSE_LISTED_RETRY_EN}$\r$\n$\r$\n${AIONUI_MSG_INSTALLER_LOG_EN}:$\r$\n$AionUiSessionLogPath" /SD IDCANCEL IDRETRY ${_RETRY_LABEL} IDCANCEL ${_CANCEL_LABEL}
+      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_ZH}$\r$\n${_FAILED_PATH}$\r$\n$\r$\n${AIONUI_MSG_APPLICATION_USING_IT_ZH}$\r$\n$AionUiLockerListZh$\r$\n$\r$\n${AIONUI_MSG_CLOSE_LISTED_RETRY_ZH}$\r$\n$\r$\n${AIONUI_MSG_INSTALLER_LOG_ZH}:$\r$\n$OneWorkSessionLogPath$\r$\n$\r$\n${AIONUI_MSG_BLOCK_SEPARATOR}$\r$\n$\r$\n${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_EN}$\r$\n${_FAILED_PATH}$\r$\n$\r$\n${AIONUI_MSG_APPLICATION_USING_IT_EN}$\r$\n$AionUiLockerListEn$\r$\n$\r$\n${AIONUI_MSG_CLOSE_LISTED_RETRY_EN}$\r$\n$\r$\n${AIONUI_MSG_INSTALLER_LOG_EN}:$\r$\n$OneWorkSessionLogPath" /SD IDCANCEL IDRETRY ${_RETRY_LABEL} IDCANCEL ${_CANCEL_LABEL}
     ${EndIf}
   ${EndIf}
   Goto ${_CONTINUE_LABEL}
@@ -225,7 +225,7 @@ Var /GLOBAL AionUiCurrentOutDir
         $$ErrorActionPreference = 'Stop'; \
         $$appDir = Join-Path $$env:APPDATA 'AionUi'; \
         $$marker = Join-Path $$appDir 'installer-last-failure.json'; \
-        $$log = '$AionUiSessionLogPath'; \
+        $$log = '$OneWorkSessionLogPath'; \
         if (-not $$log) { $$log = Join-Path $$env:TEMP '${AIONUI_FALLBACK_LOG}' }; \
         try { \
           New-Item -ItemType Directory -Path $$appDir -Force | Out-Null; \
@@ -242,10 +242,10 @@ Var /GLOBAL AionUiCurrentOutDir
           }; \
           $$json = $$payload | ConvertTo-Json -Compress -Depth 4; \
           [System.IO.File]::WriteAllText($$marker, $$json, (New-Object System.Text.UTF8Encoding $$false)); \
-          $$logPayload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'marker-write'; result = 'ok'; path = $$marker; marker = $$payload }; \
+          $$logPayload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'marker-write'; result = 'ok'; path = $$marker; marker = $$payload }; \
           Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$logPayload | ConvertTo-Json -Compress -Depth 8) \
         } catch { \
-          $$logPayload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'marker-write'; result = 'failed'; path = $$marker; error = $$_.Exception.Message }; \
+          $$logPayload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'marker-write'; result = 'failed'; path = $$marker; error = $$_.Exception.Message }; \
           Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$logPayload | ConvertTo-Json -Compress -Depth 8) \
         } \
       }"`

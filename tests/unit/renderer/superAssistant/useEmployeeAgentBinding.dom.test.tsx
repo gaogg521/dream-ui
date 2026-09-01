@@ -144,7 +144,7 @@ describe('useEmployeeAgentBinding', () => {
     act(() => result.current.selectAssistant('acp_persona'));
     await waitFor(() => expect(result.current.selectedBackendAgentId).toBe('agent_claude'));
     expect(result.current.resolvedBackend).toBe('claude');
-    expect(result.current.isAionrsBackend).toBe(false);
+    expect(result.current.isDreamEngineBackend).toBe(false);
   });
 
   it('keeps a manual backend override across later expert switches', async () => {
@@ -166,7 +166,7 @@ describe('useEmployeeAgentBinding', () => {
     const { result } = renderHook(() => useEmployeeAgentBinding());
 
     act(() => result.current.selectAssistant('cli_persona'));
-    await waitFor(() => expect(result.current.isAionrsBackend).toBe(true));
+    await waitFor(() => expect(result.current.isDreamEngineBackend).toBe(true));
     await waitFor(() => expect(result.current.buildBinding()).toBeDefined());
 
     const bound = result.current.buildBinding();
@@ -209,9 +209,9 @@ describe('useEmployeeAgentBinding', () => {
     const { result } = renderHook(() => useEmployeeAgentBinding());
 
     act(() => result.current.selectAssistant('cli_persona'));
-    await waitFor(() => expect(result.current.isAionrsBackend).toBe(true));
+    await waitFor(() => expect(result.current.isDreamEngineBackend).toBe(true));
 
-    expect(result.current.hasAionrsProvider).toBe(false);
+    expect(result.current.hasDreamEngineProvider).toBe(false);
     expect(result.current.buildBinding()).toBeUndefined();
   });
 

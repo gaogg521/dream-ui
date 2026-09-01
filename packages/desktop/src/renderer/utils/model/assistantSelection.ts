@@ -5,7 +5,7 @@
  */
 
 import type { Assistant } from '@/common/types/agent/assistantTypes';
-import { isAionrsAssistant } from '@/common/types/agent/assistantTypes';
+import { isDreamEngineAssistant } from '@/common/types/agent/assistantTypes';
 
 /**
  * Auto-generated CLI assistants exist for every known CLI tool in the catalog.
@@ -26,7 +26,7 @@ export const isInstalledGeneratedCliAssistant = (assistant: Assistant): boolean 
   if (assistant.source !== 'generated') {
     return true;
   }
-  if (isAionrsAssistant(assistant)) {
+  if (isDreamEngineAssistant(assistant)) {
     return true;
   }
   return assistant.agent_status === 'online' || assistant.agent_status === 'offline';

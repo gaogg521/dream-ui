@@ -73,7 +73,7 @@ Var /GLOBAL AionUiActiveMarkerResult
   nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& { \
     $$ErrorActionPreference = 'SilentlyContinue'; \
     $$marker = Join-Path $$env:TEMP '${AIONUI_ACTIVE_INSTALLER_MARKER}'; \
-    Set-Content -LiteralPath $$marker -Encoding UTF8 -Value ('pid=' + $$PID + ';session=$AionUiSessionId;started=' + (Get-Date -Format o)) \
+    Set-Content -LiteralPath $$marker -Encoding UTF8 -Value ('pid=' + $$PID + ';session=$OneWorkSessionId;started=' + (Get-Date -Format o)) \
   }"`
   Pop $AionUiActiveMarkerResult
 !macroend
@@ -124,10 +124,10 @@ Var /GLOBAL AionUiActiveMarkerResult
 
 !macro AIONUI_INSTALLER_PREINIT
   !ifdef BUILD_UNINSTALLER
-    StrCpy $AionUiSessionId ""
+    StrCpy $OneWorkSessionId ""
     StrCpy $AionUiIsUpdated "0"
     StrCpy $AionUiSessionLogResult ""
-    StrCpy $AionUiSessionLogPath "$TEMP\${AIONUI_FALLBACK_LOG}"
+    StrCpy $OneWorkSessionLogPath "$TEMP\${AIONUI_FALLBACK_LOG}"
     StrCpy $AionUiUninstallHadErrors "0"
     StrCpy $AionUiUninstallLogResult ""
     StrCpy $AionUiVerifyResourceResult ""
@@ -184,8 +184,8 @@ Var /GLOBAL AionUiActiveMarkerResult
 
 !macro AIONUI_VERIFY_BUNDLED_AIONCORE_RESOURCES _RUNTIME_KEY
   InitPluginsDir
-  File "/oname=$PLUGINSDIR\verify-bundled-aioncore-install.ps1" "${PROJECT_DIR}\resources\windows\support\verify-bundled-aioncore-install.ps1"
-  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\verify-bundled-aioncore-install.ps1" -InstallDir "$INSTDIR" -RuntimeKey "${_RUNTIME_KEY}" -LogPath "$AionUiSessionLogPath"`
+  File "/oname=$PLUGINSDIR\verify-bundled-dreamcore-install.ps1" "${PROJECT_DIR}\resources\windows\support\verify-bundled-dreamcore-install.ps1"
+  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\verify-bundled-dreamcore-install.ps1" -InstallDir "$INSTDIR" -RuntimeKey "${_RUNTIME_KEY}" -LogPath "$OneWorkSessionLogPath"`
   Pop $AionUiVerifyResourceResult
 
   ${If} $AionUiVerifyResourceResult != 0

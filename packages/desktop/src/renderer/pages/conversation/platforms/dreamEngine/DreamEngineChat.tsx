@@ -23,12 +23,12 @@ import HOC from '@renderer/utils/ui/HOC';
 import React, { useMemo } from 'react';
 import type { TeamSendBoxRuntime } from '@/renderer/pages/team/components/teamSendRuntime';
 import DreamEngineSendBox from './DreamEngineSendBox';
-import type { AionrsModelSelection } from './useDreamEngineModelSelection';
+import type { DreamEngineModelSelection } from './useDreamEngineModelSelection';
 
 const DreamEngineChat: React.FC<{
   conversation_id: string;
   workspace: string;
-  modelSelection: AionrsModelSelection;
+  modelSelection: DreamEngineModelSelection;
   session_mode?: string;
   cron_job_id?: string;
   emptySlot?: React.ReactNode;

@@ -28,7 +28,7 @@ export async function startBackendOrExit(options: StartBackendOrExitOptions): Pr
     if (isBackendStartupCancelledError(error)) {
       return { ok: false };
     }
-    options.logError?.('[1ONE] Failed to start aioncore:', error);
+    options.logError?.('[1ONE] Failed to start dreamcore:', error);
     await options.captureFailure(error);
     if (options.exitOnFailure ?? true) {
       options.exitApp(1);

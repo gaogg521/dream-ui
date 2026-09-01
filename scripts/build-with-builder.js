@@ -136,16 +136,36 @@ function patchElectronBuilderNsisInstaller() {
   }
 
   const copiedUninstallerExec = `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 _?=$installationDir' $R0`;
-  const copiedUninstallerExecWithLog = `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$AionUiSessionLogPath" --installer-session="$AionUiSessionId" _?=$installationDir' $R0`;
+  const copiedUninstallerExecWithLog = `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" --installer-session="$OneWorkSessionId" _?=$installationDir' $R0`;
   if (patched.includes(copiedUninstallerExec)) {
     patched = patched.replace(copiedUninstallerExec, copiedUninstallerExecWithLog);
+  // Previously patched installUtil.nsh files carry the pre-rename session
+  // variable names; upgrade those templates too instead of throwing.
   } else if (
     patched.includes(
-      `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$AionUiSessionLogPath" _?=$installationDir' $R0`
+      `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" _?=$installationDir' $R0`
     )
   ) {
     patched = patched.replace(
-      `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$AionUiSessionLogPath" _?=$installationDir' $R0`,
+      `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" _?=$installationDir' $R0`,
+      copiedUninstallerExecWithLog
+    );
+  } else if (
+    patched.includes(
+      `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" _?=$installationDir' $R0`
+    )
+  ) {
+    patched = patched.replace(
+      `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" _?=$installationDir' $R0`,
+      copiedUninstallerExecWithLog
+    );
+  } else if (
+    patched.includes(
+      `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" --installer-session="$OneWorkSessionId" _?=$installationDir' $R0`
+    )
+  ) {
+    patched = patched.replace(
+      `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" --installer-session="$OneWorkSessionId" _?=$installationDir' $R0`,
       copiedUninstallerExecWithLog
     );
   } else if (!patched.includes(copiedUninstallerExecWithLog)) {
@@ -159,6 +179,14 @@ function patchElectronBuilderNsisInstaller() {
     '  !insertmacro copyFile "$uninstallerFileName" "$uninstallerFileNameTemp"',
   ].join('\n');
   const bundledUninstallerOverride = [
+    '  ${if} ${FileExists} "$PLUGINSDIR\\OneWork-fixed-uninstaller.exe"',
+    '    DetailPrint `onework-bundled-uninstaller override source.`',
+    '    StrCpy $uninstallerFileName "$PLUGINSDIR\\OneWork-fixed-uninstaller.exe"',
+    '  ${endIf}',
+  ].join('\n');
+  // node_modules may still carry a block patched before the executable rename;
+  // upgrade it in place instead of failing the template check.
+  const legacyBundledUninstallerOverride = [
     '  ${if} ${FileExists} "$PLUGINSDIR\\AionUi-fixed-uninstaller.exe"',
     '    DetailPrint `AionUi-bundled-uninstaller override source.`',
     '    StrCpy $uninstallerFileName "$PLUGINSDIR\\AionUi-fixed-uninstaller.exe"',
@@ -180,6 +208,8 @@ function patchElectronBuilderNsisInstaller() {
 
   if (patched.includes(bundledUninstallerOverride)) {
     // Already patched.
+  } else if (patched.includes(legacyBundledUninstallerOverride)) {
+    patched = patched.replace(legacyBundledUninstallerOverride, bundledUninstallerOverride);
   } else if (patched.includes(uninstallerCopySource)) {
     patched = patched.replace(uninstallerCopySource, bundledUninstallerCopySource);
   } else {
@@ -189,16 +219,34 @@ function patchElectronBuilderNsisInstaller() {
   }
 
   const inPlaceUninstallerExec = `ExecWait '"$uninstallerFileName" /S /KEEP_APP_DATA $0 _?=$installationDir' $R0`;
-  const inPlaceUninstallerExecWithLog = `ExecWait '"$uninstallerFileName" /S /KEEP_APP_DATA $0 --installer-log="$AionUiSessionLogPath" --installer-session="$AionUiSessionId" _?=$installationDir' $R0`;
+  const inPlaceUninstallerExecWithLog = `ExecWait '"$uninstallerFileName" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" --installer-session="$OneWorkSessionId" _?=$installationDir' $R0`;
   if (patched.includes(inPlaceUninstallerExec)) {
     patched = patched.replace(inPlaceUninstallerExec, inPlaceUninstallerExecWithLog);
   } else if (
     patched.includes(
-      `ExecWait '"$uninstallerFileName" /S /KEEP_APP_DATA $0 --installer-log="$AionUiSessionLogPath" _?=$installationDir' $R0`
+      `ExecWait '"$uninstallerFileName" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" _?=$installationDir' $R0`
     )
   ) {
     patched = patched.replace(
-      `ExecWait '"$uninstallerFileName" /S /KEEP_APP_DATA $0 --installer-log="$AionUiSessionLogPath" _?=$installationDir' $R0`,
+      `ExecWait '"$uninstallerFileName" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" _?=$installationDir' $R0`,
+      inPlaceUninstallerExecWithLog
+    );
+  } else if (
+    patched.includes(
+      `ExecWait '"$uninstallerFileName" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" _?=$installationDir' $R0`
+    )
+  ) {
+    patched = patched.replace(
+      `ExecWait '"$uninstallerFileName" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" _?=$installationDir' $R0`,
+      inPlaceUninstallerExecWithLog
+    );
+  } else if (
+    patched.includes(
+      `ExecWait '"$uninstallerFileName" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" --installer-session="$OneWorkSessionId" _?=$installationDir' $R0`
+    )
+  ) {
+    patched = patched.replace(
+      `ExecWait '"$uninstallerFileName" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" --installer-session="$OneWorkSessionId" _?=$installationDir' $R0`,
       inPlaceUninstallerExecWithLog
     );
   } else if (!patched.includes(inPlaceUninstallerExecWithLog)) {
@@ -837,13 +885,13 @@ try {
   if (process.env.DREAM_SKIP_AIONCORE_PREPARE === '1') {
     console.log('⚡ DREAM_SKIP_AIONCORE_PREPARE=1: skipping aioncore prepare step');
   } else {
-    const { prepareAioncore } = require('../packages/shared-scripts/src/prepare-aioncore.js');
-    const { resolveAioncoreVersion } = require('./resolveAioncoreVersion.js');
-    prepareAioncore({
+    const { prepareDreamcore } = require('../packages/shared-scripts/src/prepare-dreamcore.js');
+    const { resolveDreamcoreVersion } = require('./resolveDreamcoreVersion.js');
+    prepareDreamcore({
       projectRoot,
       platform: process.platform,
       arch: targetArch,
-      version: resolveAioncoreVersion(projectRoot),
+      version: resolveDreamcoreVersion(projectRoot),
     });
   }
 
@@ -917,13 +965,14 @@ try {
     let cleaned = tryRemoveDir(winUnpackedDir);
     if (!cleaned) {
       const aionRunning =
+        isProcessRunningWindows('onework.exe') ||
         isProcessRunningWindows('One Work.exe') ||
         isProcessRunningWindows('1onecode.exe') ||
         isProcessRunningWindows('AionUi.exe');
       const electronRunning = isProcessRunningWindows('electron.exe');
       if (aionRunning || electronRunning) {
         console.log('⚠️  Detected running One Work/Electron process. Attempting to close...');
-        killWindowsProcesses(['One Work.exe', '1onecode.exe', 'AionUi.exe', 'electron.exe']);
+        killWindowsProcesses(['onework.exe', 'One Work.exe', '1onecode.exe', 'AionUi.exe', 'electron.exe']);
         cleaned = tryRemoveDir(winUnpackedDir);
         if (!cleaned) {
           console.log('⚠️  Directory still locked. Please close any running One Work/Electron processes and retry.');

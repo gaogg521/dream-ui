@@ -247,7 +247,7 @@ const AgentModeSelector: React.FC<AgentModeSelectorProps> = ({
             <div
               className='flex items-center gap-8px'
               data-mode-value={mode.value}
-              data-testid={`aionrs-mode-option-${mode.value}`}
+              data-testid={`dream-engine-mode-option-${mode.value}`}
             >
               {/* Fixed-width marker slot, three states now: ✓ = in force, ⏱ = accepted
                   but applies next turn, blank = neither. Reusing this slot rather than a

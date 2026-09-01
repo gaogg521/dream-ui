@@ -1150,13 +1150,13 @@ body::after {
     10px 10px 30px rgba(80, 50, 120, 0.2) !important;
 }
 
-.aionui-modal:not(.conversation-search-modal) .arco-modal-content {
+.dream-modal:not(.conversation-search-modal) .arco-modal-content {
   overflow: visible !important;
   max-height: calc(100vh - 32px) !important;
   box-sizing: border-box !important;
 }
 
-.aionui-modal:not(.conversation-search-modal) .aionui-modal-body-content {
+.dream-modal:not(.conversation-search-modal) .dream-modal-body-content {
   overflow: auto !important;
   max-height: calc(100vh - 148px) !important;
   box-sizing: border-box !important;

@@ -20,14 +20,14 @@ describe('resolveCronAgentConfig', () => {
           agent: agent('agent-aionrs', 'dream'),
         }),
       ],
-      selectedAionrsProvider: {
+      selectedDreamEngineProvider: {
         id: 'provider-gemini',
         name: 'Gemini',
       },
       model_id: 'gemini-3.1-pro-preview',
       workspace: '/tmp/project',
       getMode: () => 'yolo',
-      aionrsModelRequiredMessage: 'provider required',
+      dreamEngineModelRequiredMessage: 'provider required',
     });
 
     expect(result).toEqual({
@@ -60,7 +60,7 @@ describe('resolveCronAgentConfig', () => {
       ],
       config_options: { reasoning_effort: 'high' },
       getMode: (selectedAssistant) => (selectedAssistant.agent_id === 'agent-codex' ? 'full-access' : 'yolo'),
-      aionrsModelRequiredMessage: 'provider required',
+      dreamEngineModelRequiredMessage: 'provider required',
     });
 
     expect(result).toEqual({
@@ -89,7 +89,7 @@ describe('resolveCronAgentConfig', () => {
       ],
       localeKey: 'zh-CN',
       getMode: () => 'full-access',
-      aionrsModelRequiredMessage: 'provider required',
+      dreamEngineModelRequiredMessage: 'provider required',
     });
 
     expect(result.agent_config?.name).toBe('代码助手');
@@ -107,7 +107,7 @@ describe('resolveCronAgentConfig', () => {
         }),
       ],
       getMode: () => 'default',
-      aionrsModelRequiredMessage: 'provider required',
+      dreamEngineModelRequiredMessage: 'provider required',
     });
 
     expect(result).toEqual({
@@ -135,7 +135,7 @@ describe('resolveCronAgentConfig', () => {
         }),
       ],
       getMode: () => 'default',
-      aionrsModelRequiredMessage: 'provider required',
+      dreamEngineModelRequiredMessage: 'provider required',
     });
 
     expect(result.agent_config).toBeDefined();
@@ -150,7 +150,7 @@ describe('resolveCronAgentConfig', () => {
         agentValue: 'missing-assistant',
         presetAssistants: [],
         getMode: () => 'default',
-        aionrsModelRequiredMessage: 'provider required',
+        dreamEngineModelRequiredMessage: 'provider required',
       })
     ).toThrowError('assistant_id is required');
   });

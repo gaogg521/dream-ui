@@ -73,7 +73,7 @@ export const useDeepLink = () => {
         return;
       }
 
-      // Enterprise remote SSO login: the remote aioncore's OAuth callback
+      // Enterprise remote SSO login: the remote dreamcore's OAuth callback
       // redirects the system browser to dream://sso-callback?token=...
       // (desktop=1 flow — no Set-Cookie, the token rides the deep link).
       if (payload.action === 'sso-callback') {

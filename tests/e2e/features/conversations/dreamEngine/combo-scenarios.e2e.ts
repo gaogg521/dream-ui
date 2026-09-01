@@ -18,27 +18,27 @@
 
 import { test, expect } from '../../../fixtures';
 import {
-  resolveAionrsPreconditions,
-  cleanupE2EAionrsConversations,
-  createAionrsConversationViaBridge,
-  sendAionrsMessage,
-  waitForAionrsReply,
-  getAionrsConversationDB,
-  getAionrsMessages,
+  resolveDreamEnginePreconditions,
+  cleanupE2EDreamEngineConversations,
+  createDreamEngineConversationViaBridge,
+  sendDreamEngineMessage,
+  waitForDreamEngineReply,
+  getDreamEngineConversationDB,
+  getDreamEngineMessages,
   createTempWorkspace,
-  type AionrsTestModels,
+  type DreamEngineTestModels,
 } from '../../../helpers';
 import { takeScreenshot } from '../../../helpers/screenshots';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
+test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
   test.setTimeout(120000); // 2 minutes
 
-  let preconditions: { binary: string | null; models: AionrsTestModels | null };
+  let preconditions: { binary: string | null; models: DreamEngineTestModels | null };
 
   test.beforeAll(async ({ page }) => {
-    preconditions = await resolveAionrsPreconditions(page);
+    preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
       test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
     }
@@ -50,7 +50,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       await page.keyboard.press('Escape');
     }
 
-    await cleanupE2EAionrsConversations(page);
+    await cleanupE2EDreamEngineConversations(page);
 
     await page.evaluate(() => {
       const keysToRemove: string[] = [];
@@ -70,7 +70,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
 
   test('TC-A-10: should handle folder + second model + yolo mode combo', async ({ page }) => {
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-combo-folder-model-yolo`;
+    const conversationName = `E2E-dream-engine-${timestamp}-combo-folder-model-yolo`;
     const tempWorkspace = createTempWorkspace(`tc-a-10-${timestamp}`);
 
     try {
@@ -83,7 +83,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-10/01-before.png`);
 
       // Step 2: Create conversation via bridge with yolo mode
-      const conversationId = await createAionrsConversationViaBridge(page, {
+      const conversationId = await createDreamEngineConversationViaBridge(page, {
         name: conversationName,
         workspace: testFolderPath,
         provider: preconditions.models!.modelA,
@@ -95,12 +95,12 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       await page.waitForLoadState('networkidle');
 
       // Step 4: Switch to second model
-      const modelSelector = page.locator('[data-testid="aionrs-model-selector"]');
+      const modelSelector = page.locator('[data-testid="dream-engine-model-selector"]');
       await expect(modelSelector).toBeVisible({ timeout: 10000 });
       await modelSelector.click();
       await page.waitForTimeout(500);
 
-      const modelOptions = page.locator('[data-testid^="aionrs-model-option-"]');
+      const modelOptions = page.locator('[data-testid^="dream-engine-model-option-"]');
       const modelCount = await modelOptions.count();
 
       if (modelCount < 2) {
@@ -115,8 +115,8 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-10/02-model-switched.png`);
 
       // Step 5: Send message
-      await sendAionrsMessage(page, conversationId, 'List files in the attached folder.');
-      await waitForAionrsReply(page, conversationId);
+      await sendDreamEngineMessage(page, conversationId, 'List files in the attached folder.');
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: reply completed
       await takeScreenshot(page, `chat-aionrs/tc-a-10/03-reply.png`);
@@ -126,7 +126,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       // ============================================================================
 
       // 1. Verify conversation has workspace
-      const conversation = await getAionrsConversationDB(page, conversationId);
+      const conversation = await getDreamEngineConversationDB(page, conversationId);
       const extra =
         typeof conversation.extra === 'string' ? JSON.parse(conversation.extra || '{}') : conversation.extra || {};
       expect(extra.workspace).toContain('test-folder');
@@ -135,7 +135,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       expect(extra.sessionMode).toBe('yolo');
 
       // 3. Verify messages exist
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
       expect(messages.length).toBeGreaterThanOrEqual(2);
     } finally {
       await tempWorkspace.cleanup();
@@ -148,7 +148,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
 
   test('TC-A-11: should handle file + non-default model + default mode combo', async ({ page }) => {
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-combo-file-model-default`;
+    const conversationName = `E2E-dream-engine-${timestamp}-combo-file-model-default`;
     const tempWorkspace = createTempWorkspace(`tc-a-11-${timestamp}`);
 
     try {
@@ -160,7 +160,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-11/01-before.png`);
 
       // Step 2: Create conversation via bridge with default mode
-      const conversationId = await createAionrsConversationViaBridge(page, {
+      const conversationId = await createDreamEngineConversationViaBridge(page, {
         name: conversationName,
         workspace: tempWorkspace.path,
         provider: preconditions.models!.modelA,
@@ -176,12 +176,12 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
         test.skip(true, 'Need 2nd aionrs-compatible model for combo test');
       }
 
-      const modelSelector = page.locator('[data-testid="aionrs-model-selector"]');
+      const modelSelector = page.locator('[data-testid="dream-engine-model-selector"]');
       await expect(modelSelector).toBeVisible({ timeout: 10000 });
       await modelSelector.click();
       await page.waitForTimeout(500);
 
-      const secondModel = page.locator(`[data-testid="aionrs-model-option-${preconditions.models!.modelB.useModel}"]`);
+      const secondModel = page.locator(`[data-testid="dream-engine-model-option-${preconditions.models!.modelB.useModel}"]`);
       await secondModel.waitFor({ state: 'visible', timeout: 5000 });
       await secondModel.click();
       await page.waitForTimeout(1000);
@@ -190,8 +190,8 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-11/02-model-switched.png`);
 
       // Step 5: Send message about file
-      await sendAionrsMessage(page, conversationId, 'Read the content of test-file.txt in the workspace.');
-      await waitForAionrsReply(page, conversationId);
+      await sendDreamEngineMessage(page, conversationId, 'Read the content of test-file.txt in the workspace.');
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: reply completed
       await takeScreenshot(page, `chat-aionrs/tc-a-11/03-reply.png`);
@@ -201,7 +201,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       // ============================================================================
 
       // 1. Verify conversation has workspace
-      const conversation = await getAionrsConversationDB(page, conversationId);
+      const conversation = await getDreamEngineConversationDB(page, conversationId);
       const extra =
         typeof conversation.extra === 'string' ? JSON.parse(conversation.extra || '{}') : conversation.extra || {};
       expect(extra.workspace).toBe(tempWorkspace.path);
@@ -210,7 +210,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       expect(extra.sessionMode).toBe('default');
 
       // 3. Verify messages exist
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
       expect(messages.length).toBeGreaterThanOrEqual(2);
     } finally {
       await tempWorkspace.cleanup();
@@ -223,7 +223,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
 
   test('TC-A-12: should handle full combo (folder + file + second model + yolo)', async ({ page }) => {
     const timestamp = Date.now();
-    const conversationName = `E2E-aionrs-${timestamp}-full-combo`;
+    const conversationName = `E2E-dream-engine-${timestamp}-full-combo`;
     const tempWorkspace = createTempWorkspace(`tc-a-12-${timestamp}`);
 
     try {
@@ -237,7 +237,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-12/01-before.png`);
 
       // Step 2: Create conversation via bridge with yolo mode
-      const conversationId = await createAionrsConversationViaBridge(page, {
+      const conversationId = await createDreamEngineConversationViaBridge(page, {
         name: conversationName,
         workspace: testFolderPath,
         provider: preconditions.models!.modelA,
@@ -249,12 +249,12 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       await page.waitForLoadState('networkidle');
 
       // Step 4: Switch to second model
-      const modelSelector = page.locator('[data-testid="aionrs-model-selector"]');
+      const modelSelector = page.locator('[data-testid="dream-engine-model-selector"]');
       await expect(modelSelector).toBeVisible({ timeout: 10000 });
       await modelSelector.click();
       await page.waitForTimeout(500);
 
-      const modelOptions = page.locator('[data-testid^="aionrs-model-option-"]');
+      const modelOptions = page.locator('[data-testid^="dream-engine-model-option-"]');
       const modelCount = await modelOptions.count();
 
       if (modelCount < 2) {
@@ -269,8 +269,8 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-12/02-model-switched.png`);
 
       // Step 5: Send message about folder and files
-      await sendAionrsMessage(page, conversationId, 'List all files in the attached folder and read their contents.');
-      await waitForAionrsReply(page, conversationId);
+      await sendDreamEngineMessage(page, conversationId, 'List all files in the attached folder and read their contents.');
+      await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: reply completed
       await takeScreenshot(page, `chat-aionrs/tc-a-12/03-reply.png`);
@@ -280,7 +280,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       // ============================================================================
 
       // 1. Verify conversation has workspace
-      const conversation = await getAionrsConversationDB(page, conversationId);
+      const conversation = await getDreamEngineConversationDB(page, conversationId);
       const extra =
         typeof conversation.extra === 'string' ? JSON.parse(conversation.extra || '{}') : conversation.extra || {};
       expect(extra.workspace).toContain('combo-folder');
@@ -289,7 +289,7 @@ test.describe('Aionrs Chat - Combo Scenarios (P1)', () => {
       expect(extra.sessionMode).toBe('yolo');
 
       // 3. Verify messages exist
-      const messages = await getAionrsMessages(page, conversationId);
+      const messages = await getDreamEngineMessages(page, conversationId);
       expect(messages.length).toBeGreaterThanOrEqual(2);
 
       const userMessages = messages.filter((m) => m.position === 'right');

@@ -143,9 +143,9 @@ const _AddNewConversation: React.FC<{ conversation: TChatConversation }> = ({ co
   );
 };
 
-type AionrsConversation = Extract<TChatConversation, { type: 'dream' }>;
+type DreamEngineConversation = Extract<TChatConversation, { type: 'dream' }>;
 
-const AionrsConversationPanel: React.FC<{ conversation: AionrsConversation; sliderTitle: React.ReactNode }> = ({
+const DreamEngineConversationPanel: React.FC<{ conversation: DreamEngineConversation; sliderTitle: React.ReactNode }> = ({
   conversation,
   sliderTitle,
 }) => {
@@ -177,7 +177,7 @@ const AionrsConversationPanel: React.FC<{ conversation: AionrsConversation; slid
   const workspaceEnabled = Boolean(conversation.extra?.workspace) && !conversation.project_id;
   const cronJobId = resolveCronJobId(conversation.extra);
   const { info: presetAssistantInfo } = usePresetAssistantInfo(conversation);
-  const aionrsAssistantId = presetAssistantInfo?.assistantId;
+  const dreamEngineAssistantId = presetAssistantInfo?.assistantId;
   const layout = useLayoutContext();
   // Mobile: model selection moved into the sendbox `+` action sheet to free up
   // header space; the dropdown stays available on desktop and tablets ≥768px.
@@ -232,7 +232,7 @@ const AionrsConversationPanel: React.FC<{ conversation: AionrsConversation; slid
     isTemporaryWorkspace: (conversation.extra as { is_temporary_workspace?: boolean } | undefined)
       ?.is_temporary_workspace,
     backend: 'dream' as const,
-    presetAssistant: presetAssistantInfo ? { ...presetAssistantInfo, id: aionrsAssistantId } : undefined,
+    presetAssistant: presetAssistantInfo ? { ...presetAssistantInfo, id: dreamEngineAssistantId } : undefined,
   };
 
   return (
@@ -249,7 +249,7 @@ const AionrsConversationPanel: React.FC<{ conversation: AionrsConversation; slid
           (conversation.extra as { mcp_statuses?: IConversationMcpStatus[] } | undefined)?.mcp_statuses
         }
         agent_name={presetAssistantInfo?.name}
-        assistantId={aionrsAssistantId}
+        assistantId={dreamEngineAssistantId}
         forkCapability={conversation.fork_capability}
       />
     </ChatLayout>
@@ -274,13 +274,13 @@ const ChatConversation: React.FC<{
   const layout = useLayoutContext();
   const isMobile = Boolean(layout?.isMobile);
 
-  const isAionrsConversation = conversation?.type === 'dream';
+  const isDreamEngineConversation = conversation?.type === 'dream';
   const isLegacyReadOnlyConversation = isLegacyReadOnlyConversationType(conversation?.type);
   const resolvedHideSendBox = hideSendBox || isLegacyReadOnlyConversationType(conversation?.type);
 
   // 使用统一的 Hook 获取预设助手信息（ACP/Codex 会话）
   // Use unified hook for preset assistant info (ACP/Codex conversations)
-  const acpConversation = isAionrsConversation ? undefined : conversation;
+  const acpConversation = isDreamEngineConversation ? undefined : conversation;
   const { info: presetAssistantInfo, isLoading: isLoadingPreset } = usePresetAssistantInfo(acpConversation);
   const acpAssistantId = presetAssistantInfo?.assistantId;
   const resolvedConversationBackend = resolveConversationBackend(conversation, presetAssistantInfo?.backend);
@@ -289,7 +289,7 @@ const ChatConversation: React.FC<{
   const assistantDisplayName = presetAssistantInfo?.name || conversationAgentName;
 
   const conversationNode = useMemo(() => {
-    if (!conversation || isAionrsConversation) return null;
+    if (!conversation || isDreamEngineConversation) return null;
     if (isLegacyReadOnlyConversation) {
       return <LegacyReadOnlyConversation key={conversation.id} conversation={conversation} />;
     }
@@ -326,7 +326,7 @@ const ChatConversation: React.FC<{
     }
   }, [
     conversation,
-    isAionrsConversation,
+    isDreamEngineConversation,
     isLegacyReadOnlyConversation,
     resolvedConversationBackend,
     assistantDisplayName,
@@ -348,7 +348,7 @@ const ChatConversation: React.FC<{
   // Mobile: model selection moves into the sendbox `+` action sheet, so the
   // header selector is suppressed to free up vertical space.
   const modelSelector = useMemo(() => {
-    if (!conversation || isAionrsConversation) return undefined;
+    if (!conversation || isDreamEngineConversation) return undefined;
     if (isMobile) return undefined;
     if (isLegacyReadOnlyConversation) return undefined;
     // Antigravity included: the backend discovers agy's model list and writes it
@@ -367,10 +367,10 @@ const ChatConversation: React.FC<{
       );
     }
     return <GoogleModelSelector disabled={true} />;
-  }, [conversation, isAionrsConversation, isMobile, isLegacyReadOnlyConversation, resolvedConversationBackend]);
+  }, [conversation, isDreamEngineConversation, isMobile, isLegacyReadOnlyConversation, resolvedConversationBackend]);
 
   if (conversation && conversation.type === 'dream') {
-    return <AionrsConversationPanel key={conversation.id} conversation={conversation} sliderTitle={sliderTitle} />;
+    return <DreamEngineConversationPanel key={conversation.id} conversation={conversation} sliderTitle={sliderTitle} />;
   }
 
   // 如果有预设助手信息，使用预设助手的 logo 和名称；加载中时不进入 fallback；否则使用 backend 的 logo
