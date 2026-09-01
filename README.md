@@ -58,7 +58,7 @@ Team Mode 多 Agent **并行执行**：Leader 拆任务、Teammate 同时跑。�
 
 `Team Mode 并行` · `多成员同时执行` · `作战记录可导出`
 
-<img src="./resources/screens/team-work.png" alt="Team Mode 多 Agent 并行" width="100%">
+<img src="./resources/adv/adv-speed.png" alt="速度快 · Team Mode 并行交付" width="100%">
 
 </td>
 </tr>
@@ -77,7 +77,7 @@ Team Mode 多 Agent **并行执行**：Leader 拆任务、Teammate 同时跑。�
 
 `记忆本地存储` · `Key 不外传` · `操作可批准可审计`
 
-<img src="./resources/screens/memory.png" alt="三层记忆架构" width="100%">
+<img src="./resources/adv/adv-privacy.png" alt="隐私安全 · 数据与 Key 落本机" width="100%">
 
 </td>
 </tr>
@@ -96,7 +96,7 @@ Team Mode 多 Agent **并行执行**：Leader 拆任务、Teammate 同时跑。�
 
 `252 内置专家` · `Skill 复用` · `任意模型 API`
 
-<img src="./resources/screens/experts.png" alt="252 行业专家" width="100%">
+<img src="./resources/adv/adv-cost.png" alt="省钱 · Token 消耗更低" width="100%">
 
 </td>
 </tr>
@@ -113,12 +113,7 @@ Team Mode 多 Agent **并行执行**：Leader 拆任务、Teammate 同时跑。�
 
 OpenAI **Codex CLI** 和 Anthropic **Claude Code** 被厂商锁死在官方账号。One Work 在本机起一个兼容端点，**官方 CLI 直接走你自配的 MiniMax、DeepSeek、Kimi 或自建网关** —— 纯本地转发，关闭即恢复。
 
-<table>
-<tr>
-<td width="50%"><img src="./resources/screens/bridge-codex.png" alt="Codex 桥接" width="100%"><br><sub>Codex CLI → 自配模型</sub></td>
-<td width="50%"><img src="./resources/screens/bridge-claude.png" alt="Claude 桥接" width="100%"><br><sub>Claude Code → 自配模型</sub></td>
-</tr>
-</table>
+<img src="./resources/adv/adv-bridge.png" alt="Codex / Claude CLI 一键桥接自配模型" width="100%">
 
 </td>
 </tr>
@@ -137,7 +132,7 @@ WebUI 局域网 / 内网部署，配合 Issues 审计、数字员工与**离线�
 
 `WebUI 内网` · `Issues 审计` · `离线授权 ONEWORK-…`
 
-<img src="./resources/screens/enterprise-login.png" alt="企业版内网部署" width="100%">
+<img src="./resources/adv/adv-local.png" alt="本地化部署 · 企业内网可私有化" width="100%">
 
 </td>
 </tr>
