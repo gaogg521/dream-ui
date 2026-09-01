@@ -43,8 +43,8 @@ async function launchAppWithoutExtensions(): Promise<ElectronApplication> {
     cwd: projectRoot,
     env: {
       ...process.env,
-      DREAM_EXTENSIONS_PATH: emptyExtensionsDir,
-      DREAM_EXTENSION_STATES_FILE: extensionStatesFile,
+      ONE_EXTENSIONS_PATH: emptyExtensionsDir,
+      ONE_EXTENSION_STATES_FILE: extensionStatesFile,
       DREAM_DISABLE_AUTO_UPDATE: '1',
       AIONUI_DISABLE_DEVTOOLS: '1',
       DREAM_E2E_TEST: '1',

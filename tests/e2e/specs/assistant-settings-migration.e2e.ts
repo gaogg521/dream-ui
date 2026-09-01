@@ -198,7 +198,7 @@ test.describe('Assistant Settings Migration', () => {
       env: {
         ...process.env,
         RUST_LOG: 'warn',
-        DREAM_EXTENSIONS_PATH: path.join(process.cwd(), 'examples'),
+        ONE_EXTENSIONS_PATH: path.join(process.cwd(), 'examples'),
       },
     });
     try {

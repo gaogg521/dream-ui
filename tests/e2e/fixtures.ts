@@ -205,8 +205,8 @@ async function launchApp(): Promise<ElectronApplication> {
 
   const commonEnv = {
     ...process.env,
-    DREAM_EXTENSIONS_PATH: process.env.DREAM_EXTENSIONS_PATH || path.join(projectRoot, 'examples'),
-    DREAM_EXTENSION_STATES_FILE: process.env.DREAM_EXTENSION_STATES_FILE || e2eStateFile,
+    ONE_EXTENSIONS_PATH: process.env.ONE_EXTENSIONS_PATH || path.join(projectRoot, 'examples'),
+    ONE_EXTENSION_STATES_FILE: process.env.ONE_EXTENSION_STATES_FILE || e2eStateFile,
     DREAM_DISABLE_AUTO_UPDATE: '1',
     AIONUI_DISABLE_DEVTOOLS: '1',
     DREAM_E2E_TEST: '1',

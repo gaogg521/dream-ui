@@ -90,12 +90,12 @@ async function main() {
 
   const env = {
     ...process.env,
-    DREAM_EXTENSIONS_PATH: path.join(projectRoot, 'examples'),
+    ONE_EXTENSIONS_PATH: path.join(projectRoot, 'examples'),
   };
 
   console.log(`[packaged-launch] executable: ${packaged.executablePath}`);
   console.log(`[packaged-launch] cwd: ${packaged.cwd}`);
-  console.log(`[packaged-launch] DREAM_EXTENSIONS_PATH: ${env.DREAM_EXTENSIONS_PATH}`);
+  console.log(`[packaged-launch] ONE_EXTENSIONS_PATH: ${env.ONE_EXTENSIONS_PATH}`);
 
   if (dryRun) return;
 

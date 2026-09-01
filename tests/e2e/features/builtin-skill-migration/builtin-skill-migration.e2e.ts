@@ -371,8 +371,8 @@ test.describe('Built-in Skill Migration (T3)', () => {
       const logFd = fs.openSync(logPath, 'a');
       const parentEnv = { ...process.env };
       // Scrub any env vars that would leak main-Electron backend state.
-      delete parentEnv.DREAM_EXTENSIONS_PATH;
-      delete parentEnv.DREAM_EXTENSION_STATES_FILE;
+      delete parentEnv.ONE_EXTENSIONS_PATH;
+      delete parentEnv.ONE_EXTENSION_STATES_FILE;
       delete parentEnv.DREAM_E2E_TEST;
       delete parentEnv.DREAM_CDP_PORT;
       delete parentEnv.AIONUI_BUILTIN_SKILLS_PATH;

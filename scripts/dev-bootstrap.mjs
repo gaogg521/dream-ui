@@ -177,8 +177,8 @@ function launch(scriptName, withExtensions) {
 
   const env = { ...process.env };
   if (withExtensions) {
-    env.DREAM_EXTENSIONS_PATH = path.resolve(process.cwd(), 'examples');
-    log(`DREAM_EXTENSIONS_PATH=${env.DREAM_EXTENSIONS_PATH}`);
+    env.ONE_EXTENSIONS_PATH = path.resolve(process.cwd(), 'examples');
+    log(`ONE_EXTENSIONS_PATH=${env.ONE_EXTENSIONS_PATH}`);
   }
 
   const child = spawn('bun', ['run', scriptName], {
