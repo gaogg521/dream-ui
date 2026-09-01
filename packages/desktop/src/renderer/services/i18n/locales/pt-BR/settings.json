@@ -425,6 +425,9 @@
   "openAiApiModeChatCompletions": "Chat Completions",
   "openAiApiModeResponses": "Responses",
   "openAiApiModeTip": "Disponível apenas para modelos que usam um protocolo compatível com OpenAI.",
+  "contextWindow": "Janela de contexto",
+  "contextWindowPlaceholder": "ex.: 32768",
+  "contextWindowTip": "Deixe em branco para usar o padrão do modelo. Modelos locais (ex.: Ollama) costumam ter contexto padrão pequeno (4096) — defina conforme a capacidade real do modelo.",
   "modelSettingsApplyToSelected": "Estas configurações se aplicam a todos os modelos selecionados e podem ser alteradas individualmente depois.",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {

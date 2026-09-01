@@ -425,6 +425,9 @@
   "openAiApiModeChatCompletions": "Chat Completions",
   "openAiApiModeResponses": "Responses",
   "openAiApiModeTip": "فقط برای مدل‌هایی که از پروتکل سازگار با OpenAI استفاده می‌کنند در دسترس است.",
+  "contextWindow": "پنجره زمینه",
+  "contextWindowPlaceholder": "مثلاً 32768",
+  "contextWindowTip": "برای استفاده از مقدار پیش‌فرض مدل خالی بگذارید. مدل‌های محلی (مانند Ollama) معمولاً زمینه پیش‌فرض کوچکی (4096) دارند — مطابق ظرفیت واقعی مدل تنظیم کنید.",
   "modelSettingsApplyToSelected": "این تنظیمات برای همه مدل‌های انتخاب‌شده اعمال می‌شود و بعداً می‌توان هرکدام را جداگانه تغییر داد.",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {

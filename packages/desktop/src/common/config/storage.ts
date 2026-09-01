@@ -595,6 +595,16 @@ export type ModelSettings = {
    * find out by reconciling against an invoice.
    */
   media_unit_prices_usd?: Record<string, number>;
+  /**
+   * Context window size in tokens, as declared by the user.
+   *
+   * Absent = the engine uses its built-in default. Matters most for locally
+   * served models (Ollama defaults to 4096 tokens regardless of what the
+   * model supports), where the server cannot be trusted to report the right
+   * limit. Passed through to the engine's compaction threshold and, for the
+   * native Ollama transport, sent as `options.num_ctx`.
+   */
+  context_window?: number;
 };
 
 export interface IProvider {

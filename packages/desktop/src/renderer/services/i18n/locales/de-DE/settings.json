@@ -417,6 +417,9 @@
   "openAiApiModeChatCompletions": "Chat Completions",
   "openAiApiModeResponses": "Responses",
   "openAiApiModeTip": "Nur für Modelle mit OpenAI-kompatiblem Protokoll verfügbar.",
+  "contextWindow": "Kontextfenster",
+  "contextWindowPlaceholder": "z. B. 32768",
+  "contextWindowTip": "Leer lassen, um den Standardwert des Modells zu verwenden. Lokal bereitgestellte Modelle (z. B. Ollama) nutzen oft nur 4096 Tokens — tragen Sie hier die tatsächliche Kapazität des Modells ein.",
   "modelSettingsApplyToSelected": "Diese Einstellungen gelten für alle ausgewählten Modelle und können später einzeln geändert werden.",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {
