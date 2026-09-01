@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 500" fill="none">
+  <defs>
+    <linearGradient id="co-bg" x1="0" y1="0" x2="880" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#090f1a"/><stop offset="1" stop-color="#05080e"/>
+    </linearGradient>
+    <linearGradient id="co-accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#3b82f6"/><stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="co-green" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#10b981"/><stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="co-card" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#141d2d" stop-opacity=".95"/><stop offset="1" stop-color="#0d1422" stop-opacity=".98"/>
+    </linearGradient>
+    <pattern id="co-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r=".7" fill="#334155" fill-opacity=".3"/>
+    </pattern>
+    <filter id="co-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="880" height="500" rx="12" fill="url(#co-bg)"/>
+  <rect width="880" height="500" rx="12" fill="url(#co-grid)" opacity=".6"/>
+  <rect x="1" y="1" width="878" height="498" rx="11" stroke="rgba(255,255,255,.07)" fill="none"/>
+
+  <!-- Top Header Bar -->
+  <g transform="translate(24, 20)">
+    <rect width="832" height="38" rx="8" fill="#0d1524" stroke="rgba(255,255,255,.08)"/>
+    <rect x="12" y="10" width="160" height="20" rx="4" fill="rgba(59,130,246,.15)"/>
+    <text x="20" y="24" fill="#60a5fa" font-family="system-ui,-apple-system,sans-serif" font-size="11" font-weight="800" letter-spacing=".04em">💰 252 专家内置 + 上下文智能压缩引擎</text>
+    <g transform="translate(700, 11)">
+      <circle cx="8" cy="8" r="4" fill="#22c55e"/>
+      <text x="20" y="12" fill="#94a3b8" font-family="system-ui,-apple-system,sans-serif" font-size="11" font-weight="600">实测节省 35% Token</text>
+    </g>
+  </g>
+
+  <!-- Main Canvas Area -->
+  
+    <defs>
+      <linearGradient id="co-av1" x1="0" y1="0" x2="1" y2="1">
+        <stop stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/>
+      </linearGradient>
+      <linearGradient id="co-av2" x1="0" y1="0" x2="1" y2="1">
+        <stop stop-color="#06b6d4"/><stop offset="1" stop-color="#0284c7"/>
+      </linearGradient>
+      <linearGradient id="co-av3" x1="0" y1="0" x2="1" y2="1">
+        <stop stop-color="#a855f7"/><stop offset="1" stop-color="#7c3aed"/>
+      </linearGradient>
+      <linearGradient id="co-av4" x1="0" y1="0" x2="1" y2="1">
+        <stop stop-color="#fb923c"/><stop offset="1" stop-color="#ea580c"/>
+      </linearGradient>
+      <linearGradient id="co-bar-buddy" x1="0" y1="0" x2="0" y2="1">
+        <stop stop-color="#475569"/><stop offset="1" stop-color="#1e293b"/>
+      </linearGradient>
+      <linearGradient id="co-bar-work" x1="0" y1="0" x2="0" y2="1">
+        <stop stop-color="#64748b"/><stop offset="1" stop-color="#334155"/>
+      </linearGradient>
+      <linearGradient id="co-bar-onework" x1="0" y1="0" x2="0" y2="1">
+        <stop stop-color="#00f2fe"/><stop offset="0.3" stop-color="#38bdf8"/><stop offset="1" stop-color="#2563eb"/>
+      </linearGradient>
+      <linearGradient id="co-pill-bg" x1="0" y1="0" x2="1" y2="1">
+        <stop stop-color="#22c55e"/><stop offset="1" stop-color="#16a34a"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Left: 252 Compiled Experts -->
+    <g transform="translate(24, 75)" font-family="system-ui,-apple-system,sans-serif">
+      <rect width="360" height="400" rx="14" fill="#0e1726" stroke="rgba(255,255,255,.08)"/>
+      <rect x="1" y="1" width="358" height="40" rx="13" fill="#132035"/>
+      <text x="16" y="25" fill="#fff" font-size="13" font-weight="800">🧩 252 位编译期内置专家体系</text>
+      <text x="344" y="25" text-anchor="end" fill="#4ade80" font-size="11" font-weight="700">开箱即用 · 零 Prompt 消耗</text>
+
+      <g transform="translate(16, 52)">
+        <!-- Expert 1: Architecture -->
+        <g>
+          <rect width="328" height="58" rx="8" fill="#131e2e" stroke="rgba(59,130,246,.35)"/>
+          <circle cx="28" cy="29" r="16" fill="url(#co-av1)" stroke="#60a5fa" stroke-width="1.5"/>
+          <!-- Code icon -->
+          <path d="M23 29 l-4 -3 l4 -3 M33 23 l4 3 l-4 3 M29 21 l-2 16" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <text x="54" y="24" fill="#fff" font-size="12" font-weight="800">全栈架构师 · 磐石石</text>
+          <text x="54" y="42" fill="#94a3b8" font-size="10">预置分布式系统与高并发架构规约</text>
+          <rect x="254" y="18" width="62" height="22" rx="4" fill="rgba(34,197,94,.18)" stroke="rgba(74,222,128,.5)"/>
+          <text x="285" y="33" text-anchor="middle" fill="#4ade80" font-size="10" font-weight="800">免预热</text>
+        </g>
+
+        <!-- Expert 2: Finance / Analytics -->
+        <g transform="translate(0, 66)">
+          <rect width="328" height="58" rx="8" fill="#131e2e" stroke="rgba(6,182,212,.35)"/>
+          <circle cx="28" cy="29" r="16" fill="url(#co-av2)" stroke="#38bdf8" stroke-width="1.5"/>
+          <!-- Trend chart icon -->
+          <path d="M20 33 L24 28 L28 31 L35 22" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="35" cy="22" r="1.5" fill="#fff"/>
+          <text x="54" y="24" fill="#fff" font-size="12" font-weight="800">股票与行业研报分析师</text>
+          <text x="54" y="42" fill="#94a3b8" font-size="10">内置 209 个金融指标与三张表模型</text>
+          <rect x="254" y="18" width="62" height="22" rx="4" fill="rgba(34,197,94,.18)" stroke="rgba(74,222,128,.5)"/>
+          <text x="285" y="33" text-anchor="middle" fill="#4ade80" font-size="10" font-weight="800">免预热</text>
+        </g>
+
+        <!-- Expert 3: Security / Audit -->
+        <g transform="translate(0, 132)">
+          <rect width="328" height="58" rx="8" fill="#131e2e" stroke="rgba(168,85,247,.35)"/>
+          <circle cx="28" cy="29" r="16" fill="url(#co-av3)" stroke="#c084fc" stroke-width="1.5"/>
+          <!-- Shield icon -->
+          <path d="M28 20 L35 23 C35 29 32 34 28 37 C24 34 21 29 21 23 Z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M25 28 l2 2 l4 -4" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <text x="54" y="24" fill="#fff" font-size="12" font-weight="800">代码合规与安全审计师</text>
+          <text x="54" y="42" fill="#94a3b8" font-size="10">内置 OWASP Top 10 与数据合规标准</text>
+          <rect x="254" y="18" width="62" height="22" rx="4" fill="rgba(34,197,94,.18)" stroke="rgba(74,222,128,.5)"/>
+          <text x="285" y="33" text-anchor="middle" fill="#4ade80" font-size="10" font-weight="800">免预热</text>
+        </g>
+
+        <!-- Expert 4: DevOps / Automation -->
+        <g transform="translate(0, 198)">
+          <rect width="328" height="58" rx="8" fill="#131e2e" stroke="rgba(249,115,22,.35)"/>
+          <circle cx="28" cy="29" r="16" fill="url(#co-av4)" stroke="#fdba74" stroke-width="1.5"/>
+          <!-- Lightning bolt icon -->
+          <path d="M29 19 L23 28 L28 28 L27 38 L34 27 L29 27 Z" fill="#fff"/>
+          <text x="54" y="24" fill="#fff" font-size="12" font-weight="800">DevOps 自动化与巡检</text>
+          <text x="54" y="42" fill="#94a3b8" font-size="10">内置 Docker、CI/CD 与微服务调优模版</text>
+          <rect x="254" y="18" width="62" height="22" rx="4" fill="rgba(34,197,94,.18)" stroke="rgba(74,222,128,.5)"/>
+          <text x="285" y="33" text-anchor="middle" fill="#4ade80" font-size="10" font-weight="800">免预热</text>
+        </g>
+
+        <!-- Bottom Feature tag -->
+        <g transform="translate(0, 268)">
+          <rect width="328" height="64" rx="8" fill="#0a101a" stroke="rgba(56,189,248,.25)"/>
+          <text x="14" y="24" fill="#38bdf8" font-size="11" font-weight="800">🚀 原理：Skill Indexing 本地索引机制</text>
+          <text x="14" y="46" fill="#94a3b8" font-size="10">无需每轮在 Prompt 中注入万字背景，按需动态加载</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- Right: Benchmark Chart & Savings -->
+    <g transform="translate(404, 75)" font-family="system-ui,-apple-system,sans-serif">
+      <rect width="452" height="400" rx="14" fill="#0e1726" stroke="rgba(255,255,255,.08)"/>
+      <rect x="1" y="1" width="450" height="40" rx="13" fill="#132035"/>
+      <text x="16" y="25" fill="#fff" font-size="13" font-weight="800">📊 同任务集 Token 消耗实测 (5 项综合任务均值)</text>
+      
+      <!-- Chart Area -->
+      <g transform="translate(24, 60)">
+        <!-- Grid lines -->
+        <line x1="0" y1="200" x2="404" y2="200" stroke="#334155" stroke-width="1"/>
+        <line x1="0" y1="140" x2="404" y2="140" stroke="#1e293b" stroke-dasharray="4 4"/>
+        <line x1="0" y1="80" x2="404" y2="80" stroke="#1e293b" stroke-dasharray="4 4"/>
+        <line x1="0" y1="20" x2="404" y2="20" stroke="#1e293b" stroke-dasharray="4 4"/>
+
+        <!-- Bar 1: Buddy -->
+        <g transform="translate(40, 0)">
+          <rect x="0" y="20" width="76" height="180" rx="8" fill="url(#co-bar-buddy)" stroke="rgba(148,163,184,.35)" stroke-width="1"/>
+          <text x="38" y="12" text-anchor="middle" fill="#cbd5e1" font-size="13" font-weight="700">317.0k</text>
+          <text x="38" y="222" text-anchor="middle" fill="#cbd5e1" font-size="12" font-weight="700">某 Buddy</text>
+          <text x="38" y="238" text-anchor="middle" fill="#64748b" font-size="10">基准消耗 (100%)</text>
+        </g>
+
+        <!-- Bar 2: Work -->
+        <g transform="translate(164, 0)">
+          <rect x="0" y="55" width="76" height="145" rx="8" fill="url(#co-bar-work)" stroke="rgba(148,163,184,.4)" stroke-width="1"/>
+          <text x="38" y="47" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">264.3k</text>
+          <text x="38" y="222" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="700">某 Work</text>
+          <text x="38" y="238" text-anchor="middle" fill="#94a3b8" font-size="10">约 −16%</text>
+        </g>
+
+        <!-- Bar 3: One Work -->
+        <g transform="translate(288, 0)" filter="url(#co-glow)">
+          <rect x="0" y="92" width="76" height="108" rx="8" fill="url(#co-bar-onework)" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="38" y="80" text-anchor="middle" fill="#38bdf8" font-size="15" font-weight="900">206.1k</text>
+          <text x="38" y="222" text-anchor="middle" fill="#38bdf8" font-size="13" font-weight="900">One Work</text>
+          <text x="38" y="238" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="900">省 35% Token</text>
+
+          <!-- Saving Pill Badge -->
+          <g transform="translate(8, 134)">
+            <rect width="60" height="24" rx="12" fill="url(#co-pill-bg)" stroke="#86efac" stroke-width="1.5"/>
+            <text x="30" y="16.5" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">−35%</text>
+          </g>
+        </g>
+      </g>
+
+      <!-- Bottom Summary Box -->
+      <g transform="translate(20, 320)">
+        <rect width="412" height="60" rx="8" fill="#0a101a" stroke="rgba(34,197,94,.3)"/>
+        <circle cx="28" cy="30" r="12" fill="rgba(34,197,94,.25)"/>
+        <text x="28" y="35" text-anchor="middle" fill="#4ade80" font-size="12" font-weight="900">⚡</text>
+        <text x="48" y="24" fill="#fff" font-size="11" font-weight="800">同等预算下，支持多完成 1.5 倍复杂的任务</text>
+        <text x="48" y="44" fill="#94a3b8" font-size="10">预置领域知识 + 智能上下文剪枝，降低企业大模型 API 采购成本</text>
+      </g>
+    </g>
+    
+</svg>
