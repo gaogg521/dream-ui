@@ -1498,5 +1498,35 @@
     "openSettings": "Config. do grupo"
   },
   "enterpriseChannel": "Canal da empresa",
-  "enterpriseChannelTip": "Este canal de modelos é fornecido pela sua empresa. As credenciais ficam no servidor da empresa e ele não pode ser alterado nem removido aqui."
+  "enterpriseChannelTip": "Este canal de modelos é fornecido pela sua empresa. As credenciais ficam no servidor da empresa e ele não pode ser alterado nem removido aqui.",
+  "trialVendor": {
+    "openrouter": {
+      "title": "Roteador gratuito OpenRouter",
+      "desc": "Modelos de IA gratuitos, sem cadastro — cota inicial de US$ 1/mês",
+      "providerName": "OpenRouter (Teste)"
+    },
+    "baoyun": {
+      "title": "Baoyun · ¥10 de crédito grátis",
+      "desc": "Comece com ¥10 de uso; recarregue quando acabar",
+      "providerName": "Baoyun (Teste)"
+    }
+  },
+  "meteredQuota": {
+    "remaining": "{{amount}} restante",
+    "exhausted": "Esgotado"
+  },
+  "meteredTopUp": {
+    "title": "Recarregar",
+    "currentBalance": "Saldo atual: {{amount}}",
+    "selectPackage": "Escolha um valor",
+    "package": "¥{{price}}",
+    "payAmount": "Pagar {{amount}}",
+    "payHint": "Conclua o pagamento na página aberta — o saldo é atualizado sozinho.",
+    "waitingPayment": "Aguardando pagamento…",
+    "chooseAnother": "Escolher outro valor",
+    "creditedAmount": "{{amount}} adicionado ao seu saldo",
+    "newBalance": "Novo saldo: {{amount}}",
+    "pollTimeout": "Ainda aguardando o pagamento. Seu saldo será atualizado assim que for confirmado.",
+    "orderFailed": "Não foi possível concluir a recarga. Tente novamente."
+  }
 }

@@ -866,5 +866,8 @@
   "mediaModeStartFailed": "生成沒能開始：{{reason}}",
   "mediaJobSourceImages": "參考圖",
   "policyDenied_seatLimitExceeded": "所屬企業的席位已滿，暫時無法發送。請聯絡管理員釋放席位或升級方案。",
-  "policyDenied_departmentBudgetExceeded": "所屬部門本期的用量預算已用完，暫時無法傳送。請聯絡管理員。"
+  "policyDenied_departmentBudgetExceeded": "所屬部門本期的用量預算已用完，暫時無法傳送。請聯絡管理員。",
+  "meteredTopUp": {
+    "cta": "前往儲值"
+  }
 }

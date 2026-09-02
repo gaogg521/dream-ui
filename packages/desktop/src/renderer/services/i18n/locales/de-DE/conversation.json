@@ -867,5 +867,8 @@
   "mediaModeStartFailed": "Generierung konnte nicht gestartet werden: {{reason}}",
   "mediaJobSourceImages": "Ausgangsbilder",
   "policyDenied_seatLimitExceeded": "Das Sitzplatzlimit Ihres Unternehmens ist erreicht; Sie können erst wieder senden, wenn ein Administrator einen Platz freigibt oder den Plan upgradet.",
-  "policyDenied_departmentBudgetExceeded": "Das Nutzungsbudget deiner Abteilung für diesen Zeitraum ist aufgebraucht. Wende dich an eine Administratorin oder einen Administrator."
+  "policyDenied_departmentBudgetExceeded": "Das Nutzungsbudget deiner Abteilung für diesen Zeitraum ist aufgebraucht. Wende dich an eine Administratorin oder einen Administrator.",
+  "meteredTopUp": {
+    "cta": "Aufladen"
+  }
 }

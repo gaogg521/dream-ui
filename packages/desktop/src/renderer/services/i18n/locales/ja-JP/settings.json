@@ -1497,5 +1497,35 @@
     "openSettings": "プロジェクトグループ設定"
   },
   "enterpriseChannel": "組織配布",
-  "enterpriseChannelTip": "このモデルチャネルは会社が一括設定しています。認証情報は会社のサーバーに保管され、ここでは変更・削除できません。"
+  "enterpriseChannelTip": "このモデルチャネルは会社が一括設定しています。認証情報は会社のサーバーに保管され、ここでは変更・削除できません。",
+  "trialVendor": {
+    "openrouter": {
+      "title": "OpenRouter 無料ルーター",
+      "desc": "登録不要の無料 AI モデル。毎月 $1 のお試し枠付き",
+      "providerName": "OpenRouter（お試し）"
+    },
+    "baoyun": {
+      "title": "Baoyun · ¥10 の無料クレジット",
+      "desc": "まず ¥10 分を利用可能。なくなったらチャージ",
+      "providerName": "Baoyun（お試し）"
+    }
+  },
+  "meteredQuota": {
+    "remaining": "残り {{amount}}",
+    "exhausted": "使い切りました"
+  },
+  "meteredTopUp": {
+    "title": "チャージ",
+    "currentBalance": "現在の残高：{{amount}}",
+    "selectPackage": "金額を選択",
+    "package": "¥{{price}}",
+    "payAmount": "{{amount}} を支払う",
+    "payHint": "開いたページで支払いを完了してください。残高は自動で更新されます。",
+    "waitingPayment": "支払いを待っています…",
+    "chooseAnother": "別の金額を選ぶ",
+    "creditedAmount": "{{amount}} が残高に追加されました",
+    "newBalance": "新しい残高：{{amount}}",
+    "pollTimeout": "支払いの確認を待っています。完了すると残高が更新されます。",
+    "orderFailed": "チャージを完了できませんでした。もう一度お試しください。"
+  }
 }

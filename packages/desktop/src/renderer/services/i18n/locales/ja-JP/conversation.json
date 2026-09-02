@@ -866,5 +866,8 @@
   "mediaModeStartFailed": "生成を開始できませんでした: {{reason}}",
   "mediaJobSourceImages": "参照画像",
   "policyDenied_seatLimitExceeded": "所属組織の席数が上限に達しているため送信できません。管理者に席の解放またはプランのアップグレードを依頼してください。",
-  "policyDenied_departmentBudgetExceeded": "今期の部門の利用予算に達したため、送信できません。管理者にお問い合わせください。"
+  "policyDenied_departmentBudgetExceeded": "今期の部門の利用予算に達したため、送信できません。管理者にお問い合わせください。",
+  "meteredTopUp": {
+    "cta": "チャージ"
+  }
 }

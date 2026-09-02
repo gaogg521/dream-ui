@@ -1492,5 +1492,35 @@
     "openSettings": "Paramètres du groupe"
   },
   "enterpriseChannel": "Canal d'entreprise",
-  "enterpriseChannelTip": "Ce canal de modèles est fourni par votre entreprise. Ses identifiants restent sur le serveur de l'entreprise et il ne peut être ni modifié ni supprimé ici."
+  "enterpriseChannelTip": "Ce canal de modèles est fourni par votre entreprise. Ses identifiants restent sur le serveur de l'entreprise et il ne peut être ni modifié ni supprimé ici.",
+  "trialVendor": {
+    "openrouter": {
+      "title": "Routeur gratuit OpenRouter",
+      "desc": "Modèles d'IA gratuits, sans inscription — allocation de départ de 1 $/mois",
+      "providerName": "OpenRouter (essai)"
+    },
+    "baoyun": {
+      "title": "Baoyun · ¥10 de crédit offert",
+      "desc": "Commencez avec ¥10 d'utilisation ; rechargez quand c'est épuisé",
+      "providerName": "Baoyun (essai)"
+    }
+  },
+  "meteredQuota": {
+    "remaining": "{{amount}} restants",
+    "exhausted": "Épuisé"
+  },
+  "meteredTopUp": {
+    "title": "Recharger",
+    "currentBalance": "Solde actuel : {{amount}}",
+    "selectPackage": "Choisissez un montant",
+    "package": "¥{{price}}",
+    "payAmount": "Payer {{amount}}",
+    "payHint": "Terminez le paiement sur la page ouverte — le solde se met à jour tout seul.",
+    "waitingPayment": "En attente du paiement…",
+    "chooseAnother": "Choisir un autre montant",
+    "creditedAmount": "{{amount}} ajoutés à votre solde",
+    "newBalance": "Nouveau solde : {{amount}}",
+    "pollTimeout": "Toujours en attente du paiement. Votre solde sera mis à jour dès qu'il est validé.",
+    "orderFailed": "Impossible de terminer la recharge. Veuillez réessayer."
+  }
 }

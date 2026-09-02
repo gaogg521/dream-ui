@@ -23,6 +23,8 @@
   "trialModel": {
     "bannerTitle": "还没有配置模型",
     "bannerDesc": "无需注册，一键体验免费AI模型",
-    "bannerButton": "一键体验免费模型"
+    "bannerButton": "一键体验免费模型",
+    "pickerTitle": "体验免费 AI 模型",
+    "pickerDesc": "选一个供应商开始 —— 每个都带一份免费体验额度。"
   }
 }
