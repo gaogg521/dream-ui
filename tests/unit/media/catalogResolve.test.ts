@@ -201,6 +201,36 @@ describe('media catalog resolution', () => {
       expect(params.n).toBe(1);
       expect(dropped).toEqual(expect.arrayContaining(['size', 'seed']));
     });
+
+    describe('generateAudio', () => {
+      const gatewayProvider = {
+        base_url: 'https://gw.example.com',
+        model_settings: { 'seedance-2-0-fast': { model_kind: 'video', media_endpoint: 'seedance-gateway' } },
+      };
+
+      it('passes the caller choice through for a model that declares audio support', () => {
+        const spec = resolveMediaModelSpec('video', gatewayProvider, 'seedance-2-0-fast');
+        expect(clipParamsToSpec({ generateAudio: false }, spec).params.generateAudio).toBe(false);
+        expect(clipParamsToSpec({ generateAudio: true }, spec).params.generateAudio).toBe(true);
+      });
+
+      it('applies the spec default when the caller did not choose (seedance -> on)', () => {
+        const spec = resolveMediaModelSpec('video', gatewayProvider, 'seedance-2-0-fast');
+        expect(clipParamsToSpec({}, spec).params.generateAudio).toBe(true);
+      });
+
+      it('lets an explicit choice win over the default', () => {
+        const spec = resolveMediaModelSpec('video', gatewayProvider, 'seedance-2-0-fast');
+        expect(clipParamsToSpec({ generateAudio: false }, spec).params.generateAudio).toBe(false);
+      });
+
+      it('drops it and reports it for a model without audio support', () => {
+        const spec = resolveMediaModelSpec('image', openaiProvider, 'dall-e-3');
+        const { params, dropped } = clipParamsToSpec({ generateAudio: true }, spec);
+        expect(params.generateAudio).toBeUndefined();
+        expect(dropped).toContain('generateAudio');
+      });
+    });
   });
 
   describe('Agnes video (host-pinned entry)', () => {
