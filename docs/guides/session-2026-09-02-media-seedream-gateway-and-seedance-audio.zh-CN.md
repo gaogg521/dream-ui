@@ -15,7 +15,9 @@
 ## 一、seedance 视频无声音 —— 是我们的 BUG
 
 用户报 `seedance-2-0-fast`（挂本地 litellm 网关，走 `seedance-gateway` driver）
-生成的视频没有声音。
+生成的视频没有声音。**同一台机器上直连字节官方 `doubao-seedance-2-0-fast-260128`
+（走 `ark-task` driver）出片是有声音的** —— 说明厂商 2.x 默认就生成音频，问题只在
+中转网关这条路：我们从不发 `generate_audio`，网关/litellm 那侧按关处理。
 
 ### 根因
 
@@ -30,8 +32,9 @@
 - `seedanceGatewayDriver` 里 `if (ctx.params.generateAudio !== undefined)` 永远
   不成立 → 从不发 `generate_audio` → 网关按自己的默认（无声）出片
 
-`arkDriver`（火山直连）的情况更彻底：它把选项编码成 `--flag` 文本后缀，压根没有
-音频通道。
+`arkDriver`（火山直连）把选项编码成 `--flag` 文本后缀、没有音频通道 —— 但**这条
+路不用管**：厂商 2.x 默认生成音频，用户实测直连出片有声。本轮不给它加 flag（flag
+名无文档，写错会被当场景描述渲染进画面）。
 
 ### 修法
 
@@ -40,7 +43,7 @@
 | `catalog/resolve.ts` | `clipParamsToSpec` 的 `take` 段补 `take('generateAudio', !!support?.audio)`；defaults 合并段补 `generateAudio`（仅当模型声明了 `audio` 能力且 spec 有默认值） |
 | `catalog/types.ts` | `MediaModelSpec.defaults` 加 `generateAudio?: boolean` |
 | `catalog/videoModels.ts` | `ark-seedance` 条目 `defaults: { …, generateAudio: true }` —— **用户拍板默认开启音频**，显式「不生成」仍可覆盖（`clipParamsToSpec` 既有的 "caller wins" 语义） |
-| `adapters/taskDrivers/arkDriver.ts` | `decoratePrompt` 加 `--audio ${bool}` flag。⚠️ **flag 名未核实**——注释已标注，火山直连不是用户路径（用户走 litellm），发版前需查火山官方文档或真机生成确认（可能是 `--audio` / `--gen_audio` / 其他） |
+| `adapters/taskDrivers/arkDriver.ts` | **不动**。用户实测火山直连 `doubao-seedance-2-0-fast-260128` 本来就有声音（2.x 默认生成音频），且文本 flag 名无文档、写错会进画面。直连路径靠厂商默认，网关路径靠 `seedanceGatewayDriver` 的 `generate_audio` JSON 字段（本来就支持） |
 | `renderer/components/media/MediaParamsPanel.tsx` | 音频单元格 `active` 判断改用有效值 `value.generateAudio ?? spec.defaults?.generateAudio`，让用户看到默认是「生成」且可点掉 |
 | `renderer/components/media/MediaModeControl.tsx` | `summarize()` 收一个 `defaultAudio` 参数，♪ / ♪✕ pill 按有效值显示 |
 
@@ -181,8 +184,9 @@ auth failure" 立刻失败（`createRotatingClient` 被调 2 次而非 1 次）�
   丢失。生成始终成功（每次 fallback 兜底），代价是企业成员每次多一个毫秒级探测
   请求。真正收口要把「接口协议」做成 `dream-en` 管理后台的渠道定义字段，是产品面
   改动。
-- **`arkDriver` 的 `--audio` flag 名未核实**：火山直连不是用户路径，代码注释已
-  标注，发版前需确认。
+- **火山直连的音频开关是只读默认**：`ark-task` driver 不编码 `generateAudio`（flag
+  名无文档）。2.x 默认有声，用户显式选「不生成」在直连路径上不生效。要补得先拿到
+  火山官方 flag 名。
 - **`modelNotFound` 触发图片回退的假阳性**：如果某网关**真的**没有某个 seedream
   名，会多打一次 `/api/seedream/v1` 的 404（毫秒级）。已收窄到 `ark-seedream`
   一个条目，可接受。
