@@ -84,7 +84,6 @@ function resolveBackendBinary(flags: Map<string, string | true>): string {
   const legacy = path.join(cliRoot, 'bundled-aioncore', platArch, LEGACY_BINARY);
   if (fs.existsSync(legacy)) return legacy;
   return path.join(cliRoot, 'bundled-dreamcore', platArch, BACKEND_BINARY);
-  return bundled;
 }
 
 function resolveStaticDir(flags: Map<string, string | true>): string {

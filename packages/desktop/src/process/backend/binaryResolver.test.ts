@@ -38,10 +38,10 @@ describe('resolveBinaryPath', () => {
     setResourcesPath(originalResourcesPath);
   });
 
-  it('attaches bundled path diagnostics when aioncore cannot be resolved', () => {
+  it('attaches bundled path diagnostics when dreamcore cannot be resolved', () => {
     const resourcesPath = '/app/resources';
     const runtimeKey = `${process.platform}-${process.arch}`;
-    const binaryName = process.platform === 'win32' ? 'dreamcore.exe' : 'aioncore';
+    const binaryName = process.platform === 'win32' ? 'dreamcore.exe' : 'dreamcore';
     const bundledDir = join(resourcesPath, 'bundled-dreamcore');
     const runtimeDir = join(bundledDir, runtimeKey);
     const checkedBundledPath = join(runtimeDir, binaryName);
@@ -57,7 +57,7 @@ describe('resolveBinaryPath', () => {
       throw new Error('not found on PATH');
     });
 
-    expect(() => resolveBinaryPath()).toThrow('Cannot find "aioncore" binary');
+    expect(() => resolveBinaryPath()).toThrow('Cannot find "dreamcore"');
 
     try {
       resolveBinaryPath();
@@ -73,7 +73,7 @@ describe('resolveBinaryPath', () => {
           runtimeDirExists: false,
           resourcesDirEntries: ['bundled-dreamcore/'],
           runtimeDirEntries: ['manifest.json'],
-          pathLookupCommand: process.platform === 'win32' ? 'where aioncore' : 'which aioncore',
+          pathLookupCommand: process.platform === 'win32' ? 'where dreamcore' : 'which dreamcore',
           pathLookupError: expect.stringContaining('not found on PATH'),
         }),
       });

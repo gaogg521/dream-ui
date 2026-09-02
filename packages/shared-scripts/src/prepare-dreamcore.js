@@ -103,6 +103,17 @@ function getBinaryName(platform) {
   return platform === 'win32' ? 'dreamcore.exe' : 'dreamcore';
 }
 
+// Releases published before the rebrand ship the binary as `aioncore`.
+function getLegacyBinaryName(platform) {
+  return platform === 'win32' ? 'aioncore.exe' : 'aioncore';
+}
+
+// Find the backend binary in an extracted archive, accepting the legacy
+// `aioncore` name (pre-rebrand releases) so `renameLegacyBinary` can normalize it.
+function findBackendBinaryInDir(dir, platform) {
+  return findBinaryInDir(dir, getBinaryName(platform)) || findBinaryInDir(dir, getLegacyBinaryName(platform));
+}
+
 function getActionsTarget(platform, arch) {
   return ACTIONS_ARTIFACT_TARGETS[`${platform}-${arch}`] || null;
 }
@@ -268,7 +279,9 @@ function downloadReleaseAsset(assetName, tag, outputPath) {
     const asset = (release?.assets || []).find((candidate) => candidate.name === assetName);
     if (!asset) throw new Error(`asset ${assetName} not found in release ${tag}`);
 
-    console.log(`  Downloading dreamcore from ${GITHUB_OWNER}/${GITHUB_REPO} release asset ${asset.id} (authenticated)`);
+    console.log(
+      `  Downloading dreamcore from ${GITHUB_OWNER}/${GITHUB_REPO} release asset ${asset.id} (authenticated)`
+    );
     execFileSync(
       'curl',
       [
@@ -452,21 +465,25 @@ function downloadAndExtractActionsArtifact(platform, arch, runId) {
   downloadFileWithAuth(downloadUrl, artifactZipPath);
   extractArchive(artifactZipPath, artifactExtractDir, platform);
 
-  const archivePath = findAioncoreArchiveInDir(artifactExtractDir);
+  const archivePath = findDreamcoreArchiveInDir(artifactExtractDir);
   if (!archivePath) {
-    throw new Error(`DreamCore artifact ${expectedArtifactName} from run ${runId} does not contain a dreamcore archive`);
+    throw new Error(
+      `DreamCore artifact ${expectedArtifactName} from run ${runId} does not contain a dreamcore archive`
+    );
   }
 
   extractArchive(archivePath, binaryExtractDir, platform);
 
   const binaryName = getBinaryName(platform);
-  const binaryPath = findBinaryInDir(binaryExtractDir, binaryName);
-  if (!binaryPath) {
-    throw new Error(`Binary ${binaryName} (or legacy aioncore binary) not found in DreamCore artifact ${expectedArtifactName} from run ${runId}`);
+  const foundBinary = findBackendBinaryInDir(binaryExtractDir, platform);
+  if (!foundBinary) {
+    throw new Error(
+      `Binary ${binaryName} (or legacy ${getLegacyBinaryName(platform)}) not found in DreamCore artifact ${expectedArtifactName} from run ${runId}`
+    );
   }
 
   return {
-    binaryPath,
+    binaryPath: renameLegacyBinary(foundBinary, binaryName),
     tempDir,
     artifactName: expectedArtifactName,
     archivePath,
@@ -500,9 +517,11 @@ function downloadAndExtract(platform, arch, tag) {
   extractArchive(archivePath, extractDir, platform);
 
   const binaryName = getBinaryName(platform);
-  const binaryPath = findBinaryInDir(extractDir, binaryName);
+  const binaryPath = findBackendBinaryInDir(extractDir, platform);
   if (!binaryPath) {
-    throw new Error(`Binary ${binaryName} not found in downloaded archive`);
+    throw new Error(
+      `Binary ${binaryName} (or legacy ${getLegacyBinaryName(platform)}) not found in downloaded archive`
+    );
   }
 
   return { binaryPath: renameLegacyBinary(binaryPath, binaryName), tempDir, url };

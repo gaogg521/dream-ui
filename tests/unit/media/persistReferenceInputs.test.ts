@@ -21,8 +21,10 @@ describe('persistReferenceInputs', () => {
   let volatileDir: string;
 
   beforeEach(async () => {
-    workspaceDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'refs-ws-'));
-    volatileDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'refs-tmp-'));
+    // realpath: the Windows CI runner's tmpdir() is an 8.3 short path, while
+    // persistReferenceInputs canonicalizes to the long form.
+    workspaceDir = await fs.promises.realpath(await fs.promises.mkdtemp(path.join(os.tmpdir(), 'refs-ws-')));
+    volatileDir = await fs.promises.realpath(await fs.promises.mkdtemp(path.join(os.tmpdir(), 'refs-tmp-')));
   });
 
   afterEach(async () => {
@@ -87,7 +89,7 @@ describe('persistReferenceInputs', () => {
 
   it('keeps several references distinct rather than colliding on one name', async () => {
     const a = writeRef(volatileDir, 'same.png');
-    const other = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'refs-tmp2-'));
+    const other = await fs.promises.realpath(await fs.promises.mkdtemp(path.join(os.tmpdir(), 'refs-tmp2-')));
     const b = writeRef(other, 'same.png');
 
     const kept = await persistReferenceInputs([a, b], workspaceDir);

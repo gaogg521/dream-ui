@@ -120,9 +120,10 @@ extraResources:
     to: .
   - from: resources/app.png
     to: app.png
-  # aioncore binary (pre-compiled per platform/arch, ships its own bun runtime)
-  - from: resources/bundled-aioncore
-    to: bundled-aioncore
+  # dreamcore binary + managed resources (pre-compiled per platform/arch,
+  # prepared by scripts/shared-scripts/prepare-dreamcore.js)
+  - from: resources/bundled-dreamcore
+    to: bundled-dreamcore
   - from: resources/hub
     to: hub
 win:
