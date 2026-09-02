@@ -1,10 +1,11 @@
 # 宝云（Baoyun）模式 B 计量代理 —— 设计与交接文档
 
-> **状态：Phase 1（broker 通用骨架）已实现（2026-09-02），Phase 2-4 未开始。**
-> 原始交接时本篇只是设计记录；现在 broker 侧的三张新表、`CostResolver`/`PaymentGateway`
-> trait、claim/代理转发/quota/orders/webhook 六个端点、宝云 `RemoteCostResolver`、
-> `MockGateway`、异步计费后台轮询都已落地并有集成测试（`tests/metered.rs`）。
-> 具体见文末"§九 实现进度"。dream-core / dream-ui 侧（§4、§5）仍未动。
+> **状态：Phase 1（broker 骨架）+ Phase 2（dream-core 接线）已实现（2026-09-02）；
+> Phase 3（dream-ui）、Phase 4（真实支付）未开始。**
+> broker 侧：四张新表、`CostResolver`/`PaymentGateway` trait、claim/代理转发/quota/
+> orders/webhook 六端点、宝云 `RemoteCostResolver`、`MockGateway`、异步计费轮询，全有
+> 集成测试。dream-core 侧：`MeteredAccessService` + `/api/providers/metered/*` 四路由 +
+> 结构化 402 错误映射。**dream-ui（§5）仍未动。** 具体见文末"§九 实现进度"。
 >
 > 决策时间：2026-09-02。上游背景见 [`vendor-abstraction-and-paid-tier.zh-CN.md`](./vendor-abstraction-and-paid-tier.zh-CN.md)
 > ——那份文档写于 08-28，"模式 B"当时只是"留接口不实现"，因为没有真实要接的厂商。
@@ -313,8 +314,11 @@ pub trait PaymentGateway: Send + Sync {
    `GET /v1/billing/cost`）+ `MockGateway` + 异步费用后台轮询（`src/metered/poller.rs`）。
    产出：一个能跑通、但收不了真钱的完整闭环。集成测试 `tests/metered.rs` 覆盖
    claim 幂等、零余额硬阻断、master key 替换、按 resolver 计费、订单充值幂等、轮询结算。
-2. **Phase 2 — dream-core 打通**：`MeteredAccessResponse` + 新 service + provider 创建 +
-   broker 结构化 402 的错误映射。
+2. **Phase 2 — dream-core 打通**：✅ **已完成（2026-09-02）**。`MeteredAccessService` +
+   `MeteredAccessResponse`/`MeteredQuotaStatusResponse`/`MeteredOrderResponse` +
+   `/api/providers/metered/{claim,quota,orders,orders/{id}}` 四路由 + 结构化 402 →
+   `UserLlmProviderQuotaExhausted` 的两条路径错误映射 + `wiremock` 集成测试。
+   provider 创建仍是前端的活（Phase 3）。
 3. **Phase 3 — dream-ui**：泛化 claim hook、额度显示、购买弹窗（对接 Phase 1 的
    `MockGateway`，先能演示真实用户体验）、i18n。
 4. **Phase 4 — 真实收款（外部依赖阻塞）**：支付宝/微信支付商户号下来之后，实现真实
@@ -385,15 +389,36 @@ pub trait PaymentGateway: Send + Sync {
    保证。注释里写明：连接数一旦放开就要改成显式 `BEGIN IMMEDIATE`。
 9. **当次透支仍可能发生**：硬阻断只挡"下一次"（费用是转发后才知道的），同 §3.6，先接受。
 
-### 9.3 Phase 2 接手要点
+### 9.3 Phase 2（dream-core 侧）已实现（2026-09-02）
 
-- claim 返回的新响应结构（`MeteredAccessResponse` 对应物）字段：`vendor` / `base_url` /
-  `device_token` / `models` / `currency` / `free_grant_cents` / `remaining_cents`。
-- quota status 返回：`vendor` / `currency` / `free_grant_cents` / `purchased_cents` /
-  `consumed_cents` / `remaining_cents` / `exhausted`。**不是** mode A 的 USD/f64 形状，
-  dream-core 别想直接复用 `QuotaStatusResponse`。
-- 错误码映射见 9.2 第 7 点。
+在 dream-core `fix/enterprise-bootstrap-and-admin-ui` 分支上，两个提交：
+`feat(system): relay metered-proxy (mode B) trial access to the broker` +
+`fix(errors): map the broker's structured QUOTA_EXHAUSTED to spent-allowance`。
+细节文档：dream-core `docs/guides/session-2026-09-02-baoyun-metered-phase2.zh-CN.md`。
+
+- **新 service** `crates/dream-core-system/src/metered_access.rs` `MeteredAccessService`
+  （不合并进 `TrialKeyService`，只共享抽出来的 `crate::install_id`）。方法 `claim` /
+  `read_quota_status` / `create_order` / `get_order` 转发 broker `/v1/metered/*`。
+- **新 api-type** `MeteredAccessResponse` / `MeteredQuotaStatusResponse` /
+  `MeteredOrderResponse`（`dream-core-api-types/src/provider.rs`）——字段与 broker 的
+  `ClaimResponse` / `QuotaResponse` / `OrderResponse` 对齐。
+- **新路由**（dream-core 对前端的面）：`POST /api/providers/metered/claim {vendor}`、
+  `GET /api/providers/metered/quota?vendor=`、`POST /api/providers/metered/orders
+  {vendor, package_id}`、`GET /api/providers/metered/orders/{id}`。
+- **错误分类**：broker 结构化 402 的 `code`/`error` `quota_exhausted` 已加进
+  dream-core 的 `looks_like_spent_allowance`，两条分类路径（`protocol::send_error` 文本、
+  `manager::dream_engine::error` 状态码）都映射到 `UserLlmProviderQuotaExhausted`；
+  文本路径里 spent-allowance 检查移到了 402/billing 块之前。
+- 读同一个 `DREAM_TRIAL_BROKER_URL`（broker 一个服务两种模式）；未配置时报"未配置"。
+
+### 9.4 Phase 3（dream-ui）接手要点
+
 - Phase 4 之前 `gateway` 恒为 `MockGateway`，webhook 路由是
   `POST /v1/metered/orders/webhook/mock`，body 要带 `{order_id, paid, secret}`，secret
   来自 `MOCK_GATEWAY_SECRET`（默认 `mock-secret`）。真实网关按同一 `PaymentGateway`
   trait 加，不动订单表和账本。
+- 购买弹窗在 `structuredError.code === 'USER_LLM_PROVIDER_QUOTA_EXHAUSTED'` **且 provider
+  是我们发的 metered-trial provider** 时弹出（见 §5）。
+- claim 返回的 `base_url` 是 broker 自己的代理地址
+  `{PUBLIC_BASE_URL}/v1/metered/proxy/{vendor}`，`api_key` = `device_token`，platform
+  建成 `custom`。
