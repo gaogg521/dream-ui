@@ -673,6 +673,7 @@
   "speechToTextWholeBadge": "گروهی",
   "mcp": "یکپارچگی MCP",
   "imageGenerationModel": "مدل تصویری",
+  "mediaModelAutoPlaceholder": "انتخاب‌نشده · پیش‌فرض {{model}}",
   "imageGenSupportedTooltipTitle": "مدل‌های تصویری پشتیبانی‌شده فعلی:",
   "imageGenSupportedTooltipGemini": "مدل‌های تصویری Google Gemini / Vertex AI (مثلاً gemini-2.5-flash-image)",
   "imageGenSupportedTooltipOpenRouter": "مدل‌های تصویری چت‌محور OpenRouter (مثلاً nano-banana، gemini-image)",

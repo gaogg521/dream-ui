@@ -673,6 +673,7 @@
   "speechToTextWholeBadge": "一括",
   "mcp": "MCP統合",
   "imageGenerationModel": "画像モデル",
+  "mediaModelAutoPlaceholder": "未選択 · デフォルトは {{model}}",
   "imageGenSupportedTooltipTitle": "現在サポートされている画像モデル：",
   "imageGenSupportedTooltipGemini": "Google Gemini / Vertex AI 画像モデル（例：gemini-2.5-flash-image）",
   "imageGenSupportedTooltipOpenRouter": "OpenRouter 経由の chat 形式画像モデル（例：nano-banana、gemini-image）",

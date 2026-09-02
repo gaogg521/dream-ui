@@ -675,6 +675,7 @@
   "speechToTextWholeBadge": "Batch",
   "mcp": "MCP Integration",
   "imageGenerationModel": "Image Model",
+  "mediaModelAutoPlaceholder": "Not set — defaults to {{model}}",
   "imageGenSupportedTooltipTitle": "Currently supported image models:",
   "imageGenSupportedTooltipGemini": "Google Gemini / Vertex AI image models (e.g. gemini-2.5-flash-image)",
   "imageGenSupportedTooltipOpenRouter": "OpenRouter chat-style image models (e.g. nano-banana, gemini-image)",

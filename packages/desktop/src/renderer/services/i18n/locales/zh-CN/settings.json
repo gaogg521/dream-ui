@@ -675,6 +675,7 @@
   "speechToTextWholeBadge": "整段",
   "mcp": "MCP 集成",
   "imageGenerationModel": "图像模型",
+  "mediaModelAutoPlaceholder": "未选择 · 默认使用 {{model}}",
   "imageGenSupportedTooltipTitle": "当前已支持的图像模型：",
   "imageGenSupportedTooltipGemini": "Google Gemini / Vertex AI 图像模型（如 gemini-2.5-flash-image）",
   "imageGenSupportedTooltipOpenRouter": "OpenRouter 中转的图像 chat 模型（如 nano-banana、gemini-image）",
