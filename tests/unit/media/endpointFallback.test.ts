@@ -242,4 +242,34 @@ describe('diagnoseAutoEndpointMismatch', () => {
     expect(diagnoseAutoEndpointMismatch('video', relayProvider, 'some-chat-model')).toBeNull();
     expect(diagnoseAutoEndpointMismatch('video', relayProvider, '')).toBeNull();
   });
+
+  /**
+   * The seedream image entry carries no endpointStyle (it is the plain images
+   * route), but it has the same name-only match + relay-gateway failure mode as
+   * Seedance, so it gets the same early hint.
+   */
+  it('flags seedream on a non-Ark host even though it has no endpointStyle', () => {
+    const relaySeedream = { ...relayProvider, use_model: 'doubao-seedream-5-0-pro' };
+    const diagnosis = diagnoseAutoEndpointMismatch('image', relaySeedream, 'doubao-seedream-5-0-pro');
+    expect(diagnosis?.kind).toBe('hostMismatch');
+    expect(diagnosis).toMatchObject({ hints: ['volces.com'] });
+  });
+
+  it('stays quiet for seedream pointed straight at Ark', () => {
+    const arkSeedream = {
+      ...relayProvider,
+      base_url: 'https://ark.cn-beijing.volces.com/api/v3',
+      use_model: 'doubao-seedream-5-0-pro',
+    };
+    expect(diagnoseAutoEndpointMismatch('image', arkSeedream, 'doubao-seedream-5-0-pro')).toBeNull();
+  });
+
+  it('stays quiet for seedream when the user already pinned an endpoint', () => {
+    const declared = {
+      ...relayProvider,
+      use_model: 'doubao-seedream-5-0-pro',
+      model_settings: { 'doubao-seedream-5-0-pro': { model_kind: 'image', media_endpoint: 'seedream-gateway' } },
+    };
+    expect(diagnoseAutoEndpointMismatch('image', declared, 'doubao-seedream-5-0-pro')).toBeNull();
+  });
 });

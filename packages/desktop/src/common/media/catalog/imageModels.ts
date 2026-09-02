@@ -18,6 +18,15 @@
 
 import type { MediaModelSpec } from './types';
 
+/**
+ * Catalog id for the direct-Ark Seedream entry below.
+ *
+ * Lives here (renderer-safe `catalog/`) rather than next to the gateway adapter,
+ * which imports `fs`/`path`: both the adapter and the resolver need to recognise
+ * this vendor family, and the resolver cannot pull in a Node-only module.
+ */
+export const ARK_SEEDREAM_CATALOG_ID = 'ark-seedream';
+
 export const BUILTIN_IMAGE_MODELS: MediaModelSpec[] = [
   // ===== Provider-pinned Form B entries (preserve the legacy allowlist rules) =====
   {
@@ -95,9 +104,9 @@ export const BUILTIN_IMAGE_MODELS: MediaModelSpec[] = [
   },
   {
     // Seedream on Volcano Ark exposes a synchronous OpenAI-style images API.
-    // The id string is relied on by openaiImagesAdapter.ts (ARK_SEEDREAM_CATALOG_ID)
-    // to send Ark's watermark-suppression field on this direct path — keep in sync.
-    id: 'ark-seedream',
+    // `openaiImagesAdapter.ts` keys the watermark-suppression field and the
+    // gateway auto-fallback on this id (ARK_SEEDREAM_CATALOG_ID, above).
+    id: ARK_SEEDREAM_CATALOG_ID,
     kind: 'image',
     form: 'A',
     match: { model: /seedream/i },

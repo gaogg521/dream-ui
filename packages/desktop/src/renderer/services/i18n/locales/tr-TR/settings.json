@@ -673,6 +673,7 @@
   "speechToTextWholeBadge": "Toplu",
   "mcp": "MCP Entegrasyonu",
   "imageGenerationModel": "Görüntü Modeli",
+  "mediaModelAutoPlaceholder": "Seçilmedi · varsayılan {{model}}",
   "imageGenSupportedTooltipTitle": "Şu anda desteklenen görüntü modelleri:",
   "imageGenSupportedTooltipGemini": "Google Gemini / Vertex AI görüntü modelleri (ör. gemini-2.5-flash-image)",
   "imageGenSupportedTooltipOpenRouter": "OpenRouter üzerinden chat tarzı görüntü modelleri (ör. nano-banana, gemini-image)",

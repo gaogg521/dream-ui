@@ -49,6 +49,12 @@ function decoratePrompt(ctx: TaskSubmitContext): string {
   if (ctx.params.durationSeconds) flags.push(`--dur ${ctx.params.durationSeconds}`);
   if (ctx.params.aspectRatio) flags.push(`--ratio ${ctx.params.aspectRatio}`);
   if (ctx.params.seed !== undefined) flags.push(`--seed ${ctx.params.seed}`);
+  // `generateAudio` is deliberately NOT encoded here. Ark's direct API already
+  // generates audio for Seedance 2.x by default (verified against
+  // doubao-seedance-2-0-fast on the vendor endpoint), and the text flag name is
+  // undocumented — appending a wrong `--flag` would land in the rendered scene.
+  // The relay-gateway path takes `generate_audio` as a real JSON field
+  // (seedanceGatewayDriver) and honours the toggle there.
   return flags.length > 0 ? `${ctx.prompt} ${flags.join(' ')}` : ctx.prompt;
 }
 

@@ -673,6 +673,7 @@
   "speechToTextWholeBadge": "Целиком",
   "mcp": "Интеграция MCP",
   "imageGenerationModel": "Модель для изображений",
+  "mediaModelAutoPlaceholder": "Не выбрано · по умолчанию {{model}}",
   "imageGenSupportedTooltipTitle": "Поддерживаемые модели изображений:",
   "imageGenSupportedTooltipGemini": "Модели Google Gemini / Vertex AI (например, gemini-2.5-flash-image)",
   "imageGenSupportedTooltipOpenRouter": "Чат-модели изображений через OpenRouter (например, nano-banana, gemini-image)",

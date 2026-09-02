@@ -131,6 +131,7 @@ export async function syncTeamModelChannels(): Promise<TeamSkillSyncResult | nul
           token: issued.token,
           models: parseJsonOr<string[]>(channel.models, []),
           modelSettings: parseJsonOr<unknown>(channel.modelSettings, undefined),
+          modelProtocols: parseJsonOr<unknown>(channel.modelProtocols, undefined),
         };
       } catch {
         return null;

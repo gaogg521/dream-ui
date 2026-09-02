@@ -1373,6 +1373,8 @@ export type ManagedChannelInput = {
   token: string;
   models?: string[];
   modelSettings?: unknown;
+  /** Per-model wire protocol overrides (new-api channels). */
+  modelProtocols?: unknown;
 };
 
 // ---------------------------------------------------------------------------
