@@ -26,6 +26,11 @@ pub struct Config {
     pub trial_key_expires_days: i64,
     pub listen_addr: String,
     pub per_ip_rate_limit_per_hour: u32,
+    /// The broker's own externally-reachable base URL (scheme + host + any
+    /// reverse-proxy path prefix, no trailing slash). Mode B's claim response
+    /// builds the client's proxy `base_url` from it. Defaults to
+    /// `http://<listen_addr>`, which is only right for local dev.
+    pub public_base_url: String,
 }
 
 impl Config {
@@ -52,6 +57,10 @@ impl Config {
         let trial_key_expires_days = parse_env_or("TRIAL_KEY_EXPIRES_DAYS", 90i64)?;
         let listen_addr = env::var("LISTEN_ADDR").unwrap_or_else(|_| "0.0.0.0:8787".to_string());
         let per_ip_rate_limit_per_hour = parse_env_or("PER_IP_RATE_LIMIT_PER_HOUR", 5u32)?;
+        let public_base_url = env::var("PUBLIC_BASE_URL")
+            .unwrap_or_else(|_| format!("http://{listen_addr}"))
+            .trim_end_matches('/')
+            .to_string();
 
         Ok(Self {
             openrouter_management_key,
@@ -62,6 +71,7 @@ impl Config {
             trial_key_expires_days,
             listen_addr,
             per_ip_rate_limit_per_hour,
+            public_base_url,
         })
     }
 }

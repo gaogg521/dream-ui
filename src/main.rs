@@ -1,9 +1,12 @@
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
 use dream_trial_broker::config::Config;
 use dream_trial_broker::db;
+use dream_trial_broker::metered::gateway::MockGateway;
+use dream_trial_broker::metered::{baoyun, poller, CostResolver, MeteredRuntime, PaymentGateway};
 use dream_trial_broker::rate_limit::RateLimiter;
 use dream_trial_broker::routes::build_router;
 use dream_trial_broker::service::AppState;
@@ -34,14 +37,25 @@ async fn main() -> anyhow::Result<()> {
         Duration::from_secs(3600),
     ));
 
+    let metered = Arc::new(build_metered_runtime()?);
+
     let state = Arc::new(AppState {
         pool,
         config: Arc::new(config),
         vendor,
         rate_limiter,
+        metered,
     });
 
-    tracing::info!(%listen_addr, vendor = state.vendor.id(), "starting dream-trial-broker");
+    tracing::info!(
+        %listen_addr,
+        vendor = state.vendor.id(),
+        metered_vendors = state.metered.configs.len(),
+        "starting dream-trial-broker"
+    );
+
+    // Settles async (image / video) call costs that could not be billed inline.
+    tokio::spawn(poller::run(Arc::clone(&state)));
 
     let app = build_router(state);
 
@@ -53,4 +67,36 @@ async fn main() -> anyhow::Result<()> {
     .await?;
 
     Ok(())
+}
+
+/// Assembles mode B from the environment. A metered vendor is opt-in: with no
+/// `BAOYUN_MASTER_API_KEY` the runtime has no vendors and every
+/// `/v1/metered/*` route 404s, leaving mode A untouched.
+fn build_metered_runtime() -> anyhow::Result<MeteredRuntime> {
+    let http = reqwest::Client::new();
+    let mut configs = HashMap::new();
+    let mut resolvers: HashMap<&'static str, Arc<dyn CostResolver>> = HashMap::new();
+
+    if let Some(config) = baoyun::config_from_env()? {
+        let resolver = Arc::new(baoyun::RemoteCostResolver::new(http.clone(), &config));
+        resolvers.insert(baoyun::ID, resolver as Arc<dyn CostResolver>);
+        configs.insert(baoyun::ID, config);
+        tracing::info!("metered vendor enabled: baoyun");
+    }
+
+    let gateway: Arc<dyn PaymentGateway> = Arc::new(MockGateway::from_env());
+    if !configs.is_empty() {
+        tracing::warn!(
+            gateway = gateway.id(),
+            "metered proxy is using the {} payment gateway — no real money moves",
+            gateway.id()
+        );
+    }
+
+    Ok(MeteredRuntime {
+        configs,
+        resolvers,
+        gateway,
+        http,
+    })
 }

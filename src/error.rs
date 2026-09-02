@@ -23,6 +23,18 @@ pub enum AppError {
     /// Anything else (bad input, DB error, etc). -> 500 / 400
     Internal(String),
     BadRequest(String),
+
+    // --- mode B (metered proxy) ---
+    /// `/v1/metered/*` named a vendor that is not configured. -> 404
+    MeteredVendorUnknown,
+    /// The install has never claimed a metered account on this vendor. -> 404
+    MeteredAccountUnknown,
+    /// The requested top-up package id is not offered. -> 400
+    MeteredPackageUnknown,
+    /// `/v1/metered/orders/{id}` for an order this service never created. -> 404
+    MeteredOrderUnknown,
+    /// A payment gateway callback failed verification. -> 400
+    WebhookRejected(String),
 }
 
 impl AppError {
@@ -35,6 +47,11 @@ impl AppError {
             AppError::UpstreamError(_) => StatusCode::BAD_GATEWAY,
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
             AppError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::MeteredVendorUnknown => StatusCode::NOT_FOUND,
+            AppError::MeteredAccountUnknown => StatusCode::NOT_FOUND,
+            AppError::MeteredPackageUnknown => StatusCode::BAD_REQUEST,
+            AppError::MeteredOrderUnknown => StatusCode::NOT_FOUND,
+            AppError::WebhookRejected(_) => StatusCode::BAD_REQUEST,
         }
     }
 
@@ -47,6 +64,11 @@ impl AppError {
             AppError::UpstreamError(_) => "upstream_error",
             AppError::BadRequest(_) => "bad_request",
             AppError::Internal(_) => "internal_error",
+            AppError::MeteredVendorUnknown => "metered_vendor_unknown",
+            AppError::MeteredAccountUnknown => "metered_account_unknown",
+            AppError::MeteredPackageUnknown => "metered_package_unknown",
+            AppError::MeteredOrderUnknown => "metered_order_unknown",
+            AppError::WebhookRejected(_) => "webhook_rejected",
         }
     }
 }

@@ -3,13 +3,15 @@ use std::sync::Arc;
 
 use axum::extract::{ConnectInfo, State};
 use axum::http::HeaderMap;
-use axum::routing::{get, post};
+use axum::routing::{any, get, post};
 use axum::{Json, Router};
 use serde::Deserialize;
 use serde_json::json;
 
 use crate::db;
 use crate::error::AppError;
+use crate::metered::proxy::proxy_handler;
+use crate::metered::service as metered;
 use crate::service::{
     issue_trial_key, read_quota_status, AppState, QuotaStatusResponse, TrialKeyRequest,
     TrialKeyResponse,
@@ -19,6 +21,17 @@ pub fn build_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/v1/trial-keys", post(create_trial_key))
         .route("/v1/quota/status", post(quota_status))
+        // Mode B (metered proxy). The forwarding catch-all lives under its own
+        // `/proxy/` segment so it never collides with these fixed routes.
+        .route("/v1/metered/claim", post(metered::claim_handler))
+        .route("/v1/metered/quota/status", post(metered::quota_handler))
+        .route("/v1/metered/orders", post(metered::create_order_handler))
+        .route("/v1/metered/orders/:id", get(metered::get_order_handler))
+        .route(
+            "/v1/metered/orders/webhook/:gateway",
+            post(metered::webhook_handler),
+        )
+        .route("/v1/metered/proxy/:vendor/*path", any(proxy_handler))
         .route("/internal/stats", get(stats))
         .with_state(state)
 }

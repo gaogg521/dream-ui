@@ -49,6 +49,9 @@ pub struct AppState {
     pub config: Arc<Config>,
     pub vendor: Arc<dyn TokenVendor>,
     pub rate_limiter: Arc<RateLimiter>,
+    /// Mode B. Independent of `vendor` above — its own vendors, its own
+    /// tables. Empty when no metered vendor is configured.
+    pub metered: Arc<crate::metered::MeteredRuntime>,
 }
 
 fn log_vendor_error(error: &VendorError) {

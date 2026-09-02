@@ -121,6 +121,7 @@ fn base_config() -> Config {
         trial_key_expires_days: 90,
         listen_addr: "0.0.0.0:8787".to_string(),
         per_ip_rate_limit_per_hour: 5,
+        public_base_url: "http://127.0.0.1:8787".to_string(),
     }
 }
 
@@ -153,6 +154,7 @@ async fn make_state_with(
         config: Arc::new(config),
         vendor: vendor.clone(),
         rate_limiter: Arc::new(RateLimiter::new(rate_limit, Duration::from_secs(3600))),
+        metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
     };
     (state, vendor)
 }
