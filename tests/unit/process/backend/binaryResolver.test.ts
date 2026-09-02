@@ -127,7 +127,7 @@ describe('resolveBinaryPath', () => {
     // passes on Unix.
     const normalizedResourcesPath = join(resourcesPath);
     const runtimeKey = `${process.platform}-${process.arch}`;
-    const binaryName = process.platform === 'win32' ? 'dreamcore.exe' : 'aioncore';
+    const binaryName = process.platform === 'win32' ? 'dreamcore.exe' : 'dreamcore';
     const bundledDir = join(resourcesPath, 'bundled-dreamcore');
     const runtimeDir = join(bundledDir, runtimeKey);
     const checkedBundledPath = join(runtimeDir, binaryName);
