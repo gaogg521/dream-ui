@@ -47,6 +47,9 @@ import type {
   CreateProviderRequest,
   FetchModelsAnonymousRequest,
   FetchModelsResponse,
+  MeteredAccessResponse,
+  MeteredOrderResponse,
+  MeteredQuotaStatusResponse,
   ProviderHealthCheckRequest,
   ProviderHealthCheckResponse,
   TrialKeyResponse,
@@ -1269,6 +1272,24 @@ export const mode = {
    * never claimed a key.
    */
   trialKeyQuota: httpGet<TrialQuotaStatusResponse, void>('/api/providers/trial-key/quota'),
+  /**
+   * Mode B (metered proxy). Opens (or re-opens) a metered account for a
+   * vendor the broker cannot cap a key on — the broker proxies inference and
+   * meters spend. Turn the result into a `platform: 'custom'` provider.
+   */
+  meteredClaim: httpPost<MeteredAccessResponse, { vendor: string }>('/api/providers/metered/claim'),
+  /** Mode B balance, from the broker's local ledger. 404 = never claimed. */
+  meteredQuota: httpGet<MeteredQuotaStatusResponse, { vendor: string }>(
+    (p) => `/api/providers/metered/quota?vendor=${encodeURIComponent(p.vendor)}`
+  ),
+  /** Mode B: create a top-up order; the response carries the gateway pay payload. */
+  meteredCreateOrder: httpPost<MeteredOrderResponse, { vendor: string; package_id: string }>(
+    '/api/providers/metered/orders'
+  ),
+  /** Mode B: poll one top-up order's status. */
+  meteredGetOrder: httpGet<MeteredOrderResponse, { id: string }>(
+    (p) => `/api/providers/metered/orders/${encodeURIComponent(p.id)}`
+  ),
   detectProtocol: httpPost<ProtocolDetectionResponse, ProtocolDetectionRequest>('/api/providers/detect-protocol'),
   /**
    * Materialize the company's model channels as local providers.

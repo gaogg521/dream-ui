@@ -23,6 +23,8 @@
   "trialModel": {
     "bannerTitle": "尚未設定模型",
     "bannerDesc": "無需註冊，一鍵體驗免費AI模型",
-    "bannerButton": "一鍵體驗免費模型"
+    "bannerButton": "一鍵體驗免費模型",
+    "pickerTitle": "體驗免費 AI 模型",
+    "pickerDesc": "選一個供應商開始 —— 每個都附一份免費體驗額度。"
   }
 }

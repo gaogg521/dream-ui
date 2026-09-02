@@ -7,13 +7,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const requestTrialKey = vi.fn();
+const meteredClaim = vi.fn();
 const createProvider = vi.fn();
+const updateProvider = vi.fn();
 
 vi.mock('@/common', () => ({
   ipcBridge: {
     mode: {
       requestTrialKey: { invoke: (...args: unknown[]) => requestTrialKey(...args) },
+      meteredClaim: { invoke: (...args: unknown[]) => meteredClaim(...args) },
       createProvider: { invoke: (...args: unknown[]) => createProvider(...args) },
+      updateProvider: { invoke: (...args: unknown[]) => updateProvider(...args) },
     },
   },
 }));
@@ -27,31 +31,34 @@ vi.mock('@/renderer/hooks/agent/useModelProviderList', () => ({
   fetchProviders: vi.fn(),
 }));
 
-import { claimTrialModel, isTrialProviderClaimed, TRIAL_PROVIDER_ID } from '@/renderer/hooks/agent/useTrialModelClaim';
+import {
+  claimTrialModel,
+  isTrialProviderClaimed,
+  TRIAL_PROVIDER_ID,
+  TRIAL_PROVIDER_ID_BY_VENDOR,
+} from '@/renderer/hooks/agent/useTrialModelClaim';
 
-const trialKey = {
-  key: 'sk-test-key',
-  base_url: 'https://vendor.example/v1',
-  models: ['vendor/free'],
+const trialKey = { key: 'sk-test-key', base_url: 'https://vendor.example/v1', models: ['vendor/free'] };
+const meteredAccess = {
+  vendor: 'baoyun',
+  base_url: 'https://broker.example/v1/metered/proxy/baoyun',
+  device_token: 'dtk_abc',
+  models: ['deepseek-chat'],
+  currency: 'CNY',
+  free_grant_cents: 1000,
+  remaining_cents: 1000,
 };
 
-describe('claimTrialModel', () => {
+describe('claimTrialModel — openrouter (mode A)', () => {
   beforeEach(() => {
     requestTrialKey.mockReset();
-    createProvider.mockReset();
-    createProvider.mockResolvedValue({ id: TRIAL_PROVIDER_ID });
+    createProvider.mockReset().mockResolvedValue({ id: TRIAL_PROVIDER_ID });
   });
 
-  /**
-   * The broker decides which upstream issued the key, so it is the broker that
-   * names the platform. Hardcoding it here would silently mis-create the
-   * provider the day the broker is repointed at a different token platform —
-   * with no client release to catch it.
-   */
   it('creates the provider on the platform the broker named', async () => {
     requestTrialKey.mockResolvedValue({ ...trialKey, platform: 'SomeOtherPlatform', vendor: 'other' });
 
-    const result = await claimTrialModel('Trial');
+    const result = await claimTrialModel('openrouter', 'Trial');
 
     expect(result.outcome).toBe('claimed');
     expect(createProvider).toHaveBeenCalledWith(
@@ -63,12 +70,9 @@ describe('claimTrialModel', () => {
     );
   });
 
-  /** A broker deployed before the field existed still has to work. */
   it('falls back to OpenRouter when the broker sent no platform', async () => {
     requestTrialKey.mockResolvedValue(trialKey);
-
-    await claimTrialModel('Trial');
-
+    await claimTrialModel('openrouter', 'Trial');
     expect(createProvider).toHaveBeenCalledWith(expect.objectContaining({ platform: 'OpenRouter' }));
   });
 
@@ -79,30 +83,71 @@ describe('claimTrialModel', () => {
     [400, 'unavailable'],
   ])('maps a %i from the broker to %s', async (status, outcome) => {
     requestTrialKey.mockRejectedValue({ status });
-
-    const result = await claimTrialModel('Trial');
-
+    const result = await claimTrialModel('openrouter', 'Trial');
     expect(result.outcome).toBe(outcome);
     expect(createProvider).not.toHaveBeenCalled();
   });
 
-  /**
-   * The broker has already minted and recorded the key by this point — dedup
-   * is keyed on the install, not on whether the local row landed. So a
-   * duplicate here reads as "already claimed" rather than as a failure.
-   */
   it('treats a duplicate local provider as already claimed', async () => {
     requestTrialKey.mockResolvedValue(trialKey);
     createProvider.mockRejectedValue({ status: 409 });
+    expect((await claimTrialModel('openrouter', 'Trial')).outcome).toBe('already_claimed');
+  });
+});
 
-    expect((await claimTrialModel('Trial')).outcome).toBe('already_claimed');
+describe('claimTrialModel — baoyun (mode B)', () => {
+  beforeEach(() => {
+    meteredClaim.mockReset().mockResolvedValue(meteredAccess);
+    createProvider.mockReset().mockResolvedValue({ id: TRIAL_PROVIDER_ID_BY_VENDOR.baoyun });
+    updateProvider.mockReset().mockResolvedValue({ id: TRIAL_PROVIDER_ID_BY_VENDOR.baoyun });
+  });
+
+  it('materializes the metered account as a custom provider pointed at the broker proxy', async () => {
+    const result = await claimTrialModel('baoyun', 'Baoyun trial');
+
+    expect(meteredClaim).toHaveBeenCalledWith({ vendor: 'baoyun' });
+    expect(result.outcome).toBe('claimed');
+    expect(createProvider).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'trial-baoyun',
+        platform: 'custom',
+        base_url: meteredAccess.base_url,
+        api_key: 'dtk_abc',
+      })
+    );
+  });
+
+  it('overwrites the stale local provider when a re-claim rotated the token', async () => {
+    createProvider.mockRejectedValue({ status: 409 });
+
+    const result = await claimTrialModel('baoyun', 'Baoyun trial');
+
+    expect(result.outcome).toBe('claimed');
+    expect(updateProvider).toHaveBeenCalledWith(expect.objectContaining({ id: 'trial-baoyun', api_key: 'dtk_abc' }));
+  });
+
+  it.each([
+    [404, 'unavailable'],
+    [400, 'unavailable'],
+    [429, 'rate_limited'],
+  ])('maps a %i from the broker to %s', async (status, outcome) => {
+    meteredClaim.mockRejectedValue({ status });
+    const result = await claimTrialModel('baoyun', 'Baoyun trial');
+    expect(result.outcome).toBe(outcome);
+    expect(createProvider).not.toHaveBeenCalled();
   });
 });
 
 describe('isTrialProviderClaimed', () => {
-  it('recognises the trial provider by its fixed id', () => {
+  it('recognises either vendor by its fixed id', () => {
     expect(isTrialProviderClaimed([{ id: TRIAL_PROVIDER_ID }] as never)).toBe(true);
+    expect(isTrialProviderClaimed([{ id: 'trial-baoyun' }] as never)).toBe(true);
     expect(isTrialProviderClaimed([{ id: 'something-else' }] as never)).toBe(false);
     expect(isTrialProviderClaimed(undefined)).toBe(false);
+  });
+
+  it('scopes to one vendor when asked', () => {
+    expect(isTrialProviderClaimed([{ id: 'trial-baoyun' }] as never, 'baoyun')).toBe(true);
+    expect(isTrialProviderClaimed([{ id: 'trial-baoyun' }] as never, 'openrouter')).toBe(false);
   });
 });

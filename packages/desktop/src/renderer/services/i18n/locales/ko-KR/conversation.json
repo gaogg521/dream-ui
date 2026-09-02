@@ -866,5 +866,8 @@
   "mediaModeStartFailed": "생성을 시작하지 못했습니다: {{reason}}",
   "mediaJobSourceImages": "참조 이미지",
   "policyDenied_seatLimitExceeded": "소속 조직의 좌석이 가득 차서 메시지를 보낼 수 없습니다. 관리자에게 좌석 반환 또는 요금제 업그레이드를 요청하세요.",
-  "policyDenied_departmentBudgetExceeded": "이번 기간의 부서 사용 예산이 모두 소진되어 전송할 수 없습니다. 관리자에게 문의하세요."
+  "policyDenied_departmentBudgetExceeded": "이번 기간의 부서 사용 예산이 모두 소진되어 전송할 수 없습니다. 관리자에게 문의하세요.",
+  "meteredTopUp": {
+    "cta": "충전하기"
+  }
 }

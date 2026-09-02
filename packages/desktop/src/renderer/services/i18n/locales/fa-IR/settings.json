@@ -1495,5 +1495,35 @@
     "openSettings": "تنظیمات گروه پروژه"
   },
   "enterpriseChannel": "کانال سازمانی",
-  "enterpriseChannelTip": "این کانال مدل توسط سازمان شما پیکربندی شده است. اعتبارنامه آن روی سرور سازمان می‌ماند و در اینجا قابل تغییر یا حذف نیست."
+  "enterpriseChannelTip": "این کانال مدل توسط سازمان شما پیکربندی شده است. اعتبارنامه آن روی سرور سازمان می‌ماند و در اینجا قابل تغییر یا حذف نیست.",
+  "trialVendor": {
+    "openrouter": {
+      "title": "مسیریاب رایگان OpenRouter",
+      "desc": "مدل‌های هوش مصنوعی رایگان، بدون ثبت‌نام — سهمیه شروع ۱ دلار در ماه",
+      "providerName": "OpenRouter (آزمایشی)"
+    },
+    "baoyun": {
+      "title": "Baoyun · ۱۰ یوان اعتبار رایگان",
+      "desc": "با ۱۰ یوان مصرف شروع کنید؛ پس از اتمام شارژ کنید",
+      "providerName": "Baoyun (آزمایشی)"
+    }
+  },
+  "meteredQuota": {
+    "remaining": "{{amount}} باقی مانده",
+    "exhausted": "تمام شد"
+  },
+  "meteredTopUp": {
+    "title": "شارژ",
+    "currentBalance": "موجودی فعلی: {{amount}}",
+    "selectPackage": "یک مبلغ انتخاب کنید",
+    "package": "¥{{price}}",
+    "payAmount": "پرداخت {{amount}}",
+    "payHint": "پرداخت را در صفحه‌ای که باز شد کامل کنید — موجودی به‌طور خودکار به‌روز می‌شود.",
+    "waitingPayment": "در انتظار پرداخت…",
+    "chooseAnother": "انتخاب مبلغ دیگر",
+    "creditedAmount": "{{amount}} به موجودی شما اضافه شد",
+    "newBalance": "موجودی جدید: {{amount}}",
+    "pollTimeout": "هنوز در انتظار پرداخت هستیم. موجودی شما پس از تأیید به‌روز می‌شود.",
+    "orderFailed": "شارژ کامل نشد. لطفاً دوباره تلاش کنید."
+  }
 }

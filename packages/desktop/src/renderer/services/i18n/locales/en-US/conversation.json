@@ -880,5 +880,8 @@
   "mediaModeStartFailed": "Could not start the generation: {{reason}}",
   "mediaJobSourceImages": "Source images",
   "policyDenied_seatLimitExceeded": "Your organization's seat limit has been reached; you cannot send messages until an administrator frees a seat or upgrades the plan.",
-  "policyDenied_departmentBudgetExceeded": "Your department's usage budget for this period has been reached. Contact an administrator."
+  "policyDenied_departmentBudgetExceeded": "Your department's usage budget for this period has been reached. Contact an administrator.",
+  "meteredTopUp": {
+    "cta": "Top up"
+  }
 }

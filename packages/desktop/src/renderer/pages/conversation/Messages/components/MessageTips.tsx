@@ -14,6 +14,7 @@ import MarkdownView from '@renderer/components/Markdown';
 import ButlerDiagnoseButton from '@renderer/components/base/ButlerDiagnoseButton';
 import FeedbackButton from '@renderer/components/base/FeedbackButton';
 import CollapsibleContent from '@renderer/components/chat/CollapsibleContent';
+import MeteredTopUpCta from './MeteredTopUpCta';
 import { iconColors } from '@/renderer/styles/colors';
 
 // One entry per `IMessageTips['type']`. `info` was missing, and the render
@@ -163,6 +164,11 @@ const MessageTips: React.FC<{ message: IMessageTips }> = ({ message }) => {
               <div className='text-t-secondary whitespace-break-spaces [word-break:break-word]'>{body}</div>
               {resolutionHint && (
                 <div className='text-t-secondary whitespace-break-spaces [word-break:break-word]'>{resolutionHint}</div>
+              )}
+              {errorCode === 'USER_LLM_PROVIDER_QUOTA_EXHAUSTED' && (
+                <div className='mt-2px'>
+                  <MeteredTopUpCta />
+                </div>
               )}
               {detailParts.length > 0 && (
                 <Collapse bordered={false} className='bg-transparent' defaultActiveKey={['technical-details']}>

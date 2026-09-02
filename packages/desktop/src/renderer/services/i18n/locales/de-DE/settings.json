@@ -1495,5 +1495,35 @@
     "openSettings": "Projektgruppen-Einstellungen"
   },
   "enterpriseChannel": "Unternehmenskanal",
-  "enterpriseChannelTip": "Dieser Modellkanal wird von Ihrem Unternehmen bereitgestellt. Die Zugangsdaten verbleiben auf dem Unternehmensserver; er kann hier nicht geändert oder entfernt werden."
+  "enterpriseChannelTip": "Dieser Modellkanal wird von Ihrem Unternehmen bereitgestellt. Die Zugangsdaten verbleiben auf dem Unternehmensserver; er kann hier nicht geändert oder entfernt werden.",
+  "trialVendor": {
+    "openrouter": {
+      "title": "OpenRouter kostenloser Router",
+      "desc": "Kostenlose KI-Modelle ohne Anmeldung — 1 $/Monat Startguthaben",
+      "providerName": "OpenRouter (Test)"
+    },
+    "baoyun": {
+      "title": "Baoyun · ¥10 Gratisguthaben",
+      "desc": "Starte mit ¥10 Nutzung; lade auf, wenn es aufgebraucht ist",
+      "providerName": "Baoyun (Test)"
+    }
+  },
+  "meteredQuota": {
+    "remaining": "{{amount}} übrig",
+    "exhausted": "Aufgebraucht"
+  },
+  "meteredTopUp": {
+    "title": "Aufladen",
+    "currentBalance": "Aktuelles Guthaben: {{amount}}",
+    "selectPackage": "Betrag wählen",
+    "package": "¥{{price}}",
+    "payAmount": "{{amount}} zahlen",
+    "payHint": "Schließe die Zahlung auf der geöffneten Seite ab — das Guthaben aktualisiert sich von selbst.",
+    "waitingPayment": "Warte auf Zahlung…",
+    "chooseAnother": "Anderen Betrag wählen",
+    "creditedAmount": "{{amount}} zu deinem Guthaben hinzugefügt",
+    "newBalance": "Neues Guthaben: {{amount}}",
+    "pollTimeout": "Warte noch auf die Zahlung. Dein Guthaben wird aktualisiert, sobald sie durch ist.",
+    "orderFailed": "Aufladen konnte nicht abgeschlossen werden. Bitte erneut versuchen."
+  }
 }
