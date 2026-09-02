@@ -187,6 +187,8 @@ export type ModelChannelEntry = {
   models: string;
   /** JSON object of per-model settings, same shape as a provider's. */
   modelSettings?: string | null;
+  /** JSON object mapping model name -> wire protocol; only for new-api channels. */
+  modelProtocols?: string | null;
   enabled: boolean;
   scope: string;
   teamId: string | null;
@@ -205,6 +207,7 @@ export type UpsertModelChannelInput = {
   apiKey?: string;
   models?: string;
   modelSettings?: string | null;
+  modelProtocols?: string | null;
   enabled?: boolean;
   scope?: string;
   teamId?: string | null;
