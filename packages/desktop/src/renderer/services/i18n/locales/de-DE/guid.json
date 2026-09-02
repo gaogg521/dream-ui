@@ -41,6 +41,8 @@
   "trialModel": {
     "bannerTitle": "Noch kein Modell konfiguriert",
     "bannerDesc": "Teste kostenlose KI-Modelle sofort, ohne Registrierung",
-    "bannerButton": "Kostenlose Modelle testen"
+    "bannerButton": "Kostenlose Modelle testen",
+    "pickerTitle": "Kostenlose KI-Modelle ausprobieren",
+    "pickerDesc": "Wähle einen Anbieter zum Starten — jeder bringt ein kostenloses Startguthaben mit."
   }
 }

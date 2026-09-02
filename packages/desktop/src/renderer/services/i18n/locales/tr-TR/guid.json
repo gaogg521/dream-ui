@@ -23,6 +23,8 @@
   "trialModel": {
     "bannerTitle": "Henüz model yapılandırılmadı",
     "bannerDesc": "Kayıt olmadan ücretsiz AI modellerini hemen deneyin",
-    "bannerButton": "Ücretsiz Modelleri Deneyin"
+    "bannerButton": "Ücretsiz Modelleri Deneyin",
+    "pickerTitle": "Ücretsiz yapay zeka modellerini deneyin",
+    "pickerDesc": "Başlamak için bir sağlayıcı seçin — her biri ücretsiz başlangıç kredisiyle gelir."
   }
 }

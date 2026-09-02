@@ -5,11 +5,12 @@
  */
 
 import type { IProvider } from '@/common/config/storage';
-import { TRIAL_PROVIDER_ID } from '@/renderer/hooks/agent/useTrialModelClaim';
+import { isTrialProviderClaimed } from '@/renderer/hooks/agent/useTrialModelClaim';
 
 /**
- * Model slug of the free router the trial hands out. A user who already has
- * this from any provider gains nothing from the offer.
+ * Model slug of the free router the OpenRouter trial hands out. A user who
+ * already has this from any provider gains nothing from that side of the
+ * offer.
  */
 export const BUILT_IN_FREE_MODEL = 'openrouter/free';
 
@@ -19,18 +20,18 @@ const DISMISSED_KEY = 'trial-model-offer-dismissed';
  * Whether showing the offer would tell the user something they already have.
  *
  * Two ways that can be true, and both matter:
- *  - the trial provider is present, i.e. they claimed it here;
+ *  - any trial provider (either vendor) is present, i.e. they claimed one here;
  *  - *any* provider already serves the free model, e.g. they added their own
  *    OpenRouter key by hand. The offer would hand them a second route to
  *    models they can already reach.
  *
- * Checking only the trial provider id would nag exactly the users who went to
- * the trouble of configuring it themselves.
+ * Checking only a trial provider id would nag exactly the users who went to
+ * the trouble of configuring one themselves.
  */
 export function isTrialOfferRedundant(providers: IProvider[] | undefined): boolean {
   if (!providers?.length) return false;
-  return providers.some(
-    (provider) => provider.id === TRIAL_PROVIDER_ID || provider.models?.includes(BUILT_IN_FREE_MODEL)
+  return (
+    isTrialProviderClaimed(providers) || providers.some((provider) => provider.models?.includes(BUILT_IN_FREE_MODEL))
   );
 }
 
