@@ -23,6 +23,8 @@
   "trialModel": {
     "bannerTitle": "No model configured yet",
     "bannerDesc": "Try free AI models instantly — no sign-up required",
-    "bannerButton": "Try Free Models"
+    "bannerButton": "Try Free Models",
+    "pickerTitle": "Try free AI models",
+    "pickerDesc": "Pick a provider to get started — each comes with a free starter allowance."
   }
 }

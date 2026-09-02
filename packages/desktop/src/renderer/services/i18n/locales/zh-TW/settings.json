@@ -1498,5 +1498,35 @@
     "openSettings": "專案組設定"
   },
   "enterpriseChannel": "企業下發",
-  "enterpriseChannelTip": "這條模型渠道由公司統一設定，憑證保存在公司伺服器上，本機無法修改或刪除。"
+  "enterpriseChannelTip": "這條模型渠道由公司統一設定，憑證保存在公司伺服器上，本機無法修改或刪除。",
+  "trialVendor": {
+    "openrouter": {
+      "title": "OpenRouter 免費路由",
+      "desc": "免費 AI 模型，免註冊 —— 每月 $1 體驗額度",
+      "providerName": "OpenRouter（體驗）"
+    },
+    "baoyun": {
+      "title": "寶雲 · 免費 ¥10 額度",
+      "desc": "先送 ¥10 用量，用完可儲值",
+      "providerName": "寶雲（體驗）"
+    }
+  },
+  "meteredQuota": {
+    "remaining": "剩餘 {{amount}}",
+    "exhausted": "已用完"
+  },
+  "meteredTopUp": {
+    "title": "儲值",
+    "currentBalance": "目前餘額：{{amount}}",
+    "selectPackage": "選擇金額",
+    "package": "¥{{price}}",
+    "payAmount": "支付 {{amount}}",
+    "payHint": "在開啟的頁面完成付款，餘額會自動更新。",
+    "waitingPayment": "等待付款…",
+    "chooseAnother": "換個金額",
+    "creditedAmount": "已入帳 {{amount}}",
+    "newBalance": "新餘額：{{amount}}",
+    "pollTimeout": "仍在等待付款結果，入帳後餘額會自動更新。",
+    "orderFailed": "儲值未完成，請重試。"
+  }
 }

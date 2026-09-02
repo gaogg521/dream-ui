@@ -1496,5 +1496,35 @@
     "openSettings": "Proje grubu ayarları"
   },
   "enterpriseChannel": "Kurumsal kanal",
-  "enterpriseChannelTip": "Bu model kanalı şirketiniz tarafından sağlanır. Kimlik bilgileri şirket sunucusunda kalır ve burada değiştirilemez veya silinemez."
+  "enterpriseChannelTip": "Bu model kanalı şirketiniz tarafından sağlanır. Kimlik bilgileri şirket sunucusunda kalır ve burada değiştirilemez veya silinemez.",
+  "trialVendor": {
+    "openrouter": {
+      "title": "OpenRouter ücretsiz yönlendirici",
+      "desc": "Kayıt olmadan ücretsiz yapay zeka modelleri — aylık 1 $ başlangıç kredisi",
+      "providerName": "OpenRouter (Deneme)"
+    },
+    "baoyun": {
+      "title": "Baoyun · ¥10 ücretsiz kredi",
+      "desc": "¥10 kullanımla başlayın; bitince yükleyin",
+      "providerName": "Baoyun (Deneme)"
+    }
+  },
+  "meteredQuota": {
+    "remaining": "{{amount}} kaldı",
+    "exhausted": "Tükendi"
+  },
+  "meteredTopUp": {
+    "title": "Yükle",
+    "currentBalance": "Mevcut bakiye: {{amount}}",
+    "selectPackage": "Bir tutar seçin",
+    "package": "¥{{price}}",
+    "payAmount": "{{amount}} öde",
+    "payHint": "Ödemeyi açılan sayfada tamamlayın — bakiye kendiliğinden güncellenir.",
+    "waitingPayment": "Ödeme bekleniyor…",
+    "chooseAnother": "Farklı bir tutar seç",
+    "creditedAmount": "Bakiyenize {{amount}} eklendi",
+    "newBalance": "Yeni bakiye: {{amount}}",
+    "pollTimeout": "Ödeme hâlâ bekleniyor. Onaylandığında bakiyeniz güncellenecek.",
+    "orderFailed": "Yükleme tamamlanamadı. Lütfen tekrar deneyin."
+  }
 }

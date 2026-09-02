@@ -1551,5 +1551,35 @@
   "claudeBridge.providerModelRequired": "启用桥接前请先选择服务商和模型",
   "claudeBridge.loadFailed": "加载 Claude 桥接设置失败",
   "claudeBridge.saveSuccess": "Claude 桥接设置已保存",
-  "claudeBridge.saveFailed": "保存 Claude 桥接设置失败"
+  "claudeBridge.saveFailed": "保存 Claude 桥接设置失败",
+  "trialVendor": {
+    "openrouter": {
+      "title": "OpenRouter 免费路由",
+      "desc": "免费 AI 模型，无需注册 —— 每月 $1 体验额度",
+      "providerName": "OpenRouter（体验）"
+    },
+    "baoyun": {
+      "title": "宝云 · 免费 ¥10 额度",
+      "desc": "先送 ¥10 用量，用完可充值",
+      "providerName": "宝云（体验）"
+    }
+  },
+  "meteredQuota": {
+    "remaining": "剩余 {{amount}}",
+    "exhausted": "已用完"
+  },
+  "meteredTopUp": {
+    "title": "充值",
+    "currentBalance": "当前余额：{{amount}}",
+    "selectPackage": "选择金额",
+    "package": "¥{{price}}",
+    "payAmount": "支付 {{amount}}",
+    "payHint": "在打开的页面完成支付，余额会自动更新。",
+    "waitingPayment": "等待支付…",
+    "chooseAnother": "换个金额",
+    "creditedAmount": "已到账 {{amount}}",
+    "newBalance": "新余额：{{amount}}",
+    "pollTimeout": "仍在等待支付结果，到账后余额会自动更新。",
+    "orderFailed": "充值未完成，请重试。"
+  }
 }

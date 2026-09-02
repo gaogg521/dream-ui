@@ -872,5 +872,8 @@
   "mediaModeStartFailed": "Não foi possível iniciar a geração: {{reason}}",
   "mediaJobSourceImages": "Imagens de origem",
   "policyDenied_seatLimitExceeded": "O limite de licenças da sua empresa foi atingido; você não poderá enviar mensagens até que um administrador libere uma licença ou faça upgrade do plano.",
-  "policyDenied_departmentBudgetExceeded": "O orçamento de uso do seu departamento para este período acabou. Fale com um administrador."
+  "policyDenied_departmentBudgetExceeded": "O orçamento de uso do seu departamento para este período acabou. Fale com um administrador.",
+  "meteredTopUp": {
+    "cta": "Recarregar"
+  }
 }
