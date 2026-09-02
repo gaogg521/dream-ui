@@ -10,6 +10,7 @@ import { mcpService } from '@/common/adapter/ipcBridge';
 import { type IMcpServer, BUILTIN_IMAGE_GEN_ID, BUILTIN_IMAGE_GEN_NAME } from '@/common/config/storage';
 import { isImageGenSupported } from '@/common/utils/imageModelAllowlist';
 import { applyCatalogOverridesJson, isMediaGenSupported } from '@/common/media/catalog';
+import { findDeclaredMediaModel } from '@/common/media/declaredModel';
 import { Divider, Form, Input, Tooltip, Message, Modal, Switch } from '@arco-design/web-react';
 import { Help } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -304,6 +305,21 @@ const ToolsModalContent: React.FC = () => {
       }))
       .filter((provider) => provider.models.length > 0);
   }, [data]);
+
+  /**
+   * These two dropdowns are an explicit *override*, empty by default. When
+   * nothing is picked the runtime still works — the send box and the media MCP
+   * both fall back to the first declared media model (`findDeclaredMediaModel`).
+   * Show that model here so an empty control does not read as "not configured".
+   */
+  const imageModelFallback = useMemo(
+    () => (imageGenerationModel?.use_model ? undefined : findDeclaredMediaModel('image', data)),
+    [imageGenerationModel?.use_model, data]
+  );
+  const videoModelFallback = useMemo(
+    () => (videoGenerationModel?.use_model ? undefined : findDeclaredMediaModel('video', data)),
+    [videoGenerationModel?.use_model, data]
+  );
 
   useEffect(() => {
     const loadConfigs = async () => {
@@ -663,6 +679,11 @@ const ToolsModalContent: React.FC = () => {
                         ? `${imageGenerationModel.id}|${imageGenerationModel.use_model}`
                         : undefined
                     }
+                    placeholder={
+                      imageModelFallback
+                        ? t('settings.mediaModelAutoPlaceholder', { model: imageModelFallback.use_model })
+                        : t('settings.selectModel')
+                    }
                     onChange={(value) => {
                       const [platformId, modelName] = value.split('|');
                       const platform = imageGenerationModelList.find((p) => p.id === platformId);
@@ -753,6 +774,11 @@ const ToolsModalContent: React.FC = () => {
                       videoGenerationModel?.id && videoGenerationModel?.use_model
                         ? `${videoGenerationModel.id}|${videoGenerationModel.use_model}`
                         : undefined
+                    }
+                    placeholder={
+                      videoModelFallback
+                        ? t('settings.mediaModelAutoPlaceholder', { model: videoModelFallback.use_model })
+                        : t('settings.selectModel')
                     }
                     onChange={(value) => {
                       const [platformId, modelName] = value.split('|');

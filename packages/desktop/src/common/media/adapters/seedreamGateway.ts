@@ -36,13 +36,8 @@ import type { MediaGenParams } from '../types';
 /** The id a user selects on the model to route it here. */
 export const SEEDREAM_GATEWAY_STYLE = 'seedream-gateway';
 
-/**
- * Catalog id for the "direct Ark" seedream entry (imageModels.ts).
- *
- * Kept as a shared constant so the plain Form A path can recognize this
- * vendor family without duplicating the id string.
- */
-export const ARK_SEEDREAM_CATALOG_ID = 'ark-seedream';
+// The direct-Ark seedream catalog id (`ARK_SEEDREAM_CATALOG_ID`) now lives in
+// `catalog/imageModels.ts` so the renderer-safe resolver can import it too.
 
 /**
  * The generations root for this style.

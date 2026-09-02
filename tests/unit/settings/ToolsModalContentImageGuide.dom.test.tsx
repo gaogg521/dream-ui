@@ -17,7 +17,17 @@ const hooks = vi.hoisted(() => ({
 }));
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key }),
+  useTranslation: () => ({
+    t: (key: string, options?: Record<string, unknown>) => {
+      if (options?.defaultValue) return options.defaultValue as string;
+      // Minimal interpolation so `{{model}}`-style keys are assertable.
+      const interpolated = Object.entries(options ?? {})
+        .filter(([k]) => k !== 'defaultValue')
+        .map(([k, v]) => `${k}=${String(v)}`)
+        .join(' ');
+      return interpolated ? `${key} ${interpolated}` : key;
+    },
+  }),
 }));
 
 vi.mock('@/renderer/components/base/DreamScrollArea', () => ({
@@ -25,7 +35,12 @@ vi.mock('@/renderer/components/base/DreamScrollArea', () => ({
 }));
 
 vi.mock('@/renderer/components/base/DreamSelect', () => {
-  const Select = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
+  const Select = ({ children, placeholder }: { children?: React.ReactNode; placeholder?: React.ReactNode }) => (
+    <div>
+      {placeholder != null && <span data-testid='select-placeholder'>{placeholder}</span>}
+      {children}
+    </div>
+  );
   return { default: Object.assign(Select, { OptGroup: Select, Option: Select }) };
 });
 
@@ -158,5 +173,35 @@ describe('ToolsModalContent image model guide', () => {
       (a) => a.textContent === 'settings.goToModelSettings'
     );
     expect(links).toHaveLength(0);
+  });
+
+  it('shows the fallback media model as the select placeholder when nothing is explicitly picked', async () => {
+    // A provider that declares a seedream image model and a seedance video model —
+    // both resolved by the built-in catalog, so `findDeclaredMediaModel` returns
+    // them even though `tools.imageGenerationModel` / `tools.videoGenerationModel`
+    // are unset.
+    hooks.modelListWithImage = [
+      {
+        id: 'gw',
+        name: 'Gateway',
+        platform: 'custom',
+        base_url: 'https://gw.example.com/v1',
+        api_key: 'sk-x',
+        models: ['doubao-seedream-5-0-pro', 'seedance-2-0-fast'],
+      },
+    ];
+
+    render(
+      <MemoryRouter>
+        <ToolsModalContent />
+      </MemoryRouter>
+    );
+
+    const placeholders = await screen.findAllByTestId('select-placeholder');
+    const text = placeholders.map((n) => n.textContent).join(' | ');
+    expect(text).toContain('doubao-seedream-5-0-pro');
+    expect(text).toContain('seedance-2-0-fast');
+    // interpolation key, not a bare "select model"
+    expect(text).toContain('settings.mediaModelAutoPlaceholder');
   });
 });

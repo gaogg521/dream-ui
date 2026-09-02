@@ -36,7 +36,9 @@ export const BUILTIN_VIDEO_MODELS: MediaModelSpec[] = [
       seed: true,
       audio: true,
     },
-    defaults: { durationSeconds: 5, resolution: '720p' },
+    // Seedance ships silent video unless `generate_audio` is sent; users almost
+    // always expect sound, so default it on and let an explicit "no audio" win.
+    defaults: { durationSeconds: 5, resolution: '720p', generateAudio: true },
     polling: { intervalMs: 5000, timeoutMs: 600_000 },
   },
   {

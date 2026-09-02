@@ -22,11 +22,12 @@
  * verb, and how generation options travel. Whichever one answers is the truth
  * about that deployment.
  *
- * Scope is deliberately narrow — only pairs that are (a) the same API form, so
- * one adapter drives both, and (b) reachable at the same host with the same
- * credentials. The image-side counterpart (`seedream-gateway` vs the plain
- * OpenAI images API) satisfies neither: those are Form A and Form C
- * respectively, and swapping them mid-request would cross adapters.
+ * Scope is deliberately narrow — only Form C task-driver pairs, reachable at the
+ * same host with the same credentials, so one `TaskPollAdapter` submission can
+ * try both. The image-side counterpart (`seedream-gateway` vs the plain OpenAI
+ * images API) is also both Form A, but it never reaches this table: the two
+ * routes live in a single adapter (`openaiImagesAdapter.ts`), which retries the
+ * sibling route inline on a routing miss without a protocol swap.
  */
 
 import { IMPLEMENTED_ENDPOINT_STYLES } from './resolve';

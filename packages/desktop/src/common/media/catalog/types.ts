@@ -96,6 +96,13 @@ export type MediaModelSpec = {
     quality?: string;
     durationSeconds?: number;
     resolution?: string;
+    /**
+     * Whether to generate an audio track when the caller did not choose.
+     * Only meaningful when `params.audio` is declared. Set on a model whose
+     * vendor ships silent video by default but whose users almost always want
+     * sound — the caller can still turn it off explicitly.
+     */
+    generateAudio?: boolean;
   };
   polling?: MediaModelPolling;
 };

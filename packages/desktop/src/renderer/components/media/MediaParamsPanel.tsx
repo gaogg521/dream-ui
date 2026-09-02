@@ -263,15 +263,16 @@ const MediaParamsPanel: React.FC<Props> = ({ spec, value, onChange, kind, model,
 
       {/* Audio is a real cost lever on some vendors, so it keeps the same
           three-state treatment as everything else: on, off, or untouched
-          (click the active choice to clear) meaning "whatever the model does by
-          default". Picking silently on the user's behalf would change the bill. */}
+          (click the active choice to clear). "Untouched" resolves to the
+          model's own default (`spec.defaults.generateAudio`) when it has one —
+          shown here so the user sees what will happen and can override it. */}
       {params.audio && (
         <Section label={t('conversation.mediaParamAudio')}>
           <Grid cols={2}>
             {[true, false].map((on) => (
               <Cell
                 key={String(on)}
-                active={value.generateAudio === on}
+                active={(value.generateAudio ?? spec.defaults?.generateAudio) === on}
                 onClick={() => set({ generateAudio: toggle(value.generateAudio, on) })}
               >
                 {t(on ? 'conversation.mediaParamAudioOn' : 'conversation.mediaParamAudioOff')}

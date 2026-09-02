@@ -11,7 +11,7 @@
 
 import type { MediaGenParams } from '../types';
 import type { CatalogApiForm, CatalogMediaKind, MediaModelMatch, MediaModelSpec } from './types';
-import { BUILTIN_IMAGE_MODELS } from './imageModels';
+import { ARK_SEEDREAM_CATALOG_ID, BUILTIN_IMAGE_MODELS } from './imageModels';
 import { BUILTIN_VIDEO_MODELS } from './videoModels';
 import { getUserMediaModelSpecs } from './userSpecs';
 import { diagnoseEndpointMismatch, type EndpointMismatchDiagnosis } from './endpointStyleInfo';
@@ -450,6 +450,7 @@ export const clipParamsToSpec = (params: MediaGenParams, spec: MediaModelSpec | 
   );
   take('firstFrameImage', !!(support?.imageToVideo || support?.firstLastFrame));
   take('lastFrameImage', !!support?.firstLastFrame);
+  take('generateAudio', !!support?.audio);
   take('camera', !!support?.cameras, !params.camera || !support?.cameras || support.cameras.includes(params.camera));
 
   // n: honored whenever >1 is supported; clamped to maxN. Legacy fallback keeps n=1.
@@ -473,6 +474,11 @@ export const clipParamsToSpec = (params: MediaGenParams, spec: MediaModelSpec | 
       out.durationSeconds = spec.defaults.durationSeconds;
     }
     if (out.resolution === undefined && spec.defaults.resolution) out.resolution = spec.defaults.resolution;
+    // Only applied when the model declares audio support and `take` above kept
+    // the field eligible; an explicit caller choice already sits in `out`.
+    if (out.generateAudio === undefined && support?.audio && spec.defaults.generateAudio !== undefined) {
+      out.generateAudio = spec.defaults.generateAudio;
+    }
   }
 
   return { params: out, dropped };
@@ -509,6 +515,24 @@ export const diagnoseAutoEndpointMismatch = (
   if (provider.model_settings?.[modelName]?.media_endpoint?.trim()) return null;
 
   const spec = resolveMediaModelSpec(kind, provider, modelName);
+
+  /**
+   * The seedream image entry carries no `endpointStyle` — it resolves to the
+   * plain OpenAI images route — so the check below would never fire for it. But
+   * it has the same failure mode as Seedance: matched on the model name alone,
+   * and a relay gateway serves seedream under `/api/seedream/v1` rather than
+   * `/v1/images/generations`. Flag it when the channel address is not Ark's own
+   * host, the same signal the Seedance path uses; the Form A adapter retries
+   * the gateway route automatically, so this is only the early hint.
+   */
+  if (spec?.id === ARK_SEEDREAM_CATALOG_ID) {
+    const url = (provider.base_url ?? '').toLowerCase();
+    if (url && !url.includes('volces.com')) {
+      return { kind: 'hostMismatch', baseUrl: provider.base_url ?? '', hints: ['volces.com'] };
+    }
+    return null;
+  }
+
   if (!spec?.endpointStyle) return null;
 
   const diagnosis = diagnoseEndpointMismatch(spec.endpointStyle, provider.base_url);

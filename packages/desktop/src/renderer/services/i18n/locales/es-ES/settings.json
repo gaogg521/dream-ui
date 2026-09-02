@@ -663,6 +663,7 @@
   "speechToTextWholeBadge": "Por lotes",
   "mcp": "Integración MCP",
   "imageGenerationModel": "Modelo de imagen",
+  "mediaModelAutoPlaceholder": "Sin seleccionar · predeterminado {{model}}",
   "imageGenSupportedTooltipTitle": "Modelos de imagen actualmente compatibles:",
   "imageGenSupportedTooltipGemini": "Modelos de imagen de Google Gemini / Vertex AI (ej. gemini-2.5-flash-image)",
   "imageGenSupportedTooltipOpenRouter": "Modelos de imagen tipo chat de OpenRouter (ej. nano-banana, gemini-image)",

@@ -49,7 +49,7 @@ type Props = {
 };
 
 /** Compact summary of the active parameters, so the chip says what it will do. */
-const summarize = (params: MediaGenParams): string[] => {
+const summarize = (params: MediaGenParams, defaultAudio?: boolean): string[] => {
   const parts: string[] = [];
   if (params.aspectRatio) parts.push(params.aspectRatio);
   if (params.size) parts.push(params.size);
@@ -58,9 +58,11 @@ const summarize = (params: MediaGenParams): string[] => {
   if (params.quality) parts.push(params.quality);
   if (params.n && params.n > 1) parts.push(`×${params.n}`);
   // Audio belongs here for the same reason as the rest: it changes what gets
-  // produced and, on some vendors, what it costs. Only shown once chosen —
-  // an untouched setting means "whatever the model does by default".
-  if (params.generateAudio !== undefined) parts.push(params.generateAudio ? '♪' : '♪✕');
+  // produced and, on some vendors, what it costs. An untouched setting resolves
+  // to the model's own default (`spec.defaults.generateAudio`) — shown too, so
+  // the chip reflects what will actually be sent.
+  const effectiveAudio = params.generateAudio ?? defaultAudio;
+  if (effectiveAudio !== undefined) parts.push(effectiveAudio ? '♪' : '♪✕');
   return parts;
 };
 
@@ -81,7 +83,7 @@ const MediaModeControl: React.FC<Props> = ({
   // suite down with it. `FileAttachButton`, two files over, already navigates
   // for the same purpose.
   const navigate = useNavigate();
-  const summary = useMemo(() => summarize(params), [params]);
+  const summary = useMemo(() => summarize(params, spec?.defaults?.generateAudio), [params, spec]);
 
   // Priced off the parameters actually staged, so changing the count or the
   // duration moves the number before the money is spent rather than after.

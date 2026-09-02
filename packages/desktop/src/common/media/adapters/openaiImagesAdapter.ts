@@ -21,11 +21,12 @@ import type OpenAI from 'openai';
 import { toFile } from 'openai';
 import { ClientFactory } from '@/common/api/ClientFactory';
 import { OpenAIRotatingClient } from '@/common/api/OpenAIRotatingClient';
+import { ARK_SEEDREAM_CATALOG_ID } from '../catalog/imageModels';
+import { classifyMediaFailure } from '../failureClass';
 import { downloadUrlMediaAsset, isHttpUrl, resolveLocalInputPath, saveBase64MediaAsset } from '../mediaAssets';
 import type { MediaAsset, MediaGenOutcome, MediaGenRequest, MediaProviderAdapter } from '../types';
 import { ensureVersionedBaseUrl } from './baseUrl';
 import {
-  ARK_SEEDREAM_CATALOG_ID,
   buildSeedreamGatewayBody,
   SEEDREAM_GATEWAY_STYLE,
   seedreamGatewayBaseUrl,
@@ -50,38 +51,51 @@ export class OpenAiImagesAdapter implements MediaProviderAdapter {
 
     /**
      * Seedream behind a gateway speaks the images protocol, but under its own
-     * path and with the reference image inline — so the route and the way an
-     * input is attached both change, while everything after the response is
-     * identical. Hence a branch here rather than a separate adapter.
+     * path (`/api/seedream/v1/...`) and with the reference image inline, so the
+     * route and the way an input is attached both change while everything after
+     * the response is identical. Which shape the model wants is decided by the
+     * endpoint style the user pinned, if any.
      */
-    const viaSeedreamGateway = spec?.endpointStyle === SEEDREAM_GATEWAY_STYLE;
+    const isSeedreamFamily = spec?.id === ARK_SEEDREAM_CATALOG_ID;
+    const pinnedGateway = spec?.endpointStyle === SEEDREAM_GATEWAY_STYLE;
 
     /**
-     * Ark's direct images endpoint defaults to stamping a vendor watermark
-     * (confirmed 2026-08-10 via a real generation — see seedreamGateway.ts
-     * for the sibling gateway body this key was captured from). Scoped to
-     * this catalog entry only, so it never touches Flux/SD/DALL-E/etc.
+     * One synchronous call against either the plain images route or the seedream
+     * gateway route. Isolated so the dispatcher below can retry it under the
+     * other shape when the first proves this host does not serve it.
      */
-    const viaArkDirect = spec?.id === ARK_SEEDREAM_CATALOG_ID && !viaSeedreamGateway;
-
-    try {
+    const callOnce = async (viaGateway: boolean): Promise<OpenAI.Images.ImagesResponse> => {
       const client = await ClientFactory.createRotatingClient(provider, {
         proxy,
         rotatingOptions: { maxRetries: 3, retryDelay: 1000 },
         baseConfig: {
-          baseURL: viaSeedreamGateway
-            ? seedreamGatewayBaseUrl(provider.base_url)
-            : ensureVersionedBaseUrl(provider.base_url),
+          baseURL: viaGateway ? seedreamGatewayBaseUrl(provider.base_url) : ensureVersionedBaseUrl(provider.base_url),
         },
       });
 
       if (!(client instanceof OpenAIRotatingClient)) {
-        return {
-          success: false,
-          assets: [],
-          text: `Error: model "${provider.use_model}" resolved to the images API, but provider platform "${provider.platform}" does not speak the OpenAI protocol.`,
-          error: 'incompatible-provider',
-        };
+        throw new Error(
+          `model "${provider.use_model}" resolved to the images API, but provider platform "${provider.platform}" does not speak the OpenAI protocol.`
+        );
+      }
+
+      if (viaGateway) {
+        /**
+         * One route for both directions: a reference image rides in the body,
+         * so text-to-image and image-to-image differ only by whether `image` is
+         * present. There is no edits route here to send multipart to — trying
+         * that is what produced the JSON-decoding error this replaces.
+         */
+        const imageRef = inputUris[0] ? await toGatewayImageRef(inputUris[0], workspaceDir) : undefined;
+        return (await client.createImage(
+          buildSeedreamGatewayBody(
+            provider.use_model,
+            prompt,
+            params,
+            imageRef
+          ) as unknown as OpenAI.Images.ImageGenerateParams,
+          { signal, timeout: API_TIMEOUT_MS }
+        )) as OpenAI.Images.ImagesResponse;
       }
 
       const requestParams: Record<string, unknown> = {
@@ -95,29 +109,14 @@ export class OpenAiImagesAdapter implements MediaProviderAdapter {
       // that ignore unknown fields, essential for SD/Flux-style gateways.
       if (params.seed !== undefined) requestParams.seed = params.seed;
       if (params.negativePrompt) requestParams.negative_prompt = params.negativePrompt;
-      if (viaArkDirect) requestParams.watermark = false;
+      /**
+       * Ark's direct images endpoint defaults to stamping a vendor watermark
+       * (confirmed 2026-08-10 via a real generation). Scoped to this catalog
+       * entry only, so it never touches Flux/SD/DALL-E/etc.
+       */
+      if (isSeedreamFamily) requestParams.watermark = false;
 
-      req.onProgress?.({ stage: 'running' });
-
-      let response: OpenAI.Images.ImagesResponse;
-      if (viaSeedreamGateway) {
-        /**
-         * One route for both directions: a reference image rides in the body,
-         * so text-to-image and image-to-image differ only by whether `image` is
-         * present. There is no edits route here to send multipart to — trying
-         * that is what produced the JSON-decoding error this replaces.
-         */
-        const imageRef = inputUris[0] ? await toGatewayImageRef(inputUris[0], workspaceDir) : undefined;
-        response = (await client.createImage(
-          buildSeedreamGatewayBody(
-            provider.use_model,
-            prompt,
-            params,
-            imageRef
-          ) as unknown as OpenAI.Images.ImageGenerateParams,
-          { signal, timeout: API_TIMEOUT_MS }
-        )) as OpenAI.Images.ImagesResponse;
-      } else if (inputUris.length > 0 && spec?.params.imageInput) {
+      if (inputUris.length > 0 && spec?.params.imageInput) {
         const imageFiles = await Promise.all(
           inputUris
             .filter((uri) => !isHttpUrl(uri))
@@ -128,27 +127,83 @@ export class OpenAiImagesAdapter implements MediaProviderAdapter {
             })
         );
         if (imageFiles.length === 0) {
-          return {
-            success: false,
-            assets: [],
-            text: 'Error: image editing via the images API requires local image files (HTTP URLs are not supported by this endpoint). Download the image to the workspace first.',
-            error: 'no-local-input',
-          };
+          throw new Error(
+            'image editing via the images API requires local image files (HTTP URLs are not supported by this endpoint). Download the image to the workspace first.'
+          );
         }
-        response = await client.createImageEdit(
+        return client.createImageEdit(
           {
             ...requestParams,
             image: imageFiles.length === 1 ? imageFiles[0] : imageFiles,
           } as unknown as OpenAI.Images.ImageEditParams,
           { signal, timeout: API_TIMEOUT_MS }
         );
-      } else {
-        response = await client.createImage(requestParams as unknown as OpenAI.Images.ImageGenerateParams, {
-          signal,
-          timeout: API_TIMEOUT_MS,
-        });
       }
 
+      return client.createImage(requestParams as unknown as OpenAI.Images.ImageGenerateParams, {
+        signal,
+        timeout: API_TIMEOUT_MS,
+      });
+    };
+
+    /**
+     * Submit, and when the plain route proves seedream is not served there, try
+     * the gateway route (or the reverse) before giving up.
+     *
+     * Same shape as the video side's `submitWithFallback`, with one difference:
+     * `modelNotFound` also triggers it, not only `notRouted`. A relay gateway
+     * that mounts seedream under `/api/seedream/v1` answers the *plain*
+     * `/v1/images/generations` with `404 model "..." not found` — a genuine
+     * "no such model", by the letter of the classifier, but here it is the
+     * exact signature of "wrong route for this vendor". The cost of being wrong
+     * (a truly missing model) is one extra millisecond-scale 404, and it is
+     * gated to the one `ark-seedream` catalog entry, so the blast radius is
+     * tiny — the same "guessing is fine when it is cheap" trade the classifier
+     * itself is built on.
+     */
+    let response: OpenAI.Images.ImagesResponse;
+    try {
+      req.onProgress?.({ stage: 'running' });
+      response = await callOnce(pinnedGateway);
+    } catch (error) {
+      if (signal?.aborted) {
+        return { success: false, assets: [], text: 'Image generation was cancelled.', error: 'cancelled' };
+      }
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const failureClass = classifyMediaFailure(errorMessage);
+      const routingMiss = failureClass === 'notRouted' || failureClass === 'modelNotFound';
+
+      if (!isSeedreamFamily || !routingMiss) {
+        console.error('[MediaGen][FormA] API call failed:', error);
+        return { success: false, assets: [], text: `Error generating image: ${errorMessage}`, error: errorMessage };
+      }
+
+      try {
+        response = await callOnce(!pinnedGateway);
+      } catch (fallbackError) {
+        if (signal?.aborted) {
+          return { success: false, assets: [], text: 'Image generation was cancelled.', error: 'cancelled' };
+        }
+        // The gateway sibling did not answer either. Report the original error —
+        // it names the route the model was configured for — with the attempt
+        // appended so the advice that follows is not read as untried.
+        const triedStyle = pinnedGateway ? 'the plain images API' : SEEDREAM_GATEWAY_STYLE;
+        console.error('[MediaGen][FormA] API call failed (sibling route too):', fallbackError);
+        return {
+          success: false,
+          assets: [],
+          text: `Error generating image: ${errorMessage} Automatically retried under ${triedStyle}, with the same result.`,
+          error: errorMessage,
+        };
+      }
+
+      // The sibling route worked. Persist the discovery so every later
+      // generation does not pay for this same probe. Pinned-gateway → plain
+      // means the pin was wrong; clear it back to auto ('').
+      req.onEndpointStyleSwitched?.(pinnedGateway ? '' : SEEDREAM_GATEWAY_STYLE);
+    }
+
+    try {
       const items = extractResultItems(response);
       if (items.length === 0) {
         return {
@@ -188,7 +243,7 @@ export class OpenAiImagesAdapter implements MediaProviderAdapter {
         return { success: false, assets: [], text: 'Image generation was cancelled.', error: 'cancelled' };
       }
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error('[MediaGen][FormA] API call failed:', error);
+      console.error('[MediaGen][FormA] saving result failed:', error);
       return { success: false, assets: [], text: `Error generating image: ${errorMessage}`, error: errorMessage };
     }
   }
