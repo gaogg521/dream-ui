@@ -1,11 +1,14 @@
 # 宝云（Baoyun）模式 B 计量代理 —— 设计与交接文档
 
-> **状态：Phase 1（broker 骨架）+ Phase 2（dream-core 接线）已实现（2026-09-02）；
-> Phase 3（dream-ui）、Phase 4（真实支付）未开始。**
+> **状态：Phase 1（broker）+ Phase 2（dream-core）+ Phase 3（dream-ui）已实现
+> （2026-09-02）；Phase 4（真实支付）未开始，Phase 3 的 CDP 真机全链路验证待做。**
 > broker 侧：四张新表、`CostResolver`/`PaymentGateway` trait、claim/代理转发/quota/
-> orders/webhook 六端点、宝云 `RemoteCostResolver`、`MockGateway`、异步计费轮询，全有
-> 集成测试。dream-core 侧：`MeteredAccessService` + `/api/providers/metered/*` 四路由 +
-> 结构化 402 错误映射。**dream-ui（§5）仍未动。** 具体见文末"§九 实现进度"。
+> orders/webhook 六端点、宝云 `RemoteCostResolver`、`MockGateway`、异步计费轮询。
+> dream-core 侧：`MeteredAccessService` + `/api/providers/metered/*` 四路由 + 结构化 402
+> 错误映射。dream-ui 侧：vendor 泛化的 claim hook、选供应商弹窗、余额 badge、充值弹窗、
+> `QUOTA_EXHAUSTED` 时的充值 CTA、13 语种 i18n。三侧都有单测/集成测试；差一个把三端
+> （Phase 2 dreamcore + 本地 BAOYUN broker + dream-ui）串起来的 CDP 真机跑。
+> 具体见文末"§九 实现进度"。
 >
 > 决策时间：2026-09-02。上游背景见 [`vendor-abstraction-and-paid-tier.zh-CN.md`](./vendor-abstraction-and-paid-tier.zh-CN.md)
 > ——那份文档写于 08-28，"模式 B"当时只是"留接口不实现"，因为没有真实要接的厂商。
@@ -319,8 +322,12 @@ pub trait PaymentGateway: Send + Sync {
    `/api/providers/metered/{claim,quota,orders,orders/{id}}` 四路由 + 结构化 402 →
    `UserLlmProviderQuotaExhausted` 的两条路径错误映射 + `wiremock` 集成测试。
    provider 创建仍是前端的活（Phase 3）。
-3. **Phase 3 — dream-ui**：泛化 claim hook、额度显示、购买弹窗（对接 Phase 1 的
-   `MockGateway`，先能演示真实用户体验）、i18n。
+3. **Phase 3 — dream-ui**：✅ **代码完成（2026-09-02）**，分支 `feat/baoyun-metered-phase3`。
+   vendor 泛化的 `useTrialModelClaim`、`TrialVendorOptions` 选供应商弹窗（合并原来的两个
+   promo 位）、`useTrialQuota` + `TrialQuotaBadge` 余额显示、`MeteredTopUpModal` 充值弹窗
+   （套餐→下单→轮询→刷新）、`MeteredTopUpCta`（`QUOTA_EXHAUSTED` 时）、13 语种 i18n。
+   tsc/check-i18n/vitest(139) 全绿。**差 CDP 真机全链路**（要先 build Phase 2 dreamcore +
+   本地起 BAOYUN broker），细节见 dream-ui `docs/guides/session-2026-09-02-baoyun-metered-phase3.zh-CN.md`。
 4. **Phase 4 — 真实收款（外部依赖阻塞）**：支付宝/微信支付商户号下来之后，实现真实
    `AlipayGateway`/`WechatGateway`，做一次安全审查（走 `security-review` skill——重点是
    webhook 验签、幂等、密钥管理），真机（CDP）验证整条购买链路，再上线。
