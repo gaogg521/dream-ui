@@ -13,7 +13,7 @@
  */
 
 import { afterEach, describe, expect, it } from 'vitest';
-import { existsSync, mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
@@ -26,7 +26,10 @@ import {
 let cleanupDirs: string[] = [];
 
 function createWorkspace(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'aionui-media-assets-test-'));
+  // realpathSync: on the Windows CI runner `tmpdir()` is an 8.3 short path
+  // (`C:\Users\RUNNER~1\...`) while `resolveLocalInputPath` canonicalizes to
+  // the long form — compare against the same canonical form.
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'aionui-media-assets-test-')));
   cleanupDirs.push(dir);
   return dir;
 }
