@@ -9,8 +9,8 @@
  * test-connection / edit actions shared by official and custom agents.
  */
 
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 // Project convention: t() echoes the key so labels are assertable.
@@ -43,6 +43,10 @@ const renderCustom = (
       onConfigure={handlers.onConfigure ?? vi.fn()}
     />
   );
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('AgentCard (custom variant)', () => {
   it('greys the identity block and keeps the test-connection action available when the agent is disabled', () => {
@@ -115,6 +119,41 @@ describe('AgentCard (official variant)', () => {
     expect(logo).toHaveClass('agent-logo-frame');
     expect(logo.querySelector('img')).toHaveAttribute('loading', 'lazy');
     expect(logo.querySelector('img')).toHaveAttribute('decoding', 'async');
+  });
+
+  /**
+   * The logo plate stays a fixed light neutral in dark mode (AgentCard.css),
+   * so a monochrome `currentColor` mark must be pinned dark rather than follow
+   * `--text-primary` — which resolves to white in dark mode and made the mark
+   * disappear on the light plate.
+   */
+  it('tints a monochrome currentColor logo a fixed dark, not the theme text color', async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({ ok: true, text: () => Promise.resolve('<svg fill="currentColor"></svg>') } as Response)
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderOfficial({
+      id: 'auggie',
+      name: 'Auggie',
+      agent_type: 'acp',
+      agent_source: 'builtin',
+      backend: 'auggie',
+      avatar: 'http://127.0.0.1:1/api/assets/logos/auggie-mono.svg',
+      enabled: true,
+      installed: false,
+      status: 'missing',
+    });
+
+    // Let ThemedLogo's async tintability detection settle.
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const mask = screen.getByTestId('agent-logo-auggie').querySelector('span[role="img"]') as HTMLElement;
+    expect(mask).toBeTruthy();
+    expect(mask.style.color).toBe('rgb(15, 23, 42)'); // #0f172a
+    expect(mask.style.color).not.toContain('var(');
   });
 
   it('shows status tag plus test-connection and edit actions for a missing official agent', () => {
