@@ -54,13 +54,11 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) 
   // hosts (creates) one. Never show both — that confused users into thinking
   // a server could also "join" itself.
   const showJoinEnterprise = !deploymentLoading && isDeploymentClient;
-  const showCreateEnterprise = !deploymentLoading && isDeploymentServer;
+  // Only reachable from a pre-split config (or `markDeploymentAsServer`);
+  // there is no longer any way to enter this state from the UI.
+  const showLegacyServerNotice = !deploymentLoading && isDeploymentServer;
   const [inviteCode, setInviteCode] = useState('');
-  const [tenantName, setTenantName] = useState('');
   const [joining, setJoining] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [showResetPrompt, setShowResetPrompt] = useState(false);
-  const [resetting, setResetting] = useState(false);
   const [exitVisible, setExitVisible] = useState(false);
   const [exitCode, setExitCode] = useState('');
   const [exiting, setExiting] = useState(false);
@@ -164,61 +162,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) 
     } finally {
       setJoining(false);
     }
-  };
-
-  const handleCreate = async () => {
-    const name = tenantName.trim();
-    if (!name) {
-      Message.warning(t('common.enterprise.tenantNameRequired', { defaultValue: '请输入企业名称' }));
-      return;
-    }
-    setCreating(true);
-    setShowResetPrompt(false);
-    try {
-      const tenant = await ipcBridge.oneOrg.create.invoke({ name });
-      const { markDeploymentAsServer } = await import('@renderer/hooks/enterprise/useDeploymentRole');
-      await markDeploymentAsServer();
-      Message.success(
-        t('common.enterprise.createSuccess', {
-          name: tenant?.tenantName ?? name,
-          defaultValue: '已创建企业 {{name}}',
-        })
-      );
-      setTenantName('');
-      onChanged();
-      window.dispatchEvent(new CustomEvent(ORG_CONTEXT_CHANGED_EVENT));
-    } catch (e) {
-      if (isBackendHttpError(e) && e.code === 'ALREADY_HOSTS_ENTERPRISE') {
-        setShowResetPrompt(true);
-      } else {
-        Message.error(t('common.enterprise.createFailed', { defaultValue: '创建失败' }) + ': ' + String(e));
-      }
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const handleResetLocal = () => {
-    Modal.confirm({
-      title: t('common.enterprise.resetLocalConfirmTitle', { defaultValue: '重置本机企业数据？' }),
-      content: t('common.enterprise.resetLocalConfirmDesc', {
-        defaultValue:
-          '本机保留有历史企业数据，会归档到本地文件后清空，本机之前记录的企业成员关系将全部作废。如果这台机器正在被其他人当作真正的企业服务器使用，请不要继续。',
-      }),
-      onOk: async () => {
-        setResetting(true);
-        try {
-          await ipcBridge.oneOrg.resetLocal.invoke();
-          Message.success(t('common.enterprise.resetLocalSuccess', { defaultValue: '已重置本机企业数据' }));
-          setShowResetPrompt(false);
-          onChanged();
-        } catch (e) {
-          Message.error(t('common.enterprise.resetLocalFailed', { defaultValue: '重置失败' }) + ': ' + String(e));
-        } finally {
-          setResetting(false);
-        }
-      },
-    });
   };
 
   const handleExit = async () => {
@@ -376,46 +319,21 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) 
           </div>
         </div>
       )}
-      {showCreateEnterprise && (
-        <div>
-          <div className='text-15px font-600 text-t-primary mb-8px'>
-            {t('common.enterprise.createTitle', { defaultValue: '创建企业' })}
-          </div>
-          <div className='text-t-secondary mb-12px'>
-            {t('common.enterprise.createHint', {
-              defaultValue: '创建后本机将成为企业服务器，你会成为系统管理员。',
-            })}
-          </div>
-          <div className='flex gap-8px'>
-            <Input
-              value={tenantName}
-              onChange={setTenantName}
-              placeholder={t('common.enterprise.tenantNamePlaceholder', { defaultValue: '企业名称' })}
-              style={{ maxWidth: 240 }}
-            />
-            <Button loading={creating} onClick={handleCreate}>
-              {t('common.enterprise.createButton', { defaultValue: '创建' })}
-            </Button>
-          </div>
-          {showResetPrompt && (
-            <Alert
-              type='warning'
-              className='mt-12px'
-              content={
-                <div className='flex flex-col gap-8px'>
-                  <span>
-                    {t('common.enterprise.staleDataDetected', {
-                      defaultValue: '检测到本机保留有历史企业数据，需要先归档并清空才能重新创建企业。',
-                    })}
-                  </span>
-                  <Button status='warning' loading={resetting} className='!w-fit' onClick={handleResetLocal}>
-                    {t('common.enterprise.resetLocalButton', { defaultValue: '重置本机企业数据' })}
-                  </Button>
-                </div>
-              }
-            />
-          )}
-        </div>
+      {/* Creating an enterprise locally is gone: hosting lives in the separate
+          enterprise edition, and `/api/one/org/create` answers 501 in this
+          build. The form used to be shown to anyone whose deployment role
+          said `server`, which now only happens for configs left over from
+          before the split — so they get an explanation instead of a button
+          that cannot work. Joining a remote project group by invite code is
+          unaffected and stays above. */}
+      {showLegacyServerNotice && (
+        <Alert
+          type='info'
+          content={t('common.enterprise.hostingMovedToEnterpriseEdition', {
+            defaultValue:
+              '本机记录的部署角色是「服务器」，但个人版不提供项目组托管能力（该能力已随企业版拆分独立）。请在「设置 → 企业身份」将本机切回客户端，并连接由企业版服务端托管的项目组。',
+          })}
+        />
       )}
     </div>
   );

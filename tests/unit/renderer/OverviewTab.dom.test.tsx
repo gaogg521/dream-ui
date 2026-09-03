@@ -54,10 +54,11 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-describe('OverviewTab — stale local enterprise data recovery', () => {
-  // A personal-mode (non-enterprise) context — required to reach the "Create
-  // Enterprise" section; `context: null` short-circuits the component to `null`.
-  const personalContext: OrgContext = {
+describe('OverviewTab — local hosting retired', () => {
+  // A machine whose stored deployment role still says `server`. There is no
+  // longer any UI that can put it there — only a config written before the
+  // enterprise edition was split out, or `markDeploymentAsServer`.
+  const legacyServerContext: OrgContext = {
     tenantId: 'default',
     tenantName: null,
     role: 'system_admin',
@@ -73,63 +74,23 @@ describe('OverviewTab — stale local enterprise data recovery', () => {
     vi.mocked(webui.getStatus.invoke).mockRejectedValue(new Error('no webui in test'));
   });
 
-  it('shows a reset affordance when create fails with ALREADY_HOSTS_ENTERPRISE, and resetting clears it', async () => {
-    const user = userEvent.setup();
-    vi.mocked(oneOrg.create.invoke).mockRejectedValue(
-      new BackendHttpError({
-        method: 'POST',
-        path: '/api/one/org/create',
-        status: 403,
-        body: { success: false, error: 'already hosts', code: 'ALREADY_HOSTS_ENTERPRISE' },
-      })
-    );
-    vi.mocked(oneOrg.resetLocal.invoke).mockResolvedValue({
-      archivedTenantCount: 1,
-      archivedMemberCount: 1,
-      archivePath: '/tmp/enterprise-archives/enterprise-1.json',
-    });
-
-    const onChanged = vi.fn();
-    render(<OverviewTab context={personalContext} error={null} onChanged={onChanged} />);
-
-    await user.type(screen.getByPlaceholderText('企业名称'), 'Acme');
-    await user.click(screen.getByRole('button', { name: '创建' }));
+  /**
+   * The create form used to be offered here and called
+   * `/api/one/org/create`, which this build answers with 501 — the personal
+   * edition does not compile the governance crates that host a project
+   * group. Offering it produced a failure that explained none of that.
+   */
+  it('offers no local create path, and explains where hosting went', async () => {
+    render(<OverviewTab context={legacyServerContext} error={null} onChanged={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/检测到本机保留有历史企业数据/)).toBeInTheDocument();
+      expect(screen.getByText(/个人版不提供项目组托管能力/)).toBeInTheDocument();
     });
 
-    const confirmSpy = vi.spyOn(Modal, 'confirm').mockImplementation((config) => {
-      void config.onOk?.();
-      return { close: vi.fn(), update: vi.fn() } as never;
-    });
-
-    await user.click(screen.getByRole('button', { name: '重置本机企业数据' }));
-
-    expect(confirmSpy).toHaveBeenCalled();
-    await waitFor(() => {
-      expect(oneOrg.resetLocal.invoke).toHaveBeenCalled();
-    });
-    await waitFor(() => {
-      expect(onChanged).toHaveBeenCalled();
-    });
-    await waitFor(() => {
-      expect(screen.queryByText(/检测到本机保留有历史企业数据/)).not.toBeInTheDocument();
-    });
-  });
-
-  it('does not show the reset affordance for other create failures', async () => {
-    const user = userEvent.setup();
-    vi.mocked(oneOrg.create.invoke).mockRejectedValue(new Error('network down'));
-
-    render(<OverviewTab context={personalContext} error={null} onChanged={vi.fn()} />);
-
-    await user.type(screen.getByPlaceholderText('企业名称'), 'Acme');
-    await user.click(screen.getByRole('button', { name: '创建' }));
-
-    await waitFor(() => {
-      expect(Message.error).toHaveBeenCalled();
-    });
-    expect(screen.queryByText(/检测到本机保留有历史企业数据/)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('企业名称')).toBeNull();
+    expect(screen.queryByRole('button', { name: '创建' })).toBeNull();
+    expect(screen.queryByRole('button', { name: '重置本机企业数据' })).toBeNull();
+    expect(oneOrg.create.invoke).not.toHaveBeenCalled();
+    expect(oneOrg.resetLocal.invoke).not.toHaveBeenCalled();
   });
 });
