@@ -16,7 +16,8 @@ export type AppMetadata = {
 export type BackendBinaryResolver = () => string;
 
 /**
- * System dirs exported to the backend via AIONUI_{CACHE,WORK,LOG}_DIR env.
+ * System dirs exported to the backend via ONE_{CACHE,WORK,LOG}_DIR env
+ * (with DREAM_* aliases).
  * Backend surfaces these on `/api/system/info`. Omit and the backend inherits
  * process.env, which may carry stale values from the parent shell — better to
  * be explicit.

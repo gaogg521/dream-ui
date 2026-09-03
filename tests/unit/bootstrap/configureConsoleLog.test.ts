@@ -103,6 +103,29 @@ describe('configureConsoleLog', () => {
     expect(log.transports.console.level).toBe('silly');
   });
 
+  it('remaps the level of bridged backend log lines to match their tracing level', async () => {
+    const log = await loadConfigureConsoleLog(false);
+    const hook = log.hooks.push.mock.calls[0]?.[0] as (
+      message: { level: string; data: unknown[] },
+      transport?: unknown
+    ) => { level: string; data: unknown[] };
+    expect(hook).toBeTypeOf('function');
+
+    // dreamcore writes tracing to stdout, which the spawner bridges as
+    // `console.log('[dreamcore] …')` — default level `info`. An ERROR line
+    // must come back out of the hook at `error`.
+    const remapped = hook({
+      level: 'info',
+      data: ['[dreamcore] 2026-09-03T02:01:15.849577Z ERROR dreamcore::commands::cmd_server: boom'],
+    });
+    expect(remapped.level).toBe('error');
+    expect(remapped.data[0]).toBe('[dreamcore] dreamcore::commands::cmd_server: boom');
+
+    // A non-backend line is passed through untouched.
+    const untouched = hook({ level: 'info', data: ['just a normal renderer log'] });
+    expect(untouched.level).toBe('info');
+  });
+
   it('routes cross-day frontend log writes into the matching date directory', async () => {
     const log = await loadConfigureConsoleLog(false);
     const logsRoot = mkdtempSync(path.join(os.tmpdir(), 'aionui-log-test-'));
