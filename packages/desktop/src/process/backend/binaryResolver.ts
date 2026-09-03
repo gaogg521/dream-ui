@@ -179,7 +179,13 @@ function resolveBundledBinary(
  */
 function resolveFromSystemPATH(diagnostics: BackendBinaryResolveDiagnostics): string | null {
   try {
-    const result = execSync(diagnostics.pathLookupCommand, { encoding: 'utf-8', timeout: 5000 }).trim();
+    // windowsHide: the parent is windowless under Electron, so a bare `where`
+    // spawn flashes a console window during this PATH-lookup fallback.
+    const result = execSync(diagnostics.pathLookupCommand, {
+      encoding: 'utf-8',
+      timeout: 5000,
+      windowsHide: true,
+    }).trim();
     diagnostics.pathLookupResult = trimLookupText(result);
     const firstMatch = result.split(/\r?\n/).find((line) => line.trim());
     if (firstMatch && existsSync(firstMatch.trim())) return firstMatch.trim();

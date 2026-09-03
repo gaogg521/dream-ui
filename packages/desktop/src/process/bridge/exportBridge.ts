@@ -169,7 +169,7 @@ export async function detectNativeOfficeConverter(): Promise<{ hasNative: boolea
           '-Command',
           'try { $w = New-Object -ComObject Word.Application; $w.Quit(); "ok" } catch { "fail" }',
         ],
-        { timeout: 15000 }
+        { timeout: 15000, windowsHide: true }
       );
       officeAvailabilityCache = { checked: true, hasNative: true };
     } catch {
@@ -236,6 +236,7 @@ export async function convertViaOfficecliHtml(srcPath: string, pdfPath: string):
   const { stdout } = await execFileAsync('officecli', ['view', srcPath, 'html'], {
     timeout: 60000,
     maxBuffer: 50 * 1024 * 1024,
+    windowsHide: true,
   });
   const pdfBuffer = await renderHtmlToPdfBuffer(stdout);
   await writeFile(pdfPath, pdfBuffer);
