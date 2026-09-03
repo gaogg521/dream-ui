@@ -18,7 +18,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { IProvider } from '@/common/config/storage';
-import { findDeclaredMediaModel, hasDeclaredMediaModel } from '@/common/media/declaredModel';
+import { findDeclaredMediaModel, hasDeclaredMediaModel, listMediaModels } from '@/common/media/declaredModel';
 
 const provider = (over: Partial<IProvider> & { models: string[] }): IProvider =>
   ({
@@ -32,6 +32,13 @@ const provider = (over: Partial<IProvider> & { models: string[] }): IProvider =>
 
 const CHAT_ONLY = provider({ id: 'chat', models: ['deepseek-v4-flash', 'kimi-k2-6'] });
 const VIDEO = provider({ id: 'vid', name: 'Ark', platform: 'openai', models: ['doubao-seedance-1-0-pro'] });
+const IMAGE = provider({
+  id: 'img',
+  name: 'OpenAI',
+  platform: 'openai',
+  base_url: 'https://api.openai.com/v1',
+  models: ['gpt-image-1', 'dall-e-3'],
+});
 
 describe('findDeclaredMediaModel', () => {
   it('finds a declared video model when nothing is picked in settings', () => {
@@ -64,6 +71,30 @@ describe('findDeclaredMediaModel', () => {
     const found = findDeclaredMediaModel('video', [VIDEO]);
     expect(found?.api_key).toBe('');
     expect(found?.base_url).toBe('');
+  });
+});
+
+describe('listMediaModels', () => {
+  it('lists every model of the kind, across providers, in order', () => {
+    const list = listMediaModels('image', [CHAT_ONLY, IMAGE, VIDEO]);
+    expect(list.map((m) => m.model)).toEqual(['gpt-image-1', 'dall-e-3']);
+    expect(list[0]).toMatchObject({ providerId: 'img', providerName: 'OpenAI', platform: 'openai' });
+  });
+
+  it('does not cross image and video', () => {
+    expect(listMediaModels('video', [IMAGE]).length).toBe(0);
+    expect(listMediaModels('image', [VIDEO]).length).toBe(0);
+  });
+
+  it('is empty-list and undefined safe', () => {
+    expect(listMediaModels('image', [])).toEqual([]);
+    expect(listMediaModels('video', undefined)).toEqual([]);
+  });
+
+  it('agrees with findDeclaredMediaModel on the first match', () => {
+    const first = listMediaModels('video', [CHAT_ONLY, VIDEO])[0];
+    const found = findDeclaredMediaModel('video', [CHAT_ONLY, VIDEO]);
+    expect(found).toMatchObject({ id: first.providerId, use_model: first.model });
   });
 });
 

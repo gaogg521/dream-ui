@@ -16,7 +16,7 @@ import {
   RuntimeSelectorSubMenuTitle,
 } from '@/renderer/components/agent/runtimeSelectorOptions';
 import { isChatCapableModel, modelKindLabelOf } from '@/common/utils/modelCapabilities';
-import { isMediaGenSupported } from '@/common/media/catalog';
+import { listMediaModels } from '@/common/media/declaredModel';
 import { requestMediaMode, useMediaModeSnapshot } from '@/renderer/hooks/media/mediaModeStore';
 import { usePreviewContext } from '@/renderer/pages/conversation/Preview';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
@@ -141,13 +141,10 @@ const DreamEngineModelSelector: React.FC<{
   const mediaLookup = new Map<string, { kind: 'image' | 'video'; providerId: string; modelName: string }>();
   for (const kind of ['image', 'video'] as const) {
     const models: RuntimeSelectorModelGroup['models'] = [];
-    for (const provider of providers) {
-      for (const modelName of provider.models ?? []) {
-        if (!isMediaGenSupported(kind, provider, modelName)) continue;
-        const id = `media:${kind}:${compositeId(provider.id, modelName)}`;
-        mediaLookup.set(id, { kind, providerId: provider.id, modelName });
-        models.push({ id, label: modelName, kind, inferred: false });
-      }
+    for (const { providerId: mediaProviderId, model: modelName } of listMediaModels(kind, providers)) {
+      const id = `media:${kind}:${compositeId(mediaProviderId, modelName)}`;
+      mediaLookup.set(id, { kind, providerId: mediaProviderId, modelName });
+      models.push({ id, label: modelName, kind, inferred: false });
     }
     if (models.length) {
       modelGroups.push({

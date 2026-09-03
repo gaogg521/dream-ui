@@ -876,7 +876,7 @@
   "mediaCostFromUserPrice": "Based on the unit price you set for this model.",
   "mediaCostFromBuiltinRate": "Estimated from a built-in reference rate. It counts quantity (and video duration), but not resolution or quality, so your actual billing may differ. Set a unit price for this model in Settings → Models for an exact figure.",
   "mediaCostNoRate": "This model has no unit price and no built-in reference rate. Set one in Settings → Models to see a figure.",
-  "mediaModeNoModel": "No generation model selected yet. Pick one under Settings → Capabilities → Tools.",
+  "mediaModeNoModel": "No generation model selected yet. Pick one from the model button in the send box, or add one in Settings → Models.",
   "mediaModeStartFailed": "Could not start the generation: {{reason}}",
   "mediaJobSourceImages": "Source images",
   "policyDenied_seatLimitExceeded": "Your organization's seat limit has been reached; you cannot send messages until an administrator frees a seat or upgrades the plan.",

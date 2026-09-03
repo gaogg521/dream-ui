@@ -25,13 +25,18 @@ import styles from './MediaModeControl.module.css';
 import { useTranslation } from 'react-i18next';
 import type { MediaGenParams } from '@/common/media/types';
 import type { MediaModelSpec } from '@/common/media/catalog/types';
+import type { DeclaredMediaModel } from '@/common/media/declaredModel';
 import { useMediaCost } from '@renderer/hooks/media/useMediaCost';
 import { useAutoEndpointWarning } from '@renderer/hooks/media/useAutoEndpointWarning';
 import { requestModelSettingsHighlight } from '@renderer/hooks/media/mediaSettingsHighlight';
 import MediaParamsPanel from './MediaParamsPanel';
 import RuntimeSelectorPill from '@/renderer/components/agent/RuntimeSelectorPill';
+import { RuntimeSelectorModelList } from '@/renderer/components/agent/runtimeSelectorOptions';
 import { useNavigate } from 'react-router-dom';
 import { iconColors } from '@/renderer/styles/colors';
+
+/** Composite id so the shared grouped list can track selection across providers. */
+const MODEL_ID_SEP = '::';
 
 export type MediaMode = 'off' | 'image' | 'video';
 
@@ -42,6 +47,13 @@ type Props = {
   model?: string;
   /** Provider the model belongs to, so the cost uses that provider's price. */
   providerId?: string;
+  /**
+   * Models the user can pick for the active kind. Empty means none is declared
+   * as this kind yet — the pill then points at Settings > Models instead.
+   */
+  models?: DeclaredMediaModel[];
+  /** Pick a model for the active kind. */
+  onModelChange?: (providerId: string, model: string) => void;
   spec: MediaModelSpec | null;
   params: MediaGenParams;
   onParamsChange: (next: MediaGenParams) => void;
@@ -71,6 +83,8 @@ const MediaModeControl: React.FC<Props> = ({
   onModeChange,
   model,
   providerId,
+  models = [],
+  onModelChange,
   spec,
   params,
   onParamsChange,
@@ -84,6 +98,28 @@ const MediaModeControl: React.FC<Props> = ({
   // for the same purpose.
   const navigate = useNavigate();
   const summary = useMemo(() => summarize(params, spec?.defaults?.generateAudio), [params, spec]);
+
+  // Provider-grouped model list for the picker, in the same shape the
+  // conversation header dropdown feeds `RuntimeSelectorModelList`.
+  const modelGroups = useMemo(() => {
+    const byProvider = new Map<string, { key: string; title: string; models: { id: string; label: string }[] }>();
+    for (const item of models) {
+      const group = byProvider.get(item.providerId) ?? {
+        key: item.providerId,
+        title: item.providerName,
+        models: [],
+      };
+      group.models.push({ id: `${item.providerId}${MODEL_ID_SEP}${item.model}`, label: item.model });
+      byProvider.set(item.providerId, group);
+    }
+    return [...byProvider.values()];
+  }, [models]);
+  const currentModelId = providerId && model ? `${providerId}${MODEL_ID_SEP}${model}` : null;
+  const handleModelSelect = (id: string) => {
+    const at = id.indexOf(MODEL_ID_SEP);
+    if (at < 0 || !onModelChange) return;
+    onModelChange(id.slice(0, at), id.slice(at + MODEL_ID_SEP.length));
+  };
 
   // Priced off the parameters actually staged, so changing the count or the
   // duration moves the number before the money is spent rather than after.
@@ -174,6 +210,54 @@ const MediaModeControl: React.FC<Props> = ({
         />
       </Dropdown>
 
+      {/* Model picker. The kind is declared in Settings > Models; this is where
+          the user says which of those declared models the next generation runs
+          on. Empty list → the pill links to Settings > Models rather than
+          opening an empty dropdown. */}
+      {mode !== 'off' &&
+        (modelGroups.length > 0 ? (
+          <Dropdown
+            trigger='click'
+            position='bl'
+            droplist={
+              <Menu>
+                <RuntimeSelectorModelList
+                  groups={modelGroups}
+                  currentModelId={currentModelId}
+                  onSelect={handleModelSelect}
+                />
+              </Menu>
+            }
+            disabled={disabled}
+          >
+            <RuntimeSelectorPill
+              testId='media-model-pill'
+              className={`sendbox-model-btn agent-mode-compact-pill ${styles.modelPill}`}
+              label={model || t('conversation.welcome.selectModel')}
+              trailing={<Down theme='outline' size='12' fill={iconColors.secondary} className='shrink-0' />}
+              disabled={disabled}
+              // Green like the mode pill: the model and its parameters are part
+              // of the same armed control, and the next Enter runs them.
+              type='primary'
+              status='success'
+            />
+          </Dropdown>
+        ) : (
+          <Tooltip
+            content={t(mode === 'video' ? 'conversation.mediaNoVideoModelHint' : 'conversation.mediaNoImageModelHint')}
+          >
+            <RuntimeSelectorPill
+              testId='media-model-none'
+              className='sendbox-model-btn agent-mode-compact-pill'
+              label={t(
+                mode === 'video' ? 'conversation.mediaNoVideoModelTitle' : 'conversation.mediaNoImageModelTitle'
+              )}
+              onClick={() => void navigate('/settings/model')}
+              disabled={disabled}
+            />
+          </Tooltip>
+        ))}
+
       {mode !== 'off' && (
         <Trigger
           popup={() => (
@@ -206,10 +290,11 @@ const MediaModeControl: React.FC<Props> = ({
           <RuntimeSelectorPill
             testId='media-params-pill'
             className={`sendbox-model-btn agent-mode-compact-pill ${styles.paramsPill}`}
-            /* The model is named here because it decides both price and what
-               the parameter panel can offer — leaving it implicit is how a
-               user ends up generating with the wrong one. */
-            label={[model, ...summary].filter(Boolean).join(' · ') || t('conversation.mediaParamsOpen')}
+            /* Parameters only — the model now has its own pill to the left. */
+            label={summary.filter(Boolean).join(' · ') || t('conversation.mediaParamsOpen')}
+            // Green, matching the mode and model pills — one armed cluster.
+            type='primary'
+            status='success'
           />
         </Trigger>
       )}

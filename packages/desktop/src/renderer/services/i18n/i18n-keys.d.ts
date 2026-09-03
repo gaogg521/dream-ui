@@ -2679,6 +2679,7 @@ export type I18nKey =
   | 'settings.mediaEndpointStyleLabel_seedreamGateway'
   | 'settings.mediaEndpointTip'
   | 'settings.mediaModelAutoPlaceholder'
+  | 'settings.mediaModelUndeclared'
   | 'settings.mediaTierPriceLabel'
   | 'settings.mediaTierPricePlaceholder'
   | 'settings.mediaTierPriceTip'

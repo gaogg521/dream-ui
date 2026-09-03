@@ -701,6 +701,8 @@ const GuidPage: React.FC = () => {
           onModeChange={mediaComposer.changeMode}
           model={mediaComposer.model}
           providerId={mediaComposer.providerId}
+          models={mediaComposer.models}
+          onModelChange={mediaComposer.chooseModel}
           spec={mediaComposer.spec}
           params={mediaComposer.params}
           onParamsChange={mediaComposer.setParams}

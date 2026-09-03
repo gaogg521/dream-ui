@@ -862,7 +862,7 @@
   "mediaCostFromUserPrice": "依你為此模型填寫的單價計算。",
   "mediaCostFromBuiltinRate": "以內建參考費率估算：只計算數量（影片另計時長），不區分解析度與畫質，因此可能與你的實際計費不同。在 設定 → 模型 中為該模型填寫單價即可顯示準確金額。",
   "mediaCostNoRate": "此模型沒有單價，也沒有內建參考費率。在 設定 → 模型 中填寫單價後即可顯示。",
-  "mediaModeNoModel": "還沒有選生成模型。到「設定 → 能力擴展 → 工具」裡選一個。",
+  "mediaModeNoModel": "還沒有選生成模型。在傳送框的模型按鈕裡選一個，或到「設定 → 模型」裡新增。",
   "mediaModeStartFailed": "生成沒能開始：{{reason}}",
   "mediaJobSourceImages": "參考圖",
   "policyDenied_seatLimitExceeded": "所屬企業的席位已滿，暫時無法發送。請聯絡管理員釋放席位或升級方案。",

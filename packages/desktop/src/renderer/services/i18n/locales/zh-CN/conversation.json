@@ -876,7 +876,7 @@
   "mediaCostFromUserPrice": "按你为该模型填写的单价计算。",
   "mediaCostFromBuiltinRate": "按内置参考费率估算：只算数量（视频还算时长），不区分分辨率和清晰度，所以可能与你的实际计费不同。在 设置 → 模型 里为该模型填写单价可显示准确金额。",
   "mediaCostNoRate": "该模型没有单价，也没有内置参考费率。在 设置 → 模型 里填写单价后即可显示。",
-  "mediaModeNoModel": "还没有选生成模型。到「设置 → 能力扩展 → 工具」里选一个。",
+  "mediaModeNoModel": "还没有选生成模型。在发送框的模型按钮里选一个，或到「设置 → 模型」里添加。",
   "mediaModeStartFailed": "生成没能开始：{{reason}}",
   "mediaJobSourceImages": "参考图",
   "policyDenied_seatLimitExceeded": "所在企业的席位已满，暂时无法发送。请联系管理员释放席位或升级套餐。",
