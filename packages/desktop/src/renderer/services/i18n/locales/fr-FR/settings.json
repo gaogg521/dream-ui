@@ -1523,5 +1523,6 @@
     "newBalance": "Nouveau solde : {{amount}}",
     "pollTimeout": "Toujours en attente du paiement. Votre solde sera mis à jour dès qu'il est validé.",
     "orderFailed": "Impossible de terminer la recharge. Veuillez réessayer."
-  }
+  },
+  "mediaModelUndeclared": "Non défini —— déclarez un modèle comme Image ou Vidéo sur la page Modèles"
 }

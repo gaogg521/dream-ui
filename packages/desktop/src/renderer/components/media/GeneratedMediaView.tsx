@@ -23,20 +23,43 @@ import { buildMediaUrl } from '@/common/media/mediaUrl';
 import LocalVideoView from './LocalVideoView';
 import styles from './GeneratedMediaView.module.css';
 
+/**
+ * Columns and a per-tile height cap that scale with the result size. A two-up
+ * result should read big; a large one should stay a contact sheet rather than
+ * take over the conversation (full size is one click away via the preview).
+ * `4` is pulled back to two columns so it lays out as a clean 2×2.
+ */
+const gridShapeFor = (count: number): { columns: number; tileMaxH: number } => {
+  if (count === 2 || count === 4) return { columns: 2, tileMaxH: count === 2 ? 520 : 340 };
+  if (count <= 6) return { columns: 3, tileMaxH: 300 };
+  return { columns: 4, tileMaxH: 220 };
+};
+
 const GeneratedMediaView: React.FC<{ assets: ParsedMediaAsset[] }> = ({ assets }) => {
   const { t } = useTranslation();
   if (!assets.length) return null;
 
   const images = assets.filter((asset) => asset.kind === 'image');
   const videos = assets.filter((asset) => asset.kind === 'video');
+  const grid = gridShapeFor(images.length);
 
   return (
     <div className='mt-8px flex flex-col gap-8px'>
       {images.length > 0 && (
         // A single image gets the full width it used to get; several become a
-        // grid so a four-image result does not push the conversation around.
+        // grid whose column count and tile height adapt to the result size.
         <Image.PreviewGroup infinite={false}>
-          <div className={images.length === 1 ? 'flex' : 'grid grid-cols-2 gap-8px'}>
+          <div
+            className={images.length === 1 ? 'flex' : styles.grid}
+            style={
+              images.length === 1
+                ? undefined
+                : ({
+                    '--media-grid-cols': grid.columns,
+                    '--media-tile-max-h': `${grid.tileMaxH}px`,
+                  } as React.CSSProperties)
+            }
+          >
             {images.map((asset) => (
               <div key={asset.filePath} className='overflow-hidden rd-8px border border-solid b-color-border-2'>
                 {/* Arco's `Image` rather than a bare `<img>`: only `Image`

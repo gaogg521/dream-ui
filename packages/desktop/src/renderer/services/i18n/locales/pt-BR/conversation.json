@@ -868,7 +868,7 @@
   "mediaCostFromUserPrice": "Calculado com o preço unitário que você definiu para este modelo.",
   "mediaCostFromBuiltinRate": "Estimativa com base em uma tarifa de referência interna. Considera a quantidade (e a duração, no caso de vídeo), mas não a resolução nem a qualidade, portanto sua cobrança real pode ser diferente. Defina um preço unitário para este modelo em Configurações → Modelos para ver o valor exato.",
   "mediaCostNoRate": "Este modelo não tem preço unitário nem tarifa de referência interna. Defina um em Configurações → Modelos.",
-  "mediaModeNoModel": "Nenhum modelo de geração selecionado. Escolha um em Configurações → Capacidades → Ferramentas.",
+  "mediaModeNoModel": "Nenhum modelo de geração selecionado. Escolha um no botão de modelo da caixa de envio ou adicione em Configurações → Modelos.",
   "mediaModeStartFailed": "Não foi possível iniciar a geração: {{reason}}",
   "mediaJobSourceImages": "Imagens de origem",
   "policyDenied_seatLimitExceeded": "O limite de licenças da sua empresa foi atingido; você não poderá enviar mensagens até que um administrador libere uma licença ou faça upgrade do plano.",

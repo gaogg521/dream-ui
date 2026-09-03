@@ -21,3 +21,21 @@
   min-width: 0;
   overflow: hidden;
 }
+
+/**
+ * The model pill names a single model id, and vendor ids run long
+ * (`doubao-seedance-2-0-fast-260128`). Unlike the params pill it gets a
+ * `max-width`: the name is an identifier, not information you read left to
+ * right, so clipping the tail and revealing the rest on hover (MarqueePillLabel)
+ * keeps the row from being shoved around — the cost figure and the params pill
+ * next to it were getting pushed off-screen / under the params panel.
+ */
+.modelPill {
+  min-width: 0;
+  max-width: 180px;
+}
+
+.modelPill :global(.arco-btn-content) {
+  min-width: 0;
+  overflow: hidden;
+}

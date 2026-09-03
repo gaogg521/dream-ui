@@ -15,8 +15,9 @@
 
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { MediaGenParams } from '@/common/media/types';
+import type { DeclaredMediaModel } from '@/common/media/declaredModel';
 
 // The control navigates to model settings from its "no media model yet" empty
 // state. Rendered standalone here, there is no Router above it, so navigation
@@ -66,18 +67,32 @@ const MediaModeControl = (await import('@/renderer/components/media/MediaModeCon
 
 type Mode = 'off' | 'image' | 'video';
 
-const renderControl = (over: { mode?: Mode; model?: string; providerId?: string; params?: MediaGenParams } = {}) =>
+const renderControl = (
+  over: {
+    mode?: Mode;
+    model?: string;
+    providerId?: string;
+    params?: MediaGenParams;
+    models?: DeclaredMediaModel[];
+    onModelChange?: (providerId: string, model: string) => void;
+  } = {}
+) =>
   render(
     <MediaModeControl
       mode={over.mode ?? 'image'}
       onModeChange={vi.fn()}
       model={over.model ?? 'gpt-image-2'}
       providerId={over.providerId}
+      models={over.models}
+      onModelChange={over.onModelChange ?? vi.fn()}
       spec={null}
       params={over.params ?? {}}
       onParamsChange={vi.fn()}
     />
   );
+
+const modelList = (...names: string[]): DeclaredMediaModel[] =>
+  names.map((model) => ({ providerId: 'p-1', providerName: 'OpenAI', platform: 'openai', model }));
 
 /**
  * The collapsed trigger is what the user reads to know which mode the send box
@@ -110,6 +125,47 @@ describe('MediaModeControl mode icon', () => {
     const icons = [iconOf('off'), iconOf('image'), iconOf('video')];
     expect(icons.every((markup) => markup !== '')).toBe(true);
     expect(new Set(icons).size).toBe(3);
+  });
+});
+
+/**
+ * Choosing the media model is meant to happen here, in the send box, right where
+ * the mode is switched — not on a separate settings page.
+ */
+describe('MediaModeControl model picker', () => {
+  afterEach(() => {
+    cleanup();
+    providerList.value = [];
+  });
+
+  it('names the active model on its own pill and lists the declared models', () => {
+    renderControl({ model: 'gpt-image-2', models: modelList('gpt-image-2', 'dall-e-3') });
+    const pill = screen.getByTestId('media-model-pill');
+    expect(pill.textContent).toContain('gpt-image-2');
+
+    fireEvent.click(pill);
+    expect(screen.getByText('dall-e-3')).toBeTruthy();
+  });
+
+  it('reports the chosen model back to the caller', () => {
+    const onModelChange = vi.fn();
+    renderControl({ model: 'gpt-image-2', models: modelList('gpt-image-2', 'dall-e-3'), onModelChange });
+
+    fireEvent.click(screen.getByTestId('media-model-pill'));
+    fireEvent.click(screen.getByText('dall-e-3'));
+    expect(onModelChange).toHaveBeenCalledWith('p-1', 'dall-e-3');
+  });
+
+  it('points at Settings > Models when nothing is declared for this kind', () => {
+    renderControl({ mode: 'video', models: [] });
+    expect(screen.getByTestId('media-model-none').textContent).toContain('conversation.mediaNoVideoModelTitle');
+    expect(screen.queryByTestId('media-model-pill')).toBeNull();
+  });
+
+  it('has no model controls at all in chat mode', () => {
+    renderControl({ mode: 'off', models: modelList('gpt-image-2') });
+    expect(screen.queryByTestId('media-model-pill')).toBeNull();
+    expect(screen.queryByTestId('media-model-none')).toBeNull();
   });
 });
 
