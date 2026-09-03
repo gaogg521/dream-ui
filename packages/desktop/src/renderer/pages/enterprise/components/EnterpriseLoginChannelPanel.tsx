@@ -130,8 +130,34 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
 
   const channelLabel = useCallback((item: ChannelMeta) => t(item.labelKey, { defaultValue: item.labelDefault }), [t]);
 
+  /**
+   * Why the SSO channels are unavailable, or `null` when they are usable.
+   *
+   * Without a remote origin this panel queries the LOCAL co-located dreamcore
+   * (see the fetch above), which is a personal-edition backend and has no SSO
+   * configured — so every channel reads as unconfigured. That is a completely
+   * different fix from "the admin hasn't enabled it on the server", and the
+   * panel used to present both as the same silent grey tile.
+   */
+  const unavailableReason = useMemo<'not_connected' | 'not_configured_on_server' | null>(() => {
+    if (loading) return null;
+    if (!remoteOrigin) return 'not_connected';
+    const anyUsable = providers.some((p) => p.enabled && p.configured);
+    return anyUsable ? null : 'not_configured_on_server';
+  }, [loading, providers, remoteOrigin]);
+
   const showUnavailable = useCallback(
     (item: ChannelMeta) => {
+      if (unavailableReason === 'not_connected') {
+        Message.warning(
+          t('common.enterprise.loginChannelNeedsServer', {
+            defaultValue:
+              '尚未连接企业服务器，本机没有企业 SSO 配置。请先在「企业身份」页填写并连接项目组服务器地址，再用 {{method}} 登录。',
+            method: channelLabel(item),
+          })
+        );
+        return;
+      }
       Message.warning(
         t('common.enterprise.loginChannelUnavailable', {
           defaultValue: '您的企业尚未开通 {{method}} 登录，请联系管理员或改用其他方式。',
@@ -139,7 +165,7 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
         })
       );
     },
-    [channelLabel, t]
+    [channelLabel, t, unavailableReason]
   );
 
   const handleChannelClick = useCallback(
@@ -189,12 +215,16 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
       <div className={styles.channelGrid}>
         {channels.map((item) => {
           const status = resolveChannelStatus(item.id, providers, loading);
+          const unavailable = status === 'not_configured' || status === 'disabled';
           return (
             <button
               key={item.id}
               type='button'
-              className={styles.channelTile}
-              disabled={status === 'pending' || status === 'not_configured'}
+              className={`${styles.channelTile} ${unavailable ? styles.channelTileUnavailable : ''}`}
+              // Only `pending` is truly non-interactive. An unconfigured
+              // channel stays clickable so the click can explain itself —
+              // disabling it here is what made the reason unreachable.
+              disabled={status === 'pending'}
               onClick={() => void handleChannelClick(item)}
             >
               {item.icon}
@@ -203,6 +233,18 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
           );
         })}
       </div>
+      {unavailableReason ? (
+        <div className={styles.reason}>
+          {unavailableReason === 'not_connected'
+            ? t('common.enterprise.loginChannelsNeedServerHint', {
+                defaultValue:
+                  '企业 SSO 登录方式来自你所连接的企业服务器。当前尚未连接，因此下方仅「本地账户」可用——请先在「设置 → 企业身份」填写并连接项目组服务器地址。',
+              })
+            : t('common.enterprise.loginChannelsNoneConfiguredHint', {
+                defaultValue: '已连接企业服务器，但管理员尚未在企业管理后台启用任何 SSO 登录方式。可先用「本地账户」登录。',
+              })}
+        </div>
+      ) : null}
       <p className={styles.hint}>
         {t('common.enterprise.loginBrowserHint', {
           defaultValue:
