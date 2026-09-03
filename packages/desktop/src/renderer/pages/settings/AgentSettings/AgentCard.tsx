@@ -139,9 +139,13 @@ const AgentCard: React.FC<AgentCardProps> = (props) => {
             <ThemedLogo
               src={avatar.value}
               alt={agent.name}
-              // Arco Avatar forces color:var(--color-white); pin to theme text so
-              // the currentColor mask stays visible in light mode too.
-              style={{ width: 32, height: 32, objectFit: 'contain', color: 'var(--text-primary)' }}
+              // The plate (AgentCard.css) is a fixed light neutral in BOTH
+              // themes, so a monochrome `currentColor` mark must be pinned dark
+              // regardless of theme — `var(--text-primary)` here turned the
+              // mark white in dark mode, invisible on the light plate. Slate
+              // matches the plate's own border tone; overrides Arco Avatar's
+              // forced `color: var(--color-white)`.
+              style={{ width: 32, height: 32, objectFit: 'contain', color: '#0f172a' }}
             />
           ) : avatar.kind === 'emoji' ? (
             <span className='text-18px leading-none'>{avatar.value}</span>
