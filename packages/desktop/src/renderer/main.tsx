@@ -103,6 +103,7 @@ import { ipcBridge } from '@/common';
 import { repairAllCronJobTimeZonesOnce } from '@renderer/pages/cron/repairCronJobTimeZone';
 import { bootstrapRendererConfig } from '@renderer/services/bootstrapRenderer';
 import { prefetchAssistantsList } from '@renderer/services/prefetchAssistantsList';
+import { syncModelPlatformsFromBackend } from '@renderer/utils/model/modelPlatformsSync';
 import { useAutoAcceptInferredModelKinds } from '@renderer/hooks/agent/useAutoAcceptInferredModelKinds';
 
 // Components and utilities
@@ -370,6 +371,11 @@ const Main = () => {
   useEffect(() => {
     if (!ready || !configReady) return;
     prefetchAssistantsList();
+  }, [ready, configReady]);
+
+  useEffect(() => {
+    if (!ready || !configReady) return;
+    void syncModelPlatformsFromBackend();
   }, [ready, configReady]);
 
   useAutoAcceptInferredModelKinds(ready && configReady);
