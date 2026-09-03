@@ -14,7 +14,7 @@
 
 import { resolveBackendAssetUrl } from '@/renderer/utils/platform';
 
-const buildLogoAssetUrl = (path: string): string => {
+export const buildLogoAssetUrl = (path: string): string => {
   return resolveBackendAssetUrl(`/api/assets/logos/${path}`) ?? `/api/assets/logos/${path}`;
 };
 
