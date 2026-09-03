@@ -159,6 +159,9 @@ const child = spawn(spawnPlan.command, spawnPlan.args, {
   // protocol stream must not be buffered or rewritten in between.
   stdio: 'inherit',
   env: process.env,
+  // The parent runs windowless under Electron; without this, spawning
+  // `cmd.exe /c npx …` flashes a console window on Windows.
+  windowsHide: true,
 });
 
 child.on('error', (error) => {
