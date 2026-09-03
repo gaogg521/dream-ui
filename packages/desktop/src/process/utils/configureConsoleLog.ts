@@ -69,7 +69,13 @@ log.transports.file.level = FILE_LOG_LEVEL;
 log.transports.file.maxSize = FILE_SIZE_LIMIT;
 log.transports.console.level = app.isPackaged ? false : CONSOLE_LOG_LEVEL;
 
-const BACKEND_PREFIX = '[aioncore]';
+// Must match the prefix `BackendLifecycleManager` puts on bridged backend
+// stdout/stderr lines (`[dreamcore] …`). The rebrand renamed the emit side
+// but left this at `[aioncore]`, so the level-remap hook below silently
+// stopped firing and every backend stdout line (including ERROR/WARN from
+// dreamcore's tracing) landed in the log file at electron-log's default
+// `info` level.
+const BACKEND_PREFIX = '[dreamcore]';
 
 // Strip ANSI escape sequences from a string.
 const ANSI_RE = new RegExp(String.raw`\u001B\[[0-9;]*m`, 'g');
