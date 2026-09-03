@@ -880,5 +880,8 @@
   "mediaModeStartFailed": "生成没能开始：{{reason}}",
   "mediaJobSourceImages": "参考图",
   "policyDenied_seatLimitExceeded": "所在企业的席位已满，暂时无法发送。请联系管理员释放席位或升级套餐。",
-  "policyDenied_departmentBudgetExceeded": "所在部门本期的用量预算已用完，暂时无法发送。请联系管理员。"
+  "policyDenied_departmentBudgetExceeded": "所在部门本期的用量预算已用完，暂时无法发送。请联系管理员。",
+  "meteredTopUp": {
+    "cta": "去充值"
+  }
 }

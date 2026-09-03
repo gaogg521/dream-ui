@@ -1550,5 +1550,35 @@
   "claudeBridge.providerModelRequired": "Select a provider and model before enabling the bridge",
   "claudeBridge.loadFailed": "Failed to load Claude bridge settings",
   "claudeBridge.saveSuccess": "Claude bridge settings saved",
-  "claudeBridge.saveFailed": "Failed to save Claude bridge settings"
+  "claudeBridge.saveFailed": "Failed to save Claude bridge settings",
+  "trialVendor": {
+    "openrouter": {
+      "title": "OpenRouter free router",
+      "desc": "Free AI models, no sign-up — a $1/month starter allowance",
+      "providerName": "OpenRouter (Trial)"
+    },
+    "baoyun": {
+      "title": "Baoyun · ¥10 free credit",
+      "desc": "Start with ¥10 of usage; top up when it runs out",
+      "providerName": "Baoyun (Trial)"
+    }
+  },
+  "meteredQuota": {
+    "remaining": "{{amount}} left",
+    "exhausted": "Used up"
+  },
+  "meteredTopUp": {
+    "title": "Top up",
+    "currentBalance": "Current balance: {{amount}}",
+    "selectPackage": "Choose an amount",
+    "package": "¥{{price}}",
+    "payAmount": "Pay {{amount}}",
+    "payHint": "Finish paying in the page that opened — the balance updates on its own.",
+    "waitingPayment": "Waiting for payment…",
+    "chooseAnother": "Choose a different amount",
+    "creditedAmount": "{{amount}} added to your balance",
+    "newBalance": "New balance: {{amount}}",
+    "pollTimeout": "Still waiting on the payment. Your balance will update once it clears.",
+    "orderFailed": "Couldn't complete the top-up. Please try again."
+  }
 }

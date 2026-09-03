@@ -36,6 +36,8 @@ import EditModeModal from '@/renderer/pages/settings/components/EditModeModal';
 import DreamScrollArea from '@/renderer/components/base/DreamScrollArea';
 import TalkToButlerButton from '@/renderer/components/base/TalkToButlerButton';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
+import { trialVendorOfProviderId } from '@/renderer/hooks/agent/useTrialModelClaim';
+import TrialQuotaBadge from '@/renderer/pages/settings/components/TrialQuotaBadge';
 import { useSettingsViewMode } from '../settingsViewContext';
 import SettingsPageHeader from '@/renderer/pages/settings/components/SettingsPageHeader';
 import { consumePendingDeepLink } from '@/renderer/hooks/system/useDeepLink';
@@ -514,6 +516,10 @@ const ModelModalContent: React.FC = () => {
                               </Tag>
                             </Tooltip>
                           )}
+                          {(() => {
+                            const trialVendor = trialVendorOfProviderId(platform.id);
+                            return trialVendor ? <TrialQuotaBadge vendor={trialVendor} /> : null;
+                          })()}
                           <div
                             className='flex items-center gap-8px shrink-0'
                             onClick={(e) => {

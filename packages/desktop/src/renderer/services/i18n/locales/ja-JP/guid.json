@@ -23,6 +23,8 @@
   "trialModel": {
     "bannerTitle": "モデルがまだ設定されていません",
     "bannerDesc": "登録不要で無料のAIモデルをすぐに体験できます",
-    "bannerButton": "無料モデルを試す"
+    "bannerButton": "無料モデルを試す",
+    "pickerTitle": "無料 AI モデルを試す",
+    "pickerDesc": "プロバイダーを選んで開始 —— それぞれに無料のお試し枠が付きます。"
   }
 }

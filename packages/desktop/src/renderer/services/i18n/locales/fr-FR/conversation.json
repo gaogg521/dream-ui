@@ -866,5 +866,8 @@
   "mediaModeStartFailed": "Impossible de lancer la génération : {{reason}}",
   "mediaJobSourceImages": "Images source",
   "policyDenied_seatLimitExceeded": "La limite de licences de votre entreprise est atteinte ; vous ne pourrez pas envoyer de messages tant qu'un administrateur ne libère pas une licence ou ne met pas à niveau le forfait.",
-  "policyDenied_departmentBudgetExceeded": "Le budget d'utilisation de votre service pour cette période est épuisé. Contactez un administrateur."
+  "policyDenied_departmentBudgetExceeded": "Le budget d'utilisation de votre service pour cette période est épuisé. Contactez un administrateur.",
+  "meteredTopUp": {
+    "cta": "Recharger"
+  }
 }
