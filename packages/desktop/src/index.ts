@@ -986,9 +986,9 @@ const handleAppReady = async (): Promise<void> => {
         allowRemote,
         dataDir: getDataPath(),
         logDir: sysDirWebUI.logDir,
-        // Expose the same AIONUI_{CACHE,WORK,LOG}_DIR env the desktop IPC path
-        // passes at line 493, so /api/system/info reports the symlink workDir
-        // instead of the path-with-spaces userData root.
+        // Expose the same ONE_{CACHE,WORK,LOG}_DIR env the desktop IPC path
+        // passes, so /api/system/info reports the symlink workDir instead of
+        // the path-with-spaces userData root.
         dirs: {
           cacheDir: sysDirWebUI.cacheDir,
           workDir: sysDirWebUI.workDir,
