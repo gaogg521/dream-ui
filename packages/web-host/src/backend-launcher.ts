@@ -90,9 +90,9 @@ export type BackendLaunchOptions = {
   dataDir?: string;
   logDir?: string;
   /**
-   * System dirs exposed to the backend via AIONUI_{CACHE,WORK,LOG}_DIR env.
-   * Surfaces on `/api/system/info`. If omitted, the backend inherits
-   * process.env and will likely report wrong/empty dirs.
+   * System dirs exposed to the backend via `ONE_{CACHE,WORK,LOG}_DIR` env
+   * (plus `DREAM_*` aliases). Surfaces on `/api/system/info`. If omitted, the
+   * backend inherits process.env and will likely report wrong/empty dirs.
    */
   dirs?: BackendDirConfig;
 };
@@ -243,10 +243,20 @@ export function resolveTrialBrokerUrl(
 }
 
 /**
- * Backend reads AIONUI_{CACHE,WORK,LOG}_DIR env vars to report system dirs
- * (see Dream Core/crates/dream-system/src/sysinfo.rs). Inject them so the
- * backend's `/api/system/info` matches what Electron main persists in
- * ProcessEnv('dream.dir').
+ * Backend reads `ONE_{CACHE,WORK,LOG}_DIR` to report system dirs on
+ * `/api/system/info` (dream-core `crates/dream-core-system/src/sysinfo.rs`,
+ * `crates/dream-core-app/src/cli.rs`). Inject them so that endpoint — and the
+ * value shown in Settings — matches what Electron main persists in
+ * `ProcessEnv('one.dir')` and passes as `--log-dir`/`--work-dir`.
+ *
+ * `DREAM_*` is the forward-looking name; dream-core does not read it yet, so
+ * `ONE_*` is the one that actually takes effect today. Emit both: `ONE_*` for
+ * the current backend, `DREAM_*` for a future one that switches over.
+ *
+ * The `--log-dir` CLI flag already routes the physical log files correctly on
+ * its own; without the matching env var only the *reported* path was stale
+ * (`--work-dir` never had this bug because dream-core re-exports it as
+ * `ONE_WORK_DIR` internally — `--log-dir` had no such bridge).
  */
 export function buildSpawnEnv(dirs?: BackendDirConfig, opts?: { isPackaged?: boolean }): NodeJS.ProcessEnv {
   // PREBUILDS_ONLY protects the packaged Electron process's own node-gyp-build
@@ -266,6 +276,11 @@ export function buildSpawnEnv(dirs?: BackendDirConfig, opts?: { isPackaged?: boo
   if (!dirs) return parentEnv;
   return {
     ...parentEnv,
+    // Names the current backend reads.
+    ONE_CACHE_DIR: dirs.cacheDir,
+    ONE_WORK_DIR: dirs.workDir,
+    ONE_LOG_DIR: dirs.logDir,
+    // Forward-looking aliases (no reader in dream-core yet).
     DREAM_CACHE_DIR: dirs.cacheDir,
     DREAM_WORK_DIR: dirs.workDir,
     DREAM_LOG_DIR: dirs.logDir,

@@ -248,12 +248,16 @@ describe('resolveTrialBrokerUrl', () => {
 });
 
 describe('buildSpawnEnv', () => {
-  it('merges process.env with AIONUI_* dir vars', () => {
+  it('merges process.env with the dir vars the backend reads (ONE_*) plus DREAM_* aliases', () => {
     const env = buildSpawnEnv({
       cacheDir: '/c',
       workDir: '/w',
       logDir: '/l',
     });
+    // ONE_* is what dream-core's sysinfo + --log-dir env fallback actually read.
+    expect(env.ONE_CACHE_DIR).toBe('/c');
+    expect(env.ONE_WORK_DIR).toBe('/w');
+    expect(env.ONE_LOG_DIR).toBe('/l');
     expect(env.DREAM_CACHE_DIR).toBe('/c');
     expect(env.DREAM_WORK_DIR).toBe('/w');
     expect(env.DREAM_LOG_DIR).toBe('/l');
@@ -308,17 +312,26 @@ describe('buildSpawnEnv', () => {
   });
 
   it('strips PREBUILDS_ONLY and injects no dir vars when no dir config is provided', () => {
-    const keys = ['PREBUILDS_ONLY', 'DREAM_CACHE_DIR', 'DREAM_WORK_DIR', 'DREAM_LOG_DIR'] as const;
+    const keys = [
+      'PREBUILDS_ONLY',
+      'ONE_CACHE_DIR',
+      'ONE_WORK_DIR',
+      'ONE_LOG_DIR',
+      'DREAM_CACHE_DIR',
+      'DREAM_WORK_DIR',
+      'DREAM_LOG_DIR',
+    ] as const;
     const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
     process.env.PREBUILDS_ONLY = '1';
     // Dir vars may be inherited from a dev shell; clear them so the assertion
     // below observes injection behavior, not passthrough.
-    delete process.env.DREAM_CACHE_DIR;
-    delete process.env.DREAM_WORK_DIR;
-    delete process.env.DREAM_LOG_DIR;
+    for (const k of keys) if (k !== 'PREBUILDS_ONLY') delete process.env[k];
     try {
       const env = buildSpawnEnv();
       expect(env).not.toHaveProperty('PREBUILDS_ONLY');
+      expect(env).not.toHaveProperty('ONE_CACHE_DIR');
+      expect(env).not.toHaveProperty('ONE_WORK_DIR');
+      expect(env).not.toHaveProperty('ONE_LOG_DIR');
       expect(env).not.toHaveProperty('DREAM_CACHE_DIR');
       expect(env).not.toHaveProperty('DREAM_WORK_DIR');
       expect(env).not.toHaveProperty('DREAM_LOG_DIR');
@@ -501,6 +514,9 @@ describe('BackendLifecycleManager.start (success path)', () => {
       ]);
       const opts = spawnCall[2] as { cwd?: string; env: NodeJS.ProcessEnv };
       expect(opts.cwd).toBe('/w');
+      expect(opts.env.ONE_CACHE_DIR).toBe('/c');
+      expect(opts.env.ONE_WORK_DIR).toBe('/w');
+      expect(opts.env.ONE_LOG_DIR).toBe('/l');
       expect(opts.env.DREAM_CACHE_DIR).toBe('/c');
       expect(opts.env.DREAM_WORK_DIR).toBe('/w');
       expect(opts.env.DREAM_LOG_DIR).toBe('/l');
