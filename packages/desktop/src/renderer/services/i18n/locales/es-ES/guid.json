@@ -41,6 +41,8 @@
   "trialModel": {
     "bannerTitle": "Aún no hay ningún modelo configurado",
     "bannerDesc": "Prueba modelos de IA gratuitos al instante, sin registro",
-    "bannerButton": "Probar modelos gratuitos"
+    "bannerButton": "Probar modelos gratuitos",
+    "pickerTitle": "Prueba modelos de IA gratis",
+    "pickerDesc": "Elige un proveedor para empezar: cada uno incluye una asignación inicial gratuita."
   }
 }

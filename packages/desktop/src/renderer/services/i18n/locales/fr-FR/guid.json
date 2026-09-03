@@ -17,6 +17,8 @@
   "trialModel": {
     "bannerTitle": "Aucun modèle configuré pour l'instant",
     "bannerDesc": "Essayez des modèles d'IA gratuits instantanément, sans inscription",
-    "bannerButton": "Essayer des modèles gratuits"
+    "bannerButton": "Essayer des modèles gratuits",
+    "pickerTitle": "Essayez des modèles d'IA gratuits",
+    "pickerDesc": "Choisissez un fournisseur pour commencer — chacun offre une allocation de départ gratuite."
   }
 }

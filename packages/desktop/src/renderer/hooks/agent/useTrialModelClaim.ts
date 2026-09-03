@@ -12,15 +12,43 @@ import { useSWRConfig } from 'swr';
 import { PROVIDERS_SWR_KEY, fetchProviders } from './useModelProviderList';
 
 /**
- * Fixed local provider id for the one-click trial OpenRouter key.
+ * A trial vendor the one-click offer can claim from.
  *
- * Using a stable id (rather than a generated one) does double duty: it lets
- * `isTrialProviderClaimed` check "do I already have one" with a plain array
- * lookup instead of tracking separate local state, and a second claim
- * attempt naturally 409s at the local create-provider call too (not just at
- * the broker), so both entry points agree on "already claimed" the same way.
+ *  - `openrouter` — mode A: the broker mints a capped upstream key, the
+ *    client talks to OpenRouter directly.
+ *  - `baoyun` — mode B: the broker proxies inference under its own key and
+ *    meters spend against a local CNY ledger; when it runs out the user tops
+ *    up (see `MeteredTopUpModal`).
  */
-export const TRIAL_PROVIDER_ID = 'trial-openrouter';
+export type TrialVendor = 'openrouter' | 'baoyun';
+
+/** All vendors, in the order the picker offers them. */
+export const TRIAL_VENDORS: readonly TrialVendor[] = ['baoyun', 'openrouter'];
+
+/** The subset that is metered (mode B) — the ones a top-up applies to. */
+export const METERED_TRIAL_VENDORS: readonly TrialVendor[] = ['baoyun'];
+
+export function isMeteredTrialVendor(vendor: TrialVendor): boolean {
+  return METERED_TRIAL_VENDORS.includes(vendor);
+}
+
+/**
+ * Fixed local provider id per vendor.
+ *
+ * A stable id does double duty: `isTrialProviderClaimed` becomes a plain
+ * array lookup, and a second claim naturally collides at the local
+ * create-provider call too (not just at the broker), so both entry points
+ * agree on "already claimed".
+ */
+export const TRIAL_PROVIDER_ID_BY_VENDOR: Record<TrialVendor, string> = {
+  openrouter: 'trial-openrouter',
+  baoyun: 'trial-baoyun',
+};
+
+/** Back-compat: the original single-vendor constant. */
+export const TRIAL_PROVIDER_ID = TRIAL_PROVIDER_ID_BY_VENDOR.openrouter;
+
+const TRIAL_PROVIDER_IDS = new Set(Object.values(TRIAL_PROVIDER_ID_BY_VENDOR));
 
 export type TrialClaimOutcome =
   | 'claimed'
@@ -35,17 +63,25 @@ export interface TrialClaimResult {
   provider?: IProvider;
 }
 
-export function isTrialProviderClaimed(providers: IProvider[] | undefined): boolean {
-  return Boolean(providers?.some((p) => p.id === TRIAL_PROVIDER_ID));
+/** Whether this vendor's trial provider is present (any vendor when omitted). */
+export function isTrialProviderClaimed(providers: IProvider[] | undefined, vendor?: TrialVendor): boolean {
+  const wanted = vendor ? TRIAL_PROVIDER_ID_BY_VENDOR[vendor] : undefined;
+  return Boolean(providers?.some((p) => (wanted ? p.id === wanted : TRIAL_PROVIDER_IDS.has(p.id))));
 }
 
-/**
- * Claims a trial OpenRouter key and materializes it as a normal, editable
- * local provider. `displayName` is the provider's `name` field — callers
- * pass an already-translated string since this function has no i18n context
- * of its own.
- */
-export async function claimTrialModel(displayName: string): Promise<TrialClaimResult> {
+/** The trial provider this install holds for `vendor`, if any. */
+export function findTrialProvider(providers: IProvider[] | undefined, vendor: TrialVendor): IProvider | undefined {
+  return providers?.find((p) => p.id === TRIAL_PROVIDER_ID_BY_VENDOR[vendor]);
+}
+
+/** Which trial vendor a provider id belongs to, if it is one of ours. */
+export function trialVendorOfProviderId(providerId: string): TrialVendor | undefined {
+  return (Object.keys(TRIAL_PROVIDER_ID_BY_VENDOR) as TrialVendor[]).find(
+    (vendor) => TRIAL_PROVIDER_ID_BY_VENDOR[vendor] === providerId
+  );
+}
+
+async function claimIssuedKey(displayName: string): Promise<TrialClaimResult> {
   let trial;
   try {
     trial = await ipcBridge.mode.requestTrialKey.invoke();
@@ -62,11 +98,10 @@ export async function claimTrialModel(displayName: string): Promise<TrialClaimRe
 
   try {
     const provider = await ipcBridge.mode.createProvider.invoke({
-      id: TRIAL_PROVIDER_ID,
-      // The broker names the platform, because the broker is what decides
-      // which upstream issued this key — it can be repointed at a different
+      id: TRIAL_PROVIDER_ID_BY_VENDOR.openrouter,
+      // The broker names the platform — it can be repointed at a different
       // token platform without a client release. The fallback is only for a
-      // broker deployed before it started sending the field.
+      // broker deployed before the field existed.
       platform: trial.platform || 'OpenRouter',
       name: displayName,
       base_url: trial.base_url,
@@ -76,29 +111,86 @@ export async function claimTrialModel(displayName: string): Promise<TrialClaimRe
     });
     return { outcome: 'claimed', provider };
   } catch (e) {
-    // Broker already minted and persisted the key server-side at this point
-    // (dedup is keyed on this install, not on whether the local row landed),
-    // so a 409 here — e.g. a duplicate click that raced past the in-flight
-    // guard — reads the same as "already claimed" to the caller.
+    // The broker already minted and recorded the key server-side (dedup is
+    // keyed on the install, not on whether the local row landed), so a 409
+    // here reads the same as "already claimed".
     if (isBackendHttpError(e) && e.status === 409) return { outcome: 'already_claimed' };
     return { outcome: 'error' };
   }
 }
 
+async function claimMeteredAccount(vendor: TrialVendor, displayName: string): Promise<TrialClaimResult> {
+  let access;
+  try {
+    access = await ipcBridge.mode.meteredClaim.invoke({ vendor });
+  } catch (e) {
+    // Mode B claim is idempotent (the broker rotates the token), so it never
+    // 409s. A 404 means the broker has no such metered vendor configured; a
+    // 400 means it is not wired up at all — both are "unavailable".
+    if (isBackendHttpError(e) && (e.status === 404 || e.status === 400)) {
+      return { outcome: 'unavailable' };
+    }
+    if (isBackendHttpError(e) && e.status === 429) return { outcome: 'rate_limited' };
+    return { outcome: 'error' };
+  }
+  if (!access) return { outcome: 'error' };
+
+  try {
+    const provider = await ipcBridge.mode.createProvider.invoke({
+      id: TRIAL_PROVIDER_ID_BY_VENDOR[vendor],
+      // A metered account is a plain custom provider pointed at the broker's
+      // proxy — there is no dedicated platform for it.
+      platform: 'custom',
+      name: displayName,
+      base_url: access.base_url,
+      api_key: access.device_token,
+      models: access.models,
+      enabled: true,
+    });
+    return { outcome: 'claimed', provider };
+  } catch (e) {
+    // A re-claim rotated the device token; the stale local provider still
+    // points at the broker with an old bearer. Overwrite it.
+    if (isBackendHttpError(e) && e.status === 409) {
+      try {
+        const provider = await ipcBridge.mode.updateProvider.invoke({
+          id: TRIAL_PROVIDER_ID_BY_VENDOR[vendor],
+          api_key: access.device_token,
+          base_url: access.base_url,
+          models: access.models,
+          enabled: true,
+        });
+        return { outcome: 'claimed', provider };
+      } catch {
+        return { outcome: 'already_claimed' };
+      }
+    }
+    return { outcome: 'error' };
+  }
+}
+
 /**
- * Hook wrapper: tracks in-flight state and refreshes the shared providers
- * SWR cache (`PROVIDERS_SWR_KEY`) on success so every provider list in the
- * app picks up the new row without a manual refetch.
+ * Claims a trial from `vendor` and materializes it as a normal, editable
+ * local provider. `displayName` is the provider's `name` — callers pass an
+ * already-translated string since this has no i18n context of its own.
+ */
+export async function claimTrialModel(vendor: TrialVendor, displayName: string): Promise<TrialClaimResult> {
+  return isMeteredTrialVendor(vendor) ? claimMeteredAccount(vendor, displayName) : claimIssuedKey(displayName);
+}
+
+/**
+ * Hook wrapper: tracks in-flight state and refreshes the shared providers SWR
+ * cache on success so every provider list picks up the new row.
  */
 export function useTrialModelClaim() {
   const { mutate } = useSWRConfig();
   const [claiming, setClaiming] = useState(false);
 
   const claim = useCallback(
-    async (displayName: string): Promise<TrialClaimResult> => {
+    async (vendor: TrialVendor, displayName: string): Promise<TrialClaimResult> => {
       setClaiming(true);
       try {
-        const result = await claimTrialModel(displayName);
+        const result = await claimTrialModel(vendor, displayName);
         if (result.outcome === 'claimed') {
           await mutate(PROVIDERS_SWR_KEY, fetchProviders);
         }

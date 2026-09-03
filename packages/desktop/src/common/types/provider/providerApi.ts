@@ -138,6 +138,58 @@ export interface TrialQuotaStatusResponse {
   exhausted: boolean;
 }
 
+/**
+ * Mode B (metered proxy). Response for `POST /api/providers/metered/claim`.
+ *
+ * Unlike {@link TrialKeyResponse} there is no real upstream key: the broker
+ * proxies inference under its own master key and meters the spend. Turn this
+ * into a `CreateProviderRequest` with `platform: 'custom'`, `base_url` = the
+ * broker's proxy address, `api_key` = `device_token`.
+ */
+export interface MeteredAccessResponse {
+  vendor: string;
+  /** The broker's own proxy address for this vendor — the provider `base_url`. */
+  base_url: string;
+  /** Returned once; the provider `api_key`. Rotates on every claim. */
+  device_token: string;
+  models: string[];
+  /** ISO 4217 code every amount on this vendor is in, e.g. `CNY`. */
+  currency: string;
+  /** One-time free grant, in the vendor's minor units (分). */
+  free_grant_cents: number;
+  /** Balance left now, minor units. `<= 0` → the proxy hard-blocks the next call. */
+  remaining_cents: number;
+}
+
+/** Mode B balance, from the broker's local ledger. */
+export interface MeteredQuotaStatusResponse {
+  vendor: string;
+  currency: string;
+  free_grant_cents: number;
+  purchased_cents: number;
+  consumed_cents: number;
+  remaining_cents: number;
+  exhausted: boolean;
+}
+
+/** A mode-B top-up order, as the broker reports it. */
+export interface MeteredOrderResponse {
+  id: string;
+  vendor: string;
+  package_id: string;
+  /** What the user pays, in the vendor's minor units. */
+  amount_cents: number;
+  /** What lands in the balance once paid. */
+  credit_cents: number;
+  currency: string;
+  /** `pending` | `paid` | `failed` | `expired`. */
+  status: string;
+  /** `mock` | `alipay` | `wechat`. */
+  gateway: string;
+  /** Gateway pay instructions (QR / redirect / mock marker). Only on create. */
+  payment?: Record<string, unknown> | null;
+}
+
 export interface ProviderHealthCheckResponse {
   provider_id: string;
   platform: string;
