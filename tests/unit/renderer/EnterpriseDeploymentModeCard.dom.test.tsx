@@ -111,53 +111,17 @@ describe('EnterpriseDeploymentModeCard', () => {
     });
   });
 
-  it('blocks switching to server mode while still an active enterprise member in client mode', async () => {
+  /**
+   * Hosting a project group moved to the enterprise edition, whose governance
+   * crates this personal build does not compile in — `/api/one/org/create`
+   * answers 501 here. The role picker used to offer "本机作为服务器" anyway,
+   * so the flow ran, flipped the persisted role, and only failed later at the
+   * API with an error that named none of that. The option must now be
+   * unreachable, and say why.
+   */
+  it('does not offer server mode, and explains that hosting needs the enterprise edition', async () => {
     const user = userEvent.setup();
     mockRole = 'client';
-    vi.mocked(oneOrg.context.invoke).mockResolvedValue({
-      tenantId: 'tenant_1',
-      tenantName: 'Acme',
-      role: 'member',
-      isEnterprise: true,
-      memberCount: 3,
-    });
-    vi.mocked(webui.getStatus.invoke).mockResolvedValue({
-      running: false,
-      port: 25809,
-      allowRemote: false,
-      localUrl: 'http://localhost:25809',
-      adminUsername: 'admin',
-    });
-
-    const warningSpy = vi
-      .spyOn(Modal, 'warning')
-      .mockImplementation(() => ({ close: vi.fn(), update: vi.fn() }) as never);
-
-    render(<EnterpriseDeploymentModeCard />);
-
-    await waitFor(() => {
-      expect(oneOrg.context.invoke).toHaveBeenCalled();
-    });
-
-    // The role now applies the moment the radio is toggled — no separate
-    // "保存" button for switching roles (BUG10: avoid a stale radio preview
-    // while the rest of the page still reflects the old persisted role).
-    await user.click(screen.getByText('本机作为服务器'));
-
-    await waitFor(() => {
-      expect(warningSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringMatching(/您当前的模式是客户端，且已加入项目组/),
-        })
-      );
-    });
-    expect(mockPersistDeploymentRole).not.toHaveBeenCalled();
-  });
-
-  it('asks for confirmation before switching to server, and only then applies the role', async () => {
-    const user = userEvent.setup();
-    mockRole = 'client';
-    mockServerUrl = '192.168.1.10:25809';
     vi.mocked(oneOrg.context.invoke).mockResolvedValue({
       tenantId: 'default',
       tenantName: null,
@@ -172,13 +136,13 @@ describe('EnterpriseDeploymentModeCard', () => {
       localUrl: 'http://localhost:25809',
       adminUsername: 'admin',
     });
-    vi.spyOn(Message, 'success').mockImplementation(() => undefined as never);
 
-    let confirmOnOk: (() => void) | undefined;
-    const confirmSpy = vi.spyOn(Modal, 'confirm').mockImplementation((props) => {
-      confirmOnOk = props?.onOk as () => void;
-      return { close: vi.fn(), update: vi.fn() } as never;
-    });
+    const confirmSpy = vi
+      .spyOn(Modal, 'confirm')
+      .mockImplementation(() => ({ close: vi.fn(), update: vi.fn() }) as never);
+    const warningSpy = vi
+      .spyOn(Modal, 'warning')
+      .mockImplementation(() => ({ close: vi.fn(), update: vi.fn() }) as never);
 
     render(<EnterpriseDeploymentModeCard />);
 
@@ -186,24 +150,16 @@ describe('EnterpriseDeploymentModeCard', () => {
       expect(oneOrg.context.invoke).toHaveBeenCalled();
     });
 
+    const serverRadio = screen.getByText('本机作为服务器').closest('label') as HTMLLabelElement;
+    expect(serverRadio.querySelector('input')?.disabled).toBe(true);
+    expect(screen.getByText(/需要部署企业版服务端，个人版不提供项目组托管能力/)).toBeInTheDocument();
+
+    // Clicking it must be inert — no dialog, and above all no persisted role
+    // change that would leave the machine claiming a mode it cannot serve.
     await user.click(screen.getByText('本机作为服务器'));
-
-    // Confirmation first — the role must NOT be applied by the click alone,
-    // otherwise the saved server address silently stops being used.
-    await waitFor(() => {
-      expect(confirmSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ content: expect.stringMatching(/本机将作为项目组服务器托管项目组数据/) })
-      );
-    });
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(warningSpy).not.toHaveBeenCalled();
     expect(mockPersistDeploymentRole).not.toHaveBeenCalled();
-
-    confirmOnOk?.();
-
-    await waitFor(() => {
-      // Role only — the address is persisted separately and survives the switch.
-      expect(mockPersistDeploymentRole).toHaveBeenCalledWith('server');
-    });
-    expect(mockPersistDeploymentServerUrl).not.toHaveBeenCalled();
   });
 
   it('offers previously used server addresses in client mode', async () => {
