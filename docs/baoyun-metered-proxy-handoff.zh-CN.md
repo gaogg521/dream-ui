@@ -429,3 +429,115 @@ pub trait PaymentGateway: Send + Sync {
 - claim 返回的 `base_url` 是 broker 自己的代理地址
   `{PUBLIC_BASE_URL}/v1/metered/proxy/{vendor}`，`api_key` = `device_token`，platform
   建成 `custom`。
+
+### 9.5 Phase 3 CDP 真机全链路验证（2026-09-03，已过）
+
+无真实宝云 key，用本地 mock 上游跑通了全链路：mock 上游（返 `X-AiHub-Request-Id` +
+`/v1/billing/cost`）+ broker（`BAOYUN_BASE_URL` 指 mock、`MockGateway`）+ 现 build 的
+Phase 2 dreamcore + `DREAM_TRIAL_BROKER_URL=... bun run dev`。CDP 逐一验证并截图：
+领宝云 → `platform:custom` provider 指向 broker 代理；设置里「剩余 ¥X.XX」badge；选供应商
+弹窗两 vendor + i18n；**真发一条 mock-model 消息 → broker 402 → dream-core 映射 →
+「体验额度已用完」错误卡 + 「去充值」CTA + 错误码 `USER_LLM_PROVIDER_QUOTA_EXHAUSTED`**；
+CTA → 充值弹窗 → 套餐 → 下单 → mock webhook → 轮询到 paid → badge 刷新。全过。
+
+---
+
+## 十、Phase 4 交接：接真实收款（宝付）
+
+> **状态：未开始，卡外部依赖。** Phase 1-3 的代码都在各仓 `main`/`master` 上、真机验证过；
+> Phase 4 是把 `MockGateway` 换成真实的宝付网关。
+
+### 10.1 前因后果（新会话先读这段）
+
+- 产品要「宝云一键体验」：每个 dream 用户免费 ¥10 额度，用完弹 59/99/199 三档充值套餐。
+- 宝云（`ai.baoyun.com`）是预付费余额制、没有 OpenRouter 那种程序化发限额子 key 的能力，
+  所以走**模式 B 计量代理**：broker 用一把 master key 代理所有推理流量、按宝云
+  `GET /v1/billing/cost` 的官方净扣费记本地账本、额度耗尽硬阻断。详见 §一~§三。
+- Phase 1（broker 骨架）/ Phase 2（dream-core 接线）/ Phase 3（dream-ui 弹窗+余额+CTA）
+  全部完成，见 §九。整条链路 CDP 真机验证过（§9.5）——**唯一用的是 `MockGateway`**，
+  订单→模拟 webhook→加余额跑通，但收不了真钱。
+- **收款渠道定的是宝付（上海宝付网络科技 `baofoo.com`，聚合支付），不是直连支付宝/微信。**
+  卡在两件外部事：①宝付商户号还在申请中；②给对接方/宝付的几个问题还没回复
+  （具体问题清单在用户手上，新会话直接问用户要「宝付对接待回复问题」那个 thread）。
+
+### 10.2 架构已经就位，Phase 4 只碰「网关」这一层
+
+`PaymentGateway` trait（`src/metered/mod.rs`）是唯一要新实现的东西。它下游的所有东西
+**已经完成且网关无关**，不要动：
+
+- `metered_orders` / `metered_ledger_events` 表、`store::mark_order_paid_and_credit`
+  （**按 `order_id` 幂等**，webhook 重投多次只加一次余额）
+- 后台异步费用轮询 `poller.rs`（跟支付无关，是宝云计费的）
+- dream-core 的 `/api/providers/metered/orders` + `/orders/{id}` 中继
+- dream-ui 的 `MeteredTopUpModal`（下单→轮询订单状态→到账刷新）
+
+trait 三个方法：
+```rust
+fn id(&self) -> &'static str;                          // 返回 "baofu"
+async fn precreate(&self, order: OrderView<'_>)        // 向宝付下单，返回给客户端的付款信息
+    -> Result<PaymentIntent, MeteredError>;            //   PaymentIntent { gateway_txn_id, payload: Value }
+async fn verify_webhook(&self, headers, body)          // 宝付异步通知：验签 → 取 order_id + 是否已付
+    -> Result<WebhookOutcome, MeteredError>;           //   WebhookOutcome { order_id, paid, gateway_txn_id }
+```
+
+### 10.3 具体要做的（商户号下来后）
+
+**broker（`dream-trial-broker`）**
+
+1. `src/metered/gateway/baofu.rs`（或直接扩 `gateway.rs`），`BaofuGateway` 实现 `PaymentGateway`：
+   - `id()` → `"baofu"`
+   - `precreate`：调宝付「下单/收银台」API。宝付一般是 form-post + RSA 签名。产品形态
+     （H5 收银台跳转 URL / 扫码 QR / 快捷）取决于批下来的商户号类型 —— **先问清楚宝付给的是
+     哪个产品**，`payload` 的 shape 跟着定（`{pay_url}` 还是 `{qr_content}`）。
+     金额：`order.amount_cents` 是**分**，宝付接口多半要元的小数字符串或分的整数，按其文档换算。
+   - `verify_webhook`：验宝付异步通知的签名（RSA/MD5，用宝付下发的公钥），取商户订单号
+     （= 我们的 `metered_orders.id`）和交易状态，返回 `WebhookOutcome`。**验签失败一律返回
+     `MeteredError::WebhookRejected`。**
+2. `src/config.rs` 加：`BAOFU_MERCHANT_ID` / `BAOFU_PRIVATE_KEY`（我方私钥，签名用）/
+   `BAOFU_PUBLIC_KEY`（宝付公钥，验签用）/ `BAOFU_API_BASE` /（可选）`BAOFU_NOTIFY_URL`
+   默认 `{PUBLIC_BASE_URL}/v1/metered/orders/webhook/baofu`。私钥**绝不进日志**。
+3. `src/main.rs` `build_metered_runtime`：按 env 选网关 —— `BAOFU_MERCHANT_ID` 存在就用
+   `BaofuGateway`，否则 `MockGateway`。（`MeteredRuntime.gateway` 现在是**单个** `Arc<dyn>`，
+   不是 map；一次只有一个网关。要同时跑 mock+真实再改成 map，非必须。）
+4. **webhook 响应格式的坑**：`service::handle_webhook` 现在返回 `Json({"ok":true,...})`。
+   宝付/支付宝这类要求异步通知**回一个特定纯文本**（通常是 `SUCCESS`/`OK`），否则会一直重投。
+   要改 `webhook_handler` 的返回：验签成功且入账后回宝付要求的 ack 字符串（`text/plain`），
+   失败回它要求的失败标记。这是 Phase 4 必须动的一处已有代码。
+5. 订单超时：`metered_orders.status` 有 `expired` 但没人置。可加一个后台 sweep 把超 N 分钟
+   的 `pending` 订单标 `expired`，或下单后轮询宝付订单状态。优先级低。
+6. `src/metered/baoyun.rs` 的 `PACKAGES` 常量：现在 `credit_cents == price_cents`（1:1）。
+   §七 未决 —— 是否充 100 送 10、是否设有效期，产品拍板后改这里（字段都支持非 1:1）。
+7. 测试：仿 `gateway.rs` 里 `MockGateway` 的两个单测，给 `BaofuGateway` 加：mock 掉 HTTP、
+   用一份已知签名的 fixture 测 `verify_webhook` 验签通过 / 篡改后拒绝。
+8. **跑 `security-review` skill**：重点 webhook 验签、幂等（已有）、密钥管理、重放防护、
+   金额/币种一致性、错误不泄露内部信息。
+
+**dream-ui（`dream-ui`）**
+
+- `MeteredTopUpModal.tsx` 现在把 `order.payment.pay_url` 当纯文本显示 + 「等待支付…」轮询。
+  真实网关：H5 收银台 URL 要**在桌面端打开**（浏览器/webview），QR 要渲染成**真二维码图片**。
+  这是 Phase 4 的 dream-ui 活，按宝付返回的 `payload` shape 做。
+- 现有轮询逻辑（`meteredGetOrder` 每 3s，超时 5min，`paid` → 刷新余额 → done 态）不用改。
+
+**部署（broker）**
+
+- broker 部署在 `43.163.105.71`（systemd，无 Docker），`deploy/redeploy.sh`。新增的
+  `BAOFU_*` 环境变量写进服务器上的 systemd unit / `.env`。
+- 打包版 dream-ui 默认连 `https://work.1oneclaw.com/trial-broker`
+  （`packages/web-host/src/backend-launcher.ts` `TRIAL_BROKER_URL_DEFAULT`）——
+  那台 broker 上必须同时配好 `BAOYUN_MASTER_API_KEY` + `BAOFU_*` 功能才真的能用。
+
+### 10.4 验证
+
+- 宝付有 sandbox 就先 sandbox 跑通下单→通知→入账。
+- 没 sandbox 就上一档最小真实支付（可临时加个 ¥1 测试套餐），付完在宝付后台退款。
+- CDP 真机重跑 §9.5 那条链路，只是把 `MockGateway` 换成 `BaofuGateway`、webhook 由宝付
+  真实回调触发（不再是手动 curl）。
+
+### 10.5 未决（问用户 / 等外部）
+
+1. 宝付商户号 —— 申请中，硬前提。
+2. 给宝付/对接方的几个问题 —— 没回复，清单在用户手上（问「宝付待回复问题」thread）。
+3. 宝付给的是哪个支付产品（H5 收银台 / 扫码 / 快捷）—— 决定 `precreate` 和 dream-ui 付款 UI 的形态。
+4. 套餐定价细则：59/99/199 是否 1:1、是否赠送、是否设有效期（§七）。
+5. 免费 ¥10 的防刷：现在只按 `install_id` 去重，是否要设备指纹 / 限速阈值（§七、§3.6）。
