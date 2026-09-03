@@ -19,7 +19,6 @@ import ChannelTelegramLogo from '@/renderer/assets/channel-logos/telegram.svg';
 import ChannelWecomLogo from '@/renderer/assets/channel-logos/wecom.svg';
 import ChannelWeixinLogo from '@/renderer/assets/channel-logos/weixin.svg';
 import { isElectronDesktop } from '@/renderer/utils/platform';
-import EnterpriseDeploymentModeCard from '@/renderer/pages/settings/components/EnterpriseDeploymentModeCard';
 import '@/renderer/pages/settings/components/settings.css';
 import { Button, Form, Input, Message, Switch, Tabs, Tooltip } from '@arco-design/web-react';
 import { CheckOne, Communication, Copy, Earth, EditTwo, Refresh } from '@icon-park/react';
@@ -715,12 +714,11 @@ const WebuiModalContent: React.FC = () => {
           </div>
         </div>
 
-        {/* 项目组部署角色（服务器/客户端）——本机作为 WebUI/后端数据的托管方还是连向远端，
-            与上面"是否开放局域网访问"是两个正交维度，但都是"这台机器怎么被连、连谁"，
-            放在同一页比塞进"项目组"（tenant 作用域）页更贴合数据作用域。 */}
-        <EnterpriseDeploymentModeCard />
+        {/* 项目组服务器地址与连接开关已移至「设置 → 企业身份」：它们和企业 SSO 登录
+            是同一件事的两半（连哪台服务器 / 用什么身份登录它），分处两页时用户填完
+            地址却找不到登录入口。这一页只保留"本机 WebUI 怎么被访问"这一维度。 */}
 
-        {/* 登录信息卡片 — 本机 WebUI 的登录凭据，与企业部署角色（服务器/客户端）无关，始终显示 */}
+        {/* 登录信息卡片 — 本机 WebUI 的登录凭据，与企业连接无关，始终显示 */}
         <div className='px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
           <div className='text-14px font-500 mb-8px text-t-primary'>{t('settings.webui.loginInfo')}</div>
 

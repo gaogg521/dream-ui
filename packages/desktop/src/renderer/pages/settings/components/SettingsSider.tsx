@@ -20,8 +20,7 @@ import {
   System,
 } from '@icon-park/react';
 import { useCompanyIdentity } from '@/renderer/pages/enterprise/hooks/useCompanyIdentity';
-import { isSystemAdminRole, useOrgContext } from '@/renderer/pages/enterprise/hooks/useOrgContext';
-import { useDeploymentRole } from '@renderer/hooks/enterprise/useDeploymentRole';
+import { isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -113,15 +112,21 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const isDesktop = isElectronDesktop();
-  // Company admin console (Direction B). Shown when the viewer administers an
-  // existing company, OR when this machine is a SERVER and the viewer is a
-  // system_admin (so they can 设立企业 the first time). Personal / standalone is
-  // client-mode by default → isServer is false → the entry stays hidden, so a
-  // no-company system_admin on a personal install never sees it.
+  // Company admin console entry. Shown to anyone who administers a company,
+  // and to anyone connected to an enterprise server.
+  //
+  // It used to also require `isServer`, which never holds on a client — the
+  // only deployment role a personal build can actually be — so an admin who
+  // connected to their company's server could not reach the console from
+  // here at all. Hosting moved to the enterprise edition, so keying off the
+  // local deployment role stopped meaning anything; "am I connected to an
+  // enterprise" is the question that matters. Deliberately NOT role-gated
+  // beyond that: the server authorizes every governance call anyway, and
+  // hiding the entry from someone the server would have accepted (a
+  // sub-admin promoted in the console, say) is the worse failure — they
+  // cannot even find the door.
   const { company, isCompanyAdmin } = useCompanyIdentity();
-  const { context } = useOrgContext();
-  const { isServer } = useDeploymentRole();
-  const showCompany = (Boolean(company) && isCompanyAdmin) || (isServer && isSystemAdminRole(context?.role));
+  const showCompany = (Boolean(company) && isCompanyAdmin) || isEnterpriseModeEnabled();
 
   const extensionTabs = useExtensionSettingsTabs();
   const { resolveExtTabName } = useExtI18n();

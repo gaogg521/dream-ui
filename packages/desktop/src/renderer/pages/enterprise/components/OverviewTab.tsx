@@ -119,7 +119,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) 
     if (!isEnterpriseModeEnabled()) {
       Message.warning(
         t('common.enterprise.remoteInviteJoinNeedsConnectHint', {
-          defaultValue: '仅用邀请码加入项目组（不走 SSO）需要先在「设置 → 远程连接」手动打开连接开关。',
+          defaultValue: '仅用邀请码加入项目组（不走 SSO）需要先在「设置 → 企业身份」手动打开连接开关。',
         })
       );
       return;
@@ -354,7 +354,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) 
               type='warning'
               className='mb-12px'
               content={t('common.enterprise.remoteInviteJoinNeedsConnectHint', {
-                defaultValue: '仅用邀请码加入项目组（不走 SSO）需要先在「设置 → 远程连接」手动打开连接开关。',
+                defaultValue: '仅用邀请码加入项目组（不走 SSO）需要先在「设置 → 企业身份」手动打开连接开关。',
               })}
             />
           )}
@@ -371,7 +371,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) 
           </div>
           <div className='text-t-tertiary text-12px mt-8px'>
             {t('common.enterprise.joinModeHint', {
-              defaultValue: '本机为客户端模式。如需在本机托管企业，请在设置 → 远程连接 中切换为服务器。',
+              defaultValue: '本机为客户端模式，加入由企业版服务端托管的项目组。个人版不提供本机托管项目组的能力。',
             })}
           </div>
         </div>

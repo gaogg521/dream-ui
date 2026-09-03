@@ -269,7 +269,7 @@ const EnterpriseDeploymentModeCard: React.FC = () => {
       <Typography.Paragraph type='secondary' className='text-12px mb-12px'>
         {t('settings.webui.deployModeDesc', {
           defaultValue:
-            '同一局域网内应只有一台作为服务器，其余均为客户端连接到它。默认本机为客户端；创建项目组后本机自动成为服务器，托管项目组数据。',
+            '本机作为客户端，连接到部署了企业版的项目组服务器。企业成员、邀请码、SSO 与团队资源来自该服务器，本机的会话、助手与个人数据始终留在本地。',
         })}
       </Typography.Paragraph>
       <Radio.Group
@@ -277,11 +277,24 @@ const EnterpriseDeploymentModeCard: React.FC = () => {
         value={role}
         onChange={(v) => handleRoleChange(v as WebuiDeploymentRole)}
         disabled={saving}
-        className='mb-12px enterprise-deploy-role'
+        className='mb-4px enterprise-deploy-role'
       >
-        <Radio value='server'>{t('settings.webui.deployRoleServer', { defaultValue: '本机作为服务器' })}</Radio>
+        {/* Hosting was split out into the separate enterprise edition, whose
+            governance crates this personal build does not compile in — the
+            local `/api/one/org/*` endpoints answer 501 here. The option is
+            kept visible-but-disabled rather than deleted so anyone whose
+            config still says `server` (from before the split, or via
+            `markDeploymentAsServer`) can see the state and switch back. */}
+        <Radio value='server' disabled>
+          {t('settings.webui.deployRoleServer', { defaultValue: '本机作为服务器' })}
+        </Radio>
         <Radio value='client'>{t('settings.webui.deployRoleClient', { defaultValue: '本机作为客户端' })}</Radio>
       </Radio.Group>
+      <div className='text-11px text-t-tertiary mb-12px'>
+        {t('settings.webui.deployRoleServerUnavailable', {
+          defaultValue: '「本机作为服务器」需要部署企业版服务端，个人版不提供项目组托管能力。',
+        })}
+      </div>
       {role === 'client' ? (
         <div className='mb-12px'>
           <div className='text-12px text-t-secondary mb-4px'>

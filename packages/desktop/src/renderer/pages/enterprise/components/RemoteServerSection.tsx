@@ -5,12 +5,12 @@
  * dreamcore still serves conversations / agents / skills / personal data;
  * only enterprise GOVERNANCE (org / admin / sso / devops) is fetched from the
  * remote server with the Bearer token. The server ADDRESS *and* the connect
- * toggle both live in the "项目组部署模式" card on 设置 → 远程连接 now —
- * they used to be split across two pages (address here, connect toggle
- * there), which meant saving an address here silently did nothing until a
- * second page's switch was also found and flipped. This section only owns
- * the SSO login / logout lifecycle, an identity concern; it reads the
- * connect state to decide what to show, it does not own it.
+ * toggle live in the "项目组部署模式" card, which now sits directly above
+ * this section on the same 企业身份 page — address, connect and login were
+ * split across two settings pages before, so saving an address silently did
+ * nothing until a second page's switch was also found and flipped. This
+ * section only owns the SSO login / logout lifecycle, an identity concern;
+ * it reads the connect state to decide what to show, it does not own it.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -53,9 +53,10 @@ const RemoteServerSection: React.FC = () => {
   // every render. Depend on this boolean instead.
   const hasSession = Boolean(session);
 
-  // The connect toggle lives on 设置 → 远程连接 now, in a different React
-  // subtree, so `enabled` (and `session`, once SSO completes there) must be
-  // refreshed from that page's own change event rather than local state alone.
+  // The connect toggle lives in the deployment card above. It is a separate
+  // React subtree (and used to be a separate page entirely), so `enabled`
+  // (and `session`, once SSO completes) must be refreshed from that card's
+  // change event rather than from local state alone.
   useEffect(() => {
     const handler = (): void => setEnabled(isEnterpriseModeEnabled());
     window.addEventListener(DEPLOYMENT_ROLE_CHANGED_EVENT, handler);
@@ -63,7 +64,7 @@ const RemoteServerSection: React.FC = () => {
   }, []);
 
   // Single source of truth for the address: the deployment-role config filled
-  // in the "项目组部署模式" card on 设置 → 远程连接 (BUG1 — no second input here).
+  // in the "项目组部署模式" card above on this page (BUG1 — no second input here).
   const { normalizedServerUrl } = useDeploymentRole();
   const normalizedUrl = normalizedServerUrl ?? '';
   const urlValid = Boolean(normalizedServerUrl);
@@ -124,7 +125,7 @@ const RemoteServerSection: React.FC = () => {
     if (!urlValid) {
       Message.warning(
         t('common.enterprise.remoteUrlMissing', {
-          defaultValue: '请先在「设置 → 远程连接」的「项目组部署模式」中填写服务器地址。',
+          defaultValue: '请先在本页上方的「项目组部署模式」中填写并保存服务器地址。',
         })
       );
       return;
@@ -155,7 +156,7 @@ const RemoteServerSection: React.FC = () => {
   // is how "connected" has ever been reached via SSO. An earlier version of
   // this gate hid the whole login section behind `enabled`, which meant a
   // user who had typed an address but never touched the manual connect
-  // toggle on 设置 → 远程连接 could no longer even start an SSO login to
+  // toggle in the deployment card could no longer even start an SSO login to
   // begin with — the one path that would have turned `enabled` on for them.
   // `enabled` only changes what status this card reports and whether the
   // "已连接" banner shows; it must never hide the login affordance itself.
@@ -168,7 +169,7 @@ const RemoteServerSection: React.FC = () => {
           title={t('common.enterprise.remoteActiveTitle', { defaultValue: '已连接企业服务器' })}
           content={t('common.enterprise.remoteActiveHint', {
             defaultValue:
-              '本机的会话、助手与个人数据照常使用；成员、邀请码、SSO 与团队资源来自企业服务器。若要仅用本机数据，请在「设置 → 远程连接」关闭连接。',
+              '本机的会话、助手与个人数据照常使用；成员、邀请码、SSO 与团队资源来自企业服务器。若要仅用本机数据，请用本页上方的连接开关断开。',
           })}
         />
       )}
@@ -198,7 +199,7 @@ const RemoteServerSection: React.FC = () => {
       {!enabled && !session && (
         <div className='text-t-tertiary text-12px mb-12px'>
           {t('common.enterprise.remoteInviteJoinNeedsConnectHint', {
-            defaultValue: '仅用邀请码加入项目组（不走 SSO）需要先在「设置 → 远程连接」手动打开连接开关。',
+            defaultValue: '仅用邀请码加入项目组（不走 SSO）需要先用本页上方的连接开关手动连接。',
           })}
         </div>
       )}

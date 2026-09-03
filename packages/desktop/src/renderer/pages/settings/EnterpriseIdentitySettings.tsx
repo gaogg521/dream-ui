@@ -10,6 +10,7 @@ import EnterpriseIdentityCard from '@/renderer/pages/enterprise/components/Enter
 import RemoteServerSection from '@/renderer/pages/enterprise/components/RemoteServerSection';
 import { useDeploymentRole } from '@renderer/hooks/enterprise/useDeploymentRole';
 import { isElectronDesktop } from '@renderer/utils/platform';
+import EnterpriseDeploymentModeCard from './components/EnterpriseDeploymentModeCard';
 import SettingsPageWrapper from './components/SettingsPageWrapper';
 
 const EnterpriseIdentitySettings: React.FC = () => {
@@ -29,6 +30,12 @@ const EnterpriseIdentitySettings: React.FC = () => {
           </div>
         </div>
         <div className='flex-1 overflow-auto p-16px'>
+          {/* Ordered as the user actually proceeds: pick the server and
+              connect to it, then log in against it. These used to sit on two
+              different settings pages — the address on 远程连接, the login
+              here — so someone who filled in an address had no visible next
+              step and the SSO buttons stayed grey with no explanation. */}
+          <EnterpriseDeploymentModeCard />
           {showRemoteSection && <RemoteServerSection />}
           <EnterpriseIdentityCard />
         </div>
