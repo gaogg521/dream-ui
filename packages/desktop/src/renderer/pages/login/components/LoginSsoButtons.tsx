@@ -3,9 +3,12 @@
  *
  * OAuth providers (feishu/dingtalk/wecom): fetch /api/one/sso/providers →
  * render a button per enabled+configured provider → click navigates the
- * SAME window to /api/one/sso/{provider}/authorize?redirect=/guid — the
+ * SAME window to /api/one/sso/{provider}/authorize?redirect=/%23/guid — the
  * backend 302s to the provider, and the OAuth callback Set-Cookies +
- * redirects back to /#/guid.
+ * redirects back to that exact path. The `#` is ours to supply: the same
+ * endpoint also serves dream-en's admin console, which is a BrowserRouter
+ * under /admin and needs a plain path, so the backend redirects verbatim
+ * rather than assuming this app's hash routing.
  *
  * LDAP is password-based, not OAuth: when enabled+configured it renders a
  * username/password form posting to /api/one/sso/ldap/login (Set-Cookie on
@@ -113,7 +116,12 @@ const LoginSsoButtons: React.FC = () => {
             type='button'
             className='login-page__sso-button'
             onClick={() => {
-              window.location.href = `/api/one/sso/${p.provider}/authorize?redirect=${encodeURIComponent('/guid')}`;
+              // The full post-login path, hash included: this app is a
+              // HashRouter, but the same endpoint also serves dream-en's
+              // admin console (a BrowserRouter under /admin), so the backend
+              // no longer synthesizes the `#` — each caller states its own
+              // shape. Anything not starting with `/` is rejected server-side.
+              window.location.href = `/api/one/sso/${p.provider}/authorize?redirect=${encodeURIComponent('/#/guid')}`;
             }}
           >
             {PROVIDER_LABELS[p.provider] ?? p.provider}
