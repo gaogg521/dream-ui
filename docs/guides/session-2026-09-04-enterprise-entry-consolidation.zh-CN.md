@@ -10,7 +10,10 @@
 > 自定义日志目录、会话内选图像/视频模型、渠道按模型协议覆盖同步、两条 docs。
 > 其中**渠道协议覆盖和自定义日志目录都是跨仓链路**，dream-core 那一半也同时才合进去；
 > 在此之前两个仓各自 main 都是绿的，但链路是断的。详见交接文档 §9。
-> ⚠️ **会话内选媒体模型那 6 个 commit 没做 CDP 真机验证**，按本仓惯例应补。
+> ~~⚠️ **会话内选媒体模型那 6 个 commit 没做 CDP 真机验证**，按本仓惯例应补。~~
+> **已更正（同日晚）**：合并提交 `bbfb88e`（PR #1 squash）的信息里明确记录了
+> 「CDP 真机确认（工具页无下拉+开关自动开、发送框绿色模型胶囊+裁剪、无重叠）」，
+> 该轮验证当时已做，此条不成立。
 
 ## 1. 企业入口信息架构收敛（`77a10e4`）
 
@@ -67,12 +70,19 @@ dream-ui 的 `MODEL_PLATFORMS` 和 dream-en 的 `MODEL_PLATFORM_PRESETS` 此前�
 
 ## 6. 接手须知
 
-- **Electron CDP 真机验证本轮没做**：单实例锁挡住第二个实例（`[1ONE] Another instance is
-  already running`），当时用户 app 正开着不应杀掉，其实例也没开 CDP 端口。改动的组件都有
-  `isElectronDesktop()` 门槛、浏览器里不渲染，故用组件测试 + 页面组合测试覆盖
-  （`enterpriseLoginChannelPanel.dom.test.tsx`、`enterpriseIdentitySettings.dom.test.tsx`、
-  `EnterpriseDeploymentModeCard.dom.test.tsx`、`OverviewTab.dom.test.tsx`）。
-  **用户不使用 app 时应补做一次。**
+- ~~**Electron CDP 真机验证本轮没做**……**用户不使用 app 时应补做一次。**~~
+  **已补做（同日晚间）**：用户未开 app 时起 dev 实例
+  （`DREAM_DEVTOOLS_CDP_PORT=9230`，方法见 [cdp.md](./cdp.md)），Playwright over CDP
+  共 11 项检查全部 PASS——部署模式卡地址+开关同卡、「本机作为服务器」置灰但可见带解释、
+  SSO 按钮可点击、未连接时设置侧栏无「企业管理后台」且有说明文案、项目组页本地建组
+  表单已删。截图存于 `D:/dream/scratchpad/cdp-verify/`（临时目录，未入库）。
+  **验证抓到一个真 bug（已修）**：本轮改的 4 个文案 defaultValue
+  （`OverviewTab.tsx`、`RemoteServerSection.tsx`）没有同步 locale 词条，而 locale 优先于
+  defaultValue——用户实际看到的仍是指向已撤销的「设置 → 远程连接」的旧指引。
+  已修 `locales/{zh-CN,en-US}/common.json` 各 4 条：`joinModeHint` /
+  `remoteInviteJoinNeedsConnectHint` / `remoteUrlMissing` / `remoteActiveHint`；
+  `loginWebuiRequired` 刻意保持指向远程连接（启动 WebUI 还在那一页）。
+  **教训：改 `t(..., { defaultValue })` 时必须同步 locale 文件，defaultValue 只是兜底。**
 - `tests/unit/renderer/guidPage.dom.test.tsx` 有 11 个失败，**是 pre-existing 的**——
   已用 `git stash` 在干净 main 上复现确认，与本轮无关。判断本轮回归时请排除它。
 - 改文件请用编辑器工具，**别用脚本整体重写**：本仓库多为 CRLF，脚本 `'\n'.join()` 会把
