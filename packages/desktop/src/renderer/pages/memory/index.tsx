@@ -35,6 +35,7 @@ import {
   type MemoryScopeInfo,
   type ProjectClaudeInfo,
 } from '@/common/adapter/ipcBridge';
+import EnterpriseMemoryTab from './EnterpriseMemoryTab';
 import styles from './index.module.css';
 
 const TYPE_COLOR: Record<string, string> = {
@@ -564,7 +565,7 @@ const MemoryPage: React.FC = () => {
         )}
       </div>
 
-      <Tabs activeTab={activeTab} onChange={setActiveTab} style={{ flex: 1 }}>
+      <Tabs activeTab={activeTab} onChange={setActiveTab} style={{ flex: 1 }} lazyload>
         <Tabs.TabPane key='auto' title={t('memory.tabAuto')}>
           <div style={{ marginBottom: 12, fontSize: 12, color: 'var(--color-text-3)' }}>{t('memory.autoHint')}</div>
           {loading ? (
@@ -662,6 +663,11 @@ const MemoryPage: React.FC = () => {
               </div>
             </div>
           )}
+        </Tabs.TabPane>
+
+        <Tabs.TabPane key='enterprise' title={t('memory.tabEnterprise')}>
+          <div style={{ marginBottom: 12, fontSize: 12, color: 'var(--color-text-3)' }}>{t('memory.entHint')}</div>
+          <EnterpriseMemoryTab />
         </Tabs.TabPane>
       </Tabs>
 
