@@ -24,15 +24,15 @@ Dev builds only, and off unless you ask for it:
 
 ```bash
 # Windows PowerShell
-$env:AIONUI_DEVTOOLS_CDP_PORT = "9230"; bun run dev
+$env:DREAM_DEVTOOLS_CDP_PORT = "9230"; bun run dev
 ```
 
 ```bash
 # bash / zsh
-AIONUI_DEVTOOLS_CDP_PORT=9230 bun run dev
+DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev
 ```
 
-`AIONUI_DEVTOOLS_CDP_PORT=1` (or `true`) means "on, default port 9230". `0`, `false`, an empty
+`DREAM_DEVTOOLS_CDP_PORT=1` (or `true`) means "on, default port 9230". `0`, `false`, an empty
 value, or omitting the variable all mean off.
 
 On startup you get a loud line confirming it:
@@ -53,7 +53,7 @@ This is deliberate and not configurable. A packaged build refuses even with the 
 variable set, and logs why:
 
 ```
-[CDP] AIONUI_DEVTOOLS_CDP_PORT is set but this is a packaged build — refused.
+[CDP] DREAM_DEVTOOLS_CDP_PORT is set but this is a packaged build — refused.
 ```
 
 The reason is in the switch itself: Chromium's `remote-debugging-port` is **application-wide
@@ -175,15 +175,15 @@ gone; drive the port from the environment variable instead.
 
 ```powershell
 # Windows PowerShell
-$env:AIONUI_DEVTOOLS_CDP_PORT = "9230"; bun run dev
+$env:DREAM_DEVTOOLS_CDP_PORT = "9230"; bun run dev
 ```
 
 ```bash
 # bash / zsh
-AIONUI_DEVTOOLS_CDP_PORT=9230 bun run dev
+DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev
 ```
 
-`AIONUI_DEVTOOLS_CDP_PORT=1`（或 `true`）表示「开，用默认端口 9230」。`0`、`false`、空值、
+`DREAM_DEVTOOLS_CDP_PORT=1`（或 `true`）表示「开，用默认端口 9230」。`0`、`false`、空值、
 或者干脆不设，都表示关。
 
 启动时会有一条醒目日志确认：
@@ -203,7 +203,7 @@ curl -s http://127.0.0.1:9230/json/version
 打包版即使设了环境变量也**无条件拒绝**，并会说明原因：
 
 ```
-[CDP] AIONUI_DEVTOOLS_CDP_PORT is set but this is a packaged build — refused.
+[CDP] DREAM_DEVTOOLS_CDP_PORT is set but this is a packaged build — refused.
 ```
 
 理由就在这个开关本身：Chromium 的 `remote-debugging-port` 是**应用级的、没有 per-target
