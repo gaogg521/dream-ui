@@ -98,36 +98,107 @@ registerMediaProtocolScheme();
 const isE2ETestMode = process.env.DREAM_E2E_TEST === '1';
 const skipSingleInstanceLock = isE2ETestMode || process.env.DREAM_MULTI_INSTANCE === '1';
 const deepLinkFromArgv = process.argv.find((arg) => isDeepLinkUrl(arg));
-const gotTheLock = skipSingleInstanceLock ? true : app.requestSingleInstanceLock({ deepLinkUrl: deepLinkFromArgv });
-if (!gotTheLock) {
+/** Profile-lock result — gates backend startup (a lock-losing instance must
+ * not spawn a competing dreamcore over the same data directory). */
+let gotTheLock = true;
+
+/**
+ * Machine-wide rendezvous lock for deep links, keyed by THIS build's protocol
+ * scheme instead of the profile directory.
+ *
+ * The profile lock cannot route a protocol launch in dev: the OS registry
+ * launches the app fresh with a bare environment — no DREAM_MULTI_INSTANCE —
+ * so `getEnvAwareName` resolves a DIFFERENT profile directory and its profile
+ * lock is free. The launched instance then boots a whole second app (own
+ * profile, own WebUI) and the deep-link token dies there instead of reaching
+ * the running dev instance (observed 2026-09-05: a browser-initiated
+ * `dream-dev://sso-callback` spawned a second instance that stopped at the
+ * database-version gate while the dev instance never saw the session).
+ * The bus lives under appData with a scheme-suffixed fixed name, so a
+ * protocol launch finds whichever instance of this build claimed it first,
+ * forwards the URL through the normal `second-instance` event, and exits.
+ *
+ * ⚠︎ This MUST be the FIRST `requestSingleInstanceLock` call in the process:
+ * Electron builds its ProcessSingleton on the first call using the userData
+ * path at that moment, and every later call returns that cached result — a
+ * "take the profile lock now, the bus lock afterwards" sequence silently
+ * re-locks the profile instead (measured: the protocol instance booting a
+ * full second app because its second, bus-targeted call returned the profile
+ * lock's `true`).
+ */
+function requestDeepLinkBusLock(): boolean {
+  const realUserData = app.getPath('userData');
+  // requestSingleInstanceLock keys off the CURRENT userData path; point it at
+  // a fixed per-scheme directory for the duration of the request only.
+  const busDir = path.join(app.getPath('appData'), `one-deeplink-bus-${PROTOCOL_SCHEME}`);
+  app.setPath('userData', busDir);
+  try {
+    return app.requestSingleInstanceLock({ deepLinkUrl: deepLinkFromArgv });
+  } finally {
+    app.setPath('userData', realUserData);
+  }
+}
+
+const onSecondInstance = (
+  _event: unknown,
+  argv: string[],
+  _workingDirectory: string,
+  additionalData: unknown
+): void => {
+  // Prefer additionalData (reliable on all platforms), fallback to argv scan
+  const deepLinkUrl =
+    (additionalData as { deepLinkUrl?: string } | undefined)?.deepLinkUrl || argv.find((arg) => isDeepLinkUrl(arg));
+  // This path was silent for years — a dropped token looked identical to a
+  // browser that never launched. Log the handoff either way.
+  console.log('[1ONE] second-instance: deep link', deepLinkUrl ? 'received' : 'absent');
+  if (deepLinkUrl) {
+    handleDeepLinkUrl(deepLinkUrl);
+  }
+  // Focus existing window or recreate one if needed.
+  if (isWebUIMode || isResetPasswordMode) {
+    return;
+  }
+
+  // Skip window creation if app hasn't finished initializing
+  if (!appReadyDone) return;
+
+  if (app.isReady()) {
+    showOrCreateMainWindow({
+      mainWindow,
+      createWindow: () => {
+        console.log('[1ONE] second-instance received with no active main window, recreating main window');
+        createWindow();
+      },
+    });
+  }
+};
+
+// Which lock a process takes FIRST is mutually exclusive (see the warning on
+// requestDeepLinkBusLock), so the choice is made once, up front:
+//  - dev MULTI / E2E instances and OS protocol launches route through the bus;
+//  - everything else takes the profile lock exactly as before.
+const useDeepLinkBus = skipSingleInstanceLock || Boolean(deepLinkFromArgv);
+
+if (useDeepLinkBus) {
+  if (requestDeepLinkBusLock()) {
+    // Bus owner: MULTI/E2E instances run as before (they never took a profile
+    // lock); a protocol launch that found the bus free IS the app now and its
+    // argv deep link flows through the normal pendingDeepLinkUrl startup path.
+    app.on('second-instance', onSecondInstance);
+  } else if (deepLinkFromArgv) {
+    // The URL was delivered to the bus holder via additionalData — nothing
+    // left to do here. Quit instead of booting a second app that would drop
+    // the token into its own (bare-env) profile.
+    console.warn('[1ONE] Deep-link bus held by a running instance; forwarding protocol URL and exiting.');
+    app.quit();
+  }
+  // Bus busy + no protocol URL: a deliberate second MULTI/E2E instance.
+  // It boots without the handler — deep links belong to the bus holder.
+} else if (!(gotTheLock = app.requestSingleInstanceLock({ deepLinkUrl: deepLinkFromArgv }))) {
   console.warn('[1ONE] Another instance is already running; current process will exit.');
   app.quit();
 } else {
-  app.on('second-instance', (_event, argv, _workingDirectory, additionalData) => {
-    // Prefer additionalData (reliable on all platforms), fallback to argv scan
-    const deepLinkUrl =
-      (additionalData as { deepLinkUrl?: string })?.deepLinkUrl || argv.find((arg) => isDeepLinkUrl(arg));
-    if (deepLinkUrl) {
-      handleDeepLinkUrl(deepLinkUrl);
-    }
-    // Focus existing window or recreate one if needed.
-    if (isWebUIMode || isResetPasswordMode) {
-      return;
-    }
-
-    // Skip window creation if app hasn't finished initializing
-    if (!appReadyDone) return;
-
-    if (app.isReady()) {
-      showOrCreateMainWindow({
-        mainWindow,
-        createWindow: () => {
-          console.log('[1ONE] second-instance received with no active main window, recreating main window');
-          createWindow();
-        },
-      });
-    }
-  });
+  app.on('second-instance', onSecondInstance);
 }
 
 // Align GUI-launched PATH with what local CLIs expect on each desktop OS.
