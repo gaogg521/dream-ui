@@ -63,6 +63,15 @@ const EnterpriseLoginPage: React.FC = () => {
     if (!getEnterpriseSession()) return 2;
     return 3;
   });
+  /**
+   * Live reachability of the saved address, probed whenever step 1 shows the
+   * connected summary. The mode flag alone lies: it stays `true` after the
+   * server dies or the stored address goes stale (e.g. a history entry from
+   * another environment), and step 1 then claimed 「已连接」 for a server that
+   * answers nothing (N1). The channel panel's copy depends on the same truth.
+   */
+  const [probe, setProbe] = useState<'probing' | 'ok' | 'unreachable' | 'no-enterprise' | null>(null);
+  const [editingAddress, setEditingAddress] = useState(false);
 
   // Step 1 — address entry. A `?remote=` query (from the settings pages'
   // login buttons) prefills the field; the saved address is the next fallback.
@@ -100,6 +109,29 @@ const EnterpriseLoginPage: React.FC = () => {
   useEffect(() => {
     setHasSession(Boolean(getEnterpriseSession()));
   }, [step]);
+
+  // Probe the saved address whenever step 1 shows the connected summary (and
+  // again after edits), so 「已连接」 reflects a server that actually answers.
+  useEffect(() => {
+    if (step !== 1 || !connected || editingAddress) {
+      setProbe(null);
+      return;
+    }
+    const url = getEnterpriseServerUrl();
+    if (!url) {
+      setProbe(null);
+      return;
+    }
+    let cancelled = false;
+    setProbe('probing');
+    void probeRemoteEnterpriseServer(url).then((result) => {
+      if (cancelled) return;
+      setProbe(result === 'ok' ? 'ok' : result === 'no-enterprise' ? 'no-enterprise' : 'unreachable');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [connected, editingAddress, step]);
 
   const stepLabel = (s: (typeof STEPS)[number]) => t(s.labelKey, { defaultValue: s.labelDefault });
 
@@ -139,6 +171,8 @@ const EnterpriseLoginPage: React.FC = () => {
       setEnterpriseModeEnabled(true);
       window.dispatchEvent(new CustomEvent(DEPLOYMENT_ROLE_CHANGED_EVENT));
       setConnected(true);
+      setEditingAddress(false);
+      setProbe('ok');
       setStep(2);
     } finally {
       setConnecting(false);
@@ -189,6 +223,42 @@ const EnterpriseLoginPage: React.FC = () => {
   };
 
   const remoteOrigin = getEnterpriseServerUrl() || searchParams.get('remote')?.replace(/\/+$/, '') || null;
+
+  /** The address-entry form: used for the not-connected state AND for the
+   * N1 flows (unreachable / no-enterprise / user pressed 修改地址). */
+  const renderAddressInput = () => (
+    <>
+      <div className='text-13px text-t-secondary mb-8px'>
+        {t('settings.webui.deployServerUrlLabel', { defaultValue: '项目组服务器地址' })}
+      </div>
+      <div className='flex gap-8px'>
+        <AutoComplete
+          value={url}
+          onChange={setUrl}
+          data={serverUrlHistory}
+          placeholder={t('settings.webui.deployServerUrlPlaceholder', {
+            defaultValue: '例如 192.168.1.10:25809',
+          })}
+          style={{ flex: 1 }}
+        />
+        <Button type='primary' loading={connecting} onClick={() => void handleConnect()}>
+          {t('common.enterprise.wizardConnectButton', { defaultValue: '连接' })}
+        </Button>
+      </div>
+      <div className='text-11px text-t-tertiary mt-8px'>
+        {t('settings.webui.deployServerUrlHint', {
+          defaultValue: '请填写含端口的完整地址（服务端端口可在服务器 WebUI 设置中查看）',
+        })}
+      </div>
+      <Alert
+        type='info'
+        className='mt-12px'
+        content={t('common.enterprise.wizardConnectHint', {
+          defaultValue: '连接后，本机的会话、助手与个人数据仍留在本地，仅企业协作能力来自该服务器。',
+        })}
+      />
+    </>
+  );
 
   const renderStepIndicator = () => (
     <div className='flex items-center justify-center gap-8px mb-20px'>
@@ -245,52 +315,69 @@ const EnterpriseLoginPage: React.FC = () => {
 
         {step === 1 && (
           <div>
-            {connected ? (
+            {connected && !editingAddress ? (
               <>
-                <Alert
-                  type='success'
-                  className='mb-12px'
-                  title={t('common.enterprise.wizardConnectedTitle', { defaultValue: '已连接企业服务器' })}
-                  content={getEnterpriseServerUrl() ?? ''}
-                />
-                <div className='flex justify-center'>
-                  <Button type='primary' onClick={() => setStep(2)}>
-                    {t('common.enterprise.wizardNextLogin', { defaultValue: '下一步：登录' })}
-                  </Button>
-                </div>
+                {probe === 'probing' && (
+                  <Alert
+                    type='info'
+                    className='mb-12px'
+                    title={t('common.enterprise.wizardProbingTitle', { defaultValue: '正在检查与服务器的连接…' })}
+                  />
+                )}
+                {probe === 'ok' && (
+                  <>
+                    <Alert
+                      type='success'
+                      className='mb-12px'
+                      title={t('common.enterprise.wizardConnectedTitle', { defaultValue: '已连接企业服务器' })}
+                      content={getEnterpriseServerUrl() ?? ''}
+                    />
+                    <div className='flex justify-center gap-8px'>
+                      <Button type='primary' onClick={() => setStep(2)}>
+                        {t('common.enterprise.wizardNextLogin', { defaultValue: '下一步：登录' })}
+                      </Button>
+                      <Button onClick={() => setEditingAddress(true)}>
+                        {t('common.enterprise.wizardEditAddress', { defaultValue: '修改地址' })}
+                      </Button>
+                    </div>
+                  </>
+                )}
+                {(probe === 'unreachable' || probe === 'no-enterprise') && (
+                  <>
+                    {/* The mode flag said connected but the address does not
+                        answer (or answers without the enterprise API) — say
+                        THAT, not 「已连接」, and drop the user straight into
+                        the address editor (N1). */}
+                    <Alert
+                      type='warning'
+                      className='mb-12px'
+                      title={
+                        probe === 'unreachable'
+                          ? t('common.enterprise.wizardAddressUnreachableTitle', {
+                              defaultValue: '保存的服务器地址连不上',
+                            })
+                          : t('common.enterprise.wizardAddressNoEnterpriseTitle', {
+                              defaultValue: '该地址没有提供企业 API',
+                            })
+                      }
+                      content={
+                        (getEnterpriseServerUrl() ?? '') +
+                        ' — ' +
+                        (probe === 'unreachable'
+                          ? t('common.enterprise.wizardAddressUnreachableHint', {
+                              defaultValue: '请检查服务器是否在线、地址与端口是否正确，修改后重新连接。',
+                            })
+                          : t('common.enterprise.wizardAddressNoEnterpriseHint', {
+                              defaultValue: '对方可能运行的是不带企业模块的版本，请确认地址或联系管理员。',
+                            }))
+                      }
+                    />
+                    {renderAddressInput()}
+                  </>
+                )}
               </>
             ) : (
-              <>
-                <div className='text-13px text-t-secondary mb-8px'>
-                  {t('settings.webui.deployServerUrlLabel', { defaultValue: '项目组服务器地址' })}
-                </div>
-                <div className='flex gap-8px'>
-                  <AutoComplete
-                    value={url}
-                    onChange={setUrl}
-                    data={serverUrlHistory}
-                    placeholder={t('settings.webui.deployServerUrlPlaceholder', {
-                      defaultValue: '例如 192.168.1.10:25809',
-                    })}
-                    style={{ flex: 1 }}
-                  />
-                  <Button type='primary' loading={connecting} onClick={() => void handleConnect()}>
-                    {t('common.enterprise.wizardConnectButton', { defaultValue: '连接' })}
-                  </Button>
-                </div>
-                <div className='text-11px text-t-tertiary mt-8px'>
-                  {t('settings.webui.deployServerUrlHint', {
-                    defaultValue: '请填写含端口的完整地址（服务端端口可在服务器 WebUI 设置中查看）',
-                  })}
-                </div>
-                <Alert
-                  type='info'
-                  className='mt-12px'
-                  content={t('common.enterprise.wizardConnectHint', {
-                    defaultValue: '连接后，本机的会话、助手与个人数据仍留在本地，仅企业协作能力来自该服务器。',
-                  })}
-                />
-              </>
+              renderAddressInput()
             )}
           </div>
         )}

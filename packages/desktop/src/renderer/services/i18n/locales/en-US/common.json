@@ -324,7 +324,15 @@
     "wizardConnectHint": "After connecting, your conversations, agents and personal data stay on this machine; only team capabilities come from the server.",
     "wizardLoginNeedsConnect": "Finish step 1 first — connect to the project group server.",
     "wizardJoinedTitle": "Joined the project group",
-    "wizardFinish": "Done"
+    "wizardFinish": "Done",
+    "wizardProbingTitle": "Checking the connection to the server…",
+    "wizardEditAddress": "Edit address",
+    "wizardAddressUnreachableTitle": "The saved server address is unreachable",
+    "wizardAddressUnreachableHint": "Check that the server is online and the address and port are correct, then connect again.",
+    "wizardAddressNoEnterpriseTitle": "That address does not serve the enterprise API",
+    "wizardAddressNoEnterpriseHint": "The other side may be running a build without the enterprise module; verify the address or contact the admin.",
+    "loginChannelServerUnreachable": "Cannot reach the project group server ({{url}}). Check the server address in step 1 — the enterprise SSO configuration is only available once it connects.",
+    "loginChannelsUnreachableHint": "Cannot reach the project group server ({{url}}). Go back to step 1 and check the address — the enterprise SSO configuration is only available once it connects."
   },
   "superAssistant": {
     "title": "Super Assistant",

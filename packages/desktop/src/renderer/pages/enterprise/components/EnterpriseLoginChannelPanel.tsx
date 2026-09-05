@@ -52,6 +52,15 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
   const { t } = useTranslation();
   const [providers, setProviders] = useState<SsoProviderStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  /**
+   * Whether the providers LIST itself could not be fetched. Distinct from an
+   * empty list: fetch failure means "this address is not answering" (wrong
+   * host/port, server down) while an empty 200 means "the admin really has
+   * nothing enabled". The two used to collapse into the same grey tiles with
+   * the same "admin hasn't enabled SSO" copy — sending users to ask their
+   * admin about a problem only a typo'd address could cause (N1).
+   */
+  const [fetchFailed, setFetchFailed] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -71,12 +80,18 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
           signal: AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]),
         });
         if (!response.ok) {
+          // Non-2xx from the configured address: the server answered but not
+          // with our API — treat exactly like "cannot reach", not like
+          // "no providers configured".
+          setFetchFailed(true);
           setProviders([]);
           return;
         }
         const json = (await response.json()) as { data?: SsoProviderStatus[] };
+        setFetchFailed(false);
         setProviders(json.data ?? []);
       } catch {
+        setFetchFailed(true);
         setProviders([]);
       } finally {
         if (!controller.signal.aborted) setLoading(false);
@@ -139,15 +154,28 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
    * different fix from "the admin hasn't enabled it on the server", and the
    * panel used to present both as the same silent grey tile.
    */
-  const unavailableReason = useMemo<'not_connected' | 'not_configured_on_server' | null>(() => {
+  const unavailableReason = useMemo<'server_unreachable' | 'not_connected' | 'not_configured_on_server' | null>(() => {
     if (loading) return null;
+    // Fetch failure outranks everything else: whatever the address is, it is
+    // not answering, so "admin hasn't enabled SSO" would be a false statement.
+    if (fetchFailed) return 'server_unreachable';
     if (!remoteOrigin) return 'not_connected';
     const anyUsable = providers.some((p) => p.enabled && p.configured);
     return anyUsable ? null : 'not_configured_on_server';
-  }, [loading, providers, remoteOrigin]);
+  }, [fetchFailed, loading, providers, remoteOrigin]);
 
   const showUnavailable = useCallback(
     (item: ChannelMeta) => {
+      if (unavailableReason === 'server_unreachable') {
+        Message.warning(
+          t('common.enterprise.loginChannelServerUnreachable', {
+            defaultValue:
+              '无法连接项目组服务器（{{url}}），请检查第 1 步填写的服务器地址。地址连通后才能拿到企业的 SSO 登录配置。',
+            url: remoteOrigin ?? '',
+          })
+        );
+        return;
+      }
       if (unavailableReason === 'not_connected') {
         Message.warning(
           t('common.enterprise.loginChannelNeedsServer', {
@@ -165,7 +193,7 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
         })
       );
     },
-    [channelLabel, t, unavailableReason]
+    [channelLabel, remoteOrigin, t, unavailableReason]
   );
 
   const handleChannelClick = useCallback(
@@ -247,14 +275,21 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
       </div>
       {unavailableReason ? (
         <div className={styles.reason}>
-          {unavailableReason === 'not_connected'
-            ? t('common.enterprise.loginChannelsNeedServerHint', {
+          {unavailableReason === 'server_unreachable'
+            ? t('common.enterprise.loginChannelsUnreachableHint', {
                 defaultValue:
-                  '企业 SSO 登录方式来自你所连接的企业服务器。当前尚未连接，因此下方仅「本地账户」可用——请回到第一步填写并连接项目组服务器地址。',
+                  '无法连接项目组服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能拿到企业的 SSO 登录配置。',
+                url: remoteOrigin ?? '',
               })
-            : t('common.enterprise.loginChannelsNoneConfiguredHint', {
-                defaultValue: '已连接企业服务器，但管理员尚未在企业管理后台启用任何 SSO 登录方式。可先用「本地账户」登录。',
-              })}
+            : unavailableReason === 'not_connected'
+              ? t('common.enterprise.loginChannelsNeedServerHint', {
+                  defaultValue:
+                    '企业 SSO 登录方式来自你所连接的企业服务器。当前尚未连接，因此下方仅「本地账户」可用——请回到第一步填写并连接项目组服务器地址。',
+                })
+              : t('common.enterprise.loginChannelsNoneConfiguredHint', {
+                  defaultValue:
+                    '已连接企业服务器，但管理员尚未在企业管理后台启用任何 SSO 登录方式。可先用「本地账户」登录。',
+                })}
         </div>
       ) : null}
       <p className={styles.hint}>
