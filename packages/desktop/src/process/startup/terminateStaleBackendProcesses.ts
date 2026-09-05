@@ -64,12 +64,47 @@ async function terminateStaleBackendProcessesWindows(dataDir: string): Promise<n
   return ids.length;
 }
 
+/** Process name every backend this app spawns runs under. */
+const BACKEND_PROCESS_NAME = 'dreamcore';
+
 async function terminateStaleBackendProcessesUnix(dataDir: string): Promise<number> {
-  // pkill -f matches the full command line; dreamcore always carries
-  // --data-dir <dir>. Exit code 1 simply means nothing matched.
-  await execCommand('pkill', ['-f', '--', dataDir]);
-  // The count is not worth a second pgrep round-trip on a best-effort path.
-  return 0;
+  // List, filter in JS, then signal by pid — deliberately NOT
+  // `pkill -f -- <dataDir>`.
+  //
+  // `pkill -f` matches the full command line of EVERY process with no name
+  // filter, and treats its argument as an extended regex. Pointed at a data
+  // directory that means: a developer's `tail -f <dataDir>/logs/server.log`,
+  // an editor opened on that folder, any tool naming the path — all killed,
+  // and a path containing regex metacharacters matches more than it reads as.
+  // That contradicts this module's own contract ("a dreamcore pointed at a
+  // DIFFERENT data directory is never touched") and the Windows branch, which
+  // filters on `Name='dreamcore.exe'` and uses an ordinal `IndexOf` precisely
+  // to avoid both problems.
+  //
+  // `ps -Ao pid=,command=` is portable across macOS and Linux, and matching
+  // here is plain substring containment on both the process name and the data
+  // dir — the same test the Windows branch makes.
+  const stdout = await execCommand('ps', ['-Ao', 'pid=,command=']);
+  const pids: number[] = [];
+  for (const line of stdout.split('\n')) {
+    const match = /^\s*(\d+)\s+(.*)$/.exec(line);
+    if (!match) continue;
+    const pid = Number.parseInt(match[1], 10);
+    const commandLine = match[2];
+    // Never signal ourselves, whatever the command line happens to contain.
+    if (!Number.isFinite(pid) || pid === process.pid) continue;
+    if (!commandLine.includes(BACKEND_PROCESS_NAME)) continue;
+    if (!commandLine.includes(dataDir)) continue;
+    pids.push(pid);
+  }
+  for (const pid of pids) {
+    try {
+      process.kill(pid, 'SIGKILL');
+    } catch {
+      // Already gone, or not ours to signal — best-effort by contract.
+    }
+  }
+  return pids.length;
 }
 
 /** Kill every dreamcore process whose command line references `dataDir`.
