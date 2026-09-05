@@ -73,4 +73,43 @@ describe('recoverCorruptedDatabaseAfterUserConfirmation', () => {
     expect(deps.reloadMainWindow).not.toHaveBeenCalled();
     expect(deps.getFailure()).toBe(failure);
   });
+
+  it('kills stale backend holders between stopping and restarting (N2)', async () => {
+    const deps = makeDeps({
+      reason: 'backend_recoverable_database_corruption',
+      backendBoundaryCode: 'BOOTSTRAP_DATA_INIT_FAILED',
+      backendBoundaryStage: 'database.recoverable_corruption',
+    });
+    const order: string[] = [];
+    deps.stopBackend.mockImplementation(async () => {
+      order.push('stop');
+    });
+    deps.terminateStaleBackendProcesses = vi.fn(async () => {
+      order.push('terminate');
+    });
+    deps.startBackendWithRecovery.mockImplementation(async () => {
+      order.push('start');
+      return 25808;
+    });
+
+    await recoverCorruptedDatabaseAfterUserConfirmation(deps);
+
+    expect(order).toEqual(['stop', 'terminate', 'start']);
+  });
+
+  it('re-marks the failure recoverable when the attempt fails, so the dialog stays retryable (N3)', async () => {
+    const deps = makeDeps({
+      reason: 'backend_recoverable_database_corruption',
+      backendBoundaryCode: 'BOOTSTRAP_DATA_INIT_FAILED',
+      backendBoundaryStage: 'database.recoverable_corruption',
+    });
+    const recoveryError = new Error('could not backup corrupted database: file in use');
+    deps.startBackendWithRecovery.mockRejectedValue(recoveryError);
+    deps.markRecoveryFailed = vi.fn();
+
+    await expect(recoverCorruptedDatabaseAfterUserConfirmation(deps)).rejects.toThrow('file in use');
+
+    expect(deps.markRecoveryFailed).toHaveBeenCalledOnce();
+    expect(deps.markRecoveryFailed).toHaveBeenCalledWith(recoveryError);
+  });
 });

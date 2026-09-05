@@ -352,13 +352,28 @@ ipcMain.on('get-backend-startup-failure', (event) => {
 
 ipcMain.handle('backend:recover-corrupted-database', async () => {
   const { recoverCorruptedDatabaseAfterUserConfirmation } = await import('./process/startup/recoverCorruptedDatabase');
+  const { terminateStaleBackendProcesses } = await import('./process/startup/terminateStaleBackendProcesses');
+  const { getDataPath } = await import('./process/utils/utils');
 
   await recoverCorruptedDatabaseAfterUserConfirmation({
     getFailure: () => backendStartupFailureInfo,
     stopBackend: () => backendManager.stop(),
+    terminateStaleBackendProcesses: () => terminateStaleBackendProcesses(getDataPath()),
+    // A failed attempt must leave the failure state recoverable: the database
+    // is still corrupt, and reclassifying the failure (as the plain startup
+    // path does) turned every further click into a silent no-op (N3).
+    markRecoveryFailed: (error) => {
+      backendStartupFailed = true;
+      backendStartupFailureInfo = {
+        ...classifyBackendStartupFailure(error),
+        reason: 'backend_recoverable_database_corruption',
+        recoveryError: error instanceof Error ? error.message : String(error),
+        appVersion: app.getVersion(),
+      };
+      broadcastBackendStartupState(backendStartupFailureInfo);
+    },
     startBackendWithRecovery: async () => {
       try {
-        const { getDataPath } = await import('./process/utils/utils');
         const { getSystemDir } = await import('./process/utils/initStorage');
         const sysDir = getSystemDir();
         return await backendManager.start(

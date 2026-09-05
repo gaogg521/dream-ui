@@ -245,6 +245,7 @@ export type I18nKey =
   | 'common.backendStartup.recoverableDatabaseCorruption.diagnosticsReportSuccess'
   | 'common.backendStartup.recoverableDatabaseCorruption.diagnosticsSent'
   | 'common.backendStartup.recoverableDatabaseCorruption.rebuildFailed'
+  | 'common.backendStartup.recoverableDatabaseCorruption.rebuildFailedWithReason'
   | 'common.backendStartup.recoverableDatabaseCorruption.sendDiagnostics'
   | 'common.backendStartup.recoverableDatabaseCorruption.title'
   | 'common.backendStartup.startupDirectory.description'

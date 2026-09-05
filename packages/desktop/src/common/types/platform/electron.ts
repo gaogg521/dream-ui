@@ -80,6 +80,10 @@ export interface BackendStartupFailureInfo {
    * startup failure is recorded. Lets dialogs reference the user's version
    * (e.g. the downgrade dialog: "data needs something newer than vX.Y.Z"). */
   appVersion?: string;
+  /** Why the last corrupted-database RECOVERY attempt failed (os error 32
+   * "file in use", etc.). Kept on the failure info so the rebuild dialog can
+   * show the real reason and the user can retry instead of guessing (N2/N3). */
+  recoveryError?: string;
 }
 
 declare global {
