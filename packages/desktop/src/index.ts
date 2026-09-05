@@ -174,16 +174,30 @@ const onSecondInstance = (
 };
 
 // Which lock a process takes FIRST is mutually exclusive (see the warning on
-// requestDeepLinkBusLock), so the choice is made once, up front:
-//  - dev MULTI / E2E instances and OS protocol launches route through the bus;
-//  - everything else takes the profile lock exactly as before.
-const useDeepLinkBus = skipSingleInstanceLock || Boolean(deepLinkFromArgv);
+// requestDeepLinkBusLock), so the choice is made once, up front — and the
+// boundary is the BUILD TYPE, not the launch environment:
+//
+//  - EVERY dev-build instance claims the bus, whatever env it was started
+//    with (plain dev, DREAM_MULTI_INSTANCE, E2E). Keying the bus on the env
+//    was tried and regressed: a plain dev runner then never claimed the bus,
+//    while the protocol instance — launched by the OS registry with a bare
+//    environment, so without DREAM_MULTI_INSTANCE — fell back to the profile
+//    branch, found no collision (the runner is on a different profile), and
+//    booted a full second app with the token (measured 2026-09-05: bus dir
+//    created by the protocol instance, 4→7 electron processes, no session).
+//    The registry launch has no MULTI env, so the running instance must hold
+//    the bus unconditionally for it to always find a holder.
+//  - Packaged builds never touch the bus: the registry launch resolves the
+//    SAME profile there (no env-dependent naming), so protocol launch and
+//    running instance collide on the profile lock and forward exactly as they
+//    did before the bus existed. Production behavior stays byte-identical.
+const useDeepLinkBus = !app.isPackaged || skipSingleInstanceLock;
 
 if (useDeepLinkBus) {
   if (requestDeepLinkBusLock()) {
-    // Bus owner: MULTI/E2E instances run as before (they never took a profile
-    // lock); a protocol launch that found the bus free IS the app now and its
-    // argv deep link flows through the normal pendingDeepLinkUrl startup path.
+    // Bus owner: the running dev instance (any launch config), or a protocol
+    // launch that found the bus free — in which case it IS the app now and
+    // its argv deep link flows through the normal pendingDeepLinkUrl path.
     app.on('second-instance', onSecondInstance);
   } else if (deepLinkFromArgv) {
     // The URL was delivered to the bus holder via additionalData — nothing
@@ -192,8 +206,8 @@ if (useDeepLinkBus) {
     console.warn('[1ONE] Deep-link bus held by a running instance; forwarding protocol URL and exiting.');
     app.quit();
   }
-  // Bus busy + no protocol URL: a deliberate second MULTI/E2E instance.
-  // It boots without the handler — deep links belong to the bus holder.
+  // Bus busy + no protocol URL: a deliberate second dev instance. It boots
+  // without the handler — deep links belong to the bus holder.
 } else if (!(gotTheLock = app.requestSingleInstanceLock({ deepLinkUrl: deepLinkFromArgv }))) {
   console.warn('[1ONE] Another instance is already running; current process will exit.');
   app.quit();
