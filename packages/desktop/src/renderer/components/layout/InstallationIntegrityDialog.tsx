@@ -274,8 +274,17 @@ export const InstallationIntegrityFooter: React.FC<{
         setRecovering(true);
         try {
           await actions.onRecoverCorruptedDatabase();
-        } catch {
-          Message.error(t('common.backendStartup.recoverableDatabaseCorruption.rebuildFailed'));
+        } catch (error) {
+          // ipcMain.handle rejections arrive wrapped with an internal prefix;
+          // the user needs the actual reason ("file in use", …), plus the one
+          // self-help action that applies to the most common cause — another
+          // One Work instance still running (N2/N3).
+          const raw = error instanceof Error ? error.message : String(error);
+          const reason = raw.replace(/^Error invoking remote method '[^']*':\s*/, '');
+          Message.error({
+            content: t('common.backendStartup.recoverableDatabaseCorruption.rebuildFailedWithReason', { reason }),
+            duration: 8000,
+          });
           setRecovering(false);
         }
       },

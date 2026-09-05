@@ -136,6 +136,7 @@
       "diagnosticsReportSuccess": "诊断报告已发送",
       "diagnosticsReportFailed": "诊断报告发送失败",
       "rebuildFailed": "备份旧库并重建新库失败",
+      "rebuildFailedWithReason": "重建失败：{{reason}}。若提示文件被占用，请关闭其他正在运行的 One Work 实例后重试；本窗口仍可再次点击重建。",
       "confirmDialog": {
         "title": "确认重建数据库？",
         "content": "此操作会备份当前损坏的数据库并创建一个全新空库。历史会话将不再显示（旧库会保留为备份文件）。确定继续吗？",
