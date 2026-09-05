@@ -80,6 +80,19 @@ body.login-page-active {
   animation: login-slide-up 0.6s ease-out;
 }
 
+/* The card background is always white, but Arco text tokens follow the app
+   theme — under a dark app theme Arco renders near-white input text on this
+   white card (unreadable; hit by the enterprise onboarding wizard and the
+   main login alike). Pin card-scoped inputs to readable-on-white values. */
+.login-page__card .arco-input,
+.login-page__card input.arco-input {
+  color: #1d2129;
+}
+
+.login-page__card .arco-input::placeholder {
+  color: #86909c;
+}
+
 @keyframes login-slide-up {
   from {
     opacity: 0;

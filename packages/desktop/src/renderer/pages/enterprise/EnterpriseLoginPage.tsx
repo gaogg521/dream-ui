@@ -228,6 +228,18 @@ const EnterpriseLoginPage: React.FC = () => {
    * N1 flows (unreachable / no-enterprise / user pressed 修改地址). */
   const renderAddressInput = () => (
     <>
+      {/* Editing context for an ALREADY-connected user: without this the edit
+          form is visually identical to first-time onboarding, and the user
+          has no idea what they are about to change (real-client feedback). */}
+      {connected && getEnterpriseServerUrl() ? (
+        <div className='text-12px text-t-tertiary mb-8px'>
+          {t('common.enterprise.wizardEditingContext', {
+            defaultValue:
+              '当前已连接：{{url}}。只有新地址连接成功后才会切换，取消不会改动现有连接。',
+            url: getEnterpriseServerUrl(),
+          })}
+        </div>
+      ) : null}
       <div className='text-13px text-t-secondary mb-8px'>
         {t('settings.webui.deployServerUrlLabel', { defaultValue: '项目组服务器地址' })}
       </div>
@@ -257,6 +269,14 @@ const EnterpriseLoginPage: React.FC = () => {
           defaultValue: '连接后，本机的会话、助手与个人数据仍留在本地，仅企业协作能力来自该服务器。',
         })}
       />
+      {/* Escape hatch: editing must never trap a connected user in onboarding. */}
+      {connected ? (
+        <div className='flex justify-center mt-12px'>
+          <Button type='text' onClick={() => setEditingAddress(false)}>
+            {t('common.cancel', { defaultValue: '取消' })}
+          </Button>
+        </div>
+      ) : null}
     </>
   );
 
@@ -270,6 +290,11 @@ const EnterpriseLoginPage: React.FC = () => {
         // the channel panel explains the not-connected state itself.
         const reachable = s.step === 1 || s.step === 2 || (s.step === 3 && connected && hasSession);
         const active = step === s.step;
+        // Three visually distinct states (real-client feedback: with one flat
+        // dim style the whole row read as disabled):
+        //   active     — primary border + tinted background
+        //   reachable  — solid border, normal text
+        //   locked     — dashed border, dimmed, not-allowed cursor
         return (
           <React.Fragment key={s.step}>
             {index > 0 && <span className='text-t-tertiary'>—</span>}
@@ -278,14 +303,20 @@ const EnterpriseLoginPage: React.FC = () => {
               onClick={() => reachable && setStep(s.step)}
               className='flex items-center gap-4px px-8px py-2px rd-6px'
               style={{
-                border: '1px solid var(--color-border-2)',
+                border: active
+                  ? '1px solid rgb(var(--primary-6))'
+                  : `1px ${reachable ? 'solid' : 'dashed'} var(--color-border-2)`,
                 background: active ? 'var(--color-fill-2)' : 'transparent',
-                cursor: reachable ? 'pointer' : 'default',
-                opacity: reachable ? 1 : 0.45,
+                cursor: reachable ? 'pointer' : 'not-allowed',
+                opacity: reachable ? 1 : 0.5,
               }}
             >
               <span className='text-12px text-t-secondary'>{s.step}</span>
-              <span className={`text-13px ${active ? 'font-600 text-t-primary' : 'text-t-secondary'}`}>
+              <span
+                className={`text-13px ${
+                  active || reachable ? 'font-600 text-t-primary' : 'text-t-secondary'
+                }`}
+              >
                 {stepLabel(s)}
               </span>
             </button>
