@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { ipcBridge } from '@/common';
+import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import type { OrgContext } from '@/common/types/org/orgTypes';
 
 /**
@@ -29,6 +30,11 @@ export type UseOrgContextResult = {
   loading: boolean;
   context: OrgContext | null;
   error: string | null;
+  /** The context call failed with 401 — i.e. a remote server IS connected but
+   * this app holds no session on it yet. A "connected, not logged in" state,
+   * not a malfunction: callers must render a login affordance, never the raw
+   * error string (which carries the backend's JSON envelope). */
+  unauthorized: boolean;
   refresh: () => Promise<void>;
 };
 
@@ -36,16 +42,19 @@ export function useOrgContext(): UseOrgContextResult {
   const [context, setContext] = useState<OrgContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [unauthorized, setUnauthorized] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setUnauthorized(false);
     try {
       const ctx = await ipcBridge.oneOrg.context.invoke();
       setContext(ctx ?? null);
     } catch (e) {
       setContext(null);
       setError(String(e));
+      setUnauthorized(isBackendHttpError(e) && e.status === 401);
     } finally {
       setLoading(false);
     }
@@ -63,5 +72,5 @@ export function useOrgContext(): UseOrgContextResult {
     return () => window.removeEventListener(ORG_CONTEXT_CHANGED_EVENT, handler);
   }, [refresh]);
 
-  return { loading, context, error, refresh };
+  return { loading, context, error, unauthorized, refresh };
 }

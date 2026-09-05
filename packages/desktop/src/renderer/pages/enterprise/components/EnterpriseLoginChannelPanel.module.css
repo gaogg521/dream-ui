@@ -11,6 +11,7 @@
 }
 
 .channelTile {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -42,16 +43,34 @@
 /**
  * An unconfigured channel looks unavailable but stays clickable on purpose:
  * a `disabled` button swallows the click, which is what made this panel show
- * a row of dead grey tiles with no way to find out why.
+ * a row of dead grey tiles with no way to find out why. `help` is the cursor
+ * that says "click for an explanation" — a plain `pointer` promised an action
+ * the tile cannot take, which is exactly the visual/interactive mismatch E5
+ * records.
  */
 .channelTileUnavailable {
   opacity: 0.5;
+  cursor: help;
 }
 
 .channelTileUnavailable:hover {
   background: var(--color-fill-2);
   border-color: var(--color-border-3);
   transform: none;
+}
+
+/** On-tile label stating why the tile is grey (未配置 / 已停用) — the state
+ * is visible without a click, the click still explains the details. */
+.channelBadge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 1.4;
+  background: var(--color-fill-3);
+  color: var(--color-text-3);
 }
 
 .reason {

@@ -5,7 +5,11 @@
  */
 
 import { ipcBridge } from '@/common';
-import { getEnterpriseServerUrl, setEnterpriseServerUrl } from '@/common/adapter/enterpriseMode';
+import {
+  getEnterpriseServerUrl,
+  isEnterpriseModeEnabled,
+  setEnterpriseServerUrl,
+} from '@/common/adapter/enterpriseMode';
 import { openExternalUrl } from '@/renderer/utils/platform';
 
 export type OAuthProvider = 'feishu' | 'dingtalk' | 'wecom' | 'oidc';
@@ -99,6 +103,44 @@ export async function openEnterpriseOAuthInBrowser(
   return true;
 }
 
-export async function openEnterprisePasswordLoginInBrowser(returnTo = '/settings/enterprise'): Promise<boolean> {
+/**
+ * Password-class logins (LDAP / local account) in the system browser.
+ *
+ * CONNECTED to a remote server (mode flag on) → open the REMOTE admin
+ * console's login page (`/admin/login` — BrowserRouter with basename
+ * `/admin`, never the WebUI's `/#/login` hash shape) with the desktop
+ * handshake params. The console hands the session token back via
+ * `{scheme}://sso-callback` — the same deep link the OAuth callback page
+ * renders — because the browser's cookie jar is not shared with the desktop
+ * renderer: without the deep link, login would succeed in the browser and
+ * the app would still read as logged out.
+ *
+ * The remote branch keys on `isEnterpriseModeEnabled()`, NOT on a saved
+ * address: a merely-saved URL with the connect toggle OFF is the
+ * disconnected state, and per the personal/server-mode fallback contract it
+ * must keep opening the LOCAL WebUI login — the saved address alone never
+ * reroutes the user's login destination.
+ */
+export async function openEnterprisePasswordLoginInBrowser(
+  returnTo = '/settings/enterprise',
+  options?: { remoteOrigin?: string | null; desktop?: boolean }
+): Promise<boolean> {
+  const remote = (options?.remoteOrigin ?? getEnterpriseServerUrl())?.replace(/\/+$/, '') ?? null;
+  const desktop = options?.desktop ?? true;
+
+  if (remote && desktop && isEnterpriseModeEnabled()) {
+    const params = new URLSearchParams({
+      desktop: '1',
+      scheme: getDeepLinkScheme(),
+      redirect: returnTo,
+    });
+    await openExternalUrl(`${remote}/admin/login?${params.toString()}`);
+    return true;
+  }
+  if (remote && !desktop) {
+    const params = new URLSearchParams({ redirect: returnTo });
+    await openExternalUrl(`${remote}/admin/login?${params.toString()}`);
+    return true;
+  }
   return openWebuiEnterpriseLogin(returnTo);
 }

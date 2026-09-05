@@ -91,9 +91,12 @@ export const useDeepLink = () => {
         }
         setEnterpriseSession({ token, userId: userId ?? '', username: username ?? '', name: name || undefined });
         setEnterpriseModeEnabled(true);
-        // Land on the enterprise page after the reload so the connection
-        // status is the first thing the user sees.
-        window.location.hash = '#/settings/enterprise';
+        // Land back on the onboarding flow so the login continues in place:
+        // with a session present the wizard shows its final step (join by
+        // invite code, or the auto-placed group SSO found). Used to be
+        // /settings/enterprise, which sent the user off-flow right after the
+        // login they started inside the flow.
+        window.location.hash = '#/enterprise/login';
         window.location.reload();
         return;
       }

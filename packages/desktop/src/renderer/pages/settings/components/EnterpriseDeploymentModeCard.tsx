@@ -29,8 +29,10 @@ import { isElectronDesktop } from '@renderer/utils/platform';
 type ConnectProbeResult = 'ok' | 'unreachable' | 'no-enterprise';
 
 /** Same probe RemoteServerSection used to own — moved here so "type the
- * address" and "connect" are one action on one page instead of two. */
-async function probeRemoteEnterpriseServer(baseUrl: string): Promise<ConnectProbeResult> {
+ * address" and "connect" are one action on one page instead of two. Exported
+ * for the left-bottom onboarding wizard, whose step 1 performs the same
+ * connect-with-probe against a typed address. */
+export async function probeRemoteEnterpriseServer(baseUrl: string): Promise<ConnectProbeResult> {
   try {
     const health = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(8000) });
     if (!health.ok) return 'unreachable';
@@ -361,7 +363,7 @@ const EnterpriseDeploymentModeCard: React.FC = () => {
             </div>
             <div className='text-11px text-t-tertiary mt-4px'>
               {t('common.enterprise.remoteCardHint', {
-                defaultValue: '连接后才能用邀请码加入该服务器上的项目组，或前往「企业身份」页做 SSO 登录。',
+                defaultValue: '连接后，从左下角「登录 / 加入项目组」完成登录并加入项目组。',
               })}
             </div>
           </div>

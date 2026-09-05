@@ -5,12 +5,12 @@
  * dreamcore still serves conversations / agents / skills / personal data;
  * only enterprise GOVERNANCE (org / admin / sso / devops) is fetched from the
  * remote server with the Bearer token. The server ADDRESS *and* the connect
- * toggle live in the "项目组部署模式" card, which now sits directly above
- * this section on the same 企业身份 page — address, connect and login were
- * split across two settings pages before, so saving an address silently did
- * nothing until a second page's switch was also found and flipped. This
- * section only owns the SSO login / logout lifecycle, an identity concern;
- * it reads the connect state to decide what to show, it does not own it.
+ * toggle live in the "项目组部署模式" card above this section — including the
+ *「连接远端项目组服务器」title, which deliberately appears here NOWHERE (it
+ * used to render twice on this page with a second switch, one state, two
+ * controls). This section owns the SSO login / logout lifecycle, an identity
+ * concern; it reads the connect state to decide what to show, it does not own
+ * it, and it reports that state as a tag + alert only.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -174,9 +174,10 @@ const RemoteServerSection: React.FC = () => {
         />
       )}
       <div className='flex items-center gap-8px mb-8px'>
-        <span className='text-15px font-600 text-t-primary'>
-          {t('common.enterprise.remoteTitle', { defaultValue: '连接远端企业服务器' })}
-        </span>
+        {/* No heading here on purpose: this section sits directly below the
+            deployment card, which owns the「连接远端项目组服务器」title AND the
+            connect switch. Repeating either rendered two switches/titles for
+            one state on one page (E1). The tag is the section's status line. */}
         {session ? (
           <Tag color='green'>
             {t('common.enterprise.remoteConnectedAs', {
@@ -198,8 +199,20 @@ const RemoteServerSection: React.FC = () => {
       </div>
       {!enabled && !session && (
         <div className='text-t-tertiary text-12px mb-12px'>
-          {t('common.enterprise.remoteInviteJoinNeedsConnectHint', {
-            defaultValue: '仅用邀请码加入项目组（不走 SSO）需要先用本页上方的连接开关手动连接。',
+          {/* Accurate, not aspirational: flipping the connect toggle alone is
+              NOT enough for an invite-code join — the server also needs a
+              session, else org/context 401s. Here NEITHER step is done. */}
+          {t('common.enterprise.joinPrerequisitesHint', {
+            defaultValue:
+              '用邀请码加入项目组需要：① 连接项目组服务器（「企业身份」页），② 登录该服务器上的企业账号。当前还未连接服务器。',
+          })}
+        </div>
+      )}
+      {enabled && !session && (
+        <div className='text-t-tertiary text-12px mb-12px'>
+          {/* Connected but no session yet: name the ONE missing step. */}
+          {t('common.enterprise.joinNeedsLoginOnlyHint', {
+            defaultValue: '已连接项目组服务器，还需先登录企业账号再加入。',
           })}
         </div>
       )}
