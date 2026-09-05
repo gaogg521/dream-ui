@@ -98,12 +98,12 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
     navigate('/enterprise/login');
   }, [navigate]);
 
-  // Already authenticated via enterprise SSO — the only thing left is picking a
-  // project group, so go straight to the join UI. Sending an authenticated user
-  // back through the "登录您的账户" page (enterprise ⊃ project group) is a dead
-  // end: they have nothing left to log in to.
+  // Already authenticated via enterprise SSO — the only thing left is joining,
+  // which is the wizard's final step. Sending an authenticated user to the
+  // project-group settings page (or back through a bare login picker) splits
+  // the flow; /enterprise/login shows step 3 directly once a session exists.
   const handleJoinProjectGroup = useCallback(() => {
-    navigate('/settings/enterprise');
+    navigate('/enterprise/login');
   }, [navigate]);
 
   const handleSwitchTenant = useCallback(

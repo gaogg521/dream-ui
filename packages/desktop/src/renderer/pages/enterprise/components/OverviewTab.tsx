@@ -6,11 +6,12 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Button, Descriptions, Divider, Input, Message, Modal, Tag } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { ipcBridge } from '@/common';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import { WEBUI_DEFAULT_PORT } from '@/common/config/constants';
 import { webui } from '@/common/adapter/ipcBridge';
-import { getEnterpriseServerUrl, isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
+import { getEnterpriseServerUrl, getEnterpriseSession, isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
 import { DEPLOYMENT_ROLE_CHANGED_EVENT } from '@/common/config/webuiEnterpriseConfig';
 import { openExternalUrl } from '@/renderer/utils/platform';
 import { clearTeamResources } from '@renderer/utils/enterprise/teamSkillSync';
@@ -33,8 +34,24 @@ const resolveLocalAdminUrl = async (): Promise<string> => {
 type OverviewTabProps = {
   context: OrgContext | null;
   error: string | null;
+  /** The context call 401'd: connected to a remote server but not logged in
+   * on it. Rendered as an onboarding state with a login affordance, never as
+   * the raw error string. */
+  unauthorized: boolean;
   onChanged: () => void;
 };
+
+/**
+ * A user-presentable message for a failed governance call. Backend HTTP errors
+ * carry the whole response envelope in `error.message` (`Backend GET … (401):
+ * {"success":false,…}`) — status code and JSON are internal details no member
+ * should read, so surface the backend's own human sentence when there is one
+ * and a neutral fallback otherwise.
+ */
+function friendlyError(e: unknown, fallback: string): string {
+  if (isBackendHttpError(e) && e.backendMessage) return `${fallback}: ${e.backendMessage}`;
+  return fallback;
+}
 
 const roleLabelKey: Record<string, { key: string; fallback: string }> = {
   system_admin: { key: 'common.enterprise.roleSystemAdmin', fallback: '系统管理员' },
@@ -42,8 +59,9 @@ const roleLabelKey: Record<string, { key: string; fallback: string }> = {
   member: { key: 'common.enterprise.roleMember', fallback: '成员' },
 };
 
-const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) => {
+const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized, onChanged }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const {
     isClient: isDeploymentClient,
     isServer: isDeploymentServer,
@@ -108,16 +126,25 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) 
       Message.warning(t('common.enterprise.inviteCodeRequired', { defaultValue: '请输入邀请码' }));
       return;
     }
-    // A client that hasn't flipped the connect toggle on 设置 → 远程连接 has
-    // `isEnterpriseModeEnabled()` false, which makes httpBridge route this
-    // governance call LOCALLY (see GOVERNANCE_PATH_PREFIXES) instead of to the
-    // remote server the invite code actually belongs to — the join would
-    // silently hit the wrong backend and fail with a confusing "invalid code"
-    // instead of the real problem. Block it here with the actual instruction.
+    // A client that hasn't connected yet routes governance calls LOCALLY (see
+    // httpBridge GOVERNANCE_PATH_PREFIXES) — the join would silently hit the
+    // wrong backend and fail with a confusing "invalid code". Block it here.
+    // Stating BOTH prerequisites matters: the old copy claimed flipping the
+    // connect toggle was enough, but without a session on that server the join
+    // still 401s (measured).
     if (!isEnterpriseModeEnabled()) {
       Message.warning(
-        t('common.enterprise.remoteInviteJoinNeedsConnectHint', {
-          defaultValue: '仅用邀请码加入项目组（不走 SSO）需要先在「设置 → 企业身份」手动打开连接开关。',
+        t('common.enterprise.joinPrerequisitesHint', {
+          defaultValue:
+            '用邀请码加入项目组需要：① 连接项目组服务器（「企业身份」页），② 登录该服务器上的企业账号。当前还未连接服务器。',
+        })
+      );
+      return;
+    }
+    if (!getEnterpriseSession()) {
+      Message.warning(
+        t('common.enterprise.joinNeedsLoginOnlyHint', {
+          defaultValue: '已连接项目组服务器，还需先登录企业账号再加入。',
         })
       );
       return;
@@ -158,7 +185,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) 
           // Context re-check failed — fall through to the normal error path.
         }
       }
-      Message.error(t('common.enterprise.joinFailed', { defaultValue: '加入失败' }) + ': ' + String(e));
+      Message.error(friendlyError(e, t('common.enterprise.joinFailed', { defaultValue: '加入失败' })));
     } finally {
       setJoining(false);
     }
@@ -185,18 +212,66 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) 
         );
         return;
       }
-      Message.error(t('common.enterprise.exitFailed', { defaultValue: '退出失败' }) + ': ' + String(e));
+      Message.error(friendlyError(e, t('common.enterprise.exitFailed', { defaultValue: '退出失败' })));
     } finally {
       setExiting(false);
     }
   };
 
   if (error) {
+    // 401 is not a malfunction: the app IS connected to a remote server but
+    // holds no session on it yet (the server answers org/context before any
+    // login). Used to render the raw error — `Backend GET … (401):
+    // {"success":false,…}` — which replaced the whole page and left the user
+    // stuck on a dead end with no way forward.
+    if (unauthorized) {
+      return (
+        <div className='max-w-560px'>
+          <Alert
+            type='info'
+            className='mb-16px'
+            title={t('common.enterprise.notLoggedInTitle', { defaultValue: '已连接企业服务器，尚未登录' })}
+            content={t('common.enterprise.notLoggedInHint', {
+              defaultValue:
+                '本机已连接远端项目组服务器，但还没有在该服务器上登录。请先登录企业账号，登录后即可用邀请码加入项目组。',
+            })}
+          />
+          <div className='mb-16px'>
+            <Button type='primary' onClick={() => navigate('/enterprise/login')}>
+              {t('common.enterprise.goLoginButton', { defaultValue: '去登录企业账号' })}
+            </Button>
+          </div>
+          <div>
+            <div className='text-15px font-600 text-t-primary mb-8px'>
+              {t('common.enterprise.joinTitle', { defaultValue: '加入企业' })}
+            </div>
+            <div className='text-t-tertiary text-13px mb-8px'>
+              {t('common.enterprise.joinNeedsLoginHint', { defaultValue: '登录企业账号后可用邀请码加入。' })}
+            </div>
+            <div className='flex gap-8px'>
+              <Input
+                disabled
+                placeholder={t('common.enterprise.inviteCodePlaceholder', { defaultValue: '邀请码' })}
+                style={{ maxWidth: 240 }}
+              />
+              <Button disabled type='primary'>
+                {t('common.enterprise.joinButton', { defaultValue: '加入' })}
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    // Everything else stays an error — but a friendly one. The raw string
+    // carried the HTTP status and the backend's JSON envelope (internal
+    // details, and unreadable to a member).
     return (
       <Alert
         type='error'
         title={t('common.enterprise.contextError', { defaultValue: '无法获取企业信息' })}
-        content={error}
+        content={t('common.enterprise.contextErrorHint', {
+          defaultValue: '获取企业信息失败，请检查与项目组服务器的连接后重试。',
+        })}
       />
     );
   }
@@ -296,8 +371,18 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, onChanged }) 
             <Alert
               type='warning'
               className='mb-12px'
-              content={t('common.enterprise.remoteInviteJoinNeedsConnectHint', {
-                defaultValue: '仅用邀请码加入项目组（不走 SSO）需要先在「设置 → 企业身份」手动打开连接开关。',
+              content={t('common.enterprise.joinPrerequisitesHint', {
+                defaultValue:
+                  '用邀请码加入项目组需要：① 连接项目组服务器（「企业身份」页），② 登录该服务器上的企业账号。当前还未连接服务器。',
+              })}
+            />
+          )}
+          {isEnterpriseModeEnabled() && !getEnterpriseSession() && (
+            <Alert
+              type='warning'
+              className='mb-12px'
+              content={t('common.enterprise.joinNeedsLoginOnlyHint', {
+                defaultValue: '已连接项目组服务器，还需先登录企业账号再加入。',
               })}
             />
           )}

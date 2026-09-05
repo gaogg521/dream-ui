@@ -142,7 +142,9 @@ describe('WorkspaceIdentityEntry', () => {
 
   it('offers only "join a project group" once signed in via enterprise SSO', async () => {
     // Enterprise ⊃ project group: an already-authenticated user has nothing
-    // left to log in to, so the login page must not be offered or navigated to.
+    // left to log in to. The menu must not offer the generic login entry —
+    // and per the onboarding wizard (E6) "join" continues the SAME flow at
+    // /enterprise/login (step 3 once a session exists), not the settings page.
     mockSession = { token: 't', username: 'zhaogao', name: '赵高' } as EnterpriseSession;
     render(<WorkspaceIdentityEntry />);
 
@@ -150,8 +152,7 @@ describe('WorkspaceIdentityEntry', () => {
 
     fireEvent.click(await screen.findByText('加入项目组'));
     expect(screen.queryByText('登录 / 加入项目组')).not.toBeInTheDocument();
-    expect(mockNavigate).toHaveBeenCalledWith('/settings/enterprise');
-    expect(mockNavigate).not.toHaveBeenCalledWith('/enterprise/login');
+    expect(mockNavigate).toHaveBeenCalledWith('/enterprise/login');
   });
 
   it('drops both entries once a project group has been joined', async () => {

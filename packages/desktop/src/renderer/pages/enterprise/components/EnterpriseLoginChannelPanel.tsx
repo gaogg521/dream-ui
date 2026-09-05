@@ -152,7 +152,7 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
         Message.warning(
           t('common.enterprise.loginChannelNeedsServer', {
             defaultValue:
-              '尚未连接企业服务器，本机没有企业 SSO 配置。请先在「企业身份」页填写并连接项目组服务器地址，再用 {{method}} 登录。',
+              '尚未连接企业服务器，本机没有企业 SSO 配置。请先回到第一步填写并连接项目组服务器地址，再用 {{method}} 登录。',
             method: channelLabel(item),
           })
         );
@@ -188,7 +188,10 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
           );
         }
       } else {
-        ok = await openEnterprisePasswordLoginInBrowser(oauthRedirect);
+        // remoteOrigin must ride along: without it the password-class channels
+        // fell back to the LOCAL WebUI login even when connected to a remote
+        // server — the browser logged into the wrong backend entirely.
+        ok = await openEnterprisePasswordLoginInBrowser(oauthRedirect, { remoteOrigin });
         if (ok) {
           Message.info(
             t('common.enterprise.loginBrowserOpenedPassword', {
@@ -223,10 +226,19 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
               className={`${styles.channelTile} ${unavailable ? styles.channelTileUnavailable : ''}`}
               // Only `pending` is truly non-interactive. An unconfigured
               // channel stays clickable so the click can explain itself —
-              // disabling it here is what made the reason unreachable.
+              // disabling it here is what made the reason unreachable. The
+              // badge says WHY it looks grey up front (E5): same visual
+              // state as actual interactivity, click still explains.
               disabled={status === 'pending'}
               onClick={() => void handleChannelClick(item)}
             >
+              {unavailable && (
+                <span className={styles.channelBadge}>
+                  {status === 'disabled'
+                    ? t('common.enterprise.channelDisabledBadge', { defaultValue: '已停用' })
+                    : t('common.enterprise.channelNotConfiguredBadge', { defaultValue: '未配置' })}
+                </span>
+              )}
               {item.icon}
               <span className={styles.channelLabel}>{channelLabel(item)}</span>
             </button>
@@ -238,7 +250,7 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
           {unavailableReason === 'not_connected'
             ? t('common.enterprise.loginChannelsNeedServerHint', {
                 defaultValue:
-                  '企业 SSO 登录方式来自你所连接的企业服务器。当前尚未连接，因此下方仅「本地账户」可用——请先在「设置 → 企业身份」填写并连接项目组服务器地址。',
+                  '企业 SSO 登录方式来自你所连接的企业服务器。当前尚未连接，因此下方仅「本地账户」可用——请回到第一步填写并连接项目组服务器地址。',
               })
             : t('common.enterprise.loginChannelsNoneConfiguredHint', {
                 defaultValue: '已连接企业服务器，但管理员尚未在企业管理后台启用任何 SSO 登录方式。可先用「本地账户」登录。',
@@ -247,8 +259,7 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
       ) : null}
       <p className={styles.hint}>
         {t('common.enterprise.loginBrowserHint', {
-          defaultValue:
-            '飞书、钉钉、企微将打开系统浏览器完成授权，LDAP 与本地账户在浏览器登录页完成。完成后返回本应用，在「企业」页加入团队。',
+          defaultValue: '登录在系统浏览器中完成，完成后返回本应用，继续加入项目组。',
         })}
       </p>
     </Spin>

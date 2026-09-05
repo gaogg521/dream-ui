@@ -8,6 +8,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { Message, Modal } from '@arco-design/web-react';
 import OverviewTab from '@/renderer/pages/enterprise/components/OverviewTab';
 import { oneOrg, webui } from '@/common/adapter/ipcBridge';
@@ -81,7 +82,11 @@ describe('OverviewTab — local hosting retired', () => {
    * group. Offering it produced a failure that explained none of that.
    */
   it('offers no local create path, and explains where hosting went', async () => {
-    render(<OverviewTab context={legacyServerContext} error={null} onChanged={vi.fn()} />);
+    render(
+      <MemoryRouter>
+        <OverviewTab context={legacyServerContext} error={null} unauthorized={false} onChanged={vi.fn()} />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText(/个人版不提供项目组托管能力/)).toBeInTheDocument();
