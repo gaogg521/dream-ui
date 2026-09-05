@@ -324,7 +324,15 @@
     "wizardConnectHint": "连接后，本机的会话、助手与个人数据仍留在本地，仅企业协作能力来自该服务器。",
     "wizardLoginNeedsConnect": "请先完成第一步，连接项目组服务器。",
     "wizardJoinedTitle": "已加入项目组",
-    "wizardFinish": "完成"
+    "wizardFinish": "完成",
+    "wizardProbingTitle": "正在检查与服务器的连接…",
+    "wizardEditAddress": "修改地址",
+    "wizardAddressUnreachableTitle": "保存的服务器地址连不上",
+    "wizardAddressUnreachableHint": "请检查服务器是否在线、地址与端口是否正确，修改后重新连接。",
+    "wizardAddressNoEnterpriseTitle": "该地址没有提供企业 API",
+    "wizardAddressNoEnterpriseHint": "对方可能运行的是不带企业模块的版本，请确认地址或联系管理员。",
+    "loginChannelServerUnreachable": "无法连接项目组服务器（{{url}}），请检查第 1 步填写的服务器地址。地址连通后才能拿到企业的 SSO 登录配置。",
+    "loginChannelsUnreachableHint": "无法连接项目组服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能拿到企业的 SSO 登录配置。"
   },
   "superAssistant": {
     "title": "超级助手",
