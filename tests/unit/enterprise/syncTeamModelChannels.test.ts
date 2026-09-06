@@ -25,6 +25,7 @@ const hooks = vi.hoisted(() => ({
   syncModelChannels: vi.fn(),
   syncTeamSkills: vi.fn(),
   syncTeamMcp: vi.fn(),
+  syncTeamAgents: vi.fn(),
   // `clearTeamResources` also clears distributed content rules (T4). Stubbed
   // here only so this file's model-channel assertions can run — the behaviour
   // itself is asserted in syncContentInspection.test.ts.
@@ -47,6 +48,10 @@ vi.mock('@/common', () => ({
     fs: {
       syncTeamSkills: { invoke: hooks.syncTeamSkills },
       syncTeamMcp: { invoke: hooks.syncTeamMcp },
+    },
+    personalAgent: {
+      listTeamAgents: { invoke: vi.fn() },
+      syncTeamAgents: { invoke: hooks.syncTeamAgents },
     },
   },
 }));

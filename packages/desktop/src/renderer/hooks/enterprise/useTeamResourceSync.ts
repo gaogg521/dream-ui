@@ -10,10 +10,11 @@
  * to the server (which already holds the registry), so we skip them.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import { isElectronDesktop } from '@renderer/utils/platform';
 import {
+  clearTeamResources,
   syncContentInspection,
   syncTeamAgents,
   syncTeamMcp,
@@ -27,10 +28,28 @@ const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 export function useTeamResourceSync(): void {
   const { context } = useOrgContext();
   const isEnterprise = context?.isEnterprise ?? false;
+  /** Whether the previous render resolved as enterprise — see the purge below. */
+  const wasEnterprise = useRef(false);
 
   useEffect(() => {
+    // Leaving the enterprise is the one unambiguous "you are out" signal this
+    // client gets. The registry fetches can only guess from a status code, and
+    // 401 is too weak to guess on (an enterprise-server restart invalidates
+    // every token at once, which would otherwise purge every member's team
+    // resources). Purging here instead needs no guess: the org context has
+    // stopped resolving as enterprise.
+    //
+    // Guarded on the TRANSITION, not the state: a standalone user who was
+    // never in an enterprise has nothing to purge, and firing four IPC calls
+    // on every personal-mode start would be pure noise.
+    if (!isEnterprise && wasEnterprise.current) {
+      wasEnterprise.current = false;
+      void clearTeamResources();
+      return;
+    }
     // standalone, or a browser thin-client → never sync
     if (!isEnterprise || !isElectronDesktop()) return;
+    wasEnterprise.current = true;
     const syncAll = () => {
       void syncTeamSkills();
       void syncTeamMcp();

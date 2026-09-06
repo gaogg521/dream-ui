@@ -1,6 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { clearEnterpriseRemotePointer, setEnterpriseModeEnabled, setEnterpriseServerUrl } from '@/common/adapter/enterpriseMode';
-import { openEnterpriseOAuthInBrowser, openEnterprisePasswordLoginInBrowser } from '@/renderer/utils/enterprise/enterpriseBrowserLogin';
+import {
+  clearEnterpriseRemotePointer,
+  setEnterpriseModeEnabled,
+  setEnterpriseServerUrl,
+} from '@/common/adapter/enterpriseMode';
+import {
+  openEnterpriseOAuthInBrowser,
+  openEnterprisePasswordLoginInBrowser,
+} from '@/renderer/utils/enterprise/enterpriseBrowserLogin';
 
 const openExternalUrl = vi.fn().mockResolvedValue(undefined);
 vi.mock('@/renderer/utils/platform', () => ({
