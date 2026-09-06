@@ -35,9 +35,8 @@ vi.mock('@renderer/utils/enterprise/enterpriseBrowserLogin', () => ({
   openEnterprisePasswordLoginInBrowser: vi.fn().mockResolvedValue(true),
 }));
 
-const EnterpriseLoginChannelPanel = (await import(
-  '@renderer/pages/enterprise/components/EnterpriseLoginChannelPanel'
-)).default;
+const EnterpriseLoginChannelPanel = (await import('@renderer/pages/enterprise/components/EnterpriseLoginChannelPanel'))
+  .default;
 
 const mockProviders = (rows: unknown[]) => {
   vi.stubGlobal(

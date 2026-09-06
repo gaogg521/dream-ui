@@ -15,7 +15,9 @@ import { describe, expect, it } from 'vitest';
 import { mergeModelPlatformPresets } from '@renderer/utils/model/modelPlatformsSync';
 import type { PlatformConfig } from '@renderer/utils/model/modelPlatforms';
 
-const config = (overrides: Partial<PlatformConfig> & Pick<PlatformConfig, 'name' | 'value' | 'platform'>): PlatformConfig => ({
+const config = (
+  overrides: Partial<PlatformConfig> & Pick<PlatformConfig, 'name' | 'value' | 'platform'>
+): PlatformConfig => ({
   logo: null,
   ...overrides,
 });
@@ -23,7 +25,9 @@ const config = (overrides: Partial<PlatformConfig> & Pick<PlatformConfig, 'name'
 describe('mergeModelPlatformPresets', () => {
   it('appends a preset the target does not have yet, without disturbing existing entries', () => {
     const target: PlatformConfig[] = [config({ name: 'Custom', value: 'custom', platform: 'custom' })];
-    mergeModelPlatformPresets(target, [config({ name: 'New Vendor', value: 'NewVendor', platform: 'custom', base_url: 'https://new.example/v1' })]);
+    mergeModelPlatformPresets(target, [
+      config({ name: 'New Vendor', value: 'NewVendor', platform: 'custom', base_url: 'https://new.example/v1' }),
+    ]);
 
     expect(target.map((p) => p.value)).toEqual(['custom', 'NewVendor']);
     expect(target[1].base_url).toBe('https://new.example/v1');

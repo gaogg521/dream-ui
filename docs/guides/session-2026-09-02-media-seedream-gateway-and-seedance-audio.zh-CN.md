@@ -38,14 +38,14 @@
 
 ### 修法
 
-| 文件 | 改动 |
-| --- | --- |
-| `catalog/resolve.ts` | `clipParamsToSpec` 的 `take` 段补 `take('generateAudio', !!support?.audio)`；defaults 合并段补 `generateAudio`（仅当模型声明了 `audio` 能力且 spec 有默认值） |
-| `catalog/types.ts` | `MediaModelSpec.defaults` 加 `generateAudio?: boolean` |
-| `catalog/videoModels.ts` | `ark-seedance` 条目 `defaults: { …, generateAudio: true }` —— **用户拍板默认开启音频**，显式「不生成」仍可覆盖（`clipParamsToSpec` 既有的 "caller wins" 语义） |
-| `adapters/taskDrivers/arkDriver.ts` | **不动**。用户实测火山直连 `doubao-seedance-2-0-fast-260128` 本来就有声音（2.x 默认生成音频），且文本 flag 名无文档、写错会进画面。直连路径靠厂商默认，网关路径靠 `seedanceGatewayDriver` 的 `generate_audio` JSON 字段（本来就支持） |
-| `renderer/components/media/MediaParamsPanel.tsx` | 音频单元格 `active` 判断改用有效值 `value.generateAudio ?? spec.defaults?.generateAudio`，让用户看到默认是「生成」且可点掉 |
-| `renderer/components/media/MediaModeControl.tsx` | `summarize()` 收一个 `defaultAudio` 参数，♪ / ♪✕ pill 按有效值显示 |
+| 文件                                             | 改动                                                                                                                                                                                                                                  |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `catalog/resolve.ts`                             | `clipParamsToSpec` 的 `take` 段补 `take('generateAudio', !!support?.audio)`；defaults 合并段补 `generateAudio`（仅当模型声明了 `audio` 能力且 spec 有默认值）                                                                         |
+| `catalog/types.ts`                               | `MediaModelSpec.defaults` 加 `generateAudio?: boolean`                                                                                                                                                                                |
+| `catalog/videoModels.ts`                         | `ark-seedance` 条目 `defaults: { …, generateAudio: true }` —— **用户拍板默认开启音频**，显式「不生成」仍可覆盖（`clipParamsToSpec` 既有的 "caller wins" 语义）                                                                        |
+| `adapters/taskDrivers/arkDriver.ts`              | **不动**。用户实测火山直连 `doubao-seedance-2-0-fast-260128` 本来就有声音（2.x 默认生成音频），且文本 flag 名无文档、写错会进画面。直连路径靠厂商默认，网关路径靠 `seedanceGatewayDriver` 的 `generate_audio` JSON 字段（本来就支持） |
+| `renderer/components/media/MediaParamsPanel.tsx` | 音频单元格 `active` 判断改用有效值 `value.generateAudio ?? spec.defaults?.generateAudio`，让用户看到默认是「生成」且可点掉                                                                                                            |
+| `renderer/components/media/MediaModeControl.tsx` | `summarize()` 收一个 `defaultAudio` 参数，♪ / ♪✕ pill 按有效值显示                                                                                                                                                                    |
 
 `seedanceGatewayDriver.ts` **无需改**——变更后它自然收到值（含默认 `true`）。
 
@@ -85,6 +85,7 @@
 - 未 abort
 
 成功后：
+
 - 标准→gateway → `req.onEndpointStyleSwitched?.('seedream-gateway')`
 - gateway→标准（用户钉错了协议）→ `req.onEndpointStyleSwitched?.('')`（清回 auto）
 
@@ -142,11 +143,11 @@ same result.`（照搬视频侧，避免紧随的建议文案被读成"还没试
 
 ### 新增 / 扩充的测试
 
-| 文件 | 覆盖 |
-| --- | --- |
+| 文件                                                   | 覆盖                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tests/unit/media/imageEndpointFallback.test.ts`（新） | 真实 `OpenAiImagesAdapter` + mock client：标准路径 404 model not found → 自动打 `/api/seedream/v1` → 落盘 PNG + `onEndpointStyleSwitched('seedream-gateway')`；反向（钉错协议）→ 回落标准路径 + `onEndpointStyleSwitched('')`；负向：401 auth 失败**不**重试、非 seedream 模型**不**碰 |
-| `catalogResolve.test.ts` | `generateAudio` 有 `audio` 能力时透传、无能力时进 `dropped`；`ark-seedance` 默认 `true` 被 merge；显式 `false` 覆盖默认 |
-| `endpointFallback.test.ts` | `diagnoseAutoEndpointMismatch` 对 seedream + 非 volces host 命中 `hostMismatch`；对 volces 直连 / 已钉协议返回 null |
+| `catalogResolve.test.ts`                               | `generateAudio` 有 `audio` 能力时透传、无能力时进 `dropped`；`ark-seedance` 默认 `true` 被 merge；显式 `false` 覆盖默认                                                                                                                                                                |
+| `endpointFallback.test.ts`                             | `diagnoseAutoEndpointMismatch` 对 seedream + 非 volces host 命中 `hostMismatch`；对 volces 直连 / 已钉协议返回 null                                                                                                                                                                    |
 
 **负向验证**：把 `openaiImagesAdapter` 里 `routingMiss` 的分类 guard 临时改成
 无条件 `true`，`imageEndpointFallback.test.ts` 的 "does not retry on an honest
@@ -168,6 +169,7 @@ auth failure" 立刻失败（`createRotatingClient` 被调 2 次而非 1 次）�
 
 **建议接手者补一次 CDP 真机**（做法见
 `session-2026-08-27-media-endpoint-fallback.zh-CN.md` §9）：
+
 - 图片：不手选协议 → 首次自动回退落盘 + 写回 + 二次生成幂等（不再打标准路径）+
   预警图标出现/自愈后消失
 - 视频：音频面板 选「生成」/「不生成」/不碰 → 抓假网关收到的 `createVideo` body

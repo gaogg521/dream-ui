@@ -120,7 +120,10 @@ const FileVaultSettings: React.FC = () => {
     (object: FileVaultObject) => {
       Modal.confirm({
         title: t('common.fileVault.deleteConfirmTitle', { defaultValue: '删除文件' }),
-        content: t('common.fileVault.deleteConfirmBody', { name: object.fileName, defaultValue: '确定删除「{{name}}」吗？此操作不可撤销。' }),
+        content: t('common.fileVault.deleteConfirmBody', {
+          name: object.fileName,
+          defaultValue: '确定删除「{{name}}」吗？此操作不可撤销。',
+        }),
         okButtonProps: { status: 'danger' },
         onOk: async () => {
           try {
@@ -157,7 +160,11 @@ const FileVaultSettings: React.FC = () => {
       );
     }
     if (loading && !vault) {
-      return <div className='py-40px text-center text-14px text-t-tertiary'>{t('common.loading', { defaultValue: '加载中…' })}</div>;
+      return (
+        <div className='py-40px text-center text-14px text-t-tertiary'>
+          {t('common.loading', { defaultValue: '加载中…' })}
+        </div>
+      );
     }
     if (error && !vault) {
       return <div className='py-40px text-center text-14px text-t-tertiary'>{error}</div>;
@@ -179,7 +186,10 @@ const FileVaultSettings: React.FC = () => {
           <div className='mb-8px flex items-center justify-between text-13px'>
             <span className='text-t-primary'>
               {vault.quotaBytes == null
-                ? t('common.fileVault.usageUnlimited', { used: formatBytes(vault.usageBytes), defaultValue: '已用 {{used}} · 不限量' })
+                ? t('common.fileVault.usageUnlimited', {
+                    used: formatBytes(vault.usageBytes),
+                    defaultValue: '已用 {{used}} · 不限量',
+                  })
                 : t('common.fileVault.usageQuota', {
                     used: formatBytes(vault.usageBytes),
                     quota: formatBytes(vault.quotaBytes),

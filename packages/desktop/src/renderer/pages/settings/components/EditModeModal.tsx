@@ -148,9 +148,7 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
         form.setFieldsValue({
           ...data,
           // Enterprise-managed: the field shows the mask, never the real key.
-          api_key: enterpriseManaged
-            ? maskDistributedKey(data.api_key ?? '')
-            : data.api_key,
+          api_key: enterpriseManaged ? maskDistributedKey(data.api_key ?? '') : data.api_key,
           model:
             data.models && data.models.length > 0
               ? data.models.length === 1
@@ -178,8 +176,7 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
             const values = await form.validate();
             // Untouched mask → write the real key back; edited → the typed
             // value replaces it wholesale.
-            const apiKeyValue =
-              enterpriseManaged && !apiKeyEditedRef.current ? realApiKeyRef.current : values.api_key;
+            const apiKeyValue = enterpriseManaged && !apiKeyEditedRef.current ? realApiKeyRef.current : values.api_key;
             const updatedProvider: IProvider = {
               ...data,
               ...values,
@@ -265,7 +262,10 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
               extra={
                 enterpriseManaged ? (
                   <div className='text-11px text-t-secondary mt-2'>
-                    💡 {t('settings.enterpriseKeyMaskedTip', { defaultValue: '企业下发的 Key 已脱敏显示。未修改则保存时保留原 Key；输入新 Key 将整体替换。' })}
+                    💡{' '}
+                    {t('settings.enterpriseKeyMaskedTip', {
+                      defaultValue: '企业下发的 Key 已脱敏显示。未修改则保存时保留原 Key；输入新 Key 将整体替换。',
+                    })}
                   </div>
                 ) : (
                   <div className='text-11px text-t-secondary mt-2'>💡 {t('settings.multiApiKeyEditTip')}</div>

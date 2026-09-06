@@ -144,7 +144,10 @@ function resolveBundledBinary(
   const bundleDirs: Array<{ dir: string; currentName: boolean }> = [];
   const envBundledDir = process.env.DREAM_BACKEND_BUNDLED_DIR?.trim();
   if (envBundledDir) bundleDirs.push({ dir: envBundledDir, currentName: true });
-  for (const root of [join(process.cwd(), 'resources'), (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath]) {
+  for (const root of [
+    join(process.cwd(), 'resources'),
+    (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath,
+  ]) {
     if (!root) continue;
     for (const dirName of BUNDLED_DIR_NAMES) {
       bundleDirs.push({ dir: join(root, dirName), currentName: dirName === BUNDLED_DIR_NAMES[0] });
@@ -152,7 +155,9 @@ function resolveBundledBinary(
   }
 
   const binaryNames =
-    binaryName === `${BINARY_NAME}${binaryExt()}` ? [`${BINARY_NAME}${binaryExt()}`, `${LEGACY_BINARY_NAME}${binaryExt()}`] : [binaryName];
+    binaryName === `${BINARY_NAME}${binaryExt()}`
+      ? [`${BINARY_NAME}${binaryExt()}`, `${LEGACY_BINARY_NAME}${binaryExt()}`]
+      : [binaryName];
   const primaryName = binaryNames[0];
   for (const { dir: bundledDir, currentName } of bundleDirs) {
     const runtimeDir = join(bundledDir, runtimeKey);

@@ -61,6 +61,7 @@ dream-ui 的 `MODEL_PLATFORMS` 和 dream-en 的 `MODEL_PLATFORM_PRESETS` 此前�
 静态常量，无防漂移机制。dream-core 新增了 `GET /api/model-platforms` 作为权威源。
 
 **这里的做法刻意保守**，接手时别"优化"掉：
+
 - **没有改任何现有调用点**。`MODEL_PLATFORMS` 仍是同一个导出、同一个数组对象。
 - 新增 `modelPlatformsSync.ts` 在启动后拉取一次，把结果**原地 merge** 进那个数组
   （按 `value` 更新已存在的、追加新增的），不重新赋值、不换引用。

@@ -242,8 +242,7 @@ const EnterpriseLoginPage: React.FC = () => {
       {connected && getEnterpriseServerUrl() ? (
         <div className='text-12px text-t-tertiary mb-8px'>
           {t('common.enterprise.wizardEditingContext', {
-            defaultValue:
-              '当前已连接：{{url}}。只有新地址连接成功后才会切换，取消不会改动现有连接。',
+            defaultValue: '当前已连接：{{url}}。只有新地址连接成功后才会切换，取消不会改动现有连接。',
             url: getEnterpriseServerUrl(),
           })}
         </div>
@@ -320,11 +319,7 @@ const EnterpriseLoginPage: React.FC = () => {
               }}
             >
               <span className='text-12px text-t-secondary'>{s.step}</span>
-              <span
-                className={`text-13px ${
-                  active || reachable ? 'font-600 text-t-primary' : 'text-t-secondary'
-                }`}
-              >
+              <span className={`text-13px ${active || reachable ? 'font-600 text-t-primary' : 'text-t-secondary'}`}>
                 {stepLabel(s)}
               </span>
             </button>
@@ -470,7 +465,8 @@ const EnterpriseLoginPage: React.FC = () => {
                     type='error'
                     className='mb-12px'
                     content={t('common.enterprise.wizardJoinUnreachableHint', {
-                      defaultValue: '无法连接项目组服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能加入项目组。',
+                      defaultValue:
+                        '无法连接项目组服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能加入项目组。',
                       url: getEnterpriseServerUrl() ?? '',
                     })}
                   />

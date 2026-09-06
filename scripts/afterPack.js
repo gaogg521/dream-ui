@@ -8,7 +8,9 @@ const {
   verifyModuleBinary,
   getModulesToRebuild,
 } = require('./rebuildNativeModules');
-const { verifyBundledDreamcoreResources } = require('../packages/shared-scripts/src/verify-bundled-dreamcore-resources');
+const {
+  verifyBundledDreamcoreResources,
+} = require('../packages/shared-scripts/src/verify-bundled-dreamcore-resources');
 
 /**
  * afterPack hook for electron-builder

@@ -55,12 +55,7 @@ const EnterprisePage: React.FC = () => {
             which machine's data this whole app defers to — so it lives on
             /settings/webui ("远程连接"). */}
         <Spin loading={loading}>
-          <OverviewTab
-            context={context}
-            error={error}
-            unauthorized={unauthorized}
-            onChanged={() => void refresh()}
-          />
+          <OverviewTab context={context} error={error} unauthorized={unauthorized} onChanged={() => void refresh()} />
         </Spin>
       </div>
     </div>

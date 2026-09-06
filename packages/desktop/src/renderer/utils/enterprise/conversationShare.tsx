@@ -77,7 +77,10 @@ async function readLocalSnapshotMessages(conversationId: string): Promise<ShareM
   }));
 }
 
-function ShareScopePicker(props: { defaultValue: ConversationShareScope; onChange: (value: ConversationShareScope) => void }) {
+function ShareScopePicker(props: {
+  defaultValue: ConversationShareScope;
+  onChange: (value: ConversationShareScope) => void;
+}) {
   const [value, setValue] = React.useState<ConversationShareScope>(props.defaultValue);
   return (
     <Radio.Group

@@ -49,7 +49,7 @@ async function terminateStaleBackendProcessesWindows(dataDir: string): Promise<n
   //-insensitive Contains instead of -like so path characters like [ ] cannot
   // act as wildcards.
   const script = [
-    "$targets = Get-CimInstance Win32_Process -Filter \"Name='dreamcore.exe'\" | Where-Object {",
+    '$targets = Get-CimInstance Win32_Process -Filter "Name=\'dreamcore.exe\'" | Where-Object {',
     `$_.CommandLine -and $_.CommandLine.IndexOf('${needle}', [System.StringComparison]::OrdinalIgnoreCase) -ge 0`,
     '} | Select-Object -ExpandProperty ProcessId;',
     '$targets | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue };',

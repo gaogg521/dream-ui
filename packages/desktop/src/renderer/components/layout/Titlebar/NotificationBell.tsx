@@ -15,7 +15,10 @@ import { useTranslation } from 'react-i18next';
 import { useEnterpriseNotifications } from '@renderer/hooks/enterprise/useEnterpriseNotifications';
 
 /** Relative time for recent items, locale date past that — an inbox wants "3 分钟前", not a raw epoch. */
-function formatNotificationTime(createdAt: number, t: (key: string, options?: Record<string, unknown>) => string): string {
+function formatNotificationTime(
+  createdAt: number,
+  t: (key: string, options?: Record<string, unknown>) => string
+): string {
   const deltaMs = Date.now() - createdAt;
   const minutes = Math.floor(deltaMs / 60_000);
   // Interpolation var is deliberately `n`, not `count` — i18next treats a

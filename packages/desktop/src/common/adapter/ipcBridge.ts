@@ -2899,12 +2899,7 @@ import type {
   UpsertModelChannelInput,
   UpsertSkillInput,
 } from '@/common/types/devops/devopsTypes';
-import type {
-  FileVaultInfo,
-  FileVaultObject,
-  MyNotifications,
-  MyScene,
-} from '@/common/types/platform/enterpriseTypes';
+import type { FileVaultInfo, FileVaultObject, MyNotifications, MyScene } from '@/common/types/platform/enterpriseTypes';
 
 export const oneOrg = {
   context: httpGet<OrgContext, void>('/api/one/org/context'),
@@ -3088,10 +3083,9 @@ export const onePlatform = {
   // P2-3 in-app notifications (§4.2): the inbox + unread badge in one call;
   // mark-read takes explicit ids, or omits them for "mark all read".
   myNotifications: httpGet<MyNotifications, void>('/api/one/notifications'),
-  markNotificationsRead: httpPost<void, { ids?: string[] } | undefined>(
-    '/api/one/notifications/read',
-    (p) => ({ ids: p?.ids ?? [] })
-  ),
+  markNotificationsRead: httpPost<void, { ids?: string[] } | undefined>('/api/one/notifications/read', (p) => ({
+    ids: p?.ids ?? [],
+  })),
 
   // P2-2 conversation sharing (member half). All governance-routed: the
   // share rows and the shared content live on the enterprise server.
@@ -3129,7 +3123,14 @@ export const onePlatform = {
     {
       share: { conversationId: string; ownerUserId: string; name: string; scope: string; sharedAt: number };
       model?: string | null;
-      messages: Array<{ id: string; type: string; content: string; position?: string; status?: string; createdAt: number }>;
+      messages: Array<{
+        id: string;
+        type: string;
+        content: string;
+        position?: string;
+        status?: string;
+        createdAt: number;
+      }>;
       hasMoreBefore: boolean;
     },
     { conversationId: string }
@@ -3143,11 +3144,18 @@ export const onePlatform = {
   >('/api/one/billing/audit/conversation-requests'),
   fulfilConversationAuditRequest: httpPost<
     void,
-    { requestId: string; name: string; messages: Array<{ id?: string; type: string; content: string; position?: string; createdAt?: number }> }
-  >((p) => `/api/one/billing/audit/conversation-requests/${p.requestId}/fulfil`, (p) => ({
-    name: p.name,
-    messages: p.messages,
-  })),
+    {
+      requestId: string;
+      name: string;
+      messages: Array<{ id?: string; type: string; content: string; position?: string; createdAt?: number }>;
+    }
+  >(
+    (p) => `/api/one/billing/audit/conversation-requests/${p.requestId}/fulfil`,
+    (p) => ({
+      name: p.name,
+      messages: p.messages,
+    })
+  ),
   // P2-4 personal file vault (§4.3). Upload is multipart (one `file` field,
   // 10 MiB backend cap); download answers raw bytes, not the JSON envelope.
   myVault: httpGet<FileVaultInfo, void>('/api/one/vault'),

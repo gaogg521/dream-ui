@@ -125,7 +125,10 @@ const EnterpriseMemoryTab: React.FC = () => {
 
   const handleDelete = async (item: Item) => {
     try {
-      await httpRequest<undefined>('DELETE', `/api/one/memory/collections/${encodeURIComponent(item.collectionId)}/items/${encodeURIComponent(item.id)}`);
+      await httpRequest<undefined>(
+        'DELETE',
+        `/api/one/memory/collections/${encodeURIComponent(item.collectionId)}/items/${encodeURIComponent(item.id)}`
+      );
       setItems((current) => current.filter((i) => i.id !== item.id));
       setSearchResults((current) => current?.filter((i) => i.id !== item.id) ?? null);
       Message.success(t('memory.entDeleted'));
@@ -143,10 +146,7 @@ const EnterpriseMemoryTab: React.FC = () => {
     setSearching(true);
     try {
       setSearchResults(
-        (await httpRequest<Item[]>(
-          'GET',
-          `/api/one/memory/search?query=${encodeURIComponent(query)}&limit=50`
-        )) ?? []
+        (await httpRequest<Item[]>('GET', `/api/one/memory/search?query=${encodeURIComponent(query)}&limit=50`)) ?? []
       );
     } catch {
       Message.error(t('memory.entLoadFailed'));
@@ -165,7 +165,11 @@ const EnterpriseMemoryTab: React.FC = () => {
 
   const scopeTag = (scope: string) => {
     const key = SCOPE_T_KEY[scope];
-    return <Tag color={scope === 'personal' ? 'green' : scope === 'department' ? 'arcoblue' : 'orange'}>{key ? t(key) : scope}</Tag>;
+    return (
+      <Tag color={scope === 'personal' ? 'green' : scope === 'department' ? 'arcoblue' : 'orange'}>
+        {key ? t(key) : scope}
+      </Tag>
+    );
   };
 
   const itemColumns = [
@@ -212,15 +216,24 @@ const EnterpriseMemoryTab: React.FC = () => {
         {prefsLoading ? (
           <Spin size={14} />
         ) : (
-          <Switch size='small' checked={recallEnabled} loading={prefsSaving} onChange={(v) => void handleToggleRecall(v)} />
+          <Switch
+            size='small'
+            checked={recallEnabled}
+            loading={prefsSaving}
+            onChange={(v) => void handleToggleRecall(v)}
+          />
         )}
       </div>
       <div style={{ fontSize: 12, color: 'var(--color-text-3)' }}>{t('memory.entHint')}</div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Typography.Text style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{t('memory.entCollectionsLabel')}:</Typography.Text>
+        <Typography.Text style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+          {t('memory.entCollectionsLabel')}:
+        </Typography.Text>
         {collections.length === 0 ? (
-          <Typography.Text style={{ fontSize: 12, color: 'var(--color-text-4)' }}>{t('memory.entEmpty')}</Typography.Text>
+          <Typography.Text style={{ fontSize: 12, color: 'var(--color-text-4)' }}>
+            {t('memory.entEmpty')}
+          </Typography.Text>
         ) : (
           collections.map((c) => (
             <Button

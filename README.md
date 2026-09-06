@@ -27,8 +27,8 @@
 <br><br>
 
 | **38+** CLI Agent | **274** 助手与专家 | **Apache-2.0** 开源 | **v3.0** 开箱即用 |
-| :---: | :---: | :---: | :---: |
-| 本机自动识别 | 22 官方 + 252 专家 | 可私有化部署 | 免费模型一键开聊 |
+| :---------------: | :----------------: | :-----------------: | :---------------: |
+|   本机自动识别    | 22 官方 + 252 专家 |    可私有化部署     | 免费模型一键开聊  |
 
 <img src="https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-64748b?style=flat-square" alt="Platform">
 <img src="https://img.shields.io/github/v/release/gaogg521/dream-ui?display_name=tag&sort=semver&style=flat-square&color=2563eb" alt="Version">
@@ -211,15 +211,15 @@ AI 一键拆单，任务直接交给 Agent，进度团队可见。
 
 ## 和 Cursor / Copilot 比什么
 
-| | **One Work** | Cursor | Copilot | Claude Code |
-| --- | :---: | :---: | :---: | :---: |
-| 开源 | ✅ | 🔒 | 🔒 | 🔒 |
-| **Codex/Claude 桥接自配模型** | ✅ **独家** | ❌ | ❌ | ❌ |
-| 38 款 Agent + Team 编队 | ✅ | ⚠️ | ⚠️ | ❌ |
-| 274 助手与专家内置 | ✅ | ❌ | ❌ | ⚠️ |
-| WebUI + IM 远程指挥 | ✅ | ❌ | ❌ | ❌ |
-| 数据默认落本机 | ✅ | ⚠️ | ⚠️ | ⚠️ |
-| 企业 Issues / 私有化 | ✅ | ❌ | ❌ | ⚠️ |
+|                               | **One Work** | Cursor | Copilot | Claude Code |
+| ----------------------------- | :----------: | :----: | :-----: | :---------: |
+| 开源                          |      ✅      |   🔒   |   🔒    |     🔒      |
+| **Codex/Claude 桥接自配模型** | ✅ **独家**  |   ❌   |   ❌    |     ❌      |
+| 38 款 Agent + Team 编队       |      ✅      |   ⚠️   |   ⚠️    |     ❌      |
+| 274 助手与专家内置            |      ✅      |   ❌   |   ❌    |     ⚠️      |
+| WebUI + IM 远程指挥           |      ✅      |   ❌   |   ❌    |     ❌      |
+| 数据默认落本机                |      ✅      |   ⚠️   |   ⚠️    |     ⚠️      |
+| 企业 Issues / 私有化          |      ✅      |   ❌   |   ❌    |     ⚠️      |
 
 👉 [完整对比 · 阿里/腾讯/字节 Agent](https://work.1oneclaw.com/docs-faq.html)
 
@@ -241,6 +241,7 @@ xattr -cr "/Applications/One Work.app"
 ```
 
 或 **系统设置 → 隐私与安全性 → 仍要打开**。
+
 </details>
 
 ---
@@ -258,10 +259,10 @@ git clone https://github.com/gaogg521/dream-core.git
 cd dream-ui && bun install && bun run dev
 ```
 
-| 文档 | 说明 |
-| --- | --- |
+| 文档                                                         | 说明            |
+| ------------------------------------------------------------ | --------------- |
 | [开发者上手指南](./docs/guides/fork-dev-onboarding.zh-CN.md) | 克隆、dev、打包 |
-| [AGENTS.md](./AGENTS.md) | 代码规范与测试 |
+| [AGENTS.md](./AGENTS.md)                                     | 代码规范与测试  |
 
 </details>
 

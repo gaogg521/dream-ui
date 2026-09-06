@@ -109,8 +109,7 @@ export const updateModelSettings = (
   // Only meaningful for models that produce media; carrying it on a text model
   // would leave a stale value behind if the kind is later changed.
   const keepEndpoint = endpoint && (modelKind === 'image' || modelKind === 'video');
-  const hasContextWindow =
-    typeof contextWindow === 'number' && Number.isFinite(contextWindow) && contextWindow > 0;
+  const hasContextWindow = typeof contextWindow === 'number' && Number.isFinite(contextWindow) && contextWindow > 0;
 
   for (const modelId of modelIds) {
     const hasPrice =

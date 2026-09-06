@@ -109,7 +109,9 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
       await modelSelector.click();
       await page.waitForTimeout(500);
 
-      const secondModel = page.locator(`[data-testid="dream-engine-model-option-${preconditions.models!.modelB.useModel}"]`);
+      const secondModel = page.locator(
+        `[data-testid="dream-engine-model-option-${preconditions.models!.modelB.useModel}"]`
+      );
       await secondModel.waitFor({ state: 'visible', timeout: 5000 });
       await secondModel.click();
       await page.waitForTimeout(1000);
@@ -135,7 +137,9 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
       await modelSelector.click();
       await page.waitForTimeout(500);
 
-      const firstModel = page.locator(`[data-testid="dream-engine-model-option-${preconditions.models!.modelA.useModel}"]`);
+      const firstModel = page.locator(
+        `[data-testid="dream-engine-model-option-${preconditions.models!.modelA.useModel}"]`
+      );
       await firstModel.waitFor({ state: 'visible', timeout: 5000 });
       await firstModel.click();
       await page.waitForTimeout(1000);
@@ -214,7 +218,9 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
       await modelSelector.click();
       await page.waitForTimeout(500);
 
-      const secondModel = page.locator(`[data-testid="dream-engine-model-option-${preconditions.models!.modelB.useModel}"]`);
+      const secondModel = page.locator(
+        `[data-testid="dream-engine-model-option-${preconditions.models!.modelB.useModel}"]`
+      );
       await secondModel.waitFor({ state: 'visible', timeout: 5000 });
       await secondModel.click();
       await page.waitForTimeout(1000);
