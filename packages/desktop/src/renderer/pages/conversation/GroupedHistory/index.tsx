@@ -8,6 +8,7 @@ import type { TChatConversation } from '@/common/config/storage';
 import DreamModal from '@/renderer/components/base/DreamModal';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useCronJobsMap } from '@/renderer/pages/cron';
+import { shareConversationToOrg } from '@renderer/utils/enterprise/conversationShare';
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Button, Dropdown, Empty, Input, Menu, Modal, Tooltip } from '@arco-design/web-react';
@@ -239,6 +240,8 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       onToggleManualUnread: handleToggleManualUnread,
       getJobStatus,
       resolveConversationName,
+      onShare: (conversation: TChatConversation) =>
+        void shareConversationToOrg({ id: conversation.id, name: conversation.name ?? '' }),
     }),
     [
       collapsed,

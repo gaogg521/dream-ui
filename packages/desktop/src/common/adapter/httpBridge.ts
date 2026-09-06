@@ -80,6 +80,22 @@ const GOVERNANCE_PATH_PREFIXES = [
   '/api/one/notifications',
   '/api/one/vault',
   '/api/one/memory',
+  // Digital employees are the one /api/one/* prefix with a split personality:
+  // the member's own list/CRUD (personalAgent.*) is hard-wired local through
+  // the *Local wrappers below — employees live in the co-located dreamcore
+  // even in client mode. The prefix still has to be here so the ONE
+  // governance-routed call works: the P1-3 team-sync pull
+  // (personalAgent.listTeamAgents, a plain httpGet) must reach the enterprise
+  // server in client mode, because the server's own+tenant-shared+published+
+  // authorized view IS the distribution contract. preferLocalBackend wins
+  // over this prefix (routesToRemote checks it first), so adding it changes
+  // nothing for the *Local entries.
+  '/api/one/employee',
+  // P2-2 member self-service: conversation shares (share/unshare, the
+  // 'shared with me' inbox, share-authorized reads) and the share-mode
+  // policy read. All server-scoped rows — the local personal build does
+  // not even mount the platform crate.
+  '/api/one/platform',
 ];
 
 function isGovernancePath(path: string): boolean {

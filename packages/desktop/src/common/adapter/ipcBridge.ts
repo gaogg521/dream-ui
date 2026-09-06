@@ -2750,6 +2750,7 @@ import type {
   PersonalAgent,
   RunTeamParams,
   SetScheduleInput,
+  TeamSyncAgentInput,
   UpdatePersonalAgentInput,
 } from '@/common/types/employee/employeeTypes';
 
@@ -2781,6 +2782,20 @@ export const personalAgent = {
     (p) => `/api/one/employee/agents/${p.agentId}/runs`
   ),
   getRun: httpGetLocal<DigitalEmployeeRunRecord, { runId: string }>((p) => `/api/one/employee/runs/${p.runId}`),
+  // P1-3 team-sync pull — deliberately a plain (governance-routed) GET, NOT
+  // `*Local`: in client mode it must reach the enterprise server, whose
+  // own + tenant-shared + published + authorized view is exactly the set of
+  // employees the org distributes to this member. `/api/one/employee` is in
+  // GOVERNANCE_PATH_PREFIXES for this entry alone; every entry above stays
+  // local because preferLocalBackend overrides the prefix.
+  listTeamAgents: httpGet<PersonalAgent[], void>('/api/one/employee/agents'),
+  // P1-3 team-sync materialization — always LOCAL (like fs.syncTeamSkills /
+  // fs.syncTeamMcp): writes the team view onto the co-located dreamcore,
+  // keyed by the server agent id so `authoritative` reconciles by id diff.
+  syncTeamAgents: httpPostLocal<
+    { written: string[]; removed: string[]; conflicts: string[]; kept: number },
+    { agents: TeamSyncAgentInput[]; authoritative: boolean }
+  >('/api/one/employee/team-sync'),
 };
 
 // ---------------------------------------------------------------------------
@@ -3077,6 +3092,62 @@ export const onePlatform = {
     '/api/one/notifications/read',
     (p) => ({ ids: p?.ids ?? [] })
   ),
+
+  // P2-2 conversation sharing (member half). All governance-routed: the
+  // share rows and the shared content live on the enterprise server.
+  mySecurityPolicy: httpGet<{ conversationShareMode: string }, void>('/api/one/platform/my-security-policy'),
+  shareConversation: httpPost<
+    { conversationId: string; uploaded: boolean },
+    {
+      conversationId: string;
+      name?: string;
+      scope: 'tenant' | 'enterprise';
+      messages?: Array<{
+        id?: string;
+        type: string;
+        content: string;
+        position?: string;
+        createdAt?: number;
+      }>;
+    }
+  >('/api/one/platform/conversation-shares'),
+  unshareConversation: httpDelete<void, { conversationId: string }>(
+    (p) => `/api/one/platform/conversation-shares/${p.conversationId}`
+  ),
+  sharedConversations: httpGet<
+    Array<{
+      conversationId: string;
+      ownerUserId: string;
+      name: string;
+      scope: string;
+      sharedAt: number;
+      uploaded: boolean;
+    }>,
+    void
+  >('/api/one/platform/conversation-shares'),
+  sharedConversationMessages: httpGet<
+    {
+      share: { conversationId: string; ownerUserId: string; name: string; scope: string; sharedAt: number };
+      model?: string | null;
+      messages: Array<{ id: string; type: string; content: string; position?: string; status?: string; createdAt: number }>;
+      hasMoreBefore: boolean;
+    },
+    { conversationId: string }
+  >((p) => `/api/one/platform/conversation-shares/${p.conversationId}/messages`),
+  // P2-3 on_demand audit: the member client polls for admin content requests
+  // (the 5-minute sync loop piggybacks on this) and fulfils by uploading a
+  // snapshot of the LOCAL conversation.
+  myConversationAuditRequests: httpGet<
+    Array<{ id: string; conversationId: string; requestedBy: string; requestedAt: number }>,
+    void
+  >('/api/one/billing/audit/conversation-requests'),
+  fulfilConversationAuditRequest: httpPost<
+    void,
+    { requestId: string; name: string; messages: Array<{ id?: string; type: string; content: string; position?: string; createdAt?: number }> }
+  >((p) => `/api/one/billing/audit/conversation-requests/${p.requestId}/fulfil`, (p) => ({
+    name: p.name,
+    messages: p.messages,
+  })),
   // P2-4 personal file vault (§4.3). Upload is multipart (one `file` field,
   // 10 MiB backend cap); download answers raw bytes, not the JSON envelope.
   myVault: httpGet<FileVaultInfo, void>('/api/one/vault'),
