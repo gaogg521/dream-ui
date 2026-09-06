@@ -77,13 +77,13 @@ function main() {
   const exePath = path.join(root, 'aionui-self-lock-smoke.exe');
   const logPath = path.join(
     process.env.TEMP || tmpdir(),
-    `aionui-installer-self-lock-${new Date()
+    `onework-installer-self-lock-${new Date()
       .toISOString()
       .replace(/[-:]/g, '')
       .replace(/\..+$/, '')
       .replace('T', '-')}-log.jsonl`
   );
-  const resultPath = path.join(process.env.TEMP || tmpdir(), `aionui-installer-self-lock-${process.pid}-result.txt`);
+  const resultPath = path.join(process.env.TEMP || tmpdir(), `onework-installer-self-lock-${process.pid}-result.txt`);
   const processControlPath = path.join(repoRoot, 'resources', 'windows', 'installer-process-control.nsh');
 
   const nsi = `
@@ -94,7 +94,7 @@ RequestExecutionLevel user
 SilentInstall silent
 !define VERSION "self-lock-smoke"
 !define AIONUI_TARGET_ARCH "x64"
-!define AIONUI_FALLBACK_LOG "aionui-installer-self-lock-fallback.log"
+!define AIONUI_FALLBACK_LOG "onework-installer-self-lock-fallback.log"
 !define AIONUI_APP_EXECUTABLE_FILENAME "AionUi.exe"
 !define UNINSTALL_FILENAME "Uninstall AionUi.exe"
 !define PROJECT_DIR "${nsisQuote(repoRoot)}"

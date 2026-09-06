@@ -3,8 +3,8 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 $reportScript = Join-Path $repoRoot 'resources\windows\support\report-installer-failure.ps1'
 $runId = Get-Date -Format 'yyyyMMdd-HHmmss'
-$logPath = Join-Path $env:TEMP "aionui-installer-smoke-$runId-log.jsonl"
-$statusPath = Join-Path $env:TEMP 'aionui-installer-report.json'
+$logPath = Join-Path $env:TEMP "onework-installer-smoke-$runId-log.jsonl"
+$statusPath = Join-Path $env:TEMP 'onework-installer-report.json'
 
 Remove-Item -LiteralPath $statusPath -Force -ErrorAction SilentlyContinue
 

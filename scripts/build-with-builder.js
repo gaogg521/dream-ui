@@ -139,8 +139,8 @@ function patchElectronBuilderNsisInstaller() {
   const copiedUninstallerExecWithLog = `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" --installer-session="$OneWorkSessionId" _?=$installationDir' $R0`;
   if (patched.includes(copiedUninstallerExec)) {
     patched = patched.replace(copiedUninstallerExec, copiedUninstallerExecWithLog);
-  // Previously patched installUtil.nsh files carry the pre-rename session
-  // variable names; upgrade those templates too instead of throwing.
+    // Previously patched installUtil.nsh files carry the pre-rename session
+    // variable names; upgrade those templates too instead of throwing.
   } else if (
     patched.includes(
       `ExecWait '"$uninstallerFileNameTemp" /S /KEEP_APP_DATA $0 --installer-log="$OneWorkSessionLogPath" _?=$installationDir' $R0`
@@ -340,7 +340,7 @@ function saveCurrentHash(hash) {
 }
 
 function viteBuildExists() {
-  const outDir = process.env.ONE_BUILD_OUT_DIR ? path.resolve(process.env.ONE_BUILD_OUT_DIR) : path.resolve(__dirname, '../out');
+  const outDir = path.resolve(__dirname, '../out');
   const mainDir = path.join(outDir, 'main');
   const rendererDir = path.join(outDir, 'renderer');
 
@@ -434,7 +434,7 @@ function validateRendererBuildOutput(rendererDir) {
 }
 
 function validateViteBuildOutput() {
-  const outDir = process.env.ONE_BUILD_OUT_DIR ? path.resolve(process.env.ONE_BUILD_OUT_DIR) : path.resolve(__dirname, '../out');
+  const outDir = path.resolve(__dirname, '../out');
   const problems = [];
 
   for (const relPath of ['main/index.js', 'preload/index.js']) {
@@ -641,7 +641,9 @@ function createMacArtifactsWithPrepackaged(appDir, targetArch) {
 
 function buildWithDmgRetry(cmd, targetArch) {
   const isMac = process.platform === 'darwin';
-  const outDir = process.env.ONE_BUILD_OUT_DIR ? path.resolve(process.env.ONE_BUILD_OUT_DIR) : path.resolve(__dirname, '../out');
+  const outDir = process.env.ONE_BUILD_OUT_DIR
+    ? path.resolve(process.env.ONE_BUILD_OUT_DIR)
+    : path.resolve(__dirname, '../out');
 
   try {
     execSync(cmd, { stdio: 'inherit', shell: process.platform === 'win32' });
@@ -694,7 +696,9 @@ function buildWithDmgRetry(cmd, targetArch) {
 
 // Clean stale Windows packaging outputs from previous runs
 function cleanupWindowsPackOutput() {
-  const outDir = process.env.ONE_BUILD_OUT_DIR ? path.resolve(process.env.ONE_BUILD_OUT_DIR) : path.resolve(__dirname, '../out');
+  const outDir = process.env.ONE_BUILD_OUT_DIR
+    ? path.resolve(process.env.ONE_BUILD_OUT_DIR)
+    : path.resolve(__dirname, '../out');
   if (!fs.existsSync(outDir)) return;
 
   const removed = [];
@@ -833,7 +837,7 @@ try {
   if (!skipViteBuild) {
     // Run electron-vite to build all bundles (main + preload + renderer)
     console.log(`📦 Building ${targetArch}...`);
-    execSync(`bunx electron-vite build --config packages/desktop/electron.vite.config.ts${process.env.ONE_BUILD_OUT_DIR ? ` --outDir \"${process.env.ONE_BUILD_OUT_DIR}\"` : ''}`, {
+    execSync('bunx electron-vite build --config packages/desktop/electron.vite.config.ts', {
       stdio: 'inherit',
       shell: process.platform === 'win32',
       env: {
@@ -861,7 +865,7 @@ try {
   });
 
   // 3. Verify electron-vite output
-  const outDir = process.env.ONE_BUILD_OUT_DIR ? path.resolve(process.env.ONE_BUILD_OUT_DIR) : path.resolve(__dirname, '../out');
+  const outDir = path.resolve(__dirname, '../out');
   if (!fs.existsSync(outDir)) {
     throw new Error('electron-vite did not generate out/ directory');
   }
@@ -987,7 +991,17 @@ try {
     cleanupWindowsPackOutput();
   }
 
-  const builderCommand = `bunx electron-builder --config packages/desktop/electron-builder.yml ${builderArgs} ${archFlag} ${nsisInclude} ${publishArg}`;
+  // `ONE_BUILD_OUT_DIR` redirects electron-builder's OUTPUT (win-unpacked,
+  // app.asar, the installer) — the files a stale watcher or a sibling harness
+  // process can hold open, which is the whole reason the override exists. It
+  // deliberately does NOT move electron-vite's bundle output: `files:` in
+  // electron-builder.yml names `out/main|preload|renderer` literally, so
+  // moving the bundles would leave the packager reading whatever stale build
+  // still sat in `out/` and silently ship it.
+  const outDirFlag = process.env.ONE_BUILD_OUT_DIR
+    ? ` --config.directories.output="${path.resolve(process.env.ONE_BUILD_OUT_DIR)}"`
+    : '';
+  const builderCommand = `bunx electron-builder --config packages/desktop/electron-builder.yml ${builderArgs} ${archFlag} ${nsisInclude} ${publishArg}${outDirFlag}`;
   try {
     buildWithDmgRetry(builderCommand, targetArch);
   } catch (error) {

@@ -451,16 +451,16 @@ function verifyFailureLog(logPath, scenario, expectedReportReason) {
 
 function runHarness({ autoDecline, compileOnly, makensis, scenario }) {
   const { code } = scenario;
-  const root = mkdtempSync(path.join(tmpdir(), `aionui-failure-messagebox-${code}-`));
+  const root = mkdtempSync(path.join(tmpdir(), `onework-failure-messagebox-${code}-`));
   const projectRoot = path.join(root, 'project');
-  const nsiPath = path.join(root, 'aionui-failure-messagebox-smoke.nsi');
-  const exePath = path.join(root, 'aionui-failure-messagebox-smoke.exe');
+  const nsiPath = path.join(root, 'onework-failure-messagebox-smoke.nsi');
+  const exePath = path.join(root, 'onework-failure-messagebox-smoke.exe');
   const logPath = path.join(
     process.env.TEMP || tmpdir(),
-    `aionui-installer-messagebox-smoke-${code}-${new Date().toISOString().replace(/[-:]/g, '').replace(/\..+$/, '').replace('T', '-')}-log.jsonl`
+    `onework-installer-messagebox-smoke-${code}-${new Date().toISOString().replace(/[-:]/g, '').replace(/\..+$/, '').replace('T', '-')}-log.jsonl`
   );
   const automationPath = path.join(root, 'auto-decline.ps1');
-  const reportStatusPath = path.join(process.env.TEMP || tmpdir(), 'aionui-installer-report.json');
+  const reportStatusPath = path.join(process.env.TEMP || tmpdir(), 'onework-installer-report.json');
 
   copyHarnessProject(projectRoot);
   writeAutoDeclineScript(automationPath);
