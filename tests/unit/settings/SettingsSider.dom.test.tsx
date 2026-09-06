@@ -79,6 +79,7 @@ vi.mock('@icon-park/react', () => ({
   Communication: () => <span>Communication</span>,
   Computer: () => <span>Computer</span>,
   Earth: () => <span>Earth</span>,
+  FileCabinet: () => <span>FileCabinet</span>,
   IdCard: () => <span>IdCard</span>,
   Info: () => <span>Info</span>,
   Lightning: () => <span>Lightning</span>,
