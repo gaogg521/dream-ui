@@ -261,7 +261,13 @@ export async function syncContentInspection(): Promise<ContentInspectionSyncResu
   let rules: Awaited<ReturnType<typeof ipcBridge.oneDevops.listMyDlpRules.invoke>>;
   try {
     rules = await ipcBridge.oneDevops.listMyDlpRules.invoke();
-  } catch {
+  } catch (error) {
+    // Refusal purges here too, and this is the half that hurts most: a
+    // distributed rule lives in the LOCAL backend until something replaces
+    // it, so a member the org has dropped would go on having their sends
+    // blocked by their ex-employer's policy — on a screen that no longer
+    // exists to explain why (see clearTeamResources).
+    if (isMembershipRefused(error)) await purgeOnRevocation();
     return null;
   }
 
