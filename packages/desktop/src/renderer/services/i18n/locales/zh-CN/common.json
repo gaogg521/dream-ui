@@ -313,6 +313,7 @@
     "joinPrerequisitesHint": "用邀请码加入项目组需要：① 连接项目组服务器（「企业身份」页），② 登录该服务器上的企业账号。当前还未连接服务器。",
     "joinNeedsLoginOnlyHint": "已连接项目组服务器，还需先登录企业账号再加入。",
     "channelNotConfiguredBadge": "未配置",
+    "channelUnknownBadge": "不可用",
     "channelDisabledBadge": "已停用",
     "wizardStepConnect": "连接服务器",
     "wizardStepLogin": "登录",
@@ -324,6 +325,7 @@
     "wizardConnectButton": "连接",
     "wizardConnectHint": "连接后，本机的会话、助手与个人数据仍留在本地，仅企业协作能力来自该服务器。",
     "wizardLoginNeedsConnect": "请先完成第一步，连接项目组服务器。",
+    "wizardJoinUnreachableHint": "无法连接项目组服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能加入项目组。",
     "wizardJoinedTitle": "已加入项目组",
     "wizardFinish": "完成",
     "wizardProbingTitle": "正在检查与服务器的连接…",
@@ -552,5 +554,55 @@
   },
   "company": {
     "title": "企业管理后台"
+  },
+  "notifications": {
+    "title": "通知中心",
+    "markAllRead": "全部已读",
+    "markRead": "标为已读",
+    "empty": "暂无通知",
+    "justNow": "刚刚",
+    "minutesAgo": "{{n}} 分钟前",
+    "hoursAgo": "{{n}} 小时前",
+    "daysAgo": "{{n}} 天前"
+  },
+  "scenes": {
+    "title": "我的场景",
+    "empty": "尚未加入任何场景。管理员可在控制台把你加入场景，一次获得整包协作资源。",
+    "builtinTag": "内置",
+    "noResources": "该场景暂未配置授权包",
+    "resourceAll": "全部",
+    "resourceType": {
+      "skill": "技能",
+      "mcp": "工具",
+      "model_channel": "模型渠道",
+      "knowledge": "知识库",
+      "employee": "数字员工"
+    }
+  },
+  "fileVault": {
+    "title": "文件保险箱",
+    "notConnected": "文件保险箱属于企业版功能。请先在「企业身份」页连接企业服务器。",
+    "frozenNotice": "管理员已冻结此保险箱：暂停上传，已有文件仍可查看、下载和删除。如有疑问请联系管理员。",
+    "usageUnlimited": "已用 {{used}} · 不限量",
+    "usageQuota": "已用 {{used}} / {{quota}}",
+    "statusAvailable": "可用",
+    "statusFrozen": "已冻结",
+    "objectCount": "{{n}} 个文件",
+    "fileListTitle": "文件列表",
+    "upload": "上传文件",
+    "uploading": "上传中…",
+    "uploadFailed": "上传失败：{{message}}",
+    "download": "下载",
+    "downloadFailed": "下载失败：{{message}}",
+    "delete": "删除",
+    "deleteFailed": "删除失败：{{message}}",
+    "deleteConfirmTitle": "删除文件",
+    "deleteConfirmBody": "确定删除「{{name}}」吗？此操作不可撤销。",
+    "empty": "保险箱为空。上传的文件仅自己可见。",
+    "colName": "文件名",
+    "colSize": "大小",
+    "colTime": "上传时间",
+    "colActions": "操作",
+    "browserHint": "当前为浏览器会话，文件操作直接发生在企业服务器上。"
   }
 }

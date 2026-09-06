@@ -262,9 +262,17 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
             >
               {unavailable && (
                 <span className={styles.channelBadge}>
-                  {status === 'disabled'
-                    ? t('common.enterprise.channelDisabledBadge', { defaultValue: '已停用' })
-                    : t('common.enterprise.channelNotConfiguredBadge', { defaultValue: '未配置' })}
+                  {/* When the provider list could not be fetched at all, the
+                      channel's real state is unknown — the badge must not
+                      assert 「未配置」, which contradicts the explanation right
+                      below it ("cannot reach the server") and sends the member
+                      to the wrong person: an admin who configured nothing,
+                      rather than an address that answers nothing. */}
+                  {unavailableReason === 'server_unreachable' || unavailableReason === 'not_connected'
+                    ? t('common.enterprise.channelUnknownBadge', { defaultValue: '不可用' })
+                    : status === 'disabled'
+                      ? t('common.enterprise.channelDisabledBadge', { defaultValue: '已停用' })
+                      : t('common.enterprise.channelNotConfiguredBadge', { defaultValue: '未配置' })}
                 </span>
               )}
               {item.icon}

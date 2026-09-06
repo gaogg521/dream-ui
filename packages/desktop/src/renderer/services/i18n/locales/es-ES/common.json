@@ -236,5 +236,55 @@
   },
   "language": {
     "switchTooltip": "Cambiar idioma"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "markRead": "Marcar como leído",
+    "empty": "Sin notificaciones",
+    "justNow": "Ahora mismo",
+    "minutesAgo": "hace {{n}} min",
+    "hoursAgo": "hace {{n}} h",
+    "daysAgo": "hace {{n}} d"
+  },
+  "scenes": {
+    "title": "Mis escenarios",
+    "empty": "Todavía no perteneces a ningún escenario. Un administrador puede añadirte a un escenario para concederte todo su paquete de recursos de una vez.",
+    "builtinTag": "Integrado",
+    "noResources": "Este escenario no tiene paquete de recursos configurado",
+    "resourceAll": "Todos",
+    "resourceType": {
+      "skill": "Habilidades",
+      "mcp": "Herramientas",
+      "model_channel": "Canales de modelo",
+      "knowledge": "Conocimiento",
+      "employee": "Empleados digitales"
+    }
+  },
+  "fileVault": {
+    "title": "Caja fuerte de archivos",
+    "notConnected": "La caja fuerte de archivos es una función empresarial. Conéctate primero al servidor corporativo (Identidad corporativa).",
+    "frozenNotice": "Un administrador ha congelado esta caja fuerte: las subidas están en pausa; los archivos existentes siguen siendo visibles, descargables y eliminables. Si tienes dudas, contacta con tu administrador.",
+    "usageUnlimited": "{{used}} usados · ilimitado",
+    "usageQuota": "{{used}} usados / {{quota}}",
+    "statusAvailable": "Disponible",
+    "statusFrozen": "Congelada",
+    "objectCount": "{{n}} archivos",
+    "fileListTitle": "Archivos",
+    "upload": "Subir",
+    "uploading": "Subiendo…",
+    "uploadFailed": "Error al subir: {{message}}",
+    "download": "Descargar",
+    "downloadFailed": "Error al descargar: {{message}}",
+    "delete": "Eliminar",
+    "deleteFailed": "Error al eliminar: {{message}}",
+    "deleteConfirmTitle": "Eliminar archivo",
+    "deleteConfirmBody": "¿Eliminar «{{name}}»? Esta acción no se puede deshacer.",
+    "empty": "Tu caja fuerte está vacía. Los archivos subidos solo son visibles para ti.",
+    "colName": "Nombre",
+    "colSize": "Tamaño",
+    "colTime": "Subido",
+    "colActions": "Acciones",
+    "browserHint": "Sesión de navegador: las operaciones de archivos se realizan directamente en el servidor corporativo."
   }
 }

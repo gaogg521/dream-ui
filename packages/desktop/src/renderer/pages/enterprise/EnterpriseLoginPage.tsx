@@ -110,10 +110,18 @@ const EnterpriseLoginPage: React.FC = () => {
     setHasSession(Boolean(getEnterpriseSession()));
   }, [step]);
 
-  // Probe the saved address whenever step 1 shows the connected summary (and
-  // again after edits), so 「已连接」 reflects a server that actually answers.
+  // Probe the saved address whenever one is connected (and again after edits),
+  // so 「已连接」 reflects a server that actually answers.
+  //
+  // Deliberately NOT gated on `step === 1`. It used to be, and that left the
+  // whole unreachable story invisible to the people most likely to hit it: a
+  // member who already has a session lands on step 3, the probe never ran, and
+  // an unreachable server produced no warning at all — the invite form was
+  // simply presented as actionable and every submission failed with nothing on
+  // screen explaining why. Reachability is a fact about the server, not about
+  // which step is open or whether anyone is logged in.
   useEffect(() => {
-    if (step !== 1 || !connected || editingAddress) {
+    if (!connected || editingAddress) {
       setProbe(null);
       return;
     }
@@ -453,6 +461,20 @@ const EnterpriseLoginPage: React.FC = () => {
               </>
             ) : (
               <>
+                {/* An unreachable server makes every submission here fail, so
+                    say so and take the form out of play rather than presenting
+                    it as actionable. Ordered before the login hint because a
+                    server nobody can reach is the more fundamental blocker. */}
+                {probe === 'unreachable' && (
+                  <Alert
+                    type='error'
+                    className='mb-12px'
+                    content={t('common.enterprise.wizardJoinUnreachableHint', {
+                      defaultValue: '无法连接项目组服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能加入项目组。',
+                      url: getEnterpriseServerUrl() ?? '',
+                    })}
+                  />
+                )}
                 <div className='text-13px text-t-secondary mb-8px'>
                   {t('common.enterprise.joinHint', { defaultValue: '输入管理员提供的邀请码加入企业。' })}
                 </div>
@@ -460,14 +482,20 @@ const EnterpriseLoginPage: React.FC = () => {
                   <Input
                     value={inviteCode}
                     onChange={setInviteCode}
+                    disabled={probe === 'unreachable'}
                     placeholder={t('common.enterprise.inviteCodePlaceholder', { defaultValue: '邀请码' })}
                     style={{ flex: 1 }}
                   />
-                  <Button type='primary' loading={joining} onClick={() => void handleJoin()}>
+                  <Button
+                    type='primary'
+                    loading={joining}
+                    disabled={probe === 'unreachable'}
+                    onClick={() => void handleJoin()}
+                  >
                     {t('common.enterprise.joinButton', { defaultValue: '加入' })}
                   </Button>
                 </div>
-                {!hasSession && (
+                {probe !== 'unreachable' && !hasSession && (
                   <Alert
                     type='warning'
                     className='mt-12px'

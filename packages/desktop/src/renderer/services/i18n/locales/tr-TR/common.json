@@ -236,5 +236,55 @@
   },
   "language": {
     "switchTooltip": "Dili değiştir"
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "markAllRead": "Tümünü okundu işaretle",
+    "markRead": "Okundu işaretle",
+    "empty": "Bildirim yok",
+    "justNow": "Şimdi",
+    "minutesAgo": "{{n}} dk önce",
+    "hoursAgo": "{{n}} sa önce",
+    "daysAgo": "{{n}} g önce"
+  },
+  "scenes": {
+    "title": "Senaryolarım",
+    "empty": "Henüz bir senaryoya dahil değilsiniz. Yönetici sizi bir senaryoya ekleyerek tüm kaynak paketini tek seferde verebilir.",
+    "builtinTag": "Yerleşik",
+    "noResources": "Bu senaryo için yetki paketi yapılandırılmamış",
+    "resourceAll": "Tümü",
+    "resourceType": {
+      "skill": "Beceriler",
+      "mcp": "Araçlar",
+      "model_channel": "Model kanalları",
+      "knowledge": "Bilgi",
+      "employee": "Dijital çalışanlar"
+    }
+  },
+  "fileVault": {
+    "title": "Dosya Kasası",
+    "notConnected": "Dosya kasası kurumsal bir özelliktir. Önce 'Kurumsal Kimlik' sayfasından sunucuya bağlanın.",
+    "frozenNotice": "Bir yönetici bu kasayı dondurdu: yükleme duraklatıldı; mevcut dosyalar görüntülenebilir, indirilebilir ve silinebilir. Sorularınız için yöneticinize başvurun.",
+    "usageUnlimited": "{{used}} kullanıldı · sınırsız",
+    "usageQuota": "{{used}} kullanıldı / {{quota}}",
+    "statusAvailable": "Kullanılabilir",
+    "statusFrozen": "Donduruldu",
+    "objectCount": "{{n}} dosya",
+    "fileListTitle": "Dosyalar",
+    "upload": "Yükle",
+    "uploading": "Yükleniyor…",
+    "uploadFailed": "Yükleme başarısız: {{message}}",
+    "download": "İndir",
+    "downloadFailed": "İndirme başarısız: {{message}}",
+    "delete": "Sil",
+    "deleteFailed": "Silme başarısız: {{message}}",
+    "deleteConfirmTitle": "Dosyayı sil",
+    "deleteConfirmBody": "\"{{name}}\" silinsin mi? Bu işlem geri alınamaz.",
+    "empty": "Kasanız boş. Yüklenen dosyaları yalnızca siz görebilirsiniz.",
+    "colName": "Ad",
+    "colSize": "Boyut",
+    "colTime": "Yüklenme",
+    "colActions": "İşlemler",
+    "browserHint": "Tarayıcı oturumu: dosya işlemleri doğrudan kurumsal sunucuda yapılır."
   }
 }

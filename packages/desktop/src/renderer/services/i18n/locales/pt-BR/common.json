@@ -236,5 +236,55 @@
   },
   "language": {
     "switchTooltip": "Mudar idioma"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "markAllRead": "Marcar tudo como lido",
+    "markRead": "Marcar como lido",
+    "empty": "Sem notificações",
+    "justNow": "Agora mesmo",
+    "minutesAgo": "{{n}} min atrás",
+    "hoursAgo": "{{n}} h atrás",
+    "daysAgo": "{{n}} d atrás"
+  },
+  "scenes": {
+    "title": "Meus cenários",
+    "empty": "Você ainda não participa de nenhum cenário. Um administrador pode adicioná-lo a um cenário para conceder o pacote completo de recursos de uma vez.",
+    "builtinTag": "Integrado",
+    "noResources": "Nenhum pacote de recursos configurado para este cenário",
+    "resourceAll": "Todos",
+    "resourceType": {
+      "skill": "Habilidades",
+      "mcp": "Ferramentas",
+      "model_channel": "Canais de modelo",
+      "knowledge": "Conhecimento",
+      "employee": "Funcionários digitais"
+    }
+  },
+  "fileVault": {
+    "title": "Cofre de arquivos",
+    "notConnected": "O cofre de arquivos é um recurso corporativo. Conecte-se primeiro ao servidor da empresa (Identidade corporativa).",
+    "frozenNotice": "Um administrador congelou este cofre: uploads estão pausados, mas os arquivos existentes continuam visíveis, baixáveis e removíveis. Em caso de dúvidas, contate o administrador.",
+    "usageUnlimited": "{{used}} usados · ilimitado",
+    "usageQuota": "{{used}} usados / {{quota}}",
+    "statusAvailable": "Disponível",
+    "statusFrozen": "Congelado",
+    "objectCount": "{{n}} arquivos",
+    "fileListTitle": "Arquivos",
+    "upload": "Enviar",
+    "uploading": "Enviando…",
+    "uploadFailed": "Falha no envio: {{message}}",
+    "download": "Baixar",
+    "downloadFailed": "Falha no download: {{message}}",
+    "delete": "Excluir",
+    "deleteFailed": "Falha ao excluir: {{message}}",
+    "deleteConfirmTitle": "Excluir arquivo",
+    "deleteConfirmBody": "Excluir \"{{name}}\"? Esta ação não pode ser desfeita.",
+    "empty": "Seu cofre está vazio. Os arquivos enviados são visíveis apenas para você.",
+    "colName": "Nome",
+    "colSize": "Tamanho",
+    "colTime": "Enviado em",
+    "colActions": "Ações",
+    "browserHint": "Sessão no navegador: as operações de arquivo ocorrem diretamente no servidor corporativo."
   }
 }
