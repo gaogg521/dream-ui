@@ -1527,5 +1527,6 @@
     "pollTimeout": "Warte noch auf die Zahlung. Dein Guthaben wird aktualisiert, sobald sie durch ist.",
     "orderFailed": "Aufladen konnte nicht abgeschlossen werden. Bitte erneut versuchen."
   },
-  "mediaModelUndeclared": "Nicht festgelegt —— markiere ein Modell auf der Modellseite als Bild oder Video"
+  "mediaModelUndeclared": "Nicht festgelegt —— markiere ein Modell auf der Modellseite als Bild oder Video",
+  "enterpriseKeyMaskedTip": "Verteilte Unternehmensschlüssel sind maskiert (nur Anfang/Ende). Speichern ohne Änderung behält den ursprünglichen Schlüssel; ein neuer Schlüssel ersetzt ihn vollständig."
 }

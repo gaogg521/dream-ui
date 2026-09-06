@@ -1,13 +1,33 @@
 import type { IProvider } from '@/common/config/storage';
 import ModalHOC from '@/renderer/utils/ui/ModalHOC';
 import { Form, Input, Message, Select, Tag } from '@arco-design/web-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import DreamModal from '@/renderer/components/base/DreamModal';
 import { ipcBridge } from '@/common';
 import useModeModeList from '@renderer/hooks/agent/useModeModeList';
 import { getProviderLogo } from '@/renderer/utils/model/modelPlatforms';
 import { ProviderLogo } from '@/renderer/components/agent/ThemedLogo';
+
+/**
+ * Display mask for keys the member cannot rotate here and should not read
+ * over their shoulder — enterprise-distributed channel tokens. Keeps a
+ * verifiable head/tail and hides the middle, e.g.
+ *   onech-RG2NwTCuDL-**********_GondLqGBl0Hc
+ * Fixed-width stars regardless of the true gap so the mask itself leaks no
+ * length information. Short keys still get a meaningful head/tail.
+ */
+export const maskDistributedKey = (key: string): string => {
+  const k = key.trim();
+  if (k.length <= 24) {
+    const head = k.slice(0, Math.min(6, k.length));
+    const tail = k.length > 12 ? k.slice(-4) : '';
+    return `${head}**********${tail}`;
+  }
+  return `${k.slice(0, 16)}**********${k.slice(-12)}`;
+};
+
+const isEnterpriseManaged = (provider?: IProvider): boolean => provider?.managed_by === 'enterprise';
 
 const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): void }>(
   ({ modalProps, modalCtrl, ...props }) => {
@@ -51,6 +71,19 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
       true,
       undefined
     );
+
+    // Enterprise-managed providers show a masked key (see maskDistributedKey).
+    // The real key stays in a ref: saving with an untouched field must write
+    // the ORIGINAL value back, not the mask — a saved mask would silently kill
+    // the channel. The moment the user edits the field the mask is considered
+    // discarded and the typed value is saved as-is.
+    const enterpriseManaged = isEnterpriseManaged(data);
+    const realApiKeyRef = useRef<string>(data?.api_key ?? '');
+    const apiKeyEditedRef = useRef(false);
+    useEffect(() => {
+      realApiKeyRef.current = data?.api_key ?? '';
+      apiKeyEditedRef.current = false;
+    }, [data]);
 
     // Re-fetch the model list after the user edits the Base URL. This is
     // strictly non-destructive: it only refreshes the dropdown candidates and
@@ -114,6 +147,10 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
       if (data) {
         form.setFieldsValue({
           ...data,
+          // Enterprise-managed: the field shows the mask, never the real key.
+          api_key: enterpriseManaged
+            ? maskDistributedKey(data.api_key ?? '')
+            : data.api_key,
           model:
             data.models && data.models.length > 0
               ? data.models.length === 1
@@ -127,7 +164,7 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
           bedrockProfile: data.bedrock_config?.profile || '',
         });
       }
-    }, [data, form]);
+    }, [data, form, enterpriseManaged]);
 
     return (
       <DreamModal
@@ -139,9 +176,14 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
         onOk={async () => {
           try {
             const values = await form.validate();
+            // Untouched mask → write the real key back; edited → the typed
+            // value replaces it wholesale.
+            const apiKeyValue =
+              enterpriseManaged && !apiKeyEditedRef.current ? realApiKeyRef.current : values.api_key;
             const updatedProvider: IProvider = {
               ...data,
               ...values,
+              api_key: apiKeyValue,
               // Ensure models is always an array
               models: Array.isArray(values.model) ? values.model : [values.model],
             };
@@ -220,9 +262,23 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
               required={!isBedrock}
               rules={[{ required: !isBedrock }]}
               field={'api_key'}
-              extra={<div className='text-11px text-t-secondary mt-2'>💡 {t('settings.multiApiKeyEditTip')}</div>}
+              extra={
+                enterpriseManaged ? (
+                  <div className='text-11px text-t-secondary mt-2'>
+                    💡 {t('settings.enterpriseKeyMaskedTip', { defaultValue: '企业下发的 Key 已脱敏显示。未修改则保存时保留原 Key；输入新 Key 将整体替换。' })}
+                  </div>
+                ) : (
+                  <div className='text-11px text-t-secondary mt-2'>💡 {t('settings.multiApiKeyEditTip')}</div>
+                )
+              }
             >
-              <Input.TextArea rows={4} placeholder={t('settings.apiKeyPlaceholder')} />
+              <Input.TextArea
+                rows={4}
+                placeholder={t('settings.apiKeyPlaceholder')}
+                onChange={() => {
+                  if (enterpriseManaged) apiKeyEditedRef.current = true;
+                }}
+              />
             </Form.Item>
 
             {/* AWS Bedrock Authentication Method */}

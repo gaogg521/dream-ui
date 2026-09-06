@@ -1529,5 +1529,6 @@
     "pollTimeout": "仍在等待付款結果，入帳後餘額會自動更新。",
     "orderFailed": "儲值未完成，請重試。"
   },
-  "mediaModelUndeclared": "尚未設定 —— 在「模型」頁把某個模型標為圖片或影片類型"
+  "mediaModelUndeclared": "尚未設定 —— 在「模型」頁把某個模型標為圖片或影片類型",
+  "enterpriseKeyMaskedTip": "企業下發的 Key 已脫敏顯示（僅保留首尾便於核對）。未修改則儲存時保留原 Key；輸入新 Key 將整體替換。"
 }
