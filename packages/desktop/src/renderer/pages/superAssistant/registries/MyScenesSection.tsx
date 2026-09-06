@@ -15,16 +15,29 @@ import { useTranslation } from 'react-i18next';
 import { ipcBridge } from '@/common';
 import type { MyScene, MySceneResourceSummary } from '@/common/types/platform/enterpriseTypes';
 import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
+import { useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
 
 const MyScenesSection: React.FC = () => {
   const { t } = useTranslation();
   const [scenes, setScenes] = useState<MyScene[] | null>(null);
   const [failed, setFailed] = useState(false);
+  // `isEnterpriseRemoteActive()` is a plain module read: it tells the truth at
+  // the moment it is called and notifies nobody when that truth changes. On
+  // its own it made this section load exactly once per mount, so joining an
+  // enterprise with the app open left "my scenes" hidden until the tab was
+  // remounted. `useOrgContext` re-renders on ORG_CONTEXT_CHANGED_EVENT, which
+  // is what the join/exit flows actually dispatch.
+  const { context } = useOrgContext();
+  const tenantId = context?.tenantId ?? null;
+  const isEnterprise = context?.isEnterprise ?? false;
 
   const refresh = useCallback(async () => {
     if (!isEnterpriseRemoteActive()) return;
     try {
       setScenes((await ipcBridge.onePlatform.myScenes.invoke()) ?? []);
+      // Clear a previous failure: a server that was briefly unreachable must
+      // not hide this section for the rest of the session.
+      setFailed(false);
     } catch {
       // The scene endpoint 403s on personal/local backends — that's a "no
       // scenes here", not an error surface. Anything else reads as failed.
@@ -33,8 +46,13 @@ const MyScenesSection: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Drop the previous tenant's scenes before asking for this one's, so a
+    // switch never renders the old org's rows while the fetch is in flight.
+    setScenes(null);
+    setFailed(false);
+    if (!isEnterprise) return;
     void refresh();
-  }, [refresh]);
+  }, [refresh, isEnterprise, tenantId]);
 
   if (!isEnterpriseRemoteActive() || failed || !scenes) return null;
 
@@ -57,7 +75,9 @@ const MyScenesSection: React.FC = () => {
     >
       {scenes.length === 0 ? (
         <div className='py-16px text-center text-13px text-t-tertiary'>
-          {t('common.scenes.empty', { defaultValue: '尚未加入任何场景。管理员可在控制台把你加入场景，一次获得整包协作资源。' })}
+          {t('common.scenes.empty', {
+            defaultValue: '尚未加入任何场景。管理员可在控制台把你加入场景，一次获得整包协作资源。',
+          })}
         </div>
       ) : (
         <div className='grid grid-cols-1 gap-10px md:grid-cols-2'>
