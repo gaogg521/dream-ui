@@ -1530,5 +1530,6 @@
     "pollTimeout": "Ainda aguardando o pagamento. Seu saldo será atualizado assim que for confirmado.",
     "orderFailed": "Não foi possível concluir a recarga. Tente novamente."
   },
-  "mediaModelUndeclared": "Não definido —— declare um modelo como Imagem ou Vídeo na página Modelos"
+  "mediaModelUndeclared": "Não definido —— declare um modelo como Imagem ou Vídeo na página Modelos",
+  "enterpriseKeyMaskedTip": "Chaves emitidas pela empresa aparecem mascaradas (apenas início/fim). Salvar sem alterações mantém a chave original; digitar uma nova a substitui por completo."
 }

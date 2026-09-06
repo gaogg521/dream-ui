@@ -1581,5 +1581,6 @@
     "pollTimeout": "Still waiting on the payment. Your balance will update once it clears.",
     "orderFailed": "Couldn't complete the top-up. Please try again."
   },
-  "mediaModelUndeclared": "Not set — declare a model as Image or Video on the Models page"
+  "mediaModelUndeclared": "Not set — declare a model as Image or Video on the Models page",
+  "enterpriseKeyMaskedTip": "Enterprise-issued keys are masked (head/tail only, for verification). Saving without changes keeps the original key; typing a new one replaces it entirely."
 }

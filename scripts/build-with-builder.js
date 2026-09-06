@@ -340,7 +340,7 @@ function saveCurrentHash(hash) {
 }
 
 function viteBuildExists() {
-  const outDir = path.resolve(__dirname, '../out');
+  const outDir = process.env.ONE_BUILD_OUT_DIR ? path.resolve(process.env.ONE_BUILD_OUT_DIR) : path.resolve(__dirname, '../out');
   const mainDir = path.join(outDir, 'main');
   const rendererDir = path.join(outDir, 'renderer');
 
@@ -434,7 +434,7 @@ function validateRendererBuildOutput(rendererDir) {
 }
 
 function validateViteBuildOutput() {
-  const outDir = path.resolve(__dirname, '../out');
+  const outDir = process.env.ONE_BUILD_OUT_DIR ? path.resolve(process.env.ONE_BUILD_OUT_DIR) : path.resolve(__dirname, '../out');
   const problems = [];
 
   for (const relPath of ['main/index.js', 'preload/index.js']) {
@@ -641,7 +641,7 @@ function createMacArtifactsWithPrepackaged(appDir, targetArch) {
 
 function buildWithDmgRetry(cmd, targetArch) {
   const isMac = process.platform === 'darwin';
-  const outDir = path.resolve(__dirname, '../out');
+  const outDir = process.env.ONE_BUILD_OUT_DIR ? path.resolve(process.env.ONE_BUILD_OUT_DIR) : path.resolve(__dirname, '../out');
 
   try {
     execSync(cmd, { stdio: 'inherit', shell: process.platform === 'win32' });
@@ -694,7 +694,7 @@ function buildWithDmgRetry(cmd, targetArch) {
 
 // Clean stale Windows packaging outputs from previous runs
 function cleanupWindowsPackOutput() {
-  const outDir = path.resolve(__dirname, '../out');
+  const outDir = process.env.ONE_BUILD_OUT_DIR ? path.resolve(process.env.ONE_BUILD_OUT_DIR) : path.resolve(__dirname, '../out');
   if (!fs.existsSync(outDir)) return;
 
   const removed = [];
@@ -833,7 +833,7 @@ try {
   if (!skipViteBuild) {
     // Run electron-vite to build all bundles (main + preload + renderer)
     console.log(`📦 Building ${targetArch}...`);
-    execSync(`bunx electron-vite build --config packages/desktop/electron.vite.config.ts`, {
+    execSync(`bunx electron-vite build --config packages/desktop/electron.vite.config.ts${process.env.ONE_BUILD_OUT_DIR ? ` --outDir \"${process.env.ONE_BUILD_OUT_DIR}\"` : ''}`, {
       stdio: 'inherit',
       shell: process.platform === 'win32',
       env: {
@@ -861,7 +861,7 @@ try {
   });
 
   // 3. Verify electron-vite output
-  const outDir = path.resolve(__dirname, '../out');
+  const outDir = process.env.ONE_BUILD_OUT_DIR ? path.resolve(process.env.ONE_BUILD_OUT_DIR) : path.resolve(__dirname, '../out');
   if (!fs.existsSync(outDir)) {
     throw new Error('electron-vite did not generate out/ directory');
   }
