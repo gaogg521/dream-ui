@@ -1,5 +1,6 @@
 appId: com.huanle.oneone.ai
 productName: One Work
+executableName: onework
 # `executableName: onework` names every pre-launch surface: the Windows
 # `onework.exe`, its default install dir (`Programs\onework`), the `.app`
 # bundle and the DMG volume title. Dock/window/About still read CFBundleName

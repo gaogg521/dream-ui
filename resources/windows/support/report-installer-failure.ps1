@@ -13,10 +13,10 @@ param(
 $ErrorActionPreference = 'SilentlyContinue'
 $log = $LogPath
 if (-not $log) {
-  $log = Join-Path $env:TEMP 'aionui-installer-fallback-log.jsonl'
+  $log = Join-Path $env:TEMP 'onework-installer-fallback-log.jsonl'
 }
 $logFileName = Split-Path -Leaf $log
-$statusPath = Join-Path $env:TEMP 'aionui-installer-report.json'
+$statusPath = Join-Path $env:TEMP 'onework-installer-report.json'
 
 function Write-StatusFile($status) {
   foreach ($key in @($status.Keys)) {

@@ -8,7 +8,7 @@ Var /GLOBAL AionUiUpdatedAppExitWaitResult
 Var /GLOBAL AionUiActiveMarkerExecResult
 Var /GLOBAL AionUiActiveMarkerResult
 
-!define AIONUI_ACTIVE_INSTALLER_MARKER "aionui-installer-active.marker"
+!define AIONUI_ACTIVE_INSTALLER_MARKER "onework-installer-active.marker"
 
 !macro AIONUI_BRING_UPDATED_INSTALLER_TO_FRONT
   ${If} ${isUpdated}
