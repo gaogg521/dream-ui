@@ -91,8 +91,8 @@
 !macro AIONUI_REPORT_TO_SENTRY_IMPL _CODE _DETAIL _NO_UI
   Push $9
   InitPluginsDir
-  File /oname=$PLUGINSDIR\aionui-report-installer-failure.ps1 "${PROJECT_DIR}\resources\windows\support\report-installer-failure.ps1"
-  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\aionui-report-installer-failure.ps1" -Dsn "${AIONUI_SENTRY_DSN}" -LogPath "$OneWorkSessionLogPath" -Code "${_CODE}" -Detail "${_DETAIL}" -Release "${VERSION}" -Arch "${AIONUI_TARGET_ARCH}" -Session "$OneWorkSessionId" -Updated "$AionUiIsUpdated" ${_NO_UI}`
+  File /oname=$PLUGINSDIR\onework-report-installer-failure.ps1 "${PROJECT_DIR}\resources\windows\support\report-installer-failure.ps1"
+  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\onework-report-installer-failure.ps1" -Dsn "${AIONUI_SENTRY_DSN}" -LogPath "$OneWorkSessionLogPath" -Code "${_CODE}" -Detail "${_DETAIL}" -Release "${VERSION}" -Arch "${AIONUI_TARGET_ARCH}" -Session "$OneWorkSessionId" -Updated "$AionUiIsUpdated" ${_NO_UI}`
   Pop $9
   Pop $9
 !macroend

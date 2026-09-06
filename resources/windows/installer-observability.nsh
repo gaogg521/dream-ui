@@ -9,7 +9,7 @@
 ; value, but its include order relative to this file is not guaranteed, so we keep
 ; a self-contained literal.
 !define AIONUI_APP_EXECUTABLE_FILENAME "onework.exe"
-!define AIONUI_FALLBACK_LOG "aionui-installer-${VERSION}-fallback-log.jsonl"
+!define AIONUI_FALLBACK_LOG "onework-installer-${VERSION}-fallback-log.jsonl"
 
 !pragma warning disable 6001
 Var /GLOBAL OneWorkSessionId
@@ -90,7 +90,7 @@ Var /GLOBAL OneWorkSessionLogPath
   ${EndIf}
 
   ${If} $OneWorkSessionLogPath == ""
-    nsExec::ExecToStack `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "$$id = '$OneWorkSessionId'; if (-not $$id) { $$id = [guid]::NewGuid().ToString('N').Substring(0,12) }; $$stamp = Get-Date -Format 'yyyyMMdd'; $$name = 'aionui-installer-${VERSION}-' + $$stamp + '-log.jsonl'; $$log = Join-Path $$env:TEMP $$name; [Console]::Out.Write($$id + '|' + $$log)"`
+    nsExec::ExecToStack `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "$$id = '$OneWorkSessionId'; if (-not $$id) { $$id = [guid]::NewGuid().ToString('N').Substring(0,12) }; $$stamp = Get-Date -Format 'yyyyMMdd'; $$name = 'onework-installer-${VERSION}-' + $$stamp + '-log.jsonl'; $$log = Join-Path $$env:TEMP $$name; [Console]::Out.Write($$id + '|' + $$log)"`
     Pop $AionUiSessionLogResult
     Pop $AionUiSessionLogResult
     StrCpy $OneWorkSessionId $AionUiSessionLogResult 12
