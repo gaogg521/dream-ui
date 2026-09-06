@@ -90,7 +90,7 @@ function main() {
   const exePath = path.join(root, 'aionui-rstrtmgr-ui-smoke.exe');
   const logPath = path.join(
     process.env.TEMP || tmpdir(),
-    `aionui-installer-smoke-${new Date().toISOString().replace(/[-:]/g, '').replace(/\..+$/, '').replace('T', '-')}.log`
+    `onework-installer-smoke-${new Date().toISOString().replace(/[-:]/g, '').replace(/\..+$/, '').replace('T', '-')}.log`
   );
   const processControlPath = path.join(repoRoot, 'resources', 'windows', 'installer-process-control.nsh');
   const messagesPath = path.join(repoRoot, 'resources', 'windows', 'installer-messages.nsh');
@@ -101,7 +101,7 @@ Name "AionUi Restart Manager UI Smoke"
 OutFile "${nsisQuote(exePath)}"
 RequestExecutionLevel user
 SilentInstall normal
-!define AIONUI_FALLBACK_LOG "aionui-installer-smoke-fallback.log"
+!define AIONUI_FALLBACK_LOG "onework-installer-smoke-fallback.log"
 !define VERSION "rstrtmgr-ui-smoke"
 !define AIONUI_TARGET_ARCH "x64"
 !define AIONUI_APP_EXECUTABLE_FILENAME "AionUi.exe"
