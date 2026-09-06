@@ -71,6 +71,15 @@ const GOVERNANCE_PATH_PREFIXES = [
   '/api/one/devops',
   '/api/one/enterprise',
   '/api/one/billing',
+  // Member self-service surfaces that live only on the enterprise server: the
+  // in-app notification inbox, the personal file vault, and the enterprise
+  // memory subsystem (collections/recall — the 企业记忆 tab). Like
+  // /api/one/org, their rows are server-scoped — routing them to the local
+  // co-located dreamcore would show an inbox/vault/memory that isn't the
+  // member's (the local backend doesn't even mount one-memory).
+  '/api/one/notifications',
+  '/api/one/vault',
+  '/api/one/memory',
 ];
 
 function isGovernancePath(path: string): boolean {
@@ -472,6 +481,131 @@ export function httpDelete<Data, Params = undefined>(
       return httpRequest<Data>('DELETE', resolvedPath, undefined, options);
     }) as ProviderLike<Data, Params>['invoke'],
   };
+}
+
+/**
+ * Multipart upload — the one case the JSON-only `httpRequest` can't express:
+ * a `multipart/form-data` body must NOT be JSON-stringified or carry a
+ * JSON Content-Type. Used by the personal file vault (`POST /api/one/vault/files`,
+ * backend reads exactly one `file` field). Same routing/auth as every other
+ * governance call (remote server + Bearer in enterprise client mode).
+ */
+export async function httpUploadMultipart<T>(
+  path: string,
+  file: File | { name: string; data: Blob },
+  fieldName = 'file',
+  options?: HttpRequestOptions
+): Promise<T> {
+  const remote = routesToRemote(path, options);
+  const url = `${resolveRequestBaseUrl(path, options)}${path}`;
+  const headers: Record<string, string> = {};
+  if (remote) {
+    const session = getEnterpriseSession();
+    if (session) {
+      headers['Authorization'] = `Bearer ${session.token}`;
+    }
+  }
+
+  const form = new FormData();
+  if (file instanceof File) {
+    form.append(fieldName, file, file.name);
+  } else {
+    form.append(fieldName, file.data, file.name);
+  }
+
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+  const controller = timeoutMs > 0 ? new AbortController() : undefined;
+  const timeoutHandle = controller !== undefined ? setTimeout(() => controller.abort(), timeoutMs) : undefined;
+
+  let response: Response;
+  try {
+    // FormData sets its own boundary Content-Type; don't override it.
+    response = await fetch(url, { method: 'POST', headers, body: form, signal: controller?.signal });
+  } catch (error) {
+    if (controller?.signal.aborted) {
+      throw new BackendHttpError({
+        method: 'POST',
+        path,
+        status: 0,
+        body: { code: 'REQUEST_TIMEOUT', error: `upload timed out after ${timeoutMs}ms` },
+      });
+    }
+    throw error;
+  } finally {
+    if (timeoutHandle !== undefined) {
+      clearTimeout(timeoutHandle);
+    }
+  }
+
+  if (!response.ok) {
+    const rawText = await response.text().catch(() => '');
+    let errorBody: unknown;
+    try {
+      errorBody = JSON.parse(rawText);
+    } catch {
+      errorBody = rawText;
+    }
+    throw new BackendHttpError({ method: 'POST', path, status: response.status, body: errorBody });
+  }
+
+  const json = await response.json();
+  if (json && typeof json === 'object' && 'data' in json) {
+    return json.data as T;
+  }
+  return json as T;
+}
+
+export type HttpDownloadResult = {
+  blob: Blob;
+  /** Server-suggested filename from Content-Disposition, or the last path segment. */
+  fileName: string;
+};
+
+function fileNameFromDisposition(value: string | null, fallback: string): string {
+  if (!value) return fallback;
+  const utf8 = /filename\*=UTF-8''([^;]+)/i.exec(value);
+  if (utf8) {
+    try {
+      return decodeURIComponent(utf8[1]);
+    } catch {
+      /* fall through to the plain form */
+    }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(value);
+  return plain ? plain[1] : fallback;
+}
+
+/**
+ * Binary download — the mirror of `httpUploadMultipart`. The vault download
+ * endpoint answers with the raw bytes plus a Content-Disposition attachment
+ * header, not the JSON envelope, so it needs its own response handling.
+ * Returns the blob (caller turns it into an object URL) and the suggested
+ * filename.
+ */
+export async function httpDownloadBinary(path: string, options?: HttpRequestOptions): Promise<HttpDownloadResult> {
+  const remote = routesToRemote(path, options);
+  const url = `${resolveRequestBaseUrl(path, options)}${path}`;
+  const headers: Record<string, string> = {};
+  if (remote) {
+    const session = getEnterpriseSession();
+    if (session) {
+      headers['Authorization'] = `Bearer ${session.token}`;
+    }
+  }
+  const response = await fetch(url, { method: 'GET', headers });
+  if (!response.ok) {
+    const rawText = await response.text().catch(() => '');
+    let errorBody: unknown;
+    try {
+      errorBody = JSON.parse(rawText);
+    } catch {
+      errorBody = rawText;
+    }
+    throw new BackendHttpError({ method: 'GET', path, status: response.status, body: errorBody });
+  }
+  const blob = await response.blob();
+  const fallback = path.split('/').findLast(Boolean) ?? 'download';
+  return { blob, fileName: fileNameFromDisposition(response.headers.get('Content-Disposition'), fallback) };
 }
 
 /** Personal digital-employee APIs — always local dreamcore on desktop (see getLocalBaseUrl). */

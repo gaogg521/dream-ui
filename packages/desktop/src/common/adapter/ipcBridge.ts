@@ -115,6 +115,7 @@ import {
 import {
   httpDelete,
   httpDeleteLocal,
+  httpDownloadBinary,
   httpGet,
   httpGetLocal,
   httpPatch,
@@ -122,6 +123,7 @@ import {
   httpPostLocal,
   httpPut,
   httpPutLocal,
+  httpUploadMultipart,
   httpRequest,
   stubProvider,
   withResponseMap,
@@ -2882,6 +2884,12 @@ import type {
   UpsertModelChannelInput,
   UpsertSkillInput,
 } from '@/common/types/devops/devopsTypes';
+import type {
+  FileVaultInfo,
+  FileVaultObject,
+  MyNotifications,
+  MyScene,
+} from '@/common/types/platform/enterpriseTypes';
 
 export const oneOrg = {
   context: httpGet<OrgContext, void>('/api/one/org/context'),
@@ -3049,4 +3057,37 @@ export const oneDevops = {
     (p) => `/api/one/devops/pipelines/${p.pipelineId}/runs/${p.id}`,
     (p) => p.input
   ),
+};
+
+/**
+ * Member-side enterprise self-service (dream-domain-platform). Unlike
+ * `oneDevops`, these read the caller's own rows on the enterprise server:
+ * their scenes, their notification inbox, their file vault. Composing
+ * notifications and governing vaults stays admin-only (console).
+ */
+export const onePlatform = {
+  // E5 scenes (§4.1): what the caller belongs to + each scene's grant-package
+  // summary. Membership is the access control — the server returns only the
+  // caller's own scenes.
+  myScenes: httpGet<MyScene[], void>('/api/one/org/scenes'),
+  // P2-3 in-app notifications (§4.2): the inbox + unread badge in one call;
+  // mark-read takes explicit ids, or omits them for "mark all read".
+  myNotifications: httpGet<MyNotifications, void>('/api/one/notifications'),
+  markNotificationsRead: httpPost<void, { ids?: string[] } | undefined>(
+    '/api/one/notifications/read',
+    (p) => ({ ids: p?.ids ?? [] })
+  ),
+  // P2-4 personal file vault (§4.3). Upload is multipart (one `file` field,
+  // 10 MiB backend cap); download answers raw bytes, not the JSON envelope.
+  myVault: httpGet<FileVaultInfo, void>('/api/one/vault'),
+  listMyVaultFiles: httpGet<FileVaultObject[], void>('/api/one/vault/files'),
+  uploadVaultFile: {
+    provider: () => {},
+    invoke: (file: File) => httpUploadMultipart<FileVaultObject>('/api/one/vault/files', file, 'file'),
+  },
+  downloadVaultFile: {
+    provider: () => {},
+    invoke: (id: string) => httpDownloadBinary(`/api/one/vault/files/${encodeURIComponent(id)}`),
+  },
+  deleteVaultFile: httpDelete<void, { id: string }>((p) => `/api/one/vault/files/${encodeURIComponent(p.id)}`),
 };
