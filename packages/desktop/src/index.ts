@@ -950,6 +950,19 @@ const handleAppReady = async (): Promise<void> => {
             logDir: sysDir.logDir,
           },
           {
+            // Every peer retry is spent and the data directory is still
+            // owned. A leftover dreamcore from a dead session holds the
+            // instance guard indefinitely — waiting longer never clears it,
+            // and it hides any other startup problem underneath (a damaged
+            // database never reaches its own recovery dialog). Kill only a
+            // dreamcore pointed at THIS data directory, then let the launcher
+            // make one more attempt.
+            onPeerRetriesExhausted: async () => {
+              const { terminateStaleBackendProcesses } =
+                await import('./process/startup/terminateStaleBackendProcesses');
+              const killed = await terminateStaleBackendProcesses(getDataPath());
+              console.warn(`[1ONE] Cleared ${killed} stale dreamcore process(es) holding the data directory.`);
+            },
             allowPendingOnHealthTimeout: !(isWebUIMode || isResetPasswordMode),
             onHealthTimeout: async (error) => {
               markBackendStartupFailed(error);

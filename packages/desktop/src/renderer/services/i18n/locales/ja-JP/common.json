@@ -145,7 +145,7 @@
     },
     "transientConcurrentStartup": {
       "title": "One Work を起動しています",
-      "description": "このウィンドウを開いたとき、別の One Work の起動処理がまだローカルデータを使用していました。これは一時的なもので、データは安全です。再インストールの必要はありません。少し待ってから再試行するか、One Work を再起動してください。",
+      "description": "別の One Work 起動プロセスがローカルデータを使用中です。データは安全で、再インストールは不要です。前回の実行で残ったバックエンドの解放はすでに試みました。このメッセージが消えない場合は、別の One Work ウィンドウが起動している可能性が高いため、閉じてから再試行してください。",
       "sendDiagnostics": "Send diagnostics",
       "diagnosticsSent": "Diagnostics sent",
       "diagnosticsReportSuccess": "Diagnostics report sent",

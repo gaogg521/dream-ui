@@ -29,9 +29,14 @@ export function useEnterpriseNotificationsSync(): void {
   const tenantId = context?.tenantId ?? null;
 
   useEffect(() => {
+    // Reset FIRST, on every transition — including the one that leaves
+    // enterprise mode. The store is a module-level singleton and `available`
+    // is what gates the titlebar bell, so returning to personal mode without
+    // clearing left the bell on screen still listing the previous tenant's
+    // notifications until the app restarted or another enterprise was joined.
+    resetNotifications();
     if (!isEnterprise) return;
     // Tenant switch (or first enterprise mount): re-seed against this tenant's inbox.
-    resetNotifications();
     void refreshNotifications();
     const timer = window.setInterval((): void => void refreshNotifications(), POLL_INTERVAL_MS);
     // A laptop waking from sleep or a long-hidden window should catch up at

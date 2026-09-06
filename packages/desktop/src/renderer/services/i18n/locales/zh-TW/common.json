@@ -145,7 +145,7 @@
     },
     "transientConcurrentStartup": {
       "title": "One Work 正在啟動",
-      "description": "此視窗開啟時，另一個 One Work 啟動程序仍在使用本機資料。這是暫時的，您的資料是安全的——無需重新安裝。請稍候片刻後重試，或重新啟動 One Work。",
+      "description": "此視窗開啟時，另一個 One Work 啟動程序仍在使用本機資料。您的資料是安全的——無需重新安裝。One Work 已嘗試清理上次執行遺留的背景程序；若本提示仍未消失，通常是另一個 One Work 視窗正在執行，請關閉後再試。",
       "sendDiagnostics": "傳送診斷",
       "diagnosticsSent": "診斷已傳送",
       "diagnosticsReportSuccess": "診斷報告已傳送",

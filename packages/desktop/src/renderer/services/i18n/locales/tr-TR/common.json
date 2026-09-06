@@ -145,7 +145,7 @@
     },
     "transientConcurrentStartup": {
       "title": "One Work başlatılıyor",
-      "description": "Bu pencere açıldığında başka bir One Work başlatma işlemi yerel verileri hâlâ kullanıyordu. Bu geçicidir ve verileriniz güvende — yeniden yükleme gerekmez. Lütfen biraz bekleyip tekrar deneyin veya One Work'yi yeniden başlatın.",
+      "description": "Başka bir One Work başlatma süreci yerel verileri hâlâ kullanıyor. Verileriniz güvende — yeniden kurulum gerekmez. One Work, önceki çalıştırmadan kalan arka uç sürecini temizlemeyi zaten denedi; bu ileti sürüyorsa büyük olasılıkla başka bir One Work penceresi açıktır. Kapatıp yeniden deneyin.",
       "sendDiagnostics": "Send diagnostics",
       "diagnosticsSent": "Diagnostics sent",
       "diagnosticsReportSuccess": "Diagnostics report sent",
