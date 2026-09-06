@@ -145,10 +145,10 @@ const _AddNewConversation: React.FC<{ conversation: TChatConversation }> = ({ co
 
 type DreamEngineConversation = Extract<TChatConversation, { type: 'dream' }>;
 
-const DreamEngineConversationPanel: React.FC<{ conversation: DreamEngineConversation; sliderTitle: React.ReactNode }> = ({
-  conversation,
-  sliderTitle,
-}) => {
+const DreamEngineConversationPanel: React.FC<{
+  conversation: DreamEngineConversation;
+  sliderTitle: React.ReactNode;
+}> = ({ conversation, sliderTitle }) => {
   const runtimeView = useConversationRuntimeView(conversation.id);
   const onSelectModel = useCallback(
     async (_provider: IProvider, modelName: string) => {

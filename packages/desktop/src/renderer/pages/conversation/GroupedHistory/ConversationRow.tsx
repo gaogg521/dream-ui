@@ -14,7 +14,18 @@ import { cleanupSiderTooltips, getSiderTooltipProps } from '@/renderer/utils/ui/
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { getActivityTime } from '@/renderer/utils/chat/timeline';
 import { Checkbox, Dropdown, Menu, Spin, Tooltip } from '@arco-design/web-react';
-import { DeleteOne, EditOne, Export, Inbox, MessageOne, MoreOne, Pushpin, Robot, ShareOne, Timer } from '@icon-park/react';
+import {
+  DeleteOne,
+  EditOne,
+  Export,
+  Inbox,
+  MessageOne,
+  MoreOne,
+  Pushpin,
+  Robot,
+  ShareOne,
+  Timer,
+} from '@icon-park/react';
 import ForkBranchIcon from '@renderer/components/base/ForkBranchIcon';
 import classNames from 'classnames';
 import React, { useMemo } from 'react';

@@ -181,7 +181,9 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
       await modelSelector.click();
       await page.waitForTimeout(500);
 
-      const secondModel = page.locator(`[data-testid="dream-engine-model-option-${preconditions.models!.modelB.useModel}"]`);
+      const secondModel = page.locator(
+        `[data-testid="dream-engine-model-option-${preconditions.models!.modelB.useModel}"]`
+      );
       await secondModel.waitFor({ state: 'visible', timeout: 5000 });
       await secondModel.click();
       await page.waitForTimeout(1000);
@@ -269,7 +271,11 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
       await takeScreenshot(page, `chat-aionrs/tc-a-12/02-model-switched.png`);
 
       // Step 5: Send message about folder and files
-      await sendDreamEngineMessage(page, conversationId, 'List all files in the attached folder and read their contents.');
+      await sendDreamEngineMessage(
+        page,
+        conversationId,
+        'List all files in the attached folder and read their contents.'
+      );
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: reply completed

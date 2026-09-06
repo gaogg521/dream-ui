@@ -109,7 +109,8 @@ export async function getDreamEngineTestModels(page: Page): Promise<DreamEngineT
     };
 
     const candidates = providers.filter(
-      (p) => p.enabled !== false && Array.isArray(p.model) && p.model.length > 0 && p.apiKey && isDreamEngineCompatible(p)
+      (p) =>
+        p.enabled !== false && Array.isArray(p.model) && p.model.length > 0 && p.apiKey && isDreamEngineCompatible(p)
     );
 
     if (candidates.length === 0) return null;

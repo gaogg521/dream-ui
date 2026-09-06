@@ -98,7 +98,9 @@ export async function syncModelPlatformsFromBackend(): Promise<void> {
   syncStarted = true;
   try {
     const response = await httpRequest<{ platforms: BackendModelPlatformPreset[] }>('GET', '/api/model-platforms');
-    const mapped = response.platforms.map(toPlatformConfig).filter((preset): preset is PlatformConfig => preset !== null);
+    const mapped = response.platforms
+      .map(toPlatformConfig)
+      .filter((preset): preset is PlatformConfig => preset !== null);
     mergeModelPlatformPresets(MODEL_PLATFORMS, mapped);
   } catch (error) {
     console.debug('[modelPlatformsSync] backend fetch failed, keeping the built-in preset list', error);

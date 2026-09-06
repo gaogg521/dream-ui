@@ -59,7 +59,8 @@ describe('EnterpriseMemoryTab', () => {
     // beforeEach already queued the preferences and collections responses;
     // only the items response needs a handler here.
     mockedHttp.mockImplementation(async (method: string, path: string) => {
-      if (method === 'GET' && path.includes('/items')) return [{ id: 'memi-1', collectionId: 'memc-1', content: 'a kept note', status: 'active', createdAt: 0 }];
+      if (method === 'GET' && path.includes('/items'))
+        return [{ id: 'memi-1', collectionId: 'memc-1', content: 'a kept note', status: 'active', createdAt: 0 }];
       return [];
     });
 

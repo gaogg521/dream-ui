@@ -19,12 +19,12 @@
 
 ## 二、改动总览
 
-| 仓库 | 文件数 | 主要内容 |
-|---|---|---|
-| dream-core | 141 | 运行时契约字符串、Rust 标识符、错误文案、capabilities 文档、日志文件名、CI 资产名 |
-| dream-ui | 196 | launcher 标签、binaryResolver、NSIS/安装器、打包链、TS 标识符/CSS/i18n、web-cli、Sentry |
-| dream-en | 1 | deploy/docker-compose.yml 环境变量名 |
-| one-work-content | 3 | 移除 2 个 moltbook 生态技能（trawl、doppel-social-outreach） |
+| 仓库             | 文件数 | 主要内容                                                                                |
+| ---------------- | ------ | --------------------------------------------------------------------------------------- |
+| dream-core       | 141    | 运行时契约字符串、Rust 标识符、错误文案、capabilities 文档、日志文件名、CI 资产名       |
+| dream-ui         | 196    | launcher 标签、binaryResolver、NSIS/安装器、打包链、TS 标识符/CSS/i18n、web-cli、Sentry |
+| dream-en         | 1      | deploy/docker-compose.yml 环境变量名                                                    |
+| one-work-content | 3      | 移除 2 个 moltbook 生态技能（trawl、doppel-social-outreach）                            |
 
 ## 三、分层改动明细（改了什么、怎么改的）
 
@@ -38,15 +38,15 @@
 
 ### 3.2 跨进程契约（必须双端同改，全部按"新值写入 + 旧值兼容读"处理）
 
-| 契约 | 新值 | 兼容策略 |
-|---|---|---|
-| stdout 就绪标记 | `DREAMCORE_READY` / `DREAMCORE_LISTENING ` | 前端同时接受旧 `AIONCORE_*`（防新旧版本混跑卡启动）；后端只发新值 |
-| 内部 HTTP 头 | `x-dream-user-id` / `x-dream-conversation-id` / `x-dream-runtime-token` / `x-dream-internal` | cron 路由同时接受旧 `x-aionui-internal`；桌面端请求双发 |
-| 附件标记 | `[[DREAM_FILES]]`（`dream-core-common/constants.rs` 的 `FILES_MARKER`，新增 `LEGACY_FILES_MARKER`） | 后端注入新标记；`media.rs`/`dream_engine/content.rs`/`vision_image_hook.rs` 的剥离/切分逻辑 `rsplit_once(新).or_else(旧)` 双匹配；前端 `MessageText` 用 `ALL_FILES_MARKERS` 双匹配——老会话不受影响 |
-| 启动引导 | `DREAMCORE_BOOTSTRAP_SECRET`、`x-dreamcore-bootstrap-secret` | **旧名不再读**（部署侧必须改，启动时会报错提示新名字） |
-| 日志文件 | `dreamcore.log` / `dream-engine.log` | 前端 `logs.ts` 的 `LOG_SUFFIXES` 保留旧后缀（读历史日志） |
-| clap | `#[command(name = "dreamcore", about = "One Work Backend Server")]` | — |
-| 引擎日志 target 过滤 | 常量改名 `ENGINE_TARGETS` | 过滤项里的 `aion_*` 四个旧 target **保留**（捕获改名前编译的旧引擎二进制日志） |
+| 契约                 | 新值                                                                                                | 兼容策略                                                                                                                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| stdout 就绪标记      | `DREAMCORE_READY` / `DREAMCORE_LISTENING `                                                          | 前端同时接受旧 `AIONCORE_*`（防新旧版本混跑卡启动）；后端只发新值                                                                                                                                  |
+| 内部 HTTP 头         | `x-dream-user-id` / `x-dream-conversation-id` / `x-dream-runtime-token` / `x-dream-internal`        | cron 路由同时接受旧 `x-aionui-internal`；桌面端请求双发                                                                                                                                            |
+| 附件标记             | `[[DREAM_FILES]]`（`dream-core-common/constants.rs` 的 `FILES_MARKER`，新增 `LEGACY_FILES_MARKER`） | 后端注入新标记；`media.rs`/`dream_engine/content.rs`/`vision_image_hook.rs` 的剥离/切分逻辑 `rsplit_once(新).or_else(旧)` 双匹配；前端 `MessageText` 用 `ALL_FILES_MARKERS` 双匹配——老会话不受影响 |
+| 启动引导             | `DREAMCORE_BOOTSTRAP_SECRET`、`x-dreamcore-bootstrap-secret`                                        | **旧名不再读**（部署侧必须改，启动时会报错提示新名字）                                                                                                                                             |
+| 日志文件             | `dreamcore.log` / `dream-engine.log`                                                                | 前端 `logs.ts` 的 `LOG_SUFFIXES` 保留旧后缀（读历史日志）                                                                                                                                          |
+| clap                 | `#[command(name = "dreamcore", about = "One Work Backend Server")]`                                 | —                                                                                                                                                                                                  |
+| 引擎日志 target 过滤 | 常量改名 `ENGINE_TARGETS`                                                                           | 过滤项里的 `aion_*` 四个旧 target **保留**（捕获改名前编译的旧引擎二进制日志）                                                                                                                     |
 
 ### 3.3 `onework.exe`（本次拍板，覆盖 8-31 的"删除回落 One Work"方案）
 
