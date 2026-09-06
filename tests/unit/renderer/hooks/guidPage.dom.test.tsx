@@ -8,6 +8,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LayoutContext } from '@/renderer/hooks/context/LayoutContext';
+import { PROVIDERS_SWR_KEY } from '@/renderer/hooks/agent/useModelProviderList';
 
 const {
   modelSelectionMock,
@@ -214,6 +215,14 @@ vi.mock('@/renderer/pages/guid/components/GuidModelSelector', () => ({
 
 vi.mock('@/renderer/pages/guid/components/QuickActionButtons', () => ({
   default: () => <div data-testid='guid-quick-actions' />,
+}));
+
+// Renders unconditionally whenever the selected backend is dream (the
+// default in this suite) and pulls in DreamModal, which needs a
+// ThemeProvider this test's render tree doesn't supply -- same reason every
+// other page-level subcomponent below is mocked away rather than exercised.
+vi.mock('@/renderer/pages/guid/components/TrialModelBanner', () => ({
+  default: () => null,
 }));
 
 vi.mock('@/renderer/components/settings/SettingsModal/contents/FeedbackReportModal', () => ({
@@ -563,7 +572,14 @@ describe('GuidPage', () => {
   });
 
   it('applies an aionrs assistant default model after provider models load', async () => {
-    swrMock.useSWRMock.mockReturnValue({ data: assistantDetailFixture });
+    // A blanket mockReturnValue answers every useSWR call in the tree with
+    // this one fixture -- harmless while GuidPage only had one useSWR
+    // consumer, wrong now that useMediaComposer's provider list is a second
+    // one keyed 'providers': it would hand the assistant-detail fixture to
+    // listMediaModels, which can't iterate an object.
+    swrMock.useSWRMock.mockImplementation((key: string | null) =>
+      key === PROVIDERS_SWR_KEY ? { data: [] } : { data: assistantDetailFixture }
+    );
     resolveGuidAssistantDefaultsMock.mockReturnValue({
       modelId: 'gpt-4.1',
       disabledBuiltinSkillIds: [],
@@ -599,7 +615,12 @@ describe('GuidPage', () => {
   });
 
   it('does not reapply assistant default model over a guid-page model selection', async () => {
-    swrMock.useSWRMock.mockReturnValue({ data: assistantDetailFixture });
+    // See the mockImplementation note in the test above: a blanket
+    // mockReturnValue would also hand this fixture to useMediaComposer's
+    // 'providers' useSWR call.
+    swrMock.useSWRMock.mockImplementation((key: string | null) =>
+      key === PROVIDERS_SWR_KEY ? { data: [] } : { data: assistantDetailFixture }
+    );
     resolveGuidAssistantDefaultsMock.mockReturnValue({
       modelId: 'default',
       disabledBuiltinSkillIds: [],

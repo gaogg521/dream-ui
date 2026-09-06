@@ -13,7 +13,11 @@ describe('Windows fast build scripts', () => {
     expect(script).toBeTypeOf('string');
     expect(script).toContain('ELECTRON_BUILDER_COMPRESSION_LEVEL=1');
     expect(script).toContain('node scripts/build-with-builder.js x64 --win --x64');
-    expect(script).toContain('--config.win.signAndEditExecutable=false');
+    // Deliberately switched from signAndEditExecutable=false to
+    // signExecutable=false (see package.json): the fast build should still
+    // skip signing but no longer skip electron-builder's executable-edit
+    // step (icon/version-info resource writes).
+    expect(script).toContain('--config.win.signExecutable=false');
   });
 
   it('supports a temporary build-time auto-update version override', () => {
