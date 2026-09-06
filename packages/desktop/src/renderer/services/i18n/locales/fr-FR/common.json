@@ -145,7 +145,7 @@
     },
     "transientConcurrentStartup": {
       "title": "One Work démarre",
-      "description": "À l'ouverture de cette fenêtre, un autre démarrage d'One Work utilisait encore les données locales. C'est temporaire et vos données sont en sécurité — aucune réinstallation n'est nécessaire. Veuillez patienter un instant et réessayer, ou redémarrer One Work.",
+      "description": "Un autre processus de démarrage de One Work utilise encore les données locales. Vos données sont en sécurité : aucune réinstallation n'est nécessaire. One Work a déjà tenté de fermer un backend resté d'une exécution précédente ; si ce message persiste, une autre fenêtre One Work est probablement ouverte. Fermez-la puis réessayez.",
       "sendDiagnostics": "Envoyer des diagnostics",
       "diagnosticsSent": "Diagnostics envoyés",
       "diagnosticsReportSuccess": "Rapport de diagnostic envoyé",

@@ -172,6 +172,17 @@ export type BackendStartOptions = {
   onHealthTimeout?: (error: BackendStartupError) => Promise<void> | void;
   onPendingExit?: (error: BackendStartupError) => Promise<void> | void;
   onReady?: (port: number) => Promise<void> | void;
+  /**
+   * Last resort when every peer retry has been spent: the data directory is
+   * still owned by another dreamcore that shows no sign of leaving. Hosts that
+   * can identify and terminate a leftover backend of their own (the desktop
+   * app can — see `terminateStaleBackendProcesses`) get one chance to clear it
+   * before startup gives up; one further attempt follows.
+   *
+   * Optional by design: web-host has no business knowing how to kill
+   * processes, and a host that cannot do it simply fails as before.
+   */
+  onPeerRetriesExhausted?: () => Promise<unknown>;
 };
 
 export class BackendStartupError extends Error {
@@ -608,21 +619,43 @@ export class BackendLifecycleManager {
     preferredPort?: number,
     launchFlags: BackendLaunchFlags = {}
   ): Promise<number> {
-    // Bounded retry loop for the transient "a peer dreamcore already owns this
-    // data directory" case (Sentry 135525166). The owning peer either finishes
-    // startup and keeps running, or a crash-orphan self-exits and releases the
-    // data-dir instance guard. Non-peer errors are thrown immediately with no
-    // retry. Runtime crash restarts (handleCrash / maxRestarts) are a separate,
-    // orthogonal mechanism for an already-running backend.
+    // Bounded retry loop for the "a peer dreamcore already owns this data
+    // directory" case (Sentry 135525166). Non-peer errors are thrown
+    // immediately with no retry. Runtime crash restarts (handleCrash /
+    // maxRestarts) are a separate, orthogonal mechanism for an already-running
+    // backend.
+    //
+    // This loop used to assume the owner always leaves on its own — "a
+    // crash-orphan self-exits and releases the instance guard". A leftover
+    // backend from a dead session does not: it is a HEALTHY dreamcore whose
+    // parent went away, and it holds the guard indefinitely. Waiting it out
+    // was measured to fail all five attempts and then present the user a
+    // "this is temporary, try again shortly" dialog for a condition that
+    // never resolves — and, when the database underneath is also damaged, it
+    // preempted the corrupted-database dialog entirely, so the recovery that
+    // knows how to kill such an orphan could never be reached. Hence the last
+    // resort below.
     let lastPeerError: unknown;
     for (let attempt = 0; attempt < PEER_RETRY_MAX_ATTEMPTS; attempt += 1) {
       try {
         return await this.attemptStart(dbPath, logDir, dirs, options, preferredPort, launchFlags);
       } catch (error) {
-        if (!this.isPeerAlreadyRunningError(error) || attempt >= PEER_RETRY_MAX_ATTEMPTS - 1) {
-          throw error;
-        }
+        if (!this.isPeerAlreadyRunningError(error)) throw error;
         lastPeerError = error;
+        if (attempt >= PEER_RETRY_MAX_ATTEMPTS - 1) {
+          if (!options?.onPeerRetriesExhausted) throw error;
+          console.warn('[dreamcore] peer retries exhausted; asking the host to clear a leftover backend');
+          try {
+            await options.onPeerRetriesExhausted();
+          } catch (hookError) {
+            console.warn('[dreamcore] clearing the leftover backend failed:', hookError);
+            throw error;
+          }
+          // One attempt on the cleared directory. If the owner was something
+          // this host may not kill (a genuine second instance), this throws
+          // the same peer error and the caller reports it as before.
+          return await this.attemptStart(dbPath, logDir, dirs, options, preferredPort, launchFlags);
+        }
         const backoff = PEER_RETRY_BACKOFF_MS[Math.min(attempt, PEER_RETRY_BACKOFF_MS.length - 1)];
         console.warn(
           `[dreamcore] a peer already owns the data directory; retrying startup in ${backoff}ms (attempt ${attempt + 1}/${PEER_RETRY_MAX_ATTEMPTS})`

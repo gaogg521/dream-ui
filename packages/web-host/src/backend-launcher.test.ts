@@ -1492,6 +1492,82 @@ describe('BackendLifecycleManager.start peer retry', () => {
     warnSpy.mockRestore();
   });
 
+  // A leftover backend from a dead session is NOT transient: it is a healthy
+  // dreamcore whose parent went away, and it holds the data-dir instance guard
+  // for as long as it runs. Waiting it out was measured to burn all five
+  // attempts and then tell the user the condition was temporary — while, with
+  // a damaged database underneath, hiding the corrupted-database dialog whose
+  // own recovery is the thing that knows how to kill such a process.
+  it('asks the host to clear a leftover backend once the retry budget is spent, then tries again', async () => {
+    vi.useFakeTimers();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const mgr = new BackendLifecycleManager(APP_META, () => '/abs/path/aioncore');
+    const attemptStart = vi
+      .spyOn(mgr as unknown as AttemptStartSpyTarget, 'attemptStart')
+      .mockRejectedValueOnce(makePeerAlreadyRunningError())
+      .mockRejectedValueOnce(makePeerAlreadyRunningError())
+      .mockRejectedValueOnce(makePeerAlreadyRunningError())
+      .mockRejectedValueOnce(makePeerAlreadyRunningError())
+      .mockRejectedValueOnce(makePeerAlreadyRunningError())
+      .mockResolvedValueOnce(58673);
+    const onPeerRetriesExhausted = vi.fn().mockResolvedValue(1);
+
+    const started = mgr.start('/data/aionui-backend.db', undefined, undefined, { onPeerRetriesExhausted });
+    await vi.runAllTimersAsync();
+
+    await expect(started).resolves.toBe(58673);
+    expect(onPeerRetriesExhausted).toHaveBeenCalledTimes(1);
+    // 5 budgeted attempts, then exactly one more on the cleared directory.
+    expect(attemptStart).toHaveBeenCalledTimes(6);
+
+    warnSpy.mockRestore();
+  });
+
+  it('reports the peer error when the directory is still owned after clearing', async () => {
+    vi.useFakeTimers();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const mgr = new BackendLifecycleManager(APP_META, () => '/abs/path/aioncore');
+    // A genuine second instance this host may not kill: the extra attempt
+    // fails the same way and the caller sees the unchanged peer error.
+    const attemptStart = vi
+      .spyOn(mgr as unknown as AttemptStartSpyTarget, 'attemptStart')
+      .mockRejectedValue(makePeerAlreadyRunningError());
+    const onPeerRetriesExhausted = vi.fn().mockResolvedValue(0);
+
+    const started = mgr.start('/data/aionui-backend.db', undefined, undefined, { onPeerRetriesExhausted });
+    const assertion = expect(started).rejects.toMatchObject({
+      details: { backendBoundaryCode: 'BOOTSTRAP_PEER_ALREADY_RUNNING' },
+    });
+    await vi.runAllTimersAsync();
+    await assertion;
+
+    expect(attemptStart).toHaveBeenCalledTimes(6);
+
+    warnSpy.mockRestore();
+  });
+
+  it('keeps the original peer error when clearing itself fails', async () => {
+    vi.useFakeTimers();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const mgr = new BackendLifecycleManager(APP_META, () => '/abs/path/aioncore');
+    const attemptStart = vi
+      .spyOn(mgr as unknown as AttemptStartSpyTarget, 'attemptStart')
+      .mockRejectedValue(makePeerAlreadyRunningError());
+    const onPeerRetriesExhausted = vi.fn().mockRejectedValue(new Error('ps unavailable'));
+
+    const started = mgr.start('/data/aionui-backend.db', undefined, undefined, { onPeerRetriesExhausted });
+    const assertion = expect(started).rejects.toMatchObject({
+      details: { backendBoundaryCode: 'BOOTSTRAP_PEER_ALREADY_RUNNING' },
+    });
+    await vi.runAllTimersAsync();
+    await assertion;
+
+    // No extra attempt: nothing was cleared, so nothing changed.
+    expect(attemptStart).toHaveBeenCalledTimes(5);
+
+    warnSpy.mockRestore();
+  });
+
   it('does not retry a non-peer startup failure', async () => {
     const mgr = new BackendLifecycleManager(APP_META, () => '/abs/path/aioncore');
     const nonPeerError = new BackendStartupError('assistant storage bootstrap failed', {

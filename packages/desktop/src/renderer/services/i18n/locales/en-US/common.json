@@ -146,7 +146,7 @@
     },
     "transientConcurrentStartup": {
       "title": "One Work is starting up",
-      "description": "Another One Work startup was still using the local data when this window opened. This is temporary and your data is safe — no reinstall is needed. Please wait a moment and try again, or restart One Work.",
+      "description": "Another One Work startup process is still using the local data. Your data is safe — no reinstall is needed. One Work already tried to clear a backend left over from a previous run; if this message persists, another One Work window is most likely running. Close it and try again.",
       "sendDiagnostics": "Send diagnostics",
       "diagnosticsSent": "Diagnostics sent",
       "diagnosticsReportSuccess": "Diagnostics report sent",
