@@ -93,8 +93,35 @@ export type PersonalAgent = {
   nextRunAt?: number | null;
   /** 'private' (owner-only) or 'shared' (usable by same-tenant members). */
   visibility: 'private' | 'shared';
+  /** 'self_built' | 'catalog' | 'team' (P1-3 sync) | 'market' (reserved). Backend
+   * parity for the P1-1 round-1 origin column; optional so older responses stay valid. */
+  origin?: string;
+  categoryId?: string | null;
+  /** Unpublished shared employees stay invisible to non-owners (backend: published=0). */
+  published?: boolean;
   createdAt: number;
   updatedAt: number;
+};
+
+/**
+ * One team-distributed employee in the P1-3 sync push (`POST
+ * /api/one/employee/team-sync`). Mirrors the server DTO minus the fields that
+ * are meaningless locally — governance (`visibility`/`published`/`origin`/
+ * `categoryId`), the owner's schedule, attribution — see dream-core's
+ * `dream-domain-employee/src/team_sync.rs`.
+ */
+export type TeamSyncAgentInput = {
+  id: string;
+  name: string;
+  description?: string | null;
+  agentType: string;
+  customAgentId?: string | null;
+  cliPath?: string | null;
+  assistantId?: string | null;
+  agentIdOverride?: string | null;
+  modelId?: string | null;
+  model?: PersonalAgentModel | null;
+  automationConfig?: PersonalAgentAutomationConfig;
 };
 
 export type CreatePersonalAgentInput = PersonalAgentBinding & {

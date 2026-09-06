@@ -229,8 +229,57 @@ export async function clearTeamResources(): Promise<void> {
     ipcBridge.fs.syncTeamSkills.invoke({ skills: [], authoritative: true }),
     ipcBridge.fs.syncTeamMcp.invoke({ servers: [], authoritative: true }),
     ipcBridge.mode.syncModelChannels.invoke({ channels: [], authoritative: true }),
+    // P1-3: an empty authoritative pass removes every `origin='team'` row
+    // from the local registry — only rows this sync materialized, never the
+    // member's own employees (backend conflict/reconcile guard).
+    ipcBridge.personalAgent.syncTeamAgents.invoke({ agents: [], authoritative: true }),
     ipcBridge.mode.setContentInspectionRules.invoke({ rules: [] }),
   ]);
+}
+
+/**
+ * Same contract for team-distributed digital employees (P1-3). The pull is
+ * the one governance-routed employee call (`personalAgent.listTeamAgents`): in
+ * client mode it must reach the server, whose own + tenant-shared +
+ * published + authorized view IS the distribution contract — the member's
+ * local list never shows any of it otherwise, because `personalAgent.list`
+ * is hard-wired to the local backend. Materialization goes to the LOCAL
+ * registry (`personalAgent.syncTeamAgents`), keyed by the server agent id so
+ * the backend reconcile is a plain id diff.
+ *
+ * No `enabled` filter here (unlike skills/MCP): the server's list already
+ * encodes publish/visibility/grant decisions, so every row it returns is one
+ * this member is entitled to.
+ */
+export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
+  let team: Awaited<ReturnType<typeof ipcBridge.personalAgent.listTeamAgents.invoke>>;
+  try {
+    team = await ipcBridge.personalAgent.listTeamAgents.invoke();
+  } catch (error) {
+    if (isMembershipRefused(error)) await purgeOnRevocation();
+    return null;
+  }
+
+  const agents = (team ?? []).map((agent) => ({
+    id: agent.id,
+    name: agent.name,
+    description: agent.description ?? null,
+    agentType: agent.agentType,
+    customAgentId: agent.customAgentId ?? null,
+    cliPath: agent.cliPath ?? null,
+    assistantId: agent.assistantId ?? null,
+    agentIdOverride: agent.agentIdOverride ?? null,
+    modelId: agent.modelId ?? null,
+    model: agent.model ?? null,
+    automationConfig: agent.automationConfig,
+  }));
+
+  try {
+    const report = await ipcBridge.personalAgent.syncTeamAgents.invoke({ agents, authoritative: true });
+    return { written: report.written.length, removed: report.removed.length, kept: report.kept };
+  } catch {
+    return null;
+  }
 }
 
 /**

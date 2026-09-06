@@ -60,6 +60,7 @@ export type ConversationRowProps = {
   onCreateCronTask: (conversation: TChatConversation) => void;
   onDelete: (conversation_id: string) => void;
   onExport?: (conversation: TChatConversation) => void;
+  onShare?: (conversation: TChatConversation) => void;
   onTogglePin: (conversation: TChatConversation) => void;
   onToggleManualUnread: (conversation: TChatConversation) => void;
   getJobStatus: (conversation_id: string) => 'none' | 'active' | 'paused' | 'error' | 'unread';
