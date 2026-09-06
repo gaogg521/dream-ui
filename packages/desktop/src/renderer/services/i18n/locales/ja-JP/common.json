@@ -236,5 +236,55 @@
   },
   "language": {
     "switchTooltip": "言語を切り替え"
+  },
+  "notifications": {
+    "title": "通知センター",
+    "markAllRead": "すべて既読にする",
+    "markRead": "既読にする",
+    "empty": "通知はありません",
+    "justNow": "たった今",
+    "minutesAgo": "{{n}} 分前",
+    "hoursAgo": "{{n}} 時間前",
+    "daysAgo": "{{n}} 日前"
+  },
+  "scenes": {
+    "title": "マイシーン",
+    "empty": "まだどのシーンにも所属していません。管理者がシーンに追加すると、リソースパッケージを一括で利用できます。",
+    "builtinTag": "組み込み",
+    "noResources": "このシーンにはリソースパッケージが設定されていません",
+    "resourceAll": "すべて",
+    "resourceType": {
+      "skill": "スキル",
+      "mcp": "ツール",
+      "model_channel": "モデルチャネル",
+      "knowledge": "ナレッジ",
+      "employee": "デジタル社員"
+    }
+  },
+  "fileVault": {
+    "title": "ファイルボールト",
+    "notConnected": "ファイルボールトはエンタープライズ機能です。先に「企業アイデンティティ」でサーバーに接続してください。",
+    "frozenNotice": "管理者によりこのボールトは凍結されています：アップロードは停止中ですが、既存ファイルの閲覧・ダウンロード・削除は可能です。詳細は管理者にお問い合わせください。",
+    "usageUnlimited": "使用済み {{used}} · 無制限",
+    "usageQuota": "使用済み {{used}} / {{quota}}",
+    "statusAvailable": "利用可能",
+    "statusFrozen": "凍結済み",
+    "objectCount": "{{n}} 件のファイル",
+    "fileListTitle": "ファイル一覧",
+    "upload": "アップロード",
+    "uploading": "アップロード中…",
+    "uploadFailed": "アップロード失敗：{{message}}",
+    "download": "ダウンロード",
+    "downloadFailed": "ダウンロード失敗：{{message}}",
+    "delete": "削除",
+    "deleteFailed": "削除失敗：{{message}}",
+    "deleteConfirmTitle": "ファイルを削除",
+    "deleteConfirmBody": "「{{name}}」を削除しますか？この操作は元に戻せません。",
+    "empty": "ボールトは空です。アップロードしたファイルは自分だけが見られます。",
+    "colName": "ファイル名",
+    "colSize": "サイズ",
+    "colTime": "アップロード日時",
+    "colActions": "操作",
+    "browserHint": "ブラウザセッションのため、ファイル操作はエンタープライズサーバー上で直接行われます。"
   }
 }

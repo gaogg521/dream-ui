@@ -33,6 +33,7 @@ import { useNotificationClick } from '@renderer/hooks/system/notification/useNot
 import { useBrowserNotification } from '@renderer/hooks/system/notification/useBrowserNotification';
 import { useGovernanceEndpointSync } from '@renderer/hooks/enterprise/useGovernanceEndpointSync';
 import { useTeamResourceSync } from '@renderer/hooks/enterprise/useTeamResourceSync';
+import { useEnterpriseNotificationsSync } from '@renderer/hooks/enterprise/useEnterpriseNotifications';
 import { useRuntimeNodeHeartbeat } from '@renderer/hooks/enterprise/useRuntimeNodeHeartbeat';
 import { useDesktopTurnNotification } from '@renderer/hooks/system/notification/useDesktopTurnNotification';
 import { useDirectorySelection } from '@renderer/hooks/file/useDirectorySelection';
@@ -158,6 +159,9 @@ const Layout: React.FC<{
   // M3: sync enterprise-distributed team resources to local disk. No-op in
   // standalone mode (the hook gates on a resolved tenant).
   useTeamResourceSync();
+  // §4.2 notification bell: poll the member inbox + tray-toast arrivals. No-op
+  // in standalone mode (same tenant gate as the resource sync).
+  useEnterpriseNotificationsSync();
   // Tell the main process where the knowledge base lives, so the built-in
   // team-knowledge MCP tool reaches the same backend the UI does. Pushes null
   // (= local backend) in standalone mode.

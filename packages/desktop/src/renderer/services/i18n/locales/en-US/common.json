@@ -313,6 +313,7 @@
     "joinPrerequisitesHint": "Joining with an invite code takes two steps: ① connect to the project group server (Enterprise Identity page), ② sign in to your enterprise account on it. The server is not connected yet.",
     "joinNeedsLoginOnlyHint": "Connected to the project group server — sign in to your enterprise account before joining.",
     "channelNotConfiguredBadge": "Not set up",
+    "channelUnknownBadge": "Unavailable",
     "channelDisabledBadge": "Disabled",
     "wizardStepConnect": "Connect",
     "wizardStepLogin": "Sign in",
@@ -324,6 +325,7 @@
     "wizardConnectButton": "Connect",
     "wizardConnectHint": "After connecting, your conversations, agents and personal data stay on this machine; only team capabilities come from the server.",
     "wizardLoginNeedsConnect": "Finish step 1 first — connect to the project group server.",
+    "wizardJoinUnreachableHint": "Cannot reach the project-group server ({{url}}). Go back to step 1 and check the address — joining needs a reachable server.",
     "wizardJoinedTitle": "Joined the project group",
     "wizardFinish": "Done",
     "wizardProbingTitle": "Checking the connection to the server…",
@@ -552,5 +554,55 @@
   },
   "company": {
     "title": "Company Console"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "markRead": "Mark read",
+    "empty": "No notifications",
+    "justNow": "Just now",
+    "minutesAgo": "{{n}} min ago",
+    "hoursAgo": "{{n}} h ago",
+    "daysAgo": "{{n}} d ago"
+  },
+  "scenes": {
+    "title": "My Scenes",
+    "empty": "Not in any scene yet. An admin can add you to a scene to grant you its whole resource package at once.",
+    "builtinTag": "Built-in",
+    "noResources": "No grant package configured for this scene",
+    "resourceAll": "All",
+    "resourceType": {
+      "skill": "Skills",
+      "mcp": "Tools",
+      "model_channel": "Model channels",
+      "knowledge": "Knowledge",
+      "employee": "Digital employees"
+    }
+  },
+  "fileVault": {
+    "title": "File Vault",
+    "notConnected": "The file vault is an enterprise feature. Connect to your enterprise server first (Enterprise Identity).",
+    "frozenNotice": "An admin has frozen this vault: uploads are paused, while existing files stay viewable, downloadable and deletable. Contact your admin with any questions.",
+    "usageUnlimited": "{{used}} used · unlimited",
+    "usageQuota": "{{used}} used / {{quota}}",
+    "statusAvailable": "Available",
+    "statusFrozen": "Frozen",
+    "objectCount": "{{n}} files",
+    "fileListTitle": "Files",
+    "upload": "Upload",
+    "uploading": "Uploading…",
+    "uploadFailed": "Upload failed: {{message}}",
+    "download": "Download",
+    "downloadFailed": "Download failed: {{message}}",
+    "delete": "Delete",
+    "deleteFailed": "Delete failed: {{message}}",
+    "deleteConfirmTitle": "Delete file",
+    "deleteConfirmBody": "Delete \"{{name}}\"? This cannot be undone.",
+    "empty": "Your vault is empty. Uploaded files are visible only to you.",
+    "colName": "Name",
+    "colSize": "Size",
+    "colTime": "Uploaded",
+    "colActions": "Actions",
+    "browserHint": "Browser session: file operations happen directly on the enterprise server."
   }
 }

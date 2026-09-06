@@ -236,5 +236,55 @@
   },
   "language": {
     "switchTooltip": "切換語言"
+  },
+  "notifications": {
+    "title": "通知中心",
+    "markAllRead": "全部標為已讀",
+    "markRead": "標為已讀",
+    "empty": "暫無通知",
+    "justNow": "剛剛",
+    "minutesAgo": "{{n}} 分鐘前",
+    "hoursAgo": "{{n}} 小時前",
+    "daysAgo": "{{n}} 天前"
+  },
+  "scenes": {
+    "title": "我的場景",
+    "empty": "尚未加入任何場景。管理員可在控制台把你加入場景，一次取得整包協作資源。",
+    "builtinTag": "內建",
+    "noResources": "該場景尚未設定授權包",
+    "resourceAll": "全部",
+    "resourceType": {
+      "skill": "技能",
+      "mcp": "工具",
+      "model_channel": "模型渠道",
+      "knowledge": "知識庫",
+      "employee": "數位員工"
+    }
+  },
+  "fileVault": {
+    "title": "檔案保險箱",
+    "notConnected": "檔案保險箱屬於企業版功能。請先在「企業身分」頁連接企業伺服器。",
+    "frozenNotice": "管理員已凍結此保險箱：暫停上傳，既有檔案仍可檢視、下載與刪除。如有疑問請聯絡管理員。",
+    "usageUnlimited": "已用 {{used}} · 不限量",
+    "usageQuota": "已用 {{used}} / {{quota}}",
+    "statusAvailable": "可用",
+    "statusFrozen": "已凍結",
+    "objectCount": "{{n}} 個檔案",
+    "fileListTitle": "檔案清單",
+    "upload": "上傳檔案",
+    "uploading": "上傳中…",
+    "uploadFailed": "上傳失敗：{{message}}",
+    "download": "下載",
+    "downloadFailed": "下載失敗：{{message}}",
+    "delete": "刪除",
+    "deleteFailed": "刪除失敗：{{message}}",
+    "deleteConfirmTitle": "刪除檔案",
+    "deleteConfirmBody": "確定刪除「{{name}}」嗎？此操作無法復原。",
+    "empty": "保險箱為空。上傳的檔案僅自己可見。",
+    "colName": "檔案名稱",
+    "colSize": "大小",
+    "colTime": "上傳時間",
+    "colActions": "操作",
+    "browserHint": "目前為瀏覽器工作階段，檔案操作直接在企業伺服器上進行。"
   }
 }

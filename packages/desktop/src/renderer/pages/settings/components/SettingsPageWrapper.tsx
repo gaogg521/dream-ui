@@ -7,11 +7,13 @@ import {
 } from '@/renderer/components/settings/SettingsModal/settingsViewContext';
 import { isElectronDesktop, resolveExtensionAssetUrl } from '@/renderer/utils/platform';
 import { type IExtensionSettingsTab } from '@/common/adapter/ipcBridge';
+import { isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
 import { useExtensionSettingsTabs } from '@/renderer/hooks/system/useExtensionSettingsTabs';
 import {
   Brain,
   Communication,
   Earth,
+  FileCabinet,
   IdCard,
   Info,
   Lightning,
@@ -88,11 +90,21 @@ export function getBuiltinSettingsNavItems(isDesktop: boolean, t: TranslateFn): 
       icon: <IdCard theme='outline' size='16' />,
       path: 'enterprise-identity',
     },
+    fileVault: {
+      id: 'fileVault',
+      label: t('common.fileVault.title', { defaultValue: '文件保险箱' }),
+      icon: <FileCabinet theme='outline' size='16' />,
+      path: 'file-vault',
+    },
     system: { id: 'system', label: t('settings.system'), icon: <System theme='outline' size='16' />, path: 'system' },
     about: { id: 'about', label: t('settings.about'), icon: <Info theme='outline' size='16' />, path: 'about' },
   };
 
-  return BUILTIN_TAB_IDS.map((id) => builtinMap[id]).filter((item): item is NavItem => item != null);
+  // Mirror the sider's conditional rows: the file vault is server-scoped, so
+  // its mobile-nav row only exists in enterprise mode.
+  return BUILTIN_TAB_IDS.map((id) => builtinMap[id]).filter(
+    (item): item is NavItem => item != null && (item.id !== 'fileVault' || isEnterpriseModeEnabled())
+  );
 }
 
 const SettingsPageWrapper: React.FC<SettingsPageWrapperProps> = ({ children, className, contentClassName }) => {

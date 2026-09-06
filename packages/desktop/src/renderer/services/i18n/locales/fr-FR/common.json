@@ -236,5 +236,55 @@
   },
   "language": {
     "switchTooltip": "Changer de langue"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "markRead": "Marquer comme lu",
+    "empty": "Aucune notification",
+    "justNow": "À l'instant",
+    "minutesAgo": "il y a {{n}} min",
+    "hoursAgo": "il y a {{n}} h",
+    "daysAgo": "il y a {{n}} j"
+  },
+  "scenes": {
+    "title": "Mes scénarios",
+    "empty": "Vous n' appartenez à aucun scénario pour l'instant. Un administrateur peut vous ajouter à un scénario pour vous octroyer tout son paquet de ressources d'un coup.",
+    "builtinTag": "Intégré",
+    "noResources": "Aucun paquet de ressources configuré pour ce scénario",
+    "resourceAll": "Tous",
+    "resourceType": {
+      "skill": "Compétences",
+      "mcp": "Outils",
+      "model_channel": "Canaux de modèles",
+      "knowledge": "Connaissances",
+      "employee": "Employés numériques"
+    }
+  },
+  "fileVault": {
+    "title": "Coffre de fichiers",
+    "notConnected": "Le coffre de fichiers est une fonctionnalité d'entreprise. Connectez-vous d'abord au serveur d'entreprise (Identité d'entreprise).",
+    "frozenNotice": "Un administrateur a gelé ce coffre : les envois sont suspendus, mais les fichiers existants restent consultables, téléchargeables et supprimables. En cas de question, contactez votre administrateur.",
+    "usageUnlimited": "{{used}} utilisés · illimité",
+    "usageQuota": "{{used}} utilisés / {{quota}}",
+    "statusAvailable": "Disponible",
+    "statusFrozen": "Gelé",
+    "objectCount": "{{n}} fichiers",
+    "fileListTitle": "Fichiers",
+    "upload": "Téléverser",
+    "uploading": "Téléversement…",
+    "uploadFailed": "Échec de l'envoi : {{message}}",
+    "download": "Télécharger",
+    "downloadFailed": "Échec du téléchargement : {{message}}",
+    "delete": "Supprimer",
+    "deleteFailed": "Échec de la suppression : {{message}}",
+    "deleteConfirmTitle": "Supprimer le fichier",
+    "deleteConfirmBody": "Supprimer « {{name}} » ? Cette action est irréversible.",
+    "empty": "Votre coffre est vide. Les fichiers envoyés ne sont visibles que de vous.",
+    "colName": "Nom",
+    "colSize": "Taille",
+    "colTime": "Envoyé le",
+    "colActions": "Actions",
+    "browserHint": "Session navigateur : les opérations sur fichiers s'effectuent directement sur le serveur d'entreprise."
   }
 }

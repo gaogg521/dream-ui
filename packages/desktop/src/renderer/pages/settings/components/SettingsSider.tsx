@@ -9,6 +9,7 @@ import {
   Communication,
   Computer,
   Earth,
+  FileCabinet,
   IdCard,
   Info,
   Lightning,
@@ -49,6 +50,7 @@ export const BUILTIN_TAB_IDS = [
   'company',
   'enterprise',
   'enterpriseIdentity',
+  'fileVault',
   // Other
   'system',
   'about',
@@ -84,7 +86,7 @@ export const LEGACY_ANCHOR_REMAP: Record<string, string> = {
 const SETTINGS_GROUPS: ReadonlyArray<{ headerKey: string; members: readonly string[] }> = [
   { headerKey: 'settings.groupAiCore', members: ['agent', 'model', 'skills', 'memory'] },
   { headerKey: 'settings.groupApp', members: ['superAssistant', 'webui', 'codexBridge', 'claudeBridge'] },
-  { headerKey: 'settings.groupEnterprise', members: ['company', 'enterprise', 'enterpriseIdentity'] },
+  { headerKey: 'settings.groupEnterprise', members: ['company', 'enterprise', 'enterpriseIdentity', 'fileVault'] },
   { headerKey: 'settings.groupAbout', members: ['system', 'about'] },
 ];
 
@@ -127,6 +129,9 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
   // cannot even find the door.
   const { company, isCompanyAdmin } = useCompanyIdentity();
   const showCompany = (Boolean(company) && isCompanyAdmin) || isEnterpriseModeEnabled();
+  // The personal file vault is server-scoped (§4.3) — no enterprise server, no
+  // vault, so the row only exists once enterprise mode is on.
+  const showFileVault = isEnterpriseModeEnabled();
 
   const extensionTabs = useExtensionSettingsTabs();
   const { resolveExtTabName } = useExtI18n();
@@ -196,13 +201,19 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
         icon: <IdCard />,
         path: 'enterprise-identity',
       },
+      fileVault: {
+        id: 'fileVault',
+        label: t('common.fileVault.title', { defaultValue: '文件保险箱' }),
+        icon: <FileCabinet />,
+        path: 'file-vault',
+      },
       system: { id: 'system', label: t('settings.system'), icon: <System />, path: 'system' },
       about: { id: 'about', label: t('settings.about'), icon: <Info />, path: 'about' },
     };
 
-    const result: SiderItem[] = BUILTIN_TAB_IDS.filter((id) => id !== 'company' || showCompany).map(
-      (id) => builtinMap[id]
-    );
+    const result: SiderItem[] = BUILTIN_TAB_IDS.filter(
+      (id) => (id !== 'company' || showCompany) && (id !== 'fileVault' || showFileVault)
+    ).map((id) => builtinMap[id]);
 
     // Extension tabs with position anchoring
     const beforeMap = new Map<string, IExtensionSettingsTab[]>();
@@ -282,7 +293,7 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
     }
 
     return { menus: result, groupHeaderAt: headerAt };
-  }, [t, isDesktop, extensionTabs, resolveExtTabName, showCompany]);
+  }, [t, isDesktop, extensionTabs, resolveExtTabName, showCompany, showFileVault]);
 
   // Scroll affordance: the sider is long enough to clip entries, but the global
   // scrollbar thumb is transparent until hovered, so nothing tells the user more

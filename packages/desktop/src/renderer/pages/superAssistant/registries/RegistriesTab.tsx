@@ -13,8 +13,9 @@ import RagSection from './RagSection';
 import MilestonesSection from './MilestonesSection';
 import TestPlansSection from './TestPlansSection';
 import PipelinesSection from './PipelinesSection';
+import MyScenesSection from './MyScenesSection';
 
-const SECTION_IDS = new Set(['milestones', 'testplans', 'pipelines', 'skills', 'mcp', 'rag']);
+const SECTION_IDS = new Set(['milestones', 'testplans', 'pipelines', 'scenes', 'skills', 'mcp', 'rag']);
 
 // Deep-link support: /settings/super-assistant?tab=registries&section=<id>
 // scrolls the matching section into view. Enterprise-console grid cards rely on this.
@@ -44,6 +45,10 @@ const RegistriesTab: React.FC = () => {
 
   return (
     <div className='flex flex-col gap-16px'>
+      {/* My scenes first (§4.1): the entry describes what the member already
+          has, before the registries they administer. Self-hiding outside
+          enterprise mode, so personal users see the sections below unchanged. */}
+      <MyScenesSection />
       <div id='registry-section-milestones'>
         <MilestonesSection readOnly={readOnly} />
       </div>

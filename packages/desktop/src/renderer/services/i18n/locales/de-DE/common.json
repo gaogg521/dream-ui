@@ -236,5 +236,55 @@
   },
   "language": {
     "switchTooltip": "Sprache wechseln"
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "markAllRead": "Alle als gelesen markieren",
+    "markRead": "Als gelesen markieren",
+    "empty": "Keine Benachrichtigungen",
+    "justNow": "Gerade eben",
+    "minutesAgo": "vor {{n}} Min.",
+    "hoursAgo": "vor {{n}} Std.",
+    "daysAgo": "vor {{n}} Tg."
+  },
+  "scenes": {
+    "title": "Meine Szenarien",
+    "empty": "Sie gehören noch zu keinem Szenario. Eine Administration kann Sie einem Szenario hinzufügen und Ihnen damit das gesamte Ressourcenpaket auf einmal geben.",
+    "builtinTag": "Integriert",
+    "noResources": "Für dieses Szenario ist kein Ressourcenpaket konfiguriert",
+    "resourceAll": "Alle",
+    "resourceType": {
+      "skill": "Skills",
+      "mcp": "Werkzeuge",
+      "model_channel": "Modellkanäle",
+      "knowledge": "Wissen",
+      "employee": "Digitale Mitarbeiter"
+    }
+  },
+  "fileVault": {
+    "title": "Datei-Tresor",
+    "notConnected": "Der Datei-Tresor ist eine Unternehmensfunktion. Verbinden Sie sich zuerst unter „Unternehmensidentität“ mit dem Unternehmensserver.",
+    "frozenNotice": "Ein Administrator hat diesen Tresor eingefroren: Uploads sind pausiert, vorhandene Dateien bleiben ansehbar, herunterladbar und löschbar. Bei Fragen wenden Sie sich an Ihre Administration.",
+    "usageUnlimited": "{{used}} belegt · unbegrenzt",
+    "usageQuota": "{{used}} belegt / {{quota}}",
+    "statusAvailable": "Verfügbar",
+    "statusFrozen": "Eingefroren",
+    "objectCount": "{{n}} Dateien",
+    "fileListTitle": "Dateien",
+    "upload": "Hochladen",
+    "uploading": "Wird hochgeladen…",
+    "uploadFailed": "Upload fehlgeschlagen: {{message}}",
+    "download": "Herunterladen",
+    "downloadFailed": "Download fehlgeschlagen: {{message}}",
+    "delete": "Löschen",
+    "deleteFailed": "Löschen fehlgeschlagen: {{message}}",
+    "deleteConfirmTitle": "Datei löschen",
+    "deleteConfirmBody": "„{{name}}“ löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "empty": "Ihr Tresor ist leer. Hochgeladene Dateien sehen nur Sie.",
+    "colName": "Name",
+    "colSize": "Größe",
+    "colTime": "Hochgeladen",
+    "colActions": "Aktionen",
+    "browserHint": "Browsersitzung: Dateioperationen laufen direkt auf dem Unternehmensserver."
   }
 }

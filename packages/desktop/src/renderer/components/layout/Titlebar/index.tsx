@@ -9,6 +9,7 @@ import { TEAM_MODE_ENABLED } from '@/common/config/constants';
 import ConversationSearchPopover from '@renderer/pages/conversation/GroupedHistory/ConversationSearchPopover';
 import LanguageQuickSwitch from './LanguageQuickSwitch';
 import MobileConversationBrand from './MobileConversationBrand';
+import NotificationBell from './NotificationBell';
 import WindowControls from '../WindowControls';
 import { WORKSPACE_STATE_EVENT, dispatchWorkspaceToggleEvent } from '@renderer/utils/workspace/workspaceEvents';
 import type { WorkspaceStateDetail } from '@renderer/utils/workspace/workspaceEvents';
@@ -412,6 +413,8 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
         {layout?.isMobile && <div id='app-titlebar-actions-slot' className='app-titlebar__actions-slot' />}
         {!layout?.isMobile && <LanguageQuickSwitch iconSize={iconSize} strokeWidth={desktopIconStroke} />}
         {IS_DISCONTINUED_BUILD && <MigrationInviteCapsule />}
+        {/* Enterprise member inbox (§4.2): self-gates on a live enterprise session. */}
+        <NotificationBell iconSize={iconSize} strokeWidth={desktopIconStroke} />
         <button
           type='button'
           className={classNames('app-titlebar__button', layout?.isMobile && 'app-titlebar__button--mobile')}
