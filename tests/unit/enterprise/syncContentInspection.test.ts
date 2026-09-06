@@ -25,6 +25,7 @@ const hooks = vi.hoisted(() => ({
   reportDlpEvents: vi.fn(),
   setContentInspectionRules: vi.fn(),
   drainContentInspectionFindings: vi.fn(),
+  syncTeamAgents: vi.fn(),
 }));
 
 vi.mock('@/common', () => ({
@@ -45,6 +46,10 @@ vi.mock('@/common', () => ({
     fs: {
       syncTeamSkills: { invoke: vi.fn() },
       syncTeamMcp: { invoke: vi.fn() },
+    },
+    personalAgent: {
+      listTeamAgents: { invoke: vi.fn() },
+      syncTeamAgents: { invoke: hooks.syncTeamAgents },
     },
     oneOrg: { listEnterpriseTenants: { invoke: vi.fn() } },
   },

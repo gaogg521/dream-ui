@@ -29,6 +29,8 @@ const hooks = vi.hoisted(() => ({
   syncTeamMcp: vi.fn(),
   syncModelChannels: vi.fn(),
   setContentInspectionRules: vi.fn(),
+  listTeamAgents: vi.fn(),
+  syncTeamAgents: vi.fn(),
   getEnterpriseServerUrl: vi.fn(),
 }));
 
@@ -43,6 +45,10 @@ vi.mock('@/common', () => ({
     fs: {
       syncTeamSkills: { invoke: hooks.syncTeamSkills },
       syncTeamMcp: { invoke: hooks.syncTeamMcp },
+    },
+    personalAgent: {
+      listTeamAgents: { invoke: hooks.listTeamAgents },
+      syncTeamAgents: { invoke: hooks.syncTeamAgents },
     },
     mode: {
       syncModelChannels: { invoke: hooks.syncModelChannels },
@@ -79,18 +85,31 @@ beforeEach(() => {
   hooks.syncTeamMcp.mockResolvedValue({ written: [], removed: [], kept: 0 });
   hooks.syncModelChannels.mockResolvedValue({ written: [], removed: [], conflicts: [] });
   hooks.setContentInspectionRules.mockResolvedValue(undefined);
+  hooks.syncTeamAgents.mockResolvedValue({ written: [], removed: [], kept: 0 });
 });
 
 describe('team resources when membership is refused', () => {
-  it.each([
-    ['skills', 403],
-    ['skills', 401],
-  ])('purges everything when the %s registry answers %i', async (_which, status) => {
-    hooks.listSkills.mockRejectedValue(refusal(status));
+  it('purges everything when the skills registry answers 403', async () => {
+    hooks.listSkills.mockRejectedValue(refusal(403));
 
     await expect(syncTeamSkills()).resolves.toBeNull();
 
     expect(purged()).toBe(true);
+  });
+
+  // 401 used to purge too. Measured on a real client: restarting the
+  // enterprise server invalidates every outstanding token, so every member —
+  // none of them revoked — lost their team resources at once. "I do not know
+  // who you are" is not "you may not have this"; the genuine revocation is
+  // caught on the org-context transition instead (see useTeamResourceSync).
+  it('keeps the cache on 401 — an expired session is not a revocation', async () => {
+    hooks.listSkills.mockRejectedValue(refusal(401));
+
+    await expect(syncTeamSkills()).resolves.toBeNull();
+
+    expect(hooks.syncTeamSkills).not.toHaveBeenCalled();
+    expect(hooks.syncTeamMcp).not.toHaveBeenCalled();
+    expect(hooks.syncModelChannels).not.toHaveBeenCalled();
   });
 
   it('purges when the MCP registry refuses', async () => {
@@ -100,7 +119,7 @@ describe('team resources when membership is refused', () => {
   });
 
   it('purges when the model-channel registry refuses', async () => {
-    hooks.listModelChannels.mockRejectedValue(refusal(401));
+    hooks.listModelChannels.mockRejectedValue(refusal(403));
     await expect(syncTeamModelChannels()).resolves.toBeNull();
     expect(purged()).toBe(true);
   });

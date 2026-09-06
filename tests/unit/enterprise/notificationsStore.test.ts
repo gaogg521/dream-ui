@@ -42,7 +42,10 @@ const notification = (id: string, overrides: Partial<MyNotification> = {}): MyNo
   ...overrides,
 });
 
-const inbox = (notifications: MyNotification[]) => ({ notifications, unreadCount: notifications.filter((n) => n.readAt == null).length });
+const inbox = (notifications: MyNotification[]) => ({
+  notifications,
+  unreadCount: notifications.filter((n) => n.readAt == null).length,
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -64,7 +67,9 @@ describe('notificationsStore', () => {
     myNotifications.mockResolvedValueOnce(inbox([notification('a')]));
     await refreshNotifications();
 
-    myNotifications.mockResolvedValueOnce(inbox([notification('a'), notification('new1'), notification('new2', { readAt: 123 })]));
+    myNotifications.mockResolvedValueOnce(
+      inbox([notification('a'), notification('new1'), notification('new2', { readAt: 123 })])
+    );
     await refreshNotifications();
 
     expect(trayShow).toHaveBeenCalledTimes(1);

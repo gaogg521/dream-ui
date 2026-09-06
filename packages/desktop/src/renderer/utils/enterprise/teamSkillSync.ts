@@ -18,22 +18,29 @@ import { getEnterpriseServerUrl } from '@/common/adapter/enterpriseMode';
 export type TeamSkillSyncResult = { written: number; removed: number; kept: number };
 
 /**
- * The registry refused us rather than failed to answer.
+ * The registry refused us rather than failed to answer — 403 only.
  *
  * Offline-first keeps the local cache when the server cannot be reached, and
  * every registry fetch below used to funnel a rejection into that same branch.
  * So an admin removing a member — the case governance actually cares about —
  * left every team skill and MCP connector materialized on that machine,
- * auto-loading into their agent forever. The only purge that ever ran was the
- * one behind the member's own "exit enterprise" button.
+ * auto-loading into their agent forever.
  *
- * Failing closed here costs a member whose session merely expired their team
- * resources until the next successful sync re-materializes them; a client that
- * cannot prove membership should not keep acting on the org's resources in the
- * meantime.
+ * 401 deliberately does NOT count, though it did at first. It means "I do not
+ * know who you are", which a merely expired session produces just as readily
+ * as a revoked one — and measured on a real client, restarting the enterprise
+ * server invalidates every outstanding token at once, so treating 401 as a
+ * revocation purged the team resources of every member who had done nothing
+ * wrong. 403 is the unambiguous one: the server knows who the caller is and
+ * says they may not have this.
+ *
+ * Losing a genuine revocation is covered from the other side: a member who is
+ * removed stops resolving as enterprise at all, and `useTeamResourceSync`
+ * purges on that transition — a signal that does not depend on guessing what
+ * a status code meant.
  */
 function isMembershipRefused(error: unknown): boolean {
-  return isBackendHttpError(error) && (error.status === 401 || error.status === 403);
+  return isBackendHttpError(error) && error.status === 403;
 }
 
 /** One purge per revocation, not one per registry that noticed it. */
