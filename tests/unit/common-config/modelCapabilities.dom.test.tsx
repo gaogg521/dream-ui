@@ -62,6 +62,9 @@ vi.mock('@/renderer/components/base/DreamModal', () => ({
 vi.mock('@icon-park/react', () => ({
   CheckOne: () => <span>accept-inferred-kinds</span>,
   DeleteFour: () => <span>delete</span>,
+  // Rendered by TrialVendorOptions (the baoyun vendor icon), same pull-in
+  // chain as Thunderbolt below.
+  Gift: () => <span aria-hidden='true'>trial-baoyun</span>,
   Heartbeat: () => <span>health</span>,
   Info: () => <span>info</span>,
   LinkCloud: () => <span aria-hidden='true'>link</span>,
