@@ -12,9 +12,38 @@
 
 import { ipcBridge } from '@/common';
 import type { DlpFindingInput } from '@/common/adapter/ipcBridge';
+import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import { getEnterpriseServerUrl } from '@/common/adapter/enterpriseMode';
 
 export type TeamSkillSyncResult = { written: number; removed: number; kept: number };
+
+/**
+ * The registry refused us rather than failed to answer.
+ *
+ * Offline-first keeps the local cache when the server cannot be reached, and
+ * every registry fetch below used to funnel a rejection into that same branch.
+ * So an admin removing a member — the case governance actually cares about —
+ * left every team skill and MCP connector materialized on that machine,
+ * auto-loading into their agent forever. The only purge that ever ran was the
+ * one behind the member's own "exit enterprise" button.
+ *
+ * Failing closed here costs a member whose session merely expired their team
+ * resources until the next successful sync re-materializes them; a client that
+ * cannot prove membership should not keep acting on the org's resources in the
+ * meantime.
+ */
+function isMembershipRefused(error: unknown): boolean {
+  return isBackendHttpError(error) && (error.status === 401 || error.status === 403);
+}
+
+/** One purge per revocation, not one per registry that noticed it. */
+let revocationPurge: Promise<void> | null = null;
+function purgeOnRevocation(): Promise<void> {
+  revocationPurge ??= clearTeamResources().finally(() => {
+    revocationPurge = null;
+  });
+  return revocationPurge;
+}
 
 /**
  * Fetch team skills from the registry, then materialize + reconcile locally.
@@ -28,8 +57,10 @@ export async function syncTeamSkills(): Promise<TeamSkillSyncResult | null> {
   let registrySkills: Awaited<ReturnType<typeof ipcBridge.oneDevops.listSkills.invoke>>;
   try {
     registrySkills = await ipcBridge.oneDevops.listSkills.invoke();
-  } catch {
-    // Server unreachable — keep the local cache untouched.
+  } catch (error) {
+    // Refused → this client is no longer entitled to the org's skills.
+    // Unreachable → keep the local cache untouched (offline-first).
+    if (isMembershipRefused(error)) await purgeOnRevocation();
     return null;
   }
 
@@ -61,7 +92,8 @@ export async function syncTeamMcp(): Promise<TeamSkillSyncResult | null> {
   let registry: Awaited<ReturnType<typeof ipcBridge.oneDevops.listMcpRegistry.invoke>>;
   try {
     registry = await ipcBridge.oneDevops.listMcpRegistry.invoke();
-  } catch {
+  } catch (error) {
+    if (isMembershipRefused(error)) await purgeOnRevocation();
     return null;
   }
 
@@ -102,7 +134,8 @@ export async function syncTeamModelChannels(): Promise<TeamSkillSyncResult | nul
   let channels: Awaited<ReturnType<typeof ipcBridge.oneDevops.listModelChannels.invoke>>;
   try {
     channels = await ipcBridge.oneDevops.listModelChannels.invoke();
-  } catch {
+  } catch (error) {
+    if (isMembershipRefused(error)) await purgeOnRevocation();
     return null;
   }
 
