@@ -308,6 +308,14 @@ const DreamEngineSendBox: React.FC<{
           emitter.emit('dream.workspace.refresh');
         }
       } catch (error) {
+        // A send refused at the HTTP layer never produces a stream, and the
+        // stream events are the only thing that clears `waitingResponse` while
+        // the member stays in this conversation (the rehydration that also
+        // clears it runs on conversation switch). Leaving it set turns every
+        // refusal — company content policy, budget, model allowlist, seat
+        // limit, or a plain network error — into a turn timer that counts up
+        // forever behind a toast the reader has ten seconds to catch.
+        setWaitingResponse(false);
         const errorMessage =
           getPolicyDenialMessage(error, t) ||
           getConversationRuntimeWorkspaceErrorMessage(error, t) ||
