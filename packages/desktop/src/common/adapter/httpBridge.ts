@@ -96,6 +96,12 @@ const GOVERNANCE_PATH_PREFIXES = [
   // policy read. All server-scoped rows — the local personal build does
   // not even mount the platform crate.
   '/api/one/platform',
+  // P2-1 approvals. Not under /api/one/* at all — the prefix mirrors the
+  // reference product's dedicated workflow service — and the rows live only on
+  // the company server, so a client-mode member's queue has to resolve there.
+  // Routing it locally would show an empty list on a personal build that has
+  // never heard of workflow tasks.
+  '/api/workflow',
 ];
 
 function isGovernancePath(path: string): boolean {

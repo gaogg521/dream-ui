@@ -313,6 +313,105 @@ export type ContentInspectionSyncResult = { rules: number; findingsReported: num
  *   an unreachable server into a silently disabled policy — the worst of the
  *   three possible outcomes, because nothing looks wrong.
  */
+/**
+ * Distribute the company's tool-call policy to this machine (C0-1).
+ *
+ * The companion to `syncContentInspection`, and it exists for the same reason.
+ * A member's turns run on the co-located backend, which is a personal build:
+ * the enterprise gate that reads `one_security_policy` is not compiled into
+ * it. Until this ran, an administrator could set the strict tier and watch the
+ * client receive all nine fields while the agent went on running blocked
+ * commands and reaching the open internet.
+ *
+ * Only the two dimensions a client can decide by itself are carried down.
+ * Terminal-tool approval needs the company's workflow ledger and stays a
+ * server-side gate; sending it here would let it look enforced when it is not.
+ *
+ * Offline-first in the same direction as the rules: a policy we could not read
+ * leaves the local one untouched. Clearing it would turn an unreachable server
+ * into a silently disabled policy, which is the worst of the three outcomes
+ * because nothing looks wrong.
+ */
+export async function syncToolSecurityPolicy(): Promise<boolean> {
+  let policy: Awaited<ReturnType<typeof ipcBridge.onePlatform.mySecurityPolicy.invoke>>;
+  try {
+    policy = await ipcBridge.onePlatform.mySecurityPolicy.invoke();
+  } catch (error) {
+    if (isMembershipRefused(error)) await purgeOnRevocation();
+    return false;
+  }
+  if (!policy) return false;
+
+  try {
+    await ipcBridge.mode.syncToolSecurityPolicy.invoke({
+      destructiveCommandsBlocked: policy.destructiveCommandsBlocked ?? false,
+      blockedCommandPatterns: policy.blockedCommandPatterns ?? [],
+      externalNetworkDeniedByDefault: policy.externalNetworkDeniedByDefault ?? false,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Bring the member's readable company memory down for local recall (C1-1).
+ *
+ * The client offered a "recall my company memory in conversations" switch
+ * while the provider that would honour it was compiled out of the backend the
+ * conversation actually runs on — the page described a behaviour the product
+ * did not have. The items travel instead of the query so that turning the
+ * switch on does not start uploading every prompt to the company server.
+ *
+ * Carries the switch itself alongside the items: it is the member's setting,
+ * it lives on the server, and the local backend can only respect it by being
+ * told. Bounded — the recall budget is a handful of items per turn, so there
+ * is no reason to mirror an unbounded history onto every machine.
+ */
+export async function syncTeamMemory(): Promise<number | null> {
+  let recallEnabled = true;
+  try {
+    const prefs = await ipcBridge.onePlatform.memoryPreferences.invoke();
+    recallEnabled = prefs?.recallEnabled ?? true;
+  } catch (error) {
+    if (isMembershipRefused(error)) await purgeOnRevocation();
+    return null;
+  }
+
+  const items: { id: string; content: string }[] = [];
+  try {
+    const collections = (await ipcBridge.onePlatform.memoryCollections.invoke()) ?? [];
+    for (const collection of collections) {
+      const page = await ipcBridge.onePlatform.memoryItems.invoke({ collectionId: collection.id });
+      for (const item of page ?? []) {
+        if (item.content) items.push({ id: item.id, content: item.content });
+        if (items.length >= MAX_SYNCED_MEMORY_ITEMS) break;
+      }
+      if (items.length >= MAX_SYNCED_MEMORY_ITEMS) break;
+    }
+  } catch (error) {
+    if (isMembershipRefused(error)) await purgeOnRevocation();
+    // Unreachable mid-way: leave the local copy alone rather than writing a
+    // half-read set that would silently drop memory the member still has.
+    return null;
+  }
+
+  try {
+    return (await ipcBridge.mode.syncTeamMemory.invoke({ recallEnabled, items })) ?? items.length;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Ceiling on what one machine mirrors.
+ *
+ * Recall injects at most a handful of items per turn, so a full mirror of a
+ * long-lived company memory would be cost with no benefit — and every item
+ * copied down is one more place it exists.
+ */
+const MAX_SYNCED_MEMORY_ITEMS = 500;
+
 export async function syncContentInspection(): Promise<ContentInspectionSyncResult | null> {
   let rules: Awaited<ReturnType<typeof ipcBridge.oneDevops.listMyDlpRules.invoke>>;
   try {

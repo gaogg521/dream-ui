@@ -38,6 +38,12 @@ vi.mock('@renderer/utils/enterprise/teamSkillSync', () => ({
   syncTeamMcp: vi.fn(() => Promise.resolve(null)),
   syncTeamModelChannels: vi.fn(() => Promise.resolve(null)),
   syncTeamSkills,
+  // The other two governance surfaces that ride this timer: the tool-call
+  // policy and the company memory. Both enforce on the local backend for the
+  // same reason the content rules do, so both have to be here or the hook
+  // throws on the first tick.
+  syncToolSecurityPolicy: vi.fn(() => Promise.resolve(true)),
+  syncTeamMemory: vi.fn(() => Promise.resolve(0)),
 }));
 
 import { useTeamResourceSync } from '@/renderer/hooks/enterprise/useTeamResourceSync';

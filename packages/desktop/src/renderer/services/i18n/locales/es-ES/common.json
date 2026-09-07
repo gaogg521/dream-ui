@@ -294,5 +294,62 @@
     "colTime": "Subido",
     "colActions": "Acciones",
     "browserHint": "Sesión de navegador: las operaciones de archivos se realizan directamente en el servidor corporativo."
+  },
+  "approvals": {
+    "title": "Mis solicitudes",
+    "notConnected": "Las aprobaciones son una función empresarial. Conéctate primero al servidor de tu empresa.",
+    "intro": "Solicitudes que has enviado y la decisión del administrador. La revisión se hace en la consola de administración.",
+    "refresh": "Actualizar",
+    "newRequest": "Nueva solicitud",
+    "empty": "Todavía no has enviado nada.",
+    "submitted": "Enviada: a la espera de un administrador.",
+    "colTitle": "Solicitud",
+    "colKind": "Tipo",
+    "colStatus": "Estado",
+    "colNote": "Comentario",
+    "colCreatedAt": "Enviada",
+    "titlePlaceholder": "En una línea, qué pides",
+    "detailPlaceholder": "Algo más que convenga saber (opcional): para qué, cuánto tiempo, qué recursos",
+    "kind": {
+      "resource": "Recurso",
+      "creation": "Creación",
+      "prompt": "Prompt"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "approved": "Aprobada",
+      "rejected": "Rechazada",
+      "expired": "Caducada"
+    }
+  },
+  "selfService": {
+    "membersTitle": "Miembros del grupo",
+    "membersEmpty": "Aún no hay información de miembros.",
+    "machinesTitle": "Mis equipos",
+    "machinesEmpty": "Aún no hay equipos registrados.",
+    "sharesTitle": "Conversaciones que he compartido",
+    "sharesEmpty": "Todavía no has compartido nada.",
+    "colMember": "Miembro",
+    "colRole": "Rol",
+    "colDepartment": "Departamento",
+    "colMachine": "Equipo",
+    "colStatus": "Estado",
+    "colLastSeen": "Última conexión",
+    "colConversation": "Conversación",
+    "colScope": "Ámbito",
+    "colSharedAt": "Compartida",
+    "colAction": "Acción",
+    "unshare": "Dejar de compartir",
+    "unshareConfirm": "Al dejar de compartir, tus compañeros ya no podrán leer esta conversación.",
+    "unshared": "Se dejó de compartir.",
+    "nodeStatus": {
+      "approved": "Aprobado",
+      "pending": "Pendiente",
+      "blocked": "Bloqueado"
+    },
+    "scope": {
+      "tenant": "Grupo",
+      "enterprise": "Toda la empresa"
+    }
   }
 }

@@ -294,5 +294,62 @@
     "colTime": "アップロード日時",
     "colActions": "操作",
     "browserHint": "ブラウザセッションのため、ファイル操作はエンタープライズサーバー上で直接行われます。"
+  },
+  "approvals": {
+    "title": "自分の申請",
+    "notConnected": "承認は企業版の機能です。まず「企業 ID」ページで企業サーバーに接続してください。",
+    "intro": "あなたが提出した申請と管理者の判断です。審査は管理コンソールで行われます。",
+    "refresh": "更新",
+    "newRequest": "申請する",
+    "empty": "まだ申請はありません。",
+    "submitted": "提出しました。管理者の対応をお待ちください。",
+    "colTitle": "申請",
+    "colKind": "種類",
+    "colStatus": "状態",
+    "colNote": "対応コメント",
+    "colCreatedAt": "提出日時",
+    "titlePlaceholder": "申請内容を一行で",
+    "detailPlaceholder": "補足（任意）：目的・期間・対象リソース",
+    "kind": {
+      "resource": "リソース申請",
+      "creation": "作成申請",
+      "prompt": "プロンプト申請"
+    },
+    "status": {
+      "pending": "処理待ち",
+      "approved": "承認済み",
+      "rejected": "却下",
+      "expired": "期限切れ"
+    }
+  },
+  "selfService": {
+    "membersTitle": "プロジェクトのメンバー",
+    "membersEmpty": "メンバー情報はまだありません。",
+    "machinesTitle": "自分のマシン",
+    "machinesEmpty": "登録済みのマシンはありません。",
+    "sharesTitle": "共有した会話",
+    "sharesEmpty": "まだ共有していません。",
+    "colMember": "メンバー",
+    "colRole": "役割",
+    "colDepartment": "部署",
+    "colMachine": "マシン",
+    "colStatus": "状態",
+    "colLastSeen": "最終オンライン",
+    "colConversation": "会話",
+    "colScope": "範囲",
+    "colSharedAt": "共有日時",
+    "colAction": "操作",
+    "unshare": "共有を解除",
+    "unshareConfirm": "共有を解除すると、同僚はこの会話を閲覧できなくなります。",
+    "unshared": "共有を解除しました。",
+    "nodeStatus": {
+      "approved": "承認済み",
+      "pending": "審査待ち",
+      "blocked": "ブロック済み"
+    },
+    "scope": {
+      "tenant": "プロジェクト内",
+      "enterprise": "全社"
+    }
   }
 }

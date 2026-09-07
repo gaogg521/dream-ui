@@ -20,6 +20,8 @@ import {
   syncTeamMcp,
   syncTeamModelChannels,
   syncTeamSkills,
+  syncTeamMemory,
+  syncToolSecurityPolicy,
 } from '@renderer/utils/enterprise/teamSkillSync';
 import { fulfilAuditUploadRequests } from '@renderer/utils/enterprise/conversationShare';
 
@@ -70,6 +72,14 @@ export function useTeamResourceSync(): void {
       // one cycle to become visible in the console. The alternative — checking
       // with the server per send — is the design this deliberately avoids.
       void syncContentInspection();
+      // The other half of the same policy: content inspection decides what may
+      // be *sent*, this decides what tools may *run*. Both are enforced on this
+      // machine because that is where both happen, and both therefore inherit
+      // the same up-to-one-cycle propagation delay.
+      void syncToolSecurityPolicy();
+      // Company memory, for the same reason and on the same terms: recall runs
+      // against the local copy so the prompt never has to leave the machine.
+      void syncTeamMemory();
       // P2-3 on_demand tier: pick up admin content requests. The request was
       // audited when the admin made it; the upload lands a snapshot under the
       // member's own server identity. Best-effort: failures retry next cycle.

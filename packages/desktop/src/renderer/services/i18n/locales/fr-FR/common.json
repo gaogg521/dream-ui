@@ -294,5 +294,62 @@
     "colTime": "Envoyé le",
     "colActions": "Actions",
     "browserHint": "Session navigateur : les opérations sur fichiers s'effectuent directement sur le serveur d'entreprise."
+  },
+  "approvals": {
+    "title": "Mes demandes",
+    "notConnected": "Les validations sont une fonctionnalité entreprise. Connectez-vous d’abord au serveur de votre entreprise.",
+    "intro": "Les demandes que vous avez envoyées et la décision de l’administrateur. L’examen se fait dans la console d’administration.",
+    "refresh": "Actualiser",
+    "newRequest": "Nouvelle demande",
+    "empty": "Vous n’avez encore rien envoyé.",
+    "submitted": "Envoyée — en attente d’un administrateur.",
+    "colTitle": "Demande",
+    "colKind": "Type",
+    "colStatus": "Statut",
+    "colNote": "Commentaire",
+    "colCreatedAt": "Envoyée le",
+    "titlePlaceholder": "En une ligne, ce que vous demandez",
+    "detailPlaceholder": "Précisions (facultatif) : pourquoi, pour combien de temps, quelles ressources",
+    "kind": {
+      "resource": "Ressource",
+      "creation": "Création",
+      "prompt": "Prompt"
+    },
+    "status": {
+      "pending": "En attente",
+      "approved": "Approuvée",
+      "rejected": "Refusée",
+      "expired": "Expirée"
+    }
+  },
+  "selfService": {
+    "membersTitle": "Membres du groupe",
+    "membersEmpty": "Aucune information sur les membres pour l’instant.",
+    "machinesTitle": "Mes machines",
+    "machinesEmpty": "Aucune machine enregistrée pour l’instant.",
+    "sharesTitle": "Conversations que j’ai partagées",
+    "sharesEmpty": "Vous n’avez encore rien partagé.",
+    "colMember": "Membre",
+    "colRole": "Rôle",
+    "colDepartment": "Service",
+    "colMachine": "Machine",
+    "colStatus": "Statut",
+    "colLastSeen": "Dernière activité",
+    "colConversation": "Conversation",
+    "colScope": "Portée",
+    "colSharedAt": "Partagée le",
+    "colAction": "Action",
+    "unshare": "Ne plus partager",
+    "unshareConfirm": "Une fois le partage retiré, vos collègues ne pourront plus lire cette conversation.",
+    "unshared": "Partage retiré.",
+    "nodeStatus": {
+      "approved": "Approuvée",
+      "pending": "En attente",
+      "blocked": "Bloquée"
+    },
+    "scope": {
+      "tenant": "Groupe de projet",
+      "enterprise": "Toute l’entreprise"
+    }
   }
 }

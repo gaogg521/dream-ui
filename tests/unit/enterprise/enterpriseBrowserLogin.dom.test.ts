@@ -103,8 +103,11 @@ describe('openEnterprisePasswordLoginInBrowser remote/local routing', () => {
 
     expect(openExternalUrl).toHaveBeenCalledTimes(1);
     const url = String(openExternalUrl.mock.calls[0][0]);
+    // `channel` tells the console which form to open on. Without it the
+    // console lands on its default password tab and someone who picked
+    // "LDAP 域控" in the app has to go find it again under another tab.
     expect(url).toBe(
-      `${REMOTE}/admin/login?desktop=1&scheme=dream-dev&redirect=${encodeURIComponent('/enterprise/login')}`
+      `${REMOTE}/admin/login?desktop=1&scheme=dream-dev&redirect=${encodeURIComponent('/enterprise/login')}&channel=password`
     );
   });
 

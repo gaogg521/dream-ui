@@ -294,5 +294,62 @@
     "colTime": "上傳時間",
     "colActions": "操作",
     "browserHint": "目前為瀏覽器工作階段，檔案操作直接在企業伺服器上進行。"
+  },
+  "approvals": {
+    "title": "我的審批",
+    "notConnected": "審批屬於企業版功能。請先在「企業身分」頁連線企業伺服器。",
+    "intro": "你提交的申請與管理員的處理結果。審批由管理員在企業管理後台處理。",
+    "refresh": "重新整理",
+    "newRequest": "發起申請",
+    "empty": "還沒有提交過申請。",
+    "submitted": "已提交，等待管理員處理。",
+    "colTitle": "申請",
+    "colKind": "類型",
+    "colStatus": "狀態",
+    "colNote": "處理意見",
+    "colCreatedAt": "提交時間",
+    "titlePlaceholder": "一句話說明你要申請什麼",
+    "detailPlaceholder": "補充說明（選填）：用途、時限、涉及的資源",
+    "kind": {
+      "resource": "資源申請",
+      "creation": "建立申請",
+      "prompt": "提示詞申請"
+    },
+    "status": {
+      "pending": "待處理",
+      "approved": "已通過",
+      "rejected": "已駁回",
+      "expired": "已過期"
+    }
+  },
+  "selfService": {
+    "membersTitle": "專案群組成員",
+    "membersEmpty": "暫無成員資訊。",
+    "machinesTitle": "我的機器",
+    "machinesEmpty": "還沒有登記的機器。",
+    "sharesTitle": "我分享的對話",
+    "sharesEmpty": "還沒有分享過對話。",
+    "colMember": "成員",
+    "colRole": "角色",
+    "colDepartment": "部門",
+    "colMachine": "機器",
+    "colStatus": "狀態",
+    "colLastSeen": "最近上線",
+    "colConversation": "對話",
+    "colScope": "範圍",
+    "colSharedAt": "分享時間",
+    "colAction": "操作",
+    "unshare": "取消分享",
+    "unshareConfirm": "取消分享後，同事將無法再檢視這次對話的內容。",
+    "unshared": "已取消分享。",
+    "nodeStatus": {
+      "approved": "已核准",
+      "pending": "待審核",
+      "blocked": "已封鎖"
+    },
+    "scope": {
+      "tenant": "本群組",
+      "enterprise": "全企業"
+    }
   }
 }

@@ -1300,6 +1300,31 @@ export const mode = {
    * company server, but they have to be written to *this machine's* provider
    * table — that is where the member's agent reads them from.
    */
+  /**
+   * Load the company's tool-call policy into *this machine's* backend.
+   *
+   * `preferLocalBackend` for the same reason as `syncModelChannels` and the
+   * content rules: the policy was fetched from the company server, but the
+   * tool call it governs happens here, so here is where the decision has to
+   * be made. An empty policy is a legitimate instruction — it is how leaving
+   * an enterprise, or relaxing the tier, turns enforcement back off.
+   */
+  syncToolSecurityPolicy: httpPostLocal<ToolSecurityPolicyPayload, ToolSecurityPolicyPayload>(
+    '/api/tool-security/policy',
+    (p) => p
+  ),
+  /**
+   * Load the member's readable company memory into *this machine's* backend.
+   *
+   * `preferLocalBackend` for the same reason as the rules and the policy, with
+   * one extra: recall matches a prompt, and doing that upstream would mean
+   * sending every prompt to the company server. Bringing the items down keeps
+   * the conversation on the machine it was typed on.
+   */
+  syncTeamMemory: httpPostLocal<number, { recallEnabled: boolean; items: { id: string; content: string }[] }>(
+    '/api/one/team-memory/items',
+    (p) => p
+  ),
   syncModelChannels: httpPostLocal<
     { written: string[]; removed: string[]; conflicts: string[] },
     { channels: ManagedChannelInput[]; authoritative: boolean }
@@ -1386,6 +1411,20 @@ export type DlpEventEntry = {
 };
 
 /** One resolved channel, ready to become a local provider row. */
+/**
+ * The part of the company's security policy a client can act on by itself.
+ *
+ * Deliberately a subset of what the server returns: approval and the send-rate
+ * budget need the company server in the loop, and message scanning is content
+ * inspection's job and already delivered by its own channel. Carrying fields
+ * the local backend cannot honour would make "synced" read as "enforced".
+ */
+export type ToolSecurityPolicyPayload = {
+  destructiveCommandsBlocked: boolean;
+  blockedCommandPatterns: string[];
+  externalNetworkDeniedByDefault: boolean;
+};
+
 export type ManagedChannelInput = {
   channelId: string;
   name: string;
@@ -2951,6 +2990,36 @@ export const oneBilling = {
   // The vendor-signed license backing the plan; null when never activated.
 };
 
+/**
+ * P2-1 approval workflow, member half.
+ *
+ * The server has always had this — submit a request, watch your own
+ * submissions, see the administrator's decision — and the desktop client had
+ * no way to reach any of it: an administrator could approve or reject all day
+ * and the member who asked would never learn the outcome inside the app.
+ */
+export const oneWorkflow = {
+  /** The caller's own submissions, newest first. `view=mine` scopes to them. */
+  myTasks: httpGet<WorkflowTask[], void>('/api/workflow/tasks?view=mine'),
+  createTask: httpPost<WorkflowTask, { kind: string; title: string; detail?: string; payload?: unknown }>(
+    '/api/workflow/tasks'
+  ),
+};
+
+export type WorkflowTask = {
+  id: string;
+  kind: string;
+  title: string;
+  detail: string;
+  requesterId: string;
+  /** `pending` | `approved` | `rejected` | `expired`. */
+  status: string;
+  decidedBy?: string | null;
+  decidedAt?: number | null;
+  note?: string | null;
+  createdAt: number;
+};
+
 export const oneEnterprise = {
   // The caller's own enterprise-org identity (SSO company + department),
   // independent of project-group membership. In client mode this governance
@@ -3112,7 +3181,69 @@ export const onePlatform = {
 
   // P2-2 conversation sharing (member half). All governance-routed: the
   // share rows and the shared content live on the enterprise server.
-  mySecurityPolicy: httpGet<{ conversationShareMode: string }, void>('/api/one/platform/my-security-policy'),
+  /**
+   * Who else is in this project group.
+   *
+   * The client showed a member count and nothing else, so "2 members" was the
+   * entire answer to "who am I working with". The roster is a member-scoped
+   * read the server has always offered.
+   */
+  orgMembers: httpGet<
+    { userId: string; username: string; displayName?: string | null; role: string; orgUnitPath?: string | null }[],
+    void
+  >('/api/one/org/members'),
+  /**
+   * The machines this member has registered, plus any shared ones.
+   *
+   * The client heartbeats into this roster every five minutes and could not
+   * read it back, so a member had no way to see what they had registered — or
+   * to notice a machine they no longer use still reporting in.
+   */
+  myRuntimeNodes: httpGet<
+    { id: string; machineId: string; displayName: string; status: string; lastSeenAt: number; visibility: string }[],
+    void
+  >('/api/one/org/runtime/nodes'),
+  /** Conversations this member has shared, for review and revocation. */
+  myConversationShares: httpGet<{ conversationId: string; name: string; scope: string; sharedAt: number }[], void>(
+    '/api/one/platform/conversation-shares/owned'
+  ),
+  /**
+   * The member's own recall preference. Governance-routed: the switch lives
+   * on the company server, next to the memory it governs.
+   */
+  memoryPreferences: httpGet<{ recallEnabled: boolean }, void>('/api/one/memory/preferences'),
+  /** Collections this member may read — global, their department, their own. */
+  memoryCollections: httpGet<{ id: string; name: string; scope: string }[], void>('/api/one/memory/collections'),
+  memoryItems: httpGet<{ id: string; content: string }[], { collectionId: string }>(
+    (p) => `/api/one/memory/collections/${encodeURIComponent(p.collectionId)}/items?limit=200`
+  ),
+  /**
+   * The member's effective company security policy.
+   *
+   * The server has always returned all nine fields; this type used to declare
+   * one of them. That was not merely a thin type — the eight it left out are
+   * the enforcement half of the policy, and declaring them away is how the
+   * strict tier came to be delivered to every client and acted on by none of
+   * them. Everything the client can actually honour is now named here, and
+   * `syncToolSecurityPolicy` pushes it into the local backend.
+   */
+  mySecurityPolicy: httpGet<
+    {
+      tier?: string;
+      conversationShareMode: string;
+      destructiveCommandsBlocked?: boolean;
+      blockedCommandPatterns?: string[];
+      externalNetworkDeniedByDefault?: boolean;
+      /** Server-side gate — needs the company's workflow ledger, not honoured locally. */
+      terminalToolsRequireApproval?: boolean;
+      /** Delivered through content inspection's own channel, not this one. */
+      messageScanEnabled?: boolean;
+      messageRedactEnabled?: boolean;
+      /** Server-side gate — the local backend has no send budget. */
+      sendRateLimitPerMinute?: number | null;
+    },
+    void
+  >('/api/one/platform/my-security-policy'),
   shareConversation: httpPost<
     { conversationId: string; uploaded: boolean },
     {

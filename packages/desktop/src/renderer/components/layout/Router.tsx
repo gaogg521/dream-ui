@@ -26,6 +26,7 @@ const ClaudeBridgeSettings = React.lazy(() => import('@renderer/pages/settings/C
 const EnterpriseSettings = React.lazy(() => import('@renderer/pages/settings/EnterpriseSettings'));
 const EnterpriseIdentitySettings = React.lazy(() => import('@renderer/pages/settings/EnterpriseIdentitySettings'));
 const FileVaultSettings = React.lazy(() => import('@renderer/pages/settings/FileVaultSettings'));
+const ApprovalsSettings = React.lazy(() => import('@renderer/pages/settings/ApprovalsSettings'));
 const ExtensionSettingsPage = React.lazy(() => import('@renderer/pages/settings/ExtensionSettingsPage'));
 const LoginPage = React.lazy(() => import('@renderer/pages/login'));
 const ComponentsShowcase = React.lazy(() => import('@renderer/pages/TestShowcase'));
@@ -161,6 +162,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/settings/enterprise' element={withRouteFallback(EnterpriseSettings)} />
           <Route path='/settings/enterprise-identity' element={withRouteFallback(EnterpriseIdentitySettings)} />
           <Route path='/settings/file-vault' element={withRouteFallback(FileVaultSettings)} />
+          <Route path='/settings/approvals' element={withRouteFallback(ApprovalsSettings)} />
           <Route path='/settings/system' element={withRouteFallback(SystemSettings)} />
           <Route path='/settings/about' element={withRouteFallback(SystemSettings)} />
           <Route path='/settings/ext/:tabId' element={withRouteFallback(ExtensionSettingsPage)} />

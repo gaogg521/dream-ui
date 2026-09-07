@@ -13,6 +13,7 @@ import {
   Brain,
   Communication,
   Earth,
+  CheckOne,
   FileCabinet,
   IdCard,
   Info,
@@ -96,6 +97,12 @@ export function getBuiltinSettingsNavItems(isDesktop: boolean, t: TranslateFn): 
       icon: <FileCabinet theme='outline' size='16' />,
       path: 'file-vault',
     },
+    approvals: {
+      id: 'approvals',
+      label: t('common.approvals.title', { defaultValue: '我的审批' }),
+      icon: <CheckOne theme='outline' size='16' />,
+      path: 'approvals',
+    },
     system: { id: 'system', label: t('settings.system'), icon: <System theme='outline' size='16' />, path: 'system' },
     about: { id: 'about', label: t('settings.about'), icon: <Info theme='outline' size='16' />, path: 'about' },
   };
@@ -103,7 +110,10 @@ export function getBuiltinSettingsNavItems(isDesktop: boolean, t: TranslateFn): 
   // Mirror the sider's conditional rows: the file vault is server-scoped, so
   // its mobile-nav row only exists in enterprise mode.
   return BUILTIN_TAB_IDS.map((id) => builtinMap[id]).filter(
-    (item): item is NavItem => item != null && (item.id !== 'fileVault' || isEnterpriseModeEnabled())
+    (item): item is NavItem =>
+      item != null &&
+      (item.id !== 'fileVault' || isEnterpriseModeEnabled()) &&
+      (item.id !== 'approvals' || isEnterpriseModeEnabled())
   );
 }
 

@@ -294,5 +294,62 @@
     "colTime": "Hochgeladen",
     "colActions": "Aktionen",
     "browserHint": "Browsersitzung: Dateioperationen laufen direkt auf dem Unternehmensserver."
+  },
+  "approvals": {
+    "title": "Meine Anträge",
+    "notConnected": "Freigaben sind eine Enterprise-Funktion. Verbinden Sie sich zuerst mit Ihrem Unternehmensserver.",
+    "intro": "Von Ihnen eingereichte Anträge und die Entscheidung der Administration. Geprüft wird in der Admin-Konsole.",
+    "refresh": "Aktualisieren",
+    "newRequest": "Neuer Antrag",
+    "empty": "Sie haben noch nichts eingereicht.",
+    "submitted": "Eingereicht – wartet auf die Administration.",
+    "colTitle": "Antrag",
+    "colKind": "Art",
+    "colStatus": "Status",
+    "colNote": "Anmerkung",
+    "colCreatedAt": "Eingereicht",
+    "titlePlaceholder": "In einem Satz: worum bitten Sie?",
+    "detailPlaceholder": "Weitere Angaben (optional): wofür, wie lange, welche Ressourcen",
+    "kind": {
+      "resource": "Ressource",
+      "creation": "Erstellung",
+      "prompt": "Prompt"
+    },
+    "status": {
+      "pending": "Offen",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt",
+      "expired": "Abgelaufen"
+    }
+  },
+  "selfService": {
+    "membersTitle": "Mitglieder der Projektgruppe",
+    "membersEmpty": "Noch keine Mitgliederdaten.",
+    "machinesTitle": "Meine Geräte",
+    "machinesEmpty": "Noch keine Geräte registriert.",
+    "sharesTitle": "Von mir geteilte Unterhaltungen",
+    "sharesEmpty": "Sie haben noch nichts geteilt.",
+    "colMember": "Mitglied",
+    "colRole": "Rolle",
+    "colDepartment": "Abteilung",
+    "colMachine": "Gerät",
+    "colStatus": "Status",
+    "colLastSeen": "Zuletzt gesehen",
+    "colConversation": "Unterhaltung",
+    "colScope": "Bereich",
+    "colSharedAt": "Geteilt",
+    "colAction": "Aktion",
+    "unshare": "Freigabe aufheben",
+    "unshareConfirm": "Nach dem Aufheben können Kolleginnen und Kollegen diese Unterhaltung nicht mehr lesen.",
+    "unshared": "Freigabe aufgehoben.",
+    "nodeStatus": {
+      "approved": "Genehmigt",
+      "pending": "Offen",
+      "blocked": "Gesperrt"
+    },
+    "scope": {
+      "tenant": "Projektgruppe",
+      "enterprise": "Gesamtes Unternehmen"
+    }
   }
 }

@@ -612,5 +612,62 @@
     "colTime": "Uploaded",
     "colActions": "Actions",
     "browserHint": "Browser session: file operations happen directly on the enterprise server."
+  },
+  "approvals": {
+    "title": "My approvals",
+    "notConnected": "Approvals are an enterprise feature. Connect to your company server on the Enterprise identity page first.",
+    "intro": "Requests you have submitted, and what an administrator decided. Reviewing happens in the admin console.",
+    "refresh": "Refresh",
+    "newRequest": "New request",
+    "empty": "You have not submitted anything yet.",
+    "submitted": "Submitted — waiting for an administrator.",
+    "colTitle": "Request",
+    "colKind": "Kind",
+    "colStatus": "Status",
+    "colNote": "Reviewer note",
+    "colCreatedAt": "Submitted",
+    "titlePlaceholder": "One line on what you are asking for",
+    "detailPlaceholder": "Anything else worth knowing (optional): why, for how long, which resources",
+    "kind": {
+      "resource": "Resource",
+      "creation": "Creation",
+      "prompt": "Prompt"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "expired": "Expired"
+    }
+  },
+  "selfService": {
+    "membersTitle": "Project group members",
+    "membersEmpty": "No member information yet.",
+    "machinesTitle": "My machines",
+    "machinesEmpty": "No machines registered yet.",
+    "sharesTitle": "Conversations I have shared",
+    "sharesEmpty": "You have not shared anything yet.",
+    "colMember": "Member",
+    "colRole": "Role",
+    "colDepartment": "Department",
+    "colMachine": "Machine",
+    "colStatus": "Status",
+    "colLastSeen": "Last seen",
+    "colConversation": "Conversation",
+    "colScope": "Scope",
+    "colSharedAt": "Shared",
+    "colAction": "Action",
+    "unshare": "Unshare",
+    "unshareConfirm": "Once unshared, colleagues can no longer read this conversation.",
+    "unshared": "Sharing revoked.",
+    "nodeStatus": {
+      "approved": "Approved",
+      "pending": "Pending",
+      "blocked": "Blocked"
+    },
+    "scope": {
+      "tenant": "Project group",
+      "enterprise": "Whole company"
+    }
   }
 }

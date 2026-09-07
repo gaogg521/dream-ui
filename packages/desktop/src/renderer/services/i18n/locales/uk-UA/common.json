@@ -297,5 +297,62 @@
     "colTime": "Завантажено",
     "colActions": "Дії",
     "browserHint": "Браузерний сеанс: операції з файлами виконуються безпосередньо на корпоративному сервері."
+  },
+  "approvals": {
+    "title": "Мої заявки",
+    "notConnected": "Погодження — функція корпоративної версії. Спершу підключіться до сервера компанії.",
+    "intro": "Заявки, які ви надіслали, і рішення адміністратора.",
+    "refresh": "Оновити",
+    "newRequest": "Створити заявку",
+    "empty": "Ви ще нічого не надсилали.",
+    "submitted": "Надіслано — очікується рішення.",
+    "colTitle": "Заявка",
+    "colKind": "Тип",
+    "colStatus": "Статус",
+    "colNote": "Коментар",
+    "colCreatedAt": "Надіслано",
+    "titlePlaceholder": "Одним рядком: що ви просите",
+    "detailPlaceholder": "Додатково: навіщо, на який строк, які ресурси",
+    "kind": {
+      "resource": "Ресурс",
+      "creation": "Створення",
+      "prompt": "Промпт"
+    },
+    "status": {
+      "pending": "На розгляді",
+      "approved": "Схвалено",
+      "rejected": "Відхилено",
+      "expired": "Протерміновано"
+    }
+  },
+  "selfService": {
+    "membersTitle": "Учасники групи",
+    "membersEmpty": "Поки немає даних про учасників.",
+    "machinesTitle": "Мої машини",
+    "machinesEmpty": "Поки немає зареєстрованих машин.",
+    "sharesTitle": "Мої поділені розмови",
+    "sharesEmpty": "Ви ще нічим не поділилися.",
+    "colMember": "Учасник",
+    "colRole": "Роль",
+    "colDepartment": "Відділ",
+    "colMachine": "Машина",
+    "colStatus": "Статус",
+    "colLastSeen": "Останній вхід",
+    "colConversation": "Розмова",
+    "colScope": "Обсяг",
+    "colSharedAt": "Поділено",
+    "colAction": "Дія",
+    "unshare": "Відкликати",
+    "unshareConfirm": "Після відкликання колеги більше не зможуть читати цю розмову.",
+    "unshared": "Доступ відкликано.",
+    "nodeStatus": {
+      "approved": "Схвалено",
+      "pending": "На розгляді",
+      "blocked": "Заблоковано"
+    },
+    "scope": {
+      "tenant": "Група",
+      "enterprise": "Уся компанія"
+    }
   }
 }

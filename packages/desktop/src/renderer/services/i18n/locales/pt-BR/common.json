@@ -294,5 +294,62 @@
     "colTime": "Enviado em",
     "colActions": "Ações",
     "browserHint": "Sessão no navegador: as operações de arquivo ocorrem diretamente no servidor corporativo."
+  },
+  "approvals": {
+    "title": "Minhas solicitações",
+    "notConnected": "Aprovações são um recurso corporativo. Conecte-se ao servidor da empresa primeiro.",
+    "intro": "Solicitações que você enviou e a decisão do administrador. A análise acontece no console administrativo.",
+    "refresh": "Atualizar",
+    "newRequest": "Nova solicitação",
+    "empty": "Você ainda não enviou nada.",
+    "submitted": "Enviado — aguardando um administrador.",
+    "colTitle": "Solicitação",
+    "colKind": "Tipo",
+    "colStatus": "Status",
+    "colNote": "Observação",
+    "colCreatedAt": "Enviado em",
+    "titlePlaceholder": "Em uma linha, o que você está pedindo",
+    "detailPlaceholder": "Mais alguma coisa (opcional): por quê, por quanto tempo, quais recursos",
+    "kind": {
+      "resource": "Recurso",
+      "creation": "Criação",
+      "prompt": "Prompt"
+    },
+    "status": {
+      "pending": "Pendente",
+      "approved": "Aprovado",
+      "rejected": "Recusado",
+      "expired": "Expirado"
+    }
+  },
+  "selfService": {
+    "membersTitle": "Membros do grupo",
+    "membersEmpty": "Ainda sem informações de membros.",
+    "machinesTitle": "Minhas máquinas",
+    "machinesEmpty": "Nenhuma máquina registrada ainda.",
+    "sharesTitle": "Conversas que compartilhei",
+    "sharesEmpty": "Você ainda não compartilhou nada.",
+    "colMember": "Membro",
+    "colRole": "Função",
+    "colDepartment": "Departamento",
+    "colMachine": "Máquina",
+    "colStatus": "Status",
+    "colLastSeen": "Visto por último",
+    "colConversation": "Conversa",
+    "colScope": "Escopo",
+    "colSharedAt": "Compartilhada",
+    "colAction": "Ação",
+    "unshare": "Cancelar compartilhamento",
+    "unshareConfirm": "Ao cancelar, seus colegas deixam de ver esta conversa.",
+    "unshared": "Compartilhamento cancelado.",
+    "nodeStatus": {
+      "approved": "Aprovada",
+      "pending": "Pendente",
+      "blocked": "Bloqueada"
+    },
+    "scope": {
+      "tenant": "Grupo",
+      "enterprise": "Toda a empresa"
+    }
   }
 }

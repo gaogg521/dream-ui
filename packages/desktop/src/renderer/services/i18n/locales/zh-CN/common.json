@@ -612,5 +612,62 @@
     "colTime": "上传时间",
     "colActions": "操作",
     "browserHint": "当前为浏览器会话，文件操作直接发生在企业服务器上。"
+  },
+  "approvals": {
+    "title": "我的审批",
+    "notConnected": "审批属于企业版功能。请先在「企业身份」页连接企业服务器。",
+    "intro": "你提交的申请与管理员的处理结果。审批由管理员在企业管理后台处理。",
+    "refresh": "刷新",
+    "newRequest": "发起申请",
+    "empty": "还没有提交过申请。",
+    "submitted": "已提交，等待管理员处理。",
+    "colTitle": "申请",
+    "colKind": "类型",
+    "colStatus": "状态",
+    "colNote": "处理意见",
+    "colCreatedAt": "提交时间",
+    "titlePlaceholder": "一句话说明你要申请什么",
+    "detailPlaceholder": "补充说明（可选）：用途、时限、涉及的资源",
+    "kind": {
+      "resource": "资源申请",
+      "creation": "创建申请",
+      "prompt": "提示词申请"
+    },
+    "status": {
+      "pending": "待处理",
+      "approved": "已通过",
+      "rejected": "已驳回",
+      "expired": "已过期"
+    }
+  },
+  "selfService": {
+    "membersTitle": "项目组成员",
+    "membersEmpty": "暂无成员信息。",
+    "machinesTitle": "我的机器",
+    "machinesEmpty": "还没有登记的机器。",
+    "sharesTitle": "我分享的会话",
+    "sharesEmpty": "还没有分享过会话。",
+    "colMember": "成员",
+    "colRole": "角色",
+    "colDepartment": "部门",
+    "colMachine": "机器",
+    "colStatus": "状态",
+    "colLastSeen": "最近在线",
+    "colConversation": "会话",
+    "colScope": "范围",
+    "colSharedAt": "分享时间",
+    "colAction": "操作",
+    "unshare": "取消分享",
+    "unshareConfirm": "取消分享后，同事将无法再查看这次会话的内容。",
+    "unshared": "已取消分享。",
+    "nodeStatus": {
+      "approved": "已批准",
+      "pending": "待审核",
+      "blocked": "已封禁"
+    },
+    "scope": {
+      "tenant": "本组",
+      "enterprise": "全企业"
+    }
   }
 }
