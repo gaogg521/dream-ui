@@ -35,16 +35,21 @@ on:
         type: string
         default: ''
       installers_only:
-        # Manual builds default to installers-only to keep artifacts small. But
-        # macOS auto-update needs the .zip (latest-mac.yml points at it, not at
-        # the .dmg), and both are stripped by the cleanup step before upload —
-        # so a manual build used to produce release assets silently ships an
-        # updater-less mac package. Turn this off when the run is feeding a
-        # release rather than just smoke-testing a build.
-        description: 'Strip .zip/.yml before upload (turn OFF when producing release assets — macOS auto-update needs them)'
+        # Defaults to false (keep .zip/.yml) after this bit two release nights
+        # in a row (3.0.1, then again on the first 3.0.2 manual macos-x64
+        # rebuild): macOS auto-update needs the .zip -- latest-mac.yml points
+        # at it, not the .dmg -- and both are stripped by the cleanup step
+        # before upload. Leaving the old true default meant every manual
+        # rebuild silently shipped an updater-less mac package unless the
+        # operator remembered this exact flag. A manual build is almost always
+        # either feeding a release directly or backfilling one leg of a
+        # matrix run that already needed the full set, so "keep everything"
+        # is the safer assumption; turn this ON only for a quick smoke-test
+        # build whose artifact you don't intend to publish.
+        description: 'Strip .zip/.yml before upload (leave OFF when producing release assets — macOS auto-update needs them)'
         required: false
         type: boolean
-        default: true
+        default: false
 
 env:
   BUN_INSTALL_REGISTRY: 'https://registry.npmjs.org/'
