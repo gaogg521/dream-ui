@@ -61,12 +61,20 @@ jobs:
     if: vars.PUBLISH_RELEASE == 'true' && needs.code-quality.result == 'success' && (github.ref == 'refs/heads/dev' || (startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-dev-')))
     with:
       skip_code_quality: true
+      # ⚠️ windows-arm64 是刻意不在这里的。dream-core 的 release 不产
+      # aarch64-pc-windows 二进制，它必然卡在 "Prepare dreamcore binary"；
+      # 官网也没有 Windows ARM64 下载入口，所以它从来没产出过任何东西。
+      #
+      # 而它的失败不只是浪费一个 runner：下面的 auto-retry-workflow 会在
+      # build-pipeline 失败 5 分钟后调用整个 run 的 rerun API，rerun 会把
+      # **还在跑的 job 一起取消**。3.0.1 那轮 macOS Intel 就是这么被取消的
+      # （mac runner 最慢，永远是还在跑的那个），逼得要单独补一次手动构建。
+      # 要加回来，先让 dream-core 产出对应二进制。
       matrix: >-
         {"include":[
           {"platform":"macos-arm64","os":"macos-14","command":"node scripts/build-with-builder.js arm64 --mac --arm64","artifact-name":"macos-build-arm64","arch":"arm64"},
           {"platform":"macos-x64","os":"macos-14","command":"node scripts/build-with-builder.js x64 --mac --x64","artifact-name":"macos-build-x64","arch":"x64"},
           {"platform":"windows-x64","os":"windows-2022","command":"node scripts/build-with-builder.js x64 --win --x64","artifact-name":"windows-build-x64","arch":"x64"},
-          {"platform":"windows-arm64","os":"windows-11-arm","command":"node scripts/build-with-builder.js arm64 --win --arm64","artifact-name":"windows-build-arm64","arch":"arm64"},
           {"platform":"linux-x64","os":"ubuntu-latest","command":"node scripts/build-with-builder.js x64 --linux --x64","artifact-name":"linux-build-x64","arch":"x64"},
           {"platform":"linux-arm64","os":"ubuntu-24.04-arm","command":"node scripts/build-with-builder.js arm64 --linux --arm64","artifact-name":"linux-build-arm64","arch":"arm64"}
         ]}
