@@ -1,0 +1,24 @@
+{
+  "version": "3.0.2",
+  "date": "2026-09-07",
+  "zh": [
+    {
+      "t": "单机版",
+      "d": "**紧急修复 3.0.1 的升级问题：升上去之后看起来「什么都没了」。**\n\n数据一个字节都没丢，是应用打开了一个全新的空档案，而真正的档案原封不动留在旧目录里。3.0.1 把正式版数据目录从旧品牌名改成 One Work 并配了首启迁移，但迁移从来没执行过——取父目录那一步会顺手把目标目录建出来，迁移函数随即判定「目标已存在，无需迁移」，旧目录原地不动。会话、模型服务、技能、MCP、授权全在旧目录。\n\n【修复】\n· 迁移不再被自己创建的空目录挡住：取父目录改用不会建目录的方式，并且把空目录视为不存在（迁移前先删掉这个占位）。目标里只要有一个文件就仍算真实档案，绝不覆盖\n· 已经装过 3.0.1 的用户不会被上面那条自动救到（那时新目录已经不是空的了），所以首次启动会**弹一次窗**，写明旧目录的完整路径，由你决定是否导入\n· 选择导入不会当场搬运：先记录选择再重启，真正的搬运在下次启动最开头完成——此时还没有任何进程打开这两个目录（Windows 不允许搬运有打开句柄的目录）\n· 被顶替的空白档案会改名保留（`One Work.superseded-<时间戳>`）而**不是删除**；搬运失败会自动回滚，并在日志里打印真实路径\n· 选择「暂不导入」后不会再问\n· 弹窗语言跟随系统语言——空白档案里没有语言设置，否则中文用户会看到一个英文的「你的数据不见了」对话框\n\n【说明】\n· 若你已经自行把旧目录改名回去，本版不会重复询问，直接照常使用\n· 若同一台机器上装过更早的旧版客户端（它写入同名的旧目录），弹窗可能会提示导入那一份数据——弹窗里会写清路径，按路径确认后再决定"
+    },
+    {
+      "t": "企业版",
+      "d": "本版无企业侧功能变更。上面那条数据目录修复对企业成员同样适用——被卡在旧目录里的授权、团队技能与模型渠道会随档案一起回来。"
+    }
+  ],
+  "en": [
+    {
+      "t": "Personal edition",
+      "d": "**Urgent fix for the 3.0.1 upgrade, which looked like it had wiped everything.**\n\nNot a single byte was lost. The app was opening a brand-new empty profile while the real one sat untouched in the old directory. 3.0.1 renamed the production data directory to One Work and shipped a first-launch migration, but the migration never ran: computing the parent directory created the target as a side effect, so the migration immediately concluded the target already existed and there was nothing to do. Conversations, model providers, skills, MCP servers and licence were all still in the old directory.\n\n[Fixed]\n· The migration is no longer blocked by a directory it created itself: the parent is resolved without the directory-creating side effect, and an empty target counts as absent (the placeholder is removed before the move). A target holding even one file still counts as a real profile and is never overwritten\n· Anyone who already ran 3.0.1 cannot be rescued by that alone — their new directory is no longer empty — so first launch now **asks once**, naming the full path of the old directory, and lets you decide\n· Accepting does not move anything on the spot: the choice is recorded and the app restarts, with the actual move happening at the very top of the next launch, before anything has opened either directory (Windows will not move a directory that has open handles)\n· The displaced blank profile is renamed and kept (`One Work.superseded-<timestamp>`), never deleted; a failed move rolls back automatically and logs the real path\n· Declining is remembered, and you are not asked again\n· The prompt follows your system language — a blank profile has no language setting, and a Chinese user should not meet an English \"your data is gone\" dialog\n\n[Notes]\n· If you already renamed the old directory back yourself, this build will not ask again and simply carries on\n· On a machine that also ran a much older client (which wrote a directory of the same old name), the prompt may offer to import that one instead — it states the exact path, so check it before accepting"
+    },
+    {
+      "t": "Enterprise edition",
+      "d": "No enterprise-side feature changes in this release. The data-directory fix above applies to enterprise members too: the licence, team skills and model channels stranded in the old directory come back with the profile."
+    }
+  ]
+}
