@@ -23,8 +23,10 @@
  */
 
 import React from 'react';
+import type { TFunction } from 'i18next';
 import { Modal, Message, Radio } from '@arco-design/web-react';
 import { ipcBridge } from '@/common';
+import { friendlyEnterpriseError } from './friendlyEnterpriseError';
 
 export type ConversationShareMode = 'off' | 'tenant' | 'enterprise';
 export type ConversationShareScope = 'tenant' | 'enterprise';
@@ -102,10 +104,13 @@ function ShareScopePicker(props: {
  * `'shared'` did upload/share, `'unavailable'` the policy or plane said no,
  * `'cancelled'` the member closed the scope dialog.
  */
-export async function shareConversationToOrg(conversation: {
-  id: string;
-  name: string;
-}): Promise<'shared' | 'unavailable' | 'cancelled'> {
+export async function shareConversationToOrg(
+  conversation: {
+    id: string;
+    name: string;
+  },
+  t: TFunction
+): Promise<'shared' | 'unavailable' | 'cancelled'> {
   const mode = await fetchShareMode();
   if (mode === null || mode === 'off') {
     Message.info('当前企业未开启会话分享');
@@ -149,8 +154,13 @@ export async function shareConversationToOrg(conversation: {
     });
     Message.success(scope === 'tenant' ? '已分享给本组' : '已分享给全企业');
     return 'shared';
-  } catch {
-    Message.error('分享失败，请稍后重试');
+  } catch (error) {
+    // The server has reasons the member can act on — a conversation id already
+    // taken by someone else's conversation, for one — and "请稍后重试" is the
+    // one piece of advice that can never help with any of them. Show what the
+    // backend actually said; keep the generic line only for the case where
+    // there is nothing to show (a transport failure with no envelope).
+    Message.error(friendlyEnterpriseError(error, t) || '分享失败，请稍后重试');
     return 'unavailable';
   }
 }

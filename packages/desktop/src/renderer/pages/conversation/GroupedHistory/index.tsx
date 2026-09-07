@@ -241,7 +241,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       getJobStatus,
       resolveConversationName,
       onShare: (conversation: TChatConversation) =>
-        void shareConversationToOrg({ id: conversation.id, name: conversation.name ?? '' }),
+        void shareConversationToOrg({ id: conversation.id, name: conversation.name ?? '' }, t),
     }),
     [
       collapsed,
@@ -264,6 +264,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       handleToggleManualUnread,
       getJobStatus,
       resolveConversationName,
+      t,
     ]
   );
 

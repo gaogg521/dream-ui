@@ -22,6 +22,7 @@ const {
   draftMutateMock,
   draftContentRef,
   runtimeViewIsProcessingRef,
+  setWaitingResponseMock,
 } = vi.hoisted(() => ({
   ensureConversationRuntimeMock: vi.fn().mockResolvedValue({ recovered: false, config_options: [], runtime: null }),
   sendMessageInvokeMock: vi.fn().mockResolvedValue(undefined),
@@ -37,6 +38,7 @@ const {
   draftMutateMock: vi.fn(),
   draftContentRef: { current: '' },
   runtimeViewIsProcessingRef: { current: false },
+  setWaitingResponseMock: vi.fn(),
 }));
 
 vi.mock('@/common', () => ({
@@ -274,7 +276,7 @@ vi.mock('@/renderer/pages/conversation/platforms/dreamEngine/useDreamEngineMessa
     thought: { subject: '', description: '' },
     running: false,
     setActiveMsgId: vi.fn(),
-    setWaitingResponse: vi.fn(),
+    setWaitingResponse: setWaitingResponseMock,
     resetState: vi.fn(),
   }),
 }));
@@ -397,6 +399,65 @@ describe('DreamEngineSendBox', () => {
       expect.objectContaining({ kind: 'busy_conflict', busyKind: 'active_turn' })
     );
     expect(Message.error).not.toHaveBeenCalled();
+  });
+
+  /**
+   * A send the backend refuses never opens a stream, and the stream events are
+   * the only thing that clears `waitingResponse` while the member stays in this
+   * conversation. Before this was fixed, a company content-policy refusal left
+   * the turn clock running: the toast naming the rule faded after ten seconds
+   * and the conversation sat on "正在处理中……" counting up indefinitely — nine
+   * minutes, in the report that found it — until the member happened to switch
+   * conversations, which is the one path that rehydrates the flag.
+   *
+   * Asserted for the plain-refusal branch and the busy-conflict branch, since
+   * the latter returns early and would slip past a single check.
+   */
+  it('clears the turn clock when the backend refuses the send', async () => {
+    sendMessageInvokeMock.mockRejectedValue(
+      new BackendHttpError({
+        method: 'POST',
+        path: '/api/conversations/conv-1/messages',
+        status: 403,
+        body: {
+          success: false,
+          code: 'CONTENT_BLOCKED',
+          error: "Blocked by your company's content policy (rule: Secrets).",
+          details: { ruleName: 'Secrets' },
+        },
+      })
+    );
+
+    render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
+    await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'send' }).click();
+    });
+
+    await waitFor(() => expect(markSendFailedMock).toHaveBeenCalled());
+    expect(setWaitingResponseMock).toHaveBeenLastCalledWith(false);
+  });
+
+  it('clears the turn clock on a busy conflict too', async () => {
+    sendMessageInvokeMock.mockRejectedValue(
+      new BackendHttpError({
+        method: 'POST',
+        path: '/api/conversations/conv-1/messages',
+        status: 409,
+        body: { success: false, code: 'CONFLICT', error: 'conversation conv-1 is already running' },
+      })
+    );
+
+    render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
+    await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'send' }).click();
+    });
+
+    await waitFor(() => expect(markSendFailedMock).toHaveBeenCalled());
+    expect(setWaitingResponseMock).toHaveBeenLastCalledWith(false);
   });
 
   it('passes teamRuntime.isActive and onFocus down to SendBox as active/onFocused', () => {
