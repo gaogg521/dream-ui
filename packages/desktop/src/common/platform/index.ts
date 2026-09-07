@@ -78,6 +78,23 @@ export const LEGACY_USERDATA_IMPORT_DECLINED_MARKER = '.onework-import-declined'
 export const USERDATA_DATA_SUBDIR = '1one';
 
 /**
+ * Written into the userData directory right after it is MOVED, naming the
+ * absolute path it was moved from.
+ *
+ * Renaming the directory is only half of the job: conversations, skills, media
+ * assets and queued media jobs all persist ABSOLUTE paths that were captured
+ * under the old name, and a rename silently invalidates every one of them. The
+ * user sees it as "Agent failed to run in this workspace path — make sure
+ * <old path> exists", on a path that no longer does.
+ *
+ * The move happens before app-ready, where opening the SQLite catalog is not
+ * an option; the rewrite runs later (`process/startup/repairMovedUserDataPaths.ts`).
+ * This file is what carries the old root across that gap, and it survives a
+ * crash in between — it is deleted only once the repair has finished.
+ */
+export const USERDATA_MOVED_FROM_MARKER = '.userdata-moved-from';
+
+/**
  * Move a legacy-named production userData directory onto `PROD_USERDATA_APP_NAME`
  * and return the directory to use. `appSupportDir` is the PARENT directory
  * (macOS: `~/Library/Application Support`, Windows: `%APPDATA%`, Linux:
@@ -157,6 +174,7 @@ export function migrateAndResolveProdUserDataDir(appSupportDir: string): string 
       // data we did not inspect.
       if (targetIsEmptyStub) fs.rmdirSync(target);
       fs.renameSync(legacyPath, target);
+      recordUserDataMove(fs, legacyPath, target);
       console.log(`[platform] migrated userData directory: "${legacyName}" -> "${PROD_USERDATA_APP_NAME}"`);
       return target;
     } catch (error) {
@@ -168,6 +186,24 @@ export function migrateAndResolveProdUserDataDir(appSupportDir: string): string 
     }
   }
   return target;
+}
+
+/**
+ * Leave a note saying where this directory came from, for the path repair that
+ * runs once the app is ready. Best-effort: a move that happened without the
+ * note is still a move, and the app must not refuse to start over a file it
+ * could not write. The cost of losing it is the stale-path errors staying,
+ * which is the state we were already in.
+ */
+function recordUserDataMove(fs: typeof import('fs'), from: string, to: string): void {
+  try {
+    fs.writeFileSync(path.join(to, USERDATA_MOVED_FROM_MARKER), from);
+  } catch (error) {
+    console.warn(
+      `[platform] could not record the userData move from "${from}"; stale paths will not be repaired`,
+      error
+    );
+  }
 }
 
 /**
@@ -274,6 +310,7 @@ function swapInLegacyUserDataDir(fs: typeof import('fs'), source: string, target
     }
     return false;
   }
+  recordUserDataMove(fs, source, target);
   try {
     fs.rmSync(path.join(target, LEGACY_USERDATA_IMPORT_REQUESTED_MARKER), { force: true });
   } catch {

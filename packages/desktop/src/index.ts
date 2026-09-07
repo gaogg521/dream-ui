@@ -872,6 +872,33 @@ const handleAppReady = async (): Promise<void> => {
   }
 
   /**
+   * Second half of a userData move: the directory changed name, but every
+   * absolute path persisted inside it still names the old one. No-op unless
+   * the profile was actually moved (a marker file says so).
+   *
+   * ⚠️ Must stay BEFORE startBackendOrExit — it opens the catalog directly,
+   * which is only safe while no dreamcore holds it.
+   */
+  try {
+    const { repairMovedUserDataPaths } = await import('./process/startup/repairMovedUserDataPaths');
+    const { getDataPath, getConfigPath, resolveWithLegacyName } = await import('./process/utils/utils');
+    const dataDir = getDataPath();
+    await repairMovedUserDataPaths({
+      userDataDir: app.getPath('userData'),
+      configDir: getConfigPath(),
+      // Resolved exactly the way dreamcore resolves it: a pre-rebrand install
+      // still keeps its catalog under the old name, and repairing the other
+      // file would fix nothing while reporting success.
+      dbPath: resolveWithLegacyName(dataDir, 'one-backend.db', 'aionui-backend.db'),
+    });
+    mark('repairMovedUserDataPaths');
+  } catch (error) {
+    // A profile with stale paths still opens; some old conversations just fail
+    // to resume. Refusing to start would be strictly worse.
+    console.error('[userdata-repair] path repair failed; continuing', error);
+  }
+
+  /**
    * 启动单目标 CDP 通道，并把端口/口令写进自己的 env。
    *
    * ⚠️ 必须在 startBackendOrExit() 之前 —— 这是硬顺序，不是风格问题。
