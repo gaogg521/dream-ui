@@ -51,14 +51,20 @@ if (!app.isPackaged && !e2eUserDataDir) {
   app.setAppUserModelId(DEV_APP_USER_MODEL_ID);
 } else if (app.isPackaged && !e2eUserDataDir) {
   // Production: pin the app name + userData path to PROD_USERDATA_APP_NAME
-  // ("One Work"), independent of any future productName change. A pre-3.0
+  // ("One Work"), independent of any future productName change. A pre-3.0.1
   // install has its data under the legacy "1ONE Code" directory —
   // migrateAndResolveProdUserDataDir moves it on first launch so upgrading
   // users keep their conversations / model keys / licence. Same
   // setName-then-setPath dance as dev because Electron 28+ does not
   // retroactively move userData on setName (macOS).
+  //
+  // ⚠️ The parent comes from getPath('appData'), NOT from
+  // path.dirname(getPath('userData')). Resolving 'userData' CREATES the
+  // directory, so asking for it here materialised an empty "One Work" that
+  // then made the migration below decide there was nothing to migrate — the
+  // 3.0.1 data-loss bug. 'appData' is the same parent without the side effect.
   app.setName(PROD_USERDATA_APP_NAME);
-  const appSupportDir = path.dirname(app.getPath('userData'));
+  const appSupportDir = app.getPath('appData');
   app.setPath('userData', migrateAndResolveProdUserDataDir(appSupportDir));
   app.setAppUserModelId(APP_USER_MODEL_ID);
 }
