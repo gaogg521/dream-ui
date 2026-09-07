@@ -308,19 +308,32 @@ mv "$APPDATA/1ONE Code/1one/runtime/managed-tools/acp" \
 - **App 自动更新源**（electron-updater 轮询）：COS `releases/latest.yml`（根）+ `releases/<ver>/One-Work-...` + `releases/<ver>/latest*.yml`。
 - **官网下载**（`work.1oneclaw.com`）：`D:\website\1onework\src\site.config.js` 的 `release.version` + download URL，历史上指向 COS 根的旧名 `1ONE-Code-...`，发新版要一并对齐到实际上传的对象。
 
-### ⚠️ 5.1 只出了一个平台的包时，别整体 bump 官网版本号
+### ⚠️ 5.1 增量发布是标准做法——谁先打出来就先发谁，不要等齐再一次性切
 
-官网三个下载按钮（win / mac-arm64 / mac-x64）的 URL 都是**按版本号拼**出来的：`releases/{version}/One-Work-{version}-{os}-{arch}.{ext}`。Windows 在本机打、macOS 走 CI，两者**不一定同一轮出包**——这时把全局 `release.version` 一改，没出包的那个平台链接直接 404，而页面看上去一切正常。
+**这是从 2026-09-07 起的标准流程，不是应急处理。** 五个平台（win / macArm / macIntel / linux-x64 / linux-arm64）里任何一个包一出，COS 传完验过 200，**立刻**把官网那一个平台的版本钉切过去、build、部署——不等其余平台。原因：
 
-2026-07-31 发 2.1.51 时实测：`sync-changelog-to-site.js` 会顺手把 `release.version` 改成新版本，两个 mac 链接当场变成 404（`curl -sI` 实证）。已给 `site.config.js` 加 `release.platformVersions`（`{win, mac}`，缺省回落 `release.version`），某平台这轮没打包就把它留在上一个真实存在的版本上。
+- Windows 本机打、Linux/macOS 走 CI，**没有任何理由让五个平台绑在一起**——本来就不是同一条流水线，谁快谁慢完全独立，用户也是按平台各自下载，不存在"必须同一批发"的产品要求。
+- 憋着等全部到齐才发，等于让**已经打好的包**陪着**还没打好的包**一起被晚上线——那次实测（3.0.2）macOS Intel 反复卡在 codesign（见 [§6.3](#63-macos-intel-反复出问题的三条根因2026-09-07-用真实-api-证据查清纠正了当天早些时候的错误结论)），如果等它，Windows/Linux/macOS Apple Silicon 四个早就验证通过的包会被平白晚发几个小时。
+- 分开发布的唯一前提是**不能 404**：`site.config.js` 的 `release.platformVersions` 键是**按下载条目分的**（`win` / `macArm` / `macIntel` / `linux`），**macOS 的两个架构互相独立、不共享一个 `mac` 键**——这是 3.0.2 当天才拆开的（拆之前 macArm 想先发，会被卡着的 macIntel 一起拖住，因为两者共用 `versionFor("mac")`）。某个条目这一轮没出包，就把它单独留在上一个真实存在于 COS 的版本，其余该切的照常切、照常部署。
 
-发布后**必须按 URL 而不是按文案验收**——文案改对了不代表对象存在：
+官网三个 os 段（win / mac / linux）拼出来的下载 URL 都是**按版本号拼**的：`releases/{version}/One-Work-{version}-{os}-{arch}.{ext}`。哪个条目的版本钉往前挪了却对应对象还没传上 COS，链接直接 404，而页面看上去一切正常——这条铁律不因为改成增量发布而放松，**只是判断粒度从"平台"细到了"下载条目"**。
+
+2026-07-31 发 2.1.51 时实测过一次代价：`sync-changelog-to-site.js` 顺手把 `release.version` 改成新版本，两个 mac 链接当场变成 404（`curl -sI` 实证）。`site.config.js` 的 `release.platformVersions` 就是那次加的；2026-09-07 从"win/mac/linux 三个键"细化成"win/macArm/macIntel/linux 四个键"，把 macOS 两个架构解耦开。
+
+**每次切完就部署，不要攒。流程固定四步**：
+
+1. 传完一个平台的包到 COS 后，`curl -o /dev/null -w '%{http_code}' <该平台的下载URL>` 确认 200。
+2. 只改这一个平台在 `platformVersions` 里对应的键，其余键不动。
+3. `cd D:\website\1onework && npm run build`，然后 `python D:\game\scripts\deploy-1onework-www.py`。
+4. 部署后**必须按 URL 而不是按文案验收**——文案改对了不代表对象存在：
 
 ```bash
-node -e "import('./src/site.config.js').then(m=>{const d=m.site.downloads;for(const k of ['windows','macArm','macIntel'])console.log(k,d[k].versionLabel,d[k].url)})"
+node -e "import('./src/site.config.js').then(m=>{const d=m.site.downloads;for(const k of ['windows','macArm','macIntel','linuxX64','linuxArm64'])console.log(k,d[k].versionLabel,d[k].url)})"
 ```
 
-再把打印出的三个 URL 逐个 `curl -sI` 确认 200。i18n 文案在 `src/i18n.js`（zh/en 两套）+ `index.html` 静态 fallback，同样要按平台分别改，别全局替换。
+再把打印出的五个 URL 逐个 `curl -sI` 确认 200，理想情况下用真机浏览器（不只是 curl）抓一次 `document.querySelectorAll('a[href*="cos.ap-shanghai"]')` 核对页面实际渲染的 href，因为 curl 验证的是对象存在，不代表页面真的引用对了那个 URL。
+
+i18n 文案在 `src/i18n.js`（zh/en 两套）+ `index.html` 静态 fallback，同样要按平台分别改，别全局替换。
 
 ---
 
