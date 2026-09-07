@@ -50,6 +50,34 @@ export const PROD_USERDATA_APP_NAME = 'One Work';
 export const LEGACY_PROD_USERDATA_APP_NAMES: readonly string[] = ['1ONE Code'];
 
 /**
+ * Marker files that record the user's answer to the one-time "your data is in
+ * the old directory — import it?" prompt (`process/startup/legacyUserDataImport.ts`).
+ *
+ * The prompt exists for people who launched the broken 3.0.1: their profile at
+ * `PROD_USERDATA_APP_NAME` is real (Chromium wrote to it, dreamcore seeded a
+ * database) so the empty-stub rule below correctly refuses to overwrite it,
+ * yet everything they care about is still sitting in the legacy directory.
+ *
+ * Both markers live INSIDE the legacy directory, never in the current one:
+ *
+ * - the request marker has to survive that directory being renamed onto the
+ *   target, because the rename is what it is asking for. It travels with the
+ *   data and is deleted the moment the swap lands.
+ * - the decline marker has to survive in the one place that is still checked,
+ *   so a "no" is remembered and the prompt never returns.
+ */
+export const LEGACY_USERDATA_IMPORT_REQUESTED_MARKER = '.onework-import-requested';
+export const LEGACY_USERDATA_IMPORT_DECLINED_MARKER = '.onework-import-declined';
+
+/**
+ * Where the backend catalog sits inside a userData directory — the same
+ * `<userData>/1one` that `process/utils/utils.ts` `getDataPath()` builds. Named
+ * here because the import check needs it before any of that module's
+ * Electron-dependent code can run.
+ */
+export const USERDATA_DATA_SUBDIR = '1one';
+
+/**
  * Move a legacy-named production userData directory onto `PROD_USERDATA_APP_NAME`
  * and return the directory to use. `appSupportDir` is the PARENT directory
  * (macOS: `~/Library/Application Support`, Windows: `%APPDATA%`, Linux:
@@ -102,6 +130,19 @@ export function migrateAndResolveProdUserDataDir(appSupportDir: string): string 
   };
 
   const target = path.join(appSupportDir, PROD_USERDATA_APP_NAME);
+
+  // Someone who ran the broken 3.0.1 has a real-but-blank profile at `target`
+  // and their actual data still in the legacy directory. The stub rule below
+  // will not touch a non-empty target — correctly, since we cannot tell a
+  // blank profile from a used one — so they are recovered by an explicit
+  // prompt instead, whose "yes" is recorded as a marker inside the legacy
+  // directory. The swap itself happens HERE rather than where the question was
+  // asked: this is the last moment in startup at which nothing has opened a
+  // file under either directory, and on Windows a directory with open handles
+  // cannot be renamed.
+  const requested = findRequestedImportSource(fs, isDir, appSupportDir, target);
+  if (requested && swapInLegacyUserDataDir(fs, requested, target)) return target;
+
   const targetIsEmptyStub = isDir(target) && isEmptyDir(target);
   if (isDir(target) && !targetIsEmptyStub) return target;
 
@@ -127,6 +168,120 @@ export function migrateAndResolveProdUserDataDir(appSupportDir: string): string 
     }
   }
   return target;
+}
+
+/**
+ * A legacy profile worth offering to import, or null.
+ *
+ * Used by the one-time recovery prompt (`process/startup/legacyUserDataImport.ts`).
+ * Lives here, with no Electron import, so the decision is testable on its own —
+ * it is the guard on an operation that moves the user's entire data directory.
+ *
+ * Every condition is a reason NOT to ask:
+ * - it is the directory we are already running from (the migration fell back
+ *   in place), so importing it into itself would mean nothing;
+ * - it holds no backend catalog, so there is nothing to recover;
+ * - the user has already answered.
+ */
+export function findImportableLegacyUserDataDir(appSupportDir: string, currentUserDataDir: string): string | null {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require('fs') as typeof import('fs');
+  const isDir = (p: string): boolean => {
+    try {
+      return fs.statSync(p).isDirectory();
+    } catch {
+      return false;
+    }
+  };
+  // The backend catalog is the one artifact whose presence means the app has
+  // actually run in a directory. Both names, because dreamcore itself resolves
+  // the current one and falls back to the pre-rebrand one.
+  const hasBackendCatalog = (dir: string): boolean =>
+    ['one-backend.db', 'aionui-backend.db'].some((name) => fs.existsSync(path.join(dir, USERDATA_DATA_SUBDIR, name)));
+
+  const current = path.resolve(currentUserDataDir);
+  for (const legacyName of LEGACY_PROD_USERDATA_APP_NAMES) {
+    const legacyPath = path.join(appSupportDir, legacyName);
+    if (path.resolve(legacyPath) === current) continue;
+    if (!isDir(legacyPath)) continue;
+    if (!hasBackendCatalog(legacyPath)) continue;
+    if (fs.existsSync(path.join(legacyPath, LEGACY_USERDATA_IMPORT_DECLINED_MARKER))) continue;
+    if (fs.existsSync(path.join(legacyPath, LEGACY_USERDATA_IMPORT_REQUESTED_MARKER))) continue;
+    return legacyPath;
+  }
+  return null;
+}
+
+/**
+ * The legacy directory whose import the user has explicitly asked for, or null.
+ *
+ * Deliberately narrow: only a directory that still carries the request marker
+ * counts, and only while it is not already the directory we are running from.
+ */
+function findRequestedImportSource(
+  fs: typeof import('fs'),
+  isDir: (p: string) => boolean,
+  appSupportDir: string,
+  target: string
+): string | null {
+  for (const legacyName of LEGACY_PROD_USERDATA_APP_NAMES) {
+    const legacyPath = path.join(appSupportDir, legacyName);
+    if (legacyPath === target || !isDir(legacyPath)) continue;
+    if (fs.existsSync(path.join(legacyPath, LEGACY_USERDATA_IMPORT_REQUESTED_MARKER))) return legacyPath;
+  }
+  return null;
+}
+
+/**
+ * Put `source` in the place of `target`, keeping whatever was at `target`.
+ *
+ * Returns false — leaving both directories exactly as they were — when either
+ * rename fails. The marker is left in place on failure so the next launch
+ * retries; the usual cause is another instance of the app still holding the
+ * profile, which the next clean boot resolves by itself.
+ *
+ * The displaced profile is renamed aside, never deleted. It is small (a blank
+ * install) but it is still the user's, and this code has exactly one chance to
+ * be wrong about which directory mattered.
+ */
+function swapInLegacyUserDataDir(fs: typeof import('fs'), source: string, target: string): boolean {
+  const displaced = `${target}.superseded-${Date.now()}`;
+  const targetExists = fs.existsSync(target);
+  if (targetExists) {
+    try {
+      fs.renameSync(target, displaced);
+    } catch (error) {
+      console.warn(`[platform] could not move "${target}" aside for the requested import; keeping it`, error);
+      return false;
+    }
+  }
+  try {
+    fs.renameSync(source, target);
+  } catch (error) {
+    console.warn(`[platform] could not import "${source}"; restoring the previous profile`, error);
+    if (targetExists) {
+      try {
+        fs.renameSync(displaced, target);
+      } catch (restoreError) {
+        // Both renames failed and the profile now sits at `displaced`. Say so
+        // loudly with the real path: the data is intact and one manual rename
+        // puts it back, but nothing else in the app will mention it.
+        console.error(
+          `[platform] profile left at "${displaced}" — rename it back to "${target}" to restore it`,
+          restoreError
+        );
+      }
+    }
+    return false;
+  }
+  try {
+    fs.rmSync(path.join(target, LEGACY_USERDATA_IMPORT_REQUESTED_MARKER), { force: true });
+  } catch {
+    // A leftover marker is harmless: the directory it would point at no longer
+    // exists, so findRequestedImportSource stops finding it either way.
+  }
+  console.log(`[platform] imported legacy userData "${source}" -> "${target}" (previous profile: "${displaced}")`);
+  return true;
 }
 
 /**

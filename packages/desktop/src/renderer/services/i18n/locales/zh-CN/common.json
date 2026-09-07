@@ -77,6 +77,12 @@
   "tray.recentChats": "最近对话",
   "tray.untitled": "未命名",
   "backendStartup": {
+    "legacyUserDataImport": {
+      "title": "是否恢复此前的数据？",
+      "detail": "One Work 的数据存放位置已更换，而此前的版本没能把你已有的数据一起搬过去。你的会话、模型、技能和授权都还在这台电脑上：\n\n{{path}}\n\n导入会用这份数据替换当前的空白配置，并重启 One Work。当前配置会被保留，不会删除。选择「暂不导入」后不再询问。",
+      "importAndRestart": "导入并重启",
+      "notNow": "暂不导入"
+    },
     "incompatibleRuntime": {
       "title": "当前系统不支持内置后端",
       "description": "One Work 已打开，但本地 One Work Core 后端无法在当前 Linux 版本上运行。请升级到受支持的 Linux 发行版后重启 One Work。",
