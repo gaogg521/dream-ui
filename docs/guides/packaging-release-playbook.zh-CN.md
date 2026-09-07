@@ -507,6 +507,23 @@ dream-core 的 release 不产 `aarch64-pc-windows` 二进制，这条腿卡死�
 **判据**：打完 tag 后别看 run 的总色，去看 `Build Pipeline / Build <平台>` 这些 job 是不是
 真的 `success`——`skipped` 就等于没出包。
 
+### 6.5 三个已经落进机制、别再手打一遍的东西（2026-09-07）
+
+同一晚查出来的三处问题，都已经改成代码而不是留在这份文档里让人凭记忆执行：
+
+- **macOS 构建卡死自动重试**：`_build-reusable.yml` 的 "Build with electron-builder (macOS)"
+  步骤现在自己重试（最多 3 次，每次 20 分钟上限），不用再干等超时或手动重跑整个 job。
+  依据见 §6.3 的 codesign 卡死记录。
+- **`scripts/download-gh-artifact.sh`** —— 取代手打 `gh run download` + 重试循环。
+  `curl` 直接打产物 API，`--speed-limit`/`--speed-time` 检测卡顿自动重连，`-C -` 断点续传
+  不用每次从头来。用法：`scripts/download-gh-artifact.sh <owner/repo> <run_id> <artifact-name> <out-dir>`。
+- **`scripts/publish-cos-release-asset.sh`** —— 取代手动的"传版本目录 + 记得也传根目录"。
+  按文件名自动判断：`latest*.yml` 会自动镜像到根目录（自动更新真正轮询的位置），
+  安装包只传版本目录。用法：`scripts/publish-cos-release-asset.sh <本地文件> <version>`
+  （COS 凭据仍要先按 §6.1 注入环境变量）。**这条是从一次真实事故里长出来的**：
+  3.0.2 发布当晚，五个平台里四个的根 `latest*.yml` 都停在上一版，只有明确记得两步都做的
+  那一个是对的——"传完记得同步根目录"当人工步骤时，四次里丢了三次。
+
 ---
 
 ## 7. 实时核实命令
