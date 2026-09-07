@@ -161,18 +161,6 @@ jobs:
         run: |
           bun install --global node-gyp
 
-      - name: Install MSVC ARM64 toolchain (Windows ARM64 only)
-        if: matrix.platform == 'windows-arm64'
-        continue-on-error: true
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 20
-          max_attempts: 3
-          retry_wait_seconds: 60
-          shell: pwsh
-          command: |
-            choco install visualstudio2022buildtools --yes --params "'--add Microsoft.VisualStudio.Component.VC.Tools.ARM64 --add Microsoft.VisualStudio.Component.Windows11SDK.22000 --includeRecommended --includeOptional'"
-
       - name: Setup Windows build environment (for Windows only)
         if: startsWith(matrix.platform, 'windows')
         run: |
