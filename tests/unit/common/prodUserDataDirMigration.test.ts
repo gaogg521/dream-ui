@@ -69,6 +69,55 @@ describe('migrateAndResolveProdUserDataDir', () => {
     expect(fs.readFileSync(path.join(resolved, marker), 'utf8')).toBe(`data for ${PROD_USERDATA_APP_NAME}`);
   });
 
+  /**
+   * The 3.0.1 data-loss regression, in one test.
+   *
+   * `configureChromium.ts` read the parent directory as
+   * `path.dirname(app.getPath('userData'))`, and resolving 'userData' CREATES
+   * the directory. So by the time this function ran, an empty "One Work"
+   * always existed, the "already exists" branch short-circuited, and the
+   * legacy directory holding every conversation, model provider and licence
+   * was never moved. Users upgrading from 3.0.0 opened a blank app.
+   *
+   * An empty target is a stub, not a profile.
+   */
+  it('migrates even when an empty target directory already exists (3.0.1 regression)', () => {
+    seedDir(legacyName);
+    fs.mkdirSync(path.join(root, PROD_USERDATA_APP_NAME));
+
+    const resolved = migrateAndResolveProdUserDataDir(root);
+
+    expect(resolved).toBe(path.join(root, PROD_USERDATA_APP_NAME));
+    expect(fs.existsSync(path.join(root, legacyName))).toBe(false);
+    expect(fs.readFileSync(path.join(resolved, marker), 'utf8')).toBe(`data for ${legacyName}`);
+  });
+
+  it('leaves an empty target alone when there is no legacy directory to migrate', () => {
+    fs.mkdirSync(path.join(root, PROD_USERDATA_APP_NAME));
+
+    const resolved = migrateAndResolveProdUserDataDir(root);
+
+    expect(resolved).toBe(path.join(root, PROD_USERDATA_APP_NAME));
+    expect(fs.existsSync(resolved)).toBe(true);
+  });
+
+  /**
+   * The stub check must not reach into a target that holds anything at all —
+   * a single Chromium file means the profile is in use, and adopting the
+   * legacy directory over it would be the mirror-image data loss.
+   */
+  it('treats a target holding even one file as a real profile', () => {
+    seedDir(legacyName);
+    fs.mkdirSync(path.join(root, PROD_USERDATA_APP_NAME));
+    fs.writeFileSync(path.join(root, PROD_USERDATA_APP_NAME, 'Local State'), '{}');
+
+    const resolved = migrateAndResolveProdUserDataDir(root);
+
+    expect(resolved).toBe(path.join(root, PROD_USERDATA_APP_NAME));
+    expect(fs.existsSync(path.join(root, legacyName))).toBe(true);
+    expect(fs.existsSync(path.join(resolved, marker))).toBe(false);
+  });
+
   it('returns the target path unchanged on a fresh install (nothing to migrate)', () => {
     const resolved = migrateAndResolveProdUserDataDir(root);
 

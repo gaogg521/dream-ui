@@ -52,13 +52,29 @@ export const LEGACY_PROD_USERDATA_APP_NAMES: readonly string[] = ['1ONE Code'];
 /**
  * Move a legacy-named production userData directory onto `PROD_USERDATA_APP_NAME`
  * and return the directory to use. `appSupportDir` is the PARENT directory
- * (macOS: `~/Library/Application Support`, Windows: `%APPDATA%`).
+ * (macOS: `~/Library/Application Support`, Windows: `%APPDATA%`, Linux:
+ * `~/.config`) — i.e. exactly `app.getPath('appData')`.
  *
- * - target already exists                 → use it (no-op)
- * - legacy dir exists, target does not     → rename legacy → target, use target
+ * - target exists AND is non-empty         → use it (no-op)
+ * - target absent, or an empty stub        → migrate a legacy dir onto it
  * - rename fails (locked / cross-device)   → use the legacy dir in place
  *                                            (never lose access to the data)
  * - nothing exists                         → return target path (fresh install)
+ *
+ * ⚠️ Callers MUST derive `appSupportDir` from `app.getPath('appData')`, never
+ * from `path.dirname(app.getPath('userData'))`. Electron's path provider
+ * *creates* the userData directory as a side effect of resolving it (verified:
+ * `getPath('userData')` on a name with no directory returns a path that exists
+ * immediately afterwards), so reading the parent that way materialises an empty
+ * `<appData>/One Work` before this function ever runs. That is what shipped in
+ * 3.0.1: the target always existed, the branch below always short-circuited,
+ * and every upgrading user got a blank profile while their conversations, model
+ * providers and licence sat untouched in `1ONE Code`.
+ *
+ * The empty-stub check below is defence in depth for the same failure: anything
+ * that creates the directory ahead of us (a reordered import, Chromium's
+ * crashpad, a launch that died before writing) must not be able to cancel the
+ * migration again.
  *
  * Must run in the main process, before any `app.getPath('userData')` call.
  */
@@ -75,13 +91,30 @@ export function migrateAndResolveProdUserDataDir(appSupportDir: string): string 
     }
   };
 
+  // Unreadable counts as non-empty: a directory we cannot list is one we must
+  // not assume is a throwaway stub.
+  const isEmptyDir = (p: string): boolean => {
+    try {
+      return fs.readdirSync(p).length === 0;
+    } catch {
+      return false;
+    }
+  };
+
   const target = path.join(appSupportDir, PROD_USERDATA_APP_NAME);
-  if (isDir(target)) return target;
+  const targetIsEmptyStub = isDir(target) && isEmptyDir(target);
+  if (isDir(target) && !targetIsEmptyStub) return target;
 
   for (const legacyName of LEGACY_PROD_USERDATA_APP_NAMES) {
     const legacyPath = path.join(appSupportDir, legacyName);
     if (legacyPath === target || !isDir(legacyPath)) continue;
     try {
+      // `renameSync` onto an existing directory fails on Windows even when it
+      // is empty. rmdirSync only ever removes an empty directory — if anything
+      // wrote into it between the check and here it throws, and we fall
+      // through to using the legacy directory in place rather than deleting
+      // data we did not inspect.
+      if (targetIsEmptyStub) fs.rmdirSync(target);
       fs.renameSync(legacyPath, target);
       console.log(`[platform] migrated userData directory: "${legacyName}" -> "${PROD_USERDATA_APP_NAME}"`);
       return target;
@@ -165,7 +198,10 @@ export function getPlatformServices(): IPlatformServices {
           // Production: pin the userData directory to PROD_USERDATA_APP_NAME,
           // migrating a legacy-named directory ("1ONE Code") on first launch.
           app.setName(PROD_USERDATA_APP_NAME);
-          app.setPath('userData', migrateAndResolveProdUserDataDir(path.dirname(app.getPath('userData'))));
+          // getPath('appData') — never dirname(getPath('userData')), which
+          // would create the target and cancel the migration. See
+          // migrateAndResolveProdUserDataDir.
+          app.setPath('userData', migrateAndResolveProdUserDataDir(app.getPath('appData')));
           app.setAppUserModelId(APP_USER_MODEL_ID);
         }
         // Typed as IPlatformPaths so tsc enforces completeness: any new method
