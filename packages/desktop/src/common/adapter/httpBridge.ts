@@ -573,12 +573,16 @@ export async function httpUploadMultipart<T>(
 
 export type HttpDownloadResult = {
   blob: Blob;
-  /** Server-suggested filename from Content-Disposition, or the last path segment. */
-  fileName: string;
+  /**
+   * The name the server put in Content-Disposition, or `null` when it said
+   * nothing the browser would let us read. Callers that know the file's real
+   * name — the vault has it in the object row — should prefer their own.
+   */
+  fileName: string | null;
 };
 
-function fileNameFromDisposition(value: string | null, fallback: string): string {
-  if (!value) return fallback;
+function fileNameFromDisposition(value: string | null): string | null {
+  if (!value) return null;
   const utf8 = /filename\*=UTF-8''([^;]+)/i.exec(value);
   if (utf8) {
     try {
@@ -588,7 +592,7 @@ function fileNameFromDisposition(value: string | null, fallback: string): string
     }
   }
   const plain = /filename="?([^";]+)"?/i.exec(value);
-  return plain ? plain[1] : fallback;
+  return plain ? plain[1] : null;
 }
 
 /**
@@ -620,8 +624,15 @@ export async function httpDownloadBinary(path: string, options?: HttpRequestOpti
     throw new BackendHttpError({ method: 'GET', path, status: response.status, body: errorBody });
   }
   const blob = await response.blob();
-  const fallback = path.split('/').findLast(Boolean) ?? 'download';
-  return { blob, fileName: fileNameFromDisposition(response.headers.get('Content-Disposition'), fallback) };
+  // `Content-Disposition` is not CORS-safelisted: a cross-origin response —
+  // which is every governance call from the desktop renderer — hides it unless
+  // the server sends `Access-Control-Expose-Headers`. When it is hidden this
+  // reads `null`, so the caller has to be able to tell "the server named it"
+  // from "we guessed from the URL". Returning `null` says so; the old code
+  // returned the URL's last segment and callers could not distinguish a real
+  // name from an object id.
+  const fileName = fileNameFromDisposition(response.headers.get('Content-Disposition'));
+  return { blob, fileName };
 }
 
 /** Personal digital-employee APIs — always local dreamcore on desktop (see getLocalBaseUrl). */
