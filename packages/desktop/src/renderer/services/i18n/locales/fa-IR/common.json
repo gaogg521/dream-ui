@@ -294,5 +294,62 @@
     "colTime": "زمان بارگذاری",
     "colActions": "عملیات",
     "browserHint": "نشست مرورگر: عملیات فایل مستقیماً روی سرور سازمان انجام می‌شود."
+  },
+  "approvals": {
+    "title": "درخواست‌های من",
+    "notConnected": "تأییدها یک قابلیت سازمانی است. ابتدا به سرور شرکت متصل شوید.",
+    "intro": "درخواست‌هایی که ثبت کرده‌اید و تصمیم مدیر.",
+    "refresh": "تازه‌سازی",
+    "newRequest": "درخواست جدید",
+    "empty": "هنوز چیزی ثبت نکرده‌اید.",
+    "submitted": "ثبت شد — در انتظار مدیر.",
+    "colTitle": "درخواست",
+    "colKind": "نوع",
+    "colStatus": "وضعیت",
+    "colNote": "نظر بررسی‌کننده",
+    "colCreatedAt": "زمان ثبت",
+    "titlePlaceholder": "در یک خط بنویسید چه می‌خواهید",
+    "detailPlaceholder": "توضیح بیشتر (اختیاری): چرا، تا چه زمانی، کدام منابع",
+    "kind": {
+      "resource": "منبع",
+      "creation": "ایجاد",
+      "prompt": "پرامپت"
+    },
+    "status": {
+      "pending": "در انتظار",
+      "approved": "تأیید شد",
+      "rejected": "رد شد",
+      "expired": "منقضی شد"
+    }
+  },
+  "selfService": {
+    "membersTitle": "اعضای گروه",
+    "membersEmpty": "هنوز اطلاعات اعضا موجود نیست.",
+    "machinesTitle": "دستگاه‌های من",
+    "machinesEmpty": "هنوز دستگاهی ثبت نشده است.",
+    "sharesTitle": "گفتگوهایی که به اشتراک گذاشته‌ام",
+    "sharesEmpty": "هنوز چیزی به اشتراک نگذاشته‌اید.",
+    "colMember": "عضو",
+    "colRole": "نقش",
+    "colDepartment": "دپارتمان",
+    "colMachine": "دستگاه",
+    "colStatus": "وضعیت",
+    "colLastSeen": "آخرین اتصال",
+    "colConversation": "گفتگو",
+    "colScope": "دامنه",
+    "colSharedAt": "زمان اشتراک",
+    "colAction": "عملیات",
+    "unshare": "لغو اشتراک",
+    "unshareConfirm": "پس از لغو، همکاران دیگر نمی‌توانند این گفتگو را ببینند.",
+    "unshared": "اشتراک لغو شد.",
+    "nodeStatus": {
+      "approved": "تأیید شده",
+      "pending": "در انتظار",
+      "blocked": "مسدود"
+    },
+    "scope": {
+      "tenant": "گروه",
+      "enterprise": "کل شرکت"
+    }
   }
 }

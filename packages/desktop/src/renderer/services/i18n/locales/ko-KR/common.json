@@ -294,5 +294,62 @@
     "colTime": "업로드 시간",
     "colActions": "작업",
     "browserHint": "브라우저 세션: 파일 작업은 엔터프라이즈 서버에서 직접 수행됩니다."
+  },
+  "approvals": {
+    "title": "내 결재",
+    "notConnected": "결재는 기업용 기능입니다. 먼저 '기업 ID' 페이지에서 기업 서버에 연결하세요.",
+    "intro": "내가 제출한 요청과 관리자의 처리 결과입니다. 검토는 관리 콘솔에서 이루어집니다.",
+    "refresh": "새로고침",
+    "newRequest": "요청하기",
+    "empty": "아직 제출한 요청이 없습니다.",
+    "submitted": "제출했습니다. 관리자의 처리를 기다려 주세요.",
+    "colTitle": "요청",
+    "colKind": "종류",
+    "colStatus": "상태",
+    "colNote": "처리 의견",
+    "colCreatedAt": "제출 시각",
+    "titlePlaceholder": "무엇을 요청하는지 한 줄로",
+    "detailPlaceholder": "추가 설명(선택): 용도, 기간, 대상 리소스",
+    "kind": {
+      "resource": "리소스 요청",
+      "creation": "생성 요청",
+      "prompt": "프롬프트 요청"
+    },
+    "status": {
+      "pending": "대기 중",
+      "approved": "승인됨",
+      "rejected": "반려됨",
+      "expired": "만료됨"
+    }
+  },
+  "selfService": {
+    "membersTitle": "프로젝트 그룹 구성원",
+    "membersEmpty": "구성원 정보가 없습니다.",
+    "machinesTitle": "내 기기",
+    "machinesEmpty": "등록된 기기가 없습니다.",
+    "sharesTitle": "내가 공유한 대화",
+    "sharesEmpty": "아직 공유한 대화가 없습니다.",
+    "colMember": "구성원",
+    "colRole": "역할",
+    "colDepartment": "부서",
+    "colMachine": "기기",
+    "colStatus": "상태",
+    "colLastSeen": "마지막 접속",
+    "colConversation": "대화",
+    "colScope": "범위",
+    "colSharedAt": "공유 시각",
+    "colAction": "작업",
+    "unshare": "공유 해제",
+    "unshareConfirm": "공유를 해제하면 동료가 이 대화를 볼 수 없습니다.",
+    "unshared": "공유를 해제했습니다.",
+    "nodeStatus": {
+      "approved": "승인됨",
+      "pending": "검토 대기",
+      "blocked": "차단됨"
+    },
+    "scope": {
+      "tenant": "프로젝트 그룹",
+      "enterprise": "전사"
+    }
   }
 }

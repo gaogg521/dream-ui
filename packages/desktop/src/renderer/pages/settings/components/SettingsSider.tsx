@@ -9,6 +9,7 @@ import {
   Communication,
   Computer,
   Earth,
+  CheckOne,
   FileCabinet,
   IdCard,
   Info,
@@ -51,6 +52,7 @@ export const BUILTIN_TAB_IDS = [
   'enterprise',
   'enterpriseIdentity',
   'fileVault',
+  'approvals',
   // Other
   'system',
   'about',
@@ -207,12 +209,23 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
         icon: <FileCabinet />,
         path: 'file-vault',
       },
+      approvals: {
+        id: 'approvals',
+        label: t('common.approvals.title', { defaultValue: '我的审批' }),
+        icon: <CheckOne />,
+        path: 'approvals',
+      },
       system: { id: 'system', label: t('settings.system'), icon: <System />, path: 'system' },
       about: { id: 'about', label: t('settings.about'), icon: <Info />, path: 'about' },
     };
 
     const result: SiderItem[] = BUILTIN_TAB_IDS.filter(
-      (id) => (id !== 'company' || showCompany) && (id !== 'fileVault' || showFileVault)
+      (id) =>
+        (id !== 'company' || showCompany) &&
+        (id !== 'fileVault' || showFileVault) &&
+        // Same condition as the vault: the rows are server-scoped, so the tab
+        // only means anything once there is a company to ask.
+        (id !== 'approvals' || showFileVault)
     ).map((id) => builtinMap[id]);
 
     // Extension tabs with position anchoring

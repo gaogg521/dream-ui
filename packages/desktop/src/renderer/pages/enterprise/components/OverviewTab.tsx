@@ -15,6 +15,7 @@ import { getEnterpriseServerUrl, getEnterpriseSession, isEnterpriseModeEnabled }
 import { DEPLOYMENT_ROLE_CHANGED_EVENT } from '@/common/config/webuiEnterpriseConfig';
 import { openExternalUrl } from '@/renderer/utils/platform';
 import { clearTeamResources } from '@renderer/utils/enterprise/teamSkillSync';
+import MemberSelfServiceSections from './MemberSelfServiceSections';
 import { useDeploymentRole } from '@renderer/hooks/enterprise/useDeploymentRole';
 import { ORG_CONTEXT_CHANGED_EVENT } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import type { OrgContext } from '@/common/types/org/orgTypes';
@@ -330,6 +331,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
           />
         ) : null}
         <Descriptions column={1} border data={descData} />
+        <MemberSelfServiceSections />
         <Divider />
         <Button status='danger' onClick={() => setExitVisible(true)}>
           {t('common.enterprise.exitButton', { defaultValue: '退出企业' })}

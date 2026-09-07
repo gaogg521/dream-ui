@@ -294,5 +294,62 @@
     "colTime": "Yüklenme",
     "colActions": "İşlemler",
     "browserHint": "Tarayıcı oturumu: dosya işlemleri doğrudan kurumsal sunucuda yapılır."
+  },
+  "approvals": {
+    "title": "Onaylarım",
+    "notConnected": "Onaylar bir kurumsal özelliktir. Önce Kurumsal kimlik sayfasından şirket sunucunuza bağlanın.",
+    "intro": "Gönderdiğiniz talepler ve yöneticinin kararı. İnceleme yönetim konsolunda yapılır.",
+    "refresh": "Yenile",
+    "newRequest": "Yeni talep",
+    "empty": "Henüz bir talep göndermediniz.",
+    "submitted": "Gönderildi — yönetici bekleniyor.",
+    "colTitle": "Talep",
+    "colKind": "Tür",
+    "colStatus": "Durum",
+    "colNote": "Yönetici notu",
+    "colCreatedAt": "Gönderildi",
+    "titlePlaceholder": "Ne istediğinizi tek satırda yazın",
+    "detailPlaceholder": "Bilinmesi gerekenler (isteğe bağlı): neden, ne kadar süre, hangi kaynaklar",
+    "kind": {
+      "resource": "Kaynak",
+      "creation": "Oluşturma",
+      "prompt": "İstem"
+    },
+    "status": {
+      "pending": "Beklemede",
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi",
+      "expired": "Süresi doldu"
+    }
+  },
+  "selfService": {
+    "membersTitle": "Proje grubu üyeleri",
+    "membersEmpty": "Henüz üye bilgisi yok.",
+    "machinesTitle": "Makinelerim",
+    "machinesEmpty": "Henüz kayıtlı makine yok.",
+    "sharesTitle": "Paylaştığım sohbetler",
+    "sharesEmpty": "Henüz bir şey paylaşmadınız.",
+    "colMember": "Üye",
+    "colRole": "Rol",
+    "colDepartment": "Departman",
+    "colMachine": "Makine",
+    "colStatus": "Durum",
+    "colLastSeen": "Son görülme",
+    "colConversation": "Sohbet",
+    "colScope": "Kapsam",
+    "colSharedAt": "Paylaşıldı",
+    "colAction": "İşlem",
+    "unshare": "Paylaşımı kaldır",
+    "unshareConfirm": "Paylaşım kaldırıldığında meslektaşlarınız bu sohbeti artık okuyamaz.",
+    "unshared": "Paylaşım kaldırıldı.",
+    "nodeStatus": {
+      "approved": "Onaylandı",
+      "pending": "Beklemede",
+      "blocked": "Engellendi"
+    },
+    "scope": {
+      "tenant": "Proje grubu",
+      "enterprise": "Tüm şirket"
+    }
   }
 }
