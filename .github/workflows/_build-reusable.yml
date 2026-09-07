@@ -476,9 +476,74 @@ jobs:
         run: |
           set +e  # Handle errors manually
 
-          # Run build command
-          ${{ matrix.command }} 2>&1 | tee "${RUNNER_TEMP}/build.log"
-          BUILD_EXIT_CODE=${PIPESTATUS[0]}
+          # ⚠️ 2026-09-07: macos-x64 twice sat at "• signing file=out/mac/...app"
+          # for 50+ minutes with zero further output, until the job's own
+          # timeout-minutes hard-killed it -- cleanup then reported an orphaned
+          # `codesign` process. That is `codesign` itself hung (most likely
+          # waiting on Apple's timestamp/notarization network round-trip,
+          # which has no built-in timeout of its own -- see the arch-specific
+          # note in the timeout comment on the `build` job above), not a slow
+          # build: three separate healthy runs the same night all completed
+          # this whole step in well under 20 minutes. A single unbounded
+          # attempt therefore either finishes quickly or burns the entire job
+          # timeout waiting on a call that will never return on its own; every
+          # manual retry that night got a fresh connection and succeeded.
+          #
+          # So this loops the build command itself: each attempt is capped,
+          # and a hung attempt is killed and retried on a clean `out/` rather
+          # than waited out. 3 × 20min stays inside the job's own
+          # timeout-minutes with room for the steps around it. Each attempt's
+          # full output is appended to the cumulative log (not overwritten)
+          # so the pattern checks below still see everything that happened,
+          # including the earlier failed attempt(s).
+          #
+          # ⚠️ No GNU `timeout`/`gtimeout` here — stock macOS ships BSD
+          # userland, not GNU coreutils, and this repo has no dependency on
+          # Homebrew coreutils being present on the runner image. Poll the
+          # child PID instead; `kill`/`pkill` are the BSD tools and are
+          # always present.
+          BUILD_TIMEOUT_SECONDS=1200
+          BUILD_MAX_ATTEMPTS=3
+          BUILD_EXIT_CODE=1
+          for attempt in $(seq 1 "$BUILD_MAX_ATTEMPTS"); do
+            echo "=== macOS build attempt $attempt/$BUILD_MAX_ATTEMPTS (cap ${BUILD_TIMEOUT_SECONDS}s) ===" | tee -a "${RUNNER_TEMP}/build.log"
+            ATTEMPT_LOG="${RUNNER_TEMP}/build-attempt-${attempt}.log"
+
+            ${{ matrix.command }} > "$ATTEMPT_LOG" 2>&1 &
+            CMD_PID=$!
+
+            ELAPSED=0
+            TIMED_OUT=0
+            while kill -0 "$CMD_PID" 2>/dev/null; do
+              if [ "$ELAPSED" -ge "$BUILD_TIMEOUT_SECONDS" ]; then
+                TIMED_OUT=1
+                kill -9 "$CMD_PID" 2>/dev/null
+                break
+              fi
+              sleep 5
+              ELAPSED=$((ELAPSED + 5))
+            done
+
+            wait "$CMD_PID" 2>/dev/null
+            BUILD_EXIT_CODE=$?
+            cat "$ATTEMPT_LOG" >> "${RUNNER_TEMP}/build.log"
+
+            if [ $BUILD_EXIT_CODE -eq 0 ]; then
+              break
+            fi
+
+            if [ "$TIMED_OUT" -eq 1 ]; then
+              echo "⚠️ Attempt $attempt timed out after ${BUILD_TIMEOUT_SECONDS}s (likely a hung codesign/notarization call) — cleaning up and retrying" | tee -a "${RUNNER_TEMP}/build.log"
+              pkill -9 -f codesign 2>/dev/null || true
+              rm -rf out
+              continue
+            fi
+
+            # A real build failure (not a timeout) — no point retrying an
+            # error that will just reproduce; fall through to the existing
+            # signing/notarization classification below on this attempt's log.
+            break
+          done
 
           # Check if DMG was created (most important artifact)
           DMG_EXISTS=false
