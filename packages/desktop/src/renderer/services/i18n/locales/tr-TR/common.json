@@ -77,6 +77,12 @@
   "tray.recentChats": "Son Sohbetler",
   "tray.untitled": "Adsız",
   "backendStartup": {
+    "legacyUserDataImport": {
+      "title": "Önceki verileriniz geri yüklensin mi?",
+      "detail": "One Work artık verilerini yeni bir konumda saklıyor, ancak önceki sürüm mevcut verilerinizi oraya taşıyamadı. Sohbetleriniz, modelleriniz, becerileriniz ve lisansınız hâlâ bu bilgisayarda:\n\n{{path}}\n\nİçe aktarma, şu anki boş profili bu verilerle değiştirir ve One Work'ü yeniden başlatır. Mevcut profil silinmez, saklanır. Atlarsanız bir daha sorulmaz.",
+      "importAndRestart": "İçe aktar ve yeniden başlat",
+      "notNow": "Şimdi değil"
+    },
     "incompatibleRuntime": {
       "title": "Bu sistem paketlenmiş backend tarafından desteklenmiyor",
       "description": "One Work açıldı, ancak yerel One Work Core backend bu Linux sürümünde çalışamaz. Desteklenen bir Linux dağıtımına yükseltip One Work'yi yeniden başlatın.",

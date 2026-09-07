@@ -77,6 +77,12 @@
   "tray.recentChats": "Chats récents",
   "tray.untitled": "Sans titre",
   "backendStartup": {
+    "legacyUserDataImport": {
+      "title": "Restaurer vos données précédentes ?",
+      "detail": "One Work enregistre désormais ses données à un nouvel emplacement, et une version antérieure n'y a pas déplacé vos données existantes. Vos conversations, modèles, compétences et licence sont toujours sur cet ordinateur :\n\n{{path}}\n\nL'importation remplace le profil actuel, vide, par ces données et redémarre One Work. Le profil actuel est conservé, pas supprimé. Si vous ignorez, la question ne sera plus posée.",
+      "importAndRestart": "Importer et redémarrer",
+      "notNow": "Pas maintenant"
+    },
     "incompatibleRuntime": {
       "title": "Ce système n'est pas pris en charge par le backend fourni",
       "description": "One Work s'est ouvert, mais le backend local One Work Core ne peut pas fonctionner sur cette version de Linux. Veuillez effectuer une mise à niveau vers une distribution Linux prise en charge et redémarrer One Work.",

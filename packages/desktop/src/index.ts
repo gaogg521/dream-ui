@@ -855,6 +855,23 @@ const handleAppReady = async (): Promise<void> => {
   }
 
   /**
+   * Recovery prompt for anyone left on a blank profile by the 3.0.1 userData
+   * regression. Needs storage (it reads the saved language), so it cannot run
+   * earlier; must run before the backend, so an accepted import never boots a
+   * dreamcore against the directory it is about to move aside. Accepting
+   * relaunches the app and never returns.
+   */
+  try {
+    const { maybeOfferLegacyUserDataImport } = await import('./process/startup/legacyUserDataImport');
+    if ((await maybeOfferLegacyUserDataImport()) === 'relaunching') return;
+    mark('legacyUserDataImport');
+  } catch (error) {
+    // Never block startup on the recovery offer — a user with no legacy data
+    // (everyone, eventually) must not be kept out of the app by it.
+    console.error('[legacy-userdata] import offer failed; continuing', error);
+  }
+
+  /**
    * 启动单目标 CDP 通道，并把端口/口令写进自己的 env。
    *
    * ⚠️ 必须在 startBackendOrExit() 之前 —— 这是硬顺序，不是风格问题。

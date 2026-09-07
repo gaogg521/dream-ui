@@ -76,6 +76,12 @@
   "tray.recentChats": "Letzte Chats",
   "tray.untitled": "Ohne Titel",
   "backendStartup": {
+    "legacyUserDataImport": {
+      "title": "Frühere Daten wiederherstellen?",
+      "detail": "One Work speichert seine Daten jetzt an einem neuen Ort, und eine frühere Version hat Ihre vorhandenen Daten nicht mit verschoben. Ihre Unterhaltungen, Modelle, Skills und Lizenz liegen weiterhin auf diesem Computer:\n\n{{path}}\n\nBeim Import wird das aktuelle, leere Profil durch diese Daten ersetzt und One Work neu gestartet. Das aktuelle Profil bleibt erhalten und wird nicht gelöscht. Wenn Sie überspringen, wird nicht erneut gefragt.",
+      "importAndRestart": "Importieren und neu starten",
+      "notNow": "Jetzt nicht"
+    },
     "incompatibleRuntime": {
       "title": "Dieses System wird vom gebündelten Backend nicht unterstützt",
       "description": "One Work wurde geöffnet, aber das lokale One Work Core-Backend kann auf dieser Linux-Version nicht ausgeführt werden. Bitte upgrade auf eine unterstützte Linux-Distribution und starte One Work neu.",

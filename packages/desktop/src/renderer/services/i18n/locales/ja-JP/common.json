@@ -77,6 +77,12 @@
   "tray.recentChats": "最近のチャット",
   "tray.untitled": "無題",
   "backendStartup": {
+    "legacyUserDataImport": {
+      "title": "以前のデータを復元しますか？",
+      "detail": "One Work のデータ保存場所が変更されましたが、以前のビルドでは既存のデータが移行されませんでした。会話、モデル、スキル、ライセンスはこのコンピューター上に残っています:\n\n{{path}}\n\nインポートすると、現在の空のプロファイルがそのデータに置き換わり、One Work が再起動します。現在のプロファイルは削除されずに保持されます。スキップした場合、次回以降は確認しません。",
+      "importAndRestart": "インポートして再起動",
+      "notNow": "後で"
+    },
     "incompatibleRuntime": {
       "title": "このシステムは同梱バックエンドに対応していません",
       "description": "One Work は開きましたが、ローカルの One Work Core バックエンドはこの Linux バージョンでは実行できません。対応している Linux ディストリビューションにアップグレードしてから One Work を再起動してください。",

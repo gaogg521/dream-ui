@@ -10,9 +10,13 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import {
   BRAND_DISPLAY_NAME,
+  findImportableLegacyUserDataDir,
   LEGACY_PROD_USERDATA_APP_NAMES,
+  LEGACY_USERDATA_IMPORT_DECLINED_MARKER,
+  LEGACY_USERDATA_IMPORT_REQUESTED_MARKER,
   migrateAndResolveProdUserDataDir,
   PROD_USERDATA_APP_NAME,
+  USERDATA_DATA_SUBDIR,
 } from '@/common/platform';
 
 describe('PROD_USERDATA_APP_NAME / brand identity', () => {
@@ -133,5 +137,131 @@ describe('migrateAndResolveProdUserDataDir', () => {
     expect(resolved).toBe(path.join(root, PROD_USERDATA_APP_NAME));
     // the stray file is left alone
     expect(fs.readFileSync(path.join(root, legacyName), 'utf8')).toBe('stray file, not a userData dir');
+  });
+});
+
+/**
+ * Recovery for people the broken 3.0.1 already stranded: the new profile is a
+ * real one, so the migration above correctly refuses it, and a prompt asks
+ * instead. "Yes" is a marker file; this is the code that acts on it.
+ */
+const request = (dir: string) => fs.writeFileSync(path.join(dir, LEGACY_USERDATA_IMPORT_REQUESTED_MARKER), 'x');
+
+describe('requested legacy userData import', () => {
+  let root: string;
+  const legacyName = '1ONE Code';
+  const marker = 'db/conversations.sqlite';
+
+  const seedProfile = (name: string, catalog = 'one-backend.db') => {
+    const dir = path.join(root, name);
+    fs.mkdirSync(path.join(dir, 'db'), { recursive: true });
+    fs.mkdirSync(path.join(dir, USERDATA_DATA_SUBDIR), { recursive: true });
+    fs.writeFileSync(path.join(dir, USERDATA_DATA_SUBDIR, catalog), `catalog for ${name}`);
+    fs.writeFileSync(path.join(dir, marker), `data for ${name}`);
+    return dir;
+  };
+  const displacedDirs = () => fs.readdirSync(root).filter((n) => n.startsWith(`${PROD_USERDATA_APP_NAME}.superseded-`));
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'onework-import-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  describe('findImportableLegacyUserDataDir', () => {
+    it('offers a legacy profile that holds a backend catalog', () => {
+      const legacy = seedProfile(legacyName);
+      const current = seedProfile(PROD_USERDATA_APP_NAME);
+
+      expect(findImportableLegacyUserDataDir(root, current)).toBe(legacy);
+    });
+
+    it('offers one holding only the pre-rebrand catalog name', () => {
+      const legacy = seedProfile(legacyName, 'aionui-backend.db');
+      const current = seedProfile(PROD_USERDATA_APP_NAME);
+
+      expect(findImportableLegacyUserDataDir(root, current)).toBe(legacy);
+    });
+
+    it('stays silent when the legacy directory has no backend catalog', () => {
+      fs.mkdirSync(path.join(root, legacyName, 'Cache'), { recursive: true });
+      const current = seedProfile(PROD_USERDATA_APP_NAME);
+
+      expect(findImportableLegacyUserDataDir(root, current)).toBeNull();
+    });
+
+    /**
+     * The migration falls back to using the legacy directory in place when the
+     * rename fails. Offering to import the directory we are already running
+     * from would be a prompt with no meaning behind either answer.
+     */
+    it('stays silent when the legacy directory IS the current profile', () => {
+      const legacy = seedProfile(legacyName);
+
+      expect(findImportableLegacyUserDataDir(root, legacy)).toBeNull();
+    });
+
+    it('never asks twice — a declined or already-requested directory is skipped', () => {
+      const legacy = seedProfile(legacyName);
+      const current = seedProfile(PROD_USERDATA_APP_NAME);
+
+      fs.writeFileSync(path.join(legacy, LEGACY_USERDATA_IMPORT_DECLINED_MARKER), 'x');
+      expect(findImportableLegacyUserDataDir(root, current)).toBeNull();
+
+      fs.rmSync(path.join(legacy, LEGACY_USERDATA_IMPORT_DECLINED_MARKER));
+      request(legacy);
+      expect(findImportableLegacyUserDataDir(root, current)).toBeNull();
+    });
+  });
+
+  describe('migrateAndResolveProdUserDataDir honouring the request', () => {
+    it('swaps the legacy profile in and keeps the displaced one', () => {
+      const legacy = seedProfile(legacyName);
+      seedProfile(PROD_USERDATA_APP_NAME);
+      request(legacy);
+
+      const resolved = migrateAndResolveProdUserDataDir(root);
+
+      expect(resolved).toBe(path.join(root, PROD_USERDATA_APP_NAME));
+      expect(fs.readFileSync(path.join(resolved, marker), 'utf8')).toBe(`data for ${legacyName}`);
+      expect(fs.existsSync(path.join(root, legacyName))).toBe(false);
+
+      // the blank profile is moved aside, never deleted
+      const displaced = displacedDirs();
+      expect(displaced).toHaveLength(1);
+      expect(fs.readFileSync(path.join(root, displaced[0], marker), 'utf8')).toBe(`data for ${PROD_USERDATA_APP_NAME}`);
+    });
+
+    it('clears the request marker so the swap happens exactly once', () => {
+      const legacy = seedProfile(legacyName);
+      seedProfile(PROD_USERDATA_APP_NAME);
+      request(legacy);
+
+      const resolved = migrateAndResolveProdUserDataDir(root);
+      expect(fs.existsSync(path.join(resolved, LEGACY_USERDATA_IMPORT_REQUESTED_MARKER))).toBe(false);
+
+      // second boot: nothing left to act on, and the imported profile stands
+      expect(migrateAndResolveProdUserDataDir(root)).toBe(resolved);
+      expect(displacedDirs()).toHaveLength(1);
+      expect(fs.readFileSync(path.join(resolved, marker), 'utf8')).toBe(`data for ${legacyName}`);
+    });
+
+    /**
+     * Without a marker this is an ordinary boot, and an ordinary boot must
+     * never touch a profile that is in use — that is the mirror image of the
+     * bug being fixed.
+     */
+    it('leaves both profiles alone when no import was requested', () => {
+      seedProfile(legacyName);
+      seedProfile(PROD_USERDATA_APP_NAME);
+
+      const resolved = migrateAndResolveProdUserDataDir(root);
+
+      expect(fs.readFileSync(path.join(resolved, marker), 'utf8')).toBe(`data for ${PROD_USERDATA_APP_NAME}`);
+      expect(fs.existsSync(path.join(root, legacyName))).toBe(true);
+      expect(displacedDirs()).toHaveLength(0);
+    });
   });
 });
