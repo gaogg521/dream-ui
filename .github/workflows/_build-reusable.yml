@@ -84,11 +84,18 @@ jobs:
     if: ${{ always() && (inputs.skip_code_quality || needs.code-quality.result == 'success') }}
     # A healthy build is ~16 min (macOS arm64, measured). Without an explicit cap
     # GitHub's default is 6 hours, and macOS minutes bill at 10x — a hung
-    # electron-builder therefore burns ~3600 billable minutes before anyone
-    # notices. 2026-08-16 a macos-x64 run sat in electron-builder for 76 minutes
-    # with no output and had to be cancelled by hand. 60 min keeps ~4x headroom
-    # over a normal run while making a hang fail on its own.
-    timeout-minutes: 60
+    # electron-builder therefore burns billable minutes before anyone notices.
+    # 2026-08-16 a macos-x64 run sat in electron-builder for 76 minutes with no
+    # output and had to be cancelled by hand.
+    #
+    # ⚠️ macos-x64 specifically is NOT the ~16 min arm64 figure above: it's
+    # notarization-bound, and Apple's queue depth is outside our control.
+    # 2026-09-07 a genuine (non-hung) macos-x64 build hit exactly 60:17 and was
+    # killed by this timeout while arm64 in the same run finished in 13:32 --
+    # cancelled, not hung, confirmed by re-running it alone and it finishing
+    # normally. 90 min keeps meaningful headroom over the 76-min hang above
+    # while giving notarization queue variance room to breathe.
+    timeout-minutes: 90
 
     outputs:
       commit-short: ${{ steps.commit.outputs.short }}
