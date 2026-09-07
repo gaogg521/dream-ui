@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { execFileSync } from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
+import { readFileSync } from 'node:fs';
 import * as os from 'os';
 import type { BrowserWindow } from 'electron';
 import { app, session } from 'electron';
@@ -31,18 +33,72 @@ import { extractTextFromFile, extractTextFromUrl } from '@process/utils/document
 const RUNTIME_MACHINE_ID_KEY = 'runtime.machineId';
 
 /**
- * A UUID generated once and persisted locally (independent of any signed-in
- * user or enterprise membership), so this desktop install keeps reporting as
- * the same enterprise runtime node across restarts and re-logins.
+ * The identifier this machine reports itself under in the enterprise runtime
+ * roster, persisted so restarts and re-logins do not produce a new node.
+ *
+ * Prefer something the OS keeps per machine, and fall back to a UUID.
+ *
+ * A per-install UUID is stable for one installation and nothing wider, so the
+ * same physical computer shows up once per profile, per reinstall, per moved
+ * data directory — one audited machine, several rows, and blocking one of them
+ * leaves the others running. Reading the OS value collapses those into one
+ * node for every install made from here on.
+ *
+ * Deliberately not retroactive: an install that already persisted a UUID keeps
+ * it. Re-deriving would re-register every existing client under a new id at
+ * once, which is the same duplication this is meant to remove, applied to
+ * everybody on upgrade day.
  */
 async function getOrCreateMachineId(): Promise<string> {
   const existing = await ProcessConfig.get(RUNTIME_MACHINE_ID_KEY);
   if (typeof existing === 'string' && existing) {
     return existing;
   }
-  const id = crypto.randomUUID();
+  const id = readPlatformMachineId() ?? crypto.randomUUID();
   await ProcessConfig.set(RUNTIME_MACHINE_ID_KEY, id);
   return id;
+}
+
+/**
+ * The OS's own per-machine identifier, or `null` when it cannot be read.
+ *
+ * Each of these is the platform's conventional answer and is stable across
+ * reinstalls of this app. Read synchronously at first use only, and every
+ * failure mode — missing file, absent registry key, unexpected output, a
+ * platform not listed here — returns `null` so the caller falls back to a UUID
+ * rather than reporting a shared or empty id.
+ */
+function readPlatformMachineId(): string | null {
+  try {
+    if (process.platform === 'win32') {
+      const out = execFileSync(
+        'reg',
+        ['query', 'HKLM\SOFTWARE\Microsoft\Cryptography', '/v', 'MachineGuid', '/reg:64'],
+        { encoding: 'utf8', timeout: 3000, windowsHide: true }
+      );
+      return /MachineGuid\s+REG_SZ\s+(\S+)/i.exec(out)?.[1] ?? null;
+    }
+    if (process.platform === 'darwin') {
+      const out = execFileSync('ioreg', ['-rd1', '-c', 'IOPlatformExpertDevice'], {
+        encoding: 'utf8',
+        timeout: 3000,
+      });
+      return /"IOPlatformUUID"\s*=\s*"([^"]+)"/.exec(out)?.[1] ?? null;
+    }
+    if (process.platform === 'linux') {
+      for (const path of ['/etc/machine-id', '/var/lib/dbus/machine-id']) {
+        try {
+          const value = readFileSync(path, 'utf8').trim();
+          if (value) return value;
+        } catch {
+          // Try the next well-known location.
+        }
+      }
+    }
+  } catch {
+    // Any failure means "no stable id available here" — never fatal.
+  }
+  return null;
 }
 
 /** Every non-internal IPv4 address across all network interfaces. */

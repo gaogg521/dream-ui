@@ -238,7 +238,9 @@
       "ragEmpty": "ナレッジベースが空です — アップロード"
     },
     "noExpertOption": "エキスパートを指定しない（バックエンドのみ）",
-    "backendRequired": "実行バックエンドを選択してください"
+    "backendRequired": "実行バックエンドを選択してください",
+    "teamDistributed": "チーム · 自動",
+    "teamDeleteDisabledTip": "この AI 社員は組織から配布されています。ここでは削除できません。管理者が権限を取り消すと自動的に消えます。"
   },
   "language": {
     "switchTooltip": "言語を切り替え"

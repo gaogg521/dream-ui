@@ -238,7 +238,9 @@
       "ragEmpty": "Wissensdatenbank ist leer – hochladen"
     },
     "noExpertOption": "Kein Experte (nur Backend)",
-    "backendRequired": "Bitte ein Ausführungs-Backend wählen"
+    "backendRequired": "Bitte ein Ausführungs-Backend wählen",
+    "teamDistributed": "Team · Automatisch",
+    "teamDeleteDisabledTip": "Dieser digitale Mitarbeiter wird von Ihrer Organisation bereitgestellt. Er lässt sich hier nicht löschen und verschwindet von selbst, sobald eine Administratorin den Zugriff entzieht."
   },
   "language": {
     "switchTooltip": "Sprache wechseln"

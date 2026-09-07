@@ -704,6 +704,8 @@ export type I18nKey =
   | 'common.superAssistant.tabAgents'
   | 'common.superAssistant.tabIssues'
   | 'common.superAssistant.tabRegistries'
+  | 'common.superAssistant.teamDeleteDisabledTip'
+  | 'common.superAssistant.teamDistributed'
   | 'common.superAssistant.templatesTitle'
   | 'common.superAssistant.testCase'
   | 'common.superAssistant.testCaseDeleteConfirm'

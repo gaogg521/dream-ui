@@ -2925,6 +2925,29 @@ export const oneBilling = {
   getConversationCost: httpGet<{ conversationId: string; estimatedCostMicros: number }, { conversation_id: string }>(
     (p) => `/api/one/billing/conversation-cost?conversationId=${p.conversation_id}`
   ),
+  /**
+   * P2-1: report a turn's token spend to the company (governance-routed).
+   *
+   * Only calls the company's own model proxy already reach the billing ledger,
+   * because the proxy meters what passes through it. A member using a provider
+   * they configured themselves never touches the server at all, so their spend
+   * was invisible — the administrator's usage page showed a member who had
+   * apparently stopped working. This closes that half.
+   *
+   * `channelId` is the LOCAL provider id, verbatim. The server uses it as the
+   * source marker: a `prov_chan_…` id means the proxy already counted this
+   * turn and the report is dropped, so the two paths cannot double-count.
+   */
+  reportClientUsage: httpPost<
+    void,
+    {
+      model?: string;
+      channelId?: string;
+      inputTokens?: number;
+      outputTokens?: number;
+      conversationId?: string;
+    }
+  >('/api/one/billing/client-usage'),
   // The vendor-signed license backing the plan; null when never activated.
 };
 

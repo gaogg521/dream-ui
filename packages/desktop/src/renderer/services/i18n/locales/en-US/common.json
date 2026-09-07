@@ -553,7 +553,9 @@
     "aionrsProviderRequired": "Configure a model provider under Settings → Model first",
     "runErrorProviderNotFound": "The model bound to this employee no longer exists — pick a new one under Manage.",
     "noExpertOption": "No expert (use the backend only)",
-    "backendRequired": "Please choose a runtime backend"
+    "backendRequired": "Please choose a runtime backend",
+    "teamDistributed": "Team · Auto",
+    "teamDeleteDisabledTip": "This digital employee is distributed by your organization. It cannot be deleted here — it disappears on its own once an administrator revokes access."
   },
   "language": {
     "switchTooltip": "Switch language"

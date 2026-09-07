@@ -7,7 +7,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { Button, Card, Empty, Popconfirm, Tag } from '@arco-design/web-react';
+import { Button, Card, Empty, Popconfirm, Tag, Tooltip } from '@arco-design/web-react';
 import { Delete, Edit, FileText, PlayOne, Plus, Time } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { resolveLocaleKey } from '@/common/utils';
@@ -34,6 +34,15 @@ type AgentsTabProps = {
   onViewDigitalEmployeeDetail?: (agent: AgentCardRef) => void;
   onDeleteAgent?: (agent: AgentCardRef) => Promise<void>;
 };
+
+/**
+ * `origin === 'team'` is the marker `syncTeamAgents` writes on rows it
+ * materialized from the company registry — see the TEAM_ORIGIN constant in
+ * dream-core's employee crate. Everything else on the row is deliberately
+ * rewritten to look local (owner is the member, visibility private), so this
+ * column is the only thing that tells the two apart.
+ */
+const isTeamDistributed = (agent: { origin?: string | null }): boolean => agent.origin === 'team';
 
 const RUN_STATUS_COLOR: Record<string, string> = {
   running: 'processing',
@@ -137,6 +146,17 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
                           {t('common.superAssistant.scheduled', { defaultValue: '定时' })}
                         </Tag>
                       ) : null}
+                      {/* Company-distributed employees land in the member's own
+                          list with owner/visibility rewritten to look local, so
+                          without this tag they are indistinguishable from ones
+                          the member built — including the delete button, which
+                          the next sync would undo. Same label the skills list
+                          already uses for team-distributed rows. */}
+                      {isTeamDistributed(agent) ? (
+                        <Tag size='small' color='green'>
+                          {t('common.superAssistant.teamDistributed', { defaultValue: '团队 · 自动' })}
+                        </Tag>
+                      ) : null}
                     </div>
                     {latestRun ? (
                       <Tag size='small' color={RUN_STATUS_COLOR[latestRun.status] ?? 'default'}>
@@ -167,16 +187,33 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
                     <Button size='small' icon={<Edit />} onClick={() => onManageAgent?.(ref)}>
                       {t('common.superAssistant.manage', { defaultValue: '管理' })}
                     </Button>
-                    <Popconfirm
-                      title={t('common.superAssistant.deleteConfirm', {
-                        defaultValue: '确定删除该数字员工？',
-                      })}
-                      onOk={() => onDeleteAgent?.(ref)}
-                    >
-                      <Button size='small' icon={<Delete />} status='danger'>
-                        {t('common.superAssistant.delete', { defaultValue: '删除' })}
-                      </Button>
-                    </Popconfirm>
+                    {isTeamDistributed(agent) ? (
+                      // Deleting one of these is not a thing the member can do:
+                      // `syncTeamAgents` reconciles the company's list every
+                      // five minutes and writes the row straight back. Say so
+                      // instead of accepting the click and undoing it later.
+                      <Tooltip
+                        content={t('common.superAssistant.teamDeleteDisabledTip', {
+                          defaultValue:
+                            '企业下发的数字员工由管理员统一管理，无法在本地删除；管理员收回授权后会自动消失。',
+                        })}
+                      >
+                        <Button size='small' icon={<Delete />} disabled>
+                          {t('common.superAssistant.delete', { defaultValue: '删除' })}
+                        </Button>
+                      </Tooltip>
+                    ) : (
+                      <Popconfirm
+                        title={t('common.superAssistant.deleteConfirm', {
+                          defaultValue: '确定删除该数字员工？',
+                        })}
+                        onOk={() => onDeleteAgent?.(ref)}
+                      >
+                        <Button size='small' icon={<Delete />} status='danger'>
+                          {t('common.superAssistant.delete', { defaultValue: '删除' })}
+                        </Button>
+                      </Popconfirm>
+                    )}
                   </div>
                 </Card>
               );

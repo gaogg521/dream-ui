@@ -219,7 +219,13 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
         // remoteOrigin must ride along: without it the password-class channels
         // fell back to the LOCAL WebUI login even when connected to a remote
         // server — the browser logged into the wrong backend entirely.
-        ok = await openEnterprisePasswordLoginInBrowser(oauthRedirect, { remoteOrigin });
+        // Tell the console which form to open on. `item.id` is 'ldap' for the
+        // domain-controller channel and 'local' for the built-in account one;
+        // anything else that reaches this branch is password-shaped too.
+        ok = await openEnterprisePasswordLoginInBrowser(oauthRedirect, {
+          remoteOrigin,
+          channel: item.id === 'ldap' ? 'ldap' : 'password',
+        });
         if (ok) {
           Message.info(
             t('common.enterprise.loginBrowserOpenedPassword', {
