@@ -429,36 +429,45 @@ License 签发的 SECRET 私钥与 PUBLIC 公钥。
 
 ---
 
-## 6.3 ⚠️ 下次发版必做：补 macOS Intel 的 `latest-mac.yml`（3.0.1 遗留）
+## 6.3 macOS Intel 反复出问题的三条根因——2026-09-07 用真实 API 证据查清，纠正了当天早些时候的错误结论
 
-**2026-09-07 发 3.0.1 时留下的欠账，已跟用户确认「下次发版一起升级」。**
+**背景**：3.0.1、3.0.2 两次发版，macOS Intel（`macos-x64`）都没能跟着 matrix 正常出包，
+每次都要用 `build-manual.yml` 单独补。3.0.1 发版当晚我（AI）看着 job 时序猜了一个
+「`windows-arm64` 失败 → 触发自动重试 → rerun 取消掉还在跑的 macOS」的连锁，
+写进了当时的 commit message 和这份手册。**这个猜测是错的**——事后拉 GitHub API 查真实
+时间戳才发现，三件事是各自独立的坑，叠在一起才显得像一条连锁。**教训：CI 时序问题
+别靠日志时间点脑补因果，去 `gh api .../jobs` 拿 `started_at`/`completed_at` 核对。**
 
-根目录 `releases/latest-mac.yml`（Intel Mac 的自动更新轮询点）**还停在 3.0.0**，
-其余四个平台（win / mac-arm64 / linux-x64 / linux-arm64）的根 yml 都已是 3.0.1。
-后果有限但真实：Intel Mac 用户**从官网下载装的是 3.0.1**（链接已验 200），
-但**存量 Intel 用户收不到自动更新推送**。
+**根因 1（真正的主因）：`macos-x64` 的 job timeout 对它来说太紧。**
+`_build-reusable.yml` 的 `timeout-minutes` 原来是 60，是照 macOS arm64 的健康耗时
+（~16 分钟）定的。但 x64 这条腿是**公证排队时间不可控**，跟 arm64 的分布根本不同——
+3.0.1 那轮实测：`macos-x64` 从 `started_at` 到 `completed_at` 精确是 **60:17**，
+同一轮 `macos-arm64` 只用了 13:32。3.0.2 那轮復現了一次一样的 60:17。
+**已把 timeout 提到 90 分钟**（该文件里的注释记了完整依据）。
 
-**成因链**（三个坑叠在一起，单独看每个都不致命）：
+**根因 2（无关但值得顺手清掉）：`windows-arm64` 是已知必失败的死腿。**
+dream-core 的 release 不产 `aarch64-pc-windows` 二进制，这条腿卡死在
+"Prepare dreamcore binary"，官网也没有 Windows ARM64 下载入口——它从来没产出过
+任何东西，纯粹每次都白烧一个 runner。**已从 matrix 摘掉。**
+⚠️ 它**不会**拖累 macOS 构建被取消——`_build-reusable.yml` 的 matrix 本来就是
+`fail-fast: false`，这条已经验证过了。
 
-1. tag 触发的 `build-and-release.yml` 里，`windows-arm64` 是**已知必失败**的
-   （dream-core 的 `release.yml` 不产 `aarch64-pc-windows` 二进制，"Prepare dreamcore
-   binary" 这步必挂），而 matrix 默认 `fail-fast: true`。
-2. 于是它一失败就**把还在跑的 `macos-x64` 一起取消**（`completed/cancelled`）。
-   ⚠️ 这个连锁不是每次都发生——取决于谁先跑完，3.0.0 那轮 macOS x64 就侥幸赶在前面完成了，
-   所以**不能靠"上次没事"来判断这次安全**。
-3. 补救时用 `build-manual.yml` 单独重建 Intel，但它有一步
-   **"Clean up non-installer artifacts"**，会把 `.zip` 和 `latest-mac.yml` 一起删掉，
-   只留 `.dmg`。而 **macOS 的自动更新走的是 `.zip` 不是 `.dmg`**，
-   手上没有那个 zip 就凑不出一份正确的 yml——与其发一份指向不存在文件的元数据，
-   不如让它停在旧版本。
+**根因 3（真正无关的第三个坑，同一批修复里顺手发现）：`auto-retry-workflow`
+这个"自动重试"机制从建立以来就没成功过一次。** 它是 workflow 内的一个 job，
+在 `build-pipeline` 失败后等 5 分钟，调用**本 run 自己**的 GitHub rerun API。
+但只要这个 job 还在执行（它必然在执行，因为正是它在发这个 HTTP 请求），
+本 run 在 GitHub 眼里就还是 `in_progress`，rerun API 因此**必定** 403
+`"This workflow is already running"`——这是设计上的自我矛盾，不是偶发的时序竞争。
+3.0.1 那次实测：调用发出、10 毫秒内收到 403，从未成功过。**已彻底移除这个 job**——
+留着只会让人误以为构建失败会自动恢复，实际每次都要人工重跑。真要做自动重试，
+得是一个独立的 workflow，靠 `workflow_run` 事件在这个 run 真正结束之后触发。
 
-**下次怎么做**（任选其一，第一个最省事）：
-
-- 让 `windows-arm64` 别再拖累别人：给 matrix 加 `fail-fast: false`，
-  或给该 job 加 `continue-on-error: true`，或干脆从 matrix 里摘掉
-  （官网根本没有 Windows ARM64 下载入口）。这样 Intel 会跟着正常 matrix 出全套产物。
-- 若仍需单独补 Intel：`build-manual.yml` 记得把 **`installers_only` 关掉**，
-  才拿得到 `.zip` + `latest-mac.yml`。
+**补救 macOS Intel 时容易再踩的第四个坑**：`build-manual.yml` 单独重建时，
+`installers_only` 输入原来默认 `true`，会把 `.zip` 和 `latest-mac.yml` 一起删掉只留
+`.dmg`。**macOS 自动更新走的是 `.zip` 不是 `.dmg`**——3.0.1 就是这么把 Intel 的
+自动更新源拖欠到下一版的，而 3.0.2 第一次单独重建 Intel 时**同一个坑又踩了一次**
+（默认值没变，操作者忘了这个 flag）。**已把默认值翻成 `false`**：手动构建绝大多数
+情况就是在补发版素材，不是在冒烟测试，"保留完整产物"应该是更安全的默认。
 
 **验收**：`curl https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/latest-mac.yml`
 的 `version:` 必须等于当前发布版本，且它 `path:` 指向的 `.zip` 在同目录下真实存在。
