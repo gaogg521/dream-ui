@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { processLocalCronResponse } from './localCronCommands';
 // Shared with the ACP hook on purpose — see the `acp_context_usage` arm.
 import { tokenUsageFromAcpUsage } from '@/renderer/pages/conversation/platforms/acp/useAcpMessage';
+import { reportClientTurnUsage } from '@/renderer/utils/enterprise/clientUsageReport';
 
 type TokenUsage = {
   input_tokens?: number;
@@ -286,6 +287,17 @@ export const useDreamEngineMessage = (
                 total_tokens: (usageData.input_tokens || 0) + (usageData.output_tokens || 0),
               };
               setTokenUsage(newTokenUsage);
+              // P2-1: tell the company what this turn cost. The turn ran on the
+              // co-located personal backend, which has no usage recorder
+              // compiled in, so without this the only spend an administrator
+              // ever sees is whatever happened to go through the company's own
+              // model proxy. Gated, counts-only and best-effort — see the
+              // module for the constraints it is built to.
+              void reportClientTurnUsage({
+                conversationId: conversation_id,
+                inputTokens: usageData.input_tokens,
+                outputTokens: usageData.output_tokens,
+              });
               void ipcBridge.conversation.update.invoke({
                 id: conversation_id,
                 updates: {

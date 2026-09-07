@@ -13,6 +13,8 @@ import {
 import { openExternalUrl } from '@/renderer/utils/platform';
 
 export type OAuthProvider = 'feishu' | 'dingtalk' | 'wecom' | 'oidc';
+/** The two channels that end in a form on the console rather than an OAuth consent page. */
+export type PasswordLoginChannel = 'ldap' | 'password';
 
 /**
  * The OS protocol scheme THIS build claimed for `dream://`-style deep
@@ -123,7 +125,7 @@ export async function openEnterpriseOAuthInBrowser(
  */
 export async function openEnterprisePasswordLoginInBrowser(
   returnTo = '/settings/enterprise',
-  options?: { remoteOrigin?: string | null; desktop?: boolean }
+  options?: { remoteOrigin?: string | null; desktop?: boolean; channel?: PasswordLoginChannel }
 ): Promise<boolean> {
   const remote = (options?.remoteOrigin ?? getEnterpriseServerUrl())?.replace(/\/+$/, '') ?? null;
   const desktop = options?.desktop ?? true;
@@ -133,6 +135,13 @@ export async function openEnterprisePasswordLoginInBrowser(
       desktop: '1',
       scheme: getDeepLinkScheme(),
       redirect: returnTo,
+      // Which of the two password-class channels the member picked. Without
+      // it the console opens on its default tab — 密码登录 — and someone who
+      // clicked "LDAP 域控" in this app lands on a local-account form, with
+      // the LDAP form one tab over under 「SSO 扫码登录」. The console
+      // validates this against its own allowlist; an unknown value just
+      // leaves the default tab selected.
+      channel: options?.channel ?? 'password',
     });
     await openExternalUrl(`${remote}/admin/login?${params.toString()}`);
     return true;

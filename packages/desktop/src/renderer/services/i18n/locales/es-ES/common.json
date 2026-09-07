@@ -238,7 +238,9 @@
       "ragEmpty": "La base de conocimiento está vacía: subir"
     },
     "noExpertOption": "Sin experto (solo el backend)",
-    "backendRequired": "Selecciona un backend de ejecución"
+    "backendRequired": "Selecciona un backend de ejecución",
+    "teamDistributed": "Equipo · Automático",
+    "teamDeleteDisabledTip": "Este empleado digital lo distribuye tu organización. No se puede eliminar aquí: desaparece solo cuando un administrador revoca el acceso."
   },
   "language": {
     "switchTooltip": "Cambiar idioma"

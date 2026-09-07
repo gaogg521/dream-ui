@@ -238,7 +238,9 @@
       "ragEmpty": "Bilgi tabanı boş — yükle"
     },
     "noExpertOption": "Uzman seçilmedi (yalnızca arka uç)",
-    "backendRequired": "Bir çalışma arka ucu seçin"
+    "backendRequired": "Bir çalışma arka ucu seçin",
+    "teamDistributed": "Takım · Otomatik",
+    "teamDeleteDisabledTip": "Bu dijital çalışan kurumunuz tarafından dağıtılır. Buradan silinemez; bir yönetici erişimi kaldırdığında kendiliğinden kaybolur."
   },
   "language": {
     "switchTooltip": "Dili değiştir"

@@ -8,6 +8,7 @@ import type { TChatConversation } from '@/common/config/storage';
 import DreamModal from '@/renderer/components/base/DreamModal';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useCronJobsMap } from '@/renderer/pages/cron';
+import { useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import { shareConversationToOrg } from '@renderer/utils/enterprise/conversationShare';
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -45,6 +46,9 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
   const layout = useLayoutContext();
   const isMobile = layout?.isMobile ?? false;
   const { getJobStatus, markAsRead, setActiveConversation } = useCronJobsMap();
+  // Gates the "分享到企业" row below; see the note on `onShare`.
+  const { context: orgContext } = useOrgContext();
+  const isEnterpriseMember = orgContext?.isEnterprise ?? false;
 
   const {
     conversations,
@@ -240,8 +244,14 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       onToggleManualUnread: handleToggleManualUnread,
       getJobStatus,
       resolveConversationName,
-      onShare: (conversation: TChatConversation) =>
-        void shareConversationToOrg({ id: conversation.id, name: conversation.name ?? '' }, t),
+      // Only offer sharing to somebody who has an organization to share with.
+      // The menu item used to be unconditional, so a personal user saw
+      // "分享到企业" on every conversation and got "当前企业未开启会话分享"
+      // when they tried it — a sentence about a company they do not have.
+      onShare: isEnterpriseMember
+        ? (conversation: TChatConversation) =>
+            void shareConversationToOrg({ id: conversation.id, name: conversation.name ?? '' }, t)
+        : undefined,
     }),
     [
       collapsed,
@@ -264,6 +274,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       handleToggleManualUnread,
       getJobStatus,
       resolveConversationName,
+      isEnterpriseMember,
       t,
     ]
   );

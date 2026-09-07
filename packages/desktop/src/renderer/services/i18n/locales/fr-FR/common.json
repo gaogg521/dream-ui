@@ -238,7 +238,9 @@
       "ragEmpty": "La base de connaissances est vide — importer"
     },
     "noExpertOption": "Aucun expert (backend seul)",
-    "backendRequired": "Veuillez choisir un backend d'exécution"
+    "backendRequired": "Veuillez choisir un backend d'exécution",
+    "teamDistributed": "Équipe · Auto",
+    "teamDeleteDisabledTip": "Cet employé numérique est distribué par votre organisation. Il ne peut pas être supprimé ici : il disparaît de lui-même dès qu'un administrateur retire l'accès."
   },
   "language": {
     "switchTooltip": "Changer de langue"

@@ -238,7 +238,9 @@
       "ragEmpty": "知識庫為空，前往上傳"
     },
     "noExpertOption": "不指定專家（僅用執行後端）",
-    "backendRequired": "請選擇執行後端"
+    "backendRequired": "請選擇執行後端",
+    "teamDistributed": "團隊 · 自動",
+    "teamDeleteDisabledTip": "企業下發的數位員工由管理員統一管理，無法在本機刪除；管理員收回授權後會自動消失。"
   },
   "language": {
     "switchTooltip": "切換語言"
