@@ -429,6 +429,64 @@ License 签发的 SECRET 私钥与 PUBLIC 公钥。
 
 ---
 
+## 6.3 ⚠️ 下次发版必做：补 macOS Intel 的 `latest-mac.yml`（3.0.1 遗留）
+
+**2026-09-07 发 3.0.1 时留下的欠账，已跟用户确认「下次发版一起升级」。**
+
+根目录 `releases/latest-mac.yml`（Intel Mac 的自动更新轮询点）**还停在 3.0.0**，
+其余四个平台（win / mac-arm64 / linux-x64 / linux-arm64）的根 yml 都已是 3.0.1。
+后果有限但真实：Intel Mac 用户**从官网下载装的是 3.0.1**（链接已验 200），
+但**存量 Intel 用户收不到自动更新推送**。
+
+**成因链**（三个坑叠在一起，单独看每个都不致命）：
+
+1. tag 触发的 `build-and-release.yml` 里，`windows-arm64` 是**已知必失败**的
+   （dream-core 的 `release.yml` 不产 `aarch64-pc-windows` 二进制，"Prepare dreamcore
+   binary" 这步必挂），而 matrix 默认 `fail-fast: true`。
+2. 于是它一失败就**把还在跑的 `macos-x64` 一起取消**（`completed/cancelled`）。
+   ⚠️ 这个连锁不是每次都发生——取决于谁先跑完，3.0.0 那轮 macOS x64 就侥幸赶在前面完成了，
+   所以**不能靠"上次没事"来判断这次安全**。
+3. 补救时用 `build-manual.yml` 单独重建 Intel，但它有一步
+   **"Clean up non-installer artifacts"**，会把 `.zip` 和 `latest-mac.yml` 一起删掉，
+   只留 `.dmg`。而 **macOS 的自动更新走的是 `.zip` 不是 `.dmg`**，
+   手上没有那个 zip 就凑不出一份正确的 yml——与其发一份指向不存在文件的元数据，
+   不如让它停在旧版本。
+
+**下次怎么做**（任选其一，第一个最省事）：
+
+- 让 `windows-arm64` 别再拖累别人：给 matrix 加 `fail-fast: false`，
+  或给该 job 加 `continue-on-error: true`，或干脆从 matrix 里摘掉
+  （官网根本没有 Windows ARM64 下载入口）。这样 Intel 会跟着正常 matrix 出全套产物。
+- 若仍需单独补 Intel：`build-manual.yml` 记得把 **`installers_only` 关掉**，
+  才拿得到 `.zip` + `latest-mac.yml`。
+
+**验收**：`curl https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/latest-mac.yml`
+的 `version:` 必须等于当前发布版本，且它 `path:` 指向的 `.zip` 在同目录下真实存在。
+
+---
+
+## 6.4 ⚠️ `PUBLISH_RELEASE` 仓库变量——"绿色但什么都没构建"的真相
+
+**2026-09-07 查明。这条直接推翻了 [§1.5](#15-️-build-and-release打-tag-自动发布在本-fork-从未真正触发过)
+"从未真正触发过"的旧结论——它其实**每次都在跑，只是把活全跳过了**。**
+
+`build-and-release.yml` 的 `build-pipeline` 与 `pack-web-cli` 两个 job 的 `if:` 都带
+`vars.PUBLISH_RELEASE == 'true'`。这个仓库变量**从来没设过**，于是：
+
+- 两个 job 全部 `skipped`；
+- 而最终 `release` job 的条件里写的是 `vars.PUBLISH_RELEASE != 'true' || (...)`，
+  变量没设时**前半句为真**，于是它照样 `success`——**整个 run 显示绿色，却一个包都没产出**。
+
+这是最坏的一种假绿：不是红的所以没人查，又确实什么都没做。
+
+**已于 2026-09-07 设为 `true`**（`gh variable set PUBLISH_RELEASE --body true --repo gaogg521/dream-ui`）。
+查证：`gh variable list --repo gaogg521/dream-ui`。
+
+**判据**：打完 tag 后别看 run 的总色，去看 `Build Pipeline / Build <平台>` 这些 job 是不是
+真的 `success`——`skipped` 就等于没出包。
+
+---
+
 ## 7. 实时核实命令
 
 ```bash
