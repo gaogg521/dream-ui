@@ -61,6 +61,7 @@ import {
   PROTOCOL_SCHEME,
 } from './process/utils/deepLink';
 import {
+  attachDownloadHandler,
   bindMainWindowReferences,
   showAndFocusMainWindow,
   showOrCreateMainWindow,
@@ -655,6 +656,7 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
 
   initMainAdapterWithWindow(mainWindow);
   bindMainWindowReferences(mainWindow);
+  attachDownloadHandler(mainWindow);
 
   setupApplicationMenu();
 
