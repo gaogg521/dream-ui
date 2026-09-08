@@ -12,6 +12,8 @@
 
 import { useEffect, useRef } from 'react';
 import { useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
+import { isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
+import { ENTERPRISE_RESOURCES_MARKER } from '@renderer/utils/enterprise/teamSkillSync';
 import { isElectronDesktop } from '@renderer/utils/platform';
 import {
   clearTeamResources,
@@ -30,7 +32,7 @@ import { fulfilAuditUploadRequests } from '@renderer/utils/enterprise/conversati
 const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 
 export function useTeamResourceSync(): void {
-  const { context } = useOrgContext();
+  const { context, loading } = useOrgContext();
   const isEnterprise = context?.isEnterprise ?? false;
   /** Whether the previous render resolved as enterprise — see the purge below. */
   const wasEnterprise = useRef(false);
@@ -46,13 +48,34 @@ export function useTeamResourceSync(): void {
     // Guarded on the TRANSITION, not the state: a standalone user who was
     // never in an enterprise has nothing to purge, and firing four IPC calls
     // on every personal-mode start would be pure noise.
+    if (loading) return;
     if (!isEnterprise && wasEnterprise.current) {
       wasEnterprise.current = false;
+      localStorage.removeItem(ENTERPRISE_RESOURCES_MARKER);
       void clearTeamResources();
+      return;
+    }
+    if (!isEnterprise) {
+      // Leaving BY WAY OF A RELOAD: the disconnect toggle disables enterprise
+      // mode and reloads the app, so the in-memory leaving transition above
+      // never sees it — a fresh mount has no "was enterprise" to compare
+      // against, and an enterprise-issued model channel survived the switch
+      // back to the personal workspace exactly that way. The marker does
+      // survive: it is set for as long as this machine holds materialized
+      // enterprise resources, and consumed here.
+      //
+      // Gated on enterprise mode being explicitly OFF. A server that is
+      // merely unreachable keeps enabled=true, and its offline cache must
+      // stay — an unreachable server must never read as a purge instruction.
+      if (!isEnterpriseModeEnabled() && isElectronDesktop() && localStorage.getItem(ENTERPRISE_RESOURCES_MARKER)) {
+        localStorage.removeItem(ENTERPRISE_RESOURCES_MARKER);
+        void clearTeamResources();
+      }
       return;
     }
     // standalone, or a browser thin-client → never sync
     if (!isEnterprise || !isElectronDesktop()) return;
+    localStorage.setItem(ENTERPRISE_RESOURCES_MARKER, '1');
     wasEnterprise.current = true;
     const syncAll = () => {
       void syncTeamSkills();
@@ -97,5 +120,5 @@ export function useTeamResourceSync(): void {
     syncAll();
     const timer = window.setInterval(syncAll, SYNC_INTERVAL_MS);
     return () => window.clearInterval(timer);
-  }, [isEnterprise]);
+  }, [isEnterprise, loading]);
 }
