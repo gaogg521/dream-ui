@@ -142,27 +142,61 @@ export async function syncTeamMcp(): Promise<TeamSkillSyncResult | null> {
  * should not watch their models disappear.
  */
 /**
- * Channel tokens already minted in this session.
+ * Channel tokens this renderer has already resolved, by channel id.
  *
  * Minting is **rotation**: the server stores only a hash, so every call to
  * `issueChannelToken` replaces the row for this (member, channel) and the
- * previous token stops working. This sync runs every five minutes, so before
- * the cache a member's own client invalidated its own credential on a timer —
- * and a conversation whose agent had already captured the old token started
- * answering `401 not authorized for this model channel` about five minutes in,
- * for as long as it stayed open. Reproduced repeatedly on a real client.
+ * previous token stops working. This sync runs every five minutes, so without
+ * the check below a member's own client invalidated its own credential on a
+ * timer — and a conversation whose agent had already captured the old token
+ * started answering `401 not authorized for this model channel` about five
+ * minutes in, for as long as it stayed open. Reproduced repeatedly on a real
+ * client.
  *
- * Caching per session is enough because that is the lifetime of the thing that
- * captures the token: agents are built in the co-located backend and die with
- * it. A restart mints once more, which is a cost of one request.
+ * An in-memory map alone is NOT enough, which the first attempt at this got
+ * wrong: it lives in the renderer, and the thing holding the token is an agent
+ * in the co-located backend, which outlives a reload of the page. One reload
+ * re-minted and broke every running agent again. So the durable copy is the
+ * local provider row — the same row the sync writes and the agent reads — and
+ * this map is only a per-cycle shortcut past reading it back.
  *
  * Cleared on revocation with everything else — see `purgeOnRevocation`.
  */
 const mintedChannelTokens = new Map<string, string>();
 
+/**
+ * The token already stored for this channel, if the local backend has one.
+ *
+ * `provider_id_for` in dream-core-system materializes company channels as
+ * `prov_chan_<channel id>`, and stores the member's channel token as that
+ * row's `api_key`. Reading it back is what makes "do not rotate" survive a
+ * reload.
+ */
+async function storedChannelToken(channelId: string): Promise<string | null> {
+  try {
+    const providers = await ipcBridge.mode.listProviders.invoke();
+    const stored = providers?.find((provider) => provider.id === `prov_chan_${channelId}`)?.api_key?.trim();
+    return stored ? stored : null;
+  } catch {
+    // Unreadable local providers is not "there is no token" — minting here
+    // would be the rotation this whole function exists to avoid. Fall through
+    // to minting only because a channel with no usable token is worse than a
+    // rotated one, and this path also covers the genuine first sync.
+    return null;
+  }
+}
+
 async function channelToken(channelId: string): Promise<string> {
   const cached = mintedChannelTokens.get(channelId);
   if (cached) return cached;
+
+
+  const stored = await storedChannelToken(channelId);
+  if (stored) {
+    mintedChannelTokens.set(channelId, stored);
+    return stored;
+  }
+
   const issued = await ipcBridge.oneDevops.issueChannelToken.invoke({ id: channelId });
   mintedChannelTokens.set(channelId, issued.token);
   return issued.token;

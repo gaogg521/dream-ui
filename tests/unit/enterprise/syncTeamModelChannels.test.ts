@@ -22,6 +22,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const hooks = vi.hoisted(() => ({
   listModelChannels: vi.fn(),
   issueChannelToken: vi.fn(),
+  listProviders: vi.fn(),
   syncModelChannels: vi.fn(),
   syncTeamSkills: vi.fn(),
   syncTeamMcp: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock('@/common', () => ({
     mode: {
       syncModelChannels: { invoke: hooks.syncModelChannels },
       setContentInspectionRules: { invoke: hooks.setContentInspectionRules },
+      listProviders: { invoke: hooks.listProviders },
     },
     fs: {
       syncTeamSkills: { invoke: hooks.syncTeamSkills },
@@ -87,6 +89,8 @@ beforeEach(() => {
     channelId: id,
     token: `onech-${id}`,
   }));
+  // No local rows is the first-sync case; individual tests override it.
+  hooks.listProviders.mockResolvedValue([]);
   hooks.syncTeamSkills.mockResolvedValue({ written: [], removed: [], kept: 0 });
   hooks.syncTeamMcp.mockResolvedValue({ written: [], removed: [], kept: 0 });
 });
@@ -209,6 +213,22 @@ describe('channel tokens across repeated syncs', () => {
     for (const call of hooks.syncModelChannels.mock.calls) {
       expect(call[0].channels[0].token).toBe(`onech-${CACHE_ID}`);
     }
+  });
+
+  /**
+   * The in-memory map dies with the page; the agent holding the token does
+   * not — it lives in the co-located backend. So a reload must not re-mint,
+   * and the only thing that survives both is the local provider row.
+   */
+  it('reuses the token the local backend already stores instead of rotating', async () => {
+    CACHE_ID = 'ochan_cache_c';
+    hooks.listModelChannels.mockResolvedValue([channel(CACHE_ID, 'corp-gateway')]);
+    hooks.listProviders.mockResolvedValue([{ id: `prov_chan_${CACHE_ID}`, api_key: 'onech-already-issued' }]);
+
+    await syncTeamModelChannels();
+
+    expect(hooks.issueChannelToken).not.toHaveBeenCalled();
+    expect(hooks.syncModelChannels.mock.calls.at(-1)?.[0].channels[0].token).toBe('onech-already-issued');
   });
 
   it('drops the cached token when the member is revoked', async () => {
