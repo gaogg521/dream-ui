@@ -72,15 +72,19 @@ export async function openWebuiEnterpriseLogin(returnTo = '/settings/enterprise'
  * running and unable to start), so the caller can say why nothing happened.
  */
 export async function openAdminConsole(path = '/'): Promise<boolean> {
+  // The root of the console MUST keep its trailing slash: the gateway (Vite
+  // with base /admin/ in dev, same shape in prod) answers a bare /admin with
+  // a "did you mean to visit /admin/ instead?" hint page instead of the SPA.
   const suffix = path.startsWith('/') ? path : `/${path}`;
+  const tail = suffix === '/' ? '/' : suffix;
   const remote = getEnterpriseServerUrl()?.replace(/\/+$/, '') ?? null;
   if (remote) {
-    await openExternalUrl(`${remote}/admin${suffix === '/' ? '' : suffix}`);
+    await openExternalUrl(`${remote}/admin${tail}`);
     return true;
   }
   const webui = await ensureWebuiRunning();
   if (!webui) return false;
-  await openExternalUrl(`${webui.localUrl}/admin${suffix === '/' ? '' : suffix}`);
+  await openExternalUrl(`${webui.localUrl}/admin${tail}`);
   return true;
 }
 
