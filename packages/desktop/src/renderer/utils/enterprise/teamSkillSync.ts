@@ -299,8 +299,17 @@ function parseJsonOr<T>(raw: string | null | undefined, fallback: T): T {
  * the session being invalidated by the leave, so the call would usually fail;
  * code that pretends to deliver them would be worse than admitting it does not.
  */
+/**
+ * Set for as long as this machine holds materialized enterprise resources,
+ * consumed by `useTeamResourceSync` when enterprise mode turns explicitly OFF
+ * across a reload (the disconnect toggle reloads the app, which erases the
+ * in-memory leaving transition). Cleared by every purge path.
+ */
+export const ENTERPRISE_RESOURCES_MARKER = 'one-enterprise:resources-materialized';
+
 export async function clearTeamResources(): Promise<void> {
   undeliveredFindings = [];
+  localStorage.removeItem(ENTERPRISE_RESOURCES_MARKER);
   await Promise.allSettled([
     ipcBridge.fs.syncTeamSkills.invoke({ skills: [], authoritative: true }),
     ipcBridge.fs.syncTeamMcp.invoke({ servers: [], authoritative: true }),
