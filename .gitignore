@@ -251,3 +251,7 @@ temp/
 
 # Copied marketing screenshots — never commit; README uses resources/*.png
 resources/screens/
+
+# Build artifacts from other workflows — never commit.
+out-pkg/
+out-pkg2/
