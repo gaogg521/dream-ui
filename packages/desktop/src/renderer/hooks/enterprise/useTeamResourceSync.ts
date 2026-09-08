@@ -21,6 +21,7 @@ import {
   syncTeamModelChannels,
   syncTeamSkills,
   syncTeamMemory,
+  syncSendPolicy,
   syncToolSecurityPolicy,
 } from '@renderer/utils/enterprise/teamSkillSync';
 import { fulfilAuditUploadRequests } from '@renderer/utils/enterprise/conversationShare';
@@ -77,6 +78,9 @@ export function useTeamResourceSync(): void {
       // machine because that is where both happen, and both therefore inherit
       // the same up-to-one-cycle propagation delay.
       void syncToolSecurityPolicy();
+      // And the third: what may be *sent*, and with which model. Same machine,
+      // same reason, same propagation delay.
+      void syncSendPolicy();
       // Company memory, for the same reason and on the same terms: recall runs
       // against the local copy so the prompt never has to leave the machine.
       void syncTeamMemory();

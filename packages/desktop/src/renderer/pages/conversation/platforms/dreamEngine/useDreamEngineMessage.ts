@@ -71,6 +71,35 @@ export const useDreamEngineMessage = (
   // Use refs to avoid useEffect re-subscription when these states change
   const hasActiveToolsRef = useRef(hasActiveTools);
   const streamRunningRef = useRef(streamRunning);
+  /**
+   * The per-turn token counts, held between the frame that carries them and
+   * the turn boundary that reports them.
+   *
+   * They arrive on `acp_context_usage` (in `_meta`), and the report belongs on
+   * `finish` — one report per turn, whatever the frame ordering. Cleared on
+   * report so a repeated or late frame cannot bill the same turn twice.
+   */
+  const pendingTurnSpendRef = useRef<{ inputTokens?: number; outputTokens?: number } | null>(null);
+
+  /**
+   * Report a turn's spend exactly once, preferring counts the caller has over
+   * the ones stashed from the usage frame.
+   *
+   * Both orderings happen across backends — the usage frame can land before or
+   * after `finish` — so this is called from both arms and the ref is what makes
+   * the second call a no-op.
+   */
+  const reportTurnSpend = useCallback(
+    (counts: { inputTokens?: number; outputTokens?: number }) => {
+      const pending = pendingTurnSpendRef.current;
+      const inputTokens = counts.inputTokens ?? pending?.inputTokens;
+      const outputTokens = counts.outputTokens ?? pending?.outputTokens;
+      if (!inputTokens && !outputTokens) return;
+      pendingTurnSpendRef.current = null;
+      void reportClientTurnUsage({ conversationId: conversation_id, inputTokens, outputTokens });
+    },
+    [conversation_id]
+  );
   const waitingResponseRef = useRef(waitingResponse);
 
   // Track whether current turn has content output
@@ -282,22 +311,28 @@ export const useDreamEngineMessage = (
             logStreamTerminalObserved(conversation_id, message.turn_id, 'dream', message.type);
             // dream stream_end carries usage in data field
             const usageData = message.data as TokenUsage | undefined;
+            // P2-1: tell the company what this turn cost. The turn ran on the
+            // co-located personal backend, which has no usage recorder compiled
+            // in, so without this the only spend an administrator ever sees is
+            // whatever happened to go through the company's own model proxy.
+            //
+            // Reported here, at the turn boundary, but *not* from this frame's
+            // data: on this backend `finish` carries no counts at all — they
+            // arrive in the `acp_context_usage` frame emitted just before it
+            // (dream-core sends one there deliberately, so the context
+            // indicator has something to show). Reading only `finish` is how
+            // this reported nothing on the product's default conversation type
+            // while looking wired up. Prefer the frame's own numbers when a
+            // backend does put them there.
+            reportTurnSpend({
+              inputTokens: usageData?.input_tokens,
+              outputTokens: usageData?.output_tokens,
+            });
             if (usageData && typeof usageData === 'object' && 'input_tokens' in usageData) {
               const newTokenUsage: TokenUsageData = {
                 total_tokens: (usageData.input_tokens || 0) + (usageData.output_tokens || 0),
               };
               setTokenUsage(newTokenUsage);
-              // P2-1: tell the company what this turn cost. The turn ran on the
-              // co-located personal backend, which has no usage recorder
-              // compiled in, so without this the only spend an administrator
-              // ever sees is whatever happened to go through the company's own
-              // model proxy. Gated, counts-only and best-effort — see the
-              // module for the constraints it is built to.
-              void reportClientTurnUsage({
-                conversationId: conversation_id,
-                inputTokens: usageData.input_tokens,
-                outputTokens: usageData.output_tokens,
-              });
               void ipcBridge.conversation.update.invoke({
                 id: conversation_id,
                 updates: {
@@ -374,6 +409,17 @@ export const useDreamEngineMessage = (
               if (!next.cost && prev?.cost) next.cost = prev.cost;
               return next;
             });
+            // The per-turn counts the company's ledger wants live only here.
+            // Stash them for the `finish` arm; if the turn has already closed
+            // (a backend that reports usage afterwards), report now instead.
+            const breakdown = tokenUsageFromAcpUsage(usageData).breakdown;
+            if (breakdown && (breakdown.input_tokens || breakdown.output_tokens)) {
+              pendingTurnSpendRef.current = {
+                inputTokens: breakdown.input_tokens,
+                outputTokens: breakdown.output_tokens,
+              };
+              if (!streamRunningRef.current) reportTurnSpend({});
+            }
             // Only when the backend actually states a window. Without it the
             // indicator shows the raw count rather than a percentage against a
             // guessed denominator.

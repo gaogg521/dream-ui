@@ -46,6 +46,10 @@ function isMembershipRefused(error: unknown): boolean {
 /** One purge per revocation, not one per registry that noticed it. */
 let revocationPurge: Promise<void> | null = null;
 function purgeOnRevocation(): Promise<void> {
+  // The cached channel tokens go too: they are company credentials, and a
+  // member who has been removed must not keep one in memory for the rest of
+  // the session.
+  mintedChannelTokens.clear();
   revocationPurge ??= clearTeamResources().finally(() => {
     revocationPurge = null;
   });
@@ -137,6 +141,33 @@ export async function syncTeamMcp(): Promise<TeamSkillSyncResult | null> {
  * providers untouched, because a member whose company server is briefly down
  * should not watch their models disappear.
  */
+/**
+ * Channel tokens already minted in this session.
+ *
+ * Minting is **rotation**: the server stores only a hash, so every call to
+ * `issueChannelToken` replaces the row for this (member, channel) and the
+ * previous token stops working. This sync runs every five minutes, so before
+ * the cache a member's own client invalidated its own credential on a timer —
+ * and a conversation whose agent had already captured the old token started
+ * answering `401 not authorized for this model channel` about five minutes in,
+ * for as long as it stayed open. Reproduced repeatedly on a real client.
+ *
+ * Caching per session is enough because that is the lifetime of the thing that
+ * captures the token: agents are built in the co-located backend and die with
+ * it. A restart mints once more, which is a cost of one request.
+ *
+ * Cleared on revocation with everything else — see `purgeOnRevocation`.
+ */
+const mintedChannelTokens = new Map<string, string>();
+
+async function channelToken(channelId: string): Promise<string> {
+  const cached = mintedChannelTokens.get(channelId);
+  if (cached) return cached;
+  const issued = await ipcBridge.oneDevops.issueChannelToken.invoke({ id: channelId });
+  mintedChannelTokens.set(channelId, issued.token);
+  return issued.token;
+}
+
 export async function syncTeamModelChannels(): Promise<TeamSkillSyncResult | null> {
   let channels: Awaited<ReturnType<typeof ipcBridge.oneDevops.listModelChannels.invoke>>;
   try {
@@ -162,13 +193,13 @@ export async function syncTeamModelChannels(): Promise<TeamSkillSyncResult | nul
   const resolved = await Promise.all(
     enabled.map(async (channel) => {
       try {
-        const issued = await ipcBridge.oneDevops.issueChannelToken.invoke({ id: channel.id });
+        const token = await channelToken(channel.id);
         return {
           channelId: channel.id,
           name: channel.name,
           platform: channel.platform,
           baseUrl: `${serverUrl}/api/one/model-proxy/${channel.id}`,
-          token: issued.token,
+          token,
           models: parseJsonOr<string[]>(channel.models, []),
           modelSettings: parseJsonOr<unknown>(channel.modelSettings, undefined),
           modelProtocols: parseJsonOr<unknown>(channel.modelProtocols, undefined),
@@ -348,6 +379,54 @@ export async function syncToolSecurityPolicy(): Promise<boolean> {
       blockedCommandPatterns: policy.blockedCommandPatterns ?? [],
       externalNetworkDeniedByDefault: policy.externalNetworkDeniedByDefault ?? false,
     });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Bring the send-rate limit and the model allowlist down to the local backend.
+ *
+ * The last two dimensions of the same gap `syncToolSecurityPolicy` closes: the
+ * gate that enforces them (`EnterpriseSendGate`) is compiled into the
+ * enterprise binary, and a member's sends go to the co-located personal one.
+ * Reproduced on a real client: a limit of one message per minute let ten
+ * through, and a two-model allowlist restricted nothing.
+ *
+ * Two reads because the two settings live in two places the admin console
+ * already keeps them: the rate limit on the security policy, the allowlist on
+ * the plan. Offline-first in the same direction as everything else here — a
+ * value we could not read leaves the local copy untouched, because an
+ * unreachable server must not read as a policy that was switched off.
+ *
+ * The spend cap is deliberately not carried; `dream_core_system::send_policy`
+ * says why.
+ */
+export async function syncSendPolicy(): Promise<boolean> {
+  let sendRateLimitPerMinute: number | null = null;
+  try {
+    const policy = await ipcBridge.onePlatform.mySecurityPolicy.invoke();
+    if (!policy) return false;
+    sendRateLimitPerMinute = policy.sendRateLimitPerMinute ?? null;
+  } catch (error) {
+    if (isMembershipRefused(error)) await purgeOnRevocation();
+    return false;
+  }
+
+  let allowedModels: string[] = [];
+  try {
+    const plan = await ipcBridge.oneBilling.myPlan.invoke();
+    allowedModels = plan?.allowedModels ?? [];
+  } catch (error) {
+    if (isMembershipRefused(error)) await purgeOnRevocation();
+    // A plan we could not read is not an empty allowlist. Leaving the local
+    // copy alone is the only reading that does not silently widen it.
+    return false;
+  }
+
+  try {
+    await ipcBridge.mode.syncSendPolicy.invoke({ sendRateLimitPerMinute, allowedModels });
     return true;
   } catch {
     return false;

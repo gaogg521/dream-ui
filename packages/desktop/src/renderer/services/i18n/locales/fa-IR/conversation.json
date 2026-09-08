@@ -866,6 +866,7 @@
   "mediaModeStartFailed": "تولید آغاز نشد: {{reason}}",
   "mediaJobSourceImages": "تصاویر مبدأ",
   "policyDenied_seatLimitExceeded": "ظرفیت مجوز سازمان شما تکمیل شده است؛ تا زمانی که مدیر ظرفیتی را آزاد نکند یا طرح را ارتقا ندهد، امکان ارسال پیام نیست.",
+  "policyDenied_sendRateLimited": "سرعت ارسال شما بیش از حد مجاز در سیاست شرکت است. کمی صبر کنید و دوباره تلاش کنید.",
   "policyDenied_departmentBudgetExceeded": "بودجه مصرف بخش شما در این دوره تمام شده و ارسال ممکن نیست. با مدیر تماس بگیرید.",
   "meteredTopUp": {
     "cta": "شارژ"

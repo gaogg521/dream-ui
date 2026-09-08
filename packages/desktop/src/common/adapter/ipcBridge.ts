@@ -1325,6 +1325,18 @@ export const mode = {
     '/api/one/team-memory/items',
     (p) => p
   ),
+  /**
+   * Load the send-rate limit and model allowlist into *this machine's*
+   * backend.
+   *
+   * Same direction and same reason as `syncToolSecurityPolicy`: the gate that
+   * enforces both is compiled into the enterprise binary, and the send happens
+   * on the co-located personal one.
+   */
+  syncSendPolicy: httpPostLocal<
+    { sendRateLimitPerMinute: number | null; allowedModels: string[] },
+    { sendRateLimitPerMinute: number | null; allowedModels: string[] }
+  >('/api/send-policy', (p) => p),
   syncModelChannels: httpPostLocal<
     { written: string[]; removed: string[]; conflicts: string[] },
     { channels: ManagedChannelInput[]; authoritative: boolean }
@@ -2987,6 +2999,14 @@ export const oneBilling = {
       conversationId?: string;
     }
   >('/api/one/billing/client-usage'),
+  /**
+   * The company's plan, read by the member for one field: `allowedModels`.
+   *
+   * The allowlist is enforced by a gate the desktop client's own backend does
+   * not contain, so it has to travel down like the rest of the policy. Every
+   * other field here is already the admin console's business.
+   */
+  myPlan: httpGet<{ allowedModels?: string[] }, void>('/api/one/billing/plan'),
   // The vendor-signed license backing the plan; null when never activated.
 };
 
@@ -3239,7 +3259,7 @@ export const onePlatform = {
       /** Delivered through content inspection's own channel, not this one. */
       messageScanEnabled?: boolean;
       messageRedactEnabled?: boolean;
-      /** Server-side gate — the local backend has no send budget. */
+      /** Carried down to the local backend's send gate; see `syncSendPolicy`. */
       sendRateLimitPerMinute?: number | null;
     },
     void

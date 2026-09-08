@@ -43,6 +43,7 @@ vi.mock('@renderer/utils/enterprise/teamSkillSync', () => ({
   // same reason the content rules do, so both have to be here or the hook
   // throws on the first tick.
   syncToolSecurityPolicy: vi.fn(() => Promise.resolve(true)),
+  syncSendPolicy: vi.fn(() => Promise.resolve(true)),
   syncTeamMemory: vi.fn(() => Promise.resolve(0)),
 }));
 
