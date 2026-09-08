@@ -1326,6 +1326,20 @@ export const mode = {
     (p) => p
   ),
   /**
+   * Push the company-server channel (address + this member's token) into
+   * *this machine's* backend (C0-1 plan A): the terminal-tool approval gate
+   * lives there, and the approval round trip must outlive any single request
+   * the renderer could proxy. The token is a live company credential — the
+   * backend holds it in memory only, and `clearEnterpriseUpstream` is the
+   * revocation half.
+   */
+  setEnterpriseUpstream: httpPostLocal<{ ok: boolean }, { baseUrl: string; token: string }>(
+    '/api/enterprise/upstream',
+    (p) => p
+  ),
+  /** Revocation / disconnect half of `setEnterpriseUpstream`. */
+  clearEnterpriseUpstream: httpDeleteLocal<{ ok: boolean }, void>('/api/enterprise/upstream'),
+  /**
    * Load the member's readable company memory into *this machine's* backend.
    *
    * `preferLocalBackend` for the same reason as the rules and the policy, with
@@ -1444,6 +1458,8 @@ export type DlpEventEntry = {
  * the local backend cannot honour would make "synced" read as "enforced".
  */
 export type ToolSecurityPolicyPayload = {
+  /** C0-1 plan A: enforced client-side via the enterprise upstream channel. */
+  terminalToolsRequireApproval: boolean;
   destructiveCommandsBlocked: boolean;
   blockedCommandPatterns: string[];
   externalNetworkDeniedByDefault: boolean;

@@ -13,7 +13,7 @@
 import { ipcBridge } from '@/common';
 import type { DlpFindingInput } from '@/common/adapter/ipcBridge';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
-import { getEnterpriseServerUrl } from '@/common/adapter/enterpriseMode';
+import { getEnterpriseServerUrl, getEnterpriseSession } from '@/common/adapter/enterpriseMode';
 
 export type TeamSkillSyncResult = { written: number; removed: number; kept: number };
 
@@ -310,6 +310,9 @@ export async function clearTeamResources(): Promise<void> {
     // member's own employees (backend conflict/reconcile guard).
     ipcBridge.personalAgent.syncTeamAgents.invoke({ agents: [], authoritative: true }),
     ipcBridge.mode.setContentInspectionRules.invoke({ rules: [] }),
+    // C0-1: the company-server channel holds a live member credential — a
+    // revoked member must not leave it behind in the backend's memory.
+    ipcBridge.mode.clearEnterpriseUpstream.invoke(),
   ]);
 }
 
@@ -416,6 +419,9 @@ export async function syncToolSecurityPolicy(): Promise<boolean> {
       destructiveCommandsBlocked: policy.destructiveCommandsBlocked ?? false,
       blockedCommandPatterns: policy.blockedCommandPatterns ?? [],
       externalNetworkDeniedByDefault: policy.externalNetworkDeniedByDefault ?? false,
+      // C0-1 plan A made this enforceable on the client: the gate rides the
+      // upstream channel pushed below to the company's own workflow API.
+      terminalToolsRequireApproval: policy.terminalToolsRequireApproval ?? false,
     });
     return true;
   } catch {
@@ -441,6 +447,33 @@ export async function syncToolSecurityPolicy(): Promise<boolean> {
  * The spend cap is deliberately not carried; `dream_core_system::send_policy`
  * says why.
  */
+/**
+ * Push the company-server channel down to this machine's backend (C0-1
+ * plan A). Terminal-tool approval blocks INSIDE the tool call — for up to
+ * ten minutes, until an administrator decides — which no renderer-proxied
+ * request can span. So the backend gets the two facts only the renderer
+ * holds: the server address and this member's token, and it drives the
+ * company's own workflow API over them.
+ *
+ * This is a credential push, not a state sync: it is idempotent and there
+ * is no offline-first dilemma — the local call cannot "fail to read" any
+ * state worth preserving. If the renderer is not connected as an enterprise
+ * client there is nothing to push, and `clearTeamResources` (revocation)
+ * is what empties the channel again.
+ */
+export async function syncEnterpriseUpstream(): Promise<boolean> {
+  const baseUrl = getEnterpriseServerUrl()?.replace(/\/+$/, '');
+  const token = getEnterpriseSession()?.token;
+  if (!baseUrl || !token) return false;
+  try {
+    await ipcBridge.mode.setEnterpriseUpstream.invoke({ baseUrl, token });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+
 export async function syncSendPolicy(): Promise<boolean> {
   let sendRateLimitPerMinute: number | null = null;
   try {

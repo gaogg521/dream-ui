@@ -23,6 +23,7 @@ import {
   syncTeamMemory,
   syncSendPolicy,
   syncToolSecurityPolicy,
+  syncEnterpriseUpstream,
 } from '@renderer/utils/enterprise/teamSkillSync';
 import { fulfilAuditUploadRequests } from '@renderer/utils/enterprise/conversationShare';
 
@@ -81,6 +82,10 @@ export function useTeamResourceSync(): void {
       // And the third: what may be *sent*, and with which model. Same machine,
       // same reason, same propagation delay.
       void syncSendPolicy();
+      // C0-1 plan A: the company-server channel the terminal-approval gate
+      // drives. A credential push, not a state sync — idempotent, and
+      // `clearTeamResources` (revocation) is what empties it again.
+      void syncEnterpriseUpstream();
       // Company memory, for the same reason and on the same terms: recall runs
       // against the local copy so the prompt never has to leave the machine.
       void syncTeamMemory();
