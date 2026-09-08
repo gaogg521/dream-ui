@@ -23,11 +23,12 @@ import {
 } from '@icon-park/react';
 import { useCompanyIdentity } from '@/renderer/pages/enterprise/hooks/useCompanyIdentity';
 import { isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
+import { openAdminConsole } from '@/renderer/utils/enterprise/enterpriseBrowserLogin';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Tooltip } from '@arco-design/web-react';
+import { Message, Tooltip } from '@arco-design/web-react';
 import { getSiderTooltipProps } from '@/renderer/utils/ui/siderTooltip';
 
 /**
@@ -99,6 +100,12 @@ type SiderItem = {
   isImageIcon?: boolean;
   /** Route path segment — for builtins: `/settings/{path}`, for extensions: `/settings/ext/{id}` */
   path: string;
+  /**
+   * External action instead of in-app navigation. The admin console is a
+   * separate SPA in the system browser (dream-en) — it has no in-app route,
+   * so an item with `action` never navigates and never highlights.
+   */
+  action?: () => void;
 };
 
 const isSettingsItemActive = (pathname: string, itemPath: string): boolean => {
@@ -137,6 +144,22 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
 
   const extensionTabs = useExtensionSettingsTabs();
   const { resolveExtTabName } = useExtI18n();
+
+  // The admin console lives outside this app (dream-en, served at /admin by
+  // the gateway in front of the backend), so this entry has no in-app route to
+  // navigate to — it opens the system browser instead. Opening /admin (not
+  // /admin/login) lets the console's own auth gate decide: no browser session
+  // → its login page, an existing one → straight to the dashboard.
+  const openAdminConsoleInBrowser = useCallback(async () => {
+    const ok = await openAdminConsole();
+    if (!ok) {
+      Message.warning(
+        t('common.enterprise.loginWebuiRequired', {
+          defaultValue: '无法打开浏览器登录页，请先在设置 → 远程连接 中启动 WebUI。',
+        })
+      );
+    }
+  }, [t]);
 
   const { menus, groupHeaderAt } = useMemo(() => {
     // Build builtin items
@@ -190,6 +213,11 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
         label: t('common.company.title', { defaultValue: '企业管理后台' }),
         icon: <BuildingOne />,
         path: 'company',
+        // No in-app /settings/company route exists (the console moved to
+        // dream-en in 98f1856 and the route went with it) — navigating here
+        // fell through the router's catch-all back to the conversation list.
+        // The door now leads where the console actually lives.
+        action: () => void openAdminConsoleInBrowser(),
       },
       enterprise: {
         id: 'enterprise',
@@ -306,7 +334,7 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
     }
 
     return { menus: result, groupHeaderAt: headerAt };
-  }, [t, isDesktop, extensionTabs, resolveExtTabName, showCompany, showFileVault]);
+  }, [t, isDesktop, extensionTabs, resolveExtTabName, showCompany, showFileVault, openAdminConsoleInBrowser]);
 
   // Scroll affordance: the sider is long enough to clip entries, but the global
   // scrollbar thumb is transparent until hovered, so nothing tells the user more
@@ -378,6 +406,10 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
                   }
                 )}
                 onClick={() => {
+                  if (item.action) {
+                    item.action();
+                    return;
+                  }
                   Promise.resolve(navigate(`/settings/${item.path}`, { replace: true })).catch((error) => {
                     console.error('Navigation failed:', error);
                   });
