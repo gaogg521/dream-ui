@@ -76,6 +76,7 @@ vi.mock('@icon-park/react', () => ({
   // Fork-only: the enterprise-identity entry in the settings sider.
   BuildingOne: () => <span>BuildingOne</span>,
   Brain: () => <span>Brain</span>,
+  CheckOne: () => <span>CheckOne</span>,
   Communication: () => <span>Communication</span>,
   Computer: () => <span>Computer</span>,
   Earth: () => <span>Earth</span>,
@@ -149,6 +150,28 @@ describe('SettingsSider', () => {
 
     expect(screen.getByText('Agents')).toBeInTheDocument();
     expect(screen.getByText('settings.model')).toBeInTheDocument();
+  });
+
+  /**
+   * Both rows are server-scoped, so they only exist once the client is pointed
+   * at a company. Worth asserting because the default in this file is the
+   * personal case, which means neither row is exercised anywhere else — the
+   * approvals entry shipped with its icon missing from the mock above and every
+   * test in this file failed on it, without any of them being about approvals.
+   */
+  it('shows the server-scoped enterprise rows once a company is connected', () => {
+    localStorage.setItem('one-enterprise:enabled', 'true');
+    try {
+      const { container } = render(<SettingsSider />);
+      const order = renderedOrder(container);
+
+      expect(order).toContain('文件保险箱');
+      expect(order).toContain('我的审批');
+      // Under the Enterprise header, not appended after 关于.
+      expect(order.indexOf('我的审批')).toBeLessThan(order.indexOf('settings.groupAbout'));
+    } finally {
+      localStorage.removeItem('one-enterprise:enabled');
+    }
   });
 
   it('keeps the Enterprise header when its first member is hidden', () => {

@@ -60,6 +60,7 @@ vi.mock('@/common/adapter/enterpriseMode', () => ({
   getEnterpriseServerUrl: hooks.getEnterpriseServerUrl,
 }));
 
+const { BackendHttpError } = await import('@/common/adapter/httpBridge');
 const { syncTeamModelChannels, clearTeamResources } = await import('@renderer/utils/enterprise/teamSkillSync');
 
 const channel = (id: string, name: string, enabled = true) => ({
@@ -177,6 +178,60 @@ describe('syncTeamModelChannels', () => {
 
     await expect(syncTeamModelChannels()).resolves.toBeNull();
     expect(hooks.syncModelChannels).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Minting rotates: the server keeps only a hash, so a second call replaces the
+ * row and kills the first token. Since this sync runs on a five-minute timer,
+ * minting every cycle meant a member's own client invalidated the credential
+ * that its running agents were already holding — reproduced on a real client
+ * as `401 not authorized for this model channel` on any conversation left open
+ * past one cycle.
+ */
+describe('channel tokens across repeated syncs', () => {
+  // A channel id of its own per case: the cache is module state, so reusing an
+  // id another test already minted for would make these pass for free.
+  let CACHE_ID = 'ochan_cache_a';
+
+  it('mints once and reuses it on later cycles', async () => {
+    CACHE_ID = 'ochan_cache_a';
+    hooks.listModelChannels.mockResolvedValue([channel(CACHE_ID, 'corp-gateway')]);
+
+    await syncTeamModelChannels();
+    await syncTeamModelChannels();
+    await syncTeamModelChannels();
+
+    expect(hooks.issueChannelToken).toHaveBeenCalledTimes(1);
+    // And every sync still writes the provider with a working token, rather
+    // than skipping the write because it had nothing new to mint.
+    expect(hooks.syncModelChannels).toHaveBeenCalledTimes(3);
+    for (const call of hooks.syncModelChannels.mock.calls) {
+      expect(call[0].channels[0].token).toBe(`onech-${CACHE_ID}`);
+    }
+  });
+
+  it('drops the cached token when the member is revoked', async () => {
+    CACHE_ID = 'ochan_cache_b';
+    hooks.listModelChannels.mockResolvedValue([channel(CACHE_ID, 'corp-gateway')]);
+    await syncTeamModelChannels();
+    expect(hooks.issueChannelToken).toHaveBeenCalledTimes(1);
+
+    // A 403 anywhere in the team sync means the membership is gone; the cached
+    // company credential must not outlive it.
+    hooks.listModelChannels.mockRejectedValueOnce(
+      new BackendHttpError({
+        method: 'GET',
+        path: '/api/one/devops/model-channels',
+        status: 403,
+        body: { code: 'FORBIDDEN', error: 'not a member' },
+      })
+    );
+    await syncTeamModelChannels();
+
+    hooks.listModelChannels.mockResolvedValue([channel(CACHE_ID, 'corp-gateway')]);
+    await syncTeamModelChannels();
+    expect(hooks.issueChannelToken).toHaveBeenCalledTimes(2);
   });
 });
 

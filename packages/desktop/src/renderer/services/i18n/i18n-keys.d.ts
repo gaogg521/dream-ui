@@ -1296,6 +1296,7 @@ export type I18nKey =
   | 'conversation.policyDenied_departmentBudgetExceeded'
   | 'conversation.policyDenied_modelNotAllowed'
   | 'conversation.policyDenied_seatLimitExceeded'
+  | 'conversation.policyDenied_sendRateLimited'
   | 'conversation.runtimePreparing.sendboxHint'
   | 'conversation.sendbox.hint'
   | 'conversation.sendbox.mediaPathFallback'

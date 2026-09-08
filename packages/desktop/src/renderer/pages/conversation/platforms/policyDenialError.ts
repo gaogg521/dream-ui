@@ -33,6 +33,12 @@ const DENIAL_MESSAGE_KEYS = {
   // copy on purpose: "wait for the budget window" (BUDGET_EXCEEDED) and "ask
   // for a seat" are different asks for the reader.
   SEAT_LIMIT_EXCEEDED: { key: 'conversation.policyDenied_seatLimitExceeded', params: [] },
+  // The one denial the member can clear by themselves, so the copy says how
+  // (wait) rather than "contact an administrator". Only reachable since the
+  // rate limit started being enforced on the client at all — before that the
+  // code existed and nothing ever produced it, which is why it was missing
+  // from this map.
+  SEND_RATE_LIMITED: { key: 'conversation.policyDenied_sendRateLimited', params: [] },
   // T7: a tighter cap layered under BUDGET_EXCEEDED, scoped to the sender's
   // department. Distinct copy so the reader knows to look at their
   // department's budget, not the company-wide one.

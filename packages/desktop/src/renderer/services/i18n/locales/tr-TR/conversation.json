@@ -868,6 +868,7 @@
   "mediaModeStartFailed": "Üretim başlatılamadı: {{reason}}",
   "mediaJobSourceImages": "Kaynak görseller",
   "policyDenied_seatLimitExceeded": "Kuruluşunuzun koltuk sınırına ulaşıldı; bir yönetici koltuk boşaltana veya planı yükseltene kadar mesaj gönderemezsiniz.",
+  "policyDenied_sendRateLimited": "Şirket politikanızın izin verdiğinden daha hızlı gönderiyorsunuz. Biraz bekleyip tekrar deneyin.",
   "policyDenied_departmentBudgetExceeded": "Departmanınızın bu dönemdeki kullanım bütçesi doldu, gönderilemiyor. Bir yöneticiyle iletişime geçin.",
   "meteredTopUp": {
     "cta": "Yükle"
