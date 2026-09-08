@@ -83,6 +83,10 @@ export async function syncTeamSkills(): Promise<TeamSkillSyncResult | null> {
       description: s.description ?? '',
       content: s.content ?? '',
       autoActive: s.autoActive ?? false,
+      // C2-2: enterprise category/tag metadata, materialized into the SKILL.md
+      // frontmatter by the local backend so grouping survives offline.
+      category: s.categoryName ?? null,
+      tags: s.tags ?? [],
     }));
 
   try {

@@ -146,6 +146,10 @@ export type SkillRegistryEntry = {
   scope: string;
   teamId: string | null;
   visibility: string;
+  /** Enterprise category/tag metadata (C2-2), inlined by the server. */
+  categoryId: string | null;
+  categoryName: string | null;
+  tags: string[];
   createdBy: string;
   createdAt: number;
   updatedAt: number;
