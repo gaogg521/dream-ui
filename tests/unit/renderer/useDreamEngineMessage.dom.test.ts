@@ -12,12 +12,14 @@ import { resetConversationTurnClockForTests } from '@/renderer/pages/conversatio
 import type { IResponseMessage } from '@/common/adapter/ipcBridge';
 
 const {
+  reportClientTurnUsageMock,
   addOrUpdateMessageMock,
   conversationUpdateInvokeMock,
   conversationGetUsageInvokeMock,
   responseStreamOnMock,
   responseStreamHandlerRef,
 } = vi.hoisted(() => ({
+  reportClientTurnUsageMock: vi.fn(),
   addOrUpdateMessageMock: vi.fn(),
   conversationUpdateInvokeMock: vi.fn(),
   // The hook now hydrates the context meter from the backend's usage
@@ -37,6 +39,10 @@ vi.mock('@/renderer/pages/conversation/Messages/hooks', () => ({
 
 vi.mock('@/renderer/pages/conversation/utils/conversationCache', () => ({
   getConversationOrNull: vi.fn(),
+}));
+
+vi.mock('@/renderer/utils/enterprise/clientUsageReport', () => ({
+  reportClientTurnUsage: reportClientTurnUsageMock,
 }));
 
 vi.mock('@/common', () => ({
@@ -217,5 +223,86 @@ describe('useDreamEngineMessage turn clock', () => {
     });
     expect(result.current.turnStartedAtMs).toBe(300_000);
     nowSpy.mockRestore();
+  });
+
+  /**
+   * Where the turn's token counts actually live on this backend.
+   *
+   * The report used to read them off the `finish` frame, which carries
+   * `{"session_id": null}` and nothing else — so it never fired, on the
+   * conversation type most members use. The counts arrive one frame earlier,
+   * in `acp_context_usage._meta`.
+   */
+  describe('company spend reporting', () => {
+    const usageFrame = (input: number, output: number) =>
+      ({
+        type: 'acp_context_usage',
+        data: {
+          used: 2366,
+          size: 200_000,
+          _meta: { input_tokens: input, output_tokens: output },
+        },
+        conversation_id: 'conv-1',
+      }) as unknown as IResponseMessage;
+
+    const finishFrame = () =>
+      ({ type: 'finish', data: { session_id: null }, conversation_id: 'conv-1' }) as unknown as IResponseMessage;
+
+    it('reports the counts the usage frame carried, once, at the turn boundary', async () => {
+      vi.mocked(getConversationOrNull).mockResolvedValue(null);
+      const { result } = renderHook(() => useDreamEngineMessage('conv-1'));
+      await waitFor(() => {
+        expect(result.current.hasHydratedRunningState).toBe(true);
+      });
+
+      act(() => {
+        responseStreamHandlerRef.current?.(usageFrame(11_118, 716));
+      });
+      // Nothing yet: the turn is still open, and a mid-turn report would bill
+      // a turn that has not finished.
+      expect(reportClientTurnUsageMock).not.toHaveBeenCalled();
+
+      act(() => {
+        responseStreamHandlerRef.current?.(finishFrame());
+      });
+
+      expect(reportClientTurnUsageMock).toHaveBeenCalledTimes(1);
+      expect(reportClientTurnUsageMock).toHaveBeenCalledWith({
+        conversationId: 'conv-1',
+        inputTokens: 11_118,
+        outputTokens: 716,
+      });
+    });
+
+    it('does not bill the same turn twice', async () => {
+      vi.mocked(getConversationOrNull).mockResolvedValue(null);
+      const { result } = renderHook(() => useDreamEngineMessage('conv-1'));
+      await waitFor(() => {
+        expect(result.current.hasHydratedRunningState).toBe(true);
+      });
+
+      act(() => {
+        responseStreamHandlerRef.current?.(usageFrame(10, 5));
+        responseStreamHandlerRef.current?.(finishFrame());
+        // A duplicated or late terminal frame must not produce a second row.
+        responseStreamHandlerRef.current?.(finishFrame());
+      });
+
+      expect(reportClientTurnUsageMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('reports nothing for a turn that produced no counts', async () => {
+      vi.mocked(getConversationOrNull).mockResolvedValue(null);
+      const { result } = renderHook(() => useDreamEngineMessage('conv-1'));
+      await waitFor(() => {
+        expect(result.current.hasHydratedRunningState).toBe(true);
+      });
+
+      act(() => {
+        responseStreamHandlerRef.current?.(finishFrame());
+      });
+
+      expect(reportClientTurnUsageMock).not.toHaveBeenCalled();
+    });
   });
 });

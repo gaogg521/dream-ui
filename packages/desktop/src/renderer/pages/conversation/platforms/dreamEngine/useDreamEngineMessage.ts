@@ -85,9 +85,8 @@ export const useDreamEngineMessage = (
    * Report a turn's spend exactly once, preferring counts the caller has over
    * the ones stashed from the usage frame.
    *
-   * Both orderings happen across backends — the usage frame can land before or
-   * after `finish` — so this is called from both arms and the ref is what makes
-   * the second call a no-op.
+   * Clearing the ref is what makes a repeated or duplicated `finish` a no-op
+   * rather than a second charge.
    */
   const reportTurnSpend = useCallback(
     (counts: { inputTokens?: number; outputTokens?: number }) => {
@@ -410,15 +409,22 @@ export const useDreamEngineMessage = (
               return next;
             });
             // The per-turn counts the company's ledger wants live only here.
-            // Stash them for the `finish` arm; if the turn has already closed
-            // (a backend that reports usage afterwards), report now instead.
+            // Stash them; `finish` is what reports, because that is the turn
+            // boundary and this frame can arrive more than once.
+            //
+            // Nothing is reported from here even when no turn appears to be
+            // running. This frame is also how a reopened conversation hydrates
+            // its meter, and billing a turn that ran yesterday because its
+            // snapshot just arrived would be worse than missing one. On this
+            // backend the ordering is not in doubt anyway: dream-core emits the
+            // usage frame immediately BEFORE `Finish`, precisely because the
+            // relay stops forwarding a turn once it has seen `Finish`.
             const breakdown = tokenUsageFromAcpUsage(usageData).breakdown;
             if (breakdown && (breakdown.input_tokens || breakdown.output_tokens)) {
               pendingTurnSpendRef.current = {
                 inputTokens: breakdown.input_tokens,
                 outputTokens: breakdown.output_tokens,
               };
-              if (!streamRunningRef.current) reportTurnSpend({});
             }
             // Only when the backend actually states a window. Without it the
             // indicator shows the raw count rather than a percentage against a
