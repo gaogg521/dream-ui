@@ -26,6 +26,9 @@ interface SkillInfo {
   is_auto_inject: boolean;
   is_custom: boolean;
   source?: 'builtin' | 'custom' | 'cron' | 'extension' | 'team';
+  /** Enterprise category (C2-2), read from the SKILL.md frontmatter of team skills. */
+  category?: string;
+  tags?: string[];
 }
 
 const isAutoInjectedBuiltinSkill = (skill: SkillInfo) => skill.source === 'builtin' && skill.is_auto_inject;
@@ -172,6 +175,30 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
         s.name.toLowerCase().includes(lowerQuery) || (s.description && s.description.toLowerCase().includes(lowerQuery))
     );
   }, [mySkills, search_query]);
+  // C2-2: group the visible list by enterprise category. Skills without a
+  // category keep their original flat rendering (personal mode looks exactly
+  // as before); category sections render first, in first-appearance order.
+  const groupedSkills = useMemo(() => {
+    const groups: Array<{ category?: string; skills: SkillInfo[] }> = [];
+    const byCategory = new Map<string, { category: string; skills: SkillInfo[] }>();
+    const uncategorized: { skills: SkillInfo[] } = { skills: [] };
+    for (const skill of filteredSkills) {
+      const category = skill.category?.trim();
+      if (!category) {
+        uncategorized.skills.push(skill);
+        continue;
+      }
+      let group = byCategory.get(category);
+      if (!group) {
+        group = { category, skills: [] };
+        byCategory.set(category, group);
+        groups.push(group);
+      }
+      group.skills.push(skill);
+    }
+    if (uncategorized.skills.length > 0) groups.push(uncategorized);
+    return groups;
+  }, [filteredSkills]);
   // Batch select-all / checkboxes only apply to custom skills in the visible list.
   const filteredCustomSkills = useMemo(() => filteredSkills.filter((s) => s.source === 'custom'), [filteredSkills]);
 
@@ -758,109 +785,132 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
 
           {mySkills.length > 0 ? (
             <div className='w-full flex flex-col gap-6px relative z-10'>
-              {filteredSkills.map((skill) => {
-                const isCustom = skill.source === 'custom';
-                return (
-                  <div
-                    key={skill.name}
-                    data-testid={`my-skill-card-${normalizeTestId(skill.name)}`}
-                    style={{ contentVisibility: 'auto', containIntrinsicSize: '92px' }}
-                    ref={(el) => {
-                      skillRefs.current[skill.name] = el;
-                    }}
-                    onClick={
-                      batchMode
-                        ? isCustom
-                          ? () => toggleSkillSelected(skill.name)
-                          : undefined
-                        : () => openSkillDetail(skill.name)
-                    }
-                    className={`group flex flex-col sm:flex-row gap-16px p-16px border rd-12px transition-all duration-200 cursor-pointer ${
-                      highlightedSkill === skill.name
-                        ? 'border-primary-5 bg-primary-1'
-                        : selectedSkillNames.has(skill.name) && batchMode
-                          ? 'border-transparent bg-[rgba(var(--primary-6),0.06)]'
-                          : 'border-transparent bg-base hover:border-border-1 hover:bg-fill-1 hover:shadow-sm'
-                    }`}
-                  >
-                    {batchMode && isCustom && (
-                      <div className='shrink-0 flex items-center sm:self-center'>
-                        <Checkbox
-                          data-testid={`checkbox-skill-${normalizeTestId(skill.name)}`}
-                          checked={selectedSkillNames.has(skill.name)}
-                          onChange={() => toggleSkillSelected(skill.name)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    )}
-                    <div className='shrink-0 flex items-start sm:mt-2px'>
+              {groupedSkills.map((group) => (
+                <React.Fragment key={group.category ?? '__uncategorized'}>
+                  {group.category && (
+                    <div
+                      data-testid={`skill-category-${normalizeTestId(group.category)}`}
+                      className='flex items-center gap-8px mt-10px mb-2px px-2px'
+                    >
+                      <span className='w-3px h-12px rd-2px bg-primary-6 opacity-70' />
+                      <span className='text-13px font-semibold text-t-secondary'>{group.category}</span>
+                      <span className='text-11px text-t-tertiary'>{group.skills.length}</span>
+                    </div>
+                  )}
+                  {group.skills.map((skill) => {
+                    const isCustom = skill.source === 'custom';
+                    return (
                       <div
-                        className={`w-40px h-40px rd-10px flex items-center justify-center font-bold text-16px shadow-sm text-transform-uppercase ${getAvatarColorClass(skill.name)}`}
+                        key={skill.name}
+                        data-testid={`my-skill-card-${normalizeTestId(skill.name)}`}
+                        style={{ contentVisibility: 'auto', containIntrinsicSize: '92px' }}
+                        ref={(el) => {
+                          skillRefs.current[skill.name] = el;
+                        }}
+                        onClick={
+                          batchMode
+                            ? isCustom
+                              ? () => toggleSkillSelected(skill.name)
+                              : undefined
+                            : () => openSkillDetail(skill.name)
+                        }
+                        className={`group flex flex-col sm:flex-row gap-16px p-16px border rd-12px transition-all duration-200 cursor-pointer ${
+                          highlightedSkill === skill.name
+                            ? 'border-primary-5 bg-primary-1'
+                            : selectedSkillNames.has(skill.name) && batchMode
+                              ? 'border-transparent bg-[rgba(var(--primary-6),0.06)]'
+                              : 'border-transparent bg-base hover:border-border-1 hover:bg-fill-1 hover:shadow-sm'
+                        }`}
                       >
-                        {skill.name.charAt(0).toUpperCase()}
-                      </div>
-                    </div>
-
-                    <div className='flex-1 min-w-0 flex flex-col justify-center gap-6px'>
-                      <div className='flex items-center gap-10px flex-wrap'>
-                        <h3 className='text-14px font-semibold text-t-primary/90 truncate m-0'>{skill.name}</h3>
-                        {skill.source === 'custom' ? (
-                          <span className='bg-[rgba(var(--orange-6),0.08)] text-orange-6 border border-[rgba(var(--orange-6),0.2)] text-11px px-6px py-1px rd-4px font-medium'>
-                            {t('settings.skillsHub.custom', { defaultValue: 'Custom' })}
-                          </span>
-                        ) : skill.source === 'team' ? (
-                          <span className='bg-[rgba(var(--green-6),0.08)] text-green-6 border border-[rgba(var(--green-6),0.2)] text-11px px-6px py-1px rd-4px font-medium'>
-                            {skill.is_auto_inject
-                              ? t('settings.skillsHub.teamAuto', { defaultValue: '团队 · 自动' })
-                              : t('settings.skillsHub.team', { defaultValue: '团队' })}
-                          </span>
-                        ) : (
-                          <span className='bg-[rgba(var(--blue-6),0.08)] text-blue-6 border border-[rgba(var(--blue-6),0.2)] text-11px px-6px py-1px rd-4px font-medium'>
-                            {t('settings.skillsHub.builtin', { defaultValue: 'Built-in' })}
-                          </span>
+                        {batchMode && isCustom && (
+                          <div className='shrink-0 flex items-center sm:self-center'>
+                            <Checkbox
+                              data-testid={`checkbox-skill-${normalizeTestId(skill.name)}`}
+                              checked={selectedSkillNames.has(skill.name)}
+                              onChange={() => toggleSkillSelected(skill.name)}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
                         )}
-                      </div>
-                      {skill.description && (
-                        <p
-                          className='text-13px text-t-secondary leading-relaxed line-clamp-2 m-0'
-                          title={skill.description}
-                        >
-                          {skill.description}
-                        </p>
-                      )}
-                    </div>
-
-                    {!batchMode && (
-                      <div className='shrink-0 sm:self-center flex items-center justify-end gap-10px mt-12px sm:mt-0 pl-4px'>
-                        <SkillUsedByStack assistants={getAssistantsUsingSkill(skill.name, assistantCatalog ?? [])} />
-                        {isCustom && (
-                          <button
-                            data-testid={`btn-delete-${normalizeTestId(skill.name)}`}
-                            className='p-8px hover:bg-danger-1 hover:text-danger-6 text-t-tertiary rd-6px outline-none flex items-center justify-center border border-transparent cursor-pointer transition-colors shadow-sm bg-base sm:bg-transparent sm:shadow-none opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity'
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              Modal.confirm({
-                                title: t('settings.skillsHub.deleteConfirmTitle', { defaultValue: 'Delete Skill' }),
-                                content: t('settings.skillsHub.deleteConfirmContent', {
-                                  name: skill.name,
-                                  defaultValue: `Are you sure you want to delete "${skill.name}"?`,
-                                }),
-                                okButtonProps: { status: 'danger' },
-                                okText: t('common.delete', { defaultValue: 'Delete' }),
-                                onOk: () => void handleDelete(skill.name),
-                                wrapClassName: 'modal-delete-skill',
-                              });
-                            }}
-                            title={t('common.delete', { defaultValue: 'Delete' })}
+                        <div className='shrink-0 flex items-start sm:mt-2px'>
+                          <div
+                            className={`w-40px h-40px rd-10px flex items-center justify-center font-bold text-16px shadow-sm text-transform-uppercase ${getAvatarColorClass(skill.name)}`}
                           >
-                            <Delete size={16} />
-                          </button>
+                            {skill.name.charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+
+                        <div className='flex-1 min-w-0 flex flex-col justify-center gap-6px'>
+                          <div className='flex items-center gap-10px flex-wrap'>
+                            <h3 className='text-14px font-semibold text-t-primary/90 truncate m-0'>{skill.name}</h3>
+                            {skill.source === 'custom' ? (
+                              <span className='bg-[rgba(var(--orange-6),0.08)] text-orange-6 border border-[rgba(var(--orange-6),0.2)] text-11px px-6px py-1px rd-4px font-medium'>
+                                {t('settings.skillsHub.custom', { defaultValue: 'Custom' })}
+                              </span>
+                            ) : skill.source === 'team' ? (
+                              <span className='bg-[rgba(var(--green-6),0.08)] text-green-6 border border-[rgba(var(--green-6),0.2)] text-11px px-6px py-1px rd-4px font-medium'>
+                                {skill.is_auto_inject
+                                  ? t('settings.skillsHub.teamAuto', { defaultValue: '团队 · 自动' })
+                                  : t('settings.skillsHub.team', { defaultValue: '团队' })}
+                              </span>
+                            ) : (
+                              <span className='bg-[rgba(var(--blue-6),0.08)] text-blue-6 border border-[rgba(var(--blue-6),0.2)] text-11px px-6px py-1px rd-4px font-medium'>
+                                {t('settings.skillsHub.builtin', { defaultValue: 'Built-in' })}
+                              </span>
+                            )}
+                            {(skill.tags ?? []).map((tag) => (
+                              <span
+                                key={tag}
+                                data-testid={`skill-tag-${normalizeTestId(tag)}`}
+                                className='bg-[rgba(var(--primary-6),0.06)] text-t-secondary border border-border-1 text-11px px-6px py-1px rd-4px font-medium'
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                          {skill.description && (
+                            <p
+                              className='text-13px text-t-secondary leading-relaxed line-clamp-2 m-0'
+                              title={skill.description}
+                            >
+                              {skill.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {!batchMode && (
+                          <div className='shrink-0 sm:self-center flex items-center justify-end gap-10px mt-12px sm:mt-0 pl-4px'>
+                            <SkillUsedByStack assistants={getAssistantsUsingSkill(skill.name, assistantCatalog ?? [])} />
+                            {isCustom && (
+                              <button
+                                data-testid={`btn-delete-${normalizeTestId(skill.name)}`}
+                                className='p-8px hover:bg-danger-1 hover:text-danger-6 text-t-tertiary rd-6px outline-none flex items-center justify-center border border-transparent cursor-pointer transition-colors shadow-sm bg-base sm:bg-transparent sm:shadow-none opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  Modal.confirm({
+                                    title: t('settings.skillsHub.deleteConfirmTitle', { defaultValue: 'Delete Skill' }),
+                                    content: t('settings.skillsHub.deleteConfirmContent', {
+                                      name: skill.name,
+                                      defaultValue: `Are you sure you want to delete "${skill.name}"?`,
+                                    }),
+                                    okButtonProps: { status: 'danger' },
+                                    okText: t('common.delete', { defaultValue: 'Delete' }),
+                                    onOk: () => void handleDelete(skill.name),
+                                    wrapClassName: 'modal-delete-skill',
+                                  });
+                                }}
+                                title={t('common.delete', { defaultValue: 'Delete' })}
+                              >
+                                <Delete size={16} />
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </React.Fragment>
+              ))}
             </div>
           ) : (
             <div className='text-center text-t-secondary text-13px py-40px bg-fill-1 rd-12px border border-b-base border-dashed relative z-10'>

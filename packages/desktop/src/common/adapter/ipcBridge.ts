@@ -1033,6 +1033,9 @@ export const fs = {
       is_auto_inject: boolean;
       is_custom: boolean;
       source: 'builtin' | 'custom' | 'cron' | 'extension' | 'team';
+      /** Enterprise category/tag metadata (C2-2), from the SKILL.md frontmatter of team skills. */
+      category?: string;
+      tags?: string[];
     }>,
     void
   >('/api/skills'),
@@ -1043,7 +1046,16 @@ export const fs = {
   syncTeamSkills: httpPostLocal<
     { written: string[]; removed: string[]; kept: number },
     {
-      skills: Array<{ id: string; name: string; description: string; content: string; autoActive: boolean }>;
+      skills: Array<{
+        id: string;
+        name: string;
+        description: string;
+        content: string;
+        autoActive: boolean;
+        /** Enterprise category/tag metadata (C2-2), written into the SKILL.md frontmatter. */
+        category?: string | null;
+        tags?: string[];
+      }>;
       authoritative: boolean;
     }
   >('/api/skills/team-sync'),
