@@ -103,17 +103,37 @@ describe('rerootJson', () => {
   });
 });
 
+/**
+ * The end-to-end block below runs against a real temp directory and a real
+ * SQLite file, so its fixtures use NATIVE separators (`path.join`) rather than
+ * the Windows literals above.
+ *
+ * The separator style is not incidental. `rerootPath` deliberately preserves
+ * whatever separator the stored value used — a path captured on Windows must
+ * stay a Windows path — so a fixture that writes backslash paths while the
+ * assertion computes `path.join(...)` agrees with itself only on Windows. That
+ * is exactly how this file passed on the author's machine and then failed the
+ * first time CI ran it on Linux. Both separator styles are still covered,
+ * explicitly and platform-independently, by the `rerootPath` / `rerootJson`
+ * blocks above; this block's job is the SQL and the file I/O.
+ */
 describe('repairMovedUserDataPaths', () => {
   let root: string;
   let userDataDir: string;
+  let oldUserDataDir: string;
   let configDir: string;
   let dbPath: string;
 
   const openDb = () => new DatabaseSync(dbPath);
+  /** A path under the OLD profile, in this platform's own separator style. */
+  const inOldProfile = (...segments: string[]) => path.join(oldUserDataDir, ...segments);
+  /** The same path after the move — what the repair is expected to produce. */
+  const inNewProfile = (...segments: string[]) => path.join(userDataDir, ...segments);
 
   beforeEach(async () => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'onework-repair-'));
     userDataDir = path.join(root, 'One Work');
+    oldUserDataDir = path.join(root, '1ONE Code');
     configDir = path.join(userDataDir, 'config');
     fs.mkdirSync(configDir, { recursive: true });
     dbPath = path.join(userDataDir, 'one-backend.db');
@@ -127,16 +147,16 @@ describe('repairMovedUserDataPaths', () => {
     `);
     db.prepare('INSERT INTO conversations VALUES (?, ?)').run(
       'c1',
-      JSON.stringify({ workspace: `${OLD}\\1one\\conversations\\c1`, skills: ['cron'] })
+      JSON.stringify({ workspace: inOldProfile('1one', 'conversations', 'c1'), skills: ['cron'] })
     );
     db.prepare('INSERT INTO conversations VALUES (?, ?)').run('c2', JSON.stringify({ workspace: 'D:\\my-project' }));
     db.prepare('INSERT INTO conversations VALUES (?, ?)').run('c3', 'not json at all');
-    db.prepare('INSERT INTO messages VALUES (?, ?)').run('m1', `I read ${OLD}\\1one\\notes.md for you`);
-    db.prepare('INSERT INTO skills VALUES (?, ?)').run('s1', `${OLD}\\1one\\builtin-skills\\moltbook`);
-    db.prepare('INSERT INTO one_media_assets VALUES (?, ?)').run('a1', `${OLD}\\1one\\vid.mp4`);
+    db.prepare('INSERT INTO messages VALUES (?, ?)').run('m1', `I read ${inOldProfile('1one', 'notes.md')} for you`);
+    db.prepare('INSERT INTO skills VALUES (?, ?)').run('s1', inOldProfile('1one', 'builtin-skills', 'moltbook'));
+    db.prepare('INSERT INTO one_media_assets VALUES (?, ?)').run('a1', inOldProfile('1one', 'vid.mp4'));
     db.close();
 
-    fs.writeFileSync(path.join(userDataDir, USERDATA_MOVED_FROM_MARKER), OLD);
+    fs.writeFileSync(path.join(userDataDir, USERDATA_MOVED_FROM_MARKER), oldUserDataDir);
   });
 
   afterEach(() => {
@@ -146,11 +166,11 @@ describe('repairMovedUserDataPaths', () => {
   it('re-roots live pointers and leaves the transcript untouched', async () => {
     const report = await repairMovedUserDataPaths({ userDataDir, configDir, dbPath });
 
-    expect(report).toMatchObject({ from: OLD, conversations: 1, skills: 1, mediaAssets: 1 });
+    expect(report).toMatchObject({ from: oldUserDataDir, conversations: 1, skills: 1, mediaAssets: 1 });
 
     const db = openDb();
     const conv = db.prepare('SELECT extra FROM conversations WHERE id = ?').get('c1') as { extra: string };
-    expect(JSON.parse(conv.extra).workspace).toBe(path.join(userDataDir, '1one', 'conversations', 'c1'));
+    expect(JSON.parse(conv.extra).workspace).toBe(inNewProfile('1one', 'conversations', 'c1'));
 
     const untouched = db.prepare('SELECT extra FROM conversations WHERE id = ?').get('c2') as { extra: string };
     expect(JSON.parse(untouched.extra).workspace).toBe('D:\\my-project');
@@ -168,7 +188,7 @@ describe('repairMovedUserDataPaths', () => {
      * merely mention the old directory by name.
      */
     expect((db.prepare('SELECT content FROM messages WHERE id = ?').get('m1') as { content: string }).content).toBe(
-      `I read ${OLD}\\1one\\notes.md for you`
+      `I read ${inOldProfile('1one', 'notes.md')} for you`
     );
     db.close();
   });
@@ -179,7 +199,13 @@ describe('repairMovedUserDataPaths', () => {
       jobs,
       JSON.stringify({
         version: 1,
-        jobs: [{ id: 'j1', workspaceDir: `${OLD}\\1one\\w`, origin: { workspaceDir: `${OLD}\\1one\\w` } }],
+        jobs: [
+          {
+            id: 'j1',
+            workspaceDir: inOldProfile('1one', 'w'),
+            origin: { workspaceDir: inOldProfile('1one', 'w') },
+          },
+        ],
       })
     );
 
@@ -187,8 +213,8 @@ describe('repairMovedUserDataPaths', () => {
 
     expect(report?.mediaJobs).toBe(1);
     const written = JSON.parse(fs.readFileSync(jobs, 'utf8'));
-    expect(written.jobs[0].workspaceDir).toBe(path.join(userDataDir, '1one', 'w'));
-    expect(written.jobs[0].origin.workspaceDir).toBe(path.join(userDataDir, '1one', 'w'));
+    expect(written.jobs[0].workspaceDir).toBe(inNewProfile('1one', 'w'));
+    expect(written.jobs[0].origin.workspaceDir).toBe(inNewProfile('1one', 'w'));
   });
 
   it('clears the marker so the repair runs exactly once', async () => {
@@ -205,7 +231,7 @@ describe('repairMovedUserDataPaths', () => {
 
     const db = openDb();
     const conv = db.prepare('SELECT extra FROM conversations WHERE id = ?').get('c1') as { extra: string };
-    expect(JSON.parse(conv.extra).workspace).toBe(`${OLD}\\1one\\conversations\\c1`);
+    expect(JSON.parse(conv.extra).workspace).toBe(inOldProfile('1one', 'conversations', 'c1'));
     db.close();
   });
 
