@@ -14,6 +14,7 @@ mkdir -p "$ARTIFACTS_DIR/linux-build-arm64"
 
 # Windows x64
 touch "$ARTIFACTS_DIR/windows-build-x64/One-Work-1.0.0-win-x64.exe"
+touch "$ARTIFACTS_DIR/windows-build-x64/One-Work-1.0.0-win-x64.exe.blockmap"
 cat > "$ARTIFACTS_DIR/windows-build-x64/latest.yml" <<'EOF'
 version: 1.0.0
 files:

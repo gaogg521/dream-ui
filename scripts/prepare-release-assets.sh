@@ -158,7 +158,9 @@ done
 # "<installer>.blockmap", gets a 404 and silently falls back to downloading the
 # whole installer. Nothing else in the pipeline reports that, so a missing
 # blockmap fails the release right here.
-for arch in x64 arm64; do
+# x64 only: arm64 keeps the zip payload (see build-with-builder.js) and is
+# opted out of differential packaging, so it emits no blockmap by design.
+for arch in x64; do
   installer=$(find "$OUTPUT_DIR" -maxdepth 1 -type f -name "*-${VERSION}-win-${arch}.exe" | head -n 1)
   [ -z "$installer" ] && continue
   if [ ! -f "${installer}.blockmap" ]; then
