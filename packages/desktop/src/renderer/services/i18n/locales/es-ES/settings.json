@@ -1464,6 +1464,7 @@
   "videoGenUnsupportedTooltip": "Kling, Sora y CogVideoX llegarán en una versión posterior. La generación de vídeo comparte el interruptor de arriba con la de imágenes.",
   "mediaCatalogOverrides": "Catálogo de modelos personalizado",
   "mediaCatalogOverridesTooltip": "Avanzado: declara en JSON modelos de imagen/vídeo que el catálogo integrado no conoce (habitual con pasarelas propias). Una entrada sustituye a la integrada con el mismo id; si no, se añade. Los modelos asíncronos (form \"C\") deben indicar un endpointStyle con controlador, o se rechaza la entrada — así se evitan modelos seleccionables pero no invocables.",
+  "mediaModelPickerHint": "Define qué modelo usa el asistente cuando llama a esta herramienta por su cuenta. El modo de generación del cuadro de envío aún puede elegir un modelo distinto por mensaje y no se ve afectado.",
   "mcpIncompatibleToolsWarning": "Conectado, pero {{count}} herramienta(s) usan nombres de parámetros que la API del modelo rechaza (p. ej. «{{tool}}» → «{{key}}»). Este servidor queda excluido de las sesiones del agente hasta que se corrija su esquema.",
   "mcpSelectAll": "Seleccionar todo",
   "mcpDeselectAll": "Deseleccionar todo",

@@ -1464,6 +1464,7 @@
   "videoGenUnsupportedTooltip": "Kling, Sora und CogVideoX folgen in einer späteren Version. Die Videogenerierung teilt sich den Schalter oben mit der Bildgenerierung.",
   "mediaCatalogOverrides": "Eigener Modellkatalog",
   "mediaCatalogOverridesTooltip": "Erweitert: Bild-/Videomodelle als JSON deklarieren, die der eingebaute Katalog nicht kennt (typisch bei eigenen Gateways). Ein Eintrag überschreibt einen eingebauten mit derselben id, sonst wird er ergänzt. Asynchrone Modelle (form \"C\") müssen einen endpointStyle mit Treiber nennen, sonst wird der Eintrag abgelehnt — das verhindert wählbare, aber nicht aufrufbare Modelle.",
+  "mediaModelPickerHint": "Legt fest, welches Modell der Assistent verwendet, wenn er dieses Tool selbst aufruft. Der Erzeugungsmodus im Eingabefeld kann weiterhin pro Nachricht ein anderes Modell wählen und ist davon nicht betroffen.",
   "mcpIncompatibleToolsWarning": "Verbunden, aber {{count}} Tool(s) verwenden Parameternamen, die die Modell-API ablehnt (z. B. „{{tool}}“ → „{{key}}“). Dieser Server wird von Agent-Sitzungen ausgeschlossen, bis sein Schema korrigiert ist.",
   "mcpSelectAll": "Alle auswählen",
   "mcpDeselectAll": "Auswahl aufheben",

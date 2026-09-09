@@ -1466,6 +1466,7 @@
   "videoGenUnsupportedTooltip": "可靈、Sora、CogVideoX 等待後續版本接入；影片生成與圖像生成共用上方的工具開關。",
   "mediaCatalogOverrides": "自訂模型目錄",
   "mediaCatalogOverridesTooltip": "進階：用 JSON 宣告內建目錄不認識的圖片/影片模型（常見於自建閘道）。按 id 覆蓋同名內建條目，否則追加。非同步任務型（form \"C\"）必須指定已實作驅動的 endpointStyle，否則會被拒絕——避免出現「可選卻呼叫不通」的模型。",
+  "mediaModelPickerHint": "決定助手在對話中自行呼叫該工具時使用的模型；傳送框的生成模式仍可依訊息臨時切換模型，不受影響。",
   "mcpIncompatibleToolsWarning": "已連線，但有 {{count}} 個工具的參數名稱不被模型 API 接受（例如「{{tool}}」的「{{key}}」）。修好該 schema 之前，此伺服器不會下發給智慧體工作階段。",
   "mcpSelectAll": "全選",
   "mcpDeselectAll": "取消全選",
