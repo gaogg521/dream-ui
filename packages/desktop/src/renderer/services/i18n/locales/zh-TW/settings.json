@@ -121,7 +121,8 @@
     "noSearchResults": "沒有符合的技能。",
     "customHint": "支援技能目錄、父目錄或 zip 匯入；單檔上限 {{maxFileSize}}、單技能上限 {{maxTotalSize}}；同名匯入會覆蓋現有技能。",
     "officialHint": "One Work 官方內建的技能，開箱即用、唯讀，隨版本更新維護。",
-    "deleteAffectsNewOnlyHint": "刪除僅影響新會話：歷史會話中已選用的技能仍可繼續使用。"
+    "deleteAffectsNewOnlyHint": "刪除僅影響新會話：歷史會話中已選用的技能仍可繼續使用。",
+    "detailEditViaChat": "在對話中編輯"
   },
   "authMethod": "驗證",
   "geminiApiKey": "Gemini API 金鑰",
@@ -1050,7 +1051,10 @@
     "discordStep1": "開啟 Discord，在頻道中 @你的機器人，或傳送私訊給它",
     "discordStep2": "傳送任意訊息或 @提及 以發起配對",
     "discordStep3": "配對請求將顯示在下方。點擊「核准」以授權該使用者。",
-    "discordStep4": "核准後，你就可以在 Discord 中與助手聊天了！"
+    "discordStep4": "核准後，你就可以在 Discord 中與助手聊天了！",
+    "manualPairingHint": "清單裡沒有這筆請求？輸入使用者提供的配對碼，手動通過或拒絕。",
+    "manualPairingInvalid": "請輸入使用者看到的 6 位配對碼",
+    "manualPairingPlaceholder": "6 位配對碼"
   },
   "lark": {
     "appId": "App ID",
@@ -1538,5 +1542,6 @@
   },
   "mediaModelUndeclared": "尚未設定 —— 在「模型」頁把某個模型標為圖片或影片類型",
   "enterpriseKeyMaskedTip": "企業下發的 Key 已脫敏顯示（僅保留首尾便於核對）。未修改則儲存時保留原 Key；輸入新 Key 將整體替換。",
-  "enterpriseMachineBlockedNotice": "這台裝置已被組織管理員封鎖，本機的團隊資源已清空。"
+  "enterpriseMachineBlockedNotice": "這台裝置已被組織管理員封鎖，本機的團隊資源已清空。",
+  "webui.deployRoleServerUnavailable": "「本機作為伺服器」需要部署企業版伺服端，個人版不提供專案群組託管能力。"
 }

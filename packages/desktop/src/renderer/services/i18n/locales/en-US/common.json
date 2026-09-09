@@ -341,7 +341,13 @@
     "wizardAddressNoEnterpriseTitle": "That address does not serve the enterprise API",
     "wizardAddressNoEnterpriseHint": "The other side may be running a build without the enterprise module; verify the address or contact the admin.",
     "loginChannelServerUnreachable": "Cannot reach the project group server ({{url}}). Check the server address in step 1 — the enterprise SSO configuration is only available once it connects.",
-    "loginChannelsUnreachableHint": "Cannot reach the project group server ({{url}}). Go back to step 1 and check the address — the enterprise SSO configuration is only available once it connects."
+    "loginChannelsUnreachableHint": "Cannot reach the project group server ({{url}}). Go back to step 1 and check the address — the enterprise SSO configuration is only available once it connects.",
+    "contextErrorHint": "Could not load your company details. Check the connection to the project-group server and try again.",
+    "hostingMovedToEnterpriseEdition": "This machine is recorded as a \"server\", but the personal edition does not host project groups — that capability moved to the enterprise edition. Switch this machine back to client under Settings → Enterprise identity, then connect to a project group hosted by an enterprise-edition server.",
+    "loginChannelNeedsServer": "No enterprise server is connected, so this machine has no enterprise SSO configuration. Go back to step one, enter the project-group server address and connect, then sign in with {{method}}.",
+    "loginChannelsNeedServerHint": "Enterprise SSO methods come from the enterprise server you connect to. Nothing is connected yet, so only \"Local account\" is available below — go back to step one and connect the project-group server address.",
+    "loginChannelsNoneConfiguredHint": "Connected to the enterprise server, but an administrator has not enabled any SSO method in the admin console yet. You can sign in with \"Local account\" for now.",
+    "wizardEditingContext": "Currently connected to {{url}}. The switch happens only after the new address connects successfully; cancelling leaves the existing connection untouched."
   },
   "superAssistant": {
     "title": "Super Assistant",
@@ -513,7 +519,17 @@
       "saveFailed": "Save failed",
       "saved": "Saved",
       "skillContent": "Content (SKILL.md)",
-      "skillsTitle": "Skills Registry"
+      "skillsTitle": "Skills Registry",
+      "aclScope": "Visibility scope",
+      "aclScopeHint": "\"Whole company\" is visible to every member; \"Selected project group\" only to that group.",
+      "aclTeam": "Project group",
+      "aclTeamPlaceholder": "Select a project group",
+      "aclVisibility": "Visibility",
+      "colVisibility": "Visibility scope",
+      "scopeOrg": "Whole company",
+      "scopeTeam": "Selected project group",
+      "visibilityAdmin": "Admins only",
+      "visibilityAll": "All members"
     },
     "rag": {
       "apiKey": "API Key",

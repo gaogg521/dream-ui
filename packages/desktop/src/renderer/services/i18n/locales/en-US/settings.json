@@ -123,7 +123,8 @@
     "officialHint": "Official skills bundled with One Work — ready to use out of the box, read-only, and updated with each release.",
     "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
     "team": "Team",
-    "teamAuto": "Team · Auto"
+    "teamAuto": "Team · Auto",
+    "detailEditViaChat": "Edit via chat"
   },
   "authMethod": "Authentication",
   "geminiApiKey": "Gemini API Key",
@@ -1050,7 +1051,10 @@
     "discordStep1": "Open Discord and mention your bot in a channel, or send it a DM",
     "discordStep2": "Send any message or @mention to initiate pairing",
     "discordStep3": "A pairing request will appear below. Click \"Approve\" to authorize the user.",
-    "discordStep4": "Once approved, you can start chatting with the assistant in Discord!"
+    "discordStep4": "Once approved, you can start chatting with the assistant in Discord!",
+    "manualPairingHint": "Request not listed? Enter the pairing code from the user to approve or reject it manually.",
+    "manualPairingInvalid": "Enter the 6-digit pairing code shown to the user",
+    "manualPairingPlaceholder": "6-digit code"
   },
   "lark": {
     "appId": "App ID",
@@ -1590,5 +1594,6 @@
   },
   "mediaModelUndeclared": "Not set — declare a model as Image or Video on the Models page",
   "enterpriseKeyMaskedTip": "Enterprise-issued keys are masked (head/tail only, for verification). Saving without changes keeps the original key; typing a new one replaces it entirely.",
-  "enterpriseMachineBlockedNotice": "This device has been blocked by your organization administrator. Team resources on this machine have been cleared."
+  "enterpriseMachineBlockedNotice": "This device has been blocked by your organization administrator. Team resources on this machine have been cleared.",
+  "webui.deployRoleServerUnavailable": "\"This machine as server\" requires an enterprise-edition server deployment; the personal edition does not host project groups."
 }

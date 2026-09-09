@@ -85,7 +85,8 @@
     "reorderPinned": "Drag to reorder pinned conversation",
     "forkedFrom": "Forked from “{{name}}”",
     "forkedConversation": "Forked conversation",
-    "viewAllTooltip": "View all in Session Center"
+    "viewAllTooltip": "View all in Session Center",
+    "shareToOrg": "Share to company"
   },
   "historySearch": {
     "tooltip": "Search messages",

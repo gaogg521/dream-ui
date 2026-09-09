@@ -123,7 +123,8 @@
     "officialHint": "One Work 官方内置的技能，开箱即用、只读，随版本更新维护。",
     "deleteAffectsNewOnlyHint": "删除仅影响新会话：历史会话中已选用的技能仍可继续使用。",
     "team": "团队",
-    "teamAuto": "团队 · 自动"
+    "teamAuto": "团队 · 自动",
+    "detailEditViaChat": "在对话中编辑"
   },
   "authMethod": "认证",
   "geminiApiKey": "Gemini API 密钥",
@@ -1050,7 +1051,10 @@
     "discordStep1": "打开 Discord，在频道中 @你的机器人，或给它发送私信",
     "discordStep2": "发送任意消息或 @提及 以发起配对",
     "discordStep3": "配对请求将显示在下方。点击“批准”以授权该用户。",
-    "discordStep4": "批准后，你就可以在 Discord 中与助手聊天了！"
+    "discordStep4": "批准后，你就可以在 Discord 中与助手聊天了！",
+    "manualPairingHint": "列表里没有这条请求？输入用户提供的配对码，手动通过或拒绝。",
+    "manualPairingInvalid": "请输入用户看到的 6 位配对码",
+    "manualPairingPlaceholder": "6 位配对码"
   },
   "lark": {
     "appId": "App ID",
@@ -1591,5 +1595,6 @@
   },
   "mediaModelUndeclared": "尚未设置 —— 在「模型」页把某个模型标为图片或视频类型",
   "enterpriseKeyMaskedTip": "企业下发的 Key 已脱敏显示（仅保留首尾便于核对）。未修改则保存时保留原 Key；输入新 Key 将整体替换。",
-  "enterpriseMachineBlockedNotice": "这台设备已被组织管理员封禁，本机的团队资源已清空。"
+  "enterpriseMachineBlockedNotice": "这台设备已被组织管理员封禁，本机的团队资源已清空。",
+  "webui.deployRoleServerUnavailable": "「本机作为服务器」需要部署企业版服务端，个人版不提供项目组托管能力。"
 }

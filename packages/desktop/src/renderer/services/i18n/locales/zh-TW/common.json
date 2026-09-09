@@ -240,7 +240,19 @@
     "noExpertOption": "不指定專家（僅用執行後端）",
     "backendRequired": "請選擇執行後端",
     "teamDistributed": "團隊 · 自動",
-    "teamDeleteDisabledTip": "企業下發的數位員工由管理員統一管理，無法在本機刪除；管理員收回授權後會自動消失。"
+    "teamDeleteDisabledTip": "企業下發的數位員工由管理員統一管理，無法在本機刪除；管理員收回授權後會自動消失。",
+    "registries": {
+      "aclScope": "可見範圍",
+      "aclScopeHint": "「全企業」對所有成員可見；「指定專案群組」僅該群組成員可見。",
+      "aclTeam": "專案群組",
+      "aclTeamPlaceholder": "選擇專案群組",
+      "aclVisibility": "可見性",
+      "colVisibility": "可見範圍",
+      "scopeOrg": "全企業",
+      "scopeTeam": "指定專案群組",
+      "visibilityAdmin": "僅管理員",
+      "visibilityAll": "所有成員"
+    }
   },
   "language": {
     "switchTooltip": "切換語言"
@@ -351,5 +363,11 @@
       "tenant": "本群組",
       "enterprise": "全企業"
     }
-  }
+  },
+  "enterprise.contextErrorHint": "取得企業資訊失敗，請檢查與專案群組伺服器的連線後重試。",
+  "enterprise.hostingMovedToEnterpriseEdition": "本機記錄的部署角色是「伺服器」，但個人版不提供專案群組託管能力（該能力已隨企業版拆分獨立）。請在「設定 → 企業身分」將本機切回用戶端，並連線由企業版伺服端託管的專案群組。",
+  "enterprise.loginChannelNeedsServer": "尚未連線企業伺服器，本機沒有企業 SSO 設定。請先回到第一步填寫並連線專案群組伺服器位址，再用 {{method}} 登入。",
+  "enterprise.loginChannelsNeedServerHint": "企業 SSO 登入方式來自你所連線的企業伺服器。目前尚未連線，因此下方僅「本機帳戶」可用——請回到第一步填寫並連線專案群組伺服器位址。",
+  "enterprise.loginChannelsNoneConfiguredHint": "已連線企業伺服器，但管理員尚未在企業管理後台啟用任何 SSO 登入方式。可先用「本機帳戶」登入。",
+  "enterprise.wizardEditingContext": "目前已連線：{{url}}。只有新位址連線成功後才會切換，取消不會變更現有連線。"
 }

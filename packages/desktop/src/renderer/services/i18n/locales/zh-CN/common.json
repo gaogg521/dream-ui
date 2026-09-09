@@ -341,7 +341,13 @@
     "wizardAddressNoEnterpriseTitle": "该地址没有提供企业 API",
     "wizardAddressNoEnterpriseHint": "对方可能运行的是不带企业模块的版本，请确认地址或联系管理员。",
     "loginChannelServerUnreachable": "无法连接项目组服务器（{{url}}），请检查第 1 步填写的服务器地址。地址连通后才能拿到企业的 SSO 登录配置。",
-    "loginChannelsUnreachableHint": "无法连接项目组服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能拿到企业的 SSO 登录配置。"
+    "loginChannelsUnreachableHint": "无法连接项目组服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能拿到企业的 SSO 登录配置。",
+    "contextErrorHint": "获取企业信息失败，请检查与项目组服务器的连接后重试。",
+    "hostingMovedToEnterpriseEdition": "本机记录的部署角色是「服务器」，但个人版不提供项目组托管能力（该能力已随企业版拆分独立）。请在「设置 → 企业身份」将本机切回客户端，并连接由企业版服务端托管的项目组。",
+    "loginChannelNeedsServer": "尚未连接企业服务器，本机没有企业 SSO 配置。请先回到第一步填写并连接项目组服务器地址，再用 {{method}} 登录。",
+    "loginChannelsNeedServerHint": "企业 SSO 登录方式来自你所连接的企业服务器。当前尚未连接，因此下方仅「本地账户」可用——请回到第一步填写并连接项目组服务器地址。",
+    "loginChannelsNoneConfiguredHint": "已连接企业服务器，但管理员尚未在企业管理后台启用任何 SSO 登录方式。可先用「本地账户」登录。",
+    "wizardEditingContext": "当前已连接：{{url}}。只有新地址连接成功后才会切换，取消不会改动现有连接。"
   },
   "superAssistant": {
     "title": "超级助手",
@@ -513,7 +519,17 @@
       "saveFailed": "保存失败",
       "saved": "已保存",
       "skillContent": "内容（SKILL.md）",
-      "skillsTitle": "Skills 注册表"
+      "skillsTitle": "Skills 注册表",
+      "aclScope": "可见范围",
+      "aclScopeHint": "“全企业”对所有成员可见；“指定项目组”仅该组成员可见。",
+      "aclTeam": "项目组",
+      "aclTeamPlaceholder": "选择项目组",
+      "aclVisibility": "可见性",
+      "colVisibility": "可见范围",
+      "scopeOrg": "全企业",
+      "scopeTeam": "指定项目组",
+      "visibilityAdmin": "仅管理员",
+      "visibilityAll": "所有成员"
     },
     "rag": {
       "apiKey": "API Key",
