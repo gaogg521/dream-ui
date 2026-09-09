@@ -9,6 +9,7 @@ import {
   setEnterpriseServerUrl,
   setEnterpriseSession,
 } from '@/common/adapter/enterpriseMode';
+import { ORG_CONTEXT_CHANGED_EVENT } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import { configService } from '@/common/config/configService';
 import {
   appendEnterpriseServerUrlHistory,
@@ -57,13 +58,27 @@ function readStoredServerUrl(): string {
  */
 function applyRemotePointer(role: WebuiDeploymentRole, url: string): void {
   const normalized = normalizeEnterpriseServerUrl(url);
+  let identityChanged = false;
   if (role === 'client' && normalized) {
     if (getEnterpriseServerUrl() !== normalized) {
       setEnterpriseSession(null);
+      identityChanged = true;
     }
     setEnterpriseServerUrl(normalized);
   } else if (role === 'server') {
     clearEnterpriseRemotePointer();
+    identityChanged = true;
+  }
+  if (identityChanged) {
+    // Leaving client mode (or re-pointing it at a different server) changes
+    // what "my org" means, and everything derived from the org context must
+    // re-derive: the team-resource sync's leaving purge (C0-1's channel
+    // clearing rides it too) keys on that context flipping to
+    // not-enterprise, and it never fires unless the context refetches.
+    // DEPLOYMENT_ROLE_CHANGED_EVENT alone does not reach those hooks — which
+    // is exactly how an enterprise-issued model channel survived the switch
+    // back to the personal workspace.
+    window.dispatchEvent(new CustomEvent(ORG_CONTEXT_CHANGED_EVENT));
   }
 }
 
