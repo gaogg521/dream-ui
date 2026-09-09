@@ -71,11 +71,19 @@ async function getOrCreateMachineId(): Promise<string> {
 function readPlatformMachineId(): string | null {
   try {
     if (process.platform === 'win32') {
-      const out = execFileSync(
-        'reg',
-        ['query', 'HKLM\SOFTWARE\Microsoft\Cryptography', '/v', 'MachineGuid', '/reg:64'],
-        { encoding: 'utf8', timeout: 3000, windowsHide: true }
-      );
+      // Backslashes MUST be escaped. Written as a single-quoted
+      // 'HKLM\SOFTWARE\...' this collapses to 'HKLMSOFTWARE...' — JS drops the
+      // backslash for every escape it does not recognise — so `reg query` was
+      // handed a key that cannot exist, threw, and every Windows install fell
+      // through to the random-UUID branch. That is the exact duplication this
+      // function was added to remove, so the failure was invisible: an id was
+      // always produced, just never a stable one.
+      const registryKey = 'HKLM\\SOFTWARE\\Microsoft\\Cryptography';
+      const out = execFileSync('reg', ['query', registryKey, '/v', 'MachineGuid', '/reg:64'], {
+        encoding: 'utf8',
+        timeout: 3000,
+        windowsHide: true,
+      });
       return /MachineGuid\s+REG_SZ\s+(\S+)/i.exec(out)?.[1] ?? null;
     }
     if (process.platform === 'darwin') {
