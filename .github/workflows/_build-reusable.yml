@@ -20,7 +20,7 @@ on:
         type: boolean
         default: false
       upload_installers_only:
-        description: 'Only upload primary installers (exe/msi/dmg/deb), skip zip/yml/blockmap'
+        description: 'Only upload primary installers (exe/msi/dmg/deb), skip zip/yml/blockmap. NOT for releases: dropping the blockmap silently turns differential updates back into full downloads.'
         type: boolean
         default: false
       dreamcore_run_id:

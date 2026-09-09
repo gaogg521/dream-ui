@@ -40,39 +40,47 @@ function verifyBundledResources(resourcesDir, electronPlatformName, targetArch) 
 }
 
 /**
- * Chromium's own UI strings (context menus, spellcheck, IME candidate window) -
- * NOT the app's i18n bundles, which live inside the asar and are untouched.
- * Electron falls back to en-US.pak for any locale it cannot match, so that one
- * is mandatory; the assert below exists because losing it stays silent until a
- * non-Chinese user right-clicks.
+ * Locale pruning itself is electron-builder's `electronLanguages` (see
+ * electron-builder.yml): it runs during framework preparation, before signing,
+ * and handles both locales/*.pak and the macOS .lproj set — which a hand-rolled
+ * afterPack pass cannot do without risking the notarized framework.
  *
- * win32/linux only. On darwin these sit inside the signed Electron Framework
- * bundle, where pruning is a notarization risk that ~45 MB does not justify.
+ * What it does NOT do is fail. When nothing matches it logs a warning and skips
+ * cleanup, and its matcher compares the WANTED string against the FILE's
+ * language, so a too-loose entry ("en") silently deletes the more specific file
+ * ("en-US.pak"). Losing the fallback locale is invisible until some user
+ * right-clicks, so assert it is still there.
  */
-const KEPT_LOCALE_PAKS = new Set(['en-US.pak', 'zh-CN.pak', 'zh-TW.pak']);
-
-function pruneLocalePaks(appOutDir, electronPlatformName) {
-  if (electronPlatformName === 'darwin') return 0;
+function assertFallbackLocaleSurvived(appOutDir, electronPlatformName, packager) {
+  if (electronPlatformName === 'darwin') {
+    const appName = packager?.appInfo?.productFilename || 'onework';
+    const frameworkResources = path.join(
+      appOutDir,
+      `${appName}.app`,
+      'Contents',
+      'Frameworks',
+      'Electron Framework.framework',
+      'Versions',
+      'A',
+      'Resources'
+    );
+    if (!fs.existsSync(frameworkResources)) return;
+    if (!fs.existsSync(path.join(frameworkResources, 'en.lproj'))) {
+      throw new Error(
+        `electronLanguages removed en.lproj from ${frameworkResources} - Chromium has no locale to fall back to`
+      );
+    }
+    console.log('   [locales] en.lproj present');
+    return;
+  }
 
   const localesDir = path.join(appOutDir, 'locales');
-  if (!fs.existsSync(localesDir)) return 0;
-
-  let removed = 0;
-  let freed = 0;
-  for (const entry of fs.readdirSync(localesDir)) {
-    if (!entry.endsWith('.pak') || KEPT_LOCALE_PAKS.has(entry)) continue;
-    const target = path.join(localesDir, entry);
-    freed += fs.statSync(target).size;
-    fs.rmSync(target);
-    removed += 1;
-  }
-
+  if (!fs.existsSync(localesDir)) return;
   if (!fs.existsSync(path.join(localesDir, 'en-US.pak'))) {
-    throw new Error('Locale pruning removed en-US.pak, the fallback Electron uses for every unmatched locale');
+    throw new Error(`electronLanguages removed en-US.pak from ${localesDir} - Chromium has no locale to fall back to`);
   }
-
-  console.log(`   [prune] removed ${removed} locale pak(s), freed ${(freed / 1024 / 1024).toFixed(1)} MB`);
-  return freed;
+  const kept = fs.readdirSync(localesDir).filter((f) => f.endsWith('.pak'));
+  console.log(`   [locales] ${kept.length} pak(s) kept: ${kept.join(', ')}`);
 }
 
 /**
@@ -91,7 +99,10 @@ function pruneLocalePaks(appOutDir, electronPlatformName) {
  * and the app opens with an empty session list. The data itself is safe in
  * userData, but to the user it reads as lost history - hence the hard assert.
  */
-const BETTER_SQLITE3_LINK_ARTIFACTS = new Set(['.iobj', '.ipdb', '.pdb', '.lib', '.exp', '.map']);
+// MSVC leaves .iobj/.ipdb/.pdb/.lib/.exp; GCC/Clang leave .a and stray .o. Both
+// sets are listed so this prunes on every platform, not just the one it was
+// written on.
+const BETTER_SQLITE3_LINK_ARTIFACTS = new Set(['.iobj', '.ipdb', '.pdb', '.lib', '.exp', '.map', '.a', '.o']);
 
 function directorySize(target) {
   let total = 0;
@@ -116,7 +127,11 @@ function pruneBetterSqlite3BuildArtifacts(nodeModulesDir) {
 
   let freed = 0;
   for (const target of [
+    // node-gyp names the intermediate dir 'obj' under MSVC and 'obj.target'
+    // under make; only one exists per platform and the other is skipped below.
     path.join(releaseDir, 'obj'),
+    path.join(releaseDir, 'obj.target'),
+    path.join(releaseDir, '.deps'),
     path.join(moduleRoot, 'build', 'deps'),
     path.join(moduleRoot, 'deps'),
     path.join(moduleRoot, 'src'),
@@ -145,10 +160,9 @@ function pruneBetterSqlite3BuildArtifacts(nodeModulesDir) {
  * Size pruning that must run on every exit path, including the one that skips
  * the native rebuild entirely.
  */
-function prunePackagedApp(appOutDir, electronPlatformName, resourcesDir) {
-  const freed =
-    pruneLocalePaks(appOutDir, electronPlatformName) +
-    pruneBetterSqlite3BuildArtifacts(path.join(resourcesDir, 'app.asar.unpacked', 'node_modules'));
+function prunePackagedApp(appOutDir, electronPlatformName, resourcesDir, packager) {
+  assertFallbackLocaleSurvived(appOutDir, electronPlatformName, packager);
+  const freed = pruneBetterSqlite3BuildArtifacts(path.join(resourcesDir, 'app.asar.unpacked', 'node_modules'));
   console.log(`   [prune] total freed: ${(freed / 1024 / 1024).toFixed(1)} MB
 `);
 }
@@ -195,7 +209,7 @@ module.exports = async function afterPack(context) {
 
   if (!isCrossCompile && !needsSameArchRebuild && !forceRebuild) {
     console.log(`   ✓ Same architecture, rebuild skipped (set FORCE_NATIVE_REBUILD=true to override)\n`);
-    prunePackagedApp(appOutDir, electronPlatformName, resourcesDir);
+    prunePackagedApp(appOutDir, electronPlatformName, resourcesDir, packager);
     return;
   }
 
@@ -341,5 +355,5 @@ module.exports = async function afterPack(context) {
 
   console.log(`✅ All native modules rebuilt successfully for ${targetArch}\n`);
 
-  prunePackagedApp(appOutDir, electronPlatformName, resourcesDir);
+  prunePackagedApp(appOutDir, electronPlatformName, resourcesDir, packager);
 };
