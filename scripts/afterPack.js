@@ -39,6 +39,120 @@ function verifyBundledResources(resourcesDir, electronPlatformName, targetArch) 
   console.log(`   ✓ Bundled resources verified for ${result.runtimeKey} (${result.checked.length} checks)`);
 }
 
+/**
+ * Chromium's own UI strings (context menus, spellcheck, IME candidate window) -
+ * NOT the app's i18n bundles, which live inside the asar and are untouched.
+ * Electron falls back to en-US.pak for any locale it cannot match, so that one
+ * is mandatory; the assert below exists because losing it stays silent until a
+ * non-Chinese user right-clicks.
+ *
+ * win32/linux only. On darwin these sit inside the signed Electron Framework
+ * bundle, where pruning is a notarization risk that ~45 MB does not justify.
+ */
+const KEPT_LOCALE_PAKS = new Set(['en-US.pak', 'zh-CN.pak', 'zh-TW.pak']);
+
+function pruneLocalePaks(appOutDir, electronPlatformName) {
+  if (electronPlatformName === 'darwin') return 0;
+
+  const localesDir = path.join(appOutDir, 'locales');
+  if (!fs.existsSync(localesDir)) return 0;
+
+  let removed = 0;
+  let freed = 0;
+  for (const entry of fs.readdirSync(localesDir)) {
+    if (!entry.endsWith('.pak') || KEPT_LOCALE_PAKS.has(entry)) continue;
+    const target = path.join(localesDir, entry);
+    freed += fs.statSync(target).size;
+    fs.rmSync(target);
+    removed += 1;
+  }
+
+  if (!fs.existsSync(path.join(localesDir, 'en-US.pak'))) {
+    throw new Error('Locale pruning removed en-US.pak, the fallback Electron uses for every unmatched locale');
+  }
+
+  console.log(`   [prune] removed ${removed} locale pak(s), freed ${(freed / 1024 / 1024).toFixed(1)} MB`);
+  return freed;
+}
+
+/**
+ * better-sqlite3 leaves its whole MSVC compile tree in the packaged app: the
+ * .iobj/.ipdb link artifacts, a static sqlite3.lib, build/Release/obj (holding a
+ * 9 MB sqlite3.c) and the amalgamation source under deps/. Only
+ * build/Release/better_sqlite3.node is ever loaded.
+ *
+ * This deliberately runs AFTER the native rebuild rather than as an
+ * electron-builder `files:` exclusion: when prebuild-install has no prebuilt
+ * matching this Electron ABI, node-gyp compiles from src/ + deps/, so excluding
+ * them at pack time would turn a working fallback into a packaging failure.
+ *
+ * `bindings` resolves the addon at exactly build/Release/better_sqlite3.node.
+ * If that path is lost the driver throws "Could not locate the bindings file"
+ * and the app opens with an empty session list. The data itself is safe in
+ * userData, but to the user it reads as lost history - hence the hard assert.
+ */
+const BETTER_SQLITE3_LINK_ARTIFACTS = new Set(['.iobj', '.ipdb', '.pdb', '.lib', '.exp', '.map']);
+
+function directorySize(target) {
+  let total = 0;
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const child = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(child);
+      else if (entry.isFile()) total += fs.statSync(child).size;
+    }
+  };
+  walk(target);
+  return total;
+}
+
+function pruneBetterSqlite3BuildArtifacts(nodeModulesDir) {
+  const moduleRoot = path.join(nodeModulesDir, 'better-sqlite3');
+  const addon = path.join(moduleRoot, 'build', 'Release', 'better_sqlite3.node');
+  if (!fs.existsSync(moduleRoot) || !fs.existsSync(addon)) return 0;
+
+  const addonSizeBefore = fs.statSync(addon).size;
+  const releaseDir = path.join(moduleRoot, 'build', 'Release');
+
+  let freed = 0;
+  for (const target of [
+    path.join(releaseDir, 'obj'),
+    path.join(moduleRoot, 'build', 'deps'),
+    path.join(moduleRoot, 'deps'),
+    path.join(moduleRoot, 'src'),
+  ]) {
+    if (!fs.existsSync(target)) continue;
+    freed += directorySize(target);
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+
+  for (const entry of fs.readdirSync(releaseDir)) {
+    if (!BETTER_SQLITE3_LINK_ARTIFACTS.has(path.extname(entry))) continue;
+    const target = path.join(releaseDir, entry);
+    freed += fs.statSync(target).size;
+    fs.rmSync(target);
+  }
+
+  if (!fs.existsSync(addon) || fs.statSync(addon).size !== addonSizeBefore) {
+    throw new Error(`better-sqlite3 pruning damaged ${addon} - the app would start with an unreadable session history`);
+  }
+
+  console.log(`   [prune] removed better-sqlite3 compile artifacts, freed ${(freed / 1024 / 1024).toFixed(1)} MB`);
+  return freed;
+}
+
+/**
+ * Size pruning that must run on every exit path, including the one that skips
+ * the native rebuild entirely.
+ */
+function prunePackagedApp(appOutDir, electronPlatformName, resourcesDir) {
+  const freed =
+    pruneLocalePaks(appOutDir, electronPlatformName) +
+    pruneBetterSqlite3BuildArtifacts(path.join(resourcesDir, 'app.asar.unpacked', 'node_modules'));
+  console.log(`   [prune] total freed: ${(freed / 1024 / 1024).toFixed(1)} MB
+`);
+}
+
 module.exports = async function afterPack(context) {
   const { arch, electronPlatformName, appOutDir, packager } = context;
   const targetArch = normalizeArch(typeof arch === 'string' ? arch : Arch[arch] || process.arch);
@@ -81,6 +195,7 @@ module.exports = async function afterPack(context) {
 
   if (!isCrossCompile && !needsSameArchRebuild && !forceRebuild) {
     console.log(`   ✓ Same architecture, rebuild skipped (set FORCE_NATIVE_REBUILD=true to override)\n`);
+    prunePackagedApp(appOutDir, electronPlatformName, resourcesDir);
     return;
   }
 
@@ -225,4 +340,6 @@ module.exports = async function afterPack(context) {
   }
 
   console.log(`✅ All native modules rebuilt successfully for ${targetArch}\n`);
+
+  prunePackagedApp(appOutDir, electronPlatformName, resourcesDir);
 };

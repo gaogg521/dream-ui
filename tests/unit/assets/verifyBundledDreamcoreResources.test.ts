@@ -419,15 +419,17 @@ describe('verifyBundledDreamcoreResources', () => {
       expect(verify().failures).toContainEqual(expect.objectContaining({ component: 'codex' }));
     });
 
-    it('fails when a required CLI is absent from the contract', () => {
+    it('accepts a contract that declares no CLIs at all', () => {
+      // `cli/` is no longer produced (see REQUIRED_MANAGED_CLI_NAMES), so an
+      // empty list has to verify clean or every package build fails here. The
+      // per-entry checks in this block still guard a bundle that carries
+      // entries, which is what an older backend's manifest looks like.
       writeV2Contract((manifest) => {
-        manifest.clis = (manifest.clis as unknown[]).filter((cli) => (cli as { name: string }).name !== 'codex');
+        manifest.clis = [];
       });
       layOutV2Binaries();
 
-      expect(verify().failures).toContainEqual(
-        expect.objectContaining({ component: 'codex', reason: 'missing_required_cli' })
-      );
+      expect(verify().failures).toEqual([]);
     });
 
     it('fails when a CLI was prepared for another platform', () => {

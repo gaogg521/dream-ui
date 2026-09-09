@@ -94,6 +94,38 @@ files:
   # Exclude large packages
   - '!**/node_modules/{@img,@emnapi}/**'
   - '!**/node_modules/@img/sharp-*/**'
+  # Renderer-only dependencies. The renderer config in electron.vite.config.ts
+  # has no externalizeDepsPlugin, so Vite compiles these into out/renderer/assets
+  # and the copies under node_modules are a second, unreachable one (~180 MB on
+  # win32-x64: mermaid 24, @arco-design 15, pdfjs-dist 15, cytoscape 14, ...).
+  #
+  # Every entry below was verified to have zero references outside
+  # packages/desktop/src/renderer before being listed. Do NOT extend this by
+  # eyeballing package size: the MAIN process externalizes its dependencies, so
+  # anything it requires must stay shipped or the app dies at startup with
+  # "Cannot find module". React/react-dom are deliberately absent from this list
+  # for that reason - @dream/web-host is bundled into the main process.
+  - '!**/node_modules/mermaid/**'
+  - '!**/node_modules/@arco-design/**'
+  - '!**/node_modules/@icon-park/**'
+  - '!**/node_modules/pdfjs-dist/**'
+  - '!**/node_modules/cytoscape/**'
+  - '!**/node_modules/cytoscape-*/**'
+  - '!**/node_modules/@shikijs/**'
+  - '!**/node_modules/katex/**'
+  - '!**/node_modules/diff2html/**'
+  - '!**/node_modules/@codemirror/**'
+  - '!**/node_modules/@uiw/**'
+  - '!**/node_modules/@monaco-editor/**'
+  - '!**/node_modules/react-syntax-highlighter/**'
+  - '!**/node_modules/streamdown/**'
+  # Orphaned build-time tool: no package in node_modules declares it as a
+  # dependency and no source file requires it.
+  - '!**/node_modules/postject/**'
+  # Demo/fixture payloads carried inside packages that are otherwise needed
+  # (cytoscape-fcose/demo 8.2 MB, pptx2json/fixtures 4.6 MB).
+  - '!**/node_modules/*/{demo,demos,fixture,fixtures,benchmark,benchmarks}'
+  - '!**/node_modules/@*/*/{demo,demos,fixture,fixtures,benchmark,benchmarks}'
   # Exclude JAR files and JNI libraries that cause notarization issues
   - '!**/*.jar'
   - '!**/*.jnilib'
