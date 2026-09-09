@@ -13,8 +13,20 @@ const REQUIRED_ACP_TOOL_SLUGS = ['codex-acp', 'claude-agent-acp'];
  */
 const SUPPORTED_SCHEMA_VERSIONS = new Set([1, 2]);
 
-/** Agent CLIs a v2 bundle must contain. Mirrors REQUIRED_ACP_TOOL_SLUGS. */
-const REQUIRED_MANAGED_CLI_NAMES = ['claude', 'codex'];
+/**
+ * Deliberately empty — mirrors REQUIRED_CLI_NAMES in
+ * `managed_resources_contract.rs`, which must stay in sync with this list.
+ *
+ * `cli/` (upstream's prepared native claude/codex binaries) is no longer
+ * produced: nothing in this fork spawns them, sessions go through the `acp/`
+ * wrapper layer that REQUIRED_ACP_TOOL_SLUGS above still guards. Note that the
+ * comment on `requiredAgentFields` below is about `acpTools` — that one is load
+ * bearing and stays required; this list is not the same guarantee.
+ *
+ * Entries are still validated when a manifest carries them, so a bundle
+ * prepared by an older backend verifies unchanged.
+ */
+const REQUIRED_MANAGED_CLI_NAMES = [];
 
 function backendBinaryName(platform) {
   return platform === 'win32' ? 'dreamcore.exe' : 'dreamcore';
