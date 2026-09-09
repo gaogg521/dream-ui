@@ -37,7 +37,14 @@ vi.mock('@/renderer/components/base', () => ({
     value?: string;
     onChange?: (next: string) => void;
     placeholder?: string;
-  }) => <input data-testid='mock-search' placeholder={placeholder} value={value ?? ''} onChange={(e) => onChange?.(e.target.value)} />,
+  }) => (
+    <input
+      data-testid='mock-search'
+      placeholder={placeholder}
+      value={value ?? ''}
+      onChange={(e) => onChange?.(e.target.value)}
+    />
+  ),
 }));
 
 const persona = (id: string, displayName: string, category?: string): MarketplacePersona => ({
@@ -61,9 +68,7 @@ const personas = [
 ];
 
 const renderGrid = () =>
-  render(
-    <ExpertMarketplaceGrid personas={personas} onInstall={vi.fn()} onStartChat={vi.fn()} />
-  );
+  render(<ExpertMarketplaceGrid personas={personas} onInstall={vi.fn()} onStartChat={vi.fn()} />);
 
 const visibleCards = () => screen.queryAllByTestId(/^marketplace-card-/);
 
@@ -75,9 +80,7 @@ describe('ExpertMarketplaceGrid category pills', () => {
 
     expect(screen.getByTestId('pill-marketplace-category-all').textContent).toContain('5');
     // 内容创作 is the only multi-member category, so it must lead the row.
-    const pills = ['内容创作', '金融投资', '技术工程'].map((c) =>
-      screen.getByTestId(`pill-marketplace-category-${c}`)
-    );
+    const pills = ['内容创作', '金融投资', '技术工程'].map((c) => screen.getByTestId(`pill-marketplace-category-${c}`));
     expect(pills[0]?.textContent).toContain('2');
     expect(pills[1]?.textContent).toContain('1');
     expect(pills[2]?.textContent).toContain('1');
@@ -100,9 +103,7 @@ describe('ExpertMarketplaceGrid category pills', () => {
     fireEvent.click(screen.getByTestId('pill-marketplace-category-内容创作'));
     fireEvent.change(screen.getByTestId('mock-search'), { target: { value: 'PPT' } });
 
-    expect(visibleCards().map((el) => el.getAttribute('data-testid'))).toEqual([
-      'marketplace-card-ppt-expert',
-    ]);
+    expect(visibleCards().map((el) => el.getAttribute('data-testid'))).toEqual(['marketplace-card-ppt-expert']);
 
     // Clearing the search keeps the category pill active.
     fireEvent.change(screen.getByTestId('mock-search'), { target: { value: '' } });

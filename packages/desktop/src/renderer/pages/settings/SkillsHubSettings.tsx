@@ -880,7 +880,9 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
 
                         {!batchMode && (
                           <div className='shrink-0 sm:self-center flex items-center justify-end gap-10px mt-12px sm:mt-0 pl-4px'>
-                            <SkillUsedByStack assistants={getAssistantsUsingSkill(skill.name, assistantCatalog ?? [])} />
+                            <SkillUsedByStack
+                              assistants={getAssistantsUsingSkill(skill.name, assistantCatalog ?? [])}
+                            />
                             {isCustom && (
                               <button
                                 data-testid={`btn-delete-${normalizeTestId(skill.name)}`}
