@@ -10,7 +10,12 @@
 // Base URL
 // ---------------------------------------------------------------------------
 
-import { getCachedMachineId, getEnterpriseServerUrl, getEnterpriseSession, isEnterpriseRemoteActive } from './enterpriseMode';
+import {
+  getCachedMachineId,
+  getEnterpriseServerUrl,
+  getEnterpriseSession,
+  isEnterpriseRemoteActive,
+} from './enterpriseMode';
 
 declare global {
   interface Window {

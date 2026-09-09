@@ -169,7 +169,8 @@ describe('httpBridge', () => {
         getItem: (key: string) => {
           if (key === 'one-enterprise:enabled') return 'true';
           if (key === 'one-enterprise:server-url') return 'http://192.168.1.99:25809';
-          if (key === 'one-enterprise:session') return JSON.stringify({ token: 'tok-123', userId: 'u1', username: 'u1' });
+          if (key === 'one-enterprise:session')
+            return JSON.stringify({ token: 'tok-123', userId: 'u1', username: 'u1' });
           return null;
         },
         setItem: () => {},
@@ -198,7 +199,8 @@ describe('httpBridge', () => {
         getItem: (key: string) => {
           if (key === 'one-enterprise:enabled') return 'true';
           if (key === 'one-enterprise:server-url') return 'http://192.168.1.99:25809';
-          if (key === 'one-enterprise:session') return JSON.stringify({ token: 'tok-123', userId: 'u1', username: 'u1' });
+          if (key === 'one-enterprise:session')
+            return JSON.stringify({ token: 'tok-123', userId: 'u1', username: 'u1' });
           return null;
         },
         setItem: () => {},

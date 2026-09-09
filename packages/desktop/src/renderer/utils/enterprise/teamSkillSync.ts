@@ -214,7 +214,6 @@ async function channelToken(channelId: string): Promise<string> {
   const cached = mintedChannelTokens.get(channelId);
   if (cached) return cached;
 
-
   const stored = await storedChannelToken(channelId);
   if (stored) {
     mintedChannelTokens.set(channelId, stored);
@@ -501,7 +500,6 @@ export async function syncEnterpriseUpstream(): Promise<boolean> {
     return false;
   }
 }
-
 
 export async function syncSendPolicy(): Promise<boolean> {
   let sendRateLimitPerMinute: number | null = null;

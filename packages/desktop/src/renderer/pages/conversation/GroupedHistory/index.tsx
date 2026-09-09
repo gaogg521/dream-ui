@@ -441,7 +441,6 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
         onCancel={() => setShowExportDirectorySelector(false)}
       />
 
-
       {/* 移除项目确认弹窗 — 使用项目自家 DreamModal + 圆角线框按钮（红色危险态） */}
       <DreamModal
         visible={removeProjectTarget !== null}
