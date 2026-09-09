@@ -356,6 +356,27 @@ describe('updateModelSettings', () => {
       )
     ).toEqual({ other: { image_input: 'supported' } });
   });
+
+  it('stores only the max-tokens field override when other settings remain automatic', () => {
+    expect(updateModelSettings(undefined, ['gpt-6-astra'], 'auto', 'auto', 'max_completion_tokens')).toEqual({
+      'gpt-6-astra': { max_tokens_field: 'max_completion_tokens' },
+    });
+  });
+
+  it('removes an existing model override once the max-tokens field also returns to automatic', () => {
+    expect(
+      updateModelSettings(
+        {
+          'gpt-6-astra': { max_tokens_field: 'max_completion_tokens' },
+          other: { image_input: 'supported' },
+        },
+        ['gpt-6-astra'],
+        'auto',
+        'auto',
+        'auto'
+      )
+    ).toEqual({ other: { image_input: 'supported' } });
+  });
 });
 
 describe('model capability selectors', () => {

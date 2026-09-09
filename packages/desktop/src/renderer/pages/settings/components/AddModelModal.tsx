@@ -9,6 +9,7 @@ import {
 import {
   type ModelKindChoice,
   type ModelImageInputChoice,
+  type ModelMaxTokensFieldChoice,
   type ModelOpenAiApiModeChoice,
   supportsOpenAiApiMode,
   updateModelSettings,
@@ -36,6 +37,7 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
     const [modelProtocol, setModelProtocol] = useState<string>('openai');
     const [imageInput, setImageInput] = useState<ModelImageInputChoice>('auto');
     const [openAiApiMode, setOpenAiApiMode] = useState<ModelOpenAiApiModeChoice>('auto');
+    const [maxTokensField, setMaxTokensField] = useState<ModelMaxTokensFieldChoice>('auto');
     const [modelKind, setModelKind] = useState<ModelKindChoice>('auto');
     /** Context window as typed; parsed to tokens on save. Empty = engine default. */
     const [contextWindow, setContextWindow] = useState<string>('');
@@ -90,6 +92,7 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
       const settings = editingModel ? data?.model_settings?.[editingModel] : undefined;
       setImageInput(settings?.image_input ?? 'auto');
       setOpenAiApiMode(settings?.openai_api_mode ?? 'auto');
+      setMaxTokensField(settings?.max_tokens_field ?? 'auto');
       setModelKind(settings?.model_kind ?? 'auto');
       setContextWindow(typeof settings?.context_window === 'number' ? String(settings.context_window) : '');
       setMediaEndpoint(settings?.media_endpoint ?? '');
@@ -138,6 +141,7 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
           targetModels,
           imageInput,
           showOpenAiApiMode ? openAiApiMode : 'auto',
+          showOpenAiApiMode ? maxTokensField : 'auto',
           modelKind,
           mediaEndpoint,
           mediaUnitPrice.trim() ? Number(mediaUnitPrice) : undefined,
@@ -169,6 +173,7 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
       isNewApi,
       mediaEndpoint,
       mediaUnitPrice,
+      maxTokensField,
       modelKind,
       modelProtocol,
       models,
@@ -395,6 +400,22 @@ const AddModelModal = ModalHOC<{ data?: IProvider; model?: string; onSubmit: (mo
                 ]}
               />
               <div className='text-11px text-t-secondary leading-4'>{t('settings.openAiApiModeTip')}</div>
+            </div>
+          )}
+
+          {showOpenAiApiMode && (
+            <div className='space-y-8px'>
+              <div className='text-13px font-500 text-t-secondary'>{t('settings.maxTokensField')}</div>
+              <Select
+                value={maxTokensField}
+                onChange={(value) => setMaxTokensField(value as ModelMaxTokensFieldChoice)}
+                options={[
+                  { label: t('settings.modelSettingAuto'), value: 'auto' },
+                  { label: t('settings.maxTokensFieldLegacy'), value: 'max_tokens' },
+                  { label: t('settings.maxTokensFieldNew'), value: 'max_completion_tokens' },
+                ]}
+              />
+              <div className='text-11px text-t-secondary leading-4'>{t('settings.maxTokensFieldTip')}</div>
             </div>
           )}
 
