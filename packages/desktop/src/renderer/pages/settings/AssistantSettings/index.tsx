@@ -37,7 +37,7 @@ import '@/renderer/pages/settings/components/settings.css';
 type AssistantNavigationState = {
   openAssistantId?: string;
   openAssistantEditor?: boolean;
-  initialTab?: 'enabled' | 'mine' | 'official' | 'marketplace';
+  initialTab?: 'enabled' | 'mine' | 'official' | 'marketplace' | 'skills';
 };
 const OPEN_ASSISTANT_EDITOR_INTENT_KEY = 'guid.openAssistantEditorIntent';
 
@@ -53,7 +53,7 @@ const AssistantSettings: React.FC = () => {
   // caller can still request a specific starting tab — editing an official
   // assistant lands back on Official, and the Guid page's "+" expert picker
   // jumps straight to the fork-only marketplace tab.
-  const [homeTab, setHomeTab] = React.useState<'enabled' | 'mine' | 'official' | 'marketplace'>(
+  const [homeTab, setHomeTab] = React.useState<'enabled' | 'mine' | 'official' | 'marketplace' | 'skills'>(
     navigationState?.initialTab ?? 'enabled'
   );
   const [importModalVisible, setImportModalVisible] = React.useState(false);

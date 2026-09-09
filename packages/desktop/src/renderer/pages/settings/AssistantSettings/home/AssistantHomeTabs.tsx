@@ -11,6 +11,11 @@ import EnabledAssistantsList from './EnabledAssistantsList';
 import ExpertMarketplaceGrid from './ExpertMarketplaceGrid';
 import MyAssistantsList from './MyAssistantsList';
 import OfficialAssistantsGrid from './OfficialAssistantsGrid';
+// Embedded wrapper-less (skills next to experts, WorkBuddy-style) rather than
+// a link out to /settings/skills: the tab keeps experts and their skills in
+// one browse surface. Detail navigation inside still routes to the
+// standalone pages.
+import SkillsHubSettings from '../../SkillsHubSettings';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import TalkToButlerButton from '@/renderer/components/base/TalkToButlerButton';
 import { useScanAllAgents } from '@/renderer/hooks/agent/useScanAllAgents';
@@ -47,8 +52,8 @@ type AssistantHomeTabsProps = {
   onTabChange?: (tab: HomeTab) => void;
 };
 
-/** Upstream's `enabled`/`mine`/`official` plus the fork-only `marketplace` tab. */
-type HomeTab = 'enabled' | 'mine' | 'official' | 'marketplace';
+/** Upstream's `enabled`/`mine`/`official` plus the fork-only `marketplace` and `skills` tabs. */
+type HomeTab = 'enabled' | 'mine' | 'official' | 'marketplace' | 'skills';
 
 const AssistantHomeTabs: React.FC<AssistantHomeTabsProps> = ({
   assistants,
@@ -138,7 +143,7 @@ const AssistantHomeTabs: React.FC<AssistantHomeTabsProps> = ({
             })}
             actions={
               <>
-                {!isMobile && tab !== 'marketplace' && (
+                {!isMobile && tab !== 'marketplace' && tab !== 'skills' && (
                   <DreamSearchInput
                     className='shrink-0 w-[200px] hidden md:flex'
                     data-testid='input-search-assistants'
@@ -203,6 +208,10 @@ const AssistantHomeTabs: React.FC<AssistantHomeTabsProps> = ({
                 label: t('settings.assistantTabMarketplace'),
                 count: marketplacePersonas.length,
               },
+              {
+                key: 'skills',
+                label: t('settings.assistantTabSkills', { defaultValue: 'Skills' }),
+              },
             ]}
             activeTab={tab}
             onTabChange={(key) => selectTab(key as HomeTab)}
@@ -257,6 +266,8 @@ const AssistantHomeTabs: React.FC<AssistantHomeTabsProps> = ({
               onStartChat={onStartChat}
               searchActive={Boolean(normalizedSearchQuery)}
             />
+          ) : tab === 'skills' ? (
+            <SkillsHubSettings withWrapper={false} />
           ) : (
             <ExpertMarketplaceGrid
               personas={marketplacePersonas}
