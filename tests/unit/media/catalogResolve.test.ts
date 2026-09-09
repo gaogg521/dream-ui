@@ -194,6 +194,33 @@ describe('media catalog resolution', () => {
       expect(params.n).toBeUndefined();
     });
 
+    /**
+     * Seedream 5 floors `size` at 3,686,400 total pixels (measured: 400 "image
+     * size must be at least 3686400 pixels"), so it gets its own entry with
+     * tier vocabulary and a 2K default — the 4.x entry's `1024x1024` default
+     * is a value the 5.x API rejects on every request.
+     */
+    it('gives seedream 5 tier sizes and a 2K default, and drops sub-2K pixel sizes', () => {
+      const spec = resolveMediaModelSpec('image', openaiProvider, 'doubao-seedream-5-0-260128');
+      expect(spec?.id).toBe('ark-seedream-5');
+      expect(clipParamsToSpec({}, spec).params.size).toBe('2K');
+      expect(clipParamsToSpec({ size: '4K' }, spec).params.size).toBe('4K');
+      const rejected = clipParamsToSpec({ size: '1024x1024' }, spec);
+      expect(rejected.dropped).toContain('size');
+      // The default still applies after the invalid value is dropped — but it
+      // is now a value the endpoint accepts.
+      expect(rejected.params.size).toBe('2K');
+    });
+
+    it('leaves the 4.x seedream entry and its pixel-size default untouched', () => {
+      const spec = resolveMediaModelSpec('image', openaiProvider, 'doubao-seedream-4-0-250828');
+      expect(spec?.id).toBe('ark-seedream');
+      expect(clipParamsToSpec({}, spec).params.size).toBe('1024x1024');
+      // Tiers are family vocabulary on the native/gateway API, so an explicit
+      // tier ask survives on the 4.x entry too.
+      expect(clipParamsToSpec({ size: '2K' }, spec).params.size).toBe('2K');
+    });
+
     it('drops everything except n=1 semantics with a null spec (fallback path)', () => {
       const { params, dropped } = clipParamsToSpec({ size: '1024x1024', seed: 1, n: 1 }, null);
       expect(params.size).toBeUndefined();

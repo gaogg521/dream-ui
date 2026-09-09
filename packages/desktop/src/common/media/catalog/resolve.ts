@@ -11,7 +11,7 @@
 
 import type { MediaGenParams } from '../types';
 import type { CatalogApiForm, CatalogMediaKind, MediaModelMatch, MediaModelSpec } from './types';
-import { ARK_SEEDREAM_CATALOG_ID, BUILTIN_IMAGE_MODELS } from './imageModels';
+import { BUILTIN_IMAGE_MODELS, isArkSeedreamFamilyId } from './imageModels';
 import { BUILTIN_VIDEO_MODELS } from './videoModels';
 import { getUserMediaModelSpecs } from './userSpecs';
 import { diagnoseEndpointMismatch, type EndpointMismatchDiagnosis } from './endpointStyleInfo';
@@ -517,15 +517,15 @@ export const diagnoseAutoEndpointMismatch = (
   const spec = resolveMediaModelSpec(kind, provider, modelName);
 
   /**
-   * The seedream image entry carries no `endpointStyle` — it resolves to the
-   * plain OpenAI images route — so the check below would never fire for it. But
-   * it has the same failure mode as Seedance: matched on the model name alone,
-   * and a relay gateway serves seedream under `/api/seedream/v1` rather than
-   * `/v1/images/generations`. Flag it when the channel address is not Ark's own
-   * host, the same signal the Seedance path uses; the Form A adapter retries
-   * the gateway route automatically, so this is only the early hint.
+   * The seedream image entries carry no `endpointStyle` — they resolve to the
+   * plain OpenAI images route — so the check below would never fire for them. But
+   * they have the same failure mode as Seedance: matched on the model name
+   * alone, and a relay gateway serves seedream under `/api/seedream/v1` rather
+   * than `/v1/images/generations`. Flag them when the channel address is not
+   * Ark's own host, the same signal the Seedance path uses; the Form A adapter
+   * retries the gateway route automatically, so this is only the early hint.
    */
-  if (spec?.id === ARK_SEEDREAM_CATALOG_ID) {
+  if (spec && isArkSeedreamFamilyId(spec.id)) {
     const url = (provider.base_url ?? '').toLowerCase();
     if (url && !url.includes('volces.com')) {
       return { kind: 'hostMismatch', baseUrl: provider.base_url ?? '', hints: ['volces.com'] };

@@ -27,6 +27,28 @@ import type { MediaModelSpec } from './types';
  */
 export const ARK_SEEDREAM_CATALOG_ID = 'ark-seedream';
 
+/**
+ * Catalog id for the Seedream 5 entry below.
+ *
+ * Seedream 5 gets its own entry because its API floors `size` at 3,686,400
+ * total pixels — measured: `size: "1024x1024"` answers 400 "image size must be
+ * at least 3686400 pixels" — so every pixel size the 4.x-era entry offers,
+ * including its default, is a value this generation rejects outright. Tier
+ * strings (`"size": "2K"`) are the vocabulary its documentation uses.
+ */
+export const ARK_SEEDREAM_5_CATALOG_ID = 'ark-seedream-5';
+
+/**
+ * Whether a catalog id belongs to the seedream family, any generation.
+ *
+ * Behaviors that hold across the family — watermark suppression and the
+ * gateway-route auto-fallback in `openaiImagesAdapter.ts`, the non-Ark host
+ * hint in `resolve.ts` — key on this rather than on one entry's id, so a new
+ * generation's entry cannot silently lose them.
+ */
+export const isArkSeedreamFamilyId = (id: string | undefined): boolean =>
+  id === ARK_SEEDREAM_CATALOG_ID || id === ARK_SEEDREAM_5_CATALOG_ID;
+
 export const BUILTIN_IMAGE_MODELS: MediaModelSpec[] = [
   // ===== Provider-pinned Form B entries (preserve the legacy allowlist rules) =====
   {
@@ -103,15 +125,56 @@ export const BUILTIN_IMAGE_MODELS: MediaModelSpec[] = [
     defaults: { size: '1024x1024' },
   },
   {
+    // Seedream 5 must sit ABOVE the generic seedream entry below: first match
+    // wins, and the family-wide /seedream/ regex would otherwise swallow it.
+    //
+    // The 5.x API floors `size` at 3,686,400 total pixels (measured against a
+    // relay of Ark's native images API: `1024x1024` answers 400 "image size
+    // must be at least 3686400 pixels"), so the 1K-class pixel sizes the 4.x
+    // entry offers are values this generation rejects, and its `1024x1024`
+    // default would be a guaranteed failure on every request. Tier strings are
+    // the documented vocabulary — `"size": "2K"` — so 2K is both the floor and
+    // the default.
+    id: ARK_SEEDREAM_5_CATALOG_ID,
+    kind: 'image',
+    form: 'A',
+    match: { model: /seedream-?5/i },
+    params: {
+      sizes: ['2K', '4K'],
+      seed: true,
+      // Same measured endpoint behavior as the rest of the family: `n` is
+      // ignored (one image per request), several images come from the
+      // fan-out in executeMediaGeneration.
+      maxN: 1,
+    },
+    defaults: { size: '2K' },
+  },
+  {
     // Seedream on Volcano Ark exposes a synchronous OpenAI-style images API.
     // `openaiImagesAdapter.ts` keys the watermark-suppression field and the
-    // gateway auto-fallback on this id (ARK_SEEDREAM_CATALOG_ID, above).
+    // gateway auto-fallback on this family (`isArkSeedreamFamilyId`).
     id: ARK_SEEDREAM_CATALOG_ID,
     kind: 'image',
     form: 'A',
     match: { model: /seedream/i },
     params: {
-      sizes: ['1024x1024', '1152x864', '864x1152', '1280x720', '720x1280', '832x1248', '1248x832', '1512x648'],
+      // Pixel sizes are what was measured against Ark's direct endpoint. The
+      // tier strings ("2K", "4K") are the same family's vocabulary on the
+      // native v3 API and gateway frontings of it, so a caller can ask for a
+      // tier here too — a host that wants pixels answers with a plain 400
+      // naming the value, not a silent failure.
+      sizes: [
+        '1024x1024',
+        '1152x864',
+        '864x1152',
+        '1280x720',
+        '720x1280',
+        '832x1248',
+        '1248x832',
+        '1512x648',
+        '2K',
+        '4K',
+      ],
       seed: true,
       /**
        * One image per request, measured against the real endpoint.
