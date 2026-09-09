@@ -318,7 +318,7 @@ IMPORTANT: When user provides multiple images to edit/restyle, ALWAYS pass ALL i
         .string()
         .optional()
         .describe(
-          'Optional: Output size like "1024x1024" or "1792x1024". Only pass when the user asks for a specific size/orientation.'
+          'Optional: Output size like "1024x1024" or "1792x1024", or a tier like "2K"/"4K" for models that speak tiers (e.g. Seedream). Only pass when the user asks for a specific size/orientation.'
         ),
       aspect_ratio: z
         .string()

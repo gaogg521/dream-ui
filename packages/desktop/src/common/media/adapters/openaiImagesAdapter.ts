@@ -21,7 +21,7 @@ import type OpenAI from 'openai';
 import { toFile } from 'openai';
 import { ClientFactory } from '@/common/api/ClientFactory';
 import { OpenAIRotatingClient } from '@/common/api/OpenAIRotatingClient';
-import { ARK_SEEDREAM_CATALOG_ID } from '../catalog/imageModels';
+import { isArkSeedreamFamilyId } from '../catalog/imageModels';
 import { classifyMediaFailure } from '../failureClass';
 import { downloadUrlMediaAsset, isHttpUrl, resolveLocalInputPath, saveBase64MediaAsset } from '../mediaAssets';
 import type { MediaAsset, MediaGenOutcome, MediaGenRequest, MediaProviderAdapter } from '../types';
@@ -56,7 +56,7 @@ export class OpenAiImagesAdapter implements MediaProviderAdapter {
      * the response is identical. Which shape the model wants is decided by the
      * endpoint style the user pinned, if any.
      */
-    const isSeedreamFamily = spec?.id === ARK_SEEDREAM_CATALOG_ID;
+    const isSeedreamFamily = isArkSeedreamFamilyId(spec?.id);
     const pinnedGateway = spec?.endpointStyle === SEEDREAM_GATEWAY_STYLE;
 
     /**
@@ -157,7 +157,7 @@ export class OpenAiImagesAdapter implements MediaProviderAdapter {
      * "no such model", by the letter of the classifier, but here it is the
      * exact signature of "wrong route for this vendor". The cost of being wrong
      * (a truly missing model) is one extra millisecond-scale 404, and it is
-     * gated to the one `ark-seedream` catalog entry, so the blast radius is
+     * gated to the seedream catalog entries, so the blast radius is
      * tiny — the same "guessing is fine when it is cheap" trade the classifier
      * itself is built on.
      */
