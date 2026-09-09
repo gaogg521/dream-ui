@@ -1466,6 +1466,7 @@
   "videoGenUnsupportedTooltip": "Kling, Sora, CogVideoX는 이후 버전에서 지원될 예정입니다. 동영상 생성은 위의 이미지 생성 스위치를 함께 사용합니다.",
   "mediaCatalogOverrides": "사용자 지정 모델 카탈로그",
   "mediaCatalogOverridesTooltip": "고급: 내장 카탈로그가 모르는 이미지/동영상 모델을 JSON으로 선언합니다(자체 게이트웨이에서 흔함). 같은 id의 내장 항목은 대체되고, 그 외에는 추가됩니다. 비동기 작업형(form \"C\")은 드라이버가 있는 endpointStyle을 지정해야 하며 그렇지 않으면 거부됩니다 — 선택은 되지만 호출할 수 없는 모델을 막기 위함입니다.",
+  "mediaModelPickerHint": "어시스턴트가 스스로 이 도구를 호출할 때 사용할 모델을 정합니다. 입력창의 생성 모드는 메시지마다 다른 모델을 선택할 수 있으며 이 설정의 영향을 받지 않습니다.",
   "mcpIncompatibleToolsWarning": "연결되었지만 {{count}}개 도구가 모델 API가 거부하는 매개변수 이름을 사용합니다(예: \"{{tool}}\"의 \"{{key}}\"). 스키마를 수정할 때까지 이 서버는 에이전트 세션에서 제외됩니다.",
   "mcpSelectAll": "전체 선택",
   "mcpDeselectAll": "전체 선택 해제",

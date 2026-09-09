@@ -1498,6 +1498,7 @@
   "videoGenUnsupportedTooltip": "Kling, Sora and CogVideoX are coming in a later release. Video generation shares the tool switch above with image generation.",
   "mediaCatalogOverrides": "Custom model catalog",
   "mediaCatalogOverridesTooltip": "Advanced: declare image/video models the built-in catalog does not know (common with self-hosted gateways) as JSON. An entry overrides a built-in with the same id, otherwise it is added. Async task models (form \"C\") must name an endpointStyle that has a driver, or the entry is rejected — this prevents models that can be selected but never called.",
+  "mediaModelPickerHint": "Chooses the model the assistant uses when it calls this tool on its own; the send box's generation mode can still pick a different model per message.",
   "mcpIncompatibleToolsWarning": "Connected, but {{count}} tool(s) use parameter names the model API rejects (e.g. \"{{tool}}\" → \"{{key}}\"). This server is excluded from agent sessions until its schema is fixed.",
   "mcpSelectAll": "Select all",
   "mcpDeselectAll": "Deselect all",

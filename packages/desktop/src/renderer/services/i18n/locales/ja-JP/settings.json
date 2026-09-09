@@ -1466,6 +1466,7 @@
   "videoGenUnsupportedTooltip": "Kling、Sora、CogVideoX は今後のバージョンで対応予定です。動画生成は上の画像生成のスイッチを共用します。",
   "mediaCatalogOverrides": "カスタムモデルカタログ",
   "mediaCatalogOverridesTooltip": "上級: 内蔵カタログが知らない画像/動画モデルを JSON で宣言します（自前ゲートウェイでよくあるケース）。同じ id の内蔵項目は置き換えられ、それ以外は追加されます。非同期タスク型（form \"C\"）はドライバーのある endpointStyle を指定しないと拒否されます——選べるのに呼び出せないモデルを防ぐためです。",
+  "mediaModelPickerHint": "アシスタントが自分でこのツールを呼び出す際に使用するモデルを設定します。送信ボックスの生成モードはメッセージごとに別のモデルを選べ、この設定の影響を受けません。",
   "mcpIncompatibleToolsWarning": "接続しましたが、{{count}} 個のツールがモデル API に拒否されるパラメータ名を使用しています（例:「{{tool}}」の「{{key}}」）。スキーマを修正するまで、このサーバーはエージェントセッションから除外されます。",
   "mcpSelectAll": "すべて選択",
   "mcpDeselectAll": "すべて解除",

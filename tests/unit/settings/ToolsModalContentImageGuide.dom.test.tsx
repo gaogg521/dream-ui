@@ -15,6 +15,7 @@ const hooks = vi.hoisted(() => ({
   providers: [] as IProvider[],
   mcpServers: [] as unknown[],
   getClientBusinessSetting: vi.fn(() => Promise.resolve(undefined)),
+  setClientBusinessSetting: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -82,7 +83,7 @@ vi.mock('@/renderer/hooks/mcp', () => ({
 
 vi.mock('@/renderer/services/clientBusinessSettings', () => ({
   getClientBusinessSetting: hooks.getClientBusinessSetting,
-  setClientBusinessSetting: vi.fn(() => Promise.resolve()),
+  setClientBusinessSetting: hooks.setClientBusinessSetting,
   removeClientBusinessSetting: vi.fn(() => Promise.resolve()),
 }));
 
@@ -97,6 +98,7 @@ describe('ToolsModalContent media sections', () => {
     hooks.providers = [];
     hooks.mcpServers = [];
     hooks.getClientBusinessSetting.mockClear();
+    hooks.setClientBusinessSetting.mockClear();
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       value: vi.fn().mockImplementation((query: string) => ({
@@ -155,5 +157,85 @@ describe('ToolsModalContent media sections', () => {
       (a) => a.textContent === 'settings.goToModelSettings'
     );
     expect(anchors).toHaveLength(0);
+  });
+
+  // Two channels both declare gpt-image-2 as an image model — the exact
+  // ambiguity that made the assistant's autonomous tool call silently resolve
+  // to "whichever channel is first" with no way to see or change it.
+  it('shows which channel the model resolves to, and lets the user switch it', async () => {
+    hooks.providers = [
+      {
+        id: 'p1',
+        platform: 'openai',
+        name: 'Channel One',
+        base_url: '',
+        api_key: '',
+        models: ['gpt-image-2'],
+      },
+      {
+        id: 'p2',
+        platform: 'openai',
+        name: 'Channel Two',
+        base_url: '',
+        api_key: '',
+        models: ['gpt-image-2'],
+      },
+    ] as IProvider[];
+
+    render(
+      <MemoryRouter>
+        <ToolsModalContent />
+      </MemoryRouter>
+    );
+
+    // No explicit default yet: falls back to the first declared candidate
+    // (provider order), and says so — not just the bare model name.
+    await waitFor(() => expect(screen.getAllByText('gpt-image-2 · Channel One').length).toBeGreaterThan(0));
+
+    // Opening the picker offers both channels, grouped, not a flat list that
+    // hides which one is which.
+    const [trigger] = screen.getAllByText('gpt-image-2 · Channel One');
+    fireEvent.click(trigger);
+    await waitFor(() => expect(screen.getByText('Channel Two')).toBeInTheDocument());
+
+    // Each group's row is labelled with the bare model name; Channel One's row
+    // renders first (provider order), so the second occurrence is Channel Two's.
+    const options = screen.getAllByText('gpt-image-2');
+    expect(options.length).toBeGreaterThanOrEqual(2);
+    fireEvent.click(options[options.length - 1]);
+
+    // Persisted through the same setting the send box's own picker writes.
+    await waitFor(() => expect(hooks.setClientBusinessSetting).toHaveBeenCalled());
+    const [key, value] = hooks.setClientBusinessSetting.mock.calls[0];
+    expect(key).toBe('tools.imageGenerationModel');
+    expect(value).toMatchObject({ id: 'p2', name: 'Channel Two', use_model: 'gpt-image-2' });
+
+    // Reflected immediately, without waiting on a re-fetch.
+    await waitFor(() => expect(screen.getAllByText('gpt-image-2 · Channel Two').length).toBeGreaterThan(0));
+  });
+
+  it('still shows a picker (not just plain text) with a single declared candidate', async () => {
+    hooks.providers = [
+      {
+        id: 'p1',
+        platform: 'openai',
+        name: 'Only Channel',
+        base_url: '',
+        api_key: '',
+        models: ['gpt-image-2'],
+      },
+    ] as IProvider[];
+
+    render(
+      <MemoryRouter>
+        <ToolsModalContent />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(screen.getAllByText('gpt-image-2 · Only Channel').length).toBeGreaterThan(0));
+    // A single candidate is still shown as a clickable picker rather than bare
+    // text: that is what proves the channel to the user, and it is where they
+    // would notice a second channel was declared later.
+    expect(screen.queryAllByRole('button', { name: /gpt-image-2/ }).length).toBeGreaterThan(0);
   });
 });

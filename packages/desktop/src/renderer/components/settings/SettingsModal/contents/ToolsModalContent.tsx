@@ -8,8 +8,9 @@ import type { ImageGenerationModelSetting } from '@/common/config/clientSettings
 import { mcpService } from '@/common/adapter/ipcBridge';
 import { type IMcpServer, BUILTIN_IMAGE_GEN_ID, BUILTIN_IMAGE_GEN_NAME } from '@/common/config/storage';
 import { applyCatalogOverridesJson } from '@/common/media/catalog';
-import { findDeclaredMediaModel, hasDeclaredMediaModel } from '@/common/media/declaredModel';
-import { Divider, Form, Input, Message, Modal, Switch } from '@arco-design/web-react';
+import { type DeclaredMediaModel, hasDeclaredMediaModel, listMediaModels } from '@/common/media/declaredModel';
+import { Divider, Dropdown, Form, Input, Menu, Message, Modal, Switch } from '@arco-design/web-react';
+import { Down } from '@icon-park/react';
 import type { TFunction } from 'i18next';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +27,9 @@ import {
   useMcpOAuth,
   useMountedMessage,
 } from '@/renderer/hooks/mcp';
+import { RuntimeSelectorModelList } from '@/renderer/components/agent/runtimeSelectorOptions';
+import { persistMediaModelSelection } from '@/renderer/hooks/media/mediaModelSettings';
+import { iconColors } from '@/renderer/styles/colors';
 import { getClientBusinessSetting, setClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
 import classNames from 'classnames';
 import { useNavigate } from 'react-router-dom';
@@ -37,30 +41,107 @@ type MessageInstance = ReturnType<typeof Message.useMessage>[0];
 const isBuiltinImageGenServer = (server: IMcpServer) =>
   server.builtin === true && (server.id === BUILTIN_IMAGE_GEN_ID || server.name === BUILTIN_IMAGE_GEN_NAME);
 
-/**
- * The current image/video model, read-only.
- *
- * The model is chosen where it is used — the send box's media picker in a
- * conversation, or by declaring a model's kind in Settings > Models. This line
- * only reports the result and points at that page; it is not a second place to
- * configure one (which is exactly the redundancy this section used to have).
- */
-const MediaModelSummary: React.FC<{ model?: string; onGoToModelSettings: () => void; t: TFunction }> = ({
-  model,
-  onGoToModelSettings,
-  t,
-}) => (
-  <div className='text-t-secondary flex items-center gap-8px flex-wrap'>
-    <span className={model ? 'text-t-primary' : undefined}>{model || t('settings.mediaModelUndeclared')}</span>
-    <button
-      type='button'
-      className='appearance-none border-none bg-transparent p-0 text-[rgb(var(--primary-6))] hover:text-[rgb(var(--primary-5))] underline underline-offset-2 cursor-pointer'
-      onClick={onGoToModelSettings}
-    >
-      {t('settings.goToModelSettings')}
-    </button>
-  </div>
+/** Composite id so the grouped model list can track selection across providers. */
+const MODEL_ID_SEP = '::';
+
+const GoToModelSettingsLink: React.FC<{ onClick: () => void; t: TFunction }> = ({ onClick, t }) => (
+  <button
+    type='button'
+    className='appearance-none border-none bg-transparent p-0 text-[rgb(var(--primary-6))] hover:text-[rgb(var(--primary-5))] underline underline-offset-2 cursor-pointer'
+    onClick={onClick}
+  >
+    {t('settings.goToModelSettings')}
+  </button>
 );
+
+/**
+ * The current image/video model — and, when more than one channel offers a
+ * declared model of this kind, a way to pick which one is the default.
+ *
+ * A model's *kind* is still declared exactly one place: Settings > Models. What
+ * lives here is narrower — which of the already-declared candidates the
+ * assistant should use when it calls the built-in generation tool on its own.
+ * That call carries no explicit model (unlike the send box's own media mode,
+ * which always names one), so without this the tool silently fell back to
+ * "whichever provider happens to be listed first" — invisible, and wrong the
+ * moment that channel's key was stale or the model unsupported.
+ *
+ * Picking here writes the same `tools.{image,video}GenerationModel` setting
+ * the send box's own picker writes (`persistMediaModelSelection`), so the two
+ * surfaces share one value rather than becoming a second, conflicting truth.
+ */
+const MediaModelPicker: React.FC<{
+  candidates: DeclaredMediaModel[];
+  currentProviderId?: string;
+  currentModel?: string;
+  currentChannel?: string;
+  onSelect: (providerId: string, model: string) => void;
+  onGoToModelSettings: () => void;
+  t: TFunction;
+}> = ({ candidates, currentProviderId, currentModel, currentChannel, onSelect, onGoToModelSettings, t }) => {
+  const groups = useMemo(() => {
+    const byProvider = new Map<string, { key: string; title: string; models: { id: string; label: string }[] }>();
+    for (const item of candidates) {
+      const group = byProvider.get(item.providerId) ?? {
+        key: item.providerId,
+        title: item.providerName,
+        models: [],
+      };
+      group.models.push({ id: `${item.providerId}${MODEL_ID_SEP}${item.model}`, label: item.model });
+      byProvider.set(item.providerId, group);
+    }
+    return [...byProvider.values()];
+  }, [candidates]);
+
+  const currentModelId =
+    currentProviderId && currentModel ? `${currentProviderId}${MODEL_ID_SEP}${currentModel}` : null;
+
+  const handleSelect = useCallback(
+    (id: string) => {
+      const at = id.indexOf(MODEL_ID_SEP);
+      if (at < 0) return;
+      onSelect(id.slice(0, at), id.slice(at + MODEL_ID_SEP.length));
+    },
+    [onSelect]
+  );
+
+  if (!currentModel) {
+    return (
+      <div className='text-t-secondary flex items-center gap-8px flex-wrap'>
+        <span>{t('settings.mediaModelUndeclared')}</span>
+        <GoToModelSettingsLink onClick={onGoToModelSettings} t={t} />
+      </div>
+    );
+  }
+
+  const label = currentChannel ? `${currentModel} · ${currentChannel}` : currentModel;
+
+  return (
+    <div className='flex items-center gap-8px flex-wrap'>
+      {candidates.length > 0 ? (
+        <Dropdown
+          trigger='click'
+          droplist={
+            <Menu>
+              <RuntimeSelectorModelList groups={groups} currentModelId={currentModelId} onSelect={handleSelect} />
+            </Menu>
+          }
+        >
+          <button
+            type='button'
+            className='appearance-none inline-flex items-center gap-4px border border-solid b-color-border-2 rd-6px px-8px py-4px bg-transparent text-t-primary hover:b-color-border-3 cursor-pointer max-w-full'
+          >
+            <span className='truncate'>{label}</span>
+            <Down theme='outline' size='12' fill={iconColors.secondary} className='shrink-0' />
+          </button>
+        </Dropdown>
+      ) : (
+        <span className='text-t-primary'>{label}</span>
+      )}
+      <GoToModelSettingsLink onClick={onGoToModelSettings} t={t} />
+    </div>
+  );
+};
 
 const ModalMcpManagementSection: React.FC<{
   message: MessageInstance;
@@ -293,10 +374,12 @@ const ToolsModalContent: React.FC = () => {
   const [catalogOverrides, setCatalogOverrides] = useState('');
   const [catalogOverrideErrors, setCatalogOverrideErrors] = useState<string[]>([]);
   const [isUpdatingImageGeneration, setIsUpdatingImageGeneration] = useState(false);
-  // Legacy explicit picks, kept only to display and to keep the toggle enabled
-  // for setups that predate `model_kind`. New choices are made in a conversation
-  // (the send box's media picker) or by declaring a model's kind in Settings >
-  // Models — never here.
+  // The explicit default for the assistant's autonomous tool call — the same
+  // `tools.{image,video}GenerationModel` setting the send box's own picker
+  // writes to (`useMediaComposer`) and `resolveSelectedProvider`
+  // (process/services/mediaJob) reads with priority over any declared model.
+  // Undefined means no explicit default has been picked yet: the first
+  // declared model is used, in provider order.
   const [imageSelection, setImageSelection] = useState<ImageGenerationModelSetting | undefined>();
   const [videoSelection, setVideoSelection] = useState<ImageGenerationModelSetting | undefined>();
   const { data: providers } = useProvidersQuery();
@@ -304,12 +387,22 @@ const ToolsModalContent: React.FC = () => {
   const builtinImageGenServer = useMemo(() => mcpServers.find(isBuiltinImageGenServer), [mcpServers]);
   const isImageGenerationServerLoading = isMcpServersLoading && !builtinImageGenServer;
 
-  // What the next generation would run on: a model declared as image/video in
-  // Settings > Models, falling back to a legacy explicit pick. Display only.
-  const currentImageModel =
-    findDeclaredMediaModel('image', providers)?.use_model ?? imageSelection?.use_model ?? undefined;
-  const currentVideoModel =
-    findDeclaredMediaModel('video', providers)?.use_model ?? videoSelection?.use_model ?? undefined;
+  // Every provider+model declared as this kind, grouped for the picker below —
+  // the same list the send box's own media picker offers, so the two never
+  // disagree about what is selectable.
+  const imageCandidates = useMemo(() => listMediaModels('image', providers), [providers]);
+  const videoCandidates = useMemo(() => listMediaModels('video', providers), [providers]);
+
+  // What the next autonomous tool call would actually run on: the explicit
+  // default first, falling back to the first declared candidate — matching the
+  // priority `resolveSelectedProvider` and `useMediaComposer` already use. The
+  // channel name travels with whichever one wins, so it is never a guess.
+  const currentImageProviderId = imageSelection?.id ?? imageCandidates[0]?.providerId;
+  const currentImageModel = imageSelection?.use_model ?? imageCandidates[0]?.model;
+  const currentImageChannel = imageSelection?.name ?? imageCandidates[0]?.providerName;
+  const currentVideoProviderId = videoSelection?.id ?? videoCandidates[0]?.providerId;
+  const currentVideoModel = videoSelection?.use_model ?? videoCandidates[0]?.model;
+  const currentVideoChannel = videoSelection?.name ?? videoCandidates[0]?.providerName;
 
   useEffect(() => {
     const loadConfigs = async () => {
@@ -342,6 +435,35 @@ const ToolsModalContent: React.FC = () => {
       console.error('Failed to persist media catalog overrides:', error);
     });
   }, []);
+
+  // Sets the explicit default the assistant's autonomous tool call resolves to
+  // for this kind — writing the same setting the send box's own picker uses, so
+  // both stay in agreement about "the" current model. Optimistic: the local
+  // selection updates immediately, same as the catalog-overrides field above.
+  const handleImageModelSelect = useCallback(
+    (providerId: string, model: string) => {
+      const provider = providers?.find((item) => item.id === providerId);
+      if (!provider) return;
+      const ref = { id: provider.id, name: provider.name, platform: provider.platform, use_model: model };
+      setImageSelection((prev) => ({ ...prev, ...ref, base_url: '', api_key: '' }) as ImageGenerationModelSetting);
+      persistMediaModelSelection('image', ref).catch((error) => {
+        console.error('Failed to persist image generation model selection:', error);
+      });
+    },
+    [providers]
+  );
+  const handleVideoModelSelect = useCallback(
+    (providerId: string, model: string) => {
+      const provider = providers?.find((item) => item.id === providerId);
+      if (!provider) return;
+      const ref = { id: provider.id, name: provider.name, platform: provider.platform, use_model: model };
+      setVideoSelection((prev) => ({ ...prev, ...ref, base_url: '', api_key: '' }) as ImageGenerationModelSetting);
+      persistMediaModelSelection('video', ref).catch((error) => {
+        console.error('Failed to persist video generation model selection:', error);
+      });
+    },
+    [providers]
+  );
 
   const handleImageGenerationToggle = useCallback(
     async (checked: boolean) => {
@@ -463,7 +585,18 @@ const ToolsModalContent: React.FC = () => {
                   </div>
                 }
               >
-                <MediaModelSummary model={currentImageModel} onGoToModelSettings={goToModelSettings} t={t} />
+                <div className='flex flex-col gap-4px'>
+                  <MediaModelPicker
+                    candidates={imageCandidates}
+                    currentProviderId={currentImageProviderId}
+                    currentModel={currentImageModel}
+                    currentChannel={currentImageChannel}
+                    onSelect={handleImageModelSelect}
+                    onGoToModelSettings={goToModelSettings}
+                    t={t}
+                  />
+                  <span className='text-12px text-t-tertiary'>{t('settings.mediaModelPickerHint')}</span>
+                </div>
               </Form.Item>
             </Form>
           </div>
@@ -489,7 +622,18 @@ const ToolsModalContent: React.FC = () => {
                   </div>
                 }
               >
-                <MediaModelSummary model={currentVideoModel} onGoToModelSettings={goToModelSettings} t={t} />
+                <div className='flex flex-col gap-4px'>
+                  <MediaModelPicker
+                    candidates={videoCandidates}
+                    currentProviderId={currentVideoProviderId}
+                    currentModel={currentVideoModel}
+                    currentChannel={currentVideoChannel}
+                    onSelect={handleVideoModelSelect}
+                    onGoToModelSettings={goToModelSettings}
+                    t={t}
+                  />
+                  <span className='text-12px text-t-tertiary'>{t('settings.mediaModelPickerHint')}</span>
+                </div>
               </Form.Item>
               <Form.Item
                 label={t('settings.mediaCatalogOverrides')}

@@ -1464,6 +1464,7 @@
   "videoGenUnsupportedTooltip": "Kling, Sora ve CogVideoX sonraki bir sürümde eklenecek. Video oluşturma, yukarıdaki görsel oluşturma anahtarını paylaşır.",
   "mediaCatalogOverrides": "Özel model kataloğu",
   "mediaCatalogOverridesTooltip": "Gelişmiş: yerleşik kataloğun bilmediği görsel/video modellerini JSON ile tanımlayın (kendi ağ geçidinizde sık görülür). Aynı id'ye sahip yerleşik kayıt değiştirilir, aksi hâlde eklenir. Asenkron modeller (form \"C\") sürücüsü olan bir endpointStyle belirtmelidir, aksi hâlde kayıt reddedilir — seçilebilen ama çağrılamayan modelleri önler.",
+  "mediaModelPickerHint": "Asistanın bu aracı kendi başına çağırdığında kullanacağı modeli belirler. Gönderme kutusundaki üretim modu her mesajda farklı bir model seçebilir ve bundan etkilenmez.",
   "mcpIncompatibleToolsWarning": "Bağlandı, ancak {{count}} araç, model API’sinin reddettiği parametre adları kullanıyor (ör. \"{{tool}}\" → \"{{key}}\"). Şeması düzeltilene kadar bu sunucu ajan oturumlarından hariç tutulur.",
   "mcpSelectAll": "Tümünü seç",
   "mcpDeselectAll": "Seçimi kaldır",
