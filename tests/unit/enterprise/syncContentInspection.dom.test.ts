@@ -26,6 +26,7 @@ const hooks = vi.hoisted(() => ({
   setContentInspectionRules: vi.fn(),
   drainContentInspectionFindings: vi.fn(),
   syncTeamAgents: vi.fn(),
+  clearEnterpriseUpstream: vi.fn(),
 }));
 
 vi.mock('@/common', () => ({
@@ -42,6 +43,7 @@ vi.mock('@/common', () => ({
       setContentInspectionRules: { invoke: hooks.setContentInspectionRules },
       drainContentInspectionFindings: { invoke: hooks.drainContentInspectionFindings },
       syncModelChannels: { invoke: vi.fn() },
+      clearEnterpriseUpstream: { invoke: hooks.clearEnterpriseUpstream },
     },
     fs: {
       syncTeamSkills: { invoke: vi.fn() },
@@ -94,6 +96,7 @@ beforeEach(() => {
   hooks.setContentInspectionRules.mockResolvedValue({ activeRules: 0 });
   hooks.drainContentInspectionFindings.mockResolvedValue([]);
   hooks.reportDlpEvents.mockResolvedValue(0);
+  hooks.clearEnterpriseUpstream.mockResolvedValue(undefined);
 });
 
 afterEach(() => {

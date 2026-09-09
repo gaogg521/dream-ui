@@ -2561,6 +2561,7 @@ export type I18nKey =
   | 'settings.enterpriseChannel'
   | 'settings.enterpriseChannelTip'
   | 'settings.enterpriseKeyMaskedTip'
+  | 'settings.enterpriseMachineBlockedNotice'
   | 'settings.env'
   | 'settings.envKeyPlaceholder'
   | 'settings.envLabel'

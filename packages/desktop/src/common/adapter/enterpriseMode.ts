@@ -7,6 +7,9 @@
  * ipcBridge calls keep hitting the local backend.
  */
 
+import { bridge } from '@/common/platform/bridge';
+import type { IRuntimeNodeIdentity } from './ipcBridge';
+
 export type EnterpriseSession = {
   token: string;
   userId: string;
@@ -72,4 +75,45 @@ export function setEnterpriseSession(session: EnterpriseSession | null): void {
 /** Remote mode is active when the toggle is on AND a server URL is set. */
 export function isEnterpriseRemoteActive(): boolean {
   return isEnterpriseModeEnabled() && getEnterpriseServerUrl() !== null;
+}
+
+/**
+ * This machine's locally-persisted identity (C1-2 fix), cached after the
+ * first read so every governance request does not pay for an IPC round trip
+ * — the id never changes at runtime, same reasoning as `mintedChannelTokens`
+ * in `teamSkillSync.ts`.
+ *
+ * Calls the main process directly via the low-level `bridge.invoke` primitive
+ * (the same one `ipcBridge.ts`'s providers are built on) rather than
+ * importing `ipcBridge` itself: `ipcBridge.ts` imports from `httpBridge.ts`,
+ * which imports from this module, so importing `ipcBridge` here would close
+ * a cycle. `IRuntimeNodeIdentity` is imported type-only, which erases at
+ * compile time and carries no such risk.
+ *
+ * Bounded by a timeout, not just a try/catch: `bridge.invoke` resolves only
+ * when a matching `emit` answers it (see `common/platform/bridge.ts`) — a
+ * main process that is slow, wedged, or simply never wired to answer this
+ * channel leaves the promise pending forever, which would hang every single
+ * governance HTTP call behind it. Header on a slow reply that arrives late
+ * is not worth turning "add a header" into "requests can hang forever" to get.
+ */
+const MACHINE_ID_LOOKUP_TIMEOUT_MS = 2000;
+let cachedMachineId: string | null = null;
+export async function getCachedMachineId(): Promise<string | null> {
+  if (cachedMachineId) return cachedMachineId;
+  try {
+    const identity = await Promise.race([
+      bridge.invoke<IRuntimeNodeIdentity>('app.get-runtime-node-identity'),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('machine identity lookup timed out')), MACHINE_ID_LOOKUP_TIMEOUT_MS)
+      ),
+    ]);
+    cachedMachineId = identity.machineId || null;
+  } catch {
+    // Best-effort — the header just gets omitted, and every server-side
+    // check that reads it already fails open when it is absent. Not cached:
+    // a transient main-process hiccup should not permanently disable the
+    // header for the rest of the session.
+  }
+  return cachedMachineId;
 }

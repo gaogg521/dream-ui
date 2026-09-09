@@ -16,6 +16,15 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+// C1-2: `httpRequest` now looks up this machine's id for every remote
+// request. The real `bridge.invoke` only resolves via a matching `emit` from
+// a live electron adapter (none exists here), so unmocked it would hang for
+// the full 2s timeout on every single case below — mocking it keeps this
+// file fast, the same way it's mocked in httpBridge.test.ts.
+vi.mock('@/common/platform/bridge', () => ({
+  bridge: { invoke: vi.fn().mockResolvedValue({ machineId: 'test-machine', hostname: 'h', ipAddresses: [] }) },
+}));
+
 const REMOTE = 'https://one.corp.example';
 
 let httpRequest: typeof import('@/common/adapter/httpBridge').httpRequest;

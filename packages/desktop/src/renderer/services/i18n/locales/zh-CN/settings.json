@@ -1587,5 +1587,6 @@
     "orderFailed": "充值未完成，请重试。"
   },
   "mediaModelUndeclared": "尚未设置 —— 在「模型」页把某个模型标为图片或视频类型",
-  "enterpriseKeyMaskedTip": "企业下发的 Key 已脱敏显示（仅保留首尾便于核对）。未修改则保存时保留原 Key；输入新 Key 将整体替换。"
+  "enterpriseKeyMaskedTip": "企业下发的 Key 已脱敏显示（仅保留首尾便于核对）。未修改则保存时保留原 Key；输入新 Key 将整体替换。",
+  "enterpriseMachineBlockedNotice": "这台设备已被组织管理员封禁，本机的团队资源已清空。"
 }

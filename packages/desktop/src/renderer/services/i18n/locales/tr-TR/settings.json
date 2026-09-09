@@ -1532,5 +1532,6 @@
     "orderFailed": "Yükleme tamamlanamadı. Lütfen tekrar deneyin."
   },
   "mediaModelUndeclared": "Ayarlanmadı —— Modeller sayfasında bir modeli Görsel veya Video olarak işaretleyin",
-  "enterpriseKeyMaskedTip": "Kurum tarafından dağıtılan anahtarlar maskelenir (yalnızca baş/son). Değiştirmeden kaydederseniz mevcut anahtar korunur; yeni anahtar yazmak tamamen değiştirir."
+  "enterpriseKeyMaskedTip": "Kurum tarafından dağıtılan anahtarlar maskelenir (yalnızca baş/son). Değiştirmeden kaydederseniz mevcut anahtar korunur; yeni anahtar yazmak tamamen değiştirir.",
+  "enterpriseMachineBlockedNotice": "Bu cihaz, kuruluş yöneticiniz tarafından engellendi. Bu makinedeki takım kaynakları temizlendi."
 }

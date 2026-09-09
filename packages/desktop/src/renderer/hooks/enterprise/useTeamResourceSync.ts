@@ -11,10 +11,13 @@
  */
 
 import { useEffect, useRef } from 'react';
+import { Message } from '@arco-design/web-react';
+import { useTranslation } from 'react-i18next';
 import { useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import { isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
 import { ENTERPRISE_RESOURCES_MARKER } from '@renderer/utils/enterprise/teamSkillSync';
 import { isElectronDesktop } from '@renderer/utils/platform';
+import { addEventListener } from '@renderer/utils/emitter';
 import {
   clearTeamResources,
   syncContentInspection,
@@ -32,10 +35,20 @@ import { fulfilAuditUploadRequests } from '@renderer/utils/enterprise/conversati
 const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 
 export function useTeamResourceSync(): void {
+  const { t } = useTranslation();
   const { context, loading } = useOrgContext();
   const isEnterprise = context?.isEnterprise ?? false;
   /** Whether the previous render resolved as enterprise — see the purge below. */
   const wasEnterprise = useRef(false);
+
+  // C1-2: `teamSkillSync.ts` is a plain module with no React/i18n context, so
+  // it emits this event (at most once per sync cycle — see the emit site)
+  // instead of showing the message itself.
+  useEffect(() => {
+    return addEventListener('enterprise.machineBlocked', () => {
+      Message.warning(t('settings.enterpriseMachineBlockedNotice'));
+    });
+  }, [t]);
 
   useEffect(() => {
     // Leaving the enterprise is the one unambiguous "you are out" signal this

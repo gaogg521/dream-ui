@@ -1586,5 +1586,6 @@
     "orderFailed": "Couldn't complete the top-up. Please try again."
   },
   "mediaModelUndeclared": "Not set — declare a model as Image or Video on the Models page",
-  "enterpriseKeyMaskedTip": "Enterprise-issued keys are masked (head/tail only, for verification). Saving without changes keeps the original key; typing a new one replaces it entirely."
+  "enterpriseKeyMaskedTip": "Enterprise-issued keys are masked (head/tail only, for verification). Saving without changes keeps the original key; typing a new one replaces it entirely.",
+  "enterpriseMachineBlockedNotice": "This device has been blocked by your organization administrator. Team resources on this machine have been cleared."
 }

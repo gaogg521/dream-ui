@@ -10,7 +10,7 @@
 // Base URL
 // ---------------------------------------------------------------------------
 
-import { getEnterpriseServerUrl, getEnterpriseSession, isEnterpriseRemoteActive } from './enterpriseMode';
+import { getCachedMachineId, getEnterpriseServerUrl, getEnterpriseSession, isEnterpriseRemoteActive } from './enterpriseMode';
 
 declare global {
   interface Window {
@@ -336,6 +336,16 @@ export async function httpRequest<T>(
     const session = getEnterpriseSession();
     if (session) {
       headers['Authorization'] = `Bearer ${session.token}`;
+    }
+    // C1-2 fix: let the governance endpoints this machine polls tell it
+    // apart from every other machine on the same account, so an admin
+    // blocking one in the runtime-node roster can actually be enforced
+    // there instead of silently doing nothing. Best-effort — a machine id
+    // this call could not resolve just omits the header, and every
+    // server-side check that reads it already fails open when it is absent.
+    const machineId = await getCachedMachineId();
+    if (machineId) {
+      headers['x-dream-machine-id'] = machineId;
     }
   }
 

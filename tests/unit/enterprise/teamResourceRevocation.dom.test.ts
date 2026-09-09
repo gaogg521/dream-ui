@@ -32,6 +32,8 @@ const hooks = vi.hoisted(() => ({
   listTeamAgents: vi.fn(),
   syncTeamAgents: vi.fn(),
   getEnterpriseServerUrl: vi.fn(),
+  emitterEmit: vi.fn(),
+  clearEnterpriseUpstream: vi.fn(),
 }));
 
 vi.mock('@/common', () => ({
@@ -53,6 +55,7 @@ vi.mock('@/common', () => ({
     mode: {
       syncModelChannels: { invoke: hooks.syncModelChannels },
       setContentInspectionRules: { invoke: hooks.setContentInspectionRules },
+      clearEnterpriseUpstream: { invoke: hooks.clearEnterpriseUpstream },
     },
   },
 }));
@@ -61,16 +64,28 @@ vi.mock('@/common/adapter/enterpriseMode', () => ({
   getEnterpriseServerUrl: hooks.getEnterpriseServerUrl,
 }));
 
+// C1-2: `purgeOnRevocation` emits through this on the machine-blocked path so
+// `useTeamResourceSync` (a real React hook, no context here) can show a
+// message. This module is otherwise side-effect-free, so mocking only `emit`
+// is enough to assert on it.
+vi.mock('@renderer/utils/emitter', () => ({
+  emitter: { emit: hooks.emitterEmit },
+}));
+
 const { BackendHttpError } = await import('@/common/adapter/httpBridge');
 const { syncTeamSkills, syncTeamMcp, syncTeamModelChannels } = await import('@renderer/utils/enterprise/teamSkillSync');
 
-const refusal = (status: number) =>
+const refusal = (status: number, code = 'FORBIDDEN') =>
   new BackendHttpError({
     method: 'GET',
     path: '/api/one/devops/skills',
     status,
-    body: { code: 'FORBIDDEN', error: 'not a member' },
+    body: { code, error: 'not a member' },
   });
+
+/** C1-2: the server still answers 403 for a blocked machine, distinguished
+ * only by this code — see `isMachineBlockedError` in `teamSkillSync.ts`. */
+const machineBlocked = () => refusal(403, 'MACHINE_BLOCKED');
 
 /** Did the purge run? It is the empty authoritative write on all three sinks. */
 const purged = () =>
@@ -86,6 +101,7 @@ beforeEach(() => {
   hooks.syncModelChannels.mockResolvedValue({ written: [], removed: [], conflicts: [] });
   hooks.setContentInspectionRules.mockResolvedValue(undefined);
   hooks.syncTeamAgents.mockResolvedValue({ written: [], removed: [], kept: 0 });
+  hooks.clearEnterpriseUpstream.mockResolvedValue(undefined);
 });
 
 describe('team resources when membership is refused', () => {
@@ -150,5 +166,42 @@ describe('team resources when membership is refused', () => {
     await Promise.all([syncTeamSkills(), syncTeamMcp(), syncTeamModelChannels()]);
 
     expect(hooks.syncTeamSkills).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('C1-2: a blocked machine', () => {
+  it('is purged exactly like a removed member — still a 403, distinguished only by the code', async () => {
+    hooks.listSkills.mockRejectedValue(machineBlocked());
+
+    await expect(syncTeamSkills()).resolves.toBeNull();
+
+    expect(purged()).toBe(true);
+  });
+
+  it('emits enterprise.machineBlocked so the UI can show why', async () => {
+    hooks.listSkills.mockRejectedValue(machineBlocked());
+
+    await syncTeamSkills();
+
+    expect(hooks.emitterEmit).toHaveBeenCalledWith('enterprise.machineBlocked');
+  });
+
+  it('emits once per revocation, not once per registry that noticed it', async () => {
+    hooks.listSkills.mockRejectedValue(machineBlocked());
+    hooks.listMcpRegistry.mockRejectedValue(machineBlocked());
+    hooks.listModelChannels.mockRejectedValue(machineBlocked());
+
+    await Promise.all([syncTeamSkills(), syncTeamMcp(), syncTeamModelChannels()]);
+
+    expect(hooks.emitterEmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not emit for a plain membership refusal — only the machine-blocked code triggers the message', async () => {
+    hooks.listSkills.mockRejectedValue(refusal(403));
+
+    await syncTeamSkills();
+
+    expect(purged()).toBe(true);
+    expect(hooks.emitterEmit).not.toHaveBeenCalled();
   });
 });
