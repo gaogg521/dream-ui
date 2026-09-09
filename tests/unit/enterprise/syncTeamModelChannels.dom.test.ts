@@ -32,6 +32,7 @@ const hooks = vi.hoisted(() => ({
   // itself is asserted in syncContentInspection.test.ts.
   setContentInspectionRules: vi.fn(),
   getEnterpriseServerUrl: vi.fn(),
+  clearEnterpriseUpstream: vi.fn(),
 }));
 
 vi.mock('@/common', () => ({
@@ -46,6 +47,7 @@ vi.mock('@/common', () => ({
       syncModelChannels: { invoke: hooks.syncModelChannels },
       setContentInspectionRules: { invoke: hooks.setContentInspectionRules },
       listProviders: { invoke: hooks.listProviders },
+      clearEnterpriseUpstream: { invoke: hooks.clearEnterpriseUpstream },
     },
     fs: {
       syncTeamSkills: { invoke: hooks.syncTeamSkills },
@@ -93,6 +95,7 @@ beforeEach(() => {
   hooks.listProviders.mockResolvedValue([]);
   hooks.syncTeamSkills.mockResolvedValue({ written: [], removed: [], kept: 0 });
   hooks.syncTeamMcp.mockResolvedValue({ written: [], removed: [], kept: 0 });
+  hooks.clearEnterpriseUpstream.mockResolvedValue(undefined);
 });
 
 afterEach(() => {

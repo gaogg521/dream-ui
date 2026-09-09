@@ -1535,5 +1535,6 @@
     "orderFailed": "Não foi possível concluir a recarga. Tente novamente."
   },
   "mediaModelUndeclared": "Não definido —— declare um modelo como Imagem ou Vídeo na página Modelos",
-  "enterpriseKeyMaskedTip": "Chaves emitidas pela empresa aparecem mascaradas (apenas início/fim). Salvar sem alterações mantém a chave original; digitar uma nova a substitui por completo."
+  "enterpriseKeyMaskedTip": "Chaves emitidas pela empresa aparecem mascaradas (apenas início/fim). Salvar sem alterações mantém a chave original; digitar uma nova a substitui por completo.",
+  "enterpriseMachineBlockedNotice": "Este dispositivo foi bloqueado pelo administrador da sua organização. Os recursos da equipe nesta máquina foram limpos."
 }

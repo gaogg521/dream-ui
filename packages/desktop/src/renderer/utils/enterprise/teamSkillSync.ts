@@ -14,6 +14,7 @@ import { ipcBridge } from '@/common';
 import type { DlpFindingInput } from '@/common/adapter/ipcBridge';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import { getEnterpriseServerUrl, getEnterpriseSession } from '@/common/adapter/enterpriseMode';
+import { emitter } from '@/renderer/utils/emitter';
 
 export type TeamSkillSyncResult = { written: number; removed: number; kept: number };
 
@@ -38,21 +39,40 @@ export type TeamSkillSyncResult = { written: number; removed: number; kept: numb
  * removed stops resolving as enterprise at all, and `useTeamResourceSync`
  * purges on that transition — a signal that does not depend on guessing what
  * a status code meant.
+ *
+ * C1-2: a blocked machine gets refused the exact same way — the server
+ * distinguishes it with a `MACHINE_BLOCKED` error code (still a 403, so the
+ * bare `error.status === 403` check below keeps covering it even for a
+ * caller that has not been updated to look at `code`), and
+ * `useTeamResourceSync` uses `isMachineBlockedError` to show a message
+ * specific to that case rather than treating it like a generic refusal.
  */
+export function isMachineBlockedError(error: unknown): boolean {
+  return isBackendHttpError(error) && error.code === 'MACHINE_BLOCKED';
+}
+
 function isMembershipRefused(error: unknown): boolean {
-  return isBackendHttpError(error) && error.status === 403;
+  return isBackendHttpError(error) && (error.status === 403 || isMachineBlockedError(error));
 }
 
 /** One purge per revocation, not one per registry that noticed it. */
 let revocationPurge: Promise<void> | null = null;
-function purgeOnRevocation(): Promise<void> {
+function purgeOnRevocation(error: unknown): Promise<void> {
   // The cached channel tokens go too: they are company credentials, and a
   // member who has been removed must not keep one in memory for the rest of
   // the session.
   mintedChannelTokens.clear();
+  // Whether THIS call is the one that starts the purge (vs. one of several
+  // sync calls in the same cycle piling onto an already-in-flight purge) —
+  // the emit below is gated on it so a blocked machine gets at most one
+  // notification per cycle, not one per failing endpoint.
+  const startingNewPurge = revocationPurge === null;
   revocationPurge ??= clearTeamResources().finally(() => {
     revocationPurge = null;
   });
+  if (startingNewPurge && isMachineBlockedError(error)) {
+    emitter.emit('enterprise.machineBlocked');
+  }
   return revocationPurge;
 }
 
@@ -71,7 +91,7 @@ export async function syncTeamSkills(): Promise<TeamSkillSyncResult | null> {
   } catch (error) {
     // Refused → this client is no longer entitled to the org's skills.
     // Unreachable → keep the local cache untouched (offline-first).
-    if (isMembershipRefused(error)) await purgeOnRevocation();
+    if (isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
   }
 
@@ -108,7 +128,7 @@ export async function syncTeamMcp(): Promise<TeamSkillSyncResult | null> {
   try {
     registry = await ipcBridge.oneDevops.listMcpRegistry.invoke();
   } catch (error) {
-    if (isMembershipRefused(error)) await purgeOnRevocation();
+    if (isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
   }
 
@@ -211,7 +231,7 @@ export async function syncTeamModelChannels(): Promise<TeamSkillSyncResult | nul
   try {
     channels = await ipcBridge.oneDevops.listModelChannels.invoke();
   } catch (error) {
-    if (isMembershipRefused(error)) await purgeOnRevocation();
+    if (isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
   }
 
@@ -344,7 +364,7 @@ export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
   try {
     team = await ipcBridge.personalAgent.listTeamAgents.invoke();
   } catch (error) {
-    if (isMembershipRefused(error)) await purgeOnRevocation();
+    if (isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
   }
 
@@ -418,7 +438,7 @@ export async function syncToolSecurityPolicy(): Promise<boolean> {
   try {
     policy = await ipcBridge.onePlatform.mySecurityPolicy.invoke();
   } catch (error) {
-    if (isMembershipRefused(error)) await purgeOnRevocation();
+    if (isMembershipRefused(error)) await purgeOnRevocation(error);
     return false;
   }
   if (!policy) return false;
@@ -490,7 +510,7 @@ export async function syncSendPolicy(): Promise<boolean> {
     if (!policy) return false;
     sendRateLimitPerMinute = policy.sendRateLimitPerMinute ?? null;
   } catch (error) {
-    if (isMembershipRefused(error)) await purgeOnRevocation();
+    if (isMembershipRefused(error)) await purgeOnRevocation(error);
     return false;
   }
 
@@ -499,7 +519,7 @@ export async function syncSendPolicy(): Promise<boolean> {
     const plan = await ipcBridge.oneBilling.myPlan.invoke();
     allowedModels = plan?.allowedModels ?? [];
   } catch (error) {
-    if (isMembershipRefused(error)) await purgeOnRevocation();
+    if (isMembershipRefused(error)) await purgeOnRevocation(error);
     // A plan we could not read is not an empty allowlist. Leaving the local
     // copy alone is the only reading that does not silently widen it.
     return false;
@@ -533,7 +553,7 @@ export async function syncTeamMemory(): Promise<number | null> {
     const prefs = await ipcBridge.onePlatform.memoryPreferences.invoke();
     recallEnabled = prefs?.recallEnabled ?? true;
   } catch (error) {
-    if (isMembershipRefused(error)) await purgeOnRevocation();
+    if (isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
   }
 
@@ -549,7 +569,7 @@ export async function syncTeamMemory(): Promise<number | null> {
       if (items.length >= MAX_SYNCED_MEMORY_ITEMS) break;
     }
   } catch (error) {
-    if (isMembershipRefused(error)) await purgeOnRevocation();
+    if (isMembershipRefused(error)) await purgeOnRevocation(error);
     // Unreachable mid-way: leave the local copy alone rather than writing a
     // half-read set that would silently drop memory the member still has.
     return null;
@@ -581,7 +601,7 @@ export async function syncContentInspection(): Promise<ContentInspectionSyncResu
     // it, so a member the org has dropped would go on having their sends
     // blocked by their ex-employer's policy — on a screen that no longer
     // exists to explain why (see clearTeamResources).
-    if (isMembershipRefused(error)) await purgeOnRevocation();
+    if (isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
   }
 

@@ -10,6 +10,16 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// C1-2: the real `bridge.invoke` (@/common/platform/bridge) returns a Promise
+// that only ever resolves via a matching `emit` from a live electron adapter
+// — nothing answers it in a unit test, so an unmocked call here would hang
+// forever rather than throw. Every other test in this file goes through a
+// path where `remote` is false and never reaches it; the one below that
+// exercises the true remote branch needs this mocked.
+const { bridgeInvoke } = vi.hoisted(() => ({ bridgeInvoke: vi.fn() }));
+vi.mock('@/common/platform/bridge', () => ({ bridge: { invoke: bridgeInvoke } }));
+
 import {
   getBaseUrl,
   httpGet,
@@ -144,6 +154,72 @@ describe('httpBridge', () => {
       expect(fetchSpy.mock.calls[0][0]).toBe('http://127.0.0.1:25001/api/one/employee/agents');
       expect(fetchSpy.mock.calls[0][1]?.headers).not.toHaveProperty('Authorization');
       expect(fetchSpy.mock.calls[0][1]?.credentials).toBeUndefined();
+    });
+
+    // Order matters for these two: `getCachedMachineId` caches successfully
+    // resolved ids at module scope (deliberately — see its doc comment), and
+    // that cache is shared across every test in this file. The failure case
+    // has to run while the cache is still empty, so it comes first; once the
+    // success case populates it, a hypothetical later failure would still
+    // read the cached id rather than re-invoke the bridge — which is the
+    // intended behavior, not something a test should fight.
+    it('C1-2: omits the header rather than hang when the machine identity call fails', async () => {
+      vi.stubGlobal('window', {});
+      vi.stubGlobal('localStorage', {
+        getItem: (key: string) => {
+          if (key === 'one-enterprise:enabled') return 'true';
+          if (key === 'one-enterprise:server-url') return 'http://192.168.1.99:25809';
+          if (key === 'one-enterprise:session') return JSON.stringify({ token: 'tok-123', userId: 'u1', username: 'u1' });
+          return null;
+        },
+        setItem: () => {},
+        removeItem: () => {},
+      });
+      bridgeInvoke.mockRejectedValueOnce(new Error('no electron adapter in this test'));
+
+      const fetchSpy = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ data: { ok: true } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      vi.stubGlobal('fetch', fetchSpy);
+
+      await httpRequest('GET', '/api/one/devops/skills');
+
+      const headers = fetchSpy.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(headers.Authorization).toBe('Bearer tok-123');
+      expect(headers).not.toHaveProperty('x-dream-machine-id');
+    });
+
+    it('C1-2: a genuinely remote request carries x-dream-machine-id alongside the Bearer token', async () => {
+      vi.stubGlobal('window', {});
+      vi.stubGlobal('localStorage', {
+        getItem: (key: string) => {
+          if (key === 'one-enterprise:enabled') return 'true';
+          if (key === 'one-enterprise:server-url') return 'http://192.168.1.99:25809';
+          if (key === 'one-enterprise:session') return JSON.stringify({ token: 'tok-123', userId: 'u1', username: 'u1' });
+          return null;
+        },
+        setItem: () => {},
+        removeItem: () => {},
+      });
+      bridgeInvoke.mockResolvedValueOnce({ machineId: 'machine-abc', hostname: 'h', ipAddresses: [] });
+
+      const fetchSpy = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ data: { ok: true } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      vi.stubGlobal('fetch', fetchSpy);
+
+      await httpRequest('GET', '/api/one/devops/skills');
+
+      const headers = fetchSpy.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(headers.Authorization).toBe('Bearer tok-123');
+      expect(headers['x-dream-machine-id']).toBe('machine-abc');
+      expect(bridgeInvoke).toHaveBeenCalledWith('app.get-runtime-node-identity');
     });
   });
 

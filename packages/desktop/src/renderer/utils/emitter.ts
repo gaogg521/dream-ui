@@ -44,6 +44,12 @@ interface EventTypes {
   'sendbox.fill': [string]; // prompt text to fill
   'sendbox.reply': [ReplyQuote]; // reply/quote a message
   'sendbox.reply.clear': void; // clear reply quote
+  // C1-2: this machine was blocked in the enterprise runtime-node roster and
+  // its team resources were just purged. Emitted from `teamSkillSync.ts`
+  // (a plain module, no React/i18n context) so `useTeamResourceSync` can show
+  // a message specific to this case. See its emit site for why this fires at
+  // most once per purge rather than once per failing sync call.
+  'enterprise.machineBlocked': void;
 }
 
 export const emitter = new EventEmitter<EventTypes>();

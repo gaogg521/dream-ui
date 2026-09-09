@@ -1532,5 +1532,6 @@
     "orderFailed": "Aufladen konnte nicht abgeschlossen werden. Bitte erneut versuchen."
   },
   "mediaModelUndeclared": "Nicht festgelegt —— markiere ein Modell auf der Modellseite als Bild oder Video",
-  "enterpriseKeyMaskedTip": "Verteilte Unternehmensschlüssel sind maskiert (nur Anfang/Ende). Speichern ohne Änderung behält den ursprünglichen Schlüssel; ein neuer Schlüssel ersetzt ihn vollständig."
+  "enterpriseKeyMaskedTip": "Verteilte Unternehmensschlüssel sind maskiert (nur Anfang/Ende). Speichern ohne Änderung behält den ursprünglichen Schlüssel; ein neuer Schlüssel ersetzt ihn vollständig.",
+  "enterpriseMachineBlockedNotice": "Dieses Gerät wurde von Ihrem Organisationsadministrator gesperrt. Die Team-Ressourcen auf diesem Gerät wurden gelöscht."
 }
