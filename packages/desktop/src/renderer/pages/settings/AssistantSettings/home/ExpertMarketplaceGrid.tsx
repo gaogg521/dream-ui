@@ -20,27 +20,51 @@ type ExpertMarketplaceGridProps = {
   onStartChat: (id: string) => void;
 };
 
+const categoryPillClass = (active: boolean) =>
+  `inline-flex cursor-pointer select-none items-center rounded-999px border border-solid px-10px py-4px text-12px leading-none transition-colors ${
+    active
+      ? 'border-transparent bg-primary-light-1 font-500 text-primary'
+      : 'border-border-2 bg-fill-1 text-t-secondary hover:bg-fill-2'
+  }`;
+
 /**
  * Browsable catalog of installable expert personas. Deliberately not the
  * assistant list — nothing here is a real owned assistant until the user
  * clicks "Add to my assistants" (`onInstall`), which materializes exactly
- * one real assistant on demand. `persona.category` is surfaced as a plain
- * chip for browsing context; category *filter* pills are a natural
- * follow-up, not built in this pass.
+ * one real assistant on demand.
+ *
+ * Filtering is category pills + search, combined (a pill narrows, search
+ * narrows further). The pills are built from `persona.category` counts in
+ * the catalog itself, so a new category in the seed data appears here
+ * without a code change — the persona corpus is repackaged far more often
+ * than this UI.
  */
 const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas, loading, onInstall, onStartChat }) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [installingId, setInstallingId] = useState<string | null>(null);
+
+  /** Categories ordered by headcount (ties alphabetical), each with its count. */
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const persona of personas) {
+      const category = persona.category?.trim();
+      if (!category) continue;
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    }
+    return [...counts.entries()].toSorted((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, [personas]);
 
   const filteredPersonas = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return personas;
     return personas.filter((persona) => {
+      if (activeCategory && persona.category?.trim() !== activeCategory) return false;
+      if (!query) return true;
       const haystack = `${persona.display_name ?? ''} ${persona.name} ${persona.description ?? ''}`.toLowerCase();
       return haystack.includes(query);
     });
-  }, [personas, search]);
+  }, [personas, search, activeCategory]);
 
   const handleInstall = async (persona: MarketplacePersona) => {
     if (installingId) return;
@@ -66,6 +90,46 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
           onChange={setSearch}
         />
       </div>
+
+      {categories.length > 0 ? (
+        <div className='mb-14px flex flex-wrap gap-8px' data-testid='marketplace-category-pills'>
+          <div
+            role='button'
+            tabIndex={0}
+            data-testid='pill-marketplace-category-all'
+            className={categoryPillClass(!activeCategory)}
+            onClick={() => setActiveCategory(null)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setActiveCategory(null);
+              }
+            }}
+          >
+            {t('settings.marketplaceAllCategories')}
+            <span className='ml-4px text-11px opacity-60'>{personas.length}</span>
+          </div>
+          {categories.map(([category, count]) => (
+            <div
+              key={category}
+              role='button'
+              tabIndex={0}
+              data-testid={`pill-marketplace-category-${category}`}
+              className={categoryPillClass(activeCategory === category)}
+              onClick={() => setActiveCategory(activeCategory === category ? null : category)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setActiveCategory(activeCategory === category ? null : category);
+                }
+              }}
+            >
+              {category}
+              <span className='ml-4px text-11px opacity-60'>{count}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div className='grid grid-cols-1 gap-14px sm:grid-cols-2 lg:grid-cols-3'>
         {!loading && filteredPersonas.length === 0 ? (
