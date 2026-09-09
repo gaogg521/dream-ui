@@ -320,6 +320,19 @@ mv "$APPDATA/1ONE Code/1one/runtime/managed-tools/acp" \
 
 2026-07-31 发 2.1.51 时实测过一次代价：`sync-changelog-to-site.js` 顺手把 `release.version` 改成新版本，两个 mac 链接当场变成 404（`curl -sI` 实证）。`site.config.js` 的 `release.platformVersions` 就是那次加的；2026-09-07 从"win/mac/linux 三个键"细化成"win/macArm/macIntel/linux 四个键"，把 macOS 两个架构解耦开。
 
+> ⚠️ **每个版本目录还欠一个 `release-notes.md`——3.0.0 / 3.0.1 / 3.0.2 三版全都没传。**
+> 应用里「检查更新」面板的更新说明读的是 `releases/{version}/release-notes.md`
+> （`updateBridge.ts` 的 `fetchCdnReleaseNotes`）。electron-builder 生成的
+> `latest*.yml` 里不带 `releaseNotes` 字段，这个 sidecar 是面板唯一的内容来源。
+> 它原本由 `release-distribute.yml` 从 GitHub Release 正文写出——而自
+> [§6 的结论](#6-cos-上传--️-首选本地-aws-cli别指望-ci)起我们**不再建 GitHub Release**，
+> 那条工作流从此不触发，这个文件就再也没人写了。缺失不会报错（取不到就当没有说明），
+> 所以三个版本的用户点「检查更新」看到的都是一个没有任何说明的新版本。
+> **补法**：`node scripts/generate-release-notes.js --out <tmp>/release-notes.md`
+> 然后和安装包一样 `scripts/publish-cos-release-asset.sh <tmp>/release-notes.md <version>`
+> （它不是 `latest*.yml`，只会进版本目录，不会误镜像到根）。放在第一个平台上传时一起做，
+> 它跟平台无关，一个版本只需要传一次。
+
 **每次切完就部署，不要攒。流程固定四步**：
 
 1. 传完一个平台的包到 COS 后，`curl -o /dev/null -w '%{http_code}' <该平台的下载URL>` 确认 200。
