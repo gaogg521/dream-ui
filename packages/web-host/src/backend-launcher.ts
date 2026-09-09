@@ -242,7 +242,10 @@ export const TRIAL_BROKER_URL_DEFAULT = 'https://work.1oneclaw.com/trial-broker'
  *    build**. Every key the default broker mints spends the company's own
  *    OpenRouter budget, so shipped desktop installs get the out-of-the-box
  *    experience while `bun run dev` / `bun run webui` / self-hosted server
- *    deployments stay off unless they opt in.
+ *    deployments stay off unless they opt in. To opt a dev client in, launch
+ *    it with `DREAM_TRIAL_BROKER_URL=https://work.1oneclaw.com/trial-broker`;
+ *    without it the trial UI reports "体验功能暂不可用" (backend 400) — that
+ *    is the configured-off posture, not a malfunction.
  */
 export function resolveTrialBrokerUrl(
   isPackaged: boolean,
