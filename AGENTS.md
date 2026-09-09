@@ -133,6 +133,13 @@ Any step that fails aborts the push. Fix the issue, commit, then retry.
 
 The project has many pre-existing lint _warnings_ which do NOT indicate failure. Judge success by exit code, not by output volume.
 
+### After a completed change
+
+Once a change is verified (tests + `tsc` green), commit and push it immediately — release packages are built from `main` on demand, so a finished-but-unpushed commit is a missed fix.
+
+- Stage **only the files that belong to the change**; never sweep unrelated in-progress edits from the working tree into it.
+- Push to the remote right after committing; do not leave the branch sitting ahead.
+
 ### Before PR (optional stricter check)
 
 `prek` replicates the **exact CI pipeline** (includes end-of-file, trailing whitespace checks on all file types):
