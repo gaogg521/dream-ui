@@ -8,6 +8,7 @@ import type {
   IProvider,
   ModelImageInputCapability,
   ModelKind,
+  ModelMaxTokensField,
   ModelOpenAiApiMode,
   ModelSettings,
   ModelType,
@@ -72,6 +73,7 @@ export const getBaseModelName = (modelName: string): string => {
 
 export type ModelOpenAiApiModeChoice = ModelOpenAiApiMode | 'auto';
 export type ModelImageInputChoice = ModelImageInputCapability | 'auto';
+export type ModelMaxTokensFieldChoice = ModelMaxTokensField | 'auto';
 
 /** Whether a provider/model protocol can select an OpenAI wire API. */
 export const supportsOpenAiApiMode = (platform: string, modelProtocol = 'openai'): boolean => {
@@ -88,6 +90,7 @@ export const updateModelSettings = (
   modelIds: string[],
   imageInput: ModelImageInputChoice,
   openAiApiMode: ModelOpenAiApiModeChoice,
+  maxTokensField: ModelMaxTokensFieldChoice = 'auto',
   modelKind: ModelKindChoice = 'auto',
   mediaEndpoint = '',
   mediaUnitPriceUsd?: number,
@@ -123,6 +126,7 @@ export const updateModelSettings = (
     if (
       imageInput === 'auto' &&
       openAiApiMode === 'auto' &&
+      maxTokensField === 'auto' &&
       modelKind === 'auto' &&
       !hasPrice &&
       !hasTierPrices &&
@@ -135,6 +139,7 @@ export const updateModelSettings = (
     const settings: ModelSettings = {};
     if (imageInput !== 'auto') settings.image_input = imageInput;
     if (openAiApiMode !== 'auto') settings.openai_api_mode = openAiApiMode;
+    if (maxTokensField !== 'auto') settings.max_tokens_field = maxTokensField;
     if (modelKind !== 'auto') settings.model_kind = modelKind;
     if (keepEndpoint) settings.media_endpoint = endpoint;
     if (hasContextWindow && modelKind !== 'image' && modelKind !== 'video') {

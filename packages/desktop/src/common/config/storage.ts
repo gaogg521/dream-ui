@@ -534,6 +534,17 @@ export type ModelCapability = {
 
 export type ModelOpenAiApiMode = 'chat_completions' | 'responses';
 
+/**
+ * Explicit OpenAI max-tokens request field override for one model.
+ *
+ * The engine defaults to the legacy `max_tokens` field for any host other
+ * than the official `api.openai.com` — third-party gateways vary. Some proxy
+ * to a backend model that already requires the newer `max_completion_tokens`
+ * field, so this lets a user pin it per model instead of waiting on the
+ * engine's automatic retry-on-rejection.
+ */
+export type ModelMaxTokensField = 'max_tokens' | 'max_completion_tokens';
+
 export type ModelImageInputCapability = 'supported' | 'unsupported';
 
 /**
@@ -555,6 +566,7 @@ export const MODEL_KINDS: ModelKind[] = ['text', 'multimodal', 'image', 'video',
 export type ModelSettings = {
   image_input?: ModelImageInputCapability;
   openai_api_mode?: ModelOpenAiApiMode;
+  max_tokens_field?: ModelMaxTokensField;
   /** What this model produces. Absent = fall back to the catalog, then to name heuristics. */
   model_kind?: ModelKind;
   /**
