@@ -22,6 +22,40 @@ function yamlBlock(content: string, key: string): string {
 }
 
 describe('release packaging configuration', () => {
+  it('keeps electronLanguages in sync with the UI languages the app ships', () => {
+    // Chromium's native surfaces (context menu, spellcheck, IME candidate
+    // window) are localized by the locale paks electronLanguages keeps. Adding a
+    // UI language without adding it here leaves those users with a translated
+    // app and an English right-click menu — invisible to anyone testing in
+    // Chinese or English.
+    const config = readProjectFile('packages/desktop/electron-builder.yml');
+    const declared = new Set(
+      yamlBlock(config, 'electronLanguages')
+        .split(String.fromCharCode(10))
+        .map((line) => line.trim())
+        .filter((line) => line.startsWith('- '))
+        .map((line) => line.slice(2).trim())
+    );
+    const supported: string[] = JSON.parse(
+      readProjectFile('packages/desktop/src/common/config/i18n-config.json')
+    ).supportedLanguages;
+
+    expect(supported.length).toBeGreaterThan(0);
+    expect(supported.filter((language) => !declared.has(language))).toEqual([]);
+  });
+
+  it('collects the blockmap that differential updates depend on', () => {
+    // nsis.differentialPackage emits <installer>.blockmap. If the release
+    // assets drop it, electron-updater requests a URL that 404s and silently
+    // falls back to downloading the whole installer — no error anywhere.
+    const config = readProjectFile('packages/desktop/electron-builder.yml');
+    expect(yamlBlock(config, 'nsis')).toContain('differentialPackage: true');
+
+    const prepare = readProjectFile('scripts/prepare-release-assets.sh');
+    expect(prepare).toContain('-name "*.blockmap"');
+    expect(prepare).toContain('Missing blockmap for');
+  });
+
   it('keeps mac zip artifacts enabled', () => {
     const config = readProjectFile('packages/desktop/electron-builder.yml');
     const macBlock = yamlBlock(config, 'mac');

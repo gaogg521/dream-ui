@@ -31,7 +31,8 @@ done < <(find "$ARTIFACTS_DIR" -type f \( \
   -name "*.msi" -o \
   -name "*.dmg" -o \
   -name "*.deb" -o \
-  -name "*.zip" \
+  -name "*.zip" -o \
+  -name "*.blockmap" \
 \) | sort)
 
 DUPLICATE_BASENAMES=$(for file in "${DISTRIBUTABLES[@]}"; do basename "$file"; done | sort | uniq -d || true)
@@ -150,6 +151,20 @@ for arch in x64 arm64; do
       MISSING=1
     fi
   done
+done
+
+# Differential updates (nsis.differentialPackage) are useless without the
+# blockmap sitting beside the installer: electron-updater asks for
+# "<installer>.blockmap", gets a 404 and silently falls back to downloading the
+# whole installer. Nothing else in the pipeline reports that, so a missing
+# blockmap fails the release right here.
+for arch in x64 arm64; do
+  installer=$(find "$OUTPUT_DIR" -maxdepth 1 -type f -name "*-${VERSION}-win-${arch}.exe" | head -n 1)
+  [ -z "$installer" ] && continue
+  if [ ! -f "${installer}.blockmap" ]; then
+    echo "::error::Missing blockmap for $(basename "$installer") - differential updates would silently degrade to full downloads"
+    MISSING=1
+  fi
 done
 
 # ---------------------------------------------------------------------------
