@@ -375,18 +375,6 @@ export type StartMediaJobResult = { job?: MediaJobSnapshot; error?: string };
  * catalog refresh must not be things a new entry point can forget to do.
  */
 /**
- * Where a job writes when the caller named no workspace.
- *
- * `process.cwd()` used to be the fallback and it is never somewhere a user
- * would look: in dev it is the repo root, and in a packaged app it is wherever
- * the executable happened to be launched from. The app's own work directory is
- * where every other generated artefact already lives.
- *
- * Resolved lazily rather than by a top-level import: `initStorage` drags the
- * whole settings/bridge graph in with it, and this module is loaded by the MCP
- * server tests that mock only part of that graph.
- */
-/**
  * Keep a copy of every reference image next to the result it produced.
  *
  * An uploaded reference lands in the OS temp directory
@@ -449,12 +437,28 @@ export async function persistReferenceInputs(inputUris: string[], workspaceDir: 
   return out;
 }
 
-const fallbackWorkspaceDir = (): string => {
+/**
+ * Where a job writes when the caller named no workspace.
+ *
+ * `process.cwd()` used to be the fallback and it is never somewhere a user
+ * would look: in dev it is the repo root, and in a packaged app it is wherever
+ * the executable happened to be launched from. The app's own work directory is
+ * where every other generated artefact already lives.
+ *
+ * Resolved lazily rather than by a top-level import: `initStorage` drags the
+ * whole settings/bridge graph in with it, and this module is loaded by the MCP
+ * server tests that mock only part of that graph.
+ *
+ * Lazily, but as a dynamic `import()` and not a `require()`. Rollup rewrites
+ * path aliases in imports and leaves them verbatim inside `require()`, so the
+ * aliased require this used to be threw in every packaged build, the catch
+ * below swallowed it, and the fallback landed on `process.cwd()` regardless —
+ * the one outcome this function exists to prevent. `build-with-builder.js` now
+ * fails the build on aliased requires in the main bundle.
+ */
+const fallbackWorkspaceDir = async (): Promise<string> => {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getSystemDir } = require('@process/utils/initStorage') as {
-      getSystemDir: () => { workDir: string };
-    };
+    const { getSystemDir } = await import('@process/utils/initStorage');
     const workDir = getSystemDir()?.workDir;
     if (workDir) return workDir;
   } catch {
@@ -490,7 +494,7 @@ export async function startMediaJob(input: StartMediaJobInput): Promise<StartMed
   // executable happened to be launched from — possibly Program Files. Fall back
   // to the app's own work directory instead, which is where every other
   // generated artefact lives.
-  const workspaceDir = input.workspaceDir?.trim() || fallbackWorkspaceDir();
+  const workspaceDir = input.workspaceDir?.trim() || (await fallbackWorkspaceDir());
   const spec = resolveMediaModelSpec(kind, provider, provider.use_model);
   const inputUris = await persistReferenceInputs(input.inputUris ?? [], workspaceDir);
 

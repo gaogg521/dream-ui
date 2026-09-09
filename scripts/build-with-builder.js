@@ -433,6 +433,51 @@ function validateRendererBuildOutput(rendererDir) {
   return { valid: problems.length === 0, problems };
 }
 
+// Path aliases (`@/`, `@common/`, `@process/`, `@renderer/`, `@worker/`) are a
+// build-time concept: Rollup rewrites them in static imports and leaves them
+// untouched inside a runtime `require()`. Such a require throws in the packaged
+// app, and because these call sites are usually wrapped in a try/catch fallback,
+// it throws silently forever.
+//
+// That is not hypothetical: mediaJob's `fallbackWorkspaceDir` shipped this way,
+// so every media job in every packaged build quietly used `process.cwd()` —
+// precisely the behaviour that helper existed to replace. Fail the build.
+const ALIASED_REQUIRE_RE = /require\(\s*['"](@\/|@common\/|@process\/|@renderer\/|@worker\/)/g;
+
+function validateNoAliasedRequires(mainOutDir) {
+  const problems = [];
+  if (!fs.existsSync(mainOutDir)) return problems;
+
+  const stack = [mainOutDir];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const target = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(target);
+        continue;
+      }
+      if (!entry.isFile() || !entry.name.endsWith('.js')) continue;
+
+      const source = fs.readFileSync(target, 'utf8');
+      const specifiers = new Set();
+      for (const match of source.matchAll(ALIASED_REQUIRE_RE)) {
+        const tail = source.slice(match.index, match.index + 120);
+        const quoted = tail.match(/require\(\s*['"]([^'"]+)['"]/);
+        specifiers.add(quoted ? quoted[1] : match[1]);
+      }
+      if (specifiers.size > 0) {
+        problems.push(
+          `Main bundle keeps unresolved path-alias require(s) in ${path.relative(path.resolve(__dirname, '..'), target)}: ` +
+            `${[...specifiers].join(', ')}. Rollup only rewrites static imports — use one, or the call throws at runtime.`
+        );
+      }
+    }
+  }
+
+  return problems;
+}
+
 function validateViteBuildOutput() {
   const outDir = path.resolve(__dirname, '../out');
   const problems = [];
@@ -442,6 +487,8 @@ function validateViteBuildOutput() {
       problems.push(`Vite build output is incomplete: missing out/${relPath}`);
     }
   }
+
+  problems.push(...validateNoAliasedRequires(path.join(outDir, 'main')));
 
   const rendererValidation = validateRendererBuildOutput(path.join(outDir, 'renderer'));
   problems.push(...rendererValidation.problems);
