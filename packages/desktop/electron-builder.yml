@@ -310,7 +310,14 @@ linux:
       Comment: ${description}
       Icon: one-work
       Categories: Office;Utility;
-      MimeType: x-scheme-handler/aionui;
+      # Both schemes, current first. An explicit `MimeType` REPLACES the list
+      # electron-builder would derive from `protocols:` above, so listing only
+      # the legacy `aionui` here left the deb with no handler for `dream://` —
+      # the scheme every packaged build actually registers and the one the SSO
+      # callback comes back on (`dream://sso-callback?token=…`). On Linux that
+      # is the difference between the browser handing the token back to the app
+      # and the browser saying it does not know how to open the link.
+      MimeType: x-scheme-handler/dream;x-scheme-handler/aionui;
 
 npmRebuild: false
 buildDependenciesFromSource: false
