@@ -110,6 +110,11 @@ const AssistantHomeTabs: React.FC<AssistantHomeTabsProps> = ({
   }, [visibleAssistants]);
 
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  // The marketplace and skills panes are catalog browsing — they earn the wide
+  // layout (4-card rows, roomier pills). The assistant lists stay at 800px,
+  // which is the width their row cards were designed for.
+  const wideLayout = tab === 'marketplace' || tab === 'skills';
+  const paneMaxWidth = wideLayout ? 'max-w-1280px' : 'max-w-800px';
   const filteredAssistants = useMemo(() => {
     if (!normalizedSearchQuery) return visibleAssistants;
     return visibleAssistants.filter((assistant) => {
@@ -133,7 +138,7 @@ const AssistantHomeTabs: React.FC<AssistantHomeTabsProps> = ({
       <div
         className={`border-b border-border-2 bg-bg-0 ${isMobile ? 'px-16px pt-14px' : 'px-12px pt-24px md:px-40px md:pt-32px'}`}
       >
-        <div className='mx-auto w-full max-w-800px'>
+        <div className={`mx-auto w-full ${paneMaxWidth}`}>
           <SettingsPageHeader
             data-testid='assistants-header'
             title={t('settings.assistants', { defaultValue: 'Assistants' })}
@@ -223,7 +228,7 @@ const AssistantHomeTabs: React.FC<AssistantHomeTabsProps> = ({
         data-testid='assistant-home-body'
         className={`min-h-0 flex-1 overflow-auto ${isMobile ? 'px-16px pb-14px pt-14px' : 'px-12px pb-24px pt-18px md:px-40px'}`}
       >
-        <div className='mx-auto w-full max-w-800px'>
+        <div className={`mx-auto w-full ${paneMaxWidth}`}>
           {loading ? (
             <div
               className='flex min-h-200px flex-col items-center justify-center gap-10px py-40px text-center'
