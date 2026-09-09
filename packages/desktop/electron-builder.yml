@@ -243,6 +243,12 @@ nsis:
   #
   # The first update after this ships is still a full download: the diff needs
   # the previous installer cached in the updater's pending dir.
+  #
+  # x64 only in practice. build-with-builder.js passes
+  # `--config.nsis.differentialPackage=false` for arm64, which keeps the zip
+  # payload that arch has always used; the two options are mutually exclusive
+  # in NsisTarget, so without that override arm64 would silently lose the zip.
+  # prepare-release-assets.sh therefore only demands a blockmap for x64.
   differentialPackage: true
 
 mac:

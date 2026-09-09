@@ -132,6 +132,45 @@ describe('release packaging configuration', () => {
   });
 
   itWithBash(
+    'succeeds on a complete set of release artifacts',
+    () => {
+      // The only other end-to-end test here removes an artifact and asserts the
+      // script fails, so it stays green no matter how many NEW ways the script
+      // learns to fail. That gap shipped a release-breaking change once: adding
+      // the blockmap check without adding blockmaps to the mock artifacts (or to
+      // the CI upload list) made every real release exit non-zero here, and
+      // nothing caught it. This is the positive half.
+      const tempDir = mkdtempSync(resolve(tmpdir(), 'dream-release-assets-ok-'));
+      const artifactsDir = resolve(tempDir, 'build-artifacts');
+      const outputDir = resolve(tempDir, 'release-assets');
+
+      try {
+        const env = { ...process.env, MOCK_VERSION: '1.0.0' };
+        expect(
+          spawnSync('bash', ['scripts/create-mock-release-artifacts.sh', artifactsDir], {
+            cwd: projectRoot,
+            env,
+            encoding: 'utf8',
+          }).status
+        ).toBe(0);
+
+        const prepareResult = spawnSync('bash', ['scripts/prepare-release-assets.sh', artifactsDir, outputDir], {
+          cwd: projectRoot,
+          env,
+          encoding: 'utf8',
+        });
+
+        expect(`${prepareResult.stdout}
+${prepareResult.stderr}`).not.toContain('::error::');
+        expect(prepareResult.status).toBe(0);
+      } finally {
+        rmSync(tempDir, { force: true, recursive: true });
+      }
+    },
+    120000
+  );
+
+  itWithBash(
     'fails release asset preparation when a mac zip is missing',
     () => {
       const tempDir = mkdtempSync(resolve(tmpdir(), 'dream-release-assets-'));

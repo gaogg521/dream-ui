@@ -760,6 +760,12 @@ jobs:
             # future rename cannot break it the same way.
             out/*-mac-*.zip
             out/*.yml
+            # nsis.differentialPackage emits <installer>.blockmap. It is what
+            # lets electron-updater fetch only changed blocks; without it the
+            # updater 404s and silently downloads the whole installer again.
+            # This list is explicit, so a new artifact type has to be added
+            # here or it is dropped between build and release with no error.
+            out/*.blockmap
           if-no-files-found: warn
           retention-days: 7
 
