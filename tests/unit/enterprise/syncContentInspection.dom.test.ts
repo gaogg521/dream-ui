@@ -44,6 +44,15 @@ vi.mock('@/common', () => ({
       drainContentInspectionFindings: { invoke: hooks.drainContentInspectionFindings },
       syncModelChannels: { invoke: vi.fn() },
       clearEnterpriseUpstream: { invoke: hooks.clearEnterpriseUpstream },
+      // The rest of what `clearTeamResources` takes back. Stubbed rather than
+      // asserted here — `teamResourceRevocation.dom.test.ts` owns the
+      // sink-by-sink check. They still have to EXIST: the purge builds its
+      // `Promise.allSettled` array eagerly, so a missing bridge entry throws on
+      // the `.invoke` property access before any promise is created, and the
+      // whole purge rejects.
+      syncToolSecurityPolicy: { invoke: vi.fn().mockResolvedValue(undefined) },
+      syncSendPolicy: { invoke: vi.fn().mockResolvedValue(undefined) },
+      syncTeamMemory: { invoke: vi.fn().mockResolvedValue(undefined) },
     },
     fs: {
       syncTeamSkills: { invoke: vi.fn() },
