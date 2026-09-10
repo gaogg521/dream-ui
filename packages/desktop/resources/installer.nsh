@@ -82,10 +82,19 @@
   !insertmacro DreamRemoveStaleInstall "$R7"
   DeleteRegValue HKCU "${INSTALL_REGISTRY_KEY}" DreamStaleInstallLocation
 
-  ; 2. The names this app has shipped under. The registry did not name these on
-  ;    the machine where the duplicates were found, and nothing else will.
+  ; 2. The orphan. "One Work" is what NSIS derived the install directory from
+  ;    while `executableName` was unset and fell back to productName. On the
+  ;    machine where the duplicates were found it had no uninstall entry of any
+  ;    kind — nothing owns it, nothing will ever remove it, and no other
+  ;    mechanism can find it. Removing the directory leaves nothing dangling.
+  ;
+  ;    "1onecode" is deliberately NOT swept, even though it is also 2.28 GB and
+  ;    also ours. It still has a working uninstall entry, under a different
+  ;    appId from a different product generation. Deleting its files would turn
+  ;    a working Add/Remove Programs entry into one that fails when clicked,
+  ;    which is worse than leaving it: the user can still uninstall it properly
+  ;    themselves.
   !insertmacro DreamRemoveStaleInstall "${DREAM_INSTALL_ROOT}\One Work"
-  !insertmacro DreamRemoveStaleInstall "${DREAM_INSTALL_ROOT}\1onecode"
 
   Pop $R7
 !macroend

@@ -66,9 +66,24 @@ describe('installer.nsh takes over a stale install rather than sitting beside it
    * pointed at the orphaned "One Work" directory. A cleanup that only reads
    * the registry cannot find the directories it exists to remove.
    */
-  it('also sweeps the names this app has actually shipped under', () => {
+  it('sweeps the orphaned "One Work" directory the registry cannot name', () => {
     expect(NSH).toContain('${DREAM_INSTALL_ROOT}\\One Work');
-    expect(NSH).toContain('${DREAM_INSTALL_ROOT}\\1onecode');
+  });
+
+  /**
+   * Not every 2.28 GB directory of ours is safe to delete. "1onecode" still has
+   * a working uninstall entry, under an older appId from a different product
+   * generation; removing its files would turn a working Add/Remove Programs
+   * entry into one that fails when clicked, which is worse than leaving it.
+   * "One Work" has no entry at all, which is precisely why nothing but this can
+   * remove it.
+   */
+  it('leaves 1onecode alone, because something still owns it', () => {
+    const swept = NSH.split('\n').filter(
+      (l) => l.includes('DreamRemoveStaleInstall') && !l.trim().startsWith(';') && !l.includes('!macro')
+    );
+    expect(swept.length).toBeGreaterThan(0);
+    expect(swept.some((l) => l.includes('1onecode'))).toBe(false);
   });
 
   it('routes every removal through the one guarded macro', () => {
