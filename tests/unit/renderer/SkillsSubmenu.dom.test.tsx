@@ -52,7 +52,12 @@ vi.mock('@arco-design/web-react', () => {
         {children}
       </button>
     ),
-    Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    Tooltip: ({ children, content }: { children: React.ReactNode; content?: React.ReactNode }) => (
+      <span data-testid="skill-tooltip">
+        {content as React.ReactNode}
+        {children}
+      </span>
+    ),
     Popover: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };
 });
@@ -126,7 +131,7 @@ const baseProps = {
 describe('skills submenu presentation', () => {
   afterEach(cleanup);
 
-  it('lays the catalog out as a grid: one card per skill, display name primary, identity in the title', () => {
+  it('lays the catalog out as a grid: one card per skill, display name primary, intro on hover', () => {
     const { container } = render(<GuidActionRow {...baseProps} />);
     const grid = container.querySelector('[data-testid="guid-skills-grid"]');
     expect(grid).toBeTruthy();
@@ -136,15 +141,20 @@ describe('skills submenu presentation', () => {
 
     const fund = container.querySelector('[data-testid="guid-skill-cell-fund-analysis"]');
     expect(fund?.textContent).toContain('基金分析');
-    // The kebab identity moved into the title attribute (hover tooltip) —
-    // the visible label stays the human name alone.
-    expect(fund?.getAttribute('title')).toBe('基金分析 (fund-analysis)');
+    // The visible label stays the human name alone; identity + intro travel
+    // via aria-label and the hover tooltip content.
     expect(fund?.textContent).not.toContain('fund-analysis');
+    const ariaLabel = fund?.getAttribute('aria-label') ?? '';
+    expect(ariaLabel).toContain('基金分析');
+    expect(ariaLabel).toContain('d');
+    // Tooltip mock renders the intro content right before the button.
+    const tooltip = fund?.parentElement;
+    expect(tooltip?.getAttribute('data-testid')).toBe('skill-tooltip');
+    expect(tooltip?.textContent).toContain('d');
 
     // No display name → the kebab name is the label, no duplicate.
     const wacli = container.querySelector('[data-testid="guid-skill-cell-wacli"]');
     expect(wacli?.textContent).toContain('wacli');
-    expect(wacli?.getAttribute('title')).toBe('wacli (wacli)');
   });
 
   it('renders the icon image only for skills that ship one, letter tile otherwise', () => {
@@ -152,9 +162,9 @@ describe('skills submenu presentation', () => {
     const imgs = [...container.querySelectorAll('[data-testid="guid-skills-grid"] img')];
     expect(imgs).toHaveLength(1);
     expect(imgs[0].getAttribute('src')).toBe('http://backend.test/api/skills/12306-train-assistant/icon');
-    const tiles = [...container.querySelectorAll('[data-testid="guid-skills-grid"] span')].filter((s) =>
-      /w-40px/.test(s.className ?? '')
-    );
+    const tiles = [
+      ...container.querySelectorAll('[data-testid="guid-skills-grid"] span'),
+    ].filter((s) => /w-28px/.test(s.className ?? ''));
     expect(tiles.map((t) => t.textContent?.trim())).toContain('基');
     expect(tiles.map((t) => t.textContent?.trim())).toContain('W');
   });
