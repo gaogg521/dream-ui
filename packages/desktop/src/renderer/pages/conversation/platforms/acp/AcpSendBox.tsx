@@ -11,6 +11,8 @@ import { useMediaComposer } from '@/renderer/hooks/media/useMediaComposer';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import ContextUsageIndicator from '@/renderer/components/agent/ContextUsageIndicator';
 import CommandQueuePanel from '@/renderer/components/chat/CommandQueuePanel';
+import { resolveExtensionAssetUrl } from '@/renderer/utils/platform';
+import useSWR from 'swr';
 import MobileActionSheet, {
   type MobileActionSheetEntry,
   type MobileActionSheetOption,
@@ -154,6 +156,10 @@ const AcpSendBox: React.FC<{
   const isMobile = Boolean(layout?.isMobile);
   const conversationContext = useConversationContextSafe();
   const loadedSkills = conversationContext?.loadedSkills ?? [];
+  // Shared index for the skills submenu grid (same SWR key as SendBox).
+  const { data: skillsIndex } = useSWR(loadedSkills.length > 0 ? 'skills-index' : null, () =>
+    ipcBridge.fs.listAvailableSkills.invoke()
+  );
   const loadedMcpStatuses =
     conversationContext?.loadedMcpStatuses ??
     (conversationContext?.loadedMcpServers ?? []).map<IConversationMcpStatus>((name) => ({
@@ -680,10 +686,19 @@ Please check your local CLI tool authentication status`,
     });
 
     if (loadedSkills.length > 0) {
-      const skillOptions: MobileActionSheetOption[] = loadedSkills.map((name) => ({
-        key: name,
-        label: `/${name}`,
-      }));
+      // Same shared index the SendBox uses — display name + icon for the grid.
+      const byName = new Map((skillsIndex ?? []).map((s) => [s.name, s]));
+      const skillOptions: MobileActionSheetOption[] = loadedSkills.map((name) => {
+        const meta = byName.get(name);
+        return {
+          key: name,
+          label: `/${name}`,
+          displayName: meta?.display_name || name,
+          iconUrl: meta?.icon_file
+            ? resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(name)}/icon`)
+            : undefined,
+        };
+      });
       entries.push({
         key: 'skills',
         icon: <MagicHat theme='outline' size='16' />,
@@ -692,6 +707,8 @@ Please check your local CLI tool authentication status`,
         submenu: {
           title: t('common.selectedSkills', { defaultValue: 'Selected skills' }),
           selectable: false,
+          grid: true,
+          searchPlaceholder: t('settings.skillsHub.searchPlaceholder', { defaultValue: 'Search skills...' }),
           options: skillOptions,
           onSelect: (name) => {
             setContent(`/${name} `);

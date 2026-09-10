@@ -5,7 +5,7 @@
  */
 
 import { Left, Right } from '@icon-park/react';
-import React, { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import styles from './MobileActionSheet.module.css';
@@ -191,6 +191,8 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({ open, onClose, ti
               <div className={styles.list}>
                 {renderedSub.options.length === 0 ? (
                   <div className={styles.empty}>{renderedSub.emptyText}</div>
+                ) : renderedSub.grid ? (
+                  <SubmenuSkillGrid sub={renderedSub} />
                 ) : (
                   renderedSub.options.map((option) => {
                     const showRadio = renderedSub.multiSelect !== true && renderedSub.selectable !== false;
@@ -229,6 +231,73 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({ open, onClose, ti
       </div>
     </Fragment>,
     document.body
+  );
+};
+
+// Grid mode body: filter box + 3-column icon grid. Self-contained so the
+/// sheet stays generic — everything the grid needs rides on the sub config.
+const SubmenuSkillGrid: React.FC<{ sub: MobileActionSheetSubMenu }> = ({ sub }) => {
+  const [query, setQuery] = useState('');
+  const filtered = useMemo(() => {
+    const keyword = query.trim().toLowerCase();
+    if (!keyword) return sub.options;
+    return sub.options.filter((option) => {
+      const display = typeof option.displayName === 'string' ? option.displayName.toLowerCase() : '';
+      const key = typeof option.key === 'string' ? option.key.toLowerCase() : '';
+      return key.includes(keyword) || display.includes(keyword);
+    });
+  }, [sub.options, query]);
+
+  return (
+    <div>
+      <div className='px-6px pt-4px pb-6px'>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={typeof sub.searchPlaceholder === 'string' ? sub.searchPlaceholder : ''}
+          data-testid='mobile-sheet-sub-search'
+          className='w-full h-32px bg-fill-1 hover:bg-fill-2 border border-border-1 focus:border-primary-5 focus:bg-base outline-none rd-8px px-10px text-13px text-t-primary placeholder:text-t-tertiary transition-all box-border m-0'
+        />
+      </div>
+      <div
+        className='grid grid-cols-3 gap-6px px-6px pb-10px'
+        role='listbox'
+        aria-multiselectable='true'
+        data-testid='mobile-sheet-sub-grid'
+      >
+        {filtered.map((option) => {
+          const label = typeof option.displayName === 'string' && option.displayName ? option.displayName : String(option.key);
+          return (
+            <button
+              key={String(option.key)}
+              type='button'
+              role='option'
+              aria-selected={option.active === true}
+              title={String(option.key)}
+              data-testid={`mobile-sheet-sub-cell-${option.key}`}
+              onClick={() => sub.onSelect(String(option.key))}
+              className={`relative flex cursor-pointer select-none flex-col items-center gap-4px rounded-10px border-none p-6px text-center transition-colors ${
+                option.active ? 'bg-primary-light-1' : 'bg-transparent hover:bg-fill-2'
+              }`}
+            >
+              {option.iconUrl ? (
+                <img
+                  src={option.iconUrl}
+                  alt=''
+                  className='h-32px w-32px rounded-999px object-cover'
+                  loading='lazy'
+                />
+              ) : (
+                <span className='flex h-32px w-32px items-center justify-center rounded-999px bg-fill-2 text-14px font-600 text-t-secondary'>
+                  {label.charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span className='w-full truncate text-12px text-t-primary'>{label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 

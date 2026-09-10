@@ -11,6 +11,10 @@ export interface MobileActionSheetOption {
   label: ReactNode;
   description?: ReactNode;
   active?: boolean;
+  /** Grid mode only: human-facing display name (often CJK) shown under the icon. */
+  displayName?: string;
+  /** Grid mode only: icon served by the backend (`/api/skills/{name}/icon`). */
+  iconUrl?: string;
 }
 
 export interface MobileActionSheetSubMenu {
@@ -26,6 +30,14 @@ export interface MobileActionSheetSubMenu {
    * user can toggle several in a row (used for Skills / MCP on the home page).
    */
   multiSelect?: boolean;
+  /**
+   * Grid mode: options render as a 3-column icon grid (icon tile + display
+   * name) with a filter box, instead of full-width rows. For large catalogs
+   * (the skills submenu) where scanning rows does not scale.
+   */
+  grid?: boolean;
+  /** Grid mode: placeholder for the filter box. */
+  searchPlaceholder?: ReactNode;
 }
 
 export interface MobileActionSheetEntry {
