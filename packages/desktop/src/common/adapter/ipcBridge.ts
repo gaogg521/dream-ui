@@ -1036,6 +1036,10 @@ export const fs = {
       /** Enterprise category/tag metadata (C2-2), from the SKILL.md frontmatter of team skills. */
       category?: string;
       tags?: string[];
+      /** Human-facing display name from the SKILL.md frontmatter (often CJK). Display-only. */
+      display_name?: string;
+      /** Icon file beside SKILL.md, served at '/api/skills/{name}/icon'. Display-only. */
+      icon_file?: string;
     }>,
     void
   >('/api/skills'),

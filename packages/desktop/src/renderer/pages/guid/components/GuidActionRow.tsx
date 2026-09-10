@@ -44,6 +44,7 @@ import {
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import GuidExpertPickerGrid from './GuidExpertPickerGrid';
+import { resolveExtensionAssetUrl } from '@/renderer/utils/platform';
 import styles from '../index.module.css';
 
 /**
@@ -125,7 +126,7 @@ type GuidActionRowProps = {
   onModeSelect: (mode: string) => void;
 
   // Skills management
-  allSkills: Array<{ name: string; description: string; isAuto: boolean }>;
+  allSkills: Array<{ name: string; description: string; isAuto: boolean; display_name?: string; icon_file?: string }>;
   disabledBuiltinSkills: string[];
   enabledSkills: string[];
   onToggleSkill: (name: string, isAuto: boolean) => void;
@@ -322,7 +323,9 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
 
   const skillKeyword = skillQuery.trim().toLowerCase();
   const filteredSkills = skillKeyword
-    ? allSkills.filter((skill) => skill.name.toLowerCase().includes(skillKeyword))
+    ? allSkills.filter((skill) =>
+        [skill.name, skill.display_name ?? ''].some((field) => field.toLowerCase().includes(skillKeyword))
+      )
     : allSkills;
   const mcpKeyword = mcpQuery.trim().toLowerCase();
   const filteredMcpServers = mcpKeyword
@@ -650,7 +653,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
             </div>
           }
           triggerProps={{
-            popupStyle: { overflowX: 'hidden' },
+            popupStyle: { overflowX: 'hidden', minWidth: 300 },
             popupVisible: isSkillSubmenuOpen,
             onVisibleChange: handleSkillSubmenuVisibleChange,
           }}
@@ -677,7 +680,26 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   onChange={() => onToggleSkill(skill.name, skill.isAuto)}
                 >
-                  <span className='text-13px'>{skill.name}</span>
+                  <span className='inline-flex items-center gap-8px max-w-260px'>
+                    {skill.icon_file ? (
+                      <img
+                        src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
+                        alt=''
+                        className='w-22px h-22px rd-6px object-cover shrink-0'
+                        loading='lazy'
+                      />
+                    ) : (
+                      <span className='w-22px h-22px rd-6px flex items-center justify-center shrink-0 bg-fill-2 text-12px font-600 text-t-secondary'>
+                        {(skill.display_name || skill.name).charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <span className='text-13px text-t-primary truncate'>
+                      {skill.display_name || skill.name}
+                      {skill.display_name && skill.display_name !== skill.name && (
+                        <span className='ml-4px text-11px text-t-tertiary font-mono'>{skill.name}</span>
+                      )}
+                    </span>
+                  </span>
                 </Checkbox>
               </Menu.Item>
             ))}
