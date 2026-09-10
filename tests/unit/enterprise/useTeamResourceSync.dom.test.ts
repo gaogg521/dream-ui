@@ -22,26 +22,42 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 
-const { orgContext, clearTeamResources, syncTeamSkills, syncTeamAgents, messageWarning, emitterHandlers } = vi.hoisted(
-  () => ({
-    orgContext: { current: { isEnterprise: false } },
-    clearTeamResources: vi.fn(() => Promise.resolve()),
-    syncTeamSkills: vi.fn(() => Promise.resolve(null)),
-    syncTeamAgents: vi.fn(() => Promise.resolve(null)),
-    messageWarning: vi.fn(),
-    // A trivial stand-in for the real emitter: the hook subscribes once per
-    // mount, and tests trigger it directly instead of going through
-    // `teamSkillSync.ts`'s actual emit site (that path is covered separately
-    // by `purgeOnRevocation`'s own tests).
-    emitterHandlers: new Map<string, () => void>(),
-  })
-);
+const {
+  orgContext,
+  clearTeamResources,
+  listProviders,
+  syncTeamSkills,
+  syncTeamAgents,
+  messageWarning,
+  emitterHandlers,
+} = vi.hoisted(() => ({
+  orgContext: { current: { isEnterprise: false } },
+  clearTeamResources: vi.fn(() => Promise.resolve()),
+  listProviders: vi.fn(() => Promise.resolve([] as { managed_by?: string }[])),
+  syncTeamSkills: vi.fn(() => Promise.resolve(null)),
+  syncTeamAgents: vi.fn(() => Promise.resolve(null)),
+  messageWarning: vi.fn(),
+  // A trivial stand-in for the real emitter: the hook subscribes once per
+  // mount, and tests trigger it directly instead of going through
+  // `teamSkillSync.ts`'s actual emit site (that path is covered separately
+  // by `purgeOnRevocation`'s own tests).
+  emitterHandlers: new Map<string, () => void>(),
+}));
 
 vi.mock('@renderer/pages/enterprise/hooks/useOrgContext', () => ({
   useOrgContext: () => ({ context: orgContext.current }),
 }));
 
 vi.mock('@renderer/utils/platform', () => ({ isElectronDesktop: () => true }));
+
+// The purge now asks the backend whether any company-issued channel is still
+// materialized, instead of trusting a localStorage marker that can go missing
+// while the rows do not.
+vi.mock('@/common', () => ({ ipcBridge: { mode: { listProviders: { invoke: listProviders } } } }));
+
+// Explicitly OFF: the state a client is in after switching back to the personal
+// workspace. A merely-unreachable server keeps this true and must not purge.
+vi.mock('@/common/adapter/enterpriseMode', () => ({ isEnterpriseModeEnabled: () => false }));
 
 vi.mock('@renderer/utils/enterprise/teamSkillSync', () => ({
   ENTERPRISE_RESOURCES_MARKER: 'one-enterprise:resources-materialized',
@@ -88,6 +104,9 @@ describe('useTeamResourceSync', () => {
     syncTeamAgents.mockClear();
     messageWarning.mockClear();
     emitterHandlers.clear();
+    listProviders.mockReset();
+    listProviders.mockResolvedValue([]);
+    localStorage.clear();
     orgContext.current = { isEnterprise: false };
   });
 
@@ -117,6 +136,48 @@ describe('useTeamResourceSync', () => {
 
     expect(syncTeamSkills).toHaveBeenCalled();
     expect(clearTeamResources).not.toHaveBeenCalled();
+  });
+
+  it('purges a company channel the backend still holds even with no marker left', async () => {
+    // The reported leak. The marker is renderer state and the rows are not:
+    // rows written by an older build, or a marker consumed by a purge that
+    // then failed, left the personal workspace showing an 「企业下发」 model
+    // channel — the company's API key included — with nothing left that could
+    // ever decide to remove it.
+    listProviders.mockResolvedValue([{ managed_by: 'enterprise' }]);
+
+    renderHook(() => useTeamResourceSync());
+    await vi.waitFor(() => expect(clearTeamResources).toHaveBeenCalledTimes(1));
+  });
+
+  it('leaves an ordinary personal workspace alone', async () => {
+    // The other half: asking the backend must not turn every personal-mode
+    // start into a purge. Nothing company-issued, no marker, no purge.
+    listProviders.mockResolvedValue([{ managed_by: undefined }]);
+
+    renderHook(() => useTeamResourceSync());
+    await vi.waitFor(() => expect(listProviders).toHaveBeenCalled());
+    expect(clearTeamResources).not.toHaveBeenCalled();
+  });
+
+  it('keeps the marker when the purge fails, so the next start retries', async () => {
+    localStorage.setItem('one-enterprise:resources-materialized', '1');
+    clearTeamResources.mockRejectedValueOnce(new Error('backend unreachable'));
+
+    renderHook(() => useTeamResourceSync());
+    await vi.waitFor(() => expect(clearTeamResources).toHaveBeenCalledTimes(1));
+
+    // The marker used to be removed before the purge was even started, so a
+    // failed purge took its own retry with it and the rows stayed forever.
+    expect(localStorage.getItem('one-enterprise:resources-materialized')).toBe('1');
+  });
+
+  it('clears the marker once the purge succeeds', async () => {
+    localStorage.setItem('one-enterprise:resources-materialized', '1');
+
+    renderHook(() => useTeamResourceSync());
+    await vi.waitFor(() => expect(clearTeamResources).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(localStorage.getItem('one-enterprise:resources-materialized')).toBeNull());
   });
 
   it('C1-2: shows a warning message when this machine was blocked', () => {
