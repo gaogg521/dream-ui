@@ -672,18 +672,25 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
               columns shattered on the real app; the expert grid never breaks
               because of this shell. */}
           <div className='w-420px'>
-            <div className='px-6px pt-4px pb-6px' style={{ background: 'var(--color-bg-popup)' }}>
-              <DreamInlineSearchInput
-                value={skillQuery}
-                onChange={setSkillQuery}
-                placeholder={t('settings.skillsHub.searchPlaceholder', { defaultValue: 'Search skills...' })}
-                data-testid='guid-skill-search'
-                // See GuidExpertPickerGrid for why this matters: without it,
-                // IME composition keystrokes leak into Arco Menu's keyboard
-                // handling and the whole "+" dropdown closes mid-composition.
-                inputProps={{ onKeyDown: (event) => event.stopPropagation() }}
-              />
-            </div>
+            {/* Same threshold the MCP list below uses, and the reason
+                `DROPDOWN_SEARCH_THRESHOLD` is shared: a box that filters five
+                icons costs a row of height and earns nothing. The grid rewrite
+                moved this input into the shell and dropped the gate with it,
+                leaving `showSkillSearch` computed and unread. */}
+            {showSkillSearch && (
+              <div className='px-6px pt-4px pb-6px' style={{ background: 'var(--color-bg-popup)' }}>
+                <DreamInlineSearchInput
+                  value={skillQuery}
+                  onChange={setSkillQuery}
+                  placeholder={t('settings.skillsHub.searchPlaceholder', { defaultValue: 'Search skills...' })}
+                  data-testid='guid-skill-search'
+                  // See GuidExpertPickerGrid for why this matters: without it,
+                  // IME composition keystrokes leak into Arco Menu's keyboard
+                  // handling and the whole "+" dropdown closes mid-composition.
+                  inputProps={{ onKeyDown: (event) => event.stopPropagation() }}
+                />
+              </div>
+            )}
             <div className='dropdown-search-scroll max-h-320px overflow-y-auto px-6px pb-6px'>
               {filteredSkills.length === 0 ? (
                 <div className='px-12px py-10px text-12px text-t-tertiary text-center'>
