@@ -14,6 +14,8 @@ import AgentModeSelector from '@/renderer/components/agent/AgentModeSelector';
 import ContextUsageIndicator from '@/renderer/components/agent/ContextUsageIndicator';
 import ModelKindTag from '@/renderer/components/settings/ModelKindTag';
 import CommandQueuePanel from '@/renderer/components/chat/CommandQueuePanel';
+import { resolveExtensionAssetUrl } from '@/renderer/utils/platform';
+import useSWR from 'swr';
 import MobileActionSheet, {
   type MobileActionSheetEntry,
   type MobileActionSheetOption,
@@ -142,6 +144,11 @@ const DreamEngineSendBox: React.FC<{
   const { data: mediaProviders } = useProvidersQuery();
   const mediaComposer = useMediaComposer(conversation_id, mediaProviders);
   const loadedSkills = conversationContext?.loadedSkills ?? [];
+  // Shared with SendBox's slash-command index (same SWR key) — provides
+  // display_name / icon_file for the skills submenu grid.
+  const { data: skillsIndex } = useSWR(loadedSkills.length > 0 ? 'skills-index' : null, () =>
+    ipcBridge.fs.listAvailableSkills.invoke()
+  );
   const loadedMcpStatuses =
     conversationContext?.loadedMcpStatuses ??
     (conversationContext?.loadedMcpServers ?? []).map<IConversationMcpStatus>((name) => ({
@@ -649,10 +656,21 @@ const DreamEngineSendBox: React.FC<{
     }
 
     if (loadedSkills.length > 0) {
-      const skillOptions: MobileActionSheetOption[] = loadedSkills.map((name) => ({
-        key: name,
-        label: `/${name}`,
-      }));
+      // Presentation metadata (display name, icon) comes from the shared
+      // skills index — same SWR key the SendBox slash-command list uses, so
+      // it is fetched once and shared.
+      const byName = new Map((skillsIndex ?? []).map((s) => [s.name, s]));
+      const skillOptions: MobileActionSheetOption[] = loadedSkills.map((name) => {
+        const meta = byName.get(name);
+        return {
+          key: name,
+          label: `/${name}`,
+          displayName: meta?.display_name || name,
+          iconUrl: meta?.icon_file
+            ? resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(name)}/icon`)
+            : undefined,
+        };
+      });
       entries.push({
         key: 'skills',
         icon: <MagicHat theme='outline' size='16' />,
@@ -661,6 +679,8 @@ const DreamEngineSendBox: React.FC<{
         submenu: {
           title: t('common.selectedSkills', { defaultValue: 'Selected skills' }),
           selectable: false,
+          grid: true,
+          searchPlaceholder: t('settings.skillsHub.searchPlaceholder', { defaultValue: 'Search skills...' }),
           options: skillOptions,
           onSelect: (name) => {
             setContent(`/${name} `);
