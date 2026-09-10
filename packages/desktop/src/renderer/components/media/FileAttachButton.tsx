@@ -6,15 +6,15 @@
 
 import type { IConversationMcpStatus, IConversationMcpStatusKind } from '@/common/config/storage';
 import { ipcBridge } from '@/common';
-import { Button, Message, Trigger } from '@arco-design/web-react';
+import { Button, Message, Tooltip, Trigger } from '@arco-design/web-react';
 import { FolderOpen, Lightning, Paperclip, Plus, Right, Shield } from '@icon-park/react';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
 import { iconColors } from '@/renderer/styles/colors';
-import { isElectronDesktop } from '@/renderer/utils/platform';
+import { isElectronDesktop, resolveExtensionAssetUrl } from '@/renderer/utils/platform';
 import { FileService } from '@/renderer/services/FileService';
 import type { FileMetadata } from '@/renderer/services/FileService';
 import { emitter } from '@/renderer/utils/emitter';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
@@ -104,6 +104,16 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
     ipcBridge.fs.listAvailableSkills.invoke()
   );
   const descriptionByName = new Map((skillIndex ?? []).map((s) => [s.name, s.description]));
+  const metaByName = new Map((skillIndex ?? []).map((s) => [s.name, s]));
+  const [skillQuery, setSkillQuery] = useState('');
+  const filteredSkillNames = useMemo(() => {
+    const keyword = skillQuery.trim().toLowerCase();
+    if (!keyword) return skillNames;
+    return skillNames.filter((name) => {
+      const meta = metaByName.get(name);
+      return name.toLowerCase().includes(keyword) || (meta?.display_name ?? '').toLowerCase().includes(keyword);
+    });
+  }, [skillNames, skillQuery]);
 
   const handleSkillClick = useCallback((name: string) => {
     setOpen(false);
@@ -163,16 +173,66 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
   };
 
   const skillsPanel = (
-    <div style={{ ...cardStyle, minWidth: 180 }} onClick={(e) => e.stopPropagation()}>
-      {skillNames.map((name) => (
-        <MenuItem
-          key={name}
-          icon={<Lightning theme='outline' size={15} strokeWidth={2.5} />}
-          label={name}
-          onClick={() => handleSkillClick(name)}
-          className='mx-6px'
+    <div style={{ ...cardStyle, width: 400 }} onClick={(e) => e.stopPropagation()}>
+      <div className='px-6px pt-6px pb-4px'>
+        <input
+          value={skillQuery}
+          onChange={(e) => setSkillQuery(e.target.value)}
+          placeholder={t('settings.skillsHub.searchPlaceholder', { defaultValue: 'Search skills...' })}
+          data-testid='conversation-skill-search'
+          className='w-full h-32px bg-fill-1 hover:bg-fill-2 border border-border-1 focus:border-primary-5 focus:bg-base outline-none rd-8px px-10px text-13px text-t-primary placeholder:text-t-tertiary transition-all box-border m-0'
         />
-      ))}
+      </div>
+      <div className='max-h-360px overflow-y-auto px-6px pb-8px'>
+        {filteredSkillNames.length === 0 ? (
+          <div className='px-12px py-10px text-12px text-t-tertiary text-center'>
+            {t('settings.skillsHub.noSearchResults', { defaultValue: 'No matching skills.' })}
+          </div>
+        ) : (
+          <div className='grid grid-cols-3 gap-x-3px gap-y-2px' data-testid='conversation-skills-grid'>
+            {filteredSkillNames.map((name) => {
+              const meta = metaByName.get(name);
+              const label = meta?.display_name || name;
+              const description = descriptionByName.get(name) ?? '';
+              return (
+                <Tooltip
+                  key={name}
+                  position='right'
+                  content={
+                    <div className='max-w-260px'>
+                      <div className='mb-2px text-12px font-600'>{label}</div>
+                      <div className='text-12px leading-relaxed break-words'>{description}</div>
+                    </div>
+                  }
+                >
+                  <button
+                    type='button'
+                    aria-label={`${label}：${description}`}
+                    title={`${label} (${name})`}
+                    data-testid={`conversation-skill-cell-${name}`}
+                    onClick={() => handleSkillClick(name)}
+                    className='relative flex cursor-pointer select-none flex-col items-center gap-3px rounded-10px border-none bg-transparent px-4px py-5px text-center transition-colors hover:bg-fill-2'
+                  >
+                    {meta?.icon_file ? (
+                      <img
+                        src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(name)}/icon`)}
+                        alt=''
+                        className='h-28px w-28px rounded-999px object-cover'
+                        loading='lazy'
+                      />
+                    ) : (
+                      <span className='flex h-28px w-28px items-center justify-center rounded-999px bg-fill-2 text-13px font-600 text-t-secondary'>
+                        {label.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <span className='w-full truncate text-12px text-t-primary'>{label}</span>
+                  </button>
+                </Tooltip>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 
