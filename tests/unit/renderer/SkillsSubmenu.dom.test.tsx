@@ -126,26 +126,51 @@ const baseProps = {
 describe('skills submenu presentation', () => {
   afterEach(cleanup);
 
-  it('shows the display name as the primary label with the kebab identity beside it', () => {
+  it('lays the catalog out as a grid: one card per skill, display name primary, identity in the title', () => {
     const { container } = render(<GuidActionRow {...baseProps} />);
-    const text = container.textContent ?? '';
-    expect(text).toContain('基金分析');
-    expect(text).toContain('fund-analysis');
-    expect(text).toContain('12306 订票助手');
-    // A skill without a display name falls back to its kebab name alone.
-    expect(text).toContain('wacli');
-    // No duplicated identity when display name equals the kebab name.
-    expect(text).not.toContain('wacli wacli');
+    const grid = container.querySelector('[data-testid="guid-skills-grid"]');
+    expect(grid).toBeTruthy();
+
+    const cells = [...container.querySelectorAll('[data-testid^="guid-skill-cell-"]')];
+    expect(cells).toHaveLength(3);
+
+    const fund = container.querySelector('[data-testid="guid-skill-cell-fund-analysis"]');
+    expect(fund?.textContent).toContain('基金分析');
+    // The kebab identity moved into the title attribute (hover tooltip) —
+    // the visible label stays the human name alone.
+    expect(fund?.getAttribute('title')).toBe('基金分析 (fund-analysis)');
+    expect(fund?.textContent).not.toContain('fund-analysis');
+
+    // No display name → the kebab name is the label, no duplicate.
+    const wacli = container.querySelector('[data-testid="guid-skill-cell-wacli"]');
+    expect(wacli?.textContent).toContain('wacli');
+    expect(wacli?.getAttribute('title')).toBe('wacli (wacli)');
   });
 
-  it('renders the icon image only for skills that ship one', () => {
+  it('renders the icon image only for skills that ship one, letter tile otherwise', () => {
     const { container } = render(<GuidActionRow {...baseProps} />);
-    const imgs = [...container.querySelectorAll('img')];
+    const imgs = [...container.querySelectorAll('[data-testid="guid-skills-grid"] img')];
     expect(imgs).toHaveLength(1);
     expect(imgs[0].getAttribute('src')).toBe('http://backend.test/api/skills/12306-train-assistant/icon');
-    // letter tile fallback for the others
-    const tiles = [...container.querySelectorAll('span')].filter((s) => /w-22px/.test(s.className ?? ''));
+    const tiles = [...container.querySelectorAll('[data-testid="guid-skills-grid"] span')].filter((s) =>
+      /w-40px/.test(s.className ?? '')
+    );
     expect(tiles.map((t) => t.textContent?.trim())).toContain('基');
     expect(tiles.map((t) => t.textContent?.trim())).toContain('W');
+  });
+
+  it('marks checked cells and surfaces manually selected skills as removable chips', () => {
+    const { container } = render(<GuidActionRow {...baseProps} enabledSkills={['fund-analysis']} />);
+    const fund = container.querySelector('[data-testid="guid-skill-cell-fund-analysis"]');
+    expect(fund?.getAttribute('aria-selected')).toBe('true');
+    expect(fund?.textContent).toContain('✓');
+
+    const chip = container.querySelector('[data-testid="guid-selected-skill-chip-fund-analysis"]');
+    expect(chip?.textContent).toContain('基金分析');
+    // The chip's remove control is wired to the same toggle (clears the pick).
+    expect(container.querySelector('[data-testid="guid-remove-skill-fund-analysis"]')).toBeTruthy();
+
+    // Unselected skills get no chip.
+    expect(container.querySelector('[data-testid="guid-selected-skill-chip-wacli"]')).toBeNull();
   });
 });

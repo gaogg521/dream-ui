@@ -610,6 +610,24 @@ body[arco-theme='dark'] .arco-divider {
   overflow: visible;
 }
 
+/* The + menu's skills grid: each option is a self-styled card (icon tile,
+ * centered label, checked ring). Arco's Menu.Item chrome — padding, line
+ * height, hover inversion, rounded full-width row — fights that card look,
+ * so inside the grid the wrapper is reset to a bare cell and the card owns
+ * every visual state. Scoped to the grid test id; other menus untouched. */
+.arco-dropdown-menu [data-testid='guid-skills-grid'] > .arco-menu-item {
+  padding: 0;
+  line-height: normal;
+  background: transparent;
+  border-radius: 0;
+}
+
+.arco-dropdown-menu [data-testid='guid-skills-grid'] > .arco-menu-item:hover,
+.arco-dropdown-menu [data-testid='guid-skills-grid'] > .arco-menu-item.arco-menu-selected {
+  background: transparent;
+  color: inherit;
+}
+
 /* Explorer file-tree right-click menu: show every item, no height cap / scroll.
    Arco caps .arco-dropdown-menu at 200px (overflow:auto), so a 6+ item menu
    (add-to-chat / reveal / copy rel / copy abs / rename / delete) grows a
