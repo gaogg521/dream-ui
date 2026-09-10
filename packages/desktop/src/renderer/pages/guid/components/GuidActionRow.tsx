@@ -319,6 +319,13 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
     skill.isAuto ? !disabledBuiltinSkills.includes(skill.name) : enabledSkills.includes(skill.name);
 
   const activeSkillCount = allSkills.filter(isSkillChecked).length;
+  // Manually picked skills surface as chips in the input row — otherwise a
+  // selection lives only inside the submenu and the user cannot tell it took
+  // effect (the persona chip set the precedent).
+  const selectedSkillChips = useMemo(
+    () => allSkills.filter((skill) => !skill.isAuto && enabledSkills.includes(skill.name)),
+    [allSkills, enabledSkills]
+  );
   const activeMcpCount = selectedMcpServerIds.length;
 
   const skillKeyword = skillQuery.trim().toLowerCase();
@@ -653,7 +660,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
             </div>
           }
           triggerProps={{
-            popupStyle: { overflowX: 'hidden', minWidth: 300 },
+            popupStyle: { overflowX: 'hidden', minWidth: 420 },
             popupVisible: isSkillSubmenuOpen,
             onVisibleChange: handleSkillSubmenuVisibleChange,
           }}
@@ -667,42 +674,57 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
             emptyText={t('settings.skillsHub.noSearchResults', { defaultValue: 'No matching skills.' })}
             isEmpty={filteredSkills.length === 0}
           >
-            {filteredSkills.map((skill) => (
-              <Menu.Item
-                key={`skill-${skill.name}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleSkill(skill.name, skill.isAuto);
-                }}
-              >
-                <Checkbox
-                  checked={isSkillChecked(skill)}
-                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                  onChange={() => onToggleSkill(skill.name, skill.isAuto)}
-                >
-                  <span className='inline-flex items-center gap-8px max-w-260px'>
-                    {skill.icon_file ? (
-                      <img
-                        src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
-                        alt=''
-                        className='w-22px h-22px rd-6px object-cover shrink-0'
-                        loading='lazy'
-                      />
-                    ) : (
-                      <span className='w-22px h-22px rd-6px flex items-center justify-center shrink-0 bg-fill-2 text-12px font-600 text-t-secondary'>
-                        {(skill.display_name || skill.name).charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                    <span className='text-13px text-t-primary truncate'>
-                      {skill.display_name || skill.name}
-                      {skill.display_name && skill.display_name !== skill.name && (
-                        <span className='ml-4px text-11px text-t-tertiary font-mono'>{skill.name}</span>
+            <div
+              className='grid grid-cols-3 gap-8px p-8px'
+              role='listbox'
+              aria-multiselectable='true'
+              data-testid='guid-skills-grid'
+            >
+              {filteredSkills.map((skill) => {
+                const checked = isSkillChecked(skill);
+                const label = skill.display_name || skill.name;
+                return (
+                  <Menu.Item
+                    key={`skill-${skill.name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleSkill(skill.name, skill.isAuto);
+                    }}
+                  >
+                    <div
+                      role='option'
+                      aria-selected={checked}
+                      title={`${label} (${skill.name})`}
+                      data-testid={`guid-skill-cell-${skill.name}`}
+                      className={`relative flex w-full cursor-pointer select-none flex-col items-center gap-6px rounded-10px border border-solid px-6px py-10px transition-colors ${
+                        checked
+                          ? 'border-primary-3 bg-primary-light-1'
+                          : 'border-transparent hover:border-border-2 hover:bg-fill-1'
+                      }`}
+                    >
+                      {checked && (
+                        <span className='absolute right-4px top-4px flex h-14px w-14px items-center justify-center rounded-999px bg-primary-6 text-10px text-white'>
+                          ✓
+                        </span>
                       )}
-                    </span>
-                  </span>
-                </Checkbox>
-              </Menu.Item>
-            ))}
+                      {skill.icon_file ? (
+                        <img
+                          src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
+                          alt=''
+                          className='h-40px w-40px rounded-10px object-cover'
+                          loading='lazy'
+                        />
+                      ) : (
+                        <span className='flex h-40px w-40px items-center justify-center rounded-10px bg-fill-2 text-16px font-600 text-t-secondary'>
+                          {label.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      <span className='w-full truncate text-center text-12px text-t-primary'>{label}</span>
+                    </div>
+                  </Menu.Item>
+                );
+              })}
+            </div>
           </SubmenuSearchList>
         </Menu.SubMenu>
       )}
@@ -831,6 +853,42 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
           )}
         </div>
         {mediaControlNode}
+        {selectedSkillChips.length > 0 && (
+          <span className='inline-flex min-w-0 shrink items-center gap-4px'>
+            {selectedSkillChips.map((skill) => (
+              <span
+                key={skill.name}
+                className='inline-flex max-w-140px shrink items-center gap-4px rounded-999px py-2px pl-4px pr-6px'
+                style={{ background: 'var(--color-fill-2)' }}
+                data-testid={`guid-selected-skill-chip-${skill.name}`}
+                title={skill.display_name ? `${skill.display_name} (${skill.name})` : skill.name}
+              >
+                {skill.icon_file ? (
+                  <img
+                    src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
+                    alt=''
+                    className='h-16px w-16px rounded-999px object-cover'
+                  />
+                ) : (
+                  <Lightning theme='filled' size='12' fill={iconColors.primary} style={{ lineHeight: 0 }} />
+                )}
+                <span className='max-w-100px truncate text-12px text-t-primary'>
+                  {skill.display_name || skill.name}
+                </span>
+                <span
+                  className='inline-flex h-14px w-14px shrink-0 cursor-pointer items-center justify-center rounded-999px hover:bg-fill-3'
+                  data-testid={`guid-remove-skill-${skill.name}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleSkill(skill.name, skill.isAuto);
+                  }}
+                >
+                  <Close theme='outline' size={10} fill={iconColors.secondary} />
+                </span>
+              </span>
+            ))}
+          </span>
+        )}
         {selectedPersona && (
           <div
             className='inline-flex min-w-0 shrink items-center gap-4px rounded-999px py-4px pl-4px pr-6px'
