@@ -1,76 +1,91 @@
 ; Custom NSIS installer script — auto-included by electron-builder because it
 ; lives in buildResources (resources/) and is named installer.nsh.
 ;
-; Purpose: pin the DEFAULT install directory to "onework" so every install
-; converges there, and make sure the directory an older build under the same
-; appId installed into ("One Work", "1onecode", ...) does not survive as a
-; second copy of the app.
+; Two jobs: pin the DEFAULT install directory to "onework", and make sure the
+; directories older builds installed into do not survive as extra copies of the
+; app. Measured on a real machine mid-upgrade: "One Work", "onework" and
+; "1onecode" all present under Programs, 2.28 GB each, 6.8 GB of duplicates.
 ;
-; Why both halves live here, and why the second one is not electron-builder's
-; job even though it looks like it should be:
+; Why the second job is ours and not electron-builder's:
 ;
-; `InstallLocation` under ${INSTALL_REGISTRY_KEY} is a single value doing two
-; jobs. `multiUser.nsh` reads it during .onInit to seed $INSTDIR (where the NEW
-; version goes), and `installUtil.nsh` reads it in the install section to find
-; where the OLD version is — it copies that install's uninstaller out and runs
-; it with `_?=$installationDir`. One value, two meanings, and on a rename they
-; disagree: the new version must go to "onework" while the old one is still in
-; "One Work".
+; `InstallLocation` under ${INSTALL_REGISTRY_KEY} is one value doing two jobs.
+; `multiUser.nsh` reads it during .onInit to seed $INSTDIR (where the NEW
+; version goes) and `installUtil.nsh` reads it in the install section to find
+; the OLD one, which it then uninstalls with `_?=$installationDir`. One value,
+; two meanings, and across a rename they disagree.
 ;
-; Writing the new path in preInit — which is what this file used to do, and the
-; only lever that reaches $INSTDIR, since multiUser.nsh runs after preInit and
-; would otherwise overwrite it — therefore also told the old uninstaller that it
-; was uninstalling from "onework". The real "One Work" directory was never
-; touched, and users ended up running two installs side by side.
+; Worse, it is not even reliably present. On a machine carrying all three
+; installs the value did not exist under either uninstall key — only
+; DisplayName and UninstallString did — and no registry entry anywhere pointed
+; at the orphaned "One Work" directory at all. `installer-repair-heal.nsh`
+; already carries an empty-InstallLocation branch for the same reason. So a
+; cleanup that reads the registry to learn where the old install is cannot
+; find the very directories this exists to remove.
 ;
-; So: stash the previous location before overwriting it, and clear that
-; directory out ourselves once the new install is in place.
+; Hence both paths below: the registry when it has an answer, and the list of
+; names this app has actually shipped under when it does not. That list is not
+; a guess — `executableName` went 1onecode -> One Work -> onework, and each
+; value is what NSIS derived the install directory from.
 
+!define DREAM_INSTALL_ROOT "$LOCALAPPDATA\Programs"
+!define DREAM_TARGET_DIR "${DREAM_INSTALL_ROOT}\onework"
+
+; Remove one former install directory, if it is safe to.
+;
+; Three conditions, all required. A path being on the list is not enough on its
+; own to justify RMDir /r on a user's disk:
+;   - not the directory we just installed into (the user may have pointed this
+;     install at the old path — allowToChangeInstallationDirectory is on);
+;   - it exists;
+;   - it contains resources\app.asar, which every Electron build we ship has
+;     and almost nothing else does.
+!macro DreamRemoveStaleInstall DIR
+  StrCmp "${DIR}" "" dreamSkip_${__LINE__}
+  StrCmp "${DIR}" "$INSTDIR" dreamSkip_${__LINE__}
+  IfFileExists "${DIR}\resources\app.asar" 0 dreamSkip_${__LINE__}
+    DetailPrint "Removing a previous installation at ${DIR}"
+    RMDir /r "${DIR}"
+  dreamSkip_${__LINE__}:
+!macroend
+
+; preInit runs before electron-builder computes $INSTDIR, so seeding
+; InstallLocation is what makes the installer default to "onework". The user
+; can still change it (allowToChangeInstallationDirectory: true).
 !macro preInit
-  ; Remember where the previous install actually is. This is the only record of
-  ; it, and the next four lines are about to overwrite it.
   SetRegView 64
+  ; Read before writing: when the value IS present it names the previous
+  ; install, and the four writes below are about to replace it.
   ReadRegStr $R7 HKCU "${INSTALL_REGISTRY_KEY}" InstallLocation
   StrCmp $R7 "" 0 +2
     ReadRegStr $R7 HKLM "${INSTALL_REGISTRY_KEY}" InstallLocation
 
   StrCmp $R7 "" skipStash
-  StrCmp $R7 "$LOCALAPPDATA\Programs\onework" skipStash
-    ; Somewhere other than where we are going: worth cleaning up later.
+  StrCmp $R7 "${DREAM_TARGET_DIR}" skipStash
     WriteRegStr HKCU "${INSTALL_REGISTRY_KEY}" DreamStaleInstallLocation "$R7"
   skipStash:
 
-  WriteRegExpandStr HKCU "${INSTALL_REGISTRY_KEY}" InstallLocation "$LOCALAPPDATA\Programs\onework"
-  WriteRegExpandStr HKLM "${INSTALL_REGISTRY_KEY}" InstallLocation "$LOCALAPPDATA\Programs\onework"
+  WriteRegExpandStr HKCU "${INSTALL_REGISTRY_KEY}" InstallLocation "${DREAM_TARGET_DIR}"
+  WriteRegExpandStr HKLM "${INSTALL_REGISTRY_KEY}" InstallLocation "${DREAM_TARGET_DIR}"
   SetRegView 32
-  WriteRegExpandStr HKCU "${INSTALL_REGISTRY_KEY}" InstallLocation "$LOCALAPPDATA\Programs\onework"
-  WriteRegExpandStr HKLM "${INSTALL_REGISTRY_KEY}" InstallLocation "$LOCALAPPDATA\Programs\onework"
+  WriteRegExpandStr HKCU "${INSTALL_REGISTRY_KEY}" InstallLocation "${DREAM_TARGET_DIR}"
+  WriteRegExpandStr HKLM "${INSTALL_REGISTRY_KEY}" InstallLocation "${DREAM_TARGET_DIR}"
 !macroend
 
 ; Runs after the new version's files are in place (installSection.nsh), so
-; $INSTDIR is real and populated by the time anything below is deleted.
+; $INSTDIR is real and populated before anything below is deleted.
 !macro customInstall
-  ; Unlike preInit, this runs in the middle of the install section, where
-  ; electron-builder's own code is using registers. Borrow and give back.
   Push $R7
   SetRegView 64
+
+  ; 1. Whatever the registry knew about, if anything.
   ReadRegStr $R7 HKCU "${INSTALL_REGISTRY_KEY}" DreamStaleInstallLocation
-  StrCmp $R7 "" doneStale
+  !insertmacro DreamRemoveStaleInstall "$R7"
+  DeleteRegValue HKCU "${INSTALL_REGISTRY_KEY}" DreamStaleInstallLocation
 
-  ; Never the directory we just installed into. If the two ever resolved to the
-  ; same path, deleting it would remove the install that is running.
-  StrCmp $R7 "$INSTDIR" clearStaleValue
+  ; 2. The names this app has shipped under. The registry did not name these on
+  ;    the machine where the duplicates were found, and nothing else will.
+  !insertmacro DreamRemoveStaleInstall "${DREAM_INSTALL_ROOT}\One Work"
+  !insertmacro DreamRemoveStaleInstall "${DREAM_INSTALL_ROOT}\1onecode"
 
-  ; Only remove something that is demonstrably one of our own installs. A path
-  ; read back from the registry is not enough on its own to justify RMDir /r —
-  ; app.asar is present in every Electron build we have ever shipped and in
-  ; almost nothing else, so its absence means leave the directory alone.
-  IfFileExists "$R7\resources\app.asar" 0 clearStaleValue
-    DetailPrint "Removing the previous installation at $R7"
-    RMDir /r "$R7"
-
-  clearStaleValue:
-    DeleteRegValue HKCU "${INSTALL_REGISTRY_KEY}" DreamStaleInstallLocation
-  doneStale:
   Pop $R7
 !macroend

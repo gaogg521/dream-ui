@@ -47,21 +47,42 @@ describe('installer.nsh takes over a stale install rather than sitting beside it
   });
 
   it('never removes the directory it just installed into', () => {
-    expect(NSH).toContain('StrCmp $R7 "$INSTDIR"');
+    expect(NSH).toContain('StrCmp "${DIR}" "$INSTDIR"');
   });
 
   it('only removes a directory that is demonstrably one of our installs', () => {
-    const guard = lineOf('IfFileExists "$R7\\resources\\app.asar"');
-    const remove = lineOf('RMDir /r "$R7"');
+    const guard = lineOf('IfFileExists "${DIR}\\resources\\app.asar"');
+    const remove = lineOf('RMDir /r "${DIR}"');
 
     expect(guard, 'the app.asar check is what makes RMDir /r defensible').toBeGreaterThan(-1);
     expect(remove).toBeGreaterThan(-1);
     expect(guard).toBeLessThan(remove);
   });
 
+  /**
+   * The registry path alone is not enough, and a real machine proved it: with
+   * "One Work", "onework" and "1onecode" all installed at 2.28 GB each,
+   * `InstallLocation` did not exist under either uninstall key and nothing
+   * pointed at the orphaned "One Work" directory. A cleanup that only reads
+   * the registry cannot find the directories it exists to remove.
+   */
+  it('also sweeps the names this app has actually shipped under', () => {
+    expect(NSH).toContain('${DREAM_INSTALL_ROOT}\\One Work');
+    expect(NSH).toContain('${DREAM_INSTALL_ROOT}\\1onecode');
+  });
+
+  it('routes every removal through the one guarded macro', () => {
+    // Exactly one RMDir in the file, so every caller inherits all three
+    // conditions instead of re-implementing two of them.
+    const removals = NSH.split('\n').filter((l) => l.includes('RMDir') && !l.trim().startsWith(';'));
+    expect(removals).toHaveLength(1);
+  });
+
   it('leaves the install directory converging on onework', () => {
     // The other half of the script's job, and the reason the overwrite exists
     // at all. Losing this would scatter installs across the old names again.
-    expect(NSH).toContain('$LOCALAPPDATA\\Programs\\onework');
+    expect(NSH).toContain('!define DREAM_INSTALL_ROOT "$LOCALAPPDATA\\Programs"');
+    expect(NSH).toContain('!define DREAM_TARGET_DIR "${DREAM_INSTALL_ROOT}\\onework"');
+    expect(NSH).toContain('InstallLocation "${DREAM_TARGET_DIR}"');
   });
 });
