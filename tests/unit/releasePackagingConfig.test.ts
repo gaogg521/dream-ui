@@ -210,4 +210,46 @@ ${prepareResult.stderr}`).not.toContain('::error::');
     },
     120000
   );
+  /**
+   * `scripts/pack-web-cli.js` owns the staging layout; `Dockerfile` and
+   * `scripts/smoke-test-docker.sh` each hardcode the same two paths
+   * independently. When the executable was renamed aionui-web -> dream-web
+   * (and aioncore -> dreamcore), the pack script and the Dockerfile were
+   * updated and the smoke test was not, so it aborted on a directory that no
+   * longer existed:
+   *
+   *   dist-web-cli/staging/aionui-web not found - run pack-web-cli.js first
+   *
+   * That is a red `Pack web-cli linux-x64` job on EVERY release tag, and it
+   * had been red since v3.0.0 - v3.0.1, v3.0.2 and v3.0.3 each failed there
+   * and nowhere else, taking `Create Release` (which needs the whole pipeline
+   * green) down with it. The tarball itself built fine every time; only the
+   * check after it was looking in the wrong place.
+   *
+   * Pinning the three files to each other is what makes the next rename a
+   * failing test instead of a failing release.
+   */
+  it('keeps the web-cli staging layout agreed across pack script, Dockerfile and smoke test', () => {
+    const pack = readProjectFile('scripts/pack-web-cli.js');
+    const dockerfile = readProjectFile('Dockerfile');
+    const smoke = readProjectFile('scripts/smoke-test-docker.sh');
+
+    // The one place the name is decided.
+    const stagingName = pack.match(/path\.join\(stagingDir,\s*'([^']+)'\)/)?.[1];
+    expect(stagingName).toBeTruthy();
+
+    // Both consumers must name that exact directory.
+    expect(dockerfile).toContain(`dist-web-cli/staging/${stagingName}/`);
+    expect(smoke).toContain(`dist-web-cli/staging/${stagingName}"`);
+
+    // And both must reach the backend binary by the same in-container path.
+    const backendDir = pack.match(/'(bundled-[a-z]+)'/)?.[1];
+    expect(backendDir).toBeTruthy();
+    expect(dockerfile).toContain(`./${backendDir}/linux-x64/`);
+    expect(smoke).toContain(`./${backendDir}/linux-x64/`);
+
+    // Guards the guard: the pre-rename names must not still be reachable.
+    expect(`${dockerfile}
+${smoke}`).not.toMatch(/aionui-web|bundled-aioncore/);
+  });
 });

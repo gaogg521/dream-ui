@@ -1,23 +1,23 @@
 #!/bin/bash
-# Build the Docker image from an already-staged aionui-web tree and verify
+# Build the Docker image from an already-staged dream-web tree and verify
 # the container actually serves the app end-to-end. This is the check that
 # would have caught the previous Dockerfile being broken from the day it was
 # added (it referenced a build script that had already been deleted, and
 # `docker build` was never run in CI to notice).
 #
 # Usage: scripts/smoke-test-docker.sh
-# Expects dist-web-cli/staging/aionui-web/ to already exist (see Dockerfile's
+# Expects dist-web-cli/staging/dream-web/ to already exist (see Dockerfile's
 # header comment / scripts/pack-web-cli.js).
 set -e
 
-STAGING_DIR="dist-web-cli/staging/aionui-web"
+STAGING_DIR="dist-web-cli/staging/dream-web"
 if [ ! -d "$STAGING_DIR" ]; then
   echo "❌ $STAGING_DIR not found — run scripts/pack-web-cli.js first"
   exit 1
 fi
 
-IMAGE_TAG="aionui-web:smoke-test"
-CONTAINER_NAME="aionui-web-smoke-test"
+IMAGE_TAG="dream-web:smoke-test"
+CONTAINER_NAME="dream-web-smoke-test"
 HOST_PORT=25810
 
 cleanup() {
@@ -109,7 +109,7 @@ echo "6. Verifying resetpass CLI works via docker exec (the operator escape hatc
 # immediately (before the `if` below ever runs) and prints nothing but a bare
 # "exit code N" — exactly what happened when the flag order above was still
 # wrong. `|| true` keeps the real output reachable for the diagnostic below.
-RESETPASS_OUT=$(docker exec "$CONTAINER_NAME" ./bundled-aioncore/linux-x64/aioncore --data-dir /data resetpass 2>&1) || true
+RESETPASS_OUT=$(docker exec "$CONTAINER_NAME" ./bundled-dreamcore/linux-x64/dreamcore --data-dir /data resetpass 2>&1) || true
 if ! echo "$RESETPASS_OUT" | grep -q "New password:"; then
   echo "❌ resetpass did not print a new password:"
   echo "$RESETPASS_OUT"
