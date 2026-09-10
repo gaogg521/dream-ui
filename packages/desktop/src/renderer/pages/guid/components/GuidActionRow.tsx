@@ -674,6 +674,11 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
             emptyText={t('settings.skillsHub.noSearchResults', { defaultValue: 'No matching skills.' })}
             isEmpty={filteredSkills.length === 0}
           >
+            {/* Plain divs, NOT Menu.Item: Arco's item wrapper imposes its own
+                row layout on children, which shattered the grid on the real
+                app (icons stripped from their cells, labels collapsed). The
+                popup is a flyout panel, not a keyboard menu — 144 entries make
+                arrow-key navigation moot anyway, and click handling is ours. */}
             <div
               className='grid grid-cols-3 gap-8px p-8px'
               role='listbox'
@@ -684,44 +689,48 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
                 const checked = isSkillChecked(skill);
                 const label = skill.display_name || skill.name;
                 return (
-                  <Menu.Item
+                  <div
                     key={`skill-${skill.name}`}
+                    role='option'
+                    aria-selected={checked}
+                    tabIndex={0}
+                    title={`${label} (${skill.name})`}
+                    data-testid={`guid-skill-cell-${skill.name}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleSkill(skill.name, skill.isAuto);
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onToggleSkill(skill.name, skill.isAuto);
+                      }
+                    }}
+                    className={`relative flex w-full cursor-pointer select-none flex-col items-center gap-6px rounded-10px border border-solid px-6px py-10px transition-colors ${
+                      checked
+                        ? 'border-primary-3 bg-primary-light-1'
+                        : 'border-transparent hover:border-border-2 hover:bg-fill-1'
+                    }`}
                   >
-                    <div
-                      role='option'
-                      aria-selected={checked}
-                      title={`${label} (${skill.name})`}
-                      data-testid={`guid-skill-cell-${skill.name}`}
-                      className={`relative flex w-full cursor-pointer select-none flex-col items-center gap-6px rounded-10px border border-solid px-6px py-10px transition-colors ${
-                        checked
-                          ? 'border-primary-3 bg-primary-light-1'
-                          : 'border-transparent hover:border-border-2 hover:bg-fill-1'
-                      }`}
-                    >
-                      {checked && (
-                        <span className='absolute right-4px top-4px flex h-14px w-14px items-center justify-center rounded-999px bg-primary-6 text-10px text-white'>
-                          ✓
-                        </span>
-                      )}
-                      {skill.icon_file ? (
-                        <img
-                          src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
-                          alt=''
-                          className='h-40px w-40px rounded-10px object-cover'
-                          loading='lazy'
-                        />
-                      ) : (
-                        <span className='flex h-40px w-40px items-center justify-center rounded-10px bg-fill-2 text-16px font-600 text-t-secondary'>
-                          {label.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                      <span className='w-full truncate text-center text-12px text-t-primary'>{label}</span>
-                    </div>
-                  </Menu.Item>
+                    {checked && (
+                      <span className='absolute right-4px top-4px flex h-14px w-14px items-center justify-center rounded-999px bg-primary-6 text-10px text-white'>
+                        ✓
+                      </span>
+                    )}
+                    {skill.icon_file ? (
+                      <img
+                        src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
+                        alt=''
+                        className='h-40px w-40px rounded-10px object-cover'
+                        loading='lazy'
+                      />
+                    ) : (
+                      <span className='flex h-40px w-40px items-center justify-center rounded-10px bg-fill-2 text-16px font-600 text-t-secondary'>
+                        {label.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <span className='w-full truncate text-center text-12px text-t-primary'>{label}</span>
+                  </div>
                 );
               })}
             </div>
