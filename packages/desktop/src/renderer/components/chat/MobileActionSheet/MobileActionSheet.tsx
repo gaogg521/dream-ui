@@ -266,7 +266,8 @@ const SubmenuSkillGrid: React.FC<{ sub: MobileActionSheetSubMenu }> = ({ sub }) 
         data-testid='mobile-sheet-sub-grid'
       >
         {filtered.map((option) => {
-          const label = typeof option.displayName === 'string' && option.displayName ? option.displayName : String(option.key);
+          const label =
+            typeof option.displayName === 'string' && option.displayName ? option.displayName : String(option.key);
           return (
             <button
               key={String(option.key)}
@@ -281,12 +282,7 @@ const SubmenuSkillGrid: React.FC<{ sub: MobileActionSheetSubMenu }> = ({ sub }) 
               }`}
             >
               {option.iconUrl ? (
-                <img
-                  src={option.iconUrl}
-                  alt=''
-                  className='h-32px w-32px rounded-999px object-cover'
-                  loading='lazy'
-                />
+                <img src={option.iconUrl} alt='' className='h-32px w-32px rounded-999px object-cover' loading='lazy' />
               ) : (
                 <span className='flex h-32px w-32px items-center justify-center rounded-999px bg-fill-2 text-14px font-600 text-t-secondary'>
                   {label.charAt(0).toUpperCase()}

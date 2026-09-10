@@ -21,7 +21,13 @@ import type { MarketplacePersona } from '@/common/types/agent/assistantTypes';
 
 const allSkills = [
   { name: 'fund-analysis', description: 'd', isAuto: false, display_name: '基金分析' },
-  { name: '12306-train-assistant', description: 'd', isAuto: false, display_name: '12306 订票助手', icon_file: '_icon.svg' },
+  {
+    name: '12306-train-assistant',
+    description: 'd',
+    isAuto: false,
+    display_name: '12306 订票助手',
+    icon_file: '_icon.svg',
+  },
   { name: 'wacli', description: 'd', isAuto: false },
 ];
 
@@ -36,10 +42,10 @@ vi.mock('@arco-design/web-react', () => {
   );
   const MenuItem = ({ children }: { children: React.ReactNode }) => <li role='menuitem'>{children}</li>;
   const MenuSubMenu = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
-  const Menu = Object.assign(
-    ({ children }: { children?: React.ReactNode }) => <ul>{children as React.ReactNode}</ul>,
-    { Item: MenuItem, SubMenu: MenuSubMenu }
-  );
+  const Menu = Object.assign(({ children }: { children?: React.ReactNode }) => <ul>{children as React.ReactNode}</ul>, {
+    Item: MenuItem,
+    SubMenu: MenuSubMenu,
+  });
   return {
     Checkbox,
     Menu,
@@ -53,7 +59,7 @@ vi.mock('@arco-design/web-react', () => {
       </button>
     ),
     Tooltip: ({ children, content }: { children: React.ReactNode; content?: React.ReactNode }) => (
-      <span data-testid="skill-tooltip">
+      <span data-testid='skill-tooltip'>
         {content as React.ReactNode}
         {children}
       </span>
@@ -162,9 +168,9 @@ describe('skills submenu presentation', () => {
     const imgs = [...container.querySelectorAll('[data-testid="guid-skills-grid"] img')];
     expect(imgs).toHaveLength(1);
     expect(imgs[0].getAttribute('src')).toBe('http://backend.test/api/skills/12306-train-assistant/icon');
-    const tiles = [
-      ...container.querySelectorAll('[data-testid="guid-skills-grid"] span'),
-    ].filter((s) => /w-28px/.test(s.className ?? ''));
+    const tiles = [...container.querySelectorAll('[data-testid="guid-skills-grid"] span')].filter((s) =>
+      /w-28px/.test(s.className ?? '')
+    );
     expect(tiles.map((t) => t.textContent?.trim())).toContain('基');
     expect(tiles.map((t) => t.textContent?.trim())).toContain('W');
   });
