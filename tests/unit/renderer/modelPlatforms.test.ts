@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_PLATFORM_VALUE, MODEL_PLATFORMS } from '@renderer/utils/model/modelPlatforms';
+import { DEFAULT_PLATFORM_VALUE, MODEL_PLATFORMS, platformNeedsApiKey } from '@renderer/utils/model/modelPlatforms';
 
 describe('MODEL_PLATFORMS ordering', () => {
   it('keeps Custom first and pins both Moonshot entries right after it', () => {
@@ -31,5 +31,37 @@ describe('MODEL_PLATFORMS ordering', () => {
       'https://api.moonshot.cn/v1',
       'https://api.moonshot.ai/v1',
     ]);
+  });
+});
+
+describe('platformNeedsApiKey', () => {
+  it('exempts exactly the platforms that authenticate some other way', () => {
+    // Bedrock's credentials live in bedrock_config; a local Ollama daemon has
+    // none at all. These two, and only these two, are what the backend's
+    // `platform_authenticates_without_api_key` exempts.
+    expect(platformNeedsApiKey('bedrock')).toBe(false);
+    expect(platformNeedsApiKey('ollama')).toBe(false);
+  });
+
+  it('requires a key for Gemini and Vertex', () => {
+    // The regression this pins: the Add-Platform refresh button used to wave
+    // both Gemini variants past its "please enter an API key" warning, while
+    // the model-list hook still gated them on a key. Neither path ran, so the
+    // click did nothing and said nothing. The backend needs the key either
+    // way — it appends `?key=` to the Gemini model request, and neither
+    // variant appears in its exemption list.
+    expect(platformNeedsApiKey('gemini')).toBe(true);
+    expect(platformNeedsApiKey('gemini-vertex-ai')).toBe(true);
+  });
+
+  it('requires a key for ordinary HTTP platforms', () => {
+    expect(platformNeedsApiKey('custom')).toBe(true);
+    expect(platformNeedsApiKey('new-api')).toBe(true);
+  });
+
+  it('errs toward asking when the platform is not yet chosen', () => {
+    // The form calls this before a platform is selected. Answering "no key
+    // needed" there would suppress the warning for every platform.
+    expect(platformNeedsApiKey(undefined)).toBe(true);
   });
 });

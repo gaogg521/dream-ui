@@ -25,8 +25,8 @@ import {
   detectNewApiProtocol,
   getPlatformByValue,
   isCustomOption,
-  isGeminiPlatform,
   isNewApiPlatform,
+  platformNeedsApiKey,
   type PlatformConfig,
 } from '@/renderer/utils/model/modelPlatforms';
 import { ProviderLogo } from '@/renderer/components/agent/ThemedLogo';
@@ -228,7 +228,6 @@ const AddPlatformModal = ModalHOC<{
   const isCustom = isCustomOption(platformValue);
   const isBedrock = platform === 'bedrock';
   const isOllama = platform === 'ollama';
-  const isGemini = isGeminiPlatform(platform);
   const isNewApi = isNewApiPlatform(platform);
 
   // new-api 每模型协议选择状态 / new-api per-model protocol selection state
@@ -357,7 +356,7 @@ const AddPlatformModal = ModalHOC<{
           // 优先使用用户输入的 base_url，否则使用平台预设值
           // Prefer user input base_url, fallback to platform preset
           base_url: isBedrock ? '' : values.base_url || selectedPlatform?.base_url || '',
-          api_key: isBedrock || isOllama ? '' : values.api_key,
+          api_key: platformNeedsApiKey(platform) ? values.api_key : '',
           // The model Select is multi-select: values.model is a string[], but
           // keep the single-value fallback for safety.
           models: Array.isArray(values.model) ? values.model : [values.model],
@@ -526,10 +525,10 @@ const AddPlatformModal = ModalHOC<{
           {/* API Key — hidden for Bedrock (uses AWS credentials) and Ollama
               (a local daemon has no credentials at all) */}
           <Form.Item
-            hidden={isBedrock || isOllama}
+            hidden={!platformNeedsApiKey(platform)}
             label={t('settings.apiKey')}
-            required={!isBedrock && !isOllama}
-            rules={[{ required: !isBedrock && !isOllama }]}
+            required={platformNeedsApiKey(platform)}
+            rules={[{ required: platformNeedsApiKey(platform) }]}
             field={'api_key'}
             extra={
               <div className='space-y-2px'>
@@ -705,9 +704,19 @@ const AddPlatformModal = ModalHOC<{
                         }
                         return;
                       }
-                      // Gemini and Ollama need no api_key — a local Ollama
-                      // daemon is identified by its base_url alone.
-                      if (!isGemini && !isOllama && !api_key) {
+                      // Only Ollama needs no api_key — a local daemon is
+                      // identified by its base_url alone, which is why
+                      // `useModeModeList` gates it on the URL instead.
+                      //
+                      // Gemini used to be waved through here too, but it does
+                      // need a key: the backend appends `?key=` to the model
+                      // request, and `useModeModeList` gates every platform
+                      // except Bedrock and Ollama on `api_key`. So the
+                      // exemption skipped this warning and then the fetch did
+                      // not run either — the click did nothing at all, with no
+                      // message to say why. (Bedrock never reaches this line;
+                      // it returns from its own branch above.)
+                      if (platformNeedsApiKey(platform) && !api_key) {
                         message.warning(t('settings.pleaseEnterApiKey'));
                         return;
                       }
