@@ -34,6 +34,9 @@ const hooks = vi.hoisted(() => ({
   getEnterpriseServerUrl: vi.fn(),
   emitterEmit: vi.fn(),
   clearEnterpriseUpstream: vi.fn(),
+  syncToolSecurityPolicy: vi.fn(),
+  syncSendPolicy: vi.fn(),
+  syncTeamMemory: vi.fn(),
 }));
 
 vi.mock('@/common', () => ({
@@ -56,6 +59,9 @@ vi.mock('@/common', () => ({
       syncModelChannels: { invoke: hooks.syncModelChannels },
       setContentInspectionRules: { invoke: hooks.setContentInspectionRules },
       clearEnterpriseUpstream: { invoke: hooks.clearEnterpriseUpstream },
+      syncToolSecurityPolicy: { invoke: hooks.syncToolSecurityPolicy },
+      syncSendPolicy: { invoke: hooks.syncSendPolicy },
+      syncTeamMemory: { invoke: hooks.syncTeamMemory },
     },
   },
 }));
@@ -102,6 +108,65 @@ beforeEach(() => {
   hooks.setContentInspectionRules.mockResolvedValue(undefined);
   hooks.syncTeamAgents.mockResolvedValue({ written: [], removed: [], kept: 0 });
   hooks.clearEnterpriseUpstream.mockResolvedValue(undefined);
+  hooks.syncToolSecurityPolicy.mockResolvedValue(undefined);
+  hooks.syncSendPolicy.mockResolvedValue(undefined);
+  hooks.syncTeamMemory.mockResolvedValue(undefined);
+});
+
+/**
+ * Everything `useTeamResourceSync`'s `syncAll` pushes down, and therefore
+ * everything leaving has to take back.
+ *
+ * Kept as an explicit list because the two halves live in different files and
+ * drifted once already: the three policies added with the C0-1/C1-1 work were
+ * wired into `syncAll` and not into the purge, so an ex-employer's
+ * destructive-command block, send rate limit, model allowlist and memory items
+ * outlived the membership. Nothing surfaced it — the disconnect toggle only
+ * reloads the renderer, the co-located backend holds all three in memory until
+ * the app fully restarts, and by then the enterprise UI is gone and no screen
+ * explains why terminal commands are refused or company memory keeps
+ * surfacing. The disconnect dialog meanwhile promises "本机个人数据不受影响".
+ */
+const PURGE_SINKS: ReadonlyArray<[string, () => ReturnType<typeof vi.fn>]> = [
+  ['team skills', () => hooks.syncTeamSkills],
+  ['team MCP', () => hooks.syncTeamMcp],
+  ['model channels', () => hooks.syncModelChannels],
+  ['team agents', () => hooks.syncTeamAgents],
+  ['content inspection rules', () => hooks.setContentInspectionRules],
+  ['company-server channel', () => hooks.clearEnterpriseUpstream],
+  ['tool-call security policy', () => hooks.syncToolSecurityPolicy],
+  ['send policy', () => hooks.syncSendPolicy],
+  ['team memory', () => hooks.syncTeamMemory],
+];
+
+describe('leaving the enterprise takes back everything it pushed', () => {
+  it('clears every sink syncAll writes to', async () => {
+    const { clearTeamResources } = await import('@renderer/utils/enterprise/teamSkillSync');
+
+    await clearTeamResources();
+
+    const untouched = PURGE_SINKS.filter(([, sink]) => sink().mock.calls.length === 0).map(([name]) => name);
+    expect(untouched).toEqual([]);
+  });
+
+  it('clears the two policies to their permissive value, not a lockout', async () => {
+    const { clearTeamResources } = await import('@renderer/utils/enterprise/teamSkillSync');
+
+    await clearTeamResources();
+
+    // An all-false tool policy and a null/empty send policy are the
+    // unrestricted state — `dream_core_system::send_policy` is explicit that
+    // "Empty is unrestricted". Clearing to anything else would leave a
+    // departed member locked out of their own machine.
+    expect(hooks.syncToolSecurityPolicy).toHaveBeenCalledWith({
+      destructiveCommandsBlocked: false,
+      blockedCommandPatterns: [],
+      externalNetworkDeniedByDefault: false,
+      terminalToolsRequireApproval: false,
+    });
+    expect(hooks.syncSendPolicy).toHaveBeenCalledWith({ sendRateLimitPerMinute: null, allowedModels: [] });
+    expect(hooks.syncTeamMemory).toHaveBeenCalledWith({ recallEnabled: false, items: [] });
+  });
 });
 
 describe('team resources when membership is refused', () => {
