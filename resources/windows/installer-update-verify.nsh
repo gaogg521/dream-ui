@@ -201,10 +201,39 @@ Var /GLOBAL AionUiActiveMarkerResult
   ${EndIf}
 !macroend
 
+; Remove an install directory that nothing else can.
+;
+; `executableName` went 1onecode -> One Work -> onework, and NSIS derives the
+; install directory from it, so each rename installed a fresh copy beside the
+; last. Measured on a real machine mid-upgrade: all three present under
+; Programs at 2.28 GB each.
+;
+; Only "One Work" is swept. On that machine it had no uninstall entry of any
+; kind — nothing in HKCU or HKLM pointed at it — so nothing else will ever
+; remove it. "1onecode" still has a working entry under an older appId;
+; deleting its files would turn a working Add/Remove Programs entry into one
+; that fails when clicked, which is worse than leaving it.
+;
+; Runs from customInstall, after the new version's files are verified in place,
+; so $INSTDIR is real before anything is deleted.
+!macro DREAM_REMOVE_ORPHANED_INSTALLS
+  Push $R7
+  StrCpy $R7 "$LOCALAPPDATA\Programs\One Work"
+  ; Three conditions, all required. Being on the list is not on its own a
+  ; reason to RMDir /r a directory on someone's disk.
+  StrCmp $R7 "$INSTDIR" dreamOrphanDone
+  IfFileExists "$R7\resources\app.asar" 0 dreamOrphanDone
+    !insertmacro AIONUI_LOG_EVENT "orphaned-install-remove path=$R7"
+    RMDir /r "$R7"
+  dreamOrphanDone:
+  Pop $R7
+!macroend
+
 !macro customInstall
   !insertmacro AIONUI_VERIFY_CORE_APP_FILES
   !insertmacro AIONUI_VERIFY_BUNDLED_AIONCORE_RESOURCES "${AIONUI_RUNTIME_KEY}"
   !insertmacro AIONUI_LOG_EVENT "verify-install ok instDir=$INSTDIR"
+  !insertmacro DREAM_REMOVE_ORPHANED_INSTALLS
   !insertmacro AIONUI_CLEAR_ACTIVE_INSTALLER_MARKER
   !insertmacro AIONUI_SESSION_SUCCESS
 !macroend
