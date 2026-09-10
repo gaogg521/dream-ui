@@ -1,4 +1,5 @@
 import { ipcBridge } from '@/common';
+import { resolveExtensionAssetUrl } from '@/renderer/utils/platform';
 import type { Assistant } from '@/common/types/agent/assistantTypes';
 import { Button, Checkbox, Message, Modal } from '@arco-design/web-react';
 import { Delete, Lightning, Puzzle, Search, Refresh } from '@icon-park/react';
@@ -29,6 +30,10 @@ interface SkillInfo {
   /** Enterprise category (C2-2), read from the SKILL.md frontmatter of team skills. */
   category?: string;
   tags?: string[];
+  /** Human-facing display name from SKILL.md frontmatter (often CJK). Display-only. */
+  display_name?: string;
+  /** Icon file beside SKILL.md, served at `GET /api/skills/{name}/icon`. Display-only. */
+  icon_file?: string;
 }
 
 const isAutoInjectedBuiltinSkill = (skill: SkillInfo) => skill.source === 'builtin' && skill.is_auto_inject;
@@ -833,16 +838,32 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                           </div>
                         )}
                         <div className='shrink-0 flex items-start sm:mt-2px'>
-                          <div
-                            className={`w-40px h-40px rd-10px flex items-center justify-center font-bold text-16px shadow-sm text-transform-uppercase ${getAvatarColorClass(skill.name)}`}
-                          >
-                            {skill.name.charAt(0).toUpperCase()}
-                          </div>
+                          {skill.icon_file ? (
+                            <img
+                              src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
+                              alt=''
+                              className='w-40px h-40px rd-10px object-cover shadow-sm'
+                              loading='lazy'
+                            />
+                          ) : (
+                            <div
+                              className={`w-40px h-40px rd-10px flex items-center justify-center font-bold text-16px shadow-sm text-transform-uppercase ${getAvatarColorClass(skill.name)}`}
+                            >
+                              {(skill.display_name || skill.name).charAt(0).toUpperCase()}
+                            </div>
+                          )}
                         </div>
 
                         <div className='flex-1 min-w-0 flex flex-col justify-center gap-6px'>
                           <div className='flex items-center gap-10px flex-wrap'>
-                            <h3 className='text-14px font-semibold text-t-primary/90 truncate m-0'>{skill.name}</h3>
+                            <h3 className='text-14px font-semibold text-t-primary/90 truncate m-0'>
+                              {skill.display_name || skill.name}
+                            </h3>
+                            {skill.display_name && skill.display_name !== skill.name && (
+                              <span className='text-11px text-t-tertiary font-mono truncate' title={skill.name}>
+                                {skill.name}
+                              </span>
+                            )}
                             {skill.source === 'custom' ? (
                               <span className='bg-[rgba(var(--orange-6),0.08)] text-orange-6 border border-[rgba(var(--orange-6),0.2)] text-11px px-6px py-1px rd-4px font-medium'>
                                 {t('settings.skillsHub.custom', { defaultValue: 'Custom' })}
