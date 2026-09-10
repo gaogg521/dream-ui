@@ -186,6 +186,14 @@
       "diagnosticsSent": "Diagnostics sent",
       "diagnosticsReportSuccess": "Diagnostics reported",
       "diagnosticsReportFailed": "Failed to send diagnostics, please retry"
+    },
+    "runtimeCrashed": {
+      "title": "Background service stopped",
+      "description": "One Work's local background service kept exiting, so it stopped retrying. Please restart the app; if this keeps happening, please send diagnostics.",
+      "sendDiagnostics": "Send diagnostics",
+      "diagnosticsSent": "Diagnostics sent",
+      "diagnosticsReportSuccess": "Diagnostics reported",
+      "diagnosticsReportFailed": "Failed to send diagnostics, please retry"
     }
   },
   "fileAttach.addFiles": "Add files",

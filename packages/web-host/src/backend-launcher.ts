@@ -183,6 +183,33 @@ export type BackendStartOptions = {
    * processes, and a host that cannot do it simply fails as before.
    */
   onPeerRetriesExhausted?: () => Promise<unknown>;
+  /**
+   * The backend started, ran, and then crashed often enough to exhaust its
+   * restart budget. Everything above this line is about a start that never
+   * completed; this fires for a session that WAS working.
+   *
+   * Without a host that surfaces it, this state is invisible: the manager sets
+   * an internal `error` status that nothing reads, writes one console line,
+   * and stops — leaving a window that looks fine and fails every action, with
+   * no hint that the fix is to restart the app. The budget is three crashes in
+   * sixty seconds with 1s/2s/4s backoff, so a hard crash loop reaches it in
+   * about seven seconds.
+   *
+   * Fires on either way the recovery ends: the budget running out, or a
+   * scheduled restart failing to come back up. The second is the common one —
+   * `handleCrash` only runs while the status is `running`, and a restart that
+   * DOES come up resets the counter, so a backend that cannot restart reaches
+   * `restart after crash failed` long before it reaches the budget.
+   *
+   * Optional by design, like `onPeerRetriesExhausted`: a host with no user to
+   * tell simply keeps the old logged-and-dropped behaviour.
+   */
+  onRestartLimitExceeded?: (context: {
+    exitCode?: number;
+    signal?: string;
+    restartCount: number;
+    reason: 'restart_limit_exceeded' | 'restart_failed';
+  }) => void;
 };
 
 export class BackendStartupError extends Error {
@@ -1111,6 +1138,26 @@ export class BackendLifecycleManager {
     });
   }
 
+  /**
+   * Hand the host a backend that is not coming back, exactly once per death.
+   *
+   * Both call sites are terminal, but they can only be reached one at a time,
+   * and a host that throws here must not add an unhandled rejection on top of
+   * an already-dead backend.
+   */
+  private notifyBackendDead(context: {
+    exitCode?: number;
+    signal?: string;
+    restartCount: number;
+    reason: 'restart_limit_exceeded' | 'restart_failed';
+  }): void {
+    try {
+      this._lastOptions?.onRestartLimitExceeded?.(context);
+    } catch (error) {
+      console.error('[dreamcore] onRestartLimitExceeded threw', getErrorMessage(error));
+    }
+  }
+
   private handleCrash(code: number | null, signal?: NodeJS.Signals | string | null): void {
     const now = Date.now();
     if (now - this.restartWindowStart > this.restartWindowMs) {
@@ -1130,6 +1177,12 @@ export class BackendLifecycleManager {
     if (this.restartCount > this.maxRestarts) {
       this._status = 'error';
       console.error('[dreamcore] child exited unexpectedly; restart limit exceeded', crashContext);
+      this.notifyBackendDead({
+        exitCode: code ?? undefined,
+        signal: signal == null ? undefined : String(signal),
+        restartCount: this.restartCount,
+        reason: 'restart_limit_exceeded',
+      });
       return;
     }
 
@@ -1156,6 +1209,16 @@ export class BackendLifecycleManager {
             maxRestarts: this.maxRestarts,
             delayMs: delay,
             error: getErrorMessage(error),
+          });
+          // The recovery is over and it did not work. This is the path a real
+          // crash loop takes — the budget is almost never what stops it,
+          // because a restart that succeeds resets the counter and one that
+          // fails lands here on the first try.
+          this.notifyBackendDead({
+            exitCode: code ?? undefined,
+            signal: signal == null ? undefined : String(signal),
+            restartCount: this.restartCount,
+            reason: 'restart_failed',
           });
         });
     }, delay);

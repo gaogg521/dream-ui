@@ -184,6 +184,14 @@
       "diagnosticsSent": "Diagnose gesendet",
       "diagnosticsReportSuccess": "Diagnose gemeldet",
       "diagnosticsReportFailed": "Diagnose konnte nicht gesendet werden, bitte erneut versuchen"
+    },
+    "runtimeCrashed": {
+      "title": "Hintergrunddienst wurde beendet",
+      "description": "Der lokale Hintergrunddienst von One Work wurde wiederholt beendet, daher wurden weitere Versuche eingestellt. Bitte starten Sie die App neu; wenn das weiterhin passiert, senden Sie bitte eine Diagnose.",
+      "sendDiagnostics": "Diagnose senden",
+      "diagnosticsSent": "Diagnose gesendet",
+      "diagnosticsReportSuccess": "Diagnose gemeldet",
+      "diagnosticsReportFailed": "Diagnose konnte nicht gesendet werden, bitte erneut versuchen"
     }
   },
   "fileAttach.addFiles": "Dateien hinzufügen",

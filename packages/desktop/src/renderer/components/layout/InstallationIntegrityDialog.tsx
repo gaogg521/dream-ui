@@ -17,6 +17,7 @@ type InstallationIntegrityDialogKind =
   | 'startup_directory'
   | 'backend_exited'
   | 'port_report_timeout'
+  | 'runtime_crashed'
   | 'startup_failed';
 
 export type InstallationIntegrityDiagnostics = {
@@ -75,6 +76,7 @@ const DIALOG_KIND_CONFIG: Record<
   startup_directory: { i18nSection: 'startupDirectory', showDiagnostics: true },
   backend_exited: { i18nSection: 'exited', showDiagnostics: true },
   port_report_timeout: { i18nSection: 'portReportTimeout', showDiagnostics: true },
+  runtime_crashed: { i18nSection: 'runtimeCrashed', showDiagnostics: true, showDiagnosticsHint: true },
   startup_failed: { i18nSection: 'startupFailed', showDiagnostics: true },
 };
 

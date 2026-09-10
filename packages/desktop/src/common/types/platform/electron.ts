@@ -50,6 +50,14 @@ export type BackendStartupFailureReason =
   // so this is a fatal-but-honest "startup timed out" — never an "incomplete
   // installation" (Sentry 136646113).
   | 'backend_startup_port_report_timeout'
+  // The backend started, served normally, and then died at runtime often
+  // enough to exhaust its restart budget (3 crashes inside 60s). Distinct from
+  // every reason above, which are all about a start that never completed: this
+  // one names a session that WAS working, so the copy must not say "startup
+  // did not finish". Until this existed the case reached no surface at all —
+  // `handleCrash` set an internal status nothing read, logged one line, and
+  // returned, leaving a window that looked fine and failed every action.
+  | 'backend_runtime_crashed'
   | 'backend_startup_failed';
 
 export type BackendIncompleteInstallationKind = 'missing_backend_binary' | 'missing_directory_resources';

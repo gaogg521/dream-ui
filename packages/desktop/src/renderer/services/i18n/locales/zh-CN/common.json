@@ -186,6 +186,14 @@
       "diagnosticsSent": "诊断已发送",
       "diagnosticsReportSuccess": "诊断信息已上报",
       "diagnosticsReportFailed": "诊断上报失败，请稍后重试"
+    },
+    "runtimeCrashed": {
+      "title": "后台服务已停止",
+      "description": "One Work 的本地后台服务反复退出，已停止重试。请重启应用；若反复出现，请发送诊断信息。",
+      "sendDiagnostics": "发送诊断",
+      "diagnosticsSent": "诊断已发送",
+      "diagnosticsReportSuccess": "诊断信息已上报",
+      "diagnosticsReportFailed": "诊断上报失败，请稍后重试"
     }
   },
   "fileAttach.addFiles": "添加文件",

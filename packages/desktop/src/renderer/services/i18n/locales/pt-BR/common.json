@@ -185,6 +185,14 @@
       "diagnosticsSent": "Diagnóstico enviado",
       "diagnosticsReportSuccess": "Diagnóstico enviado",
       "diagnosticsReportFailed": "Falha ao enviar o diagnóstico, tente novamente"
+    },
+    "runtimeCrashed": {
+      "title": "O serviço em segundo plano parou",
+      "description": "O serviço local em segundo plano do One Work encerrou repetidamente, então parou de tentar novamente. Reinicie o aplicativo; se continuar acontecendo, envie um diagnóstico.",
+      "sendDiagnostics": "Enviar diagnóstico",
+      "diagnosticsSent": "Diagnóstico enviado",
+      "diagnosticsReportSuccess": "Diagnóstico enviado",
+      "diagnosticsReportFailed": "Falha ao enviar o diagnóstico, tente novamente"
     }
   },
   "fileAttach.addFiles": "Adicionar arquivos",
