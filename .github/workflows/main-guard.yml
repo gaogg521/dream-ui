@@ -1,0 +1,96 @@
+name: Main Guard
+
+# The gate `main` did not have.
+#
+# `Build and Release` triggers on tags and the `dev` branch; `pr-checks`
+# triggers on pull requests. This repo is worked trunk-only, pushing straight
+# to `main`, so neither ever fired for ordinary work and nothing checked a
+# commit until a release tag did — a whole release cycle later, at which point
+# the tag fails and the cycle is spent. Three breakages reached `main` that way
+# in a single day: oxfmt drift twice (each one blocking every platform, because
+# `format:check` runs before any build starts), two failing `GuidActionRow`
+# tests, and a mock left stale by the change to the code it mocked.
+#
+# The `.husky/pre-push` hook catches most of this in ~40s before the push. This
+# is the half a hook cannot be:
+#   - it cannot be skipped with `--no-verify`;
+#   - it runs the FULL vitest suite, which is far too slow for a hook;
+#   - it runs on Linux, and a Windows machine cannot compile `#[cfg(unix)]`
+#     code or see a lint that only fires there. Two Windows-green /
+#     Linux-red bugs shipped to `main` this way, one of them in a test whose
+#     fixtures agreed with themselves only on Windows.
+#
+# Deliberately NOT a build: no installers, no signing, no artifacts. Those cost
+# tens of minutes and belong to the release tag. This answers one question —
+# "is `main` in a state a release tag could be cut from?" — in about five.
+
+on:
+  push:
+    branches: [main]
+    # Docs-only pushes cannot break a build gate, and paying five runner
+    # minutes for a typo fix is how a gate earns a reputation for being noise.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+  workflow_dispatch:
+
+# A newer push supersedes an older one still running: only the tip of `main`
+# matters here, and the intermediate answer is never acted on.
+concurrency:
+  group: main-guard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run postinstall
+        run: bun run postinstall || true
+
+      - name: Run ESLint
+        run: bun run lint
+
+      - name: Check formatting
+        run: bun run format:check
+
+      - name: TypeScript type check
+        run: bunx tsc --noEmit
+
+      # Not in the release pipeline's own code-quality job, and it should be:
+      # a locale file that fails this renders raw keys to users, which no other
+      # gate here would notice.
+      - name: i18n consistency
+        run: |
+          bun run i18n:types
+          node scripts/check-i18n.js
+          # `i18n:types` regenerates a checked-in file. If that produces a diff,
+          # the committed types are stale — the exact state check-i18n's own
+          # sync check exists to catch, but only for what it knows to compare.
+          git diff --exit-code -- packages/desktop/src/renderer/services/i18n/i18n-keys.d.ts
+
+      # The whole suite, which the pre-push hook cannot afford to run.
+      #
+      # Judge the counts, not just the exit code: vitest exits 0 with a passing
+      # summary even when whole files never ran, because their worker failed to
+      # start under CPU contention. See AGENTS.md.
+      - name: Unit tests
+        run: bunx vitest run
