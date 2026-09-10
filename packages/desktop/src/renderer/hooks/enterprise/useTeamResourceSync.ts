@@ -10,10 +10,11 @@
  * to the server (which already holds the registry), so we skip them.
  */
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Message } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
+import { ipcBridge } from '@/common';
 import { isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
 import { ENTERPRISE_RESOURCES_MARKER } from '@renderer/utils/enterprise/teamSkillSync';
 import { isElectronDesktop } from '@renderer/utils/platform';
@@ -34,12 +35,65 @@ import { fulfilAuditUploadRequests } from '@renderer/utils/enterprise/conversati
 
 const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 
+/**
+ * Whether the local backend still holds model channels the company issued.
+ *
+ * `managed_by === 'enterprise'` is set by the backend when it materializes a
+ * company channel and is the same marker its own purge deletes on, so this asks
+ * exactly the question the purge answers. Unreachable backend → `false`: a
+ * failed probe must not be read as "nothing to clean", but it must not stall
+ * personal mode either, and the marker path still covers the ordinary case.
+ */
+async function backendHoldsCompanyProviders(): Promise<boolean> {
+  try {
+    const providers = (await ipcBridge.mode.listProviders.invoke()) ?? [];
+    return providers.some((p) => p.managed_by === 'enterprise');
+  } catch {
+    return false;
+  }
+}
+
 export function useTeamResourceSync(): void {
   const { t } = useTranslation();
   const { context, loading } = useOrgContext();
   const isEnterprise = context?.isEnterprise ?? false;
   /** Whether the previous render resolved as enterprise — see the purge below. */
   const wasEnterprise = useRef(false);
+
+  /**
+   * Take back the company's materialized resources, on evidence rather than on
+   * a remembered flag.
+   *
+   * The marker alone used to be the whole trigger, and it failed both ways.
+   *
+   * It could be missing while the resources are not: rows written by a build
+   * from before the marker existed, a cleared site storage, a different
+   * renderer profile. The machine then held enterprise-issued model channels —
+   * complete with the company's API key, visible in the personal workspace's
+   * model list under an 「企业下发」 badge — with nothing left that could ever
+   * decide to remove them. That is how a leaked key outlives the membership.
+   *
+   * And it was consumed before the work it guarded had happened: the marker was
+   * removed, then a fire-and-forget purge was started. A purge that failed took
+   * its own retry with it.
+   *
+   * So: ask the backend, which is where the answer actually lives, and clear
+   * the marker only once the purge has come back. The marker stays as the cheap
+   * path — it answers without a round trip in the common case — but it is no
+   * longer the only evidence that counts.
+   */
+  const purgeMaterializedEnterpriseResources = useCallback(async () => {
+    try {
+      if (!localStorage.getItem(ENTERPRISE_RESOURCES_MARKER) && !(await backendHoldsCompanyProviders())) {
+        return;
+      }
+      await clearTeamResources();
+      localStorage.removeItem(ENTERPRISE_RESOURCES_MARKER);
+    } catch {
+      // Keep the marker: leaving it set means the next personal-mode start
+      // tries again, which is the failure mode worth having.
+    }
+  }, []);
 
   // C1-2: `teamSkillSync.ts` is a plain module with no React/i18n context, so
   // it emits this event (at most once per sync cycle — see the emit site)
@@ -64,8 +118,7 @@ export function useTeamResourceSync(): void {
     if (loading) return;
     if (!isEnterprise && wasEnterprise.current) {
       wasEnterprise.current = false;
-      localStorage.removeItem(ENTERPRISE_RESOURCES_MARKER);
-      void clearTeamResources();
+      void purgeMaterializedEnterpriseResources();
       return;
     }
     if (!isEnterprise) {
@@ -73,16 +126,13 @@ export function useTeamResourceSync(): void {
       // mode and reloads the app, so the in-memory leaving transition above
       // never sees it — a fresh mount has no "was enterprise" to compare
       // against, and an enterprise-issued model channel survived the switch
-      // back to the personal workspace exactly that way. The marker does
-      // survive: it is set for as long as this machine holds materialized
-      // enterprise resources, and consumed here.
+      // back to the personal workspace exactly that way.
       //
       // Gated on enterprise mode being explicitly OFF. A server that is
       // merely unreachable keeps enabled=true, and its offline cache must
       // stay — an unreachable server must never read as a purge instruction.
-      if (!isEnterpriseModeEnabled() && isElectronDesktop() && localStorage.getItem(ENTERPRISE_RESOURCES_MARKER)) {
-        localStorage.removeItem(ENTERPRISE_RESOURCES_MARKER);
-        void clearTeamResources();
+      if (!isEnterpriseModeEnabled() && isElectronDesktop()) {
+        void purgeMaterializedEnterpriseResources();
       }
       return;
     }
