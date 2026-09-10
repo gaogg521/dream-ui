@@ -12,6 +12,10 @@ export type SkillInfo = {
   is_auto_inject: boolean;
   is_custom: boolean;
   source: SkillSource;
+  /** Human-facing display name from SKILL.md frontmatter (often CJK). Display-only; `name` is the identity. */
+  display_name?: string;
+  /** Icon file beside SKILL.md, served at `GET /api/skills/{name}/icon`. Display-only. */
+  icon_file?: string;
 };
 
 // External source type

@@ -40,6 +40,8 @@ interface SkillInfo {
   is_auto_inject: boolean;
   is_custom: boolean;
   source?: 'builtin' | 'custom' | 'cron' | 'extension' | 'team';
+  display_name?: string;
+  icon_file?: string;
 }
 
 const getAvatarColorClass = (name: string) => {
