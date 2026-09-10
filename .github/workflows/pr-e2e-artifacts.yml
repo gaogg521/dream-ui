@@ -44,6 +44,11 @@ jobs:
 
       - name: Install Linux display dependencies (E2E)
         run: |
+          # Same reason as _build-reusable.yml's Linux deps step: the runner
+          # pre-registers Google's Chrome apt repo, whose CDN intermittently
+          # serves an index with a mismatched hash, and `apt-get update` treats
+          # that as fatal. Nothing here needs that repo.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.sources
           sudo apt-get update
           sudo apt-get install -y libgbm-dev xvfb
 
