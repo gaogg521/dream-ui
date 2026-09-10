@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./resources/logo透明底.png" alt="One Work" height="120">
+
 # One Work
 
 **又快 · 又安全 · 还省钱**
@@ -9,6 +11,10 @@
 <br>
 
 <img src="./resources/首页.png" alt="One Work 工作台" width="960">
+
+<br>
+
+<img src="./resources/首页2.png" alt="One Work 工作台 · 文生图" width="960">
 
 <br>
 
@@ -41,7 +47,7 @@
 
 ---
 
-## 五大优势
+## 核心优势
 
 > 速度快 · 隐私安全 · 省钱 · **官方 CLI 一键桥接** · 本地化部署 —— 这五件事，决定了 One Work 不是「又一个聊天窗口」。
 
@@ -138,6 +144,30 @@ WebUI 局域网 / 内网部署，配合 Issues 审计、数字员工与**离线�
 </tr>
 </table>
 
+<br>
+
+<table>
+<tr>
+<td width="120" align="center"><h2>06</h2><strong>企业版</strong></td>
+<td>
+
+### 企业管理后台 · 组织 / SSO / 审计
+
+内网私有化后，用企业管理后台管成员、组织架构、模型通道、SSO 与授权。数据与 Key 仍落在企业自己的服务器。
+
+`企业管理后台` · `SSO / 飞书登录` · `离线授权`
+
+<p align="center">
+  <img src="./resources/企业版后台登录.png" alt="One Work 企业版后台登录" width="100%">
+</p>
+<p align="center">
+  <img src="./resources/企业版后台-1.png" alt="One Work 企业管理后台首页" width="100%">
+</p>
+
+</td>
+</tr>
+</table>
+
 ---
 
 ## v3.0 · 装好就能聊
@@ -145,7 +175,7 @@ WebUI 局域网 / 内网部署，配合 Issues 审计、数字员工与**离线�
 首次启动 **一键启用内置免费模型**，无需先填 API Key。22 位官方助手 + 252 位行业专家编译期内置，断网也有完整目录。
 
 <p align="center">
-  <img src="./resources/3.0开箱即用-3.png" alt="v3.0 开箱即用" width="720">
+  <img src="./resources/3.0开箱即用-1.png" alt="v3.0 开箱即用" width="720">
 </p>
 
 ---
