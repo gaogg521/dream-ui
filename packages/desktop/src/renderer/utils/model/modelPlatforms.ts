@@ -375,6 +375,25 @@ export const isGeminiPlatform = (platform: PlatformType): boolean => {
 };
 
 /**
+ * 该平台是否用 API Key 认证
+ * Whether this platform authenticates with a bearer API key
+ *
+ * Mirrors the backend's `platform_authenticates_without_api_key`, which is the
+ * authority: `bedrock` carries its credentials in `bedrock_config`, and a local
+ * `ollama` daemon has none at all. Everything else — Gemini and Vertex
+ * included — is rejected by the backend validator without a key.
+ *
+ * One function because the client used to answer this twice and disagree with
+ * itself: the Add-Platform refresh button waved Gemini through, while the
+ * model-list hook still required a key for it. The result was a click that did
+ * nothing — no warning, because the guard was skipped, and no request, because
+ * the hook was disabled.
+ */
+export const platformNeedsApiKey = (platform: PlatformType | string | undefined): boolean => {
+  return platform !== 'bedrock' && platform !== 'ollama';
+};
+
+/**
  * 检查是否为自定义选项（无预设 base_url）
  * Check if it's custom option (no preset base_url)
  */

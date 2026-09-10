@@ -1,4 +1,5 @@
 import { ipcBridge } from '@/common';
+import { platformNeedsApiKey } from '@/renderer/utils/model/modelPlatforms';
 import useSWR from 'swr';
 
 // Gemini 模型排序函数：Pro 优先，版本号降序
@@ -49,12 +50,19 @@ const useModeModeList = (
       models: { label: string; value: string }[];
       fix_base_url?: string;
     }> => {
-      // Only call the backend when we have credentials it can actually use:
-      // - bedrock: bedrock_config carries the credentials (api_key not required)
-      // - ollama: a local daemon has no credentials at all — the base_url is enough
-      // - everything else: api_key is mandatory per backend validator
-      const hasUsableCredentials =
-        platform === 'bedrock' ? !!bedrock_config : platform === 'ollama' ? !!base_url : !!api_key;
+      // Only call the backend when we have credentials it can actually use.
+      // Which credential that is depends on how the platform authenticates:
+      // a bearer key for most, `bedrock_config` for Bedrock, and for a local
+      // Ollama daemon — which has no credentials at all — just the address.
+      //
+      // `platformNeedsApiKey` is shared with the Add-Platform form's own
+      // pre-flight warning, which used to answer the same question differently
+      // and left the refresh button doing nothing at all for Gemini.
+      const hasUsableCredentials = platformNeedsApiKey(platform)
+        ? !!api_key
+        : platform === 'bedrock'
+          ? !!bedrock_config
+          : !!base_url;
       if (hasUsableCredentials) {
         const res = await ipcBridge.mode.fetchModelList.invoke({
           base_url,
