@@ -341,6 +341,28 @@ export async function clearTeamResources(): Promise<void> {
     // C0-1: the company-server channel holds a live member credential — a
     // revoked member must not leave it behind in the backend's memory.
     ipcBridge.mode.clearEnterpriseUpstream.invoke(),
+    // The three policies `syncAll` pushes alongside the content rules. Each
+    // takes an empty value as a real instruction — "the company no longer
+    // governs this machine" — which is exactly what leaving means. Without
+    // these three the ex-employer's rules outlived the membership: the
+    // disconnect toggle only reloads the renderer, so the co-located backend
+    // keeps whatever it was last told until the app is fully restarted, and
+    // by then the enterprise UI is gone and nothing on screen explains why
+    // terminal commands are refused, sends are rate-limited, or company
+    // memory keeps surfacing in personal conversations.
+    ipcBridge.mode.syncToolSecurityPolicy.invoke({
+      destructiveCommandsBlocked: false,
+      blockedCommandPatterns: [],
+      externalNetworkDeniedByDefault: false,
+      terminalToolsRequireApproval: false,
+    }),
+    // Null limit + empty allowlist is the unrestricted state, not a lockout —
+    // `dream_core_system::send_policy` spells it out: "Empty is unrestricted."
+    ipcBridge.mode.syncSendPolicy.invoke({ sendRateLimitPerMinute: null, allowedModels: [] }),
+    // Items first: an empty set makes recall moot either way, and the switch
+    // going false too means a stale copy cannot be reached even if one
+    // survived.
+    ipcBridge.mode.syncTeamMemory.invoke({ recallEnabled: false, items: [] }),
   ]);
 }
 
