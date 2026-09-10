@@ -1,0 +1,71 @@
+#!/usr/bin/env sh
+#
+# The gate `main` does not otherwise have.
+#
+# `Build and Release` runs on tags and the `dev` branch; `pr-checks` runs on
+# pull requests. This repo is worked trunk-only, straight onto `main`, so
+# neither fires and nothing checked a push until a release tag did — which is
+# a whole release cycle later. Three separate breakages reached `main` that way
+# in one day: oxfmt drift (twice, each one blocking every platform of the next
+# tag, because `format:check` runs before anything builds), two failing
+# `GuidActionRow` tests, and a mock left stale by a change to the code it
+# mocked.
+#
+# Ordered cheapest-first so the common mistake fails in ten seconds, not fifty.
+# Total on a warm cache is around 50s; `vitest --changed` scales with the push,
+# so a one-file change costs a fraction of that.
+#
+# `git push --no-verify` skips all of it. That is deliberate and sometimes
+# right — pushing a WIP branch, or a docs-only change during an incident. It is
+# not right for `main`.
+#
+# What this deliberately does NOT do: run the full vitest suite (~10 min, which
+# is how a hook gets bypassed permanently) or compile the Rust side. Both belong
+# in the push CI added alongside this — and CI is also the only place that
+# compiles `#[cfg(unix)]` code, which cannot warn on a Windows machine no
+# matter what this hook runs.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+fail() {
+  echo ""
+  echo "  ✗ pre-push: $1"
+  echo "    fix:      $2"
+  echo "    bypass:   git push --no-verify   (this is main — prefer fixing)"
+  echo ""
+  exit 1
+}
+
+step() {
+  printf '  → %s' "$1"
+}
+
+ok() {
+  printf ' ✓\n'
+}
+
+echo ""
+echo "pre-push checks (git push --no-verify to skip)"
+
+step "format"
+npx oxfmt --check >/dev/null 2>&1 || fail "formatting has drifted" "bun run format"
+ok
+
+step "types"
+npx tsc --noEmit -p tsconfig.json >/dev/null 2>&1 || fail "TypeScript errors" "bunx tsc --noEmit"
+ok
+
+step "i18n"
+node scripts/check-i18n.js >/dev/null 2>&1 || fail "i18n check failed" "bun run i18n:types && node scripts/check-i18n.js"
+ok
+
+# Only the tests the push can actually affect. `origin/main` is the right base
+# for a trunk workflow: it is what this push is adding to.
+step "tests (changed)"
+npx vitest run --changed origin/main --passWithNoTests --reporter=dot >/dev/null 2>&1 ||
+  fail "tests affected by this push are failing" "bunx vitest run --changed origin/main"
+ok
+
+echo ""

@@ -129,7 +129,30 @@ node scripts/check-i18n.js
 
 ### Before Pushing
 
+A `pre-push` hook runs automatically (installed by `bun install`, via `prepare: husky`).
+Roughly 40s on a warm cache, cheapest check first:
+
+| Check                              | Fix                                                |
+| ---------------------------------- | -------------------------------------------------- |
+| `oxfmt --check`                    | `bun run format`                                   |
+| `tsc --noEmit`                     | `bunx tsc --noEmit`                                |
+| `node scripts/check-i18n.js`       | `bun run i18n:types && node scripts/check-i18n.js` |
+| `vitest run --changed origin/main` | `bunx vitest run --changed origin/main`            |
+
 Any step that fails aborts the push. Fix the issue, commit, then retry.
+`git push --no-verify` skips the hook — reasonable for a WIP branch, rarely right for `main`.
+
+**Why it exists:** `Build and Release` triggers on tags and `dev`; `pr-checks` triggers on
+pull requests. Work here goes straight onto `main`, so neither fired and nothing checked a
+push until a release tag did — a whole release cycle later, with the tag failing and the
+cycle spent. `format:check` in particular runs before any build starts, so one drifted file
+on `main` blocks all five platforms.
+
+The hook is not the whole gate. **`.github/workflows/main-guard.yml`** runs on every push to
+`main` and does what a hook cannot: it cannot be skipped, it runs the FULL vitest suite, and
+it runs on Linux — a Windows machine cannot compile `#[cfg(unix)]` code or see a lint that
+only fires there. Both of those have shipped to `main` as Windows-green / Linux-red bugs.
+It does not build installers; that stays with the release tag.
 
 The project has many pre-existing lint _warnings_ which do NOT indicate failure. Judge success by exit code, not by output volume.
 
