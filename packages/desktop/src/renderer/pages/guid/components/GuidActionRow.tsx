@@ -665,76 +665,91 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
             onVisibleChange: handleSkillSubmenuVisibleChange,
           }}
         >
-          <SubmenuSearchList
-            showSearch={showSkillSearch}
-            query={skillQuery}
-            onQueryChange={setSkillQuery}
-            placeholder={t('settings.skillsHub.searchPlaceholder', { defaultValue: 'Search skills...' })}
-            searchTestId='guid-skill-search'
-            emptyText={t('settings.skillsHub.noSearchResults', { defaultValue: 'No matching skills.' })}
-            isEmpty={filteredSkills.length === 0}
-          >
-            {/* Plain divs, NOT Menu.Item: Arco's item wrapper imposes its own
-                row layout on children, which shattered the grid on the real
-                app (icons stripped from their cells, labels collapsed). The
-                popup is a flyout panel, not a keyboard menu — 144 entries make
-                arrow-key navigation moot anyway, and click handling is ours. */}
-            <div
-              className='grid grid-cols-3 gap-8px p-8px'
-              role='listbox'
-              aria-multiselectable='true'
-              data-testid='guid-skills-grid'
-            >
-              {filteredSkills.map((skill) => {
-                const checked = isSkillChecked(skill);
-                const label = skill.display_name || skill.name;
-                return (
-                  <div
-                    key={`skill-${skill.name}`}
-                    role='option'
-                    aria-selected={checked}
-                    tabIndex={0}
-                    title={`${label} (${skill.name})`}
-                    data-testid={`guid-skill-cell-${skill.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleSkill(skill.name, skill.isAuto);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        onToggleSkill(skill.name, skill.isAuto);
-                      }
-                    }}
-                    className={`relative flex w-full cursor-pointer select-none flex-col items-center gap-6px rounded-10px border border-solid px-6px py-10px transition-colors ${
-                      checked
-                        ? 'border-primary-3 bg-primary-light-1'
-                        : 'border-transparent hover:border-border-2 hover:bg-fill-1'
-                    }`}
-                  >
-                    {checked && (
-                      <span className='absolute right-4px top-4px flex h-14px w-14px items-center justify-center rounded-999px bg-primary-6 text-10px text-white'>
-                        ✓
-                      </span>
-                    )}
-                    {skill.icon_file ? (
-                      <img
-                        src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
-                        alt=''
-                        className='h-40px w-40px rounded-10px object-cover'
-                        loading='lazy'
-                      />
-                    ) : (
-                      <span className='flex h-40px w-40px items-center justify-center rounded-10px bg-fill-2 text-16px font-600 text-t-secondary'>
-                        {label.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                    <span className='w-full truncate text-center text-12px text-t-primary'>{label}</span>
-                  </div>
-                );
-              })}
+          {/* Mirrors GuidExpertPickerGrid's hosting exactly: a fixed-width
+              shell owning its own search box and scroll container, INSIDE the
+              Menu.SubMenu but structurally self-contained. The first grid
+              attempt hung the grid bare in Arco's menu row layout and the
+              columns shattered on the real app; the expert grid never breaks
+              because of this shell. */}
+          <div className='w-420px'>
+            <div className='px-6px pt-4px pb-6px' style={{ background: 'var(--color-bg-popup)' }}>
+              <DreamInlineSearchInput
+                value={skillQuery}
+                onChange={setSkillQuery}
+                placeholder={t('settings.skillsHub.searchPlaceholder', { defaultValue: 'Search skills...' })}
+                data-testid='guid-skill-search'
+                // See GuidExpertPickerGrid for why this matters: without it,
+                // IME composition keystrokes leak into Arco Menu's keyboard
+                // handling and the whole "+" dropdown closes mid-composition.
+                inputProps={{ onKeyDown: (event) => event.stopPropagation() }}
+              />
             </div>
-          </SubmenuSearchList>
+            <div className='dropdown-search-scroll max-h-320px overflow-y-auto px-6px pb-6px'>
+              {filteredSkills.length === 0 ? (
+                <div className='px-12px py-10px text-12px text-t-tertiary text-center'>
+                  {t('settings.skillsHub.noSearchResults', { defaultValue: 'No matching skills.' })}
+                </div>
+              ) : (
+                <div
+                  className='grid grid-cols-3 gap-x-3px gap-y-2px'
+                  role='listbox'
+                  aria-multiselectable='true'
+                  data-testid='guid-skills-grid'
+                >
+                  {filteredSkills.map((skill) => {
+                    const checked = isSkillChecked(skill);
+                    const label = skill.display_name || skill.name;
+                    return (
+                      <Tooltip
+                        key={`skill-${skill.name}`}
+                        position='right'
+                        content={
+                          <div className='max-w-260px'>
+                            <div className='mb-2px text-12px font-600'>{label}</div>
+                            <div className='text-12px leading-relaxed break-words'>{skill.description}</div>
+                          </div>
+                        }
+                      >
+                        <button
+                          type='button'
+                          role='option'
+                          aria-selected={checked}
+                          aria-label={`${label}：${skill.description}`}
+                          data-testid={`guid-skill-cell-${skill.name}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleSkill(skill.name, skill.isAuto);
+                          }}
+                          className={`relative flex cursor-pointer select-none flex-col items-center gap-3px rounded-10px border-none px-4px py-5px text-center transition-colors ${
+                            checked ? 'bg-primary-light-1' : 'bg-transparent hover:bg-fill-2'
+                          }`}
+                        >
+                          {checked && (
+                            <span className='absolute right-2px top-2px flex h-13px w-13px items-center justify-center rounded-999px bg-primary-6 text-9px text-white'>
+                              ✓
+                            </span>
+                          )}
+                          {skill.icon_file ? (
+                            <img
+                              src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
+                              alt=''
+                              className='h-28px w-28px rounded-999px object-cover'
+                              loading='lazy'
+                            />
+                          ) : (
+                            <span className='flex h-28px w-28px items-center justify-center rounded-999px bg-fill-2 text-13px font-600 text-t-secondary'>
+                              {label.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                          <span className='w-full truncate text-12px text-t-primary'>{label}</span>
+                        </button>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </Menu.SubMenu>
       )}
       {mcpServers.length > 0 && (
