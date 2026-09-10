@@ -185,6 +185,14 @@
       "diagnosticsSent": "Diagnostic envoyé",
       "diagnosticsReportSuccess": "Diagnostic envoyé",
       "diagnosticsReportFailed": "Échec de l'envoi du diagnostic, veuillez réessayer"
+    },
+    "runtimeCrashed": {
+      "title": "Le service en arrière-plan s’est arrêté",
+      "description": "Le service local en arrière-plan de One Work s'est arrêté à plusieurs reprises, les tentatives ont donc cessé. Veuillez redémarrer l'application ; si cela persiste, envoyez un diagnostic.",
+      "sendDiagnostics": "Envoyer le diagnostic",
+      "diagnosticsSent": "Diagnostic envoyé",
+      "diagnosticsReportSuccess": "Diagnostic envoyé",
+      "diagnosticsReportFailed": "Échec de l'envoi du diagnostic, veuillez réessayer"
     }
   },
   "fileAttach.addFiles": "Ajouter des fichiers",

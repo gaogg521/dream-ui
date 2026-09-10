@@ -185,6 +185,14 @@
       "diagnosticsSent": "Tanılama gönderildi",
       "diagnosticsReportSuccess": "Tanılama bildirildi",
       "diagnosticsReportFailed": "Tanılama gönderilemedi, lütfen tekrar deneyin"
+    },
+    "runtimeCrashed": {
+      "title": "Arka plan hizmeti durdu",
+      "description": "One Work'ün yerel arka plan hizmeti tekrar tekrar kapandığı için yeniden denemeler durduruldu. Lütfen uygulamayı yeniden başlatın; sorun sürerse tanılama gönderin.",
+      "sendDiagnostics": "Tanılama gönder",
+      "diagnosticsSent": "Tanılama gönderildi",
+      "diagnosticsReportSuccess": "Tanılama bildirildi",
+      "diagnosticsReportFailed": "Tanılama gönderilemedi, lütfen tekrar deneyin"
     }
   },
   "fileAttach.addFiles": "Dosya ekle",

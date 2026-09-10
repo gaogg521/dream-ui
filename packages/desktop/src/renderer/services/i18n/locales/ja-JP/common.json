@@ -185,6 +185,14 @@
       "diagnosticsSent": "診断を送信しました",
       "diagnosticsReportSuccess": "診断情報を送信しました",
       "diagnosticsReportFailed": "診断の送信に失敗しました。しばらくしてから再試行してください。"
+    },
+    "runtimeCrashed": {
+      "title": "バックグラウンドサービスが停止しました",
+      "description": "One Work のローカルバックグラウンドサービスが繰り返し終了したため、再試行を停止しました。アプリを再起動してください。繰り返し発生する場合は診断情報を送信してください。",
+      "sendDiagnostics": "診断を送信",
+      "diagnosticsSent": "診断を送信しました",
+      "diagnosticsReportSuccess": "診断情報を送信しました",
+      "diagnosticsReportFailed": "診断の送信に失敗しました。しばらくしてから再試行してください。"
     }
   },
   "fileAttach.addFiles": "ファイルを追加",

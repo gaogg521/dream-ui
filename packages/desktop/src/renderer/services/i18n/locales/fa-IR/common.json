@@ -185,6 +185,14 @@
       "diagnosticsSent": "تشخیص ارسال شد",
       "diagnosticsReportSuccess": "تشخیص گزارش شد",
       "diagnosticsReportFailed": "ارسال تشخیص ناموفق بود، لطفاً بعداً دوباره تلاش کنید"
+    },
+    "runtimeCrashed": {
+      "title": "سرویس پس‌زمینه متوقف شد",
+      "description": "سرویس پس‌زمینهٔ محلی One Work بارها بسته شد، بنابراین تلاش مجدد متوقف شد. لطفاً برنامه را دوباره اجرا کنید؛ اگر تکرار شد، اطلاعات عیب‌یابی را ارسال کنید.",
+      "sendDiagnostics": "ارسال تشخیص",
+      "diagnosticsSent": "تشخیص ارسال شد",
+      "diagnosticsReportSuccess": "تشخیص گزارش شد",
+      "diagnosticsReportFailed": "ارسال تشخیص ناموفق بود، لطفاً بعداً دوباره تلاش کنید"
     }
   },
   "fileAttach.addFiles": "افزودن فایل‌ها",

@@ -1383,6 +1383,91 @@ describe('BackendLifecycleManager crash restart', () => {
     fetchSpy.mockRestore();
   }, 5_000);
 
+  /**
+   * The moment the app becomes a shell: the window stays open and every action
+   * fails. Before this callback existed the state reached nobody —
+   * `handleCrash` set an internal status no caller reads, logged one line and
+   * returned, so the only way to learn the backend had died was to open the
+   * log file.
+   *
+   * This is the path a real crash loop takes. The restart budget is almost
+   * never what stops it: `handleCrash` only runs while the status is
+   * `running`, and a restart that comes back up resets the counter, so a
+   * backend that cannot restart lands in `restart after crash failed` on the
+   * very first attempt.
+   */
+  it('tells the host when a scheduled restart fails to come back up', async () => {
+    const child1 = makeFakeChild();
+    // Both entries are `mockImplementationOnce` on purpose: mixing it with
+    // `mockReturnValueOnce` does not preserve the order they were queued in,
+    // and the throw lands on the FIRST spawn instead of the restart.
+    vi.mocked(spawn)
+      .mockImplementationOnce(() => child1 as unknown as ChildProcess)
+      .mockImplementationOnce(() => {
+        throw new Error('spawn failed');
+      });
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('ok', { status: 200 }) as unknown as Response);
+    const onRestartLimitExceeded = vi.fn();
+
+    const mgr = new BackendLifecycleManager(APP_META, () => '/x');
+    const startPromise = mgr.start('/db', undefined, undefined, { onRestartLimitExceeded });
+    await Promise.resolve();
+    emitListening(child1, 65303);
+    await startPromise;
+    expect(mgr.status).toBe('running');
+
+    (child1 as unknown as EventEmitter).emit('exit', 3221225477, 'SIGSEGV');
+    // 1s backoff, then the restart's spawn throws and the catch runs.
+    await new Promise((r) => setTimeout(r, 1_500));
+
+    expect(onRestartLimitExceeded).toHaveBeenCalledTimes(1);
+    expect(onRestartLimitExceeded.mock.calls[0][0]).toMatchObject({
+      exitCode: 3221225477,
+      signal: 'SIGSEGV',
+      reason: 'restart_failed',
+    });
+    expect(mgr.status).toBe('error');
+
+    fetchSpy.mockRestore();
+  }, 20_000);
+
+  /** A host whose notifier throws must not add an unhandled rejection on top. */
+  it('survives a host notifier that throws', async () => {
+    const child1 = makeFakeChild();
+    vi.mocked(spawn)
+      .mockImplementationOnce(() => child1 as unknown as ChildProcess)
+      .mockImplementationOnce(() => {
+        throw new Error('spawn failed');
+      });
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('ok', { status: 200 }) as unknown as Response);
+
+    const mgr = new BackendLifecycleManager(APP_META, () => '/x');
+    const startPromise = mgr.start('/db', undefined, undefined, {
+      onRestartLimitExceeded: () => {
+        throw new Error('notifier blew up');
+      },
+    });
+    await Promise.resolve();
+    emitListening(child1, 65303);
+    await startPromise;
+
+    expect(() => (child1 as unknown as EventEmitter).emit('exit', 1, 'SIGABRT')).not.toThrow();
+    await new Promise((r) => setTimeout(r, 1_500));
+
+    expect(errorSpy).toHaveBeenCalledWith('[dreamcore] onRestartLimitExceeded threw', 'notifier blew up');
+    expect(mgr.status).toBe('error');
+
+    fetchSpy.mockRestore();
+  }, 20_000);
+
   it('does not reuse corrupted database recovery authorization during crash restart', async () => {
     const child1 = makeFakeChild();
     const child2 = makeFakeChild();

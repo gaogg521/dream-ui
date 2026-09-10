@@ -398,6 +398,7 @@ ipcMain.handle('backend:recover-corrupted-database', async () => {
             onReady: (backendPort) => {
               markBackendReady(backendPort, 'backendManager.recoverCorruptedDatabase.lateReady');
             },
+            onRestartLimitExceeded: markBackendRuntimeCrashed,
           },
           undefined,
           { recoverCorruptedDatabase: true }
@@ -436,6 +437,30 @@ function markBackendStartupFailed(error: unknown): void {
   // on now — i.e. that they need something newer than this.
   backendStartupFailureInfo = { ...classifyBackendStartupFailure(error), appVersion: app.getVersion() };
   (globalThis as typeof globalThis & { __backendStartupFailed?: boolean }).__backendStartupFailed = true;
+  broadcastBackendStartupState(backendStartupFailureInfo);
+}
+
+/**
+ * The backend ran, then crashed past its restart budget.
+ *
+ * Deliberately not routed through `classifyBackendStartupFailure`: that reads
+ * the shape of a startup error, and there is no startup error here — the start
+ * succeeded, possibly hours ago. The reason is known outright.
+ *
+ * Reuses the startup-failure channel because the surface is the same one the
+ * user needs (a blocking dialog naming the problem, with diagnostics) and it
+ * already exists; only the copy differs, which is what the separate reason is
+ * for. Before this, the case had no surface at all.
+ */
+function markBackendRuntimeCrashed(context: { exitCode?: number; signal?: string; restartCount: number }): void {
+  backendStartupFailed = true;
+  backendStartupFailureInfo = {
+    reason: 'backend_runtime_crashed',
+    appVersion: app.getVersion(),
+    backendBoundaryStage: `runtime_crash_exit_${context.exitCode ?? context.signal ?? 'unknown'}`,
+  };
+  (globalThis as typeof globalThis & { __backendStartupFailed?: boolean }).__backendStartupFailed = true;
+  console.error('[1ONE] backend crashed past its restart budget; surfacing to the user', context);
   broadcastBackendStartupState(backendStartupFailureInfo);
 }
 
@@ -1028,6 +1053,7 @@ const handleAppReady = async (): Promise<void> => {
             onReady: (backendPort) => {
               markBackendReady(backendPort, 'backendManager.lateReady');
             },
+            onRestartLimitExceeded: markBackendRuntimeCrashed,
           }
         );
       },

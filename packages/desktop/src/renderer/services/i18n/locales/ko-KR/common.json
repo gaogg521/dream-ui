@@ -185,6 +185,14 @@
       "diagnosticsSent": "진단을 보냈습니다",
       "diagnosticsReportSuccess": "진단 정보를 보고했습니다",
       "diagnosticsReportFailed": "진단 전송에 실패했습니다. 나중에 다시 시도해 주세요."
+    },
+    "runtimeCrashed": {
+      "title": "백그라운드 서비스가 중지되었습니다",
+      "description": "One Work의 로컬 백그라운드 서비스가 반복해서 종료되어 재시도를 중단했습니다. 앱을 다시 시작하세요. 계속 발생하면 진단 정보를 보내주세요.",
+      "sendDiagnostics": "진단 보내기",
+      "diagnosticsSent": "진단을 보냈습니다",
+      "diagnosticsReportSuccess": "진단 정보를 보고했습니다",
+      "diagnosticsReportFailed": "진단 전송에 실패했습니다. 나중에 다시 시도해 주세요."
     }
   },
   "fileAttach.addFiles": "파일 추가",
