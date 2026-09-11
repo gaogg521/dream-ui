@@ -126,21 +126,229 @@
     "teamAuto": "团队 · 自动",
     "detailEditViaChat": "在对话中编辑",
     "builtinSkill": {
+      "12306": {
+        "title": "12306 铁路查询",
+        "desc": "查询 12306 的车次时刻、余票与车站信息。"
+      },
+      "12306-train-assistant": {
+        "title": "12306 订票助手",
+        "desc": "12306 查询与订票辅助技能，支持余票查询、经停站查询、中转换乘、候补查询与提交/取消、登录状态检查、密码登录与二维码登录、下单与支付链接获取"
+      },
+      "a-stock-data": {
+        "title": "A股全栈数据",
+        "desc": "A股全栈数据工具包 — 覆盖行情(mootdx+腾讯+百度K线)、研报(东财+同花顺+iwencai)、信号(同花顺热点+北向+龙虎榜+解禁+行业)…"
+      },
+      "ai-comic-drama-shot-maker": {
+        "title": "漫剧镜头生成",
+        "desc": "Turn a comic panel, character sheet, webtoon frame, or frozen story beat into one dynamic…"
+      },
+      "ai-short-drama-script": {
+        "title": "AI短剧剧本",
+        "desc": "AI 短剧剧本输出引擎：完整剧本、单集剧本、剧集与分集大纲，以及剧本的改写、优化与诊断。"
+      },
+      "ai-song-cover-studio": {
+        "title": "AI翻唱歌曲制作",
+        "desc": "Turn a song recording into a newly interpreted cover or rearranged song from a reference p…"
+      },
+      "ai-storyboard-generator": {
+        "title": "分镜生成器",
+        "desc": "Turn a script, scene, or ad brief into a structured AI storyboard plan with a practical sh…"
+      },
+      "ai-video-image-music-studio": {
+        "title": "AI创作工作台·视频图片音乐",
+        "desc": "Generate AI video, images, music, and voice-over in one connected creative flow, edit visu…"
+      },
+      "analyze-recruitment-trends": {
+        "title": "eRoad 招聘趋势洞察",
+        "desc": "根据用户提供的结构化市场、竞品和招聘资料，识别招聘需求变化、人才流动信号和竞争态势，形成带来源、假设、限制与行动建议的招聘趋势洞察。用于招聘负责人进行季度或专项规划…"
+      },
+      "android-apk-builder": {
+        "title": "Android APK 构建器（免 aapt2）",
+        "desc": "在缺少 aapt2 或完整 Android SDK 的环境中，仅用 JDK + d8 + jarsigner 构建可安装的 APK。…"
+      },
+      "android-native-dev": {
+        "title": "Android 原生开发",
+        "desc": "Android native application development and UI design guide. Covers Material Design 3, Kotl…"
+      },
+      "apple-design": {
+        "title": "Apple流体界面设计指南",
+        "desc": "基于Apple WWDC流体交互设计，用于UI设计评审、手势驱动界面、弹簧动画、拖拽/侧滑/抽屉弹窗、动量过渡、毛玻璃材质、深度层级、光学字号排版、减弱动效无障碍场景…"
+      },
+      "ardot-skillhub": {
+        "title": "ardot",
+        "desc": "用于在 Ardot 中把多个已有画板自动编排成可交付的衍生展示区。适合多状态对照、设计评审看板、流程演示、角色/设备矩阵。也可作为 本平台 + Ardot AI 设计工"
+      },
+      "assist-payroll-approval": {
+        "title": "eRoad 薪酬结果审批辅助",
+        "desc": "面向薪酬审批人、HR 和财务，根据用户上传的薪酬结果、异常清单、预算对比和审批规则，整理审批摘要、差异证据、风险分级和需要补充的材料，帮助人工做出有依据的审批判断。…"
+      },
+      "autocad-drawing": {
+        "title": "AutoCAD 图纸绘制",
+        "desc": "绘制、生成、修改与优化 CAD 图纸，或从图纸中提取数据——机械、建筑、电气、给排水、暖通、钢结构与工艺流程图。"
+      },
+      "bid-pipeline": {
+        "title": "招投标内容生产流水线",
+        "desc": "招投标内容生产流水线：把征集公告改写成各平台发布内容，生成封面贴图视频，并做发布前合规校验与选题去重。"
+      },
+      "bilibili-script": {
+        "title": "B站长视频脚本",
+        "desc": "Generate Bilibili-style long video scripts with opening hook, section structure, danmaku i…"
+      },
+      "btpanel": {
+        "title": "宝塔面板管理与 MCP 接入",
+        "desc": "宝塔面板 Skill，让 AI Agent 调用宝塔面板能力，管理网站、文件、数据库、Docker、计划任务及服务器环境，完成状态查询、故障排查和安全检查等日常运维操作…"
+      },
+      "build-job-profile": {
+        "title": "eRoad 智能岗位画像",
+        "desc": "面向 HR、招聘人员和用人经理，把招聘需求、业务目标、岗位任务、约束或单份岗位文档转成结构化、可评审的岗位画像，包含结果责任、能力标准、任职要求分层、筛选证据、假设和待确认项。…"
+      },
+      "chinese-poetry": {
+        "title": "国学诗词助手",
+        "desc": "帮助用户查找、赏析古诗词与国学典籍：按作者、篇名、主题查找诗句，补全诗句、溯源名句、解读文言文"
+      },
+      "ci-cd-and-automation": {
+        "title": "CI/CD 自动化",
+        "desc": "流水线设计、构建与发布自动化，以及让部署可重复的各项检查。"
+      },
+      "cn-ecommerce-search": {
+        "title": "中国电商搜索",
+        "desc": "在国内主流电商平台搜索商品，并排展示商品信息与价格。"
+      },
+      "comfyui-ops": {
+        "title": "ComfyUI 部署运维助手",
+        "desc": "ComfyUI 部署运维与排障工具包，直接在本机执行安装、排障与运维操作"
+      },
+      "content-factory": {
+        "title": "内容工厂",
+        "desc": "Multi-agent content production system. One piece of source content becomes many formats —…"
+      },
+      "creative-brainstorming-board": {
+        "title": "创意产品头脑风暴白板",
+        "desc": "提供基于5栏白板方法论的结构化产品创意迭代流程，从现实世界到问题推进，强制思维演化；适用于新产品构思、复杂问题拆解、假设验证式创新探索"
+      },
       "cron": {
         "title": "定时任务",
         "desc": "创建和管理按计划自动执行的任务。"
       },
-      "officecli": {
-        "title": "Office 文档",
-        "desc": "创建、分析和修改 Word、Excel、PowerPoint 文件。"
+      "delivery-no-pseudoblock": {
+        "title": "AI交付前全自动自检技能",
+        "desc": "交付前伪阻断 / 缓干闸门（通用行为级纪律）。任何一次向用户交付结果之前（本平台、写最终总结、下结论、状态汇报、向用户提问或征询）必须真加载并实跑本技能，对整条"
       },
-      "one-config": {
-        "title": "应用配置",
-        "desc": "查看和调整本应用的配置。"
+      "design-first": {
+        "title": "头脑风暴·设计先行",
+        "desc": "先把设计定下来再动手写码，让开发从一个已达成共识的形态开始。"
       },
-      "skill-creator": {
-        "title": "技能创建指南",
-        "desc": "指导你编写自己的技能。"
+      "dingtalk-unified": {
+        "title": "钉钉套件",
+        "desc": "钉钉 CLI 全能套件，基于官方 DingTalk Workspace CLI（dws）操作钉钉消息、群聊、通讯录、日历、待办、审批、考勤、日志、DING、AI 表格、钉钉文档…"
+      },
+      "douyin-video-fetch": {
+        "title": "抖音视频采集",
+        "desc": "抖音视频采集"
+      },
+      "drawio": {
+        "title": "Draw.io 专业绘图",
+        "desc": "创建可原生编辑的 Draw.io 图表并导出。"
+      },
+      "element-ui-guide": {
+        "title": "Element UI 组件速查与代码生成",
+        "desc": "Element UI (Vue 2) 全量组件速查与代码生成技能"
+      },
+      "expense-merger": {
+        "title": "报销发票合并",
+        "desc": "把一个目录下的 OFD + PDF 报销发票合并成单 PDF，封面带城市汇总、费用科目汇总与业务招待费明细。自动识别票面形式（专票/普票/铁路电子客票/行程单等）与费用科目…"
+      },
+      "flight-trip-advisor": {
+        "title": "航班出行决策助手",
+        "desc": "航班出行决策助手。根据出行日期、航线和可选的航班号，输出出发地与目的地的天气对比、延误风险评估、穿衣建议和机场地面通行提示。…"
+      },
+      "fore-vip-geo-optimizer": {
+        "title": "GEO优化",
+        "desc": "GEO 生成式引擎引用占位（fore.vip）。输入一个主题或产品名称，执行五步流水线：① 以真实用户问句联网检索 AI 搜索（豆包/Kimi/DeepSeek/秘塔等）…"
+      },
+      "fore-vip-oss": {
+        "title": "OSS 对象存储助手",
+        "desc": "对象存储（OSS）入门与配置助手。向用户介绍 OSS 是什么、可应用场景…"
+      },
+      "fortune-master": {
+        "title": "命理大师",
+        "desc": "全体系命理大师 — 八字四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、星盘"
+      },
+      "frontend-design": {
+        "title": "前端设计",
+        "desc": "面向 Web 的界面设计：布局、视觉层级，以及开发可直接落地的组件语汇。"
+      },
+      "frontend-dev": {
+        "title": "前端开发",
+        "desc": "Web 界面开发：组件、状态、样式，以及背后的浏览器行为。"
+      },
+      "fund-analysis": {
+        "title": "基金分析",
+        "desc": "解读基金的持仓、业绩与风险特征，把数字放回上下文里看。"
+      },
+      "github": {
+        "title": "GitHub",
+        "desc": "通过 `gh` 命令行操作 GitHub：issue、pull request、workflow 运行与原始 API 调用。"
+      },
+      "gog": {
+        "title": "Google全家桶",
+        "desc": "Google Workspace CLI for Gmail, Calendar, Drive, Contacts, Sheets, and Docs."
+      },
+      "gongwen-format": {
+        "title": "文档格式化排版",
+        "desc": "把用户编好内容的 Word 或 Markdown 文档一键排版为符合党政机关公文国标（GB/T 9704-2012 / GB/T 33476.2-2016）…"
+      },
+      "govproc-method-selector": {
+        "title": "政府采购方式选择助手",
+        "desc": "政府采购领域\"某项目应选/已选何种采购方式\"的法定适用条件判定与合规验证引擎。 六种法定方式（公开/邀请招标、竞谈/磋商/询价/单一来源）+"
+      },
+      "grilling": {
+        "title": "严格拷问",
+        "desc": "逐题追问、压力测试一个方案或决策，拷问得和你要求的一样狠。"
+      },
+      "h3-prompt-writing": {
+        "title": "MiniMax H3 提示词编写",
+        "desc": "Write MiniMax H3 video generation prompts for T2VA, I2VA, FL2VA, L2VA, and Ref2VA."
+      },
+      "hot-search-cn": {
+        "title": "全网热搜聚合",
+        "desc": "全平台热搜聚合：微博、知乎、百度、B站、抖音、36氪、贴吧、头条热榜，一键获取全网热点趋势，支持单平台与跨平台对比"
+      },
+      "identify-key-talent": {
+        "title": "eRoad 关键人才识别",
+        "desc": "根据用户上传的岗位/关键任务说明，以及人才履历、绩效、评价等结构化表格或多份资料，识别值得优先核实的关键人才，输出证据矩阵、推荐分层、风险与补证计划。适用于 HR…"
+      },
+      "imap-smtp-email": {
+        "title": "IMAP/SMTP邮件",
+        "desc": "Read and send email via IMAP/SMTP. Check for new/unread messages, fetch content, search ma…"
+      },
+      "invoice-verify": {
+        "title": "发票查验",
+        "desc": "查验发票真伪与状态（作废、红冲、异常），支持文本输入与附件识别两种方式。"
+      },
+      "ios-application-dev": {
+        "title": "iOS 应用开发",
+        "desc": "iOS 应用开发：Swift、SwiftUI 与 UIKit，以及 Apple 的平台规范。"
+      },
+      "ixhlink-skills-id-photo-standard": {
+        "title": "标准证件照片",
+        "desc": "合规向标准证件照，上传人像后生成可用于简历/考试/办证场景的标准规格照片"
+      },
+      "karpathy-guidelines": {
+        "title": "Karpathy行为准则",
+        "desc": "Behavioral guidelines to reduce common LLM coding mistakes."
+      },
+      "kdocs": {
+        "title": "金山文档|WPS云文档",
+        "desc": "操作金山文档（WPS 云文档 / Kdocs / 365.kdocs.cn / www.kdocs.cn）云文档的官方 Skill。核心能力覆盖云端新建、读取、编辑、搜索、分享…"
+      },
+      "lark-unified": {
+        "title": "飞书套件",
+        "desc": "Unified Lark/Feishu CLI suite covering messaging, documents, spreadsheets, base tables, ca…"
+      },
+      "lexiang-knowledge-base": {
+        "title": "腾讯乐享",
+        "desc": "乐享知识库 MCP 全功能技能：跨个人与共享知识库的搜索、阅读与写入。"
       },
       "local-ocr-linux": {
         "title": "本地 OCR（Linux）",
@@ -154,6 +362,18 @@
         "title": "本地 OCR（Windows）",
         "desc": "用系统自带的 Windows OCR 引擎离线识别图片文字，不联网。"
       },
+      "markitdown-skill": {
+        "title": "MarkItDown",
+        "desc": "Convert documents to Markdown using Microsoft's MarkItDown CLI (`markitdown`)…"
+      },
+      "mcporter": {
+        "title": "MCP管理器",
+        "desc": "Use the mcporter CLI to list, configure, auth, and call MCP servers/tools directly (HTTP o…"
+      },
+      "meeting-minutes-assistant": {
+        "title": "会议纪要→待办助手",
+        "desc": "把会议整理成结构化纪要：决策、待办事项、负责人、截止时间与后续跟进闭环。"
+      },
       "mermaid": {
         "title": "Mermaid 图表",
         "desc": "把流程图、时序图、ER 图渲染成 SVG 或 ASCII。"
@@ -165,6 +385,10 @@
       "morph-ppt-3d": {
         "title": "3D Morph 幻灯片",
         "desc": "在 Morph 动效基础上加入 GLB 模型与运镜。"
+      },
+      "officecli": {
+        "title": "Office 文档",
+        "desc": "创建、分析和修改 Word、Excel、PowerPoint 文件。"
       },
       "officecli-academic-paper": {
         "title": "学术论文",
@@ -198,6 +422,14 @@
         "title": "Excel 表格",
         "desc": "涉及 .xlsx 的一切读写操作。"
       },
+      "old-photo-restorer": {
+        "title": "老旧照片修复无水印版",
+        "desc": "修复老旧、泛黄、划痕、折痕、噪点、污渍与破损的照片，无水印交付。"
+      },
+      "one-config": {
+        "title": "应用配置",
+        "desc": "查看和调整本应用的配置。"
+      },
       "one-troubleshooting": {
         "title": "故障排查",
         "desc": "诊断并解决本应用的使用问题。"
@@ -214,17 +446,229 @@
         "title": "OpenClaw 安装配置",
         "desc": "安装、部署和使用 OpenClaw 个人助理。"
       },
+      "patent-disclosure-writer": {
+        "title": "专利技术交底书撰写助手",
+        "desc": "Autonomously turn brief ideas, code, PRDs, technical documents, or drawings into strengthe…"
+      },
       "pdf": {
         "title": "PDF 工具箱",
         "desc": "提取文字和表格，创建、合并、拆分 PDF。"
+      },
+      "peekaboo": {
+        "title": "macOS界面自动化",
+        "desc": "Capture and automate macOS UI with the Peekaboo CLI."
+      },
+      "pm-toolkit-zxh": {
+        "title": "数据与效率工具 · zxh",
+        "desc": "数据查询与日常杂务：A/B 检验、队列留存、SQL 取数、上线前审查、文案校对、简历诊断、NDA 与隐私政策起草。"
+      },
+      "poster-design-studio": {
+        "title": "海报设计工作室",
+        "desc": "Turn a topic description, a product photo, or brand references into a scroll-stopping even…"
+      },
+      "price-compare": {
+        "title": "商品比价",
+        "desc": "多商品比价助手：输入多个商品的价格与参数，输出最低价与性价比建议"
+      },
+      "proboost-tiktok-shop-analysis": {
+        "title": "TikTok店铺经营分析",
+        "desc": "分析 TikTok 店铺的经营表现——商品、流量与转化，并指出经营缺口在哪。"
+      },
+      "proboost-tiktok-video-analysis": {
+        "title": "TikTok爆款视频拆解",
+        "desc": "拆解 TikTok 爆款视频背后的选择，以及哪些可以复用。"
+      },
+      "product-discovery-zxh": {
+        "title": "产品发现 · zxh",
+        "desc": "产品发现全流程：头脑风暴点子、挖掘风险假设、按影响×风险排序、设计验证实验、整理访谈并提炼机会点。"
+      },
+      "product-manager": {
+        "title": "产品经理",
+        "desc": "产品经理全生命周期技能，覆盖机会评估、PRD 撰写、路线图规划、GTM 上市与上线后度量"
+      },
+      "product-strategy-zxh": {
+        "title": "产品战略 · zxh",
+        "desc": "把方向说清楚：产品愿景、战略画布、商业模式与精益画布、变现与定价、SWOT、PESTLE、安索夫矩阵、波特五力与价值主张。"
+      },
+      "product-trend-researcher": {
+        "title": "趋势研究",
+        "desc": "做市场趋势、竞品格局与技术扫描研究，输出带信源评级与置信度的决策简报"
+      },
+      "pubmed-literature-search": {
+        "title": "pubmed搜文献助手",
+        "desc": "PubMed 关键词文献检索助手。用于「搜文献 / 查文献 / 检索 PubMed / 帮我找论文 / 出文献报告」等需求：按客户关键词与时间窗（必填）…"
+      },
+      "qq-email": {
+        "title": "QQ邮箱",
+        "desc": "QQ邮箱 IMAP receive and SMTP send via Node.js scripts; credentials read from env vars QQ_EMA…"
+      },
+      "qqmusic": {
+        "title": "QQ音乐助手",
+        "desc": "QQ Music — search songs, albums, playlists, music videos, artists; daily recommendations…"
+      },
+      "remove-watermark": {
+        "title": "去水印",
+        "desc": "去除图片上的水印、logo、角标、文字与字幕。"
+      },
+      "resume-design": {
+        "title": "简历设计",
+        "desc": "美图设计室出品的“简历设计”专家 Skill，通过终端执行命令名为 `designkit` 的「美图设计室 AI设计 CLI」完成“简历设计”（办公设计）：简历版式设计…"
+      },
+      "screen-automation": {
+        "title": "屏幕自动化",
+        "desc": "增强 Agent 的屏幕理解和控制能力，利用本地屏幕视觉技术提高界面识别与定位效率…"
+      },
+      "security-and-hardening": {
+        "title": "安全加固",
+        "desc": "OWASP prevention, auth, secrets management and dependency auditing."
+      },
+      "self-media-distribution": {
+        "title": "自媒体一键分发系统",
+        "desc": "可以实现多自媒体平台的多账号内容一键分发系统，支持抖音、视频号、快手等主流平台"
+      },
+      "seo-content-optimizer": {
+        "title": "SEO内容优化",
+        "desc": "Optimize content for better search visibility and AI citation potential."
+      },
+      "skill-creator": {
+        "title": "技能创建指南",
+        "desc": "指导你编写自己的技能。"
+      },
+      "skill-scanner": {
+        "title": "Skill安全扫描（朱雀实验室）",
+        "desc": "Scan any agent skill for security risks before you install or use it. Powered by Tencent Z…"
+      },
+      "smart-product-selector": {
+        "title": "电商选品分析",
+        "desc": "E-commerce product selection analyst: performs market data collection, profit margin calcu…"
+      },
+      "social-media-content": {
+        "title": "社交媒体内容生产",
+        "desc": "Systematically produce social media content covering topics, copy, tags and publishing cad…"
+      },
+      "software-copyright-cn": {
+        "title": "中国软著鉴别材料",
+        "desc": "准备中国软件著作权登记所需的鉴别材料。"
+      },
+      "solo-company": {
+        "title": "一人公司教练",
+        "desc": "一人公司教练：陪一人创业者从0到1跑通定位→产品→定价→获客→交付→复盘的完整经营闭环，带阶段决策树、反模式识别、经营仪表盘与配套模板。…"
       },
       "story-roleplay": {
         "title": "故事角色扮演",
         "desc": "解析并应用 PNG／WebP／JSON 格式的角色卡与世界书。"
       },
+      "superpowers": {
+        "title": "Superpowers 工程方法论",
+        "desc": "Agent 软件工程方法论框架：开始写码前先头脑风暴出规格，写可执行实施计划，强制红绿 TDD，子代理驱动开发，系统化调试与代码评审，收尾合并"
+      },
+      "supertonic-tts": {
+        "title": "本地超快TTS合成",
+        "desc": "用 supertonic-mnn（Supertone TTS on MNN）本地合成高质量多语言音频。CLI + Python API，支持中英日韩等 30+ 语言…"
+      },
+      "talking-avatar-video": {
+        "title": "AI数字人口播与虚拟主播视频",
+        "desc": "用一张人像和一段短脚本或语音，制作有明确讲述内容的数字人口播视频。可使用现成录音，也可以先选择音色，把脚本生成旁白，让画面中的人物随声音完成稳定、自然的口播。适合 AI 主播…"
+      },
+      "taobao": {
+        "title": "全网比价（买手）",
+        "desc": "商品价格全网对比技能，获取商品在淘宝(Taobao)、天猫(TMall)、京东(JD.com)、拼多多(PinDuoDuo)、抖音(Douyin)、快手(KaiShou)…"
+      },
+      "tax-policy-knowledge": {
+        "title": "Tax Policy 财税政策知识库",
+        "desc": "Tax Policy 财税政策知识库"
+      },
+      "tencent-meeting-skill": {
+        "title": "腾讯会议",
+        "desc": "腾讯会议：会议管理与音视频协作助手。预约/创建/修改/取消会议、查询会议详情与会议号转换、查看参会成员/受邀人/等候室成员、查询用户会议列表（即将开始/进行中/已结束）…"
+      },
+      "the-entrepreneurship-handbook": {
+        "title": "创业可以学",
+        "desc": "Q&A skill for entrepreneurs, managers, and business leaders. Triggers when users ask about…"
+      },
+      "tiktok-script": {
+        "title": "TikTok短视频脚本",
+        "desc": "Generate TikTok short video scripts emphasizing pacing, text overlays and trend adaptation…"
+      },
+      "totorosir-work-report": {
+        "title": "工作汇报助手",
+        "desc": "工作汇报助手（totorosir-work-report）用于生成周报、日报、月报、季报、年报与项目/里程碑汇报"
+      },
+      "toutiao-search": {
+        "title": "今日头条爆款内容查询",
+        "desc": "今日头条爆款内容查询 — 输入关键词搜索今日头条最新作品（图文/视频），支持按阅读量/时间排序、限定时间范围，终端表格展示 + CSV 导出 + 交互式 HTML 报告"
+      },
+      "travel-guide-assistant": {
+        "title": "旅游攻略助手",
+        "desc": "帮你规划旅游行程，查询和核验交通、住宿、景点、美食等信息"
+      },
+      "user-persona-builder": {
+        "title": "用户画像构建",
+        "desc": "Build detailed user personas including demography, pain points, motivations and content pr…"
+      },
+      "video-to-ppt": {
+        "title": "视频转PPT",
+        "desc": "把演示/会议/课程录屏视频自动切页、抽帧、画质增强，导出成每页一张图铺满的图片型 PPTX。支持四档画质（无损 PNG / 高清 / 压缩 / 原尺寸）…"
+      },
+      "wacli": {
+        "title": "WhatsApp",
+        "desc": "Send WhatsApp messages to other people or search/sync WhatsApp history via the wacli CLI (…"
+      },
+      "weather-now": {
+        "title": "天气查询",
+        "desc": "查询城市天气，支持今天/明天/后天预报和多城市对比，自然语言输入即可触发"
+      },
+      "weaver-e10-jucailin": {
+        "title": "泛微E10聚才林人事管理",
+        "desc": "泛微E10聚才林人事管理，帮您处理人事日常事宜：[出勤]-查考勤数据做报表统计、考勤打卡（PC端签到签退）、发考勤流程处理考勤异常；[薪酬]-查工资、社保公积金、调薪记录…"
+      },
+      "weaver-e10-plan": {
+        "title": "泛微e10计划报告",
+        "desc": "E10 计划报告接口 Skill：负责报告的新建、查询、修改、发布、撤回、共享报告分页查询、提交提醒与评论查看"
+      },
+      "web-access": {
+        "title": "Web Access（浏览器自动化）",
+        "desc": "所有联网操作的统一出口：搜索、网页抓取、登录后操作与网页界面交互。"
+      },
+      "wechat-miniprogram": {
+        "title": "微信小程序开发框架",
+        "desc": "WeChat Mini Program (微信小程序) development framework."
+      },
+      "wechat-official-account": {
+        "title": "微信公众号文章",
+        "desc": "Write in-depth articles in WeChat Official Account style, including title, lead, structure…"
+      },
+      "wechat-viral-video-writer": {
+        "title": "视频号爆款拆解",
+        "desc": "分析视频号爆款短视频的选题逻辑与文案结构，并按四段结构生成可直接开拍的口播文案。"
+      },
+      "wechat-wenyan-publish": {
+        "title": "公众号全流程发布",
+        "desc": "微信公众号全流程发布技能：写稿规范 → 封面生成（900×383 无署名）…"
+      },
+      "wechatpay-basic-payment": {
+        "title": "微信支付基础支付",
+        "desc": "微信支付基础支付解决方案，涵盖支付、退款账单、分账、商户进件、开户意愿确认，提供选型/代码示例/业务速查/质量评估/排障五大能力"
+      },
+      "wecom-unified": {
+        "title": "企业微信套件",
+        "desc": "企业微信 CLI 全能套件，覆盖通讯录、文档、在线表格、智能表格、智能文档、日程、会议、待办、微盘、邮件、消息、媒体文件等业务域。…"
+      },
+      "weekly-literature-briefing": {
+        "title": "每周文献热点简报",
+        "desc": "每周医学文献热点简报系统（SkeMex 自进化增强版）。功能：(1) 检索PubMed获取指定领域热点文献；(2) AI翻译标题和摘要为中英对照；(3) 生成简报发送到邮箱；(4)…"
+      },
+      "weekly-report-generator": {
+        "title": "周报生成器",
+        "desc": "Generate polished weekly and daily work reports from scattered todos, chat logs, calendars…"
+      },
       "weixin-file-send": {
         "title": "微信文件发送",
         "desc": "把文件通过微信发给联系人。"
+      },
+      "weiyun": {
+        "title": "腾讯微云",
+        "desc": "微云网盘 MCP 接口完整技能。包含 weiyun.list、weiyun.list_by_category、weiyun.download、weiyun.delete…"
       },
       "x-recruiter": {
         "title": "X 招聘帖",
@@ -233,6 +677,18 @@
       "xiaohongshu-recruiter": {
         "title": "小红书招聘",
         "desc": "在小红书发布 AI 岗位招聘帖，自动生成封面图。"
+      },
+      "xiaoliebian-scrm": {
+        "title": "小裂变私域运营",
+        "desc": "小裂变私域运营，帮你做企业微信社群裂变、活动抽奖，制定朋友圈发布任务、群发触达任务，私域数据分析、社群运营数据分析，自动统计员工聊天排行榜，总结员工和客户聊天内容等"
+      },
+      "youtube-video-research": {
+        "title": "YouTube 视频内容深度调研",
+        "desc": "Enhance any deep research task with first-hand YouTube video evidence"
+      },
+      "zxh-api-connector-builder": {
+        "title": "API 连接器构建",
+        "desc": "对接第三方 API 构建连接器：鉴权、接口与调用方需要的数据形态。"
       }
     },
     "builtinCategory": {
