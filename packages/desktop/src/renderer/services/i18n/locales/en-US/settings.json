@@ -126,21 +126,229 @@
     "teamAuto": "Team · Auto",
     "detailEditViaChat": "Edit via chat",
     "builtinSkill": {
+      "12306": {
+        "title": "China Railway 12306",
+        "desc": "Train schedules, seat availability and station information from China Railway 12306."
+      },
+      "12306-train-assistant": {
+        "title": "12306 Booking Assistant",
+        "desc": "Search and book China Railway tickets: availability, stops, transfers, waitlists, sign-in, orders and payment links."
+      },
+      "a-stock-data": {
+        "title": "A-Share Data Toolkit",
+        "desc": "Full-stack A-share data: quotes, research reports, hot-topic and northbound signals, margin trading and block trades."
+      },
+      "ai-comic-drama-shot-maker": {
+        "title": "Comic Drama Shot Maker",
+        "desc": "Turns a comic panel, character sheet or frozen story beat into one dynamic animated shot."
+      },
+      "ai-short-drama-script": {
+        "title": "AI Short Drama Script",
+        "desc": "Short-drama scripting end to end: full scripts, single episodes, series and episode outlines, rewrites and script diagnosis."
+      },
+      "ai-song-cover-studio": {
+        "title": "AI Song Cover Studio",
+        "desc": "Turns a recording into a newly interpreted cover or a rearrangement from a reference track."
+      },
+      "ai-storyboard-generator": {
+        "title": "Storyboard Generator",
+        "desc": "Turns a script, scene or ad brief into a structured storyboard with a practical shot list."
+      },
+      "ai-video-image-music-studio": {
+        "title": "AI Creation Studio",
+        "desc": "Video, images, music and voice-over in one connected flow, with visual editing in the loop."
+      },
+      "analyze-recruitment-trends": {
+        "title": "Recruitment Trend Insight",
+        "desc": "Reads market, competitor and hiring material for demand shifts and talent-flow signals, with sources, assumptions and recommended actions."
+      },
+      "android-apk-builder": {
+        "title": "Android APK Builder (no aapt2)",
+        "desc": "Builds an installable APK with only JDK + d8 + jarsigner, on a machine with no aapt2 or full Android SDK."
+      },
+      "android-native-dev": {
+        "title": "Android Native Development",
+        "desc": "Android app development and UI design: Material Design 3, Kotlin, Jetpack Compose and the platform conventions."
+      },
+      "apple-design": {
+        "title": "Apple Fluid Interface Design",
+        "desc": "Design review against Apple's fluid-interaction guidance: gesture-driven UI, spring animation, momentum, materials, depth and reduced-motion."
+      },
+      "ardot-skillhub": {
+        "title": "Ardot Board Composer",
+        "desc": "Arranges existing Ardot artboards into a deliverable showcase — state comparisons, review boards, flow walkthroughs, role and device matrices."
+      },
+      "assist-payroll-approval": {
+        "title": "Payroll Approval Assistant",
+        "desc": "Turns payroll results, exception lists, budget comparisons and approval rules into a summary with variance evidence and risk tiers."
+      },
+      "autocad-drawing": {
+        "title": "AutoCAD Drafting",
+        "desc": "Draws, edits and optimises CAD drawings, or extracts data from them — mechanical, architectural, electrical, plumbing, HVAC, steel and process diagrams."
+      },
+      "bid-pipeline": {
+        "title": "Tender Content Pipeline",
+        "desc": "Turns tender notices into publishable posts across WeChat, Toutiao, Xiaohongshu and short video, with covers, artwork and a compliance check."
+      },
+      "bilibili-script": {
+        "title": "Bilibili Long-Video Script",
+        "desc": "Bilibili-style long video scripts with an opening hook, section structure and danmaku-friendly beats."
+      },
+      "btpanel": {
+        "title": "baota Panel & MCP",
+        "desc": "Drives baota Panel: sites, files, databases, Docker, scheduled tasks and server environment, plus status checks and troubleshooting."
+      },
+      "build-job-profile": {
+        "title": "Job Profile Builder",
+        "desc": "Turns hiring needs, business goals and job documents into a reviewable profile: accountabilities, competency bar, tiered requirements and screening evidence."
+      },
+      "chinese-poetry": {
+        "title": "Classical Chinese Literature",
+        "desc": "Finds and interprets classical Chinese poetry and texts — by author, title or theme — with line completion and source tracing."
+      },
+      "ci-cd-and-automation": {
+        "title": "CI/CD & Automation",
+        "desc": "Pipeline design, build and release automation, and the checks that keep a deploy repeatable."
+      },
+      "cn-ecommerce-search": {
+        "title": "China E-commerce Search",
+        "desc": "Product search across the major Chinese marketplaces, with listings and prices side by side."
+      },
+      "comfyui-ops": {
+        "title": "ComfyUI Deployment & Ops",
+        "desc": "Installs, troubleshoots and operates ComfyUI directly on this machine."
+      },
+      "content-factory": {
+        "title": "Content Factory",
+        "desc": "Multi-agent content production: one source piece becomes many formats across channels."
+      },
+      "creative-brainstorming-board": {
+        "title": "Product Brainstorm Board",
+        "desc": "A five-column whiteboard method that forces an idea forward from the real world to a stated problem — for new products and hypothesis-led exploration."
+      },
       "cron": {
         "title": "Scheduled Tasks",
         "desc": "Create and manage tasks that run on a schedule."
       },
-      "officecli": {
-        "title": "Office Documents",
-        "desc": "Create, analyse and edit Word, Excel and PowerPoint files."
+      "delivery-no-pseudoblock": {
+        "title": "Pre-Delivery Self-Check",
+        "desc": "A behavioural gate run before anything reaches the user — a final summary, a conclusion, a status report — that actually loads and executes rather than claiming to."
       },
-      "one-config": {
-        "title": "App Configuration",
-        "desc": "Inspect and adjust this application's configuration."
+      "design-first": {
+        "title": "Brainstorm, Design First",
+        "desc": "Settles the design before any code is written, so the build starts from an agreed shape."
       },
-      "skill-creator": {
-        "title": "Skill Creator",
-        "desc": "A guide to writing effective skills of your own."
+      "dingtalk-unified": {
+        "title": "DingTalk Suite",
+        "desc": "The official DingTalk Workspace CLI: messages, group chats, contacts, calendar, to-dos, approvals, attendance, logs, AI tables and docs."
+      },
+      "douyin-video-fetch": {
+        "title": "Douyin Video Fetch",
+        "desc": "Collects Douyin videos and their metadata for later analysis."
+      },
+      "drawio": {
+        "title": "Draw.io Diagramming",
+        "desc": "Creates native, editable Draw.io diagrams and exports them."
+      },
+      "element-ui-guide": {
+        "title": "Element UI Reference",
+        "desc": "Element UI (Vue 2) component reference and code generation — props, events, methods and slots, or a working component."
+      },
+      "expense-merger": {
+        "title": "Expense Invoice Merger",
+        "desc": "Merges a folder of OFD and PDF invoices into one PDF, with a cover sheet summarising city, expense category and entertainment detail."
+      },
+      "flight-trip-advisor": {
+        "title": "Flight Trip Advisor",
+        "desc": "Weather at both ends, delay risk, what to wear and airport ground notes for a given date and route."
+      },
+      "fore-vip-geo-optimizer": {
+        "title": "GEO Optimizer",
+        "desc": "Five-step pipeline for generative-engine citation share: searches AI engines with real user questions, collects answers and works the gaps."
+      },
+      "fore-vip-oss": {
+        "title": "Object Storage Setup",
+        "desc": "Explains object storage, then walks through picking and configuring a provider — Alibaba OSS, Tencent COS, AWS S3, Huawei OBS, MinIO and others."
+      },
+      "fortune-master": {
+        "title": "Chinese Metaphysics Reference",
+        "desc": "Bazi, Zi Wei Dou Shu, Qi Men Dun Jia, Liu Yao, Mei Hua, tarot and astrology charts. For entertainment only."
+      },
+      "frontend-design": {
+        "title": "Frontend Design",
+        "desc": "Interface design for the web: layout, visual hierarchy and the component vocabulary a build can follow."
+      },
+      "frontend-dev": {
+        "title": "Frontend Development",
+        "desc": "Building web interfaces — components, state, styling and the browser behaviour underneath."
+      },
+      "fund-analysis": {
+        "title": "Fund Analysis",
+        "desc": "Reads a fund's holdings, performance and risk profile, and puts the numbers in context."
+      },
+      "github": {
+        "title": "GitHub",
+        "desc": "Works GitHub through the `gh` CLI: issues, pull requests, workflow runs and raw API calls."
+      },
+      "gog": {
+        "title": "Google Workspace",
+        "desc": "Google Workspace from the command line: Gmail, Calendar, Drive, Contacts, Sheets and Docs."
+      },
+      "gongwen-format": {
+        "title": "Official Document Formatting",
+        "desc": "Formats a Word or Markdown document to China's official-document standards (GB/T 9704-2012, GB/T 33476.2-2016) — typeface, size and spacing."
+      },
+      "govproc-method-selector": {
+        "title": "Public Procurement Method Selector",
+        "desc": "Tests a public-procurement project against the statutory conditions for each of the six methods, and verifies the choice already made."
+      },
+      "grilling": {
+        "title": "Grilling",
+        "desc": "Stress-tests a plan or decision by interrogating it point by point, as hard as you asked for."
+      },
+      "h3-prompt-writing": {
+        "title": "MiniMax H3 Prompting",
+        "desc": "Writes MiniMax H3 video prompts for T2VA, I2VA, FL2VA, L2VA and Ref2VA."
+      },
+      "hot-search-cn": {
+        "title": "China Trending Aggregator",
+        "desc": "Trending lists from Weibo, Zhihu, Baidu, Bilibili, Douyin, 36Kr, Tieba and Toutiao, single-platform or compared."
+      },
+      "identify-key-talent": {
+        "title": "Key Talent Identification",
+        "desc": "Reads role definitions against résumés, performance and reviews to flag the people worth verifying first, with an evidence matrix and risk plan."
+      },
+      "imap-smtp-email": {
+        "title": "IMAP / SMTP Email",
+        "desc": "Reads and sends mail over IMAP and SMTP: unread checks, message content, search and mailbox management."
+      },
+      "invoice-verify": {
+        "title": "Invoice Verification",
+        "desc": "Checks whether an invoice is genuine and what state it is in — voided, credited or flagged — from text or an uploaded file."
+      },
+      "ios-application-dev": {
+        "title": "iOS Application Development",
+        "desc": "iOS app development: Swift, SwiftUI and UIKit, and the platform conventions Apple expects."
+      },
+      "ixhlink-skills-id-photo-standard": {
+        "title": "Standard ID Photo",
+        "desc": "Turns a portrait into a compliant ID photo at résumé, exam, passport and visa specifications — no beautification."
+      },
+      "karpathy-guidelines": {
+        "title": "Karpathy Coding Guidelines",
+        "desc": "Behavioural guidelines that cut the coding mistakes LLMs keep making. Use when writing or reviewing code."
+      },
+      "kdocs": {
+        "title": "Kingsoft Docs / WPS Cloud",
+        "desc": "The official Kingsoft Docs skill: create, read, edit, search, share and organise cloud documents."
+      },
+      "lark-unified": {
+        "title": "Lark / Feishu Suite",
+        "desc": "A unified Lark CLI: messaging, documents, spreadsheets, Base tables and calendar."
+      },
+      "lexiang-knowledge-base": {
+        "title": "Tencent Lexiang",
+        "desc": "Full Lexiang knowledge-base access over MCP: search, read and write across personal and shared bases."
       },
       "local-ocr-linux": {
         "title": "Local OCR (Linux)",
@@ -154,6 +362,18 @@
         "title": "Local OCR (Windows)",
         "desc": "Read text from images offline with the built-in Windows OCR engine."
       },
+      "markitdown-skill": {
+        "title": "MarkItDown",
+        "desc": "Converts documents to Markdown with Microsoft's MarkItDown CLI. PDF, Office and more."
+      },
+      "mcporter": {
+        "title": "MCP Manager",
+        "desc": "Lists, configures, authenticates and calls MCP servers and their tools directly, over HTTP or stdio."
+      },
+      "meeting-minutes-assistant": {
+        "title": "Meeting Minutes & Actions",
+        "desc": "Turns a meeting into structured minutes: decisions, action items, owners, due dates and the follow-up loop."
+      },
       "mermaid": {
         "title": "Mermaid Diagrams",
         "desc": "Render flowcharts, sequence and ER diagrams as SVG or ASCII."
@@ -165,6 +385,10 @@
       "morph-ppt-3d": {
         "title": "3D Morph Slides",
         "desc": "Morph decks with GLB models and cinematic camera moves."
+      },
+      "officecli": {
+        "title": "Office Documents",
+        "desc": "Create, analyse and edit Word, Excel and PowerPoint files."
       },
       "officecli-academic-paper": {
         "title": "Academic Paper",
@@ -198,6 +422,14 @@
         "title": "Excel Spreadsheets",
         "desc": "Anything involving a .xlsx file, as input or output."
       },
+      "old-photo-restorer": {
+        "title": "Old Photo Restoration",
+        "desc": "Restores old, yellowed, scratched or damaged photographs — creases, noise, stains and missing patches — delivered without a watermark."
+      },
+      "one-config": {
+        "title": "App Configuration",
+        "desc": "Inspect and adjust this application's configuration."
+      },
       "one-troubleshooting": {
         "title": "Troubleshooting",
         "desc": "Diagnose and work through problems with this application."
@@ -214,17 +446,229 @@
         "title": "OpenClaw Setup",
         "desc": "Install, deploy and use the OpenClaw personal assistant."
       },
+      "patent-disclosure-writer": {
+        "title": "Patent Disclosure Writer",
+        "desc": "Turns a brief idea, code, a PRD or drawings into a strengthened patent disclosure document."
+      },
       "pdf": {
         "title": "PDF Toolkit",
         "desc": "Extract text and tables, and create, merge or split PDFs."
+      },
+      "peekaboo": {
+        "title": "macOS UI Automation",
+        "desc": "Captures and automates the macOS interface through the Peekaboo CLI."
+      },
+      "pm-toolkit-zxh": {
+        "title": "Data & Efficiency Toolkit",
+        "desc": "A/B significance, cohort retention, SQL pulls, pre-launch review, copy proofing, résumé critique, NDA and privacy-policy drafts."
+      },
+      "poster-design-studio": {
+        "title": "Poster Design Studio",
+        "desc": "Turns a topic, a product photo or brand references into a poster worth stopping for."
+      },
+      "price-compare": {
+        "title": "Price Comparison",
+        "desc": "Compares several products on price and spec, and says which is cheapest and which is the better buy."
+      },
+      "proboost-tiktok-shop-analysis": {
+        "title": "TikTok Shop Analysis",
+        "desc": "Reads a TikTok Shop's performance — products, traffic and conversion — and where the operating gap is."
+      },
+      "proboost-tiktok-video-analysis": {
+        "title": "TikTok Viral Video Teardown",
+        "desc": "Breaks a high-performing TikTok video down to the choices that made it work, and what to reuse."
+      },
+      "product-discovery-zxh": {
+        "title": "Product Discovery",
+        "desc": "Idea brainstorming, risky-assumption mapping, impact × risk ranking, validation experiments and interview synthesis."
+      },
+      "product-manager": {
+        "title": "Product Manager",
+        "desc": "The full product lifecycle: opportunity assessment, PRD writing, roadmap planning, GTM and post-launch measurement."
+      },
+      "product-strategy-zxh": {
+        "title": "Product Strategy",
+        "desc": "Vision, strategy canvas, business and lean canvas, monetisation and pricing, SWOT, PESTLE, Ansoff, Porter and value proposition."
+      },
+      "product-trend-researcher": {
+        "title": "Trend Research",
+        "desc": "Market trends, competitive landscape and technology scans, delivered as a decision brief with source ratings and confidence."
+      },
+      "pubmed-literature-search": {
+        "title": "PubMed Literature Search",
+        "desc": "Keyword literature search across PubMed within a required time window, delivered as a report."
+      },
+      "qq-email": {
+        "title": "QQ Mail",
+        "desc": "Receives over IMAP and sends over SMTP for QQ Mail, with credentials read from the environment."
+      },
+      "qqmusic": {
+        "title": "QQ Music",
+        "desc": "Searches songs, albums, playlists, music videos and artists, plus daily recommendations."
+      },
+      "remove-watermark": {
+        "title": "Watermark Removal",
+        "desc": "Removes watermarks, logos, corner marks, text and subtitles from an image."
+      },
+      "resume-design": {
+        "title": "Résumé Design",
+        "desc": "Résumé layout and template work through the Meitu Design Studio AI design CLI (`designkit`)."
+      },
+      "screen-automation": {
+        "title": "Screen Automation",
+        "desc": "Local screen vision for recognising and locating interface elements, then completing a task on the current screen on Windows or macOS."
+      },
+      "security-and-hardening": {
+        "title": "Security & Hardening",
+        "desc": "OWASP prevention, authentication, secrets management and dependency auditing."
+      },
+      "self-media-distribution": {
+        "title": "Multi-Platform Distribution",
+        "desc": "One-click publishing across creator platforms and multiple accounts — Douyin, WeChat Channels, Kuaishou and the rest."
+      },
+      "seo-content-optimizer": {
+        "title": "SEO Content Optimizer",
+        "desc": "Optimises content for search visibility and for being cited by AI answers."
+      },
+      "skill-creator": {
+        "title": "Skill Creator",
+        "desc": "A guide to writing effective skills of your own."
+      },
+      "skill-scanner": {
+        "title": "Skill Security Scanner",
+        "desc": "Scans any agent skill for security risks before you install or use it. Powered by Tencent Zhuque Lab."
+      },
+      "smart-product-selector": {
+        "title": "E-commerce Product Selection",
+        "desc": "Market data collection, margin calculation and selection analysis for deciding what to sell."
+      },
+      "social-media-content": {
+        "title": "Social Media Content",
+        "desc": "Produces social content systematically — topics, copy, tags and a publishing cadence."
+      },
+      "software-copyright-cn": {
+        "title": "China Software Copyright Filing",
+        "desc": "Prepares the identification materials a Chinese software copyright registration requires."
+      },
+      "solo-company": {
+        "title": "One-Person Company Coach",
+        "desc": "Walks a solo founder through positioning, product, pricing, acquisition, delivery and retrospective, with decision trees and a dashboard."
       },
       "story-roleplay": {
         "title": "Story Roleplay",
         "desc": "Character cards and world info in PNG, WebP and JSON."
       },
+      "superpowers": {
+        "title": "Superpowers Engineering Method",
+        "desc": "Spec before code, an executable plan, enforced red-green TDD, subagent-driven development, systematic debugging and review, then merge."
+      },
+      "supertonic-tts": {
+        "title": "Local Fast TTS",
+        "desc": "High-quality local speech synthesis with supertonic-mnn: 30+ languages, ten voices, CLI and Python API."
+      },
+      "talking-avatar-video": {
+        "title": "Talking Avatar Video",
+        "desc": "One portrait and a short script or recording become a talking-head video with steady, natural delivery."
+      },
+      "taobao": {
+        "title": "Cross-Platform Price Check",
+        "desc": "Finds the best price for a product across Taobao, Tmall, JD, Pinduoduo, Douyin and Kuaishou."
+      },
+      "tax-policy-knowledge": {
+        "title": "Tax Policy Knowledge Base",
+        "desc": "Reference knowledge base for Chinese tax and finance policy."
+      },
+      "tencent-meeting-skill": {
+        "title": "Tencent Meeting",
+        "desc": "Book, edit and cancel meetings; look up details, participants, waiting rooms, a user's meeting list and recordings."
+      },
+      "the-entrepreneurship-handbook": {
+        "title": "The Entrepreneurship Handbook",
+        "desc": "A Q&A skill for founders, managers and business leaders."
+      },
+      "tiktok-script": {
+        "title": "TikTok Script",
+        "desc": "TikTok short-video scripts built around pacing, text overlays and trend adaptation."
+      },
+      "totorosir-work-report": {
+        "title": "Work Report Assistant",
+        "desc": "Weekly, daily, monthly, quarterly and annual reports, plus project and milestone updates, from scattered notes and ticket numbers."
+      },
+      "toutiao-search": {
+        "title": "Toutiao Content Search",
+        "desc": "Searches Toutiao posts and videos by keyword, sorted by reads or date, with a table, CSV export and an interactive HTML report."
+      },
+      "travel-guide-assistant": {
+        "title": "Travel Planner",
+        "desc": "Plans an itinerary and checks the transport, lodging, sights and food along it."
+      },
+      "user-persona-builder": {
+        "title": "User Persona Builder",
+        "desc": "Builds detailed personas: demographics, pain points, motivations and content preferences."
+      },
+      "video-to-ppt": {
+        "title": "Video to PPT",
+        "desc": "Splits a talk, meeting or lecture recording into slides — frame extraction, enhancement and duplicate removal — exported as a full-bleed PPTX."
+      },
+      "wacli": {
+        "title": "WhatsApp",
+        "desc": "Sends WhatsApp messages and searches or syncs history through the wacli CLI."
+      },
+      "weather-now": {
+        "title": "Weather",
+        "desc": "City weather in plain language: today, tomorrow, the day after, and several cities compared."
+      },
+      "weaver-e10-jucailin": {
+        "title": "Weaver E10 HR",
+        "desc": "Day-to-day HR in Weaver E10: attendance data and reports, clock-in, exception workflows, payroll, social insurance, pay changes and recruiting."
+      },
+      "weaver-e10-plan": {
+        "title": "Weaver E10 Plans & Reports",
+        "desc": "Creates, finds, edits, publishes and withdraws E10 reports, plus shared-report paging, submission reminders and comments."
+      },
+      "web-access": {
+        "title": "Web Access",
+        "desc": "Every online action goes through here: search, page fetching, signed-in workflows and browser interaction."
+      },
+      "wechat-miniprogram": {
+        "title": "WeChat Mini Program",
+        "desc": "The WeChat Mini Program framework, for building apps inside WeChat."
+      },
+      "wechat-official-account": {
+        "title": "WeChat Official Account Article",
+        "desc": "In-depth articles in Official Account style — title, lead, structure and close."
+      },
+      "wechat-viral-video-writer": {
+        "title": "WeChat Channels Teardown",
+        "desc": "Breaks a viral Channels video into its topic logic and copy structure, then writes a four-part script you can shoot."
+      },
+      "wechat-wenyan-publish": {
+        "title": "Official Account Publishing",
+        "desc": "End to end: writing standards, a 900×383 cover, SVG-to-PNG artwork, wenyan theming and publication."
+      },
+      "wechatpay-basic-payment": {
+        "title": "WeChat Pay Basics",
+        "desc": "Payments, refunds, statements, profit sharing, merchant onboarding and account consent — with selection guidance, code samples and troubleshooting."
+      },
+      "wecom-unified": {
+        "title": "WeCom Suite",
+        "desc": "A full WeCom CLI: contacts, documents, sheets, smart tables and docs, calendar, meetings, to-dos, drive, mail, messages and media."
+      },
+      "weekly-literature-briefing": {
+        "title": "Weekly Literature Briefing",
+        "desc": "Pulls the week's PubMed highlights in a field, translates titles and abstracts bilingually, and emails the briefing."
+      },
+      "weekly-report-generator": {
+        "title": "Weekly Report Generator",
+        "desc": "Turns scattered to-dos, chat logs and calendars into a polished weekly or daily report."
+      },
       "weixin-file-send": {
         "title": "WeChat File Send",
         "desc": "Send files to a WeChat contact from a conversation."
+      },
+      "weiyun": {
+        "title": "Tencent Weiyun",
+        "desc": "Full Weiyun cloud-drive access over MCP: list, browse by category, download, delete and more."
       },
       "x-recruiter": {
         "title": "X Recruiting Posts",
@@ -233,6 +677,18 @@
       "xiaohongshu-recruiter": {
         "title": "Xiaohongshu Recruiting",
         "desc": "Publish AI hiring posts on Xiaohongshu with generated covers."
+      },
+      "xiaoliebian-scrm": {
+        "title": "Xiaoliebian Private Domain",
+        "desc": "WeCom community growth and giveaways, Moments and broadcast tasks, private-domain and community analytics, and staff conversation summaries."
+      },
+      "youtube-video-research": {
+        "title": "YouTube Video Research",
+        "desc": "Backs a research task with first-hand evidence drawn from YouTube video."
+      },
+      "zxh-api-connector-builder": {
+        "title": "API Connector Builder",
+        "desc": "Builds a connector against a third-party API — auth, endpoints and the shape the caller needs."
       }
     },
     "builtinCategory": {

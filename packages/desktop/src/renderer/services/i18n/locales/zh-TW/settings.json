@@ -124,21 +124,229 @@
     "deleteAffectsNewOnlyHint": "刪除僅影響新會話：歷史會話中已選用的技能仍可繼續使用。",
     "detailEditViaChat": "在對話中編輯",
     "builtinSkill": {
+      "12306": {
+        "title": "12306 鐵路查詢",
+        "desc": "查詢 12306 的車次時刻、餘票與車站資訊。"
+      },
+      "12306-train-assistant": {
+        "title": "12306 訂票助手",
+        "desc": "12306 查詢與訂票輔助技能，支援餘票查詢、經停站查詢、中轉換乘、候補查詢與提交/取消、登入狀態檢查、密碼登入與二維碼登入、下單與支付連結獲取"
+      },
+      "a-stock-data": {
+        "title": "A股全棧資料",
+        "desc": "A股全棧資料工具包 — 覆蓋行情(mootdx+騰訊+百度K線)、研報(東財+同花順+iwencai)、訊號(同花順熱點+北向+龍虎榜+解禁+行業)…"
+      },
+      "ai-comic-drama-shot-maker": {
+        "title": "漫劇鏡頭生成",
+        "desc": "Turn a comic panel, character sheet, webtoon frame, or frozen story beat into one dynamic…"
+      },
+      "ai-short-drama-script": {
+        "title": "AI短劇劇本",
+        "desc": "AI 短劇劇本輸出引擎：完整劇本、單集劇本、劇集與分集大綱，以及劇本的改寫、最佳化與診斷。"
+      },
+      "ai-song-cover-studio": {
+        "title": "AI翻唱歌曲製作",
+        "desc": "Turn a song recording into a newly interpreted cover or rearranged song from a reference p…"
+      },
+      "ai-storyboard-generator": {
+        "title": "分鏡生成器",
+        "desc": "Turn a script, scene, or ad brief into a structured AI storyboard plan with a practical sh…"
+      },
+      "ai-video-image-music-studio": {
+        "title": "AI創作工作臺·影片圖片音樂",
+        "desc": "Generate AI video, images, music, and voice-over in one connected creative flow, edit visu…"
+      },
+      "analyze-recruitment-trends": {
+        "title": "eRoad 招聘趨勢洞察",
+        "desc": "根據使用者提供的結構化市場、競品和招聘資料，識別招聘需求變化、人才流動訊號和競爭態勢，形成帶來源、假設、限制與行動建議的招聘趨勢洞察。用於招聘負責人進行季度或專項規劃…"
+      },
+      "android-apk-builder": {
+        "title": "Android APK 構建器（免 aapt2）",
+        "desc": "在缺少 aapt2 或完整 Android SDK 的環境中，僅用 JDK + d8 + jarsigner 構建可安裝的 APK。…"
+      },
+      "android-native-dev": {
+        "title": "Android 原生開發",
+        "desc": "Android native application development and UI design guide. Covers Material Design 3, Kotl…"
+      },
+      "apple-design": {
+        "title": "Apple流體介面設計指南",
+        "desc": "基於Apple WWDC流體互動設計，用於UI設計評審、手勢驅動介面、彈簧動畫、拖拽/側滑/抽屜彈窗、動量過渡、毛玻璃材質、深度層級、光學字號排版、減弱動效無障礙場景…"
+      },
+      "ardot-skillhub": {
+        "title": "ardot",
+        "desc": "用於在 Ardot 中把多個已有畫板自動編排成可交付的衍生展示區。適合多狀態對照、設計評審看板、流程演示、角色/裝置矩陣。也可作為 本平臺 + Ardot AI 設計工"
+      },
+      "assist-payroll-approval": {
+        "title": "eRoad 薪酬結果審批輔助",
+        "desc": "面向薪酬審批人、HR 和財務，根據使用者上傳的薪酬結果、異常清單、預算對比和審批規則，整理審批摘要、差異證據、風險分級和需要補充的材料，幫助人工做出有依據的審批判斷。…"
+      },
+      "autocad-drawing": {
+        "title": "AutoCAD 圖紙繪製",
+        "desc": "繪製、生成、修改與最佳化 CAD 圖紙，或從圖紙中提取資料——機械、建築、電氣、給排水、暖通、鋼結構與工藝流程圖。"
+      },
+      "bid-pipeline": {
+        "title": "招投標內容生產流水線",
+        "desc": "招投標內容生產流水線：把徵集公告改寫成各平臺釋出內容，生成封面貼圖影片，並做釋出前合規校驗與選題去重。"
+      },
+      "bilibili-script": {
+        "title": "B站長影片指令碼",
+        "desc": "Generate Bilibili-style long video scripts with opening hook, section structure, danmaku i…"
+      },
+      "btpanel": {
+        "title": "寶塔面板管理與 MCP 接入",
+        "desc": "寶塔面板 Skill，讓 AI Agent 呼叫寶塔面板能力，管理網站、檔案、資料庫、Docker、計劃任務及伺服器環境，完成狀態查詢、故障排查和安全檢查等日常運維操作…"
+      },
+      "build-job-profile": {
+        "title": "eRoad 智慧崗位畫像",
+        "desc": "面向 HR、招聘人員和用人經理，把招聘需求、業務目標、崗位任務、約束或單份崗位文件轉成結構化、可評審的崗位畫像，包含結果責任、能力標準、任職要求分層、篩選證據、假設和待確認項。…"
+      },
+      "chinese-poetry": {
+        "title": "國學詩詞助手",
+        "desc": "幫助使用者查詢、賞析古詩詞與國學典籍：按作者、篇名、主題查詢詩句，補全詩句、溯源名句、解讀文言文"
+      },
+      "ci-cd-and-automation": {
+        "title": "CI/CD 自動化",
+        "desc": "流水線設計、構建與釋出自動化，以及讓部署可重複的各項檢查。"
+      },
+      "cn-ecommerce-search": {
+        "title": "中國電商搜尋",
+        "desc": "在國內主流電商平臺搜尋商品，並排展示商品資訊與價格。"
+      },
+      "comfyui-ops": {
+        "title": "ComfyUI 部署運維助手",
+        "desc": "ComfyUI 部署運維與排障工具包，直接在本機執行安裝、排障與運維操作"
+      },
+      "content-factory": {
+        "title": "內容工廠",
+        "desc": "Multi-agent content production system. One piece of source content becomes many formats —…"
+      },
+      "creative-brainstorming-board": {
+        "title": "創意產品頭腦風暴白板",
+        "desc": "提供基於5欄白板方法論的結構化產品創意迭代流程，從現實世界到問題推進，強制思維演化；適用於新產品構思、複雜問題拆解、假設驗證式創新探索"
+      },
       "cron": {
         "title": "定時任務",
         "desc": "建立和管理按計畫自動執行的任務。"
       },
-      "officecli": {
-        "title": "Office 文件",
-        "desc": "建立、分析和修改 Word、Excel、PowerPoint 檔案。"
+      "delivery-no-pseudoblock": {
+        "title": "AI交付前全自動自檢技能",
+        "desc": "交付前偽阻斷 / 緩幹閘門（通用行為級紀律）。任何一次向使用者交付結果之前（本平臺、寫最終總結、下結論、狀態彙報、向使用者提問或徵詢）必須真載入並實跑本技能，對整條"
       },
-      "one-config": {
-        "title": "應用設定",
-        "desc": "檢視和調整本應用的設定。"
+      "design-first": {
+        "title": "頭腦風暴·設計先行",
+        "desc": "先把設計定下來再動手寫碼，讓開發從一個已達成共識的形態開始。"
       },
-      "skill-creator": {
-        "title": "技能建立指南",
-        "desc": "指導你撰寫自己的技能。"
+      "dingtalk-unified": {
+        "title": "釘釘套件",
+        "desc": "釘釘 CLI 全能套件，基於官方 DingTalk Workspace CLI（dws）操作釘釘訊息、群聊、通訊錄、日曆、待辦、審批、考勤、日誌、DING、AI 表格、釘釘文件…"
+      },
+      "douyin-video-fetch": {
+        "title": "抖音影片採集",
+        "desc": "抖音影片採集"
+      },
+      "drawio": {
+        "title": "Draw.io 專業繪圖",
+        "desc": "建立可原生編輯的 Draw.io 圖表並匯出。"
+      },
+      "element-ui-guide": {
+        "title": "Element UI 元件速查與程式碼生成",
+        "desc": "Element UI (Vue 2) 全量元件速查與程式碼生成技能"
+      },
+      "expense-merger": {
+        "title": "報銷發票合併",
+        "desc": "把一個目錄下的 OFD + PDF 報銷發票合併成單 PDF，封面帶城市彙總、費用科目彙總與業務招待費明細。自動識別票面形式（專票/普票/鐵路電子客票/行程單等）與費用科目…"
+      },
+      "flight-trip-advisor": {
+        "title": "航班出行決策助手",
+        "desc": "航班出行決策助手。根據出行日期、航線和可選的航班號，輸出出發地與目的地的天氣對比、延誤風險評估、穿衣建議和機場地面通行提示。…"
+      },
+      "fore-vip-geo-optimizer": {
+        "title": "GEO最佳化",
+        "desc": "GEO 生成式引擎引用佔位（fore.vip）。輸入一個主題或產品名稱，執行五步流水線：① 以真實使用者問句聯網檢索 AI 搜尋（豆包/Kimi/DeepSeek/秘塔等）…"
+      },
+      "fore-vip-oss": {
+        "title": "OSS 物件儲存助手",
+        "desc": "物件儲存（OSS）入門與配置助手。向使用者介紹 OSS 是什麼、可應用場景…"
+      },
+      "fortune-master": {
+        "title": "命理大師",
+        "desc": "全體系命理大師 — 八字四柱、紫微斗數、奇門遁甲、六爻、梅花易數、塔羅、星盤"
+      },
+      "frontend-design": {
+        "title": "前端設計",
+        "desc": "面向 Web 的介面設計：佈局、視覺層級，以及開發可直接落地的元件語彙。"
+      },
+      "frontend-dev": {
+        "title": "前端開發",
+        "desc": "Web 介面開發：元件、狀態、樣式，以及背後的瀏覽器行為。"
+      },
+      "fund-analysis": {
+        "title": "基金分析",
+        "desc": "解讀基金的持倉、業績與風險特徵，把數字放回上下文裡看。"
+      },
+      "github": {
+        "title": "GitHub",
+        "desc": "透過 `gh` 命令列操作 GitHub：issue、pull request、workflow 執行與原始 API 呼叫。"
+      },
+      "gog": {
+        "title": "Google全家桶",
+        "desc": "Google Workspace CLI for Gmail, Calendar, Drive, Contacts, Sheets, and Docs."
+      },
+      "gongwen-format": {
+        "title": "文件格式化排版",
+        "desc": "把使用者編好內容的 Word 或 Markdown 文件一鍵排版為符合黨政機關公文國標（GB/T 9704-2012 / GB/T 33476.2-2016）…"
+      },
+      "govproc-method-selector": {
+        "title": "政府採購方式選擇助手",
+        "desc": "政府採購領域\"某專案應選/已選何種採購方式\"的法定適用條件判定與合規驗證引擎。 六種法定方式（公開/邀請招標、競談/磋商/詢價/單一來源）+"
+      },
+      "grilling": {
+        "title": "嚴格拷問",
+        "desc": "逐題追問、壓力測試一個方案或決策，拷問得和你要求的一樣狠。"
+      },
+      "h3-prompt-writing": {
+        "title": "MiniMax H3 提示詞編寫",
+        "desc": "Write MiniMax H3 video generation prompts for T2VA, I2VA, FL2VA, L2VA, and Ref2VA."
+      },
+      "hot-search-cn": {
+        "title": "全網熱搜聚合",
+        "desc": "全平臺熱搜聚合：微博、知乎、百度、B站、抖音、36氪、貼吧、頭條熱榜，一鍵獲取全網熱點趨勢，支援單平臺與跨平臺對比"
+      },
+      "identify-key-talent": {
+        "title": "eRoad 關鍵人才識別",
+        "desc": "根據使用者上傳的崗位/關鍵任務說明，以及人才履歷、績效、評價等結構化表格或多份資料，識別值得優先核實的關鍵人才，輸出證據矩陣、推薦分層、風險與補證計劃。適用於 HR…"
+      },
+      "imap-smtp-email": {
+        "title": "IMAP/SMTP郵件",
+        "desc": "Read and send email via IMAP/SMTP. Check for new/unread messages, fetch content, search ma…"
+      },
+      "invoice-verify": {
+        "title": "發票查驗",
+        "desc": "查驗發票真偽與狀態（作廢、紅衝、異常），支援文字輸入與附件識別兩種方式。"
+      },
+      "ios-application-dev": {
+        "title": "iOS 應用開發",
+        "desc": "iOS 應用開發：Swift、SwiftUI 與 UIKit，以及 Apple 的平臺規範。"
+      },
+      "ixhlink-skills-id-photo-standard": {
+        "title": "標準證件照片",
+        "desc": "合規向標準證件照，上傳人像後生成可用於簡歷/考試/辦證場景的標準規格照片"
+      },
+      "karpathy-guidelines": {
+        "title": "Karpathy行為準則",
+        "desc": "Behavioral guidelines to reduce common LLM coding mistakes."
+      },
+      "kdocs": {
+        "title": "金山文件|WPS雲文件",
+        "desc": "操作金山文件（WPS 雲文件 / Kdocs / 365.kdocs.cn / www.kdocs.cn）雲文件的官方 Skill。核心能力覆蓋雲端新建、讀取、編輯、搜尋、分享…"
+      },
+      "lark-unified": {
+        "title": "飛書套件",
+        "desc": "Unified Lark/Feishu CLI suite covering messaging, documents, spreadsheets, base tables, ca…"
+      },
+      "lexiang-knowledge-base": {
+        "title": "騰訊樂享",
+        "desc": "樂享知識庫 MCP 全功能技能：跨個人與共享知識庫的搜尋、閱讀與寫入。"
       },
       "local-ocr-linux": {
         "title": "本機 OCR（Linux）",
@@ -152,6 +360,18 @@
         "title": "本機 OCR（Windows）",
         "desc": "用系統內建的 Windows OCR 引擎離線辨識圖片文字，不連網。"
       },
+      "markitdown-skill": {
+        "title": "MarkItDown",
+        "desc": "Convert documents to Markdown using Microsoft's MarkItDown CLI (`markitdown`)…"
+      },
+      "mcporter": {
+        "title": "MCP管理器",
+        "desc": "Use the mcporter CLI to list, configure, auth, and call MCP servers/tools directly (HTTP o…"
+      },
+      "meeting-minutes-assistant": {
+        "title": "會議紀要→待辦助手",
+        "desc": "把會議整理成結構化紀要：決策、待辦事項、負責人、截止時間與後續跟進閉環。"
+      },
       "mermaid": {
         "title": "Mermaid 圖表",
         "desc": "把流程圖、時序圖、ER 圖算繪成 SVG 或 ASCII。"
@@ -163,6 +383,10 @@
       "morph-ppt-3d": {
         "title": "3D Morph 簡報",
         "desc": "在 Morph 動效基礎上加入 GLB 模型與運鏡。"
+      },
+      "officecli": {
+        "title": "Office 文件",
+        "desc": "建立、分析和修改 Word、Excel、PowerPoint 檔案。"
       },
       "officecli-academic-paper": {
         "title": "學術論文",
@@ -196,6 +420,14 @@
         "title": "Excel 表格",
         "desc": "涉及 .xlsx 的一切讀寫操作。"
       },
+      "old-photo-restorer": {
+        "title": "老舊照片修復無水印版",
+        "desc": "修復老舊、泛黃、劃痕、摺痕、噪點、汙漬與破損的照片，無水印交付。"
+      },
+      "one-config": {
+        "title": "應用設定",
+        "desc": "檢視和調整本應用的設定。"
+      },
       "one-troubleshooting": {
         "title": "故障排查",
         "desc": "診斷並解決本應用的使用問題。"
@@ -212,17 +444,229 @@
         "title": "OpenClaw 安裝設定",
         "desc": "安裝、部署和使用 OpenClaw 個人助理。"
       },
+      "patent-disclosure-writer": {
+        "title": "專利技術交底書撰寫助手",
+        "desc": "Autonomously turn brief ideas, code, PRDs, technical documents, or drawings into strengthe…"
+      },
       "pdf": {
         "title": "PDF 工具箱",
         "desc": "擷取文字和表格，建立、合併、分割 PDF。"
+      },
+      "peekaboo": {
+        "title": "macOS介面自動化",
+        "desc": "Capture and automate macOS UI with the Peekaboo CLI."
+      },
+      "pm-toolkit-zxh": {
+        "title": "資料與效率工具 · zxh",
+        "desc": "資料查詢與日常雜務：A/B 檢驗、佇列留存、SQL 取數、上線前審查、文案校對、簡歷診斷、NDA 與隱私政策起草。"
+      },
+      "poster-design-studio": {
+        "title": "海報設計工作室",
+        "desc": "Turn a topic description, a product photo, or brand references into a scroll-stopping even…"
+      },
+      "price-compare": {
+        "title": "商品比價",
+        "desc": "多商品比價助手：輸入多個商品的價格與引數，輸出最低價與價效比建議"
+      },
+      "proboost-tiktok-shop-analysis": {
+        "title": "TikTok店鋪經營分析",
+        "desc": "分析 TikTok 店鋪的經營表現——商品、流量與轉化，並指出經營缺口在哪。"
+      },
+      "proboost-tiktok-video-analysis": {
+        "title": "TikTok爆款影片拆解",
+        "desc": "拆解 TikTok 爆款影片背後的選擇，以及哪些可以複用。"
+      },
+      "product-discovery-zxh": {
+        "title": "產品發現 · zxh",
+        "desc": "產品發現全流程：頭腦風暴點子、挖掘風險假設、按影響×風險排序、設計驗證實驗、整理訪談並提煉機會點。"
+      },
+      "product-manager": {
+        "title": "產品經理",
+        "desc": "產品經理全生命週期技能，覆蓋機會評估、PRD 撰寫、路線圖規劃、GTM 上市與上線後度量"
+      },
+      "product-strategy-zxh": {
+        "title": "產品戰略 · zxh",
+        "desc": "把方向說清楚：產品願景、戰略畫布、商業模式與精益畫布、變現與定價、SWOT、PESTLE、安索夫矩陣、波特五力與價值主張。"
+      },
+      "product-trend-researcher": {
+        "title": "趨勢研究",
+        "desc": "做市場趨勢、競品格局與技術掃描研究，輸出帶信源評級與置信度的決策簡報"
+      },
+      "pubmed-literature-search": {
+        "title": "pubmed搜文獻助手",
+        "desc": "PubMed 關鍵詞文獻檢索助手。用於「搜文獻 / 查文獻 / 檢索 PubMed / 幫我找論文 / 出文獻報告」等需求：按客戶關鍵詞與時間窗（必填）…"
+      },
+      "qq-email": {
+        "title": "QQ郵箱",
+        "desc": "QQ郵箱 IMAP receive and SMTP send via Node.js scripts; credentials read from env vars QQ_EMA…"
+      },
+      "qqmusic": {
+        "title": "QQ音樂助手",
+        "desc": "QQ Music — search songs, albums, playlists, music videos, artists; daily recommendations…"
+      },
+      "remove-watermark": {
+        "title": "去水印",
+        "desc": "去除圖片上的水印、logo、角標、文字與字幕。"
+      },
+      "resume-design": {
+        "title": "簡歷設計",
+        "desc": "美圖設計室出品的“簡歷設計”專家 Skill，透過終端執行命令名為 `designkit` 的「美圖設計室 AI設計 CLI」完成“簡歷設計”（辦公設計）：簡歷版式設計…"
+      },
+      "screen-automation": {
+        "title": "螢幕自動化",
+        "desc": "增強 Agent 的螢幕理解和控制能力，利用本地螢幕視覺技術提高介面識別與定位效率…"
+      },
+      "security-and-hardening": {
+        "title": "安全加固",
+        "desc": "OWASP prevention, auth, secrets management and dependency auditing."
+      },
+      "self-media-distribution": {
+        "title": "自媒體一鍵分發系統",
+        "desc": "可以實現多自媒體平臺的多賬號內容一鍵分發系統，支援抖音、影片號、快手等主流平臺"
+      },
+      "seo-content-optimizer": {
+        "title": "SEO內容最佳化",
+        "desc": "Optimize content for better search visibility and AI citation potential."
+      },
+      "skill-creator": {
+        "title": "技能建立指南",
+        "desc": "指導你撰寫自己的技能。"
+      },
+      "skill-scanner": {
+        "title": "Skill安全掃描（朱雀實驗室）",
+        "desc": "Scan any agent skill for security risks before you install or use it. Powered by Tencent Z…"
+      },
+      "smart-product-selector": {
+        "title": "電商選品分析",
+        "desc": "E-commerce product selection analyst: performs market data collection, profit margin calcu…"
+      },
+      "social-media-content": {
+        "title": "社交媒體內容生產",
+        "desc": "Systematically produce social media content covering topics, copy, tags and publishing cad…"
+      },
+      "software-copyright-cn": {
+        "title": "中國軟著鑑別材料",
+        "desc": "準備中國軟體著作權登記所需的鑑別材料。"
+      },
+      "solo-company": {
+        "title": "一人公司教練",
+        "desc": "一人公司教練：陪一人創業者從0到1跑通定位→產品→定價→獲客→交付→覆盤的完整經營閉環，帶階段決策樹、反模式識別、經營儀表盤與配套模板。…"
       },
       "story-roleplay": {
         "title": "故事角色扮演",
         "desc": "解析並套用 PNG／WebP／JSON 格式的角色卡與世界書。"
       },
+      "superpowers": {
+        "title": "Superpowers 工程方法論",
+        "desc": "Agent 軟體工程方法論框架：開始寫碼前先頭腦風暴出規格，寫可執行實施計劃，強制紅綠 TDD，子代理驅動開發，系統化除錯與程式碼評審，收尾合併"
+      },
+      "supertonic-tts": {
+        "title": "本地超快TTS合成",
+        "desc": "用 supertonic-mnn（Supertone TTS on MNN）本地合成高質量多語言音訊。CLI + Python API，支援中英日韓等 30+ 語言…"
+      },
+      "talking-avatar-video": {
+        "title": "AI數字人口播與虛擬主播影片",
+        "desc": "用一張人像和一段短指令碼或語音，製作有明確講述內容的數字人口播影片。可使用現成錄音，也可以先選擇音色，把指令碼生成旁白，讓畫面中的人物隨聲音完成穩定、自然的口播。適合 AI 主播…"
+      },
+      "taobao": {
+        "title": "全網比價（買手）",
+        "desc": "商品價格全網對比技能，獲取商品在淘寶(Taobao)、天貓(TMall)、京東(JD.com)、拼多多(PinDuoDuo)、抖音(Douyin)、快手(KaiShou)…"
+      },
+      "tax-policy-knowledge": {
+        "title": "Tax Policy 財稅政策知識庫",
+        "desc": "Tax Policy 財稅政策知識庫"
+      },
+      "tencent-meeting-skill": {
+        "title": "騰訊會議",
+        "desc": "騰訊會議：會議管理與音影片協作助手。預約/建立/修改/取消會議、查詢會議詳情與會議號轉換、檢視參會成員/受邀人/等候室成員、查詢使用者會議列表（即將開始/進行中/已結束）…"
+      },
+      "the-entrepreneurship-handbook": {
+        "title": "創業可以學",
+        "desc": "Q&A skill for entrepreneurs, managers, and business leaders. Triggers when users ask about…"
+      },
+      "tiktok-script": {
+        "title": "TikTok短影片指令碼",
+        "desc": "Generate TikTok short video scripts emphasizing pacing, text overlays and trend adaptation…"
+      },
+      "totorosir-work-report": {
+        "title": "工作彙報助手",
+        "desc": "工作彙報助手（totorosir-work-report）用於生成周報、日報、月報、季報、年報與專案/里程碑彙報"
+      },
+      "toutiao-search": {
+        "title": "今日頭條爆款內容查詢",
+        "desc": "今日頭條爆款內容查詢 — 輸入關鍵詞搜尋今日頭條最新作品（圖文/影片），支援按閱讀量/時間排序、限定時間範圍，終端表格展示 + CSV 匯出 + 互動式 HTML 報告"
+      },
+      "travel-guide-assistant": {
+        "title": "旅遊攻略助手",
+        "desc": "幫你規劃旅遊行程，查詢和核驗交通、住宿、景點、美食等資訊"
+      },
+      "user-persona-builder": {
+        "title": "使用者畫像構建",
+        "desc": "Build detailed user personas including demography, pain points, motivations and content pr…"
+      },
+      "video-to-ppt": {
+        "title": "影片轉PPT",
+        "desc": "把演示/會議/課程錄屏影片自動切頁、抽幀、畫質增強，匯出成每頁一張圖鋪滿的圖片型 PPTX。支援四檔畫質（無損 PNG / 高畫質 / 壓縮 / 原尺寸）…"
+      },
+      "wacli": {
+        "title": "WhatsApp",
+        "desc": "Send WhatsApp messages to other people or search/sync WhatsApp history via the wacli CLI (…"
+      },
+      "weather-now": {
+        "title": "天氣查詢",
+        "desc": "查詢城市天氣，支援今天/明天/後天預報和多城市對比，自然語言輸入即可觸發"
+      },
+      "weaver-e10-jucailin": {
+        "title": "泛微E10聚才林人事管理",
+        "desc": "泛微E10聚才林人事管理，幫您處理人事日常事宜：[出勤]-查考勤資料做報表統計、考勤打卡（PC端簽到簽退）、發考勤流程處理考勤異常；[薪酬]-查工資、社保公積金、調薪記錄…"
+      },
+      "weaver-e10-plan": {
+        "title": "泛微e10計劃報告",
+        "desc": "E10 計劃報告介面 Skill：負責報告的新建、查詢、修改、釋出、撤回、共享報告分頁查詢、提交提醒與評論檢視"
+      },
+      "web-access": {
+        "title": "Web Access（瀏覽器自動化）",
+        "desc": "所有聯網操作的統一出口：搜尋、網頁抓取、登入後操作與網頁介面互動。"
+      },
+      "wechat-miniprogram": {
+        "title": "微信小程式開發框架",
+        "desc": "WeChat Mini Program (微信小程式) development framework."
+      },
+      "wechat-official-account": {
+        "title": "微信公眾號文章",
+        "desc": "Write in-depth articles in WeChat Official Account style, including title, lead, structure…"
+      },
+      "wechat-viral-video-writer": {
+        "title": "影片號爆款拆解",
+        "desc": "分析影片號爆款短影片的選題邏輯與文案結構，並按四段結構生成可直接開拍的口播文案。"
+      },
+      "wechat-wenyan-publish": {
+        "title": "公眾號全流程釋出",
+        "desc": "微信公眾號全流程釋出技能：寫稿規範 → 封面生成（900×383 無署名）…"
+      },
+      "wechatpay-basic-payment": {
+        "title": "微信支付基礎支付",
+        "desc": "微信支付基礎支付解決方案，涵蓋支付、退款賬單、分賬、商戶進件、開戶意願確認，提供選型/程式碼示例/業務速查/質量評估/排障五大能力"
+      },
+      "wecom-unified": {
+        "title": "企業微信套件",
+        "desc": "企業微信 CLI 全能套件，覆蓋通訊錄、文件、線上表格、智慧表格、智慧文件、日程、會議、待辦、微盤、郵件、訊息、媒體檔案等業務域。…"
+      },
+      "weekly-literature-briefing": {
+        "title": "每週文獻熱點簡報",
+        "desc": "每週醫學文獻熱點簡報系統（SkeMex 自進化增強版）。功能：(1) 檢索PubMed獲取指定領域熱點文獻；(2) AI翻譯標題和摘要為中英對照；(3) 生成簡報傳送到郵箱；(4)…"
+      },
+      "weekly-report-generator": {
+        "title": "週報生成器",
+        "desc": "Generate polished weekly and daily work reports from scattered todos, chat logs, calendars…"
+      },
       "weixin-file-send": {
         "title": "微信檔案傳送",
         "desc": "把檔案透過微信傳給聯絡人。"
+      },
+      "weiyun": {
+        "title": "騰訊微雲",
+        "desc": "微雲網盤 MCP 介面完整技能。包含 weiyun.list、weiyun.list_by_category、weiyun.download、weiyun.delete…"
       },
       "x-recruiter": {
         "title": "X 招募貼文",
@@ -231,6 +675,18 @@
       "xiaohongshu-recruiter": {
         "title": "小紅書招募",
         "desc": "在小紅書發布 AI 職缺招募貼文，自動產生封面圖。"
+      },
+      "xiaoliebian-scrm": {
+        "title": "小裂變私域運營",
+        "desc": "小裂變私域運營，幫你做企業微信社群裂變、活動抽獎，制定朋友圈釋出任務、群發觸達任務，私域資料分析、社群運營資料分析，自動統計員工聊天排行榜，總結員工和客戶聊天內容等"
+      },
+      "youtube-video-research": {
+        "title": "YouTube 影片內容深度調研",
+        "desc": "Enhance any deep research task with first-hand YouTube video evidence"
+      },
+      "zxh-api-connector-builder": {
+        "title": "API 聯結器構建",
+        "desc": "對接第三方 API 構建聯結器：鑑權、介面與呼叫方需要的資料形態。"
       }
     },
     "builtinCategory": {

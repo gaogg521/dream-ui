@@ -98,7 +98,14 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-import SkillsHubSettings from '@/renderer/pages/settings/SkillsHubSettings';
+import SkillsHubSettings, {
+  BUILTIN_CATEGORY_ORDER,
+  BUILTIN_SKILL_CATEGORY,
+  skillPillKey,
+} from '@/renderer/pages/settings/SkillsHubSettings';
+import enSettings from '@/renderer/services/i18n/locales/en-US/settings.json';
+import zhCnSettings from '@/renderer/services/i18n/locales/zh-CN/settings.json';
+import zhTwSettings from '@/renderer/services/i18n/locales/zh-TW/settings.json';
 
 describe('SkillsHubSettings', () => {
   // The import action is now a TalkToButlerButton: open the menu, then click
@@ -625,5 +632,85 @@ describe('SkillsHubSettings', () => {
       fireEvent.click(screen.getByTestId('btn-batch-manage'));
       expect(screen.getByText('0 selected')).toBeInTheDocument();
     });
+  });
+});
+
+/**
+ * The shipped skill corpus is described in two places that have to agree: the
+ * category map in this component, and the localized title/description overlay
+ * in the locale files. They drifted once already — the pill key checked
+ * `source` before the category map, and since 115 of the 141 skills are
+ * materialized into the user skills directory and come back as
+ * `source: 'custom'`, those 115 landed in one undifferentiated pill with no
+ * category chip and no translation. These cases pin both halves so the next
+ * skill added to the corpus cannot repeat it.
+ */
+describe('shipped skill corpus', () => {
+  it('classifies a corpus skill by category no matter which directory it ships from', () => {
+    const shipped = (source: 'builtin' | 'custom') => ({
+      name: 'weekly-report-generator',
+      description: '',
+      location: '',
+      is_auto_inject: false,
+      is_custom: source === 'custom',
+      source,
+    });
+
+    // `source: 'custom'` is the backend's word for "not under builtin_skills_dir",
+    // not for "the user wrote this" — it must not decide the category.
+    expect(skillPillKey(shipped('custom'))).toBe('cat:office');
+    expect(skillPillKey(shipped('builtin'))).toBe('cat:office');
+  });
+
+  it('leaves a genuinely user-authored skill under Custom', () => {
+    expect(
+      skillPillKey({
+        name: 'my-own-notes-thing',
+        description: '',
+        location: '',
+        is_auto_inject: false,
+        is_custom: true,
+        source: 'custom',
+      })
+    ).toBe('source:custom');
+  });
+
+  it('gives team skills their own pill even when the name is in the corpus', () => {
+    // Which pill a team skill sits under is a permissions fact, not a topic one.
+    expect(
+      skillPillKey({
+        name: 'weekly-report-generator',
+        description: '',
+        location: '',
+        is_auto_inject: false,
+        is_custom: false,
+        source: 'team',
+      })
+    ).toBe('source:team');
+  });
+
+  it('keeps the category map and the localized overlay covering the same skills', () => {
+    const categorized = Object.keys(BUILTIN_SKILL_CATEGORY).sort();
+    for (const [lang, overlay] of [
+      ['en-US', enSettings],
+      ['zh-CN', zhCnSettings],
+      ['zh-TW', zhTwSettings],
+    ] as const) {
+      const translated = Object.keys(overlay.skillsHub.builtinSkill).sort();
+      expect(translated, `${lang} overlay does not match the category map`).toEqual(categorized);
+      for (const name of translated) {
+        const entry = overlay.skillsHub.builtinSkill[name];
+        expect(entry.title.length, `${lang}/${name} title`).toBeGreaterThan(0);
+        expect(entry.desc.length, `${lang}/${name} desc`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('assigns every skill a category from the declared order, so no pill is orphaned', () => {
+    const order = new Set(BUILTIN_CATEGORY_ORDER);
+    const unknown = Object.entries(BUILTIN_SKILL_CATEGORY)
+      .filter(([, category]) => !order.has(category))
+      .map(([name]) => name);
+    expect(unknown).toEqual([]);
   });
 });

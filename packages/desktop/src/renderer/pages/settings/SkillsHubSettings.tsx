@@ -44,7 +44,7 @@ interface SkillInfo {
  * — these are ours to assign, and only for the corpus we ship. A user's own
  * imports have no basis for a category and stay under "custom".
  */
-const BUILTIN_SKILL_CATEGORY: Record<string, string> = {
+export const BUILTIN_SKILL_CATEGORY: Record<string, string> = {
   '12306': 'life',
   '12306-train-assistant': 'life',
   'a-stock-data': 'data',
@@ -188,7 +188,7 @@ const BUILTIN_SKILL_CATEGORY: Record<string, string> = {
   'zxh-api-connector-builder': 'dev',
 };
 
-const BUILTIN_CATEGORY_ORDER = [
+export const BUILTIN_CATEGORY_ORDER = [
   'office',
   'content',
   'media',
@@ -206,15 +206,25 @@ const BUILTIN_CATEGORY_ORDER = [
 
 /**
  * One pill row over two different axes, the way a reader actually looks for a
- * skill: a built-in category, or "the ones I brought myself". Built-in skills
- * without an assigned category fall under their source, so a new one added to
- * the corpus is still reachable before anyone classifies it.
+ * skill: a category, or "the ones I brought myself". A skill outside the
+ * shipped corpus falls under its source, so anything new is still reachable
+ * before anyone classifies it.
+ *
+ * The category map is consulted BEFORE `source`, and that ordering is the whole
+ * point. Only 27 of the 141 shipped skills land in `builtin_skills_dir`; the
+ * rest are materialized into the user skills directory and therefore come back
+ * from the backend as `source: 'custom'` — the backend's word for "not in the
+ * built-in directory", not for "the user wrote this". Checking `source` first
+ * sent 115 of the 141 classified skills to one undifferentiated "Custom" pill
+ * and left their category chips blank: a rule written in two places where the
+ * copies disagreed. Team skills keep their own pill regardless — an enterprise
+ * admin distributes those, and which pill they sit under is a permissions fact.
  */
-const skillPillKey = (skill: SkillInfo): string => {
-  if (skill.source === 'custom') return 'source:custom';
+export const skillPillKey = (skill: SkillInfo): string => {
   if (skill.source === 'team') return 'source:team';
   const category = BUILTIN_SKILL_CATEGORY[skill.name];
-  return category ? `cat:${category}` : 'source:builtin';
+  if (category) return `cat:${category}`;
+  return skill.source === 'custom' ? 'source:custom' : 'source:builtin';
 };
 
 /**
@@ -226,15 +236,20 @@ const skillPillKey = (skill: SkillInfo): string => {
  * per UI language would change what the model matches on. This overlays the
  * display layer only, the way `display_name` already overlays `name`.
  *
- * Built-in skills only, which is the right boundary and not a shortcut:
- * imported skills are the user's own content and team skills are authored by
- * an enterprise admin. Anything without an entry keeps its authored text.
+ * Scoped to the shipped corpus by the same category map the pills use, not by
+ * `source`: 114 of those 141 skills are materialized into the user skills
+ * directory and come back as `source: 'custom'`, so keying on source covered
+ * 27 of them and left the rest Chinese in an English UI. A skill outside the
+ * map -- one the user really did write or import -- keeps its authored text,
+ * which is the boundary that actually matters. Team skills are excluded
+ * outright: an enterprise admin authored those.
  */
 const useBuiltinSkillDisplay = () => {
   const { t } = useTranslation();
   return (skill: SkillInfo) => {
     const fallbackTitle = skill.display_name || skill.name;
-    if (skill.source !== 'builtin') return { title: fallbackTitle, description: skill.description };
+    const shipped = skill.source !== 'team' && Boolean(BUILTIN_SKILL_CATEGORY[skill.name]);
+    if (!shipped) return { title: fallbackTitle, description: skill.description };
     const base = `settings.skillsHub.builtinSkill.${skill.name}`;
     return {
       title: t(`${base}.title`, { defaultValue: fallbackTitle }),
