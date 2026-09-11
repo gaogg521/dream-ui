@@ -234,13 +234,22 @@
       }
     },
     "builtinCategory": {
-      "office": "Office 文件",
-      "diagram": "圖表視覺化",
-      "media": "檔案與媒體",
-      "recruit": "招募",
-      "system": "設定與排查",
+      "office": "辦公文件",
+      "content": "內容創作",
+      "media": "圖像影音",
+      "diagram": "圖表繪圖",
+      "dev": "開發工程",
+      "data": "數據金融",
+      "workplace": "協同辦公",
+      "recruit": "人力招募",
+      "product": "產品戰略",
+      "research": "研究檢索",
+      "life": "生活服務",
+      "system": "設定與自動化",
       "creative": "創意寫作"
-    }
+    },
+    "useSkill": "使用此技能",
+    "editSkill": "編輯此技能"
   },
   "authMethod": "驗證",
   "geminiApiKey": "Gemini API 金鑰",

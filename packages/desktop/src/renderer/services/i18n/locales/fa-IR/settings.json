@@ -121,7 +121,9 @@
     "noSearchResults": "هیچ مهارت منطبقی وجود ندارد.",
     "customHint": "یک پوشه مهارت، پوشه والد یا zip را وارد کنید؛ حداکثر {{maxFileSize}} برای هر فایل و {{maxTotalSize}} برای هر مهارت؛ وارد کردن نام تکراری مهارت موجود را بازنویسی می‌کند.",
     "officialHint": "مهارت‌های رسمی همراه One Work — آماده استفاده، فقط‌خواندنی و با هر نسخه به‌روزرسانی می‌شوند.",
-    "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working."
+    "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
+    "useSkill": "استفاده",
+    "editSkill": "ویرایش"
   },
   "authMethod": "احراز هویت",
   "geminiApiKey": "کلید API جمینای",

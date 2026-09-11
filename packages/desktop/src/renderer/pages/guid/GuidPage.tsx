@@ -177,6 +177,25 @@ const GuidPage: React.FC = () => {
     () => resolveGuidAssistantDefaults(selectedAssistantDetail),
     [selectedAssistantDetail]
   );
+  /**
+   * "Use this skill" from the Skills Marketplace arrives as `/guid?skill=<name>`.
+   *
+   * Seeded by MERGING into the assistant's defaults rather than replacing
+   * them: `guidEnabledSkills` is the full enabled set, so assigning just the
+   * requested name would silently switch off every skill the assistant
+   * normally starts with. Waits for those defaults to resolve, then clears
+   * the param so a later reload does not re-apply it.
+   */
+  useEffect(() => {
+    const requested = new URLSearchParams(location.search).get('skill');
+    if (!requested) return;
+    setGuidEnabledSkills((current) => {
+      const base = current ?? resolvedAssistantDefaults.skillIds ?? [];
+      return base.includes(requested) ? base : [...base, requested];
+    });
+    navigate(location.pathname, { replace: true });
+  }, [location.search, location.pathname, navigate, resolvedAssistantDefaults.skillIds]);
+
   const selectedSkillNames = useMemo(() => {
     const disabledBuiltinSkillSet = new Set(
       guidDisabledBuiltinSkills ?? resolvedAssistantDefaults.disabledBuiltinSkillIds

@@ -45,36 +45,164 @@ interface SkillInfo {
  * imports have no basis for a category and stay under "custom".
  */
 const BUILTIN_SKILL_CATEGORY: Record<string, string> = {
-  officecli: 'office',
-  'officecli-docx': 'office',
-  'officecli-pptx': 'office',
-  'officecli-xlsx': 'office',
-  'officecli-word-form': 'office',
-  'officecli-academic-paper': 'office',
-  'officecli-data-dashboard': 'office',
-  'officecli-financial-model': 'office',
-  'officecli-pitch-deck': 'office',
-  'morph-ppt': 'diagram',
-  'morph-ppt-3d': 'diagram',
-  mermaid: 'diagram',
-  pdf: 'media',
-  'weixin-file-send': 'media',
+  '12306': 'life',
+  '12306-train-assistant': 'life',
+  'a-stock-data': 'data',
+  'ai-comic-drama-shot-maker': 'media',
+  'ai-short-drama-script': 'content',
+  'ai-song-cover-studio': 'media',
+  'ai-storyboard-generator': 'media',
+  'ai-video-image-music-studio': 'media',
+  'analyze-recruitment-trends': 'recruit',
+  'android-apk-builder': 'dev',
+  'android-native-dev': 'dev',
+  'apple-design': 'dev',
+  'ardot-skillhub': 'dev',
+  'assist-payroll-approval': 'recruit',
+  'autocad-drawing': 'diagram',
+  'bid-pipeline': 'product',
+  'bilibili-script': 'content',
+  btpanel: 'dev',
+  'build-job-profile': 'recruit',
+  'chinese-poetry': 'creative',
+  'ci-cd-and-automation': 'dev',
+  'cn-ecommerce-search': 'data',
+  'comfyui-ops': 'dev',
+  'content-factory': 'content',
+  'creative-brainstorming-board': 'product',
+  cron: 'system',
+  'delivery-no-pseudoblock': 'dev',
+  'design-first': 'dev',
+  'dingtalk-unified': 'workplace',
+  'douyin-video-fetch': 'media',
+  drawio: 'diagram',
+  'element-ui-guide': 'dev',
+  'expense-merger': 'office',
+  'flight-trip-advisor': 'life',
+  'fore-vip-geo-optimizer': 'content',
+  'fore-vip-oss': 'workplace',
+  'fortune-master': 'life',
+  'frontend-design': 'dev',
+  'frontend-dev': 'dev',
+  'fund-analysis': 'data',
+  github: 'dev',
+  gog: 'workplace',
+  'gongwen-format': 'office',
+  'govproc-method-selector': 'product',
+  grilling: 'dev',
+  'h3-prompt-writing': 'media',
+  'hot-search-cn': 'research',
+  'identify-key-talent': 'recruit',
+  'imap-smtp-email': 'workplace',
+  'invoice-verify': 'data',
+  'ios-application-dev': 'dev',
+  'ixhlink-skills-id-photo-standard': 'media',
+  'karpathy-guidelines': 'dev',
+  kdocs: 'office',
+  'lark-unified': 'workplace',
+  'lexiang-knowledge-base': 'workplace',
   'local-ocr-linux': 'media',
   'local-ocr-macos': 'media',
   'local-ocr-windows': 'media',
+  'markitdown-skill': 'office',
+  mcporter: 'dev',
+  'meeting-minutes-assistant': 'office',
+  mermaid: 'diagram',
+  'morph-ppt': 'diagram',
+  'morph-ppt-3d': 'diagram',
+  officecli: 'office',
+  'officecli-academic-paper': 'office',
+  'officecli-data-dashboard': 'office',
+  'officecli-docx': 'office',
+  'officecli-financial-model': 'office',
+  'officecli-pitch-deck': 'office',
+  'officecli-pptx': 'office',
+  'officecli-word-form': 'office',
+  'officecli-xlsx': 'office',
+  'old-photo-restorer': 'media',
+  'one-config': 'system',
+  'one-troubleshooting': 'system',
+  'one-webui-public': 'system',
+  'one-webui-setup': 'system',
+  'openclaw-setup': 'system',
+  'patent-disclosure-writer': 'office',
+  pdf: 'media',
+  peekaboo: 'system',
+  'pm-toolkit-zxh': 'data',
+  'poster-design-studio': 'media',
+  'price-compare': 'data',
+  'proboost-tiktok-shop-analysis': 'data',
+  'proboost-tiktok-video-analysis': 'data',
+  'product-discovery-zxh': 'product',
+  'product-manager': 'product',
+  'product-strategy-zxh': 'product',
+  'product-trend-researcher': 'product',
+  'pubmed-literature-search': 'research',
+  'qq-email': 'workplace',
+  qqmusic: 'media',
+  'remove-watermark': 'media',
+  'resume-design': 'media',
+  'screen-automation': 'system',
+  'security-and-hardening': 'dev',
+  'self-media-distribution': 'content',
+  'seo-content-optimizer': 'content',
+  'skill-creator': 'dev',
+  'skill-scanner': 'dev',
+  'smart-product-selector': 'data',
+  'social-media-content': 'content',
+  'software-copyright-cn': 'office',
+  'solo-company': 'product',
+  'story-roleplay': 'creative',
+  superpowers: 'dev',
+  'supertonic-tts': 'media',
+  'talking-avatar-video': 'media',
+  taobao: 'data',
+  'tax-policy-knowledge': 'data',
+  'tencent-meeting-skill': 'workplace',
+  'the-entrepreneurship-handbook': 'product',
+  'tiktok-script': 'content',
+  'totorosir-work-report': 'office',
+  'toutiao-search': 'content',
+  'travel-guide-assistant': 'life',
+  'user-persona-builder': 'product',
+  'video-to-ppt': 'office',
+  wacli: 'workplace',
+  'weather-now': 'life',
+  'weaver-e10-jucailin': 'recruit',
+  'weaver-e10-plan': 'workplace',
+  'web-access': 'research',
+  'wechat-miniprogram': 'dev',
+  'wechat-official-account': 'content',
+  'wechat-viral-video-writer': 'content',
+  'wechat-wenyan-publish': 'content',
+  'wechatpay-basic-payment': 'data',
+  'wecom-unified': 'workplace',
+  'weekly-literature-briefing': 'research',
+  'weekly-report-generator': 'office',
+  'weixin-file-send': 'media',
+  weiyun: 'workplace',
   'x-recruiter': 'recruit',
   'xiaohongshu-recruiter': 'recruit',
-  'one-webui-setup': 'system',
-  'one-webui-public': 'system',
-  'one-troubleshooting': 'system',
-  'openclaw-setup': 'system',
-  'one-config': 'system',
-  cron: 'system',
-  'skill-creator': 'system',
-  'story-roleplay': 'creative',
+  'xiaoliebian-scrm': 'content',
+  'youtube-video-research': 'research',
+  'zxh-api-connector-builder': 'dev',
 };
 
-const BUILTIN_CATEGORY_ORDER = ['office', 'diagram', 'media', 'recruit', 'system', 'creative'];
+const BUILTIN_CATEGORY_ORDER = [
+  'office',
+  'content',
+  'media',
+  'diagram',
+  'dev',
+  'data',
+  'workplace',
+  'recruit',
+  'product',
+  'research',
+  'life',
+  'system',
+  'creative',
+];
 
 /**
  * One pill row over two different axes, the way a reader actually looks for a
@@ -978,7 +1106,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                             ? 'border-primary-5 bg-primary-1'
                             : selectedSkillNames.has(skill.name) && batchMode
                               ? 'border-transparent bg-[rgba(var(--primary-6),0.06)]'
-                              : 'border-transparent bg-base hover:border-border-1 hover:bg-fill-1 hover:shadow-sm'
+                              : 'border-border-2 bg-base hover:border-primary-4 hover:bg-fill-1 hover:shadow-sm'
                         }`}
                       >
                         {batchMode && isCustom && (
@@ -1008,27 +1136,18 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                               </div>
                             )}
                           </div>
-                          {/* Source badge sits beside the icon, where the expert
-                              marketplace puts its category chip. Keeping it out of
-                              the title row is what makes every card the same
-                              height: the title can then be one truncated line. */}
-                          <span className='shrink-0'>
-                            {skill.source === 'custom' ? (
-                              <span className='bg-[rgba(var(--orange-6),0.08)] text-orange-6 border border-[rgba(var(--orange-6),0.2)] text-11px px-6px py-1px rd-4px font-medium'>
-                                {t('settings.skillsHub.custom', { defaultValue: 'Custom' })}
-                              </span>
-                            ) : skill.source === 'team' ? (
-                              <span className='bg-[rgba(var(--green-6),0.08)] text-green-6 border border-[rgba(var(--green-6),0.2)] text-11px px-6px py-1px rd-4px font-medium'>
-                                {skill.is_auto_inject
-                                  ? t('settings.skillsHub.teamAuto', { defaultValue: '团队 · 自动' })
-                                  : t('settings.skillsHub.team', { defaultValue: '团队' })}
-                              </span>
-                            ) : (
-                              <span className='bg-[rgba(var(--blue-6),0.08)] text-blue-6 border border-[rgba(var(--blue-6),0.2)] text-11px px-6px py-1px rd-4px font-medium'>
-                                {t('settings.skillsHub.builtin', { defaultValue: 'Built-in' })}
-                              </span>
-                            )}
-                          </span>
+                          {/* Category, not source. "Custom" was never the
+                              user's word for these -- they are skills this
+                              product ships and the user installed, and the
+                              label said the opposite. Source stays available
+                              as a pill filter. */}
+                          {skillPillKey(skill).startsWith('cat:') ? (
+                            <span className='mt-1px max-w-96px shrink-0 truncate rounded-6px bg-fill-2 px-8px py-2px text-11px text-t-secondary'>
+                              {t(`settings.skillsHub.builtinCategory.${skillPillKey(skill).slice(4)}`, {
+                                defaultValue: '',
+                              })}
+                            </span>
+                          ) : null}
                         </div>
 
                         <h3
@@ -1042,7 +1161,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                             description leaves the card shorter than its row and
                             the grid drifts out of alignment. */}
                         <p
-                          className='mt-6px min-h-36px line-clamp-2 text-12px leading-[1.55] text-t-secondary m-0'
+                          className='mt-6px min-h-32px line-clamp-2 text-12px leading-[1.5] text-t-secondary m-0'
                           title={builtinSkillDisplay(skill).description}
                         >
                           {builtinSkillDisplay(skill).description}
@@ -1063,14 +1182,38 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                         )}
 
                         {!batchMode && (
-                          <div className='mt-auto flex shrink-0 items-center justify-between gap-10px pt-10px'>
+                          <div className='mt-auto flex shrink-0 items-center gap-6px pt-8px'>
+                            <Button
+                              type='text'
+                              size='mini'
+                              data-testid={`btn-use-skill-${normalizeTestId(skill.name)}`}
+                              className='!h-28px !flex-1 !rounded-8px !bg-fill-2 !px-8px !text-12px !text-t-secondary hover:!bg-primary-6 hover:!text-white'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void navigate(`/guid?skill=${encodeURIComponent(skill.name)}`);
+                              }}
+                            >
+                              {t('settings.skillsHub.useSkill', { defaultValue: 'Use' })}
+                            </Button>
+                            <Button
+                              type='text'
+                              size='mini'
+                              data-testid={`btn-edit-skill-${normalizeTestId(skill.name)}`}
+                              className='!h-28px !flex-1 !rounded-8px !bg-fill-2 !px-8px !text-12px !text-t-secondary hover:!bg-primary-6 hover:!text-white'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openSkillDetail(skill.name);
+                              }}
+                            >
+                              {t('settings.skillsHub.editSkill', { defaultValue: 'Edit' })}
+                            </Button>
                             <SkillUsedByStack
                               assistants={getAssistantsUsingSkill(skill.name, assistantCatalog ?? [])}
                             />
                             {isCustom && (
                               <button
                                 data-testid={`btn-delete-${normalizeTestId(skill.name)}`}
-                                className='p-8px hover:bg-danger-1 hover:text-danger-6 text-t-tertiary rd-6px outline-none flex items-center justify-center border border-transparent cursor-pointer transition-colors shadow-sm bg-base sm:bg-transparent sm:shadow-none opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity'
+                                className='shrink-0 p-4px hover:bg-danger-1 hover:text-danger-6 text-t-tertiary rd-6px outline-none flex items-center justify-center border border-transparent cursor-pointer transition-colors bg-transparent opacity-0 group-hover:opacity-100 transition-opacity'
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   Modal.confirm({
@@ -1087,7 +1230,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                                 }}
                                 title={t('common.delete', { defaultValue: 'Delete' })}
                               >
-                                <Delete size={16} />
+                                <Delete size={14} />
                               </button>
                             )}
                           </div>

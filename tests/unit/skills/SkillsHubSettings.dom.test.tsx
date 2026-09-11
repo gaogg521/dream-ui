@@ -329,7 +329,11 @@ describe('SkillsHubSettings', () => {
     render(<SkillsHubSettings withWrapper={false} />);
 
     await waitFor(() => expect(screen.getByTestId('my-skill-card-sample-single')).toBeInTheDocument());
-    expect(screen.getByText('Custom')).toBeInTheDocument();
+    // The chip beside the icon now carries a category, not a source. "Custom"
+    // was never the user's word for these -- they are skills this product
+    // ships and the user installed -- and an imported skill has no category to
+    // show, so it carries no chip at all. Source remains a pill filter.
+    expect(screen.queryByText('Custom')).not.toBeInTheDocument();
     expect(screen.queryByText('Available')).not.toBeInTheDocument();
   });
 

@@ -180,7 +180,7 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
             <div
               key={persona.id}
               data-testid={`marketplace-card-${persona.id}`}
-              className='group flex flex-col rounded-16px border border-solid border-transparent bg-base p-14px transition-all duration-180 hover:-translate-y-1px hover:border-primary-2 hover:shadow-[0_8px_24px_rgba(0,0,0,0.09)]'
+              className='group flex flex-col rounded-16px border border-solid border-border-2 bg-base p-14px transition-all duration-180 hover:-translate-y-1px hover:border-primary-2 hover:shadow-[0_8px_24px_rgba(0,0,0,0.09)]'
             >
               <div className='flex items-start justify-between gap-8px'>
                 <span className='relative inline-flex shrink-0'>
