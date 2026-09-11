@@ -160,3 +160,45 @@ describe('image fan-out', () => {
     expect(outcome.text).not.toContain('Do not retry');
   });
 });
+
+/**
+ * A model the catalog has never heard of.
+ *
+ * `agnes-image-2.1-flash` matches no image entry, so it falls to the declared
+ * spec — which claimed `maxN: 4` on nothing but optimism. The agent asked for
+ * two images, the pipeline dutifully put `n: 2` on the wire, and Agnes answered
+ *
+ *     400 n must be 1
+ *
+ * so the user got nothing. Guessing low cannot fail that way: the fan-out
+ * already turns one request for N into N requests for one.
+ */
+describe('an unrecognized image model', () => {
+  const unknown = {
+    platform: 'custom',
+    base_url: 'https://apihub.agnes-ai.com/v1',
+    use_model: 'agnes-image-2.1-flash',
+    api_key: 'k',
+  };
+
+  it('never puts n > 1 on the wire for an endpoint it has not measured', async () => {
+    await run(unknown, { n: 2 });
+
+    for (const [call] of generate.mock.calls) {
+      expect(call.params.n ?? 1, 'an unmeasured endpoint may reject any n but 1').toBe(1);
+    }
+  });
+
+  it('still delivers the count that was asked for, as separate requests', async () => {
+    const outcome = await run(unknown, { n: 3 });
+
+    expect(generate).toHaveBeenCalledTimes(3);
+    expect(outcome.success).toBe(true);
+    expect(outcome.assets).toHaveLength(3);
+  });
+
+  it('leaves a single-image request as exactly one request', async () => {
+    await run(unknown, { n: 1 });
+    expect(generate).toHaveBeenCalledTimes(1);
+  });
+});
