@@ -19,6 +19,23 @@
 import type { MediaModelSpec } from './types';
 
 /**
+ * Agnes image constants live here, not beside the adapter that uses them.
+ *
+ * The renderer imports this catalog to build the media picker, and the adapter
+ * module reaches for `fs` — so the dependency has to point adapter -> catalog,
+ * never the reverse. Same reason `ARK_SEEDREAM_CATALOG_ID` sits here.
+ */
+export const AGNES_IMAGE_STYLE = 'agnes-image';
+
+/**
+ * Tier values the vendor recommends. An unsupported exact size is normalized
+ * server-side, so the picker offers only tiers and lets `ratio` shape the frame.
+ */
+export const AGNES_IMAGE_SIZES = ['1K', '2K', '3K', '4K'];
+
+export const AGNES_IMAGE_RATIOS = ['1:1', '3:4', '4:3', '16:9', '9:16', '2:3', '3:2', '21:9'];
+
+/**
  * Catalog id for the direct-Ark Seedream entry below.
  *
  * Lives here (renderer-safe `catalog/`) rather than next to the gateway adapter,
@@ -194,6 +211,38 @@ export const BUILTIN_IMAGE_MODELS: MediaModelSpec[] = [
       maxN: 1,
     },
     defaults: { size: '1024x1024' },
+  },
+  {
+    /**
+     * Agnes AI image (`agnes-image-2.1-flash`, `agnes-image-2.5-flash`, …).
+     *
+     * Listed with a body shape of its own because the OpenAI one fails against
+     * it several different ways at once — `n` rejected outright, `size`
+     * required and tiered rather than pixels, the ratio a separate field, and
+     * a reference image expected in the JSON rather than as multipart. Without
+     * an entry these models fell to the declared-model default and produced
+     * `400 n must be 1` on every generation.
+     *
+     * `seed` and `negativePrompt` are absent on purpose rather than merely
+     * unset: Agnes documents neither, so offering them would offer controls
+     * that do nothing, and `clipParamsToSpec` drops them before the wire.
+     *
+     * verified: https://agnes-ai.com/zh-Hans/docs/agnes-image-21-flash (2026-09-11)
+     * verified: https://agnes-ai.com/zh-Hans/docs/agnes-image-25-flash (2026-09-11)
+     */
+    id: 'agnes-image',
+    kind: 'image',
+    form: 'A',
+    endpointStyle: AGNES_IMAGE_STYLE,
+    match: { model: /agnes.*image|image.*agnes/i, baseUrlIncludes: ['agnes-ai.com'] },
+    params: {
+      sizes: AGNES_IMAGE_SIZES,
+      aspectRatios: AGNES_IMAGE_RATIOS,
+      imageInput: true,
+      // One image per request; several come from repeated requests.
+      maxN: 1,
+    },
+    defaults: { size: '2K' },
   },
   {
     // FLUX family — SiliconFlow, Together, fal, and OpenAI-compatible gateways.

@@ -21,11 +21,12 @@ import type OpenAI from 'openai';
 import { toFile } from 'openai';
 import { ClientFactory } from '@/common/api/ClientFactory';
 import { OpenAIRotatingClient } from '@/common/api/OpenAIRotatingClient';
-import { isArkSeedreamFamilyId } from '../catalog/imageModels';
+import { AGNES_IMAGE_STYLE, isArkSeedreamFamilyId } from '../catalog/imageModels';
 import { classifyMediaFailure } from '../failureClass';
 import { downloadUrlMediaAsset, isHttpUrl, resolveLocalInputPath, saveBase64MediaAsset } from '../mediaAssets';
 import type { MediaAsset, MediaGenOutcome, MediaGenRequest, MediaProviderAdapter } from '../types';
 import { ensureVersionedBaseUrl } from './baseUrl';
+import { buildAgnesImageBody, toAgnesImageRef } from './agnesImage';
 import {
   buildSeedreamGatewayBody,
   SEEDREAM_GATEWAY_STYLE,
@@ -58,6 +59,13 @@ export class OpenAiImagesAdapter implements MediaProviderAdapter {
      */
     const isSeedreamFamily = isArkSeedreamFamilyId(spec?.id);
     const pinnedGateway = spec?.endpointStyle === SEEDREAM_GATEWAY_STYLE;
+    /**
+     * Agnes runs on the ordinary generations route but will not take the
+     * OpenAI body: `n` is rejected outright, `size` is required and tiered, the
+     * aspect ratio is its own `ratio` field, and a reference image rides in the
+     * JSON rather than as multipart to an edits route it does not serve.
+     */
+    const isAgnesImage = spec?.endpointStyle === AGNES_IMAGE_STYLE;
 
     /**
      * One synchronous call against either the plain images route or the seedream
@@ -77,6 +85,19 @@ export class OpenAiImagesAdapter implements MediaProviderAdapter {
         throw new Error(
           `model "${provider.use_model}" resolved to the images API, but provider platform "${provider.platform}" does not speak the OpenAI protocol.`
         );
+      }
+
+      if (isAgnesImage) {
+        const imageRefs = await Promise.all(inputUris.map((uri) => toAgnesImageRef(uri, workspaceDir)));
+        return (await client.createImage(
+          buildAgnesImageBody(
+            provider.use_model,
+            prompt,
+            params,
+            imageRefs
+          ) as unknown as OpenAI.Images.ImageGenerateParams,
+          { signal, timeout: API_TIMEOUT_MS }
+        )) as OpenAI.Images.ImagesResponse;
       }
 
       if (viaGateway) {
