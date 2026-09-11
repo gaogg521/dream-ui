@@ -1412,7 +1412,7 @@
   "personaImportSubmit": "Импортировать выбранные ({{count}})",
   "personaImportResultSummary": "Импортировано: {{imported}}, пропущено: {{skipped}}, ошибок: {{failed}}",
   "assistantTabMarketplace": "Магазин экспертов",
-  "assistantTabSkills": "Навыки",
+  "assistantTabSkills": "Магазин навыков",
   "marketplaceInstall": "Добавить в моих ассистентов",
   "marketplaceInstalled": "Добавлено",
   "marketplaceEmptyState": "Нет экспертов, соответствующих запросу.",

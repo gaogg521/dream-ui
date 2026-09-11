@@ -1400,7 +1400,7 @@
   "personaImportSubmit": "選択した {{count}} 件をインポート",
   "personaImportResultSummary": "インポート {{imported}} 件、スキップ {{skipped}} 件、失敗 {{failed}} 件",
   "assistantTabMarketplace": "エキスパートマーケット",
-  "assistantTabSkills": "スキル",
+  "assistantTabSkills": "スキルマーケット",
   "marketplaceInstall": "マイアシスタントに追加",
   "marketplaceInstalled": "追加済み",
   "marketplaceEmptyState": "該当するエキスパートが見つかりません。",

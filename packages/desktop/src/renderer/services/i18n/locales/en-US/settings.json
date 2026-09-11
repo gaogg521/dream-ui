@@ -1404,7 +1404,7 @@
   "personaImportSubmit": "Import {{count}} Selected",
   "personaImportResultSummary": "{{imported}} imported, {{skipped}} skipped, {{failed}} failed",
   "assistantTabMarketplace": "Expert Marketplace",
-  "assistantTabSkills": "Skills",
+  "assistantTabSkills": "Skills Marketplace",
   "marketplaceInstall": "Add to My Assistants",
   "marketplaceInstalled": "Added",
   "marketplaceEmptyState": "No experts match your search.",

@@ -1400,7 +1400,7 @@
   "personaImportSubmit": "선택한 {{count}}개 가져오기",
   "personaImportResultSummary": "가져옴 {{imported}}개, 건너뜀 {{skipped}}개, 실패 {{failed}}개",
   "assistantTabMarketplace": "전문가 마켓",
-  "assistantTabSkills": "스킬",
+  "assistantTabSkills": "스킬 마켓",
   "marketplaceInstall": "내 어시스턴트에 추가",
   "marketplaceInstalled": "추가됨",
   "marketplaceEmptyState": "검색과 일치하는 전문가가 없습니다.",

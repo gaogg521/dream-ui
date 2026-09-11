@@ -131,7 +131,11 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
         </div>
       ) : null}
 
-      <div className='grid grid-cols-1 gap-16px sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+      {/* Four across from `lg`, not from `xl`. The settings window sits around
+          1200px wide, which is below the 1280px `xl` breakpoint, so the old
+          `lg:grid-cols-3 xl:grid-cols-4` only ever showed three. The card
+          below is scaled down to stay legible at the ~250px this leaves it. */}
+      <div className='grid grid-cols-1 gap-12px sm:grid-cols-2 lg:grid-cols-4'>
         {!loading && filteredPersonas.length === 0 ? (
           <div className='col-span-full rounded-14px border border-dashed border-border-2 bg-fill-1/40 px-20px py-28px text-center text-13px text-t-secondary'>
             {t('settings.marketplaceEmptyState')}
@@ -145,14 +149,14 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
             <div
               key={persona.id}
               data-testid={`marketplace-card-${persona.id}`}
-              className='group flex flex-col rounded-16px border border-solid border-transparent bg-base p-20px transition-all duration-180 hover:-translate-y-1px hover:border-primary-2 hover:shadow-[0_8px_24px_rgba(0,0,0,0.09)]'
+              className='group flex flex-col rounded-16px border border-solid border-transparent bg-base p-14px transition-all duration-180 hover:-translate-y-1px hover:border-primary-2 hover:shadow-[0_8px_24px_rgba(0,0,0,0.09)]'
             >
               <div className='flex items-start justify-between gap-8px'>
                 <span className='relative inline-flex shrink-0'>
                   <Avatar
-                    className='rounded-12px border-none'
+                    className='rounded-10px border-none'
                     shape='square'
-                    size={48}
+                    size={40}
                     style={{ backgroundColor: 'var(--color-fill-2)', border: 'none' }}
                   >
                     {avatarImage ? (
@@ -163,9 +167,9 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
                         style={{ display: 'block' }}
                       />
                     ) : hasEmojiAvatar ? (
-                      <span style={{ fontSize: 24 }}>{persona.avatar}</span>
+                      <span style={{ fontSize: 20 }}>{persona.avatar}</span>
                     ) : (
-                      <Robot theme='outline' size={24} />
+                      <Robot theme='outline' size={20} />
                     )}
                   </Avatar>
                   {persona.installed ? (
@@ -178,27 +182,27 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
                   ) : null}
                 </span>
                 {persona.category ? (
-                  <span className='mt-2px max-w-120px shrink-0 truncate rounded-6px bg-fill-2 px-8px py-2px text-11px text-t-secondary'>
+                  <span className='mt-1px max-w-88px shrink-0 truncate rounded-6px bg-fill-2 px-8px py-2px text-11px text-t-secondary'>
                     {persona.category}
                   </span>
                 ) : null}
               </div>
-              <div className='mt-14px flex items-baseline gap-6px'>
-                <span className='truncate text-15px font-600 text-t-primary'>
+              <div className='mt-10px flex items-baseline gap-4px'>
+                <span className='truncate text-14px font-600 text-t-primary'>
                   {persona.display_name || persona.name}
                 </span>
                 {nickname ? <span className='shrink-0 truncate text-12px text-t-tertiary'>· {nickname}</span> : null}
               </div>
-              <div className='mt-8px line-clamp-2 min-h-40px text-13px leading-[1.6] text-t-secondary'>
+              <div className='mt-6px line-clamp-2 min-h-36px text-12px leading-[1.55] text-t-secondary'>
                 {persona.description || ''}
               </div>
-              <div className='mt-18px'>
+              <div className='mt-12px'>
                 {persona.installed ? (
                   <Button
                     type='text'
                     size='small'
                     data-testid={`btn-marketplace-chat-${persona.id}`}
-                    className='!inline-flex !h-32px !w-full !items-center !justify-center !rounded-10px !bg-fill-2 !px-12px !text-13px !leading-none !text-t-secondary hover:!bg-primary-6 hover:!text-white'
+                    className='!inline-flex !h-30px !w-full !items-center !justify-center !rounded-8px !bg-fill-2 !px-10px !text-12px !leading-none !text-t-secondary hover:!bg-primary-6 hover:!text-white'
                     onClick={() => onStartChat(persona.id)}
                   >
                     {t('settings.assistantGoChat', { defaultValue: 'Chat' })}
@@ -210,7 +214,7 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
                     loading={installingId === persona.id}
                     disabled={installingId !== null && installingId !== persona.id}
                     data-testid={`btn-marketplace-install-${persona.id}`}
-                    className='!inline-flex !h-32px !w-full !items-center !justify-center !rounded-10px !bg-fill-2 !px-12px !text-13px !leading-none !text-t-secondary hover:!bg-primary-6 hover:!text-white'
+                    className='!inline-flex !h-30px !w-full !items-center !justify-center !rounded-8px !bg-fill-2 !px-10px !text-12px !leading-none !text-t-secondary hover:!bg-primary-6 hover:!text-white'
                     aria-label={t('settings.marketplaceInstall', { defaultValue: 'Add to My Assistants' })}
                     onClick={() => void handleInstall(persona)}
                   >

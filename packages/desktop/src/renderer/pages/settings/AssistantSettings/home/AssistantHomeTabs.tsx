@@ -215,7 +215,7 @@ const AssistantHomeTabs: React.FC<AssistantHomeTabsProps> = ({
               },
               {
                 key: 'skills',
-                label: t('settings.assistantTabSkills', { defaultValue: 'Skills' }),
+                label: t('settings.assistantTabSkills', { defaultValue: 'Skills Marketplace' }),
               },
             ]}
             activeTab={tab}

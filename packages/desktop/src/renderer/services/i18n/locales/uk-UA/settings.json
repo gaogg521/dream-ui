@@ -1413,7 +1413,7 @@
   "personaImportSubmit": "Імпортувати вибрані ({{count}})",
   "personaImportResultSummary": "Імпортовано: {{imported}}, пропущено: {{skipped}}, помилок: {{failed}}",
   "assistantTabMarketplace": "Ринок експертів",
-  "assistantTabSkills": "Навички",
+  "assistantTabSkills": "Ринок навичок",
   "marketplaceInstall": "Додати до моїх асистентів",
   "marketplaceInstalled": "Додано",
   "marketplaceEmptyState": "Немає експертів, що відповідають запиту.",

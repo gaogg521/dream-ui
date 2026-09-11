@@ -1398,7 +1398,7 @@
   "personaImportSubmit": "درون‌ریزی {{count}} مورد انتخاب‌شده",
   "personaImportResultSummary": "{{imported}} درون‌ریزی شد، {{skipped}} نادیده گرفته شد، {{failed}} ناموفق",
   "assistantTabMarketplace": "بازار متخصصان",
-  "assistantTabSkills": "مهارت‌ها",
+  "assistantTabSkills": "بازار مهارت‌ها",
   "marketplaceInstall": "افزودن به دستیارهای من",
   "marketplaceInstalled": "افزوده شد",
   "marketplaceEmptyState": "متخصصی مطابق جستجوی شما یافت نشد.",
