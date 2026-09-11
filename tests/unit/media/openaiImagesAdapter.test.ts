@@ -119,3 +119,87 @@ describe('OpenAiImagesAdapter', () => {
     expect(outcome.error).toBe('empty-response');
   });
 });
+
+/**
+ * The Agnes branch, exercised through the adapter rather than through its body
+ * builder alone.
+ *
+ * `buildAgnesImageBody` having no `n` proves nothing on its own: the bug that
+ * produced `400 n must be 1` lives in whether that branch is reached at all.
+ * These drive the real `generate()` and read what the client was handed.
+ */
+describe('OpenAiImagesAdapter — Agnes image', () => {
+  let workspaceDir: string;
+  const adapter = new OpenAiImagesAdapter();
+
+  const agnes: TProviderWithModel = {
+    id: 'agnes',
+    platform: 'openai',
+    name: 'Agnes',
+    base_url: 'https://apihub.agnes-ai.com/v1',
+    api_key: 'sk-test',
+    use_model: 'agnes-image-2.5-flash',
+  };
+
+  beforeEach(async () => {
+    workspaceDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'media-agnes-'));
+  });
+
+  afterEach(async () => {
+    vi.restoreAllMocks();
+    await fs.promises.rm(workspaceDir, { recursive: true, force: true });
+  });
+
+  /** Run a generation and hand back the body the client actually received. */
+  const bodySentFor = async (params: Record<string, unknown>, inputUris: string[] = []) => {
+    const client = fakeClient({ created: 0, data: [{ b64_json: TINY_PNG_B64 }] });
+    vi.spyOn(ClientFactory, 'createRotatingClient').mockResolvedValue(client);
+
+    const outcome = await adapter.generate({
+      kind: 'image',
+      prompt: 'two beasts crossing their tribulation',
+      params: params as never,
+      inputUris,
+      provider: agnes,
+      spec: resolveMediaModelSpec('image', agnes, agnes.use_model),
+      workspaceDir,
+    } as never);
+
+    expect(outcome.success, outcome.text).toBe(true);
+    const createImage = (client as unknown as { createImage: ReturnType<typeof vi.fn> }).createImage;
+    expect(createImage).toHaveBeenCalledTimes(1);
+    return createImage.mock.calls[0][0] as Record<string, unknown>;
+  };
+
+  it('reaches the Agnes branch and puts no n on the wire', async () => {
+    // Even asked for two — the exact request that failed in the field.
+    const body = await bodySentFor({ n: 2, size: '2K' });
+
+    expect(body, 'n is not an Agnes parameter at any value').not.toHaveProperty('n');
+    expect(body.model).toBe('agnes-image-2.5-flash');
+    expect(body.size).toBe('2K');
+  });
+
+  it('always carries a size, even when the caller picked none', async () => {
+    const body = await bodySentFor({});
+    expect(body.size).toBe('2K');
+  });
+
+  it('sends the aspect ratio as `ratio`', async () => {
+    const body = await bodySentFor({ size: '4K', aspectRatio: '16:9' });
+    expect(body.ratio).toBe('16:9');
+    expect(body.size).toBe('4K');
+  });
+
+  it('passes a reference image through the body, not as multipart', async () => {
+    const body = await bodySentFor({}, ['https://example.test/ref.png']);
+
+    expect(body.image).toEqual(['https://example.test/ref.png']);
+    // The edits route is what the standard path would have used; Agnes does
+    // not serve it, and reaching for it is a separate failure from this one.
+    const client = (await ClientFactory.createRotatingClient(agnes as never, {} as never)) as unknown as {
+      createImageEdit: ReturnType<typeof vi.fn>;
+    };
+    expect(client.createImageEdit).not.toHaveBeenCalled();
+  });
+});
