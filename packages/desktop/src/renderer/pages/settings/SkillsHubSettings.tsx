@@ -36,6 +36,14 @@ interface SkillInfo {
   icon_file?: string;
 }
 
+/** Same pill styling as the expert marketplace, so the two tabs read alike. */
+const skillSourcePillClass = (active: boolean) =>
+  `inline-flex cursor-pointer select-none items-center rounded-999px border border-solid px-12px py-6px text-13px leading-none transition-colors ${
+    active
+      ? 'border-transparent bg-primary-light-1 font-600 text-primary'
+      : 'border-border-2 bg-fill-1 text-t-secondary hover:bg-fill-2 hover:text-t-primary'
+  }`;
+
 const isAutoInjectedBuiltinSkill = (skill: SkillInfo) => skill.source === 'builtin' && skill.is_auto_inject;
 
 interface SkillImportRecord {
@@ -147,6 +155,8 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
   const skillRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [loading, setLoading] = useState(false);
   const [availableSkills, setAvailableSkills] = useState<SkillInfo[]>([]);
+  /** Source pill filter, mirroring the expert marketplace's category pills. */
+  const [sourceFilter, setSourceFilter] = useState<SkillInfo['source'] | null>(null);
   const [search_query, setSearchQuery] = useState('');
   const [importHistory, setImportHistory] = useState<SkillImportRecord[]>([]);
   const [importLimits, setImportLimits] = useState<SkillImportLimits | null>(null);
@@ -173,13 +183,24 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
   const importHistoryGroups = useMemo(() => buildImportHistoryGroups(importHistory), [importHistory]);
 
   const filteredSkills = useMemo(() => {
-    if (!search_query.trim()) return mySkills;
-    const lowerQuery = search_query.toLowerCase();
-    return mySkills.filter(
-      (s) =>
-        s.name.toLowerCase().includes(lowerQuery) || (s.description && s.description.toLowerCase().includes(lowerQuery))
-    );
-  }, [mySkills, search_query]);
+    const lowerQuery = search_query.trim().toLowerCase();
+    return mySkills.filter((s) => {
+      // Pill and search narrow independently, same as the expert marketplace.
+      if (sourceFilter && (s.source ?? 'builtin') !== sourceFilter) return false;
+      if (!lowerQuery) return true;
+      return s.name.toLowerCase().includes(lowerQuery) || Boolean(s.description?.toLowerCase().includes(lowerQuery));
+    });
+  }, [mySkills, search_query, sourceFilter]);
+
+  /** Counts per source, so a pill can show how many it will leave behind. */
+  const sourceCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const skill of mySkills) {
+      const key = skill.source ?? 'builtin';
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  }, [mySkills]);
   // C2-2: group the visible list by enterprise category. Skills without a
   // category keep their original flat rendering (personal mode looks exactly
   // as before); category sections render first, in first-appearance order.
@@ -788,14 +809,55 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
             </div>
           )}
 
+          {mySkills.length > 0 && sourceCounts.size > 1 ? (
+            <div className='mb-14px flex flex-wrap gap-8px relative z-10' data-testid='skill-source-pills'>
+              {([null, 'builtin', 'custom', 'team'] as const)
+                .filter((key) => key === null || sourceCounts.has(key))
+                .map((key) => {
+                  const active = sourceFilter === key;
+                  const count = key === null ? mySkills.length : (sourceCounts.get(key) ?? 0);
+                  const label =
+                    key === null
+                      ? t('settings.marketplaceAllCategories')
+                      : key === 'custom'
+                        ? t('settings.skillsHub.custom', { defaultValue: 'Custom' })
+                        : key === 'team'
+                          ? t('settings.skillsHub.team', { defaultValue: 'Team' })
+                          : t('settings.skillsHub.builtin', { defaultValue: 'Built-in' });
+                  return (
+                    <div
+                      key={key ?? '__all'}
+                      role='button'
+                      tabIndex={0}
+                      data-testid={`pill-skill-source-${key ?? 'all'}`}
+                      className={skillSourcePillClass(active)}
+                      onClick={() => setSourceFilter(key)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          setSourceFilter(key);
+                        }
+                      }}
+                    >
+                      {label}
+                      <span className='ml-6px text-12px opacity-60'>{count}</span>
+                    </div>
+                  );
+                })}
+            </div>
+          ) : null}
+
           {mySkills.length > 0 ? (
-            <div className='w-full flex flex-col gap-6px relative z-10'>
+            <div
+              className='w-full grid grid-cols-1 gap-12px sm:grid-cols-2 lg:grid-cols-4 relative z-10'
+              data-testid='skill-card-grid'
+            >
               {groupedSkills.map((group) => (
                 <React.Fragment key={group.category ?? '__uncategorized'}>
                   {group.category && (
                     <div
                       data-testid={`skill-category-${normalizeTestId(group.category)}`}
-                      className='flex items-center gap-8px mt-10px mb-2px px-2px'
+                      className='col-span-full flex items-center gap-8px mt-10px mb-2px px-2px'
                     >
                       <span className='w-3px h-12px rd-2px bg-primary-6 opacity-70' />
                       <span className='text-13px font-semibold text-t-secondary'>{group.category}</span>
@@ -808,7 +870,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                       <div
                         key={skill.name}
                         data-testid={`my-skill-card-${normalizeTestId(skill.name)}`}
-                        style={{ contentVisibility: 'auto', containIntrinsicSize: '92px' }}
+                        style={{ contentVisibility: 'auto', containIntrinsicSize: '168px' }}
                         ref={(el) => {
                           skillRefs.current[skill.name] = el;
                         }}
@@ -819,7 +881,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                               : undefined
                             : () => openSkillDetail(skill.name)
                         }
-                        className={`group flex flex-col sm:flex-row gap-16px p-16px border rd-12px transition-all duration-200 cursor-pointer ${
+                        className={`group flex h-full flex-col gap-10px p-14px border rd-12px transition-all duration-200 cursor-pointer ${
                           highlightedSkill === skill.name
                             ? 'border-primary-5 bg-primary-1'
                             : selectedSkillNames.has(skill.name) && batchMode
@@ -837,7 +899,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                             />
                           </div>
                         )}
-                        <div className='shrink-0 flex items-start sm:mt-2px'>
+                        <div className='shrink-0 flex items-start'>
                           {skill.icon_file ? (
                             <img
                               src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
@@ -900,7 +962,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                         </div>
 
                         {!batchMode && (
-                          <div className='shrink-0 sm:self-center flex items-center justify-end gap-10px mt-12px sm:mt-0 pl-4px'>
+                          <div className='mt-auto flex shrink-0 items-center justify-between gap-10px pt-2px'>
                             <SkillUsedByStack
                               assistants={getAssistantsUsingSkill(skill.name, assistantCatalog ?? [])}
                             />

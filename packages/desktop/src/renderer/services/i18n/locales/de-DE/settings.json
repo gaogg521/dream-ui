@@ -1536,5 +1536,20 @@
   },
   "mediaModelUndeclared": "Nicht festgelegt —— markiere ein Modell auf der Modellseite als Bild oder Video",
   "enterpriseKeyMaskedTip": "Verteilte Unternehmensschlüssel sind maskiert (nur Anfang/Ende). Speichern ohne Änderung behält den ursprünglichen Schlüssel; ein neuer Schlüssel ersetzt ihn vollständig.",
-  "enterpriseMachineBlockedNotice": "Dieses Gerät wurde von Ihrem Organisationsadministrator gesperrt. Die Team-Ressourcen auf diesem Gerät wurden gelöscht."
+  "enterpriseMachineBlockedNotice": "Dieses Gerät wurde von Ihrem Organisationsadministrator gesperrt. Die Team-Ressourcen auf diesem Gerät wurden gelöscht.",
+  "marketplaceCategory": {
+    "marketingGrowth": "Marketing & Wachstum",
+    "engineering": "Technik",
+    "contentCreation": "Content-Erstellung",
+    "finance": "Finanzen & Investment",
+    "gaming": "Gaming",
+    "projectQuality": "Projekt & Qualität",
+    "tencentZone": "Tencent-Bereich",
+    "dataIntelligence": "Daten & Analytics",
+    "productDesign": "Produkt & Design",
+    "legalSecurity": "Recht & Sicherheit",
+    "sales": "Vertrieb & Business",
+    "industryAdvisory": "Branchenberatung",
+    "operationsHr": "Betrieb & HR"
+  }
 }

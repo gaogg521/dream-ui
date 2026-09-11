@@ -1543,5 +1543,20 @@
   "mediaModelUndeclared": "尚未設定 —— 在「模型」頁把某個模型標為圖片或影片類型",
   "enterpriseKeyMaskedTip": "企業下發的 Key 已脫敏顯示（僅保留首尾便於核對）。未修改則儲存時保留原 Key；輸入新 Key 將整體替換。",
   "enterpriseMachineBlockedNotice": "這台裝置已被組織管理員封鎖，本機的團隊資源已清空。",
-  "webui.deployRoleServerUnavailable": "「本機作為伺服器」需要部署企業版伺服端，個人版不提供專案群組託管能力。"
+  "webui.deployRoleServerUnavailable": "「本機作為伺服器」需要部署企業版伺服端，個人版不提供專案群組託管能力。",
+  "marketplaceCategory": {
+    "marketingGrowth": "行銷成長",
+    "engineering": "技術工程",
+    "contentCreation": "內容創作",
+    "finance": "金融投資",
+    "gaming": "遊戲空間",
+    "projectQuality": "專案品質",
+    "tencentZone": "騰訊專區",
+    "dataIntelligence": "數據智能",
+    "productDesign": "產品設計",
+    "legalSecurity": "法務安全",
+    "sales": "銷售商務",
+    "industryAdvisory": "產業顧問",
+    "operationsHr": "營運人力"
+  }
 }
