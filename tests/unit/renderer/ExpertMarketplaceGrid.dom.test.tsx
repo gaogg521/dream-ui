@@ -19,9 +19,20 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { MarketplacePersona } from '@/common/types/agent/assistantTypes';
 import ExpertMarketplaceGrid from '@renderer/pages/settings/AssistantSettings/home/ExpertMarketplaceGrid';
 
+/**
+ * Keys the active "locale" defines. Empty by default so the cases below run
+ * against the untranslated catalog; the overlay suite fills it in.
+ *
+ * `t` has to honour `defaultValue` the way i18next does — the grid tells an
+ * absent overlay entry apart from a present one by asking for the key with an
+ * empty default, so a mock that echoes the key would make every persona look
+ * translated.
+ */
+const translations: Record<string, string> = {};
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: (key: string, options?: { defaultValue?: string }) => translations[key] ?? options?.defaultValue ?? key,
   }),
 }));
 
@@ -52,6 +63,7 @@ const persona = (id: string, displayName: string, category?: string): Marketplac
   name: id,
   display_name: displayName,
   description: `${displayName} 的简介`,
+  role_name: `${displayName}昵称`,
   category,
   installed: false,
 });
@@ -124,5 +136,64 @@ describe('ExpertMarketplaceGrid category pills', () => {
     fireEvent.click(screen.getByTestId('pill-marketplace-category-技术工程'));
     fireEvent.click(screen.getByTestId('pill-marketplace-category-all'));
     expect(visibleCards()).toHaveLength(5);
+  });
+});
+
+/**
+ * The persona catalog is monolingual Chinese — no name or description field has
+ * ever had a locale variant — so an English UI used to render the whole grid in
+ * Chinese. `settings.marketplacePersona.<id>` is the per-locale overlay that
+ * fixes it, and these cases pin the two halves of its contract: a translated
+ * persona shows only its translation, an untranslated one still shows up.
+ */
+describe('ExpertMarketplaceGrid persona overlay', () => {
+  afterEach(() => {
+    cleanup();
+    for (const key of Object.keys(translations)) delete translations[key];
+  });
+
+  it('renders the localized name and blurb over the catalog Chinese', () => {
+    translations['settings.marketplacePersona.ppt-expert.name'] = 'Deck Creation Expert';
+    translations['settings.marketplacePersona.ppt-expert.desc'] = 'Turns an idea into a finished deck.';
+    renderGrid();
+
+    const card = screen.getByTestId('marketplace-card-ppt-expert');
+    expect(card.textContent).toContain('Deck Creation Expert');
+    expect(card.textContent).toContain('Turns an idea into a finished deck.');
+    expect(card.textContent).not.toContain('PPT制作专家');
+    expect(card.textContent).not.toContain('的简介');
+  });
+
+  it('drops the nickname in a locale that has no word for it', () => {
+    translations['settings.marketplacePersona.ppt-expert.name'] = 'Deck Creation Expert';
+    renderGrid();
+
+    // The nicknames are Chinese wordplay on the role title. Chinese locales
+    // carry a `.nickname` key; the others define none, and the line goes away
+    // rather than leaving one Chinese fragment in an English card.
+    expect(screen.getByTestId('marketplace-card-ppt-expert').textContent).not.toContain('昵称');
+    // A persona the overlay has never heard of keeps its catalog nickname.
+    expect(screen.getByTestId('marketplace-card-writer-expert').textContent).toContain('写作专家昵称');
+  });
+
+  it('falls back to the catalog for a persona the overlay does not cover', () => {
+    translations['settings.marketplacePersona.ppt-expert.name'] = 'Deck Creation Expert';
+    renderGrid();
+
+    const card = screen.getByTestId('marketplace-card-stock-expert');
+    expect(card.textContent).toContain('股票专家');
+    expect(visibleCards()).toHaveLength(5);
+  });
+
+  it('search matches the localized text and the original Chinese alike', () => {
+    translations['settings.marketplacePersona.ppt-expert.name'] = 'Deck Creation Expert';
+    renderGrid();
+
+    fireEvent.change(screen.getByTestId('mock-search'), { target: { value: 'deck' } });
+    expect(visibleCards().map((el) => el.getAttribute('data-testid'))).toEqual(['marketplace-card-ppt-expert']);
+
+    // Someone who pasted the Chinese name into an English UI still finds it.
+    fireEvent.change(screen.getByTestId('mock-search'), { target: { value: 'PPT制作' } });
+    expect(visibleCards().map((el) => el.getAttribute('data-testid'))).toEqual(['marketplace-card-ppt-expert']);
   });
 });

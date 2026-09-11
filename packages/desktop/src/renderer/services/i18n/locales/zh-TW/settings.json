@@ -1685,5 +1685,1235 @@
     "sales": "銷售商務",
     "industryAdvisory": "產業顧問",
     "operationsHr": "營運人力"
+  },
+  "marketplacePersona": {
+    "AccessibilityAuditor": {
+      "name": "無障礙審計師",
+      "desc": "按WCAG標準審計介面可訪問性，確保每個使用者都能使用產品",
+      "nickname": "無礙礙"
+    },
+    "AccountsPayableAgent": {
+      "name": "應付賬款代理",
+      "desc": "自動化處理應付賬款流程，確保付款準確及時",
+      "nickname": "付清清"
+    },
+    "AdCreativeStrategist": {
+      "name": "廣告創意策略師",
+      "desc": "精通廣告創意設計和效果預判，創作高轉化廣告素材",
+      "nickname": "點睛睛"
+    },
+    "AdortDesignExpert": {
+      "name": "Ardot 設計專家",
+      "desc": "精通 Ardot 設計軟體，既能在畫布上構建精準 UI，也能將設計稿直接生成前端程式碼",
+      "nickname": "林覺初"
+    },
+    "AdTrackingExpert": {
+      "name": "廣告追蹤技術專家",
+      "desc": "精通廣告追蹤程式碼和轉化歸因技術，確保投放效果可追蹤",
+      "nickname": "追蹤蹤"
+    },
+    "AgentIdentityTrustExpert": {
+      "name": "智慧體身份信任專家",
+      "desc": "構建AI智慧體間的身份認證和信任機制",
+      "nickname": "信鏈鏈"
+    },
+    "AgentOrchestrator": {
+      "name": "智慧體編排師",
+      "desc": "精通多智慧體系統的編排和協調，讓AI團隊高效協作",
+      "nickname": "排程達"
+    },
+    "AiContentCreatorTeam": {
+      "name": "內容創作專家團",
+      "desc": "AI驅動的多模態內容生產團隊，從創意策劃到成品交付全覆蓋，涵蓋品牌定位、情緒板、廣告方向、文案創作、影片生成、圖片設計、精修合成和素材改編。"
+    },
+    "AiDataCopilot": {
+      "name": "智數分析專家團",
+      "desc": "6人AI資料分析團隊，擅長自然語言轉SQL、Python建模、RAG知識問答、儀表盤視覺化與報告生成"
+    },
+    "AiEngineer": {
+      "name": "AI工程師",
+      "desc": "精通ML模型開發部署最佳化的全棧AI工程師，將AI從論文帶到生產環境",
+      "nickname": "深網網"
+    },
+    "AiHot": {
+      "name": "資訊速遞專家",
+      "desc": "一句話查到每天精選的 AI 模型/產品/行業/論文動態，自動整理成中文簡報，免配置免登入。",
+      "nickname": "數字生命卡茲克"
+    },
+    "AiImagePromptEngineer": {
+      "name": "AI影象提示詞工程師",
+      "desc": "精通AI影象生成的語言密碼，將抽象視覺概念轉化為精準提示詞",
+      "nickname": "畫令令"
+    },
+    "AIShifuExpert": {
+      "name": "AI師傅課程製作專家",
+      "desc": "基於你的教學需求和原始內容(PPT、Word、PDF、txt等)，幫你快速做門AI一對一互動課",
+      "nickname": "AI師傅"
+    },
+    "AndonQExpert": {
+      "name": "騰訊雲智慧客服",
+      "desc": "精通騰訊雲全線產品，提供產品諮詢、故障排查、服務報告等多維度服務的技術專家。",
+      "nickname": "AndonQ"
+    },
+    "ApiTestingExpert": {
+      "name": "API測試專家",
+      "desc": "在使用者之前發現API的每一個缺陷，確保介面穩定性和正確性",
+      "nickname": "介面探"
+    },
+    "APMPerformanceExpert": {
+      "name": "應用效能專家",
+      "desc": "精通騰訊雲 APM 效能診斷與調優，快速定位應用瓶頸並給出最佳化方案",
+      "nickname": "安迪"
+    },
+    "AppStoreOptimizationExpert": {
+      "name": "應用商店最佳化專家",
+      "desc": "精通App Store和Google Play搜尋排名演算法，讓應用脫穎而出",
+      "nickname": "榜上上"
+    },
+    "AShareAnalysis": {
+      "name": "A股研究團隊",
+      "desc": "8位研究專家支援6個預設工作流編排，覆蓋宏觀策略、盤面解讀、個股深度、估值定價、產業鏈對映、資金追蹤、風險診斷"
+    },
+    "AskLiuxiaopai": {
+      "name": "產品顧問",
+      "desc": "Raphael AI 創始人劉小排的數字分身，office-hours 風格陪你拆 idea：釘死具體的人、真痛點、第一筆錢、第一批使用者在哪，再給一件今晚就能做的事。",
+      "nickname": "AI 劉小排"
+    },
+    "AutonomousOptimizationArchitect": {
+      "name": "自主最佳化架構師",
+      "desc": "專精於設計能自主最佳化和進化的智慧系統架構，讓系統越用越聰明",
+      "nickname": "自進化"
+    },
+    "BackendArchitect": {
+      "name": "後端架構師",
+      "desc": "深耕分散式系統和高併發架構，擅長將複雜業務轉化為優雅技術方案",
+      "nickname": "磐石石"
+    },
+    "BaiduSeoExpert": {
+      "name": "百度SEO專家",
+      "desc": "深諳百度搜尋演算法和中國搜尋生態，讓品牌獲得最大曝光",
+      "nickname": "度優優"
+    },
+    "BehavioralNudgeEngine": {
+      "name": "行為助推引擎",
+      "desc": "運用行為經濟學設計產品助推機制，引導使用者做出更好的決策",
+      "nickname": "助推推"
+    },
+    "BilibiliContentStrategist": {
+      "name": "B站內容策略師",
+      "desc": "精通B站平臺生態和年輕使用者偏好，打造高播放量影片策略",
+      "nickname": "彈幕幕"
+    },
+    "BlockchainSecurityAuditor": {
+      "name": "區塊鏈安全審計師",
+      "desc": "專精區塊鏈智慧合約和DeFi協議安全審計",
+      "nickname": "鏈審審"
+    },
+    "BookCoCreator": {
+      "name": "圖書聯合創作者",
+      "desc": "與作者深度協作，幫助規劃書籍結構和內容，達到出版級品質",
+      "nickname": "著書書"
+    },
+    "BrandGuardian": {
+      "name": "品牌策略師",
+      "desc": "15年品牌戰略經驗，守護品牌一致性的終極捍衛者",
+      "nickname": "盾衛衛"
+    },
+    "CapacityExpert": {
+      "name": "騰訊雲容量規劃專家",
+      "desc": "容量規劃專家。擅長水位監控、容量預測與彈性伸縮策略制定，防止資源瓶頸與浪費。",
+      "nickname": "CloudQ"
+    },
+    "CarouselContentGrowthExpert": {
+      "name": "輪播內容增長專家",
+      "desc": "專精設計高互動率輪播圖內容，驅動社交平臺使用者參與和增長",
+      "nickname": "翻頁頁"
+    },
+    "CATNetworkQualityAnalyst": {
+      "name": "網路質量分析專家",
+      "desc": "精通多維效能分析、異常定位、抓包診斷、問題定界，快速定位網路與服務異常根因",
+      "nickname": "亞倫"
+    },
+    "ChaosExpert": {
+      "name": "騰訊雲混沌演練專家",
+      "desc": "混沌演練專家。擅長故障注入演練、韌性驗證與熔斷策略評估，提升系統抗脆弱能力。",
+      "nickname": "CloudQ"
+    },
+    "CharityDocFinanceExpert": {
+      "name": "公益文書與財務專家",
+      "desc": "公益機構文書與財務一站式專家，覆蓋專案申請書、結項報告、票據管理、審計準備與合規諮詢，幫助公益人從繁瑣行政中解放。",
+      "nickname": "小益"
+    },
+    "ChatLawTeam": {
+      "name": "中文法律諮詢團",
+      "desc": "案情采集、法條研究、判例分析、建議撰寫，為民事、婚姻、合同、勞動等高頻場景出具專業法律諮詢報告。"
+    },
+    "ChinaEcommerceOperationsExpert": {
+      "name": "中國電商運營專家",
+      "desc": "精通天貓京東拼多多等平臺運營，從選品到爆款一站式操盤",
+      "nickname": "賣得好"
+    },
+    "CloudOpsTeam": {
+      "name": "騰訊雲技術支援",
+      "desc": "三位專家組成的運維團隊 — CloudQ 負責多雲統一治理與架構視覺化，AndonQ 負責工單管理與智慧問答，MigraQ 負責跨雲遷移規劃與 TCO 分析。從遷移上雲到日常運維，提供端到端的騰訊雲運維服務。"
+    },
+    "Code": {
+      "name": "程式碼開發流程專家",
+      "desc": "提供規劃執行驗證測試全流程編碼指導，將複雜需求拆解為可獨立驗證步驟，支援多工跟蹤與偏好記憶。",
+      "nickname": "鵬城資訊AI專家"
+    },
+    "CodeReviewExpert": {
+      "name": "程式碼審查專家",
+      "desc": "以鷹眼標準檢查每行程式碼，在缺陷到達生產環境之前將其攔截",
+      "nickname": "火眼眼"
+    },
+    "ComplianceAuditor": {
+      "name": "合規審計師",
+      "desc": "全面審計企業運營合規性，確保符合行業標準",
+      "nickname": "合規規"
+    },
+    "ContentCreator": {
+      "name": "內容創作專家",
+      "desc": "擅長創作引人入勝的多平臺內容，讓品牌故事觸達目標受眾",
+      "nickname": "文博凱"
+    },
+    "ContentDistributionTeam": {
+      "name": "全域內容分發專家團",
+      "desc": "一站式多平臺內容分發方案，覆蓋13+全球社交媒體平臺（含微信影片號），提供釋出規則適配、排期管理、批次釋出編排、跨平臺資料分析和小紅書自動化釋出能力"
+    },
+    "ContentMonetizationTeam": {
+      "name": "內容變現商業化專家團",
+      "desc": "5人專家團覆蓋CPS帶貨分傭、CPE/CPM效果廣告、創作者-品牌交易撮合與收益分析，助力內容創作者和品牌方實現商業化閉環"
+    },
+    "CorporateTrainingDesigner": {
+      "name": "企業培訓設計師",
+      "desc": "設計系統化企業培訓課程和學習路徑，讓員工技能快速提升",
+      "nickname": "育才才"
+    },
+    "CrossBorderEcommerceExpert": {
+      "name": "跨境電商專家",
+      "desc": "精通亞馬遜Shopify等國際電商平臺，助力品牌出海全球",
+      "nickname": "海跨洋"
+    },
+    "CulturalIntelligenceStrategist": {
+      "name": "文化智慧策略師",
+      "desc": "幫助品牌建立全球化過程中的文化敏感度",
+      "nickname": "知文文"
+    },
+    "CustomerSupportExpert": {
+      "name": "客戶支援專家",
+      "desc": "將每次沮喪的使用者互動轉化為忠實擁護者，用卓越服務創口碑",
+      "nickname": "暖心心"
+    },
+    "DataAnalysisExpert": {
+      "name": "資料分析專家",
+      "desc": "資料分析專家，支援 Excel 電子表格的建立、編輯、分析、公式計算、格式化和資料視覺化",
+      "nickname": "析數數"
+    },
+    "DataAnalyticsReporter": {
+      "name": "資料分析報告師",
+      "desc": "將複雜資料轉化為戰略洞察，提供指標診斷、KPI框架設計、資料質量評估與決策報告",
+      "nickname": "舒明析"
+    },
+    "DatabaseOptimizationExpert": {
+      "name": "資料庫最佳化專家",
+      "desc": "專精資料庫效能調優和查詢最佳化，讓慢查詢變快讓瓶頸消失",
+      "nickname": "索引靈"
+    },
+    "DataEngineer": {
+      "name": "資料工程師",
+      "desc": "構建高效可靠的資料管道和ETL流程，讓資料從源頭到洞察暢通無阻",
+      "nickname": "管道通"
+    },
+    "DataExplorationExpert": {
+      "name": "資料探索專家",
+      "desc": "資料探索專家，支援 SQL 查詢、資料探索、視覺化、儀表板構建、資料驗證和洞察生成",
+      "nickname": "探數數"
+    },
+    "DataIntegrationAgent": {
+      "name": "資料整合代理",
+      "desc": "將分散資料清洗整合統一，構建企業統一資料檢視",
+      "nickname": "聚數數"
+    },
+    "DealStrategist": {
+      "name": "交易策略師",
+      "desc": "精通複雜交易策略制定和推進，幫助銷售團隊贏得大單",
+      "nickname": "贏單單"
+    },
+    "DeepResearchExpert": {
+      "name": "深度研究專家",
+      "desc": "綜合性深度研究專家，支援多源資訊檢索、事實驗證、知識發現和結構化報告生成，含微信公眾號文章搜尋能力",
+      "nickname": "深研研"
+    },
+    "DelightfulExperienceDesigner": {
+      "name": "趣味體驗設計師",
+      "desc": "專注於在品牌體驗中注入意想不到的愉悅時刻",
+      "nickname": "驚喜喜"
+    },
+    "DesignEngineTeam": {
+      "name": "設計原型專家團",
+      "desc": "6 角色 AI 設計團隊，覆蓋從需求發現到品牌級原型交付的完整工作流，內建 71 套設計系統"
+    },
+    "DesignMdArchitect": {
+      "name": "設計系統架構師",
+      "desc": "基於58個品牌參考庫，生成設計系統規範文件並直接輸出高質量HTML/CSS頁面與UI元件程式碼",
+      "nickname": "規範範"
+    },
+    "DesignToCodeExpert": {
+      "name": "設計轉程式碼專家",
+      "desc": "將 Figma 設計稿和截圖轉換為可直接使用的程式碼元件，內建無障礙性支援",
+      "nickname": "圖變碼"
+    },
+    "DeveloperEvangelist": {
+      "name": "開發者佈道師",
+      "desc": "構建發展開發者社群，推動產品在開發者群體中的採用",
+      "nickname": "佈道道"
+    },
+    "DevOpsAutomationEngineer": {
+      "name": "DevOps自動化工程師",
+      "desc": "將一切手動運維自動化，從CI/CD到基礎設施即程式碼，部署一鍵搞定",
+      "nickname": "一鍵達"
+    },
+    "DiscoveryCoach": {
+      "name": "需求發現教練",
+      "desc": "訓練銷售掌握深度需求挖掘技巧，發現真正的業務痛點",
+      "nickname": "掘需需"
+    },
+    "DiversityVisualExpert": {
+      "name": "多元視覺專家",
+      "desc": "致力於消除AI影象中的系統性偏見，確保視覺內容文化準確和包容",
+      "nickname": "多元元"
+    },
+    "DockerfileGenExpert": {
+      "name": "Dockerfile生成專家",
+      "desc": "Dockerfile 自動生成專家，遵循容器化最佳實踐",
+      "nickname": "容器器"
+    },
+    "DocumentGenerationExpert": {
+      "name": "文件生成專家",
+      "desc": "自動化生成各類業務文件，大幅提升文件建立效率",
+      "nickname": "文件達"
+    },
+    "DocumentProcessingExpert": {
+      "name": "文件處理專家",
+      "desc": "文件處理套件：Excel 電子表格、Word 文件、PowerPoint 簡報和 PDF 檔案的建立、編輯與轉換",
+      "nickname": "理文文"
+    },
+    "DouyinStrategist": {
+      "name": "抖音策略師",
+      "desc": "精通抖音演算法和內容生態，打造短影片爆款並實現商業化變現",
+      "nickname": "鬥音音"
+    },
+    "EarningsReviewer": {
+      "name": "財報研究員",
+      "desc": "資深季報復核分析師,讀財報電話會和公告更新覆蓋模型,產出季報後記、方差表與估值調整,供研究部門沿用。",
+      "nickname": "季明辨"
+    },
+    "EmbeddedFirmwareEngineer": {
+      "name": "嵌入式韌體工程師",
+      "desc": "精通微控制器程式設計，在資源受限的硬體上編寫高效可靠的韌體程式碼",
+      "nickname": "韌體通"
+    },
+    "EngineeringAssuranceTeam": {
+      "name": "工程保障團隊",
+      "desc": "由工程總監領導的 5 人工程專家團隊：程式碼審查師（安全/效能/正確性）、架構師（系統設計/ADR）、SRE 工程師（事故響應/部署）、測試專家（測試策略/覆蓋率）和技術文件師（文件/Runbook）。處理從程式碼審查到事故響應的複雜工程工作流。"
+    },
+    "EngineeringWorkflowSkills": {
+      "name": "工程實踐專家",
+      "desc": "基於Google 工程師的《Agent Skills》打造的資深工程全流程教練：規約驅動、測試驅動、程式碼評審、CI/CD釋出",
+      "nickname": "工序達"
+    },
+    "EnterpriseAccountStrategist": {
+      "name": "大客戶策略師",
+      "desc": "精通大客戶經營和賬戶擴充套件策略，將客戶發展為長期戰略伙伴",
+      "nickname": "拓客客"
+    },
+    "EnterpriseLegalTeam": {
+      "name": "企業法務專家團",
+      "desc": "面向企業法務的多角色專家團，覆蓋合同、交易、隱私、產品、監管、AI 治理、僱傭與智慧財產權分診。"
+    },
+    "EntrepreneurshipCoach": {
+      "name": "創業夥伴",
+      "desc": "林老師分身+讀書夥伴。送《創業可以學》，陪創業者讀書，從讀書中聽痛點，痛點匹配時自然引出課程諮詢。擅長GTM落地、敢見客戶情緒層突破、順序判斷。",
+      "nickname": "林正剛"
+    },
+    "EquityResearchExpert": {
+      "name": "股票研究專家",
+      "desc": "全面的股票研究工具集：財報分析、首次覆蓋報告、DCF與可比估值、多空推介、投資備忘錄、事件情景分析、組合風險管理，覆蓋完整買方賣方研究工作流",
+      "nickname": "嚴估深"
+    },
+    "EvidenceCollector": {
+      "name": "證據收集員",
+      "desc": "不放過任何沒有截圖證據的問題，用視覺證據確保缺陷無處遁形",
+      "nickname": "截圖圖"
+    },
+    "ExecutiveSummaryGenerator": {
+      "name": "戰略報告顧問",
+      "desc": "將冗長報告濃縮為高管可快速消化的精華摘要，節省每分鐘",
+      "nickname": "簡明明"
+    },
+    "ExperimentTrackingManager": {
+      "name": "實驗追蹤管理者",
+      "desc": "系統化管理實驗全生命週期，確保每個實驗有假設有執行有結論",
+      "nickname": "實驗通"
+    },
+    "FbsirSuperPartner": {
+      "name": "超級合夥人|魔鏡行動",
+      "desc": "帶上目標或真實材料，立即得到可使用成品；宿主能力可用且獲授權時執行並回執，再做72小時裁決。"
+    },
+    "FeedbackSynthesisAnalyst": {
+      "name": "反饋綜合分析師",
+      "desc": "從海量使用者反饋中提煉有價值洞察，將使用者聲音轉化為改進方向",
+      "nickname": "聽聲聲"
+    },
+    "FinanceAccountingExpert": {
+      "name": "財務會計專家",
+      "desc": "財務會計工具集：月末結賬、日記賬分錄、賬戶核對、財務報表生成、差異分析和 SOX 審計支援",
+      "nickname": "記賬賬"
+    },
+    "FinanceDataExpert": {
+      "name": "金融資料檢索專家",
+      "desc": "金融資料檢索專家，透過自然語言查詢 209 個金融資料 API，涵蓋股票、指數、期貨、債券、基金和宏觀經濟等 15 大類",
+      "nickname": "財數數"
+    },
+    "FinancialModelingExpert": {
+      "name": "金融建模專家",
+      "desc": "核心金融建模工具：DCF 估值、可比公司分析、LBO 模型、三張表模型、競爭格局分析和 PPT 質檢",
+      "nickname": "建模模"
+    },
+    "FinancialTracker": {
+      "name": "財務追蹤師",
+      "desc": "精準追蹤專案和業務的財務資料，確保每筆收支清晰透明",
+      "nickname": "賬清清"
+    },
+    "FinopsExpert": {
+      "name": "騰訊雲FinOps專家",
+      "desc": "雲成本治理專家。擅長賬單分析、閒置資源識別、計費模式最佳化與成本分攤，驅動降本增效決策。",
+      "nickname": "CloudQ"
+    },
+    "FortuneConsultant": {
+      "name": "賽博神運算元",
+      "desc": "傳統命理參考工具——八字紫微排盤、塔羅梅花起卦、農曆黃曆查詢，多體系交叉參考，僅供娛樂。",
+      "nickname": "運勢分析師"
+    },
+    "FrontendDeveloper": {
+      "name": "前端開發工程師",
+      "desc": "精通現代Web技術和主流框架，以畫素級精度構建響應式高效能Web應用",
+      "nickname": "畫素匠"
+    },
+    "FsiMarketResearcher": {
+      "name": "行業研究員",
+      "desc": "面向分析師與基金經理的行業研究分析師,產出行業全景、競爭格局、可比公司估值表與主題選股清單等研究交付物。",
+      "nickname": "嚴研行"
+    },
+    "GameAudioEngineer": {
+      "name": "遊戲音訊工程師",
+      "desc": "精通FMOD/Wwise整合和空間音訊，讓遊戲聲音栩栩如生",
+      "nickname": "音效效"
+    },
+    "GameDesigner": {
+      "name": "遊戲設計師",
+      "desc": "精通遊戲系統和機制設計，用迴圈槓桿和心理構建玩法",
+      "nickname": "玩法師"
+    },
+    "GaokaoAdvisor": {
+      "name": "高考我幫你",
+      "desc": "輔助檢索高考知識庫並呼叫分數線、一分一段能力，整理帶來源的真題、高校專業和志願參考；同時提供全流程志願填報引導，產出可轉發的騰訊文件志願報告",
+      "nickname": "專業高考顧問"
+    },
+    "GitWorkflowExpert": {
+      "name": "Git工作流專家",
+      "desc": "精通Git高階工作流和分支策略，讓團隊協作像行雲流水般順暢",
+      "nickname": "分支通"
+    },
+    "GlReconciler": {
+      "name": "總賬對賬師",
+      "desc": "基金後臺日終與月末對賬專員,在總賬與子賬之間找出差異、追溯到源交易、歸類 timing/reclass/FX 等原因並出具可籤核清單。",
+      "nickname": "錢對齊"
+    },
+    "GodotGameScriptEngineer": {
+      "name": "Godot遊戲指令碼工程師",
+      "desc": "精通GDScript 2.0和Godot 4節點架構",
+      "nickname": "節點通"
+    },
+    "GodotMultiplayerEngineer": {
+      "name": "Godot多人聯機工程師",
+      "desc": "精通Godot 4 MultiplayerAPI和網路複製",
+      "nickname": "聯網達"
+    },
+    "GodotShaderDeveloper": {
+      "name": "Godot著色器開發者",
+      "desc": "精通Godot著色語言和VisualShader",
+      "nickname": "渲染達"
+    },
+    "GovernmentDigitalPresalesConsultant": {
+      "name": "政府數字化售前顧問",
+      "desc": "精通政府數字化轉型需求和採購流程",
+      "nickname": "政通通"
+    },
+    "GPTResearcherTeam": {
+      "name": "深度研究團隊",
+      "desc": "深度研究報告輸出，7角色5階段聚合多源資訊，經審稿修訂迴圈輸出帶引用的專業報告"
+    },
+    "GrowthHacker": {
+      "name": "增長駭客",
+      "desc": "用資料驅動的實驗方法論找到未開發的增長渠道，實現指數級增長",
+      "nickname": "裂變變"
+    },
+    "HealthcareMarketingComplianceExpert": {
+      "name": "醫療營銷合規專家",
+      "desc": "確保醫療營銷內容符合法規要求，守護資訊準確性",
+      "nickname": "醫合合"
+    },
+    "HrOperationsTeam": {
+      "name": "HR 運營團隊",
+      "desc": "人力資源管理流程化，招聘篩選、薪酬體系設計、組織發展與HR運營流程化管理，助力企業人才戰略落地"
+    },
+    "HuashuDataPro": {
+      "name": "花叔資料分析專家團",
+      "desc": "「一人公司」本地資料分析專家團。一份 Excel 進，趨勢 / 結構 / 異常三專家並行分析，交付網頁、Excel、PPT 三格式報告，資料不出本地。"
+    },
+    "HuashuDocReviewer": {
+      "name": "合同與公文審稿",
+      "desc": "為「一人公司」打造的 AI 審稿專家。直接在 .docx 原文里加批註氣泡和追蹤修訂，不返回新文件、不破壞原格式。",
+      "nickname": "花叔文件審稿專家"
+    },
+    "HumanizePptTeam": {
+      "name": "卡爾的人感PPT專家團",
+      "desc": "把原始資料梳理成人感PPT大綱，排程HTML生成、演講模式、影片動效與交付質檢，形成可演示成果。",
+      "nickname": "PPT大綱、生成、影片、演示與交付專家團"
+    },
+    "IdentityGraphOperator": {
+      "name": "身份圖譜運營師",
+      "desc": "構建維護使用者身份圖譜系統，實現跨平臺身份識別",
+      "nickname": "識圖圖"
+    },
+    "IncidentResponseCommander": {
+      "name": "事故響應指揮官",
+      "desc": "系統故障時冷靜指揮團隊快速定位處理和恢復，是終極救火隊長",
+      "nickname": "救火隊"
+    },
+    "IndieFounderCoach": {
+      "name": "獨立創業教練",
+      "desc": "信奉精益創業與自力更生理念，幫助獨立創業者用最少資源從0到1構建可持續盈利事業，覆蓋創業全旅程關鍵決策",
+      "nickname": "創迪"
+    },
+    "IndustrySreTeam": {
+      "name": "騰訊雲行業SRE",
+      "desc": "12 位行業 SRE 覆蓋遊戲、金融、電商等場景，做五維巡檢，輸出可對照可執行的架構治理建議。",
+      "nickname": "騰訊雲行業 SRE"
+    },
+    "InfrastructureOperationsExpert": {
+      "name": "基礎設施運維專家",
+      "desc": "確保IT基礎設施的持續穩定執行，一切盡在掌控",
+      "nickname": "運維通"
+    },
+    "InspectionExpert": {
+      "name": "騰訊雲風險巡檢專家",
+      "desc": "雲資源巡檢專家。覆蓋五維巡檢（安全、效能、可靠性、成本、合規）、高危風險掃描與優先順序處置、巡檢趨勢分析與視覺化報告生成，主動發現潛在隱患，防患於未然。",
+      "nickname": "CloudQ"
+    },
+    "InstagramOperationsExpert": {
+      "name": "Instagram運營專家",
+      "desc": "精通Instagram視覺美學和內容策略，打造令人嚮往的品牌形象",
+      "nickname": "曬圖圖"
+    },
+    "InternalCommsExpert": {
+      "name": "內部溝通專家",
+      "desc": "內部溝通模板專家：狀態報告、領導彙報、公司簡報、FAQ、事故報告和專案更新",
+      "nickname": "傳令令"
+    },
+    "InvestmentBankingExpert": {
+      "name": "投資銀行專家",
+      "desc": "全能投資銀行專家：交易材料製作、估值建模（Comps/DCF/LBO/三表）、資本市場融資、買方盡調分析、重組與回收瀑布、交易全流程執行",
+      "nickname": "銀拓遠"
+    },
+    "InvestmentMastersTeam": {
+      "name": "投資大師專家團",
+      "desc": "13位傳奇投資哲學家 + 6位專業分析師並行分析，風險管理師評估約束，投資組合經理訊號聚合投票，多角度投資分析參考"
+    },
+    "JiraWorkflowAdmin": {
+      "name": "Jira工作流管理員",
+      "desc": "精通Jira配置和敏捷工作流設計，讓工具真正服務於團隊效率",
+      "nickname": "看板達"
+    },
+    "KdocsDataTable": {
+      "name": "資料建表專家",
+      "desc": "金山文件出品將群聊接龍一鍵轉為結構化表格，一句話生成可分享的資訊收集表，智慧美化表格並固化規則（條件格式高亮異常值、資料校驗下拉約束、區域保護鎖定表頭）。擅長接龍識別、欄位推斷、格式規範與資料去重。",
+      "nickname": "金山文件智慧建表助手"
+    },
+    "KdocsDocButler": {
+      "name": "文件管家",
+      "desc": "金山文件出品一站式管理金山文件全生命週期：新建各類線上文件、按關鍵詞快速搜尋定位、AI 按主題自動分類整理資料夾、批次移動重新命名、生成分享連結與許可權管理、讀取文件內容輸出為 Markdown。",
+      "nickname": "金山文件文件管家助手"
+    },
+    "KdocsKnowledgeCollector": {
+      "name": "知識收藏專家",
+      "desc": "金山文件出品把網頁、訊息、筆記等碎片內容沉澱為結構化知識資產：一鍵剪藏公眾號與網頁為雲文件，AI 按主題聚合零散筆記生成整理稿，多份文件自動提煉摘要與要點，一鍵歸檔到個人知識庫並智慧整理已有內容。",
+      "nickname": "金山文件知識收藏助手"
+    },
+    "KdocsPdfToolbox": {
+      "name": "PDF 處理專家",
+      "desc": "金山文件出品PDF 文件處理一站式：按頁拆分、多檔案合併、提取指定頁、轉換為 Word/Excel/PPT、全文翻譯匯出（雙語/指定語言）、內容讀取與頁數查詢。適用於合同拆分、報告合併、格式轉換、跨語言文件處理等場景。",
+      "nickname": "金山文件PDF處理助手"
+    },
+    "KdocsPptCreator": {
+      "name": "AIPPT專家",
+      "desc": "WPS官方出品一句話主題或一份參考文件，AI 自動設計大綱並生成包含標題頁、內容頁、總結頁的完整 PPT，並按場景統一配色與排版。覆蓋工作彙報、專案展示、培訓課件、方案演示等高頻場景。",
+      "nickname": "WPS AIPPT創作助手"
+    },
+    "KuaishouStrategist": {
+      "name": "快手策略師",
+      "desc": "深諳快手下沉市場特性和老鐵文化，打造接地氣的內容策略",
+      "nickname": "老鐵鐵"
+    },
+    "KycScreener": {
+      "name": "客戶合規官",
+      "desc": "客戶准入合規分析師,解析 KYC 材料、跑規則引擎、比對制裁與 PEP 名單,並按風險等級形成可交合規籤核的升級包。",
+      "nickname": "查本源"
+    },
+    "LawStudentCoach": {
+      "name": "法學學習教練",
+      "desc": "面向法學生的學習陪練，訓練蘇格拉底問答、案例摘要、IRAC、課程大綱和律考複習。",
+      "nickname": "法學生陪練"
+    },
+    "LegalBuilderHubExpert": {
+      "name": "法律技能治理專家",
+      "desc": "面向法律運營和技能開發者的治理助手，評估技能來源、工具許可權、新鮮度、許可證和信任邊界。",
+      "nickname": "法律技能運營官"
+    },
+    "LegalClinicSupervisor": {
+      "name": "法律診所督導顧問",
+      "desc": "面向法學院診所導師的監督助手，支援客戶接待、研究啟動、期限追蹤、學生入職和學期交接。",
+      "nickname": "法律診所督導"
+    },
+    "LegalComplianceReviewer": {
+      "name": "法律合規審查員",
+      "desc": "確保業務運營和產品功能符合法律法規要求，防範合規風險",
+      "nickname": "律守正"
+    },
+    "LevelDesigner": {
+      "name": "關卡設計師",
+      "desc": "將每個關卡視為精心編排的體驗，用空間講述故事",
+      "nickname": "關卡卡"
+    },
+    "LinkedInContentCreator": {
+      "name": "LinkedIn內容創作者",
+      "desc": "精通LinkedIn專業社交平臺內容策略，幫助建立思想領袖地位",
+      "nickname": "領英達"
+    },
+    "LitigationLegalExpert": {
+      "name": "訴訟支援顧問",
+      "desc": "面向訴訟律師的案件支援專家，梳理案件、證據、時間線、質證準備、索賠圖表和文書草稿。",
+      "nickname": "訴訟法務專家"
+    },
+    "LivestreamEcommerceCoach": {
+      "name": "直播電商教練",
+      "desc": "精通直播帶貨全鏈路運營，從話術到投流幫助實現GMV突破",
+      "nickname": "播旺旺"
+    },
+    "LlmWiki": {
+      "name": "知識管理專家",
+      "desc": "基於 Andrej Karpathy 的 LLM Wiki 模式，幫助使用者構建、維護和查詢持久化的個人知識庫。擅長將原始資料（論文、文章、筆記等）編譯為結構化 Markdown Wiki，自動建立交叉引用、標註矛盾、維護索引。",
+      "nickname": "知庫庫"
+    },
+    "LspIndexEngineer": {
+      "name": "LSP索引工程師",
+      "desc": "精通語言伺服器協議和程式碼索引技術",
+      "nickname": "索引引"
+    },
+    "MacOsSpatialMetalEngineer": {
+      "name": "macOS空間Metal工程師",
+      "desc": "精通Apple Metal圖形API和macOS空間計算開發",
+      "nickname": "渲染師"
+    },
+    "MarketingCampaignExpert": {
+      "name": "營銷活動策劃專家",
+      "desc": "策劃、建立和最佳化全渠道營銷活動，包括內容策略、社交媒體、郵件營銷和廣告投放",
+      "nickname": "策動動"
+    },
+    "MarketingCampaignTeam": {
+      "name": "營銷戰役團隊",
+      "desc": "由營銷總監領導的 4 人營銷專家團隊：內容創作者（部落格/郵件/社媒/品牌聲音）、活動策劃師（戰役策略/受眾/渠道/預算）、SEO 專家（技術審計/內容最佳化/效果分析）和品牌分析師（競品定位/品牌稽核）。覆蓋完整營銷生命週期。"
+    },
+    "McpBuildExpert": {
+      "name": "MCP構建專家",
+      "desc": "精通Model Context Protocol設計實現",
+      "nickname": "協議通"
+    },
+    "MeetingPrepAgent": {
+      "name": "會前準備助理",
+      "desc": "理財顧問的會議準備搭檔,在每次客戶見面前彙總關係歷史、持倉近況、市場要聞與議題清單,讓顧問 5 分鐘進入狀態。",
+      "nickname": "周備全"
+    },
+    "MermaidDiagramExpert": {
+      "name": "圖表設計與渲染專家",
+      "desc": "將自然語言轉化為專業級Mermaid圖表，支援6種圖表型別、15種主題配色，秒級渲染出版級SVG與ASCII視覺化",
+      "nickname": "繪靈"
+    },
+    "Migraq": {
+      "name": "騰訊雲遷移服務專家",
+      "desc": "騰訊雲遷移服務專家，支援阿里雲、AWS、華為雲等多雲資源掃描、規格對標、TCO成本分析與遷移方案規劃",
+      "nickname": "MigraQ"
+    },
+    "MigraqTeam": {
+      "name": "騰訊雲上雲遷移專家團",
+      "desc": "7位專家協作完成上雲遷移：產品選型、Landing Zone、架構設計、交付實施、運維與FDE部署"
+    },
+    "MobileApplicationDeveloper": {
+      "name": "移動應用開發工程師",
+      "desc": "精通iOS和Android原生及跨平臺開發，打造流暢美觀的移動應用",
+      "nickname": "掌中靈"
+    },
+    "ModelBuilder": {
+      "name": "財務建模師",
+      "desc": "專業財務建模師,在 Excel 中從零搭建 DCF、LBO、三張表模型與可比公司估值,公式全連結、可追溯、機構級品控。",
+      "nickname": "莫百鍊"
+    },
+    "ModelQualityAssuranceExpert": {
+      "name": "模型質量保障專家",
+      "desc": "系統化評估保障AI模型質量，確保輸出準確公平安全",
+      "nickname": "模檢檢"
+    },
+    "ModernWebappExpert": {
+      "name": "現代Web開發專家",
+      "desc": "現代 Web 應用開發專家，基於 React + TypeScript + Vite + Tailwind CSS + shadcn/ui 技術棧，含瀏覽器自動化能力",
+      "nickname": "速構構"
+    },
+    "MonthEndCloser": {
+      "name": "月末結賬會計",
+      "desc": "財務負責人的月末關賬搭檔,按清單跑應計、滾動表、差異說明,把關賬包整理好交給 controller 籤核。",
+      "nickname": "關月結"
+    },
+    "MultiCloudExpert": {
+      "name": "多雲AIOps專家",
+      "desc": "統一管理騰訊雲、阿里雲、AWS、Azure、GCP 等多雲平臺，一個智慧體即可管多雲。",
+      "nickname": "CloudQ"
+    },
+    "MultiCloudManagementExpert": {
+      "name": "騰訊雲DevOps專家",
+      "desc": "精通騰訊雲、阿里雲、AWS等多雲架構治理、架構視覺化、智慧巡檢、雲成本最佳化和風險評估，一個專家管理所有云。",
+      "nickname": "CloudQ"
+    },
+    "NarrativeDesigner": {
+      "name": "敘事設計師",
+      "desc": "將敘事和遊戲玩法無縫融合，讓故事與互動不可分割",
+      "nickname": "劇本本"
+    },
+    "OpcTeam": {
+      "name": "一人公司專家團",
+      "desc": "基於由Easy創作的《一人企業方法論》，9位專家陪你走完從資源盤點、利基定位到MVP、轉化、覆盤的一人公司全流程共創"
+    },
+    "OpenSpecDocTeam": {
+      "name": "專業文件生成團隊",
+      "desc": "企業級長文件生成，4角色協作完成深度調研、大綱規劃、內容撰寫與合規稽核全流程"
+    },
+    "OutboundStrategist": {
+      "name": "外呼策略師",
+      "desc": "精通外呼和冷啟動銷售策略，讓陌生人30秒內願意繼續傾聽",
+      "nickname": "撥必通"
+    },
+    "PaidMediaAuditor": {
+      "name": "付費媒體審計師",
+      "desc": "深度審計廣告投放資料和預算分配，找出被浪費的廣告費",
+      "nickname": "查賬賬"
+    },
+    "PerformanceTestingExpert": {
+      "name": "效能測試專家",
+      "desc": "精通效能測試和基準評估，用資料證明效能改進而非憑感覺",
+      "nickname": "壓測測"
+    },
+    "PitchAgent": {
+      "name": "投行交易助理",
+      "desc": "資深投行關聯人,從零搭建 pitch 初稿——可比公司、先例交易、DCF、足球場估值圖,並生成綁在模型上的品牌化 PPT。",
+      "nickname": "白必得"
+    },
+    "PodcastStrategist": {
+      "name": "播客策略師",
+      "desc": "精通播客內容策劃和增長策略，透過音訊建立深度使用者連線",
+      "nickname": "聲浪浪"
+    },
+    "PpcBiddingStrategist": {
+      "name": "PPC競價廣告策略師",
+      "desc": "精通Google Ads和百度競價，以最低點選成本獲取高質量流量",
+      "nickname": "競高高"
+    },
+    "PptCreationExpert": {
+      "name": "PPT製作專家",
+      "desc": "智慧 PPT 生成助手，一鍵將想法轉化為精美簡報",
+      "nickname": "幻燈燈"
+    },
+    "PresalesTechnicalConsultant": {
+      "name": "售前技術顧問",
+      "desc": "架起技術與商業的橋樑，幫助客戶理解解決方案的價值",
+      "nickname": "方案通"
+    },
+    "PrivateDomainMarketingExpert": {
+      "name": "私域營銷專家",
+      "desc": "深諳私域運營增長，盤活現有資料資源、洞察營銷機會、實現業績增長",
+      "nickname": "司玉琦"
+    },
+    "PrivateDomainOperationsExpert": {
+      "name": "私域運營專家",
+      "desc": "精通微信私域流量池搭建運營，將公域流量沉澱為私域資產",
+      "nickname": "留客客"
+    },
+    "PrivateEquityExpert": {
+      "name": "私募股權專家",
+      "desc": "私募股權工具集：Deal Sourcing、專案篩選、盡調清單、IC Memo、單位經濟學分析、回報分析、投後管理和價值創造方案",
+      "nickname": "募資資"
+    },
+    "ProductManagementExpert": {
+      "name": "產品管理專家",
+      "desc": "產品管理工具集：功能規格編寫、路線圖規劃、利益相關者溝通、使用者研究綜合、競品分析和指標追蹤",
+      "nickname": "產品通"
+    },
+    "ProductStrategyTeam": {
+      "name": "產品戰略團隊",
+      "desc": "由產品總監領導的 5 人產品專家團隊：需求分析師（PRD/功能規格書）、使用者研究員（調研綜合分析）、競品分析師（競爭情報）、資料分析師（指標追蹤）和路線圖規劃師（路線圖管理/迭代規劃）。覆蓋從構思到上線的完整產品生命週期。"
+    },
+    "ProgrammaticAdBuyer": {
+      "name": "程式化廣告買手",
+      "desc": "精通程式化廣告購買和DSP平臺，透過演算法實現大規模精準投放",
+      "nickname": "演算法投"
+    },
+    "ProjectShepherd": {
+      "name": "專案牧羊人",
+      "desc": "溫和但堅定地引導專案按計劃推進，確保里程碑準時交付",
+      "nickname": "牧羊羊"
+    },
+    "PromoCreatorTeam": {
+      "name": "宣傳片創作團隊",
+      "desc": "6位專業角色分6階段協作完成產品宣傳片全流程製作：創意簡報、逐鏡頭分鏡、素材生產、HyperFrames剪輯合成、BGM設計與交付，從產品URL到可釋出的60-90秒宣傳片MP4",
+      "nickname": "袋鼠帝宣傳片創作團隊"
+    },
+    "ProposalStrategist": {
+      "name": "方案策劃師",
+      "desc": "精通銷售提案和方案設計，將價值轉化為無法拒絕的商業論證",
+      "nickname": "策必中"
+    },
+    "RapidPrototypingEngineer": {
+      "name": "快速原型工程師",
+      "desc": "以極快速度將創意轉化為可工作的原型，讓團隊快速驗證想法",
+      "nickname": "閃造造"
+    },
+    "RealityChecker": {
+      "name": "現實檢查員",
+      "desc": "預設認為一切需要更多證據，需要壓倒性證據才批准生產就緒",
+      "nickname": "驗真真"
+    },
+    "RecruitmentExpert": {
+      "name": "招聘專家",
+      "desc": "精通人才招聘全流程，為團隊找到最佳人才",
+      "nickname": "伯樂樂"
+    },
+    "RedditCommunityBuilder": {
+      "name": "Reddit社群建設者",
+      "desc": "深諳Reddit社群文化，在全球最大論壇上建立真實社群影響力",
+      "nickname": "紅迪迪"
+    },
+    "RemotionVideoExpert": {
+      "name": "影片生成專家",
+      "desc": "基於 Remotion 的影片生成專家，建立產品演示、解說影片、社交媒體內容和簡報",
+      "nickname": "動畫畫"
+    },
+    "ReportDistributionAgent": {
+      "name": "報告分發代理",
+      "desc": "自動化管理報告生成和分發流程",
+      "nickname": "送報報"
+    },
+    "RobloxAvatarCreator": {
+      "name": "Roblox虛擬形象創作者",
+      "desc": "精通Roblox UGC和虛擬形象管線",
+      "nickname": "捏臉達"
+    },
+    "RobloxExperienceDesigner": {
+      "name": "Roblox體驗設計師",
+      "desc": "精通Roblox平臺UX和商業化設計",
+      "nickname": "樂體驗"
+    },
+    "RobloxSystemScriptEngineer": {
+      "name": "Roblox系統指令碼工程師",
+      "desc": "精通Luau和Roblox客戶端-伺服器安全模型",
+      "nickname": "指令碼通"
+    },
+    "RumFullstackTeam": {
+      "name": "騰訊雲 RUM 全鏈路專家團",
+      "desc": "騰訊雲 RUM 全鏈路服務：10 大平臺 aegis SDK 接入 + WebVitals/異常/介面/資源分析，支援 RUM-APM 聯動"
+    },
+    "SalesBattleTeam": {
+      "name": "銷售作戰團隊",
+      "desc": "銷售攻堅體系，客戶研究鎖定目標、外聯策略提升觸達、競品情報預警風險、銷售預測最佳化資源分配"
+    },
+    "SalesCoach": {
+      "name": "銷售教練",
+      "desc": "全棧銷售教練：從能力培養到實戰執行——會議準備、交易策略、商業案例、競品分析、通話覆盤，用蘇格拉底式提問驅動",
+      "nickname": "單必成"
+    },
+    "SalesDataExtractionAgent": {
+      "name": "銷售資料提取代理",
+      "desc": "從各類資料來源中自動提取整理銷售資料",
+      "nickname": "拉數數"
+    },
+    "SalesPipelineAnalyst": {
+      "name": "銷售管道分析師",
+      "desc": "用資料驅動方法分析銷售管道健康度，讓預測從猜測變科學",
+      "nickname": "漏斗通"
+    },
+    "SearchTermAnalyst": {
+      "name": "搜尋詞分析師",
+      "desc": "深度分析搜尋詞資料，挖掘使用者真實搜尋意圖",
+      "nickname": "詞探探"
+    },
+    "SecurityEngineer": {
+      "name": "安全工程師",
+      "desc": "全方位保障系統安全，在駭客之前發現並修復安全漏洞",
+      "nickname": "盾甲甲"
+    },
+    "SeniorDeveloper": {
+      "name": "高階開發工程師",
+      "desc": "10年以上全棧經驗，精通多種語言和框架，是團隊的技術中堅",
+      "nickname": "吳八哥"
+    },
+    "SeniorProjectManager": {
+      "name": "高階專案經理",
+      "desc": "10年以上專案管理經驗，精通瀑布和敏捷，是複雜專案定海神針",
+      "nickname": "關德豪"
+    },
+    "SeoContentTeam": {
+      "name": "SEO 內容營銷團隊",
+      "desc": "7位專業角色分5階段協作：關鍵詞研究、SEO長文創作、技術最佳化、內容編輯、連結策略、轉化率分析，全流程自動化產出高質量SEO內容"
+    },
+    "SeoExpert": {
+      "name": "SEO專家",
+      "desc": "精通Google搜尋演算法和技術SEO，讓網站在搜尋結果中穩居前列",
+      "nickname": "搜霸霸"
+    },
+    "ShortVideoEditingCoach": {
+      "name": "短影片剪輯教練",
+      "desc": "精通短影片剪輯技巧和節奏把控，讓每條影片具有專業衝擊力",
+      "nickname": "剪神神"
+    },
+    "SiteReliabilityEngineer": {
+      "name": "站點可靠性工程師",
+      "desc": "用軟體工程方法論解決運維問題，確保99.99%可用性",
+      "nickname": "穩如山"
+    },
+    "SocialAdStrategist": {
+      "name": "社交廣告策略師",
+      "desc": "精通社交平臺廣告投放，以精準定向實現最優獲客成本",
+      "nickname": "精投投"
+    },
+    "SocialEngagementTeam": {
+      "name": "社媒互動增長專家團",
+      "desc": "透過智慧化互動自動化、AI評論運營、高轉化訊號挖掘和品牌輿情監控，安全高效提升社交媒體互動效果，覆蓋14+全球主流平臺"
+    },
+    "SocialMediaStrategist": {
+      "name": "社交媒體策略師",
+      "desc": "全面統籌多平臺社交媒體策略，讓品牌在每個平臺發出最強音",
+      "nickname": "傳聲聲"
+    },
+    "Soe": {
+      "name": "騰訊雲安全運營專家",
+      "desc": "分析WAF/主機安全/雲防火牆/SOC/御界/天幕的告警/事件等離線資料，含漏洞、攻擊、溯源分析。"
+    },
+    "SoftwareArchitect": {
+      "name": "軟體架構師",
+      "desc": "站在全域性高度設計可擴充套件高可用的軟體架構，為技術團隊指明方向",
+      "nickname": "架構通"
+    },
+    "SoftwareCompany": {
+      "name": "軟體開發團隊",
+      "desc": "高效軟體研發團隊，產品經理定需求、架構師設計+拆任務、工程師批次實現程式碼、QA驗證質量，小需求支援快速模式"
+    },
+    "SoftwareWorkshop": {
+      "name": "軟體工坊",
+      "desc": "6位工程專業角色：產品評審、程式碼審查、安全審計、QA測試、設計系統、除錯運維，覆蓋從想法到生產的完整軟體生命週期"
+    },
+    "SoliditySmartContractEngineer": {
+      "name": "Solidity智慧合約工程師",
+      "desc": "精通Solidity和EVM生態，編寫安全高效的智慧合約",
+      "nickname": "鏈合約"
+    },
+    "SprintPriorityManager": {
+      "name": "迭代優先順序管理者",
+      "desc": "在有限迭代週期內做出最優優先順序決策，確保Sprint交付最大價值",
+      "nickname": "排序序"
+    },
+    "SreExpert": {
+      "name": "騰訊雲SRE專家",
+      "desc": "站點可靠性專家。擅長故障根因推理、告警關聯分析、業務程序診斷與 SLO 治理，透過系統化診斷方法論保障服務持續穩定執行。",
+      "nickname": "CloudQ"
+    },
+    "StatementAuditor": {
+      "name": "LP 報表稽核師",
+      "desc": "LP 資本賬戶報表最後把關人,按基金 NAV 反算每條專案、對齊分配與管理費,發差前形成籤核建議與異常清單。",
+      "nickname": "審細明"
+    },
+    "StockPartnerTeam": {
+      "name": "騰訊自選股股票投研專家團",
+      "desc": "六位投研專家團，兼擅產業策略、訊號捕捉、估值定價、逆向佈局、基本面與短線，基於實時行情多視角研判。"
+    },
+    "StrategyBacktestExpert": {
+      "name": "量化策略回測師",
+      "desc": "把自然語言描述的交易策略轉成可執行的 Python 回測指令碼，輸出標準指標、視覺化圖表、HTML 儀表盤，並給出實現細節、已知偏差和結果解讀。",
+      "nickname": "回測明算"
+    },
+    "StudioOperationsManager": {
+      "name": "工作室運營管理者",
+      "desc": "全面管理工作室日常運營，從資源調配到流程最佳化",
+      "nickname": "統籌籌"
+    },
+    "StudioProducer": {
+      "name": "工作室製片人",
+      "desc": "統籌專案從立項到交付的全過程，平衡創意預算和時間",
+      "nickname": "製片達"
+    },
+    "StudyAbroadConsultant": {
+      "name": "留學顧問",
+      "desc": "精通各國留學申請流程和院校資訊",
+      "nickname": "留洋洋"
+    },
+    "SupplyChainStrategist": {
+      "name": "供應鏈策略師",
+      "desc": "最佳化供應鏈每個環節，實現成本效率韌性的最佳平衡",
+      "nickname": "鏈優優"
+    },
+    "TaxComplianceTeam": {
+      "name": "財稅合規專家團",
+      "desc": "覆蓋票據處理、記賬核算、報表編制、稅務申報、合規審計五大環節的企業財稅合規全鏈路管理專家團"
+    },
+    "TechnicalArtist": {
+      "name": "技術美術",
+      "desc": "在美術願景與引擎實現之間架起橋樑，精通著色器和VFX",
+      "nickname": "技美美"
+    },
+    "TechnicalDocumentationEngineer": {
+      "name": "技術文件工程師",
+      "desc": "將複雜技術概念轉化為清晰準確的文件，讓技術知識可傳播",
+      "nickname": "文通通"
+    },
+    "TencentCharityExpert": {
+      "name": "騰訊技術公益智慧化專家",
+      "desc": "精通公益行業產品和技術解決方案的騰訊技術公益智慧化專家",
+      "nickname": "小益"
+    },
+    "TencentCloudPriceExpert": {
+      "name": "騰訊雲刊例價查詢助手",
+      "desc": "騰訊雲銷售刊例價查詢助手。支援產品諮詢、單產品/批次詢價、圖片配置識別，價格來自實時 API。"
+    },
+    "TencentRtcExpert": {
+      "name": "騰訊雲實時音影片專家",
+      "desc": "TRTC 技術支援專家：通話用量與質量查詢、單次通話診斷、雲端巡檢解讀、故障排查與友商程式碼遷移。",
+      "nickname": "CloudQ"
+    },
+    "TencentSecurityExpert": {
+      "name": "騰訊安全專家",
+      "desc": "深耕安全領域多年，提供威脅建模、漏洞評估、安全程式碼審查、架構設計、事件響應、安全諮詢等服務",
+      "nickname": "雲鼎安全專家"
+    },
+    "TerminalIntegrationExpert": {
+      "name": "終端整合專家",
+      "desc": "精通終端應用與空間計算環境的整合",
+      "nickname": "終端通"
+    },
+    "TestResultsAnalyst": {
+      "name": "測試結果分析師",
+      "desc": "像偵探解讀證據一樣分析測試結果，發現隱藏的質量問題",
+      "nickname": "析測測"
+    },
+    "ThreatDetectionEngineer": {
+      "name": "威脅檢測工程師",
+      "desc": "專精構建威脅檢測系統，在攻擊者造成損害前發現攔截威脅",
+      "nickname": "獵威威"
+    },
+    "TikTokStrategist": {
+      "name": "TikTok策略師",
+      "desc": "精通TikTok演算法和海外短影片生態，幫助品牌在全球平臺爆發",
+      "nickname": "拓刻刻"
+    },
+    "ToolEvaluationExpert": {
+      "name": "工具評估專家",
+      "desc": "系統化評估推薦最適合團隊的工具，避免浪費時間在錯誤工具上",
+      "nickname": "選品品"
+    },
+    "TradingAgentTeam": {
+      "name": "交易分析團隊",
+      "desc": "13位專業角色分5階段協作完成投資分析：技術面、基本面、新聞面、情緒面資料採集 → 多空辯論 → 交易決策 → 三方風險評估 → 最終報告，輸出 BUY/SELL/HOLD 建議及完整操作方案"
+    },
+    "TrendResearcher": {
+      "name": "行業趨勢專家",
+      "desc": "持續追蹤行業和技術趨勢，為產品戰略提供前瞻性洞察",
+      "nickname": "風向標"
+    },
+    "TripStarAgent": {
+      "name": "旅遊攻略管家",
+      "desc": "生活服務管家，一站式搞定行程規劃、景點/酒店/天氣/預算與美團紅包領取",
+      "nickname": "路小鮮"
+    },
+    "TwitterOperationsExpert": {
+      "name": "Twitter運營專家",
+      "desc": "精通Twitter/X平臺互動策略和話題運營，讓品牌佔據全球對話",
+      "nickname": "推文文"
+    },
+    "Txzhaopin": {
+      "name": "騰訊招聘專家",
+      "desc": "騰訊官方招聘助手：覆蓋校招/社招全流程，含需求溝通、搜簡歷、面試安排、出題、面評、待辦與資料看板。"
+    },
+    "UiDesigner": {
+      "name": "UI設計師",
+      "desc": "精通設計系統和元件庫，追求畫素級完美，打造無障礙使用者介面",
+      "nickname": "畫素君"
+    },
+    "UnityArchitect": {
+      "name": "Unity架構師",
+      "desc": "精通ScriptableObjects和解耦系統設計",
+      "nickname": "解耦達"
+    },
+    "UnityEditorToolDeveloper": {
+      "name": "Unity編輯器工具開發者",
+      "desc": "精通Unity自定義EditorWindow和管線自動化",
+      "nickname": "外掛達"
+    },
+    "UnityMultiplayerEngineer": {
+      "name": "Unity多人聯機工程師",
+      "desc": "精通Netcode for GameObjects和網路預測",
+      "nickname": "同步達"
+    },
+    "UnityShaderGraphArtist": {
+      "name": "Unity著色器圖表藝術家",
+      "desc": "精通Unity Shader Graph和HLSL",
+      "nickname": "著色師"
+    },
+    "UnrealMultiplayerArchitect": {
+      "name": "Unreal多人架構師",
+      "desc": "精通Unreal Actor複製和伺服器權威架構",
+      "nickname": "聯機達"
+    },
+    "UnrealSystemEngineer": {
+      "name": "Unreal系統工程師",
+      "desc": "精通C++/Blueprint和Nanite/Lumen",
+      "nickname": "虛幻通"
+    },
+    "UnrealTechnicalArtist": {
+      "name": "Unreal技術美術",
+      "desc": "精通UE5材質編輯器和Niagara VFX",
+      "nickname": "材質通"
+    },
+    "UnrealWorldBuilder": {
+      "name": "Unreal世界構建師",
+      "desc": "精通UE5 World Partition和大世界流式載入",
+      "nickname": "造世界"
+    },
+    "UserExperienceArchitect": {
+      "name": "使用者體驗架構師",
+      "desc": "為開發者提供堅實的技術基礎和CSS系統，是設計與開發之間的橋樑",
+      "nickname": "體驗達"
+    },
+    "UserExperienceResearcher": {
+      "name": "使用者體驗研究員",
+      "desc": "用真實資料而非假設驗證設計決策，專精使用者行為分析和可用性測試",
+      "nickname": "探真真"
+    },
+    "ValuationReviewer": {
+      "name": "組合估值主管",
+      "desc": "PE/VC 基金組合估值主管,收 GP 估值包、跑標準估值模板、算基金 NAV 與 LP 分配、出 LP 報告草稿交投資者關係籤核。",
+      "nickname": "顧估衡"
+    },
+    "VideoDissection": {
+      "name": "影片解剖專家團",
+      "desc": "專業拆解火爆抖音影片拍攝手法的專家團。輸入抖音連結，自動提取影片、轉錄文案、分析景別運鏡、剪輯節奏、色調風格，生成完整拍攝指令碼拆解文件，並提供可落地的仿拍建議。",
+      "nickname": "蒼何影片解剖"
+    },
+    "VideoGenTeam": {
+      "name": "AI影片創作團隊",
+      "desc": "三位一體的AI影片創作團隊：靈閱負責採集AI/科技熱點，靈樞負責策劃選題與指令碼，靈映負責渲染MP4影片成品（配音+字幕）。全流程自動化，60秒短影片一鍵生成。",
+      "nickname": "蒼何影片生成團隊"
+    },
+    "VisionOsSpatialEngineer": {
+      "name": "visionOS空間工程師",
+      "desc": "精通visionOS平臺開發，打造Apple Vision Pro空間應用",
+      "nickname": "空間通"
+    },
+    "VisualStorytellingExpert": {
+      "name": "視覺敘事專家",
+      "desc": "擅長將複雜資訊轉化為引人入勝的視覺故事",
+      "nickname": "圖說說"
+    },
+    "WealthManagementExpert": {
+      "name": "財富管理專家",
+      "desc": "財富管理工具集：客戶回顧、財務規劃、投資組合再平衡、稅損收割、投資提案和客戶報告生成",
+      "nickname": "理財財"
+    },
+    "WebappTestingExpert": {
+      "name": "Web應用測試專家",
+      "desc": "Web 應用測試助手，引導使用者完成 Web 應用的啟動、配置和測試流程",
+      "nickname": "端測測"
+    },
+    "WeChatMiniProgramDeveloper": {
+      "name": "微信小程式開發者",
+      "desc": "精通微信小程式開發框架和生態，打造流暢微信原生體驗應用",
+      "nickname": "小程達"
+    },
+    "WechatOfficialAccountExpert": {
+      "name": "微信公眾號運營專家",
+      "desc": "精通公眾號內容策略和粉絲增長，打造10萬+品牌自媒體矩陣",
+      "nickname": "郝文昌"
+    },
+    "WeiboStrategist": {
+      "name": "微博策略師",
+      "desc": "精通微博話題營銷和輿論傳播規律，讓品牌在熱搜持續出圈",
+      "nickname": "熱搜搜"
+    },
+    "WellArchExpert": {
+      "name": "騰訊雲卓越架構專家",
+      "desc": "卓越架構專家。擅長架構視覺化評估、資源拓撲梳理、Well-Architected 六支柱評估與架構風險識別，確保架構符合最佳實踐。",
+      "nickname": "CloudQ"
+    },
+    "WorkflowOptimizationExpert": {
+      "name": "工作流最佳化專家",
+      "desc": "找到瓶頸修復流程自動化一切，讓團隊效率最大化",
+      "nickname": "流暢暢"
+    },
+    "XiaohongshuOperationsExpert": {
+      "name": "小紅書運營專家",
+      "desc": "深諳小紅書種草生態和推薦機制，打造高互動率種草內容",
+      "nickname": "薛紅笙"
+    },
+    "XrCockpitInteractionExpert": {
+      "name": "XR座艙互動專家",
+      "desc": "專精XR環境下的座艙式互動設計",
+      "nickname": "座艙師"
+    },
+    "XrImmersiveDeveloper": {
+      "name": "XR沉浸式開發者",
+      "desc": "精通XR沉浸式體驗開發，創造身臨其境的VR/MR應用",
+      "nickname": "沉浸達"
+    },
+    "XrInterfaceArchitect": {
+      "name": "XR介面架構師",
+      "desc": "設計XR環境中的使用者介面架構，讓3D空間互動直觀自然",
+      "nickname": "空間界"
+    },
+    "YahooFinanceCli": {
+      "name": "行情洞察與趨勢發現專家",
+      "desc": "查詢全球股票實時行情、基本面、財報預期、評級、歷史走勢與估值洞察，發現熱門趨勢標的，支援模糊檢索與並排對比。",
+      "nickname": "鵬城資訊AI專家"
+    },
+    "YunzhiQaAssistant": {
+      "name": "騰訊雲知識問答專家",
+      "desc": "基於騰訊雲知（樂享）平臺的檢索增強問答專家。呼叫樂享 MCP 的語義向量檢索多路並行召回；基於檢索結果生成結構化回答；",
+      "nickname": "騰訊雲知（樂享）"
+    },
+    "ZeroKnowledgeProofAdmin": {
+      "name": "零知識證明管理員",
+      "desc": "精通零知識證明技術的應用和管理",
+      "nickname": "零知知"
+    },
+    "ZhihuStrategist": {
+      "name": "知乎策略師",
+      "desc": "精通知乎推薦機制和知識營銷策略，透過高質量回答建立權威",
+      "nickname": "答有道"
+    }
   }
 }
