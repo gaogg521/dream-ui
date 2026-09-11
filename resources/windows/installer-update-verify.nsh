@@ -216,16 +216,45 @@ Var /GLOBAL AionUiActiveMarkerResult
 ;
 ; Runs from customInstall, after the new version's files are verified in place,
 ; so $INSTDIR is real before anything is deleted.
-!macro DREAM_REMOVE_ORPHANED_INSTALLS
-  Push $R7
-  StrCpy $R7 "$LOCALAPPDATA\Programs\One Work"
-  ; Three conditions, all required. Being on the list is not on its own a
-  ; reason to RMDir /r a directory on someone's disk.
-  StrCmp $R7 "$INSTDIR" dreamOrphanDone
-  IfFileExists "$R7\resources\app.asar" 0 dreamOrphanDone
+; One orphaned install directory. `_ID` exists only to keep the labels unique
+; across insertions — NSIS labels are global to the function.
+;
+; Both conditions are required. Being on the list is not on its own a reason
+; to RMDir /r a directory on someone's disk: `app.asar` is what makes it one
+; of ours rather than a name collision, and the $INSTDIR guard is what stops
+; a future rename from making this delete the install it just wrote.
+;
+; Deliberately does NOT touch the registry. Every build this fork has ever
+; shipped uses the SAME appId (com.huanle.oneone.ai, frozen since the first
+; commit, and identical in the 1oneUI snapshot), and neither config sets
+; `guid`, so there has only ever been ONE uninstall key — whichever install
+; ran last owns it. A key left naming a directory removed here is already
+; handled by AIONUI_HEAL_INSTALL_REGISTRY, which clears it when
+; <InstallLocation>\onework.exe is missing. Clearing it a second time here
+; would be the same rule in two places, disagreeing on ordering.
+!macro DREAM_REMOVE_ORPHANED_INSTALL_AT _ID _PATH
+  StrCpy $R7 "${_PATH}"
+  StrCmp $R7 "$INSTDIR" dreamOrphanDone_${_ID}
+  IfFileExists "$R7\resources\app.asar" 0 dreamOrphanDone_${_ID}
     !insertmacro AIONUI_LOG_EVENT "orphaned-install-remove path=$R7"
     RMDir /r "$R7"
-  dreamOrphanDone:
+  dreamOrphanDone_${_ID}:
+!macroend
+
+; The install directories older builds of THIS app wrote to, none of which a
+; new install replaces or Add/Remove Programs can reach:
+;
+;   Programs\One Work   executableName fell back to productName
+;   Programs\1onecode   executableName in the 1oneUI snapshot
+;
+; Windows treats all three names as unrelated programs, so without this the
+; user ends up with two or three identical icons opening different versions.
+; User data is never in these directories — it lives in %APPDATA%\One Work,
+; pinned by app.setName(PROD_USERDATA_APP_NAME) and untouched by any of this.
+!macro DREAM_REMOVE_ORPHANED_INSTALLS
+  Push $R7
+  !insertmacro DREAM_REMOVE_ORPHANED_INSTALL_AT "spaced" "$LOCALAPPDATA\Programs\One Work"
+  !insertmacro DREAM_REMOVE_ORPHANED_INSTALL_AT "onecode" "$LOCALAPPDATA\Programs\1onecode"
   Pop $R7
 !macroend
 

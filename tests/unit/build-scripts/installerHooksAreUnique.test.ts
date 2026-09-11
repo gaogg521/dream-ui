@@ -102,16 +102,40 @@ describe('the orphaned-install sweep', () => {
   });
 
   /**
-   * "1onecode" is the same size and equally ours, but it still has a working
-   * uninstall entry under an older appId. Removing its files would turn a
-   * working Add/Remove Programs entry into one that fails when clicked. "One
-   * Work" has no entry at all, which is precisely why nothing else can remove
-   * it. The test is "nothing else can clean this up", not "ours and large".
+   * This test used to assert the OPPOSITE — that 1onecode must be spared
+   * "because it still has a working uninstall entry under an older appId".
+   * That premise was simply false: `appId: com.huanle.oneone.ai` has never
+   * changed since the first commit, and the 1oneUI snapshot the 1onecode
+   * build came from declares the same one. Neither sets `guid`, so all three
+   * installs derive the same uninstall key and the last one to run owns it.
+   * 1onecode's entry was overwritten years of releases ago; nothing owns it,
+   * which is exactly the condition that qualifies it for the sweep.
+   *
+   * The rule is "nothing else can clean this up", not "ours and large" — and
+   * on the evidence 1onecode now meets it just as "One Work" does.
    */
-  it('leaves 1onecode alone, because something still owns it', () => {
+  it('sweeps every install directory older builds wrote to', () => {
     const body = verify.slice(verify.indexOf('!macro DREAM_REMOVE_ORPHANED_INSTALLS'));
     const macro = body.slice(0, body.indexOf('!macroend'));
-    expect(macro).toContain('One Work');
-    expect(macro).not.toContain('1onecode');
+    expect(macro).toContain('Programs\\One Work');
+    expect(macro).toContain('Programs\\1onecode');
+  });
+
+  /**
+   * The sweep must not grow a second copy of the stale-registry rule.
+   * AIONUI_HEAL_INSTALL_REGISTRY already clears an entry whose
+   * InstallLocation has no onework.exe, and two rules for one fact is the
+   * failure this whole file exists to pin.
+   */
+  it('leaves the registry to the one macro that owns it', () => {
+    const body = verify.slice(verify.indexOf('!macro DREAM_REMOVE_ORPHANED_INSTALL_AT'));
+    const macro = body.slice(0, body.indexOf('!macroend'));
+    expect(macro).not.toMatch(/DeleteRegKey|WriteRegStr/);
+  });
+
+  /** Removing a program directory must never reach the user's data. */
+  it('never names the userData directory', () => {
+    expect(verify).not.toContain('APPDATA\\One Work');
+    expect(verify).not.toMatch(/RMDir[^\n]*APPDATA/);
   });
 });
