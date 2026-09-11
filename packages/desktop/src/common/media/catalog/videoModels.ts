@@ -107,6 +107,39 @@ export const BUILTIN_VIDEO_MODELS: MediaModelSpec[] = [
   },
   {
     /**
+     * Agnes video 2.5 / 2.5-flash / 2.5-fast.
+     *
+     * A separate entry from `agnes-video` above because the two generations
+     * disagree about what the user may even choose, and one shared entry
+     * offered 2.5 users options its API rejects outright: 18s (2.5 caps at 12),
+     * and a negative prompt (2.5 has no such field and 400s on unknown ones).
+     * 2.5 in turn adds 21:9, which 2.0 does not accept.
+     *
+     * Listed before the generic entry so it wins the match — resolution walks
+     * the list in order, and `/agnes.*video/` above would otherwise swallow
+     * every 2.5 model.
+     *
+     * verified: https://agnes-ai.com/zh-Hans/docs/agnes-video-25 (2026-09-11)
+     * verified: https://agnes-ai.com/zh-Hans/docs/agnes-video-25-flash (2026-09-11)
+     */
+    id: 'agnes-video-25',
+    kind: 'video',
+    form: 'C',
+    endpointStyle: 'agnes-task',
+    match: { model: /agnes[-_]?video[-_]?2\.5/i, baseUrlIncludes: ['agnes-ai.com'] },
+    params: {
+      // The vendor's range is any integer 4-12; these are the round stops.
+      durations: [4, 5, 8, 10, 12],
+      aspectRatios: ['21:9', '16:9', '4:3', '1:1', '3:4', '9:16'],
+      imageToVideo: true,
+      seed: true,
+      negativePrompt: false,
+    },
+    defaults: { durationSeconds: 5, aspectRatio: '16:9' },
+    polling: { intervalMs: 5000, timeoutMs: 600_000 },
+  },
+  {
+    /**
      * Agnes AI video (`POST /v1/videos` + `GET /agnesapi`).
      *
      * `agnes-task` was the only implemented driver with no catalog entry, which
