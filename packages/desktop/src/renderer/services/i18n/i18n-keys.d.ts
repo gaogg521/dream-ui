@@ -1234,6 +1234,7 @@ export type I18nKey =
   | 'conversation.mediaFailureAdvice_modelNotFound'
   | 'conversation.mediaFailureAdvice_notRouted'
   | 'conversation.mediaFailureAdvice_rateLimit'
+  | 'conversation.mediaFailureAdvice_serviceBusy'
   | 'conversation.mediaFailureAdvice_timeout'
   | 'conversation.mediaImageUnavailable'
   | 'conversation.mediaJobElapsed'

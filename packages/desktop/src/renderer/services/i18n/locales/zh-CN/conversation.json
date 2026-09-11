@@ -837,6 +837,7 @@
   "mediaFailureAdvice_modelNotFound": "渠道不认识这个模型名。去 设置 → 模型 核对模型名，或换一个该渠道确实提供的模型。",
   "mediaFailureAdvice_auth": "凭据被拒。去 设置 → 模型 检查该渠道的 API Key 是否有效、是否覆盖这个模型。",
   "mediaFailureAdvice_rateLimit": "触发了限流或额度上限。稍后再试；持续出现就联系渠道管理员提额。",
+  "mediaFailureAdvice_serviceBusy": "对方的生成队列暂时排满了，不是你这边的设置有问题。稍等片刻点重试即可；如果持续几个小时都这样，换个模型或渠道。",
   "mediaFailureAdvice_timeout": "等待超时。视频生成通常要几分钟，直接重试是合理的；反复超时就换更快的模型。",
   "mediaFailureAdvice_contentPolicy": "提示词被内容审核拦下。改写提示词再试。",
   "policyDenied_contentBlocked": "内容被公司的内容策略拦下（规则：{{ruleName}}）。删掉被标记的内容后重试。",

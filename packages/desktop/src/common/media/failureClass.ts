@@ -32,6 +32,13 @@ export type MediaFailureClass =
   | 'modelNotFound'
   | 'auth'
   | 'rateLimit'
+  /**
+   * The provider is up but cannot take the job right now — its own queue or
+   * capacity, not anything about this request. Deliberately separate from
+   * `rateLimit`: that one points at the user's key or quota and has a remedy
+   * they control, while this one has none beyond waiting.
+   */
+  | 'serviceBusy'
   | 'timeout'
   | 'contentPolicy';
 
@@ -61,6 +68,17 @@ export const classifyMediaFailure = (error: string | undefined): MediaFailureCla
   if (/\b401\b|\b403\b|unauthorized|invalid api key|invalid_api_key|authentication/.test(e)) return 'auth';
   if (/\b429\b|rate limit|too many requests|quota/.test(e)) return 'rateLimit';
   if (/timeout|timed out/.test(e)) return 'timeout';
+  // After `timeout` on purpose: a 504 says "Gateway Timeout" and the timeout
+  // advice already fits it. What lands here is the provider saying its own
+  // queue is full — Agnes answers `503 {"code":"video_queue_unavailable",
+  // "message":"video queue is unavailable, please retry later"}`, which used
+  // to classify as nothing and left the user reading raw JSON.
+  if (
+    /\b50[23]\b|service unavailable|temporarily unavailable|_unavailable|overloaded|please retry later|try again later|no capacity|insufficient capacity/.test(
+      e
+    )
+  )
+    return 'serviceBusy';
   if (/content policy|content_policy|safety|sensitive|moderation|violat/.test(e)) return 'contentPolicy';
   return null;
 };
