@@ -884,10 +884,16 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                       <div
                         key={skill.name}
                         data-testid={`my-skill-card-${normalizeTestId(skill.name)}`}
-                        style={{ contentVisibility: 'auto', containIntrinsicSize: '168px' }}
                         ref={(el) => {
                           skillRefs.current[skill.name] = el;
                         }}
+                        /* No `content-visibility: auto` here. It was worth 19px
+                           of height on every card -- measured, not guessed: the
+                           containment it applies changes how the flex column
+                           resolves, and the card could no longer settle at its
+                           content height no matter what `contain-intrinsic-size`
+                           claimed. 139 cards of static markup do not need the
+                           paint skip badly enough to pay that. */
                         onClick={
                           batchMode
                             ? isCustom
@@ -895,7 +901,13 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                               : undefined
                             : () => openSkillDetail(skill.name)
                         }
-                        className={`group flex h-full flex-col p-14px border rd-12px transition-all duration-200 cursor-pointer ${
+                        /* No `h-full`. `height: 100%` on a grid item in an `auto` row track is a
+                           circular reference, and the browser breaks it by sizing the track
+                           from the item's max-content height -- which ignores `line-clamp`,
+                           so the full untruncated description counted toward the row. Every
+                           card measured 157px on its own and got stretched to 182px by that.
+                           Grid items already stretch to fill their row by default. */
+                        className={`group flex flex-col p-12px border rd-12px transition-all duration-200 cursor-pointer ${
                           highlightedSkill === skill.name
                             ? 'border-primary-5 bg-primary-1'
                             : selectedSkillNames.has(skill.name) && batchMode
@@ -913,49 +925,57 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                             />
                           </div>
                         )}
-                        <div className='flex items-start justify-between gap-8px'>
+                        {/* Icon beside the title, not stacked above it. Stacked,
+                            the icon owned a 40px band the title could not share
+                            and the category chip sat alone across from it, so
+                            every card carried an L-shaped void and ran 227px
+                            tall for two lines of text. Sharing the row puts the
+                            chip under the title where the width already exists
+                            and gives the icon's height back to the card. */}
+                        <div className='flex items-start gap-10px'>
                           <div className='shrink-0'>
                             {skill.icon_file ? (
                               <img
                                 src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
                                 alt=''
-                                className='w-40px h-40px rd-10px object-cover shadow-sm'
+                                className='w-36px h-36px rd-9px object-cover'
                                 loading='lazy'
                               />
                             ) : (
                               <div
-                                className={`w-40px h-40px rd-10px flex items-center justify-center font-bold text-16px shadow-sm text-transform-uppercase ${getAvatarColorClass(skill.name)}`}
+                                className={`w-36px h-36px rd-9px flex items-center justify-center font-bold text-15px text-transform-uppercase ${getAvatarColorClass(skill.name)}`}
                               >
                                 {(skill.display_name || skill.name).charAt(0).toUpperCase()}
                               </div>
                             )}
                           </div>
-                          {/* Category, not source. "Custom" was never the
-                              user's word for these -- they are skills this
-                              product ships and the user installed, and the
-                              label said the opposite. Source stays available
-                              as a pill filter. */}
-                          {skillPillKey(skill).startsWith('cat:') ? (
-                            <span className='mt-1px max-w-96px shrink-0 truncate rounded-6px bg-fill-2 px-8px py-2px text-11px text-t-secondary'>
-                              {t(`settings.skillsHub.builtinCategory.${skillPillKey(skill).slice(4)}`, {
-                                defaultValue: '',
-                              })}
-                            </span>
-                          ) : null}
+                          <div className='min-w-0 flex-1'>
+                            <h3
+                              className='text-14px font-semibold text-t-primary/90 truncate m-0 leading-[20px]'
+                              title={skill.name}
+                            >
+                              {builtinSkillDisplay(skill).title}
+                            </h3>
+                            {/* Category, not source. "Custom" was never the
+                                user's word for these -- they are skills this
+                                product ships and the user installed, and the
+                                label said the opposite. Source stays available
+                                as a pill filter. */}
+                            {skillPillKey(skill).startsWith('cat:') ? (
+                              <span className='mt-4px inline-block max-w-full truncate rounded-5px bg-fill-2 px-6px py-1px text-11px leading-[16px] text-t-tertiary'>
+                                {t(`settings.skillsHub.builtinCategory.${skillPillKey(skill).slice(4)}`, {
+                                  defaultValue: '',
+                                })}
+                              </span>
+                            ) : null}
+                          </div>
                         </div>
-
-                        <h3
-                          className='mt-10px text-14px font-semibold text-t-primary/90 truncate m-0'
-                          title={skill.name}
-                        >
-                          {builtinSkillDisplay(skill).title}
-                        </h3>
 
                         {/* Fixed two-line box. Without the floor, a short
                             description leaves the card shorter than its row and
                             the grid drifts out of alignment. */}
                         <p
-                          className='mt-6px min-h-32px line-clamp-2 text-12px leading-[1.5] text-t-secondary m-0'
+                          className='mt-10px h-36px line-clamp-2 text-12px leading-[1.5] text-t-secondary m-0'
                           title={builtinSkillDisplay(skill).description}
                         >
                           {builtinSkillDisplay(skill).description}
@@ -976,7 +996,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                         )}
 
                         {!batchMode && (
-                          <div className='mt-auto flex shrink-0 items-center gap-6px pt-8px'>
+                          <div className='mt-auto flex shrink-0 items-center gap-6px pt-10px'>
                             <Button
                               type='text'
                               size='mini'
