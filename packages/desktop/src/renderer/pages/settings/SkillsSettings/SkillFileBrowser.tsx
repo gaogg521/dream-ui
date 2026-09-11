@@ -18,6 +18,23 @@ type SkillFileBrowserProps = {
   };
 };
 
+/**
+ * Fence a skill file's YAML frontmatter so markdown stops mistaking it for a
+ * heading. `name: x\ndescription: y\n---` is a *setext* h2 in CommonMark —
+ * text underlined by dashes — so every SKILL.md opened here led with its own
+ * metadata rendered as a bold banner larger than the document's real title.
+ *
+ * Fencing rather than dropping it: the frontmatter is the part of a skill that
+ * decides when the model reaches for it, which is exactly what someone opening
+ * this panel came to read.
+ */
+const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---(\r?\n|$)/;
+export const fenceFrontmatter = (markdown: string): string => {
+  const match = FRONTMATTER.exec(markdown);
+  if (!match) return markdown;
+  return `\`\`\`yaml\n${match[1]}\n\`\`\`\n${markdown.slice(match[0].length)}`;
+};
+
 const findFirstFile = (nodes: SkillFileNode[]): SkillFileNode | undefined => {
   for (const node of nodes) {
     if (node.type === 'file') return node;
@@ -146,7 +163,7 @@ const SkillFileBrowser: React.FC<SkillFileBrowserProps> = ({ skill }) => {
               data-view-mode='preview'
               className='size-full overflow-auto px-16px py-12px'
             >
-              <Markdown>{content}</Markdown>
+              <Markdown compact>{fenceFrontmatter(content)}</Markdown>
             </div>
           ) : (
             <CodeEditor value={content} onChange={() => undefined} fileName={selectedPath} readOnly />

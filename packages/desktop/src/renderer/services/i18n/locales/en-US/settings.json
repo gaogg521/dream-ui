@@ -1737,5 +1737,1015 @@
     "sales": "Sales & Business",
     "industryAdvisory": "Industry Advisory",
     "operationsHr": "Operations & HR"
+  },
+  "marketplacePersona": {
+    "AccessibilityAuditor": {
+      "name": "Accessibility Auditor",
+      "desc": "Audits interfaces against WCAG so every user can actually use the product."
+    },
+    "AccountsPayableAgent": {
+      "name": "Accounts Payable Agent",
+      "desc": "Automates the accounts-payable workflow and keeps payments accurate and on time."
+    },
+    "AdCreativeStrategist": {
+      "name": "Ad Creative Strategist",
+      "desc": "Designs ad creative and predicts its performance, producing assets built to convert."
+    },
+    "AdortDesignExpert": {
+      "name": "Ardot Design Expert",
+      "desc": "Works Ardot fluently: builds precise UI on the canvas and turns designs straight into frontend code."
+    },
+    "AdTrackingExpert": {
+      "name": "Ad Tracking Expert",
+      "desc": "Handles tracking code and conversion attribution so campaign performance is actually measurable."
+    },
+    "AgentIdentityTrustExpert": {
+      "name": "Agent Identity & Trust Expert",
+      "desc": "Builds identity and trust mechanisms between AI agents."
+    },
+    "AgentOrchestrator": {
+      "name": "Agent Orchestrator",
+      "desc": "Orchestrates multi-agent systems so an AI team works together instead of in parallel."
+    },
+    "AiContentCreatorTeam": {
+      "name": "AI Content Creator Team",
+      "desc": "An AI-driven multimodal content team covering brand positioning, mood boards, ad direction, copy, video, imagery, retouching and repurposing — brief to finished asset."
+    },
+    "AiDataCopilot": {
+      "name": "AI Data Copilot",
+      "desc": "A six-person data team: natural language to SQL, Python modelling, RAG knowledge Q&A, dashboards and report generation."
+    },
+    "AiEngineer": {
+      "name": "AI Engineer",
+      "desc": "Full-stack ML engineer for model development, deployment and tuning — takes AI from paper to production."
+    },
+    "AiHot": {
+      "name": "AI News Digest",
+      "desc": "One sentence gets you the day's curated AI model, product, industry and paper news, compiled into a briefing. No setup, no login."
+    },
+    "AiImagePromptEngineer": {
+      "name": "AI Image Prompt Engineer",
+      "desc": "Knows the language of image generation and turns an abstract visual idea into a precise prompt."
+    },
+    "AIShifuExpert": {
+      "name": "AI Shifu Course Builder",
+      "desc": "Turns your teaching goals and raw material (PPT, Word, PDF, txt) into an interactive one-on-one AI course."
+    },
+    "AndonQExpert": {
+      "name": "AndonQ Tencent Cloud Support",
+      "desc": "Knows the full Tencent Cloud product line: consultation, troubleshooting and service reporting."
+    },
+    "ApiTestingExpert": {
+      "name": "API Testing Expert",
+      "desc": "Finds every API defect before your users do, and keeps interfaces stable and correct."
+    },
+    "APMPerformanceExpert": {
+      "name": "APM Performance Expert",
+      "desc": "Diagnoses and tunes with Tencent Cloud APM, pinpointing bottlenecks and proposing fixes."
+    },
+    "AppStoreOptimizationExpert": {
+      "name": "App Store Optimization Expert",
+      "desc": "Knows App Store and Google Play ranking algorithms, and how to stand out in them."
+    },
+    "AShareAnalysis": {
+      "name": "A-Share Research Team",
+      "desc": "Eight analysts across six preset workflows: macro strategy, market reads, single-stock depth, valuation, supply-chain mapping, fund flows and risk diagnosis."
+    },
+    "AskLiuxiaopai": {
+      "name": "Ask Liu Xiaopai",
+      "desc": "A digital twin of Raphael AI's founder, office-hours style: pin down the specific person, the real pain, the first dollar and the first users — then one thing to do tonight."
+    },
+    "AutonomousOptimizationArchitect": {
+      "name": "Autonomous Optimization Architect",
+      "desc": "Designs systems that optimize and evolve on their own, getting smarter the more they are used."
+    },
+    "BackendArchitect": {
+      "name": "Backend Architect",
+      "desc": "Deep in distributed systems and high-concurrency design; turns messy business requirements into clean architecture."
+    },
+    "BaiduSeoExpert": {
+      "name": "Baidu SEO Expert",
+      "desc": "Understands Baidu's algorithm and the Chinese search ecosystem, and how to maximise brand visibility in it."
+    },
+    "BehavioralNudgeEngine": {
+      "name": "Behavioral Nudge Engine",
+      "desc": "Applies behavioural economics to product design, nudging users toward better decisions."
+    },
+    "BilibiliContentStrategist": {
+      "name": "Bilibili Content Strategist",
+      "desc": "Knows Bilibili's ecosystem and its young audience, and builds strategies that earn views."
+    },
+    "BlockchainSecurityAuditor": {
+      "name": "Blockchain Security Auditor",
+      "desc": "Audits smart contracts and DeFi protocols for security flaws."
+    },
+    "BookCoCreator": {
+      "name": "Book Co-Creator",
+      "desc": "Works alongside an author on structure and content, to publication standard."
+    },
+    "BrandGuardian": {
+      "name": "Brand Guardian",
+      "desc": "Fifteen years of brand strategy, defending consistency wherever the brand shows up."
+    },
+    "CapacityExpert": {
+      "name": "Capacity Planning Expert",
+      "desc": "Watermark monitoring, capacity forecasting and autoscaling policy — prevents both bottlenecks and waste."
+    },
+    "CarouselContentGrowthExpert": {
+      "name": "Carousel Content Growth Expert",
+      "desc": "Designs high-engagement carousel content that drives participation and growth on social platforms."
+    },
+    "CATNetworkQualityAnalyst": {
+      "name": "Network Quality Analyst",
+      "desc": "Multi-dimensional performance analysis, anomaly localisation, packet capture and problem scoping — finds the root cause of network and service faults fast."
+    },
+    "ChaosExpert": {
+      "name": "Chaos Engineering Expert",
+      "desc": "Fault injection, resilience validation and circuit-breaker assessment, to make systems antifragile."
+    },
+    "CharityDocFinanceExpert": {
+      "name": "Nonprofit Docs & Finance Expert",
+      "desc": "One-stop paperwork and finance for nonprofits: grant applications, closeout reports, receipts, audit prep and compliance — so charity workers spend less time on admin."
+    },
+    "ChatLawTeam": {
+      "name": "Chinese Legal Consultation Team",
+      "desc": "Case intake, statute research, precedent analysis and written advice, producing consultation reports for civil, family, contract and labour matters."
+    },
+    "ChinaEcommerceOperationsExpert": {
+      "name": "China E-commerce Operations Expert",
+      "desc": "Runs Tmall, JD and Pinduoduo storefronts end to end, from product selection to a breakout listing."
+    },
+    "CloudOpsTeam": {
+      "name": "Tencent Cloud Ops Team",
+      "desc": "Three specialists: CloudQ for multi-cloud governance and architecture visualisation, AndonQ for tickets and Q&A, MigraQ for migration planning and TCO. Migration through day-to-day operations."
+    },
+    "Code": {
+      "name": "Coding Workflow Expert",
+      "desc": "Guides the full plan-execute-verify-test loop, breaking complex work into independently verifiable steps, with multi-task tracking and remembered preferences."
+    },
+    "CodeReviewExpert": {
+      "name": "Code Review Expert",
+      "desc": "Reads every line with an eagle eye and catches defects before they reach production."
+    },
+    "ComplianceAuditor": {
+      "name": "Compliance Auditor",
+      "desc": "Audits business operations end to end against industry standards."
+    },
+    "ContentCreator": {
+      "name": "Content Creator",
+      "desc": "Writes compelling multi-platform content that gets a brand's story to its audience."
+    },
+    "ContentDistributionTeam": {
+      "name": "Content Distribution Team",
+      "desc": "One-stop distribution across 13+ global social platforms (WeChat Channels included): per-platform rules, scheduling, batch publishing, cross-platform analytics and automated Xiaohongshu posting."
+    },
+    "ContentMonetizationTeam": {
+      "name": "Content Monetization Team",
+      "desc": "Five specialists covering CPS affiliate commissions, CPE/CPM performance ads, creator-brand matchmaking and revenue analysis."
+    },
+    "CorporateTrainingDesigner": {
+      "name": "Corporate Training Designer",
+      "desc": "Designs structured corporate curricula and learning paths that move employee skills quickly."
+    },
+    "CrossBorderEcommerceExpert": {
+      "name": "Cross-Border E-commerce Expert",
+      "desc": "Knows Amazon, Shopify and the rest of the international marketplaces, and how to take a brand global."
+    },
+    "CulturalIntelligenceStrategist": {
+      "name": "Cultural Intelligence Strategist",
+      "desc": "Builds the cultural sensitivity a brand needs as it goes global."
+    },
+    "CustomerSupportExpert": {
+      "name": "Customer Support Expert",
+      "desc": "Turns a frustrated interaction into an advocate, and service quality into word of mouth."
+    },
+    "DataAnalysisExpert": {
+      "name": "Data Analysis Expert",
+      "desc": "Spreadsheet work end to end: creating, editing, analysing, formulas, formatting and visualisation."
+    },
+    "DataAnalyticsReporter": {
+      "name": "Data Analytics Reporter",
+      "desc": "Turns complex data into strategic insight: metric diagnosis, KPI frameworks, data-quality assessment and decision reports."
+    },
+    "DatabaseOptimizationExpert": {
+      "name": "Database Optimization Expert",
+      "desc": "Tunes database performance and rewrites queries, so slow ones get fast and bottlenecks disappear."
+    },
+    "DataEngineer": {
+      "name": "Data Engineer",
+      "desc": "Builds reliable pipelines and ETL so data flows from source to insight without stalling."
+    },
+    "DataExplorationExpert": {
+      "name": "Data Exploration Expert",
+      "desc": "SQL querying, exploration, visualisation, dashboards, validation and insight generation."
+    },
+    "DataIntegrationAgent": {
+      "name": "Data Integration Agent",
+      "desc": "Cleans and unifies scattered data into a single enterprise-wide view."
+    },
+    "DealStrategist": {
+      "name": "Deal Strategist",
+      "desc": "Builds and advances complex deal strategy, helping sales teams land the big ones."
+    },
+    "DeepResearchExpert": {
+      "name": "Deep Research Expert",
+      "desc": "Multi-source retrieval, fact checking, knowledge discovery and structured reporting — WeChat Official Account article search included."
+    },
+    "DelightfulExperienceDesigner": {
+      "name": "Delightful Experience Designer",
+      "desc": "Plants unexpected moments of delight into the brand experience."
+    },
+    "DesignEngineTeam": {
+      "name": "Design & Prototype Team",
+      "desc": "A six-role AI design team covering discovery through brand-grade prototype delivery, with 71 design systems built in."
+    },
+    "DesignMdArchitect": {
+      "name": "Design System Architect",
+      "desc": "Generates design-system specs from a 58-brand reference library, and emits production HTML/CSS pages and UI components directly."
+    },
+    "DesignToCodeExpert": {
+      "name": "Design-to-Code Expert",
+      "desc": "Converts Figma files and screenshots into usable code components, with accessibility built in."
+    },
+    "DeveloperEvangelist": {
+      "name": "Developer Evangelist",
+      "desc": "Grows a developer community and drives adoption among engineers."
+    },
+    "DevOpsAutomationEngineer": {
+      "name": "DevOps Automation Engineer",
+      "desc": "Automates every manual operation, from CI/CD to infrastructure as code — deployment in one click."
+    },
+    "DiscoveryCoach": {
+      "name": "Discovery Coach",
+      "desc": "Trains sales teams in deep discovery, so they surface the business pain that actually matters."
+    },
+    "DiversityVisualExpert": {
+      "name": "Diversity Visual Expert",
+      "desc": "Works to remove systemic bias from AI imagery, keeping visuals culturally accurate and inclusive."
+    },
+    "DockerfileGenExpert": {
+      "name": "Dockerfile Generator",
+      "desc": "Generates Dockerfiles that follow containerisation best practice."
+    },
+    "DocumentGenerationExpert": {
+      "name": "Document Generation Expert",
+      "desc": "Generates business documents of every kind, cutting the time each one takes."
+    },
+    "DocumentProcessingExpert": {
+      "name": "Document Processing Expert",
+      "desc": "A document suite: creating, editing and converting Excel, Word, PowerPoint and PDF files."
+    },
+    "DouyinStrategist": {
+      "name": "Douyin Strategist",
+      "desc": "Knows the Douyin algorithm and content ecosystem — short-video hits, and the monetisation behind them."
+    },
+    "EarningsReviewer": {
+      "name": "Earnings Reviewer",
+      "desc": "Senior quarterly-review analyst: reads calls and filings, updates the coverage model, and produces the post-quarter note, variance table and valuation adjustment for the research desk."
+    },
+    "EmbeddedFirmwareEngineer": {
+      "name": "Embedded Firmware Engineer",
+      "desc": "Microcontroller programming: efficient, reliable firmware on hardware with very little to spare."
+    },
+    "EngineeringAssuranceTeam": {
+      "name": "Engineering Assurance Team",
+      "desc": "Five specialists under an engineering director: code reviewer (security/performance/correctness), architect (system design/ADR), SRE (incident response/deploys), test expert (strategy/coverage) and technical writer (docs/runbooks)."
+    },
+    "EngineeringWorkflowSkills": {
+      "name": "Engineering Workflow Coach",
+      "desc": "A full-cycle engineering coach built on Google's Agent Skills: spec-driven, test-driven, code review, CI/CD release."
+    },
+    "EnterpriseAccountStrategist": {
+      "name": "Enterprise Account Strategist",
+      "desc": "Runs major accounts and expansion strategy, growing a customer into a long-term partner."
+    },
+    "EnterpriseLegalTeam": {
+      "name": "Enterprise Legal Team",
+      "desc": "A multi-role team for in-house legal: contracts, transactions, privacy, product, regulatory, AI governance, employment and IP triage."
+    },
+    "EntrepreneurshipCoach": {
+      "name": "Entrepreneurship Coach",
+      "desc": "Part mentor, part reading partner. Works through the founder's real pain as it surfaces, and is strong on GTM execution, facing customers, and what order to do things in."
+    },
+    "EquityResearchExpert": {
+      "name": "Equity Research Expert",
+      "desc": "A full equity toolkit: earnings analysis, initiation reports, DCF and comparables, long/short pitches, investment memos, event scenarios and portfolio risk — buy-side and sell-side workflows."
+    },
+    "EvidenceCollector": {
+      "name": "Evidence Collector",
+      "desc": "Refuses to log a defect without a screenshot, so nothing hides behind a description."
+    },
+    "ExecutiveSummaryGenerator": {
+      "name": "Executive Summary Generator",
+      "desc": "Condenses long reports into something an executive can absorb, and gives the minutes back."
+    },
+    "ExperimentTrackingManager": {
+      "name": "Experiment Tracking Manager",
+      "desc": "Manages the experiment lifecycle so every one has a hypothesis, an execution and a conclusion."
+    },
+    "FbsirSuperPartner": {
+      "name": "Super Partner",
+      "desc": "Bring a goal or real material and get a usable deliverable; where host capabilities are available and authorised it executes, reports back, and then renders a 72-hour verdict."
+    },
+    "FeedbackSynthesisAnalyst": {
+      "name": "Feedback Synthesis Analyst",
+      "desc": "Distils insight from a mass of user feedback and turns the user's voice into a direction."
+    },
+    "FinanceAccountingExpert": {
+      "name": "Finance & Accounting Expert",
+      "desc": "Month-end close, journal entries, reconciliation, financial statements, variance analysis and SOX audit support."
+    },
+    "FinanceDataExpert": {
+      "name": "Finance Data Expert",
+      "desc": "Queries 209 financial data APIs in natural language, across 15 families including equities, indices, futures, bonds, funds and macro."
+    },
+    "FinancialModelingExpert": {
+      "name": "Financial Modeling Expert",
+      "desc": "The core modelling set: DCF, comparable company analysis, LBO, three-statement models, competitive landscape and deck QA."
+    },
+    "FinancialTracker": {
+      "name": "Financial Tracker",
+      "desc": "Tracks project and business finances precisely, so every inflow and outflow is accounted for."
+    },
+    "FinopsExpert": {
+      "name": "FinOps Expert",
+      "desc": "Cloud cost governance: bill analysis, idle-resource detection, pricing-model optimisation and chargeback."
+    },
+    "FortuneConsultant": {
+      "name": "Fortune Consultant",
+      "desc": "Traditional divination references — BaZi and Zi Wei charts, tarot and Plum Blossom readings, lunar almanac lookups. Cross-referenced across systems, for entertainment only."
+    },
+    "FrontendDeveloper": {
+      "name": "Frontend Developer",
+      "desc": "Modern web stacks and mainstream frameworks, building responsive high-performance apps to pixel precision."
+    },
+    "FsiMarketResearcher": {
+      "name": "Industry Researcher",
+      "desc": "Sector research for analysts and portfolio managers: landscape, competitive structure, comparable valuation tables and thematic screens."
+    },
+    "GameAudioEngineer": {
+      "name": "Game Audio Engineer",
+      "desc": "FMOD/Wwise integration and spatial audio, bringing a game's sound to life."
+    },
+    "GameDesigner": {
+      "name": "Game Designer",
+      "desc": "Systems and mechanics design, building play out of loops, levers and psychology."
+    },
+    "GaokaoAdvisor": {
+      "name": "Gaokao Advisor",
+      "desc": "Searches the Gaokao knowledge base and score-line data for sourced past papers, programmes and application references, then walks the whole application process and produces a shareable report."
+    },
+    "GitWorkflowExpert": {
+      "name": "Git Workflow Expert",
+      "desc": "Advanced Git workflows and branching strategy, so collaboration stops being a source of friction."
+    },
+    "GlReconciler": {
+      "name": "GL Reconciler",
+      "desc": "Fund back-office daily and month-end reconciliation: finds GL-to-subledger breaks, traces them to source trades, classifies them as timing/reclass/FX, and produces a sign-off ready list."
+    },
+    "GodotGameScriptEngineer": {
+      "name": "Godot Script Engineer",
+      "desc": "GDScript 2.0 and the Godot 4 node architecture."
+    },
+    "GodotMultiplayerEngineer": {
+      "name": "Godot Multiplayer Engineer",
+      "desc": "Godot 4 MultiplayerAPI and network replication."
+    },
+    "GodotShaderDeveloper": {
+      "name": "Godot Shader Developer",
+      "desc": "The Godot shading language and VisualShader."
+    },
+    "GovernmentDigitalPresalesConsultant": {
+      "name": "Government Presales Consultant",
+      "desc": "Knows public-sector digital transformation requirements and the procurement process behind them."
+    },
+    "GPTResearcherTeam": {
+      "name": "Deep Research Team",
+      "desc": "Seven roles across five stages aggregate multiple sources, then a review-and-revise loop produces a cited professional report."
+    },
+    "GrowthHacker": {
+      "name": "Growth Hacker",
+      "desc": "Finds untapped growth channels through data-driven experiments, and compounds them."
+    },
+    "HealthcareMarketingComplianceExpert": {
+      "name": "Healthcare Marketing Compliance",
+      "desc": "Keeps medical marketing within regulation, and its claims accurate."
+    },
+    "HrOperationsTeam": {
+      "name": "HR Operations Team",
+      "desc": "HR as a process: screening, compensation design, organisational development and operational workflow, so a talent strategy actually lands."
+    },
+    "HuashuDataPro": {
+      "name": "Local Data Analysis Team",
+      "desc": "A one-person-company data team. One Excel goes in; trend, structure and anomaly specialists analyse it in parallel and deliver web, Excel and PPT reports. Nothing leaves the machine."
+    },
+    "HuashuDocReviewer": {
+      "name": "Contract & Document Reviewer",
+      "desc": "Adds comment bubbles and tracked changes inside the original .docx — no new file, no format damage."
+    },
+    "HumanizePptTeam": {
+      "name": "Human-Feel PPT Team",
+      "desc": "Turns raw material into a deck outline with a human voice, then orchestrates HTML generation, presenter mode, video motion and delivery QA."
+    },
+    "IdentityGraphOperator": {
+      "name": "Identity Graph Operator",
+      "desc": "Builds and maintains the user identity graph that makes cross-platform recognition possible."
+    },
+    "IncidentResponseCommander": {
+      "name": "Incident Response Commander",
+      "desc": "Keeps a calm hand on the team during an outage: locate, mitigate, recover."
+    },
+    "IndieFounderCoach": {
+      "name": "Indie Founder Coach",
+      "desc": "Lean and bootstrapped by conviction: helps solo founders get from zero to a sustainable, profitable business on minimal resources, through every decision along the way."
+    },
+    "IndustrySreTeam": {
+      "name": "Industry SRE Team",
+      "desc": "Twelve industry SREs across gaming, finance and e-commerce run a five-dimension inspection and return architecture recommendations you can check off."
+    },
+    "InfrastructureOperationsExpert": {
+      "name": "Infrastructure Operations Expert",
+      "desc": "Keeps IT infrastructure running, with nothing left unaccounted for."
+    },
+    "InspectionExpert": {
+      "name": "Cloud Inspection Expert",
+      "desc": "Five-dimension inspection (security, performance, reliability, cost, compliance), high-risk scanning with prioritised remediation, trend analysis and visual reports — finds the problem before it finds you."
+    },
+    "InstagramOperationsExpert": {
+      "name": "Instagram Operations Expert",
+      "desc": "Instagram's visual language and content strategy, building a brand people want to follow."
+    },
+    "InternalCommsExpert": {
+      "name": "Internal Comms Expert",
+      "desc": "Templates for internal communication: status reports, exec updates, company briefings, FAQs, incident reports and project updates."
+    },
+    "InvestmentBankingExpert": {
+      "name": "Investment Banking Expert",
+      "desc": "Pitch material, valuation (comps/DCF/LBO/three-statement), capital markets, buy-side diligence, restructuring and recovery waterfalls, and deal execution end to end."
+    },
+    "InvestmentMastersTeam": {
+      "name": "Investment Masters Team",
+      "desc": "Thirteen legendary investing philosophies plus six analysts run in parallel, a risk manager sets the constraints, and a portfolio manager aggregates the signals into a vote."
+    },
+    "JiraWorkflowAdmin": {
+      "name": "Jira Workflow Admin",
+      "desc": "Jira configuration and agile workflow design, so the tool serves the team rather than the reverse."
+    },
+    "KdocsDataTable": {
+      "name": "Smart Table Builder",
+      "desc": "Turns a group-chat sign-up thread into a structured table, generates a shareable collection form from one sentence, and fixes the rules in place — conditional formatting for outliers, dropdown validation, locked headers."
+    },
+    "KdocsDocButler": {
+      "name": "Document Butler",
+      "desc": "Manages the whole life of your cloud documents: create, search, AI-sort into folders by topic, batch move and rename, share links and permissions, and read content out as Markdown."
+    },
+    "KdocsKnowledgeCollector": {
+      "name": "Knowledge Collector",
+      "desc": "Turns scattered pages, messages and notes into a structured knowledge asset: one-click clipping to cloud docs, AI topic grouping, multi-document summaries, and tidy archiving into a personal library."
+    },
+    "KdocsPdfToolbox": {
+      "name": "PDF Toolbox",
+      "desc": "PDF work in one place: split by page, merge, extract pages, convert to Word/Excel/PPT, full-text translation export (bilingual or single language), content reading and page counts."
+    },
+    "KdocsPptCreator": {
+      "name": "AI Deck Creator",
+      "desc": "One sentence or one reference document, and the AI designs the outline and builds the full deck — title, content and summary pages — with palette and layout matched to the occasion."
+    },
+    "KuaishouStrategist": {
+      "name": "Kuaishou Strategist",
+      "desc": "Understands Kuaishou's lower-tier market and its culture, and builds content strategy that belongs there."
+    },
+    "KycScreener": {
+      "name": "KYC Screener",
+      "desc": "Client onboarding compliance: parses KYC material, runs the rules engine, checks sanctions and PEP lists, and assembles an escalation pack graded by risk."
+    },
+    "LawStudentCoach": {
+      "name": "Law Student Coach",
+      "desc": "A study partner for law students: Socratic questioning, case briefs, IRAC, syllabus work and bar revision."
+    },
+    "LegalBuilderHubExpert": {
+      "name": "Legal Skill Governance",
+      "desc": "A governance assistant for legal ops and skill developers, assessing skill provenance, tool permissions, freshness, licence and trust boundaries."
+    },
+    "LegalClinicSupervisor": {
+      "name": "Legal Clinic Supervisor",
+      "desc": "A supervision assistant for law-school clinic instructors: client intake, research kick-off, deadline tracking, student onboarding and end-of-term handover."
+    },
+    "LegalComplianceReviewer": {
+      "name": "Legal Compliance Reviewer",
+      "desc": "Keeps operations and product features within the law, and heads off compliance risk."
+    },
+    "LevelDesigner": {
+      "name": "Level Designer",
+      "desc": "Treats every level as a composed experience, telling the story through space."
+    },
+    "LinkedInContentCreator": {
+      "name": "LinkedIn Content Creator",
+      "desc": "LinkedIn content strategy, and the thought leadership that comes with it."
+    },
+    "LitigationLegalExpert": {
+      "name": "Litigation Support Expert",
+      "desc": "Case support for litigators: case and evidence organisation, timelines, cross-examination prep, damages charts and draft filings."
+    },
+    "LivestreamEcommerceCoach": {
+      "name": "Livestream Commerce Coach",
+      "desc": "The full livestream selling loop, from script to ad spend, aimed at a GMV breakthrough."
+    },
+    "LlmWiki": {
+      "name": "LLM Wiki",
+      "desc": "Builds and maintains a durable personal knowledge base on Andrej Karpathy's LLM Wiki pattern: compiles papers, articles and notes into structured Markdown, cross-links them, flags contradictions and keeps the index current."
+    },
+    "LspIndexEngineer": {
+      "name": "LSP Index Engineer",
+      "desc": "The Language Server Protocol and code indexing."
+    },
+    "MacOsSpatialMetalEngineer": {
+      "name": "macOS Spatial Metal Engineer",
+      "desc": "Apple's Metal graphics API and macOS spatial computing."
+    },
+    "MarketingCampaignExpert": {
+      "name": "Marketing Campaign Expert",
+      "desc": "Plans, builds and optimises omnichannel campaigns: content strategy, social, email and paid."
+    },
+    "MarketingCampaignTeam": {
+      "name": "Marketing Campaign Team",
+      "desc": "Four specialists under a marketing director: content creator (blog/email/social/brand voice), campaign planner (strategy/audience/channel/budget), SEO expert (technical audit/optimisation/analysis) and brand analyst (positioning/brand audit)."
+    },
+    "McpBuildExpert": {
+      "name": "MCP Build Expert",
+      "desc": "Designing and implementing the Model Context Protocol."
+    },
+    "MeetingPrepAgent": {
+      "name": "Meeting Prep Agent",
+      "desc": "A prep partner for financial advisers: before each client meeting it assembles relationship history, portfolio movement, market news and an agenda — five minutes to ready."
+    },
+    "MermaidDiagramExpert": {
+      "name": "Mermaid Diagram Expert",
+      "desc": "Turns plain language into professional Mermaid diagrams: six diagram types, fifteen themes, publication-grade SVG and ASCII in seconds."
+    },
+    "Migraq": {
+      "name": "MigraQ Cloud Migration",
+      "desc": "Tencent Cloud migration: resource scanning across Alibaba Cloud, AWS and Huawei Cloud, spec matching, TCO analysis and migration planning."
+    },
+    "MigraqTeam": {
+      "name": "Cloud Migration Team",
+      "desc": "Seven specialists take a migration end to end: product selection, landing zone, architecture, delivery, operations and FDE deployment."
+    },
+    "MobileApplicationDeveloper": {
+      "name": "Mobile Application Developer",
+      "desc": "Native iOS and Android plus cross-platform, building mobile apps that feel smooth."
+    },
+    "ModelBuilder": {
+      "name": "Financial Model Builder",
+      "desc": "Builds DCF, LBO, three-statement models and comparable valuations in Excel from scratch — fully linked formulas, traceable, institutional quality control."
+    },
+    "ModelQualityAssuranceExpert": {
+      "name": "Model QA Expert",
+      "desc": "Systematically evaluates AI model quality, so outputs stay accurate, fair and safe."
+    },
+    "ModernWebappExpert": {
+      "name": "Modern Web App Expert",
+      "desc": "React + TypeScript + Vite + Tailwind + shadcn/ui, with browser automation included."
+    },
+    "MonthEndCloser": {
+      "name": "Month-End Closer",
+      "desc": "A close partner for finance leads: works the checklist through accruals, rollforwards and variance explanations, and hands the controller a package ready to sign."
+    },
+    "MultiCloudExpert": {
+      "name": "Multi-Cloud AIOps Expert",
+      "desc": "One agent across Tencent Cloud, Alibaba Cloud, AWS, Azure and GCP."
+    },
+    "MultiCloudManagementExpert": {
+      "name": "Multi-Cloud Management Expert",
+      "desc": "Architecture governance, visualisation, automated inspection, cost optimisation and risk assessment across every cloud — one expert for all of them."
+    },
+    "NarrativeDesigner": {
+      "name": "Narrative Designer",
+      "desc": "Fuses story and play until the two cannot be separated."
+    },
+    "OpcTeam": {
+      "name": "One-Person Company Team",
+      "desc": "Nine specialists walk the whole one-person-company arc with you — resource audit, niche positioning, MVP, conversion and retrospective — built on Easy's One-Person Enterprise methodology."
+    },
+    "OpenSpecDocTeam": {
+      "name": "Long-Form Document Team",
+      "desc": "Enterprise-grade long documents: four roles cover deep research, outline planning, writing and compliance review."
+    },
+    "OutboundStrategist": {
+      "name": "Outbound Strategist",
+      "desc": "Outbound and cold-start sales — earning the next thirty seconds from a stranger."
+    },
+    "PaidMediaAuditor": {
+      "name": "Paid Media Auditor",
+      "desc": "Audits ad spend and budget allocation in depth, and finds the money being wasted."
+    },
+    "PerformanceTestingExpert": {
+      "name": "Performance Testing Expert",
+      "desc": "Performance testing and benchmarking — proving an improvement with numbers rather than impressions."
+    },
+    "PitchAgent": {
+      "name": "Pitch Agent",
+      "desc": "A senior banking associate: builds a first pitch from nothing — comps, precedent transactions, DCF, football-field chart — and a branded deck wired to the model."
+    },
+    "PodcastStrategist": {
+      "name": "Podcast Strategist",
+      "desc": "Podcast planning and growth, and the deeper audience connection audio earns."
+    },
+    "PpcBiddingStrategist": {
+      "name": "PPC Bidding Strategist",
+      "desc": "Google Ads and Baidu bidding, buying quality traffic at the lowest cost per click."
+    },
+    "PptCreationExpert": {
+      "name": "Deck Creation Expert",
+      "desc": "Turns an idea into a finished presentation in one pass."
+    },
+    "PresalesTechnicalConsultant": {
+      "name": "Presales Technical Consultant",
+      "desc": "Bridges the technical and the commercial, so a customer can see the value in the solution."
+    },
+    "PrivateDomainMarketingExpert": {
+      "name": "Private Domain Marketing Expert",
+      "desc": "Activates the data you already have, finds the marketing opening in it, and turns that into revenue."
+    },
+    "PrivateDomainOperationsExpert": {
+      "name": "Private Domain Operations Expert",
+      "desc": "Builds and runs WeChat private traffic pools, converting public traffic into an owned asset."
+    },
+    "PrivateEquityExpert": {
+      "name": "Private Equity Expert",
+      "desc": "Deal sourcing, screening, diligence checklists, IC memos, unit economics, returns analysis, portfolio management and value-creation plans."
+    },
+    "ProductManagementExpert": {
+      "name": "Product Management Expert",
+      "desc": "Spec writing, roadmap planning, stakeholder communication, user-research synthesis, competitive analysis and metric tracking."
+    },
+    "ProductStrategyTeam": {
+      "name": "Product Strategy Team",
+      "desc": "Five specialists under a product director: requirements analyst (PRD/specs), user researcher (synthesis), competitive analyst (intelligence), data analyst (metrics) and roadmap planner — idea through launch."
+    },
+    "ProgrammaticAdBuyer": {
+      "name": "Programmatic Ad Buyer",
+      "desc": "Programmatic buying and DSP platforms, running precise targeting at scale."
+    },
+    "ProjectShepherd": {
+      "name": "Project Shepherd",
+      "desc": "Keeps a project moving to plan — gently, and without letting a milestone slip."
+    },
+    "PromoCreatorTeam": {
+      "name": "Promo Video Team",
+      "desc": "Six roles across six stages take a product URL to a publishable 60-90 second MP4: creative brief, shot-by-shot storyboard, asset production, HyperFrames edit, BGM and delivery."
+    },
+    "ProposalStrategist": {
+      "name": "Proposal Strategist",
+      "desc": "Sales proposals and solution design, turning value into an argument that is hard to decline."
+    },
+    "RapidPrototypingEngineer": {
+      "name": "Rapid Prototyping Engineer",
+      "desc": "Gets an idea to a working prototype fast, so the team can find out whether it holds."
+    },
+    "RealityChecker": {
+      "name": "Reality Checker",
+      "desc": "Assumes everything needs more evidence, and wants overwhelming proof before signing off production-ready."
+    },
+    "RecruitmentExpert": {
+      "name": "Recruitment Expert",
+      "desc": "The whole hiring funnel, aimed at finding the team the right person."
+    },
+    "RedditCommunityBuilder": {
+      "name": "Reddit Community Builder",
+      "desc": "Understands Reddit's culture well enough to build genuine standing on the world's largest forum."
+    },
+    "RemotionVideoExpert": {
+      "name": "Remotion Video Expert",
+      "desc": "Video generation with Remotion: product demos, explainers, social content and presentations."
+    },
+    "ReportDistributionAgent": {
+      "name": "Report Distribution Agent",
+      "desc": "Automates report generation and how it gets to the people who need it."
+    },
+    "RobloxAvatarCreator": {
+      "name": "Roblox Avatar Creator",
+      "desc": "Roblox UGC and the avatar pipeline."
+    },
+    "RobloxExperienceDesigner": {
+      "name": "Roblox Experience Designer",
+      "desc": "Roblox platform UX and monetisation design."
+    },
+    "RobloxSystemScriptEngineer": {
+      "name": "Roblox Script Engineer",
+      "desc": "Luau and the Roblox client-server security model."
+    },
+    "RumFullstackTeam": {
+      "name": "RUM Full-Stack Team",
+      "desc": "Tencent Cloud RUM end to end: aegis SDK across 10 platforms plus WebVitals, exception, API and resource analysis, with RUM-APM correlation."
+    },
+    "SalesBattleTeam": {
+      "name": "Sales Battle Team",
+      "desc": "Account research to lock the target, outreach strategy to improve contact, competitive intelligence to flag risk, and forecasting to allocate effort."
+    },
+    "SalesCoach": {
+      "name": "Sales Coach",
+      "desc": "Full-stack coaching from capability to execution — meeting prep, deal strategy, business case, competitive analysis and call reviews — driven by Socratic questioning."
+    },
+    "SalesDataExtractionAgent": {
+      "name": "Sales Data Extraction Agent",
+      "desc": "Pulls and organises sales data out of whatever source it lives in."
+    },
+    "SalesPipelineAnalyst": {
+      "name": "Sales Pipeline Analyst",
+      "desc": "Analyses pipeline health with data, so forecasting stops being guesswork."
+    },
+    "SearchTermAnalyst": {
+      "name": "Search Term Analyst",
+      "desc": "Digs into search-term data for the intent underneath it."
+    },
+    "SecurityEngineer": {
+      "name": "Security Engineer",
+      "desc": "Finds and fixes the vulnerability before an attacker does."
+    },
+    "SeniorDeveloper": {
+      "name": "Senior Developer",
+      "desc": "Ten-plus years full-stack across many languages and frameworks — the technical backbone of a team."
+    },
+    "SeniorProjectManager": {
+      "name": "Senior Project Manager",
+      "desc": "Ten-plus years in waterfall and agile, and the steady hand on a complicated project."
+    },
+    "SeoContentTeam": {
+      "name": "SEO Content Team",
+      "desc": "Seven roles across five stages: keyword research, long-form SEO writing, technical optimisation, editing, link strategy and conversion analysis."
+    },
+    "SeoExpert": {
+      "name": "SEO Expert",
+      "desc": "Google's algorithm and technical SEO, and how to hold a position in the results."
+    },
+    "ShortVideoEditingCoach": {
+      "name": "Short Video Editing Coach",
+      "desc": "Editing technique and pacing, so every clip lands with professional impact."
+    },
+    "SiteReliabilityEngineer": {
+      "name": "Site Reliability Engineer",
+      "desc": "Solves operations problems with software engineering, and holds 99.99% availability."
+    },
+    "SocialAdStrategist": {
+      "name": "Social Ad Strategist",
+      "desc": "Social platform advertising, hitting the best acquisition cost through precise targeting."
+    },
+    "SocialEngagementTeam": {
+      "name": "Social Engagement Team",
+      "desc": "Raises social engagement safely across 14+ global platforms through interaction automation, AI comment operations, high-conversion signal mining and brand sentiment monitoring."
+    },
+    "SocialMediaStrategist": {
+      "name": "Social Media Strategist",
+      "desc": "Coordinates strategy across every platform, so the brand sounds strongest on each."
+    },
+    "Soe": {
+      "name": "Security Operations Expert",
+      "desc": "Analyses offline alert and event data from WAF, host security, cloud firewall, SOC and threat-defence products, including vulnerability, attack and forensic analysis."
+    },
+    "SoftwareArchitect": {
+      "name": "Software Architect",
+      "desc": "Designs scalable, highly available architecture from the top down, and points the engineering team at it."
+    },
+    "SoftwareCompany": {
+      "name": "Software Company",
+      "desc": "A working dev team: PM sets requirements, architect designs and splits tasks, engineers implement in bulk, QA verifies — with a fast path for small requests."
+    },
+    "SoftwareWorkshop": {
+      "name": "Software Workshop",
+      "desc": "Six engineering roles — product review, code review, security audit, QA, design system, debugging and ops — covering idea to production."
+    },
+    "SoliditySmartContractEngineer": {
+      "name": "Solidity Engineer",
+      "desc": "Solidity and the EVM ecosystem, writing contracts that are secure and cheap to run."
+    },
+    "SprintPriorityManager": {
+      "name": "Sprint Priority Manager",
+      "desc": "Makes the best prioritisation calls a fixed sprint allows, so the iteration ships its highest value."
+    },
+    "SreExpert": {
+      "name": "SRE Expert",
+      "desc": "Root-cause reasoning, alert correlation, process diagnosis and SLO governance, through a systematic diagnostic method."
+    },
+    "StatementAuditor": {
+      "name": "LP Statement Auditor",
+      "desc": "Final check on LP capital account statements: recomputes each line back from fund NAV, reconciles distributions and management fees, and issues sign-off recommendations and an exception list before anything goes out."
+    },
+    "StockPartnerTeam": {
+      "name": "Stock Research Team",
+      "desc": "Six analysts spanning sector strategy, signal capture, valuation, contrarian positioning, fundamentals and short-term trading, reading live market data from several angles."
+    },
+    "StrategyBacktestExpert": {
+      "name": "Strategy Backtest Expert",
+      "desc": "Turns a strategy described in plain language into a runnable Python backtest, with standard metrics, charts and an HTML dashboard — plus the implementation details, known biases and how to read the result."
+    },
+    "StudioOperationsManager": {
+      "name": "Studio Operations Manager",
+      "desc": "Runs studio operations day to day, from resource allocation to process."
+    },
+    "StudioProducer": {
+      "name": "Studio Producer",
+      "desc": "Carries a project from greenlight to delivery, balancing creative, budget and time."
+    },
+    "StudyAbroadConsultant": {
+      "name": "Study Abroad Consultant",
+      "desc": "Application processes and institution knowledge across countries."
+    },
+    "SupplyChainStrategist": {
+      "name": "Supply Chain Strategist",
+      "desc": "Optimises every link for the right balance of cost, efficiency and resilience."
+    },
+    "TaxComplianceTeam": {
+      "name": "Tax & Compliance Team",
+      "desc": "End-to-end corporate finance compliance across five stages: receipts, bookkeeping, statements, tax filing and compliance audit."
+    },
+    "TechnicalArtist": {
+      "name": "Technical Artist",
+      "desc": "Bridges art direction and engine reality, at home in shaders and VFX."
+    },
+    "TechnicalDocumentationEngineer": {
+      "name": "Technical Documentation Engineer",
+      "desc": "Turns complex technical ideas into documentation clear enough to pass the knowledge on."
+    },
+    "TencentCharityExpert": {
+      "name": "Tech for Good Expert",
+      "desc": "Product and technical solutions for the nonprofit sector, from Tencent's tech-for-good practice."
+    },
+    "TencentCloudPriceExpert": {
+      "name": "Tencent Cloud Pricing",
+      "desc": "Price-list lookups for sales: product questions, single and bulk quotes, and configuration recognition from an image. Prices come from the live API."
+    },
+    "TencentRtcExpert": {
+      "name": "TRTC Support Expert",
+      "desc": "Real-time audio/video support: usage and quality queries, single-call diagnosis, cloud inspection readouts, troubleshooting and migration from competing SDKs."
+    },
+    "TencentSecurityExpert": {
+      "name": "Tencent Security Expert",
+      "desc": "Years in security: threat modelling, vulnerability assessment, secure code review, architecture, incident response and advisory."
+    },
+    "TerminalIntegrationExpert": {
+      "name": "Terminal Integration Expert",
+      "desc": "Integrating terminal applications with spatial computing environments."
+    },
+    "TestResultsAnalyst": {
+      "name": "Test Results Analyst",
+      "desc": "Reads test results the way a detective reads evidence, and finds the quality problem hiding in them."
+    },
+    "ThreatDetectionEngineer": {
+      "name": "Threat Detection Engineer",
+      "desc": "Builds detection systems that catch and stop a threat before it does damage."
+    },
+    "TikTokStrategist": {
+      "name": "TikTok Strategist",
+      "desc": "The TikTok algorithm and the international short-video ecosystem, and how a brand breaks out on it."
+    },
+    "ToolEvaluationExpert": {
+      "name": "Tool Evaluation Expert",
+      "desc": "Evaluates and recommends the right tool for a team, so nobody loses weeks to the wrong one."
+    },
+    "TradingAgentTeam": {
+      "name": "Trading Analysis Team",
+      "desc": "Thirteen roles across five stages: technical, fundamental, news and sentiment collection, bull/bear debate, trade decision, three-way risk assessment and a final report with a BUY/SELL/HOLD call."
+    },
+    "TrendResearcher": {
+      "name": "Trend Researcher",
+      "desc": "Tracks industry and technology trends, and turns them into forward-looking input for product strategy."
+    },
+    "TripStarAgent": {
+      "name": "Travel Concierge",
+      "desc": "A life-services concierge: itinerary planning, attractions, hotels, weather, budget and deal collection in one place."
+    },
+    "TwitterOperationsExpert": {
+      "name": "X / Twitter Operations Expert",
+      "desc": "Engagement strategy and topic operations on X, putting a brand into the global conversation."
+    },
+    "Txzhaopin": {
+      "name": "Tencent Recruiting Assistant",
+      "desc": "The official Tencent hiring assistant across campus and experienced hiring: requirement intake, resume search, interview scheduling, question setting, evaluations, to-dos and a data dashboard."
+    },
+    "UiDesigner": {
+      "name": "UI Designer",
+      "desc": "Design systems and component libraries, pixel-perfect and accessible."
+    },
+    "UnityArchitect": {
+      "name": "Unity Architect",
+      "desc": "ScriptableObjects and decoupled system design."
+    },
+    "UnityEditorToolDeveloper": {
+      "name": "Unity Editor Tool Developer",
+      "desc": "Custom EditorWindows and pipeline automation in Unity."
+    },
+    "UnityMultiplayerEngineer": {
+      "name": "Unity Multiplayer Engineer",
+      "desc": "Netcode for GameObjects and network prediction."
+    },
+    "UnityShaderGraphArtist": {
+      "name": "Unity Shader Graph Artist",
+      "desc": "Unity Shader Graph and HLSL."
+    },
+    "UnrealMultiplayerArchitect": {
+      "name": "Unreal Multiplayer Architect",
+      "desc": "Unreal actor replication and server-authoritative architecture."
+    },
+    "UnrealSystemEngineer": {
+      "name": "Unreal Systems Engineer",
+      "desc": "C++/Blueprint, Nanite and Lumen."
+    },
+    "UnrealTechnicalArtist": {
+      "name": "Unreal Technical Artist",
+      "desc": "The UE5 material editor and Niagara VFX."
+    },
+    "UnrealWorldBuilder": {
+      "name": "Unreal World Builder",
+      "desc": "UE5 World Partition and large-world streaming."
+    },
+    "UserExperienceArchitect": {
+      "name": "User Experience Architect",
+      "desc": "Gives developers a solid technical foundation and CSS system — the bridge between design and engineering."
+    },
+    "UserExperienceResearcher": {
+      "name": "User Experience Researcher",
+      "desc": "Validates design decisions with real data instead of assumptions, through behavioural analysis and usability testing."
+    },
+    "ValuationReviewer": {
+      "name": "Portfolio Valuation Reviewer",
+      "desc": "Heads valuation for a PE/VC portfolio: takes in GP valuation packs, runs the standard templates, computes fund NAV and LP allocations, and drafts the LP report for IR sign-off."
+    },
+    "VideoDissection": {
+      "name": "Video Dissection Team",
+      "desc": "Reverse-engineers a viral Douyin video: extracts the clip, transcribes the script, analyses shot sizes, camera movement, cut rhythm and colour, and produces a full breakdown with a practical plan to shoot your own."
+    },
+    "VideoGenTeam": {
+      "name": "AI Video Creation Team",
+      "desc": "Three roles in one loop: one gathers AI and tech headlines, one plans the topic and script, one renders the finished MP4 with voice-over and subtitles. A 60-second video, end to end."
+    },
+    "VisionOsSpatialEngineer": {
+      "name": "visionOS Spatial Engineer",
+      "desc": "visionOS development for Apple Vision Pro spatial apps."
+    },
+    "VisualStorytellingExpert": {
+      "name": "Visual Storytelling Expert",
+      "desc": "Turns complicated information into a visual story worth following."
+    },
+    "WealthManagementExpert": {
+      "name": "Wealth Management Expert",
+      "desc": "Client reviews, financial planning, portfolio rebalancing, tax-loss harvesting, investment proposals and client reporting."
+    },
+    "WebappTestingExpert": {
+      "name": "Web App Testing Expert",
+      "desc": "Walks you through starting, configuring and testing a web application."
+    },
+    "WeChatMiniProgramDeveloper": {
+      "name": "WeChat Mini Program Developer",
+      "desc": "The Mini Program framework and ecosystem, building apps that feel native to WeChat."
+    },
+    "WechatOfficialAccountExpert": {
+      "name": "WeChat Official Account Expert",
+      "desc": "Content strategy and follower growth for Official Accounts, and the 100k-read posts that come with it."
+    },
+    "WeiboStrategist": {
+      "name": "Weibo Strategist",
+      "desc": "Topic marketing and how opinion travels on Weibo, keeping a brand in the trending list."
+    },
+    "WellArchExpert": {
+      "name": "Well-Architected Expert",
+      "desc": "Architecture visualisation and assessment, resource topology, the six Well-Architected pillars and architectural risk identification."
+    },
+    "WorkflowOptimizationExpert": {
+      "name": "Workflow Optimization Expert",
+      "desc": "Finds the bottleneck, fixes the process, automates the rest."
+    },
+    "XiaohongshuOperationsExpert": {
+      "name": "Xiaohongshu Operations Expert",
+      "desc": "Understands Xiaohongshu's recommendation engine and its seeding culture, and writes content that earns engagement."
+    },
+    "XrCockpitInteractionExpert": {
+      "name": "XR Cockpit Interaction Expert",
+      "desc": "Cockpit-style interaction design for XR environments."
+    },
+    "XrImmersiveDeveloper": {
+      "name": "XR Immersive Developer",
+      "desc": "Immersive XR development for VR and MR applications that hold presence."
+    },
+    "XrInterfaceArchitect": {
+      "name": "XR Interface Architect",
+      "desc": "Interface architecture for XR, so interacting in 3D space feels obvious."
+    },
+    "YahooFinanceCli": {
+      "name": "Market Insight Explorer",
+      "desc": "Live quotes, fundamentals, earnings expectations, ratings, history and valuation insight for global equities, with fuzzy search, trending names and side-by-side comparison."
+    },
+    "YunzhiQaAssistant": {
+      "name": "Knowledge Q&A Assistant",
+      "desc": "Retrieval-augmented Q&A over the Tencent Lexiang platform: parallel semantic vector recall through the Lexiang MCP, then a structured answer built from what it retrieved."
+    },
+    "ZeroKnowledgeProofAdmin": {
+      "name": "Zero-Knowledge Proof Admin",
+      "desc": "Applying and administering zero-knowledge proof systems."
+    },
+    "ZhihuStrategist": {
+      "name": "Zhihu Strategist",
+      "desc": "Zhihu's recommendation mechanics and knowledge marketing, building authority one good answer at a time."
+    }
   }
 }

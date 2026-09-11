@@ -47,6 +47,12 @@ const CATEGORY_I18N_KEYS: Record<string, string> = {
   运营人力: 'operationsHr',
 };
 
+/**
+ * One persona's text in the active language: name, the Chinese-only nickname,
+ * and the one-line blurb.
+ */
+type PersonaText = { name: string; nickname: string | null; description: string };
+
 const categoryPillClass = (active: boolean) =>
   `inline-flex cursor-pointer select-none items-center rounded-999px border border-solid px-12px py-6px text-13px leading-none transition-colors ${
     active
@@ -72,6 +78,37 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
     const key = CATEGORY_I18N_KEYS[category];
     return key ? t(`settings.marketplaceCategory.${key}`, { defaultValue: category }) : category;
   };
+
+  /**
+   * Same problem as the categories, one level deeper: every persona's name and
+   * blurb is stored once, in Chinese, so an English UI used to render a wall of
+   * Chinese. `settings.marketplacePersona.<id>` is the per-locale overlay.
+   *
+   * When the active locale supplies a name, its whole entry wins over the
+   * catalog — nickname included. The nicknames (无碍碍, 付清清 …) are Chinese
+   * wordplay on the role title with no counterpart elsewhere, so the key simply
+   * does not exist outside the Chinese locales and the line disappears.
+   *
+   * A persona the overlay has never heard of still renders: it falls back to the
+   * catalog string it always used. That is deliberate — the persona corpus is
+   * repackaged far more often than this UI, and a new expert must show up
+   * without a code change even before anyone has translated it.
+   */
+  const personaText = (persona: MarketplacePersona): PersonaText => {
+    const prefix = `settings.marketplacePersona.${persona.id}`;
+    const name = t(`${prefix}.name`, { defaultValue: '' });
+    if (!name) {
+      const raw = persona.display_name || persona.name;
+      const nickname = persona.role_name && persona.role_name !== raw ? persona.role_name : null;
+      return { name: raw, nickname, description: persona.description ?? '' };
+    }
+    const nickname = t(`${prefix}.nickname`, { defaultValue: '' });
+    return {
+      name,
+      nickname: nickname && nickname !== name ? nickname : null,
+      description: t(`${prefix}.desc`, { defaultValue: persona.description ?? '' }),
+    };
+  };
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [installingId, setInstallingId] = useState<string | null>(null);
@@ -87,15 +124,27 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
     return [...counts.entries()].toSorted((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   }, [personas]);
 
+  /** Resolved once per language switch rather than per keystroke and per card. */
+  const personaTextById = useMemo(() => {
+    const map = new Map<string, PersonaText>();
+    for (const persona of personas) map.set(persona.id, personaText(persona));
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- personaText is derived from `t`
+  }, [personas, t]);
+
   const filteredPersonas = useMemo(() => {
     const query = search.trim().toLowerCase();
     return personas.filter((persona) => {
       if (activeCategory && persona.category?.trim() !== activeCategory) return false;
       if (!query) return true;
-      const haystack = `${persona.display_name ?? ''} ${persona.name} ${persona.description ?? ''}`.toLowerCase();
+      const text = personaTextById.get(persona.id);
+      // Both the localized text and the raw catalog fields: an English UI still
+      // has to find 无障碍审计师 when that is what the user pasted in.
+      const haystack =
+        `${text?.name ?? ''} ${text?.description ?? ''} ${persona.display_name ?? ''} ${persona.name} ${persona.description ?? ''}`.toLowerCase();
       return haystack.includes(query);
     });
-  }, [personas, search, activeCategory]);
+  }, [personas, search, activeCategory, personaTextById]);
 
   const handleInstall = async (persona: MarketplacePersona) => {
     if (installingId) return;
@@ -175,7 +224,7 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
         {filteredPersonas.map((persona) => {
           const hasEmojiAvatar = Boolean(persona.avatar && isEmoji(persona.avatar));
           const avatarImage = resolveAvatarImageSrc(persona.avatar);
-          const nickname = persona.role_name && persona.role_name !== persona.display_name ? persona.role_name : null;
+          const text = personaTextById.get(persona.id) ?? personaText(persona);
           return (
             <div
               key={persona.id}
@@ -219,13 +268,13 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
                 ) : null}
               </div>
               <div className='mt-10px flex items-baseline gap-4px'>
-                <span className='truncate text-14px font-600 text-t-primary'>
-                  {persona.display_name || persona.name}
-                </span>
-                {nickname ? <span className='shrink-0 truncate text-12px text-t-tertiary'>· {nickname}</span> : null}
+                <span className='truncate text-14px font-600 text-t-primary'>{text.name}</span>
+                {text.nickname ? (
+                  <span className='shrink-0 truncate text-12px text-t-tertiary'>· {text.nickname}</span>
+                ) : null}
               </div>
               <div className='mt-6px line-clamp-2 min-h-36px text-12px leading-[1.55] text-t-secondary'>
-                {persona.description || ''}
+                {text.description}
               </div>
               <div className='mt-12px'>
                 {persona.installed ? (

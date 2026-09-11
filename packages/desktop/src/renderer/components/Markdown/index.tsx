@@ -42,10 +42,25 @@ type MarkdownViewProps = {
   onLocalFileLink?: (path: string, reference?: LocalFileLinkReference) => void | Promise<void>;
   /** Enable raw HTML rendering in markdown content. Use with caution — only for trusted sources. */
   allowHtml?: boolean;
+  /**
+   * Render at document scale rather than chat-reply scale. For markdown shown
+   * inside a panel (a skill's SKILL.md in the file browser, for instance),
+   * where reply-sized type overwhelms the panel around it.
+   */
+  compact?: boolean;
 };
 
 const MarkdownView: React.FC<MarkdownViewProps> = React.memo(
-  ({ hiddenCodeCopyButton, codeStyle, className, onRef, onLocalFileLink, allowHtml, children: childrenProp }) => {
+  ({
+    hiddenCodeCopyButton,
+    codeStyle,
+    className,
+    onRef,
+    onLocalFileLink,
+    allowHtml,
+    compact,
+    children: childrenProp,
+  }) => {
     const { t } = useTranslation();
     const preview = useOptionalPreviewContext();
 
@@ -128,7 +143,7 @@ const MarkdownView: React.FC<MarkdownViewProps> = React.memo(
 
     return (
       <div className={classNames('relative w-full', className)}>
-        <ShadowView>
+        <ShadowView compact={compact}>
           <div ref={onRef} className='markdown-shadow-body'>
             <ReactMarkdown
               remarkPlugins={MARKDOWN_REMARK_PLUGINS}

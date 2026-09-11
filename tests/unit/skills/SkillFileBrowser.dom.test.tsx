@@ -72,7 +72,36 @@ vi.mock('@/renderer/pages/conversation/Preview/components/editors/CodeEditor', (
   ),
 }));
 
-import SkillFileBrowser from '@/renderer/pages/settings/SkillsSettings/SkillFileBrowser';
+import SkillFileBrowser, { fenceFrontmatter } from '@/renderer/pages/settings/SkillsSettings/SkillFileBrowser';
+
+/**
+ * A SKILL.md opens on its own YAML frontmatter, and `name: x\n…\n---` is a
+ * *setext* h2 in CommonMark — text underlined by dashes. Every skill therefore
+ * led with its metadata rendered as a heading bigger than the document's real
+ * title. Fencing it keeps the metadata (it is the part that decides when the
+ * model reaches for the skill) while taking it out of the heading grammar.
+ */
+describe('fenceFrontmatter', () => {
+  it('fences leading YAML frontmatter so it cannot parse as a heading', () => {
+    const source = '---\nname: x-recruiter\ndescription: 用于在 X 发布招聘帖子。\n---\n\n# X Recruiter\n\nBody.';
+
+    expect(fenceFrontmatter(source)).toBe(
+      '```yaml\nname: x-recruiter\ndescription: 用于在 X 发布招聘帖子。\n```\n\n# X Recruiter\n\nBody.'
+    );
+  });
+
+  it('handles CRLF files and a frontmatter block with nothing after it', () => {
+    expect(fenceFrontmatter('---\r\nname: a\r\n---\r\n')).toBe('```yaml\nname: a\n```\n');
+    expect(fenceFrontmatter('---\nname: a\n---')).toBe('```yaml\nname: a\n```\n');
+  });
+
+  it('leaves a document without frontmatter untouched', () => {
+    // A horizontal rule mid-document, and a document that simply starts with
+    // prose, must both come through unchanged — only a leading block counts.
+    expect(fenceFrontmatter('# Title\n\n---\n\nBody.')).toBe('# Title\n\n---\n\nBody.');
+    expect(fenceFrontmatter('Just prose.')).toBe('Just prose.');
+  });
+});
 
 describe('SkillFileBrowser', () => {
   beforeEach(() => {

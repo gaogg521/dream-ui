@@ -19,7 +19,8 @@ export const createInitStyle = (
   currentTheme = 'light',
   cssVars?: Record<string, string>,
   customCss?: string,
-  isMobile?: boolean
+  isMobile?: boolean,
+  compact?: boolean
 ) => {
   const style = document.createElement('style');
   // Inject external CSS variables into Shadow DOM for dark mode support
@@ -29,11 +30,19 @@ export const createInitStyle = (
         .join('\n    ')
     : '';
 
-  const lineHeight = isMobile ? '19.6px' : '24px';
-  const fontSize = isMobile ? 'var(--chat-font-size, 14px)' : 'var(--chat-font-size, 16px)';
+  // `compact` is for markdown shown inside a panel rather than as a chat reply —
+  // a skill's SKILL.md in a 420px-tall file browser, say. It deliberately does
+  // not follow `--chat-font-size`: that preference is about reading replies, and
+  // a document pane rendered at reply size swallows the panel it sits in.
+  const lineHeight = compact ? '20px' : isMobile ? '19.6px' : '24px';
+  const fontSize = compact ? '13px' : isMobile ? 'var(--chat-font-size, 14px)' : 'var(--chat-font-size, 16px)';
   // Desktop paragraph spacing trimmed from 16px to 12px (~0.85em) for a more
   // compact reply; mobile spacing is left untouched (tuned separately).
-  const paragraphMargin = isMobile ? '16px' : '12px';
+  const paragraphMargin = compact ? '8px' : isMobile ? '16px' : '12px';
+  const h1Style = compact ? { size: '17px', line: '24px' } : { size: '24px', line: '32px' };
+  const hRestStyle = compact
+    ? { size: '14px', line: '21px', top: '14px', bottom: '8px' }
+    : { size: '16px', line: '24px', top: '20px', bottom: '12px' };
 
   style.innerHTML = `
   /* Shadow DOM CSS variable definitions */
@@ -144,16 +153,16 @@ export const createInitStyle = (
     color: var(--text-primary);
   }
   h1{
-    font-size: 24px;
-    line-height: 32px;
+    font-size: ${h1Style.size};
+    line-height: ${h1Style.line};
     font-weight: bold;
   }
   h2,h3,h4,h5,h6{
-    font-size: 16px;
-    line-height: 24px;
+    font-size: ${hRestStyle.size};
+    line-height: ${hRestStyle.line};
     font-weight: bold;
-    margin-top: 20px;
-    margin-bottom: 12px;
+    margin-top: ${hRestStyle.top};
+    margin-bottom: ${hRestStyle.bottom};
   }
   code span{
     font-size:var(--code-font-size, 13px);
@@ -350,7 +359,7 @@ const getKatexStyleSheet = (): CSSStyleSheet | null => {
 
 type ShadowDivElement = HTMLDivElement & { __init__shadow?: boolean };
 
-const ShadowView = ({ children }: { children: React.ReactNode }) => {
+const ShadowView = ({ children, compact }: { children: React.ReactNode; compact?: boolean }) => {
   const [root, setRoot] = useState<ShadowRoot | null>(null);
   const styleRef = React.useRef<HTMLStyleElement | null>(null);
   const [customCss, setCustomCss] = useState<string>('');
@@ -396,7 +405,7 @@ const ShadowView = ({ children }: { children: React.ReactNode }) => {
       if (styleRef.current) {
         styleRef.current.remove();
       }
-      const newStyle = createInitStyle(currentTheme, cssVars, customCss, isMobile);
+      const newStyle = createInitStyle(currentTheme, cssVars, customCss, isMobile, compact);
       styleRef.current = newStyle;
       shadowRoot.appendChild(newStyle);
 
@@ -407,7 +416,7 @@ const ShadowView = ({ children }: { children: React.ReactNode }) => {
         shadowRoot.adoptedStyleSheets = [...shadowRoot.adoptedStyleSheets, katexSheet];
       }
     },
-    [customCss, isMobile]
+    [customCss, isMobile, compact]
   );
 
   React.useEffect(() => {
