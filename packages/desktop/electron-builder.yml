@@ -221,14 +221,15 @@ nsis:
   # break-even ~7 Mbps, not ~120. The old figure was ~17x off because the real
   # extract step costs 180-268s, not 21.7s.
   #
-  # Left OFF for now only because it is mutually exclusive with differential
-  # updates (below) — that is the trade to decide, not the install time.
+  # Enabled 2026-09-11. What it trades against is differential updates, which
+  # are mutually exclusive with it by construction: NsisTarget reads
+  # `!isBuildDifferentialAware && options.useZip`, so the two cannot both be
+  # on — set one and the other is silently ignored. Differential only helps
+  # from the SECOND update onward and only for users whose previous installer
+  # is still cached; this helps every user on every install. arm64 had already
+  # been on zip since the 1oneUI snapshot.
   # If you re-measure, install; do not time `7z t`.
-  #
-  # It is also mutually exclusive with differential updates by construction:
-  # NsisTarget reads `!isBuildDifferentialAware && options.useZip`, so a future
-  # `useZip: true` would be silently ignored while differentialPackage is on.
-  # Re-measure before reconsidering; do not enable both and assume you got both.
+  useZip: true
   oneClick: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
@@ -242,29 +243,15 @@ nsis:
   # space-containing for UI display (window title, shortcut, uninstaller);
   # only the on-disk/published artifact name is hyphenated.
   artifactName: One-Work-${version}-${os}-${arch}.${ext}
-  # Emit a .blockmap next to the installer (and embed one in it) so
-  # electron-updater fetches only changed blocks instead of the whole 288 MB
-  # installer on every update. Inherited as `false` from the 1oneUI snapshot
-  # with no rationale recorded; enabled 2026-09-09.
+  # Off, and it must stay off while useZip is on: NsisTarget would silently
+  # win here and drop the zip payload, putting x64 back on the ~268s install
+  # with nothing reporting the regression.
   #
-  # Three things have to hold or this degrades silently to a full download:
-  #  - `prepare-release-assets.sh` must collect *.blockmap (it now does, and
-  #    fails the release when one is missing);
-  #  - the blockmap must land beside the installer at releases/<version>/,
-  #    which CdnGenericProvider.resolveFiles already produces because
-  #    electron-updater appends ".blockmap" to the resolved installer URL;
-  #  - the `upload_installers_only` input in _build-reusable.yml deletes
-  #    blockmaps — leave it off for releases.
-  #
-  # The first update after this ships is still a full download: the diff needs
-  # the previous installer cached in the updater's pending dir.
-  #
-  # x64 only in practice. build-with-builder.js passes
-  # `--config.nsis.differentialPackage=false` for arm64, which keeps the zip
-  # payload that arch has always used; the two options are mutually exclusive
-  # in NsisTarget, so without that override arm64 would silently lose the zip.
-  # prepare-release-assets.sh therefore only demands a blockmap for x64.
-  differentialPackage: true
+  # On from 2026-09-09 to 2026-09-11. It bought a smaller download from the
+  # second update onward, at the cost of the LZMA payload every user pays for
+  # on every install. No blockmap is emitted now, which is why
+  # prepare-release-assets.sh no longer demands one.
+  differentialPackage: false
 
 mac:
   target:

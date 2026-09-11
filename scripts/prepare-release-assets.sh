@@ -153,21 +153,12 @@ for arch in x64 arm64; do
   done
 done
 
-# Differential updates (nsis.differentialPackage) are useless without the
-# blockmap sitting beside the installer: electron-updater asks for
-# "<installer>.blockmap", gets a 404 and silently falls back to downloading the
-# whole installer. Nothing else in the pipeline reports that, so a missing
-# blockmap fails the release right here.
-# x64 only: arm64 keeps the zip payload (see build-with-builder.js) and is
-# opted out of differential packaging, so it emits no blockmap by design.
-for arch in x64; do
-  installer=$(find "$OUTPUT_DIR" -maxdepth 1 -type f -name "*-${VERSION}-win-${arch}.exe" | head -n 1)
-  [ -z "$installer" ] && continue
-  if [ ! -f "${installer}.blockmap" ]; then
-    echo "::error::Missing blockmap for $(basename "$installer") - differential updates would silently degrade to full downloads"
-    MISSING=1
-  fi
-done
+# No blockmap gate here any more. Differential packaging was turned off on
+# 2026-09-11 when the NSIS payload moved to zip (the two are mutually
+# exclusive in NsisTarget), so no arch emits a blockmap and demanding one
+# would fail every release. If differential packaging is ever turned back on,
+# restore this check with it -- a missing blockmap degrades silently to a full
+# download and nothing else in the pipeline reports it.
 
 # ---------------------------------------------------------------------------
 # 5c) Hard validation for web-cli release assets

@@ -1046,16 +1046,10 @@ try {
           nsisInclude += ` --config.nsis.include="${arm64Script}"`;
           console.log(`📋 Including Windows ARM64 architecture check script`);
         }
-        nsisInclude += ' --config.nsis.useZip=true';
-        // ...and opt arm64 out of differential packaging, because the two are
-        // mutually exclusive in NsisTarget (`!isBuildDifferentialAware &&
-        // options.useZip`): with `differentialPackage: true` in the yml, the flag
-        // above would be silently ignored and arm64 would quietly switch to the
-        // 7z payload. Why arm64 wants zip is not recorded anywhere in this repo
-        // (it arrived with the 1oneUI snapshot), so it is preserved rather than
-        // traded away for an update optimisation on the arch almost nobody runs.
-        nsisInclude += ' --config.nsis.differentialPackage=false';
-        console.log('📋 Using ZIP payload for Windows ARM64 NSIS installer');
+        // The zip payload and the differential opt-out used to be forced here
+        // for arm64 alone, because the yml asked for LZMA + differential. Both
+        // are now the yml's defaults for every arch (2026-09-11), so repeating
+        // them per-arch would be the same setting written twice, free to drift.
       } else if (targetArch === 'x64') {
         const x64Script = 'resources/windows/windows-installer-x64.nsh';
         if (fs.existsSync(path.resolve(__dirname, '..', x64Script))) {
