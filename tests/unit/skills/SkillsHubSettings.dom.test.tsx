@@ -333,6 +333,46 @@ describe('SkillsHubSettings', () => {
     expect(screen.queryByText('Available')).not.toBeInTheDocument();
   });
 
+  it('files built-in skills under a category pill and imports under custom', async () => {
+    mocks.listAvailableSkills.mockResolvedValue([
+      {
+        name: 'officecli-pptx',
+        description: 'Slides.',
+        location: '/tmp/builtin-skills/officecli-pptx/SKILL.md',
+        is_custom: false,
+        source: 'builtin',
+      },
+      {
+        name: 'mermaid',
+        description: 'Diagrams.',
+        location: '/tmp/builtin-skills/mermaid/SKILL.md',
+        is_custom: false,
+        source: 'builtin',
+      },
+      {
+        name: 'my-own-skill',
+        description: 'Mine.',
+        location: '/tmp/user-skills/my-own-skill',
+        is_custom: true,
+        source: 'custom',
+      },
+    ]);
+
+    render(<SkillsHubSettings withWrapper={false} />);
+    await waitFor(() => expect(screen.getByTestId('skill-source-pills')).toBeInTheDocument());
+
+    // Two different built-in categories, not one lump labelled "built-in".
+    expect(screen.getByTestId('pill-skill-source-cat-office')).toBeInTheDocument();
+    expect(screen.getByTestId('pill-skill-source-cat-diagram')).toBeInTheDocument();
+    expect(screen.getByTestId('pill-skill-source-source-custom')).toBeInTheDocument();
+
+    // Selecting one narrows to it and leaves the others out.
+    fireEvent.click(screen.getByTestId('pill-skill-source-cat-diagram'));
+    await waitFor(() => expect(screen.getByTestId('my-skill-card-mermaid')).toBeInTheDocument());
+    expect(screen.queryByTestId('my-skill-card-officecli-pptx')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('my-skill-card-my-own-skill')).not.toBeInTheDocument();
+  });
+
   it('puts skills that ship an icon ahead of the ones falling back to a letter tile', async () => {
     mocks.listAvailableSkills.mockResolvedValue([
       {

@@ -37,6 +37,59 @@ interface SkillInfo {
 }
 
 /**
+ * Category for each built-in skill.
+ *
+ * The backend's `category` field is enterprise metadata (C2-2) and is empty
+ * for everything in the personal build, so there is no category data to read
+ * — these are ours to assign, and only for the corpus we ship. A user's own
+ * imports have no basis for a category and stay under "custom".
+ */
+const BUILTIN_SKILL_CATEGORY: Record<string, string> = {
+  officecli: 'office',
+  'officecli-docx': 'office',
+  'officecli-pptx': 'office',
+  'officecli-xlsx': 'office',
+  'officecli-word-form': 'office',
+  'officecli-academic-paper': 'office',
+  'officecli-data-dashboard': 'office',
+  'officecli-financial-model': 'office',
+  'officecli-pitch-deck': 'office',
+  'morph-ppt': 'diagram',
+  'morph-ppt-3d': 'diagram',
+  mermaid: 'diagram',
+  pdf: 'media',
+  'weixin-file-send': 'media',
+  'local-ocr-linux': 'media',
+  'local-ocr-macos': 'media',
+  'local-ocr-windows': 'media',
+  'x-recruiter': 'recruit',
+  'xiaohongshu-recruiter': 'recruit',
+  'one-webui-setup': 'system',
+  'one-webui-public': 'system',
+  'one-troubleshooting': 'system',
+  'openclaw-setup': 'system',
+  'one-config': 'system',
+  cron: 'system',
+  'skill-creator': 'system',
+  'story-roleplay': 'creative',
+};
+
+const BUILTIN_CATEGORY_ORDER = ['office', 'diagram', 'media', 'recruit', 'system', 'creative'];
+
+/**
+ * One pill row over two different axes, the way a reader actually looks for a
+ * skill: a built-in category, or "the ones I brought myself". Built-in skills
+ * without an assigned category fall under their source, so a new one added to
+ * the corpus is still reachable before anyone classifies it.
+ */
+const skillPillKey = (skill: SkillInfo): string => {
+  if (skill.source === 'custom') return 'source:custom';
+  if (skill.source === 'team') return 'source:team';
+  const category = BUILTIN_SKILL_CATEGORY[skill.name];
+  return category ? `cat:${category}` : 'source:builtin';
+};
+
+/**
  * Localized display text for the built-in skills.
  *
  * NOT a translation of `description`: that field is model-facing --
@@ -183,7 +236,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
   const builtinSkillDisplay = useBuiltinSkillDisplay();
   const [availableSkills, setAvailableSkills] = useState<SkillInfo[]>([]);
   /** Source pill filter, mirroring the expert marketplace's category pills. */
-  const [sourceFilter, setSourceFilter] = useState<SkillInfo['source'] | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<string | null>(null);
   const [search_query, setSearchQuery] = useState('');
   const [importHistory, setImportHistory] = useState<SkillImportRecord[]>([]);
   const [importLimits, setImportLimits] = useState<SkillImportLimits | null>(null);
@@ -213,7 +266,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
     const lowerQuery = search_query.trim().toLowerCase();
     const matched = mySkills.filter((s) => {
       // Pill and search narrow independently, same as the expert marketplace.
-      if (sourceFilter && (s.source ?? 'builtin') !== sourceFilter) return false;
+      if (sourceFilter && skillPillKey(s) !== sourceFilter) return false;
       if (!lowerQuery) return true;
       return s.name.toLowerCase().includes(lowerQuery) || Boolean(s.description?.toLowerCase().includes(lowerQuery));
     });
@@ -227,7 +280,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
   const sourceCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const skill of mySkills) {
-      const key = skill.source ?? 'builtin';
+      const key = skillPillKey(skill);
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     return counts;
@@ -842,7 +895,13 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
 
           {mySkills.length > 0 && sourceCounts.size > 1 ? (
             <div className='mb-14px flex flex-wrap gap-8px relative z-10' data-testid='skill-source-pills'>
-              {([null, 'builtin', 'custom', 'team'] as const)
+              {[
+                null,
+                ...BUILTIN_CATEGORY_ORDER.map((slug) => `cat:${slug}`),
+                'source:builtin',
+                'source:custom',
+                'source:team',
+              ]
                 .filter((key) => key === null || sourceCounts.has(key))
                 .map((key) => {
                   const active = sourceFilter === key;
@@ -850,23 +909,25 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                   const label =
                     key === null
                       ? t('settings.marketplaceAllCategories')
-                      : key === 'custom'
-                        ? t('settings.skillsHub.custom', { defaultValue: 'Custom' })
-                        : key === 'team'
-                          ? t('settings.skillsHub.team', { defaultValue: 'Team' })
-                          : t('settings.skillsHub.builtin', { defaultValue: 'Built-in' });
+                      : key.startsWith('cat:')
+                        ? t(`settings.skillsHub.builtinCategory.${key.slice(4)}`, { defaultValue: key.slice(4) })
+                        : key === 'source:custom'
+                          ? t('settings.skillsHub.custom', { defaultValue: 'Custom' })
+                          : key === 'source:team'
+                            ? t('settings.skillsHub.team', { defaultValue: 'Team' })
+                            : t('settings.skillsHub.builtin', { defaultValue: 'Built-in' });
                   return (
                     <div
                       key={key ?? '__all'}
                       role='button'
                       tabIndex={0}
-                      data-testid={`pill-skill-source-${key ?? 'all'}`}
+                      data-testid={`pill-skill-source-${key ? key.replace(':', '-') : 'all'}`}
                       className={skillSourcePillClass(active)}
-                      onClick={() => setSourceFilter(key)}
+                      onClick={() => setSourceFilter(active ? null : key)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault();
-                          setSourceFilter(key);
+                          setSourceFilter(active ? null : key);
                         }
                       }}
                     >

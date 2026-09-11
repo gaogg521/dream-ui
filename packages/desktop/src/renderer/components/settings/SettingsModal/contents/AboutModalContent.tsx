@@ -30,8 +30,21 @@ import {
 // which is a workspace placeholder permanently pinned at "0.0.0".
 declare const __APP_VERSION__: string;
 
-const ABOUT_GITHUB_REPO_URL = 'https://github.com/gaogg521/1oneUI';
+// The repository was renamed to dream-ui; `1oneUI` 404s, so the GitHub
+// icon beside the version opened a dead page.
+const ABOUT_GITHUB_REPO_URL = 'https://github.com/gaogg521/dream-ui';
 const ABOUT_OFFICIAL_WEBSITE_URL = 'https://work.1oneclaw.com/';
+/**
+ * Release notes live on the site, not on GitHub Releases.
+ *
+ * This used to point at `${ABOUT_GITHUB_REPO_URL}/releases`, which was wrong
+ * twice over: releases are published to COS and the website only (see
+ * docs/release-notes/README.md), so that page carries nothing, and the repo
+ * constant still names `1oneUI` — the pre-rename repository. Both links sent
+ * users somewhere empty.
+ */
+const ABOUT_UPDATE_LOG_URL = 'https://work.1oneclaw.com/updates.html';
+const ABOUT_HELP_DOCS_URL = 'https://work.1oneclaw.com/docs.html';
 
 type LinkItem =
   | { title: string; url: string; icon: React.ReactNode; onClick?: never }
@@ -104,12 +117,12 @@ const AboutModalContent: React.FC = () => {
   const linkItems: LinkItem[] = [
     {
       title: t('settings.helpDocumentation'),
-      url: `${ABOUT_GITHUB_REPO_URL}/wiki`,
+      url: ABOUT_HELP_DOCS_URL,
       icon: <Right theme='outline' size='16' className='rtl-mirror' />,
     },
     {
       title: t('settings.updateLog'),
-      url: `${ABOUT_GITHUB_REPO_URL}/releases`,
+      url: ABOUT_UPDATE_LOG_URL,
       icon: <Right theme='outline' size='16' className='rtl-mirror' />,
     },
     {
