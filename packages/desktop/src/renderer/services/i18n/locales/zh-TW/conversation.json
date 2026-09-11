@@ -823,6 +823,7 @@
   "mediaFailureAdvice_modelNotFound": "渠道不認識這個模型名稱。到 設定 → 模型 核對名稱，或改用該渠道確實提供的模型。",
   "mediaFailureAdvice_auth": "憑證遭拒。到 設定 → 模型 檢查此渠道的 API Key 是否有效、是否涵蓋這個模型。",
   "mediaFailureAdvice_rateLimit": "觸發了限流或額度上限。稍後再試；持續出現請聯絡渠道管理員提高額度。",
+  "mediaFailureAdvice_serviceBusy": "對方的生成佇列暫時排滿了，不是你這邊的設定有問題。稍等片刻點重試即可；如果持續幾個小時都這樣，換個模型或管道。",
   "mediaFailureAdvice_timeout": "等待逾時。影片生成通常要數分鐘，直接重試是合理的；反覆逾時就改用更快的模型。",
   "mediaFailureAdvice_contentPolicy": "提示詞被內容審核攔下。改寫提示詞再試。",
   "policyDenied_contentBlocked": "內容被公司的內容政策攔下（規則：{{ruleName}}）。刪掉被標記的內容後重試。",

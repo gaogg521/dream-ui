@@ -837,6 +837,7 @@
   "mediaFailureAdvice_modelNotFound": "The channel does not recognize this model name. Check it in Settings → Models, or pick a model the channel actually offers.",
   "mediaFailureAdvice_auth": "The credentials were rejected. Check this channel's API key, and whether it covers this model, in Settings → Models.",
   "mediaFailureAdvice_rateLimit": "You hit a rate limit or quota. Try again shortly; if it keeps happening, ask the channel's admin to raise it.",
+  "mediaFailureAdvice_serviceBusy": "The provider's own queue is full right now — nothing here is wrong. Wait a moment and retry; if it persists for hours, try another model or channel.",
   "mediaFailureAdvice_timeout": "Timed out waiting. Video generation often takes minutes, so a retry is reasonable; repeated timeouts mean picking a faster model.",
   "mediaFailureAdvice_contentPolicy": "The prompt was blocked by content moderation. Rewrite it and try again.",
   "policyDenied_contentBlocked": "Blocked by your company's content policy (rule: {{ruleName}}). Remove the flagged content and try again.",

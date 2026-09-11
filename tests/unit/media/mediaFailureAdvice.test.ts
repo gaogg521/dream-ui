@@ -68,6 +68,31 @@ describe('classifyMediaFailure', () => {
     );
   });
 
+  /**
+   * Verbatim from the user's failed Agnes 2.5 generation. It used to classify
+   * as nothing, so the card showed this raw JSON and no next step — while the
+   * remedy ("wait, then retry") is both knowable and entirely the provider's
+   * side. Kept distinct from `rateLimit`, whose advice points at the user's own
+   * key and quota and would be misleading here.
+   */
+  it('recognizes a provider whose own queue is full', () => {
+    expect(
+      classifyMediaFailure(
+        'Agnes video submission failed: HTTP 503 — {"code":"video_queue_unavailable","message":"video queue is unavailable, please retry later (request id: 2026091111451524)","data":null}'
+      )
+    ).toBe('serviceBusy');
+
+    expect(classifyMediaFailure('HTTP 502 Bad Gateway')).toBe('serviceBusy');
+    expect(classifyMediaFailure('Service Unavailable')).toBe('serviceBusy');
+    expect(classifyMediaFailure('The engine is currently overloaded, please try again later')).toBe('serviceBusy');
+  });
+
+  it('keeps a throttle a throttle even when it also says to retry later', () => {
+    // 429 is the user's quota and has a remedy they control; it must not be
+    // swallowed by the busy-provider class that says "just wait".
+    expect(classifyMediaFailure('HTTP 429 — quota exceeded, please try again later')).toBe('rateLimit');
+  });
+
   it('stays silent on a failure it does not recognize', () => {
     expect(classifyMediaFailure('ECONNRESET while reading the response stream')).toBeNull();
     expect(classifyMediaFailure('')).toBeNull();
