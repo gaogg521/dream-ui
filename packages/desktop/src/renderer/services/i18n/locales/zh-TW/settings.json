@@ -232,6 +232,14 @@
         "title": "小紅書招募",
         "desc": "在小紅書發布 AI 職缺招募貼文，自動產生封面圖。"
       }
+    },
+    "builtinCategory": {
+      "office": "Office 文件",
+      "diagram": "圖表視覺化",
+      "media": "檔案與媒體",
+      "recruit": "招募",
+      "system": "設定與排查",
+      "creative": "創意寫作"
     }
   },
   "authMethod": "驗證",

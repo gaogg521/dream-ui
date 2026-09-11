@@ -234,6 +234,14 @@
         "title": "Xiaohongshu Recruiting",
         "desc": "Publish AI hiring posts on Xiaohongshu with generated covers."
       }
+    },
+    "builtinCategory": {
+      "office": "Office Documents",
+      "diagram": "Diagrams & Visuals",
+      "media": "Files & Media",
+      "recruit": "Recruiting",
+      "system": "Setup & Troubleshooting",
+      "creative": "Creative"
     }
   },
   "authMethod": "Authentication",
