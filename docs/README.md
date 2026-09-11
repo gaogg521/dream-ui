@@ -13,6 +13,7 @@ Documentation is organized by reader intent, not by document type.
 
 ## Quick pointers
 
+- **2026-09-09：安装包瘦身 + 安装速度（装机 −39%、安装包 −26%；差分更新；`useZip` 实测否决）**? [`guides/session-2026-09-09-package-size-and-install-speed.zh-CN.md`](guides/session-2026-09-09-package-size-and-install-speed.zh-CN.md).
 - **多媒体生成（图片/视频）架构设计（Form A/B/C 三形态适配 + 异步任务引擎 + 能力目录，五阶段路线图，待评审）**? [`specs/media-generation/architecture.zh-CN.md`](specs/media-generation/architecture.zh-CN.md).
 - New to the project? Start with [`architecture/overview.md`](architecture/overview.md).
 - Setting up a dev environment? See [`contributing/development.md`](contributing/development.md).
