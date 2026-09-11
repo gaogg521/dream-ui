@@ -124,7 +124,117 @@
     "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
     "team": "Team",
     "teamAuto": "Team · Auto",
-    "detailEditViaChat": "Edit via chat"
+    "detailEditViaChat": "Edit via chat",
+    "builtinSkill": {
+      "cron": {
+        "title": "Scheduled Tasks",
+        "desc": "Create and manage tasks that run on a schedule."
+      },
+      "officecli": {
+        "title": "Office Documents",
+        "desc": "Create, analyse and edit Word, Excel and PowerPoint files."
+      },
+      "one-config": {
+        "title": "App Configuration",
+        "desc": "Inspect and adjust this application's configuration."
+      },
+      "skill-creator": {
+        "title": "Skill Creator",
+        "desc": "A guide to writing effective skills of your own."
+      },
+      "local-ocr-linux": {
+        "title": "Local OCR (Linux)",
+        "desc": "Read text from images offline using an installed Tesseract."
+      },
+      "local-ocr-macos": {
+        "title": "Local OCR (macOS)",
+        "desc": "Read text from images offline with the built-in Vision framework."
+      },
+      "local-ocr-windows": {
+        "title": "Local OCR (Windows)",
+        "desc": "Read text from images offline with the built-in Windows OCR engine."
+      },
+      "mermaid": {
+        "title": "Mermaid Diagrams",
+        "desc": "Render flowcharts, sequence and ER diagrams as SVG or ASCII."
+      },
+      "morph-ppt": {
+        "title": "Morph Slides",
+        "desc": "Build .pptx decks with smooth cross-slide Morph transitions."
+      },
+      "morph-ppt-3d": {
+        "title": "3D Morph Slides",
+        "desc": "Morph decks with GLB models and cinematic camera moves."
+      },
+      "officecli-academic-paper": {
+        "title": "Academic Paper",
+        "desc": "Journal, conference and thesis .docx with proper formatting."
+      },
+      "officecli-data-dashboard": {
+        "title": "Excel Dashboard",
+        "desc": "Multi-sheet Excel dashboards driven by formulas and charts."
+      },
+      "officecli-docx": {
+        "title": "Word Documents",
+        "desc": "Anything involving a .docx file, as input or output."
+      },
+      "officecli-financial-model": {
+        "title": "Financial Model",
+        "desc": "Three-statement models, DCF, LBO and sensitivity analysis."
+      },
+      "officecli-pitch-deck": {
+        "title": "Pitch Deck",
+        "desc": "Investor decks from seed through Series C."
+      },
+      "officecli-pptx": {
+        "title": "PowerPoint Slides",
+        "desc": "Anything involving a .pptx file, as input or output."
+      },
+      "officecli-word-form": {
+        "title": "Fillable Word Forms",
+        "desc": "Word forms with real content controls and form fields."
+      },
+      "officecli-xlsx": {
+        "title": "Excel Spreadsheets",
+        "desc": "Anything involving a .xlsx file, as input or output."
+      },
+      "one-troubleshooting": {
+        "title": "Troubleshooting",
+        "desc": "Diagnose and work through problems with this application."
+      },
+      "one-webui-public": {
+        "title": "WebUI Public Access",
+        "desc": "Expose the WebUI for access from outside your network."
+      },
+      "one-webui-setup": {
+        "title": "WebUI Setup",
+        "desc": "Configure WebUI mode for remote access."
+      },
+      "openclaw-setup": {
+        "title": "OpenClaw Setup",
+        "desc": "Install, deploy and use the OpenClaw personal assistant."
+      },
+      "pdf": {
+        "title": "PDF Toolkit",
+        "desc": "Extract text and tables, and create, merge or split PDFs."
+      },
+      "story-roleplay": {
+        "title": "Story Roleplay",
+        "desc": "Character cards and world info in PNG, WebP and JSON."
+      },
+      "weixin-file-send": {
+        "title": "WeChat File Send",
+        "desc": "Send files to a WeChat contact from a conversation."
+      },
+      "x-recruiter": {
+        "title": "X Recruiting Posts",
+        "desc": "Publish hiring posts on X, with copy rules and image prompts."
+      },
+      "xiaohongshu-recruiter": {
+        "title": "Xiaohongshu Recruiting",
+        "desc": "Publish AI hiring posts on Xiaohongshu with generated covers."
+      }
+    }
   },
   "authMethod": "Authentication",
   "geminiApiKey": "Gemini API Key",

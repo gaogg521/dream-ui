@@ -124,7 +124,117 @@
     "deleteAffectsNewOnlyHint": "删除仅影响新会话：历史会话中已选用的技能仍可继续使用。",
     "team": "团队",
     "teamAuto": "团队 · 自动",
-    "detailEditViaChat": "在对话中编辑"
+    "detailEditViaChat": "在对话中编辑",
+    "builtinSkill": {
+      "cron": {
+        "title": "定时任务",
+        "desc": "创建和管理按计划自动执行的任务。"
+      },
+      "officecli": {
+        "title": "Office 文档",
+        "desc": "创建、分析和修改 Word、Excel、PowerPoint 文件。"
+      },
+      "one-config": {
+        "title": "应用配置",
+        "desc": "查看和调整本应用的配置。"
+      },
+      "skill-creator": {
+        "title": "技能创建指南",
+        "desc": "指导你编写自己的技能。"
+      },
+      "local-ocr-linux": {
+        "title": "本地 OCR（Linux）",
+        "desc": "用本机已安装的 Tesseract 离线识别图片文字，不联网。"
+      },
+      "local-ocr-macos": {
+        "title": "本地 OCR（macOS）",
+        "desc": "用系统自带的 Vision 框架离线识别图片文字，不联网。"
+      },
+      "local-ocr-windows": {
+        "title": "本地 OCR（Windows）",
+        "desc": "用系统自带的 Windows OCR 引擎离线识别图片文字，不联网。"
+      },
+      "mermaid": {
+        "title": "Mermaid 图表",
+        "desc": "把流程图、时序图、ER 图渲染成 SVG 或 ASCII。"
+      },
+      "morph-ppt": {
+        "title": "Morph 动效幻灯片",
+        "desc": "制作带平滑「平滑切换」动效的 .pptx 演示文稿。"
+      },
+      "morph-ppt-3d": {
+        "title": "3D Morph 幻灯片",
+        "desc": "在 Morph 动效基础上加入 GLB 模型与运镜。"
+      },
+      "officecli-academic-paper": {
+        "title": "学术论文",
+        "desc": "生成符合期刊、会议、学位论文格式的 .docx。"
+      },
+      "officecli-data-dashboard": {
+        "title": "Excel 仪表盘",
+        "desc": "制作由公式和图表驱动的多表 Excel 仪表盘。"
+      },
+      "officecli-docx": {
+        "title": "Word 文档",
+        "desc": "涉及 .docx 的一切读写操作。"
+      },
+      "officecli-financial-model": {
+        "title": "财务模型",
+        "desc": "三张表模型、DCF 估值、LBO 与敏感性分析。"
+      },
+      "officecli-pitch-deck": {
+        "title": "融资路演 PPT",
+        "desc": "从天使轮到 C 轮的投资人路演材料。"
+      },
+      "officecli-pptx": {
+        "title": "PowerPoint 幻灯片",
+        "desc": "涉及 .pptx 的一切读写操作。"
+      },
+      "officecli-word-form": {
+        "title": "Word 可填表单",
+        "desc": "生成带真实内容控件的可填写 Word 表单。"
+      },
+      "officecli-xlsx": {
+        "title": "Excel 表格",
+        "desc": "涉及 .xlsx 的一切读写操作。"
+      },
+      "one-troubleshooting": {
+        "title": "故障排查",
+        "desc": "诊断并解决本应用的使用问题。"
+      },
+      "one-webui-public": {
+        "title": "WebUI 公网访问",
+        "desc": "把 WebUI 暴露到公网供远程访问。"
+      },
+      "one-webui-setup": {
+        "title": "WebUI 配置",
+        "desc": "配置 WebUI 模式以便远程访问。"
+      },
+      "openclaw-setup": {
+        "title": "OpenClaw 安装配置",
+        "desc": "安装、部署和使用 OpenClaw 个人助理。"
+      },
+      "pdf": {
+        "title": "PDF 工具箱",
+        "desc": "提取文字和表格，创建、合并、拆分 PDF。"
+      },
+      "story-roleplay": {
+        "title": "故事角色扮演",
+        "desc": "解析并应用 PNG／WebP／JSON 格式的角色卡与世界书。"
+      },
+      "weixin-file-send": {
+        "title": "微信文件发送",
+        "desc": "把文件通过微信发给联系人。"
+      },
+      "x-recruiter": {
+        "title": "X 招聘帖",
+        "desc": "在 X 发布招聘帖，含文案规范与配图提示。"
+      },
+      "xiaohongshu-recruiter": {
+        "title": "小红书招聘",
+        "desc": "在小红书发布 AI 岗位招聘帖，自动生成封面图。"
+      }
+    }
   },
   "authMethod": "认证",
   "geminiApiKey": "Gemini API 密钥",

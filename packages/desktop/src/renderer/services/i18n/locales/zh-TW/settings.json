@@ -122,7 +122,117 @@
     "customHint": "支援技能目錄、父目錄或 zip 匯入；單檔上限 {{maxFileSize}}、單技能上限 {{maxTotalSize}}；同名匯入會覆蓋現有技能。",
     "officialHint": "One Work 官方內建的技能，開箱即用、唯讀，隨版本更新維護。",
     "deleteAffectsNewOnlyHint": "刪除僅影響新會話：歷史會話中已選用的技能仍可繼續使用。",
-    "detailEditViaChat": "在對話中編輯"
+    "detailEditViaChat": "在對話中編輯",
+    "builtinSkill": {
+      "cron": {
+        "title": "定時任務",
+        "desc": "建立和管理按計畫自動執行的任務。"
+      },
+      "officecli": {
+        "title": "Office 文件",
+        "desc": "建立、分析和修改 Word、Excel、PowerPoint 檔案。"
+      },
+      "one-config": {
+        "title": "應用設定",
+        "desc": "檢視和調整本應用的設定。"
+      },
+      "skill-creator": {
+        "title": "技能建立指南",
+        "desc": "指導你撰寫自己的技能。"
+      },
+      "local-ocr-linux": {
+        "title": "本機 OCR（Linux）",
+        "desc": "用本機已安裝的 Tesseract 離線辨識圖片文字，不連網。"
+      },
+      "local-ocr-macos": {
+        "title": "本機 OCR（macOS）",
+        "desc": "用系統內建的 Vision 框架離線辨識圖片文字，不連網。"
+      },
+      "local-ocr-windows": {
+        "title": "本機 OCR（Windows）",
+        "desc": "用系統內建的 Windows OCR 引擎離線辨識圖片文字，不連網。"
+      },
+      "mermaid": {
+        "title": "Mermaid 圖表",
+        "desc": "把流程圖、時序圖、ER 圖算繪成 SVG 或 ASCII。"
+      },
+      "morph-ppt": {
+        "title": "Morph 動效簡報",
+        "desc": "製作帶平滑「平滑切換」動效的 .pptx 簡報。"
+      },
+      "morph-ppt-3d": {
+        "title": "3D Morph 簡報",
+        "desc": "在 Morph 動效基礎上加入 GLB 模型與運鏡。"
+      },
+      "officecli-academic-paper": {
+        "title": "學術論文",
+        "desc": "產生符合期刊、會議、學位論文格式的 .docx。"
+      },
+      "officecli-data-dashboard": {
+        "title": "Excel 儀表板",
+        "desc": "製作由公式和圖表驅動的多表 Excel 儀表板。"
+      },
+      "officecli-docx": {
+        "title": "Word 文件",
+        "desc": "涉及 .docx 的一切讀寫操作。"
+      },
+      "officecli-financial-model": {
+        "title": "財務模型",
+        "desc": "三張表模型、DCF 估值、LBO 與敏感性分析。"
+      },
+      "officecli-pitch-deck": {
+        "title": "募資路演簡報",
+        "desc": "從天使輪到 C 輪的投資人路演材料。"
+      },
+      "officecli-pptx": {
+        "title": "PowerPoint 簡報",
+        "desc": "涉及 .pptx 的一切讀寫操作。"
+      },
+      "officecli-word-form": {
+        "title": "Word 可填表單",
+        "desc": "產生帶真實內容控制項的可填寫 Word 表單。"
+      },
+      "officecli-xlsx": {
+        "title": "Excel 表格",
+        "desc": "涉及 .xlsx 的一切讀寫操作。"
+      },
+      "one-troubleshooting": {
+        "title": "故障排查",
+        "desc": "診斷並解決本應用的使用問題。"
+      },
+      "one-webui-public": {
+        "title": "WebUI 公網存取",
+        "desc": "把 WebUI 暴露到公網供遠端存取。"
+      },
+      "one-webui-setup": {
+        "title": "WebUI 設定",
+        "desc": "設定 WebUI 模式以便遠端存取。"
+      },
+      "openclaw-setup": {
+        "title": "OpenClaw 安裝設定",
+        "desc": "安裝、部署和使用 OpenClaw 個人助理。"
+      },
+      "pdf": {
+        "title": "PDF 工具箱",
+        "desc": "擷取文字和表格，建立、合併、分割 PDF。"
+      },
+      "story-roleplay": {
+        "title": "故事角色扮演",
+        "desc": "解析並套用 PNG／WebP／JSON 格式的角色卡與世界書。"
+      },
+      "weixin-file-send": {
+        "title": "微信檔案傳送",
+        "desc": "把檔案透過微信傳給聯絡人。"
+      },
+      "x-recruiter": {
+        "title": "X 招募貼文",
+        "desc": "在 X 發布招募貼文，含文案規範與配圖提示。"
+      },
+      "xiaohongshu-recruiter": {
+        "title": "小紅書招募",
+        "desc": "在小紅書發布 AI 職缺招募貼文，自動產生封面圖。"
+      }
+    }
   },
   "authMethod": "驗證",
   "geminiApiKey": "Gemini API 金鑰",

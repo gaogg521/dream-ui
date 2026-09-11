@@ -36,6 +36,32 @@ interface SkillInfo {
   icon_file?: string;
 }
 
+/**
+ * Localized display text for the built-in skills.
+ *
+ * NOT a translation of `description`: that field is model-facing --
+ * `build_skills_index_text` renders it into the system prompt as
+ * "- **name**: description", trigger wording included -- so translating it
+ * per UI language would change what the model matches on. This overlays the
+ * display layer only, the way `display_name` already overlays `name`.
+ *
+ * Built-in skills only, which is the right boundary and not a shortcut:
+ * imported skills are the user's own content and team skills are authored by
+ * an enterprise admin. Anything without an entry keeps its authored text.
+ */
+const useBuiltinSkillDisplay = () => {
+  const { t } = useTranslation();
+  return (skill: SkillInfo) => {
+    const fallbackTitle = skill.display_name || skill.name;
+    if (skill.source !== 'builtin') return { title: fallbackTitle, description: skill.description };
+    const base = `settings.skillsHub.builtinSkill.${skill.name}`;
+    return {
+      title: t(`${base}.title`, { defaultValue: fallbackTitle }),
+      description: t(`${base}.desc`, { defaultValue: skill.description }),
+    };
+  };
+};
+
 /** Same pill styling as the expert marketplace, so the two tabs read alike. */
 const skillSourcePillClass = (active: boolean) =>
   `inline-flex cursor-pointer select-none items-center rounded-999px border border-solid px-12px py-6px text-13px leading-none transition-colors ${
@@ -154,6 +180,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
   const [highlightedSkill, setHighlightedSkill] = useState<string | null>(null);
   const skillRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [loading, setLoading] = useState(false);
+  const builtinSkillDisplay = useBuiltinSkillDisplay();
   const [availableSkills, setAvailableSkills] = useState<SkillInfo[]>([]);
   /** Source pill filter, mirroring the expert marketplace's category pills. */
   const [sourceFilter, setSourceFilter] = useState<SkillInfo['source'] | null>(null);
@@ -184,12 +211,16 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
 
   const filteredSkills = useMemo(() => {
     const lowerQuery = search_query.trim().toLowerCase();
-    return mySkills.filter((s) => {
+    const matched = mySkills.filter((s) => {
       // Pill and search narrow independently, same as the expert marketplace.
       if (sourceFilter && (s.source ?? 'builtin') !== sourceFilter) return false;
       if (!lowerQuery) return true;
       return s.name.toLowerCase().includes(lowerQuery) || Boolean(s.description?.toLowerCase().includes(lowerQuery));
     });
+    // Skills shipping a real icon lead; the rest fall back to a generated
+    // letter tile, and a grid that mixes the two at random reads as unfinished.
+    // `toSorted` is stable, so within each half the backend's order survives.
+    return matched.toSorted((a, b) => Number(Boolean(b.icon_file)) - Number(Boolean(a.icon_file)));
   }, [mySkills, search_query, sourceFilter]);
 
   /** Counts per source, so a pill can show how many it will leave behind. */
@@ -881,7 +912,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                               : undefined
                             : () => openSkillDetail(skill.name)
                         }
-                        className={`group flex h-full flex-col gap-10px p-14px border rd-12px transition-all duration-200 cursor-pointer ${
+                        className={`group flex h-full flex-col p-14px border rd-12px transition-all duration-200 cursor-pointer ${
                           highlightedSkill === skill.name
                             ? 'border-primary-5 bg-primary-1'
                             : selectedSkillNames.has(skill.name) && batchMode
@@ -899,33 +930,28 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                             />
                           </div>
                         )}
-                        <div className='shrink-0 flex items-start'>
-                          {skill.icon_file ? (
-                            <img
-                              src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
-                              alt=''
-                              className='w-40px h-40px rd-10px object-cover shadow-sm'
-                              loading='lazy'
-                            />
-                          ) : (
-                            <div
-                              className={`w-40px h-40px rd-10px flex items-center justify-center font-bold text-16px shadow-sm text-transform-uppercase ${getAvatarColorClass(skill.name)}`}
-                            >
-                              {(skill.display_name || skill.name).charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className='flex-1 min-w-0 flex flex-col justify-center gap-6px'>
-                          <div className='flex items-center gap-10px flex-wrap'>
-                            <h3 className='text-14px font-semibold text-t-primary/90 truncate m-0'>
-                              {skill.display_name || skill.name}
-                            </h3>
-                            {skill.display_name && skill.display_name !== skill.name && (
-                              <span className='text-11px text-t-tertiary font-mono truncate' title={skill.name}>
-                                {skill.name}
-                              </span>
+                        <div className='flex items-start justify-between gap-8px'>
+                          <div className='shrink-0'>
+                            {skill.icon_file ? (
+                              <img
+                                src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
+                                alt=''
+                                className='w-40px h-40px rd-10px object-cover shadow-sm'
+                                loading='lazy'
+                              />
+                            ) : (
+                              <div
+                                className={`w-40px h-40px rd-10px flex items-center justify-center font-bold text-16px shadow-sm text-transform-uppercase ${getAvatarColorClass(skill.name)}`}
+                              >
+                                {(skill.display_name || skill.name).charAt(0).toUpperCase()}
+                              </div>
                             )}
+                          </div>
+                          {/* Source badge sits beside the icon, where the expert
+                              marketplace puts its category chip. Keeping it out of
+                              the title row is what makes every card the same
+                              height: the title can then be one truncated line. */}
+                          <span className='shrink-0'>
                             {skill.source === 'custom' ? (
                               <span className='bg-[rgba(var(--orange-6),0.08)] text-orange-6 border border-[rgba(var(--orange-6),0.2)] text-11px px-6px py-1px rd-4px font-medium'>
                                 {t('settings.skillsHub.custom', { defaultValue: 'Custom' })}
@@ -941,6 +967,28 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                                 {t('settings.skillsHub.builtin', { defaultValue: 'Built-in' })}
                               </span>
                             )}
+                          </span>
+                        </div>
+
+                        <h3
+                          className='mt-10px text-14px font-semibold text-t-primary/90 truncate m-0'
+                          title={skill.name}
+                        >
+                          {builtinSkillDisplay(skill).title}
+                        </h3>
+
+                        {/* Fixed two-line box. Without the floor, a short
+                            description leaves the card shorter than its row and
+                            the grid drifts out of alignment. */}
+                        <p
+                          className='mt-6px min-h-36px line-clamp-2 text-12px leading-[1.55] text-t-secondary m-0'
+                          title={builtinSkillDisplay(skill).description}
+                        >
+                          {builtinSkillDisplay(skill).description}
+                        </p>
+
+                        {(skill.tags ?? []).length > 0 && (
+                          <div className='mt-6px flex flex-wrap gap-4px overflow-hidden max-h-20px'>
                             {(skill.tags ?? []).map((tag) => (
                               <span
                                 key={tag}
@@ -951,18 +999,10 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                               </span>
                             ))}
                           </div>
-                          {skill.description && (
-                            <p
-                              className='text-13px text-t-secondary leading-relaxed line-clamp-2 m-0'
-                              title={skill.description}
-                            >
-                              {skill.description}
-                            </p>
-                          )}
-                        </div>
+                        )}
 
                         {!batchMode && (
-                          <div className='mt-auto flex shrink-0 items-center justify-between gap-10px pt-2px'>
+                          <div className='mt-auto flex shrink-0 items-center justify-between gap-10px pt-10px'>
                             <SkillUsedByStack
                               assistants={getAssistantsUsingSkill(skill.name, assistantCatalog ?? [])}
                             />
