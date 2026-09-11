@@ -98,11 +98,12 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-import SkillsHubSettings, {
+import SkillsHubSettings from '@/renderer/pages/settings/SkillsHubSettings';
+import {
   BUILTIN_CATEGORY_ORDER,
   BUILTIN_SKILL_CATEGORY,
   skillPillKey,
-} from '@/renderer/pages/settings/SkillsHubSettings';
+} from '@/renderer/pages/settings/skillsHub/skillCorpus';
 import enSettings from '@/renderer/services/i18n/locales/en-US/settings.json';
 import zhCnSettings from '@/renderer/services/i18n/locales/zh-CN/settings.json';
 import zhTwSettings from '@/renderer/services/i18n/locales/zh-TW/settings.json';
