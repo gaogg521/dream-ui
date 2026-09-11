@@ -84,6 +84,12 @@ vi.mock('react-i18next', () => ({
           'Imported {{successCount}} skill(s), {{failureCount}} failed: {{failures}}',
         'settings.skillsHub.importErrors.SKILL_IMPORT_FILE_TOO_LARGE':
           'A file in this skill is over the size limit. Remove the large file and try again.',
+        'settings.skillsHub.builtinSkill.mermaid.title': 'Mermaid Diagrams',
+        'settings.skillsHub.builtinSkill.mermaid.desc': 'Render flowcharts as SVG or ASCII.',
+        // Negative control: an entry the overlay must never reach, because
+        // my-own-skill is imported. If it renders, the overlay leaked past
+        // `source === 'builtin'`.
+        'settings.skillsHub.builtinSkill.my-own-skill.title': 'OVERLAY LEAKED ONTO AN IMPORTED SKILL',
       };
       const template = translations[k] ?? (typeof options?.defaultValue === 'string' ? options.defaultValue : k);
       return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => String(options?.[key] ?? ''));
@@ -325,6 +331,76 @@ describe('SkillsHubSettings', () => {
     await waitFor(() => expect(screen.getByTestId('my-skill-card-sample-single')).toBeInTheDocument());
     expect(screen.getByText('Custom')).toBeInTheDocument();
     expect(screen.queryByText('Available')).not.toBeInTheDocument();
+  });
+
+  it('puts skills that ship an icon ahead of the ones falling back to a letter tile', async () => {
+    mocks.listAvailableSkills.mockResolvedValue([
+      {
+        name: 'no-icon-first-from-backend',
+        description: 'Arrives first but has no icon.',
+        location: '/tmp/user-skills/no-icon-first-from-backend',
+        is_custom: true,
+        source: 'custom',
+      },
+      {
+        name: 'has-an-icon',
+        description: 'Ships _icon.svg.',
+        location: '/tmp/user-skills/has-an-icon',
+        is_custom: true,
+        source: 'custom',
+        icon_file: '_icon.svg',
+      },
+    ]);
+
+    render(<SkillsHubSettings withWrapper={false} />);
+
+    await waitFor(() => expect(screen.getByTestId('my-skill-card-has-an-icon')).toBeInTheDocument());
+
+    const cards = screen.getAllByTestId(/^my-skill-card-/);
+    expect(cards.map((c) => c.getAttribute('data-testid'))).toEqual([
+      'my-skill-card-has-an-icon',
+      'my-skill-card-no-icon-first-from-backend',
+    ]);
+  });
+
+  it('localizes built-in skill text without touching what an imported skill authored', async () => {
+    // `description` is model-facing: build_skills_index_text renders it into
+    // the system prompt, trigger wording included. The overlay is display-only
+    // and built-in only -- an imported skill is the user's own content, so its
+    // authored text has to survive untouched.
+    mocks.listAvailableSkills.mockResolvedValue([
+      {
+        name: 'mermaid',
+        description: 'Render Mermaid diagrams as SVG or ASCII art using beautiful-mermaid.',
+        location: '/tmp/builtin-skills/mermaid/SKILL.md',
+        is_custom: false,
+        source: 'builtin',
+      },
+      {
+        name: 'my-own-skill',
+        display_name: '我自己的技能',
+        description: 'Authored by the user, not ours to rewrite.',
+        location: '/tmp/user-skills/my-own-skill',
+        is_custom: true,
+        source: 'custom',
+      },
+    ]);
+
+    render(<SkillsHubSettings withWrapper={false} />);
+
+    await waitFor(() => expect(screen.getByTestId('my-skill-card-mermaid')).toBeInTheDocument());
+
+    // The built-in one is looked up by name and shows the localized text.
+    expect(screen.getByText('Mermaid Diagrams')).toBeInTheDocument();
+    expect(screen.getByText('Render flowcharts as SVG or ASCII.')).toBeInTheDocument();
+    expect(
+      screen.queryByText('Render Mermaid diagrams as SVG or ASCII art using beautiful-mermaid.')
+    ).not.toBeInTheDocument();
+
+    // The imported one keeps exactly what its author wrote.
+    expect(screen.getByText('我自己的技能')).toBeInTheDocument();
+    expect(screen.getByText('Authored by the user, not ours to rewrite.')).toBeInTheDocument();
+    expect(screen.queryByText('OVERLAY LEAKED ONTO AN IMPORTED SKILL')).not.toBeInTheDocument();
   });
 
   it('renders auto-injected skills from the main catalog and keeps cron-source skills out of my skills', async () => {
