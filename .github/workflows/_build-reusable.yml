@@ -449,8 +449,17 @@ jobs:
           appleId: ${{ secrets.APPLE_ID }}
           appleIdPassword: ${{ secrets.APPLE_ID_PASSWORD }}
           teamId: ${{ secrets.TEAM_ID }}
-          identity: ${{ secrets.IDENTITY }}
-          CSC_NAME: ${{ secrets.IDENTITY }}
+          # No signing identity here on purpose. `IDENTITY` is the macOS
+          # Developer ID secret, and this block was copied wholesale from the
+          # macOS step. On Windows `CSC_NAME` becomes `win.certificateSubjectName`,
+          # so electron-builder believed a matching certificate was installed and
+          # invoked signtool — which is why the build log read
+          # "signing with signtool.exe" while the artifact came out NotSigned.
+          # Windows code signing is deliberately not configured for now; leaving
+          # the macOS identity here bought nothing but a misleading log line.
+          # Packaging is unaffected: nothing sets `forceCodeSigning`, and
+          # `signAndEditExecutable` stays on, so rcedit still writes the icon and
+          # version metadata into the exe.
           CSC_IDENTITY_AUTO_DISCOVERY: false
           # Windows build flags / Windows 构建参数
           MSVS_VERSION: 2022
