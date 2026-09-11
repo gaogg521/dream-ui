@@ -204,11 +204,26 @@ win:
 
 nsis:
   # `useZip: true` (zip payload instead of the solid 7z/LZMA archive) was
-  # measured and rejected on 2026-09-09. Decompressing the same 1.39 GB payload:
-  # 7z/LZMA 21.7s from a 288 MB installer, zip 10.3s from a 458 MB one. It buys
-  # 11.4s of install time for +170 MB of download, which only pays off above a
-  # sustained ~120 Mbps — and the payload reduction in the same release already
-  # cut ~14s off decompression on its own (the old 2.28 GB payload took ~36s).
+  # rejected on 2026-09-09 on a number that did not measure installing.
+  #
+  # That comparison used `7z t -mmt=1`, which decompresses and verifies in
+  # memory: no files written, none of NSIS's own extraction path. It put LZMA
+  # at 21.7s and zip at 10.3s, i.e. "11.4s for +170 MB", break-even ~120 Mbps.
+  #
+  # 2026-09-11, measured by actually installing silently on Windows x64
+  # (wall clock, 3 LZMA runs vs 2 zip runs):
+  #
+  #   LZMA  238s / 334s / 268s   (extract step 180s / 268s / 201s)
+  #   zip   109s / 109s          (extract step  57s /  58s)
+  #   installer 340.8 MB vs 458.9 MB  ->  +118 MB
+  #
+  # So zip saves 129s against LZMA's BEST run, 171s on the mean, for +118 MB:
+  # break-even ~7 Mbps, not ~120. The old figure was ~17x off because the real
+  # extract step costs 180-268s, not 21.7s.
+  #
+  # Left OFF for now only because it is mutually exclusive with differential
+  # updates (below) — that is the trade to decide, not the install time.
+  # If you re-measure, install; do not time `7z t`.
   #
   # It is also mutually exclusive with differential updates by construction:
   # NsisTarget reads `!isBuildDifferentialAware && options.useZip`, so a future
