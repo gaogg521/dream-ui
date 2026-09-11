@@ -80,6 +80,17 @@
 !define AIONUI_MSG_CLOSE_LISTED_RETRY_EN "Close the application listed above, then click Retry. If you are not sure what to close, click Cancel to send the installer log to the One Work team."
 !define AIONUI_MSG_CLOSE_LISTED_RETRY_ZH "请关闭上面列出的应用，然后点击重试。如果不确定要关闭哪个程序，请点击取消，将安装日志发送给 One Work 团队。"
 
+; Restart Manager often reports no process at all -- an antivirus or sync client
+; holding a transient handle never registers one. The dialog used to print
+; "unknown process" under "Application using it:" and then tell the user to
+; close "the application listed above", which is an instruction nobody can
+; follow. These two say what actually happened and give advice that matches the
+; real causes; Retry usually succeeds because the handle is short-lived.
+!define AIONUI_MSG_NO_LOCKER_FOUND_EN "Windows could not name the program holding it. That usually means a short-lived handle rather than an open application -- antivirus or a cloud-sync client (OneDrive, Dropbox) scanning the folder, or a File Explorer window, terminal, or editor sitting in it."
+!define AIONUI_MSG_NO_LOCKER_FOUND_ZH "Windows 无法指出是哪个程序占用了它。这通常不是某个打开着的应用，而是一个短暂的文件句柄——杀毒软件或云同步客户端（OneDrive、Dropbox）正在扫描该目录，或者有资源管理器窗口、终端、编辑器停留在其中。"
+!define AIONUI_MSG_NO_LOCKER_RETRY_EN "Wait a few seconds and click Retry -- these handles usually release on their own. If Retry keeps failing, close any Explorer window or terminal open in that folder and try once more, then click Cancel to send the installer log to the One Work team."
+!define AIONUI_MSG_NO_LOCKER_RETRY_ZH "请等几秒后点击重试——这类句柄通常会自行释放。如果重试仍然失败，请关闭停留在该目录的资源管理器窗口或终端再试一次，然后点击取消，将安装日志发送给 One Work 团队。"
+
 !define AIONUI_MSG_CLOSE_OR_REMOVE_PREVIOUS_EN "One Work could not finish closing or removing the previous version."
 !define AIONUI_MSG_CLOSE_OR_REMOVE_PREVIOUS_ZH "One Work 无法完成关闭或移除旧版本。"
 !define AIONUI_MSG_MAY_USE_INSTALL_DIR_EN "Another program may still be using files in:"

@@ -378,3 +378,80 @@ childProcess.execSync = function mockedExecSync(command) {
     }
   });
 });
+
+/**
+ * The "file is still in use" dialog, in the case Restart Manager most often
+ * lands in: it names no process at all.
+ *
+ * The dialog used to print the literal placeholder "unknown process" under
+ * "Application using it:" and then tell the user to "close the application
+ * listed above" — an instruction with no referent — before suggesting a Windows
+ * restart. The real cause is almost always a short-lived handle from antivirus
+ * or a sync client, which clears on its own.
+ */
+describe('Windows installer in-use dialog', () => {
+  const control = () => readFileSync(resolve(repoRoot, 'resources/windows/installer-process-control.nsh'), 'utf8');
+  const messages = () => readFileSync(resolve(repoRoot, 'resources/windows/installer-messages.nsh'), 'utf8');
+
+  it('records whether Restart Manager actually named a process', () => {
+    const capture = control().match(/!macro AIONUI_CAPTURE_FAILED_PATH_LOCKERS[\s\S]*?!macroend/)?.[0];
+
+    expect(capture).toBeTruthy();
+    // Set optimistically, cleared on the empty-list branch — so the flag tracks
+    // the list itself rather than a second, driftable condition.
+    expect(capture).toContain('StrCpy $AionUiLockerIdentified "1"');
+    const emptyBranch = capture!.match(/\$\{If\} \$AionUiLockerList == ""([\s\S]*?)\$\{Else\}/)?.[1];
+    expect(emptyBranch).toContain('StrCpy $AionUiLockerIdentified "0"');
+  });
+
+  it('shows a different dialog when no process was named, and never asks to close a placeholder', () => {
+    const prompt = control().match(/!macro AIONUI_PROMPT_FAILED_PATH_LOCKERS[\s\S]*?!macroend/)?.[0];
+
+    expect(prompt).toContain('$AionUiLockerIdentified == "1"');
+
+    const identified = prompt!.match(/\$AionUiLockerIdentified == "1"([\s\S]*?)\$\{Else\}/)?.[1];
+    const unidentified = prompt!.match(/\$\{Else\}([\s\S]*?)\$\{EndIf\}/)?.[1];
+
+    // Named: list the process and ask for it to be closed.
+    expect(identified).toContain('AIONUI_MSG_APPLICATION_USING_IT_ZH');
+    expect(identified).toContain('AIONUI_MSG_CLOSE_LISTED_RETRY_ZH');
+
+    // Unnamed: no "Application using it:" header, no "close the listed app",
+    // and no placeholder standing in for a process the user could act on.
+    expect(unidentified).toContain('AIONUI_MSG_NO_LOCKER_FOUND_ZH');
+    expect(unidentified).toContain('AIONUI_MSG_NO_LOCKER_RETRY_ZH');
+    expect(unidentified).not.toContain('AIONUI_MSG_APPLICATION_USING_IT_');
+    expect(unidentified).not.toContain('AIONUI_MSG_CLOSE_LISTED_RETRY_');
+    expect(unidentified).not.toContain('AIONUI_MSG_UNKNOWN_PROCESS_');
+  });
+
+  it('explains the transient causes rather than sending the user to reboot', () => {
+    const text = messages();
+    for (const key of [
+      'AIONUI_MSG_NO_LOCKER_FOUND_EN',
+      'AIONUI_MSG_NO_LOCKER_FOUND_ZH',
+      'AIONUI_MSG_NO_LOCKER_RETRY_EN',
+      'AIONUI_MSG_NO_LOCKER_RETRY_ZH',
+    ]) {
+      expect(text, `${key} must be defined`).toContain(`!define ${key} `);
+    }
+    const zhAdvice = text.match(/!define AIONUI_MSG_NO_LOCKER_RETRY_ZH "(.*)"/)?.[1] ?? '';
+    const enAdvice = text.match(/!define AIONUI_MSG_NO_LOCKER_RETRY_EN "(.*)"/)?.[1] ?? '';
+    expect(zhAdvice).not.toContain('重启 Windows');
+    expect(enAdvice.toLowerCase()).not.toContain('restart windows');
+  });
+
+  it('backs the close-wait poll off instead of hammering a fixed one second', () => {
+    const script = control();
+    const loop = script.match(/aionui_wait_for_close:([\s\S]*?)!insertmacro AIONUI_FIND_APP_PROCESS/)?.[1];
+
+    expect(loop).toBeTruthy();
+    // The wait has to grow with the attempt count; a literal `Sleep 1000` caps
+    // total patience at the retry limit in seconds, which is short for an
+    // Electron app flushing its session database on exit.
+    expect(loop).not.toMatch(/^\s*Sleep 1000\s*$/m);
+    expect(loop).toContain('$AionUiCloseRetries');
+    expect(loop).toContain('Sleep $AionUiCloseWaitMs');
+    expect(script).toContain('Var /GLOBAL AionUiCloseWaitMs');
+  });
+});
