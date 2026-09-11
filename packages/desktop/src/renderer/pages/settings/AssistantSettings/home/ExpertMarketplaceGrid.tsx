@@ -231,7 +231,11 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
               data-testid={`marketplace-card-${persona.id}`}
               className='group flex flex-col rounded-16px border border-solid border-border-2 bg-base p-14px transition-all duration-180 hover:-translate-y-1px hover:border-primary-2 hover:shadow-[0_8px_24px_rgba(0,0,0,0.09)]'
             >
-              <div className='flex items-start justify-between gap-8px'>
+              {/* Avatar beside the name, not above it. Stacked, the avatar owned
+                  a 40px band the name could not share and the category chip sat
+                  alone across from it, leaving an L-shaped void in every card.
+                  Same change the skills grid needed, same reason. */}
+              <div className='flex items-start gap-10px'>
                 <span className='relative inline-flex shrink-0'>
                   <Avatar
                     className='rounded-10px border-none'
@@ -261,22 +265,26 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
                     </span>
                   ) : null}
                 </span>
-                {persona.category ? (
-                  <span className='mt-1px max-w-88px shrink-0 truncate rounded-6px bg-fill-2 px-8px py-2px text-11px text-t-secondary'>
-                    {translateCategory(persona.category)}
-                  </span>
-                ) : null}
+                <div className='min-w-0 flex-1'>
+                  <div className='flex items-baseline gap-4px'>
+                    <span className='truncate text-14px font-600 leading-[20px] text-t-primary'>{text.name}</span>
+                    {text.nickname ? (
+                      <span className='shrink-0 truncate text-12px text-t-tertiary'>· {text.nickname}</span>
+                    ) : null}
+                  </div>
+                  {persona.category ? (
+                    <span className='mt-4px inline-block max-w-full truncate rounded-5px bg-fill-2 px-6px py-1px text-11px leading-[16px] text-t-tertiary'>
+                      {translateCategory(persona.category)}
+                    </span>
+                  ) : null}
+                </div>
               </div>
-              <div className='mt-10px flex items-baseline gap-4px'>
-                <span className='truncate text-14px font-600 text-t-primary'>{text.name}</span>
-                {text.nickname ? (
-                  <span className='shrink-0 truncate text-12px text-t-tertiary'>· {text.nickname}</span>
-                ) : null}
-              </div>
-              <div className='mt-6px line-clamp-2 min-h-36px text-12px leading-[1.55] text-t-secondary'>
+              {/* Fixed two-line box rather than a floor: a `min-h` lets a longer
+                  blurb win and stretch every card in the same grid row. */}
+              <div className='mt-10px h-36px line-clamp-2 text-12px leading-[1.5] text-t-secondary'>
                 {text.description}
               </div>
-              <div className='mt-12px'>
+              <div className='mt-10px'>
                 {persona.installed ? (
                   <Button
                     type='text'
