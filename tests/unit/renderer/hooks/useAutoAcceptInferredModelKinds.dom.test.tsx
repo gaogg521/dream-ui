@@ -60,20 +60,24 @@ describe('useAutoAcceptInferredModelKinds', () => {
 
     const call = updateProviderMock.mock.calls[0][0] as { id: string; model_settings?: Record<string, unknown> };
     expect(call.id).toBe('agnes');
-    // Guessed purely from the model name — image pattern, text default.
-    expect(call.model_settings).toMatchObject({
-      'agnes-image-2.0-flash': { model_kind: 'image' },
-      'agnes-2.5-flash': { model_kind: 'text' },
-    });
+    // Guessed purely from the model name, with text as the default.
+    expect(call.model_settings).toMatchObject({ 'agnes-2.5-flash': { model_kind: 'text' } });
     /**
-     * `agnes-video-v2.0` is deliberately NOT here. This provider's `base_url`
-     * is the vendor's own host, which the catalog's host-pinned `agnes-video`
-     * entry matches — so the kind is KNOWN rather than inferred, and there is
-     * nothing for this hook to accept on the user's behalf. The picker reaches
-     * it through the catalog either way; writing a declaration would only
-     * duplicate what the catalog already says.
+     * Neither media model is here, and both for the same reason. This
+     * provider's `base_url` is the vendor's own host, which the catalog's
+     * host-pinned `agnes-video` and `agnes-image` entries match — so their
+     * kinds are KNOWN rather than inferred, and there is nothing for this hook
+     * to accept on the user's behalf. The picker reaches them through the
+     * catalog either way; writing a declaration would only duplicate what the
+     * catalog already says.
+     *
+     * `agnes-image-2.0-flash` moved into this group when the image entry was
+     * added. Before that it had no catalog entry, so the hook guessed "image"
+     * from the name and persisted it — the same fallback that also claimed the
+     * endpoint accepted `n: 4` and produced `400 n must be 1`.
      */
     expect(call.model_settings).not.toHaveProperty('agnes-video-v2.0');
+    expect(call.model_settings).not.toHaveProperty('agnes-image-2.0-flash');
   });
 
   it('does not touch a provider whose kinds are already declared', async () => {
