@@ -59,3 +59,44 @@ describe('createInitStyle heading inline-markup sizing', () => {
     expect(inheritance).toBeGreaterThan(strongReset);
   });
 });
+
+/**
+ * `compact` is for markdown shown inside a panel rather than as a chat reply —
+ * a skill's SKILL.md in a 420px-tall file browser. Reply-sized type swallowed
+ * the panel around it, and the heading rules made it worse: a SKILL.md's own
+ * frontmatter parses as a setext h2, so every skill opened on a 16px bold
+ * banner above a 16px body.
+ */
+describe('createInitStyle compact mode', () => {
+  const declarationsFor = (selector: string, compact: boolean) => {
+    const style = createInitStyle('light', undefined, undefined, false, compact);
+    document.head.appendChild(style);
+    const rule = [...(style.sheet?.cssRules ?? [])].find(
+      (r) => selectorOf(r).replace(/\s/g, '') === selector.replace(/\s/g, '')
+    ) as CSSStyleRule | undefined;
+    style.remove();
+    return rule?.style;
+  };
+
+  it('pins a fixed body size instead of following the chat font-size preference', () => {
+    // The chat preference is about reading replies. A document pane that grows
+    // with it overflows the panel it sits in, so compact opts out of the var.
+    expect(declarationsFor('*', false)?.getPropertyValue('font-size')).toContain('--chat-font-size');
+    expect(declarationsFor('*', true)?.getPropertyValue('font-size')).toBe('13px');
+  });
+
+  it('scales the headings down with the body rather than leaving them at reply size', () => {
+    const h1 = declarationsFor('h1', true);
+    const rest = declarationsFor('h2,h3,h4,h5,h6', true);
+
+    expect(h1?.getPropertyValue('font-size')).toBe('17px');
+    expect(rest?.getPropertyValue('font-size')).toBe('14px');
+    // Still a hierarchy, and still above the 13px body.
+    expect(h1?.getPropertyValue('font-weight')).toBe('bold');
+  });
+
+  it('leaves the chat defaults untouched when compact is off', () => {
+    expect(declarationsFor('h1', false)?.getPropertyValue('font-size')).toBe('24px');
+    expect(declarationsFor('h2,h3,h4,h5,h6', false)?.getPropertyValue('font-size')).toBe('16px');
+  });
+});
