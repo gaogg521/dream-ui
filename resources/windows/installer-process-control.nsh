@@ -7,6 +7,7 @@ Var /GLOBAL AionUiLockerList
 Var /GLOBAL AionUiLockerListZh
 Var /GLOBAL AionUiLockerListEn
 Var /GLOBAL AionUiLockerListFile
+Var /GLOBAL AionUiLockerIdentified
 Var /GLOBAL AionUiCurrentOutDir
 
 !macro AIONUI_FIND_APP_PROCESS _RETURN
@@ -191,7 +192,13 @@ Var /GLOBAL AionUiCurrentOutDir
     FileClose $AionUiLockerListFile
   ${EndIf}
   SetDetailsPrint lastused
+  ; Whether Restart Manager actually named a process. The dialog below reads
+  ; this rather than the list string: the "unknown process" placeholder is not
+  ; something a user can close, and telling them to close it is the difference
+  ; between a useful message and a dead end.
+  StrCpy $AionUiLockerIdentified "1"
   ${If} $AionUiLockerList == ""
+    StrCpy $AionUiLockerIdentified "0"
     ${If} $AionUiLockerResult == 0
       StrCpy $AionUiLockerList "${AIONUI_MSG_UNKNOWN_PROCESS_EN}"
       StrCpy $AionUiLockerListZh "${AIONUI_MSG_UNKNOWN_PROCESS_ZH}"
@@ -211,7 +218,17 @@ Var /GLOBAL AionUiCurrentOutDir
   !insertmacro AIONUI_CAPTURE_FAILED_PATH_LOCKERS "${_FAILED_PATH}"
   ${If} $AionUiLockerResult == 0
     ${IfNot} ${Silent}
-      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_ZH}$\r$\n${_FAILED_PATH}$\r$\n$\r$\n${AIONUI_MSG_APPLICATION_USING_IT_ZH}$\r$\n$AionUiLockerListZh$\r$\n$\r$\n${AIONUI_MSG_CLOSE_LISTED_RETRY_ZH}$\r$\n$\r$\n${AIONUI_MSG_INSTALLER_LOG_ZH}:$\r$\n$OneWorkSessionLogPath$\r$\n$\r$\n${AIONUI_MSG_BLOCK_SEPARATOR}$\r$\n$\r$\n${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_EN}$\r$\n${_FAILED_PATH}$\r$\n$\r$\n${AIONUI_MSG_APPLICATION_USING_IT_EN}$\r$\n$AionUiLockerListEn$\r$\n$\r$\n${AIONUI_MSG_CLOSE_LISTED_RETRY_EN}$\r$\n$\r$\n${AIONUI_MSG_INSTALLER_LOG_EN}:$\r$\n$OneWorkSessionLogPath" /SD IDCANCEL IDRETRY ${_RETRY_LABEL} IDCANCEL ${_CANCEL_LABEL}
+      ; Two dialogs, not one with a placeholder. When Restart Manager names a
+      ; process the user has something to act on; when it names nothing, saying
+      ; "Application using it: unknown process -- close the application listed
+      ; above" is an instruction that cannot be followed, and the old text also
+      ; sent people to reboot Windows over what is usually a handle that clears
+      ; itself in seconds.
+      ${If} $AionUiLockerIdentified == "1"
+        MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_ZH}$\r$\n${_FAILED_PATH}$\r$\n$\r$\n${AIONUI_MSG_APPLICATION_USING_IT_ZH}$\r$\n$AionUiLockerListZh$\r$\n$\r$\n${AIONUI_MSG_CLOSE_LISTED_RETRY_ZH}$\r$\n$\r$\n${AIONUI_MSG_INSTALLER_LOG_ZH}:$\r$\n$OneWorkSessionLogPath$\r$\n$\r$\n${AIONUI_MSG_BLOCK_SEPARATOR}$\r$\n$\r$\n${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_EN}$\r$\n${_FAILED_PATH}$\r$\n$\r$\n${AIONUI_MSG_APPLICATION_USING_IT_EN}$\r$\n$AionUiLockerListEn$\r$\n$\r$\n${AIONUI_MSG_CLOSE_LISTED_RETRY_EN}$\r$\n$\r$\n${AIONUI_MSG_INSTALLER_LOG_EN}:$\r$\n$OneWorkSessionLogPath" /SD IDCANCEL IDRETRY ${_RETRY_LABEL} IDCANCEL ${_CANCEL_LABEL}
+      ${Else}
+        MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_ZH}$\r$\n${_FAILED_PATH}$\r$\n$\r$\n${AIONUI_MSG_NO_LOCKER_FOUND_ZH}$\r$\n$\r$\n${AIONUI_MSG_NO_LOCKER_RETRY_ZH}$\r$\n$\r$\n${AIONUI_MSG_INSTALLER_LOG_ZH}:$\r$\n$OneWorkSessionLogPath$\r$\n$\r$\n${AIONUI_MSG_BLOCK_SEPARATOR}$\r$\n$\r$\n${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_EN}$\r$\n${_FAILED_PATH}$\r$\n$\r$\n${AIONUI_MSG_NO_LOCKER_FOUND_EN}$\r$\n$\r$\n${AIONUI_MSG_NO_LOCKER_RETRY_EN}$\r$\n$\r$\n${AIONUI_MSG_INSTALLER_LOG_EN}:$\r$\n$OneWorkSessionLogPath" /SD IDCANCEL IDRETRY ${_RETRY_LABEL} IDCANCEL ${_CANCEL_LABEL}
+      ${EndIf}
     ${EndIf}
   ${EndIf}
   Goto ${_CONTINUE_LABEL}
@@ -258,6 +275,7 @@ Var /GLOBAL AionUiCurrentOutDir
 !macro customCheckAppRunning
   Var /GLOBAL AionUiCheckResult
   Var /GLOBAL AionUiCloseRetries
+  Var /GLOBAL AionUiCloseWaitMs
   InitPluginsDir
   !insertmacro AIONUI_SESSION_BEGIN
 
@@ -274,7 +292,15 @@ Var /GLOBAL AionUiCurrentOutDir
       StrCpy $AionUiCloseRetries 0
 
     aionui_wait_for_close:
-      Sleep 1000
+      ; Back off instead of polling flat every second. A flat 1s x 10 gives the
+      ; app 10 seconds to shut down; an Electron app flushing a large session
+      ; database routinely needs more than that, and the old loop declared
+      ; failure while it was still making progress. Scaling the wait with the
+      ; attempt count gets ~35s of patience out of the same 10 attempts, and
+      ; costs nothing in the common case where the app exits on the first poll.
+      IntOp $AionUiCloseWaitMs $AionUiCloseRetries * 500
+      IntOp $AionUiCloseWaitMs $AionUiCloseWaitMs + 1000
+      Sleep $AionUiCloseWaitMs
       !insertmacro AIONUI_FIND_APP_PROCESS $AionUiCheckResult
       ${If} $AionUiCheckResult == 0
         IntOp $AionUiCloseRetries $AionUiCloseRetries + 1
