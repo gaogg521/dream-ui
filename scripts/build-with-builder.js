@@ -496,9 +496,55 @@ function validateViteBuildOutput() {
   return { valid: problems.length === 0, problems };
 }
 
+/**
+ * The version electron.vite.config.ts baked into the renderer last time it ran.
+ *
+ * The renderer learns the app version at COMPILE time (`__APP_VERSION__`, from
+ * root package.json), while electron-builder stamps the packaged package.json
+ * at PACKAGE time. Reusing renderer output across a version bump therefore
+ * ships one build carrying two different versions, and nothing fails: the app
+ * updates correctly against the new one while the About panel shows the old.
+ * 3.0.4 went out that way — installed as 3.0.4, displaying v3.0.3.
+ */
+const VITE_BUILD_VERSION_FILE = 'out/.build-version';
+
+function rootVersion() {
+  return JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')).version;
+}
+
+function readBuiltVersion() {
+  try {
+    return fs.readFileSync(path.resolve(__dirname, '..', VITE_BUILD_VERSION_FILE), 'utf8').trim();
+  } catch {
+    return null;
+  }
+}
+
+function saveBuiltVersion(version) {
+  try {
+    const file = path.resolve(__dirname, '..', VITE_BUILD_VERSION_FILE);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, version);
+  } catch {}
+}
+
 function shouldSkipViteBuild(skipViteFlag, forceFlag) {
   if (forceFlag) return false;
-  if (skipViteFlag) return true;
+
+  // Even an explicit --skip-vite must not carry a renderer from a different
+  // version: that mismatch is invisible until a user reads the About panel.
+  // Unknown counts as stale — an out/ from before this check existed has no
+  // marker, and guessing in its favour is how the bad build shipped.
+  if (skipViteFlag) {
+    const want = rootVersion();
+    const have = readBuiltVersion();
+    if (have === want) return true;
+    console.warn(
+      `--skip-vite ignored: out/ was built for ${have ?? 'an unrecorded version'}, ` +
+        `package.json is ${want}. Rebuilding so the renderer and the package agree.`
+    );
+    return false;
+  }
 
   // Auto-detect: skip if build exists and hash matches
   const currentHash = computeSourceHash();
@@ -895,6 +941,9 @@ try {
 
     // Save hash after successful build
     saveCurrentHash(computeSourceHash());
+    // Record which version the renderer now carries, so a later --skip-vite can
+    // tell whether reusing this output would ship a mismatched About panel.
+    saveBuiltVersion(rootVersion());
   } else {
     console.log('📦 Using cached Vite build output');
   }
