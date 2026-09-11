@@ -259,3 +259,57 @@ ${prepareResult.stderr}`).not.toContain('::error::');
 ${smoke}`).not.toMatch(/aionui-web|bundled-aioncore/);
   });
 });
+
+/**
+ * Windows code signing is deliberately not configured. What matters is that the
+ * build does not *pretend* it is.
+ *
+ * The Windows step's env block was copied from the macOS one, `IDENTITY` and
+ * all. On Windows `CSC_NAME` becomes `win.certificateSubjectName`, so
+ * electron-builder went looking for a certificate with an Apple Developer ID
+ * subject and invoked signtool — the build log read "signing with signtool.exe"
+ * while the artifact came out NotSigned, which is the worst of both: no
+ * signature, and a log that says otherwise.
+ */
+describe('Windows signing configuration', () => {
+  const windowsBuildStepEnv = (): string => {
+    const workflow = readProjectFile('.github/workflows/_build-reusable.yml');
+    // From the Windows build step's `env:` up to the next step (`- name:`).
+    const step = workflow.slice(workflow.indexOf('Build with electron-builder (Windows)'));
+    const env = step.slice(step.indexOf('env:'));
+    const end = env.indexOf('\n      - name:');
+    return end === -1 ? env : env.slice(0, end);
+  };
+
+  it('hands the Windows build no signing identity at all', () => {
+    const env = windowsBuildStepEnv();
+
+    // A macOS Developer ID is not a Windows certificate subject, and offering
+    // one only makes electron-builder attempt a signature it cannot produce.
+    expect(env).not.toMatch(/^\s*CSC_NAME:/m);
+    expect(env).not.toMatch(/^\s*CSC_LINK:/m);
+    expect(env).not.toMatch(/^\s*identity:/m);
+    // Explicitly off rather than merely unset, so nothing goes hunting for one.
+    expect(env).toMatch(/^\s*CSC_IDENTITY_AUTO_DISCOVERY:\s*false\s*$/m);
+  });
+
+  it('leaves the macOS build signing, which it really does', () => {
+    const workflow = readProjectFile('.github/workflows/_build-reusable.yml');
+    const macStep = workflow.slice(workflow.indexOf('Build with electron-builder (macOS)'));
+
+    expect(macStep.slice(0, macStep.indexOf('\n      - name:'))).toMatch(
+      /CSC_NAME:\s*\$\{\{\s*secrets\.IDENTITY\s*\}\}/
+    );
+  });
+
+  it('never blocks packaging on a missing signature', () => {
+    // Not signing must stay a cosmetic fact about the artifact, not a build
+    // failure. `forceCodeSigning` would turn it into one.
+    const builderConfig = readProjectFile('packages/desktop/electron-builder.yml');
+    expect(builderConfig).not.toContain('forceCodeSigning');
+
+    // And the exe still has to get its icon and version metadata, which is the
+    // *edit* half of signAndEditExecutable — so that must not be globally off.
+    expect(builderConfig).not.toMatch(/^\s*signAndEditExecutable:\s*false/m);
+  });
+});
