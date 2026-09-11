@@ -239,12 +239,26 @@ const specFromDeclaration = (
     };
   }
 
+  /**
+   * The last resort: an image model we know nothing about beyond its name.
+   *
+   * `maxN` is 1 because the two ways of being wrong are not symmetric. Guess
+   * low and a caller asking for four images still gets four — Form A images
+   * fan out into four single-image requests, which is what the sync-style
+   * branch above already relies on. Guess high and the whole request dies:
+   * Agnes answers `400 n must be 1`, and the user gets nothing at all. That is
+   * what `maxN: 4` did here, on nothing but optimism.
+   *
+   * Endpoints that really do honour `n > 1` pay one extra round trip per image
+   * for this. Cheap, and it buys never handing an unknown endpoint a parameter
+   * value it can reject outright.
+   */
   return {
     id: `declared:${modelName}`,
     kind,
     form: 'A',
     match: { model: modelName },
-    params: { maxN: 4, seed: true, imageInput: true },
+    params: { maxN: 1, seed: true, imageInput: true },
   };
 };
 
