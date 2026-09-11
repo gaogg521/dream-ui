@@ -342,12 +342,18 @@ export async function httpRequest<T>(
     if (session) {
       headers['Authorization'] = `Bearer ${session.token}`;
     }
-    // C1-2 fix: let the governance endpoints this machine polls tell it
-    // apart from every other machine on the same account, so an admin
-    // blocking one in the runtime-node roster can actually be enforced
-    // there instead of silently doing nothing. Best-effort — a machine id
-    // this call could not resolve just omits the header, and every
-    // server-side check that reads it already fails open when it is absent.
+    // C1-2: let the governance endpoints this machine polls tell it apart
+    // from every other machine on the same account, so an admin blocking one
+    // in the runtime-node roster can actually be enforced there instead of
+    // silently doing nothing.
+    //
+    // Omitting the header is NOT a way around the block. The server reads a
+    // bearer request with no machine id as an unidentified client and refuses
+    // it whenever this user has any blocked node — otherwise the block would
+    // hold only while the client chose to identify itself, which is no block
+    // at all. Only a browser session (cookie, no bearer) stays exempt, so an
+    // admin whose own laptop is blocked can still reach the page that
+    // unblocks it. See dream-core `classify_governance_caller`.
     const machineId = await getCachedMachineId();
     if (machineId) {
       headers['x-dream-machine-id'] = machineId;
