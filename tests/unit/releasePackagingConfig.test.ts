@@ -44,16 +44,22 @@ describe('release packaging configuration', () => {
     expect(supported.filter((language) => !declared.has(language))).toEqual([]);
   });
 
-  it('collects the blockmap that differential updates depend on', () => {
-    // nsis.differentialPackage emits <installer>.blockmap. If the release
-    // assets drop it, electron-updater requests a URL that 404s and silently
-    // falls back to downloading the whole installer — no error anywhere.
-    const config = readProjectFile('packages/desktop/electron-builder.yml');
-    expect(yamlBlock(config, 'nsis')).toContain('differentialPackage: true');
+  it('keeps the zip payload and differential packaging from being set together', () => {
+    // NsisTarget reads `!isBuildDifferentialAware && options.useZip`: the two
+    // are mutually exclusive, and setting both does not warn — differential
+    // wins and the zip payload is silently dropped, taking a Windows install
+    // from ~109s back to 238-334s with nothing reporting it.
+    const nsis = yamlBlock(readProjectFile('packages/desktop/electron-builder.yml'), 'nsis');
+    const useZip = /^\s*useZip:\s*true\s*$/m.test(nsis);
+    const differential = /^\s*differentialPackage:\s*true\s*$/m.test(nsis);
 
+    expect(useZip && differential, 'useZip and differentialPackage cannot both be on').toBe(false);
+
+    // Whichever is on, the release script has to agree with it: a blockmap
+    // only exists when differential packaging is, and demanding one otherwise
+    // fails every release.
     const prepare = readProjectFile('scripts/prepare-release-assets.sh');
-    expect(prepare).toContain('-name "*.blockmap"');
-    expect(prepare).toContain('Missing blockmap for');
+    expect(prepare.includes('Missing blockmap for')).toBe(differential);
   });
 
   it('keeps mac zip artifacts enabled', () => {

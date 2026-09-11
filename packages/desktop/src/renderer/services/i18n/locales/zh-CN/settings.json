@@ -1405,7 +1405,7 @@
   "personaImportSubmit": "导入所选 {{count}} 项",
   "personaImportResultSummary": "成功导入 {{imported}} 个，跳过 {{skipped}} 个，失败 {{failed}} 个",
   "assistantTabMarketplace": "专家市场",
-  "assistantTabSkills": "技能",
+  "assistantTabSkills": "技能市场",
   "marketplaceInstall": "添加到我的助手",
   "marketplaceInstalled": "已添加",
   "marketplaceEmptyState": "没有找到匹配的专家",

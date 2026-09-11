@@ -1395,7 +1395,7 @@
   "personaImportSubmit": "Importer {{count}} éléments sélectionnés",
   "personaImportResultSummary": "{{imported}} importés, {{skipped}} ignorés, {{failed}} échoués",
   "assistantTabMarketplace": "Marché des experts",
-  "assistantTabSkills": "Compétences",
+  "assistantTabSkills": "Marché des compétences",
   "marketplaceInstall": "Ajouter à mes assistants",
   "marketplaceInstalled": "Ajouté",
   "marketplaceEmptyState": "Aucun expert ne correspond à votre recherche.",

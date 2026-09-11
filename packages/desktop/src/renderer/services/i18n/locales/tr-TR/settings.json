@@ -1398,7 +1398,7 @@
   "personaImportSubmit": "Seçilen {{count}} öğeyi içe aktar",
   "personaImportResultSummary": "{{imported}} içe aktarıldı, {{skipped}} atlandı, {{failed}} başarısız",
   "assistantTabMarketplace": "Uzman Pazarı",
-  "assistantTabSkills": "Beceriler",
+  "assistantTabSkills": "Beceri Pazarı",
   "marketplaceInstall": "Asistanlarıma Ekle",
   "marketplaceInstalled": "Eklendi",
   "marketplaceEmptyState": "Aramanızla eşleşen uzman bulunamadı.",
