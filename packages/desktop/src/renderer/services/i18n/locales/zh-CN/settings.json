@@ -236,13 +236,22 @@
       }
     },
     "builtinCategory": {
-      "office": "Office 文档",
-      "diagram": "图表可视化",
-      "media": "文件与媒体",
-      "recruit": "招聘",
-      "system": "配置与排查",
+      "office": "办公文档",
+      "content": "内容创作",
+      "media": "图像音视频",
+      "diagram": "图表绘图",
+      "dev": "开发工程",
+      "data": "数据金融",
+      "workplace": "协同办公",
+      "recruit": "人力招聘",
+      "product": "产品战略",
+      "research": "研究检索",
+      "life": "生活服务",
+      "system": "配置与自动化",
       "creative": "创意写作"
-    }
+    },
+    "useSkill": "使用此技能",
+    "editSkill": "编辑此技能"
   },
   "authMethod": "认证",
   "geminiApiKey": "Gemini API 密钥",

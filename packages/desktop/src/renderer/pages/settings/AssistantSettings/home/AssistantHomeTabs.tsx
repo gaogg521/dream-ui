@@ -16,6 +16,7 @@ import OfficialAssistantsGrid from './OfficialAssistantsGrid';
 // one browse surface. Detail navigation inside still routes to the
 // standalone pages.
 import SkillsHubSettings from '../../SkillsHubSettings';
+import { useSkillCount } from './useSkillCount';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import TalkToButlerButton from '@/renderer/components/base/TalkToButlerButton';
 import { useScanAllAgents } from '@/renderer/hooks/agent/useScanAllAgents';
@@ -113,6 +114,7 @@ const AssistantHomeTabs: React.FC<AssistantHomeTabsProps> = ({
   // The marketplace and skills panes are catalog browsing — they earn the wide
   // layout (4-card rows, roomier pills). The assistant lists stay at 800px,
   // which is the width their row cards were designed for.
+  const skillCount = useSkillCount();
   const wideLayout = tab === 'marketplace' || tab === 'skills';
   const paneMaxWidth = wideLayout ? 'max-w-1280px' : 'max-w-800px';
   const filteredAssistants = useMemo(() => {
@@ -216,6 +218,7 @@ const AssistantHomeTabs: React.FC<AssistantHomeTabsProps> = ({
               {
                 key: 'skills',
                 label: t('settings.assistantTabSkills', { defaultValue: 'Skills Marketplace' }),
+                count: skillCount,
               },
             ]}
             activeTab={tab}

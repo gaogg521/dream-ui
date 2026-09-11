@@ -236,13 +236,22 @@
       }
     },
     "builtinCategory": {
-      "office": "Office Documents",
-      "diagram": "Diagrams & Visuals",
-      "media": "Files & Media",
-      "recruit": "Recruiting",
-      "system": "Setup & Troubleshooting",
-      "creative": "Creative"
-    }
+      "office": "Documents & Office",
+      "content": "Content Creation",
+      "media": "Image, Audio & Video",
+      "diagram": "Diagrams & Drawing",
+      "dev": "Development",
+      "data": "Data & Finance",
+      "workplace": "Workplace Suites",
+      "recruit": "HR & Recruiting",
+      "product": "Product & Strategy",
+      "research": "Research",
+      "life": "Life & Travel",
+      "system": "Setup & Automation",
+      "creative": "Creative Writing"
+    },
+    "useSkill": "Use",
+    "editSkill": "Edit"
   },
   "authMethod": "Authentication",
   "geminiApiKey": "Gemini API Key",
