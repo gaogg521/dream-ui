@@ -20,6 +20,33 @@ type ExpertMarketplaceGridProps = {
   onStartChat: (id: string) => void;
 };
 
+/**
+ * The catalog stores one category string per persona, with no locale fields,
+ * so those strings arrive Chinese whatever language the UI is in. Mapping the
+ * literal to an i18n key translates them without a schema change on both
+ * sides of the IPC boundary.
+ *
+ * A lookup with a fallback rather than an exhaustive union on purpose: this
+ * grid is built so a new category in the seed data shows up without a code
+ * change, and that has to survive translation. An unknown category renders
+ * its raw string, exactly as it did before.
+ */
+const CATEGORY_I18N_KEYS: Record<string, string> = {
+  营销增长: 'marketingGrowth',
+  技术工程: 'engineering',
+  内容创作: 'contentCreation',
+  金融投资: 'finance',
+  游戏空间: 'gaming',
+  项目质量: 'projectQuality',
+  腾讯专区: 'tencentZone',
+  数据智能: 'dataIntelligence',
+  产品设计: 'productDesign',
+  法务安全: 'legalSecurity',
+  销售商务: 'sales',
+  行业顾问: 'industryAdvisory',
+  运营人力: 'operationsHr',
+};
+
 const categoryPillClass = (active: boolean) =>
   `inline-flex cursor-pointer select-none items-center rounded-999px border border-solid px-12px py-6px text-13px leading-none transition-colors ${
     active
@@ -41,6 +68,10 @@ const categoryPillClass = (active: boolean) =>
  */
 const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas, loading, onInstall, onStartChat }) => {
   const { t } = useTranslation();
+  const translateCategory = (category: string) => {
+    const key = CATEGORY_I18N_KEYS[category];
+    return key ? t(`settings.marketplaceCategory.${key}`, { defaultValue: category }) : category;
+  };
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [installingId, setInstallingId] = useState<string | null>(null);
@@ -124,7 +155,7 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
                 }
               }}
             >
-              {category}
+              {translateCategory(category)}
               <span className='ml-6px text-12px opacity-60'>{count}</span>
             </div>
           ))}
@@ -183,7 +214,7 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
                 </span>
                 {persona.category ? (
                   <span className='mt-1px max-w-88px shrink-0 truncate rounded-6px bg-fill-2 px-8px py-2px text-11px text-t-secondary'>
-                    {persona.category}
+                    {translateCategory(persona.category)}
                   </span>
                 ) : null}
               </div>

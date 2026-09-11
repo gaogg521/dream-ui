@@ -1536,5 +1536,20 @@
   },
   "mediaModelUndeclared": "تنظیم نشده —— در صفحه مدل‌ها یک مدل را به‌عنوان تصویر یا ویدیو مشخص کنید",
   "enterpriseKeyMaskedTip": "کلیدهای توزیع‌شده سازمانی به‌صورت ماسک‌شده نمایش داده می‌شوند (فقط ابتدا/انتها). ذخیره بدون تغییر، کلید اصلی را نگه می‌دارد؛ وارد کردن کلید جدید آن را کاملاً جایگزین می‌کند.",
-  "enterpriseMachineBlockedNotice": "این دستگاه توسط مدیر سازمان شما مسدود شده است. منابع تیمی روی این دستگاه پاک شده‌اند."
+  "enterpriseMachineBlockedNotice": "این دستگاه توسط مدیر سازمان شما مسدود شده است. منابع تیمی روی این دستگاه پاک شده‌اند.",
+  "marketplaceCategory": {
+    "marketingGrowth": "بازاریابی و رشد",
+    "engineering": "مهندسی",
+    "contentCreation": "تولید محتوا",
+    "finance": "مالی و سرمایه‌گذاری",
+    "gaming": "بازی",
+    "projectQuality": "پروژه و کیفیت",
+    "tencentZone": "بخش Tencent",
+    "dataIntelligence": "داده و تحلیل",
+    "productDesign": "محصول و طراحی",
+    "legalSecurity": "حقوقی و امنیت",
+    "sales": "فروش و کسب‌وکار",
+    "industryAdvisory": "مشاوره صنعت",
+    "operationsHr": "عملیات و منابع انسانی"
+  }
 }

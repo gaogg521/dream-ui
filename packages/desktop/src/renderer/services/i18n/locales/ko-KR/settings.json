@@ -1538,5 +1538,20 @@
   },
   "mediaModelUndeclared": "설정되지 않음 —— 모델 페이지에서 모델을 이미지 또는 비디오로 지정하세요",
   "enterpriseKeyMaskedTip": "기업 배포 키는 마스킹되어 표시됩니다(앞뒤만 표시). 수정하지 않고 저장하면 기존 키가 유지되며, 새 키를 입력하면 전체가 대체됩니다.",
-  "enterpriseMachineBlockedNotice": "이 기기는 조직 관리자에 의해 차단되었습니다. 이 기기의 팀 리소스가 삭제되었습니다."
+  "enterpriseMachineBlockedNotice": "이 기기는 조직 관리자에 의해 차단되었습니다. 이 기기의 팀 리소스가 삭제되었습니다.",
+  "marketplaceCategory": {
+    "marketingGrowth": "마케팅 성장",
+    "engineering": "기술 엔지니어링",
+    "contentCreation": "콘텐츠 제작",
+    "finance": "금융 투자",
+    "gaming": "게임",
+    "projectQuality": "프로젝트 품질",
+    "tencentZone": "텐센트 전용",
+    "dataIntelligence": "데이터 분석",
+    "productDesign": "제품 디자인",
+    "legalSecurity": "법무 보안",
+    "sales": "영업 비즈니스",
+    "industryAdvisory": "산업 자문",
+    "operationsHr": "운영 인사"
+  }
 }

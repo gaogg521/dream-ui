@@ -1536,5 +1536,20 @@
   },
   "mediaModelUndeclared": "Ayarlanmadı —— Modeller sayfasında bir modeli Görsel veya Video olarak işaretleyin",
   "enterpriseKeyMaskedTip": "Kurum tarafından dağıtılan anahtarlar maskelenir (yalnızca baş/son). Değiştirmeden kaydederseniz mevcut anahtar korunur; yeni anahtar yazmak tamamen değiştirir.",
-  "enterpriseMachineBlockedNotice": "Bu cihaz, kuruluş yöneticiniz tarafından engellendi. Bu makinedeki takım kaynakları temizlendi."
+  "enterpriseMachineBlockedNotice": "Bu cihaz, kuruluş yöneticiniz tarafından engellendi. Bu makinedeki takım kaynakları temizlendi.",
+  "marketplaceCategory": {
+    "marketingGrowth": "Pazarlama ve Büyüme",
+    "engineering": "Mühendislik",
+    "contentCreation": "İçerik Üretimi",
+    "finance": "Finans ve Yatırım",
+    "gaming": "Oyun",
+    "projectQuality": "Proje ve Kalite",
+    "tencentZone": "Tencent Bölgesi",
+    "dataIntelligence": "Veri ve Analitik",
+    "productDesign": "Ürün ve Tasarım",
+    "legalSecurity": "Hukuk ve Güvenlik",
+    "sales": "Satış ve İş",
+    "industryAdvisory": "Sektör Danışmanlığı",
+    "operationsHr": "Operasyon ve İK"
+  }
 }

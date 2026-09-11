@@ -1538,5 +1538,20 @@
   },
   "mediaModelUndeclared": "未設定 —— モデルページでモデルを画像または動画として指定してください",
   "enterpriseKeyMaskedTip": "企業配布のキーはマスク表示されています（先頭と末尾のみ表示）。変更せずに保存すると元のキーが保持され、新しいキーを入力すると全体的に置き換えられます。",
-  "enterpriseMachineBlockedNotice": "このデバイスは組織の管理者によってブロックされました。このマシン上のチームリソースはクリアされました。"
+  "enterpriseMachineBlockedNotice": "このデバイスは組織の管理者によってブロックされました。このマシン上のチームリソースはクリアされました。",
+  "marketplaceCategory": {
+    "marketingGrowth": "マーケティング",
+    "engineering": "技術・エンジニアリング",
+    "contentCreation": "コンテンツ制作",
+    "finance": "金融・投資",
+    "gaming": "ゲーム",
+    "projectQuality": "プロジェクト・品質",
+    "tencentZone": "テンセント専用",
+    "dataIntelligence": "データ・分析",
+    "productDesign": "プロダクト・デザイン",
+    "legalSecurity": "法務・セキュリティ",
+    "sales": "営業・ビジネス",
+    "industryAdvisory": "業界アドバイザリー",
+    "operationsHr": "オペレーション・人事"
+  }
 }

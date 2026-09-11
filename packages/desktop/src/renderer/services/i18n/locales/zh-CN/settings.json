@@ -1596,5 +1596,20 @@
   "mediaModelUndeclared": "尚未设置 —— 在「模型」页把某个模型标为图片或视频类型",
   "enterpriseKeyMaskedTip": "企业下发的 Key 已脱敏显示（仅保留首尾便于核对）。未修改则保存时保留原 Key；输入新 Key 将整体替换。",
   "enterpriseMachineBlockedNotice": "这台设备已被组织管理员封禁，本机的团队资源已清空。",
-  "webui.deployRoleServerUnavailable": "「本机作为服务器」需要部署企业版服务端，个人版不提供项目组托管能力。"
+  "webui.deployRoleServerUnavailable": "「本机作为服务器」需要部署企业版服务端，个人版不提供项目组托管能力。",
+  "marketplaceCategory": {
+    "marketingGrowth": "营销增长",
+    "engineering": "技术工程",
+    "contentCreation": "内容创作",
+    "finance": "金融投资",
+    "gaming": "游戏空间",
+    "projectQuality": "项目质量",
+    "tencentZone": "腾讯专区",
+    "dataIntelligence": "数据智能",
+    "productDesign": "产品设计",
+    "legalSecurity": "法务安全",
+    "sales": "销售商务",
+    "industryAdvisory": "行业顾问",
+    "operationsHr": "运营人力"
+  }
 }

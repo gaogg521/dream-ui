@@ -1533,5 +1533,20 @@
   },
   "mediaModelUndeclared": "Non défini —— déclarez un modèle comme Image ou Vidéo sur la page Modèles",
   "enterpriseKeyMaskedTip": "Les clés émises par l'entreprise sont masquées (début/fin uniquement). Enregistrer sans modification conserve la clé d'origine ; saisir une nouvelle clé la remplace entièrement.",
-  "enterpriseMachineBlockedNotice": "Cet appareil a été bloqué par l'administrateur de votre organisation. Les ressources d'équipe sur cette machine ont été effacées."
+  "enterpriseMachineBlockedNotice": "Cet appareil a été bloqué par l'administrateur de votre organisation. Les ressources d'équipe sur cette machine ont été effacées.",
+  "marketplaceCategory": {
+    "marketingGrowth": "Marketing et croissance",
+    "engineering": "Ingénierie",
+    "contentCreation": "Création de contenu",
+    "finance": "Finance et investissement",
+    "gaming": "Jeux vidéo",
+    "projectQuality": "Projet et qualité",
+    "tencentZone": "Espace Tencent",
+    "dataIntelligence": "Données et analytique",
+    "productDesign": "Produit et design",
+    "legalSecurity": "Juridique et sécurité",
+    "sales": "Ventes et business",
+    "industryAdvisory": "Conseil sectoriel",
+    "operationsHr": "Opérations et RH"
+  }
 }
