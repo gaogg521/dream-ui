@@ -123,6 +123,7 @@
     "officialHint": "One Work ile birlikte gelen resmi beceriler — kullanıma hazır, salt okunur ve her sürümde güncellenir.",
     "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
     "useSkill": "Kullan",
+    "useSkillToast": "\"{{name}}\" etkinken yeni bir sohbet başlatılıyor",
     "editSkill": "Düzenle"
   },
   "authMethod": "Kimlik Doğrulama",

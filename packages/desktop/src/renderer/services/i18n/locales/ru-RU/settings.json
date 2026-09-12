@@ -131,6 +131,7 @@
     "officialHint": "Официальные навыки, входящие в состав One Work, — готовы к использованию, только для чтения и обновляются с каждым релизом.",
     "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
     "useSkill": "Использовать",
+    "useSkillToast": "Запуск нового чата с включённым «{{name}}»",
     "editSkill": "Изменить"
   },
   "authMethod": "Аутентификация",

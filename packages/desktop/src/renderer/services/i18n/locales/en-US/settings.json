@@ -707,6 +707,7 @@
       "creative": "Creative Writing"
     },
     "useSkill": "Use",
+    "useSkillToast": "Starting a new chat with \"{{name}}\" enabled",
     "editSkill": "Edit"
   },
   "authMethod": "Authentication",

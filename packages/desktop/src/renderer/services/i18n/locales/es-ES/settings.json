@@ -123,6 +123,7 @@
     "officialHint": "Habilidades oficiales incluidas en One Work: listas para usar, de solo lectura y actualizadas con cada versión.",
     "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
     "useSkill": "Usar",
+    "useSkillToast": "Iniciando un nuevo chat con \"{{name}}\" activado",
     "editSkill": "Editar"
   },
   "authMethod": "Autenticación",

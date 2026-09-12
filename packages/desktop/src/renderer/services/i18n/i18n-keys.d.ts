@@ -4085,6 +4085,7 @@ export type I18nKey =
   | 'settings.skillsHub.tipTitle'
   | 'settings.skillsHub.title'
   | 'settings.skillsHub.useSkill'
+  | 'settings.skillsHub.useSkillToast'
   | 'settings.skillsHub.usedByCount'
   | 'settings.skillsHub.usedByTooltip'
   | 'settings.skillsHub.usedByTooltip_one'
