@@ -3028,6 +3028,10 @@ export const oneBilling = {
       channelId?: string;
       inputTokens?: number;
       outputTokens?: number;
+      cacheReadTokens?: number;
+      cacheWriteTokens?: number;
+      durationMs?: number;
+      requestId?: string;
       conversationId?: string;
     }
   >('/api/one/billing/client-usage'),

@@ -15,7 +15,7 @@ import { logStreamTerminalObserved } from '@/renderer/pages/conversation/runtime
 import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
 import { isConversationProcessing } from '@/renderer/pages/conversation/utils/conversationRuntime';
 import { ensureConversationRuntime } from '@/renderer/pages/conversation/utils/ensureConversationRuntime';
-import { beginConversationTurn, endConversationTurn } from '@/renderer/pages/conversation/utils/conversationTurnClock';
+import { beginConversationTurn, endConversationTurn, getConversationTurnStart } from '@/renderer/pages/conversation/utils/conversationTurnClock';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { processLocalCronResponse } from './localCronCommands';
 // Shared with the ACP hook on purpose — see the `acp_context_usage` arm.
@@ -79,7 +79,12 @@ export const useDreamEngineMessage = (
    * `finish` — one report per turn, whatever the frame ordering. Cleared on
    * report so a repeated or late frame cannot bill the same turn twice.
    */
-  const pendingTurnSpendRef = useRef<{ inputTokens?: number; outputTokens?: number } | null>(null);
+  const pendingTurnSpendRef = useRef<{
+    inputTokens?: number;
+    outputTokens?: number;
+    cacheReadTokens?: number;
+    cacheWriteTokens?: number;
+  } | null>(null);
 
   /**
    * Report a turn's spend exactly once, preferring counts the caller has over
@@ -95,7 +100,15 @@ export const useDreamEngineMessage = (
       const outputTokens = counts.outputTokens ?? pending?.outputTokens;
       if (!inputTokens && !outputTokens) return;
       pendingTurnSpendRef.current = null;
-      void reportClientTurnUsage({ conversationId: conversation_id, inputTokens, outputTokens });
+      const startedAt = getConversationTurnStart(conversation_id);
+      void reportClientTurnUsage({
+        conversationId: conversation_id,
+        inputTokens,
+        outputTokens,
+        cacheReadTokens: pending?.cacheReadTokens,
+        cacheWriteTokens: pending?.cacheWriteTokens,
+        durationMs: startedAt == null ? undefined : Math.max(0, Date.now() - startedAt),
+      });
     },
     [conversation_id]
   );
@@ -424,6 +437,8 @@ export const useDreamEngineMessage = (
               pendingTurnSpendRef.current = {
                 inputTokens: breakdown.input_tokens,
                 outputTokens: breakdown.output_tokens,
+                cacheReadTokens: breakdown.cached_read_tokens,
+                cacheWriteTokens: breakdown.cached_write_tokens,
               };
             }
             // Only when the backend actually states a window. Without it the
