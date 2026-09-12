@@ -36,11 +36,16 @@
 
 import { ipcBridge } from '@/common';
 import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
+import { uuid } from '@/common/utils';
 
 export type ClientTurnUsage = {
   conversationId: string;
   inputTokens?: number | null;
   outputTokens?: number | null;
+  cacheReadTokens?: number | null;
+  cacheWriteTokens?: number | null;
+  durationMs?: number | null;
+  requestId?: string;
 };
 
 /** A turn that burned nothing is not worth a row. */
@@ -88,6 +93,10 @@ export async function reportClientTurnUsage(usage: ClientTurnUsage): Promise<voi
       channelId,
       inputTokens: usage.inputTokens ?? undefined,
       outputTokens: usage.outputTokens ?? undefined,
+      cacheReadTokens: usage.cacheReadTokens ?? undefined,
+      cacheWriteTokens: usage.cacheWriteTokens ?? undefined,
+      durationMs: usage.durationMs ?? undefined,
+      requestId: usage.requestId ?? uuid(),
     });
   } catch {
     // Constraint 4. Includes the case where the member is connected but the
