@@ -237,6 +237,17 @@ AI 一键拆单，任务直接交给 Agent，进度团队可见。
 </table>
 </details>
 
+<details>
+<summary><strong>🧠 市场专家 · Skills 技能管理</strong></summary>
+<br>
+<table>
+<tr>
+<td width="50%"><img src="./resources/市场专家.png" width="100%"><br><sub>行业专家市场 · 开箱即用</sub></td>
+<td width="50%"><img src="./resources/SKILL技能管理.png" width="100%"><br><sub>技能可组合、可下发团队</sub></td>
+</tr>
+</table>
+</details>
+
 ---
 
 ## 和 Cursor / Copilot 比什么

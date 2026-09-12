@@ -52,14 +52,16 @@ describe('client usage reporting', () => {
   it('reports the counts with the model and the local provider id', async () => {
     await reportClientTurnUsage({ conversationId: 'conv-1', inputTokens: 900, outputTokens: 40 });
 
-    expect(reportUsageMock).toHaveBeenCalledWith(expect.objectContaining({
-      conversationId: 'conv-1',
-      model: 'gpt-4.1',
-      channelId: 'prov_local_openai',
-      inputTokens: 900,
-      outputTokens: 40,
-      requestId: expect.any(String),
-    }));
+    expect(reportUsageMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationId: 'conv-1',
+        model: 'gpt-4.1',
+        channelId: 'prov_local_openai',
+        inputTokens: 900,
+        outputTokens: 40,
+        requestId: expect.any(String),
+      })
+    );
   });
 
   /**
