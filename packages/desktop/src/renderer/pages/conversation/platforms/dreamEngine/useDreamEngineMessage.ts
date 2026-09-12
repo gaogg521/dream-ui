@@ -15,7 +15,11 @@ import { logStreamTerminalObserved } from '@/renderer/pages/conversation/runtime
 import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
 import { isConversationProcessing } from '@/renderer/pages/conversation/utils/conversationRuntime';
 import { ensureConversationRuntime } from '@/renderer/pages/conversation/utils/ensureConversationRuntime';
-import { beginConversationTurn, endConversationTurn, getConversationTurnStart } from '@/renderer/pages/conversation/utils/conversationTurnClock';
+import {
+  beginConversationTurn,
+  endConversationTurn,
+  getConversationTurnStart,
+} from '@/renderer/pages/conversation/utils/conversationTurnClock';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { processLocalCronResponse } from './localCronCommands';
 // Shared with the ACP hook on purpose — see the `acp_context_usage` arm.
