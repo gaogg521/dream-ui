@@ -761,9 +761,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
                             )}
                           </span>
                           {skill.description && (
-                            <span className='mt-1px block truncate text-11px text-t-tertiary'>
-                              {skill.description}
-                            </span>
+                            <span className='mt-1px block truncate text-11px text-t-tertiary'>{skill.description}</span>
                           )}
                         </span>
                         {checked && (
