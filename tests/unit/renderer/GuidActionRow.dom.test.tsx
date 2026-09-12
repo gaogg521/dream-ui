@@ -313,12 +313,12 @@ describe('GuidActionRow skill/MCP submenu search', () => {
     renderActionRow({ onToggleSkill });
 
     fireEvent.change(screen.getByTestId('guid-skill-search'), { target: { value: 'skill-3' } });
-    // The grid rewrite turned each row into a `button role="option"` inside a
-    // listbox; `closest('[role="menuitem"]')` matched nothing and returned
-    // null, which fireEvent reports as "please provide a DOM element" rather
-    // than as a missing element. Query the cell's own testid so the next
-    // markup change breaks the component test, not the selector.
-    fireEvent.click(screen.getByTestId('guid-skill-cell-skill-3'));
+    // Each row is a `button role="option"` inside a listbox;
+    // `closest('[role="menuitem"]')` matched nothing and returned null,
+    // which fireEvent reports as "please provide a DOM element" rather than
+    // as a missing element. Query the row's own testid so the next markup
+    // change breaks the component test, not the selector.
+    fireEvent.click(screen.getByTestId('guid-skill-row-skill-3'));
 
     expect(onToggleSkill).toHaveBeenCalledWith('skill-3', false);
   });

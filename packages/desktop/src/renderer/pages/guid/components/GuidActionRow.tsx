@@ -126,7 +126,14 @@ type GuidActionRowProps = {
   onModeSelect: (mode: string) => void;
 
   // Skills management
-  allSkills: Array<{ name: string; description: string; isAuto: boolean; display_name?: string; icon_file?: string }>;
+  allSkills: Array<{
+    name: string;
+    description: string;
+    isAuto: boolean;
+    display_name?: string;
+    icon_file?: string;
+    source?: string;
+  }>;
   disabledBuiltinSkills: string[];
   enabledSkills: string[];
   onToggleSkill: (name: string, isAuto: boolean) => void;
@@ -317,6 +324,14 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
 
   const isSkillChecked = (skill: { name: string; isAuto: boolean }) =>
     skill.isAuto ? !disabledBuiltinSkills.includes(skill.name) : enabledSkills.includes(skill.name);
+
+  // Only "team" gets a badge here — that is the one distinction with real
+  // consequence for the person picking a skill (an admin controls it, not
+  // them). Builtin vs. custom is a shipping detail nobody choosing a skill to
+  // run needs to weigh, and showing all three would just add noise to every
+  // row in a list already hundreds of items long.
+  const skillSourceLabel = (source?: string): string | null =>
+    source === 'team' ? t('settings.skillsHub.team', { defaultValue: 'Team' }) : null;
 
   const activeSkillCount = allSkills.filter(isSkillChecked).length;
   // Manually picked skills surface as chips in the input row — otherwise a
@@ -697,60 +712,66 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
                   {t('settings.skillsHub.noSearchResults', { defaultValue: 'No matching skills.' })}
                 </div>
               ) : (
-                <div
-                  className='grid grid-cols-3 gap-x-3px gap-y-2px'
-                  role='listbox'
-                  aria-multiselectable='true'
-                  data-testid='guid-skills-grid'
-                >
+                // A dense icon grid tops out at a truncated name per cell — fine
+                // for a handful of skills, unreadable once a team distributes
+                // hundreds of them under machine-generated English slugs with no
+                // display_name. A row per skill has room for the description
+                // (what it actually does) and a source badge (who put it here),
+                // both of which a grid cell has no space for.
+                <div role='listbox' aria-multiselectable='true' data-testid='guid-skills-list'>
                   {filteredSkills.map((skill) => {
                     const checked = isSkillChecked(skill);
                     const label = skill.display_name || skill.name;
+                    const sourceLabel = skillSourceLabel(skill.source);
                     return (
-                      <Tooltip
+                      <button
                         key={`skill-${skill.name}`}
-                        position='right'
-                        content={
-                          <div className='max-w-260px'>
-                            <div className='mb-2px text-12px font-600'>{label}</div>
-                            <div className='text-12px leading-relaxed break-words'>{skill.description}</div>
-                          </div>
-                        }
+                        type='button'
+                        role='option'
+                        aria-selected={checked}
+                        aria-label={`${label}：${skill.description}`}
+                        data-testid={`guid-skill-row-${skill.name}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleSkill(skill.name, skill.isAuto);
+                        }}
+                        className={`flex w-full cursor-pointer select-none items-center gap-8px rounded-8px border-none px-6px py-6px text-left transition-colors ${
+                          checked ? 'bg-primary-light-1' : 'bg-transparent hover:bg-fill-2'
+                        }`}
                       >
-                        <button
-                          type='button'
-                          role='option'
-                          aria-selected={checked}
-                          aria-label={`${label}：${skill.description}`}
-                          data-testid={`guid-skill-cell-${skill.name}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleSkill(skill.name, skill.isAuto);
-                          }}
-                          className={`relative flex cursor-pointer select-none flex-col items-center gap-3px rounded-10px border-none px-4px py-5px text-center transition-colors ${
-                            checked ? 'bg-primary-light-1' : 'bg-transparent hover:bg-fill-2'
-                          }`}
-                        >
-                          {checked && (
-                            <span className='absolute right-2px top-2px flex h-13px w-13px items-center justify-center rounded-999px bg-primary-6 text-9px text-white'>
-                              ✓
+                        {skill.icon_file ? (
+                          <img
+                            src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
+                            alt=''
+                            className='h-28px w-28px shrink-0 rounded-999px object-cover'
+                            loading='lazy'
+                          />
+                        ) : (
+                          <span className='flex h-28px w-28px shrink-0 items-center justify-center rounded-999px bg-fill-2 text-13px font-600 text-t-secondary'>
+                            {label.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                        <span className='min-w-0 flex-1'>
+                          <span className='flex items-center gap-6px'>
+                            <span className='truncate text-13px text-t-primary'>{label}</span>
+                            {sourceLabel && (
+                              <span className='shrink-0 rounded-4px bg-fill-2 px-4px py-1px text-10px leading-[14px] text-t-tertiary'>
+                                {sourceLabel}
+                              </span>
+                            )}
+                          </span>
+                          {skill.description && (
+                            <span className='mt-1px block truncate text-11px text-t-tertiary'>
+                              {skill.description}
                             </span>
                           )}
-                          {skill.icon_file ? (
-                            <img
-                              src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
-                              alt=''
-                              className='h-28px w-28px rounded-999px object-cover'
-                              loading='lazy'
-                            />
-                          ) : (
-                            <span className='flex h-28px w-28px items-center justify-center rounded-999px bg-fill-2 text-13px font-600 text-t-secondary'>
-                              {label.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                          <span className='w-full truncate text-12px text-t-primary'>{label}</span>
-                        </button>
-                      </Tooltip>
+                        </span>
+                        {checked && (
+                          <span className='flex h-16px w-16px shrink-0 items-center justify-center rounded-999px bg-primary-6 text-9px text-white'>
+                            ✓
+                          </span>
+                        )}
+                      </button>
                     );
                   })}
                 </div>

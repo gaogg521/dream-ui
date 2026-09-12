@@ -131,6 +131,7 @@
     "officialHint": "Офіційні навички, що постачаються з One Work, — готові до використання, лише для читання та оновлюються з кожним випуском.",
     "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
     "useSkill": "Використати",
+    "useSkillToast": "Починаємо новий чат із увімкненим «{{name}}»",
     "editSkill": "Редагувати"
   },
   "authMethod": "Автентифікація",

@@ -12,6 +12,12 @@
  * tile, display name as the primary label with the kebab identity as a
  * small secondary tag, and search matching BOTH names (a user who saw
  * "基金分析" in the Skills Hub types Chinese, not "fund-analysis").
+ *
+ * Rendered as a list (one row per skill), not a grid: a team distributes
+ * hundreds of skills under English slugs with no display_name, and a dense
+ * icon grid has no room for a description or for who put the skill there.
+ * Each row shows name + description + a "Team" badge when `source ===
+ * 'team'`.
  */
 
 import React from 'react';
@@ -29,6 +35,7 @@ const allSkills = [
     icon_file: '_icon.svg',
   },
   { name: 'wacli', description: 'd', isAuto: false },
+  { name: 'admin-console-guide', description: 'd', isAuto: false, source: 'team' },
 ];
 
 const onToggleSkill = vi.fn();
@@ -137,47 +144,46 @@ const baseProps = {
 describe('skills submenu presentation', () => {
   afterEach(cleanup);
 
-  it('lays the catalog out as a grid: one card per skill, display name primary, intro on hover', () => {
+  it('lays the catalog out as a list: one row per skill, display name primary, description inline', () => {
     const { container } = render(<GuidActionRow {...baseProps} />);
-    const grid = container.querySelector('[data-testid="guid-skills-grid"]');
-    expect(grid).toBeTruthy();
+    const list = container.querySelector('[data-testid="guid-skills-list"]');
+    expect(list).toBeTruthy();
 
-    const cells = [...container.querySelectorAll('[data-testid^="guid-skill-cell-"]')];
-    expect(cells).toHaveLength(3);
+    const rows = [...container.querySelectorAll('[data-testid^="guid-skill-row-"]')];
+    expect(rows).toHaveLength(4);
 
-    const fund = container.querySelector('[data-testid="guid-skill-cell-fund-analysis"]');
+    const fund = container.querySelector('[data-testid="guid-skill-row-fund-analysis"]');
     expect(fund?.textContent).toContain('基金分析');
-    // The visible label stays the human name alone; identity + intro travel
-    // via aria-label and the hover tooltip content.
+    // The visible label stays the human name alone; the kebab identity
+    // travels via aria-label, not a duplicate visible string.
     expect(fund?.textContent).not.toContain('fund-analysis');
     const ariaLabel = fund?.getAttribute('aria-label') ?? '';
     expect(ariaLabel).toContain('基金分析');
     expect(ariaLabel).toContain('d');
-    // Tooltip mock renders the intro content right before the button.
-    const tooltip = fund?.parentElement;
-    expect(tooltip?.getAttribute('data-testid')).toBe('skill-tooltip');
-    expect(tooltip?.textContent).toContain('d');
+    // The description sits in the row itself now — no hover needed to read
+    // hundreds of entries one at a time.
+    expect(fund?.textContent).toContain('d');
 
     // No display name → the kebab name is the label, no duplicate.
-    const wacli = container.querySelector('[data-testid="guid-skill-cell-wacli"]');
+    const wacli = container.querySelector('[data-testid="guid-skill-row-wacli"]');
     expect(wacli?.textContent).toContain('wacli');
   });
 
   it('renders the icon image only for skills that ship one, letter tile otherwise', () => {
     const { container } = render(<GuidActionRow {...baseProps} />);
-    const imgs = [...container.querySelectorAll('[data-testid="guid-skills-grid"] img')];
+    const imgs = [...container.querySelectorAll('[data-testid="guid-skills-list"] img')];
     expect(imgs).toHaveLength(1);
     expect(imgs[0].getAttribute('src')).toBe('http://backend.test/api/skills/12306-train-assistant/icon');
-    const tiles = [...container.querySelectorAll('[data-testid="guid-skills-grid"] span')].filter((s) =>
+    const tiles = [...container.querySelectorAll('[data-testid="guid-skills-list"] span')].filter((s) =>
       /w-28px/.test(s.className ?? '')
     );
     expect(tiles.map((t) => t.textContent?.trim())).toContain('基');
     expect(tiles.map((t) => t.textContent?.trim())).toContain('W');
   });
 
-  it('marks checked cells and surfaces manually selected skills as removable chips', () => {
+  it('marks checked rows and surfaces manually selected skills as removable chips', () => {
     const { container } = render(<GuidActionRow {...baseProps} enabledSkills={['fund-analysis']} />);
-    const fund = container.querySelector('[data-testid="guid-skill-cell-fund-analysis"]');
+    const fund = container.querySelector('[data-testid="guid-skill-row-fund-analysis"]');
     expect(fund?.getAttribute('aria-selected')).toBe('true');
     expect(fund?.textContent).toContain('✓');
 
@@ -188,5 +194,14 @@ describe('skills submenu presentation', () => {
 
     // Unselected skills get no chip.
     expect(container.querySelector('[data-testid="guid-selected-skill-chip-wacli"]')).toBeNull();
+  });
+
+  it('badges only team-distributed skills, not builtin or custom ones', () => {
+    const { container } = render(<GuidActionRow {...baseProps} />);
+    const team = container.querySelector('[data-testid="guid-skill-row-admin-console-guide"]');
+    expect(team?.textContent).toContain('Team');
+
+    const fund = container.querySelector('[data-testid="guid-skill-row-fund-analysis"]');
+    expect(fund?.textContent).not.toContain('Team');
   });
 });
