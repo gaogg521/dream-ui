@@ -123,6 +123,7 @@
     "officialHint": "One Work に同梱される公式スキル。すぐに使え、読み取り専用で、リリースごとに更新されます。",
     "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
     "useSkill": "使う",
+    "useSkillToast": "「{{name}}」を有効にして新しいチャットを開始します",
     "editSkill": "編集"
   },
   "authMethod": "認証",

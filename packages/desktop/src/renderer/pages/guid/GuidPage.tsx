@@ -72,7 +72,14 @@ const GuidPage: React.FC = () => {
   // skills default checked; the rest are opt-in per conversation or pre-checked
   // by assistant defaults.
   const [allSkills, setAllSkills] = useState<
-    Array<{ name: string; description: string; isAuto: boolean; display_name?: string; icon_file?: string }>
+    Array<{
+      name: string;
+      description: string;
+      isAuto: boolean;
+      display_name?: string;
+      icon_file?: string;
+      source?: string;
+    }>
   >([]);
   const [guidDisabledBuiltinSkills, setGuidDisabledBuiltinSkills] = useState<string[] | undefined>(undefined);
   const [guidEnabledSkills, setGuidEnabledSkills] = useState<string[] | undefined>(undefined);
@@ -90,6 +97,7 @@ const GuidPage: React.FC = () => {
             isAuto: s.source === 'builtin' && s.is_auto_inject,
             display_name: s.display_name,
             icon_file: s.icon_file,
+            source: s.source,
           }))
         );
       })

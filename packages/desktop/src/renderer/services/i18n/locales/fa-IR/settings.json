@@ -123,6 +123,7 @@
     "officialHint": "مهارت‌های رسمی همراه One Work — آماده استفاده، فقط‌خواندنی و با هر نسخه به‌روزرسانی می‌شوند.",
     "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
     "useSkill": "استفاده",
+    "useSkillToast": "شروع یک گفتگوی جدید با «{{name}}» فعال",
     "editSkill": "ویرایش"
   },
   "authMethod": "احراز هویت",

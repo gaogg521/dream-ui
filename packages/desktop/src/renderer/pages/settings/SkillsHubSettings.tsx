@@ -1004,6 +1004,23 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                               className='!h-28px !flex-1 !rounded-8px !bg-fill-2 !px-8px !text-12px !text-t-secondary hover:!bg-primary-6 hover:!text-white'
                               onClick={(e) => {
                                 e.stopPropagation();
+                                // No visible confirmation used to follow this
+                                // click — it silently seeded a brand-new chat's
+                                // enabled-skills set (see GuidPage's `?skill=`
+                                // handling) and, since that also NAVIGATES away
+                                // from wherever the user was, it read as "did
+                                // nothing" to anyone who clicked it mid-browse.
+                                // The toast is the only feedback this flow gets;
+                                // it also spells out that a new chat is what's
+                                // coming, since the jump itself is no longer
+                                // self-explanatory once there is a reason to
+                                // pause before it lands.
+                                Message.success(
+                                  t('settings.skillsHub.useSkillToast', {
+                                    name: builtinSkillDisplay(skill).title,
+                                    defaultValue: `Starting a new chat with "${builtinSkillDisplay(skill).title}" enabled`,
+                                  })
+                                );
                                 void navigate(`/guid?skill=${encodeURIComponent(skill.name)}`);
                               }}
                             >

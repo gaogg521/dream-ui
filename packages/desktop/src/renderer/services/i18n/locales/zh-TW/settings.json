@@ -705,6 +705,7 @@
       "creative": "創意寫作"
     },
     "useSkill": "使用此技能",
+    "useSkillToast": "正在為「{{name}}」新開一個會話",
     "editSkill": "編輯此技能"
   },
   "authMethod": "驗證",
