@@ -38,6 +38,8 @@ export type PersonalAgentAutomationConfig = {
   /** @deprecated Never written. Use the first-class `model` field instead. */
   providerModelKey?: string;
   instructions?: string;
+  /** Enterprise-governed PNG identity; team sync preserves this field. */
+  avatarUrl?: string;
   [key: string]: unknown;
 };
 

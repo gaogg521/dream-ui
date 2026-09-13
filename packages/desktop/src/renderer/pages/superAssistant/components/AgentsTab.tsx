@@ -16,6 +16,7 @@ import { useConversationAssistants } from '@renderer/pages/conversation/hooks/us
 import type { DigitalEmployeeWithRuns } from '../hooks/useDigitalEmployees';
 import { resolveEmployeeBackendLabel, resolveEmployeeExpertName } from '../utils/employeeDisplay';
 import { useAgentTemplates, getTemplateName, getTemplateDescription } from '../templates/agentTemplates';
+import { resolveEmployeeAvatar } from '../utils/employeeAvatar';
 
 export type AgentCardRef = {
   agentId: string;
@@ -130,33 +131,40 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
               return (
                 <Card key={agent.id} size='small'>
                   <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-8px'>
-                      <span className='text-14px font-500'>{agent.name}</span>
-                      {expertName ? (
-                        <Tag size='small' color='arcoblue'>
-                          {expertName}
+                    <div className='flex min-w-0 items-center gap-9px'>
+                      <img
+                        src={resolveEmployeeAvatar(agent)}
+                        alt=''
+                        className='h-42px w-42px shrink-0 rd-10px border border-border-2 object-cover'
+                      />
+                      <div className='flex min-w-0 flex-wrap items-center gap-6px'>
+                        <span className='text-14px font-500'>{agent.name}</span>
+                        {expertName ? (
+                          <Tag size='small' color='arcoblue'>
+                            {expertName}
+                          </Tag>
+                        ) : null}
+                        <Tag size='small' color='gray'>
+                          {resolveEmployeeBackendLabel(agent, managedAgentRuntimeCatalog, localeKey)}
                         </Tag>
-                      ) : null}
-                      <Tag size='small' color='gray'>
-                        {resolveEmployeeBackendLabel(agent, managedAgentRuntimeCatalog, localeKey)}
-                      </Tag>
-                      {agent.scheduleEnabled ? (
-                        <Tag size='small' color='blue'>
-                          <Time className='mr-2px' />
-                          {t('common.superAssistant.scheduled', { defaultValue: '定时' })}
-                        </Tag>
-                      ) : null}
-                      {/* Company-distributed employees land in the member's own
+                        {agent.scheduleEnabled ? (
+                          <Tag size='small' color='blue'>
+                            <Time className='mr-2px' />
+                            {t('common.superAssistant.scheduled', { defaultValue: '定时' })}
+                          </Tag>
+                        ) : null}
+                        {/* Company-distributed employees land in the member's own
                           list with owner/visibility rewritten to look local, so
                           without this tag they are indistinguishable from ones
                           the member built — including the delete button, which
                           the next sync would undo. Same label the skills list
                           already uses for team-distributed rows. */}
-                      {isTeamDistributed(agent) ? (
-                        <Tag size='small' color='green'>
-                          {t('common.superAssistant.teamDistributed', { defaultValue: '团队 · 自动' })}
-                        </Tag>
-                      ) : null}
+                        {isTeamDistributed(agent) ? (
+                          <Tag size='small' color='green'>
+                            {t('common.superAssistant.teamDistributed', { defaultValue: '团队 · 自动' })}
+                          </Tag>
+                        ) : null}
+                      </div>
                     </div>
                     {latestRun ? (
                       <Tag size='small' color={RUN_STATUS_COLOR[latestRun.status] ?? 'default'}>
