@@ -23,6 +23,7 @@ import { useMediaComposer } from '@/renderer/hooks/media/useMediaComposer';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import GuidAuthorTip from './components/GuidAuthorTip';
 import GuidInputCard from './components/GuidInputCard';
+import EnterpriseSceneGrid from '@/renderer/components/enterprise/EnterpriseSceneGrid';
 import GuidModelSelector from './components/GuidModelSelector';
 import TrialModelBanner from './components/TrialModelBanner';
 import { useGuidAssistantSelection } from './hooks/useGuidAssistantSelection';
@@ -832,6 +833,8 @@ const GuidPage: React.FC = () => {
             onSelectWorkspace={(dir) => guidInput.setDir(dir)}
             onClearWorkspace={() => guidInput.setDir('')}
           />
+
+          <EnterpriseSceneGrid />
 
           {selectedAssistantPrompts.length > 0 ? (
             <div className='mt-18px w-full animate-fade-in ps-20px'>
