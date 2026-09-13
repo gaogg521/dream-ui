@@ -42,27 +42,32 @@ const BUILTIN_AVATARS: Record<string, string> = {
 
 const SceneCard: React.FC<{ scene: MyScene }> = ({ scene }) => {
   const { t } = useTranslation();
-  const resourceLabel = (summary: MySceneResourceSummary): string => {
-    const type = t(`common.scenes.resourceType.${summary.resourceType}`, { defaultValue: summary.resourceType });
-    return summary.includesAll
-      ? `${type} · ${t('common.scenes.resourceAll', { defaultValue: '全部' })}`
-      : `${type} ×${summary.count}`;
-  };
+  /**
+   * Just the amount. The resource *type* is rendered separately in a muted
+   * tone so the eye can scan the numbers down a column — "技能 全部 / 工具 3"
+   * reads faster than four identically-weighted pills.
+   */
+  const resourceValue = (summary: MySceneResourceSummary): string =>
+    summary.includesAll ? t('common.scenes.resourceAll', { defaultValue: '全部' }) : String(summary.count);
 
   return (
     <div
-      className='min-w-0 rd-10px border border-border-2 bg-bg-1 px-11px py-10px transition-colors hover:border-border-3 hover:bg-fill-1'
+      className='group min-w-0 flex flex-col gap-10px rd-14px border border-3 bg-1 p-14px
+                 transition-all duration-150 hover:-translate-y-2px hover:border-primary hover:shadow-lg'
       data-scene-name={scene.name}
     >
-      <div className='flex min-w-0 items-center gap-8px'>
+      {/* Identity row: the avatar carries the card, so it is sized like a
+          subject rather than a bullet. */}
+      <div className='flex min-w-0 items-start gap-10px'>
         <img
           src={scene.avatarRef || BUILTIN_AVATARS[scene.name] || officeAvatar}
           alt=''
-          className='h-28px w-28px shrink-0 rd-8px border border-border-2 object-cover'
+          className='h-40px w-40px shrink-0 rd-12px border border-3 object-cover transition-colors
+                     group-hover:border-primary'
         />
         <div className='min-w-0 flex-1'>
-          <div className='flex min-w-0 items-center gap-5px'>
-            <span className='truncate text-12.5px font-600 text-t-primary'>{scene.name}</span>
+          <div className='flex min-w-0 items-center gap-6px'>
+            <span className='truncate text-14px font-600 leading-20px text-t-primary'>{scene.name}</span>
             {scene.builtIn && (
               <Tag size='small' color='arcoblue'>
                 {t('common.scenes.builtinTag', { defaultValue: '内置' })}
@@ -70,32 +75,36 @@ const SceneCard: React.FC<{ scene: MyScene }> = ({ scene }) => {
             )}
           </div>
           {scene.description ? (
-            <div className='truncate text-11px leading-16px text-t-tertiary' title={scene.description}>
+            <div className='mt-2px line-clamp-2 text-12px leading-17px text-t-tertiary' title={scene.description}>
               {scene.description}
             </div>
           ) : null}
         </div>
       </div>
 
+      {/* The two facts a member actually needs, separated rather than stacked
+          as one undifferentiated run of tags: what this scene makes them, and
+          what it hands them. */}
       {scene.jobFunctions.length > 0 && (
-        <div className='mt-7px flex flex-wrap gap-4px'>
-          {scene.jobFunctions.map((job) => (
-            <Tag key={job} size='small'>
-              {job}
-            </Tag>
-          ))}
+        <div className='min-w-0 truncate text-12px text-t-secondary' title={scene.jobFunctions.join(' · ')}>
+          {scene.jobFunctions.join(' · ')}
         </div>
       )}
 
-      <div className='mt-5px flex flex-wrap gap-4px'>
+      <div className='mt-auto border-t border-3 pt-9px'>
         {scene.resources.length > 0 ? (
-          scene.resources.map((summary) => (
-            <Tag key={summary.resourceType} size='small' color='green'>
-              {resourceLabel(summary)}
-            </Tag>
-          ))
+          <div className='flex flex-wrap gap-x-12px gap-y-5px'>
+            {scene.resources.map((summary) => (
+              <span key={summary.resourceType} className='inline-flex items-baseline gap-4px text-12px'>
+                <span className='text-t-tertiary'>
+                  {t(`common.scenes.resourceType.${summary.resourceType}`, { defaultValue: summary.resourceType })}
+                </span>
+                <span className='font-600 text-t-primary'>{resourceValue(summary)}</span>
+              </span>
+            ))}
+          </div>
         ) : (
-          <span className='text-11px text-t-tertiary'>
+          <span className='text-12px text-t-tertiary'>
             {t('common.scenes.noResources', { defaultValue: '该场景暂未配置授权包' })}
           </span>
         )}
@@ -129,7 +138,7 @@ const EnterpriseSceneGrid: React.FC = () => {
             })}
       </div>
       {scenes.length > 0 && (
-        <div className='grid grid-cols-1 gap-8px sm:grid-cols-2 lg:grid-cols-3'>
+        <div className='grid grid-cols-1 gap-10px sm:grid-cols-2 lg:grid-cols-3'>
           {scenes.map((scene) => (
             <SceneCard key={scene.id} scene={scene} />
           ))}

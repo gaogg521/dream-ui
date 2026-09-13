@@ -32,8 +32,8 @@ const ScenePanel: React.FC<{ scenes: MyScene[] }> = ({ scenes }) => {
   };
 
   return (
-    <div className='w-360px max-w-[calc(100vw-24px)] overflow-hidden rd-12px border border-border-2 bg-bg-1 shadow-lg'>
-      <div className='border-b border-border-2 px-14px py-12px'>
+    <div className='w-360px max-w-[calc(100vw-24px)] overflow-hidden rd-12px border border-3 bg-1 shadow-lg'>
+      <div className='border-b border-3 px-14px py-12px'>
         <div className='text-14px font-600 text-t-primary'>
           {t('common.scenes.conversationTitle', { defaultValue: '企业场景' })}
         </div>
@@ -55,14 +55,14 @@ const ScenePanel: React.FC<{ scenes: MyScene[] }> = ({ scenes }) => {
             {scenes.map((scene) => (
               <div
                 key={scene.id}
-                className='rd-10px border border-transparent px-10px py-9px hover:border-border-2 hover:bg-fill-2'
+                className='rd-10px border border-transparent px-10px py-9px hover:border-3 hover:bg-2'
                 data-scene-name={scene.name}
               >
                 <div className='flex items-start gap-9px'>
                   <img
                     src={scene.avatarRef || BUILTIN_AVATARS[scene.name] || officeAvatar}
                     alt=''
-                    className='h-40px w-40px shrink-0 rd-10px border border-border-2 object-cover'
+                    className='h-40px w-40px shrink-0 rd-10px border border-3 object-cover'
                   />
                   <div className='min-w-0 flex-1'>
                     <div className='flex min-w-0 items-center gap-6px'>
