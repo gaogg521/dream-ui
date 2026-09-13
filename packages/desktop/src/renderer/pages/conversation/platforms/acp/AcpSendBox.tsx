@@ -10,6 +10,7 @@ import MediaModeControl from '@/renderer/components/media/MediaModeControl';
 import { useMediaComposer } from '@/renderer/hooks/media/useMediaComposer';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import ContextUsageIndicator from '@/renderer/components/agent/ContextUsageIndicator';
+import EnterpriseSceneContext from '@/renderer/components/enterprise/EnterpriseSceneContext';
 import CommandQueuePanel from '@/renderer/components/chat/CommandQueuePanel';
 import { resolveExtensionAssetUrl } from '@/renderer/utils/platform';
 import useSWR from 'swr';
@@ -960,6 +961,7 @@ Please check your local CLI tool authentication status`,
             )}
           </div>
         }
+        contextFooter={<EnterpriseSceneContext compact />}
         prefix={
           <>
             {uploadFile.length > 0 && (

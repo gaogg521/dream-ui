@@ -251,6 +251,8 @@ const SendBox: React.FC<{
   selectedWorkspaceItems?: FileSelectionItem[];
   onSelectedWorkspaceItemsChange?: (items: FileSelectionItem[]) => void;
   bottomHint?: React.ReactNode;
+  /** Optional account/work context shown below the composer controls. */
+  contextFooter?: React.ReactNode;
   /**
    * Drop the trailing "type / for commands, ↑/↓ for history" hint.
    *
@@ -309,6 +311,7 @@ const SendBox: React.FC<{
   selectedWorkspaceItems,
   onSelectedWorkspaceItemsChange,
   bottomHint,
+  contextFooter,
   hideChatHint,
   onMobilePlusClick,
   active = true,
@@ -1935,6 +1938,9 @@ const SendBox: React.FC<{
             </div>
           </div>
         )}
+        {contextFooter ? (
+          <div className='mt-6px flex min-w-0 items-center border-t border-border-1 pt-5px'>{contextFooter}</div>
+        ) : null}
       </div>
     </div>
   );
