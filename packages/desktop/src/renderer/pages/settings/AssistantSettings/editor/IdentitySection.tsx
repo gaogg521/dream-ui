@@ -81,7 +81,7 @@ const IdentitySection: React.FC<IdentitySectionProps> = ({
               type='outline'
               size='mini'
               data-testid='btn-assistant-avatar-upload'
-              className='!rounded-8px !border-border-2 !bg-base !px-8px !text-11px'
+              className='!rounded-8px !border-2 !bg-base !px-8px !text-11px'
               onClick={onPickAvatarImage}
             >
               {t('settings.assistantAvatarUploadImage', { defaultValue: 'Upload image' })}
@@ -97,7 +97,7 @@ const IdentitySection: React.FC<IdentitySectionProps> = ({
               disabled={!isIdentityEditable}
               placeholder={t('settings.agentNamePlaceholder', { defaultValue: 'Enter a name for this agent' })}
               data-testid='input-assistant-name'
-              className='rounded-8px border-border-2 bg-bg-0'
+              className='rounded-8px border-2 bg-base'
             />
           </div>
           <div className='flex items-center gap-12px'>
@@ -110,7 +110,7 @@ const IdentitySection: React.FC<IdentitySectionProps> = ({
               placeholder={t('settings.assistantDescriptionPlaceholder', {
                 defaultValue: 'What can this assistant help with?',
               })}
-              className='rounded-8px border-border-2 bg-bg-0'
+              className='rounded-8px border-2 bg-base'
             />
           </div>
         </div>

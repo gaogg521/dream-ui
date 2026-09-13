@@ -382,7 +382,7 @@ const Main = () => {
 
   if (!ready || !configReady) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-bg-1 text-t-secondary text-14px'>
+      <div className='min-h-screen flex items-center justify-center bg-1 text-t-secondary text-14px'>
         {t('common.loading')}
       </div>
     );
@@ -454,7 +454,7 @@ const BackendStartupFailureDialog: React.FC<{ failure: BackendStartupFailureInfo
 
   if (!isIncompatibleRuntime && !isPackageArchitectureMismatch) {
     return (
-      <div className='min-h-screen bg-bg-1'>
+      <div className='min-h-screen bg-1'>
         <InstallationIntegrityModalHost
           description={description}
           diagnosticsKind={
@@ -492,7 +492,7 @@ const BackendStartupFailureDialog: React.FC<{ failure: BackendStartupFailureInfo
 
   if (isPackageArchitectureMismatch) {
     return (
-      <div className='min-h-screen bg-bg-1'>
+      <div className='min-h-screen bg-1'>
         <Modal
           visible
           closable={false}
@@ -507,7 +507,7 @@ const BackendStartupFailureDialog: React.FC<{ failure: BackendStartupFailureInfo
   }
 
   return (
-    <div className='min-h-screen bg-bg-1'>
+    <div className='min-h-screen bg-1'>
       <Modal visible closable={false} maskClosable={false} footer={null} title={title}>
         <div className='text-t-1'>
           <Typography.Paragraph className='mb-0 text-t-secondary'>{description}</Typography.Paragraph>

@@ -82,7 +82,7 @@ const MyScenesSection: React.FC = () => {
       ) : (
         <div className='grid grid-cols-1 gap-10px md:grid-cols-2'>
           {scenes.map((scene) => (
-            <div key={scene.id} className='rd-8px border border-border-2 px-12px py-10px' data-scene-name={scene.name}>
+            <div key={scene.id} className='rd-8px border border-2 px-12px py-10px' data-scene-name={scene.name}>
               <div className='flex items-center gap-8px'>
                 <span className='text-14px font-500 text-t-primary'>{scene.name}</span>
                 {scene.builtIn && (

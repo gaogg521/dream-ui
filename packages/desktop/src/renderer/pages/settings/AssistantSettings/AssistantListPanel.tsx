@@ -124,7 +124,7 @@ const SortableAssistantCard: React.FC<SortableAssistantCardProps> = ({
       key={assistant.id}
       style={style}
       data-testid={`assistant-card-${assistant.id}`}
-      className={`group flex cursor-pointer items-center justify-between gap-12px rounded-12px border border-solid px-14px py-10px transition-all duration-180 hover:border-border-1 hover:bg-fill-1 ${highlightedId === assistant.id ? 'border-primary-5 bg-primary-1' : 'border-transparent bg-base'}`}
+      className={`group flex cursor-pointer items-center justify-between gap-12px rounded-12px border border-solid px-14px py-10px transition-all duration-180 hover:border-1 hover:bg-fill-1 ${highlightedId === assistant.id ? 'border-primary-5 bg-primary-1' : 'border-transparent bg-base'}`}
       onClick={() => {
         setActiveAssistantId(assistant.id);
         onEdit(assistant);
@@ -333,7 +333,7 @@ const AssistantListPanel: React.FC<AssistantListPanelProps> = ({
     ));
 
     return (
-      <div className='rounded-12px border border-border-2 bg-2 p-8px md:rounded-16px md:p-10px'>
+      <div className='rounded-12px border border-2 bg-2 p-8px md:rounded-16px md:p-10px'>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSectionDragEnd}>
           <SortableContext
             items={sectionAssistants.map((assistant) => assistant.id)}
@@ -350,7 +350,7 @@ const AssistantListPanel: React.FC<AssistantListPanelProps> = ({
     <div data-testid='assistant-list-shell' className='flex h-full min-h-0 flex-col overflow-hidden bg-transparent'>
       <div
         data-testid='assistant-list-header'
-        className={`sticky top-0 z-10 border-b border-border-2 bg-bg-0 ${isMobile ? 'px-8px py-12px' : 'px-18px py-18px'}`}
+        className={`sticky top-0 z-10 border-b border-2 bg-base ${isMobile ? 'px-8px py-12px' : 'px-18px py-18px'}`}
       >
         <div className='mx-auto w-full max-w-760px'>
           <div className={`flex gap-12px ${isMobile ? 'flex-col' : 'items-start justify-between'}`}>

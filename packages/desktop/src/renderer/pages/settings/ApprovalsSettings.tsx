@@ -98,7 +98,7 @@ const ApprovalsSettings: React.FC = () => {
   }, [detail, kind, refresh, t, title]);
 
   const heading = (
-    <div className='flex items-center border-b border-border-2 px-16px py-12px'>
+    <div className='flex items-center border-b border-2 px-16px py-12px'>
       <div className='text-16px font-600 text-t-primary'>
         {t('common.approvals.title', { defaultValue: '我的审批' })}
       </div>

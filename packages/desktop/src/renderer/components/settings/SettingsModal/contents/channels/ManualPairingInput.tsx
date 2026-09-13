@@ -43,7 +43,7 @@ const ManualPairingInput: React.FC<ManualPairingInputProps> = ({ onApprove, onRe
   };
 
   return (
-    <div className='mt-12px pt-12px border-t border-border-2'>
+    <div className='mt-12px pt-12px border-t border-2'>
       <div className='text-12px text-t-tertiary mb-8px'>
         {t(
           'settings.assistant.manualPairingHint',

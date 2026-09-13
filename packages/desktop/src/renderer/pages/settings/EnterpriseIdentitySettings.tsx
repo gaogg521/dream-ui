@@ -24,7 +24,7 @@ const EnterpriseIdentitySettings: React.FC = () => {
   return (
     <SettingsPageWrapper contentClassName='max-w-960px'>
       <div className='flex h-full flex-col'>
-        <div className='flex items-center border-b border-border-2 px-16px py-12px'>
+        <div className='flex items-center border-b border-2 px-16px py-12px'>
           <div className='text-16px font-600 text-t-primary'>
             {t('common.enterprise.identityTabTitle', { defaultValue: '企业身份' })}
           </div>

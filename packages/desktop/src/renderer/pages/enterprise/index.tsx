@@ -37,7 +37,7 @@ const EnterprisePage: React.FC = () => {
 
   return (
     <div className='flex h-full flex-col'>
-      <div className='flex items-center justify-between border-b border-border-2 px-16px py-12px'>
+      <div className='flex items-center justify-between border-b border-2 px-16px py-12px'>
         <div className='text-16px font-600 text-t-primary'>
           {t('common.enterprise.title', { defaultValue: '企业' })}
         </div>

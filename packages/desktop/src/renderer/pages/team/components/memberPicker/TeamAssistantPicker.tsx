@@ -97,7 +97,7 @@ const TeamAssistantPicker: React.FC<Props> = ({
         className={
           isModalDensity
             ? 'min-h-0 flex-1 overflow-y-auto rounded-8px bg-dialog-fill-0'
-            : 'max-h-300px overflow-y-auto border-b border-border-1 bg-dialog-fill-0 px-8px py-10px'
+            : 'max-h-300px overflow-y-auto border-b border-1 bg-dialog-fill-0 px-8px py-10px'
         }
       >
         {filteredAssistants.length === 0 ? (

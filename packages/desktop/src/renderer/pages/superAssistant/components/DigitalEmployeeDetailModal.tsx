@@ -73,7 +73,7 @@ const DigitalEmployeeDetailModal: React.FC<DetailModalProps> = ({ visible, agent
             <img
               src={resolveEmployeeAvatar(agent)}
               alt=''
-              className='h-64px w-64px rd-14px border border-border-2 object-cover'
+              className='h-64px w-64px rd-14px border border-2 object-cover'
             />
             <div>
               <div className='text-16px font-600 text-t-primary'>{agent.name}</div>
@@ -127,7 +127,7 @@ const DigitalEmployeeDetailModal: React.FC<DetailModalProps> = ({ visible, agent
             ) : (
               <div className='flex flex-col gap-8px'>
                 {runs.map((run) => (
-                  <div key={run.id} className='rounded-6px border border-border-2 p-8px'>
+                  <div key={run.id} className='rounded-6px border border-2 p-8px'>
                     <div className='flex items-center justify-between'>
                       <Tag size='small' color={RUN_STATUS_COLOR[run.status] ?? 'default'}>
                         {t(`common.superAssistant.runStatus.${run.status}`, { defaultValue: run.status })}

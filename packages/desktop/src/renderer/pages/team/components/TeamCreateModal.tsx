@@ -178,7 +178,7 @@ const TeamCreateModal: React.FC<Props> = ({ visible, onClose, onCreated }) => {
   const assistantPicker = (
     <>
       {allAssistants.length === 0 ? (
-        <div className='flex min-h-112px items-center justify-center rounded-8px border border-dashed border-border-2 bg-fill-1 py-14px text-13px text-t-tertiary'>
+        <div className='flex min-h-112px items-center justify-center rounded-8px border border-dashed border-2 bg-fill-1 py-14px text-13px text-t-tertiary'>
           {t('team.create.noSupportedAgents', { defaultValue: 'No supported assistants available' })}
         </div>
       ) : (
@@ -241,7 +241,7 @@ const TeamCreateModal: React.FC<Props> = ({ visible, onClose, onCreated }) => {
       style={{ height: 'min(54vh, 470px)', minHeight: 390 }}
     >
       <section
-        className='flex min-h-0 flex-col border-e border-border-3 px-20px pb-18px pt-12px'
+        className='flex min-h-0 flex-col border-e border-3 px-20px pb-18px pt-12px'
         data-testid='team-create-assistant-pane'
       >
         <div className='mb-12px text-15px font-600 leading-22px text-t-secondary'>
@@ -265,7 +265,7 @@ const TeamCreateModal: React.FC<Props> = ({ visible, onClose, onCreated }) => {
           onLeaderChange={setLeaderSelectionId}
           onRemove={handleRemoveDraft}
         />
-        <div className='mt-14px shrink-0 border-t border-border-2 pt-14px'>{teamFields}</div>
+        <div className='mt-14px shrink-0 border-t border-2 pt-14px'>{teamFields}</div>
       </section>
     </div>
   );

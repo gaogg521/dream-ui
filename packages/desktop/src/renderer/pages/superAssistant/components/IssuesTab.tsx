@@ -468,7 +468,7 @@ const IssuesTab: React.FC<IssuesTabProps> = ({ collaborationContext, employees, 
               })}
             </div>
 
-            <div className='border-t border-border-2 pt-8px'>
+            <div className='border-t border-2 pt-8px'>
               <div className='mb-8px text-13px font-600'>
                 {t('common.superAssistant.comments', { defaultValue: '评论' })} ({comments.length})
               </div>
