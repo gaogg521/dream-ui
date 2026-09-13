@@ -599,6 +599,10 @@
   },
   "scenes": {
     "title": "我的场景",
+    "conversationTitle": "企业场景",
+    "conversationHint": "以下场景的职能与资源包已叠加到当前账号，在所有会话中自动生效。",
+    "conversationCount": "企业场景 · {{count}}",
+    "conversationNone": "企业场景 · 未加入",
     "empty": "尚未加入任何场景。管理员可在控制台把你加入场景，一次获得整包协作资源。",
     "builtinTag": "内置",
     "noResources": "该场景暂未配置授权包",
