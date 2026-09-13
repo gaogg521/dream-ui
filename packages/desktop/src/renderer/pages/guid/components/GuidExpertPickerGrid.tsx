@@ -169,7 +169,7 @@ const GuidExpertPickerGrid: React.FC<GuidExpertPickerGridProps> = ({
         )}
       </div>
       <div
-        className='flex cursor-pointer items-center justify-center gap-4px border-t border-border-2 px-12px py-10px text-12px text-t-secondary hover:text-t-primary'
+        className='flex cursor-pointer items-center justify-center gap-4px border-t border-2 px-12px py-10px text-12px text-t-secondary hover:text-t-primary'
         onClick={onBrowseMore}
       >
         <span>{t('settings.marketplaceBrowseMore', { defaultValue: 'Summon more experts' })}</span>

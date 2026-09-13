@@ -1939,7 +1939,7 @@ const SendBox: React.FC<{
           </div>
         )}
         {contextFooter ? (
-          <div className='mt-6px flex min-w-0 items-center border-t border-border-1 pt-5px'>{contextFooter}</div>
+          <div className='mt-6px flex min-w-0 items-center border-t border-1 pt-5px'>{contextFooter}</div>
         ) : null}
       </div>
     </div>

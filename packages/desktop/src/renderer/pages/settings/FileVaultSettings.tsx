@@ -182,7 +182,7 @@ const FileVaultSettings: React.FC = () => {
         )}
 
         {/* Quota / status card */}
-        <div className='rd-8px border border-border-2 px-14px py-12px'>
+        <div className='rd-8px border border-2 px-14px py-12px'>
           <div className='mb-8px flex items-center justify-between text-13px'>
             <span className='text-t-primary'>
               {vault.quotaBytes == null
@@ -236,7 +236,7 @@ const FileVaultSettings: React.FC = () => {
           />
           <button
             type='button'
-            className='rd-6px border border-border-2 px-12px py-5px text-13px text-t-primary transition-colors hover:bg-fill-3 disabled:cursor-not-allowed disabled:opacity-50'
+            className='rd-6px border border-2 px-12px py-5px text-13px text-t-primary transition-colors hover:bg-fill-3 disabled:cursor-not-allowed disabled:opacity-50'
             disabled={frozen || uploading}
             onClick={() => fileInputRef.current?.click()}
           >
@@ -252,7 +252,7 @@ const FileVaultSettings: React.FC = () => {
             {t('common.fileVault.empty', { defaultValue: '保险箱为空。上传的文件仅自己可见。' })}
           </div>
         ) : (
-          <div className='rd-8px border border-border-2 overflow-hidden'>
+          <div className='rd-8px border border-2 overflow-hidden'>
             <div className='flex bg-fill-2 px-14px py-8px text-12px text-t-tertiary'>
               <span className='flex-1'>{t('common.fileVault.colName', { defaultValue: '文件名' })}</span>
               <span className='w-90px text-right'>{t('common.fileVault.colSize', { defaultValue: '大小' })}</span>
@@ -262,7 +262,7 @@ const FileVaultSettings: React.FC = () => {
             {files.map((object) => (
               <div
                 key={object.id}
-                className='flex items-center border-t border-border-2 px-14px py-9px text-13px'
+                className='flex items-center border-t border-2 px-14px py-9px text-13px'
                 data-vault-file={object.fileName}
               >
                 <span className='flex-1 truncate text-t-primary' title={object.fileName}>
@@ -305,7 +305,7 @@ const FileVaultSettings: React.FC = () => {
   return (
     <SettingsPageWrapper contentClassName='max-w-960px'>
       <div className='flex h-full flex-col'>
-        <div className='flex items-center border-b border-border-2 px-16px py-12px'>
+        <div className='flex items-center border-b border-2 px-16px py-12px'>
           <div className='text-16px font-600 text-t-primary'>
             {t('common.fileVault.title', { defaultValue: '文件保险箱' })}
           </div>

@@ -180,7 +180,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
           onChange={(e) => setSkillQuery(e.target.value)}
           placeholder={t('settings.skillsHub.searchPlaceholder', { defaultValue: 'Search skills...' })}
           data-testid='conversation-skill-search'
-          className='w-full h-32px bg-fill-1 hover:bg-fill-2 border border-border-1 focus:border-primary-5 focus:bg-base outline-none rd-8px px-10px text-13px text-t-primary placeholder:text-t-tertiary transition-all box-border m-0'
+          className='w-full h-32px bg-fill-1 hover:bg-fill-2 border border-1 focus:border-primary-5 focus:bg-base outline-none rd-8px px-10px text-13px text-t-primary placeholder:text-t-tertiary transition-all box-border m-0'
         />
       </div>
       <div className='max-h-360px overflow-y-auto px-6px pb-8px'>

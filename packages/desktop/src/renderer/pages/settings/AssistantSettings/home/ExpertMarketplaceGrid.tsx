@@ -57,7 +57,7 @@ const categoryPillClass = (active: boolean) =>
   `inline-flex cursor-pointer select-none items-center rounded-999px border border-solid px-12px py-6px text-13px leading-none transition-colors ${
     active
       ? 'border-transparent bg-primary-light-1 font-600 text-primary'
-      : 'border-border-2 bg-fill-1 text-t-secondary hover:bg-fill-2 hover:text-t-primary'
+      : 'border-2 bg-fill-1 text-t-secondary hover:bg-fill-2 hover:text-t-primary'
   }`;
 
 /**
@@ -217,7 +217,7 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
           below is scaled down to stay legible at the ~250px this leaves it. */}
       <div className='grid grid-cols-1 gap-12px sm:grid-cols-2 lg:grid-cols-4'>
         {!loading && filteredPersonas.length === 0 ? (
-          <div className='col-span-full rounded-14px border border-dashed border-border-2 bg-fill-1/40 px-20px py-28px text-center text-13px text-t-secondary'>
+          <div className='col-span-full rounded-14px border border-dashed border-2 bg-fill-1/40 px-20px py-28px text-center text-13px text-t-secondary'>
             {t('settings.marketplaceEmptyState')}
           </div>
         ) : null}
@@ -229,7 +229,7 @@ const ExpertMarketplaceGrid: React.FC<ExpertMarketplaceGridProps> = ({ personas,
             <div
               key={persona.id}
               data-testid={`marketplace-card-${persona.id}`}
-              className='group flex flex-col rounded-16px border border-solid border-border-2 bg-base p-14px transition-all duration-180 hover:-translate-y-1px hover:border-primary-2 hover:shadow-[0_8px_24px_rgba(0,0,0,0.09)]'
+              className='group flex flex-col rounded-16px border border-solid border-2 bg-base p-14px transition-all duration-180 hover:-translate-y-1px hover:border-primary-2 hover:shadow-[0_8px_24px_rgba(0,0,0,0.09)]'
             >
               {/* Avatar beside the name, not above it. Stacked, the avatar owned
                   a 40px band the name could not share and the category chip sat

@@ -10,7 +10,7 @@
  *
  * Usage:
  * - CSS: use CSS variables directly: var(--color-bg-0)
- * - UnoCSS: use atomic classes: bg-bg-0, text-text, border-border
+ * - UnoCSS: use atomic classes: bg-base, text-text, border-border
  * - TypeScript: use this file for type safety and constants
  */
 

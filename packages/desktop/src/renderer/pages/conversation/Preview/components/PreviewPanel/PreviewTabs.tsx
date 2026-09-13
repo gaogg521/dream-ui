@@ -149,7 +149,7 @@ const PreviewTabs: React.FC<PreviewTabsProps> = ({
 
   return (
     <div
-      className='relative flex-shrink-0 bg-bg-2'
+      className='relative flex-shrink-0 bg-2'
       style={{ minHeight: '36px', borderBottom: '1px solid var(--border-base)' }}
     >
       <div className='flex items-center h-36px w-full'>
@@ -159,7 +159,7 @@ const PreviewTabs: React.FC<PreviewTabsProps> = ({
             tabs.map((tab) => (
               <div
                 key={tab.id}
-                className={`flex items-center gap-6px px-10px h-full cursor-pointer transition-colors flex-shrink-0 ${tab.id === activeTabId ? 'bg-bg-1 text-t-primary' : 'text-t-secondary hover:bg-bg-3'}`}
+                className={`flex items-center gap-6px px-10px h-full cursor-pointer transition-colors flex-shrink-0 ${tab.id === activeTabId ? 'bg-1 text-t-primary' : 'text-t-secondary hover:bg-3'}`}
                 style={{ maxWidth: `${MAX_TAB_WIDTH_PX}px` }}
                 onClick={() => onSwitchTab(tab.id)}
                 onContextMenu={(e) => onContextMenu(e, tab.id)}
@@ -233,7 +233,7 @@ const PreviewTabs: React.FC<PreviewTabsProps> = ({
                     of box (16px — one step down from the plus's 24px since it lives inside
                     a tab) and trimming the glyph to 12px evens out their visual weight. */}
                 <span
-                  className='flex items-center justify-center w-16px h-16px rd-4px flex-shrink-0 hover:bg-bg-3 transition-colors'
+                  className='flex items-center justify-center w-16px h-16px rd-4px flex-shrink-0 hover:bg-3 transition-colors'
                   onClick={(e) => {
                     e.stopPropagation();
                     onCloseTab(tab.id);
@@ -250,7 +250,7 @@ const PreviewTabs: React.FC<PreviewTabsProps> = ({
           {/* 新建浏览器 tab / New browser tab */}
           {onNewBrowserTab && (
             <div
-              className='flex items-center justify-center w-24px h-24px ms-4px rd-4px cursor-pointer flex-shrink-0 hover:bg-bg-3 transition-colors'
+              className='flex items-center justify-center w-24px h-24px ms-4px rd-4px cursor-pointer flex-shrink-0 hover:bg-3 transition-colors'
               onClick={onNewBrowserTab}
               title={t('preview.browser.newTab')}
             >
@@ -263,7 +263,7 @@ const PreviewTabs: React.FC<PreviewTabsProps> = ({
         {onClosePanel && (
           <div className='flex items-center h-full px-10px flex-shrink-0 rounded-se-[16px]'>
             <div
-              className='flex items-center justify-center w-20px h-20px rd-4px cursor-pointer hover:bg-bg-3 transition-colors'
+              className='flex items-center justify-center w-20px h-20px rd-4px cursor-pointer hover:bg-3 transition-colors'
               onClick={onClosePanel}
               title={t('preview.collapsePanel')}
             >

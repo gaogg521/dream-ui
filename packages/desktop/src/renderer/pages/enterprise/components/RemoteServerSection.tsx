@@ -161,7 +161,7 @@ const RemoteServerSection: React.FC = () => {
   // `enabled` only changes what status this card reports and whether the
   // "已连接" banner shows; it must never hide the login affordance itself.
   return (
-    <div className='border border-border-2 bg-bg-2 rd-8px p-16px mb-16px'>
+    <div className='border border-2 bg-2 rd-8px p-16px mb-16px'>
       {enabled && (
         <Alert
           type='success'

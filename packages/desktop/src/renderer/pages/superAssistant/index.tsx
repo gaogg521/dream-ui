@@ -121,7 +121,7 @@ const SuperAssistantPage: React.FC = () => {
 
   return (
     <div className='flex h-full flex-col'>
-      <div className='flex items-center justify-between border-b border-border-2 px-16px py-12px'>
+      <div className='flex items-center justify-between border-b border-2 px-16px py-12px'>
         <div className='text-16px font-600'>{t('common.superAssistant.title', { defaultValue: '超级助手' })}</div>
         <Button type='primary' onClick={() => setCreateModalVisible(true)}>
           {t('common.superAssistant.createAgent', { defaultValue: '创建员工' })}

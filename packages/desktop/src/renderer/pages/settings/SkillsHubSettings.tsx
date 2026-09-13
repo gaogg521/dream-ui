@@ -42,7 +42,7 @@ const skillSourcePillClass = (active: boolean) =>
   `inline-flex cursor-pointer select-none items-center rounded-999px border border-solid px-12px py-6px text-13px leading-none transition-colors ${
     active
       ? 'border-transparent bg-primary-light-1 font-600 text-primary'
-      : 'border-border-2 bg-fill-1 text-t-secondary hover:bg-fill-2 hover:text-t-primary'
+      : 'border-2 bg-fill-1 text-t-secondary hover:bg-fill-2 hover:text-t-primary'
   }`;
 
 const isAutoInjectedBuiltinSkill = (skill: SkillInfo) => skill.source === 'builtin' && skill.is_auto_inject;
@@ -604,7 +604,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
             </div>
             <button
               data-testid='btn-back-to-skills'
-              className='flex items-center justify-center px-14px py-7px bg-base border border-border-1 hover:border-border-2 hover:bg-fill-1 text-t-primary rd-8px shadow-sm transition-all focus:outline-none shrink-0 cursor-pointer whitespace-nowrap text-13px font-medium'
+              className='flex items-center justify-center px-14px py-7px bg-base border border-1 hover:border-2 hover:bg-fill-1 text-t-primary rd-8px shadow-sm transition-all focus:outline-none shrink-0 cursor-pointer whitespace-nowrap text-13px font-medium'
               onClick={showSkillList}
             >
               {t('settings.skillsHub.backToSkills', { defaultValue: 'Back to skills' })}
@@ -614,7 +614,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
 
         <div className='px-[16px] md:px-[32px] py-16px bg-base rd-16px md:rd-24px shadow-sm border border-b-base'>
           {importHistoryGroups.length === 0 ? (
-            <div className='border border-dashed border-border-1 bg-fill-1 rd-10px px-12px py-14px text-12px text-t-tertiary'>
+            <div className='border border-dashed border-1 bg-fill-1 rd-10px px-12px py-14px text-12px text-t-tertiary'>
               {t('settings.skillsHub.importHistoryEmpty', { defaultValue: 'No import records yet.' })}
             </div>
           ) : (
@@ -634,7 +634,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                     className={`border rd-12px px-12px py-10px ${
                       failedRecords.length > 0
                         ? 'border-[rgba(var(--warning-6),0.28)] bg-[rgba(var(--warning-6),0.03)]'
-                        : 'border-border-1 bg-fill-1'
+                        : 'border-1 bg-fill-1'
                     }`}
                   >
                     <div className='flex flex-col sm:flex-row sm:items-start justify-between gap-8px'>
@@ -757,7 +757,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                 <input
                   data-testid='input-search-my-skills'
                   type='text'
-                  className='w-full h-36px bg-fill-1 hover:bg-fill-2 border border-border-1 focus:border-primary-5 focus:bg-base outline-none rd-8px py-0 pl-36px pr-12px text-13px leading-36px text-t-primary placeholder:text-t-tertiary transition-all shadow-sm box-border m-0'
+                  className='w-full h-36px bg-fill-1 hover:bg-fill-2 border border-1 focus:border-primary-5 focus:bg-base outline-none rd-8px py-0 pl-36px pr-12px text-13px leading-36px text-t-primary placeholder:text-t-tertiary transition-all shadow-sm box-border m-0'
                   placeholder={t('settings.skillsHub.searchPlaceholder', { defaultValue: 'Search skills...' })}
                   value={search_query}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -777,7 +777,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
             </div>
           </div>
 
-          <div className='flex items-center gap-8px min-h-36px mb-12px px-10px py-8px border border-border-1 bg-fill-1 rd-10px text-12px text-t-tertiary leading-relaxed relative z-10'>
+          <div className='flex items-center gap-8px min-h-36px mb-12px px-10px py-8px border border-1 bg-fill-1 rd-10px text-12px text-t-tertiary leading-relaxed relative z-10'>
             <span className='font-medium text-t-secondary shrink-0'>
               {t('settings.skillsHub.importHelpCompactLabel', { defaultValue: 'Import rules' })}:
             </span>
@@ -912,7 +912,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                             ? 'border-primary-5 bg-primary-1'
                             : selectedSkillNames.has(skill.name) && batchMode
                               ? 'border-transparent bg-[rgba(var(--primary-6),0.06)]'
-                              : 'border-border-2 bg-base hover:border-primary-4 hover:bg-fill-1 hover:shadow-sm'
+                              : 'border-2 bg-base hover:border-primary-4 hover:bg-fill-1 hover:shadow-sm'
                         }`}
                       >
                         {batchMode && isCustom && (
@@ -987,7 +987,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                               <span
                                 key={tag}
                                 data-testid={`skill-tag-${normalizeTestId(tag)}`}
-                                className='bg-[rgba(var(--primary-6),0.06)] text-t-secondary border border-border-1 text-11px px-6px py-1px rd-4px font-medium'
+                                className='bg-[rgba(var(--primary-6),0.06)] text-t-secondary border border-1 text-11px px-6px py-1px rd-4px font-medium'
                               >
                                 {tag}
                               </span>
@@ -1106,7 +1106,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                   ref={(el) => {
                     skillRefs.current[skill.name] = el;
                   }}
-                  className={`flex flex-col sm:flex-row gap-16px p-16px bg-base border hover:border-border-1 hover:bg-fill-1 rd-12px transition-all duration-200 ${highlightedSkill === skill.name ? 'border-primary-5 bg-primary-1' : 'border-transparent'}`}
+                  className={`flex flex-col sm:flex-row gap-16px p-16px bg-base border hover:border-1 hover:bg-fill-1 rd-12px transition-all duration-200 ${highlightedSkill === skill.name ? 'border-primary-5 bg-primary-1' : 'border-transparent'}`}
                 >
                   <div className='shrink-0 flex items-start sm:mt-2px'>
                     <div className='w-40px h-40px rd-10px bg-[rgba(var(--primary-6),0.08)] flex items-center justify-center shadow-sm'>
@@ -1153,7 +1153,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                   ref={(el) => {
                     skillRefs.current[skill.name] = el;
                   }}
-                  className={`flex flex-col sm:flex-row gap-16px p-16px bg-base border hover:border-border-1 hover:bg-fill-1 rd-12px transition-all duration-200 ${highlightedSkill === skill.name ? 'border-primary-5 bg-primary-1' : 'border-transparent'}`}
+                  className={`flex flex-col sm:flex-row gap-16px p-16px bg-base border hover:border-1 hover:bg-fill-1 rd-12px transition-all duration-200 ${highlightedSkill === skill.name ? 'border-primary-5 bg-primary-1' : 'border-transparent'}`}
                 >
                   <div className='shrink-0 flex items-start sm:mt-2px'>
                     <div className='w-40px h-40px rd-10px bg-[rgba(var(--success-6),0.08)] flex items-center justify-center shadow-sm'>

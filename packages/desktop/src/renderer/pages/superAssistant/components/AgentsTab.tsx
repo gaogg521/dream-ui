@@ -93,7 +93,7 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
                 type='button'
                 disabled={creatingFromTemplate}
                 onClick={() => onCreateFromTemplate?.(tpl.id)}
-                className='flex flex-col items-start gap-4px rounded-6px border border-border-2 bg-bg-2 p-12px text-left transition hover:border-primary'
+                className='flex flex-col items-start gap-4px rounded-6px border border-2 bg-2 p-12px text-left transition hover:border-primary'
               >
                 <span className='text-24px'>{tpl.avatar}</span>
                 <span className='text-14px font-500'>{getTemplateName(tpl, language)}</span>
@@ -135,7 +135,7 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
                       <img
                         src={resolveEmployeeAvatar(agent)}
                         alt=''
-                        className='h-42px w-42px shrink-0 rd-10px border border-border-2 object-cover'
+                        className='h-42px w-42px shrink-0 rd-10px border border-2 object-cover'
                       />
                       <div className='flex min-w-0 flex-wrap items-center gap-6px'>
                         <span className='text-14px font-500'>{agent.name}</span>
@@ -178,7 +178,7 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
                     <div className='mt-4px text-12px text-t-tertiary line-clamp-2'>{agent.description}</div>
                   ) : null}
                   {latestRun?.summary ? (
-                    <div className='mt-8px rounded-4px bg-bg-2 p-8px text-12px text-t-secondary line-clamp-3'>
+                    <div className='mt-8px rounded-4px bg-2 p-8px text-12px text-t-secondary line-clamp-3'>
                       {latestRun.summary}
                     </div>
                   ) : null}

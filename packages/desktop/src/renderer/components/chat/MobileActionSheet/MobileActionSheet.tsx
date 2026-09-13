@@ -256,7 +256,7 @@ const SubmenuSkillGrid: React.FC<{ sub: MobileActionSheetSubMenu }> = ({ sub }) 
           onChange={(e) => setQuery(e.target.value)}
           placeholder={typeof sub.searchPlaceholder === 'string' ? sub.searchPlaceholder : ''}
           data-testid='mobile-sheet-sub-search'
-          className='w-full h-32px bg-fill-1 hover:bg-fill-2 border border-border-1 focus:border-primary-5 focus:bg-base outline-none rd-8px px-10px text-13px text-t-primary placeholder:text-t-tertiary transition-all box-border m-0'
+          className='w-full h-32px bg-fill-1 hover:bg-fill-2 border border-1 focus:border-primary-5 focus:bg-base outline-none rd-8px px-10px text-13px text-t-primary placeholder:text-t-tertiary transition-all box-border m-0'
         />
       </div>
       <div
