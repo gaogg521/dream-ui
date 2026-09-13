@@ -23,6 +23,7 @@ export type MyScene = {
   id: string;
   name: string;
   description?: string | null;
+  avatarRef?: string | null;
   jobFunctions: string[];
   builtIn: boolean;
   resources: MySceneResourceSummary[];

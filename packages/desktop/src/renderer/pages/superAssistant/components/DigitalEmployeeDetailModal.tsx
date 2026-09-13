@@ -15,6 +15,7 @@ import {
   resolveEmployeeExpertName,
   resolveEmployeeRunErrorMessage,
 } from '../utils/employeeDisplay';
+import { resolveEmployeeAvatar } from '../utils/employeeAvatar';
 
 type DetailModalProps = {
   visible: boolean;
@@ -68,6 +69,19 @@ const DigitalEmployeeDetailModal: React.FC<DetailModalProps> = ({ visible, agent
     >
       {agent ? (
         <div className='flex flex-col gap-16px'>
+          <div className='flex items-center gap-12px rd-12px bg-fill-1 p-12px'>
+            <img
+              src={resolveEmployeeAvatar(agent)}
+              alt=''
+              className='h-64px w-64px rd-14px border border-border-2 object-cover'
+            />
+            <div>
+              <div className='text-16px font-600 text-t-primary'>{agent.name}</div>
+              <div className='mt-4px text-12px text-t-tertiary'>
+                {agent.description ?? t('common.superAssistant.employeeIdentityHint', { defaultValue: '企业数字员工' })}
+              </div>
+            </div>
+          </div>
           <Descriptions
             column={2}
             data={[

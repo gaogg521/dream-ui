@@ -8,6 +8,19 @@ import { Down, MagicWand } from '@icon-park/react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
+import officeAvatar from '@/renderer/assets/scenes/office.png';
+import itOpsAvatar from '@/renderer/assets/scenes/it-ops.png';
+import securityAvatar from '@/renderer/assets/scenes/cybersecurity.png';
+import mediaAvatar from '@/renderer/assets/scenes/media-ops.png';
+import marketingAvatar from '@/renderer/assets/scenes/marketing.png';
+
+const BUILTIN_AVATARS: Record<string, string> = {
+  办公: officeAvatar,
+  IT运维: itOpsAvatar,
+  网络安全: securityAvatar,
+  新媒体运营: mediaAvatar,
+  市场营销: marketingAvatar,
+};
 
 const ScenePanel: React.FC<{ scenes: MyScene[] }> = ({ scenes }) => {
   const { t } = useTranslation();
@@ -40,37 +53,50 @@ const ScenePanel: React.FC<{ scenes: MyScene[] }> = ({ scenes }) => {
         ) : (
           <div className='flex flex-col gap-6px'>
             {scenes.map((scene) => (
-              <div key={scene.id} className='rd-8px px-10px py-9px hover:bg-fill-2' data-scene-name={scene.name}>
-                <div className='flex min-w-0 items-center gap-6px'>
-                  <span className='truncate text-13px font-600 text-t-primary'>{scene.name}</span>
-                  {scene.builtIn && (
-                    <Tag size='small' color='arcoblue'>
-                      {t('common.scenes.builtinTag', { defaultValue: '内置' })}
-                    </Tag>
-                  )}
-                </div>
-                {scene.description && <div className='mt-3px text-11px text-t-secondary'>{scene.description}</div>}
-                {scene.jobFunctions.length > 0 && (
-                  <div className='mt-6px flex flex-wrap gap-4px'>
-                    {scene.jobFunctions.map((job) => (
-                      <Tag key={job} size='small'>
-                        {job}
-                      </Tag>
-                    ))}
+              <div
+                key={scene.id}
+                className='rd-10px border border-transparent px-10px py-9px hover:border-border-2 hover:bg-fill-2'
+                data-scene-name={scene.name}
+              >
+                <div className='flex items-start gap-9px'>
+                  <img
+                    src={scene.avatarRef || BUILTIN_AVATARS[scene.name] || officeAvatar}
+                    alt=''
+                    className='h-40px w-40px shrink-0 rd-10px border border-border-2 object-cover'
+                  />
+                  <div className='min-w-0 flex-1'>
+                    <div className='flex min-w-0 items-center gap-6px'>
+                      <span className='truncate text-13px font-600 text-t-primary'>{scene.name}</span>
+                      {scene.builtIn && (
+                        <Tag size='small' color='arcoblue'>
+                          {t('common.scenes.builtinTag', { defaultValue: '内置' })}
+                        </Tag>
+                      )}
+                    </div>
+                    {scene.description && <div className='mt-3px text-11px text-t-secondary'>{scene.description}</div>}
+                    {scene.jobFunctions.length > 0 && (
+                      <div className='mt-6px flex flex-wrap gap-4px'>
+                        {scene.jobFunctions.map((job) => (
+                          <Tag key={job} size='small'>
+                            {job}
+                          </Tag>
+                        ))}
+                      </div>
+                    )}
+                    <div className='mt-6px flex flex-wrap gap-4px'>
+                      {scene.resources.length > 0 ? (
+                        scene.resources.map((summary) => (
+                          <Tag key={summary.resourceType} size='small' color='green'>
+                            {resourceLabel(summary)}
+                          </Tag>
+                        ))
+                      ) : (
+                        <span className='text-11px text-t-tertiary'>
+                          {t('common.scenes.noResources', { defaultValue: '该场景暂未配置授权包' })}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )}
-                <div className='mt-6px flex flex-wrap gap-4px'>
-                  {scene.resources.length > 0 ? (
-                    scene.resources.map((summary) => (
-                      <Tag key={summary.resourceType} size='small' color='green'>
-                        {resourceLabel(summary)}
-                      </Tag>
-                    ))
-                  ) : (
-                    <span className='text-11px text-t-tertiary'>
-                      {t('common.scenes.noResources', { defaultValue: '该场景暂未配置授权包' })}
-                    </span>
-                  )}
                 </div>
               </div>
             ))}
