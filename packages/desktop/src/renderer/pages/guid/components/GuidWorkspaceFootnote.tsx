@@ -6,6 +6,7 @@
 
 import { ipcBridge } from '@/common';
 import { addRecentWorkspace, getRecentWorkspaces } from '@/renderer/components/workspace';
+import EnterpriseSceneContext from '@/renderer/components/enterprise/EnterpriseSceneContext';
 import { DreamInlineSearchInput } from '@/renderer/components/base';
 import { Tooltip } from '@arco-design/web-react';
 import { Close, Down } from '@icon-park/react';
@@ -275,6 +276,7 @@ const GuidWorkspaceFootnote: React.FC<GuidWorkspaceFootnoteProps> = ({
           {dropdownEl}
         </>
       )}
+      <EnterpriseSceneContext />
     </div>
   );
 };

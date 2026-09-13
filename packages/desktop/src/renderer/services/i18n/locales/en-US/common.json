@@ -599,6 +599,10 @@
   },
   "scenes": {
     "title": "My Scenes",
+    "conversationTitle": "Enterprise scenes",
+    "conversationHint": "Roles and resource packages from these scenes are combined for your account and apply automatically in every conversation.",
+    "conversationCount": "Enterprise scenes · {{count}}",
+    "conversationNone": "Enterprise scenes · None",
     "empty": "Not in any scene yet. An admin can add you to a scene to grant you its whole resource package at once.",
     "builtinTag": "Built-in",
     "noResources": "No grant package configured for this scene",
