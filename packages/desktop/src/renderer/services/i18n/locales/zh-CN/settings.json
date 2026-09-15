@@ -3425,5 +3425,35 @@
       "desc": "精通知乎推荐机制和知识营销策略，通过高质量回答建立权威",
       "nickname": "答有道"
     }
+  },
+  "backup": {
+    "title": "备份与恢复",
+    "description": "把数据保存成文件，换机器时带走；也可以把已有备份合并进当前安装。",
+    "listSeparator": "、",
+    "scope": {
+      "conversations": "会话与消息",
+      "attachments": "附件与工作区文件",
+      "providers": "模型配置",
+      "skills": "技能",
+      "appSettings": "助理、团队与偏好设置"
+    },
+    "scopeHint": {
+      "conversations": "聊天记录",
+      "attachments": "可能很大",
+      "providers": "模型服务商、桥接与 MCP 服务器",
+      "skills": "已安装和自建的技能",
+      "appSettings": "含定时任务"
+    },
+    "credentialWarning": "包含模型配置的备份里有可直接使用的 API 密钥，请妥善保管该文件。",
+    "exportButton": "创建备份",
+    "importButton": "从备份恢复",
+    "exportSuccess": "备份已创建（{{size}}）",
+    "exportFailed": "创建备份失败",
+    "previewFailed": "无法读取该备份文件",
+    "restoreConfirmTitle": "要从这个备份恢复吗？",
+    "restoreConfirmContent": "将把 {{items}} 合并进当前数据。备份里没有的内容保持不变。",
+    "restoreExportedAt": "创建于 {{date}}，版本 {{version}}",
+    "restoreSuccess": "已恢复 {{rows}} 条记录和 {{files}} 个文件",
+    "restoreFailed": "从该备份恢复失败"
   }
 }

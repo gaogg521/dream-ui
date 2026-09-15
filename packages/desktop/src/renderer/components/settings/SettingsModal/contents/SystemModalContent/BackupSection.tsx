@@ -1,0 +1,213 @@
+/**
+ * @license
+ * Copyright 2026 1ONE
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { httpRequest } from '@/common/adapter/httpBridge';
+import { dialog, isNativeDialogAvailable } from '@/common/adapter/ipcBridge';
+import { Alert, Button, Checkbox, Message, Modal } from '@arco-design/web-react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+/**
+ * 备份与恢复 / Backup and restore.
+ *
+ * 换新机器以前只能从零开始：唯一的导出是单个会话的文字存档，会话、模型配置、技能
+ * 都带不走。这一节是那个缺口的出入口。
+ *
+ * Moving to a new machine used to mean starting from zero — the only export was a
+ * per-conversation transcript, and nothing carried conversations, providers or
+ * skills across. This section is that missing door.
+ *
+ * 只在桌面端显示：备份写的是**后端所在机器**的路径，WebUI 模式下后端可能在另一台
+ * 机器上，"保存到我的电脑"这个语义根本不成立。
+ *
+ * Desktop only: a backup names a path on the machine running the backend, and in
+ * WebUI that is a server the user cannot browse, so "save to my computer" is not
+ * a thing that can be honoured there.
+ */
+
+type BackupScope = {
+  conversations: boolean;
+  attachments: boolean;
+  providers: boolean;
+  skills: boolean;
+  appSettings: boolean;
+};
+
+type BackupManifest = {
+  formatVersion: number;
+  exportedAt: number;
+  appVersion: string;
+  scope: BackupScope;
+  totalBytes: number;
+  containsCredentials: boolean;
+};
+
+type CreateBackupResponse = {
+  path: string;
+  archiveBytes: number;
+  manifest: BackupManifest;
+};
+
+type RestoreBackupResponse = {
+  rowsByTable: Record<string, number>;
+  filesRestored: number;
+};
+
+const SCOPE_KEYS = ['conversations', 'attachments', 'providers', 'skills', 'appSettings'] as const;
+
+/** Everything selected — the "move me to a new machine" default. */
+const DEFAULT_SCOPE: BackupScope = {
+  conversations: true,
+  attachments: true,
+  providers: true,
+  skills: true,
+  appSettings: true,
+};
+
+const formatBytes = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(1)} ${units[unit]}`;
+};
+
+const defaultFileName = (): string => {
+  const now = new Date();
+  const stamp = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('');
+  return `one-work-backup-${stamp}.zip`;
+};
+
+const BackupSection: React.FC = () => {
+  const { t } = useTranslation();
+  const [scope, setScope] = useState<BackupScope>(DEFAULT_SCOPE);
+  const [exporting, setExporting] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+
+  const nothingSelected = useMemo(() => SCOPE_KEYS.every((key) => !scope[key]), [scope]);
+
+  const toggle = useCallback((key: keyof BackupScope, checked: boolean) => {
+    setScope((previous) => ({ ...previous, [key]: checked }));
+  }, []);
+
+  const handleExport = useCallback(async () => {
+    const destination = await dialog.showSave.invoke({
+      defaultPath: defaultFileName(),
+      filters: [{ name: 'Zip', extensions: ['zip'] }],
+    });
+    if (!destination) return;
+
+    setExporting(true);
+    try {
+      const result = await httpRequest<CreateBackupResponse>('POST', '/api/system/backup', {
+        destination,
+        scope,
+      });
+      Message.success(
+        t('settings.backup.exportSuccess', {
+          size: formatBytes(result.archiveBytes),
+        })
+      );
+    } catch (error) {
+      Message.error(error instanceof Error ? error.message : t('settings.backup.exportFailed'));
+    } finally {
+      setExporting(false);
+    }
+  }, [scope, t]);
+
+  const handleImport = useCallback(async () => {
+    const picked = await dialog.showOpen.invoke({
+      properties: ['openFile'],
+      filters: [{ name: 'Zip', extensions: ['zip'] }],
+    });
+    const source = picked?.[0];
+    if (!source) return;
+
+    let manifest: BackupManifest;
+    try {
+      manifest = await httpRequest<BackupManifest>('POST', '/api/system/backup/preview', { source });
+    } catch (error) {
+      Message.error(error instanceof Error ? error.message : t('settings.backup.previewFailed'));
+      return;
+    }
+
+    // 说清楚这个包里有什么、会往哪儿合并，再让用户点确认 —— 恢复是合并不是覆盖，
+    // 没勾的类别原样不动，这一点必须让用户看到，否则会以为要丢数据。
+    // Say what the archive holds and how it will be applied before confirming:
+    // a restore merges, and categories it does not carry are left alone.
+    const carried = SCOPE_KEYS.filter((key) => manifest.scope[key]).map((key) => t(`settings.backup.scope.${key}`));
+    Modal.confirm({
+      title: t('settings.backup.restoreConfirmTitle'),
+      content: (
+        <div className='flex flex-col gap-8px'>
+          <div>
+            {t('settings.backup.restoreConfirmContent', { items: carried.join(t('settings.backup.listSeparator')) })}
+          </div>
+          <div className='text-12px text-t-secondary'>
+            {t('settings.backup.restoreExportedAt', {
+              date: new Date(manifest.exportedAt).toLocaleString(),
+              version: manifest.appVersion,
+            })}
+          </div>
+        </div>
+      ),
+      onOk: async () => {
+        setRestoring(true);
+        try {
+          const result = await httpRequest<RestoreBackupResponse>('POST', '/api/system/backup/restore', {
+            source,
+            scope: manifest.scope,
+          });
+          const rows = Object.values(result.rowsByTable).reduce((sum, count) => sum + count, 0);
+          Message.success(t('settings.backup.restoreSuccess', { rows, files: result.filesRestored }));
+        } catch (error) {
+          Message.error(error instanceof Error ? error.message : t('settings.backup.restoreFailed'));
+        } finally {
+          setRestoring(false);
+        }
+      },
+    });
+  }, [t]);
+
+  if (!isNativeDialogAvailable()) return null;
+
+  return (
+    <div className='px-[12px] md:px-[32px] py-16px bg-2 rd-16px'>
+      <div className='text-14px font-medium text-t-primary mb-4px'>{t('settings.backup.title')}</div>
+      <div className='text-12px text-t-secondary mb-12px'>{t('settings.backup.description')}</div>
+
+      <div className='flex flex-col gap-8px mb-12px'>
+        {SCOPE_KEYS.map((key) => (
+          <Checkbox key={key} checked={scope[key]} onChange={(checked) => toggle(key, checked)}>
+            <span className='text-13px text-t-primary'>{t(`settings.backup.scope.${key}`)}</span>
+            <span className='text-12px text-t-secondary ml-8px'>{t(`settings.backup.scopeHint.${key}`)}</span>
+          </Checkbox>
+        ))}
+      </div>
+
+      {scope.providers && <Alert type='warning' content={t('settings.backup.credentialWarning')} className='mb-12px' />}
+
+      <div className='flex items-center gap-8px'>
+        <Button type='primary' size='small' loading={exporting} disabled={nothingSelected} onClick={handleExport}>
+          {t('settings.backup.exportButton')}
+        </Button>
+        <Button size='small' loading={restoring} onClick={handleImport}>
+          {t('settings.backup.importButton')}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default BackupSection;

@@ -1554,5 +1554,35 @@
     "sales": "Ventas y negocio",
     "industryAdvisory": "Consultoría sectorial",
     "operationsHr": "Operaciones y RR. HH."
+  },
+  "backup": {
+    "title": "Copia de seguridad y restauración",
+    "description": "Guarda tus datos en un archivo para llevarlos a otro equipo, o combina una copia de seguridad con esta instalación.",
+    "listSeparator": ", ",
+    "scope": {
+      "conversations": "Conversaciones y mensajes",
+      "attachments": "Adjuntos y archivos del espacio de trabajo",
+      "providers": "Configuración de modelos",
+      "skills": "Habilidades",
+      "appSettings": "Asistentes, equipos y preferencias"
+    },
+    "scopeHint": {
+      "conversations": "Historial de chat",
+      "attachments": "Puede ocupar mucho",
+      "providers": "Proveedores, puentes y servidores MCP",
+      "skills": "Habilidades instaladas y propias",
+      "appSettings": "Incluye tareas programadas"
+    },
+    "credentialWarning": "Una copia que incluya la configuración de modelos contiene claves de API utilizables. Guarda el archivo en un lugar seguro.",
+    "exportButton": "Crear copia de seguridad",
+    "importButton": "Restaurar desde copia",
+    "exportSuccess": "Copia de seguridad creada ({{size}})",
+    "exportFailed": "No se pudo crear la copia de seguridad",
+    "previewFailed": "No se pudo leer ese archivo de copia de seguridad",
+    "restoreConfirmTitle": "¿Restaurar desde esta copia de seguridad?",
+    "restoreConfirmContent": "Se combinarán {{items}} con tus datos actuales. Lo que no esté en la copia permanecerá sin cambios.",
+    "restoreExportedAt": "Creada el {{date}} con la versión {{version}}",
+    "restoreSuccess": "Se restauraron {{rows}} registros y {{files}} archivos",
+    "restoreFailed": "No se pudo restaurar desde esa copia de seguridad"
   }
 }

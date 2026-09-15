@@ -3372,5 +3372,35 @@
       "desc": "精通知乎推薦機制和知識營銷策略，透過高質量回答建立權威",
       "nickname": "答有道"
     }
+  },
+  "backup": {
+    "title": "備份與還原",
+    "description": "把資料儲存成檔案，換機器時帶走；也可以把既有備份合併進目前的安裝。",
+    "listSeparator": "、",
+    "scope": {
+      "conversations": "對話與訊息",
+      "attachments": "附件與工作區檔案",
+      "providers": "模型設定",
+      "skills": "技能",
+      "appSettings": "助理、團隊與偏好設定"
+    },
+    "scopeHint": {
+      "conversations": "聊天紀錄",
+      "attachments": "可能很大",
+      "providers": "模型服務商、橋接與 MCP 伺服器",
+      "skills": "已安裝與自建的技能",
+      "appSettings": "含排程工作"
+    },
+    "credentialWarning": "包含模型設定的備份內有可直接使用的 API 金鑰，請妥善保管該檔案。",
+    "exportButton": "建立備份",
+    "importButton": "從備份還原",
+    "exportSuccess": "備份已建立（{{size}}）",
+    "exportFailed": "建立備份失敗",
+    "previewFailed": "無法讀取該備份檔案",
+    "restoreConfirmTitle": "要從這個備份還原嗎？",
+    "restoreConfirmContent": "將把 {{items}} 合併進目前的資料。備份中沒有的內容保持不變。",
+    "restoreExportedAt": "建立於 {{date}}，版本 {{version}}",
+    "restoreSuccess": "已還原 {{rows}} 筆記錄與 {{files}} 個檔案",
+    "restoreFailed": "從該備份還原失敗"
   }
 }

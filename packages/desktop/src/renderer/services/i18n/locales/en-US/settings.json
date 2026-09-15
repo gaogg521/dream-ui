@@ -3204,5 +3204,35 @@
       "name": "Zhihu Strategist",
       "desc": "Zhihu's recommendation mechanics and knowledge marketing, building authority one good answer at a time."
     }
+  },
+  "backup": {
+    "title": "Backup and restore",
+    "description": "Save your data to a file so you can carry it to another machine, or merge a backup into this install.",
+    "listSeparator": ", ",
+    "scope": {
+      "conversations": "Conversations and messages",
+      "attachments": "Attachments and workspace files",
+      "providers": "Model configuration",
+      "skills": "Skills",
+      "appSettings": "Assistants, teams and preferences"
+    },
+    "scopeHint": {
+      "conversations": "Chat history",
+      "attachments": "Can be large",
+      "providers": "Providers, bridges and MCP servers",
+      "skills": "Installed and authored skills",
+      "appSettings": "Scheduled jobs included"
+    },
+    "credentialWarning": "A backup that includes model configuration contains usable API keys. Store the file somewhere you trust.",
+    "exportButton": "Create backup",
+    "importButton": "Restore from backup",
+    "exportSuccess": "Backup created ({{size}})",
+    "exportFailed": "Could not create the backup",
+    "previewFailed": "Could not read that backup file",
+    "restoreConfirmTitle": "Restore from this backup?",
+    "restoreConfirmContent": "This will merge {{items}} into your current data. Anything not in the backup is left untouched.",
+    "restoreExportedAt": "Created {{date}} by version {{version}}",
+    "restoreSuccess": "Restored {{rows}} records and {{files}} files",
+    "restoreFailed": "Could not restore from that backup"
   }
 }

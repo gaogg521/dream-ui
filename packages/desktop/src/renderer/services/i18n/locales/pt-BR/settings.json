@@ -1557,5 +1557,35 @@
     "sales": "Vendas e negócios",
     "industryAdvisory": "Consultoria setorial",
     "operationsHr": "Operações e RH"
+  },
+  "backup": {
+    "title": "Backup e restauração",
+    "description": "Salve seus dados em um arquivo para levá-los a outra máquina, ou mescle um backup nesta instalação.",
+    "listSeparator": ", ",
+    "scope": {
+      "conversations": "Conversas e mensagens",
+      "attachments": "Anexos e arquivos do espaço de trabalho",
+      "providers": "Configuração de modelos",
+      "skills": "Habilidades",
+      "appSettings": "Assistentes, equipes e preferências"
+    },
+    "scopeHint": {
+      "conversations": "Histórico de conversas",
+      "attachments": "Pode ser grande",
+      "providers": "Provedores, pontes e servidores MCP",
+      "skills": "Habilidades instaladas e próprias",
+      "appSettings": "Inclui tarefas agendadas"
+    },
+    "credentialWarning": "Um backup que inclui a configuração de modelos contém chaves de API utilizáveis. Guarde o arquivo em local seguro.",
+    "exportButton": "Criar backup",
+    "importButton": "Restaurar do backup",
+    "exportSuccess": "Backup criado ({{size}})",
+    "exportFailed": "Não foi possível criar o backup",
+    "previewFailed": "Não foi possível ler esse arquivo de backup",
+    "restoreConfirmTitle": "Restaurar a partir deste backup?",
+    "restoreConfirmContent": "Isso vai mesclar {{items}} com seus dados atuais. O que não estiver no backup permanece intacto.",
+    "restoreExportedAt": "Criado em {{date}} pela versão {{version}}",
+    "restoreSuccess": "{{rows}} registros e {{files}} arquivos restaurados",
+    "restoreFailed": "Não foi possível restaurar a partir desse backup"
   }
 }

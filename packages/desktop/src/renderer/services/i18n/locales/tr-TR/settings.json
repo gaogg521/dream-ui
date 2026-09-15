@@ -1554,5 +1554,35 @@
     "sales": "Satış ve İş",
     "industryAdvisory": "Sektör Danışmanlığı",
     "operationsHr": "Operasyon ve İK"
+  },
+  "backup": {
+    "title": "Yedekleme ve geri yükleme",
+    "description": "Verilerinizi bir dosyaya kaydedip başka bir makineye taşıyın veya mevcut bir yedeği bu kuruluma birleştirin.",
+    "listSeparator": ", ",
+    "scope": {
+      "conversations": "Sohbetler ve mesajlar",
+      "attachments": "Ekler ve çalışma alanı dosyaları",
+      "providers": "Model yapılandırması",
+      "skills": "Beceriler",
+      "appSettings": "Asistanlar, ekipler ve tercihler"
+    },
+    "scopeHint": {
+      "conversations": "Sohbet geçmişi",
+      "attachments": "Büyük olabilir",
+      "providers": "Sağlayıcılar, köprüler ve MCP sunucuları",
+      "skills": "Yüklenen ve kendi oluşturduğunuz beceriler",
+      "appSettings": "Zamanlanmış görevler dahil"
+    },
+    "credentialWarning": "Model yapılandırması içeren bir yedek, kullanılabilir API anahtarları içerir. Dosyayı güvendiğiniz bir yerde saklayın.",
+    "exportButton": "Yedek oluştur",
+    "importButton": "Yedekten geri yükle",
+    "exportSuccess": "Yedek oluşturuldu ({{size}})",
+    "exportFailed": "Yedek oluşturulamadı",
+    "previewFailed": "Bu yedek dosyası okunamadı",
+    "restoreConfirmTitle": "Bu yedekten geri yüklensin mi?",
+    "restoreConfirmContent": "Bu işlem {{items}} öğelerini mevcut verilerinizle birleştirir. Yedekte olmayanlar değişmeden kalır.",
+    "restoreExportedAt": "{{date}} tarihinde {{version}} sürümüyle oluşturuldu",
+    "restoreSuccess": "{{rows}} kayıt ve {{files}} dosya geri yüklendi",
+    "restoreFailed": "Bu yedekten geri yüklenemedi"
   }
 }
