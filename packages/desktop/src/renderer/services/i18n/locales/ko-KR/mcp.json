@@ -82,6 +82,11 @@
     "saved": "저장됨",
     "saveFailed": "저장하지 못했습니다",
     "readyHint": "{{count}}개 설정됨 — 웹 검색이 켜졌습니다",
-    "emptyHint": "키를 입력하면 자동으로 켜집니다"
+    "emptyHint": "키를 입력하면 자동으로 켜집니다",
+    "test": "테스트",
+    "regionCustom": "사용자 지정",
+    "endpointPlaceholder": "https://your-service/search",
+    "noPrefix": "(접두사 없음)",
+    "needsSetup": "API 키 필요"
   }
 }

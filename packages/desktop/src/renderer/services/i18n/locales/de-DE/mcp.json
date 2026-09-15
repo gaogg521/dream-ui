@@ -82,6 +82,11 @@
     "saved": "Gespeichert",
     "saveFailed": "Speichern fehlgeschlagen",
     "readyHint": "{{count}} Anbieter konfiguriert – Websuche ist aktiv",
-    "emptyHint": "Wird automatisch aktiviert, sobald ein Schlüssel vorhanden ist"
+    "emptyHint": "Wird automatisch aktiviert, sobald ein Schlüssel vorhanden ist",
+    "test": "Testen",
+    "regionCustom": "Benutzerdefiniert",
+    "endpointPlaceholder": "https://ihr-dienst/search",
+    "noPrefix": "(kein Präfix)",
+    "needsSetup": "Schlüssel erforderlich"
   }
 }

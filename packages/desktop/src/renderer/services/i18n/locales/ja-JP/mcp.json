@@ -82,6 +82,11 @@
     "saved": "保存しました",
     "saveFailed": "保存できませんでした",
     "readyHint": "{{count}} 件設定済み — Web 検索は有効です",
-    "emptyHint": "キーを入力すると自動で有効になります"
+    "emptyHint": "キーを入力すると自動で有効になります",
+    "test": "テスト",
+    "regionCustom": "カスタム",
+    "endpointPlaceholder": "https://your-service/search",
+    "noPrefix": "（プレフィックスなし）",
+    "needsSetup": "API キーが必要"
   }
 }

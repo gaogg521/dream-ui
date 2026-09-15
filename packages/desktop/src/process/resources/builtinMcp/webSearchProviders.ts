@@ -28,6 +28,8 @@
  * because a vendor's prose disagreed with its own worked example.
  */
 
+import { WEB_SEARCH_CUSTOM_DEFAULTS, WEB_SEARCH_CUSTOM_ENV } from '../../../common/webSearch/catalog';
+
 /** One result, in the single shape the model sees regardless of provider. */
 export type SearchHit = {
   title: string;
@@ -46,8 +48,14 @@ export type ProviderRequest = {
 };
 
 export type ProviderAdapter = {
-  /** Build the HTTP call. `count` is a hint; vendors clamp it themselves. */
-  request(query: string, count: number, apiKey: string): ProviderRequest;
+  /**
+   * Build the HTTP call. `count` is a hint; vendors clamp it themselves.
+   *
+   * `baseUrl` arrives from the catalog's default or the user's override — an
+   * endpoint is never hardcoded here, because a vendor that moves or
+   * regionalises its API would otherwise break search until the next release.
+   */
+  request(query: string, count: number, apiKey: string, baseUrl: string, env?: Record<string, string>): ProviderRequest;
   /** Preferred path into the payload. May return nothing; `harvest` covers that. */
   pick(payload: Record<string, unknown>): unknown[];
 };
@@ -71,8 +79,8 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
    * truncated before it, so treat it as likely rather than confirmed.
    */
   bocha: {
-    request: (query, count, apiKey) => ({
-      url: 'https://api.bochaai.com/v1/web-search',
+    request: (query, count, apiKey, baseUrl) => ({
+      url: baseUrl,
       init: {
         method: 'POST',
         headers: { ...JSON_HEADERS, Authorization: `Bearer ${apiKey}` },
@@ -84,8 +92,8 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
 
   /** verified: 401 "Header中未收到Authorization参数，无法进行身份验证。" */
   zhipu: {
-    request: (query, count, apiKey) => ({
-      url: 'https://open.bigmodel.cn/api/paas/v4/web_search',
+    request: (query, count, apiKey, baseUrl) => ({
+      url: baseUrl,
       init: {
         method: 'POST',
         headers: { ...JSON_HEADERS, Authorization: apiKey },
@@ -97,8 +105,8 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
 
   /** verified: 401 "the API key or AK/SK in the request is missing or invalid". */
   volcengine: {
-    request: (query, count, apiKey) => ({
-      url: 'https://ark.cn-beijing.volces.com/api/v3/web_search',
+    request: (query, count, apiKey, baseUrl) => ({
+      url: baseUrl,
       init: {
         method: 'POST',
         headers: { ...JSON_HEADERS, Authorization: `Bearer ${apiKey}` },
@@ -114,8 +122,8 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
    * name comes from.
    */
   aliyun: {
-    request: (query, _count, apiKey) => ({
-      url: `https://cloud-iqs.aliyuncs.com/search/genericSearch?query=${encodeURIComponent(query)}`,
+    request: (query, _count, apiKey, baseUrl) => ({
+      url: `${baseUrl}?query=${encodeURIComponent(query)}`,
       init: {
         method: 'GET',
         headers: { ...JSON_HEADERS, 'X-API-Key': apiKey },
@@ -135,8 +143,8 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
    * that exposure for nothing.
    */
   tavily: {
-    request: (query, count, apiKey) => ({
-      url: 'https://api.tavily.com/search',
+    request: (query, count, apiKey, baseUrl) => ({
+      url: baseUrl,
       init: {
         method: 'POST',
         headers: { ...JSON_HEADERS, Authorization: `Bearer ${apiKey}` },
@@ -148,8 +156,8 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
 
   /** verified: 403 {"message":"Unauthorized. Sign up for a free account."} */
   serper: {
-    request: (query, count, apiKey) => ({
-      url: 'https://google.serper.dev/search',
+    request: (query, count, apiKey, baseUrl) => ({
+      url: baseUrl,
       init: {
         method: 'POST',
         headers: { ...JSON_HEADERS, 'X-API-KEY': apiKey },
@@ -160,12 +168,48 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
   },
 
   /**
+   * A user-defined endpoint.
+   *
+   * The seven entries above were each measured against the live service; this
+   * one cannot be, because only the user knows what it points at. So the four
+   * things that actually differed between those seven are configuration here —
+   * header name, header prefix, HTTP method, query field name — with defaults
+   * matching the most common shape. Everything downstream is unchanged: the
+   * response goes through the same structural scan, which is what makes an
+   * unknown vendor's payload readable without an adapter written for it.
+   */
+  custom: {
+    request: (query, count, apiKey, baseUrl, env) => {
+      const cfg = env || {};
+      const header = cfg[WEB_SEARCH_CUSTOM_ENV.authHeader]?.trim() || WEB_SEARCH_CUSTOM_DEFAULTS.authHeader;
+      const prefix = cfg[WEB_SEARCH_CUSTOM_ENV.authPrefix] ?? WEB_SEARCH_CUSTOM_DEFAULTS.authPrefix;
+      const field = cfg[WEB_SEARCH_CUSTOM_ENV.queryField]?.trim() || WEB_SEARCH_CUSTOM_DEFAULTS.queryField;
+      const method = (cfg[WEB_SEARCH_CUSTOM_ENV.method]?.trim() || WEB_SEARCH_CUSTOM_DEFAULTS.method).toUpperCase();
+      const headers: Record<string, string> = { ...JSON_HEADERS, [header]: `${prefix}${apiKey}` };
+
+      if (method === 'GET') {
+        const joiner = baseUrl.includes('?') ? '&' : '?';
+        return {
+          url: `${baseUrl}${joiner}${encodeURIComponent(field)}=${encodeURIComponent(query)}`,
+          init: { method: 'GET', headers },
+        };
+      }
+      return {
+        url: baseUrl,
+        init: { method: 'POST', headers, body: JSON.stringify({ [field]: query, count, num: count }) },
+      };
+    },
+    // No known envelope — the structural scan does all the work.
+    pick: () => [],
+  },
+
+  /**
    * verified: 422 naming the missing header outright —
    * {"error":{"code":"VALIDATION","meta":{"errors":[{"loc":["header","x-subscription-token"]…
    */
   brave: {
-    request: (query, count, apiKey) => ({
-      url: `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${count}`,
+    request: (query, count, apiKey, baseUrl) => ({
+      url: `${baseUrl}?q=${encodeURIComponent(query)}&count=${count}`,
       init: {
         method: 'GET',
         headers: { Accept: 'application/json', 'X-Subscription-Token': apiKey },
@@ -244,4 +288,59 @@ export const normalise = (adapter: ProviderAdapter, payload: unknown, limit: num
   const scanned: SearchHit[] = [];
   harvest(root, scanned);
   return dedupe(scanned).slice(0, limit);
+};
+
+/**
+ * Outcome of one provider call, in the form both callers need.
+ *
+ * Deliberately one flat shape rather than a discriminated union on `ok`: this
+ * project compiles without `strictNullChecks`, and without it TypeScript does
+ * not narrow a union by a literal boolean field — every access after an
+ * `if (outcome.ok)` guard still fails to compile. A flat record with optional
+ * fields is what actually type-checks here.
+ */
+export type SearchOutcome = {
+  ok: boolean;
+  hits?: SearchHit[];
+  status?: number;
+  body?: string;
+  reason?: 'http' | 'network' | 'timeout' | 'badJson';
+};
+
+/**
+ * Run one search against one provider.
+ *
+ * Shared deliberately by the MCP tool and by the settings page's "test"
+ * button. A test that exercised a different path could pass while real
+ * searches fail — which is the only failure mode a connection test exists to
+ * rule out, so it must be the same request, the same parsing, the same
+ * everything but the wording of the result.
+ */
+export const runProviderSearch = async (
+  adapter: ProviderAdapter,
+  apiKey: string,
+  baseUrl: string,
+  query: string,
+  count: number,
+  timeoutMs: number,
+  env?: Record<string, string>
+): Promise<SearchOutcome> => {
+  const { url, init } = adapter.request(query, count, apiKey, baseUrl, env);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    const raw = await response.text();
+    if (!response.ok) return { ok: false, status: response.status, body: raw, reason: 'http' };
+    try {
+      return { ok: true, hits: normalise(adapter, JSON.parse(raw), count) };
+    } catch {
+      return { ok: false, body: raw, reason: 'badJson' };
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, body: message, reason: message.includes('abort') ? 'timeout' : 'network' };
+  } finally {
+    clearTimeout(timer);
+  }
 };

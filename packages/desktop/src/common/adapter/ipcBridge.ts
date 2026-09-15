@@ -902,6 +902,38 @@ export type MemoryScopeInfo = {
   appWorkDir: string;
 };
 
+// ---------------------------------------------------------------------------
+// Web search — provider connectivity test for the settings form
+// ---------------------------------------------------------------------------
+
+/** What a "test" tells the user about one configured search provider. */
+export type WebSearchTestResult = {
+  ok: boolean;
+  /** Ready-to-show line: how many results, or why it failed. */
+  message: string;
+  /** Present on success, so the user sees the search really returned something. */
+  sampleTitle?: string;
+};
+
+/**
+ * Runs in the main process because the renderer cannot: `webSecurity` is on, and
+ * search APIs send no CORS headers, so a fetch from the page is blocked before
+ * it leaves. Main-process code has no such restriction and reuses the exact
+ * request builder the MCP tool uses.
+ */
+export const webSearch = {
+  test: bridge.buildProvider<
+    WebSearchTestResult,
+    {
+      providerId: string;
+      apiKey: string;
+      baseUrl?: string;
+      /** Request-shape settings, needed by the user-defined provider. */
+      options?: Record<string, string>;
+    }
+  >('webSearch.test'),
+};
+
 export const memory = {
   list: bridge.buildProvider<MemoryFileEntry[], void>('memory.list'),
   read: bridge.buildProvider<string, { filename: string; path?: string }>('memory.read'),

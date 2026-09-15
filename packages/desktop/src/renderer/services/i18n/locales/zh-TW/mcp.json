@@ -82,6 +82,11 @@
     "saved": "已儲存",
     "saveFailed": "儲存失敗",
     "readyHint": "已設定 {{count}} 家，聯網搜尋已啟用",
-    "emptyHint": "填入任一家的 Key 後自動啟用"
+    "emptyHint": "填入任一家的 Key 後自動啟用",
+    "test": "測試",
+    "regionCustom": "自訂",
+    "endpointPlaceholder": "https://你的服務位址/search",
+    "noPrefix": "（無前綴）",
+    "needsSetup": "需填寫 Key"
   }
 }
