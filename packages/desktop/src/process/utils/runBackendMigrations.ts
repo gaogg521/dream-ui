@@ -23,6 +23,7 @@ import {
 } from '@/common/config/storage';
 import { hasDeclaredMediaModel } from '@/common/media/declaredModel';
 import { BUILTIN_EXPORT_PDF_NAME, BUILTIN_TEAM_KNOWLEDGE_NAME } from '@process/resources/builtinMcp/constants';
+import { WEB_SEARCH_MCP_NAME } from '@/common/webSearch/catalog';
 import { startExportPdfMcpServer } from '@process/services/exportPdfMcpServer';
 import { startTeamKnowledgeMcpServer } from '@process/services/teamKnowledgeMcpServer';
 import { startMediaMcpServer } from '@process/services/mediaJob';
@@ -51,6 +52,7 @@ const BUILTIN_STOCK_SDK_NAME = 'stock-sdk';
  * happens in the side preview panel where the user can watch it.
  */
 const BUILTIN_BROWSER_SCRIPT = 'builtin-mcp-browser';
+const BUILTIN_WEB_SEARCH_SCRIPT = 'builtin-mcp-web-search';
 
 const LEGACY_BACKEND_CLIENT_PREFERENCE_KEYS = [
   'assistants',
@@ -295,6 +297,43 @@ function buildBuiltinBrowserServer(): McpImportServer {
   };
 }
 
+/**
+ * 内置「联网搜索」MCP。
+ *
+ * 默认**关闭**：它要用户自己填搜索服务商的 API Key，没 key 就开着只会让模型
+ * 调用失败一次再被告知去配置。用户在设置里填完 key 之后由界面自动启用。
+ *
+ * The built-in web search MCP. Default-DISABLED on purpose: it needs a provider
+ * API key that only the user can supply, and an enabled-but-unconfigured tool
+ * just buys one failed call before the model is told to go and configure it.
+ * The settings form enables it once a key is entered.
+ *
+ * Keys live in this entry's `transport.env`, one variable per provider — see
+ * `common/webSearch/catalog.ts`. Nothing new is persisted anywhere else.
+ */
+function buildBuiltinWebSearchServer(): McpImportServer {
+  const scriptPath = getBuiltinMcpScriptPath(BUILTIN_WEB_SEARCH_SCRIPT);
+  const serverConfig = {
+    command: 'node',
+    args: [scriptPath],
+  };
+
+  return {
+    name: WEB_SEARCH_MCP_NAME,
+    description:
+      'Search the live web. Configure a provider API key in Settings to enable it — ' +
+      'Bocha, Zhipu, Volcengine, Aliyun, Tavily, Serper or Brave.',
+    enabled: false,
+    builtin: true,
+    transport: {
+      type: 'stdio',
+      command: serverConfig.command,
+      args: serverConfig.args,
+    },
+    original_json: JSON.stringify({ mcpServers: { [WEB_SEARCH_MCP_NAME]: serverConfig } }, null, 2),
+  };
+}
+
 function buildDefaultMcpServers(): McpImportServer[] {
   const chromeConfig = {
     command: 'npx',
@@ -345,6 +384,7 @@ function buildDefaultMcpServers(): McpImportServer[] {
       original_json: JSON.stringify({ mcpServers: { [BUILTIN_FTSHARE_NAME]: ftshareConfig } }, null, 2),
     },
     buildBuiltinBrowserServer(),
+    buildBuiltinWebSearchServer(),
   ];
 }
 

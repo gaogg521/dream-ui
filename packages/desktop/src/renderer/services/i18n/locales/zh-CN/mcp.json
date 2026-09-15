@@ -71,5 +71,17 @@
     "normal": "普通",
     "high": "高",
     "urgent": "紧急"
+  },
+  "webSearch": {
+    "description": "填入任意一家的 API Key 即可启用联网搜索。配置多家时，用单选按钮选择实际使用哪一家。",
+    "regionCn": "国内",
+    "regionGlobal": "海外",
+    "apiKeyPlaceholder": "粘贴 API Key",
+    "getKey": "申请 Key",
+    "save": "保存",
+    "saved": "已保存",
+    "saveFailed": "保存失败",
+    "readyHint": "已配置 {{count}} 家，联网搜索已启用",
+    "emptyHint": "填入任意一家的 Key 后自动启用"
   }
 }

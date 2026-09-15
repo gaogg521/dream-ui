@@ -71,5 +71,17 @@
     "normal": "보통",
     "high": "높음",
     "urgent": "긴급"
+  },
+  "webSearch": {
+    "description": "어느 한 곳의 API 키만 입력하면 웹 검색이 켜집니다. 여러 곳을 설정한 경우 라디오 버튼으로 실제 사용할 곳을 고릅니다.",
+    "regionCn": "중국",
+    "regionGlobal": "해외",
+    "apiKeyPlaceholder": "API 키 붙여넣기",
+    "getKey": "키 발급",
+    "save": "저장",
+    "saved": "저장됨",
+    "saveFailed": "저장하지 못했습니다",
+    "readyHint": "{{count}}개 설정됨 — 웹 검색이 켜졌습니다",
+    "emptyHint": "키를 입력하면 자동으로 켜집니다"
   }
 }

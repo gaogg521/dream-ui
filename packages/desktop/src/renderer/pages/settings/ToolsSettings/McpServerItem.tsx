@@ -1,8 +1,10 @@
 import { Collapse } from '@arco-design/web-react';
 import React from 'react';
 import type { IMcpServer } from '@/common/config/storage';
+import { WEB_SEARCH_MCP_NAME } from '@/common/webSearch/catalog';
 import McpServerHeader from './McpServerHeader';
 import McpServerToolsList from './McpServerToolsList';
+import WebSearchProviderConfig from './WebSearchProviderConfig';
 import type { McpOAuthStatus } from '@/renderer/hooks/mcp/useMcpOAuth';
 
 interface McpServerItemProps {
@@ -18,6 +20,8 @@ interface McpServerItemProps {
   onEditServer: (server: IMcpServer) => void;
   onDeleteServer: (serverId: string) => void;
   onOAuthLogin?: (server: IMcpServer) => void;
+  /** Called after the built-in web-search entry saves its provider keys. */
+  onServerUpdated?: (next: IMcpServer) => void;
 }
 
 const McpServerItem: React.FC<McpServerItemProps> = ({
@@ -32,6 +36,7 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
   onEditServer,
   onDeleteServer,
   onOAuthLogin,
+  onServerUpdated,
 }) => {
   return (
     <Collapse
@@ -57,6 +62,9 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
         name='1'
         className={'[&_div.arco-collapse-item-content-box]:py-3'}
       >
+        {server.name === WEB_SEARCH_MCP_NAME && (
+          <WebSearchProviderConfig server={server} onServerUpdated={onServerUpdated} />
+        )}
         <McpServerToolsList server={server} />
       </Collapse.Item>
     </Collapse>

@@ -71,5 +71,17 @@
     "normal": "Normal",
     "high": "Élevé",
     "urgent": "Urgent"
+  },
+  "webSearch": {
+    "description": "Collez la clé API de n'importe quel fournisseur pour activer la recherche web. Si plusieurs sont configurés, le bouton radio choisit lequel est utilisé.",
+    "regionCn": "Chine",
+    "regionGlobal": "International",
+    "apiKeyPlaceholder": "Coller la clé API",
+    "getKey": "Obtenir une clé",
+    "save": "Enregistrer",
+    "saved": "Enregistré",
+    "saveFailed": "Échec de l'enregistrement",
+    "readyHint": "{{count}} fournisseur(s) configuré(s) — la recherche web est active",
+    "emptyHint": "Activée automatiquement dès qu'une clé est saisie"
   }
 }

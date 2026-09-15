@@ -316,6 +316,9 @@ const ModalMcpManagementSection: React.FC<{
                   onEditServer={showEditMcpModal}
                   onDeleteServer={showDeleteConfirm}
                   onOAuthLogin={handleOAuthLogin}
+                  onServerUpdated={(next) =>
+                    setMcpServers((prev) => prev.map((item) => (item.id === next.id ? next : item)))
+                  }
                 />
               ))}
               {extensionMcpServers.map((server) => (

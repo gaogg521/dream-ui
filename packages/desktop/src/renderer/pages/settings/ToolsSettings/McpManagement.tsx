@@ -183,6 +183,9 @@ const McpManagement: React.FC<McpManagementProps> = ({ message }) => {
                 onEditServer={showEditMcpModal}
                 onDeleteServer={showDeleteConfirm}
                 onOAuthLogin={handleOAuthLogin}
+                onServerUpdated={(next) =>
+                  setMcpServers((prev) => prev.map((item) => (item.id === next.id ? next : item)))
+                }
               />
             ))
           )}
