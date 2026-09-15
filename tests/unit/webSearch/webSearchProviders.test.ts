@@ -92,11 +92,14 @@ describe('vendor request shaping', () => {
     expect(
       WEB_SEARCH_ADAPTERS.bocha.request('q', 1, 'k', 'https://api.bochaai.com/v1/web-search').init.headers.Authorization
     ).toBe('Bearer k');
-    // Zhipu takes the raw key, not a Bearer prefix.
+    // Zhipu wants `Bearer` too, per its own docs. An unauthenticated probe
+    // only reports that the header is MISSING — never what format it expects —
+    // and reading that as "raw key" made every Zhipu request fail while
+    // looking indistinguishable from a bad key.
     expect(
       WEB_SEARCH_ADAPTERS.zhipu.request('q', 1, 'k', 'https://open.bigmodel.cn/api/paas/v4/web_search').init.headers
         .Authorization
-    ).toBe('k');
+    ).toBe('Bearer k');
     expect(
       WEB_SEARCH_ADAPTERS.serper.request('q', 1, 'k', 'https://google.serper.dev/search').init.headers['X-API-KEY']
     ).toBe('k');
