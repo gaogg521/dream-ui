@@ -1583,6 +1583,9 @@
     "restoreConfirmContent": "Bu işlem {{items}} öğelerini mevcut verilerinizle birleştirir. Yedekte olmayanlar değişmeden kalır.",
     "restoreExportedAt": "{{date}} tarihinde {{version}} sürümüyle oluşturuldu",
     "restoreSuccess": "{{rows}} kayıt ve {{files}} dosya geri yüklendi",
-    "restoreFailed": "Bu yedekten geri yüklenemedi"
+    "restoreFailed": "Bu yedekten geri yüklenemedi",
+    "attachmentsSlowWarning": "Çalışma alanı dosyaları çok sayıda küçük dosyadan oluşur; bu işlem birkaç dakika sürebilir ve uygulama bu süre boyunca meşgul görünür. Yeni bir makineye taşınmak için gerekenler diğer kategorilerde yer alır.",
+    "revealButton": "Klasörde göster",
+    "revealFailed": "Klasör açılamadı"
   }
 }

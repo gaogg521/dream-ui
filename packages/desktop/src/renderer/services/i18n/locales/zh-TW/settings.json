@@ -3401,6 +3401,9 @@
     "restoreConfirmContent": "將把 {{items}} 合併進目前的資料。備份中沒有的內容保持不變。",
     "restoreExportedAt": "建立於 {{date}}，版本 {{version}}",
     "restoreSuccess": "已還原 {{rows}} 筆記錄與 {{files}} 個檔案",
-    "restoreFailed": "從該備份還原失敗"
+    "restoreFailed": "從該備份還原失敗",
+    "attachmentsSlowWarning": "工作區檔案數量多、體積大，打包可能需要幾分鐘，期間介面會一直顯示處理中。換新機器所需的內容都在其他幾項裡。",
+    "revealButton": "開啟所在資料夾",
+    "revealFailed": "無法開啟該資料夾"
   }
 }

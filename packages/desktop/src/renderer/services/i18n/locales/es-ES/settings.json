@@ -1583,6 +1583,9 @@
     "restoreConfirmContent": "Se combinarán {{items}} con tus datos actuales. Lo que no esté en la copia permanecerá sin cambios.",
     "restoreExportedAt": "Creada el {{date}} con la versión {{version}}",
     "restoreSuccess": "Se restauraron {{rows}} registros y {{files}} archivos",
-    "restoreFailed": "No se pudo restaurar desde esa copia de seguridad"
+    "restoreFailed": "No se pudo restaurar desde esa copia de seguridad",
+    "attachmentsSlowWarning": "Los archivos del espacio de trabajo son muchos y pequeños, así que esto puede tardar varios minutos y la aplicación parecerá ocupada todo el rato. Todo lo necesario para cambiar de equipo está en las demás categorías.",
+    "revealButton": "Mostrar en la carpeta",
+    "revealFailed": "No se pudo abrir esa carpeta"
   }
 }

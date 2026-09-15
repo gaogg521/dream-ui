@@ -1585,6 +1585,9 @@
     "restoreConfirmContent": "{{items}}을(를) 현재 데이터에 병합합니다. 백업에 없는 항목은 그대로 유지됩니다.",
     "restoreExportedAt": "{{date}}에 버전 {{version}}으로 생성됨",
     "restoreSuccess": "{{rows}}개 레코드와 {{files}}개 파일을 복원했습니다",
-    "restoreFailed": "해당 백업에서 복원하지 못했습니다"
+    "restoreFailed": "해당 백업에서 복원하지 못했습니다",
+    "attachmentsSlowWarning": "작업 공간 파일은 수가 많아 압축에 몇 분이 걸릴 수 있으며 그동안 앱은 계속 처리 중으로 표시됩니다. 새 컴퓨터로 옮기는 데 필요한 것은 다른 항목에 모두 들어 있습니다.",
+    "revealButton": "폴더 열기",
+    "revealFailed": "폴더를 열지 못했습니다"
   }
 }

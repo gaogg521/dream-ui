@@ -1580,6 +1580,9 @@
     "restoreConfirmContent": "Cela fusionnera {{items}} avec vos données actuelles. Ce qui n'est pas dans la sauvegarde reste inchangé.",
     "restoreExportedAt": "Créée le {{date}} par la version {{version}}",
     "restoreSuccess": "{{rows}} enregistrements et {{files}} fichiers restaurés",
-    "restoreFailed": "Impossible de restaurer depuis cette sauvegarde"
+    "restoreFailed": "Impossible de restaurer depuis cette sauvegarde",
+    "attachmentsSlowWarning": "Les fichiers de l'espace de travail sont nombreux : l'opération peut prendre plusieurs minutes et l'application paraîtra occupée pendant tout ce temps. Tout ce qu'il faut pour changer de machine se trouve dans les autres catégories.",
+    "revealButton": "Afficher dans le dossier",
+    "revealFailed": "Impossible d'ouvrir ce dossier"
   }
 }
