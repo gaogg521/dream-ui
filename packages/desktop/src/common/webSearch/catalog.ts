@@ -137,8 +137,8 @@ export const WEB_SEARCH_PROVIDERS: WebSearchProvider[] = [
     region: 'cn',
     envKey: 'WEB_SEARCH_KEY_VOLCENGINE',
     baseUrlEnvKey: 'WEB_SEARCH_URL_VOLCENGINE',
-    defaultBaseUrl: 'https://ark.cn-beijing.volces.com/api/v3/web_search',
-    apiKeyUrl: 'https://console.volcengine.com/ark',
+    defaultBaseUrl: 'https://open.feedcoopapi.com/search_api/web_search',
+    apiKeyUrl: 'https://console.volcengine.com/torchlight',
   },
   {
     id: 'aliyun',

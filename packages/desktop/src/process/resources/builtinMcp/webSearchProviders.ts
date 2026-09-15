@@ -103,17 +103,33 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
     pick: (payload) => asArray(payload.search_result ?? at(payload, 'data.search_result')),
   },
 
-  /** verified: 401 "the API key or AK/SK in the request is missing or invalid". */
+  /**
+   * verified with a live key 2026-09-15 against the product's own docs
+   * (docs.volcengine.com/docs/87772/2272953).
+   *
+   * This one was wrong in every part of an earlier guess, and the guess looked
+   * plausible the whole way: "Doubao search" sounds like a Volcengine Ark
+   * model feature, so it was pointed at `ark.cn-beijing.volces.com/api/v3/
+   * web_search` with a lowercase body. Ark answered `401` — and a 401 reads as
+   * "bad key", not as "this endpoint has nothing to do with the product", so it
+   * sent the search for a key problem that did not exist.
+   *
+   * It is a separate product with its own host, and its JSON is PascalCase:
+   *   POST open.feedcoopapi.com/search_api/web_search
+   *   { Query, SearchType: 'web', Count, Filter }   ← SearchType is required
+   *   → Result.WebResults[] of { Title, Url, Snippet, PublishTime, SiteName }
+   */
   volcengine: {
     request: (query, count, apiKey, baseUrl) => ({
       url: baseUrl,
       init: {
         method: 'POST',
         headers: { ...JSON_HEADERS, Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ query, count }),
+        // `NeedUrl` keeps out results with no link, which are useless to cite.
+        body: JSON.stringify({ Query: query, SearchType: 'web', Count: count, Filter: { NeedUrl: true } }),
       },
     }),
-    pick: (payload) => asArray(payload.results ?? at(payload, 'data.results')),
+    pick: (payload) => asArray(at(payload, 'Result.WebResults')),
   },
 
   /**
@@ -225,9 +241,20 @@ const URL_KEYS = ['url', 'link', 'href', 'displayUrl', 'display_url'];
 const SNIPPET_KEYS = ['snippet', 'summary', 'description', 'content', 'abstract', 'body', 'mainText', 'main_text'];
 const DATE_KEYS = ['datePublished', 'date_published', 'publishTime', 'publish_time', 'published_date', 'date'];
 
+/**
+ * Case-insensitive field lookup.
+ *
+ * Not a nicety: Volcengine returns `Title` / `Url` / `Snippet` / `PublishTime`
+ * in PascalCase, so an exact lowercase match reads nothing out of a perfectly
+ * good 200 response — the structural fallback would come up empty on exactly
+ * the payloads it exists to rescue. Vendors disagree about casing as freely as
+ * they disagree about nesting.
+ */
 const firstString = (row: Record<string, unknown>, keys: string[]): string | undefined => {
+  const byLower = new Map<string, unknown>();
+  for (const [key, value] of Object.entries(row)) byLower.set(key.toLowerCase(), value);
   for (const key of keys) {
-    const value = row[key];
+    const value = byLower.get(key.toLowerCase());
     if (typeof value === 'string' && value.trim()) return value.trim();
   }
   return undefined;
