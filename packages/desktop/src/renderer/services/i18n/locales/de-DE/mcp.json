@@ -71,5 +71,17 @@
     "normal": "Normal",
     "high": "Hoch",
     "urgent": "Dringend"
+  },
+  "webSearch": {
+    "description": "Fügen Sie den API-Schlüssel eines beliebigen Anbieters ein, um die Websuche zu aktivieren. Bei mehreren Anbietern wählt der Radiobutton, welcher verwendet wird.",
+    "regionCn": "China",
+    "regionGlobal": "International",
+    "apiKeyPlaceholder": "API-Schlüssel einfügen",
+    "getKey": "Schlüssel holen",
+    "save": "Speichern",
+    "saved": "Gespeichert",
+    "saveFailed": "Speichern fehlgeschlagen",
+    "readyHint": "{{count}} Anbieter konfiguriert – Websuche ist aktiv",
+    "emptyHint": "Wird automatisch aktiviert, sobald ein Schlüssel vorhanden ist"
   }
 }

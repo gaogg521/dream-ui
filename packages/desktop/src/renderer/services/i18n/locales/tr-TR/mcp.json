@@ -71,5 +71,17 @@
     "normal": "Normal",
     "high": "Yüksek",
     "urgent": "Acil"
+  },
+  "webSearch": {
+    "description": "Web aramasını açmak için herhangi bir sağlayıcının API anahtarını yapıştırın. Birden fazla yapılandırdıysanız, seçenek düğmesi hangisinin kullanılacağını belirler.",
+    "regionCn": "Çin",
+    "regionGlobal": "Küresel",
+    "apiKeyPlaceholder": "API anahtarını yapıştırın",
+    "getKey": "Anahtar al",
+    "save": "Kaydet",
+    "saved": "Kaydedildi",
+    "saveFailed": "Kaydedilemedi",
+    "readyHint": "{{count}} sağlayıcı yapılandırıldı — web araması açık",
+    "emptyHint": "Bir anahtar eklediğinizde otomatik olarak açılır"
   }
 }

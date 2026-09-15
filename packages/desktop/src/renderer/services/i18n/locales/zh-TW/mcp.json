@@ -71,5 +71,17 @@
     "normal": "一般",
     "high": "高",
     "urgent": "緊急"
+  },
+  "webSearch": {
+    "description": "填入任一家的 API Key 即可啟用聯網搜尋。設定多家時，用單選按鈕選擇實際使用哪一家。",
+    "regionCn": "中國大陸",
+    "regionGlobal": "海外",
+    "apiKeyPlaceholder": "貼上 API Key",
+    "getKey": "申請 Key",
+    "save": "儲存",
+    "saved": "已儲存",
+    "saveFailed": "儲存失敗",
+    "readyHint": "已設定 {{count}} 家，聯網搜尋已啟用",
+    "emptyHint": "填入任一家的 Key 後自動啟用"
   }
 }

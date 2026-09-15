@@ -71,5 +71,17 @@
     "normal": "Normal",
     "high": "Alta",
     "urgent": "Urgente"
+  },
+  "webSearch": {
+    "description": "Pega la clave API de cualquier proveedor para activar la búsqueda web. Si configuras varios, el botón de opción elige cuál se usa.",
+    "regionCn": "China",
+    "regionGlobal": "Internacional",
+    "apiKeyPlaceholder": "Pegar clave API",
+    "getKey": "Obtener clave",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "saveFailed": "No se pudo guardar",
+    "readyHint": "{{count}} proveedor(es) configurado(s): la búsqueda web está activa",
+    "emptyHint": "Se activa automáticamente al añadir una clave"
   }
 }

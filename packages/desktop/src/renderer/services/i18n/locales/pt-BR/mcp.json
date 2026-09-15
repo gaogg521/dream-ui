@@ -71,5 +71,17 @@
     "normal": "Normal",
     "high": "Alta",
     "urgent": "Urgente"
+  },
+  "webSearch": {
+    "description": "Cole a chave de API de qualquer provedor para ativar a busca na web. Com vários configurados, o botão de opção escolhe qual será usado.",
+    "regionCn": "China",
+    "regionGlobal": "Internacional",
+    "apiKeyPlaceholder": "Colar chave de API",
+    "getKey": "Obter chave",
+    "save": "Salvar",
+    "saved": "Salvo",
+    "saveFailed": "Não foi possível salvar",
+    "readyHint": "{{count}} provedor(es) configurado(s) — a busca na web está ativa",
+    "emptyHint": "Ativada automaticamente assim que você adicionar uma chave"
   }
 }

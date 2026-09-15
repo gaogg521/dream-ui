@@ -71,5 +71,17 @@
     "normal": "Normal",
     "high": "High",
     "urgent": "Urgent"
+  },
+  "webSearch": {
+    "description": "Paste an API key from any one provider to turn on web search. With several configured, the radio button picks which one runs.",
+    "regionCn": "China",
+    "regionGlobal": "Global",
+    "apiKeyPlaceholder": "Paste API key",
+    "getKey": "Get key",
+    "save": "Save",
+    "saved": "Saved",
+    "saveFailed": "Could not save",
+    "readyHint": "{{count}} provider(s) configured — web search is on",
+    "emptyHint": "Turns on automatically once you add a key"
   }
 }
