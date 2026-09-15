@@ -448,9 +448,12 @@ async function refreshWebSearchHostedEnv(configFile: ConfigFile, existing: IMcpS
   // does, then never touch `enabled` again.
   if (!nextEnv[WEB_SEARCH_BROKER_URL_ENV]) return;
   if (existing.enabled) return;
-  if (await configFile.get(WEB_SEARCH_HOSTED_ENABLED_KEY)) return;
 
   try {
+    // Inside the try with the toggle: a config read that throws must not take
+    // the rest of the bootstrap down with it — the export-pdf and
+    // team-knowledge port refreshes still have to run after this.
+    if (await configFile.get(WEB_SEARCH_HOSTED_ENABLED_KEY)) return;
     await mcpService.toggleServer.invoke({ id: existing.id });
     await configFile.set(WEB_SEARCH_HOSTED_ENABLED_KEY, true);
     console.info('[Migration] enabled built-in web search; it now works without a user key');
