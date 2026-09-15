@@ -318,12 +318,28 @@ function buildBuiltinBrowserServer(): McpImportServer {
  * `DREAM_TRIAL_BROKER_URL` is set.
  */
 function resolveHostedWebSearchEnv(): Record<string, string> {
-  const brokerUrl = resolveTrialBrokerUrl(app.isPackaged);
-  if (!brokerUrl) return {};
-  return {
-    [WEB_SEARCH_BROKER_URL_ENV]: brokerUrl,
-    [WEB_SEARCH_INSTALL_ID_ENV]: webSearchInstallId(),
-  };
+  /**
+   * Never allowed to throw.
+   *
+   * This runs inside `buildDefaultMcpServers`, so anything that escapes here
+   * aborts the whole `ensureBootstrapMcpServersInDb` step and NONE of the
+   * built-in MCPs get registered — image generation, the in-app browser,
+   * export-pdf, all of them. Caught in the test suite, where `electron`'s `app`
+   * is not the real module and `app.isPackaged` threw; but `app.getPath` inside
+   * the analytics id can fail for its own reasons too. A search that quietly
+   * needs a user key is a small loss; losing every built-in tool is not.
+   */
+  try {
+    const brokerUrl = resolveTrialBrokerUrl(app?.isPackaged === true);
+    if (!brokerUrl) return {};
+    return {
+      [WEB_SEARCH_BROKER_URL_ENV]: brokerUrl,
+      [WEB_SEARCH_INSTALL_ID_ENV]: webSearchInstallId(),
+    };
+  } catch (error) {
+    console.warn('[Migration] could not resolve the web search broker; search will need a user key', error);
+    return {};
+  }
 }
 
 /**

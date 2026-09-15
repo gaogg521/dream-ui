@@ -213,6 +213,31 @@ describe('runBackendMigrations', () => {
     expect(updated.data.transport.env.MEDIA_MCP_PORT).toBe('19860');
   });
 
+  /**
+   * Hosted web search resolves the broker URL through Electron's `app`, and an
+   * `app` that is absent or unusable made `app.isPackaged` throw — which aborted
+   * the whole bootstrap step, so NOT ONE built-in MCP was registered: image
+   * generation, the in-app browser, export-pdf, all gone. Search falling back to
+   * "needs a user key" is a small loss; losing every built-in tool is not.
+   */
+  it('still registers the built-in MCP servers when the search broker cannot be resolved', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    listServersMock.mockResolvedValue([]);
+
+    await runBackendMigrations(configFile as never);
+
+    const imported = batchImportServersMock.mock.calls.flatMap((call) => call[0].servers as IMcpServer[]);
+    const names = imported.map((server) => server.name);
+    expect(names).toContain(BUILTIN_IMAGE_GEN_NAME);
+    expect(names).toContain('one-web-search');
+
+    // Registered, but with no broker to point at: off, and carrying no env.
+    const search = imported.find((server) => server.name === 'one-web-search')!;
+    expect(search.enabled).toBe(false);
+    expect(search.transport.type === 'stdio' && search.transport.env).toBeFalsy();
+    warnSpy.mockRestore();
+  });
+
   it('does not sync the built-in image MCP server when bootstrap makes no effective change', async () => {
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     listServersMock.mockResolvedValue([imageServer()]);
