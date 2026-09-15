@@ -80,6 +80,14 @@ export type WebSearchProvider = {
   /** Where the user goes to get a key. Shown as a link next to the input. */
   apiKeyUrl?: string;
   /**
+   * The user must supply the endpoint; a key alone is not enough.
+   *
+   * True for a user-defined provider, and for vendors whose URL embeds the
+   * account's own instance or workspace — those have no shared default that
+   * could work for anyone else.
+   */
+  requiresBaseUrl?: boolean;
+  /**
    * A user-defined endpoint rather than one of the shipped vendors.
    *
    * The seven built-in entries cover the services checked against live APIs,
@@ -143,13 +151,22 @@ export const WEB_SEARCH_PROVIDERS: WebSearchProvider[] = [
   },
   {
     id: 'aliyun',
-    label: '阿里云 IQS',
+    label: '阿里云 OpenSearch',
     region: 'cn',
     envKey: 'WEB_SEARCH_KEY_ALIYUN',
     baseUrlEnvKey: 'WEB_SEARCH_URL_ALIYUN',
-    defaultBaseUrl: 'https://cloud-iqs.aliyuncs.com/search/genericSearch',
-    // Handed over by the API itself in its 403 body.
-    apiKeyUrl: 'https://ipaas.console.aliyun.com/api-key',
+    /**
+     * No default, because there is no shared one to give.
+     *
+     * The URL is `{host}/v3/openapi/workspaces/{workspace}/web-search/
+     * ops-web-search-001`, where the host carries the account's own instance
+     * id (e.g. `xxxx-hangzhou.opensearch.aliyuncs.com`) and the workspace is
+     * whatever the user named theirs. Shipping any fixed string here would be
+     * a value that works for nobody.
+     */
+    defaultBaseUrl: '',
+    requiresBaseUrl: true,
+    apiKeyUrl: 'https://help.aliyun.com/zh/open-search/search-platform/developer-reference/web-search',
   },
   {
     id: 'tencent',
@@ -200,6 +217,7 @@ export const WEB_SEARCH_PROVIDERS: WebSearchProvider[] = [
     // No default: a custom endpoint has to be supplied, and an empty string is
     // how `configuredWebSearchProviders` knows it has not been.
     defaultBaseUrl: '',
+    requiresBaseUrl: true,
     custom: true,
   },
 ];
@@ -223,10 +241,11 @@ export const configuredWebSearchProviders = (env: Record<string, string> | undef
   env
     ? WEB_SEARCH_PROVIDERS.filter((p) => {
         if (!env[p.envKey]?.trim()) return false;
-        // A custom entry ships no default endpoint, so a key alone leaves it
-        // with nowhere to send the request — it is configured only once both
-        // halves are present.
-        return !p.custom || !!env[p.baseUrlEnvKey]?.trim();
+        // Some providers ship no default endpoint — a user-defined one, or a
+        // vendor whose URL embeds the account's own instance. For those a key
+        // alone leaves the request with nowhere to go, so both halves must be
+        // present before the provider counts as configured.
+        return !p.requiresBaseUrl || !!env[p.baseUrlEnvKey]?.trim();
       })
     : [];
 

@@ -15,16 +15,21 @@
  *   Bocha       401 {"code":"401","message":"Invalid API KEY"}
  *   Zhipu       401 {"error":{"code":"401","message":"令牌已过期或验证不正确"}}
  *   Volcengine  401 "The API key format is incorrect"
- *   Aliyun      403 "Incorrect APIKey provided"
  *   Serper      403 {"message":"Unauthorized."}
  *   Brave       422 "The provided subscription token is invalid"
  *
  * Every one of those says the credential was READ and rejected — not that it
  * was missing — so the header names below are confirmed, not guessed.
  *
- * Bocha and Tavily were then run with live keys, which also pins their response
- * shapes: `data.webPages.value` with a `name` title for Bocha, and `results[]`
- * with `url` / `title` / `content` for Tavily.
+ * Bocha, Tavily, Volcengine and Aliyun were then run with live keys, which also
+ * pins their response shapes.
+ *
+ * Aliyun is the cautionary one. An earlier version aimed it at
+ * `cloud-iqs.aliyuncs.com`, a DIFFERENT Aliyun search product, and that host's
+ * `403 Incorrect APIKey provided` even named a key console — so the wrong
+ * endpoint looked confirmed by exactly the kind of evidence used to confirm
+ * the others. A probe tells you a service is there; it cannot tell you it is
+ * the service you meant.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -66,10 +71,15 @@ const BOCHA_RESPONSE = {
   },
 };
 
+/** A real workspace URL: the host carries the account's own instance id. */
+const ALIYUN_URL =
+  'https://default-81sf.platform-cn-shanghai.opensearch.aliyuncs.com/v3/openapi/workspaces/default/web-search/ops-web-search-001';
+
 describe('vendor request shaping', () => {
   it('covers every adapter with an https endpoint and a credential', () => {
     for (const [id, adapter] of Object.entries(WEB_SEARCH_ADAPTERS)) {
-      const base = WEB_SEARCH_PROVIDERS.find((p) => p.id === id)?.defaultBaseUrl || 'https://custom.test/search';
+      // Providers whose URL embeds the user's own instance ship no default.
+      const base = WEB_SEARCH_PROVIDERS.find((p) => p.id === id)?.defaultBaseUrl || 'https://supplied-by-user.test/api';
       const { url, init } = adapter.request('test query', 5, 'KEY-123', base);
       expect(url, id).toMatch(/^https:\/\//);
       const carriesKey = JSON.stringify(init.headers).includes('KEY-123') || (init.body ?? '').includes('KEY-123');
@@ -78,13 +88,10 @@ describe('vendor request shaping', () => {
   });
 
   it('puts the query on the wire for GET-style vendors too', () => {
-    // Brave and Aliyun take the query in the URL, so a body-only builder would
-    // silently search for nothing.
+    // Brave takes the query in the URL, so a body-only builder would silently
+    // search for nothing.
     expect(
       WEB_SEARCH_ADAPTERS.brave.request('北京天气', 3, 'k', 'https://api.search.brave.com/res/v1/web/search').url
-    ).toContain(encodeURIComponent('北京天气'));
-    expect(
-      WEB_SEARCH_ADAPTERS.aliyun.request('北京天气', 3, 'k', 'https://cloud-iqs.aliyuncs.com/search/genericSearch').url
     ).toContain(encodeURIComponent('北京天气'));
   });
 
@@ -108,10 +115,11 @@ describe('vendor request shaping', () => {
         'X-Subscription-Token'
       ]
     ).toBe('k');
-    expect(
-      WEB_SEARCH_ADAPTERS.aliyun.request('q', 1, 'k', 'https://cloud-iqs.aliyuncs.com/search/genericSearch').init
-        .headers['X-API-Key']
-    ).toBe('k');
+    // Aliyun OpenSearch also takes Bearer. An earlier version sent `X-API-Key`
+    // to `cloud-iqs.aliyuncs.com`, which is a different Aliyun search product
+    // entirely — its 403 even named a key console, which made the wrong
+    // endpoint look confirmed.
+    expect(WEB_SEARCH_ADAPTERS.aliyun.request('q', 1, 'k', ALIYUN_URL).init.headers.Authorization).toBe('Bearer k');
   });
 
   /**
@@ -137,6 +145,55 @@ describe('vendor request shaping', () => {
  * between those seven — header name, header prefix, HTTP method, query field —
  * are configuration here, and the response is left to the structural scan.
  */
+/**
+ * Aliyun's AI 搜索开放平台 (OpenSearch), verified with a live key.
+ *
+ * Two things are pinned here. The results sit at `result.search_result`, and
+ * the publish date is one level deeper still, at `meta_info.publishedTime` —
+ * field matching only reads top-level keys, so without lifting it every result
+ * would silently lose its date.
+ */
+describe('aliyun OpenSearch', () => {
+  it('sends a lowercase body with top_k', () => {
+    const { url, init } = WEB_SEARCH_ADAPTERS.aliyun.request('cats', 6, 'k', ALIYUN_URL);
+    expect(url).toBe(ALIYUN_URL);
+    expect(init.method).toBe('POST');
+    const body = JSON.parse(init.body!);
+    expect(body.query).toBe('cats');
+    expect(body.top_k).toBe(6);
+    // `content_type` and `way` are left out so the service's own defaults
+    // apply — a heavier mode changes both latency and billing.
+    expect(body).not.toHaveProperty('content_type');
+    expect(body).not.toHaveProperty('way');
+  });
+
+  it('reads results and lifts the nested publish date', () => {
+    const payload = {
+      request_id: 'r',
+      result: {
+        search_result: [
+          {
+            title: '新浪AI热点小时报',
+            link: 'https://k.sina.cn/article_7857201856.html',
+            content: '今日实时AI热点速递…',
+            meta_info: { publishedTime: '2026-09-15T01:00:00+08:00' },
+          },
+        ],
+      },
+    };
+    const hits = normalise(WEB_SEARCH_ADAPTERS.aliyun, payload, 8);
+    expect(hits).toHaveLength(1);
+    expect(hits[0].url).toBe('https://k.sina.cn/article_7857201856.html');
+    expect(hits[0].publishedAt).toBe('2026-09-15T01:00:00+08:00');
+  });
+
+  it('survives a result with no meta_info', () => {
+    const payload = { result: { search_result: [{ title: 't', link: 'https://x.test/a' }] } };
+    const hits = normalise(WEB_SEARCH_ADAPTERS.aliyun, payload, 8);
+    expect(hits[0].publishedAt).toBeUndefined();
+  });
+});
+
 describe('custom provider', () => {
   const CUSTOM_URL = 'https://search.internal.test/api';
 
