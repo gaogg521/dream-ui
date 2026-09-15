@@ -1551,5 +1551,35 @@
     "sales": "Ventes et business",
     "industryAdvisory": "Conseil sectoriel",
     "operationsHr": "Opérations et RH"
+  },
+  "backup": {
+    "title": "Sauvegarde et restauration",
+    "description": "Enregistrez vos données dans un fichier pour les transférer vers une autre machine, ou fusionnez une sauvegarde dans cette installation.",
+    "listSeparator": ", ",
+    "scope": {
+      "conversations": "Conversations et messages",
+      "attachments": "Pièces jointes et fichiers de l'espace de travail",
+      "providers": "Configuration des modèles",
+      "skills": "Compétences",
+      "appSettings": "Assistants, équipes et préférences"
+    },
+    "scopeHint": {
+      "conversations": "Historique des discussions",
+      "attachments": "Peut être volumineux",
+      "providers": "Fournisseurs, passerelles et serveurs MCP",
+      "skills": "Compétences installées et créées",
+      "appSettings": "Tâches planifiées incluses"
+    },
+    "credentialWarning": "Une sauvegarde incluant la configuration des modèles contient des clés API utilisables. Conservez le fichier en lieu sûr.",
+    "exportButton": "Créer une sauvegarde",
+    "importButton": "Restaurer depuis une sauvegarde",
+    "exportSuccess": "Sauvegarde créée ({{size}})",
+    "exportFailed": "Impossible de créer la sauvegarde",
+    "previewFailed": "Impossible de lire ce fichier de sauvegarde",
+    "restoreConfirmTitle": "Restaurer depuis cette sauvegarde ?",
+    "restoreConfirmContent": "Cela fusionnera {{items}} avec vos données actuelles. Ce qui n'est pas dans la sauvegarde reste inchangé.",
+    "restoreExportedAt": "Créée le {{date}} par la version {{version}}",
+    "restoreSuccess": "{{rows}} enregistrements et {{files}} fichiers restaurés",
+    "restoreFailed": "Impossible de restaurer depuis cette sauvegarde"
   }
 }

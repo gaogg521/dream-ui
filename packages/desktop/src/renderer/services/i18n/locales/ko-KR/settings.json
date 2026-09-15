@@ -1556,5 +1556,35 @@
     "sales": "영업 비즈니스",
     "industryAdvisory": "산업 자문",
     "operationsHr": "운영 인사"
+  },
+  "backup": {
+    "title": "백업 및 복원",
+    "description": "데이터를 파일로 저장해 다른 컴퓨터로 옮기거나, 기존 백업을 현재 설치에 병합할 수 있습니다.",
+    "listSeparator": ", ",
+    "scope": {
+      "conversations": "대화 및 메시지",
+      "attachments": "첨부 파일 및 작업 공간 파일",
+      "providers": "모델 설정",
+      "skills": "스킬",
+      "appSettings": "어시스턴트, 팀 및 기본 설정"
+    },
+    "scopeHint": {
+      "conversations": "채팅 기록",
+      "attachments": "용량이 클 수 있음",
+      "providers": "제공업체, 브리지 및 MCP 서버",
+      "skills": "설치 및 직접 만든 스킬",
+      "appSettings": "예약 작업 포함"
+    },
+    "credentialWarning": "모델 설정이 포함된 백업에는 사용 가능한 API 키가 들어 있습니다. 안전한 곳에 보관하세요.",
+    "exportButton": "백업 만들기",
+    "importButton": "백업에서 복원",
+    "exportSuccess": "백업을 만들었습니다({{size}})",
+    "exportFailed": "백업을 만들지 못했습니다",
+    "previewFailed": "해당 백업 파일을 읽을 수 없습니다",
+    "restoreConfirmTitle": "이 백업에서 복원할까요?",
+    "restoreConfirmContent": "{{items}}을(를) 현재 데이터에 병합합니다. 백업에 없는 항목은 그대로 유지됩니다.",
+    "restoreExportedAt": "{{date}}에 버전 {{version}}으로 생성됨",
+    "restoreSuccess": "{{rows}}개 레코드와 {{files}}개 파일을 복원했습니다",
+    "restoreFailed": "해당 백업에서 복원하지 못했습니다"
   }
 }

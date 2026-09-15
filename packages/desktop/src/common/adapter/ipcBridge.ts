@@ -843,6 +843,20 @@ const nativeShowOpen = bridge.buildProvider<string[] | undefined, ShowOpenOption
 const isElectronRenderer = (): boolean =>
   typeof window !== 'undefined' && Boolean((window as { electronAPI?: unknown }).electronAPI);
 
+export type ShowSaveOptions = { defaultPath?: string; filters?: OpenDialogOptions['filters'] } | undefined;
+
+/**
+ * Electron-only, and deliberately without the WebUI fallback `show-open` has.
+ * A save dialog names a path on the machine running the backend, and in WebUI
+ * that is a server the user cannot browse. Callers gate on
+ * {@link isNativeDialogAvailable} rather than offering a picker that would
+ * write somewhere the user never sees.
+ */
+const nativeShowSave = bridge.buildProvider<string | undefined, ShowSaveOptions>('show-save');
+
+/** Whether native file dialogs are available (Electron desktop, not WebUI). */
+export const isNativeDialogAvailable = (): boolean => isElectronRenderer();
+
 export const dialog = {
   showOpen: {
     provider: nativeShowOpen.provider,
@@ -853,6 +867,7 @@ export const dialog = {
       return nativeShowOpen.invoke(options);
     }) as typeof nativeShowOpen.invoke,
   },
+  showSave: nativeShowSave,
 };
 
 // ---------------------------------------------------------------------------

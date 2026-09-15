@@ -1556,5 +1556,35 @@
     "sales": "営業・ビジネス",
     "industryAdvisory": "業界アドバイザリー",
     "operationsHr": "オペレーション・人事"
+  },
+  "backup": {
+    "title": "バックアップと復元",
+    "description": "データをファイルに保存して別のマシンに持ち運んだり、既存のバックアップをこのインストールに統合したりできます。",
+    "listSeparator": "、",
+    "scope": {
+      "conversations": "会話とメッセージ",
+      "attachments": "添付ファイルとワークスペースのファイル",
+      "providers": "モデル設定",
+      "skills": "スキル",
+      "appSettings": "アシスタント、チーム、環境設定"
+    },
+    "scopeHint": {
+      "conversations": "チャット履歴",
+      "attachments": "サイズが大きくなる場合があります",
+      "providers": "プロバイダー、ブリッジ、MCP サーバー",
+      "skills": "インストール済みおよび自作のスキル",
+      "appSettings": "スケジュールされたタスクを含む"
+    },
+    "credentialWarning": "モデル設定を含むバックアップには使用可能な API キーが含まれます。信頼できる場所に保管してください。",
+    "exportButton": "バックアップを作成",
+    "importButton": "バックアップから復元",
+    "exportSuccess": "バックアップを作成しました（{{size}}）",
+    "exportFailed": "バックアップを作成できませんでした",
+    "previewFailed": "そのバックアップファイルを読み取れませんでした",
+    "restoreConfirmTitle": "このバックアップから復元しますか？",
+    "restoreConfirmContent": "{{items}} を現在のデータに統合します。バックアップに含まれないものは変更されません。",
+    "restoreExportedAt": "{{date}} にバージョン {{version}} で作成",
+    "restoreSuccess": "{{rows}} 件のレコードと {{files}} 個のファイルを復元しました",
+    "restoreFailed": "そのバックアップから復元できませんでした"
   }
 }
