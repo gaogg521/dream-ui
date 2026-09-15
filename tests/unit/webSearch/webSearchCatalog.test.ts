@@ -37,11 +37,11 @@ describe('web search provider catalog', () => {
 
   it('points every shipped vendor at a page where a key can actually be obtained', () => {
     for (const provider of WEB_SEARCH_PROVIDERS) {
-      if (provider.custom) {
-        // A user-defined endpoint has no sign-up page to link to, and no
-        // default URL — the user supplies both.
-        expect(provider.apiKeyUrl).toBeUndefined();
-        expect(provider.defaultBaseUrl).toBe('');
+      if (provider.requiresBaseUrl) {
+        // No shared default exists: either the provider is user-defined, or
+        // its URL embeds the account's own instance and workspace. Shipping a
+        // fixed string would be a value that works for nobody.
+        expect(provider.defaultBaseUrl, provider.id).toBe('');
         continue;
       }
       expect(provider.apiKeyUrl, provider.id).toMatch(/^https:\/\//);
@@ -54,7 +54,7 @@ describe('web search provider catalog', () => {
    * endpoint has nowhere to send the request, and would otherwise be offered
    * as a selectable default that fails on every search.
    */
-  it('treats a custom provider as configured only once it has a key AND an endpoint', () => {
+  it('treats an endpoint-required provider as configured only with a key AND an endpoint', () => {
     const keyOnly = { WEB_SEARCH_KEY_CUSTOM: 'k' };
     expect(configuredWebSearchProviders(keyOnly).map((p) => p.id)).toEqual([]);
 

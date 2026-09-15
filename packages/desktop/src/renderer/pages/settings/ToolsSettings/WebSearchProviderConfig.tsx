@@ -213,11 +213,11 @@ const WebSearchProviderConfig: React.FC<Props> = ({ server, onServerUpdated }) =
                   </div>
                   <div className='flex items-center gap-8px pl-150px'>
                     <Input
-                      value={env[provider.baseUrlEnvKey] || (provider.custom ? '' : provider.defaultBaseUrl)}
+                      value={env[provider.baseUrlEnvKey] || provider.defaultBaseUrl}
                       onChange={(value: string) =>
                         setField(provider.baseUrlEnvKey, value === provider.defaultBaseUrl ? '' : value)
                       }
-                      placeholder={provider.custom ? t('mcp.webSearch.endpointPlaceholder') : undefined}
+                      placeholder={provider.requiresBaseUrl ? t('mcp.webSearch.endpointPlaceholder') : undefined}
                       size='small'
                       className='flex-1'
                       spellCheck={false}

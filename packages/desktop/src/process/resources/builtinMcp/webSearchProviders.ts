@@ -145,33 +145,46 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
   },
 
   /**
-   * Aliyun IQS, API-KEY entry point.
+   * Aliyun's AI 搜索开放平台 (OpenSearch), 联网搜索 service.
    *
-   * The endpoint has strong evidence: an unauthenticated probe answered
-   * `403 Incorrect APIKey provided. You can find your api key at
-   * https://ipaas.console.aliyun.com/api-key` — the service not only
-   * recognised the request but pointed at the console page for THIS product's
-   * key, which is what distinguishes it from the Doubao mistake, where a
-   * wrong host returned a generic 401 naming nothing.
+   * An earlier version pointed this at `cloud-iqs.aliyuncs.com/search/
+   * genericSearch`, which is a DIFFERENT Aliyun product (信息查询服务 IQS).
+   * That endpoint answered `403 Incorrect APIKey provided` and even named a
+   * key console — evidence strong enough to look settled, and still the wrong
+   * product. Aliyun sells several search services and their error messages do
+   * not distinguish themselves.
    *
-   * The request and response SHAPES are not confirmed. Aliyun's help pages
-   * redirect scrapers to a product overview, and no key was available to run
-   * it, so `?query=` and `pageItems` are conventions rather than documented
-   * fact. Read a first failure as "the shape may be wrong", not "bad key".
+   * verified: help.aliyun.com/zh/open-search/search-platform/developer-
+   * reference/web-search (2026-09-15). Not run against the live service — no
+   * key available.
    *
-   * Aliyun also exposes this through `iqs.cn-zhangjiakou.aliyuncs.com`, but
-   * that path authenticates with an AK/SK pair through the OpenAPI SDK, which
-   * a single-key form cannot express.
+   * The URL has no shared default: it is
+   * `{host}/v3/openapi/workspaces/{workspace}/web-search/ops-web-search-001`,
+   * where the host carries the account's own instance id. Hence
+   * `requiresBaseUrl` on the catalog entry.
+   *
+   * `content_type` and `way` are left unset so the service's own defaults
+   * (`snippet` / `pro`) apply — sending a heavier mode changes both latency
+   * and billing.
    */
   aliyun: {
-    request: (query, _count, apiKey, baseUrl) => ({
-      url: `${baseUrl}?query=${encodeURIComponent(query)}`,
+    request: (query, count, apiKey, baseUrl) => ({
+      url: baseUrl,
       init: {
-        method: 'GET',
-        headers: { ...JSON_HEADERS, 'X-API-Key': apiKey },
+        method: 'POST',
+        headers: { ...JSON_HEADERS, Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ query, top_k: count }),
       },
     }),
-    pick: (payload) => asArray(payload.pageItems ?? at(payload, 'data.pageItems')),
+    pick: (payload) =>
+      asArray(at(payload, 'result.search_result')).map((row) => {
+        if (!row || typeof row !== 'object') return row;
+        const record = row as Record<string, unknown>;
+        // The date sits at `meta_info.publishedTime`; field matching only
+        // looks at top-level keys, so lift it rather than lose it.
+        const published = at(record, 'meta_info.publishedTime');
+        return typeof published === 'string' ? { ...record, publishedTime: published } : record;
+      }),
   },
 
   /**
@@ -322,6 +335,7 @@ const DATE_KEYS = [
   'datePublished',
   'date_published',
   'publishTime',
+  'publishedTime',
   'publish_time',
   // Zhipu spells it `publish_date`; near-miss spellings like this are why the
   // list is long rather than clever.
