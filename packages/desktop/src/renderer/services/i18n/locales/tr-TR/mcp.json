@@ -82,6 +82,11 @@
     "saved": "Kaydedildi",
     "saveFailed": "Kaydedilemedi",
     "readyHint": "{{count}} sağlayıcı yapılandırıldı — web araması açık",
-    "emptyHint": "Bir anahtar eklediğinizde otomatik olarak açılır"
+    "emptyHint": "Bir anahtar eklediğinizde otomatik olarak açılır",
+    "test": "Test et",
+    "regionCustom": "Özel",
+    "endpointPlaceholder": "https://hizmetiniz/search",
+    "noPrefix": "(ön ek yok)",
+    "needsSetup": "Anahtar gerekli"
   }
 }

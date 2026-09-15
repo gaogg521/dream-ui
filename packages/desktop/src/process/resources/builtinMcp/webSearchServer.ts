@@ -35,10 +35,11 @@ import {
   WEB_SEARCH_MCP_NAME,
   WEB_SEARCH_PROVIDERS,
   configuredWebSearchProviders,
+  resolveWebSearchBaseUrl,
   resolveWebSearchProvider,
   type WebSearchProvider,
 } from '../../../common/webSearch/catalog';
-import { WEB_SEARCH_ADAPTERS, normalise, type SearchHit } from './webSearchProviders';
+import { WEB_SEARCH_ADAPTERS, runProviderSearch, type SearchHit } from './webSearchProviders';
 
 const DEFAULT_COUNT = 8;
 const MAX_COUNT = 20;
@@ -141,39 +142,35 @@ async function runSearch(query: string, count: number): Promise<{ text: string; 
   const apiKey = current[provider.envKey]?.trim();
   if (!apiKey) return { text: NOT_CONFIGURED, isError: true };
 
-  const { url, init } = adapter.request(query, count, apiKey);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  try {
-    const response = await fetch(url, { ...init, signal: controller.signal });
-    const raw = await response.text();
-    if (!response.ok) {
-      return { text: describeHttpFailure(provider, response.status, raw), isError: true };
-    }
+  const outcome = await runProviderSearch(
+    adapter,
+    apiKey,
+    resolveWebSearchBaseUrl(provider, current),
+    query,
+    count,
+    REQUEST_TIMEOUT_MS,
+    current
+  );
 
-    let payload: unknown;
-    try {
-      payload = JSON.parse(raw);
-    } catch {
-      return {
-        text: `${provider.label} returned a non-JSON response:\n${raw.slice(0, 300)}`,
-        isError: true,
-      };
-    }
+  if (outcome.ok) {
+    return { text: formatHits(provider, query, outcome.hits || []), isError: false };
+  }
 
-    return { text: formatHits(provider, query, normalise(adapter, payload, count)), isError: false };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const timedOut = message.includes('abort');
+  const detail = outcome.body ?? '';
+  if (outcome.reason === 'http') {
+    return { text: describeHttpFailure(provider, outcome.status ?? 0, detail), isError: true };
+  }
+  if (outcome.reason === 'badJson') {
     return {
-      text: timedOut
-        ? `${provider.label} did not respond within ${REQUEST_TIMEOUT_MS / 1000}s.`
-        : `Could not reach ${provider.label}: ${message}`,
+      text: `${provider.label} returned a non-JSON response:
+${detail.slice(0, 300)}`,
       isError: true,
     };
-  } finally {
-    clearTimeout(timer);
   }
+  if (outcome.reason === 'timeout') {
+    return { text: `${provider.label} did not respond within ${REQUEST_TIMEOUT_MS / 1000}s.`, isError: true };
+  }
+  return { text: `Could not reach ${provider.label}: ${detail || 'unknown error'}`, isError: true };
 }
 
 async function main() {

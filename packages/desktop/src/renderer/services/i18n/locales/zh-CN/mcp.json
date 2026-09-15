@@ -82,6 +82,11 @@
     "saved": "已保存",
     "saveFailed": "保存失败",
     "readyHint": "已配置 {{count}} 家，联网搜索已启用",
-    "emptyHint": "填入任意一家的 Key 后自动启用"
+    "emptyHint": "填入任意一家的 Key 后自动启用",
+    "test": "测试",
+    "regionCustom": "自定义",
+    "endpointPlaceholder": "https://你的服务地址/search",
+    "noPrefix": "（无前缀）",
+    "needsSetup": "需填写 Key"
   }
 }

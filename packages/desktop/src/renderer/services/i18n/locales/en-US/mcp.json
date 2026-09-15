@@ -82,6 +82,11 @@
     "saved": "Saved",
     "saveFailed": "Could not save",
     "readyHint": "{{count}} provider(s) configured — web search is on",
-    "emptyHint": "Turns on automatically once you add a key"
+    "emptyHint": "Turns on automatically once you add a key",
+    "test": "Test",
+    "regionCustom": "Custom",
+    "endpointPlaceholder": "https://your-service/search",
+    "noPrefix": "(no prefix)",
+    "needsSetup": "Needs an API key"
   }
 }

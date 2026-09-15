@@ -82,6 +82,11 @@
     "saved": "Salvo",
     "saveFailed": "Não foi possível salvar",
     "readyHint": "{{count}} provedor(es) configurado(s) — a busca na web está ativa",
-    "emptyHint": "Ativada automaticamente assim que você adicionar uma chave"
+    "emptyHint": "Ativada automaticamente assim que você adicionar uma chave",
+    "test": "Testar",
+    "regionCustom": "Personalizado",
+    "endpointPlaceholder": "https://seu-servico/search",
+    "noPrefix": "(sem prefixo)",
+    "needsSetup": "Requer chave"
   }
 }

@@ -82,6 +82,11 @@
     "saved": "Enregistré",
     "saveFailed": "Échec de l'enregistrement",
     "readyHint": "{{count}} fournisseur(s) configuré(s) — la recherche web est active",
-    "emptyHint": "Activée automatiquement dès qu'une clé est saisie"
+    "emptyHint": "Activée automatiquement dès qu'une clé est saisie",
+    "test": "Tester",
+    "regionCustom": "Personnalisé",
+    "endpointPlaceholder": "https://votre-service/search",
+    "noPrefix": "(sans préfixe)",
+    "needsSetup": "Clé requise"
   }
 }

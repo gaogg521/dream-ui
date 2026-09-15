@@ -28,6 +28,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { WEB_SEARCH_PROVIDERS } from '@/common/webSearch/catalog';
 import { WEB_SEARCH_ADAPTERS, normalise } from '@process/resources/builtinMcp/webSearchProviders';
 
 /**
@@ -68,7 +69,8 @@ const BOCHA_RESPONSE = {
 describe('vendor request shaping', () => {
   it('covers every adapter with an https endpoint and a credential', () => {
     for (const [id, adapter] of Object.entries(WEB_SEARCH_ADAPTERS)) {
-      const { url, init } = adapter.request('test query', 5, 'KEY-123');
+      const base = WEB_SEARCH_PROVIDERS.find((p) => p.id === id)?.defaultBaseUrl || 'https://custom.test/search';
+      const { url, init } = adapter.request('test query', 5, 'KEY-123', base);
       expect(url, id).toMatch(/^https:\/\//);
       const carriesKey = JSON.stringify(init.headers).includes('KEY-123') || (init.body ?? '').includes('KEY-123');
       expect(carriesKey, `${id} must send the api key somewhere`).toBe(true);
@@ -78,17 +80,35 @@ describe('vendor request shaping', () => {
   it('puts the query on the wire for GET-style vendors too', () => {
     // Brave and Aliyun take the query in the URL, so a body-only builder would
     // silently search for nothing.
-    expect(WEB_SEARCH_ADAPTERS.brave.request('北京天气', 3, 'k').url).toContain(encodeURIComponent('北京天气'));
-    expect(WEB_SEARCH_ADAPTERS.aliyun.request('北京天气', 3, 'k').url).toContain(encodeURIComponent('北京天气'));
+    expect(
+      WEB_SEARCH_ADAPTERS.brave.request('北京天气', 3, 'k', 'https://api.search.brave.com/res/v1/web/search').url
+    ).toContain(encodeURIComponent('北京天气'));
+    expect(
+      WEB_SEARCH_ADAPTERS.aliyun.request('北京天气', 3, 'k', 'https://cloud-iqs.aliyuncs.com/search/genericSearch').url
+    ).toContain(encodeURIComponent('北京天气'));
   });
 
   it('uses each vendor’s own auth header, as confirmed by its rejection message', () => {
-    expect(WEB_SEARCH_ADAPTERS.bocha.request('q', 1, 'k').init.headers.Authorization).toBe('Bearer k');
+    expect(
+      WEB_SEARCH_ADAPTERS.bocha.request('q', 1, 'k', 'https://api.bochaai.com/v1/web-search').init.headers.Authorization
+    ).toBe('Bearer k');
     // Zhipu takes the raw key, not a Bearer prefix.
-    expect(WEB_SEARCH_ADAPTERS.zhipu.request('q', 1, 'k').init.headers.Authorization).toBe('k');
-    expect(WEB_SEARCH_ADAPTERS.serper.request('q', 1, 'k').init.headers['X-API-KEY']).toBe('k');
-    expect(WEB_SEARCH_ADAPTERS.brave.request('q', 1, 'k').init.headers['X-Subscription-Token']).toBe('k');
-    expect(WEB_SEARCH_ADAPTERS.aliyun.request('q', 1, 'k').init.headers['X-API-Key']).toBe('k');
+    expect(
+      WEB_SEARCH_ADAPTERS.zhipu.request('q', 1, 'k', 'https://open.bigmodel.cn/api/paas/v4/web_search').init.headers
+        .Authorization
+    ).toBe('k');
+    expect(
+      WEB_SEARCH_ADAPTERS.serper.request('q', 1, 'k', 'https://google.serper.dev/search').init.headers['X-API-KEY']
+    ).toBe('k');
+    expect(
+      WEB_SEARCH_ADAPTERS.brave.request('q', 1, 'k', 'https://api.search.brave.com/res/v1/web/search').init.headers[
+        'X-Subscription-Token'
+      ]
+    ).toBe('k');
+    expect(
+      WEB_SEARCH_ADAPTERS.aliyun.request('q', 1, 'k', 'https://cloud-iqs.aliyuncs.com/search/genericSearch').init
+        .headers['X-API-Key']
+    ).toBe('k');
   });
 
   /**
@@ -99,10 +119,66 @@ describe('vendor request shaping', () => {
    */
   it('sends the Tavily key only as a header, never in the body', () => {
     const secret = 'tvly-SECRET-do-not-log';
-    const { init } = WEB_SEARCH_ADAPTERS.tavily.request('q', 1, secret);
+    const { init } = WEB_SEARCH_ADAPTERS.tavily.request('q', 1, secret, 'https://api.tavily.com/search');
     expect(init.headers.Authorization).toBe(`Bearer ${secret}`);
     expect(init.body).not.toContain(secret);
     expect(JSON.parse(init.body!)).not.toHaveProperty('api_key');
+  });
+});
+
+/**
+ * The user-defined endpoint.
+ *
+ * Shipping only the seven measured vendors would mean a service we have not
+ * heard of cannot be used at all. The four things that actually differed
+ * between those seven — header name, header prefix, HTTP method, query field —
+ * are configuration here, and the response is left to the structural scan.
+ */
+describe('custom provider', () => {
+  const CUSTOM_URL = 'https://search.internal.test/api';
+
+  it('defaults to the most common shape among the measured vendors', () => {
+    const { url, init } = WEB_SEARCH_ADAPTERS.custom.request('cats', 5, 'k', CUSTOM_URL, {});
+    expect(url).toBe(CUSTOM_URL);
+    expect(init.method).toBe('POST');
+    expect(init.headers.Authorization).toBe('Bearer k');
+    expect(JSON.parse(init.body!).query).toBe('cats');
+  });
+
+  it('takes the header name, prefix and query field from configuration', () => {
+    const { init } = WEB_SEARCH_ADAPTERS.custom.request('cats', 5, 'k', CUSTOM_URL, {
+      WEB_SEARCH_CUSTOM_AUTH_HEADER: 'X-API-KEY',
+      WEB_SEARCH_CUSTOM_AUTH_PREFIX: '',
+      WEB_SEARCH_CUSTOM_QUERY_FIELD: 'q',
+    });
+    // An empty prefix means the raw key, which is what Serper and Zhipu want.
+    expect(init.headers['X-API-KEY']).toBe('k');
+    expect(init.headers.Authorization).toBeUndefined();
+    expect(JSON.parse(init.body!).q).toBe('cats');
+  });
+
+  it('switches to a query string when configured for GET', () => {
+    const { url, init } = WEB_SEARCH_ADAPTERS.custom.request('北京天气', 5, 'k', CUSTOM_URL, {
+      WEB_SEARCH_CUSTOM_METHOD: 'GET',
+      WEB_SEARCH_CUSTOM_QUERY_FIELD: 'q',
+    });
+    expect(init.method).toBe('GET');
+    expect(url).toBe(`${CUSTOM_URL}?q=${encodeURIComponent('北京天气')}`);
+    expect(init.body).toBeUndefined();
+  });
+
+  it('appends to an endpoint that already carries a query string', () => {
+    const { url } = WEB_SEARCH_ADAPTERS.custom.request('cats', 5, 'k', `${CUSTOM_URL}?lang=zh`, {
+      WEB_SEARCH_CUSTOM_METHOD: 'GET',
+    });
+    expect(url).toBe(`${CUSTOM_URL}?lang=zh&query=cats`);
+  });
+
+  it('reads results out of an unknown envelope via the structural scan', () => {
+    // No adapter path exists for a custom vendor, so this is the only route.
+    const payload = { data: { items: [{ heading: 'Hit', href: 'https://x.test/a', abstract: 'text' }] } };
+    const hits = normalise(WEB_SEARCH_ADAPTERS.custom, payload, 8);
+    expect(hits).toEqual([{ title: 'Hit', url: 'https://x.test/a', snippet: 'text', publishedAt: undefined }]);
   });
 });
 

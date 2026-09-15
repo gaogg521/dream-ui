@@ -82,6 +82,11 @@
     "saved": "ذخیره شد",
     "saveFailed": "ذخیره نشد",
     "readyHint": "{{count}} سرویس‌دهنده پیکربندی شد — جستجوی وب فعال است",
-    "emptyHint": "با افزودن کلید به‌صورت خودکار فعال می‌شود"
+    "emptyHint": "با افزودن کلید به‌صورت خودکار فعال می‌شود",
+    "test": "آزمایش",
+    "regionCustom": "سفارشی",
+    "endpointPlaceholder": "https://your-service/search",
+    "noPrefix": "(بدون پیشوند)",
+    "needsSetup": "به کلید نیاز دارد"
   }
 }

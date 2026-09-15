@@ -35,10 +35,31 @@ describe('web search provider catalog', () => {
     expect(ids).toContain('bocha');
   });
 
-  it('points every provider at a page where a key can actually be obtained', () => {
+  it('points every shipped vendor at a page where a key can actually be obtained', () => {
     for (const provider of WEB_SEARCH_PROVIDERS) {
+      if (provider.custom) {
+        // A user-defined endpoint has no sign-up page to link to, and no
+        // default URL — the user supplies both.
+        expect(provider.apiKeyUrl).toBeUndefined();
+        expect(provider.defaultBaseUrl).toBe('');
+        continue;
+      }
       expect(provider.apiKeyUrl, provider.id).toMatch(/^https:\/\//);
+      expect(provider.defaultBaseUrl, provider.id).toMatch(/^https:\/\//);
     }
+  });
+
+  /**
+   * The custom entry needs BOTH halves before it can run: a key with no
+   * endpoint has nowhere to send the request, and would otherwise be offered
+   * as a selectable default that fails on every search.
+   */
+  it('treats a custom provider as configured only once it has a key AND an endpoint', () => {
+    const keyOnly = { WEB_SEARCH_KEY_CUSTOM: 'k' };
+    expect(configuredWebSearchProviders(keyOnly).map((p) => p.id)).toEqual([]);
+
+    const both = { WEB_SEARCH_KEY_CUSTOM: 'k', WEB_SEARCH_URL_CUSTOM: 'https://x.test/search' };
+    expect(configuredWebSearchProviders(both).map((p) => p.id)).toEqual(['custom']);
   });
 
   it('treats an unknown id as no provider rather than throwing', () => {
