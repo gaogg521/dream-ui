@@ -886,5 +886,7 @@
   "policyDenied_departmentBudgetExceeded": "所在部门本期的用量预算已用完，暂时无法发送。请联系管理员。",
   "meteredTopUp": {
     "cta": "去充值"
-  }
+  },
+  "mediaIntentSwitchedImage": "已切换到图片生成模式，再次发送即可生成。",
+  "mediaIntentSwitchedVideo": "已切换到视频生成模式，再次发送即可生成。"
 }

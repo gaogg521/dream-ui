@@ -872,5 +872,7 @@
   "policyDenied_departmentBudgetExceeded": "Departmanınızın bu dönemdeki kullanım bütçesi doldu, gönderilemiyor. Bir yöneticiyle iletişime geçin.",
   "meteredTopUp": {
     "cta": "Yükle"
-  }
+  },
+  "mediaIntentSwitchedImage": "Görsel üretimine geçildi. Oluşturmak için tekrar gönderin.",
+  "mediaIntentSwitchedVideo": "Video üretimine geçildi. Oluşturmak için tekrar gönderin."
 }

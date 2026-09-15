@@ -871,5 +871,7 @@
   "policyDenied_departmentBudgetExceeded": "Das Nutzungsbudget deiner Abteilung für diesen Zeitraum ist aufgebraucht. Wende dich an eine Administratorin oder einen Administrator.",
   "meteredTopUp": {
     "cta": "Aufladen"
-  }
+  },
+  "mediaIntentSwitchedImage": "Zur Bildgenerierung gewechselt. Erneut senden, um zu generieren.",
+  "mediaIntentSwitchedVideo": "Zur Videogenerierung gewechselt. Erneut senden, um zu generieren."
 }
