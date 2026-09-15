@@ -111,6 +111,25 @@
 `catalog` 不认某个 host，等于该厂商的**全部**修复静默失效。
 （详见 memory `agnes-cn-host-gates-all-media-fixes`。）
 
+### 3.10 一个锦上添花的功能差点让**全部**内置 MCP 注册不上（本轮自伤）
+
+`resolveHostedWebSearchEnv()` 里读 `app.isPackaged`。在 `electron` 的 `app` 不是真模块的
+环境里这会抛异常，而这个函数跑在 `buildDefaultMcpServers()` 里 —— 异常一抛，
+**整个 `ensureBootstrapMcpServersInDb` 步骤中止**，于是图片生成、应用内浏览器、
+export-pdf……**一个内置 MCP 都注册不上**。
+
+三个跟搜索毫无关系的 bootstrap 测试由绿变红，是 pre-push 钩子拦下来的。
+
+教训有两条：
+
+1. **我漏跑了测试目录。** 只跑了 `tests/unit/webSearch` 和 `tests/unit/process`，
+   没跑 `tests/unit/bootstrap` —— 而我改的正是 `runBackendMigrations.ts`。
+   改哪个文件，就去找哪个文件的测试，不要按功能名去猜目录。
+2. **爆炸半径要和收益匹配。** 联网搜索退化成"要用户自己填 key"是小损失，
+   丢掉全部内置工具不是。这类调用现在整个包在 try/catch 里，任何失败都当成"没有 broker"。
+
+新加的测试**反向验证过**：把守卫去掉 → 4 红 6 绿；加回来 → 10 绿。
+
 ### 3.9 `echo "tsc=$?"` 取到的是 `head` 的退出码
 
 `bunx tsc --noEmit | head -30` 之后的 `$?` 是管道最后一个命令的。类型错误被整个吞掉。
