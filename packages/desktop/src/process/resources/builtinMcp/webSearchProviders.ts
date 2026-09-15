@@ -90,13 +90,25 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
     pick: (payload) => asArray(at(payload, 'data.webPages.value') ?? at(payload, 'webPages.value')),
   },
 
-  /** verified: 401 "Header中未收到Authorization参数，无法进行身份验证。" */
+  /**
+   * verified against docs.bigmodel.cn (Web Search API) 2026-09-15.
+   *
+   * The header was WRONG here until that read. A probe with no credentials
+   * answered `401 Header中未收到Authorization参数`, which says only that the
+   * header is absent — it says nothing about the format — and the raw key was
+   * guessed from Zhipu's older JWT-style auth. The docs' own curl is
+   * `Authorization: Bearer <token>`, so every request would have been rejected
+   * while looking exactly like a bad key.
+   *
+   * Body and response path were right: `{search_query, search_engine, count}`
+   * → `search_result[]` of `{title, link, content, publish_date}`.
+   */
   zhipu: {
     request: (query, count, apiKey, baseUrl) => ({
       url: baseUrl,
       init: {
         method: 'POST',
-        headers: { ...JSON_HEADERS, Authorization: apiKey },
+        headers: { ...JSON_HEADERS, Authorization: `Bearer ${apiKey}` },
         body: JSON.stringify({ search_engine: 'search_std', search_query: query, count }),
       },
     }),
@@ -133,9 +145,23 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
   },
 
   /**
-   * verified: 403 "Incorrect APIKey provided. You can find your api key at
-   * https://ipaas.console.aliyun.com/api-key" — which is also where the header
-   * name comes from.
+   * Aliyun IQS, API-KEY entry point.
+   *
+   * The endpoint has strong evidence: an unauthenticated probe answered
+   * `403 Incorrect APIKey provided. You can find your api key at
+   * https://ipaas.console.aliyun.com/api-key` — the service not only
+   * recognised the request but pointed at the console page for THIS product's
+   * key, which is what distinguishes it from the Doubao mistake, where a
+   * wrong host returned a generic 401 naming nothing.
+   *
+   * The request and response SHAPES are not confirmed. Aliyun's help pages
+   * redirect scrapers to a product overview, and no key was available to run
+   * it, so `?query=` and `pageItems` are conventions rather than documented
+   * fact. Read a first failure as "the shape may be wrong", not "bad key".
+   *
+   * Aliyun also exposes this through `iqs.cn-zhangjiakou.aliyuncs.com`, but
+   * that path authenticates with an AK/SK pair through the OpenAPI SDK, which
+   * a single-key form cannot express.
    */
   aliyun: {
     request: (query, _count, apiKey, baseUrl) => ({
@@ -292,7 +318,17 @@ const SNIPPET_KEYS = [
   'mainText',
   'main_text',
 ];
-const DATE_KEYS = ['datePublished', 'date_published', 'publishTime', 'publish_time', 'published_date', 'date'];
+const DATE_KEYS = [
+  'datePublished',
+  'date_published',
+  'publishTime',
+  'publish_time',
+  // Zhipu spells it `publish_date`; near-miss spellings like this are why the
+  // list is long rather than clever.
+  'publish_date',
+  'published_date',
+  'date',
+];
 
 /**
  * Case-insensitive field lookup.
