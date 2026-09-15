@@ -84,7 +84,14 @@ async function testWebSearchProvider(
   if (outcome.reason === 'network') return { ok: false, message: `Cannot reach ${endpoint} — ${detail}` };
   if (outcome.reason === 'badJson') return { ok: false, message: `Endpoint did not return JSON — ${detail}` };
   const status = outcome.status || 0;
-  const hint = status === 401 || status === 403 ? 'key rejected' : status === 429 ? 'rate limited' : 'request failed';
+  // A 401 can also mean the endpoint belongs to a different service than the
+  // key does — Ark answered 401 to a valid Doubao-search key. Say both.
+  const hint =
+    status === 401 || status === 403
+      ? 'key rejected, or this endpoint is for a different service'
+      : status === 429
+        ? 'rate limited'
+        : 'request failed';
   return { ok: false, message: `HTTP ${status} (${hint}) — ${detail}` };
 }
 

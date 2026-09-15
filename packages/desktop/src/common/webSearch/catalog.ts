@@ -133,7 +133,7 @@ export const WEB_SEARCH_PROVIDERS: WebSearchProvider[] = [
   },
   {
     id: 'volcengine',
-    label: '豆包搜索（火山方舟）',
+    label: '豆包搜索',
     region: 'cn',
     envKey: 'WEB_SEARCH_KEY_VOLCENGINE',
     baseUrlEnvKey: 'WEB_SEARCH_URL_VOLCENGINE',
