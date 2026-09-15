@@ -34,7 +34,11 @@ const spec = { id: 's', kind: 'video', form: 'C', match: { model: /x/ }, params:
 /** Every field 2.5 documents as rejected with HTTP 400. */
 const FORBIDDEN_ON_V25 = ['width', 'height', 'fps', 'num_frames', 'quality', 'num_inference_steps'];
 
-const submitAndCaptureBody = async (model: string, params: Record<string, unknown> = {}) => {
+const submitAndCaptureBody = async (
+  model: string,
+  params: Record<string, unknown> = {},
+  extra: { inputs?: string[]; baseUrl?: string } = {}
+) => {
   const fetchMock = vi.fn().mockResolvedValue({
     ok: true,
     status: 200,
@@ -49,9 +53,9 @@ const submitAndCaptureBody = async (model: string, params: Record<string, unknow
     kind: 'video',
     prompt: 'two beasts crossing their tribulation',
     params: params as TaskSubmitContext['params'],
-    inputs: [],
+    inputs: extra.inputs ?? [],
     model,
-    baseUrl: 'https://agnes-ai.com/v1',
+    baseUrl: extra.baseUrl ?? 'https://apihub.agnes-ai.com/v1',
     apiKey: 'k',
     spec,
   });
@@ -100,6 +104,108 @@ describe('Agnes video driver request shape', () => {
     expect(body.first_frame).toBe('https://example.test/a.png');
     // `image` is the 2.0 spelling and is not a 2.5 field.
     expect(body).not.toHaveProperty('image');
+  });
+
+  /**
+   * `mode` is not a label on the request — it is a whitelist. keyframe rejects
+   * `images`, reference rejects `first_frame`, text rejects all of them. So
+   * every media field we hold has to land in a mode that permits it, and the
+   * old `firstFrameImage || inputs[0]` reduced everything to one value.
+   */
+  it('sends both frames in keyframe mode', async () => {
+    const { body } = await submitAndCaptureBody('agnes-video-2.5-flash', {
+      firstFrameImage: 'https://x.test/first.png',
+      lastFrameImage: 'https://x.test/last.png',
+    });
+
+    expect(body.mode).toBe('keyframe');
+    expect(body.first_frame).toBe('https://x.test/first.png');
+    // Dropped before this fix: the driver read only the first frame, so a last
+    // frame the user had chosen never reached the API.
+    expect(body.last_frame).toBe('https://x.test/last.png');
+    expect(body).not.toHaveProperty('images');
+  });
+
+  it('accepts a last frame on its own', async () => {
+    // The docs require first_frame and last_frame "至少提供一个", not both.
+    const { body } = await submitAndCaptureBody('agnes-video-2.5-flash', {
+      lastFrameImage: 'https://x.test/last.png',
+    });
+    expect(body.mode).toBe('keyframe');
+    expect(body.last_frame).toBe('https://x.test/last.png');
+    expect(body).not.toHaveProperty('first_frame');
+  });
+
+  it('keeps a single attachment on keyframe, as image-to-video', async () => {
+    const { body } = await submitAndCaptureBody('agnes-video-2.5-flash', {}, { inputs: ['https://x.test/a.png'] });
+    expect(body.mode).toBe('keyframe');
+    expect(body.first_frame).toBe('https://x.test/a.png');
+  });
+
+  it('switches to reference mode for several attachments instead of dropping them', async () => {
+    const { body } = await submitAndCaptureBody(
+      'agnes-video-2.5-flash',
+      {},
+      { inputs: ['https://x.test/a.png', 'https://x.test/b.png', 'https://x.test/c.png'] }
+    );
+
+    expect(body.mode).toBe('reference');
+    expect(body.images).toEqual(['https://x.test/a.png', 'https://x.test/b.png', 'https://x.test/c.png']);
+    // keyframe has nowhere to put the rest, and reference rejects these.
+    expect(body).not.toHaveProperty('first_frame');
+    expect(body).not.toHaveProperty('last_frame');
+  });
+
+  it('clamps reference images to the documented five', async () => {
+    // Over the cap Flash rejects the whole request before the task exists
+    // (`images length must not exceed 5`), which reads as "video is broken".
+    const { body } = await submitAndCaptureBody(
+      'agnes-video-2.5-flash',
+      {},
+      { inputs: Array.from({ length: 8 }, (_, i) => `https://x.test/${i}.png`) }
+    );
+    expect(body.mode).toBe('reference');
+    expect((body.images as string[]).length).toBe(5);
+  });
+
+  it('sends no media field at all in text mode', async () => {
+    const { body } = await submitAndCaptureBody('agnes-video-2.5-flash', {});
+    expect(body.mode).toBe('text');
+    for (const field of ['first_frame', 'last_frame', 'images', 'audios', 'videos']) {
+      expect(body, `${field} is rejected in text mode`).not.toHaveProperty(field);
+    }
+  });
+
+  /**
+   * The host is the user's, not this file's. A `.cn` key answers `401 Invalid
+   * token` at `apihub.agnes-ai.com`, so a hardcoded host made Agnes video
+   * unusable for a Chinese account no matter what was configured.
+   */
+  it('submits and polls against the configured host', async () => {
+    const { url } = await submitAndCaptureBody('agnes-video-2.5-flash', {}, { baseUrl: 'https://api.agnes-ai.cn/v1' });
+    expect(url).toBe('https://api.agnes-ai.cn/v1/videos');
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ status: 'queued' }),
+      text: async () => '{"status":"queued"}',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    await getTaskDriver('agnes-task')!.poll(
+      {
+        kind: 'video',
+        model: 'agnes-video-2.5-flash',
+        baseUrl: 'https://api.agnes-ai.cn/v1',
+        apiKey: 'k',
+        spec,
+      },
+      'task_1'
+    );
+    // The poll path is NOT under /v1 — that asymmetry is in the vendor's docs.
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://api.agnes-ai.cn/agnesapi?video_id=task_1&model_name=agnes-video-2.5-flash'
+    );
   });
 
   it('drops negative_prompt on 2.5 rather than sending an undocumented field', async () => {

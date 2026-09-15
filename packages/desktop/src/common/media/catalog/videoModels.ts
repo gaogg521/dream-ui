@@ -14,6 +14,7 @@
  * the "build the base layer complete" decision (progress doc, 2026-08-05).
  */
 
+import { AGNES_HOSTS } from './agnesHosts';
 import type { MediaModelSpec } from './types';
 
 export const BUILTIN_VIDEO_MODELS: MediaModelSpec[] = [
@@ -126,12 +127,17 @@ export const BUILTIN_VIDEO_MODELS: MediaModelSpec[] = [
     kind: 'video',
     form: 'C',
     endpointStyle: 'agnes-task',
-    match: { model: /agnes[-_]?video[-_]?2\.5/i, baseUrlIncludes: ['agnes-ai.com'] },
+    match: { model: /agnes[-_]?video[-_]?2\.5/i, baseUrlIncludes: AGNES_HOSTS },
     params: {
       // The vendor's range is any integer 4-12; these are the round stops.
       durations: [4, 5, 8, 10, 12],
       aspectRatios: ['21:9', '16:9', '4:3', '1:1', '3:4', '9:16'],
       imageToVideo: true,
+      // `keyframe` mode documents first_frame AND last_frame, "至少提供一个".
+      // Without this flag `clipParamsToSpec` drops `lastFrameImage` on the way
+      // to the driver — the silent-field-loss shape that left Seedance videos
+      // mute — so the API's headline feature was unreachable.
+      firstLastFrame: true,
       seed: true,
       negativePrompt: false,
     },
@@ -176,7 +182,7 @@ export const BUILTIN_VIDEO_MODELS: MediaModelSpec[] = [
     kind: 'video',
     form: 'C',
     endpointStyle: 'agnes-task',
-    match: { model: /agnes.*video|video.*agnes/i, baseUrlIncludes: ['agnes-ai.com'] },
+    match: { model: /agnes.*video|video.*agnes/i, baseUrlIncludes: AGNES_HOSTS },
     params: {
       durations: [3, 5, 10, 18],
       aspectRatios: ['16:9', '9:16', '1:1', '4:3', '3:4'],

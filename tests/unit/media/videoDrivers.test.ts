@@ -238,24 +238,37 @@ describe('agnes driver', () => {
   const pollCtx = {
     kind: 'video' as const,
     model: 'agnes-video-v2.0',
-    baseUrl: 'https://irrelevant.example',
+    baseUrl: 'https://apihub.agnes-ai.com/v1',
     apiKey: 'sk-test',
     spec,
   };
 
-  it('submits to the fixed Agnes host regardless of the configured base_url', async () => {
+  /**
+   * This used to assert the opposite — that the driver ignores `base_url` and
+   * always calls `apihub.agnes-ai.com`, on the reasoning that the docs print
+   * one host. Agnes serves the same API from `.com` and `.cn`, and a key is
+   * honoured by only one of them: measured 2026-09-15, a `.cn` key answered
+   * `401 Invalid token` at `apihub.agnes-ai.com` and `200 queued` at
+   * `api.agnes-ai.cn`. A fixed host therefore made Agnes video impossible for a
+   * Chinese account regardless of what it configured.
+   *
+   * The old worry — a relay gateway being bypassed, its key sent to the vendor
+   * — is handled a layer up: `baseUrlIncludes` (agnesHosts.ts) means a model
+   * served by a non-Agnes host never resolves to this driver at all.
+   */
+  it('submits to the configured Agnes host, not a fixed one', async () => {
     const fetchMock = vi.fn(async () =>
       jsonResponse({ id: 'task_1', task_id: 'task_1', video_id: 'video_1', status: 'queued' })
     );
     vi.stubGlobal('fetch', fetchMock);
 
     const { taskId } = await driver.submit(
-      submitCtx({ model: 'agnes-video-v2.0', baseUrl: 'https://irrelevant.example', apiKey: 'sk-test' })
+      submitCtx({ model: 'agnes-video-v2.0', baseUrl: 'https://api.agnes-ai.cn/v1', apiKey: 'sk-test' })
     );
 
     expect(taskId).toBe('video_1');
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('https://apihub.agnes-ai.com/v1/videos');
+    expect(url).toBe('https://api.agnes-ai.cn/v1/videos');
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer sk-test');
     const body = JSON.parse(String(init.body));
     expect(body.model).toBe('agnes-video-v2.0');

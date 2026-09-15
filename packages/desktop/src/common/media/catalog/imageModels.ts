@@ -16,6 +16,7 @@
  * resolver gates on EXECUTABLE_FORMS.
  */
 
+import { AGNES_HOSTS } from './agnesHosts';
 import type { MediaModelSpec } from './types';
 
 /**
@@ -234,7 +235,7 @@ export const BUILTIN_IMAGE_MODELS: MediaModelSpec[] = [
     kind: 'image',
     form: 'A',
     endpointStyle: AGNES_IMAGE_STYLE,
-    match: { model: /agnes.*image|image.*agnes/i, baseUrlIncludes: ['agnes-ai.com'] },
+    match: { model: /agnes.*image|image.*agnes/i, baseUrlIncludes: AGNES_HOSTS },
     params: {
       sizes: AGNES_IMAGE_SIZES,
       aspectRatios: AGNES_IMAGE_RATIOS,
