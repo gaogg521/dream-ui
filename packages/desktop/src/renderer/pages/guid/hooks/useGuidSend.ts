@@ -17,6 +17,7 @@ import { type TFunction } from 'i18next';
 import type { NavigateFunction } from 'react-router-dom';
 import { mutate as swrMutate } from 'swr';
 import { getConversationCreateErrorMessage } from '@/renderer/pages/conversation/utils/conversationCreateError';
+import { requestMediaMode } from '@/renderer/hooks/media/mediaModeStore';
 import type { AcpModelInfo } from '../types';
 
 /** Just the slice of `useMediaComposer` the welcome page needs. */
@@ -24,6 +25,9 @@ export type GuidMediaComposer = {
   mode: 'off' | 'image' | 'video';
   needsModel: boolean;
   changeMode: (mode: 'off' | 'image' | 'video') => void;
+  /** The resolved model, handed to the conversation so it starts on the same one. */
+  providerId?: string;
+  model?: string;
   submit: (
     prompt: string,
     workspaceDir?: string,
@@ -167,6 +171,11 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
       if (isCustomWorkspace) updateWorkspaceTime(finalWorkspace);
       emitter.emit('chat.history.refresh');
 
+      // Captured before `submit`, which is async and could in principle see a
+      // changed selection by the time the navigate runs.
+      const mediaTarget =
+        media.providerId && media.model ? { providerId: media.providerId, model: media.model } : undefined;
+
       const { images, rejected } = splitReferenceInputs(files.map(chatFileRefPath));
       if (rejected.length) {
         Message.warning(t('conversation.mediaModeNonImageIgnored', { files: rejected.map(baseName).join('、') }));
@@ -180,9 +189,20 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
       if (started.started === false) {
         Message.error(t('conversation.mediaModeStartFailed', { reason: started.error ?? '' }));
       }
-      // Leave the mode on: the next thing a user does after one image is
-      // usually another one, and the conversation's own send box picks the
-      // mode up from its own state anyway.
+      // Carry the mode into the conversation we are about to open.
+      //
+      // The mode lives in `useMediaComposer`, and this page's instance is a
+      // different one from the send box's — keyed on no conversation at all,
+      // and unmounted by the navigate below. Leaving it to "its own state"
+      // meant the send box started at `off`, so the follow-up to a generated
+      // image ("make the background blue") went to the chat model, which
+      // cannot draw. The request channel is how a mode crosses between
+      // composers; the send box applies it once on mount.
+      if (mediaTarget) {
+        requestMediaMode(conversation.id, media.mode, mediaTarget);
+      } else {
+        requestMediaMode(conversation.id, media.mode);
+      }
       await navigate(`/conversation/${conversation.id}`);
       return;
     }
