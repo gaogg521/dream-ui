@@ -25,15 +25,30 @@
  * so the payload branches by model family rather than trying to be one shape
  * that satisfies both.
  *
- * Fixed host independent of whatever `base_url` the provider's chat traffic
- * uses, like Kling — the docs hardcode `apihub.agnes-ai.com` for both create
- * and poll, there is no per-account/region variant documented.
+ * # The host comes from the provider, not from this file
  *
- * Submit: POST /v1/videos → { video_id, task_id, status: 'queued', ... }.
- * Poll (recommended): GET /agnesapi?video_id=<id> → status queued/in_progress/
- * completed/failed. `video_id` and `task_id` are usually the same value;
- * `video_id` is what the docs recommend for new integrations, so `submit()`
- * returns that as the driver's `taskId`.
+ * This driver used to hardcode `apihub.agnes-ai.com` on the reasoning that the
+ * docs print one host and no regional variant exists. Both halves were wrong,
+ * and the result was that Agnes video could not run at all for a China
+ * account. Measured 2026-09-15 with the key configured in this app, the same
+ * `POST /v1/videos` body to each host:
+ *
+ *   apihub.agnes-ai.com -> 401 {"message":"Invalid token"}
+ *   api.agnes-ai.cn     -> 200 {"video_id":"task_…","status":"queued"}
+ *
+ * A key is issued against one host and is not honoured by the other, so the
+ * only host that can be right is the one the user configured. `baseUrl` is
+ * where that lives, and the catalog's `baseUrlIncludes` (see `agnesHosts.ts`)
+ * already guarantees it is an Agnes host before this driver is reached — which
+ * is also what answers the old comment's worry about a relay gateway: a model
+ * served by some other host does not resolve to this driver in the first place.
+ *
+ * Submit: POST <base>/v1/videos → { video_id, task_id, status: 'queued', ... }.
+ * Poll (recommended): GET <base>/agnesapi?video_id=<id> → status queued/
+ * in_progress/completed/failed. Note the poll path is NOT under `/v1`, so both
+ * are built from the base with its compat suffix stripped. `video_id` and
+ * `task_id` are usually the same value; `video_id` is what the docs recommend
+ * for new integrations, so `submit()` returns that as the driver's `taskId`.
  *
  * ⚠ The finished address is at the response's **top-level `url`**, not at
  * `metadata.url` as the docs state — measured against the live host on
@@ -43,13 +58,21 @@
 
 import {
   readJsonOrThrow,
+  stripCompatSuffix,
   type TaskDriver,
   type TaskPollContext,
   type TaskPollResult,
   type TaskSubmitContext,
 } from './types';
 
-const API_ROOT = 'https://apihub.agnes-ai.com';
+/**
+ * Only reachable if a provider somehow resolved here with no `base_url` at
+ * all; the catalog match cannot be satisfied without one. Kept so the request
+ * fails against a real host with a real error rather than against `undefined`.
+ */
+const FALLBACK_API_ROOT = 'https://api.agnes-ai.cn';
+
+const apiRoot = (baseUrl: string): string => stripCompatSuffix(baseUrl || '') || FALLBACK_API_ROOT;
 
 const headers = (apiKey: string): Record<string, string> => ({
   'Content-Type': 'application/json',
@@ -111,6 +134,54 @@ const v25Seconds = (seconds: number | undefined): string => {
   return String(Math.min(V25_MAX_SECONDS, Math.max(V25_MIN_SECONDS, Math.round(seconds))));
 };
 
+/** Flash caps `images` at 5 and answers `400 images length must not exceed 5`. */
+const V25_MAX_REFERENCE_IMAGES = 5;
+
+/**
+ * Pick the 2.5 `mode` and the media fields that mode allows.
+ *
+ * The three modes are not interchangeable spellings of "here is a picture" —
+ * each one forbids the others' fields outright:
+ *
+ *   text      no media at all
+ *   keyframe  first_frame and/or last_frame; images/audios rejected
+ *   reference images and/or audios; first_frame/last_frame rejected
+ *
+ * So the mode has to be derived from what we are actually holding, and every
+ * field we hold has to end up somewhere legal. The previous version derived it
+ * from one value (`firstFrameImage || inputs[0]`) and sent only `first_frame`,
+ * which lost two things silently: a last frame the user had picked, and every
+ * attachment after the first.
+ *
+ * An explicit first/last frame is a direct statement about the animation's
+ * endpoints, so it wins. Otherwise attachments decide: one image reads as
+ * "animate this" (keyframe, the behaviour this driver has always had), while
+ * several can only mean "use these as reference" — keyframe has nowhere to put
+ * them.
+ */
+const planV25Media = (
+  ctx: TaskSubmitContext
+): { mode: 'text' | 'keyframe' | 'reference'; media: Record<string, unknown> } => {
+  const first = ctx.params.firstFrameImage;
+  const last = ctx.params.lastFrameImage;
+  if (first || last) {
+    const media: Record<string, unknown> = {};
+    if (first) media.first_frame = first;
+    if (last) media.last_frame = last;
+    return { mode: 'keyframe', media };
+  }
+
+  const inputs = ctx.inputs.filter(Boolean);
+  if (inputs.length === 1) return { mode: 'keyframe', media: { first_frame: inputs[0] } };
+  if (inputs.length > 1) {
+    // Clamped rather than passed through: over the cap the whole request is
+    // rejected before the task exists, which would read to the user as "video
+    // generation is broken" rather than "I attached too many pictures".
+    return { mode: 'reference', media: { images: inputs.slice(0, V25_MAX_REFERENCE_IMAGES) } };
+  }
+  return { mode: 'text', media: {} };
+};
+
 type AgnesTaskPayload = {
   status?: string;
   progress?: number;
@@ -139,16 +210,17 @@ export const agnesDriver: TaskDriver = {
     const body: Record<string, unknown> = { model: ctx.model, prompt: ctx.prompt };
 
     if (isAgnesV25(ctx.model)) {
-      // `mode` is required and decides which reference fields are legal:
-      // `keyframe` takes first_frame/last_frame, `text` takes none. Only the
-      // documented fields go on the wire — 2.5 rejects unknown ones rather
-      // than ignoring them, so `negative_prompt` (a 2.0 field with no 2.5
-      // counterpart) is deliberately dropped instead of sent hopefully.
-      body.mode = reference ? 'keyframe' : 'text';
+      // `mode` is required and decides which media fields are legal; the docs'
+      // rule table forbids the fields of the other modes rather than ignoring
+      // them. Only the documented fields go on the wire — 2.5 rejects unknown
+      // ones, so `negative_prompt` (a 2.0 field with no 2.5 counterpart) is
+      // deliberately dropped instead of sent hopefully.
+      const plan = planV25Media(ctx);
+      body.mode = plan.mode;
       body.seconds = v25Seconds(ctx.params.durationSeconds);
       body.size = V25_SIZE_TIER;
       body.aspect_ratio = ctx.params.aspectRatio || '16:9';
-      if (reference) body.first_frame = reference;
+      Object.assign(body, plan.media);
       if (ctx.params.seed !== undefined) body.seed = ctx.params.seed;
     } else {
       const size = (ctx.params.aspectRatio && SIZE_BY_ASPECT[ctx.params.aspectRatio]) || DEFAULT_SIZE;
@@ -161,7 +233,7 @@ export const agnesDriver: TaskDriver = {
       if (ctx.params.negativePrompt) body.negative_prompt = ctx.params.negativePrompt;
     }
 
-    const response = await fetch(`${API_ROOT}/v1/videos`, {
+    const response = await fetch(`${apiRoot(ctx.baseUrl)}/v1/videos`, {
       method: 'POST',
       headers: headers(ctx.apiKey),
       body: JSON.stringify(body),
@@ -185,7 +257,7 @@ export const agnesDriver: TaskDriver = {
     const pollQuery = isAgnesV25(ctx.model)
       ? `video_id=${encodeURIComponent(taskId)}&model_name=${encodeURIComponent(ctx.model)}`
       : `video_id=${encodeURIComponent(taskId)}`;
-    const response = await fetch(`${API_ROOT}/agnesapi?${pollQuery}`, {
+    const response = await fetch(`${apiRoot(ctx.baseUrl)}/agnesapi?${pollQuery}`, {
       method: 'GET',
       headers: headers(ctx.apiKey),
       signal: ctx.signal,
