@@ -15,10 +15,13 @@
  *   - `n` is not a parameter.
  *   - `size` is REQUIRED, and is a tier (1K-4K), not pixels.
  *   - the aspect ratio is its own `ratio` field.
- *   - a reference image is `image: string[]` in the JSON body.
+ *   - a reference image is `image: string[]` nested under `extra_body`.
  *
  * verified: https://agnes-ai.com/zh-Hans/docs/agnes-image-21-flash (2026-09-11)
  * verified: https://agnes-ai.com/zh-Hans/docs/agnes-image-25-flash (2026-09-11)
+ * verified: live probe against apihub.agnes-ai.com (2026-09-15) — see the
+ *   `extra_body` note below; the docs table and its curl sample disagree and
+ *   the sample is right.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -64,16 +67,33 @@ describe('Agnes image request body', () => {
     expect(body.ratio).toBe('16:9');
   });
 
-  it('carries reference images as an array in the body', () => {
+  /**
+   * `extra_body`, not the top level.
+   *
+   * The docs' parameter table lists `image` beside `model` and `prompt`, which
+   * reads as top-level; the worked `curl` on the same page nests it, and the
+   * sample is what the service implements. Measured 2026-09-15 against
+   * apihub.agnes-ai.com with the same prompt and key, changing only placement:
+   * top level answered `400 LLM Provider NOT provided ... model=
+   * agnes-image-2.5-flash`, `extra_body` answered 200 with an image.
+   *
+   * That error names the model and never mentions `image`, and text-to-image on
+   * the same model and route keeps working — so a regression here looks like a
+   * credentials or routing fault and costs a debugging session to place.
+   */
+  it('nests reference images under extra_body, never at the top level', () => {
     const one = buildAgnesImageBody('m', 'p', {} as never, ['https://x.test/a.png']);
-    expect(one.image).toEqual(['https://x.test/a.png']);
+    expect(one.extra_body).toEqual({ image: ['https://x.test/a.png'] });
+    expect(one).not.toHaveProperty('image');
 
     // Multi-image composition is the same field with more entries.
     const many = buildAgnesImageBody('m', 'p', {} as never, ['https://x.test/a.png', 'data:image/png;base64,AA']);
-    expect(many.image).toHaveLength(2);
+    expect((many.extra_body as { image: string[] }).image).toHaveLength(2);
 
-    // Text-to-image must not send an empty array.
-    expect(buildAgnesImageBody('m', 'p', {} as never, [])).not.toHaveProperty('image');
+    // Text-to-image must send neither the field nor an empty wrapper.
+    const none = buildAgnesImageBody('m', 'p', {} as never, []);
+    expect(none).not.toHaveProperty('image');
+    expect(none).not.toHaveProperty('extra_body');
   });
 });
 
