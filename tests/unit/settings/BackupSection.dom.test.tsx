@@ -16,10 +16,17 @@ const mocks = vi.hoisted(() => ({
   messageSuccessMock: vi.fn(),
   messageErrorMock: vi.fn(),
   modalConfirmMock: vi.fn(),
+  showItemInFolderMock: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('@/common/adapter/httpBridge', () => ({
   httpRequest: mocks.httpRequestMock,
+}));
+
+vi.mock('@/common', () => ({
+  ipcBridge: {
+    shell: { showItemInFolder: { invoke: mocks.showItemInFolderMock } },
+  },
 }));
 
 vi.mock('@/common/adapter/ipcBridge', () => ({
@@ -69,9 +76,9 @@ describe('BackupSection', () => {
     mocks.httpRequestMock.mockResolvedValue({ path: 'D:/backups/mine.zip', archiveBytes: 2048, manifest: {} });
 
     render(<BackupSection />);
-    // Everything is selected by default — clear one so the request is not the
-    // trivial all-true case.
-    fireEvent.click(screen.getByText('settings.backup.scope.attachments'));
+    // Clear one of the defaulted-on categories so the request is not the
+    // trivial everything-on case.
+    fireEvent.click(screen.getByText('settings.backup.scope.skills'));
     fireEvent.click(screen.getByText('settings.backup.exportButton'));
 
     await waitFor(() => expect(mocks.httpRequestMock).toHaveBeenCalled());
@@ -80,8 +87,53 @@ describe('BackupSection', () => {
     expect(path).toBe('/api/system/backup');
     expect(body).toEqual({
       destination: 'D:/backups/mine.zip',
-      scope: { conversations: true, attachments: false, providers: true, skills: true, appSettings: true },
+      scope: { conversations: true, attachments: false, providers: true, skills: false, appSettings: true },
     });
+  });
+
+  /**
+   * Attachments default off because they are the one category that can run for
+   * half an hour — measured at 13,304 files / 228 MB on a developer install,
+   * while everything else finishes in seconds. On by default, the ordinary
+   * backup looked like the app had hung.
+   */
+  it('leaves workspace attachments out by default', async () => {
+    mocks.showSaveMock.mockResolvedValue('D:/backups/mine.zip');
+    mocks.httpRequestMock.mockResolvedValue({ path: 'x', archiveBytes: 1, manifest: {} });
+
+    render(<BackupSection />);
+    fireEvent.click(screen.getByText('settings.backup.exportButton'));
+
+    await waitFor(() => expect(mocks.httpRequestMock).toHaveBeenCalled());
+    expect(mocks.httpRequestMock.mock.calls[0][2].scope.attachments).toBe(false);
+  });
+
+  /**
+   * The user picked the destination minutes earlier in a native dialog; making
+   * them go find it afterwards is how a finished backup still feels lost.
+   */
+  it('offers to reveal the archive only after one has been written', async () => {
+    mocks.showSaveMock.mockResolvedValue('D:/backups/mine.zip');
+    mocks.httpRequestMock.mockResolvedValue({ path: 'D:/backups/mine.zip', archiveBytes: 2048, manifest: {} });
+
+    render(<BackupSection />);
+    expect(screen.queryByText('settings.backup.revealButton')).toBeNull();
+
+    fireEvent.click(screen.getByText('settings.backup.exportButton'));
+    await waitFor(() => expect(screen.queryByText('settings.backup.revealButton')).not.toBeNull());
+    // The path is shown too, so it is findable even without the button.
+    expect(screen.queryByText('D:/backups/mine.zip')).not.toBeNull();
+
+    fireEvent.click(screen.getByText('settings.backup.revealButton'));
+    expect(mocks.showItemInFolderMock).toHaveBeenCalledWith('D:/backups/mine.zip');
+  });
+
+  it('warns about the wait only while attachments are selected', () => {
+    render(<BackupSection />);
+    expect(screen.queryByText('settings.backup.attachmentsSlowWarning')).toBeNull();
+
+    fireEvent.click(screen.getByText('settings.backup.scope.attachments'));
+    expect(screen.queryByText('settings.backup.attachmentsSlowWarning')).not.toBeNull();
   });
 
   it('does not call the backend when the save dialog is cancelled', async () => {
@@ -108,7 +160,9 @@ describe('BackupSection', () => {
 
   it('disables export when nothing is selected', () => {
     render(<BackupSection />);
-    for (const key of ['conversations', 'attachments', 'providers', 'skills', 'appSettings']) {
+    // Attachments start off, so clearing the four that start on empties the
+    // selection.
+    for (const key of ['conversations', 'providers', 'skills', 'appSettings']) {
       fireEvent.click(screen.getByText(`settings.backup.scope.${key}`));
     }
 

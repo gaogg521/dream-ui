@@ -1583,6 +1583,9 @@
     "restoreConfirmContent": "Dadurch werden {{items}} mit Ihren aktuellen Daten zusammengeführt. Was nicht in der Sicherung enthalten ist, bleibt unverändert.",
     "restoreExportedAt": "Erstellt am {{date}} mit Version {{version}}",
     "restoreSuccess": "{{rows}} Datensätze und {{files}} Dateien wiederhergestellt",
-    "restoreFailed": "Wiederherstellung aus dieser Sicherung fehlgeschlagen"
+    "restoreFailed": "Wiederherstellung aus dieser Sicherung fehlgeschlagen",
+    "attachmentsSlowWarning": "Arbeitsbereichsdateien sind viele kleine Dateien, daher kann dies mehrere Minuten dauern und die App wirkt durchgehend beschäftigt. Alles für den Umzug auf einen neuen Rechner steckt in den anderen Kategorien.",
+    "revealButton": "Im Ordner anzeigen",
+    "revealFailed": "Der Ordner konnte nicht geöffnet werden"
   }
 }

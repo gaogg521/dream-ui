@@ -1585,6 +1585,9 @@
     "restoreConfirmContent": "{{items}} を現在のデータに統合します。バックアップに含まれないものは変更されません。",
     "restoreExportedAt": "{{date}} にバージョン {{version}} で作成",
     "restoreSuccess": "{{rows}} 件のレコードと {{files}} 個のファイルを復元しました",
-    "restoreFailed": "そのバックアップから復元できませんでした"
+    "restoreFailed": "そのバックアップから復元できませんでした",
+    "attachmentsSlowWarning": "ワークスペースのファイルは数が多いため、圧縮に数分かかり、その間アプリは処理中のままになります。新しいマシンへの移行に必要なものは他の項目に含まれています。",
+    "revealButton": "フォルダーを開く",
+    "revealFailed": "フォルダーを開けませんでした"
   }
 }

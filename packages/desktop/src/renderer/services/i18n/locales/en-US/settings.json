@@ -3233,6 +3233,9 @@
     "restoreConfirmContent": "This will merge {{items}} into your current data. Anything not in the backup is left untouched.",
     "restoreExportedAt": "Created {{date}} by version {{version}}",
     "restoreSuccess": "Restored {{rows}} records and {{files}} files",
-    "restoreFailed": "Could not restore from that backup"
+    "restoreFailed": "Could not restore from that backup",
+    "attachmentsSlowWarning": "Workspace files are many small files, so this can take several minutes and the app will look busy the whole time. Everything needed to move to a new machine is in the other categories.",
+    "revealButton": "Show in folder",
+    "revealFailed": "Could not open that folder"
   }
 }

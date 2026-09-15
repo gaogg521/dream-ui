@@ -1586,6 +1586,9 @@
     "restoreConfirmContent": "Isso vai mesclar {{items}} com seus dados atuais. O que não estiver no backup permanece intacto.",
     "restoreExportedAt": "Criado em {{date}} pela versão {{version}}",
     "restoreSuccess": "{{rows}} registros e {{files}} arquivos restaurados",
-    "restoreFailed": "Não foi possível restaurar a partir desse backup"
+    "restoreFailed": "Não foi possível restaurar a partir desse backup",
+    "attachmentsSlowWarning": "Os arquivos do espaço de trabalho são muitos e pequenos, então isso pode levar vários minutos e o app parecerá ocupado o tempo todo. Tudo o que é preciso para mudar de máquina está nas outras categorias.",
+    "revealButton": "Mostrar na pasta",
+    "revealFailed": "Não foi possível abrir essa pasta"
   }
 }

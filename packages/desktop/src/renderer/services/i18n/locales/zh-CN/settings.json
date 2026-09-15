@@ -3454,6 +3454,9 @@
     "restoreConfirmContent": "将把 {{items}} 合并进当前数据。备份里没有的内容保持不变。",
     "restoreExportedAt": "创建于 {{date}}，版本 {{version}}",
     "restoreSuccess": "已恢复 {{rows}} 条记录和 {{files}} 个文件",
-    "restoreFailed": "从该备份恢复失败"
+    "restoreFailed": "从该备份恢复失败",
+    "attachmentsSlowWarning": "工作区文件数量多、体积大，打包可能需要几分钟，期间界面会一直显示处理中。换新机器所需的内容都在其他几项里。",
+    "revealButton": "打开所在文件夹",
+    "revealFailed": "无法打开该文件夹"
   }
 }

@@ -4,11 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { ipcBridge } from '@/common';
 import { httpRequest } from '@/common/adapter/httpBridge';
 import { dialog, isNativeDialogAvailable } from '@/common/adapter/ipcBridge';
 import { Alert, Button, Checkbox, Message, Modal } from '@arco-design/web-react';
+import { FolderOpen } from '@icon-park/react';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { iconColors } from '@/renderer/styles/colors';
 
 /**
  * 备份与恢复 / Backup and restore.
@@ -58,10 +61,20 @@ type RestoreBackupResponse = {
 
 const SCOPE_KEYS = ['conversations', 'attachments', 'providers', 'skills', 'appSettings'] as const;
 
-/** Everything selected — the "move me to a new machine" default. */
+/**
+ * Everything a new machine needs, minus the one category that can take half an
+ * hour.
+ *
+ * `attachments` is off by default because it is not what "carry my setup
+ * across" means: the conversations, messages, providers and skills all live in
+ * the catalog, and this category is the files agents read and wrote while
+ * working. Measured on a developer install, it was 13,304 files / 228 MB and
+ * roughly thirty minutes to compress — with the rest of the backup finishing in
+ * seconds. Defaulting it on made the common case look like the app had hung.
+ */
 const DEFAULT_SCOPE: BackupScope = {
   conversations: true,
-  attachments: true,
+  attachments: false,
   providers: true,
   skills: true,
   appSettings: true,
@@ -94,6 +107,8 @@ const BackupSection: React.FC = () => {
   const [scope, setScope] = useState<BackupScope>(DEFAULT_SCOPE);
   const [exporting, setExporting] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  /** The archive just written, so it can be revealed without re-picking it. */
+  const [lastArchive, setLastArchive] = useState<string | null>(null);
 
   const nothingSelected = useMemo(() => SCOPE_KEYS.every((key) => !scope[key]), [scope]);
 
@@ -114,17 +129,29 @@ const BackupSection: React.FC = () => {
         destination,
         scope,
       });
-      Message.success(
-        t('settings.backup.exportSuccess', {
-          size: formatBytes(result.archiveBytes),
-        })
-      );
+      // Remember where it went, so the button below can open it. A path the
+      // user chose minutes ago in a native dialog is not something they should
+      // have to go hunting for afterwards.
+      setLastArchive(result.path);
+      Message.success({
+        content: t('settings.backup.exportSuccess', { size: formatBytes(result.archiveBytes) }),
+        // A long export outlives the default toast: someone who waited minutes
+        // for it should not have to wonder whether it finished.
+        duration: 6000,
+      });
     } catch (error) {
       Message.error(error instanceof Error ? error.message : t('settings.backup.exportFailed'));
     } finally {
       setExporting(false);
     }
   }, [scope, t]);
+
+  const handleReveal = useCallback(() => {
+    if (!lastArchive) return;
+    void ipcBridge.shell.showItemInFolder.invoke(lastArchive).catch(() => {
+      Message.error(t('settings.backup.revealFailed'));
+    });
+  }, [lastArchive, t]);
 
   const handleImport = useCallback(async () => {
     const picked = await dialog.showOpen.invoke({
@@ -197,6 +224,12 @@ const BackupSection: React.FC = () => {
       </div>
 
       {scope.providers && <Alert type='warning' content={t('settings.backup.credentialWarning')} className='mb-12px' />}
+      {/* Says so before the click, not after: this category is the difference
+          between a backup that finishes in seconds and one that runs for half
+          an hour with nothing on screen to explain it. */}
+      {scope.attachments && (
+        <Alert type='info' content={t('settings.backup.attachmentsSlowWarning')} className='mb-12px' />
+      )}
 
       <div className='flex items-center gap-8px'>
         <Button type='primary' size='small' loading={exporting} disabled={nothingSelected} onClick={handleExport}>
@@ -205,7 +238,18 @@ const BackupSection: React.FC = () => {
         <Button size='small' loading={restoring} onClick={handleImport}>
           {t('settings.backup.importButton')}
         </Button>
+        {/* Only after something has been written — before that there is
+            nothing to reveal, and a dead button is worse than no button. */}
+        {lastArchive && (
+          <Button size='small' type='text' onClick={handleReveal}>
+            <span className='flex items-center gap-4px'>
+              <FolderOpen theme='outline' size='13' fill={iconColors.secondary} />
+              {t('settings.backup.revealButton')}
+            </span>
+          </Button>
+        )}
       </div>
+      {lastArchive && <div className='text-12px text-t-secondary mt-8px break-all'>{lastArchive}</div>}
     </div>
   );
 };
