@@ -110,13 +110,23 @@ const formatHits = (provider: WebSearchProvider, query: string, hits: SearchHit[
  * a 5xx is worth one retry. Saying which is which here is the difference
  * between one wasted call and a loop.
  */
-const describeHttpFailure = (provider: WebSearchProvider, status: number, body: string): string => {
+const describeHttpFailure = (provider: WebSearchProvider, status: number, body: string, endpoint: string): string => {
   const detail = body.slice(0, 300);
   if (status === 401 || status === 403) {
+    /**
+     * A 401 here does not always mean the key is bad. Doubao search was once
+     * pointed at Volcengine Ark — a different product on a different host — and
+     * Ark answered 401 to a perfectly valid key. The message said "key
+     * rejected", which sent the search hunting for a credential problem that
+     * did not exist. Naming the endpoint makes the other explanation visible.
+     */
     return [
-      `${provider.label} rejected the API key (HTTP ${status}).`,
-      'Do NOT retry — the key is wrong, expired, or out of quota.',
-      `Ask the user to check it in Settings → Tools → one-web-search (${provider.apiKeyUrl}).`,
+      `${provider.label} rejected the request (HTTP ${status}) at ${endpoint}.`,
+      'Do NOT retry — retrying cannot fix either cause.',
+      'Either the API key is wrong, expired or out of quota, OR that endpoint',
+      'belongs to a different service than the key does — a host that does not',
+      'serve this product answers 401 to a valid key too.',
+      `Ask the user to check both in Settings → Tools → one-web-search${provider.apiKeyUrl ? ` (${provider.apiKeyUrl})` : ''}.`,
       detail && `Service said: ${detail}`,
     ]
       .filter(Boolean)
@@ -142,15 +152,8 @@ async function runSearch(query: string, count: number): Promise<{ text: string; 
   const apiKey = current[provider.envKey]?.trim();
   if (!apiKey) return { text: NOT_CONFIGURED, isError: true };
 
-  const outcome = await runProviderSearch(
-    adapter,
-    apiKey,
-    resolveWebSearchBaseUrl(provider, current),
-    query,
-    count,
-    REQUEST_TIMEOUT_MS,
-    current
-  );
+  const endpoint = resolveWebSearchBaseUrl(provider, current);
+  const outcome = await runProviderSearch(adapter, apiKey, endpoint, query, count, REQUEST_TIMEOUT_MS, current);
 
   if (outcome.ok) {
     return { text: formatHits(provider, query, outcome.hits || []), isError: false };
@@ -158,7 +161,7 @@ async function runSearch(query: string, count: number): Promise<{ text: string; 
 
   const detail = outcome.body ?? '';
   if (outcome.reason === 'http') {
-    return { text: describeHttpFailure(provider, outcome.status ?? 0, detail), isError: true };
+    return { text: describeHttpFailure(provider, outcome.status ?? 0, detail, endpoint), isError: true };
   }
   if (outcome.reason === 'badJson') {
     return {
