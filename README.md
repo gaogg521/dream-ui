@@ -15,7 +15,13 @@ side by side:
   (`MockGateway` only, so far — see the handoff doc). Disabled unless
   `BAOYUN_MASTER_API_KEY` is set.
 
-The two modes share no code and no tables. Design and status:
+- **Mode C — hosted search** (`/v1/search`): holds the company's Tavily key and
+  runs the search itself, returning normalised results. The desktop app cannot
+  ship a key of its own — dream-ui is a public repo and an `asar` is readable —
+  so this is what makes web search work out of the box. Daily allowance per
+  device plus a global cap; disabled unless `SEARCH_TAVILY_API_KEY` is set.
+
+The three modes share no code and no tables. Design and status:
 [`docs/baoyun-metered-proxy-handoff.zh-CN.md`](docs/baoyun-metered-proxy-handoff.zh-CN.md).
 
 This is a fully independent project (its own git repo, its own
@@ -61,6 +67,11 @@ migrates a local SQLite file at `DATABASE_URL` (default
 | `BAOYUN_FREE_GRANT_CENTS` | no | `1000` | One-time free grant, CNY cents (`1000` = ¥10.00). |
 | `BAOYUN_TRIAL_MODELS` | no | placeholder | Comma-separated preset model list; unset serves an unverified placeholder. |
 | `MOCK_GATEWAY_SECRET` | no | `mock-secret` | Shared secret the mock payment webhook body must carry. |
+| `SEARCH_TAVILY_API_KEY` | no | — | Secret. Enables mode C when set; hosted search is off otherwise. |
+| `SEARCH_TAVILY_BASE_URL` | no | `https://api.tavily.com/search` | Tavily search endpoint. |
+| `SEARCH_DAILY_LIMIT_PER_INSTALL` | no | `50` | Searches one install may run per UTC day. |
+| `SEARCH_GLOBAL_DAILY_LIMIT` | no | `5000` | Searches every install together may run per UTC day — the spend cap. |
+| `SEARCH_RATE_LIMIT_PER_HOUR` | no | `60` | Per-IP sliding window for `/v1/search` only. |
 
 ## API
 
@@ -114,6 +125,51 @@ CNY cents (分).
 Async (image / video) calls that can't be priced inline are settled by a
 background poller against `metered_pending_costs`.
 
+### Mode C — hosted web search (`POST /v1/search`)
+
+Answers `503 {"error":"search_unavailable"}` unless `SEARCH_TAVILY_API_KEY` is
+set. The client sends a query, never a key: dream-ui is a public repository and
+an Electron `asar` is readable, so a key bundled into the app is a published
+key. This is the same reasoning as mode B, minus the money — a search is one
+unit, so there is no ledger and no top-up, just a daily allowance per device
+and a global cap on the day.
+
+Request:
+
+```json
+{ "install_id": "opaque-per-device-id", "query": "what changed in X", "count": 8 }
+```
+
+`count` is optional (default 8, clamped to 1–20).
+
+Success response (`200`):
+
+```json
+{
+  "provider": "tavily",
+  "results": [
+    { "title": "…", "url": "https://…", "snippet": "…", "published_at": "2026-01-02" }
+  ],
+  "quota": { "used_today": 3, "daily_limit": 50, "remaining": 47 }
+}
+```
+
+`published_at` is omitted when the upstream does not supply one.
+
+Error responses:
+
+| Status | Body | Cause |
+|---|---|---|
+| 400 | `{"error":"bad_request"}` | Missing/empty `install_id`, or a `query` shorter than 2 characters (the upstream rejects those, so they are stopped here). |
+| 429 | `{"error":"rate_limited"}` | Caller IP exceeded `SEARCH_RATE_LIMIT_PER_HOUR`. |
+| 429 | `{"error":"search_quota_exhausted"}` | This install spent its `SEARCH_DAILY_LIMIT_PER_INSTALL` for the UTC day. |
+| 502 | `{"error":"upstream_error"}` | The search vendor failed. The slot is refunded, so a vendor outage does not eat the allowance. |
+| 503 | `{"error":"search_unavailable"}` | No search key configured on this broker. |
+| 503 | `{"error":"search_budget_exhausted"}` | All installs together hit `SEARCH_GLOBAL_DAILY_LIMIT`. |
+
+A slot is reserved *before* the upstream call (so concurrent requests cannot
+both pass the limit check) and released when the search never ran.
+
 ### `GET /internal/stats`
 
 Manually-checked ops endpoint, no auth. Returns:
@@ -138,6 +194,8 @@ SQLite, `migrations/`.
 
 - Mode A: `issuances` (`0001`, `0002`). The plaintext key is never stored —
   only the vendor's handle for it.
+- Mode C: `search_usage` (`0004`). One row per (install, UTC day); older days
+  are swept on the first search of a new day.
 - Mode B: `metered_accounts` (fast-path balance), `metered_ledger_events`
   (append-only audit trail that must reconcile to it), `metered_orders`,
   `metered_pending_costs` (`0003`). Device tokens are stored only as a

@@ -155,6 +155,7 @@ async fn make_state_with(
         vendor: vendor.clone(),
         rate_limiter: Arc::new(RateLimiter::new(rate_limit, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
+        search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
     };
     (state, vendor)
 }

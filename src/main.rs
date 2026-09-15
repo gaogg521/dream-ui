@@ -9,6 +9,7 @@ use dream_trial_broker::metered::gateway::MockGateway;
 use dream_trial_broker::metered::{baoyun, poller, CostResolver, MeteredRuntime, PaymentGateway};
 use dream_trial_broker::rate_limit::RateLimiter;
 use dream_trial_broker::routes::build_router;
+use dream_trial_broker::search;
 use dream_trial_broker::service::AppState;
 use dream_trial_broker::vendor::openrouter::OpenRouterVendor;
 use dream_trial_broker::vendor::TokenVendor;
@@ -39,18 +40,30 @@ async fn main() -> anyhow::Result<()> {
 
     let metered = Arc::new(build_metered_runtime()?);
 
+    // Mode C. Opt-in the same way mode B is: no key, no hosted search.
+    let search_config = search::config_from_env()?;
+    if search_config.is_some() {
+        tracing::info!(provider = search::PROVIDER_ID, "hosted search enabled");
+    }
+    let search = Arc::new(search::SearchRuntime::new(
+        search_config,
+        reqwest::Client::new(),
+    ));
+
     let state = Arc::new(AppState {
         pool,
         config: Arc::new(config),
         vendor,
         rate_limiter,
         metered,
+        search,
     });
 
     tracing::info!(
         %listen_addr,
         vendor = state.vendor.id(),
         metered_vendors = state.metered.configs.len(),
+        hosted_search = state.search.enabled(),
         "starting dream-trial-broker"
     );
 

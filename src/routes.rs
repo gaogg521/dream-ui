@@ -32,6 +32,9 @@ pub fn build_router(state: Arc<AppState>) -> Router {
             post(metered::webhook_handler),
         )
         .route("/v1/metered/proxy/:vendor/*path", any(proxy_handler))
+        // Mode C (hosted search). No vendor segment: one provider, chosen by
+        // the broker, so the client never names it.
+        .route("/v1/search", post(crate::search::service::search_handler))
         .route("/internal/stats", get(stats))
         .with_state(state)
 }
@@ -99,7 +102,7 @@ async fn stats(State(state): State<Arc<AppState>>) -> Result<Json<serde_json::Va
 /// that sets X-Forwarded-For; if present we take the first (left-most,
 /// i.e. original client) address from it, otherwise we fall back to the
 /// TCP peer address.
-fn extract_client_ip(headers: &HeaderMap, peer: SocketAddr) -> std::net::IpAddr {
+pub(crate) fn extract_client_ip(headers: &HeaderMap, peer: SocketAddr) -> std::net::IpAddr {
     if let Some(value) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
         if let Some(first) = value.split(',').next() {
             if let Ok(ip) = first.trim().parse() {

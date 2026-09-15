@@ -69,6 +69,36 @@ services on the target box (`operone`) are deployed.
      -H 'content-type: application/json' -d '{"install_id":"smoke-1"}'
    # second call with the same install_id must return 409 already_issued
    ```
+
+## Enabling mode C (hosted web search)
+
+Mode C is off until the broker holds a search key, and turning it on is an
+`.env` edit plus a restart — no rebuild, no client release:
+
+```bash
+umask 077
+cat >> /opt/dream-trial-broker/.env <<'EOF'
+SEARCH_TAVILY_API_KEY=tvly-REPLACE_ME
+SEARCH_DAILY_LIMIT_PER_INSTALL=50
+SEARCH_GLOBAL_DAILY_LIMIT=5000
+SEARCH_RATE_LIMIT_PER_HOUR=60
+EOF
+systemctl restart dream-trial-broker
+journalctl -u dream-trial-broker -n 20 | grep hosted_search   # expect true
+```
+
+Smoke test (a query under 2 characters is rejected before it leaves, so use a
+real one):
+
+```bash
+curl -s -X POST https://<host>/trial-broker/v1/search   -H 'content-type: application/json'   -d '{"install_id":"smoke-1","query":"latest rust release","count":3}'
+# expect {"provider":"tavily","results":[...],"quota":{...}}
+```
+
+The key is the whole point of this mode: it stays here because dream-ui is a
+public repository and an Electron `asar` is readable, so a key shipped in the
+app is a key published to everyone. Rotating it is an `.env` edit; rotating a
+bundled one would have been a release.
    Clean up test keys afterwards: list with
    `GET https://openrouter.ai/api/v1/keys` (Bearer = management key), then
    `DELETE https://openrouter.ai/api/v1/keys/{hash}` for each `onework-trial-*`,

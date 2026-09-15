@@ -52,6 +52,9 @@ pub struct AppState {
     /// Mode B. Independent of `vendor` above — its own vendors, its own
     /// tables. Empty when no metered vendor is configured.
     pub metered: Arc<crate::metered::MeteredRuntime>,
+    /// Mode C. Also independent: its own key, its own table, its own limiter.
+    /// Disabled when no search key is configured.
+    pub search: Arc<crate::search::SearchRuntime>,
 }
 
 fn log_vendor_error(error: &VendorError) {

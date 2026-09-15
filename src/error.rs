@@ -35,6 +35,17 @@ pub enum AppError {
     MeteredOrderUnknown,
     /// A payment gateway callback failed verification. -> 400
     WebhookRejected(String),
+
+    // --- mode C (hosted search) ---
+    /// This broker has no search key configured, so `/v1/search` cannot run.
+    /// 503 rather than 404: the route exists, the capability is switched off,
+    /// and a client that falls back to "ask the user for their own key" needs
+    /// to tell those two apart. -> 503
+    SearchUnavailable,
+    /// This install has used its whole allowance for the UTC day. -> 429
+    SearchQuotaExhausted,
+    /// Every install together has spent the day's cap. -> 503
+    SearchBudgetExhausted,
 }
 
 impl AppError {
@@ -52,6 +63,9 @@ impl AppError {
             AppError::MeteredPackageUnknown => StatusCode::BAD_REQUEST,
             AppError::MeteredOrderUnknown => StatusCode::NOT_FOUND,
             AppError::WebhookRejected(_) => StatusCode::BAD_REQUEST,
+            AppError::SearchUnavailable => StatusCode::SERVICE_UNAVAILABLE,
+            AppError::SearchQuotaExhausted => StatusCode::TOO_MANY_REQUESTS,
+            AppError::SearchBudgetExhausted => StatusCode::SERVICE_UNAVAILABLE,
         }
     }
 
@@ -69,6 +83,9 @@ impl AppError {
             AppError::MeteredPackageUnknown => "metered_package_unknown",
             AppError::MeteredOrderUnknown => "metered_order_unknown",
             AppError::WebhookRejected(_) => "webhook_rejected",
+            AppError::SearchUnavailable => "search_unavailable",
+            AppError::SearchQuotaExhausted => "search_quota_exhausted",
+            AppError::SearchBudgetExhausted => "search_budget_exhausted",
         }
     }
 }

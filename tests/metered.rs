@@ -170,6 +170,8 @@ async fn harness(
         vendor: Arc::new(OpenRouterVendor::new("unused".to_string())),
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered,
+        // Mode C is off for these tests: it shares nothing with mode B.
+        search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
     });
 
     Harness { state, resolver }
