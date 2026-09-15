@@ -30,7 +30,7 @@ type WorkspaceIdentityEntryProps = {
 const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collapsed = false }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { context, loading } = useOrgContext();
+  const { context, loading, unauthorized } = useOrgContext();
   // Every project group the caller belongs to (Phase 2 multi-membership) — the
   // source for the switcher below. Empty for personal / standalone, so the
   // switcher never renders there.
@@ -41,7 +41,7 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
   const { identity: enterpriseIdentity } = useEnterpriseIdentity();
   const { isClient: isDeploymentClient, loading: deploymentLoading } = useDeploymentRole();
   const hideLocalAdmin = !deploymentLoading && isDeploymentClient;
-  const remoteSession = getEnterpriseSession();
+  const remoteSession = unauthorized ? null : getEnterpriseSession();
   // A THIRD identity dimension, independent of SSO/project-group membership:
   // any local system_admin can self-establish a company via "设立企业"
   // (CompanyConsole's SetupCompanyCard) without ever touching SSO or joining a
@@ -83,9 +83,11 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
   // not" contradiction this whole investigation started from, just inverted.
   const isRemoteConnected = isEnterpriseModeEnabled();
   const editionLine = hideLocalAdmin
-    ? isRemoteConnected
-      ? t('settings.workspaceIdentity.editionClient', { defaultValue: '客户端 · 连接远端' })
-      : t('settings.workspaceIdentity.editionClientDisconnected', { defaultValue: '客户端 · 未连接' })
+    ? !isRemoteConnected
+      ? t('settings.workspaceIdentity.editionClientDisconnected', { defaultValue: '客户端 · 未连接' })
+      : unauthorized || !remoteSession
+        ? t('settings.workspaceIdentity.editionClientNeedLogin', { defaultValue: '客户端 · 未登录' })
+        : t('settings.workspaceIdentity.editionClient', { defaultValue: '客户端 · 连接远端' })
     : context?.isEnterprise
       ? t('settings.workspaceIdentity.editionProjectGroup', { defaultValue: '项目组' })
       : remoteSession
