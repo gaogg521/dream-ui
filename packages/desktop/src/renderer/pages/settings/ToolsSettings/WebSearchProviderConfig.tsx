@@ -76,12 +76,24 @@ const WebSearchProviderConfig: React.FC<Props> = ({ server, onServerUpdated }) =
         delete cleaned[WEB_SEARCH_DEFAULT_ENV];
       }
 
-      // Enable as soon as there is something to search with. Leaving it off
-      // after the user has pasted a key is a second, invisible step.
-      const enabled = configured.length > 0;
-      const data = { transport: { ...server.transport, env: cleaned }, enabled };
+      const data = { transport: { ...server.transport, env: cleaned } };
       await mcpService.updateServer.invoke({ id: server.id, data });
-      onServerUpdated?.({ ...server, ...data } as IMcpServer);
+
+      /**
+       * `enabled` is NOT part of `updateServer` — the backend ignores it there
+       * and only `toggleServer` moves it. Sending it in the update payload
+       * looked like it worked (the form said "enabled", the keys saved) while
+       * the entry stayed off, so the tool never loaded and search silently did
+       * nothing. Measured on a real run; a mocked IPC cannot show this.
+       *
+       * Toggle is a flip, not a set, so it is only called when the desired
+       * state differs — the same guard `useMcpServerCRUD.persistEnabledState`
+       * applies.
+       */
+      const enabled = configured.length > 0;
+      if (server.enabled !== enabled) await mcpService.toggleServer.invoke({ id: server.id });
+
+      onServerUpdated?.({ ...server, ...data, enabled } as IMcpServer);
       Message.success(t('mcp.webSearch.saved'));
     } catch (error) {
       Message.error(error instanceof Error ? error.message : t('mcp.webSearch.saveFailed'));
