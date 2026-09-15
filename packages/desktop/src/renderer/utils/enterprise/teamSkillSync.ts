@@ -395,23 +395,23 @@ export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
       Array.isArray(config[key]) ? config[key].filter((item): item is string => typeof item === 'string') : [];
     const skillIds = [...new Set([...asIds('skillIds'), ...asIds('boundSkillIds')])];
     return {
-    id: agent.id,
-    name: agent.name,
-    description: agent.description ?? null,
-    agentType: agent.agentType,
-    customAgentId: agent.customAgentId ?? null,
-    cliPath: agent.cliPath ?? null,
-    assistantId: agent.assistantId ?? null,
-    agentIdOverride: agent.agentIdOverride ?? null,
-    modelId: agent.modelId ?? null,
-    model: agent.model ?? null,
-    automationConfig: {
-      ...config,
-      skillIds,
-      boundSkillIds: asIds('boundSkillIds'),
-      boundMcpIds: asIds('boundMcpIds'),
-    },
-  };
+      id: agent.id,
+      name: agent.name,
+      description: agent.description ?? null,
+      agentType: agent.agentType,
+      customAgentId: agent.customAgentId ?? null,
+      cliPath: agent.cliPath ?? null,
+      assistantId: agent.assistantId ?? null,
+      agentIdOverride: agent.agentIdOverride ?? null,
+      modelId: agent.modelId ?? null,
+      model: agent.model ?? null,
+      automationConfig: {
+        ...config,
+        skillIds,
+        boundSkillIds: asIds('boundSkillIds'),
+        boundMcpIds: asIds('boundMcpIds'),
+      },
+    };
   });
 
   try {
