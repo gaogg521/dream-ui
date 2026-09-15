@@ -389,7 +389,12 @@ export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
     return null;
   }
 
-  const agents = (team ?? []).map((agent) => ({
+  const agents = (team ?? []).map((agent) => {
+    const config = (agent.automationConfig ?? {}) as Record<string, unknown>;
+    const asIds = (key: string): string[] =>
+      Array.isArray(config[key]) ? config[key].filter((item): item is string => typeof item === 'string') : [];
+    const skillIds = [...new Set([...asIds('skillIds'), ...asIds('boundSkillIds')])];
+    return {
     id: agent.id,
     name: agent.name,
     description: agent.description ?? null,
@@ -400,8 +405,14 @@ export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
     agentIdOverride: agent.agentIdOverride ?? null,
     modelId: agent.modelId ?? null,
     model: agent.model ?? null,
-    automationConfig: agent.automationConfig,
-  }));
+    automationConfig: {
+      ...config,
+      skillIds,
+      boundSkillIds: asIds('boundSkillIds'),
+      boundMcpIds: asIds('boundMcpIds'),
+    },
+  };
+  });
 
   try {
     const report = await ipcBridge.personalAgent.syncTeamAgents.invoke({ agents, authoritative: true });
