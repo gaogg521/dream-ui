@@ -224,6 +224,38 @@ export function renderJob(job: JobView | undefined, fallback: string): string {
   return lines.join('\n');
 }
 
+/**
+ * Tell the model what kind of failure this was, so it stops guessing.
+ *
+ * Observed: an edit request failed with the image service's own
+ * `400 LLM Provider NOT provided`. The agent read that as a bad file path,
+ * retried with a *relative* path, produced an ENOENT — which looked like
+ * confirmation — and then retried the original absolute path for the same 400.
+ * Three paid calls, two misleading errors, and the user was told it was "a
+ * temporary service problem".
+ *
+ * The distinction is cheap to make here and impossible to make from the raw
+ * message, so it is made here.
+ */
+export function retryAdvice(detail: string): string {
+  if (/ENOENT|no such file|not found on disk/i.test(detail)) {
+    return (
+      '\n\nThe path could not be opened. Pass the absolute path exactly as a previous call returned it ' +
+      '("Generated image saved to: ..."), not a shortened or relative form, and do not rewrite it.'
+    );
+  }
+  // An HTTP status from the image service means the request reached it and was
+  // refused. Nothing about the local file is implicated.
+  if (/\b(4\d\d|5\d\d)\b/.test(detail) || /provider|api key|unauthorized|quota|billing/i.test(detail)) {
+    return (
+      '\n\nThis is the image service rejecting the request, not a problem with the file path. ' +
+      'Do NOT retry with a different path spelling — it will fail the same way. ' +
+      'Report the error to the user as-is and, if it names a model or configuration problem, say which.'
+    );
+  }
+  return '';
+}
+
 async function runGeneration(kind: 'image' | 'video', payload: Record<string, unknown>) {
   const portError = requirePort();
   if (portError) {
@@ -241,7 +273,9 @@ async function runGeneration(kind: 'image' | 'video', payload: Record<string, un
       const detail = result.error || result.job?.error || 'generation failed';
       const jobRef = result.job ? ` (job ${result.job.jobId})` : '';
       return {
-        content: [{ type: 'text' as const, text: `Error generating ${kind}: ${detail}${jobRef}` }],
+        content: [
+          { type: 'text' as const, text: `Error generating ${kind}: ${detail}${jobRef}${retryAdvice(detail)}` },
+        ],
         isError: true,
       };
     }

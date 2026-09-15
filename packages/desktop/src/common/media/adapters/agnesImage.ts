@@ -19,9 +19,37 @@
  * - `size` is REQUIRED, and takes a tier (`1K`-`4K`), not pixels. Omitting it
  *   fails; `1024x1024` is tolerated but silently normalized to a tier.
  * - the aspect ratio is a separate `ratio` field, not encoded into `size`.
- * - a reference image is `image: string[]` in the JSON body. The standard path
- *   sends multipart to an edits route Agnes does not serve.
+ * - a reference image goes in `extra_body.image` — NOT at the top level, and
+ *   not as multipart to an edits route Agnes does not serve. See below.
  * - `seed`, `negative_prompt` and `quality` are not parameters at all.
+ *
+ * # `image` belongs under `extra_body`
+ *
+ * The docs' parameter table lists `image` in the same column as `model` and
+ * `prompt`, which reads as a top-level field. It is not one. The table also
+ * lists `extra_body.response_format` with its prefix spelled out, and the
+ * worked `curl` on the same page puts `image` inside `extra_body` — the sample
+ * is what the service actually implements.
+ *
+ * Sent at the top level it fails with `400 LLM Provider NOT provided ...
+ * You passed model=agnes-image-2.5-flash`, which names the model and says
+ * nothing about `image`. That message cost a full debugging session: it reads
+ * as a routing or credentials problem, and text-to-image on the same model,
+ * key and route keeps working, so nothing points at the reference image.
+ *
+ * Measured 2026-09-15 against `apihub.agnes-ai.com/v1/images/generations`,
+ * same prompt and key, only the placement differing:
+ *
+ *   image at top level      -> 400 "LLM Provider NOT provided"
+ *   image under extra_body  -> 200, image returned
+ *
+ * A malformed value under `extra_body` answers
+ * `image must be a public http(s) URL or valid image base64` instead — proof
+ * the field is being read there rather than ignored.
+ *
+ * `response_format` is deliberately not sent: the caller handles both `url`
+ * and `b64_json` responses, so there is nothing to gain from pinning one and
+ * the service's own default stays in play.
  *
  * `toGatewayImageRef` is borrowed from the seedream gateway rather than
  * duplicated: "HTTP URL through, local file to a data URI" is exactly what
@@ -58,8 +86,9 @@ export const buildAgnesImageBody = (
     size: asTier(params.size),
   };
   if (params.aspectRatio) body.ratio = params.aspectRatio;
-  // Multi-image composition is the same field with more entries.
-  if (imageRefs.length > 0) body.image = imageRefs;
+  // Multi-image composition is the same field with more entries. Nested under
+  // `extra_body` — see the module docs for what the top level does instead.
+  if (imageRefs.length > 0) body.extra_body = { image: imageRefs };
   return body;
 };
 

@@ -194,7 +194,10 @@ describe('OpenAiImagesAdapter — Agnes image', () => {
   it('passes a reference image through the body, not as multipart', async () => {
     const body = await bodySentFor({}, ['https://example.test/ref.png']);
 
-    expect(body.image).toEqual(['https://example.test/ref.png']);
+    // Nested, not top-level: sent at the top level Agnes answers
+    // `400 LLM Provider NOT provided` — see agnesImage.ts for the measurement.
+    expect(body.extra_body).toEqual({ image: ['https://example.test/ref.png'] });
+    expect(body).not.toHaveProperty('image');
     // The edits route is what the standard path would have used; Agnes does
     // not serve it, and reaching for it is a separate failure from this one.
     const client = (await ClientFactory.createRotatingClient(agnes as never, {} as never)) as unknown as {
