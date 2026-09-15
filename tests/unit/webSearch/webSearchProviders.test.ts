@@ -182,6 +182,70 @@ describe('custom provider', () => {
   });
 });
 
+/**
+ * Volcengine's "Doubao search" is a separate product from Ark, with its own
+ * host and PascalCase JSON.
+ *
+ * An earlier version guessed `ark.cn-beijing.volces.com/api/v3/web_search`
+ * because the name sounds like an Ark model feature. Ark answered 401 — and a
+ * 401 reads as "bad key", not "wrong product", so it sent the user hunting for
+ * a credential problem that did not exist. Verified against the live service.
+ */
+describe('volcengine (Doubao search)', () => {
+  const VOLC_URL = 'https://open.feedcoopapi.com/search_api/web_search';
+
+  it('sends the PascalCase body the service requires', () => {
+    const { url, init } = WEB_SEARCH_ADAPTERS.volcengine.request('cats', 5, 'k', VOLC_URL);
+    expect(url).toBe(VOLC_URL);
+    const body = JSON.parse(init.body!);
+    expect(body.Query).toBe('cats');
+    // SearchType is mandatory; without it the request is rejected.
+    expect(body.SearchType).toBe('web');
+    expect(body.Count).toBe(5);
+    expect(body.query).toBeUndefined();
+  });
+
+  it('reads results out of the real response shape', () => {
+    // Trimmed from a live 200 on 2026-09-15.
+    const payload = {
+      ResponseMetadata: { RequestId: 'x' },
+      Result: {
+        ResultCount: 1,
+        WebResults: [
+          {
+            Id: '1',
+            SortId: 0,
+            Title: '首个“人工智能+脑机接口”标准发布-新华网',
+            SiteName: '新华网',
+            Url: 'http://www.xinhuanet.com/sci-tech/20260915/abc/c.html',
+            Snippet: '我国第三个脑机接口医疗器械标准…',
+            PublishTime: '2026-09-15T09:06:00+08:00',
+          },
+        ],
+      },
+    };
+    const hits = normalise(WEB_SEARCH_ADAPTERS.volcengine, payload, 8);
+    expect(hits).toHaveLength(1);
+    expect(hits[0].url).toBe('http://www.xinhuanet.com/sci-tech/20260915/abc/c.html');
+    expect(hits[0].title).toContain('脑机接口');
+    expect(hits[0].publishedAt).toBe('2026-09-15T09:06:00+08:00');
+  });
+
+  /**
+   * The casing rule, isolated.
+   *
+   * Field names are matched case-insensitively because vendors disagree about
+   * casing as freely as they disagree about nesting. Without this, a PascalCase
+   * payload yields zero hits from a perfectly good 200 — and the structural
+   * fallback comes up empty on exactly the response it exists to rescue.
+   */
+  it('matches field names regardless of casing', () => {
+    const payload = { items: [{ TITLE: 'Shouty', URL: 'https://x.test/a', SNIPPET: 'text' }] };
+    const hits = normalise(WEB_SEARCH_ADAPTERS.custom, payload, 8);
+    expect(hits[0]).toMatchObject({ title: 'Shouty', url: 'https://x.test/a', snippet: 'text' });
+  });
+});
+
 describe('normalise', () => {
   it('reads a real Bocha response through the adapter path', () => {
     const hits = normalise(WEB_SEARCH_ADAPTERS.bocha, BOCHA_RESPONSE, 8);
