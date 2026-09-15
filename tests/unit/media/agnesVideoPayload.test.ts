@@ -177,13 +177,25 @@ describe('Agnes video driver request shape', () => {
   });
 
   /**
-   * The host is the user's, not this file's. A `.cn` key answers `401 Invalid
-   * token` at `apihub.agnes-ai.com`, so a hardcoded host made Agnes video
-   * unusable for a Chinese account no matter what was configured.
+   * The host is the user's, not this file's.
+   *
+   * Agnes runs an international site and a Chinese one on separate domains, and
+   * a key issued for one is rejected by the other — measured, a `.cn` key
+   * answers `401 Invalid token` at `apihub.agnes-ai.com`. A hardcoded host
+   * therefore made Agnes video unusable for a Chinese account no matter what
+   * was configured.
+   *
+   * These are the two base_urls a user actually pastes in, including the
+   * trailing slash the Chinese console prints. Both must build the same two
+   * endpoints against their own host, with no doubled slash.
    */
-  it('submits and polls against the configured host', async () => {
-    const { url } = await submitAndCaptureBody('agnes-video-2.5-flash', {}, { baseUrl: 'https://api.agnes-ai.cn/v1' });
-    expect(url).toBe('https://api.agnes-ai.cn/v1/videos');
+  it.each([
+    ['https://apihub.agnes-ai.com/v1', 'https://apihub.agnes-ai.com'],
+    ['https://api.agnes-ai.cn/v1/', 'https://api.agnes-ai.cn'],
+    ['https://api.agnes-ai.cn/v1', 'https://api.agnes-ai.cn'],
+  ])('builds both endpoints from %s', async (baseUrl, root) => {
+    const { url } = await submitAndCaptureBody('agnes-video-2.5-flash', {}, { baseUrl });
+    expect(url).toBe(`${root}/v1/videos`);
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -193,19 +205,11 @@ describe('Agnes video driver request shape', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
     await getTaskDriver('agnes-task')!.poll(
-      {
-        kind: 'video',
-        model: 'agnes-video-2.5-flash',
-        baseUrl: 'https://api.agnes-ai.cn/v1',
-        apiKey: 'k',
-        spec,
-      },
+      { kind: 'video', model: 'agnes-video-2.5-flash', baseUrl, apiKey: 'k', spec },
       'task_1'
     );
-    // The poll path is NOT under /v1 — that asymmetry is in the vendor's docs.
-    expect(fetchMock.mock.calls[0][0]).toBe(
-      'https://api.agnes-ai.cn/agnesapi?video_id=task_1&model_name=agnes-video-2.5-flash'
-    );
+    // No double slash, and the poll path is deliberately NOT under /v1.
+    expect(fetchMock.mock.calls[0][0]).toBe(`${root}/agnesapi?video_id=task_1&model_name=agnes-video-2.5-flash`);
   });
 
   it('drops negative_prompt on 2.5 rather than sending an undocumented field', async () => {
