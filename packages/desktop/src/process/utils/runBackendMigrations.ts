@@ -5,6 +5,9 @@
  */
 
 import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { app } from 'electron';
+import { resolveTrialBrokerUrl } from '@dream/web-host';
 import { migrateConfigStorage, migrateLegacyMcpConfigToDb, migrateProviders } from '@/common/config/configMigration';
 import { httpRequest } from '@/common/adapter/httpBridge';
 import { mcpService } from '@/common/adapter/ipcBridge';
@@ -23,11 +26,12 @@ import {
 } from '@/common/config/storage';
 import { hasDeclaredMediaModel } from '@/common/media/declaredModel';
 import { BUILTIN_EXPORT_PDF_NAME, BUILTIN_TEAM_KNOWLEDGE_NAME } from '@process/resources/builtinMcp/constants';
-import { WEB_SEARCH_MCP_NAME } from '@/common/webSearch/catalog';
+import { WEB_SEARCH_BROKER_URL_ENV, WEB_SEARCH_INSTALL_ID_ENV, WEB_SEARCH_MCP_NAME } from '@/common/webSearch/catalog';
 import { startExportPdfMcpServer } from '@process/services/exportPdfMcpServer';
 import { startTeamKnowledgeMcpServer } from '@process/services/teamKnowledgeMcpServer';
 import { startMediaMcpServer } from '@process/services/mediaJob';
 import { getBuiltinMcpScriptPath, type ProcessConfig as ProcessConfigType } from './initStorage';
+import { getOrCreateAnalyticsId } from './analyticsId';
 import { migrateAssistantsToBackend } from './migrateAssistants';
 import { migrateOneCustomAgents } from '@process/services/oneMigration/importOneCustomAgents';
 
@@ -298,15 +302,55 @@ function buildBuiltinBrowserServer(): McpImportServer {
 }
 
 /**
+ * 内置「联网搜索」能走公司 broker 时的环境变量。
+ *
+ * The env that points the built-in search MCP at the company broker, or `{}`
+ * when there is none to point at.
+ *
+ * Why a broker and not a bundled key: shipping our own Tavily key inside the
+ * app would publish it. dream-ui is a public repository and an Electron `asar`
+ * is a readable archive, so the key would be scanned, revoked, and search would
+ * then break for every user at once. The broker holds it instead and the client
+ * sends only a query — the same arrangement mode B already uses for inference.
+ *
+ * Same URL resolution as the trial-key broker, so there is one answer to "where
+ * is our broker": packaged builds get the default, dev builds stay off unless
+ * `DREAM_TRIAL_BROKER_URL` is set.
+ */
+function resolveHostedWebSearchEnv(): Record<string, string> {
+  const brokerUrl = resolveTrialBrokerUrl(app.isPackaged);
+  if (!brokerUrl) return {};
+  return {
+    [WEB_SEARCH_BROKER_URL_ENV]: brokerUrl,
+    [WEB_SEARCH_INSTALL_ID_ENV]: webSearchInstallId(),
+  };
+}
+
+/**
+ * This install, as the broker's per-device quota bucket.
+ *
+ * Derived from the analytics id rather than the OS machine id: the broker needs
+ * only to tell two devices apart, and the OS value is stable across every other
+ * application on that computer — not something to hand to a server that does
+ * not need it. Hashed with a fixed label so the value the broker sees is not
+ * the analytics id either; nothing new is persisted.
+ */
+function webSearchInstallId(): string {
+  return createHash('sha256').update(`one-work-web-search:${getOrCreateAnalyticsId()}`).digest('hex').slice(0, 32);
+}
+
+/**
  * 内置「联网搜索」MCP。
  *
- * 默认**关闭**：它要用户自己填搜索服务商的 API Key，没 key 就开着只会让模型
- * 调用失败一次再被告知去配置。用户在设置里填完 key 之后由界面自动启用。
+ * 有 broker 时默认**开启** —— 用户不用配置任何 key 就能联网搜索，这正是内置
+ * 的意义。没有 broker（开发环境、自建部署）时默认关闭：要用户自己填 key，
+ * 没 key 就开着只会让模型白调用一次再被告知去配置。
  *
- * The built-in web search MCP. Default-DISABLED on purpose: it needs a provider
- * API key that only the user can supply, and an enabled-but-unconfigured tool
- * just buys one failed call before the model is told to go and configure it.
- * The settings form enables it once a key is entered.
+ * The built-in web search MCP. Enabled when the broker is reachable, because
+ * then it works with no configuration at all — which is the whole point. With
+ * no broker it stays disabled: it would need a provider key only the user can
+ * supply, and an enabled-but-unconfigured tool just buys one failed call before
+ * the model is told to go and configure it.
  *
  * Keys live in this entry's `transport.env`, one variable per provider — see
  * `common/webSearch/catalog.ts`. Nothing new is persisted anywhere else.
@@ -317,21 +361,86 @@ function buildBuiltinWebSearchServer(): McpImportServer {
     command: 'node',
     args: [scriptPath],
   };
+  const hostedEnv = resolveHostedWebSearchEnv();
+  const hosted = Object.keys(hostedEnv).length > 0;
 
   return {
     name: WEB_SEARCH_MCP_NAME,
-    description:
-      'Search the live web. Configure a provider API key in Settings to enable it — ' +
-      'Bocha, Zhipu, Volcengine, Aliyun, Tavily, Serper or Brave.',
-    enabled: false,
+    description: hosted
+      ? 'Search the live web. Works out of the box; add your own provider API key in Settings for a higher limit.'
+      : 'Search the live web. Configure a provider API key in Settings to enable it — ' +
+        'Bocha, Zhipu, Volcengine, Aliyun, Tavily, Serper or Brave.',
+    enabled: hosted,
     builtin: true,
     transport: {
       type: 'stdio',
       command: serverConfig.command,
       args: serverConfig.args,
+      ...(hosted ? { env: hostedEnv } : {}),
     },
     original_json: JSON.stringify({ mcpServers: { [WEB_SEARCH_MCP_NAME]: serverConfig } }, null, 2),
   };
+}
+
+/**
+ * One-shot flag: the hosted-search enable has already been offered once.
+ *
+ * Same rationale as `migration.providersMigrated_v1`. Without it, an existing
+ * install would have the row re-enabled on every launch, so a user who turns
+ * search off would find it back on after the next restart — the built-in media
+ * MCP has exactly that shape above, and it should not be copied.
+ */
+const WEB_SEARCH_HOSTED_ENABLED_KEY = 'migration.webSearchHostedEnabled_v1';
+
+/**
+ * Keeps an existing `one-web-search` row pointed at the broker.
+ *
+ * Runs on every launch because neither half is stable across builds: the broker
+ * URL is a release-time decision (a dev build resolves to none at all), and the
+ * install id is derived, not stored on the row. The user's own provider keys
+ * live in the same env map and are preserved untouched.
+ */
+async function refreshWebSearchHostedEnv(configFile: ConfigFile, existing: IMcpServer | undefined): Promise<void> {
+  if (!existing || existing.transport.type !== 'stdio') return;
+
+  const hostedEnv = resolveHostedWebSearchEnv();
+  const currentEnv = existing.transport.env || {};
+  const nextEnv = { ...currentEnv, ...hostedEnv };
+  // No broker in this build: drop the stale pointer rather than leave the MCP
+  // dialling an address this install is no longer meant to use.
+  if (Object.keys(hostedEnv).length === 0) {
+    delete nextEnv[WEB_SEARCH_BROKER_URL_ENV];
+    delete nextEnv[WEB_SEARCH_INSTALL_ID_ENV];
+  }
+
+  const changed = JSON.stringify(nextEnv) !== JSON.stringify(currentEnv);
+  if (changed) {
+    try {
+      await mcpService.updateServer.invoke({
+        id: existing.id,
+        data: { transport: { ...existing.transport, env: nextEnv } },
+      });
+    } catch (error) {
+      console.warn('[Migration] failed to refresh web search broker env', error);
+      return;
+    }
+  }
+
+  // An install created before hosted search existed has this row sitting
+  // disabled — the state it was born in, when a key was mandatory. Enable it
+  // once, so upgrading gets the same out-of-the-box search a fresh install
+  // does, then never touch `enabled` again.
+  if (!nextEnv[WEB_SEARCH_BROKER_URL_ENV]) return;
+  if (existing.enabled) return;
+  if (await configFile.get(WEB_SEARCH_HOSTED_ENABLED_KEY)) return;
+
+  try {
+    await mcpService.toggleServer.invoke({ id: existing.id });
+    await configFile.set(WEB_SEARCH_HOSTED_ENABLED_KEY, true);
+    console.info('[Migration] enabled built-in web search; it now works without a user key');
+  } catch (error) {
+    console.warn('[Migration] failed to enable built-in web search', error);
+  }
 }
 
 function buildDefaultMcpServers(): McpImportServer[] {
@@ -668,6 +777,8 @@ async function ensureBootstrapMcpServersInDb(configFile: ConfigFile): Promise<vo
       console.warn('[Migration] failed to enable built-in media MCP', error);
     }
   }
+
+  await refreshWebSearchHostedEnv(configFile, existingByName.get(WEB_SEARCH_MCP_NAME));
 
   // The TCP port is allocated fresh each app start (19820 + first free slot),
   // so an existing export-pdf server row may point at a now-stale port.
