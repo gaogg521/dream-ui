@@ -53,6 +53,7 @@ export type WebSearchProviderId =
   | 'tavily'
   | 'serper'
   | 'brave'
+  | 'tencent'
   | 'custom';
 
 export type WebSearchProvider = {
@@ -149,6 +150,19 @@ export const WEB_SEARCH_PROVIDERS: WebSearchProvider[] = [
     defaultBaseUrl: 'https://cloud-iqs.aliyuncs.com/search/genericSearch',
     // Handed over by the API itself in its 403 body.
     apiKeyUrl: 'https://ipaas.console.aliyun.com/api-key',
+  },
+  {
+    id: 'tencent',
+    label: '腾讯云联网搜索',
+    region: 'cn',
+    envKey: 'WEB_SEARCH_KEY_TENCENT',
+    baseUrlEnvKey: 'WEB_SEARCH_URL_TENCENT',
+    // The API-KEY entry point. Tencent also exposes this through
+    // `wsa.tencentcloudapi.com` with Action/Version, but that path needs
+    // TC3-HMAC-SHA256 request signing with an AK/SK pair, which a single-key
+    // form cannot express. This host is the one that takes a plain Bearer key.
+    defaultBaseUrl: 'https://api.wsa.cloud.tencent.com/SearchPro',
+    apiKeyUrl: 'https://console.cloud.tencent.com/wsapi/index',
   },
   {
     id: 'tavily',

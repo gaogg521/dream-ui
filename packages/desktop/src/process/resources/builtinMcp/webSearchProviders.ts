@@ -149,6 +149,49 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
   },
 
   /**
+   * Tencent's 联网搜索 API (WSA), API-KEY entry point.
+   *
+   * verified: docs.tencent.com product 1806, docs 130615 / 121811. NOT run
+   * against the live service — no key was available — so unlike Bocha, Tavily
+   * and Volcengine this one is documentation-only. Treat a first failure here
+   * as "the shape may be wrong", not "the user's key is bad".
+   *
+   * Two things are unusual enough to be worth stating:
+   *
+   * - `Pages` is an Array of STRING, each holding a JSON document
+   *   (`{title,date,url,passage,site,score}`). Handed to the structural scan
+   *   as-is it yields nothing, because strings carry no fields to match — so
+   *   `pick` parses them rather than relying on the fallback.
+   * - The body is kept to `Query` alone on purpose. `Mode`, `Cnt` and
+   *   `Industry` are each documented as available only on higher service
+   *   tiers, and sending a parameter the account's tier does not support risks
+   *   failing a request that would otherwise have worked.
+   *
+   * There is a second entry point at `wsa.tencentcloudapi.com` taking
+   * `Action`/`Version`, but it requires TC3-HMAC-SHA256 signing with an AK/SK
+   * pair, which a one-key form cannot express.
+   */
+  tencent: {
+    request: (query, _count, apiKey, baseUrl) => ({
+      url: baseUrl,
+      init: {
+        method: 'POST',
+        headers: { ...JSON_HEADERS, Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ Query: query }),
+      },
+    }),
+    pick: (payload) =>
+      asArray(payload.Pages ?? at(payload, 'Response.Pages')).map((page) => {
+        if (typeof page !== 'string') return page;
+        try {
+          return JSON.parse(page);
+        } catch {
+          return undefined;
+        }
+      }),
+  },
+
+  /**
    * verified with a live key 2026-09-15: results at `results[]`, each carrying
    * `url` / `title` / `content` (no date field).
    *
@@ -238,7 +281,17 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
 /** Field names vendors use for the same three things. */
 const TITLE_KEYS = ['title', 'name', 'heading'];
 const URL_KEYS = ['url', 'link', 'href', 'displayUrl', 'display_url'];
-const SNIPPET_KEYS = ['snippet', 'summary', 'description', 'content', 'abstract', 'body', 'mainText', 'main_text'];
+const SNIPPET_KEYS = [
+  'snippet',
+  'summary',
+  'description',
+  'content',
+  'abstract',
+  'passage',
+  'body',
+  'mainText',
+  'main_text',
+];
 const DATE_KEYS = ['datePublished', 'date_published', 'publishTime', 'publish_time', 'published_date', 'date'];
 
 /**
