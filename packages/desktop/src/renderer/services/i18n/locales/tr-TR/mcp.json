@@ -87,6 +87,13 @@
     "regionCustom": "Özel",
     "endpointPlaceholder": "https://hizmetiniz/search",
     "noPrefix": "(ön ek yok)",
-    "needsSetup": "Anahtar gerekli"
+    "needsSetup": "Anahtar gerekli",
+    "hostedTitle": "Yerleşik web araması",
+    "hostedReady": "Kullanıma hazır",
+    "hostedUnavailable": "Kullanılamıyor",
+    "hostedQuotaHint": "Anahtar girmeden arama yapabilirsiniz. Her cihaz için günlük ücretsiz bir kota vardır.",
+    "hostedOverridden": "Kendi anahtarınız ayarlı; yerleşik arama yerine o kullanılacak.",
+    "hostedUnavailableHint": "Bu sürümde yerleşik arama yok. Aramayı açmak için aşağıya bir sağlayıcı anahtarı girin.",
+    "hostedEmptyHint": "Yerleşik arama açık. Daha yüksek günlük limit için kendi anahtarınızı girin"
   }
 }

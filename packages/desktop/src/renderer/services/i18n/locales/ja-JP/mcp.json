@@ -87,6 +87,13 @@
     "regionCustom": "カスタム",
     "endpointPlaceholder": "https://your-service/search",
     "noPrefix": "（プレフィックスなし）",
-    "needsSetup": "API キーが必要"
+    "needsSetup": "API キーが必要",
+    "hostedTitle": "内蔵Web検索",
+    "hostedReady": "すぐに利用可能",
+    "hostedUnavailable": "利用不可",
+    "hostedQuotaHint": "キーを入力しなくても検索できます。デバイスごとに1日の無料枠があります。",
+    "hostedOverridden": "ご自身のキーが設定されているため、内蔵検索ではなくそちらが使われます。",
+    "hostedUnavailableHint": "このビルドには内蔵検索がありません。下のいずれかのプロバイダーのキーを入力してください。",
+    "hostedEmptyHint": "内蔵検索は有効です。ご自身のキーを入力すると1日の上限が上がります"
   }
 }

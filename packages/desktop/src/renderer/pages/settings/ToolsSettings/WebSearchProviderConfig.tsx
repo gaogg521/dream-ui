@@ -36,6 +36,7 @@ import {
   WEB_SEARCH_DEFAULT_ENV,
   WEB_SEARCH_PROVIDERS,
   configuredWebSearchProviders,
+  hostedWebSearchEndpoint,
   type WebSearchProvider,
 } from '@/common/webSearch/catalog';
 
@@ -76,6 +77,20 @@ const WebSearchProviderConfig: React.FC<Props> = ({ server, onServerUpdated }) =
    * about what "configured" means (the custom entry also needs an endpoint).
    */
   const configured = useMemo(() => configuredWebSearchProviders(env), [env]);
+
+  /**
+   * Whether search already works with nothing filled in.
+   *
+   * The company broker holds a key and runs the search, so most users never
+   * need this form at all — it is there for a higher limit, or for a provider
+   * they prefer. Set by the main process on this MCP entry, so the answer here
+   * is the same one the MCP process will act on.
+   *
+   * Deliberately NOT offered as a radio option: a user key always wins over the
+   * hosted path, so a radio pointing at "built-in" while a key sat above it
+   * would be a control that does not control anything.
+   */
+  const hostedAvailable = useMemo(() => !!hostedWebSearchEndpoint(env), [env]);
 
   /**
    * Which radio is filled in.
@@ -153,7 +168,10 @@ const WebSearchProviderConfig: React.FC<Props> = ({ server, onServerUpdated }) =
        * state differs — the same guard `useMcpServerCRUD.persistEnabledState`
        * applies.
        */
-      const enabled = configured.length > 0;
+      // Hosted search needs no key, so the entry must stay on even with the
+      // form empty — otherwise saving an empty form would switch off search
+      // that was working a moment earlier.
+      const enabled = configured.length > 0 || hostedAvailable;
       if (server.enabled !== enabled) await mcpService.toggleServer.invoke({ id: server.id });
 
       onServerUpdated?.({ ...server, ...data, enabled } as IMcpServer);
@@ -172,6 +190,22 @@ const WebSearchProviderConfig: React.FC<Props> = ({ server, onServerUpdated }) =
       <Typography.Text type='secondary' className='text-12px'>
         {t('mcp.webSearch.description')}
       </Typography.Text>
+
+      <div className='flex flex-col gap-4px'>
+        <div className='flex items-center gap-8px'>
+          <Typography.Text className='text-13px font-medium'>{t('mcp.webSearch.hostedTitle')}</Typography.Text>
+          <Tag size='small' color={hostedAvailable ? 'green' : 'gray'}>
+            {hostedAvailable ? t('mcp.webSearch.hostedReady') : t('mcp.webSearch.hostedUnavailable')}
+          </Tag>
+        </div>
+        <Typography.Text type='secondary' className='text-12px'>
+          {hostedAvailable
+            ? configured.length > 0
+              ? t('mcp.webSearch.hostedOverridden')
+              : t('mcp.webSearch.hostedQuotaHint')
+            : t('mcp.webSearch.hostedUnavailableHint')}
+        </Typography.Text>
+      </div>
 
       <Radio.Group
         value={selected}
@@ -268,7 +302,9 @@ const WebSearchProviderConfig: React.FC<Props> = ({ server, onServerUpdated }) =
         <Typography.Text type='secondary' className='text-12px'>
           {configured.length > 0
             ? t('mcp.webSearch.readyHint', { count: configured.length })
-            : t('mcp.webSearch.emptyHint')}
+            : hostedAvailable
+              ? t('mcp.webSearch.hostedEmptyHint')
+              : t('mcp.webSearch.emptyHint')}
         </Typography.Text>
       </div>
     </div>

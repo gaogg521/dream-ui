@@ -268,3 +268,77 @@ export const resolveWebSearchProvider = (env: Record<string, string> | undefined
 /** The endpoint to call: the user's override when set, otherwise the default. */
 export const resolveWebSearchBaseUrl = (provider: WebSearchProvider, env: Record<string, string> | undefined): string =>
   env?.[provider.baseUrlEnvKey]?.trim() || provider.defaultBaseUrl;
+
+// --- hosted search (no key required) --------------------------------------
+
+/**
+ * Base URL of the company broker that runs a search on the user's behalf.
+ *
+ * Everything above assumes the user brings a key. Most will not, and a feature
+ * that needs seven signups before it works is a feature nobody has. The
+ * alternative — bundling our own Tavily key into the app — does not survive
+ * inspection: dream-ui is a public repository and an Electron `asar` is a
+ * readable archive, so a shipped key is a published key. It gets scanned,
+ * revoked, and search then breaks for every user at once.
+ *
+ * So the key lives on the broker and the client sends only a query. This is
+ * the same arrangement `dream-trial-broker` already uses to hand out model
+ * access without putting a credential in the client (mode B), and the env var
+ * is set from the same broker URL.
+ */
+export const WEB_SEARCH_BROKER_URL_ENV = 'WEB_SEARCH_BROKER_URL';
+
+/**
+ * This install, as the broker's per-device quota bucket.
+ *
+ * A hash of the machine id rather than the id itself: the broker needs to tell
+ * two devices apart, which a hash does, and nothing more. Sending the raw OS
+ * identifier would hand our own server a value that is stable across every
+ * other application on that computer.
+ */
+export const WEB_SEARCH_INSTALL_ID_ENV = 'WEB_SEARCH_INSTALL_ID';
+
+/** Path the broker serves hosted search on. */
+const BROKER_SEARCH_PATH = '/v1/search';
+
+/**
+ * Where hosted search should be called, or `undefined` when it is unavailable.
+ *
+ * Unavailable is a normal state, not a fault: a dev build with no broker
+ * configured, or a self-hosted deployment pointing at nothing.
+ */
+export const hostedWebSearchEndpoint = (env: Record<string, string> | undefined): string | undefined => {
+  const base = env?.[WEB_SEARCH_BROKER_URL_ENV]?.trim();
+  const installId = env?.[WEB_SEARCH_INSTALL_ID_ENV]?.trim();
+  // Both halves or neither: the broker rejects a request with no install id,
+  // so half a configuration would fail every search with a confusing 400.
+  if (!base || !installId) return undefined;
+  return `${base.replace(/\/+$/, '')}${BROKER_SEARCH_PATH}`;
+};
+
+/**
+ * How the next search will actually run.
+ *
+ * A flat record rather than a tagged union on purpose: `tsconfig.json` has
+ * `strictNullChecks` off, so narrowing a union by a literal discriminant does
+ * not work here and every branch would need a cast. Callers test the fields.
+ *
+ * A user key always wins over the hosted path — it is their own quota, usually
+ * a larger one, and it costs us nothing.
+ */
+export type WebSearchRoute = {
+  /** Set when the user configured a provider of their own. */
+  provider?: WebSearchProvider;
+  /** Set when the search falls back to the company broker. */
+  hostedEndpoint?: string;
+  /** Present alongside `hostedEndpoint`. */
+  installId?: string;
+};
+
+export const resolveWebSearchRoute = (env: Record<string, string> | undefined): WebSearchRoute => {
+  const provider = resolveWebSearchProvider(env);
+  if (provider) return { provider };
+  const hostedEndpoint = hostedWebSearchEndpoint(env);
+  if (hostedEndpoint) return { hostedEndpoint, installId: env[WEB_SEARCH_INSTALL_ID_ENV].trim() };
+  return {};
+};

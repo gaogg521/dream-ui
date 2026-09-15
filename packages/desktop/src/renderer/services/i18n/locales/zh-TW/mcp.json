@@ -87,6 +87,13 @@
     "regionCustom": "自訂",
     "endpointPlaceholder": "https://你的服務位址/search",
     "noPrefix": "（無前綴）",
-    "needsSetup": "需填寫 Key"
+    "needsSetup": "需填寫 Key",
+    "hostedTitle": "內建聯網搜尋",
+    "hostedReady": "開箱可用",
+    "hostedUnavailable": "不可用",
+    "hostedQuotaHint": "無須填寫 Key 即可搜尋，每台裝置每天有免費額度。",
+    "hostedOverridden": "已填寫自己的 Key，搜尋會優先使用它，不走內建搜尋。",
+    "hostedUnavailableHint": "目前版本沒有內建搜尋，請在下方填入任一服務商的 Key 開啟聯網搜尋。",
+    "hostedEmptyHint": "內建搜尋已啟用；填入自己的 Key 可取得更高的每日額度"
   }
 }

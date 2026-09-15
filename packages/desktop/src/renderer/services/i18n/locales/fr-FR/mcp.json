@@ -87,6 +87,13 @@
     "regionCustom": "Personnalisé",
     "endpointPlaceholder": "https://votre-service/search",
     "noPrefix": "(sans préfixe)",
-    "needsSetup": "Clé requise"
+    "needsSetup": "Clé requise",
+    "hostedTitle": "Recherche web intégrée",
+    "hostedReady": "Prête à l’emploi",
+    "hostedUnavailable": "Indisponible",
+    "hostedQuotaHint": "La recherche fonctionne sans clé. Un quota quotidien gratuit s’applique par appareil.",
+    "hostedOverridden": "Votre propre clé est configurée et sera utilisée à la place de la recherche intégrée.",
+    "hostedUnavailableHint": "Cette version n’inclut pas la recherche intégrée. Saisissez ci-dessous la clé d’un fournisseur.",
+    "hostedEmptyHint": "La recherche intégrée est active. Ajoutez votre propre clé pour une limite quotidienne plus élevée"
   }
 }

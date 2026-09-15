@@ -73,6 +73,13 @@ export interface IConfigStorageRefer {
    * still-on-disk legacy field.
    */
   'migration.assistantsMigrated_v1'?: boolean;
+  /**
+   * One-shot flag: the built-in web search MCP has been enabled once, now that
+   * it works without the user supplying a key (the company broker runs the
+   * search). Without the flag an install that predates hosted search would have
+   * the row re-enabled on every launch, so turning search off would not stick.
+   */
+  'migration.webSearchHostedEnabled_v1'?: boolean;
   // Desktop Pet: whether the desktop pet feature is enabled
   'pet.enabled'?: boolean;
   // Desktop Pet: size in pixels (200, 280, or 360)

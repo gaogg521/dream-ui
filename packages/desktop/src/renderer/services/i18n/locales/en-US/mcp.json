@@ -87,6 +87,13 @@
     "regionCustom": "Custom",
     "endpointPlaceholder": "https://your-service/search",
     "noPrefix": "(no prefix)",
-    "needsSetup": "Needs an API key"
+    "needsSetup": "Needs an API key",
+    "hostedTitle": "Built-in web search",
+    "hostedReady": "Ready to use",
+    "hostedUnavailable": "Unavailable",
+    "hostedQuotaHint": "Search works right now with no key. There is a daily free allowance per device.",
+    "hostedOverridden": "Your own key is set and will be used instead of the built-in search.",
+    "hostedUnavailableHint": "This build has no built-in search. Add a provider key below to turn search on.",
+    "hostedEmptyHint": "Built-in search is on. Add your own key for a higher daily limit"
   }
 }

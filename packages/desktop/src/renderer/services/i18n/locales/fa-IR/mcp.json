@@ -87,6 +87,13 @@
     "regionCustom": "سفارشی",
     "endpointPlaceholder": "https://your-service/search",
     "noPrefix": "(بدون پیشوند)",
-    "needsSetup": "به کلید نیاز دارد"
+    "needsSetup": "به کلید نیاز دارد",
+    "hostedTitle": "جست‌وجوی وب داخلی",
+    "hostedReady": "آمادهٔ استفاده",
+    "hostedUnavailable": "در دسترس نیست",
+    "hostedQuotaHint": "جست‌وجو بدون کلید کار می‌کند. برای هر دستگاه سهمیهٔ رایگان روزانه وجود دارد.",
+    "hostedOverridden": "کلید شخصی شما تنظیم شده و به‌جای جست‌وجوی داخلی استفاده می‌شود.",
+    "hostedUnavailableHint": "این نسخه جست‌وجوی داخلی ندارد. کلید یکی از سرویس‌دهنده‌ها را در پایین وارد کنید.",
+    "hostedEmptyHint": "جست‌وجوی داخلی فعال است. با کلید شخصی خود سقف روزانهٔ بیشتری خواهید داشت"
   }
 }

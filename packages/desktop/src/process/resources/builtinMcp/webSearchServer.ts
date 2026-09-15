@@ -37,8 +37,10 @@ import {
   configuredWebSearchProviders,
   resolveWebSearchBaseUrl,
   resolveWebSearchProvider,
+  resolveWebSearchRoute,
   type WebSearchProvider,
 } from '../../../common/webSearch/catalog';
+import { runHostedSearch } from './hostedSearch';
 import { WEB_SEARCH_ADAPTERS, runProviderSearch, type SearchHit } from './webSearchProviders';
 
 const DEFAULT_COUNT = 8;
@@ -91,16 +93,16 @@ const flatten = (text: string): string => {
 };
 
 /** Render hits for the model: ranked, each with the URL it can cite. */
-const formatHits = (provider: WebSearchProvider, query: string, hits: SearchHit[]): string => {
+const formatHits = (source: string, query: string, hits: SearchHit[]): string => {
   if (hits.length === 0) {
-    return `No results from ${provider.label} for "${query}". Try different wording, or a narrower query.`;
+    return `No results from ${source} for "${query}". Try different wording, or a narrower query.`;
   }
   const lines = hits.map((hit, index) => {
     const date = hit.publishedAt ? ` (${hit.publishedAt})` : '';
     const snippet = hit.snippet ? `\n   ${flatten(hit.snippet)}` : '';
     return `[${index + 1}] ${flatten(hit.title)}${date}\n   ${hit.url}${snippet}`;
   });
-  return [`${hits.length} result(s) from ${provider.label} for "${query}":`, '', ...lines].join('\n');
+  return [`${hits.length} result(s) from ${source} for "${query}":`, '', ...lines].join('\n');
 };
 
 /**
@@ -138,10 +140,75 @@ const describeHttpFailure = (provider: WebSearchProvider, status: number, body: 
   return `${provider.label} search failed with HTTP ${status}.\n${detail}`;
 };
 
+/**
+ * Label for hosted results. Deliberately not the vendor name: the user did not
+ * choose Tavily, and naming it would imply a relationship (and a quota) that
+ * is ours, not theirs.
+ */
+const HOSTED_LABEL = 'built-in web search';
+
+/**
+ * A hosted search that did not return results.
+ *
+ * The distinction that matters is whether the user can do anything. Running
+ * out of the day's free allowance is fixable — by waiting, or by adding their
+ * own key — and saying so is the difference between a dead end and a next
+ * step. A broker outage is not the user's to fix and must not send them
+ * hunting through settings.
+ */
+const describeHostedFailure = (errorCode: string | undefined, status: number | undefined, detail: string): string => {
+  if (errorCode === 'search_quota_exhausted') {
+    return [
+      'The built-in web search has used up this device’s free allowance for today.',
+      'Do NOT retry — the allowance resets at 00:00 UTC.',
+      'Tell the user they can keep searching right away by adding their own provider',
+      'API key in Settings → Tools → one-web-search, which has no such limit.',
+      'Until then, answer from what you already know and say you could not check anything current.',
+    ].join('\n');
+  }
+  if (errorCode === 'search_budget_exhausted' || errorCode === 'search_unavailable') {
+    return [
+      'The built-in web search is unavailable right now (the shared daily capacity is spent,',
+      'or the service is switched off).',
+      'Do NOT retry — this is not a transient network error.',
+      'Tell the user they can search immediately with their own provider API key in',
+      'Settings → Tools → one-web-search.',
+    ].join('\n');
+  }
+  if (errorCode === 'rate_limited' || status === 429) {
+    return 'The built-in web search is rate limiting this connection. Wait a moment before trying again.';
+  }
+  return `The built-in web search could not be reached${status ? ` (HTTP ${status})` : ''}.\n${detail.slice(0, 300)}`;
+};
+
+async function runHosted(
+  endpoint: string,
+  installId: string,
+  query: string,
+  count: number
+): Promise<{ text: string; isError: boolean }> {
+  const outcome = await runHostedSearch(endpoint, installId, query, count, REQUEST_TIMEOUT_MS);
+  if (outcome.ok) {
+    return { text: formatHits(HOSTED_LABEL, query, outcome.hits || []), isError: false };
+  }
+  return {
+    text: describeHostedFailure(outcome.errorCode, outcome.status, outcome.detail || ''),
+    isError: true,
+  };
+}
+
 async function runSearch(query: string, count: number): Promise<{ text: string; isError: boolean }> {
   const current = env();
-  const provider = resolveWebSearchProvider(current);
-  if (!provider) return { text: NOT_CONFIGURED, isError: true };
+  const route = resolveWebSearchRoute(current);
+
+  // A key the user configured always wins: it is their quota, usually a larger
+  // one, and it costs us nothing. The hosted path is the floor, not the
+  // ceiling.
+  if (!route.provider) {
+    if (route.hostedEndpoint) return runHosted(route.hostedEndpoint, route.installId, query, count);
+    return { text: NOT_CONFIGURED, isError: true };
+  }
+  const provider = route.provider;
 
   const adapter = WEB_SEARCH_ADAPTERS[provider.id];
   if (!adapter) {
@@ -156,7 +223,7 @@ async function runSearch(query: string, count: number): Promise<{ text: string; 
   const outcome = await runProviderSearch(adapter, apiKey, endpoint, query, count, REQUEST_TIMEOUT_MS, current);
 
   if (outcome.ok) {
-    return { text: formatHits(provider, query, outcome.hits || []), isError: false };
+    return { text: formatHits(provider.label, query, outcome.hits || []), isError: false };
   }
 
   const detail = outcome.body ?? '';
@@ -206,9 +273,12 @@ async function main() {
 
   const configured = configuredWebSearchProviders(env());
   const active = resolveWebSearchProvider(env());
-  process.stderr.write(
-    `[web-search-mcp] ready; ${configured.length} provider(s) configured, active: ${active?.id ?? 'none'}\n`
-  );
+  const route = resolveWebSearchRoute(env());
+  // Which of the three states this process is in is the first thing anyone
+  // debugging "search did nothing" needs, and stderr is the only channel a
+  // stdio MCP has that does not corrupt the protocol.
+  const source = active?.id ?? (route.hostedEndpoint ? 'hosted' : 'none');
+  process.stderr.write(`[web-search-mcp] ready; ${configured.length} provider(s) configured, active: ${source}\n`);
 }
 
 main().catch((err) => {
