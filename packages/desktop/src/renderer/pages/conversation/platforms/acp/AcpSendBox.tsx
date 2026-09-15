@@ -6,6 +6,7 @@ import { parseError, uuid } from '@/common/utils';
 import { modelKindLabelByName } from '@/common/utils/modelCapabilities';
 import AgentModeSelector from '@/renderer/components/agent/AgentModeSelector';
 import ModelKindTag from '@/renderer/components/settings/ModelKindTag';
+import { detectMediaIntent } from '@/common/media/detectMediaIntent';
 import MediaModeControl from '@/renderer/components/media/MediaModeControl';
 import { useMediaComposer } from '@/renderer/hooks/media/useMediaComposer';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
@@ -466,6 +467,21 @@ Please check your local CLI tool authentication status`,
   });
 
   const onSendHandler = async (message: string): Promise<void | false> => {
+    // The mode is off but the message asks for a picture or a video, and a
+    // model for that kind is configured. Switch the mode and hand the message
+    // back instead of generating straight away: the detection can misread, and
+    // a generation the user did not ask for costs real money.
+    if (mediaComposer.mode === 'off') {
+      const intent = detectMediaIntent(message);
+      if (intent && mediaComposer.hasModelFor(intent)) {
+        mediaComposer.changeMode(intent);
+        Message.info(
+          t(intent === 'video' ? 'conversation.mediaIntentSwitchedVideo' : 'conversation.mediaIntentSwitchedImage')
+        );
+        return false;
+      }
+    }
+
     const allFiles = collectChatFileRefs(uploadFile, atPath);
 
     // Media mode short-circuits the agent: the user asked for a picture, not a

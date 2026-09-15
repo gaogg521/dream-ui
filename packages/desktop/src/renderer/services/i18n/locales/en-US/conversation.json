@@ -886,5 +886,7 @@
   "policyDenied_departmentBudgetExceeded": "Your department's usage budget for this period has been reached. Contact an administrator.",
   "meteredTopUp": {
     "cta": "Top up"
-  }
+  },
+  "mediaIntentSwitchedImage": "Switched to image generation. Press send again to generate.",
+  "mediaIntentSwitchedVideo": "Switched to video generation. Press send again to generate."
 }

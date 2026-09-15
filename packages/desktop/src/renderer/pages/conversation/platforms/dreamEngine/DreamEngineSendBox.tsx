@@ -7,6 +7,7 @@
 import { ipcBridge } from '@/common';
 import type { IConversationMcpStatus } from '@/common/config/storage';
 import { modelKindLabelOf } from '@/common/utils/modelCapabilities';
+import { detectMediaIntent } from '@/common/media/detectMediaIntent';
 import MediaModeControl from '@/renderer/components/media/MediaModeControl';
 import { useMediaComposer } from '@/renderer/hooks/media/useMediaComposer';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
@@ -428,6 +429,22 @@ const DreamEngineSendBox: React.FC<{
         })
       );
       return false;
+    }
+
+    // The mode is off but the message asks for a picture or a video, and a
+    // model for that kind is configured. Switch the mode and hand the message
+    // back instead of generating straight away: the detection can misread, and
+    // a generation the user did not ask for costs real money. Runs before
+    // `clearFiles` so returning false leaves the composer exactly as it was.
+    if (mediaComposer.mode === 'off') {
+      const intent = detectMediaIntent(message);
+      if (intent && mediaComposer.hasModelFor(intent)) {
+        mediaComposer.changeMode(intent);
+        Message.info(
+          t(intent === 'video' ? 'conversation.mediaIntentSwitchedVideo' : 'conversation.mediaIntentSwitchedImage')
+        );
+        return false;
+      }
     }
 
     const filesToSend = collectChatFileRefs(uploadFile, atPath);

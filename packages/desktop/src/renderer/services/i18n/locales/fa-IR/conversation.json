@@ -870,5 +870,7 @@
   "policyDenied_departmentBudgetExceeded": "بودجه مصرف بخش شما در این دوره تمام شده و ارسال ممکن نیست. با مدیر تماس بگیرید.",
   "meteredTopUp": {
     "cta": "شارژ"
-  }
+  },
+  "mediaIntentSwitchedImage": "به حالت ساخت تصویر تغییر کرد. برای ساخت دوباره ارسال کنید.",
+  "mediaIntentSwitchedVideo": "به حالت ساخت ویدیو تغییر کرد. برای ساخت دوباره ارسال کنید."
 }

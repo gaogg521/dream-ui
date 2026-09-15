@@ -204,6 +204,15 @@ export const useMediaComposer = (conversationId: string | undefined, providers: 
     submit,
     /** Models the send box can offer for the active kind (empty when off). */
     models: mode === 'off' ? [] : mediaModels[mode],
+    /**
+     * Whether a model exists for a kind, regardless of the active mode.
+     *
+     * `models` above is empty while the mode is off, so it cannot answer the
+     * question the intent prompt needs to ask: the user has typed "draw a cat"
+     * with the mode still off, and offering to switch is only honest when
+     * there is something to switch to.
+     */
+    hasModelFor: (kind: 'image' | 'video') => mediaModels[kind].length > 0,
     /** Pick a model for the active kind — applied now, remembered globally. */
     chooseModel,
     /** True when the mode is on but nothing can run — the caller should say why. */

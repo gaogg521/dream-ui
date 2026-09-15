@@ -876,5 +876,7 @@
   "policyDenied_departmentBudgetExceeded": "O orçamento de uso do seu departamento para este período acabou. Fale com um administrador.",
   "meteredTopUp": {
     "cta": "Recarregar"
-  }
+  },
+  "mediaIntentSwitchedImage": "Alterado para geração de imagens. Envie novamente para gerar.",
+  "mediaIntentSwitchedVideo": "Alterado para geração de vídeos. Envie novamente para gerar."
 }

@@ -870,5 +870,7 @@
   "policyDenied_departmentBudgetExceeded": "Le budget d'utilisation de votre service pour cette période est épuisé. Contactez un administrateur.",
   "meteredTopUp": {
     "cta": "Recharger"
-  }
+  },
+  "mediaIntentSwitchedImage": "Passé en génération d'images. Renvoyez pour générer.",
+  "mediaIntentSwitchedVideo": "Passé en génération de vidéos. Renvoyez pour générer."
 }

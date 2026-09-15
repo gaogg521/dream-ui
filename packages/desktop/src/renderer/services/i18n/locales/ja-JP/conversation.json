@@ -870,5 +870,7 @@
   "policyDenied_departmentBudgetExceeded": "今期の部門の利用予算に達したため、送信できません。管理者にお問い合わせください。",
   "meteredTopUp": {
     "cta": "チャージ"
-  }
+  },
+  "mediaIntentSwitchedImage": "画像生成モードに切り替えました。もう一度送信すると生成します。",
+  "mediaIntentSwitchedVideo": "動画生成モードに切り替えました。もう一度送信すると生成します。"
 }

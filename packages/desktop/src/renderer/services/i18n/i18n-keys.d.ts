@@ -1241,6 +1241,8 @@ export type I18nKey =
   | 'conversation.mediaFailureAdvice_serviceBusy'
   | 'conversation.mediaFailureAdvice_timeout'
   | 'conversation.mediaImageUnavailable'
+  | 'conversation.mediaIntentSwitchedImage'
+  | 'conversation.mediaIntentSwitchedVideo'
   | 'conversation.mediaJobElapsed'
   | 'conversation.mediaJobErrorFromProvider'
   | 'conversation.mediaJobGeneratingHint'

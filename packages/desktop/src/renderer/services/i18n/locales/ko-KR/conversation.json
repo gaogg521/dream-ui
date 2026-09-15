@@ -870,5 +870,7 @@
   "policyDenied_departmentBudgetExceeded": "이번 기간의 부서 사용 예산이 모두 소진되어 전송할 수 없습니다. 관리자에게 문의하세요.",
   "meteredTopUp": {
     "cta": "충전하기"
-  }
+  },
+  "mediaIntentSwitchedImage": "이미지 생성 모드로 전환했습니다. 다시 보내면 생성합니다.",
+  "mediaIntentSwitchedVideo": "동영상 생성 모드로 전환했습니다. 다시 보내면 생성합니다."
 }
