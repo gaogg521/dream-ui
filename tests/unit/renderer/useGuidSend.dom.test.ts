@@ -11,6 +11,7 @@ import { useGuidSend, type GuidSendDeps } from '@/renderer/pages/guid/hooks/useG
 
 const createConversationInvokeMock = vi.fn();
 const swrMutateMock = vi.fn();
+const requestMediaModeMock = vi.fn();
 
 vi.mock('@/common', () => ({
   ipcBridge: {
@@ -20,6 +21,10 @@ vi.mock('@/common', () => ({
       },
     },
   },
+}));
+
+vi.mock('@/renderer/hooks/media/mediaModeStore', () => ({
+  requestMediaMode: (...args: unknown[]) => requestMediaModeMock(...args),
 }));
 
 vi.mock('@/renderer/utils/emitter', () => ({
@@ -352,5 +357,88 @@ describe('useGuidSend', () => {
     });
 
     expect(createConversationInvokeMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useGuidSend media mode handoff', () => {
+  beforeEach(() => {
+    createConversationInvokeMock.mockReset();
+    createConversationInvokeMock.mockResolvedValue({ id: 'conv-media-1', extra: { workspace: '/ws' } });
+    swrMutateMock.mockReset();
+    swrMutateMock.mockResolvedValue(undefined);
+    requestMediaModeMock.mockReset();
+  });
+
+  const mediaDeps = (overrides?: Partial<GuidSendDeps['media']>): GuidSendDeps => {
+    const deps = createDeps();
+    deps.current_model = { id: 'p1', name: 'Chat', platform: 'openai', use_model: 'gpt-4o' } as never;
+    deps.media = {
+      mode: 'image',
+      needsModel: false,
+      changeMode: vi.fn(),
+      providerId: 'provider-ark',
+      model: 'seedream-4',
+      submit: vi.fn().mockResolvedValue({ started: true }),
+      ...overrides,
+    };
+    return deps;
+  };
+
+  /**
+   * The bug this covers: the welcome page's composer is a different instance
+   * from the conversation's, so without an explicit handoff the send box
+   * mounted at `off` and the follow-up to a generated image went to the chat
+   * model — which cannot draw.
+   */
+  it('carries the generation mode into the conversation it navigates to', async () => {
+    const deps = mediaDeps();
+
+    const { result } = renderHook(() => useGuidSend(deps));
+    await act(async () => {
+      await result.current.handleSend();
+    });
+
+    expect(deps.media?.submit).toHaveBeenCalled();
+    expect(requestMediaModeMock).toHaveBeenCalledWith('conv-media-1', 'image', {
+      providerId: 'provider-ark',
+      model: 'seedream-4',
+    });
+  });
+
+  it('carries video mode the same way', async () => {
+    const deps = mediaDeps({ mode: 'video', providerId: 'provider-ark', model: 'seedance-1' });
+
+    const { result } = renderHook(() => useGuidSend(deps));
+    await act(async () => {
+      await result.current.handleSend();
+    });
+
+    expect(requestMediaModeMock).toHaveBeenCalledWith('conv-media-1', 'video', {
+      providerId: 'provider-ark',
+      model: 'seedance-1',
+    });
+  });
+
+  /** A mode with no resolved model still has to travel, or the send box lands on `off`. */
+  it('still hands over the mode when no model has resolved yet', async () => {
+    const deps = mediaDeps({ providerId: undefined, model: undefined });
+
+    const { result } = renderHook(() => useGuidSend(deps));
+    await act(async () => {
+      await result.current.handleSend();
+    });
+
+    expect(requestMediaModeMock).toHaveBeenCalledWith('conv-media-1', 'image');
+  });
+
+  it('does not touch the media mode for an ordinary chat message', async () => {
+    const deps = createDeps();
+
+    const { result } = renderHook(() => useGuidSend(deps));
+    await act(async () => {
+      await result.current.handleSend();
+    });
+
+    expect(requestMediaModeMock).not.toHaveBeenCalled();
   });
 });
