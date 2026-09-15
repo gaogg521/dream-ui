@@ -246,6 +246,57 @@ describe('volcengine (Doubao search)', () => {
   });
 });
 
+/**
+ * Tencent WSA, documentation-only (no key was available to run it).
+ *
+ * Pinned because its response is shaped unlike every other vendor here:
+ * `Pages` is an array of JSON STRINGS, not objects. Passed to the structural
+ * fallback untouched it yields nothing — a string has no fields to match — so
+ * this is one of the few places where the adapter path is load-bearing rather
+ * than an optimisation.
+ */
+describe('tencent WSA', () => {
+  const URL = 'https://api.wsa.cloud.tencent.com/SearchPro';
+
+  it('sends only Query, so a lower service tier cannot reject an extra field', () => {
+    const { url, init } = WEB_SEARCH_ADAPTERS.tencent.request('cats', 20, 'k', URL);
+    expect(url).toBe(URL);
+    expect(init.headers.Authorization).toBe('Bearer k');
+    const body = JSON.parse(init.body!);
+    expect(body.Query).toBe('cats');
+    // Mode / Cnt / Industry are tier-gated; sending one the account lacks
+    // risks failing a request that would otherwise have worked.
+    expect(Object.keys(body)).toEqual(['Query']);
+  });
+
+  it('parses the JSON strings inside Pages', () => {
+    const payload = {
+      Query: '今天北京的天气',
+      Pages: [
+        JSON.stringify({
+          title: '北京天气预报',
+          date: '2026-09-15',
+          url: 'https://weather.test/bj',
+          passage: '今天多云',
+          site: '天气网',
+        }),
+      ],
+    };
+    const hits = normalise(WEB_SEARCH_ADAPTERS.tencent, payload, 8);
+    expect(hits).toHaveLength(1);
+    expect(hits[0].title).toBe('北京天气预报');
+    expect(hits[0].url).toBe('https://weather.test/bj');
+    // `passage` is Tencent's name for the snippet.
+    expect(hits[0].snippet).toBe('今天多云');
+  });
+
+  it('skips an unparsable entry instead of failing the whole search', () => {
+    const payload = { Pages: ['not json at all', JSON.stringify({ title: 'ok', url: 'https://x.test/a' })] };
+    const hits = normalise(WEB_SEARCH_ADAPTERS.tencent, payload, 8);
+    expect(hits.map((h) => h.url)).toEqual(['https://x.test/a']);
+  });
+});
+
 describe('normalise', () => {
   it('reads a real Bocha response through the adapter path', () => {
     const hits = normalise(WEB_SEARCH_ADAPTERS.bocha, BOCHA_RESPONSE, 8);
