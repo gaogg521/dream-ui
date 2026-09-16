@@ -18,6 +18,19 @@ import { emitter } from '@/renderer/utils/emitter';
 
 export type TeamSkillSyncResult = { written: number; removed: number; kept: number };
 
+export function filterTeamAgentBindings(
+  config: Record<string, unknown>,
+  enabledSkillIds: ReadonlySet<string>,
+  enabledMcpIds: ReadonlySet<string>
+) {
+  const asIds = (key: string): string[] =>
+    Array.isArray(config[key]) ? config[key].filter((item): item is string => typeof item === 'string') : [];
+  const boundSkillIds = asIds('boundSkillIds').filter((id) => enabledSkillIds.has(id));
+  const boundMcpIds = asIds('boundMcpIds').filter((id) => enabledMcpIds.has(id));
+  const skillIds = [...new Set([...asIds('skillIds').filter((id) => enabledSkillIds.has(id)), ...boundSkillIds])];
+  return { skillIds, boundSkillIds, boundMcpIds };
+}
+
 /**
  * The registry refused us rather than failed to answer — 403 only.
  *
@@ -382,18 +395,29 @@ export async function clearTeamResources(): Promise<void> {
  */
 export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
   let team: Awaited<ReturnType<typeof ipcBridge.personalAgent.listTeamAgents.invoke>>;
+  let registrySkills: Awaited<ReturnType<typeof ipcBridge.oneDevops.listSkills.invoke>>;
+  let registryMcp: Awaited<ReturnType<typeof ipcBridge.oneDevops.listMcpRegistry.invoke>>;
   try {
-    team = await ipcBridge.personalAgent.listTeamAgents.invoke();
+    [team, registrySkills, registryMcp] = await Promise.all([
+      ipcBridge.personalAgent.listTeamAgents.invoke(),
+      ipcBridge.oneDevops.listSkills.invoke(),
+      ipcBridge.oneDevops.listMcpRegistry.invoke(),
+    ]);
   } catch (error) {
     if (isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
   }
 
+  const enabledSkillIds = new Set((registrySkills ?? []).filter((skill) => skill.enabled).map((skill) => skill.id));
+  const enabledMcpIds = new Set((registryMcp ?? []).filter((server) => server.enabled).map((server) => server.id));
+
   const agents = (team ?? []).map((agent) => {
     const config = (agent.automationConfig ?? {}) as Record<string, unknown>;
-    const asIds = (key: string): string[] =>
-      Array.isArray(config[key]) ? config[key].filter((item): item is string => typeof item === 'string') : [];
-    const skillIds = [...new Set([...asIds('skillIds'), ...asIds('boundSkillIds')])];
+    const { skillIds, boundSkillIds, boundMcpIds } = filterTeamAgentBindings(
+      config,
+      enabledSkillIds,
+      enabledMcpIds
+    );
     return {
       id: agent.id,
       name: agent.name,
@@ -408,8 +432,8 @@ export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
       automationConfig: {
         ...config,
         skillIds,
-        boundSkillIds: asIds('boundSkillIds'),
-        boundMcpIds: asIds('boundMcpIds'),
+        boundSkillIds,
+        boundMcpIds,
       },
     };
   });
