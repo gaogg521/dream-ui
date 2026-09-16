@@ -434,7 +434,7 @@
   "maxTokensFieldTip": "Disponível apenas para modelos que usam um protocolo compatível com OpenAI. O mecanismo já tenta novamente automaticamente quando o gateway rejeita o nome de campo errado; defina isso manualmente apenas se você já souber o campo correto para um modelo.",
   "contextWindow": "Janela de contexto",
   "contextWindowPlaceholder": "ex.: 32768",
-  "contextWindowTip": "Deixe em branco para usar o padrão do modelo. Modelos locais (ex.: Ollama) costumam ter contexto padrão pequeno (4096) — defina conforme a capacidade real do modelo.",
+  "contextWindowTip": "Deixe em branco e uma janela grande será assumida. Informe o que o modelo realmente suporta — o indicador de uso e a compactação automática se baseiam nesse número. Modelos locais (ex.: Ollama) costumam ter um padrão bem menor.",
   "modelSettingsApplyToSelected": "Estas configurações se aplicam a todos os modelos selecionados e podem ser alteradas individualmente depois.",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {

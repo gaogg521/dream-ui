@@ -426,7 +426,7 @@
   "maxTokensFieldTip": "Nur für Modelle mit OpenAI-kompatiblem Protokoll verfügbar. Die Engine wiederholt die Anfrage bereits automatisch, wenn das Gateway den falschen Feldnamen ablehnt; legen Sie dies manuell nur fest, wenn Sie das richtige Feld für ein Modell bereits kennen.",
   "contextWindow": "Kontextfenster",
   "contextWindowPlaceholder": "z. B. 32768",
-  "contextWindowTip": "Leer lassen, um den Standardwert des Modells zu verwenden. Lokal bereitgestellte Modelle (z. B. Ollama) nutzen oft nur 4096 Tokens — tragen Sie hier die tatsächliche Kapazität des Modells ein.",
+  "contextWindowTip": "Leer gelassen wird ein großes Fenster angenommen. Trage ein, was das Modell wirklich unterstützt — auf dieser Zahl beruhen sowohl die Auslastungsanzeige als auch die automatische Verdichtung. Lokal betriebene Modelle (z. B. Ollama) haben oft einen viel kleineren Standardwert.",
   "modelSettingsApplyToSelected": "Diese Einstellungen gelten für alle ausgewählten Modelle und können später einzeln geändert werden.",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {

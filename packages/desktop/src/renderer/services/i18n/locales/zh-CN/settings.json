@@ -1018,7 +1018,7 @@
   "maxTokensFieldTip": "仅对使用 OpenAI 兼容协议的模型显示。网关拒绝错误字段名时引擎会自动重试；仅在你已经确定某个模型该用哪个字段时手动指定即可。",
   "contextWindow": "上下文窗口",
   "contextWindowPlaceholder": "例如 32768",
-  "contextWindowTip": "留空则使用模型默认值。本地部署的模型（如 Ollama）默认上下文可能只有 4096，建议按模型实际能力设置。",
+  "contextWindowTip": "留空则按大窗口模型处理。建议按模型实际支持的窗口填写——用量百分比和自动压缩都以这个数为准；本地部署的模型（如 Ollama）默认往往小得多。",
   "modelSettingsApplyToSelected": "这些设置会应用到全部已选模型，添加后仍可分别修改。",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {

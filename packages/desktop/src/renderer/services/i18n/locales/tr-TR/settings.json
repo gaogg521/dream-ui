@@ -434,7 +434,7 @@
   "maxTokensFieldTip": "Yalnızca OpenAI uyumlu protokol kullanan modellerde kullanılabilir. Ağ geçidi yanlış alan adını reddettiğinde motor otomatik olarak yeniden dener; bunu yalnızca bir model için doğru alanı zaten biliyorsanız manuel olarak ayarlayın.",
   "contextWindow": "Bağlam penceresi",
   "contextWindowPlaceholder": "örn. 32768",
-  "contextWindowTip": "Model varsayılanını kullanmak için boş bırakın. Yerel modeller (örn. Ollama) genellikle 4096 gibi küçük bir varsayılan bağlama sahiptir — modelin gerçek kapasitesine ayarlayın.",
+  "contextWindowTip": "Boş bırakılırsa geniş bir bağlam varsayılır. Modelin gerçekte desteklediği değeri girin — kullanım yüzdesi de otomatik sıkıştırma da bu sayıya dayanır. Yerel modeller (ör. Ollama) genelde çok daha küçük bir varsayılana sahiptir.",
   "modelSettingsApplyToSelected": "Bu ayarlar seçilen tüm modellere uygulanır ve daha sonra ayrı ayrı değiştirilebilir.",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {

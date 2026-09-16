@@ -434,7 +434,7 @@
   "maxTokensFieldTip": "OpenAI 호환 프로토콜을 사용하는 모델에만 제공됩니다. 게이트웨이가 잘못된 필드 이름을 거부하면 엔진이 자동으로 재시도합니다. 특정 모델에 맞는 필드를 이미 알고 있을 때만 수동으로 지정하세요.",
   "contextWindow": "컨텍스트 창",
   "contextWindowPlaceholder": "예: 32768",
-  "contextWindowTip": "비워 두면 모델 기본값을 사용합니다. 로컬 모델(예: Ollama)은 기본 컨텍스트가 4096으로 작을 수 있으므로 모델이 실제로 지원하는 값으로 설정하세요.",
+  "contextWindowTip": "비워 두면 큰 윈도우로 간주합니다. 모델이 실제로 지원하는 값을 입력하세요 — 사용률 표시와 자동 압축이 모두 이 값을 기준으로 합니다. 로컬 실행 모델(예: Ollama)은 기본값이 훨씬 작은 경우가 많습니다.",
   "modelSettingsApplyToSelected": "이 설정은 선택한 모든 모델에 적용되며 나중에 개별적으로 변경할 수 있습니다.",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {
