@@ -613,6 +613,12 @@
       "ACP_EMPTY_TURN": {
         "body": "Bu istek görünür bir yanıt üretmedi."
       },
+      "AUTOCOMPACT_DONE": {
+        "body": "Bağlamda yer açmak için eski mesajlar bir özete sıkıştırıldı ({{count}} mesaj, öncesinde {{tokens}} token)."
+      },
+      "AUTOCOMPACT_CIRCUIT_BROKEN": {
+        "body": "Otomatik sıkıştırma arka arkaya {{failures}} kez başarısız oldu ve durdu. /compact çalıştırın veya yeni bir sohbet başlatın."
+      },
       "ACP_EMPTY_TURN_NEEDS_AUTH": {
         "body": "Bu istek görünür bir yanıt üretmedi. Zaten oturum açtıysanız, bu geçici bir arka uç veya bağlantı sorunu olabilir; tekrar deneyin ya da yeni bir sohbet başlatın. Henüz oturum açmadıysanız oturum açabilirsiniz: {{hint}}."
       },

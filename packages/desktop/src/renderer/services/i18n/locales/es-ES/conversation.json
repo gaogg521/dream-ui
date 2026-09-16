@@ -612,6 +612,12 @@
       "ACP_EMPTY_TURN": {
         "body": "Esta solicitud no produjo ninguna respuesta visible."
       },
+      "AUTOCOMPACT_DONE": {
+        "body": "Los mensajes antiguos se condensaron en un resumen para liberar contexto ({{count}} condensados, {{tokens}} tokens antes)."
+      },
+      "AUTOCOMPACT_CIRCUIT_BROKEN": {
+        "body": "La compactación automática falló {{failures}} veces seguidas y se detuvo. Usa /compact o inicia una conversación nueva."
+      },
       "ACP_EMPTY_TURN_NEEDS_AUTH": {
         "body": "Esta solicitud no produjo ninguna respuesta visible. Si ya has iniciado sesión, puede tratarse de un problema temporal del backend o de conexión: inténtalo de nuevo o inicia una nueva conversación. Si aún no has iniciado sesión, puedes iniciar sesión: {{hint}}."
       },

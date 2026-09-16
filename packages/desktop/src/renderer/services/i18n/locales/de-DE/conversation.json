@@ -612,6 +612,12 @@
       "ACP_EMPTY_TURN": {
         "body": "Diese Anfrage hat keine sichtbare Antwort erzeugt."
       },
+      "AUTOCOMPACT_DONE": {
+        "body": "Ältere Nachrichten wurden zu einer Zusammenfassung verdichtet, um Kontext freizugeben ({{count}} verdichtet, vorher {{tokens}} Tokens)."
+      },
+      "AUTOCOMPACT_CIRCUIT_BROKEN": {
+        "body": "Die automatische Verdichtung ist {{failures}}-mal in Folge fehlgeschlagen und wurde gestoppt. Nutze /compact oder starte eine neue Unterhaltung."
+      },
       "ACP_EMPTY_TURN_NEEDS_AUTH": {
         "body": "Diese Anfrage hat keine sichtbare Antwort erzeugt. Wenn Sie bereits angemeldet sind, kann es sich um ein vorübergehendes Backend- oder Verbindungsproblem handeln – versuchen Sie es erneut oder starten Sie eine neue Unterhaltung. Wenn Sie noch nicht angemeldet sind, können Sie sich anmelden – {{hint}}."
       },
