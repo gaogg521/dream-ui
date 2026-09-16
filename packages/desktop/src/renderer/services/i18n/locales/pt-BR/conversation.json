@@ -560,7 +560,9 @@
     "thought": "Raciocínio",
     "cachedRead": "Leitura de cache",
     "cachedWrite": "Escrita de cache",
-    "cacheHitRate": "Taxa de acerto do cache"
+    "cacheHitRate": "Taxa de acerto do cache",
+    "compactReminder": "O contexto já passou de {{threshold}}%. Use /compact para condensá-lo ou inicie uma nova conversa.",
+    "compactBadge": "compactar"
   },
   "skill_generator": {
     "title": "Gerar Habilidade/Regra",

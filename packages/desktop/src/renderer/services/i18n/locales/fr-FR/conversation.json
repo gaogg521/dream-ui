@@ -554,7 +554,9 @@
     "thought": "Réflexion",
     "cachedRead": "Lecture du cache",
     "cachedWrite": "Écriture du cache",
-    "cacheHitRate": "Taux de succès du cache"
+    "cacheHitRate": "Taux de succès du cache",
+    "compactReminder": "Le contexte dépasse {{threshold}} % de remplissage. Utilisez /compact pour le condenser ou démarrez une nouvelle conversation.",
+    "compactBadge": "à compacter"
   },
   "skill_generator": {
     "title": "Générer une compétence/règle",

@@ -554,7 +554,9 @@
     "thought": "思考",
     "cachedRead": "キャッシュ読み取り",
     "cachedWrite": "キャッシュ書き込み",
-    "cacheHitRate": "キャッシュヒット率"
+    "cacheHitRate": "キャッシュヒット率",
+    "compactReminder": "コンテキストの使用量が {{threshold}}% を超えました。/compact で圧縮するか、新しい会話を始めてください。",
+    "compactBadge": "圧縮推奨"
   },
   "skill_generator": {
     "title": "Generate Skill/Rule",

@@ -62,10 +62,18 @@ const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({
       percentage: pct,
       displayTotal: formatTokenCount(total, locale),
       displayLimit: formatTokenCount(context_limit, locale, true),
-      isWarning: pct > 70,
-      isDanger: pct > 90,
+      isWarning: pct > COMPACT_REMINDER_PCT,
+      isDanger: pct > DANGER_PCT,
     };
   }, [tokenUsage, context_limit, hasWindow, locale]);
+
+  /**
+   * Past this point the conversation is close enough to the window that the
+   * user should act, so the indicator stops being a hover-only detail and says
+   * so in the toolbar. Gated on `hasWindow` because a percentage against an
+   * unknown denominator is not a fact — that case shows the raw count instead.
+   */
+  const shouldRemindCompact = hasWindow && percentage > COMPACT_REMINDER_PCT;
 
   if (!tokenUsage) {
     return null;
@@ -170,6 +178,15 @@ const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({
         {formatPercentage(percentage, locale)} · {displayTotal} / {displayLimit}{' '}
         {t('conversation.contextUsage.contextUsed', 'context used')}
       </div>
+      {shouldRemindCompact && (
+        <div className='text-12px mt-4px' style={{ color: getStrokeColor() }}>
+          {t('conversation.contextUsage.compactReminder', {
+            threshold: COMPACT_REMINDER_PCT,
+            defaultValue:
+              'Context is over {{threshold}}% full. Run /compact to condense it, or start a new conversation.',
+          })}
+        </div>
+      )}
       {details}
     </div>
   ) : (
@@ -187,8 +204,8 @@ const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({
   return (
     <Popover content={popoverContent} position='top' trigger='hover' className='context-usage-popover'>
       <div
-        className={`context-usage-indicator cursor-pointer flex items-center justify-center ${className}`}
-        style={{ width: 32, height: 32 }}
+        className={`context-usage-indicator cursor-pointer flex items-center justify-center gap-4px ${className}`}
+        style={{ height: 32, width: shouldRemindCompact ? undefined : 32, paddingInline: shouldRemindCompact ? 6 : 0 }}
       >
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
           {/* 背景圆环 */}
@@ -216,10 +233,32 @@ const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({
             />
           )}
         </svg>
+        {/* The reminder itself: a ring that quietly changes colour is easy to
+            miss, and by the time the engine blocks the turn outright the user
+            has already lost the thread they were on. */}
+        {shouldRemindCompact && (
+          <span className='text-11px whitespace-nowrap leading-none' style={{ color: getStrokeColor() }}>
+            {formatPercentage(percentage, locale)} · {t('conversation.contextUsage.compactBadge', 'compact soon')}
+          </span>
+        )}
       </div>
     </Popover>
   );
 };
+
+/**
+ * Percentage of the context window at which the indicator starts telling the
+ * user to compact.
+ *
+ * Kept in step with the engine's own `AUTOCOMPACT_THRESHOLD_PCT` (dream-core,
+ * `manager/dream_engine/agent.rs`): the point the user is told about is the
+ * point autocompact starts working on it, so the warning never appears after
+ * the fact or long before anything happens.
+ */
+const COMPACT_REMINDER_PCT = 80;
+
+/** Past this the ring turns red: little room left before the engine blocks the turn. */
+const DANGER_PCT = 90;
 
 /**
  * Smallest amount that four fraction digits can still render honestly. Below

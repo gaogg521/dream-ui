@@ -554,7 +554,9 @@
     "thought": "تفکر",
     "cachedRead": "خواندن حافظه پنهان",
     "cachedWrite": "نوشتن حافظه پنهان",
-    "cacheHitRate": "نرخ اصابت حافظهٔ نهان"
+    "cacheHitRate": "نرخ اصابت حافظهٔ نهان",
+    "compactReminder": "زمینه بیش از {{threshold}}٪ پر شده است. با /compact آن را فشرده کنید یا گفتگوی جدیدی آغاز کنید.",
+    "compactBadge": "فشرده‌سازی"
   },
   "skill_generator": {
     "title": "ساخت مهارت/قانون",

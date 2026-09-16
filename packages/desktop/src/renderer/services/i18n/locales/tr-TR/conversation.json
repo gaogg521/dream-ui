@@ -539,7 +539,9 @@
     "thought": "Düşünme",
     "cachedRead": "Önbellek okuma",
     "cachedWrite": "Önbellek yazma",
-    "cacheHitRate": "Önbellek isabet oranı"
+    "cacheHitRate": "Önbellek isabet oranı",
+    "compactReminder": "Bağlam %{{threshold}} doluluk oranını aştı. /compact ile sıkıştırın veya yeni bir sohbet başlatın.",
+    "compactBadge": "sıkıştırın"
   },
   "skill_generator": {
     "title": "Yetenek/Kural Oluştur",

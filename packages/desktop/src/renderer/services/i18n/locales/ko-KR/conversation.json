@@ -554,7 +554,9 @@
     "thought": "사고",
     "cachedRead": "캐시 읽기",
     "cachedWrite": "캐시 쓰기",
-    "cacheHitRate": "캐시 적중률"
+    "cacheHitRate": "캐시 적중률",
+    "compactReminder": "컨텍스트가 {{threshold}}%를 넘었습니다. /compact로 압축하거나 새 대화를 시작하세요.",
+    "compactBadge": "압축 권장"
   },
   "skill_generator": {
     "title": "스킬/규칙 생성",
