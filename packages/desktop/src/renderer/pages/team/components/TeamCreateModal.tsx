@@ -328,6 +328,9 @@ const TeamCreateModal: React.FC<Props> = ({ visible, onClose, onCreated }) => {
       variant='standard'
       visible={visible}
       onCancel={handleClose}
+      // 900px 宽、居中，正好压住用户要对照的东西：工作空间要照着左侧文件树选，
+      // 成员要照着会话里正在做的事挑。移动端不给拖（视口本来就只放得下弹窗）。
+      draggable={!isMobile}
       className='team-create-modal'
       style={{
         width: isMobile ? 'calc(100vw - 32px)' : 900,

@@ -107,6 +107,15 @@ export interface DreamModalProps extends Omit<ModalProps, 'title' | 'footer'> {
   title?: React.ReactNode;
   /** @deprecated 请使用 header.showClose */
   showCustomClose?: boolean;
+
+  /**
+   * 允许按住标题栏把弹窗拖到别处。
+   *
+   * 给那些「填的时候要对照背后内容」的弹窗用（如新建团队要照着文件树选工作空间）：
+   * 居中的弹窗正好压住要看的东西，而弹窗本身又不能关。位置只在本次打开期间保留，
+   * 关掉再开回到居中 —— 记住位置会让下次打开时弹窗出现在意料之外的角落。
+   */
+  draggable?: boolean;
 }
 
 // ==================== 样式常量 / Style Constants ====================
@@ -191,6 +200,80 @@ const formatDimensionValue = (value?: string | number) => {
   return typeof value === 'number' ? `${value}px` : value;
 };
 
+/** 拖动后仍必须留在视口内的边长，保证弹窗不会被拖到完全够不着的地方。 */
+const DRAG_VISIBLE_MARGIN = 80;
+
+type DragOffset = { x: number; y: number };
+
+/**
+ * 标题栏拖动。返回要叠加到弹窗上的位移，以及绑在标题栏上的 `onPointerDown`。
+ *
+ * 用 pointer 事件而不是 mouse 事件：触摸屏和手写笔同样能拖，并且 `setPointerCapture`
+ * 让指针划出标题栏、甚至划出窗口时拖动依然连续 —— 用 mousemove 的话指针一旦离开
+ * 元素就断，拖到一半会“甩脱”。
+ */
+const useModalDrag = (enabled: boolean, visible?: boolean) => {
+  const [offset, setOffset] = React.useState<DragOffset>({ x: 0, y: 0 });
+
+  // 每次重新打开都回到居中：位置属于“这一次打开”，不是弹窗的属性。
+  React.useEffect(() => {
+    if (!visible) setOffset({ x: 0, y: 0 });
+  }, [visible]);
+
+  const onPointerDown = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!enabled || event.button !== 0) return;
+      // 标题栏上的关闭按钮等控件不该触发拖动。
+      if ((event.target as HTMLElement).closest('button, a, input, textarea, select')) return;
+
+      const handle = event.currentTarget;
+      const modal = handle.closest('.arco-modal') as HTMLElement | null;
+      const rect = modal?.getBoundingClientRect();
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const start = offset;
+      // 拿到指针捕获，指针划出标题栏也继续收事件。拿不到不致命（jsdom 里就没有这个
+      // 实现），下面的监听挂在 window 上，冒泡路径两种情况都覆盖得到。
+      try {
+        handle.setPointerCapture(event.pointerId);
+      } catch {
+        /* 捕获失败就退回冒泡路径 */
+      }
+
+      const clamp = (next: DragOffset): DragOffset => {
+        if (!rect) return next;
+        // rect 是当前（已含 start 位移）的位置，换算回未位移时的原点再夹取。
+        const originLeft = rect.left - start.x;
+        const originTop = rect.top - start.y;
+        const minX = DRAG_VISIBLE_MARGIN - originLeft - rect.width;
+        const maxX = window.innerWidth - DRAG_VISIBLE_MARGIN - originLeft;
+        // 标题栏必须留在视口内，否则拖下去就再也拖不回来了。
+        const minY = -originTop;
+        const maxY = window.innerHeight - DRAG_VISIBLE_MARGIN - originTop;
+        return {
+          x: Math.min(Math.max(next.x, minX), maxX),
+          y: Math.min(Math.max(next.y, minY), maxY),
+        };
+      };
+
+      const onMove = (moveEvent: PointerEvent) => {
+        setOffset(clamp({ x: start.x + moveEvent.clientX - startX, y: start.y + moveEvent.clientY - startY }));
+      };
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
+    },
+    [enabled, offset]
+  );
+
+  return { offset, onPointerDown };
+};
+
 const DreamModal: React.FC<DreamModalProps> = ({
   children,
   variant,
@@ -202,11 +285,13 @@ const DreamModal: React.FC<DreamModalProps> = ({
   title,
   showCustomClose = true,
   onCancel,
+  draggable = false,
   className = '',
   style,
   ...props
 }) => {
   const isStandard = variant === 'standard';
+  const { offset: dragOffset, onPointerDown: onDragPointerDown } = useModalDrag(draggable, props.visible);
   const { fontScale } = useThemeContext();
   const { t } = useTranslation();
   // standard 变体默认给内容区标准内边距（上下20/左右24）；当调用方显式传入
@@ -268,9 +353,13 @@ const DreamModal: React.FC<DreamModalProps> = ({
     }
   }
 
+  const isDragged = dragOffset.x !== 0 || dragOffset.y !== 0;
   const finalStyle: CSSProperties = {
     ...mergedStyle,
     borderRadius: mergedStyle.borderRadius ?? '16px',
+    // 只在真的拖过之后才写 transform：Arco 的打开动画自己用 transform，
+    // 开场就叠一个 translate(0,0) 会把动画压掉。
+    ...(isDragged ? { transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)` } : {}),
   };
 
   const bodyInlineStyle = React.useMemo<CSSProperties>(() => {
@@ -370,7 +459,11 @@ const DreamModal: React.FC<DreamModalProps> = ({
     // standard 变体：标题 + 可选副标题竖排，自带标准内边距与下分隔线
     if (isStandard) {
       return (
-        <div className={classNames(STD_HEADER_CLASS, headerConfig.className)} style={headerConfig.style}>
+        <div
+          className={classNames(STD_HEADER_CLASS, draggable && 'cursor-move select-none', headerConfig.className)}
+          style={headerConfig.style}
+          onPointerDown={draggable ? onDragPointerDown : undefined}
+        >
           <div className='min-w-0 flex-1'>
             {headerConfig.title && <h3 className={STD_TITLE_CLASS}>{headerConfig.title}</h3>}
             {/* 副标题可选：不传时整行不渲染、不占位、不留白 */}
@@ -386,7 +479,11 @@ const DreamModal: React.FC<DreamModalProps> = ({
     }
 
     // 默认 header 布局
-    const headerClassName = classNames(HEADER_BASE_CLASS, headerConfig.className);
+    const headerClassName = classNames(
+      HEADER_BASE_CLASS,
+      draggable && 'cursor-move select-none',
+      headerConfig.className
+    );
 
     const headerStyle: CSSProperties = {
       borderBottom: '1px solid var(--bg-3)',
@@ -394,7 +491,7 @@ const DreamModal: React.FC<DreamModalProps> = ({
     };
 
     return (
-      <div className={headerClassName} style={headerStyle}>
+      <div className={headerClassName} style={headerStyle} onPointerDown={draggable ? onDragPointerDown : undefined}>
         {headerConfig.title && <h3 className={TITLE_BASE_CLASS}>{headerConfig.title}</h3>}
         {headerConfig.showClose && (
           <button onClick={onCancel} className={CLOSE_BUTTON_CLASS} aria-label='Close'>
