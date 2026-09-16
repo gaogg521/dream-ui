@@ -413,11 +413,7 @@ export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
 
   const agents = (team ?? []).map((agent) => {
     const config = (agent.automationConfig ?? {}) as Record<string, unknown>;
-    const { skillIds, boundSkillIds, boundMcpIds } = filterTeamAgentBindings(
-      config,
-      enabledSkillIds,
-      enabledMcpIds
-    );
+    const { skillIds, boundSkillIds, boundMcpIds } = filterTeamAgentBindings(config, enabledSkillIds, enabledMcpIds);
     return {
       id: agent.id,
       name: agent.name,
