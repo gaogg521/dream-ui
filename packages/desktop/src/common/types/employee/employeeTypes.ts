@@ -33,6 +33,10 @@ export type CronScheduleDto =
 
 export type PersonalAgentAutomationConfig = {
   skillIds?: string[];
+  /** Enterprise registry skill ids explicitly bound to this employee. */
+  boundSkillIds?: string[];
+  /** Enterprise registry MCP ids explicitly bound to this employee. */
+  boundMcpIds?: string[];
   /** @deprecated Never written. Use the first-class `modelId` field instead. */
   preferredModelId?: string;
   /** @deprecated Never written. Use the first-class `model` field instead. */
