@@ -559,7 +559,9 @@
     "thought": "思考",
     "cachedRead": "缓存读",
     "cachedWrite": "缓存写",
-    "cacheHitRate": "缓存命中率"
+    "cacheHitRate": "缓存命中率",
+    "compactReminder": "上下文已超过 {{threshold}}%，建议使用 /compact 压缩上下文，或开启新对话。",
+    "compactBadge": "建议压缩"
   },
   "skill_generator": {
     "title": "生成 Skill/规则",

@@ -555,7 +555,9 @@
     "thought": "Razonamiento",
     "cachedRead": "Lectura de caché",
     "cachedWrite": "Escritura de caché",
-    "cacheHitRate": "Tasa de aciertos de caché"
+    "cacheHitRate": "Tasa de aciertos de caché",
+    "compactReminder": "El contexto supera el {{threshold}} % de ocupación. Usa /compact para condensarlo o inicia una conversación nueva.",
+    "compactBadge": "compactar"
   },
   "skill_generator": {
     "title": "Generar habilidad/regla",

@@ -564,7 +564,9 @@
     "thought": "Размышление",
     "cachedRead": "Чтение кэша",
     "cachedWrite": "Запись кэша",
-    "cacheHitRate": "Попадания в кэш"
+    "cacheHitRate": "Попадания в кэш",
+    "compactReminder": "Контекст заполнен более чем на {{threshold}}%. Выполните /compact или начните новый диалог.",
+    "compactBadge": "сжать"
   },
   "skill_generator": {
     "title": "Создать навык/правило",

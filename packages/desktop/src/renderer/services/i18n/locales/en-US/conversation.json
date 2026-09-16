@@ -559,7 +559,9 @@
     "thought": "Thinking",
     "cachedRead": "Cache read",
     "cachedWrite": "Cache write",
-    "cacheHitRate": "Cache hit rate"
+    "cacheHitRate": "Cache hit rate",
+    "compactReminder": "Context is over {{threshold}}% full. Run /compact to condense it, or start a new conversation.",
+    "compactBadge": "compact soon"
   },
   "skill_generator": {
     "title": "Generate Skill/Rule",

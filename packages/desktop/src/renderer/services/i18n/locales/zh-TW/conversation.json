@@ -555,7 +555,9 @@
     "thought": "思考",
     "cachedRead": "快取讀取",
     "cachedWrite": "快取寫入",
-    "cacheHitRate": "快取命中率"
+    "cacheHitRate": "快取命中率",
+    "compactReminder": "上下文已超過 {{threshold}}%，建議使用 /compact 壓縮上下文，或開啟新對話。",
+    "compactBadge": "建議壓縮"
   },
   "skill_generator": {
     "title": "Generate Skill/Rule",

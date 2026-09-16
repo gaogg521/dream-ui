@@ -555,7 +555,9 @@
     "thought": "Denken",
     "cachedRead": "Cache-Lesen",
     "cachedWrite": "Cache-Schreiben",
-    "cacheHitRate": "Cache-Trefferquote"
+    "cacheHitRate": "Cache-Trefferquote",
+    "compactReminder": "Der Kontext ist zu über {{threshold}} % gefüllt. Nutze /compact zum Verdichten oder starte eine neue Unterhaltung.",
+    "compactBadge": "komprimieren"
   },
   "skill_generator": {
     "title": "Skill/Regel generieren",

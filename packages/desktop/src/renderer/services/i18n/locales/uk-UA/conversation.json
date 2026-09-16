@@ -564,7 +564,9 @@
     "thought": "Міркування",
     "cachedRead": "Читання кешу",
     "cachedWrite": "Запис кешу",
-    "cacheHitRate": "Влучення в кеш"
+    "cacheHitRate": "Влучення в кеш",
+    "compactReminder": "Контекст заповнено більше ніж на {{threshold}}%. Виконайте /compact або розпочніть нову розмову.",
+    "compactBadge": "стиснути"
   },
   "skill_generator": {
     "title": "Створити Навичку/Правило",

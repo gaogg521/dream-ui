@@ -1028,6 +1028,8 @@ export type I18nKey =
   | 'conversation.contextUsage.cacheHitRate'
   | 'conversation.contextUsage.cachedRead'
   | 'conversation.contextUsage.cachedWrite'
+  | 'conversation.contextUsage.compactBadge'
+  | 'conversation.contextUsage.compactReminder'
   | 'conversation.contextUsage.contextUsed'
   | 'conversation.contextUsage.input'
   | 'conversation.contextUsage.output'
