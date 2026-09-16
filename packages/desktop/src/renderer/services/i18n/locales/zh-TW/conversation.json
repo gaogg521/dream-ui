@@ -612,6 +612,12 @@
       "ACP_EMPTY_TURN": {
         "body": "這次請求沒有產生任何可見回覆。"
       },
+      "AUTOCOMPACT_DONE": {
+        "body": "已把較早的訊息壓縮成摘要以騰出上下文（壓縮 {{count}} 則，壓縮前 {{tokens}} tokens）。"
+      },
+      "AUTOCOMPACT_CIRCUIT_BROKEN": {
+        "body": "自動壓縮連續失敗 {{failures}} 次，已停止重試。請手動執行 /compact，或開啟新對話。"
+      },
       "ACP_EMPTY_TURN_NEEDS_AUTH": {
         "body": "這次請求沒有產生任何可見回覆。若你已登入，可能是後端瞬時或連線問題，請重試或新建對話；若尚未登入，可嘗試登入：{{hint}}。"
       },

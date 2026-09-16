@@ -617,6 +617,12 @@
       "ACP_EMPTY_TURN": {
         "body": "Esta solicitação não gerou nenhuma resposta visível."
       },
+      "AUTOCOMPACT_DONE": {
+        "body": "Mensagens antigas foram condensadas em um resumo para liberar contexto ({{count}} condensadas, {{tokens}} tokens antes)."
+      },
+      "AUTOCOMPACT_CIRCUIT_BROKEN": {
+        "body": "A compactação automática falhou {{failures}} vezes seguidas e parou. Use /compact ou inicie uma nova conversa."
+      },
       "ACP_EMPTY_TURN_NEEDS_AUTH": {
         "body": "Esta solicitação não produziu nenhuma resposta visível. Se você já fez login, pode ser um problema temporário de backend ou de conexão — tente novamente ou inicie uma nova conversa. Se ainda não fez login, você pode fazer login: {{hint}}."
       },

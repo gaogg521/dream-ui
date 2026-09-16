@@ -616,6 +616,12 @@
       "ACP_EMPTY_TURN": {
         "body": "This request produced no visible reply."
       },
+      "AUTOCOMPACT_DONE": {
+        "body": "Older messages were condensed into a summary to free up context ({{count}} condensed, {{tokens}} tokens before)."
+      },
+      "AUTOCOMPACT_CIRCUIT_BROKEN": {
+        "body": "Automatic compaction failed {{failures}} times in a row and has stopped retrying. Run /compact, or start a new conversation."
+      },
       "ACP_EMPTY_TURN_NEEDS_AUTH": {
         "body": "This request produced no visible reply. If you're already signed in, this may be a transient backend or connection issue — try again or start a new conversation. If you're not signed in yet, you can sign in — {{hint}}."
       },

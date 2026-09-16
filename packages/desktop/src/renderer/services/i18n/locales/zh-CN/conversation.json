@@ -616,6 +616,12 @@
       "ACP_EMPTY_TURN": {
         "body": "这次请求没有产生任何可见回复。"
       },
+      "AUTOCOMPACT_DONE": {
+        "body": "已把较早的消息压缩成摘要以腾出上下文（压缩 {{count}} 条，压缩前 {{tokens}} tokens）。"
+      },
+      "AUTOCOMPACT_CIRCUIT_BROKEN": {
+        "body": "自动压缩连续失败 {{failures}} 次，已停止重试。请手动执行 /compact，或开启新对话。"
+      },
       "ACP_EMPTY_TURN_NEEDS_AUTH": {
         "body": "这次请求没有产生任何可见回复。若你已登录，可能是后端瞬时或连接问题，请重试或新建对话；若尚未登录，可尝试登录：{{hint}}。"
       },
