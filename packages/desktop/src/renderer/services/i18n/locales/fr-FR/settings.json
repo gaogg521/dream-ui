@@ -434,7 +434,7 @@
   "maxTokensFieldTip": "Disponible uniquement pour les modèles utilisant un protocole compatible OpenAI. Le moteur réessaie déjà automatiquement lorsque la passerelle rejette le mauvais nom de champ ; ne le définissez manuellement que si vous connaissez déjà le bon champ pour un modèle.",
   "contextWindow": "Fenêtre de contexte",
   "contextWindowPlaceholder": "ex. 32768",
-  "contextWindowTip": "Laissez vide pour utiliser la valeur par défaut du modèle. Les modèles locaux (ex. Ollama) ont souvent un contexte par défaut réduit (4096) — indiquez la capacité réelle du modèle.",
+  "contextWindowTip": "Laissé vide, une grande fenêtre est supposée. Indiquez ce que le modèle prend réellement en charge : l'indicateur d'utilisation comme la compaction automatique reposent sur ce nombre. Les modèles exécutés localement (p. ex. Ollama) ont souvent une valeur par défaut bien plus faible.",
   "modelSettingsApplyToSelected": "Ces réglages s'appliquent à tous les modèles sélectionnés et peuvent être modifiés individuellement ensuite.",
   "platformBedrock": "AWS Bedrock",
   "bedrock": {
