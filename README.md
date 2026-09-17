@@ -69,6 +69,9 @@ migrates a local SQLite file at `DATABASE_URL` (default
 | `MOCK_GATEWAY_SECRET` | no | `mock-secret` | Shared secret the mock payment webhook body must carry. |
 | `SEARCH_TAVILY_API_KEY` | no | — | Secret. Enables mode C when set; hosted search is off otherwise. |
 | `SEARCH_TAVILY_BASE_URL` | no | `https://api.tavily.com/search` | Tavily search endpoint. |
+| `SEARCH_ZHIPU_API_KEY` | no | — | Secret. Adds Zhipu to the provider chain. |
+| `SEARCH_ZHIPU_BASE_URL` | no | `https://open.bigmodel.cn/api/paas/v4/web_search` | Zhipu search endpoint. |
+| `SEARCH_PROVIDER_ORDER` | no | `tavily,zhipu` | Order providers are tried in. A Chinese query moves the Chinese-web providers to the front regardless. |
 | `SEARCH_DAILY_LIMIT_PER_INSTALL` | no | `50` | Searches one install may run per UTC day. |
 | `SEARCH_GLOBAL_DAILY_LIMIT` | no | `5000` | Searches every install together may run per UTC day — the spend cap. |
 | `SEARCH_RATE_LIMIT_PER_HOUR` | no | `60` | Per-IP sliding window for `/v1/search` only. |
@@ -134,6 +137,17 @@ key. This is the same reasoning as mode B, minus the money — a search is one
 unit, so there is no ledger and no top-up, just a daily allowance per device
 and a global cap on the day.
 
+Providers are tried in order and the first that **answers** wins — answering
+means non-empty, not merely a 200. A Chinese-language query asks the
+Chinese-web providers first: measured against the live APIs, Tavily returned a
+university course page for a Chinese query and reported success, while Zhipu
+returned that week's industry figures. Waiting for a 200 to fail would have
+made the second provider dead code for exactly the queries it was added for.
+
+One user-visible search is one quota slot however many vendors it took. The
+slot is refunded only when *no* provider managed to search at all; an empty
+result from a provider that did search is an answer, and keeps its slot.
+
 Request:
 
 ```json
@@ -154,7 +168,14 @@ Success response (`200`):
 }
 ```
 
-`published_at` is omitted when the upstream does not supply one.
+`published_at` is omitted when the upstream does not supply one, and so is
+`url`. A missing url is not an error: Zhipu's own engines (`search_std`,
+`search_pro`) return whole dated summaries with an empty link for Chinese news
+— measured 0 of 10, against 8 of 8 linked for an English query — because that
+content is licensed into their index rather than crawled. Dropping those
+emptied the provider exactly where it is most useful, so they are served
+without a `url` and the client renders them as explicitly unlinked rather than
+printing a broken citation.
 
 Error responses:
 

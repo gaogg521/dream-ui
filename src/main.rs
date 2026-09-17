@@ -41,14 +41,15 @@ async fn main() -> anyhow::Result<()> {
     let metered = Arc::new(build_metered_runtime()?);
 
     // Mode C. Opt-in the same way mode B is: no key, no hosted search.
-    let search_config = search::config_from_env()?;
-    if search_config.is_some() {
-        tracing::info!(provider = search::PROVIDER_ID, "hosted search enabled");
+    let search = Arc::new(search::SearchRuntime::from_env(&reqwest::Client::new())?);
+    if search.enabled() {
+        // The order matters operationally — it is the fallback chain — so log
+        // it rather than just the count.
+        tracing::info!(
+            providers = search.provider_ids().join(","),
+            "hosted search enabled"
+        );
     }
-    let search = Arc::new(search::SearchRuntime::new(
-        search_config,
-        reqwest::Client::new(),
-    ));
 
     let state = Arc::new(AppState {
         pool,
@@ -64,6 +65,7 @@ async fn main() -> anyhow::Result<()> {
         vendor = state.vendor.id(),
         metered_vendors = state.metered.configs.len(),
         hosted_search = state.search.enabled(),
+        search_providers = state.search.provider_ids().join(","),
         "starting dream-trial-broker"
     );
 

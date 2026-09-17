@@ -12,7 +12,8 @@ use sqlx::SqlitePool;
 
 use super::store;
 use super::{
-    SearchHit, UpstreamFailure, DEFAULT_RESULTS, MAX_RESULTS, MIN_QUERY_CHARS, PROVIDER_ID,
+    is_chinese_query, SearchHit, Upstream, UpstreamFailure, DEFAULT_RESULTS, MAX_RESULTS,
+    MIN_QUERY_CHARS,
 };
 use crate::error::AppError;
 use crate::service::AppState;
@@ -56,9 +57,11 @@ pub async fn run_search(
     ip: IpAddr,
     request: &SearchRequest,
 ) -> Result<SearchResponse, AppError> {
-    let Some(config) = state.search.config.as_ref() else {
+    let providers = &state.search.providers;
+    if providers.is_empty() {
         return Err(AppError::SearchUnavailable);
-    };
+    }
+    let limits = &state.search.limits;
 
     let install_id = request.install_id.trim();
     if install_id.is_empty() {
@@ -92,10 +95,10 @@ pub async fn run_search(
     let global_used = store::used_today_global(&state.pool, &day)
         .await
         .map_err(db_error("search global usage"))?;
-    if global_used >= config.global_daily_limit {
+    if global_used >= limits.global_daily_limit {
         tracing::warn!(
             global_used,
-            cap = config.global_daily_limit,
+            cap = limits.global_daily_limit,
             "hosted search daily cap reached"
         );
         return Err(AppError::SearchBudgetExhausted);
@@ -106,45 +109,116 @@ pub async fn run_search(
     let used = store::reserve(&state.pool, install_id, &day)
         .await
         .map_err(db_error("search reserve"))?;
-    if used > config.daily_limit_per_install {
+    if used > limits.daily_limit_per_install {
         refund(&state.pool, install_id, &day).await;
         return Err(AppError::SearchQuotaExhausted);
     }
 
-    match state.search.upstream.search(config, query, count).await {
-        Ok(results) => {
-            tracing::info!(
-                provider = PROVIDER_ID,
-                hits = results.len(),
-                used,
-                "hosted search served"
-            );
-            Ok(SearchResponse {
-                provider: PROVIDER_ID,
-                results,
-                quota: QuotaView {
-                    used_today: used,
-                    daily_limit: config.daily_limit_per_install,
-                    remaining: (config.daily_limit_per_install - used).max(0),
-                },
-            })
-        }
-        Err(failure) => {
-            // A search the vendor never ran is not one the user spent. Without
-            // the refund an upstream outage would quietly eat every device's
-            // allowance and read as "quota exhausted" long after it ended.
-            refund(&state.pool, install_id, &day).await;
-            match &failure {
-                UpstreamFailure::Status { status, body } => {
-                    tracing::error!(status, body = %body, "hosted search upstream rejected the call");
-                }
-                other => tracing::error!(error = %other, "hosted search upstream call failed"),
+    let quota = QuotaView {
+        used_today: used,
+        daily_limit: limits.daily_limit_per_install,
+        remaining: (limits.daily_limit_per_install - used).max(0),
+    };
+
+    /*
+     * Try each provider in turn; the first one that answers wins.
+     *
+     * "Answers" deliberately means a non-empty result, not merely a 200. The
+     * providers have different coverage — a Chinese-language query can come
+     * back empty from one and well-populated from the other — and an empty
+     * answer is no more useful to the caller than an error. Falling through on
+     * empty is what makes the second provider worth its extra call.
+     *
+     * The quota still counts ONE search: the slot is per user-visible search,
+     * not per upstream call, so a fallback costs us an extra vendor call and
+     * costs the user nothing.
+     */
+    let mut empty_from: Option<&'static str> = None;
+    let mut failures = 0usize;
+    let chain = order_for(providers, query);
+
+    for (index, provider) in chain.iter().enumerate() {
+        let is_last = index + 1 == chain.len();
+        match provider.search(query, count).await {
+            Ok(results) if !results.is_empty() => {
+                tracing::info!(
+                    provider = provider.id(),
+                    hits = results.len(),
+                    used,
+                    attempt = index + 1,
+                    "hosted search served"
+                );
+                return Ok(SearchResponse {
+                    provider: provider.id(),
+                    results,
+                    quota,
+                });
             }
-            // The upstream body can name our own key state; it never reaches
-            // the client, only the logs.
-            Err(AppError::UpstreamError("search upstream failed".into()))
+            Ok(_) => {
+                // Remember it: if nothing later does better, "this provider
+                // looked and found nothing" is a truthful answer, and a more
+                // useful one than an error.
+                empty_from.get_or_insert(provider.id());
+                if !is_last {
+                    tracing::info!(
+                        provider = provider.id(),
+                        "no results; falling through to the next provider"
+                    );
+                }
+            }
+            Err(failure) => {
+                failures += 1;
+                match &failure {
+                    UpstreamFailure::Status { status, body } => {
+                        tracing::error!(provider = provider.id(), status, body = %body, "hosted search upstream rejected the call");
+                    }
+                    other => {
+                        tracing::error!(provider = provider.id(), error = %other, "hosted search upstream call failed")
+                    }
+                }
+            }
         }
     }
+
+    // Something searched and found nothing. That is a result, not a fault, so
+    // the slot stays spent and the caller gets an honest empty list.
+    if let Some(provider) = empty_from {
+        tracing::info!(provider, used, "hosted search returned no results");
+        return Ok(SearchResponse {
+            provider,
+            results: Vec::new(),
+            quota,
+        });
+    }
+
+    // Every provider failed. A search no vendor ran is not one the user spent:
+    // without the refund an outage would quietly eat every device's allowance
+    // and keep reading as "quota exhausted" long after it ended.
+    refund(&state.pool, install_id, &day).await;
+    tracing::error!(failures, "hosted search exhausted every provider");
+    // Upstream bodies can name our own key state; they never reach the client,
+    // only the logs.
+    Err(AppError::UpstreamError("search upstream failed".into()))
+}
+
+/// The chain to try, for this query.
+///
+/// The configured order is the baseline; a Chinese query moves the providers
+/// that index the Chinese web to the front. This is what makes the second
+/// provider useful rather than decorative: a vendor with poor Chinese coverage
+/// still answers a Chinese query — with irrelevant results and a 200 — so
+/// waiting for it to fail or come back empty would never hand over.
+///
+/// Stable within each group, so the operator's `SEARCH_PROVIDER_ORDER` still
+/// decides ties.
+fn order_for<'a>(providers: &'a [Box<dyn Upstream>], query: &str) -> Vec<&'a dyn Upstream> {
+    let refs: Vec<&dyn Upstream> = providers.iter().map(|p| p.as_ref()).collect();
+    if !is_chinese_query(query) {
+        return refs;
+    }
+    let (preferred, rest): (Vec<_>, Vec<_>) =
+        refs.into_iter().partition(|p| p.prefers_chinese_queries());
+    preferred.into_iter().chain(rest).collect()
 }
 
 async fn refund(pool: &SqlitePool, install_id: &str, day: &str) {
