@@ -619,6 +619,9 @@
       "AUTOCOMPACT_DONE": {
         "body": "已把较早的消息压缩成摘要以腾出上下文（压缩 {{count}} 条，压缩前 {{tokens}} tokens）。"
       },
+      "CONTEXT_WINDOW_LEARNED": {
+        "body": "这个模型的实际上下文窗口比预设的小（{{tokens}} tokens）。已自动压缩对话并继续，你不用做任何操作。"
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "自动压缩连续失败 {{failures}} 次，已停止重试。请手动执行 /compact，或开启新对话。"
       },

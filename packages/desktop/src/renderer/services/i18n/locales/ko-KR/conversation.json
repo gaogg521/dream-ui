@@ -614,6 +614,9 @@
       "AUTOCOMPACT_DONE": {
         "body": "오래된 메시지를 요약으로 압축해 컨텍스트를 확보했습니다({{count}}개 압축, 압축 전 {{tokens}} 토큰)."
       },
+      "CONTEXT_WINDOW_LEARNED": {
+        "body": "이 모델의 실제 컨텍스트 윈도우가 예상보다 작았습니다({{tokens}} 토큰). 대화를 자동으로 압축하고 계속했으므로 별도 조치는 필요 없습니다."
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "자동 압축이 연속 {{failures}}회 실패해 재시도를 중단했습니다. /compact를 실행하거나 새 대화를 시작하세요."
       },

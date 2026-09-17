@@ -614,6 +614,9 @@
       "AUTOCOMPACT_DONE": {
         "body": "古いメッセージを要約にまとめてコンテキストを空けました（{{count}} 件を圧縮、圧縮前 {{tokens}} トークン）。"
       },
+      "CONTEXT_WINDOW_LEARNED": {
+        "body": "このモデルの実際のコンテキストウィンドウは想定より小さいことが分かりました（{{tokens}} トークン）。会話を自動で要約して続行したので、操作は不要です。"
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "自動圧縮が {{failures}} 回連続で失敗したため、再試行を停止しました。/compact を実行するか、新しい会話を始めてください。"
       },

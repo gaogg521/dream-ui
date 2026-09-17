@@ -615,6 +615,9 @@
       "AUTOCOMPACT_DONE": {
         "body": "已把較早的訊息壓縮成摘要以騰出上下文（壓縮 {{count}} 則，壓縮前 {{tokens}} tokens）。"
       },
+      "CONTEXT_WINDOW_LEARNED": {
+        "body": "這個模型的實際上下文視窗比預設的小（{{tokens}} tokens）。已自動壓縮對話並繼續，你不用做任何操作。"
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "自動壓縮連續失敗 {{failures}} 次，已停止重試。請手動執行 /compact，或開啟新對話。"
       },

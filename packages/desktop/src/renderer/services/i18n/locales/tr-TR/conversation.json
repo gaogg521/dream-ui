@@ -616,6 +616,9 @@
       "AUTOCOMPACT_DONE": {
         "body": "Bağlamda yer açmak için eski mesajlar bir özete sıkıştırıldı ({{count}} mesaj, öncesinde {{tokens}} token)."
       },
+      "CONTEXT_WINDOW_LEARNED": {
+        "body": "Bu modelin gerçek bağlam penceresi varsayılandan küçük çıktı ({{tokens}} token). Sohbet otomatik olarak sıkıştırılıp sürdürüldü; yapmanız gereken bir şey yok."
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "Otomatik sıkıştırma arka arkaya {{failures}} kez başarısız oldu ve durdu. /compact çalıştırın veya yeni bir sohbet başlatın."
       },

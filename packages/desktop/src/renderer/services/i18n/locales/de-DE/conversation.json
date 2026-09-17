@@ -615,6 +615,9 @@
       "AUTOCOMPACT_DONE": {
         "body": "Ältere Nachrichten wurden zu einer Zusammenfassung verdichtet, um Kontext freizugeben ({{count}} verdichtet, vorher {{tokens}} Tokens)."
       },
+      "CONTEXT_WINDOW_LEARNED": {
+        "body": "Dieses Modell hat ein kleineres Kontextfenster als angenommen ({{tokens}} Tokens). Die Unterhaltung wurde automatisch verdichtet und fortgesetzt — du musst nichts tun."
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "Die automatische Verdichtung ist {{failures}}-mal in Folge fehlgeschlagen und wurde gestoppt. Nutze /compact oder starte eine neue Unterhaltung."
       },
