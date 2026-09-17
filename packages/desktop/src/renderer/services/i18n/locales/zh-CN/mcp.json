@@ -94,6 +94,8 @@
     "hostedQuotaHint": "无需填写 Key 即可搜索，每台设备每天有免费额度。",
     "hostedOverridden": "已填写自己的 Key，搜索会优先使用它，不走内置搜索。",
     "hostedUnavailableHint": "当前版本没有内置搜索，请在下方填入任一服务商的 Key 开启联网搜索。",
-    "hostedEmptyHint": "内置搜索已启用；填入自己的 Key 可获得更高的每日额度"
+    "hostedEmptyHint": "内置搜索已启用；填入自己的 Key 可获得更高的每日额度",
+    "tier": "搜索引擎",
+    "tierHint": "各档价格与检索深度不同，std 最便宜。"
   }
 }

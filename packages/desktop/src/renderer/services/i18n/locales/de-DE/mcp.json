@@ -94,6 +94,8 @@
     "hostedQuotaHint": "Die Suche funktioniert ohne Schlüssel. Pro Gerät gibt es ein tägliches Freikontingent.",
     "hostedOverridden": "Ihr eigener Schlüssel ist hinterlegt und wird anstelle der integrierten Suche verwendet.",
     "hostedUnavailableHint": "Dieser Build hat keine integrierte Suche. Tragen Sie unten einen Anbieter-Schlüssel ein.",
-    "hostedEmptyHint": "Die integrierte Suche ist aktiv. Mit eigenem Schlüssel gilt ein höheres Tageslimit"
+    "hostedEmptyHint": "Die integrierte Suche ist aktiv. Mit eigenem Schlüssel gilt ein höheres Tageslimit",
+    "tier": "Suchmaschine",
+    "tierHint": "Die Stufen unterscheiden sich in Preis und Tiefe — std ist die günstigste."
   }
 }

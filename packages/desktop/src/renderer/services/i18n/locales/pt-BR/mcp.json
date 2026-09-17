@@ -94,6 +94,8 @@
     "hostedQuotaHint": "A busca funciona sem chave. Há uma cota diária gratuita por dispositivo.",
     "hostedOverridden": "Sua própria chave está configurada e será usada no lugar da busca integrada.",
     "hostedUnavailableHint": "Esta versão não tem busca integrada. Adicione abaixo a chave de um provedor.",
-    "hostedEmptyHint": "A busca integrada está ativa. Adicione sua própria chave para um limite diário maior"
+    "hostedEmptyHint": "A busca integrada está ativa. Adicione sua própria chave para um limite diário maior",
+    "tier": "Motor de busca",
+    "tierHint": "Os níveis diferem em preço e profundidade — std é o mais barato."
   }
 }

@@ -24,7 +24,7 @@
  * user an edit instead of a release.
  */
 
-import { Button, Input, Link, Message, Radio, Tag, Typography } from '@arco-design/web-react';
+import { Button, Input, Link, Message, Radio, Select, Tag, Typography } from '@arco-design/web-react';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ipcBridge } from '@/common';
@@ -266,6 +266,32 @@ const WebSearchProviderConfig: React.FC<Props> = ({ server, onServerUpdated }) =
                       </Tag>
                     ) : null}
                   </div>
+                  {provider.tiers ? (
+                    <div className='flex items-center gap-8px pl-150px'>
+                      <Typography.Text type='secondary' className='text-12px shrink-0'>
+                        {t('mcp.webSearch.tier')}
+                      </Typography.Text>
+                      <Select
+                        value={env[provider.tiers.envKey] || provider.tiers.defaultValue}
+                        onChange={(value: string) =>
+                          setField(provider.tiers.envKey, value === provider.tiers.defaultValue ? '' : value)
+                        }
+                        size='small'
+                        className='w-220px'
+                      >
+                        {provider.tiers.options.map((option) => (
+                          // Engine codes, untranslated: they are what the API
+                          // takes and what the vendor's own console shows.
+                          <Select.Option key={option} value={option}>
+                            {option}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                      <Typography.Text type='secondary' className='text-12px'>
+                        {t('mcp.webSearch.tierHint')}
+                      </Typography.Text>
+                    </div>
+                  ) : null}
                   {provider.custom ? (
                     <div className='flex items-center gap-8px pl-150px'>
                       {(

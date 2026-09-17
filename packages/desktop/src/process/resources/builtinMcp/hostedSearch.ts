@@ -52,14 +52,22 @@ type BrokerHit = {
   published_at?: string;
 };
 
-/** The broker already normalises; this only renames `published_at`. */
+/**
+ * The broker already normalises; this only renames `published_at` and drops
+ * anything with nothing left to say.
+ *
+ * A hit may legitimately arrive with no url — see {@link SearchHit.url} — so
+ * the test is whether there is any content at all, not whether it is linkable.
+ */
 const toHit = (raw: BrokerHit): SearchHit | undefined => {
   const url = typeof raw?.url === 'string' ? raw.url.trim() : '';
-  if (!url) return undefined;
+  const title = typeof raw?.title === 'string' ? raw.title.trim() : '';
+  const snippet = typeof raw?.snippet === 'string' ? raw.snippet : '';
+  if (!url && !title && !snippet) return undefined;
   return {
-    title: typeof raw.title === 'string' && raw.title.trim() ? raw.title.trim() : url,
-    url,
-    snippet: typeof raw.snippet === 'string' ? raw.snippet : '',
+    title: title || url,
+    ...(url ? { url } : {}),
+    snippet,
     ...(typeof raw.published_at === 'string' && raw.published_at ? { publishedAt: raw.published_at } : {}),
   };
 };

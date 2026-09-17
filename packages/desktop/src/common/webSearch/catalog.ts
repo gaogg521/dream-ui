@@ -88,6 +88,21 @@ export type WebSearchProvider = {
    */
   requiresBaseUrl?: boolean;
   /**
+   * A vendor tier the user picks, when the vendor sells several at different
+   * prices and quality.
+   *
+   * Only Zhipu has one today. It is offered because the tiers are a real
+   * trade-off the account holder pays for — `search_std` is 0.01 CNY a call
+   * and `search_pro_sogou` is 0.05 — and the person holding the key is the
+   * only one who can weigh that. The hosted (broker-run) search is pinned to
+   * the cheapest tier instead, because there the bill is ours.
+   */
+  tiers?: {
+    envKey: string;
+    options: readonly string[];
+    defaultValue: string;
+  };
+  /**
    * A user-defined endpoint rather than one of the shipped vendors.
    *
    * The seven built-in entries cover the services checked against live APIs,
@@ -121,6 +136,18 @@ export const WEB_SEARCH_CUSTOM_DEFAULTS = {
   queryField: 'query',
 } as const;
 
+/**
+ * Which Zhipu search engine a user's own key should call.
+ *
+ * `search_std` is the default because it is the cheapest and answers ordinary
+ * queries well; the `search_pro*` tiers cost three to five times as much and
+ * are worth it only to someone who has decided so. Verified live: all four
+ * codes are accepted by the same endpoint with the same request shape.
+ */
+export const ZHIPU_ENGINE_ENV = 'WEB_SEARCH_ZHIPU_ENGINE';
+export const ZHIPU_ENGINES = ['search_std', 'search_pro', 'search_pro_sogou', 'search_pro_quark'] as const;
+export const ZHIPU_ENGINE_DEFAULT = 'search_std';
+
 export const WEB_SEARCH_PROVIDERS: WebSearchProvider[] = [
   {
     id: 'bocha',
@@ -139,6 +166,15 @@ export const WEB_SEARCH_PROVIDERS: WebSearchProvider[] = [
     baseUrlEnvKey: 'WEB_SEARCH_URL_ZHIPU',
     defaultBaseUrl: 'https://open.bigmodel.cn/api/paas/v4/web_search',
     apiKeyUrl: 'https://open.bigmodel.cn/usercenter/apikeys',
+    // Engine codes and prices from the vendor's own table (2026-09):
+    // search_std 0.01 / search_pro 0.03 / search_pro_sogou 0.05 /
+    // search_pro_quark 0.05 CNY per call. Codes, not translated labels — they
+    // are what the API takes, and what the vendor's console shows.
+    tiers: {
+      envKey: ZHIPU_ENGINE_ENV,
+      options: ZHIPU_ENGINES,
+      defaultValue: ZHIPU_ENGINE_DEFAULT,
+    },
   },
   {
     id: 'volcengine',

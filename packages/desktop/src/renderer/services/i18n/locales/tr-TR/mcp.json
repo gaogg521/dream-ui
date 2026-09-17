@@ -94,6 +94,8 @@
     "hostedQuotaHint": "Anahtar girmeden arama yapabilirsiniz. Her cihaz için günlük ücretsiz bir kota vardır.",
     "hostedOverridden": "Kendi anahtarınız ayarlı; yerleşik arama yerine o kullanılacak.",
     "hostedUnavailableHint": "Bu sürümde yerleşik arama yok. Aramayı açmak için aşağıya bir sağlayıcı anahtarı girin.",
-    "hostedEmptyHint": "Yerleşik arama açık. Daha yüksek günlük limit için kendi anahtarınızı girin"
+    "hostedEmptyHint": "Yerleşik arama açık. Daha yüksek günlük limit için kendi anahtarınızı girin",
+    "tier": "Arama motoru",
+    "tierHint": "Katmanlar fiyat ve derinlik açısından farklıdır; std en ucuzudur."
   }
 }

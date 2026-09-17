@@ -147,8 +147,34 @@ describe('runHostedSearch', () => {
     expect(outcome.detail).toContain('Bad Gateway');
   });
 
-  it('drops a result with no url rather than showing an empty citation', async () => {
-    stubFetch(200, { results: [{ title: 'no link' }, { title: 'ok', url: 'https://a.test/1' }] });
+  /**
+   * A link-less result is kept, not dropped: Zhipu returns dated summaries
+   * with no link for much of the Chinese news it indexes, and discarding them
+   * emptied that provider exactly where it was added to help. `url` stays
+   * undefined rather than becoming an empty string, so the renderer has to
+   * say "no link" instead of printing a broken citation.
+   */
+  it('keeps a result that has text but no link', async () => {
+    stubFetch(200, {
+      results: [
+        { title: 'no link', snippet: 'a dated summary' },
+        { title: 'ok', url: 'https://a.test/1' },
+      ],
+    });
+    const outcome = await runHostedSearch('https://broker.test/v1/search', 'i', 'q', 5, 1000);
+    expect(outcome.hits).toHaveLength(2);
+    expect(outcome.hits[0].url).toBeUndefined();
+    expect(outcome.hits[0].snippet).toBe('a dated summary');
+    expect(outcome.hits[1].url).toBe('https://a.test/1');
+  });
+
+  it('drops a result with neither text nor link', async () => {
+    stubFetch(200, {
+      results: [
+        { title: '  ', url: '  ', snippet: '' },
+        { title: 'ok', url: 'https://a.test/1' },
+      ],
+    });
     const outcome = await runHostedSearch('https://broker.test/v1/search', 'i', 'q', 5, 1000);
     expect(outcome.hits.map((h) => h.url)).toEqual(['https://a.test/1']);
   });

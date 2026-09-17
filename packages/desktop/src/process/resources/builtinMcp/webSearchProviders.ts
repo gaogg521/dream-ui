@@ -28,12 +28,27 @@
  * because a vendor's prose disagreed with its own worked example.
  */
 
-import { WEB_SEARCH_CUSTOM_DEFAULTS, WEB_SEARCH_CUSTOM_ENV } from '../../../common/webSearch/catalog';
+import {
+  WEB_SEARCH_CUSTOM_DEFAULTS,
+  WEB_SEARCH_CUSTOM_ENV,
+  ZHIPU_ENGINE_DEFAULT,
+  ZHIPU_ENGINE_ENV,
+} from '../../../common/webSearch/catalog';
 
 /** One result, in the single shape the model sees regardless of provider. */
 export type SearchHit = {
   title: string;
-  url: string;
+  /**
+   * Absent when the source supplied no link.
+   *
+   * Every vendor adapter below requires one — a result it cannot link to is
+   * dropped. The hosted (broker-run) path is the exception: Zhipu returns
+   * whole dated summaries with an empty link for much of the Chinese news it
+   * indexes, and discarding those emptied that provider exactly where it was
+   * added to help. Optional rather than an empty string, so the renderer has
+   * to decide what to say instead of printing a broken citation.
+   */
+  url?: string;
   snippet: string;
   publishedAt?: string;
 };
@@ -70,6 +85,18 @@ const at = (root: unknown, path: string): unknown =>
     .split('.')
     .reduce<unknown>((node, key) => (node && typeof node === 'object' ? (node as never)[key] : undefined), root);
 
+/**
+ * `count` for a Zhipu engine.
+ *
+ * Sogou does not take an arbitrary number — the vendor schema allows only
+ * 10/20/30/40/50 — so a model asking for 8 results would be sending a value
+ * the API rejects or silently reinterprets. The other engines take 1-50.
+ */
+const zhipuCount = (engine: string, count: number): number => {
+  if (engine !== 'search_pro_sogou') return count;
+  return count <= 10 ? 10 : 20;
+};
+
 export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
   /**
    * verified: endpoint + `Authorization: Bearer` from open.bochaai.com's own
@@ -104,14 +131,33 @@ export const WEB_SEARCH_ADAPTERS: Record<string, ProviderAdapter> = {
    * → `search_result[]` of `{title, link, content, publish_date}`.
    */
   zhipu: {
-    request: (query, count, apiKey, baseUrl) => ({
-      url: baseUrl,
-      init: {
-        method: 'POST',
-        headers: { ...JSON_HEADERS, Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ search_engine: 'search_std', search_query: query, count }),
-      },
-    }),
+    /**
+     * `search_engine` is the user's to choose: the tiers differ by 3-5x in
+     * price and in how hard they work the query, and only the person paying
+     * for the key can weigh that. Defaults to the cheapest.
+     */
+    request: (query, count, apiKey, baseUrl, env) => {
+      const engine = env?.[ZHIPU_ENGINE_ENV]?.trim() || ZHIPU_ENGINE_DEFAULT;
+      return {
+        url: baseUrl,
+        init: {
+          method: 'POST',
+          headers: { ...JSON_HEADERS, Authorization: `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            search_engine: engine,
+            search_query: query,
+            count: zhipuCount(engine, count),
+            /**
+             * Required by the vendor schema, and the value matters: with intent
+             * detection on, a query it reads as conversational comes back
+             * `SEARCH_NONE` and no search runs at all. This tool is only called
+             * when a search is already wanted.
+             */
+            search_intent: false,
+          }),
+        },
+      };
+    },
     pick: (payload) => asArray(payload.search_result ?? at(payload, 'data.search_result')),
   },
 

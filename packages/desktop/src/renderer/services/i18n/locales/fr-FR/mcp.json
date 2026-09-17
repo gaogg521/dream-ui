@@ -94,6 +94,8 @@
     "hostedQuotaHint": "La recherche fonctionne sans clé. Un quota quotidien gratuit s’applique par appareil.",
     "hostedOverridden": "Votre propre clé est configurée et sera utilisée à la place de la recherche intégrée.",
     "hostedUnavailableHint": "Cette version n’inclut pas la recherche intégrée. Saisissez ci-dessous la clé d’un fournisseur.",
-    "hostedEmptyHint": "La recherche intégrée est active. Ajoutez votre propre clé pour une limite quotidienne plus élevée"
+    "hostedEmptyHint": "La recherche intégrée est active. Ajoutez votre propre clé pour une limite quotidienne plus élevée",
+    "tier": "Moteur de recherche",
+    "tierHint": "Les niveaux diffèrent par le prix et la profondeur ; std est le moins cher."
   }
 }

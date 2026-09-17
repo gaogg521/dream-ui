@@ -94,6 +94,8 @@
     "hostedQuotaHint": "La búsqueda funciona sin clave. Hay una cuota diaria gratuita por dispositivo.",
     "hostedOverridden": "Tienes tu propia clave configurada y se usará en lugar de la búsqueda integrada.",
     "hostedUnavailableHint": "Esta versión no incluye búsqueda integrada. Añade abajo la clave de un proveedor.",
-    "hostedEmptyHint": "La búsqueda integrada está activa. Añade tu propia clave para un límite diario mayor"
+    "hostedEmptyHint": "La búsqueda integrada está activa. Añade tu propia clave para un límite diario mayor",
+    "tier": "Motor de búsqueda",
+    "tierHint": "Los niveles varían en precio y profundidad; std es el más barato."
   }
 }
