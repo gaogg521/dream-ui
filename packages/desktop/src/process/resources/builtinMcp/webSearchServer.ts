@@ -100,7 +100,15 @@ const formatHits = (source: string, query: string, hits: SearchHit[]): string =>
   const lines = hits.map((hit, index) => {
     const date = hit.publishedAt ? ` (${hit.publishedAt})` : '';
     const snippet = hit.snippet ? `\n   ${flatten(hit.snippet)}` : '';
-    return `[${index + 1}] ${flatten(hit.title)}${date}\n   ${hit.url}${snippet}`;
+    /**
+     * Some sources come back with no link at all — Zhipu returns whole dated
+     * summaries that way for much of the Chinese news it indexes. Saying so
+     * plainly is the point. Interpolating a missing url printed the literal
+     * text `undefined` on its own line, which reads to a model as a URL it
+     * failed to parse, and the next thing it does is guess one.
+     */
+    const where = hit.url || '(no link available — cite this as an unlinked source, do not invent a URL)';
+    return `[${index + 1}] ${flatten(hit.title)}${date}\n   ${where}${snippet}`;
   });
   return [`${hits.length} result(s) from ${source} for "${query}":`, '', ...lines].join('\n');
 };
@@ -251,7 +259,9 @@ async function main() {
     'Search the live web and get back ranked results with titles, URLs and snippets. ' +
       'Use this whenever the answer depends on current information — news, prices, releases, ' +
       'documentation, anything that may have changed since training. ' +
-      'Cite the URLs you actually used. Returns plain text; an empty result means the query found nothing, not that the tool failed.',
+      'Cite the URLs you actually used — and only those: some results carry no link and are marked as such, ' +
+      'so quote them as unlinked sources rather than guessing an address. ' +
+      'Returns plain text; an empty result means the query found nothing, not that the tool failed.',
     {
       query: z.string().describe('What to search for. A natural-language question works.'),
       count: z

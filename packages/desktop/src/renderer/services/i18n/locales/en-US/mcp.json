@@ -94,6 +94,8 @@
     "hostedQuotaHint": "Search works right now with no key. There is a daily free allowance per device.",
     "hostedOverridden": "Your own key is set and will be used instead of the built-in search.",
     "hostedUnavailableHint": "This build has no built-in search. Add a provider key below to turn search on.",
-    "hostedEmptyHint": "Built-in search is on. Add your own key for a higher daily limit"
+    "hostedEmptyHint": "Built-in search is on. Add your own key for a higher daily limit",
+    "tier": "Engine",
+    "tierHint": "Tiers differ in price and depth — std is the cheapest."
   }
 }

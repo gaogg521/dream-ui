@@ -1771,6 +1771,8 @@ export type I18nKey =
   | 'mcp.webSearch.saveFailed'
   | 'mcp.webSearch.saved'
   | 'mcp.webSearch.test'
+  | 'mcp.webSearch.tier'
+  | 'mcp.webSearch.tierHint'
   | 'memory.addAdditionalRoot'
   | 'memory.addMemory'
   | 'memory.additionalRootsTitle'
