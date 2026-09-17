@@ -72,7 +72,7 @@ migrates a local SQLite file at `DATABASE_URL` (default
 | `SEARCH_ZHIPU_API_KEY` | no | — | Secret. Adds Zhipu to the provider chain. |
 | `SEARCH_ZHIPU_BASE_URL` | no | `https://open.bigmodel.cn/api/paas/v4/web_search` | Zhipu search endpoint. |
 | `SEARCH_PROVIDER_ORDER` | no | `tavily,zhipu` | Order providers are tried in. |
-| `SEARCH_TAVILY_MONTHLY_CAP` | no | `1000` | Calls Tavily may serve per UTC month before the chain moves on — the size of its free plan. `0` removes the cap. |
+| `SEARCH_TAVILY_MONTHLY_CAP` | no | `1000` | Calls Tavily may serve per **UTC** month before the chain moves on — the size of its free plan. The counter is a monthly bucket, so a new month puts Tavily back in front on its own. `0` removes the cap. |
 | `SEARCH_DAILY_LIMIT_PER_INSTALL` | no | `50` | Searches one install may run per UTC day. |
 | `SEARCH_GLOBAL_DAILY_LIMIT` | no | `5000` | Searches every install together may run per UTC day — the spend cap. |
 | `SEARCH_RATE_LIMIT_PER_HOUR` | no | `60` | Per-IP sliding window for `/v1/search` only. |

@@ -499,6 +499,43 @@ async fn hands_over_once_the_first_providers_monthly_allowance_is_spent() {
     assert_eq!(response.quota.used_today, 3);
 }
 
+/// The allowance is a MONTHLY bucket, so a new month puts the first provider
+/// back in front on its own — no reset job, no manual step.
+///
+/// The vendor's free plan renews monthly; if the counter were cumulative the
+/// chain would hand over once and never hand back, and every later month would
+/// be served by the paid provider while a thousand free calls went unused.
+#[tokio::test]
+async fn a_new_month_returns_to_the_first_provider() {
+    let h = harness_chain(
+        limits(100, 1000),
+        vec![("primary", Some(2), vec![]), ("backup", None, vec![])],
+    )
+    .await;
+
+    // Last month was spent well past the cap.
+    for _ in 0..5 {
+        store::record_provider_call(&h.state.pool, "primary", "2020-01")
+            .await
+            .unwrap();
+    }
+
+    let response = run_search(&h.state, ip(), &request("a query"))
+        .await
+        .unwrap();
+    assert_eq!(
+        response.provider, "primary",
+        "a spent month must not follow the provider into the next one"
+    );
+    assert_eq!(
+        store::provider_used_this_month(&h.state.pool, "primary", "2020-01")
+            .await
+            .unwrap(),
+        5,
+        "and the old month's count is left alone"
+    );
+}
+
 /// An allowance is spent by calls the vendor actually served, not by ones that
 /// never reached it — otherwise an outage at the first provider would burn the
 /// free tier it is meant to be using.
