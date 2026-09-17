@@ -38,6 +38,7 @@ const {
   conversationsMock: {
     conversations: [] as unknown[],
     isConversationGenerating: vi.fn((_id: string) => false),
+    isConversationWaitingConfirmation: vi.fn((_id: string) => false),
     hasCompletionUnread: vi.fn((_id: string) => false),
     isManualUnread: vi.fn((_id: string) => false),
     markManualUnread: vi.fn(),
