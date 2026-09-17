@@ -17,12 +17,20 @@
 //!
 //! # Why more than one provider
 //!
-//! Providers are tried in order and the first that answers wins. That is not
-//! redundancy for its own sake: Tavily and Zhipu have genuinely different
-//! coverage, and a Chinese-language query that returns nothing from one
-//! routinely returns good results from the other. A fallback also means one
-//! vendor's outage, expiry or exhausted quota degrades the feature instead of
-//! ending it.
+//! A safety net, in the order `SEARCH_PROVIDER_ORDER` gives. The first
+//! provider serves every request it can; the next one is reached only when
+//! that one cannot answer — an exhausted allowance, an expired key, an outage,
+//! or a search that came back with nothing at all. One vendor running out
+//! degrades the feature instead of ending it.
+//!
+//! Worth knowing before changing this order: the providers are not equally
+//! good at everything, and a weak answer is NOT a failure the chain can see.
+//! Measured against the live APIs on 2026-09-17, asked for 2026 Chinese EV
+//! export figures, Tavily returned three results — a university course page
+//! among them — with a perfectly healthy 200, while Zhipu returned that week's
+//! industry association numbers. Whichever provider leads will therefore serve
+//! Chinese queries too, well or badly; the fallback never gets a look in,
+//! because there is nothing for it to catch.
 
 pub mod service;
 pub mod store;
@@ -50,6 +58,10 @@ const ZHIPU_ENGINE: &str = "search_std";
 
 /// Order providers are tried in when nothing says otherwise.
 const DEFAULT_PROVIDER_ORDER: &str = "tavily,zhipu";
+
+/// Tavily's free plan, as sold: 1000 calls a month. Once spent, the chain
+/// moves to the next provider rather than spending money here.
+const DEFAULT_TAVILY_MONTHLY_CAP: i64 = 1000;
 
 const DEFAULT_DAILY_LIMIT_PER_INSTALL: i64 = 50;
 const DEFAULT_GLOBAL_DAILY_LIMIT: i64 = 5_000;
@@ -115,10 +127,15 @@ pub fn providers_from_env(http: &reqwest::Client) -> Vec<Box<dyn Upstream>> {
         match name {
             TAVILY_ID => {
                 if let Some(key) = secret("SEARCH_TAVILY_API_KEY") {
+                    // `0` means no cap — for an account that has moved off the
+                    // free plan and should keep serving every query.
+                    let cap = parse_env_or("SEARCH_TAVILY_MONTHLY_CAP", DEFAULT_TAVILY_MONTHLY_CAP)
+                        .unwrap_or(DEFAULT_TAVILY_MONTHLY_CAP);
                     providers.push(Box::new(TavilyUpstream::new(
                         http.clone(),
                         key,
                         endpoint("SEARCH_TAVILY_BASE_URL", TAVILY_DEFAULT_URL),
+                        (cap > 0).then_some(cap),
                     )));
                 }
             }
@@ -268,36 +285,19 @@ impl std::fmt::Display for UpstreamFailure {
 pub trait Upstream: Send + Sync {
     fn id(&self) -> &'static str;
 
-    /// Whether this vendor indexes the Chinese web well enough to be asked
-    /// first for a Chinese-language query.
+    /// Calls this provider may make per UTC month before the chain moves on,
+    /// or `None` for one with no allowance to run out.
     ///
-    /// Measured, not assumed. Asked for the 2026 figures on Chinese EV
-    /// exports, Tavily returned three results — a university course page among
-    /// them — and reported perfect success; Zhipu returned the industry
-    /// association numbers from the week before. Without this the chain would
-    /// have stopped at Tavily every time, because "non-empty" is not the same
-    /// as "answered", and the fallback would have been dead code for exactly
-    /// the queries it was added for.
-    fn prefers_chinese_queries(&self) -> bool {
-        false
+    /// Counted here rather than inferred from the vendor's refusal: that would
+    /// mean guessing which status code means "plan exhausted" — a guess this
+    /// service has been wrong about before — and finding out only after the
+    /// first search had already failed. On a plan that bills past the free
+    /// tier instead of refusing, it would mean finding out on the invoice.
+    fn monthly_cap(&self) -> Option<i64> {
+        None
     }
 
     async fn search(&self, query: &str, count: i64) -> Result<Vec<SearchHit>, UpstreamFailure>;
-}
-
-/// Whether a query is written in Chinese.
-///
-/// One Han character is enough: a mixed query like `Rust 1.90 发布说明` comes
-/// from someone who wants Chinese-language sources, and the Chinese engines
-/// handle the Latin half of it perfectly well. The reverse is not true.
-pub fn is_chinese_query(query: &str) -> bool {
-    query.chars().any(|c| {
-        matches!(c,
-            '\u{4E00}'..='\u{9FFF}'      // CJK Unified Ideographs
-            | '\u{3400}'..='\u{4DBF}'    // Extension A
-            | '\u{F900}'..='\u{FAFF}'    // Compatibility Ideographs
-        )
-    })
 }
 
 /// Sends the request and hands back the parsed body, or the reason it could
@@ -343,14 +343,21 @@ pub struct TavilyUpstream {
     http: reqwest::Client,
     api_key: String,
     base_url: String,
+    monthly_cap: Option<i64>,
 }
 
 impl TavilyUpstream {
-    pub fn new(http: reqwest::Client, api_key: String, base_url: String) -> Self {
+    pub fn new(
+        http: reqwest::Client,
+        api_key: String,
+        base_url: String,
+        monthly_cap: Option<i64>,
+    ) -> Self {
         Self {
             http,
             api_key,
             base_url,
+            monthly_cap,
         }
     }
 }
@@ -359,6 +366,10 @@ impl TavilyUpstream {
 impl Upstream for TavilyUpstream {
     fn id(&self) -> &'static str {
         TAVILY_ID
+    }
+
+    fn monthly_cap(&self) -> Option<i64> {
+        self.monthly_cap
     }
 
     async fn search(&self, query: &str, count: i64) -> Result<Vec<SearchHit>, UpstreamFailure> {
@@ -397,10 +408,6 @@ impl ZhipuUpstream {
 impl Upstream for ZhipuUpstream {
     fn id(&self) -> &'static str {
         ZHIPU_ID
-    }
-
-    fn prefers_chinese_queries(&self) -> bool {
-        true
     }
 
     async fn search(&self, query: &str, count: i64) -> Result<Vec<SearchHit>, UpstreamFailure> {
@@ -504,17 +511,6 @@ fn string_at(item: &serde_json::Value, key: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn spots_a_chinese_query_including_a_mixed_one() {
-        assert!(is_chinese_query("中国新能源汽车出口"));
-        // Mixed is still a Chinese query: the person wants Chinese sources.
-        assert!(is_chinese_query("Rust 1.90 发布说明"));
-        assert!(!is_chinese_query("Rust 1.90 release notes"));
-        assert!(!is_chinese_query(""));
-        // Punctuation and digits alone are not a language signal.
-        assert!(!is_chinese_query("GPT-5 2026?!"));
-    }
 
     #[test]
     fn maps_a_live_shaped_tavily_payload() {

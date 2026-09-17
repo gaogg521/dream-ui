@@ -77,3 +77,56 @@ pub async fn prune_before(pool: &SqlitePool, day: &str) -> sqlx::Result<u64> {
         .await?;
     Ok(result.rows_affected())
 }
+
+// --- per-provider monthly counters --------------------------------------
+
+/// Calls this provider has made in `month` (UTC, `YYYY-MM`).
+pub async fn provider_used_this_month(
+    pool: &SqlitePool,
+    provider: &str,
+    month: &str,
+) -> sqlx::Result<i64> {
+    let (count,): (i64,) = sqlx::query_as(
+        "SELECT COALESCE(count, 0) FROM search_provider_usage WHERE provider = ? AND month = ?",
+    )
+    .bind(provider)
+    .bind(month)
+    .fetch_optional(pool)
+    .await?
+    .unwrap_or((0,));
+    Ok(count)
+}
+
+/// Records one call against a provider's monthly allowance.
+///
+/// Called after the vendor answers, because that is what a vendor bills for: a
+/// request that never reached them costs nothing and must not eat the free
+/// allowance the second provider is waiting to take over from.
+pub async fn record_provider_call(
+    pool: &SqlitePool,
+    provider: &str,
+    month: &str,
+) -> sqlx::Result<()> {
+    sqlx::query(
+        "INSERT INTO search_provider_usage (provider, month, count) VALUES (?, ?, 1)
+         ON CONFLICT (provider, month) DO UPDATE SET count = count + 1",
+    )
+    .bind(provider)
+    .bind(month)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Every provider's count for one month, for the ops endpoint.
+pub async fn provider_usage_for_month(
+    pool: &SqlitePool,
+    month: &str,
+) -> sqlx::Result<Vec<(String, i64)>> {
+    sqlx::query_as(
+        "SELECT provider, count FROM search_provider_usage WHERE month = ? ORDER BY provider",
+    )
+    .bind(month)
+    .fetch_all(pool)
+    .await
+}

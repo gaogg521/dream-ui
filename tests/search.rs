@@ -30,17 +30,20 @@ const INSTALL: &str = "install-abc";
 
 struct ScriptedUpstream {
     id: &'static str,
+    monthly_cap: Option<i64>,
     outcomes: Mutex<VecDeque<Result<Vec<SearchHit>, UpstreamFailure>>>,
     queries: Mutex<Vec<String>>,
 }
 
 impl ScriptedUpstream {
-    fn new(
+    fn capped(
         id: &'static str,
+        monthly_cap: Option<i64>,
         script: impl IntoIterator<Item = Result<Vec<SearchHit>, UpstreamFailure>>,
     ) -> Arc<Self> {
         Arc::new(Self {
             id,
+            monthly_cap,
             outcomes: Mutex::new(script.into_iter().collect()),
             queries: Mutex::new(Vec::new()),
         })
@@ -61,9 +64,8 @@ impl Upstream for SharedUpstream {
         self.0.id
     }
 
-    /// Stand-ins named `*-cn` play the part of a Chinese-web provider.
-    fn prefers_chinese_queries(&self) -> bool {
-        self.0.id.ends_with("-cn")
+    fn monthly_cap(&self) -> Option<i64> {
+        self.0.monthly_cap
     }
 
     async fn search(&self, query: &str, _count: i64) -> Result<Vec<SearchHit>, UpstreamFailure> {
@@ -127,11 +129,20 @@ async fn harness(
     limits: SearchLimits,
     script: impl IntoIterator<Item = Result<Vec<SearchHit>, UpstreamFailure>>,
 ) -> Harness {
-    harness_chain(limits, vec![("primary", script.into_iter().collect())]).await
+    harness_chain(
+        limits,
+        vec![("primary", None, script.into_iter().collect())],
+    )
+    .await
 }
 
-/// One provider's scripted outcomes, in the order it will return them.
-type ScriptedChain = Vec<(&'static str, Vec<Result<Vec<SearchHit>, UpstreamFailure>>)>;
+/// One provider's id, its monthly allowance (if any) and its scripted
+/// outcomes, in the order it will return them.
+type ScriptedChain = Vec<(
+    &'static str,
+    Option<i64>,
+    Vec<Result<Vec<SearchHit>, UpstreamFailure>>,
+)>;
 
 /// A harness with a whole provider chain, for the fallback tests.
 async fn harness_chain(limits: SearchLimits, chain: ScriptedChain) -> Harness {
@@ -141,7 +152,7 @@ async fn harness_chain(limits: SearchLimits, chain: ScriptedChain) -> Harness {
 
     let upstreams: Vec<Arc<ScriptedUpstream>> = chain
         .into_iter()
-        .map(|(id, script)| ScriptedUpstream::new(id, script))
+        .map(|(id, cap, script)| ScriptedUpstream::capped(id, cap, script))
         .collect();
     let providers: Vec<Box<dyn Upstream>> = upstreams
         .iter()
@@ -297,9 +308,10 @@ async fn falls_through_to_the_next_provider_when_the_first_fails() {
         vec![
             (
                 "primary",
+                None,
                 vec![Err(UpstreamFailure::Transport("connection refused".into()))],
             ),
-            ("backup", vec![Ok(vec![hit("https://b.test/1")])]),
+            ("backup", None, vec![Ok(vec![hit("https://b.test/1")])]),
         ],
     )
     .await;
@@ -324,8 +336,8 @@ async fn falls_through_when_the_first_provider_returns_nothing() {
     let h = harness_chain(
         limits(5, 100),
         vec![
-            ("primary", vec![Ok(Vec::new())]),
-            ("backup", vec![Ok(vec![hit("https://b.test/1")])]),
+            ("primary", None, vec![Ok(Vec::new())]),
+            ("backup", None, vec![Ok(vec![hit("https://b.test/1")])]),
         ],
     )
     .await;
@@ -344,8 +356,8 @@ async fn stops_at_the_first_provider_that_answers() {
     let h = harness_chain(
         limits(5, 100),
         vec![
-            ("primary", vec![Ok(vec![hit("https://a.test/1")])]),
-            ("backup", vec![Ok(vec![hit("https://b.test/1")])]),
+            ("primary", None, vec![Ok(vec![hit("https://a.test/1")])]),
+            ("backup", None, vec![Ok(vec![hit("https://b.test/1")])]),
         ],
     )
     .await;
@@ -370,8 +382,8 @@ async fn an_empty_result_everywhere_is_success_not_failure() {
     let h = harness_chain(
         limits(5, 100),
         vec![
-            ("primary", vec![Ok(Vec::new())]),
-            ("backup", vec![Ok(Vec::new())]),
+            ("primary", None, vec![Ok(Vec::new())]),
+            ("backup", None, vec![Ok(Vec::new())]),
         ],
     )
     .await;
@@ -397,9 +409,10 @@ async fn prefers_an_empty_answer_over_a_later_providers_failure() {
     let h = harness_chain(
         limits(5, 100),
         vec![
-            ("primary", vec![Ok(Vec::new())]),
+            ("primary", None, vec![Ok(Vec::new())]),
             (
                 "backup",
+                None,
                 vec![Err(UpstreamFailure::Status {
                     status: 500,
                     body: "boom".into(),
@@ -424,10 +437,12 @@ async fn refunds_only_when_every_provider_failed() {
         vec![
             (
                 "primary",
+                None,
                 vec![Err(UpstreamFailure::Transport("down".into()))],
             ),
             (
                 "backup",
+                None,
                 vec![Err(UpstreamFailure::Status {
                     status: 401,
                     body: "expired".into(),
@@ -449,83 +464,111 @@ async fn refunds_only_when_every_provider_failed() {
     );
 }
 
-/// The reason the fallback is not decorative.
+/// The handover this chain exists for: the first provider is on a free monthly
+/// allowance, and once it is spent every further search goes to the next one.
 ///
-/// A vendor with poor Chinese coverage still ANSWERS a Chinese query — with
-/// irrelevant results and a 200 — so a chain that only hands over on failure
-/// or emptiness would stop at it every time. Measured against the live APIs:
-/// asked for 2026 Chinese EV export figures, Tavily returned a university
-/// course page and called it success while Zhipu returned the industry
-/// numbers.
+/// Counted here rather than waiting for the vendor to refuse. Which status code
+/// means "plan exhausted" is a guess — and on a plan that bills past the free
+/// tier instead of refusing, the first sign would be the invoice.
 #[tokio::test]
-async fn asks_the_chinese_provider_first_for_a_chinese_query() {
+async fn hands_over_once_the_first_providers_monthly_allowance_is_spent() {
     let h = harness_chain(
-        limits(5, 100),
-        vec![
-            ("primary", vec![Ok(vec![hit("https://en.test/1")])]),
-            ("backup-cn", vec![Ok(vec![hit("https://cn.test/1")])]),
-        ],
+        limits(100, 1000),
+        vec![("primary", Some(2), vec![]), ("backup", None, vec![])],
     )
     .await;
 
-    let response = run_search(&h.state, ip(), &request("中国新能源汽车出口"))
+    for _ in 0..2 {
+        let response = run_search(&h.state, ip(), &request("a query"))
+            .await
+            .unwrap();
+        assert_eq!(response.provider, "primary");
+    }
+
+    let response = run_search(&h.state, ip(), &request("a query"))
         .await
         .unwrap();
-
-    assert_eq!(response.provider, "backup-cn");
+    assert_eq!(response.provider, "backup", "the allowance is spent");
     assert_eq!(
         h.upstreams[0].call_count(),
-        0,
-        "the English-first provider must not be asked at all"
+        2,
+        "the capped provider is not called again"
     );
+
+    // The device's own allowance is untouched by which vendor served it.
+    assert_eq!(response.quota.used_today, 3);
 }
 
-/// ...and the preference does not leak into English queries.
+/// An allowance is spent by calls the vendor actually served, not by ones that
+/// never reached it — otherwise an outage at the first provider would burn the
+/// free tier it is meant to be using.
 #[tokio::test]
-async fn keeps_the_configured_order_for_a_non_chinese_query() {
+async fn a_failed_call_does_not_spend_the_allowance() {
     let h = harness_chain(
-        limits(5, 100),
+        limits(100, 1000),
         vec![
-            ("primary", vec![Ok(vec![hit("https://en.test/1")])]),
-            ("backup-cn", vec![Ok(vec![hit("https://cn.test/1")])]),
-        ],
-    )
-    .await;
-
-    let response = run_search(&h.state, ip(), &request("Rust release notes"))
-        .await
-        .unwrap();
-
-    assert_eq!(response.provider, "primary");
-    assert_eq!(h.upstreams[1].call_count(), 0);
-}
-
-/// The preference is a reordering, not a restriction: if the Chinese provider
-/// is down, the other one still serves the Chinese query.
-#[tokio::test]
-async fn a_chinese_query_still_falls_back_when_the_preferred_provider_fails() {
-    let h = harness_chain(
-        limits(5, 100),
-        vec![
-            ("primary", vec![Ok(vec![hit("https://en.test/1")])]),
             (
-                "backup-cn",
+                "primary",
+                Some(2),
                 vec![Err(UpstreamFailure::Transport("down".into()))],
             ),
+            ("backup", None, vec![Ok(vec![hit("https://b.test/1")])]),
         ],
     )
     .await;
 
-    let response = run_search(&h.state, ip(), &request("中国新能源汽车出口"))
+    let first = run_search(&h.state, ip(), &request("a query"))
+        .await
+        .unwrap();
+    assert_eq!(first.provider, "backup");
+
+    // The next search still tries the first provider: it has spent nothing.
+    let second = run_search(&h.state, ip(), &request("a query"))
+        .await
+        .unwrap();
+    assert_eq!(second.provider, "primary");
+}
+
+/// An empty answer is a call the vendor served and bills for.
+#[tokio::test]
+async fn an_empty_answer_still_spends_the_allowance() {
+    let h = harness_chain(
+        limits(100, 1000),
+        vec![
+            ("primary", Some(1), vec![Ok(Vec::new())]),
+            ("backup", None, vec![Ok(vec![hit("https://b.test/1")])]),
+        ],
+    )
+    .await;
+
+    run_search(&h.state, ip(), &request("a query"))
         .await
         .unwrap();
 
-    assert_eq!(response.provider, "primary");
-    assert_eq!(
-        h.upstreams[1].call_count(),
-        1,
-        "preferred one was tried first"
-    );
+    let second = run_search(&h.state, ip(), &request("a query"))
+        .await
+        .unwrap();
+    assert_eq!(second.provider, "backup");
+    assert_eq!(h.upstreams[0].call_count(), 1);
+}
+
+/// A provider with no allowance keeps serving indefinitely — the cap is opt-in,
+/// and a paid account must not be cut off by it.
+#[tokio::test]
+async fn an_uncapped_provider_is_never_skipped() {
+    let h = harness_chain(
+        limits(100, 1000),
+        vec![("primary", None, vec![]), ("backup", None, vec![])],
+    )
+    .await;
+
+    for _ in 0..5 {
+        let response = run_search(&h.state, ip(), &request("a query"))
+            .await
+            .unwrap();
+        assert_eq!(response.provider, "primary");
+    }
+    assert_eq!(h.upstreams[1].call_count(), 0);
 }
 
 #[tokio::test]

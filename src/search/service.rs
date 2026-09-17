@@ -11,10 +11,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 
 use super::store;
-use super::{
-    is_chinese_query, SearchHit, Upstream, UpstreamFailure, DEFAULT_RESULTS, MAX_RESULTS,
-    MIN_QUERY_CHARS,
-};
+use super::{SearchHit, UpstreamFailure, DEFAULT_RESULTS, MAX_RESULTS, MIN_QUERY_CHARS};
 use crate::error::AppError;
 use crate::service::AppState;
 
@@ -50,6 +47,12 @@ pub struct SearchResponse {
 /// claiming a new one.
 fn today() -> String {
     Utc::now().format("%Y-%m-%d").to_string()
+}
+
+/// This UTC month, as the `search_provider_usage.month` key. Vendor allowances
+/// reset monthly, so this is the bucket the cap is measured against.
+fn this_month() -> String {
+    Utc::now().format("%Y-%m").to_string()
 }
 
 pub async fn run_search(
@@ -135,12 +138,31 @@ pub async fn run_search(
      */
     let mut empty_from: Option<&'static str> = None;
     let mut failures = 0usize;
-    let chain = order_for(providers, query);
+    let month = this_month();
 
-    for (index, provider) in chain.iter().enumerate() {
-        let is_last = index + 1 == chain.len();
+    for (index, provider) in providers.iter().enumerate() {
+        let is_last = index + 1 == providers.len();
+
+        // A provider on a free allowance steps aside once it is spent, so the
+        // next one takes over instead of this one starting to cost money.
+        if let Some(cap) = provider.monthly_cap() {
+            let used = store::provider_used_this_month(&state.pool, provider.id(), &month)
+                .await
+                .map_err(db_error("provider monthly usage"))?;
+            if used >= cap {
+                tracing::info!(
+                    provider = provider.id(),
+                    used,
+                    cap,
+                    "monthly allowance spent; handing over to the next provider"
+                );
+                continue;
+            }
+        }
+
         match provider.search(query, count).await {
             Ok(results) if !results.is_empty() => {
+                record_call(&state.pool, provider.id(), &month).await;
                 tracing::info!(
                     provider = provider.id(),
                     hits = results.len(),
@@ -155,6 +177,9 @@ pub async fn run_search(
                 });
             }
             Ok(_) => {
+                // An empty answer is still a call the vendor served and bills
+                // for, so it counts against the allowance just the same.
+                record_call(&state.pool, provider.id(), &month).await;
                 // Remember it: if nothing later does better, "this provider
                 // looked and found nothing" is a truthful answer, and a more
                 // useful one than an error.
@@ -201,24 +226,15 @@ pub async fn run_search(
     Err(AppError::UpstreamError("search upstream failed".into()))
 }
 
-/// The chain to try, for this query.
+/// Counts one call against a provider's monthly allowance.
 ///
-/// The configured order is the baseline; a Chinese query moves the providers
-/// that index the Chinese web to the front. This is what makes the second
-/// provider useful rather than decorative: a vendor with poor Chinese coverage
-/// still answers a Chinese query — with irrelevant results and a 200 — so
-/// waiting for it to fail or come back empty would never hand over.
-///
-/// Stable within each group, so the operator's `SEARCH_PROVIDER_ORDER` still
-/// decides ties.
-fn order_for<'a>(providers: &'a [Box<dyn Upstream>], query: &str) -> Vec<&'a dyn Upstream> {
-    let refs: Vec<&dyn Upstream> = providers.iter().map(|p| p.as_ref()).collect();
-    if !is_chinese_query(query) {
-        return refs;
+/// Only after the vendor answered: a request that never reached them costs
+/// nothing, and spending the allowance on it would hand over to the fallback
+/// early. Best effort — losing a count must not fail a search that succeeded.
+async fn record_call(pool: &SqlitePool, provider: &str, month: &str) {
+    if let Err(error) = store::record_provider_call(pool, provider, month).await {
+        tracing::error!(error = %error, provider, "failed to record a provider call");
     }
-    let (preferred, rest): (Vec<_>, Vec<_>) =
-        refs.into_iter().partition(|p| p.prefers_chinese_queries());
-    preferred.into_iter().chain(rest).collect()
 }
 
 async fn refund(pool: &SqlitePool, install_id: &str, day: &str) {

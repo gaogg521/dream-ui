@@ -71,7 +71,8 @@ migrates a local SQLite file at `DATABASE_URL` (default
 | `SEARCH_TAVILY_BASE_URL` | no | `https://api.tavily.com/search` | Tavily search endpoint. |
 | `SEARCH_ZHIPU_API_KEY` | no | — | Secret. Adds Zhipu to the provider chain. |
 | `SEARCH_ZHIPU_BASE_URL` | no | `https://open.bigmodel.cn/api/paas/v4/web_search` | Zhipu search endpoint. |
-| `SEARCH_PROVIDER_ORDER` | no | `tavily,zhipu` | Order providers are tried in. A Chinese query moves the Chinese-web providers to the front regardless. |
+| `SEARCH_PROVIDER_ORDER` | no | `tavily,zhipu` | Order providers are tried in. |
+| `SEARCH_TAVILY_MONTHLY_CAP` | no | `1000` | Calls Tavily may serve per UTC month before the chain moves on — the size of its free plan. `0` removes the cap. |
 | `SEARCH_DAILY_LIMIT_PER_INSTALL` | no | `50` | Searches one install may run per UTC day. |
 | `SEARCH_GLOBAL_DAILY_LIMIT` | no | `5000` | Searches every install together may run per UTC day — the spend cap. |
 | `SEARCH_RATE_LIMIT_PER_HOUR` | no | `60` | Per-IP sliding window for `/v1/search` only. |
@@ -137,12 +138,20 @@ key. This is the same reasoning as mode B, minus the money — a search is one
 unit, so there is no ledger and no top-up, just a daily allowance per device
 and a global cap on the day.
 
-Providers are tried in order and the first that **answers** wins — answering
-means non-empty, not merely a 200. A Chinese-language query asks the
-Chinese-web providers first: measured against the live APIs, Tavily returned a
-university course page for a Chinese query and reported success, while Zhipu
-returned that week's industry figures. Waiting for a 200 to fail would have
-made the second provider dead code for exactly the queries it was added for.
+Providers are tried in the configured order and the first that **answers**
+wins — answering means non-empty, not merely a 200. A provider is skipped once
+it has spent its monthly allowance (`SEARCH_TAVILY_MONTHLY_CAP`), which is the
+handover this chain exists for: the free plan runs out and the next provider
+takes over, without waiting for the vendor to start refusing and without
+guessing which status code that would be. `GET /internal/stats` reports the
+running count per provider.
+
+Worth knowing before reordering: the providers are not equally good at
+everything, and a weak answer is not a failure the chain can see. Measured
+2026-09-17, asked for 2026 Chinese EV export figures, Tavily returned three
+results — a university course page among them — with a healthy 200, while Zhipu
+returned that week's industry association numbers. Whichever provider leads
+serves Chinese queries too, well or badly.
 
 One user-visible search is one quota slot however many vendors it took. The
 slot is refunded only when *no* provider managed to search at all; an empty

@@ -88,8 +88,36 @@ async fn stats(State(state): State<Arc<AppState>>) -> Result<Json<serde_json::Va
     // commitment under the default monthly reset.
     let liability_added_today_usd = issued_today as f64 * state.config.trial_key_limit_usd;
 
+    // Which vendor mode C is spending, and how much of its allowance is left.
+    // The handover from a free plan to a paid one is invisible from outside,
+    // and this is the only place it can be watched before the bill arrives.
+    let month = now.format("%Y-%m").to_string();
+    let search_usage = crate::search::store::provider_usage_for_month(&state.pool, &month)
+        .await
+        .unwrap_or_default();
+    let search_providers: Vec<serde_json::Value> = state
+        .search
+        .providers
+        .iter()
+        .map(|provider| {
+            let used = search_usage
+                .iter()
+                .find(|(id, _)| id == provider.id())
+                .map(|(_, count)| *count)
+                .unwrap_or(0);
+            json!({
+                "provider": provider.id(),
+                "used_this_month": used,
+                "monthly_cap": provider.monthly_cap(),
+                "exhausted": provider.monthly_cap().is_some_and(|cap| used >= cap),
+            })
+        })
+        .collect();
+
     Ok(Json(json!({
         "vendor": state.vendor.id(),
+        "search_month": month,
+        "search_providers": search_providers,
         "issued_today": issued_today,
         "issuance_budget_cap_usd": state.config.daily_budget_usd_cap,
         "liability_added_today_usd": liability_added_today_usd,
