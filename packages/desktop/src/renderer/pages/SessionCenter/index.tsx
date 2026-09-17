@@ -106,6 +106,7 @@ const SessionCenter: React.FC = () => {
   const {
     conversations,
     isConversationGenerating,
+    isConversationWaitingConfirmation,
     hasCompletionUnread,
     isManualUnread,
     markManualUnread,
@@ -190,6 +191,7 @@ const SessionCenter: React.FC = () => {
     (conversation: TChatConversation, dimIcon = false, detailed = false): ConversationRowProps => ({
       conversation,
       isGenerating: isConversationGenerating(conversation.id),
+      isWaitingConfirmation: isConversationWaitingConfirmation(conversation.id),
       hasUnread: hasCompletionUnread(conversation.id) || isManualUnread(conversation.id),
       isManualUnread: isManualUnread(conversation.id),
       collapsed: false,
@@ -214,6 +216,7 @@ const SessionCenter: React.FC = () => {
     }),
     [
       isConversationGenerating,
+      isConversationWaitingConfirmation,
       hasCompletionUnread,
       isManualUnread,
       dropdownVisibleId,

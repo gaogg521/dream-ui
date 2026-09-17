@@ -64,6 +64,7 @@ export const useConversations = () => {
   const {
     conversations,
     isConversationGenerating,
+    isConversationWaitingConfirmation,
     hasCompletionUnread,
     clearCompletionUnread,
     isManualUnread,
@@ -249,6 +250,7 @@ export const useConversations = () => {
   return {
     conversations,
     isConversationGenerating,
+    isConversationWaitingConfirmation,
     hasCompletionUnread,
     isManualUnread,
     markManualUnread,
