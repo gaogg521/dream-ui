@@ -618,6 +618,12 @@
       "CONTEXT_WINDOW_LEARNED": {
         "body": "Dieses Modell hat ein kleineres Kontextfenster als angenommen ({{tokens}} Tokens). Die Unterhaltung wurde automatisch verdichtet und fortgesetzt — du musst nichts tun."
       },
+      "AUTOCOMPACT_FAILED": {
+        "body": "Die automatische Verdichtung hat diesmal nicht funktioniert. Nutze /compact oder starte eine neue Unterhaltung."
+      },
+      "MESSAGE_LARGER_THAN_WINDOW": {
+        "body": "Eine einzelne Nachricht ist größer als das Kontextfenster dieses Modells ({{tokens}} Tokens), Verdichten der Unterhaltung hilft daher nicht. Teile die Nachricht auf oder wechsle zu einem Modell mit größerem Fenster."
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "Die automatische Verdichtung ist {{failures}}-mal in Folge fehlgeschlagen und wurde gestoppt. Nutze /compact oder starte eine neue Unterhaltung."
       },

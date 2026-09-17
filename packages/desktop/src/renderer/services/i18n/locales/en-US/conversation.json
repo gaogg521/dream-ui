@@ -622,6 +622,12 @@
       "CONTEXT_WINDOW_LEARNED": {
         "body": "This model turned out to have a smaller context window than assumed ({{tokens}} tokens). The conversation was condensed automatically and continued — no action needed."
       },
+      "AUTOCOMPACT_FAILED": {
+        "body": "Automatic compaction did not work this time. Run /compact, or start a new conversation."
+      },
+      "MESSAGE_LARGER_THAN_WINDOW": {
+        "body": "One message on its own is larger than this model's context window ({{tokens}} tokens), so condensing the conversation cannot help. Split the message up, or switch to a model with a larger window."
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "Automatic compaction failed {{failures}} times in a row and has stopped retrying. Run /compact, or start a new conversation."
       },

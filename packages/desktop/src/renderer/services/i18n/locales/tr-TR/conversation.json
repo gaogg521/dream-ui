@@ -619,6 +619,12 @@
       "CONTEXT_WINDOW_LEARNED": {
         "body": "Bu modelin gerçek bağlam penceresi varsayılandan küçük çıktı ({{tokens}} token). Sohbet otomatik olarak sıkıştırılıp sürdürüldü; yapmanız gereken bir şey yok."
       },
+      "AUTOCOMPACT_FAILED": {
+        "body": "Bu kez otomatik sıkıştırma başarısız oldu. /compact çalıştırın veya yeni bir sohbet başlatın."
+      },
+      "MESSAGE_LARGER_THAN_WINDOW": {
+        "body": "Tek bir mesaj bile bu modelin bağlam penceresinden ({{tokens}} token) büyük, bu yüzden sohbeti sıkıştırmak işe yaramaz. Mesajı bölün veya daha geniş pencereli bir modele geçin."
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "Otomatik sıkıştırma arka arkaya {{failures}} kez başarısız oldu ve durdu. /compact çalıştırın veya yeni bir sohbet başlatın."
       },
