@@ -619,6 +619,9 @@
       "AUTOCOMPACT_DONE": {
         "body": "Older messages were condensed into a summary to free up context ({{count}} condensed, {{tokens}} tokens before)."
       },
+      "CONTEXT_WINDOW_LEARNED": {
+        "body": "This model turned out to have a smaller context window than assumed ({{tokens}} tokens). The conversation was condensed automatically and continued — no action needed."
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "Automatic compaction failed {{failures}} times in a row and has stopped retrying. Run /compact, or start a new conversation."
       },
