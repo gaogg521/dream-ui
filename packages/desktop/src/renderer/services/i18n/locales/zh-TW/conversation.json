@@ -618,6 +618,12 @@
       "CONTEXT_WINDOW_LEARNED": {
         "body": "這個模型的實際上下文視窗比預設的小（{{tokens}} tokens）。已自動壓縮對話並繼續，你不用做任何操作。"
       },
+      "AUTOCOMPACT_FAILED": {
+        "body": "這次自動壓縮沒成功。可以手動執行 /compact，或開啟新對話。"
+      },
+      "MESSAGE_LARGER_THAN_WINDOW": {
+        "body": "有單則訊息本身就超過了這個模型的上下文視窗（{{tokens}} tokens），壓縮對話救不了。請把這則訊息拆開，或換一個視窗更大的模型。"
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "自動壓縮連續失敗 {{failures}} 次，已停止重試。請手動執行 /compact，或開啟新對話。"
       },

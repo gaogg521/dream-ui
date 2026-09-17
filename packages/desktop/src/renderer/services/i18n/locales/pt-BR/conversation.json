@@ -623,6 +623,12 @@
       "CONTEXT_WINDOW_LEARNED": {
         "body": "Este modelo tem uma janela de contexto menor do que a presumida ({{tokens}} tokens). A conversa foi condensada automaticamente e continuou — nada a fazer."
       },
+      "AUTOCOMPACT_FAILED": {
+        "body": "A compactação automática não funcionou desta vez. Use /compact ou inicie uma nova conversa."
+      },
+      "MESSAGE_LARGER_THAN_WINDOW": {
+        "body": "Uma única mensagem já é maior que a janela de contexto deste modelo ({{tokens}} tokens), então condensar a conversa não resolve. Divida a mensagem ou use um modelo com janela maior."
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "A compactação automática falhou {{failures}} vezes seguidas e parou. Use /compact ou inicie uma nova conversa."
       },

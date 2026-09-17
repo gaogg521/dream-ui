@@ -617,6 +617,12 @@
       "CONTEXT_WINDOW_LEARNED": {
         "body": "Ce modèle a une fenêtre de contexte plus petite que supposé ({{tokens}} tokens). La conversation a été condensée automatiquement et s'est poursuivie — rien à faire de votre côté."
       },
+      "AUTOCOMPACT_FAILED": {
+        "body": "La compaction automatique n'a pas fonctionné cette fois. Utilisez /compact ou démarrez une nouvelle conversation."
+      },
+      "MESSAGE_LARGER_THAN_WINDOW": {
+        "body": "Un seul message dépasse à lui seul la fenêtre de contexte de ce modèle ({{tokens}} tokens) ; condenser la conversation n'y changera rien. Découpez le message ou passez à un modèle doté d'une fenêtre plus grande."
+      },
       "AUTOCOMPACT_CIRCUIT_BROKEN": {
         "body": "La compaction automatique a échoué {{failures}} fois de suite et s'est arrêtée. Utilisez /compact ou démarrez une nouvelle conversation."
       },
