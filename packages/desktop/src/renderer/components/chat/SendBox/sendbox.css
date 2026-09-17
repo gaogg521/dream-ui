@@ -83,76 +83,6 @@
   clip-path: circle(50% at 50% 50%) !important;
 }
 
-.sendbox-draft-tooltip-anchor {
-  display: inline-flex;
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
-}
-
-.sendbox-draft-tool-action,
-.sendbox-draft-tool-action.arco-btn,
-.sendbox-draft-tool-action.arco-btn-secondary {
-  width: 32px !important;
-  min-width: 32px !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  padding: 0 !important;
-  border: none !important;
-  border-radius: 50% !important;
-  box-shadow: none !important;
-  flex: 0 0 32px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  position: static !important;
-  inset: auto !important;
-  transform: none !important;
-  opacity: 1 !important;
-}
-
-.sendbox-draft-tool-action .arco-btn-icon,
-.sendbox-draft-tool-action .arco-icon {
-  margin: 0 !important;
-  width: 20px !important;
-  height: 20px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  line-height: 1 !important;
-}
-
-.sendbox-draft-tool-action svg {
-  display: block;
-  width: 20px;
-  height: 20px;
-}
-
-.sendbox-draft-tool-action--enabled,
-.sendbox-draft-tool-action--enabled.arco-btn,
-.sendbox-draft-tool-action--enabled.arco-btn-secondary {
-  background-color: rgb(var(--primary-6)) !important;
-  color: var(--text-white) !important;
-}
-
-.sendbox-draft-tool-action--enabled:not(:disabled):hover,
-.sendbox-draft-tool-action--enabled.arco-btn:not(:disabled):hover {
-  background-color: rgb(var(--primary-7)) !important;
-  color: var(--text-white) !important;
-}
-
-.sendbox-draft-tool-action--disabled,
-.sendbox-draft-tool-action--disabled:disabled,
-.sendbox-draft-tool-action--disabled.arco-btn:disabled,
-.sendbox-draft-tool-action--disabled.arco-btn-disabled,
-.sendbox-draft-tool-action--disabled.arco-btn-secondary:disabled {
-  background-color: #e4e6ed !important;
-  border-color: #e4e6ed !important;
-  color: #fff !important;
-  opacity: 1 !important;
-  cursor: not-allowed !important;
-}
-
 /* Dark mode: adjust send button brightness */
 [data-theme='dark'] .send-button-custom:not(:disabled) {
   background-color: var(--aou-4) !important;
@@ -187,11 +117,13 @@
   opacity: 1 !important;
 }
 
+/* 16px, matching the 12-16px icons the other tools in this row carry. At 20
+ * this one read as a different size of control rather than the same button. */
 .sendbox-draft-tool-action .arco-btn-icon,
 .sendbox-draft-tool-action .arco-icon {
   margin: 0 !important;
-  width: 20px !important;
-  height: 20px !important;
+  width: 16px !important;
+  height: 16px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -200,8 +132,8 @@
 
 .sendbox-draft-tool-action svg {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
 }
 
 .sendbox-draft-tool-action--enabled,
@@ -230,9 +162,13 @@
 .sendbox-draft-tool-action--disabled.arco-btn:disabled,
 .sendbox-draft-tool-action--disabled.arco-btn-disabled,
 .sendbox-draft-tool-action--disabled.arco-btn-secondary:disabled {
-  background-color: var(--color-fill-3) !important;
-  border-color: var(--color-fill-3) !important;
-  color: var(--text-white) !important;
+  /* Nothing to save yet. A filled disc made the one control that cannot be used
+   * the heaviest thing in a row of flat, borderless tool icons. Flat and muted
+   * keeps it in line with its neighbours; the filled state above still makes it
+   * stand out once there is something to save. */
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: var(--text-tertiary) !important;
   opacity: 1 !important;
   cursor: not-allowed !important;
 }
@@ -552,14 +488,25 @@ body[arco-theme='dark'] .sendbox-panel .send-button-custom--disabled svg * {
   }
 }
 
+/* The pills inside already know how to compress (see `.agent-mode-compact-pill`
+ * below: min-width 0, overflow hidden, a marquee for the clipped label). This
+ * group sat on top of all of it with `flex: 0 0 auto` and `max-width:
+ * max-content`, so it held its full natural width no matter how narrow the
+ * column was and simply overflowed — which is what made the mode and
+ * permission pills run into each other in team mode's multi-column grid, where
+ * a sendbox is a third of the width it gets on its own.
+ *
+ * `0 1 auto` + `min-width: 0` lets it give way; `max-width: 100%` keeps it
+ * inside its container while still shrink-to-fit, so nothing stretches. */
 .sendbox-left-tool-group {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
   gap: 6px !important;
   width: auto !important;
-  max-width: max-content !important;
-  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  flex: 0 1 auto !important;
   position: static !important;
 }
 
@@ -576,8 +523,11 @@ body[arco-theme='dark'] .sendbox-panel .send-button-custom--disabled svg * {
   min-width: 0;
 }
 
-/* Circle / icon-only buttons must not shrink */
-.sendbox-tools .arco-btn-shape-circle {
+/* Circle / icon-only buttons must not shrink.
+ * `.sendbox-actions` needs the same guarantee: it holds send and stop, and once
+ * the row is allowed to compress those are the last things that may lose size. */
+.sendbox-tools .arco-btn-shape-circle,
+.sendbox-actions .arco-btn-shape-circle {
   flex-shrink: 0 !important;
 }
 

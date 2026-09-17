@@ -1520,7 +1520,10 @@ const SendBox: React.FC<{
       ? `${draftActionBaseTooltip} · ${addToDraftShortcutLabel}`
       : draftActionBaseTooltip;
   const draftActionTitle = typeof draftActionTooltip === 'string' ? draftActionTooltip : addToDraftLabel;
-  const draftActionIcon = <DraftBoxActionIcon size={20} strokeWidth={1.25} />;
+  // 16, to match the 14-16px icons the mode and permission pills carry beside
+  // it. At 20 this one read as a different size of control entirely — it is the
+  // same button, not a bigger one.
+  const draftActionIcon = <DraftBoxActionIcon size={16} strokeWidth={1.4} />;
   const draftActionButton = hasDraftAction ? (
     <Tooltip content={draftActionTooltip} position='top'>
       <span className='sendbox-draft-tooltip-anchor'>
