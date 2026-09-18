@@ -183,5 +183,13 @@
   "historyNotSupported": "O conteúdo atual não suporta histórico",
   "snapshot": "Instantâneo",
   "largeTextTruncatedHint": "Modo de pré-visualização de arquivos grandes: mostrando os primeiros {{count}} caracteres para melhor desempenho.",
-  "truncatedBanner": "O conteúdo da pré-visualização foi truncado. Clique em baixar para visualizar o arquivo completo."
+  "truncatedBanner": "O conteúdo da pré-visualização foi truncado. Clique em baixar para visualizar o arquivo completo.",
+  "maximizePanel": "Maximizar",
+  "restorePanel": "Restaurar",
+  "close": "Fechar",
+  "closeUnmodified": "Fechar Não Modificadas",
+  "copyPath": "Copiar Caminho",
+  "copyRelativePath": "Copiar Caminho Relativo",
+  "openLocation": "Mostrar na pasta",
+  "openLocationFailed": "Falha ao abrir a pasta que contém o arquivo"
 }

@@ -183,5 +183,13 @@
   "historyNotSupported": "Aktueller Inhalt unterstützt keinen Verlauf",
   "snapshot": "Schnappschuss",
   "largeTextTruncatedHint": "Großdatei-Vorschaumodus: Die ersten {{count}} Zeichen werden aus Leistungsgründen angezeigt.",
-  "truncatedBanner": "Vorschau-Inhalt wurde gekürzt. Klicke auf Download, um die vollständige Datei anzuzeigen."
+  "truncatedBanner": "Vorschau-Inhalt wurde gekürzt. Klicke auf Download, um die vollständige Datei anzuzeigen.",
+  "maximizePanel": "Maximieren",
+  "restorePanel": "Wiederherstellen",
+  "close": "Schließen",
+  "closeUnmodified": "Unveränderte schließen",
+  "copyPath": "Pfad kopieren",
+  "copyRelativePath": "Relativen Pfad kopieren",
+  "openLocation": "Im Ordner anzeigen",
+  "openLocationFailed": "Enthaltenden Ordner öffnen fehlgeschlagen"
 }

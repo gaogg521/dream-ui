@@ -183,5 +183,13 @@
   "historyNotSupported": "현재 콘텐츠는 기록을 지원하지 않습니다",
   "snapshot": "스냅샷",
   "largeTextTruncatedHint": "대용량 파일 미리보기 모드: 성능을 위해 앞의 {{count}}자만 표시합니다.",
-  "truncatedBanner": "미리보기 내용이 잘렸습니다. 전체 파일은 다운로드해서 확인하세요."
+  "truncatedBanner": "미리보기 내용이 잘렸습니다. 전체 파일은 다운로드해서 확인하세요.",
+  "maximizePanel": "최대화",
+  "restorePanel": "복원",
+  "close": "닫기",
+  "closeUnmodified": "수정되지 않은 탭 닫기",
+  "copyPath": "경로 복사",
+  "copyRelativePath": "상대 경로 복사",
+  "openLocation": "폴더에서 보기",
+  "openLocationFailed": "포함 폴더 열기 실패"
 }

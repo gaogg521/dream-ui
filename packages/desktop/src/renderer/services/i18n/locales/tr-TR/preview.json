@@ -183,5 +183,13 @@
   "historyNotSupported": "Mevcut içerik geçmişi desteklemiyor",
   "snapshot": "Anlık Görüntü",
   "largeTextTruncatedHint": "Büyük dosya önizleme modu: performans için yalnızca ilk {{count}} karakter gösteriliyor.",
-  "truncatedBanner": "Önizleme içeriği kısaltıldı. Tam dosyayı görmek için indir seçeneğini kullanın."
+  "truncatedBanner": "Önizleme içeriği kısaltıldı. Tam dosyayı görmek için indir seçeneğini kullanın.",
+  "maximizePanel": "Büyüt",
+  "restorePanel": "Geri Yükle",
+  "close": "Kapat",
+  "closeUnmodified": "Değiştirilmemişleri Kapat",
+  "copyPath": "Yolu Kopyala",
+  "copyRelativePath": "Göreli Yolu Kopyala",
+  "openLocation": "Klasörde göster",
+  "openLocationFailed": "İçeren klasör açılamadı"
 }

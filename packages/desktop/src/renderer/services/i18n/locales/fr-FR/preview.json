@@ -183,5 +183,13 @@
   "historyNotSupported": "Le contenu actuel ne supporte pas l'historique",
   "snapshot": "Instantané",
   "largeTextTruncatedHint": "Mode aperçu grand fichier : affichage des {{count}} premiers caractères pour les performances.",
-  "truncatedBanner": "Le contenu de l'aperçu a été tronqué. Cliquez sur télécharger pour voir le fichier complet."
+  "truncatedBanner": "Le contenu de l'aperçu a été tronqué. Cliquez sur télécharger pour voir le fichier complet.",
+  "maximizePanel": "Agrandir",
+  "restorePanel": "Restaurer",
+  "close": "Fermer",
+  "closeUnmodified": "Fermer les non modifiés",
+  "copyPath": "Copier le chemin",
+  "copyRelativePath": "Copier le chemin relatif",
+  "openLocation": "Afficher dans le dossier",
+  "openLocationFailed": "Échec de l'ouverture du dossier conteneur"
 }

@@ -183,5 +183,13 @@
   "historyNotSupported": "當前內容不支援歷史版本",
   "snapshot": "快照",
   "largeTextTruncatedHint": "大型檔案預覽模式：為了保持流暢度，僅顯示前 {{count}} 個字元。",
-  "truncatedBanner": "預覽內容已截斷，點擊下載即可查看完整檔案。"
+  "truncatedBanner": "預覽內容已截斷，點擊下載即可查看完整檔案。",
+  "maximizePanel": "最大化",
+  "restorePanel": "還原",
+  "close": "關閉",
+  "closeUnmodified": "關閉未修改",
+  "copyPath": "複製路徑",
+  "copyRelativePath": "複製相對路徑",
+  "openLocation": "開啟檔案所在資料夾",
+  "openLocationFailed": "無法開啟所在資料夾"
 }
