@@ -24,7 +24,7 @@ endpoint that serves it.
 **这段报错本身就是旧仓 2026-08-10 `95a885ac7` 那次修复的产物**（诊断文案 + `notRouted` 分类 + 「去修改模型设置」按钮）。那次修的是"说得清、有入口"，没修"默认值这条路"。所以接手者不要以为这是没人管过的报错。
 
 旧仓完整的根因追溯与真机验证记录在
-`D:\aionui-m0\1oneUI\docs\guides\session-2026-08-27-media-endpoint-fallback.zh-CN.md`
+`D:\旧中转目录\1oneUI\docs\guides\session-2026-08-27-media-endpoint-fallback.zh-CN.md`
 （只读归档，不在任何 git 仓库里）。**本文档只写 dream 侧的确认、移植与差异**，不重复抄那份。
 
 ### 为什么 dream-ui 会带着它
@@ -33,15 +33,15 @@ endpoint that serves it.
 
 移植前逐文件比对过"旧仓修复前的版本"和"dream-ui 当前版本"，差异**只有品牌串**：
 
-| 文件                                 | 与旧仓 pre-fix 版本的差异                                                                                                          |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `taskPollAdapter.ts`                 | 仅版权头 `Copyright 2025 AionUi` → `Copyright 2026 1ONE`                                                                           |
-| `catalog/resolve.ts`                 | 同上                                                                                                                               |
-| `executeMediaGeneration.ts`          | 同上                                                                                                                               |
-| `media/types.ts`                     | 同上                                                                                                                               |
-| `MediaModeControl.tsx`               | 同上                                                                                                                               |
-| `useMediaFailureAdvice.ts`           | 同上                                                                                                                               |
-| `process/services/mediaJob/index.ts` | 版权头 + `AIONUI_MEDIA_CONVERSATION_ID` → `DREAM_MEDIA_...`、临时目录 `Temp/aionui` → `Temp/dream`（P4 改名的产物，与本 bug 无关） |
+| 文件                                 | 与旧仓 pre-fix 版本的差异                                                                                                           |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `taskPollAdapter.ts`                 | 仅版权头 `Copyright 2025 dream-ui` → `Copyright 2026 1ONE`                                                                          |
+| `catalog/resolve.ts`                 | 同上                                                                                                                                |
+| `executeMediaGeneration.ts`          | 同上                                                                                                                                |
+| `media/types.ts`                     | 同上                                                                                                                                |
+| `MediaModeControl.tsx`               | 同上                                                                                                                                |
+| `useMediaFailureAdvice.ts`           | 同上                                                                                                                                |
+| `process/services/mediaJob/index.ts` | 版权头 + `DREAM_MEDIA_CONVERSATION_ID` → `DREAM_MEDIA_...`、临时目录 `Temp/dream-ui` → `Temp/dream`（P4 改名的产物，与本 bug 无关） |
 
 所以旧仓的 patch 在 dream-ui 上**零冲突干净落地**，逻辑无需改写。
 
@@ -133,7 +133,7 @@ export const ENDPOINT_STYLE_FALLBACKS = {
 
 ### 4.3 dream 侧的收口
 
-- 4 个新文件的版权头统一为本仓约定的 `Copyright 2026 1ONE`（旧仓 patch 带的是 `Copyright 2025 AionUi (aionui.com)`）。
+- 4 个新文件的版权头统一为本仓约定的 `Copyright 2026 1ONE`（旧仓 patch 带的是 `Copyright 2025 dream-ui (dream-ui.com)`）。
 - 未改 `AddModelModal.tsx` 的那个 `if (!mediaEndpoint) return null`：那个 guard 在它自己的语境里是对的（用户什么都没选，没有可以二次猜疑的对象），自动那条路由 A 覆盖。
 
 ---
@@ -347,7 +347,7 @@ Agnes reported completed but returned no metadata.url
 
 ## 九、CDP 真机验证怎么做（本轮实测可用的做法）
 
-- **dev 下 CDP 默认关闭**，必须 `DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev`（注意 P4 改名后前缀是 `DREAM_*`，不是 `AIONUI_*`）。日志里会出现 `[CDP] Developer app-wide debugging ENABLED on http://127.0.0.1:9230`。
+- **dev 下 CDP 默认关闭**，必须 `DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev`（注意 P4 改名后前缀是 `DREAM_*`，不是 `DREAM_*`）。日志里会出现 `[CDP] Developer app-wide debugging ENABLED on http://127.0.0.1:9230`。
 - **`chrome-devtools` MCP 连的是独立浏览器**，看不到 Electron 窗口。要驱动真实 UI 只能自己连 9230。
 - **Node 内置 `WebSocket`（v22+）够用**，不必依赖项目的 `ws`。
 - **`/@fs/` 动态 import 应用模块**比模拟 Arco 组件点击稳得多：
@@ -481,7 +481,7 @@ start · thinking · content · finish
 - `useDreamEngineMessage` **零次**调用 `getUsage`，没有从后端快照恢复的路径（ACP 那个 hook 有）；
 - 它也**完全不处理 `acp_context_usage` 帧**，而 `broadcast_usage_frame` 的注释明确写着"Fires for every backend"——后端设计上是打算广播给所有后端的，前端这边没接。
 
-**修它需要**：dream-core 让 1ONE CLI 这条会话路径上报 token 用量（`UsageDelta` → 持久化 + 广播），加上 dream-ui 这两个缺口，然后 `cargo build -p dream-core-app --release` + `node scripts/prepareAioncore.js` 重编内嵌 `dreamcore` 才会在 dev 生效。
+**修它需要**：dream-core 让 1ONE CLI 这条会话路径上报 token 用量（`UsageDelta` → 持久化 + 广播），加上 dream-ui 这两个缺口，然后 `cargo build -p dream-core-app --release` + `node scripts/prepareDreamcore.js` 重编内嵌 `dreamcore` 才会在 dev 生效。
 
 > ✅ **已在 §12.5 做完**（dream-core `e4d2279`）。而且**不需要改 dream-engine**——
 > `AgentEngine::context_status()` 本来就是公开的，带用量的 `AgentResult` 也一直在
@@ -588,7 +588,7 @@ cache 写（见其文档注释）；渲染层 breakdown 里同名字段的含义
 （此前只恢复了 token 数，所以重开会话只有裸数字没有百分比）。
 
 ⚠️ **改了 dream-core 必须重编内嵌二进制才在 dev 生效**：
-`cargo build -p dream-core-app --release` + `node scripts/prepareAioncore.js`。
+`cargo build -p dream-core-app --release` + `node scripts/prepareDreamcore.js`。
 参见 §9.1 那条更隐蔽的同类陷阱（改 `common/` 后主进程 HMR 的假阳性）。
 
 **随后的两轮修正**（真机验证之后才发现的，都已落地）：
@@ -623,7 +623,7 @@ cache 写（见其文档注释）；渲染层 breakdown 里同名字段的含义
 
 ### 12.7 真机验证（重编内嵌后端之后）
 
-`cargo build -p dream-core-app --release` + 同步 `resources/bundled-aioncore/`
+`cargo build -p dream-core-app --release` + 同步 `resources/bundled-dreamcore/`
 之后重启 dev，发一轮对话，抓到的帧序列多了用量帧且位置正确：
 
 ```
@@ -662,7 +662,7 @@ start · thinking · content · acp_context_usage · finish
 了"待接受的推断"集合（测试 provider 的 `base_url` 恰好就是 `apihub.agnes-ai.com`）。
 断言已更新并写明原因——目录已经知道的事情，没必要再写一份 declaration。
 
-⚠️ **`prepareAioncore.js` 的两个坑**：① dev 在跑时会 `EPERM`（二进制被占用），
+⚠️ **`prepareDreamcore.js` 的两个坑**：① dev 在跑时会 `EPERM`（二进制被占用），
 必须先停 dev 并确认 `Get-Process electron`/`dreamcore` 清零；② 拷完二进制后它还
 会去 npm 拉 managed resources，本轮那步网络超时失败——**但二进制已经同步好了**
 （比对时间戳和字节数即可确认），那一步失败不影响后端改动生效。

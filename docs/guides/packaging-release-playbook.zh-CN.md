@@ -11,11 +11,11 @@
 发一个跨平台版本要走 5 仓/步，**顺序不能乱**：
 
 ```
-aionrs 改完推 master
-  → 1oneCore: cargo update 对齐 aionrs + bump 版本 + 打 tag（触发 release.yml 产 6 个跨平台 aioncore 二进制）
-    → 1oneUI: bump package.json version + aioncoreVersion 指向上面那个 1oneCore tag
-      → Windows: 本地 package-win.ps1（用本地 aioncore.exe，不走 CI）
-      → Mac: GitHub Actions build-manual.yml（macOS runner，签名+公证；从 1oneCore Release 下载 aioncore）
+dream-engine 改完推 master
+  → 1oneCore: cargo update 对齐 dream-engine + bump 版本 + 打 tag（触发 release.yml 产 6 个跨平台 dreamcore 二进制）
+    → 1oneUI: bump package.json version + dreamcoreVersion 指向上面那个 1oneCore tag
+      → Windows: 本地 package-win.ps1（用本地 dreamcore.exe，不走 CI）
+      → Mac: GitHub Actions build-manual.yml（macOS runner，签名+公证；从 1oneCore Release 下载 dreamcore）
         → gh release create v<ver>（Win + Mac 资产）
           → COS 上传（releases/<ver>/ + releases/latest*.yml，App 自动更新的源）
             → 官网 work.1oneclaw.com（D:\website\1onework，改 site.config.js + 部署）
@@ -23,7 +23,7 @@ aionrs 改完推 master
 
 > ⚠️ **发版前必过项**：见 [§2.6](#26-️-内嵌-acp-运行组件claude-agent-acp--codex-acp缺失--全平台且只有全新安装才会暴露)——内嵌 ACP 运行组件缺失会让**全新安装的用户**用不了 Claude Code / Codex，而**有缓存的开发机完全看不出来**，2.1.51 已经这样发出去过一次。
 
-**为什么 Mac 必须等 1oneCore 先发 Release**：Mac 包（`build-manual.yml`）在打包时会去 **1oneCore 的 GitHub Release** 按 `1oneUI/package.json` 的 `aioncoreVersion` 下载对应平台的 aioncore 二进制内嵌。1oneCore Release 不存在 → Mac 包拿不到后端。Windows 本地打包不受此限（用 `AIONUI_BACKEND_LOCAL_PATH` 指本地编译产物）。
+**为什么 Mac 必须等 1oneCore 先发 Release**：Mac 包（`build-manual.yml`）在打包时会去 **1oneCore 的 GitHub Release** 按 `1oneUI/package.json` 的 `dreamcoreVersion` 下载对应平台的 dreamcore 二进制内嵌。1oneCore Release 不存在 → Mac 包拿不到后端。Windows 本地打包不受此限（用 `DREAM_BACKEND_LOCAL_PATH` 指本地编译产物）。
 
 ---
 
@@ -34,13 +34,13 @@ aionrs 改完推 master
 > | 症状                                                               | 去看                             |
 > | ------------------------------------------------------------------ | -------------------------------- |
 > | run 几秒失败、`jobs[].steps` 为空、`--log-failed` 报 log not found | §1.2 计费拦截                    |
-> | 在 `Prepare aioncore binary` 步骤 404                              | §1.5 + 下方「后端 tag 必须先发」 |
+> | 在 `Prepare dreamcore binary` 步骤 404                             | §1.5 + 下方「后端 tag 必须先发」 |
 > | 卡在 oxfmt / oxlint / tsc / vitest                                 | §1.3                             |
 > | 签名成功但装上报未签名                                             | §1.4                             |
 >
 > **判据**：同期公开仓库（1oneCore）的 CI 跑得动、私有仓库（1oneUI）全挡 → 一定是计费，不是代码。私有仓库连最便宜的 ubuntu job 都会被挡，不只 macOS。
 >
-> **后端 tag 必须先发**：`package.json` 的 `aioncoreVersion` 指向的 1oneCore Release 必须真实存在，CI 才下得到 aioncore。这个 tag 不会自己产生——2026-07-31 打 2.1.51 时 `aioncoreVersion` 已是 `v0.1.53-one.1` 而 1oneCore 最新 Release 只到 `v0.1.49-one.3`，必须先去 1oneCore 打 tag（`release.yml` 由 `v*` 触发，六平台约 22 分钟）再触发前端构建。
+> **后端 tag 必须先发**：`package.json` 的 `dreamcoreVersion` 指向的 1oneCore Release 必须真实存在，CI 才下得到 dreamcore。这个 tag 不会自己产生——2026-07-31 打 2.1.51 时 `dreamcoreVersion` 已是 `v0.1.53-one.1` 而 1oneCore 最新 Release 只到 `v0.1.49-one.3`，必须先去 1oneCore 打 tag（`release.yml` 由 `v*` 触发，六平台约 22 分钟）再触发前端构建。
 
 触发方式（dream-ui，默认分支就是 `main`）：
 `gh workflow run build-manual.yml --repo gaogg521/dream-ui --ref main -f branch=main -f platform=macos-arm64 -f installers_only=false`
@@ -123,13 +123,13 @@ this.productFilename = executableName != null ? sanitizeFileName(executableName)
 
 - **修法**：直接删 `executableName`（回落 `productName`）。Linux 单独加 `linux.executableName: one-work`（deb / 二进制名不要空格）+ `desktop.entry.Icon: one-work`。
 - **`executableName` 冻结跟 userData 无关**——生产 userData 是 `configureChromium.ts` / `common/platform/index.ts` 用 `app.setName(PROD_USERDATA_APP_NAME)` + 显式 `app.setPath('userData', …)` 钉的，跟 `executableName` / `productName` 都无关。CLAUDE.md 旧「运行时身份·刻意不改」表把三个值绑一起是过度保守，实际只有 `appId` 真必须冻结（Squirrel.Mac 按 `CFBundleIdentifier` 匹配升级包、Win 卸载注册表 GUID 由它派生、签名证书 team 也绑它）。
-- 连带要一起改的 fork 自有文件：`resources/installer.nsh`（`$LOCALAPPDATA\Programs\1onecode` → `One Work`）、`resources/windows/installer-observability.nsh`（`AIONUI_APP_EXECUTABLE_FILENAME`）、`resources/windows/support/query-lockers.ps1`、`scripts/build-with-builder.js` 的进程 kill 列表、`scripts/packaged-launch.mjs`、`scripts/dev-bootstrap.mjs`、`tests/e2e/fixtures.ts`、`packages/desktop/src/sentry.ts` 的 `installDirs`。旧名一律留作兜底，别删。
+- 连带要一起改的 fork 自有文件：`resources/installer.nsh`（`$LOCALAPPDATA\Programs\1onecode` → `One Work`）、`resources/windows/installer-observability.nsh`（`DREAM_APP_EXECUTABLE_FILENAME`）、`resources/windows/support/query-lockers.ps1`、`scripts/build-with-builder.js` 的进程 kill 列表、`scripts/packaged-launch.mjs`、`scripts/dev-bootstrap.mjs`、`tests/e2e/fixtures.ts`、`packages/desktop/src/sentry.ts` 的 `installDirs`。旧名一律留作兜底，别删。
 
 **B. `PROD_USERDATA_APP_NAME` 改名要配首启迁移**
 
 `1ONE Code` → `One Work` 直接改会让存量用户开 3.0.0 看到空白（数据没删、只是不读了）。加了 `common/platform/index.ts` 的 `migrateAndResolveProdUserDataDir(appSupportDir)`：目标目录已存在就用它；否则旧目录（`LEGACY_PROD_USERDATA_APP_NAMES`）存在就 `renameSync` 搬过去；rename 失败（跨卷 / 被锁）就**就地用旧目录**，数据绝不丢。`configureChromium.ts` + `getPlatformServices()` 两个调用点都换成它。
 
-- ⚠️ `LEGACY_PROD_USERDATA_APP_NAMES` **刻意只放 `1ONE Code`，不放 `AionUi`**——`AionUi` 是上游的目录名，同机跑着上游 App 的人会被误搬数据（跟 `getDevAppName` 撞库同一类事故）。
+- ⚠️ `LEGACY_PROD_USERDATA_APP_NAMES` **刻意只放 `1ONE Code`，不放 `dream-ui`**——`dream-ui` 是上游的目录名，同机跑着上游 App 的人会被误搬数据（跟 `getDevAppName` 撞库同一类事故）。
 - **Windows 真机验迁移的正确姿势**：Electron 在 Windows 读 `SHGetKnownFolderPath(FOLDERID_RoamingAppData)`，**不认 `%APPDATA%` 环境变量**——`Start-Process` 前 `$env:APPDATA=...` 没用，会打到真实目录去。用 Chromium 开关 `--user-data-dir=<沙箱>`：`app.getPath('userData')` 会返回它，迁移里的 `path.dirname(userData)` 就落在沙箱里，预置 `<沙箱>\1ONE Code\` 就能安全验。跑完 `1ONE Code` 消失、`One Work` 出现、marker 文件原样保留 = 通过。
 - Mac 侧同一函数、同一 `configureChromium.ts` 生产分支，只有 `dirname(userData)` 落点不同（`~/Library/Application Support`）。本地无 Mac 时单测 + Win 真机 + 代码同源可作为可接受的信心，但**能上真 Mac 就上**。
 - 全仓无 `safeStorage`/`keytar` → 模型 key 在 SQLite，迁移 = 纯目录搬移，不涉及 keychain 重新加密。
@@ -152,19 +152,19 @@ this.productFilename = executableName != null ? sanitizeFileName(executableName)
 
 ---
 
-## 2. Windows 打包（本地 `D:\aionui-m0\scripts\package-win.ps1`）
+## 2. Windows 打包（本地 `D:\旧中转目录\scripts\package-win.ps1`）
 
-用法：`.\package-win.ps1`（用现有 `1oneCore/target/release/aioncore.exe`）或 `-Rebuild`（先 cargo build 再打）。
+用法：`.\package-win.ps1`（用现有 `1oneCore/target/release/dreamcore.exe`）或 `-Rebuild`（先 cargo build 再打）。
 
 坑：
 
-- **必须设 `AIONUI_BACKEND_LOCAL_PATH`**（脚本已自动设）：否则打包链去 GitHub Release 下载 `aioncoreVersion` 对应二进制，私有 fork tag 常无产物 → `aioncore binary not found`。日志出现 `Bundled aioncore prepared: ... [source=local]` 才对。
+- **必须设 `DREAM_BACKEND_LOCAL_PATH`**（脚本已自动设）：否则打包链去 GitHub Release 下载 `dreamcoreVersion` 对应二进制，私有 fork tag 常无产物 → `dreamcore binary not found`。日志出现 `Bundled dreamcore prepared: ... [source=local]` 才对。
 - **PowerShell `$ErrorActionPreference='Stop'` 会把 cargo/npm/vite 往 stderr 写的正常进度行当成终止错误**（`NativeCommandError`）打断构建。脚本已在调原生命令前后切 `Continue`、只靠 `$LASTEXITCODE` 判真失败。
 - **bun cache 损坏 → `better-sqlite3` native rebuild 失败**（`v2.1.49` 踩到）：`afterPack.js` 用 `bun x prebuild-install` / `bun x electron-rebuild` 重编原生模块，bunx 把这些包下到 `%TEMP%\bunx-*` 时可能**下不全**，报 `Cannot find module '...prebuild-install/bin.js'` / `Cannot find module 'chalk'`。解法：
   ```bash
   bun pm cache rm && rm -rf "$TEMP"/bunx-*   # 清缓存，重跑 dist:win
   ```
-- **打包前停 dev 应用**（避免文件锁）：`taskkill /F /IM electron.exe /T; taskkill /F /IM aioncore.exe /T`。electron 主进程有看门狗会**自动重启 aioncore**，只杀 aioncore 没用，要连 electron 一起杀。
+- **打包前停 dev 应用**（避免文件锁）：`taskkill /F /IM electron.exe /T; taskkill /F /IM dreamcore.exe /T`。electron 主进程有看门狗会**自动重启 dreamcore**，只杀 dreamcore 没用，要连 electron 一起杀。
 
 ---
 
@@ -198,17 +198,17 @@ App 自己的 `packages/desktop/src/process/services/autoUpdaterService.ts`（`r
 
 ## 2.6 ⚠️ 内嵌 ACP 运行组件（claude-agent-acp / codex-acp）缺失 —— 全平台，且**只有全新安装才会暴露**
 
-**2026-08-07 由用户真机截图发现**：装完点 Claude Code，弹「One Work 安装不完整 …… Claude ACP 运行组件 无法启动」，正文路径指向 `…\resources\bundled-aioncore\win32-x64\…`。Codex 同理（同一套代码路径）。
+**2026-08-07 由用户真机截图发现**：装完点 Claude Code，弹「One Work 安装不完整 …… Claude ACP 运行组件 无法启动」，正文路径指向 `…\resources\bundled-dreamcore\win32-x64\…`。Codex 同理（同一套代码路径）。
 
 ### 2.6.1 成因（每一环都已核对源码）
 
 fork 走的是「ACP 包装层按 npm 包内嵌」这条路（`acp_tool_runtime`，07-29 同步时从上游删除中恢复），打包版**硬性要求**内嵌目录下存在：
 
 ```
-resources/bundled-aioncore/<runtimeKey>/managed-resources/acp/<slug>/<version>/<runtimeKey>/
+resources/bundled-dreamcore/<runtimeKey>/managed-resources/acp/<slug>/<version>/<runtimeKey>/
 ```
 
-但上游 `#609`（2026-07-23，随 07-29 同步进 fork）把 [`cmd_prepare_managed_resources.rs`](../../../1oneCore/crates/aionui-app/src/commands/cmd_prepare_managed_resources.rs) 整体换成了 `managed_cli` 方案——它只产出 `node/` + `cli/claude`、`cli/codex` 两个**原生二进制**，`acp/` 这一层从此不再生成。而 fork 里本该产出它的 `prepare_managed_acp_tool_to_root`（`aionui-runtime/src/acp_tool_runtime/mod.rs`）**全仓库零调用方**，只在 `lib.rs` 里 re-export 了一下。
+但上游 `#609`（2026-07-23，随 07-29 同步进 fork）把 [`cmd_prepare_managed_resources.rs`](../../../1oneCore/crates/dream-core-app/src/commands/cmd_prepare_managed_resources.rs) 整体换成了 `managed_cli` 方案——它只产出 `node/` + `cli/claude`、`cli/codex` 两个**原生二进制**，`acp/` 这一层从此不再生成。而 fork 里本该产出它的 `prepare_managed_acp_tool_to_root`（`dream-core-runtime/src/acp_tool_runtime/mod.rs`）**全仓库零调用方**，只在 `lib.rs` 里 re-export 了一下。
 
 运行时后果：打包版才带 `--managed-resources-mode bundled`（`packages/web-host/src/backend-launcher.ts`），于是 `activate_local_tool_source` 直接抛 `bundled managed Claude ACP artifact missing under …`；而 npm 兜底路径在 bundled 模式下**第一行就 return**，没有任何回退，直接硬失败。
 
@@ -231,7 +231,7 @@ resources/bundled-aioncore/<runtimeKey>/managed-resources/acp/<slug>/<version>/<
 
 ### 2.6.3 ⚠️ 原本的闸门被自己关掉了
 
-`verify-bundled-aioncore-resources.js` 本来只认 schema v1（校验 `acpTools` → `acp/…` 真在盘上），正是能拦住这个问题的检查。07-30 为「解除打包阻塞」（`3c40734c7`）改成 v1/v2 都接受，而 v2 只校验 `cli/claude/…` 存不存在——**唯一的防线在这里被放行了**。装机侧的 `verify-bundled-aioncore-install.ps1` 同样。
+`verify-bundled-dreamcore-resources.js` 本来只认 schema v1（校验 `acpTools` → `acp/…` 真在盘上），正是能拦住这个问题的检查。07-30 为「解除打包阻塞」（`3c40734c7`）改成 v1/v2 都接受，而 v2 只校验 `cli/claude/…` 存不存在——**唯一的防线在这里被放行了**。装机侧的 `verify-bundled-dreamcore-install.ps1` 同样。
 
 **⚠️ 更要紧的是当时为什么觉得这样安全**——`3c40734c7` 自己的提交信息写着：
 
@@ -245,7 +245,7 @@ resources/bundled-aioncore/<runtimeKey>/managed-resources/acp/<slug>/<version>/<
 
 - 1oneCore：`run_prepare_managed_resources` 现在对 `ClaudeAgentAcp` / `CodexAcp` 各调一次 `prepare_managed_acp_tool_to_root`（新增失败阶段 `acp.prepare`，与 `cli.prepare` 分开报），并恢复了 `managed_acp_tool_contract_for_export`（07-29 同步时**唯一没恢复**的那个函数，正是缺口所在）。v2 契约新增 `acpTools` 段，**形状与 v1 逐字段相同**——这样两个校验器不必各写第二套实现。
 - 契约校验 `validate_contract` 现在缺 `acp/` 直接失败（缺 slug / 声明了但盘上没有 / 缺每工具 `manifest.json` / 平台不匹配 / 路径逃逸各有用例）。⚠️ 该函数**只在打包期调用、运行时零读取方**（`acp_tool_sources` 只探目录不读 manifest），所以收紧它对存量安装零风险。
-- 1oneUI：`verify-bundled-aioncore-resources.js` 与 `verify-bundled-aioncore-install.ps1` 的 v2 分支改为**同时**校验 `acpTools` 与 `clis`（原为二选一）。装机侧校验器随包分发，故只影响新包，不会把存量 2.1.51 用户误判成损坏。
+- 1oneUI：`verify-bundled-dreamcore-resources.js` 与 `verify-bundled-dreamcore-install.ps1` 的 v2 分支改为**同时**校验 `acpTools` 与 `clis`（原为二选一）。装机侧校验器随包分发，故只影响新包，不会把存量 2.1.51 用户误判成损坏。
 - 测试：Rust 契约 15 条、JS 校验器 19 条、PS1 5 条，新增的负向用例**都做过负向验证**（拆掉闸门重跑，确认失败的正是它们）。
 - **未采纳的顺带项**：`cli/claude`、`cli/codex` 两个原生二进制保留入包。它们确实是当前用不到的重量，但删除属独立决策、且会缩小将来接 session-port 的余地，不在本次修复范围。
 
@@ -253,8 +253,8 @@ resources/bundled-aioncore/<runtimeKey>/managed-resources/acp/<slug>/<version>/<
 
 ```bash
 # 检查一：内嵌包里的 acp/ 版本必须与后端常量逐字一致
-grep -A5 'pub fn version' 1oneCore/crates/aionui-runtime/src/acp_tool_runtime/types.rs
-ls -d 1oneUI/resources/bundled-aioncore/*/managed-resources/acp/*/*/
+grep -A5 'pub fn version' 1oneCore/crates/dream-core-runtime/src/acp_tool_runtime/types.rs
+ls -d 1oneUI/resources/bundled-dreamcore/*/managed-resources/acp/*/*/
 # 两边对不上（或 acp/ 根本不存在）= 这个包发出去会让所有新用户装完用不了 Claude/Codex
 ```
 
@@ -296,7 +296,7 @@ mv "$APPDATA/1ONE Code/1one/runtime/managed-tools/acp" \
 
 ## 4. 版本号规则
 
-- **1oneUI**：`package.json` `version` patch+1（如 `2.1.48`→`2.1.49`），`electron-builder.yml` 读 `${version}` 不用改；同时把 `aioncoreVersion` 指向新的 1oneCore tag。
+- **1oneUI**：`package.json` `version` patch+1（如 `2.1.48`→`2.1.49`），`electron-builder.yml` 读 `${version}` 不用改；同时把 `dreamcoreVersion` 指向新的 1oneCore tag。
 - **1oneCore**：`Cargo.toml` `[workspace.package] version`。上游基线没变时**只 bump fork 后缀**（`0.1.49-one.1`→`0.1.49-one.2`）；上游基线变了才动前面（`0.1.48-one.1`→`0.1.49-one.1`）。
 - exe 内部名（`1onecode.exe`）、appId（`com.huanle.oneone.ai`）**不随版本/品牌走**（改了会丢用户 userData，见品牌红线）。
 

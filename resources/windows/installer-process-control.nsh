@@ -71,6 +71,11 @@ Var /GLOBAL OneWorkCurrentOutDir
   Pop $OneWorkStopResult
 !macroend
 
+; Pre-rebrand bundled-backend path. An in-place upgrade from a legacy build can
+; still have that copy on disk holding a file lock, so the Restart Manager query
+; has to register it alongside the current one.
+!define ONEWORK_LEGACY_BUNDLED_BACKEND "resources\bundled-aioncore\win32-x64\aioncore.exe"
+
 !macro ONEWORK_QUERY_LOCKERS_INLINE_LEGACY _TARGET_PATH _RETURN
   nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& { \
     $$ErrorActionPreference = 'SilentlyContinue'; \
@@ -79,7 +84,7 @@ Var /GLOBAL OneWorkCurrentOutDir
     $$instDir = [System.IO.Path]::GetFullPath('$INSTDIR'); \
     $$targetPath = '${_TARGET_PATH}'; \
     $$currentOutDir = '$OneWorkCurrentOutDir'; \
-    $$lockerListPath = '$PLUGINSDIR\aionui-rm-lockers.txt'; \
+    $$lockerListPath = '$PLUGINSDIR\onework-rm-lockers.txt'; \
     [System.IO.File]::WriteAllText($$lockerListPath, '', (New-Object System.Text.UTF8Encoding $$false)); \
     try { \
     function Test-OneWorkSamePath($$left, $$right) { \
@@ -107,7 +112,7 @@ Var /GLOBAL OneWorkCurrentOutDir
         } elseif ($$targetPath -and (Test-Path -LiteralPath $$targetPath -PathType Container)) { \
           $$root = [System.IO.Path]::GetFullPath($$targetPath); \
           $$topLevel = @(Get-ChildItem -LiteralPath $$root -Force -File -ErrorAction SilentlyContinue | ForEach-Object { $$_.FullName }); \
-          $$knownRelative = @('${ONEWORK_APP_EXECUTABLE_FILENAME}', '${UNINSTALL_FILENAME}', 'resources\app.asar', 'resources\app-update.yml', 'resources\bundled-aioncore\win32-x64\aioncore.exe'); \
+          $$knownRelative = @('${ONEWORK_APP_EXECUTABLE_FILENAME}', '${UNINSTALL_FILENAME}', 'resources\app.asar', 'resources\app-update.yml', 'resources\bundled-dreamcore\win32-${ONEWORK_TARGET_ARCH}\dreamcore.exe', '${ONEWORK_LEGACY_BUNDLED_BACKEND}'); \
           $$known = @($$knownRelative | ForEach-Object { Join-Path $$root $$_ } | Where-Object { Test-Path -LiteralPath $$_ -PathType Leaf }); \
           $$resources = @($$topLevel + $$known | Where-Object { $$_ -and $$_.Trim().Length -gt 0 } | Select-Object -Unique | Select-Object -First 512); \
         } \
@@ -176,8 +181,8 @@ Var /GLOBAL OneWorkCurrentOutDir
 
 !macro ONEWORK_QUERY_LOCKERS _TARGET_PATH _RETURN
   InitPluginsDir
-  File /oname=$PLUGINSDIR\aionui-query-lockers.ps1 "${PROJECT_DIR}\resources\windows\support\query-lockers.ps1"
-  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\aionui-query-lockers.ps1" -LogPath "$OneWorkSessionLogPath" -InstDir "$INSTDIR" -TargetPath "${_TARGET_PATH}" -LockerListPath "$PLUGINSDIR\aionui-rm-lockers.txt" -Session "$OneWorkSessionId" -Version "${VERSION}" -Arch "${ONEWORK_TARGET_ARCH}" -Updated "$OneWorkIsUpdated" -CurrentOutDir "$OneWorkCurrentOutDir"`
+  File /oname=$PLUGINSDIR\onework-query-lockers.ps1 "${PROJECT_DIR}\resources\windows\support\query-lockers.ps1"
+  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\onework-query-lockers.ps1" -LogPath "$OneWorkSessionLogPath" -InstDir "$INSTDIR" -TargetPath "${_TARGET_PATH}" -LockerListPath "$PLUGINSDIR\onework-rm-lockers.txt" -Session "$OneWorkSessionId" -Version "${VERSION}" -Arch "${ONEWORK_TARGET_ARCH}" -Updated "$OneWorkIsUpdated" -CurrentOutDir "$OneWorkCurrentOutDir"`
   Pop ${_RETURN}
 !macroend
 
@@ -186,7 +191,7 @@ Var /GLOBAL OneWorkCurrentOutDir
   StrCpy $OneWorkLockerList ""
   ClearErrors
   SetDetailsPrint none
-  FileOpen $OneWorkLockerListFile "$PLUGINSDIR\aionui-rm-lockers.txt" r
+  FileOpen $OneWorkLockerListFile "$PLUGINSDIR\onework-rm-lockers.txt" r
   ${IfNot} ${Errors}
     FileRead $OneWorkLockerListFile $OneWorkLockerList
     FileClose $OneWorkLockerListFile
@@ -282,16 +287,16 @@ Var /GLOBAL OneWorkCurrentOutDir
   !insertmacro ONEWORK_WAIT_FOR_UPDATED_APP_EXIT
   !insertmacro ONEWORK_FIND_APP_PROCESS $OneWorkCheckResult
   ${If} $OneWorkCheckResult == 0
-    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "$(appRunning)" /SD IDOK IDOK aionui_do_stop_process
+    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "$(appRunning)" /SD IDOK IDOK onework_do_stop_process
     !insertmacro ONEWORK_CLEAR_ACTIVE_INSTALLER_MARKER
     Quit
 
-    aionui_do_stop_process:
+    onework_do_stop_process:
       DetailPrint "$(appClosing)"
       !insertmacro ONEWORK_STOP_APP_PROCESSES
       StrCpy $OneWorkCloseRetries 0
 
-    aionui_wait_for_close:
+    onework_wait_for_close:
       ; Back off instead of polling flat every second. A flat 1s x 10 gives the
       ; app 10 seconds to shut down; an Electron app flushing a large session
       ; database routinely needs more than that, and the old loop declared
@@ -305,12 +310,12 @@ Var /GLOBAL OneWorkCurrentOutDir
       ${If} $OneWorkCheckResult == 0
         IntOp $OneWorkCloseRetries $OneWorkCloseRetries + 1
         ${If} $OneWorkCloseRetries > 10
-          MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${ONEWORK_MSG_CLOSE_OR_REMOVE_PREVIOUS_ZH}$\r$\n$\r$\n${ONEWORK_MSG_MAY_USE_INSTALL_DIR_ZH}$\r$\n$INSTDIR$\r$\n$\r$\n${ONEWORK_MSG_RETRY_AFTER_CLOSING_DIR_ZH}$\r$\n$\r$\n${ONEWORK_MSG_BLOCK_SEPARATOR}$\r$\n$\r$\n${ONEWORK_MSG_CLOSE_OR_REMOVE_PREVIOUS_EN}$\r$\n$\r$\n${ONEWORK_MSG_MAY_USE_INSTALL_DIR_EN}$\r$\n$INSTDIR$\r$\n$\r$\n${ONEWORK_MSG_RETRY_AFTER_CLOSING_DIR_EN}" /SD IDCANCEL IDRETRY aionui_wait_for_close
+          MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${ONEWORK_MSG_CLOSE_OR_REMOVE_PREVIOUS_ZH}$\r$\n$\r$\n${ONEWORK_MSG_MAY_USE_INSTALL_DIR_ZH}$\r$\n$INSTDIR$\r$\n$\r$\n${ONEWORK_MSG_RETRY_AFTER_CLOSING_DIR_ZH}$\r$\n$\r$\n${ONEWORK_MSG_BLOCK_SEPARATOR}$\r$\n$\r$\n${ONEWORK_MSG_CLOSE_OR_REMOVE_PREVIOUS_EN}$\r$\n$\r$\n${ONEWORK_MSG_MAY_USE_INSTALL_DIR_EN}$\r$\n$INSTDIR$\r$\n$\r$\n${ONEWORK_MSG_RETRY_AFTER_CLOSING_DIR_EN}" /SD IDCANCEL IDRETRY onework_wait_for_close
           !insertmacro ONEWORK_WRITE_INSTALLER_LAST_FAILURE_MARKER
           !insertmacro ONEWORK_FAIL_REPORTABLE_BILINGUAL_DIAGNOSTICS ${ONEWORK_E_INSTALL_DIR_REMOVE_OR_LOCKED} "event=session-end result=fail code=${ONEWORK_E_INSTALL_DIR_REMOVE_OR_LOCKED} phase=app-cannot-be-closed retryCount=$OneWorkCloseRetries instDir=$INSTDIR" "${ONEWORK_MSG_CLOSE_OR_REMOVE_PREVIOUS_EN}" "${ONEWORK_MSG_CLOSE_OR_REMOVE_PREVIOUS_ZH}" "${ONEWORK_MSG_CLOSE_INSTALL_DIR_ACTION_EN}" "${ONEWORK_MSG_CLOSE_INSTALL_DIR_ACTION_ZH}" "app-cannot-be-closed retryCount=$OneWorkCloseRetries instDir=$INSTDIR" "app-cannot-be-closed retryCount=$OneWorkCloseRetries instDir=$INSTDIR"
         ${Else}
           !insertmacro ONEWORK_STOP_APP_PROCESSES
-          Goto aionui_wait_for_close
+          Goto onework_wait_for_close
         ${EndIf}
       ${EndIf}
   ${EndIf}

@@ -13,11 +13,11 @@
 
 ### 1.1 第一层:不是 scheme 抢注(07-15 修过的那个)
 
-07-15 修过 `aionui://` 被 dev/打包版互抢注册的问题。这次先怀疑它复发,实测**排除**:
+07-15 修过 `dream-ui://` 被 dev/打包版互抢注册的问题。这次先怀疑它复发,实测**排除**:
 
-- 注册表:`aionui://` → 打包版 `1onecode.exe`;`aionui-dev://` → dev electron,**拆分正确**。
-- 合成 `aionui-dev://sso-callback?token=...` 用 `Start-Process` 触发 → dev 侧栏立刻变成 `sso_test_user`、`localStorage` 正确写入。**接收链路完全正常**。
-- 抓包实证客户端发出的授权 URL 带了 `desktop=1&scheme=aionui-dev`(用 CDP 拦 `/api/shell/open-external` 拿到实参)。
+- 注册表:`dream-ui://` → 打包版 `1onecode.exe`;`dream-ui-dev://` → dev electron,**拆分正确**。
+- 合成 `dream-ui-dev://sso-callback?token=...` 用 `Start-Process` 触发 → dev 侧栏立刻变成 `sso_test_user`、`localStorage` 正确写入。**接收链路完全正常**。
+- 抓包实证客户端发出的授权 URL 带了 `desktop=1&scheme=dream-ui-dev`(用 CDP 拦 `/api/shell/open-external` 拿到实参)。
 
 结论:客户端(发送 + 接收)**全对**,问题在别处。
 
@@ -26,7 +26,7 @@
 `one-sso` 的 `desktop_callback_page` 原本是:
 
 ```js
-location.href = 'aionui-dev://sso-callback?token=...';
+location.href = 'dream-ui-dev://sso-callback?token=...';
 setTimeout(function () {
   window.close();
 }, 1200); // ← 元凶
@@ -34,7 +34,7 @@ setTimeout(function () {
 
 浏览器对自定义协议会弹「要打开 Electron 吗?」的**原生确认框**,但这个页面 **1.2 秒后就把标签关了,确认框跟着一起消失**,用户根本来不及点 → deep link 从未真正触发 → 桌面端永远收不到 token。
 
-**决定性证据**:用户截图里那个框写的是「要打开 **Electron** 吗?」——说明远程回吐的 scheme 是 `aionui-dev`(**正确**),纯粹是没点成。用户换 Edge(不允许脚本关它没开的标签)后,页面留住、点「点击这里」→ **登录立刻成功**,监听捕获到真实 JWT session。
+**决定性证据**:用户截图里那个框写的是「要打开 **Electron** 吗?」——说明远程回吐的 scheme 是 `dream-ui-dev`(**正确**),纯粹是没点成。用户换 Edge(不允许脚本关它没开的标签)后,页面留住、点「点击这里」→ **登录立刻成功**,监听捕获到真实 JWT session。
 
 > 这个坑**与平台无关**(Win/macOS/Linux 浏览器都一样),也就是说**此前所有平台的飞书桌面登录基本都是坏的**。
 
@@ -59,14 +59,14 @@ setTimeout(function () {
 
 ## 2. 为什么要做 / 预期效果
 
-| 事项                    | 为什么                                                                                                              | 预期效果                                            |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| **回调页 1.2s→5s**      | 自动关闭抢掉协议确认框,导致所有平台桌面 SSO 登录都走不完最后一步                                                    | 用户有充裕时间点「打开」;页面仍会自动关(不留残页)   |
-| **deep link 带 `name`** | 服务器有「赵高」却没交给客户端,只能显示 `sso_xxx` 代号                                                              | 侧栏显示真实姓名                                    |
-| **小猫图标**            | WebUI favicon/manifest 与 Mac `app.icns` 仍是旧 AionUi 菱形 logo                                                    | 品牌一致                                            |
-| **自动升级改指向 COS**  | fork 的升级源写死上游 `static.aionui.com` + `iOfficeAI/AionUi`,**上游一发版就会把原版 AionUi 推到 fork 装机上覆盖** | 只从用户自己的腾讯 COS 拉更新                       |
-| **企业→项目组 改名**    | "企业"一词误导:自建的那个容器不是真实公司组织                                                                       | 概念清晰:项目组=邀请码轻量协作;企业=SSO 公司级      |
-| **真实企业层(B2)**      | 商业化方向:公司自建服务器,员工飞书登录**自动入伙**、带真名/部门,免邀请码                                            | 同公司 SSO 登录自动进同一企业;外公司/无绑定不受影响 |
+| 事项                    | 为什么                                                                                                                   | 预期效果                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| **回调页 1.2s→5s**      | 自动关闭抢掉协议确认框,导致所有平台桌面 SSO 登录都走不完最后一步                                                         | 用户有充裕时间点「打开」;页面仍会自动关(不留残页)   |
+| **deep link 带 `name`** | 服务器有「赵高」却没交给客户端,只能显示 `sso_xxx` 代号                                                                   | 侧栏显示真实姓名                                    |
+| **小猫图标**            | WebUI favicon/manifest 与 Mac `app.icns` 仍是旧 dream-ui 菱形 logo                                                       | 品牌一致                                            |
+| **自动升级改指向 COS**  | fork 的升级源写死上游 `static.dream-ui.com` + `gaogg521/dream-ui`,**上游一发版就会把原版 dream-ui 推到 fork 装机上覆盖** | 只从用户自己的腾讯 COS 拉更新                       |
+| **企业→项目组 改名**    | "企业"一词误导:自建的那个容器不是真实公司组织                                                                            | 概念清晰:项目组=邀请码轻量协作;企业=SSO 公司级      |
+| **真实企业层(B2)**      | 商业化方向:公司自建服务器,员工飞书登录**自动入伙**、带真名/部门,免邀请码                                                 | 同公司 SSO 登录自动进同一企业;外公司/无绑定不受影响 |
 
 **B2 形态定调(用户拍板)**:每公司自建一台服务器(契合现有"一局域网一服务器 / 一服务器一企业 D3"约束),**不做**云端多租户 SaaS(那需要给 skills/MCP/看板/devops 全套加租户隔离,是大重构)。
 
@@ -84,7 +84,7 @@ setTimeout(function () {
 
 **B. 图标**(1oneUI)
 
-- `public/pwa/icon-{180,192,512}.png` 用 `resources/app.png`(小猫)重生成;`public/manifest.webmanifest` 品牌 `AionUi`→`1One Work`。
+- `public/pwa/icon-{180,192,512}.png` 用 `resources/app.png`(小猫)重生成;`public/manifest.webmanifest` 品牌 `dream-ui`→`1One Work`。
 - `resources/app.icns`(Mac 图标)原本是旧菱形,已用小猫重生成(仅 ≤512 原生/缩小尺寸,避免放大产生边缘噪点)。
   > `resources/app.ico`(Windows)本来就是小猫,未动。
 
@@ -92,7 +92,7 @@ setTimeout(function () {
 
 - `process/services/updateFeed.ts`:`CDN_UPDATE_BASE_URL` → `https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases`(**运行时真正生效的 feed**)。
 - `process/bridge/updateBridge.ts`:`CDN_HOST`/`CDN_BASE_URL` 同步。
-- `packages/desktop/electron-builder.yml`:`publish` 从 `github/iOfficeAI/AionUi` 改成 `generic` 指向同 URL。
+- `packages/desktop/electron-builder.yml`:`publish` 从 `github/gaogg521/dream-ui` 改成 `generic` 指向同 URL。
 - `.github/workflows/release-distribute.yml`:从上游 AWS S3(OIDC)**重写为腾讯 COS**。COS 兼容 S3,直接复用 `aws s3 cp --endpoint-url https://cos.ap-shanghai.myqcloud.com`,用 `COS_SECRET_ID/KEY` 当 AWS 凭据。
 
 **D. 企业→项目组 改名**(1oneUI,i18n)
@@ -108,7 +108,7 @@ setTimeout(function () {
 - 捕获公司标识:`ProviderUserInfo` + `org_external_id`;飞书 `to_provider_user_info` 填 `tenant_key`(空白安全回退 None);`bind_identity`/`touch_identity` 持久化。
 - 绑定:`OrgService::create_tenant` 建企业时把**创建者的 SSO 公司**绑到 tenant(`sso_org_binding_for`)。
 - 自动入伙:`OrgService::auto_provision_enterprise(user, provider, org_external_id)`。
-- 接线:`one_sso::EnterpriseAutoJoiner` trait + `aionui-app` 里的 `OrgEnterpriseAutoJoiner` adapter(照抄既有 `TenantResolver`/`OrgTenantResolver` 范式,同层 crate 只能靠 trait 交互);`callback()` 在 **`issue_session` 之前**调用(auto-join 会轮换 jwt secret,顺序反了 token 就废)。
+- 接线:`one_sso::EnterpriseAutoJoiner` trait + `dream-core-app` 里的 `OrgEnterpriseAutoJoiner` adapter(照抄既有 `TenantResolver`/`OrgTenantResolver` 范式,同层 crate 只能靠 trait 交互);`callback()` 在 **`issue_session` 之前**调用(auto-join 会轮换 jwt secret,顺序反了 token 就废)。
 
 **F. 真实企业层 B2 — context 端点扩字段 + 前端(本轮 07-16 补完)**
 
@@ -126,7 +126,7 @@ setTimeout(function () {
 - `components/layout/WorkspaceIdentityEntry.tsx`:侧栏姓名链补 `context.displayName`;版本行按 `ssoBound` 区分「企业团队版」vs「项目组」;下拉菜单头补「部门:xxx」(有部门才显示)。
 - **i18n 语义修正**:上一轮"企业→项目组"改名把 `settings.workspaceIdentity.editionEnterprise` 值直接改成了"项目组版"。本轮有了真实企业/项目组的**真实区分**,把它**回归为"企业团队版"/"Enterprise"(仅 `ssoBound` 时用)**,并新增 `editionProjectGroup`(项目组)、`departmentLine`(部门:{{department}});common.json 新增 `fieldTenantType`/`tierRealEnterprise`/`tierProjectGroup`/`fieldMyName`/`fieldMyDepartment`/`fieldMyJobTitle`。仅 zh-CN + en-US(其余语言回退 en-US)。
 - 校验:`bunx tsc --noEmit` 干净、`node scripts/check-i18n.js` 通过(类型定义 in sync)、`oxlint --fix` + `oxfmt` 干净。
-- **已重编内嵌**:`aioncore.exe` release 编译(1m56s)并 `prepareAioncore.js` 内嵌进 `resources/bundled-aioncore/win32-x64`(`source=local`);内嵌前需先停掉正在运行的 dev 应用(占用锁二进制,否则 EPERM)。
+- **已重编内嵌**:`dreamcore.exe` release 编译(1m56s)并 `prepareDreamcore.js` 内嵌进 `resources/bundled-dreamcore/win32-x64`(`source=local`);内嵌前需先停掉正在运行的 dev 应用(占用锁二进制,否则 EPERM)。
 
 ### 3.2 ⚠️ 红线:我改了已批准方案的决策①
 
@@ -156,13 +156,13 @@ setTimeout(function () {
 ## 4. 待办
 
 1. ~~**前端(真实企业层)**:显示部门、区分「真实企业/项目组」~~ ✅ **07-16 完成**(见 3.1 F):`OrgContextDto` 已扩 `sso_bound`/`display_name`/`org_unit_path`/`job_title`;总览页 + 侧栏 + i18n 全改完,类型/i18n/lint 校验通过。
-2. ~~**重编 `aioncore.exe` 并进 bundled**~~ ✅ **07-16 完成**(release 编译 + `prepareAioncore.js` 内嵌 `source=local`)。⚠️ **仅本机 dev 生效**;远程 159 那台仍是旧后端,要靠待办 4 部署过去。
+2. ~~**重编 `dreamcore.exe` 并进 bundled**~~ ✅ **07-16 完成**(release 编译 + `prepareDreamcore.js` 内嵌 `source=local`)。⚠️ **仅本机 dev 生效**;远程 159 那台仍是旧后端,要靠待办 4 部署过去。
 3. **E2E 真机验证**(飞书扫码),见第 5 节。**⚠️ 只有本机 dev 用的是新后端**;真机验证真实企业自动入伙/部门显示需先把新后端部署到 159(待办 4)。
 4. **部署到远程服务器 `192.168.11.159:25808`**(另一台机器,装的是 **2.1.44**):
    - 回调页 5 秒修复是**服务器端渲染的**,不部署过去,登录体验不变(仍要靠换浏览器/手快)。
    - 真实企业自动入伙也在服务器端。
 5. **打包**(bump 版本):图标 + 自动升级改 feed 都要出新包才落到装机版。
-   - ✅ **07-16 已本地打包 Windows x64**:`out/1ONE-Code-2.1.45-win-x64.exe`(329MB,已 signtool 签名),版本 2.1.44→**2.1.45**(已 commit+push)。**关键**:打包必须带 `AIONUI_BACKEND_LOCAL_PATH` 指向本地 `1oneCore/target/release/aioncore.exe`,否则 `prepareAioncore` 会去 `gaogg521/1oneCore` releases 下载(我的改动只推了 one-main、没发 release → 会拉到旧版或失败);已核实打进包的后端 `manifest.sourceType=local`、`version=v0.1.45-one.1`。
+   - ✅ **07-16 已本地打包 Windows x64**:`out/1ONE-Code-2.1.45-win-x64.exe`(329MB,已 signtool 签名),版本 2.1.44→**2.1.45**(已 commit+push)。**关键**:打包必须带 `DREAM_BACKEND_LOCAL_PATH` 指向本地 `1oneCore/target/release/dreamcore.exe`,否则 `prepareDreamcore` 会去 `gaogg521/1oneCore` releases 下载(我的改动只推了 one-main、没发 release → 会拉到旧版或失败);已核实打进包的后端 `manifest.sourceType=local`、`version=v0.1.45-one.1`。
    - **用途**:装到 159 当企业**服务器**,dev 环境当**客户端**联调(见 5.5)。mac 包仍未出。
 6. **用户侧前置条件(非代码)**:
    - 飞书开放平台给应用「IT小助手」加**「通讯录」只读权限** —— 现在它**只有「获取用户身份标识」**(截图实证),所以**拿不到部门**(姓名能拿到)。
@@ -175,20 +175,20 @@ setTimeout(function () {
 
 ### 5.1 改了什么 → 该怎么加载(铁律)
 
-| 改动                                                            | 必须做                                                             | 验证                                                                          |
-| --------------------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| `1oneCore` Rust(本次 one-sso/one-org/aionui-app + **两个迁移**) | `D:\aionui-m0\scripts\backend-rebuild.ps1` → 再 `frontend-dev.ps1` | 日志出现 `starting: ...\1oneUI\resources\bundled-aioncore\...`;迁移重启自动跑 |
-| `1oneUI` 渲染进程 / i18n JSON                                   | dev 热更新(**注意 HMR 会漏**,见下)                                 | 刷新窗口                                                                      |
-| 仅文档                                                          | 无需 rebuild                                                       | —                                                                             |
+| 改动                                                                | 必须做                                                              | 验证                                                                           |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `1oneCore` Rust(本次 one-sso/one-org/dream-core-app + **两个迁移**) | `D:\旧中转目录\scripts\backend-rebuild.ps1` → 再 `frontend-dev.ps1` | 日志出现 `starting: ...\1oneUI\resources\bundled-dreamcore\...`;迁移重启自动跑 |
+| `1oneUI` 渲染进程 / i18n JSON                                       | dev 热更新(**注意 HMR 会漏**,见下)                                  | 刷新窗口                                                                       |
+| 仅文档                                                              | 无需 rebuild                                                        | —                                                                              |
 
 > **本次踩到的 HMR 坑**:改 i18n JSON / `.tsx` 后 dev 窗口可能显示"半拉子"(侧栏已是「项目组」、部署卡还是「企业」)。**不是改错了**,是 HMR 没热更那个文件。**重启 dev 或打包后一致**。别被它误导。
 
 ### 5.2 单测
 
 ```bash
-cd D:\aionui-m0\1oneCore
+cd D:\旧中转目录\1oneCore
 cargo test -p one-org -p one-sso        # 期望 25 + 45 passed / 0 failed
-cargo fmt -p one-org -p one-sso -p aionui-app -- --check
+cargo fmt -p one-org -p one-sso -p dream-core-app -- --check
 ```
 
 ### 5.3 E2E:飞书扫码(需先把新后端部署到 192.168.11.159)
@@ -206,8 +206,8 @@ cargo fmt -p one-org -p one-sso -p aionui-app -- --check
 
 - CDP 直接读/写渲染进程:`localStorage` 状态、`document.body.innerText` 断言文案、`Page.captureScreenshot`。
 - 拦 `window.fetch` 抓 `/api/shell/open-external` 的实参 → 拿到客户端真正打开的授权 URL(证明带没带 `desktop=1&scheme=`)。
-- `Start-Process "aionui-dev://sso-callback?token=..."` 合成 deep link,绕开飞书扫码单独验证接收链路。
-- 注册表 `HKCU\Software\Classes\{aionui,aionui-dev}\shell\open\command` 看协议归属。
+- `Start-Process "dream-ui-dev://sso-callback?token=..."` 合成 deep link,绕开飞书扫码单独验证接收链路。
+- 注册表 `HKCU\Software\Classes\{dream-ui,dream-ui-dev}\shell\open\command` 看协议归属。
 
 ### 5.4 自动升级(改完 feed 后)
 
@@ -217,8 +217,8 @@ cargo fmt -p one-org -p one-sso -p aionui-app -- --check
 ### 5.5 联调拓扑(159 服务器 + dev 客户端)
 
 - **159 = 企业服务器**:装 `1ONE-Code-2.1.45-win-x64.exe`(新后端 = 真实企业层 + 回调 5s + scheme-aware)。回调页 5s、真实企业自动入伙都在**服务器端**,所以必须装到 159 才生效。
-- **dev 环境 = 客户端**(`bun run dev`,scheme `aionui-dev`;新前端 = 显部门/分层/deep link 收 name)。
-- **scheme 匹配为什么这次成立**:客户端发 `desktop=1&scheme=aionui-dev`,**新服务器(2.1.45)是 scheme-aware 的**,会照着回吐 `aionui-dev://` → dev 客户端收得到。这正是本轮改动闭环的地方(旧服务器只回 `aionui://`,dev 收不到)。见 [[sso-scheme-desktop-callback-constraint]]。
+- **dev 环境 = 客户端**(`bun run dev`,scheme `dream-ui-dev`;新前端 = 显部门/分层/deep link 收 name)。
+- **scheme 匹配为什么这次成立**:客户端发 `desktop=1&scheme=dream-ui-dev`,**新服务器(2.1.45)是 scheme-aware 的**,会照着回吐 `dream-ui-dev://` → dev 客户端收得到。这正是本轮改动闭环的地方(旧服务器只回 `dream-ui://`,dev 收不到)。见 [[sso-scheme-desktop-callback-constraint]]。
 - **真实企业自动入伙要有绑定目标**:159 上的企业必须是**被 SSO 公司绑定**的(`create_tenant` 在创建者带 SSO 身份时才写 `sso_provider/sso_org_id`)。若企业是本地管理员(无 SSO)建的 → 是**未绑定的项目组**,SSO 登录不会自动入伙。所以测真实企业:建企业的管理员要**先飞书登录**再建企业。
 - **部门显示**仍卡在飞书应用的**通讯录只读权限**(没有 → `org_unit_path` 空,姓名能显示)。
 - **混版陷阱**:159 现装 2.1.44,装 2.1.45 若行为怪异,先卸干净删旧安装目录再装(见 [[packaging-exe-name-mismatch]])。
@@ -230,7 +230,7 @@ cargo fmt -p one-org -p one-sso -p aionui-app -- --check
 - 飞书桌面登录走不完最后一步 = **回调页 1.2s `window.close()` 抢掉协议确认框**,与 scheme/平台无关。
 - 显示 `sso_xxx` 而非真名 = **中文用户名被 sanitize 掉 + deep link 没传 display_name**,服务器其实有「赵高」。
 - **SSO 认证 ≠ 加入组织**:前者只建用户,后者靠 `one_user_org`;飞书 `tenant_key`(公司标识)此前被丢弃 —— 这是"真实企业"层缺的那块拼图。
-- 自动升级此前会**把上游原版 AionUi 推到 fork 装机上**,已改指向用户 COS。
+- 自动升级此前会**把上游原版 dream-ui 推到 fork 装机上**,已改指向用户 COS。
 - 「一服务器一企业(D3)」是硬约束:`create_tenant` 见到已有 tenant 就拒;因此 B2 选每公司自建服务器,不做多租户。
 - **红线**:`auto_provision_enterprise` join-only + `auto_joiner` 为 `Option`,单机版行为零变化,并有测试锁死。
 
@@ -244,26 +244,26 @@ cargo fmt -p one-org -p one-sso -p aionui-app -- --check
 
 - 桌面 co-located 后端**硬编码 `--local`**(`1oneUI/packages/web-host/src/backend-launcher.ts:575` `local: true`)。
 - "本机作为服务器"用 web-host `static-server` 绑 `0.0.0.0`(`static-server.ts:140`)把 `/api/*` 反代到 `127.0.0.1` 的 `--local` 后端(`static-server.ts:63-83`)。
-- `--local` 的 `auth_middleware`(`1oneCore/crates/aionui-auth/src/middleware.rs`)**无条件注入 `system_default_user`、跳过 JWT** → **所有远端客户端的登录 token 被无视,全体塌缩成 `system_default_user`**。所以赵高连上去,服务端一切治理接口都以 system_default_user 回答(看到的是它的成员/tenant,而非自己)。还是安全隐患:无 token 打 `:25808` 也被当成 system_admin。
+- `--local` 的 `auth_middleware`(`1oneCore/crates/dream-core-auth/src/middleware.rs`)**无条件注入 `system_default_user`、跳过 JWT** → **所有远端客户端的登录 token 被无视,全体塌缩成 `system_default_user`**。所以赵高连上去,服务端一切治理接口都以 system_default_user 回答(看到的是它的成员/tenant,而非自己)。还是安全隐患:无 token 打 `:25808` 也被当成 system_admin。
 
 ### 7.2 已修(源码,已测)
 
-**P1(核心)`aionui-auth/src/middleware.rs`**:`--local` 分支改为 **带有效 Bearer JWT 就解析成那个真实用户**(复用 `jwt_service.verify` + `user_repo`),没带/无效才回落 `system_default_user`。桌面本机(不带 token)行为不变;远端客户端(带 token)终于认成自己。**严格改进,不削弱现状**(无 token→operator 的既有行为未动)。3 个新单测锁定(honor token / 无 token / 无效 token)。⚠️ 残留:无 token 打网络暴露的服务器仍被当成 operator —— 这是**既有安全洞**,本轮未扩范围去堵(要堵需区分 loopback 桌面 vs 反代远端,是更大的设计),已在此标注。
+**P1(核心)`dream-core-auth/src/middleware.rs`**:`--local` 分支改为 **带有效 Bearer JWT 就解析成那个真实用户**(复用 `jwt_service.verify` + `user_repo`),没带/无效才回落 `system_default_user`。桌面本机(不带 token)行为不变;远端客户端(带 token)终于认成自己。**严格改进,不削弱现状**(无 token→operator 的既有行为未动)。3 个新单测锁定(honor token / 无 token / 无效 token)。⚠️ 残留:无 token 打网络暴露的服务器仍被当成 operator —— 这是**既有安全洞**,本轮未扩范围去堵(要堵需区分 loopback 桌面 vs 反代远端,是更大的设计),已在此标注。
 
 **P2(独立企业组织维度)**:
 
-- 后端 `one-sso`:`SsoService::identity_of(user_id)` + `GET /api/one/sso/me` 返回调用者自己的 SSO 身份(`provider`/`companyId`=tenant_key/`displayName`/`department`/`jobTitle`),**独立于任何 tenant**。DTO `SsoIdentityDto`(models.rs)。新路由组 `one_sso_member_routes`(挂在 auth 之后,非 admin 门控),`aionui-app` 里 merge。2 个新单测。
+- 后端 `one-sso`:`SsoService::identity_of(user_id)` + `GET /api/one/sso/me` 返回调用者自己的 SSO 身份(`provider`/`companyId`=tenant_key/`displayName`/`department`/`jobTitle`),**独立于任何 tenant**。DTO `SsoIdentityDto`(models.rs)。新路由组 `one_sso_member_routes`(挂在 auth 之后,非 admin 门控),`dream-core-app` 里 merge。2 个新单测。
 - 前端:`oneSso.me` bridge(`ipcBridge.ts`)+ `SsoIdentity` 类型 + `useSsoIdentity` hook + `OverviewTab` 顶部新增独立「企业组织」块(认证来源/所属企业/姓名/部门/岗位),与下方项目组并存。i18n zh-CN+en-US 新键(`orgIdentity*` / `ssoProvider*`)。
 
-测试:`aionui-auth` 116+3+23+35 全绿;`one-sso` 47(+2);`one-org` 27;前端 tsc/oxlint/i18n 校验全过。
+测试:`dream-core-auth` 116+3+23+35 全绿;`one-sso` 47(+2);`one-org` 27;前端 tsc/oxlint/i18n 校验全过。
 
 ### 7.3 修完后的预期行为(需 159 装 2.1.46 复测)
 
 - 赵高连上 159:服务端认得出他 → `/api/one/org/context` 返回**赵高自己**的上下文(他没用邀请码 join 王小明1,所以正确显示"未加入项目组");`/api/one/sso/me` 返回他的 SSO 身份(欢乐互娱 tenant_key + 姓名;**部门/岗位仍需飞书通讯录权限**,公司只有 tenant_key 无中文名)。
 - 企业组织块与项目组分开展示 —— 落地"两个独立维度"。
 - **#1(服务器显示访客)**:用户确认 王小明1 是在 159 桌面 App 里建的 → 创建者应是 `system_default_user`、本该是成员。若装 2.1.46 后仍显示访客,是独立 bug,需 159 运行时取证(查 `/api/one/org/context` 实际返回 + 是否真 `--local` + create 是否写了 membership 行)。
-- **#2(客户端除项目组外点不动)**:静态分析**证伪**了"WS 带远端 token 致本机拒握手"(本机 `--local` 的 WS `token_validator` 恒 true、`token_extractor` 忽略 header,见 `aionui-app/src/router/state.rs:821-842`)。真因待运行时取证(dev DevTools:`[ensureWs]` 是 CONNECTED 还是 CLOSED?close code?`getBackendPort` 是否回退 13400=本机后端没起来?)。历史上同款报告曾是**误导性 UI 文案**(见 [[session-2026-07-13-enterprise-client-6bugs]])。
+- **#2(客户端除项目组外点不动)**:静态分析**证伪**了"WS 带远端 token 致本机拒握手"(本机 `--local` 的 WS `token_validator` 恒 true、`token_extractor` 忽略 header,见 `dream-core-app/src/router/state.rs:821-842`)。真因待运行时取证(dev DevTools:`[ensureWs]` 是 CONNECTED 还是 CLOSED?close code?`getBackendPort` 是否回退 13400=本机后端没起来?)。历史上同款报告曾是**误导性 UI 文案**(见 [[session-2026-07-13-enterprise-client-6bugs]])。
 
 ### 7.4 打包
 
-已本地打包 `out/1ONE-Code-2.1.46-win-x64.exe`(带 `AIONUI_BACKEND_LOCAL_PATH`,后端 `sourceType=local`)。装到 159 复测。
+已本地打包 `out/1ONE-Code-2.1.46-win-x64.exe`(带 `DREAM_BACKEND_LOCAL_PATH`,后端 `sourceType=local`)。装到 159 复测。

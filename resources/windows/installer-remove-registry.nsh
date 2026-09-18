@@ -42,7 +42,7 @@
     $$log = '$OneWorkSessionLogPath'; \
     if (-not $$log) { $$log = Join-Path $$env:TEMP '${ONEWORK_FALLBACK_LOG}' }; \
     $$path = [System.IO.Path]::GetFullPath('$OneWorkRemoveResidueRoot'); \
-    $$firstFailedFile = '$PLUGINSDIR\aionui-remove-first-failed.txt'; \
+    $$firstFailedFile = '$PLUGINSDIR\onework-remove-first-failed.txt'; \
     Set-Content -LiteralPath $$firstFailedFile -Encoding UTF8 -NoNewline -Value ''; \
     function Write-InstallerLog($$message) { $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$OneWorkSessionId'; version = '${VERSION}'; arch = '${ONEWORK_TARGET_ARCH}'; updated = ('$OneWorkIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'remove-log'; message = $$message }; if ($$message -match '(^|\s)event=([^\s]+)') { $$payload.event = $$Matches[2] }; Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$payload | ConvertTo-Json -Compress -Depth 8) } \
     function Convert-LongPath($$itemPath) { if ($$itemPath.StartsWith('\\')) { return '\\?\UNC\' + $$itemPath.TrimStart('\') } return '\\?\' + $$itemPath } \
@@ -77,7 +77,7 @@
 
   ClearErrors
   SetDetailsPrint none
-  FileOpen $OneWorkRemoveFirstFailedFile "$PLUGINSDIR\aionui-remove-first-failed.txt" r
+  FileOpen $OneWorkRemoveFirstFailedFile "$PLUGINSDIR\onework-remove-first-failed.txt" r
   ${IfNot} ${Errors}
     FileRead $OneWorkRemoveFirstFailedFile $OneWorkRemoveFirstFailedPath
     FileClose $OneWorkRemoveFirstFailedFile
@@ -128,7 +128,7 @@
       StrCpy $OneWorkRemoveResidueRoot "$INSTDIR"
     ${EndIf}
 
-    aionui_retry_atomic_rename:
+    onework_retry_atomic_rename:
       ClearErrors
       Rename "$INSTDIR" "$OneWorkAtomicStagingDir"
     ${if} ${Errors}
@@ -137,10 +137,10 @@
       !insertmacro ONEWORK_LOG_ATOMIC_REMOVE_FAILURE
       !insertmacro ONEWORK_CAPTURE_FAILED_PATH_LOCKERS "$OneWorkAtomicFailedPath"
       ${IfNot} ${Silent}
-        !insertmacro ONEWORK_PROMPT_FAILED_PATH_LOCKERS "$OneWorkAtomicFailedPath" "atomic-failed" aionui_retry_atomic_rename aionui_cancel_atomic_rename aionui_continue_atomic_failed
-        aionui_cancel_atomic_rename:
+        !insertmacro ONEWORK_PROMPT_FAILED_PATH_LOCKERS "$OneWorkAtomicFailedPath" "atomic-failed" onework_retry_atomic_rename onework_cancel_atomic_rename onework_continue_atomic_failed
+        onework_cancel_atomic_rename:
       ${EndIf}
-      aionui_continue_atomic_failed:
+      onework_continue_atomic_failed:
       !insertmacro ONEWORK_LOG_REMOVE_FAILURE_JSON "atomic-failed" "1" "$OneWorkAtomicFailedPath" "$$payload.atomicFailedPath = '$OneWorkAtomicFailedPath'"
       !insertmacro ONEWORK_LOG_EVENT "code=${ONEWORK_E_INSTALL_DIR_REMOVE_OR_LOCKED} phase=atomic-failed fatal=1 degraded=none firstFailed=$OneWorkAtomicFailedPath atomicFailedPath=$OneWorkAtomicFailedPath"
       !insertmacro ONEWORK_CLEAR_INSTALL_REGISTRY "remove-failed-before-quit"
@@ -152,28 +152,28 @@
     ${endif}
   ${endif}
 
-  aionui_retry_remove_install_dir:
+  onework_retry_remove_install_dir:
     !insertmacro ONEWORK_REMOVE_INSTALL_DIR
   ${if} $OneWorkRemoveDirResult != 0
     !insertmacro ONEWORK_CAPTURE_FAILED_PATH_LOCKERS "$OneWorkRemoveFirstFailedPath"
     ${if} $OneWorkAtomicRemoveSucceeded == "1"
       ${IfNot} ${Silent}
-        !insertmacro ONEWORK_PROMPT_FAILED_PATH_LOCKERS "$OneWorkRemoveFirstFailedPath" "residual-delete-failed" aionui_retry_remove_install_dir aionui_cancel_remove_after_rm aionui_continue_after_rm
-        aionui_cancel_remove_after_rm:
+        !insertmacro ONEWORK_PROMPT_FAILED_PATH_LOCKERS "$OneWorkRemoveFirstFailedPath" "residual-delete-failed" onework_retry_remove_install_dir onework_cancel_remove_after_rm onework_continue_after_rm
+        onework_cancel_remove_after_rm:
           !insertmacro ONEWORK_LOG_REMOVE_FAILURE_JSON "residual-delete-failed" "1" "$OneWorkRemoveFirstFailedPath" "$$payload.residueRoot = '$OneWorkRemoveResidueRoot'; $$payload.failedCount = '$OneWorkRemoveResidueCount'; $$payload.removeDirResult = '$OneWorkRemoveDirResult'; $$payload.atomicSucceeded = ('$OneWorkAtomicRemoveSucceeded' -eq '1')"
           !insertmacro ONEWORK_LOG_EVENT "code=${ONEWORK_E_INSTALL_DIR_REMOVE_OR_LOCKED} phase=residual-delete-failed userAction=cancel fatal=1 residueRoot=$OneWorkRemoveResidueRoot failedCount=$OneWorkRemoveResidueCount firstFailed=$OneWorkRemoveFirstFailedPath removeDirResult=$OneWorkRemoveDirResult removeResidueCount=$OneWorkRemoveResidueCount atomicFailedPath=$OneWorkAtomicFailedPath atomicSucceeded=$OneWorkAtomicRemoveSucceeded"
           !insertmacro ONEWORK_FAIL_REPORTABLE_BILINGUAL ${ONEWORK_E_INSTALL_DIR_REMOVE_OR_LOCKED} "event=session-end result=fail code=${ONEWORK_E_INSTALL_DIR_REMOVE_OR_LOCKED} phase=residual-delete-failed userAction=cancel fatal=1 firstFailed=$OneWorkRemoveFirstFailedPath lockers=$OneWorkLockerList" "${ONEWORK_MSG_PREVIOUS_FILE_OPEN_EN}" "${ONEWORK_MSG_PREVIOUS_FILE_OPEN_ZH}" "${ONEWORK_MSG_CLOSE_SHOWN_FILE_ACTION_EN}" "${ONEWORK_MSG_CLOSE_SHOWN_FILE_ACTION_ZH}"
       ${EndIf}
-      aionui_continue_after_rm:
+      onework_continue_after_rm:
       DetailPrint `One Work previous installation had locked residual files; continuing after atomic cleanup succeeded: $INSTDIR`
       !insertmacro ONEWORK_LOG_EVENT "code=${ONEWORK_E_INSTALL_DIR_REMOVE_OR_LOCKED} phase=residual-delete-failed degraded=continue fatal=0 residueRoot=$OneWorkRemoveResidueRoot failedCount=$OneWorkRemoveResidueCount firstFailed=$OneWorkRemoveFirstFailedPath removeDirResult=$OneWorkRemoveDirResult removeResidueCount=$OneWorkRemoveResidueCount atomicFailedPath=$OneWorkAtomicFailedPath atomicSucceeded=$OneWorkAtomicRemoveSucceeded"
     ${else}
       DetailPrint `Can't safely remove previous installation without atomic cleanup proof: $INSTDIR`
       ${IfNot} ${Silent}
-        !insertmacro ONEWORK_PROMPT_FAILED_PATH_LOCKERS "$OneWorkRemoveFirstFailedPath" "residual-delete-failed-no-atomic-proof" aionui_retry_remove_install_dir aionui_cancel_remove_no_atomic aionui_continue_remove_no_atomic
-        aionui_cancel_remove_no_atomic:
+        !insertmacro ONEWORK_PROMPT_FAILED_PATH_LOCKERS "$OneWorkRemoveFirstFailedPath" "residual-delete-failed-no-atomic-proof" onework_retry_remove_install_dir onework_cancel_remove_no_atomic onework_continue_remove_no_atomic
+        onework_cancel_remove_no_atomic:
       ${EndIf}
-      aionui_continue_remove_no_atomic:
+      onework_continue_remove_no_atomic:
       !insertmacro ONEWORK_LOG_REMOVE_FAILURE_JSON "residual-delete-failed-no-atomic-proof" "1" "$OneWorkRemoveFirstFailedPath" "$$payload.residueRoot = '$OneWorkRemoveResidueRoot'; $$payload.failedCount = '$OneWorkRemoveResidueCount'; $$payload.removeDirResult = '$OneWorkRemoveDirResult'; $$payload.atomicSucceeded = ('$OneWorkAtomicRemoveSucceeded' -eq '1')"
       !insertmacro ONEWORK_LOG_EVENT "code=${ONEWORK_E_INSTALL_DIR_REMOVE_OR_LOCKED} phase=residual-delete-failed-no-atomic-proof degraded=none fatal=1 residueRoot=$OneWorkRemoveResidueRoot failedCount=$OneWorkRemoveResidueCount firstFailed=$OneWorkRemoveFirstFailedPath removeDirResult=$OneWorkRemoveDirResult removeResidueCount=$OneWorkRemoveResidueCount atomicFailedPath=$OneWorkAtomicFailedPath atomicSucceeded=$OneWorkAtomicRemoveSucceeded"
       !insertmacro ONEWORK_CLEAR_INSTALL_REGISTRY "remove-failed-before-quit"

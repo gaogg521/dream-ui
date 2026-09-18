@@ -1,4 +1,4 @@
-# 上游（AionUi / AionCore）两个月增量的取舍与移植 + 跨会话消息/归档体系调研
+# 上游（dream-ui / dream-core）两个月增量的取舍与移植 + 跨会话消息/归档体系调研
 
 > 日期：2026-09-18 ｜ 涉及仓：`dream-ui`、`dream-core`
 >
@@ -20,15 +20,15 @@
 - 上游 2026-08-21 及之后新增的文件，我们**一个都没有**；
 - 上游 2026-08-20 及之前的，我们**全都有**（抽查了 `74512d3e` 的 `refactor(feedback): attach account email automatically`，在我们树里）。
 
-**结论：分叉点 = 上游 AionUi `74512d3e`（2026-08-20 20:36）**。AionCore 同日（`aionui-sidebar`、`aionui-session-message` 两个 crate 都是 08-21 新建的，我们没有）。
+**结论：分叉点 = 上游 dream-ui `74512d3e`（2026-08-20 20:36）**。dream-core 同日（`dream-ui-sidebar`、`dream-core-session-message` 两个 crate 都是 08-21 新建的，我们没有）。
 
-所以「最近两个月」里 07-18 → 08-20 那一半我们本来就有（顺带确认了两个 `fix(security)` 路径穿越修复都在：`HTMLRenderer.tsx` 的 `isWithinRoot` / `normalizeAbsolute`）。真正的增量是 **08-21 → 09-18**：AionUi 30 个提交，AionCore 55 个（后者一大半是 ACP registry 版本 pin）。
+所以「最近两个月」里 07-18 → 08-20 那一半我们本来就有（顺带确认了两个 `fix(security)` 路径穿越修复都在：`HTMLRenderer.tsx` 的 `isWithinRoot` / `normalizeAbsolute`）。真正的增量是 **08-21 → 09-18**：dream-ui 30 个提交，dream-core 55 个（后者一大半是 ACP registry 版本 pin）。
 
 ### 复现方法（下次再做同样的事照抄）
 
 ```bash
 # 只拉提交树、不拉文件内容，几秒钟
-git clone --filter=blob:none --no-checkout https://github.com/iOfficeAI/AionUi.git
+git clone --filter=blob:none --no-checkout https://github.com/gaogg521/dream-ui.git
 # 然后对每个「上游独有」的文件跑 git log -1 --diff-filter=A
 ```
 
@@ -40,7 +40,7 @@ git clone --filter=blob:none --no-checkout https://github.com/iOfficeAI/AionUi.g
 
 - 前端（`scratchpad/patches/localize.py`）：`bg-bg-N` → `bg-N`、`border-border-N` → `border-N`（`ecf2eac` 那次 176 处失效类名修复）、`Aion*` 基础组件 → `Dream*`、版权头。
   - 逐字还原验证通过：`PreviewContextMenu.tsx`、`PreviewTabs.tsx`。
-- 后端（`scratchpad/patches/localize_core.py`）：`aionui_process` → `dream_core_process`、`aionui_common` → `dream_core_common`、`aionui_session` → `dream_core_session`、`AIONUI_*` 环境变量 → `ONE_*`、品牌串。
+- 后端（`scratchpad/patches/localize_core.py`）：`dream_core_process` → `dream_core_process`、`dream_core_common` → `dream_core_common`、`dream_core_session` → `dream_core_session`、`DREAM_*` 环境变量 → `ONE_*`、品牌串。
   - 逐字还原验证通过：`claude_conn.rs`（7118 行，完全一致）。
 
 **反例**：`PreviewPanel.tsx` 还原不出来——我们有自己的 `handleToolbarSave`（修过一个静默丢编辑的 bug）。这种就不能整文件取，只能打 diff。`session_agent.rs` 同理（我们多了一处 `..Default::default()`）。
@@ -98,7 +98,7 @@ catalog 是**按 agent 持久化、后写覆盖**的 —— 所以某个会话�
 | 通知里带上会话名                                                    | #4195               | `31c8be5` |
 | Explorer「全部折叠」                                                | #4202（只取这一半） | `53f93ab` |
 | 分区字体：字族 + 字重 + 字号（全局/聊天/Markdown/代码）             | #4138 #4152         | `45891a5` |
-| SCM 发现阶段枚举 linked worktrees                                   | AionCore #959       | `d1ea6bc` |
+| SCM 发现阶段枚举 linked worktrees                                   | dream-core #959     | `d1ea6bc` |
 
 ### 两件移植时踩到的事
 
@@ -106,7 +106,7 @@ catalog 是**按 agent 持久化、后写覆盖**的 —— 所以某个会话�
 加 WaveDrom 时跑了一次普通 `bun install`，它把 `wavedrom` 解析成 3.7.0 并**重新解析了约 410 个无关锁条目**，结果加载了第二份 `@codemirror/state`，`codeEditor` / `editorDegradation` 共 21 个测试全挂。
 改用 `bun add wavedrom@3.6.2 json5@2.2.3`（精确锁版本）后只动了 15 行锁文件。**这两个依赖因此是精确 pin 而不是 `^`**，故意的。
 
-顺带修了一处真的品牌残留：锁文件里 `@dream/web-cli` 的 bin 还写着改名前的 `aionui-web`，而它的 `package.json` 和磁盘上的文件早就是 `dream-web` 了。
+顺带修了一处真的品牌残留：锁文件里 `@dream/web-cli` 的 bin 还写着改名前的 `dream-web`，而它的 `package.json` 和磁盘上的文件早就是 `dream-web` 了。
 
 **2）Explorer 只取了一半，另一半有后端依赖。**
 上游 #4202 的另一半是「tab 级刷新」，它建立在 `refreshRoot` 上，而 `refreshRoot` 调的是 `fs/remount` 这个 monitor 方法 —— **我们 core 没有**（`dispatch.rs` 里只有 subscribe/unsubscribe/mkdir/createFile/remove/rename/copy/move/search）。上游那条提交是纯前端的，因为它后端早就有了。
@@ -141,9 +141,9 @@ catalog 是**按 agent 持久化、后写覆盖**的 —— 所以某个会话�
 
 ### 4.2 上游怎么做的（可抄的是设计，不是代码）
 
-#### 归档（AionCore `8d6f6cc` + `7ac84f9`，AionUi `18e4fddd` + `3fce329b`）
+#### 归档（dream-core `8d6f6cc` + `7ac84f9`，dream-ui `18e4fddd` + `3fce329b`）
 
-- 新建 `aionui-sidebar` crate（10 个文件）：聚合读模型、级联逻辑、ports、routes、service。
+- 新建 `dream-ui-sidebar` crate（10 个文件）：聚合读模型、级联逻辑、ports、routes、service。
 - 迁移 `040`：给会话和团队加 `archived_at` 列 + 按用户的排序表。
 - **所有"活跃"查询加 `archived_at IS NULL`**，恢复路径走专门的变体，所以归档项始终可恢复。
 - `7ac84f9` 补了关键一刀：**归档要像删除一样把 agent 进程停掉**。原来归档只翻 `archived_at`，agent 还在后台跑着、还在给一个用户已经移出工作区的会话推流。做法是加 `AgentKillReason::Archived`，从 `archive_conversation` / `archive_team` 提交后**尽力而为**地调用——拆不掉只 warn，绝不让归档失败。
@@ -154,7 +154,7 @@ catalog 是**按 agent 持久化、后写覆盖**的 —— 所以某个会话�
 2. **拆进程失败不能让归档失败**（best-effort + warn）。
 3. **恢复路径必须是独立查询变体**，不能靠在活跃查询上开洞。
 
-#### 跨会话消息（AionCore `f2b490f` + `1c37366` + `1f511e5` + `9bfb2ad`，AionUi `c83bc49e`）
+#### 跨会话消息（dream-core `f2b490f` + `1c37366` + `1f511e5` + `9bfb2ad`，dream-ui `c83bc49e`）
 
 语义定义得很干净：**一个 agent 给同一用户的另一个会话发消息，等价于用户打开那个会话按了发送**；收件会话自己起一轮，自己决定要不要回。
 

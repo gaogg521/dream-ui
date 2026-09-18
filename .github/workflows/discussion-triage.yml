@@ -20,14 +20,14 @@ jobs:
         with:
           script: |
             // Category slug → on-duty owner. Q&A/Ideas and everything else
-            // route to IceyLiu (overall duty), who redirects to module owners
-            // by content. null = do not comment.
+            // route to the repository owner, who redirects by content.
+            // null = do not comment.
             const CATEGORY_OWNERS = {
               'announcements': null,
-              'q-a': 'IceyLiu',
-              'ideas': 'IceyLiu',
+              'q-a': 'gaogg521',
+              'ideas': 'gaogg521',
             };
-            const FALLBACK_OWNER = 'IceyLiu';
+            const FALLBACK_OWNER = 'gaogg521';
 
             const discussion = context.payload.discussion;
             const slug = discussion.category?.slug ?? '';

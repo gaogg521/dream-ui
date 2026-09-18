@@ -30,10 +30,10 @@
 !define ONEWORK_MSG_EXTRACT_FAILED_ACTION_EN "Download a fresh installer and run it again. If it still fails, send the installer report to the One Work team."
 !define ONEWORK_MSG_EXTRACT_FAILED_ACTION_ZH "请重新下载安装器后再次运行。如果仍然失败，请将安装失败报告发送给 One Work 团队。"
 
-!define ONEWORK_MSG_BUNDLED_AIONCORE_INCOMPLETE_EN "One Work installed, but the bundled One Work Core resources are incomplete."
-!define ONEWORK_MSG_BUNDLED_AIONCORE_INCOMPLETE_ZH "One Work 已安装部分文件，但内置 One Work Core 资源不完整。"
-!define ONEWORK_MSG_BUNDLED_AIONCORE_INCOMPLETE_ACTION_EN "Download a fresh installer and run it again. If it still fails, send the installer report to the One Work team."
-!define ONEWORK_MSG_BUNDLED_AIONCORE_INCOMPLETE_ACTION_ZH "请重新下载安装器后再次运行。如果仍然失败，请将安装失败报告发送给 One Work 团队。"
+!define ONEWORK_MSG_BUNDLED_CORE_INCOMPLETE_EN "One Work installed, but the bundled One Work Core resources are incomplete."
+!define ONEWORK_MSG_BUNDLED_CORE_INCOMPLETE_ZH "One Work 已安装部分文件，但内置 One Work Core 资源不完整。"
+!define ONEWORK_MSG_BUNDLED_CORE_INCOMPLETE_ACTION_EN "Download a fresh installer and run it again. If it still fails, send the installer report to the One Work team."
+!define ONEWORK_MSG_BUNDLED_CORE_INCOMPLETE_ACTION_ZH "请重新下载安装器后再次运行。如果仍然失败，请将安装失败报告发送给 One Work 团队。"
 
 !define ONEWORK_MSG_ARCH_MISMATCH_EN "Installation package architecture mismatch."
 !define ONEWORK_MSG_ARCH_MISMATCH_ZH "安装包架构不匹配。"

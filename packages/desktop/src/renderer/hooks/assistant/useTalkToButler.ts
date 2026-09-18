@@ -19,7 +19,7 @@ const BUTLER_ASSISTANT_ID = 'one-assistant';
  * Pre-rebrand manifest id.
  *
  * A backend older than the rename still seeds the butler under the old id, and
- * this app pairs with a pinned aioncore release — so matching only the current
+ * this app pairs with a pinned dreamcore release — so matching only the current
  * id would make "talk to the butler" silently resolve to nothing on exactly the
  * installs that have not upgraded yet.
  */

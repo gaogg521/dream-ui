@@ -3,7 +3,7 @@
 > **看图 / 自定义网关专用交接。**  
 > **本次上游同步的完整功能与 BUG 清单**见 [`session-2026-07-19-upstream-sync-changelog.zh-CN.md`](session-2026-07-19-upstream-sync-changelog.zh-CN.md)。  
 > 作战过程见 [`session-2026-07-18-upstream-sync-v2137-handoff.zh-CN.md`](session-2026-07-18-upstream-sync-v2137-handoff.zh-CN.md)。  
-> 仓库根：`D:\aionui-m0`（`1oneUI` / `1oneCore` / `aionrs-local`）。
+> 仓库根：`D:\旧中转目录`（`1oneUI` / `1oneCore` / `旧引擎本地检出`）。
 
 ---
 
@@ -12,7 +12,7 @@
 | 项                                             | 状态                                          | 说明                                                                  |
 | ---------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- |
 | 自定义 LiteLLM 网关下 **Kimi K2.6** 看图被剥图 | ✅ 已修；**✅ 用户验收通过（2026-07-19 晚）** | LiteLLM + `kimi-k2-6` 贴图可识图；见 §3                               |
-| 重编并嵌入 `aioncore.exe`（含上述修复）        | ✅                                            | 看图归一化约 **21:45**；品牌技能约 **22:20**；与对应 release 哈希一致 |
+| 重编并嵌入 `dreamcore.exe`（含上述修复）       | ✅                                            | 看图归一化约 **21:45**；品牌技能约 **22:20**；与对应 release 哈希一致 |
 | DeepSeek V4 Flash / MiniMax M2.7「多模态」诉求 | ❌ **不应加白名单**                           | 官方为纯文本，见 §4                                                   |
 | 上游同步合主 / push / 出包                     | 见 07-18 清单                                 | 本日未再做 `dist:win`                                                 |
 
@@ -45,19 +45,19 @@
 ```
 1oneUI 附件
   → 1oneCore resolve_image_input_capability(provider, base_url, model)
-  → aionrs project_image_input：仅 ImageInputCapability::Supported 才保留图片
+  → dream-engine project_image_input：仅 ImageInputCapability::Supported 才保留图片
   → Unknown / 未 Supported → 剥离图片，换成占位文本
   → 模型「看不见图」
 ```
 
 关键代码：
 
-| 层                        | 路径                                                                                |
-| ------------------------- | ----------------------------------------------------------------------------------- |
-| 能力解析                  | `1oneCore/crates/aionui-ai-agent/src/capability/image_input.rs`                     |
-| 白名单 JSON（编译期嵌入） | `1oneCore/crates/aionui-ai-agent/assets/model-capabilities/image_input_models.json` |
-| 说明                      | `.../assets/model-capabilities/README.md`                                           |
-| 剥图                      | `aionrs-local/crates/aion-agent/src/engine.rs`（`project_image_input`）             |
+| 层                        | 路径                                                                                    |
+| ------------------------- | --------------------------------------------------------------------------------------- |
+| 能力解析                  | `1oneCore/crates/dream-core-ai-agent/src/capability/image_input.rs`                     |
+| 白名单 JSON（编译期嵌入） | `1oneCore/crates/dream-core-ai-agent/assets/model-capabilities/image_input_models.json` |
+| 说明                      | `.../assets/model-capabilities/README.md`                                               |
+| 剥图                      | `旧引擎本地检出/crates/dream-engine-agent/src/engine.rs`（`project_image_input`）       |
 
 **上游设计**：按 **API root + 模型 ID** 正向前白名单；匹配不上 → `Unknown` → fail-closed 剥图。  
 自定义网关域名 **不在** catalog 的 `api` 列表里 → 以前一律 `Unknown`。  
@@ -90,7 +90,7 @@
 
 ### 3.2 测试
 
-`cargo test -p aionui-ai-agent --lib image_input` → **11 passed**（含自定义网关 + 横杠别名用例）。
+`cargo test -p dream-core-ai-agent --lib image_input` → **11 passed**（含自定义网关 + 横杠别名用例）。
 
 注意：fixture 里 openrouter 的 `models: []` 时，**已知 aggregator + 空列表** 仍对裸 `kimi-k2.6` 返回 `Unknown`（不按模型名跨 provider 瞎放）。真实嵌入 catalog 里 openrouter 有 `moonshotai/kimi-k2.6`，basename 匹配后官方 OpenRouter 会 Supported。
 
@@ -98,15 +98,15 @@
 
 ```powershell
 # 改了 Core 能力代码后必须重编；dev 跑的是 bundled exe
-D:\aionui-m0\scripts\backend-rebuild.ps1
+D:\旧中转目录\scripts\backend-rebuild.ps1
 ```
 
 注意：
 
-- 若 Electron / `aioncore.exe` 占用文件，`prepareAioncore.js` 可能 EPERM 或卡在 `managed-resources`。
+- 若 Electron / `dreamcore.exe` 占用文件，`prepareDreamcore.js` 可能 EPERM 或卡在 `managed-resources`。
 - 可先停进程再编；必要时直接 `Copy-Item`  
-  `1oneCore\target\release\aioncore.exe` →  
-  `1oneUI\resources\bundled-aioncore\win32-x64\aioncore.exe`  
+  `1oneCore\target\release\dreamcore.exe` →  
+  `1oneUI\resources\bundled-dreamcore\win32-x64\dreamcore.exe`  
   并用 SHA256 核对一致。
 - **改完代码未重编 = 桌面仍跑旧后端**，看图修复不会生效。
 
@@ -133,23 +133,23 @@ D:\aionui-m0\scripts\backend-rebuild.ps1
 
 同步目标大致已合主线（详见 07-18 文档进度表）。本日额外相关点：
 
-| 仓         | 相关 tip / 状态                                                                                                  |
-| ---------- | ---------------------------------------------------------------------------------------------------------------- |
-| aionrs     | `master` / `sync-v025` @ `78672b3`（v0.2.5 + #230 流诊断 + fork 补丁）                                           |
-| 1oneCore   | `0.1.48-one.1`；migration **026–029**；看图 `357bbbf3` + 品牌 `9504fa47`（`sync-v0148`）                         |
-| 1oneUI     | 内容对齐上游 v2.1.37；产品号仍 **2.1.46**；技能详情/批量已移植进 fork SkillsHub；`aioncoreVersion=v0.1.48-one.1` |
-| 企业铁律   | Router / SettingsSider / `one-*` / capabilities+企业 tab → 仍 `--ours`                                           |
-| 企业 stash | `1oneCore` 可能仍有 `stash@{0}: wip-enterprise-before-sync-v0148`（接手时确认）                                  |
+| 仓           | 相关 tip / 状态                                                                                                   |
+| ------------ | ----------------------------------------------------------------------------------------------------------------- |
+| dream-engine | `master` / `sync-v025` @ `78672b3`（v0.2.5 + #230 流诊断 + fork 补丁）                                            |
+| 1oneCore     | `0.1.48-one.1`；migration **026–029**；看图 `357bbbf3` + 品牌 `9504fa47`（`sync-v0148`）                          |
+| 1oneUI       | 内容对齐上游 v2.1.37；产品号仍 **2.1.46**；技能详情/批量已移植进 fork SkillsHub；`dreamcoreVersion=v0.1.48-one.1` |
+| 企业铁律     | Router / SettingsSider / `one-*` / capabilities+企业 tab → 仍 `--ours`                                            |
+| 企业 stash   | `1oneCore` 可能仍有 `stash@{0}: wip-enterprise-before-sync-v0148`（接手时确认）                                   |
 
 ---
 
 ## 6. 后续 AI 建议步骤
 
 1. ~~**Commit** 1oneCore 三文件看图修复~~ → **已提交 `357bbbf3`**（push / 合 `one-main` 另议）。
-2. 确认 bundled `aioncore.exe` ≥ 含看图+品牌的 release（约 22:20+）。
+2. 确认 bundled `dreamcore.exe` ≥ 含看图+品牌的 release（约 22:20+）。
 3. ~~`kimi-k2-6` 贴图验收~~ → **已通过（2026-07-19 晚）**；勿用 deepseek-v4-flash / minimax-2-7 验看图。
 4. 若日后又剥图：查实际 `base_url` + `model` 是否进 `resolve_image_input_capability`，以及是否仍跑旧 exe。
-5. 出包前：发布连锁 aionrs tip → Core release → prepare/embed → `dist:win`。
+5. 出包前：发布连锁 dream-engine tip → Core release → prepare/embed → `dist:win`。
 6. 不要为「用户以为多模态」把 DeepSeek V4 Flash / MiniMax M2.7 写进白名单，除非官方文档改口并实测 `image_url` 成功。
 
 ---
@@ -157,13 +157,13 @@ D:\aionui-m0\scripts\backend-rebuild.ps1
 ## 7. 相关路径速查
 
 ```
-D:\aionui-m0\1oneCore\crates\aionui-ai-agent\src\capability\image_input.rs
-D:\aionui-m0\1oneCore\crates\aionui-ai-agent\src\capability\image_input_test.rs
-D:\aionui-m0\1oneCore\crates\aionui-ai-agent\assets\model-capabilities\image_input_models.json
-D:\aionui-m0\aionrs-local\crates\aion-agent\src\engine.rs
-D:\aionui-m0\scripts\backend-rebuild.ps1
-D:\aionui-m0\1oneUI\resources\bundled-aioncore\win32-x64\aioncore.exe
-D:\aionui-m0\1oneUI\docs\guides\session-2026-07-18-upstream-sync-v2137-handoff.zh-CN.md
+D:\旧中转目录\1oneCore\crates\dream-core-ai-agent\src\capability\image_input.rs
+D:\旧中转目录\1oneCore\crates\dream-core-ai-agent\src\capability\image_input_test.rs
+D:\旧中转目录\1oneCore\crates\dream-core-ai-agent\assets\model-capabilities\image_input_models.json
+D:\旧中转目录\旧引擎本地检出\crates\dream-engine-agent\src\engine.rs
+D:\旧中转目录\scripts\backend-rebuild.ps1
+D:\旧中转目录\1oneUI\resources\bundled-dreamcore\win32-x64\dreamcore.exe
+D:\旧中转目录\1oneUI\docs\guides\session-2026-07-18-upstream-sync-v2137-handoff.zh-CN.md
 ```
 
 对话 transcript（本会话）：`agent-transcripts/7845196b-6e36-40dd-b061-a770b00f8cca`。

@@ -20,19 +20,19 @@ commit:1oneUI `b5f24d838`。
 
 ---
 
-## 2. `dist:win` 打包必须走本地 aioncore,否则去 GitHub Release 下载会失败
+## 2. `dist:win` 打包必须走本地 dreamcore,否则去 GitHub Release 下载会失败
 
 `npm run dist:win` 直接跑,在 `electron-builder` 之前就挂:
 
 ```
-❌ Build failed: aioncore binary not found for win32-x64 (tag: v0.1.48-one.1)
+❌ Build failed: dreamcore binary not found for win32-x64 (tag: v0.1.48-one.1)
 ```
 
-**根因**:打包链 `scripts/build-with-builder.js` → `prepare-aioncore.js` 默认按 `package.json` 的 `aioncoreVersion` 去 **GitHub Release 下载** aioncore 二进制;私有 fork 那个 tag 通常没有对应平台产物。
+**根因**:打包链 `scripts/build-with-builder.js` → `prepare-dreamcore.js` 默认按 `package.json` 的 `dreamcoreVersion` 去 **GitHub Release 下载** dreamcore 二进制;私有 fork 那个 tag 通常没有对应平台产物。
 
-**修法**:`prepare-aioncore.js` 有优先级 0 的本地分支——设 `AIONUI_BACKEND_LOCAL_PATH` 指向本地编译的 `1oneCore/target/release/aioncore.exe` 即可跳过下载。日志出现 `Bundled aioncore prepared: ... [source=local]` 即走对。
+**修法**:`prepare-dreamcore.js` 有优先级 0 的本地分支——设 `DREAM_BACKEND_LOCAL_PATH` 指向本地编译的 `1oneCore/target/release/dreamcore.exe` 即可跳过下载。日志出现 `Bundled dreamcore prepared: ... [source=local]` 即走对。
 
-已封装成 `D:\aionui-m0\scripts\package-win.ps1`(自动设好该变量;`-Rebuild` 参数可先 `cargo build --release` 再打包)。文档已同步进 [`fork-dev-onboarding.zh-CN.md`](fork-dev-onboarding.zh-CN.md)「打 Windows 安装包」段与 [`../../../scripts/README.md`](../../../scripts/README.md)。
+已封装成 `D:\旧中转目录\scripts\package-win.ps1`(自动设好该变量;`-Rebuild` 参数可先 `cargo build --release` 再打包)。文档已同步进 [`fork-dev-onboarding.zh-CN.md`](fork-dev-onboarding.zh-CN.md)「打 Windows 安装包」段与 [`../../../scripts/README.md`](../../../scripts/README.md)。
 
 commit:1oneUI `2a0849f12`。
 
@@ -40,9 +40,9 @@ commit:1oneUI `2a0849f12`。
 
 ---
 
-## 3. aionrs 截断续写修复的 dev 真机实测(两轮,发现一个待议的横幅文案问题)
+## 3. dream-engine 截断续写修复的 dev 真机实测(两轮,发现一个待议的横幅文案问题)
 
-07-20 那轮把 aionrs 的输出截断从「撞上限补救一轮就放弃」改成「最多 12 轮有界续写」(`aionrs` commit `9fa951e`,`MAX_TRUNCATION_CONTINUATIONS=12`)。本轮在 dev 环境用 CDP 直连渲染进程,发「写一段 1000 行的 Python 代码」实测了两次(1ONE CLI + deepseek-v4-flash):
+07-20 那轮把 dream-engine 的输出截断从「撞上限补救一轮就放弃」改成「最多 12 轮有界续写」(`dream-engine` commit `9fa951e`,`MAX_TRUNCATION_CONTINUATIONS=12`)。本轮在 dev 环境用 CDP 直连渲染进程,发「写一段 1000 行的 Python 代码」实测了两次(1ONE CLI + deepseek-v4-flash):
 
 - **第一次**:12 轮「思考完成」跑满,拼出 551+ 行代码,**无任何截断横幅**——在 12 轮预算内收尾。
 - **第二次**(全新 dev 环境):同样跑满 12 轮,但仍未写完,耗尽预算后弹出横幅——但确认是**新文案**:
@@ -53,7 +53,7 @@ commit:1oneUI `2a0849f12`。
 
 **结论**:修复确实生效(12× 续写预算 + 旧文案根除),但截断是**大幅缓解、不是消灭**——真正超长输出仍可能耗尽 12 轮预算。
 
-**⚠️ 待议问题(未修)**:新横幅建议用户「在模型设置里调高 max output tokens」——但这个设置项①被上游 #641 改成运行时恒不读,②今天 §4 已把它从设置 UI 彻底删除。这条建议现在**指向一个不存在的入口**,属误导性文案,需要动 aionrs fork(改文案 → 重新 pin commit → 重编 → 重打包),本轮判定为独立问题,留给下一轮。
+**⚠️ 待议问题(未修)**:新横幅建议用户「在模型设置里调高 max output tokens」——但这个设置项①被上游 #641 改成运行时恒不读,②今天 §4 已把它从设置 UI 彻底删除。这条建议现在**指向一个不存在的入口**,属误导性文案,需要动 dream-engine fork(改文案 → 重新 pin commit → 重编 → 重打包),本轮判定为独立问题,留给下一轮。
 
 ---
 
@@ -61,11 +61,11 @@ commit:1oneUI `2a0849f12`。
 
 核实结果(`git fetch upstream` 三仓):
 
-| 仓             | 上游最新     | 我们基线         | 结论                    |
-| -------------- | ------------ | ---------------- | ----------------------- |
-| aionrs         | v0.2.6(main) | v0.2.6 `b2b7bde` | 已是最新,0 落后         |
-| AionCore(后端) | v0.1.49      | ≈v0.1.48+9       | 11 提交落后(含已消化的) |
-| AionUi(前端)   | v2.1.38      | ≈v2.1.37+5       | 6 提交落后              |
+| 仓               | 上游最新     | 我们基线         | 结论                    |
+| ---------------- | ------------ | ---------------- | ----------------------- |
+| dream-engine     | v0.2.6(main) | v0.2.6 `b2b7bde` | 已是最新,0 落后         |
+| dream-core(后端) | v0.1.49      | ≈v0.1.48+9       | 11 提交落后(含已消化的) |
+| dream-ui(前端)   | v2.1.38      | ≈v2.1.37+5       | 6 提交落后              |
 
 > 注:仓库里有个 `v2.1.43` tag 容易误判为上游进度——那是我们 fork 自己的历史 tag(07-14 中国时区打的),不在上游 `main` 上,上游真实进度是 v2.1.38。
 
@@ -118,8 +118,8 @@ commit:1oneUI `f788dd6ee`(rebrand)+ `8598e0777`(bump 2.1.48)。品牌红线文�
 
 ### 6.1 已完成
 
-- ✅ 后端重编到 **aioncore v0.1.49-one.1**(1oneCore 并发提交把版本 pin 到 0.1.49 并加了新的助手提示词内容,已用 `package-win.ps1 -Rebuild` 重编 + 重打包对齐,不是用旧的 0.1.48 exe 发布)。
-- ✅ Windows 安装包 `out/One-Work-2.1.48-win-x64.exe`(317MB)+ `out/latest.yml` 已生成,内嵌 aioncore 版本核对无误。
+- ✅ 后端重编到 **dreamcore v0.1.49-one.1**(1oneCore 并发提交把版本 pin 到 0.1.49 并加了新的助手提示词内容,已用 `package-win.ps1 -Rebuild` 重编 + 重打包对齐,不是用旧的 0.1.48 exe 发布)。
+- ✅ Windows 安装包 `out/One-Work-2.1.48-win-x64.exe`(317MB)+ `out/latest.yml` 已生成,内嵌 dreamcore 版本核对无误。
 - ✅ GitHub Release `v2.1.48` 已创建(带上述两个产物)。
 
 ### 6.2 `release-distribute.yml` 修的三个真 bug(该工作流此前从未真正跑通过)
@@ -139,15 +139,15 @@ commit(1oneUI,均已 push):`c56ae0254`、`32718bca6`、`09b6d87af`、`9cd32e867`
 
 发现 `releases/2.1.48/` 下当时已经有一份 `latest.yml`(332B,16:34 上传,CI 卡死前小文件先传完了)但没有 exe(331MB 大文件传到一半 runner 就没响应了)。本地补传:
 
-| 本地文件(`D:\aionui-m0\1oneUI\out\`) | 目标路径                                       | 状态                               |
-| ------------------------------------ | ---------------------------------------------- | ---------------------------------- |
-| `One-Work-2.1.48-win-x64.exe`        | `releases/2.1.48/One-Work-2.1.48-win-x64.exe`  | ✅ 已传(331,833,280 字节,~23MiB/s) |
-| `latest.yml`                         | `releases/2.1.48/latest.yml`(版本存档)         | ✅ 已传(覆盖)                      |
-| `latest.yml`                         | `releases/latest.yml`(根目录,App 实际轮询位置) | ✅ 已传                            |
+| 本地文件(`D:\旧中转目录\1oneUI\out\`) | 目标路径                                       | 状态                               |
+| ------------------------------------- | ---------------------------------------------- | ---------------------------------- |
+| `One-Work-2.1.48-win-x64.exe`         | `releases/2.1.48/One-Work-2.1.48-win-x64.exe`  | ✅ 已传(331,833,280 字节,~23MiB/s) |
+| `latest.yml`                          | `releases/2.1.48/latest.yml`(版本存档)         | ✅ 已传(覆盖)                      |
+| `latest.yml`                          | `releases/latest.yml`(根目录,App 实际轮询位置) | ✅ 已传                            |
 
 两处均设**公开读**。已用 `curl` 验证:`releases/latest.yml` 内容正确;`releases/2.1.48/One-Work-2.1.48-win-x64.exe` 返回 `200 OK` 且 `Content-Length: 331833280` 与本地文件一致。**v2.1.48 发布链路已走通,公开可下载。**
 
-⚠️ 用于本次上传的 Tencent COS SecretId/SecretKey 由用户放在本地明文文件 `D:\aionui-m0\cos.txt` 提供——不在任何 git 仓库内(`D:\aionui-m0` 根目录本身不是 git 仓库),但建议用完后自行删除或转移到密码管理器,别长期明文躺在磁盘上。
+⚠️ 用于本次上传的 Tencent COS SecretId/SecretKey 由用户放在本地明文文件 `D:\旧中转目录\cos.txt` 提供——不在任何 git 仓库内(`D:\旧中转目录` 根目录本身不是 git 仓库),但建议用完后自行删除或转移到密码管理器,别长期明文躺在磁盘上。
 
 **之后可选**(不阻塞发布,留给下一轮):给 `release-distribute.yml` 的上传步骤加 `timeout-minutes`,避免下次卡住又是几个小时静默无响应;如果 GH Actions 到 COS 的网络路径本身不稳定,长期看手动/本地上传可能比 CI 更可靠,值得评估要不要保留这条 CI 路径,或者把本地 `aws configure` 那套流程封装成脚本方便下次直接复用。
 
@@ -165,8 +165,8 @@ commit(1oneUI,均已 push):`c56ae0254`、`32718bca6`、`09b6d87af`、`9cd32e867`
 
 ### 8.1 ⚠️ 时间线提醒:§6.1 已打好的安装包大概率不含这次修复
 
-- 那个修复对应的 1oneCore 提交是 `chore: 对齐 aionrs 到修复长 Write 工具调用截断的新 commit`(`700e7f75`,**20:22:46** 落地,对齐 aionrs `master` 到 `33c2bd2`)。
-- 而本文档 §6.1 的后端重编"到 aioncore v0.1.49-one.1"所依赖的版本 bump 提交(`6054185e`)是 **15:30:03** 落地的,早于 `700e7f75` 将近 5 小时。
+- 那个修复对应的 1oneCore 提交是 `chore: 对齐 dream-engine 到修复长 Write 工具调用截断的新 commit`(`700e7f75`,**20:22:46** 落地,对齐 dream-engine `master` 到 `33c2bd2`)。
+- 而本文档 §6.1 的后端重编"到 dreamcore v0.1.49-one.1"所依赖的版本 bump 提交(`6054185e`)是 **15:30:03** 落地的,早于 `700e7f75` 将近 5 小时。
 - 也就是说,`out/One-Work-2.1.48-win-x64.exe` 这个已经打好、已经建了 GitHub Release `v2.1.48` 的安装包,**大概率是在 `700e7f75` 落地之前编译的**,不含这次工具调用截断恢复的修复。
 
 **接手者需要判断**:如果 `v2.1.48` 这个版本号还要正式对外发布(即完成 §6.3 的 COS 上传),建议先确认/重新走一遍 `package-win.ps1 -Rebuild` 拿到含 `700e7f75` 的最新 1oneCore 构建,而不是直接把已经打好的旧产物传上去——否则用户报的这个"长文件截断丢失"bug 会在这次发布里原样带出去。如果不追求这次发布必须含这条修复,也可以照原计划先发,把这条修复留到下一版本号。
@@ -175,5 +175,5 @@ commit(1oneUI,均已 push):`c56ae0254`、`32718bca6`、`09b6d87af`、`9cd32e867`
 
 用 kimi-k3(慢速重推理模型)测"写3000行"超长单文件请求时,发现一个**不同**的问题:请求跑到约10分钟量级时,网关连接直接 EOF 断开(未走到 `[DONE]`),导致整个 agent 运行静默以"finished"收场——无 ERROR 日志、无可见报错、什么也没写。推测是网关(Kong)自己的连接超时,与这次修的"截断后静默假装写完"是不同机制,详见 `session-2026-07-21-truncated-tool-call-recovery.zh-CN.md` §2。下一轮待办:
 
-1. 检查 `aion-providers::transport.rs` 的 `reqwest::Client` 有没有设连接/读超时。
+1. 检查 `dream-engine-providers::transport.rs` 的 `reqwest::Client` 有没有设连接/读超时。
 2. "连接中途断开、没走到 `[DONE]`"这类情况现在会静默吞掉,应该和这次修的截断 bug 一样给用户可见报错。

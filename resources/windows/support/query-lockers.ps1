@@ -81,7 +81,7 @@ try {
       'onework.exe',
       'Uninstall onework.exe',
       // Historical exe names, kept so upgrade-time lock detection still sees
-      // processes left over from older builds.
+      // legacy processes left over from older builds.
       'One Work.exe',
       'Uninstall One Work.exe',
       '1onecode.exe',

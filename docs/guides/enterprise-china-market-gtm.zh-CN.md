@@ -119,11 +119,11 @@ License 离线激活（Ed25519 签名码）做得不错，但缺：POC/试用期
 
 ### 本轮修掉的三个真缺口
 
-| 缺口                                                                                                                                                                                                           | 修法                                                                                                                                                                                     |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **客户端模式下整套管控空转**：`/api/one/billing` 不是 governance 路径，precheck/用量打的是员工本机 aioncore，而成员资格只存在于服务器 → `resolve_enterprise_id` 恒为 `None` → 一律放行、用量写进没人看的本地库 | 抽出 `process/services/governanceEndpoint.ts`（原来只服务团队知识库），媒体管控改走它；同时把 `/api/one/billing` 加进 `GOVERNANCE_PATH_PREFIXES`，企业后台的订阅与用量页也不再读本机空表 |
-| **数字员工 / 定时任务 / 团队 / 存量会话用不了媒体**：后端两个 agent 工厂都有 `if !selected \|\| row.builtin { continue }`，内置 MCP 只能靠前端 `withBuiltinMediaMcp` 写进会话快照，而它只挂在新建会话页        | 新建 `factory/session_mcp.rs` 收口两个工厂共用的选择规则；媒体这一个内置 MCP 跟着自己的 `enabled` 走，与前端同一条规则。**刻意只放这一个**，否则每个 agent 都会拿到 PDF 导出与团队知识库 |
-| **审计看不见媒体**：`list_agent_audit` 的 detail 只抽 command/path/url，不抽 prompt；发送框直发那条路不产生任何 message                                                                                        | detail 补 `$.args.prompt` / `$.input.prompt`；用量上报补 `conversationId`                                                                                                                |
+| 缺口                                                                                                                                                                                                            | 修法                                                                                                                                                                                     |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **客户端模式下整套管控空转**：`/api/one/billing` 不是 governance 路径，precheck/用量打的是员工本机 dreamcore，而成员资格只存在于服务器 → `resolve_enterprise_id` 恒为 `None` → 一律放行、用量写进没人看的本地库 | 抽出 `process/services/governanceEndpoint.ts`（原来只服务团队知识库），媒体管控改走它；同时把 `/api/one/billing` 加进 `GOVERNANCE_PATH_PREFIXES`，企业后台的订阅与用量页也不再读本机空表 |
+| **数字员工 / 定时任务 / 团队 / 存量会话用不了媒体**：后端两个 agent 工厂都有 `if !selected \|\| row.builtin { continue }`，内置 MCP 只能靠前端 `withBuiltinMediaMcp` 写进会话快照，而它只挂在新建会话页         | 新建 `factory/session_mcp.rs` 收口两个工厂共用的选择规则；媒体这一个内置 MCP 跟着自己的 `enabled` 走，与前端同一条规则。**刻意只放这一个**，否则每个 agent 都会拿到 PDF 导出与团队知识库 |
+| **审计看不见媒体**：`list_agent_audit` 的 detail 只抽 command/path/url，不抽 prompt；发送框直发那条路不产生任何 message                                                                                         | detail 补 `$.args.prompt` / `$.input.prompt`；用量上报补 `conversationId`                                                                                                                |
 
 ### ⚠️ 真机验证抓出来的两个后续缺陷（都已修）
 
@@ -132,7 +132,7 @@ License 离线激活（Ed25519 签名码）做得不错，但缺：POC/试用期
 1. **agent 发起的生成，账本里仍然 `conv=None`。** 原因写在 `startMediaJob` 自己的
    注释里——"渲染层知道自己的会话，MCP 调用方不知道"。媒体 MCP 是 stdio 子进程，
    除 env 无从得知服务哪个会话，于是**最常见的那条路恰好是留不下踪迹的那条**。
-   修法：照 `AIONUI_MEDIA_WORKSPACE_DIR` 加 `AIONUI_MEDIA_CONVERSATION_ID`。
+   修法：照 `DREAM_MEDIA_WORKSPACE_DIR` 加 `DREAM_MEDIA_CONVERSATION_ID`。
 2. **走 repo 行进会话时，媒体 env 一个都没注入。** 媒体 env 的注入原本只写在
    _快照_ 路径，而本轮 `session_mcp` 修复让媒体 MCP 是以 **repo 行**身份进会话的。
    后果是工具能用但两件事都丢：产物落兜底目录、用量归因为空。⚠️ 我一开始把
@@ -178,10 +178,10 @@ per-conversation 上下文**都数一遍——旧路径上"顺手就有"的东�
 **放哪**：`one-devops`。三个既有 registry 已带 `scope`/`team_id`/`visibility`
 （迁移 009），新增 `one_provider_registry` 与它们同构，`member_visibility_where()`
 与 `validate_resource_scope()` 原样复用。加密不构成割裂——`encrypt_string` /
-`decrypt_string` 在 `aionui-common`（基础层），任何 crate 都能用，key 照
+`decrypt_string` 在 `dream-core-common`（基础层），任何 crate 都能用，key 照
 `ProviderService` 的既有方式从 `data_secret` 派生后注入。
 
-**代理为什么是路径透传而不是协议感知**：`aionui-codex-bridge` 是协议感知的
+**代理为什么是路径透传而不是协议感知**：`dream-core-codex-bridge` 是协议感知的
 （解成 `LlmEvent` 再重编码）。媒体一家就说三种互不兼容的形状（Form A
 `/v1/images/generations`、Form B chat、Form C 的 DashScope/Ark 异步任务 API），
 协议感知要为每种写一遍，且厂商加第四种就崩。改为把 channel id 之后的路径原样转发：
@@ -208,14 +208,14 @@ per-member 归因（正是 T4 内容审计要的）。**只存哈希**。
 
 ### 已落地（Stage A，服务端）
 
-| 内容                                                                                                                                                                    | 位置                                                                       |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 迁移 `one_provider_registry` + `one_provider_channel_tokens`                                                                                                            | `one-devops/migrations/010_provider_registry.sql`                          |
-| registry CRUD + ACL + 加密 + token 签发/撤销/解析                                                                                                                       | `one-devops/src/provider_channel.rs`                                       |
-| 路径透传代理（请求与响应双向流式，SSE 不缓冲；64MB body 上限给图生图的 data-URI）                                                                                       | `one-devops/src/model_proxy.rs`                                            |
-| 端点 `GET/POST /api/one/devops/model-channels`、`DELETE .../{id}`、`POST .../{id}/token`                                                                                | `one-devops/src/routes.rs`                                                 |
-| 代理挂在 CSRF 层之外（调用方是 agent 进程不是浏览器，同 Codex bridge 的既有安排）                                                                                       | `aionui-app/router/routes.rs`                                              |
-| **移除成员时连带撤销其 channel token**——走新 trait `one_org::CredentialRevoker`（同层不能直接依赖），接在 `invalidate_user_tokens` 里，所以每条杀会话的路径都会杀 token | `one-org/src/credential_revoker.rs`、`aionui-app` 的 `ModelChannelRevoker` |
+| 内容                                                                                                                                                                    | 位置                                                                           |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 迁移 `one_provider_registry` + `one_provider_channel_tokens`                                                                                                            | `one-devops/migrations/010_provider_registry.sql`                              |
+| registry CRUD + ACL + 加密 + token 签发/撤销/解析                                                                                                                       | `one-devops/src/provider_channel.rs`                                           |
+| 路径透传代理（请求与响应双向流式，SSE 不缓冲；64MB body 上限给图生图的 data-URI）                                                                                       | `one-devops/src/model_proxy.rs`                                                |
+| 端点 `GET/POST /api/one/devops/model-channels`、`DELETE .../{id}`、`POST .../{id}/token`                                                                                | `one-devops/src/routes.rs`                                                     |
+| 代理挂在 CSRF 层之外（调用方是 agent 进程不是浏览器，同 Codex bridge 的既有安排）                                                                                       | `dream-core-app/router/routes.rs`                                              |
+| **移除成员时连带撤销其 channel token**——走新 trait `one_org::CredentialRevoker`（同层不能直接依赖），接在 `invalidate_user_tokens` 里，所以每条杀会话的路径都会杀 token | `one-org/src/credential_revoker.rs`、`dream-core-app` 的 `ModelChannelRevoker` |
 
 **测试 15 条 = 11 单测 + 4 条打真实上游服务器的端到端**。最要命的那条是
 `the_real_credential_is_never_readable_through_any_listing`——把列表序列化后逐字节
@@ -232,9 +232,9 @@ per-member 归因（正是 T4 内容审计要的）。**只存哈希**。
 
 | 内容                                                                                                                                               | 位置                                                                                    |
 | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| 迁移 041：`providers` 加 `managed_by`（NULL=自配、`'enterprise'`=下发）                                                                            | `aionui-db/migrations/041_provider_managed_by.sql`                                      |
-| 成员端物化：按渠道 id 派生 provider id（同步是 upsert 不堆行）、authoritative 对账、**个人 provider 任何情况都不覆盖**（同 id 只记 conflict 跳过） | `aionui-system/src/managed_provider.rs`                                                 |
-| 托管行的 update/delete 直接拒绝（同步下轮本来就会还原，放行只会产生自己回滚的改动）                                                                | `aionui-system/src/provider.rs`                                                         |
+| 迁移 041：`providers` 加 `managed_by`（NULL=自配、`'enterprise'`=下发）                                                                            | `dream-core-db/migrations/041_provider_managed_by.sql`                                  |
+| 成员端物化：按渠道 id 派生 provider id（同步是 upsert 不堆行）、authoritative 对账、**个人 provider 任何情况都不覆盖**（同 id 只记 conflict 跳过） | `dream-core-system/src/managed_provider.rs`                                             |
+| 托管行的 update/delete 直接拒绝（同步下轮本来就会还原，放行只会产生自己回滚的改动）                                                                | `dream-core-system/src/provider.rs`                                                     |
 | 管理员后台「模型渠道」页：增删改 + 作用范围；**密钥永不回显**，编辑留空即保留                                                                      | `renderer/pages/enterprise/components/ModelChannelsTab.tsx`                             |
 | `syncTeamModelChannels()` 挂上既有 5 分钟定时；退出企业时连带清掉                                                                                  | `renderer/utils/enterprise/teamSkillSync.ts`、`hooks/enterprise/useTeamResourceSync.ts` |
 | 模型设置页「企业下发」标签 + 隐藏编辑/删除入口                                                                                                     | `ModelModalContent.tsx`                                                                 |
@@ -328,7 +328,7 @@ stub。它们不在任何一个签单路径上，做完也不会让任何客户�
 `"Forbidden."`（防泄漏沙箱路径等内部信息，`error.rs` 里有测试锁死）——扫描器
 一直生成着正确的句子，丢失发生在 HTTP 边界上，单测照不出来。同一个吞噬也压着
 P1-2 的预算与 allowlist 拒绝，一并修了。现在三处拒绝共用
-`aionui_conversation::PolicyDenial`：稳定 `code` + 英文兜底 + 参数（规则名、
+`dream_core_conversation::PolicyDenial`：稳定 `code` + 英文兜底 + 参数（规则名、
 模型名），前端按 code 渲染 13 语言文案、拿不到参数才回落英文。
 ⚠️ **只有已知的策略变体走可见文案**——内部错误（DB 出错之类）仍然只说
 "策略无法校验"，闸门照旧 fail closed。在 message 被抹掉的年代这不重要，
@@ -354,10 +354,10 @@ P1-2 的预算与 allowlist 拒绝，一并修了。现在三处拒绝共用
 
 | 层                                                     | 位置                                                              |
 | ------------------------------------------------------ | ----------------------------------------------------------------- |
-| 扫描器（关键词/正则/5 个内置模式，含校验位与数字边界） | `1oneCore` `aionui-common/src/dlp.rs`                             |
+| 扫描器（关键词/正则/5 个内置模式，含校验位与数字边界） | `1oneCore` `dream-core-common/src/dlp.rs`                         |
 | 规则与命中的存储、CRUD、下发、上报                     | `1oneCore` `one-devops`（迁移 011 + `dlp_service.rs` + 4 个端点） |
-| 本机规则缓存与命中缓冲                                 | `1oneCore` `aionui-system/src/content_inspection.rs`              |
-| 接入发送路径（排在计费闸门**之前**）                   | `1oneCore` `aionui-conversation::ContentInspector`                |
+| 本机规则缓存与命中缓冲                                 | `1oneCore` `dream-core-system/src/content_inspection.rs`          |
+| 接入发送路径（排在计费闸门**之前**）                   | `1oneCore` `dream-core-conversation::ContentInspector`            |
 | 下行/上行同步                                          | `1oneUI` `teamSkillSync.ts::syncContentInspection`                |
 | 企业后台（规则 + 命中同屏）                            | `1oneUI` `ContentInspectionTab.tsx`                               |
 
@@ -417,7 +417,7 @@ P1-2 的预算与 allowlist 拒绝，一并修了。现在三处拒绝共用
 ——与飞书 union_id 的真实格式一致，说明字段映射猜对了。**形状假设成立，无需
 校正。**
 
-dev 可用 `AIONUI_FEISHU_BASE_URL` 把拉取指向替身服务器；**刻意做成环境变量而非
+dev 可用 `DREAM_FEISHU_BASE_URL` 把拉取指向替身服务器；**刻意做成环境变量而非
 存储配置**——`parse_feishu_config` 把 `base_url` 挡在管理员可编辑配置之外是有意
 的，把它变成可保存设置等于让"公司凭据发往哪里"变成一次 API 调用能改的事。
 
@@ -427,7 +427,7 @@ dev 可用 `AIONUI_FEISHU_BASE_URL` 把拉取指向替身服务器；**刻意做
 | ------------------------------------------ | ------------------------------------------------------------------------------- |
 | 飞书批量拉取（分页 / 单次运行 token 缓存） | `1oneCore` `one-sso/src/providers/feishu.rs` + `directory.rs`                   |
 | 公司级镜像与对账、离职标记                 | `1oneCore` `one-enterprise`（迁移 `enterprise_003_directory` + `directory.rs`） |
-| 跨 crate seam                              | `one_sso::DirectorySink`，adapter 在 `aionui-app/router/routes.rs`              |
+| 跨 crate seam                              | `one_sso::DirectorySink`，adapter 在 `dream-core-app/router/routes.rs`          |
 | 调度循环（含闸门）                         | `one-sso` `start_directory_sync_scheduler`，在 `cmd_server.rs` 起               |
 | 企业后台「通讯录」页                       | `1oneUI` `DirectoryTab.tsx`                                                     |
 
@@ -458,7 +458,7 @@ dev 可用 `AIONUI_FEISHU_BASE_URL` 把拉取指向替身服务器；**刻意做
 的 `complete` 不变量同一条理由）；**没有新造"跨项目组移除"的权力**——那会让一个
 企业管理员能删掉自己从未加入的组里的人，爆炸半径远大于本阶段的收益。
 
-跨层用 `one_enterprise::SessionRevoker` trait + `aionui-app` 里的 adapter 委托
+跨层用 `one_enterprise::SessionRevoker` trait + `dream-core-app` 里的 adapter 委托
 `OrgService`（同层不能直接依赖，照 `EnterpriseSync` / `CredentialRevoker` 的既有
 安排）。「移出企业必须注销凭据」和「不在当前组时不得发项目组请求」两条都做过
 负向验证，并在隔离实例上用真实二进制跑通：离职列表带出三种形态（在本组 / 在别的组
@@ -481,7 +481,7 @@ dev 可用 `AIONUI_FEISHU_BASE_URL` 把拉取指向替身服务器；**刻意做
   地方"时原地更新而非删了重建（删了重建会丢成员的部门分配），也是一个通用的
   管理员能力，只是这一轮没做拖拽 UI，仅留 API。
 
-**三条不变量**（照抄 `aionui-system::managed_provider` 的既有安排）：只创建/
+**三条不变量**（照抄 `dream-core-system::managed_provider` 的既有安排）：只创建/
 更新/删除自己拥有的行（`source='directory'`）、按外部 id 匹配保证重跑不重复、
 删除范围限定在这次对账认定的集合内。**映射的根节点在本地永远是顶层部门**，
 不管它在上游自己的父节点是谁——只映射一个分支不该把分支以上的结构也拉进来。
@@ -490,7 +490,7 @@ dev 可用 `AIONUI_FEISHU_BASE_URL` 把拉取指向替身服务器；**刻意做
 `one_departments` 加 `source`/`directory_external_id` 两列；`one-enterprise`
 新增 `list_directory_departments` 读接口；跨层走 `one_org::DirectoryTreeSource`
 trait，但**没有**塞进 `OrgService` 的构造函数——因为 `one_enterprise_service`
-在 `aionui-app` 里构造得比 `one_org_service` 晚（它反过来要用 `one_org_service`
+在 `dream-core-app` 里构造得比 `one_org_service` 晚（它反过来要用 `one_org_service`
 撤销离职者会话），塞进构造函数会形成构造顺序死循环。改用 `OneOrgRouterState`
 级别的桥接（照抄已有的 `company_resolver` 那条路——它也是这么解决同款问题的）。
 
@@ -523,7 +523,7 @@ trait，但**没有**塞进 `OrgService` 的构造函数——因为 `one_enterp
 上限的东西）。原链条逐环核实过：
 
 超限 → `one-enterprise` 的 `reject_if_seat_full` 返回 `SeatLimitExceeded`
-→ `EnterpriseSyncAdapter` 只 `warn!` 然后吞掉（`aionui-app/router/routes.rs`）
+→ `EnterpriseSyncAdapter` 只 `warn!` 然后吞掉（`dream-core-app/router/routes.rs`）
 → 该用户**没有企业成员行** → `resolve_enterprise_id` 返回 `None`
 → `check_send_allowed` 第一行就 `Ok(())` 放行（`one-billing/service.rs`）。
 
@@ -615,7 +615,7 @@ Seat limit reached for the current plan"}`；`GET .../company/members` 的
 `usage_summary` 新增 `by_department` 桶（复用既有 `buckets()` 聚合助手，
 key 用 `COALESCE(department_id, 'unassigned')`）；两个新路由
 `PUT`/`GET /api/one/billing/department-budgets`，与既有 `model-control`
-同一套 `is_billing_admin` 门控。`aionui-app` 的 `billing_denial()` 新增
+同一套 `is_billing_admin` 门控。`dream-core-app` 的 `billing_denial()` 新增
 `DEPARTMENT_BUDGET_EXCEEDED` 映射分支。
 
 前端（1oneUI）：`BillingTab.tsx` 新增「部门预算」卡片（表格逐部门设上限、
@@ -722,27 +722,27 @@ promptContains 过滤均返回预期子集 → 移除企业成员关系后上报
 
 ## 六-7、T1 真正的服务端交付（2026-08-10 落地，方案见下）
 
-调研发现现状比预想的好得多：**不是从零架构，是补齐+打包**。`aioncore` 本身
+调研发现现状比预想的好得多：**不是从零架构，是补齐+打包**。`dreamcore` 本身
 对 Electron 没有硬依赖（可选 `--parent-pid`、真实优雅关闭、`/health`、
-启动自动迁移、完整多用户 JWT），`1oneUI/packages/web-cli`（`aionui-web`
+启动自动迁移、完整多用户 JWT），`1oneUI/packages/web-cli`（`dream-web`
 二进制）早就是一个零 Electron 依赖的独立 web 运行时——"后端脱离 Electron +
 浏览器可访问"这条链路本身已经存在且被 CI（`pack-web-cli.yml`）验证过，
 只是没被当成正式交付物包装成 Docker 镜像、写进部署文档。真正坏的只有
 `1oneUI/Dockerfile`（引用的构建脚本两个月前就被删除，从加进仓库那天起就
 没构建成功过，CI 也从未跑过 `docker build`）和 `docs/guides/deploy-server.md`
-（部署的是整个 Electron 桌面壳 + Xvfb，不是 `aioncore` 自己）。
+（部署的是整个 Electron 桌面壳 + Xvfb，不是 `dreamcore` 自己）。
 
 **方案范围**（完整方案见 `.claude/plans/snazzy-bubbling-frost.md`）：
 把单实例部署做扎实，**不是**把架构改成水平扩展的多租户 SaaS——那是完全
 不同量级的项目（换数据层到 Postgres、分布式限流、对象存储……），
-`crates/aionui-app/src/main.rs` 的 `DataDirInstanceGuard` 决定了当前数据层
+`crates/dream-core-app/src/main.rs` 的 `DataDirInstanceGuard` 决定了当前数据层
 （SQLite 单文件）从设计上就没打算支持多副本。
 
-### 阶段一：`aioncore` 运维硬化（1oneCore，已提交并真机验证）
+### 阶段一：`dreamcore` 运维硬化（1oneCore，已提交并真机验证）
 
 `--host`/`--port`/`--data-dir`/`--log-dir`/`--log-level` 全部支持
-`AIONUI_*` 环境变量回退（容器编排靠环境变量注入配置，不用再拼 entrypoint
-脚本传 argv）；新增 `AIONUI_LOG_JSON=1` 让 stdout 控制台层也输出 JSON，
+`DREAM_*` 环境变量回退（容器编排靠环境变量注入配置，不用再拼 entrypoint
+脚本传 argv）；新增 `DREAM_LOG_JSON=1` 让 stdout 控制台层也输出 JSON，
 方便容器日志采集直接解析结构化字段。**首次管理员账号沿用已有的
 `resetpass` 子命令，没有新造 HTTP 引导接口**——真机验证发现它比预想的
 还好用：在一个全新的空 `--data-dir` 上直接跑 `resetpass`（不需要先启动
@@ -751,7 +751,7 @@ promptContains 过滤均返回预期子集 → 移除企业成员关系后上报
 ### 阶段二：Docker 镜像 + 部署产物（1oneUI，已提交）
 
 新 `Dockerfile`（整个替换掉坏的那个）：直接打包 CI 已产出、已 smoke test
-过的 `aionui-web` tarball，不在镜像构建过程里重新编译 Rust/TypeScript；
+过的 `dream-web` tarball，不在镜像构建过程里重新编译 Rust/TypeScript；
 新增 `docker-compose.yml`（含可选 Caddy sidecar 自动签发 HTTPS 证书）；
 `pack-web-cli.yml` 新增 `smoke-test-docker` job（`docker build` + 起容器
 
@@ -759,11 +759,11 @@ promptContains 过滤均返回预期子集 → 移除企业成员关系后上报
   跑 `resetpass`），补上旧 Dockerfile "从来没被 CI 碰过所以没人发现坏了"
   的那个漏洞。
 
-**顺带核实了一处容易看错的安全设计**：`aioncore` 内部总是以 `--local`
+**顺带核实了一处容易看错的安全设计**：`dreamcore` 内部总是以 `--local`
 被拉起（字面意思像"跳过鉴权"），但反向代理会给每个转发请求打
-`x-aionui-forwarded-origin: webui` 头，鉴权中间件看到这个头时**不会**走
+`x-dream-ui-forwarded-origin: webui` 头，鉴权中间件看到这个头时**不会**走
 自动登录捷径而是走完整 JWT 校验——"自动登录"只对完全绕开代理、直连
-`aioncore` 回环端口的请求生效，而那个端口从不对容器外暴露。即
+`dreamcore` 回环端口的请求生效，而那个端口从不对容器外暴露。即
 Docker 部署下每个用户仍必须用真实账号登录，不存在"整个部署共享一个免
 登录身份"的风险。
 
@@ -785,8 +785,8 @@ skip_code_quality=true`，绕开下面提到的、与本轮无关的既有格式
    这一步，与本轮代码无关）。改为在 `linux-x64` 那一路打包 job 内联跑
    docker build + smoke test（暂存目录本来就在同一个 job 的工作区里），
    不再依赖这次上传是否成功。
-2. **`docker exec ... aioncore resetpass --data-dir /data` 参数顺序写反
-   了**——`--data-dir` 是 `aioncore` 的顶层 clap 参数（未标
+2. **`docker exec ... dreamcore resetpass --data-dir /data` 参数顺序写反
+   了**——`--data-dir` 是 `dreamcore` 的顶层 clap 参数（未标
    `global = true`），必须写在子命令 `resetpass` **之前**，写反会报
    `unexpected argument '--data-dir' found`（exit 2）。本地用调试二进制
    复现坐实后，连带修了 `scripts/smoke-test-docker.sh` 和
@@ -804,7 +804,7 @@ skip_code_quality=true`，绕开下面提到的、与本轮无关的既有格式
 ### 已知遗留（发现但未修，已按范围收敛原则不在本轮处理）
 
 - `scripts/install-web.sh`（tarball 一键安装脚本的"curl | bash"路径）
-  硬编码指向上游仓库 `iOfficeAI/AionUi` 的 GitHub Releases 下载源，对这个
+  硬编码指向上游仓库 `gaogg521/dream-ui` 的 GitHub Releases 下载源，对这个
   fork 不成立；而桌面端的自动更新走的是腾讯 COS 而非 GitHub Releases
   （见 `autoupdate-cos-repoint` 相关记录），说明 web-cli tarball 可能压根
   没有对应的发布渠道。已作为独立任务标记，不在 T1 范围内处理——手动构建/

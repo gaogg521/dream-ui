@@ -2,13 +2,13 @@
 
 **日期**：2026-08-23 · **范围**：dream-ui + dream-core（跨仓），dream-engine 无代码改动
 
-> 本文档记录的是**整个 AionUi/AionCore/aionrs → One Work / dream 独立品牌改造**里
+> 本文档记录的是**整个 dream-ui/dream-core/dream-engine → One Work / dream 独立品牌改造**里
 > **最后一个阶段**（技术身份重命名之后的持久化数据收尾）。如果你需要了解更早期"三仓
 > 从哪里来、为什么独立成新仓库、命名规范怎么定的"这些决策背景，先读
-> `D:\aionui-m0\DREAM-PLATFORM-DIRECTION.md`（v1.1 决策基线，仍留在旧工作目录里，
+> `D:\旧中转目录\DREAM-PLATFORM-DIRECTION.md`（v1.1 决策基线，仍留在旧工作目录里，
 > 三个新仓库都没有它的副本）。本文档假定读者已经知道：产品展示名是 **One Work**
 > （首字母大写、中间有空格），技术/协议前缀是小写 **`dream`**，三仓分别是
-> `dream-ui`（原 1oneUI）/`dream-core`（原 1oneCore）/`dream-engine`（原 aionrs-local）。
+> `dream-ui`（原 1oneUI）/`dream-core`（原 1oneCore）/`dream-engine`（原 旧引擎本地检出）。
 
 ## 一、这一阶段解决的问题
 
@@ -19,9 +19,9 @@
 等列）、写进了种子数据（`assistants.json` 里 22 个官方助手的 `agent_ref`）、或者被
 写死进测试固件和跨仓协议约定（内部 HTTP 头名）。
 
-如果只是简单地把 Rust 里的 `AgentType::Aionrs` 改名成 `AgentType::DreamEngine` 而不做
+如果只是简单地把 Rust 里的 `AgentType::DreamEngine` 改名成 `AgentType::DreamEngine` 而不做
 额外处理，`#[serde(rename_all = "snake_case")]` 这类宏会**自动**把序列化值从
-`"aionrs"` 改成 `"dream_engine"` 或类似值——这会让所有已经写着旧值的历史数据库行
+`"dream-engine"` 改成 `"dream_engine"` 或类似值——这会让所有已经写着旧值的历史数据库行
 在下次读取时匹配不上任何已知枚举分支，一次"看起来只是改了个 Rust 标识符名字"的重构
 就能让老用户存量数据全部失效。
 
@@ -37,21 +37,21 @@
 序列化值会被持久化的枚举，改名统一用：
 
 ```rust
-#[serde(rename = "dream", alias = "aionrs")]
+#[serde(rename = "dream", alias = "dream-engine")]
 DreamEngine,
 ```
 
 - `rename = "dream"`：新写入的数据统一用规范值 `"dream"`。
-- `alias = "aionrs"`：反序列化时同时接受历史值 `"aionrs"`，老数据不需要迁移也能正常
+- `alias = "dream-engine"`：反序列化时同时接受历史值 `"dream-engine"`，老数据不需要迁移也能正常
   读出来。
 
-`ConversationSource::DreamUi` 同理，`rename = "dream", alias = "aionui"`；
+`ConversationSource::DreamUi` 同理，`rename = "dream", alias = "dream-ui"`；
 `McpSource::DreamEngine`/`McpSource::DreamUi` 同理。
 
 ### 2.2 冻结哈希派生 ID
 
 `AgentType::id()` 原本是动态计算的：`fnv1a_hex8(self.serde_name().as_bytes())`。
-`serde_name()` 从 `"aionrs"` 改成 `"dream"` 之后，这个哈希值会跟着变——但种子 SQL
+`serde_name()` 从 `"dream-engine"` 改成 `"dream"` 之后，这个哈希值会跟着变——但种子 SQL
 和十几个测试文件里已经把旧哈希值 `"632f31d2"` 当成**稳定不变的 ID** 写死使用了。
 处理方式是在 `id()` 里对 `DreamEngine` 分支单独硬编码冻结旧值，不再跟随
 `serde_name()` 变化：
@@ -75,7 +75,7 @@ pub fn id(&self) -> String {
 
 - `dream-core-db/migrations/052_dream_rebrand_persisted_values.sql`：
   `conversations.type`/`conversations.source`/`agent_metadata.agent_type`/
-  `assistant_sessions.agent_type` 四处 `aionrs`/`aionui` → `dream`。
+  `assistant_sessions.agent_type` 四处 `dream-engine`/`dream-ui` → `dream`。
 - `dream-domain-employee/migrations/005_dream_rebrand_agent_type.sql`：
   `one_personal_agents.agent_type` 同样迁移。
 
@@ -89,9 +89,9 @@ pub fn id(&self) -> String {
 
 Electron 桌面端还有一套**完全独立、跟 dream-core-db 不共享同一份迁移历史**的本地
 SQLite 迁移系统（`packages/desktop/src/process/services/database/migrations.ts`），
-同样的规则也适用——已发布的 `migration_v21`（历史上把 `'aionrs'` 加进
+同样的规则也适用——已发布的 `migration_v21`（历史上把 `'dream-engine'` 加进
 `conversations.type` 的 CHECK 约束）文件内容不能动，新增
-`migration_v27` 做同样的 `UPDATE conversations SET type='dream' WHERE type='aionrs'`
+`migration_v27` 做同样的 `UPDATE conversations SET type='dream' WHERE type='dream-engine'`
 /`source` 迁移（好在 `migration_v22` 已经把 CHECK 约束整个去掉了，不需要重建表，
 一条 `UPDATE` 语句就够）。
 
@@ -101,8 +101,8 @@ SQLite 迁移系统（`packages/desktop/src/process/services/database/migrations
 discriminant 字面量、`ConversationSource`）改名后，`tsc --noEmit` 会精确报出所有
 跟严格类型比较的 `TS2367 (no overlap)` 错误——这是发现所有需要联动修改点位最快的
 方式，比人工 grep 全代码库可靠。但**松散 `string` 类型的比较**（比如
-`backend === 'aionrs'`，`backend` 参数类型就是普通 `string`）tsc 不会报错，必须
-额外做 `grep "=== 'aionrs'"` 全仓扫描补充，两种方式缺一个都会漏掉真实的比较点。
+`backend === 'dream-engine'`，`backend` 参数类型就是普通 `string`）tsc 不会报错，必须
+额外做 `grep "=== 'dream-engine'"` 全仓扫描补充，两种方式缺一个都会漏掉真实的比较点。
 
 ## 三、过程中发现并修复的真实生产 bug
 
@@ -112,21 +112,21 @@ discriminant 字面量、`ConversationSource`）改名后，`tsc --noEmit` 会�
 ### 3.1 `AgentErrorOwnership` 前端三处未同步，错误归因分类彻底失效
 
 `dream-core-api-types::agent_error::AgentErrorOwnership` 早期批量重命名时枚举变体
-从 `Aionui` 改成了 `Dream`，配合 `#[serde(rename_all = "snake_case")]` 宏，线上实际
-序列化值已经是 `"dream"`。但前端三处仍然停在旧值 `"aionui"`：
+从 `dream-ui` 改成了 `Dream`，配合 `#[serde(rename_all = "snake_case")]` 宏，线上实际
+序列化值已经是 `"dream"`。但前端三处仍然停在旧值 `"dream-ui"`：
 
 - `common/chat/chatLib.ts` 的 `AgentErrorOwnership` 类型定义和
   `AGENT_ERROR_OWNERSHIPS` 校验集合
-- 13 个语言的 i18n key `conversation.agentError.ownership.aionui`
+- 13 个语言的 i18n key `conversation.agentError.ownership.dream-ui`
 - `pages/conversation/Messages/hooks.ts`、
   `pages/conversation/platforms/acp/buildSendFailureError.ts` 里构造错误对象时
-  仍然写死 `ownership: 'aionui'`
+  仍然写死 `ownership: 'dream-ui'`
 
 后果：后端返回的错误对象 `ownership` 字段值是 `"dream"`，前端校验集合里没有这个值，
 `MessageTips.tsx` 的归因展示（"这是我方 bug / 用户 Agent 配置问题 / 用户模型账号
 问题"）全部退化成"未知上游"，用户完全看不出错误到底该找谁负责。
 
-### 3.2 内部 HTTP 头 `x-aionui-forwarded-origin`/`x-aionui-client-ip` 两仓不同步
+### 3.2 内部 HTTP 头 `x-dream-ui-forwarded-origin`/`x-dream-ui-client-ip` 两仓不同步
 
 `dream-ui` 的 WebUI 反代层（`packages/web-host/src/static-server.ts`）和 `dream-core`
 的鉴权中间件（`crates/dream-core-auth/src/middleware.rs`）各自定义了同名的两个内部
@@ -134,7 +134,7 @@ discriminant 字面量、`ConversationSource`）改名后，`tsc --noEmit` 会�
 反代"以及"真实客户端 IP 是多少"（用于企业版 IP allowlist 之类的功能）。
 
 `dream-ui` 侧的测试文件已经改成期望新值 `x-dream-*`，但两侧生产代码都还是旧值
-`x-aionui-*`——这是一次"只改了一半"的历史遗留，被这次全量测试驱动的排查揪出来。
+`x-dream-ui-*`——这是一次"只改了一半"的历史遗留，被这次全量测试驱动的排查揪出来。
 **这类跨仓协议改名必须两侧同步改，只改一边不会报任何编译或运行时错误，只是功能
 在运行时悄悄失效**（WebUI 来源识别永远判定失败、真实客户端 IP 永远拿不到）。
 
@@ -143,14 +143,14 @@ discriminant 字面量、`ConversationSource`）改名后，`tsc --noEmit` 会�
 
 ### 3.3 会话分叉功能对 dream 会话 100% 报错（影响面最大的一个）
 
-`dream-core-conversation::service.rs` 里 `aionrs_capability_agent_id()` 函数，在
+`dream-core-conversation::service.rs` 里 `dream-engine_capability_agent_id()` 函数，在
 会话没有显式绑定 `assistant_snapshot` 时的兜底逻辑，硬编码调用
-`self.resolve_assistant_agent_binding(user_id, "aionrs")` 去查找内置 dream agent
+`self.resolve_assistant_agent_binding(user_id, "dream-engine")` 去查找内置 dream agent
 的 `agent_id`。这个函数底层是 `dream-core-db::agent_binding::resolve_agent_binding_from_rows`——
 一个**严格字符串匹配**（`row.agent_type == value`，不做任何别名归一化）的函数。
 
 数据库里 `agent_metadata.agent_type` 字段值早已经是 `"dream"`（迁移 052 已经改过），
-传入字面量 `"aionrs"` 永远查不到匹配行，返回空 `agent_id`，导致
+传入字面量 `"dream-engine"` 永远查不到匹配行，返回空 `agent_id`，导致
 `fork_capability_for_agent` 拿着空 `agent_id` 查能力表得到 `None`，最终报错
 `FORK_UNSUPPORTED: this agent does not support session forking`。
 
@@ -160,7 +160,7 @@ bug `cargo check`/`tsc` 完全测不出来（纯运行时字符串比较），�
 里 `dream-core-conversation/tests/conversation_extended.rs` 的 fork 相关集成测试
 才暴露出来的。
 
-修复：把硬编码的 `"aionrs"` 改成 `"dream"`。
+修复：把硬编码的 `"dream-engine"` 改成 `"dream"`。
 
 ### 3.4 CI / 打包脚本的环境变量名滞后于代码
 
@@ -168,7 +168,7 @@ bug `cargo check`/`tsc` 完全测不出来（纯运行时字符串比较），�
 `DREAM_EXTENSIONS_PATH`、`DREAM_DEBUG_AUTO_UPDATE_CURRENT_VERSION`、
 `DREAM_BACKEND_LOCAL_BINARY`、`DREAM_BACKEND_LOCAL_BUNDLE_DIR`、`DREAM_ALLOW_REMOTE`、
 `DREAM_HUB_TAG`、`DREAM_BACKEND_RUN_ID`、`DREAM_BACKEND_ARCH`、`DREAM_BACKEND_VERSION`、
-`DREAM_OPEN_BROWSER`。但下面这些文件设置这些变量时用的还是旧名字 `AIONUI_*`，代码
+`DREAM_OPEN_BROWSER`。但下面这些文件设置这些变量时用的还是旧名字 `DREAM_*`，代码
 根本读不到，功能悄悄回落到默认值（多开模式失效、e2e 测试用的 extensions 路径失效
 等，都不会报错）：
 
@@ -220,7 +220,7 @@ CodeMirror 6 的 `Facet`/`Extension` 系统靠**对象引用身份**识别扩展
 ## 五、关键决策记录（后续改动前必看，不要被误当成 bug 改掉）
 
 - **运行时身份不变**：`appId`（`com.huanle.oneone.ai`）、`executableName`
-  （`1onecode`）、深链协议 scheme（`aionui://`）、`PROD_USERDATA_APP_NAME`
+  （`1onecode`）、深链协议 scheme（`dream-ui://`）、`PROD_USERDATA_APP_NAME`
   （内部锁定的历史值）全部刻意保持不变——这是独立于本次数据迁移之外的一条更早的
   决策，改这几项会导致老用户 `%APPDATA%` 数据和 `userData` 目录失联。
 - **产品展示名是 "One Work"**（首字母大写、中间有空格），代码里

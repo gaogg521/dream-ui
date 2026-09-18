@@ -1,7 +1,7 @@
 # AI / 开发者交接约定（fork v2）
 
 > **读者**：后续接手的 AI 或人类开发者。  
-> **仓库**：`D:\aionui-m0\1oneUI` + `D:\aionui-m0\1oneCore`；脚本 `D:\aionui-m0\scripts\`。
+> **仓库**：`D:\旧中转目录\1oneUI` + `D:\旧中转目录\1oneCore`；脚本 `D:\旧中转目录\scripts\`。
 
 ---
 
@@ -18,7 +18,7 @@
 | 内容                   | 写到哪里                                                      |
 | ---------------------- | ------------------------------------------------------------- |
 | 当次会话的功能/坑/验证 | `docs/guides/session-YYYY-MM-DD-*.zh-CN.md`（新建或追加一节） |
-| 启动 / 前后端加载      | `D:\aionui-m0\scripts\README.md`（行为变化时同步）            |
+| 启动 / 前后端加载      | `D:\旧中转目录\scripts\README.md`（行为变化时同步）           |
 | 索引入口               | `docs/README.md` Quick pointers 加一行链接                    |
 
 不要只口头总结；**未落盘 = 未完成**。
@@ -27,20 +27,20 @@
 
 ## 2. 前后端加载（改完必对照）
 
-前端 dev **不会**自动编译 1oneCore 源码；spawn 的是 `resources/bundled-aioncore/.../aioncore.exe`。
+前端 dev **不会**自动编译 1oneCore 源码；spawn 的是 `resources/bundled-dreamcore/.../dreamcore.exe`。
 
-| 你改了什么                                                                           | 必须做什么                                       | 验证                                                                               |
-| ------------------------------------------------------------------------------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| 仅 `1oneUI` 渲染进程 / 公共 TS（`packages/desktop/src/renderer/**`、`common/**` 等） | `frontend-dev.ps1`（或已在跑的 dev 热更新）      | 刷新窗口；WebUI/LAN 需 rebuild `out/`                                              |
-| `1oneCore` Rust（API、迁移、agent 检测、assistant 服务）                             | `backend-rebuild.ps1` → 再 `frontend-dev.ps1`    | 日志 `starting: ...\1oneUI\resources\bundled-aioncore\...`；`/health` version 对齐 |
-| DB 迁移（`aionui-db/migrations/*.sql`）                                              | **同上**：必须重编并进 bundled；重启后迁移自动跑 | 看 `%APPDATA%\1one-Dev` 下 DB / 日志                                               |
-| 仅文档 / 脚本 README                                                                 | 无需 rebuild                                     | —                                                                                  |
+| 你改了什么                                                                           | 必须做什么                                       | 验证                                                                                |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| 仅 `1oneUI` 渲染进程 / 公共 TS（`packages/desktop/src/renderer/**`、`common/**` 等） | `frontend-dev.ps1`（或已在跑的 dev 热更新）      | 刷新窗口；WebUI/LAN 需 rebuild `out/`                                               |
+| `1oneCore` Rust（API、迁移、agent 检测、assistant 服务）                             | `backend-rebuild.ps1` → 再 `frontend-dev.ps1`    | 日志 `starting: ...\1oneUI\resources\bundled-dreamcore\...`；`/health` version 对齐 |
+| DB 迁移（`dream-core-db/migrations/*.sql`）                                          | **同上**：必须重编并进 bundled；重启后迁移自动跑 | 看 `%APPDATA%\1one-Dev` 下 DB / 日志                                                |
+| 仅文档 / 脚本 README                                                                 | 无需 rebuild                                     | —                                                                                   |
 
 **禁止**假设 `bun run dev` 等于后端已更新。
 
-**进程**：重启前 `taskkill /F /IM electron.exe /T` 与 `aioncore.exe /T`，避免多实例端口错乱。
+**进程**：重启前 `taskkill /F /IM electron.exe /T` 与 `dreamcore.exe /T`，避免多实例端口错乱。
 
-详见：`D:\aionui-m0\scripts\README.md`、`docs/guides/session-2026-07-07-evening.zh-CN.md` §2。
+详见：`D:\旧中转目录\scripts\README.md`、`docs/guides/session-2026-07-07-evening.zh-CN.md` §2。
 
 ---
 

@@ -50,7 +50,7 @@
 
 - [ ] 其余 11 语言 `common.company.*` 精翻（现回退 en/defaultValue）。
 - [ ] 企业三层 Phase 1 打包发版（重编 + bump 版本）。
-- [ ] `backend-rebuild.ps1` 第 2 步 `prepareAioncore.js` 偶发 exit 1（版本校验/文件锁），值得排查。
+- [ ] `backend-rebuild.ps1` 第 2 步 `prepareDreamcore.js` 偶发 exit 1（版本校验/文件锁），值得排查。
 - [ ] `one-org/service.rs:873` 既有 `too_many_arguments`（ratchet，暂不动）。
 
 ## 3. 一句话

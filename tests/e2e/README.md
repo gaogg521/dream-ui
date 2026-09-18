@@ -25,7 +25,7 @@ and every HTTP call from the renderer (or from e2e helpers that use
 
 ```bash
 # Install the backend binary (builds to ~/.cargo/bin/dreamcore)
-cd ../AionCore && cargo install --path crates/one-app
+cd ../dream-core && cargo install --path crates/dream-core-app
 
 # Make sure it's on PATH when running tests
 export PATH="$HOME/.cargo/bin:$PATH"

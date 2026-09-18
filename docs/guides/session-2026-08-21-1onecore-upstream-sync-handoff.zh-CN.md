@@ -20,13 +20,13 @@
 
 ### 1.1 合并本身
 
-- worktree：`D:\aionui-m0\1oneCore-sync-full`，分支 `sync-v0170`，merge-base `2addb762`，
+- worktree：`D:\旧中转目录\1oneCore-sync-full`，分支 `sync-v0170`，merge-base `2addb762`，
   上游到 `b584da01`。
 - 253 个文件冲突，全部逐一 3-way 解决（`git merge-file` + Perl 状态机脚本批量应用 + 手工核对）。
-- **最高杠杆的单点修复**：`Cargo.toml` 的 6 个 `aion-*` git 依赖被合并成指向上游裸
-  `iOfficeAI/aionrs` tag，已改回 `gaogg521/aionrs` branch=master——否则会静默丢光 fork
-  在 aionrs 上的全部专属补丁（视觉委托治理、textualize 工具历史等）。
-- **`aionui-auth/src/routes.rs` 路由重复注册**曾导致 axum 启动 panic，级联拖垮几十个不
+- **最高杠杆的单点修复**：`Cargo.toml` 的 6 个 `dream-engine-*` git 依赖被合并成指向上游裸
+  `gaogg521/dream-engine` tag，已改回 `gaogg521/dream-engine` branch=master——否则会静默丢光 fork
+  在 dream-engine 上的全部专属补丁（视觉委托治理、textualize 工具历史等）。
+- **`dream-core-auth/src/routes.rs` 路由重复注册**曾导致 axum 启动 panic，级联拖垮几十个不
   相关的 e2e 测试——找到并删掉后，失败数从"几十个"直接掉到个位数。
 - 详细的诊断方法论、diff3 误合并的具体案例、每个被恢复文件的取舍理由，见本次会话的完整
   transcript（已被压缩，如需细节可搜 `sync-v0170` 相关提交的 commit message，两条 commit
@@ -63,17 +63,17 @@
   `context_reset_requires_csrf` / `update_agent_model_requires_csrf` /
   `set_team_config_option_requires_csrf`）原本用 `Authorization: Bearer` 构造
   "缺 CSRF token"的请求，其实测的正是这条豁免本身——已改用真实的
-  `Cookie: aionui-session=<token>`（不带 `Authorization` 头）来测试真正应该被
+  `Cookie: dream-core-session=<token>`（不带 `Authorization` 头）来测试真正应该被
   拦截的防护边界，生产代码未改。
-- **mid-turn 消息回执时序**：`aionui-conversation/src/service_test.rs` 里
+- **mid-turn 消息回执时序**：`dream-core-conversation/src/service_test.rs` 里
   `midturn_send_delivers_into_the_active_turn` 明确注释锁定"即使是不发送原生
   echo 的 backend，reliable-fallback 也要立即把回执关闭成 finish"；而
-  `aionui-app/tests/midturn_e2e.rs` 的 `midturn_send_returns_200_with_the_active_turn_id`
+  `dream-core-app/tests/midturn_e2e.rs` 的 `midturn_send_returns_200_with_the_active_turn_id`
   却断言 GET 回来的状态是 `pending`——两者矛盾。已确认前者才是被文档化/测试锁定
   的正确契约（`deliver_midturn_message` 的 fallback 关闭本来就在响应返回前同步
   执行完，任何后续读取都只会看到 `finish`），修正了后者的错误断言，生产代码
   保持不变。
-- `aionui-project` 的 `apply_synthesizes_rename_for_same_inode`：确认 Windows 无
+- `dream-core-project` 的 `apply_synthesizes_rename_for_same_inode`：确认 Windows 无
   POSIX inode 是 `EntryFact::inode` 文档里写明的永久性设计降级（`inode_of()` 在
   `#[cfg(not(unix))]` 下恒返回 0），不是缺口，加 `#[cfg(unix)]`。
 - `git_provider_test.rs` 6 个 CRLF 相关失败：本机全局 `git config core.autocrlf=true`
@@ -93,15 +93,15 @@ HEAD~1:...` 对比确认合并前有、合并后丢，已按原样恢复（注�
 **建议下一次接手时先重跑一次确认到底**（预计总耗时 30–45 分钟）：
 
 ```bash
-cd /d/aionui-m0/1oneCore
+cd /d/旧后端仓库
 cargo test --workspace --no-fail-fast -- --test-threads=4
 ```
 
 ### 1.3 真机 CDP 核验（已做完）
 
-编译 `cargo build -p aionui-app --release`，用
-`AIONUI_BACKEND_LOCAL_PATH=<exe路径> node scripts/prepareAioncore.js` 内嵌进 1oneUI，
-`AIONUI_DEVTOOLS_CDP_PORT=9230 bun run dev` 启动。验证过：品牌显示（"1ONE CLI"/
+编译 `cargo build -p dream-core-app --release`，用
+`DREAM_BACKEND_LOCAL_PATH=<exe路径> node scripts/prepareDreamcore.js` 内嵌进 1oneUI，
+`DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev` 启动。验证过：品牌显示（"1ONE CLI"/
 "One Work"）、已有团队会话（"股票讨论"）多列视图+文件树+历史消息正常渲染、MCP
 服务列表正常、团队技能下发→`GET /api/skills` 全链路 API 往返、控制台/后端日志
 无异常。方法论细节（原生 WebSocket 客户端脚本，绕开 chrome-devtools MCP 连不上
@@ -112,16 +112,16 @@ dev 环境按用户要求**仍在运行、未关闭**（用户说要自己再测
 它还开着：
 
 - CDP：`http://127.0.0.1:9230/json`
-- 后端端口：看 `/tmp/dev-user-test.stdout.log` 里的 `AIONCORE_LISTENING` 行
+- 后端端口：看 `/tmp/dev-user-test.stdout.log` 里的 `DREAMCORE_LISTENING` 行
 - 关闭方法：`tasklist | grep -i electron` 找 PID，`taskkill //PID <pid> //F`，
-  再杀对应的 `aioncore.exe`
+  再杀对应的 `dreamcore.exe`
 
 ### 1.4 品牌复检
 
-全仓扫描本次合并涉及文件，修复了 `AgentType::Aionrs` 显示名被合并回
-`"Aion CLI"`（应为 `"1ONE CLI"`）这一处泄漏。另发现 1oneUI 的内置浏览器 MCP
-显示名 `aionui-browser`，核实后**判定不是泄漏**（`aionui-image-generation` 用
-同样的 `aionui-` 内部前缀，历次专门品牌复检都没碰过这两个，是命名不统一不是
+全仓扫描本次合并涉及文件，修复了 `AgentType::DreamEngine` 显示名被合并回
+`"Dream CLI"`（应为 `"1ONE CLI"`）这一处泄漏。另发现 1oneUI 的内置浏览器 MCP
+显示名 `dream-ui-browser`，核实后**判定不是泄漏**（`aionui-image-generation` 用
+同样的 `dream-ui-` 内部前缀，历次专门品牌复检都没碰过这两个，是命名不统一不是
 品牌暴露）。
 
 ---
@@ -161,13 +161,13 @@ dev 环境按用户要求**仍在运行、未关闭**（用户说要自己再测
 
 - **已确认**：1oneCore `#876`（"pair native media blocks with a link to the
   same file"）**已经在这次 149 提交合并里**，`da91f826` 已经是 `one-main`
-  的祖先（`crates/aionui-ai-agent/src/media.rs` 是这次合并新增的文件之一）。
+  的祖先（`crates/dream-core-ai-agent/src/media.rs` 是这次合并新增的文件之一）。
 - **已确认没做**：1oneUI `#4103`（"render relative images in agent replies"）
   和 `#4105`（"read image root from ConversationContext"）都不在
   1oneUI 当前 `one-main` 里；`LocalImageView.tsx` 里没有对应的 image-root
   改动，`AcpChat.tsx` 没有 imageRoot 相关逻辑，对应的三个测试文件
   （`acpChatLocalImageRoot.dom.test.tsx` / `localImageViewContextRoot.dom.test.tsx` /
-  `aionrsChatForkCapability.dom.test.tsx`）全仓不存在。
+  `dream-engineChatForkCapability.dom.test.tsx`）全仓不存在。
 - **影响**：后端"给原生媒体块配上指向同一文件的链接"这个能力，前端渲染时
   拿不到正确的 image root，agent 回复里的相对路径图片大概率显示不出来或
   显示到根目录路径下——这正是本项目 memory 里已经反复出现过的
@@ -213,7 +213,7 @@ dev 环境按用户要求**仍在运行、未关闭**（用户说要自己再测
   **上线前必须 keygen 换掉**。纯人工操作，不需要代码改动。
 - Claude CLI pin 从 2.1.215 升到 2.1.233——涉及 fork 自己 pin 值的断言，
   需要单独一轮打包决策，见 `upstream-sync-backlog` 文档"仍然挂着的"一节。
-- 会话分叉（session fork）跨仓功能——aionrs 侧已经随这次 149 提交合并进来
+- 会话分叉（session fork）跨仓功能——dream-engine 侧已经随这次 149 提交合并进来
   （`df1cf85`+`5889110`），但 1oneUI 侧的 `ae2d2f53e` 未合，前端没有分叉
   入口。是否要做是产品决策，不是技术缺口。
 
@@ -225,7 +225,7 @@ dev 环境按用户要求**仍在运行、未关闭**（用户说要自己再测
    实现**——报错内容跟生产代码的新校验逻辑完全对应时，先看 `git show
 HEAD:<测试文件>` 里 mock 合并前的真实实现，别急着改生产代码。
 2. **Cargo.toml 的跨仓依赖源会被 merge 静默改错**——每次上游同步收尾前，
-   固定检查这六行 `aion-*` 依赖是否还指向 `gaogg521/aionrs` branch=master。
+   固定检查这六行 `dream-engine-*` 依赖是否还指向 `gaogg521/dream-engine` branch=master。
 3. **Windows 路径别名化（trailing space/dot）没有办法靠 metadata 查询区分
    "特意创建"和"意外匹配"两种意图**——涉及这类路径的测试要么两边都用
    `fs::metadata` 走一遍验证后再下结论，要么干脆认命做 `#[cfg(unix)]`。

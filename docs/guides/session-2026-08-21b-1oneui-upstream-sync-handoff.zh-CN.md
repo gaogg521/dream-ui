@@ -10,12 +10,12 @@
 | 1oneCore | 149 提交上游合并（上一份文档记录）                          | ✅ 已推送 |
 | 1oneUI   | 136 提交上游同步（`80ddf89f9`→`e613573e1`），含真机回归修复 | ✅ 已推送 |
 
-分支 `sync-v2178`（worktree `D:\aionui-m0\1oneUI-sync-full`）→ 合并提交 `e613573e1` → 直接
+分支 `sync-v2178`（worktree `D:\旧中转目录\1oneUI-sync-full`）→ 合并提交 `e613573e1` → 直接
 `git push origin sync-v2178:one-main`（本地 `one-main` 分支被主仓库另一个 worktree
-`D:\aionui-m0\1oneUI` 占用，无法在这个 worktree 里 `git branch -f`，改用远端分支名映射
+`D:\旧中转目录\1oneUI` 占用，无法在这个 worktree 里 `git branch -f`，改用远端分支名映射
 push，效果等价）。**`origin/one-main` 现在是权威、干净的最新状态。**
 
-⚠️ 主仓库 worktree `D:\aionui-m0\1oneUI`（checkout 在 `one-main`）本地还停留在旧提交
+⚠️ 主仓库 worktree `D:\旧中转目录\1oneUI`（checkout 在 `one-main`）本地还停留在旧提交
 `80ddf89f9`，且工作区里有一批与本次同步无关的脏文件（看着是某次发布脚本把
 `C:\Users\...\Temp\...\build-artifacts\` 这类畸形绝对路径当相对路径 `git add` 进了索引，
 含真实的 dmg/deb/tar.gz 二进制），**本次会话未触碰这批内容**（超出任务范围、来源不明、
@@ -28,14 +28,14 @@ push，效果等价）。**`origin/one-main` 现在是权威、干净的最新�
 
 ### 1.1 合并本身
 
-- worktree：`D:\aionui-m0\1oneUI-sync-full`，分支 `sync-v2178`，merge-base `80ddf89f9`，
+- worktree：`D:\旧中转目录\1oneUI-sync-full`，分支 `sync-v2178`，merge-base `80ddf89f9`，
   上游到 `upstream/main`（136 个提交，1393 个文件，+43584/-98129）。
 - **169 处显式冲突**逐一 3-way 解决。判断原则：先看下游是否还在用（callers 数量）、
   是否有依赖的后端端点还存在（跨仓核对 `1oneCore/crates/...`）、`git log <commit> -s`
   找上游删除的官方理由、有既有决策记录时优先复用（如社区主题不采纳、providers 表共享
   作用域）。
 - **六个架构分歧点全部守住，没被上游覆盖**：Codex/Claude 自定义模型桥接锁定（UI
-  model-selector 在桥接开启时禁用切换）、CDP 调试端口（`AIONUI_DEVTOOLS_CDP_PORT`
+  model-selector 在桥接开启时禁用切换）、CDP 调试端口（`DREAM_DEVTOOLS_CDP_PORT`
   双闸门）、Streamdown 渲染引擎（mermaid pan/zoom + shiki，替代上游纯 `react-markdown`）、
   `AppUserModelID`/品牌单一来源机制（`BRAND_DISPLAY_NAME` + 锁死测试）、providers 表
   部署级共享（非按用户隔离）、fork 自己的 CDN（腾讯 COS）更新机制（非 GitHub API，
@@ -50,7 +50,7 @@ push，效果等价）。**`origin/one-main` 现在是权威、干净的最新�
 - **恢复**：7 个社区主题 CSS 文件 + 封面 + 注册表（此前会话已有"不采纳上游主题重构，
   保留 fork 自己主题系统"的明确决策）、Office 自动预览功能整套（`useAutoPreviewOfficeFiles`
   等，真机 UI/i18n/调用点都还在用）、目录选择+导出功能整套（`DirectorySelectionModal`/
-  `useExport`——核实 `1oneCore/crates/aionui-file/src/routes.rs` 对应的 zip/rename/remove
+  `useExport`——核实 `1oneCore/crates/dream-core-file/src/routes.rs` 对应的 zip/rename/remove
   端点仍然存在，上游"已删除"的说法对 fork 不成立）、fork 自己的 legacy 配置迁移桥接
   （`importOneLegacyConfig.ts` → `migrateThemeConfig.ts` 两段式管线）。
 - **确认可安全丢弃**：preview-history 功能（`renderHistoryDropdown()` 全仓零调用点）。
@@ -72,12 +72,12 @@ push，效果等价）。**`origin/one-main` 现在是权威、干净的最新�
 
 ### 1.4 真机 CDP 验证——发现并修复两个真实回归
 
-方法：`AIONUI_BACKEND_BIN=<aioncore.exe路径> AIONUI_DEVTOOLS_CDP_PORT=9231 bun run dev`
+方法：`DREAM_BACKEND_BIN=<dreamcore.exe路径> DREAM_DEVTOOLS_CDP_PORT=9231 bun run dev`
 （⚠️ **环境变量名已改**，见下方"新教训"），裸 `ws`/Node 原生 `WebSocket` 直连页面
 target 跑 `Runtime.evaluate`，参照 [`cdp.md`](cdp.md) 的既有方法论。
 
 - **回归①（白屏，本会话自己造成又自己修复）**：`DocumentTitle.tsx` 是上游新增文件，
-  非登录路径的兜底品牌名硬编码成上游字面量 `'AionUi'`。第一次修复时直接
+  非登录路径的兜底品牌名硬编码成上游字面量 `'dream-ui'`。第一次修复时直接
   `import { BRAND_DISPLAY_NAME } from '@/common/platform'`——但 `common/platform/index.ts`
   是**仅供主进程使用**的桶文件（顶层 `import path from 'path'` + 依赖
   `NodePlatformServices.ts` 里的 `child_process`），渲染层导入它会在模块顶层执行时
@@ -88,7 +88,7 @@ target 跑 `Runtime.evaluate`，参照 [`cdp.md`](cdp.md) 的既有方法论。
   一律抄字面量，不要 import 它。
 - **回归②（品牌泄漏，真实但影响面小）**：`ChannelModalContent.tsx` 里 Slack/Discord
   两个新渠道（本次同步新增的 upstream 功能）的描述文案 i18n key 兜底值写死了英文字面量
-  `'AionUi'`，同一文件里其余五个渠道（telegram/lark/dingtalk/weixin/wecom）的兜底值
+  `'dream-ui'`，同一文件里其余五个渠道（telegram/lark/dingtalk/weixin/wecom）的兜底值
   都已经正确写成 `'One Work'`。核实所有 13 个语言的 `settings.json` 里
   `channels.slackDesc`/`channels.discordDesc` 翻译本身已经是正确的"One Work"——**正常
   使用不受影响**，兜底值只在 i18n 加载异常时才会显示，仍按其余渠道的写法统一改正，
@@ -101,33 +101,33 @@ target 跑 `Runtime.evaluate`，参照 [`cdp.md`](cdp.md) 的既有方法论。
 语言目录做完整 grep）。结果发现规模远超预期的残留：
 
 - **`conversation.json`**（13 语言，各 5 处）：CLI 版本校验提示——"已安装的 {{cli}} 低于/
-  高于 **AionUi** 验证过的版本"、"AionUi 正在等待重连" 这类文案，是上游这次同步带来的
+  高于 **dream-ui** 验证过的版本"、"dream-ui 正在等待重连" 这类文案，是上游这次同步带来的
   **全新功能**（CLI 版本兼容性检测），从未被品牌化。
-- **`update.json`**（13 语言，9~10 处不等）：一整个**"来自 AionUi 团队的一封信"迁移
+- **`update.json`**（13 语言，9~10 处不等）：一整个**"来自 dream-ui 团队的一封信"迁移
   公告弹窗**（`UpdateMigrationDialog.tsx` 对应的文案，账号体系/免费承诺相关的大段说明
   文字）——标题、称呼、落款、正文多处品牌名，同样是上游新功能，全 13 语言从未汉化/
   品牌化过，是这次追加扫描里最大的一块。
 
-两者合计 **184 处**，用脚本对这 26 个文件做全字匹配替换（`AionUi` → `One Work`），替换
+两者合计 **184 处**，用脚本对这 26 个文件做全字匹配替换（`dream-ui` → `One Work`），替换
 后逐文件 `JSON.parse` 校验通过、`node scripts/check-i18n.js` 通过（仅剩与本次无关的既有
 295 条 unknown-key 警告）、`bun run format:check` 通过。土耳其语/德语等有格位后缀的语言
-（如 `AionUi'yi`→`One Work'yi`、`AionUi-Team`→`One Work-Team`）保留了机械替换后的轻微
+（如 `dream-ui'yi`→`One Work'yi`、`dream-ui-Team`→`One Work-Team`）保留了机械替换后的轻微
 语法瑕疵，**与本项目此前 115 文件品牌重写脚本的既有先例一致**，不是本次新增的问题。
 
 **这条教训比 1.4 节的两处更值得记住**：此前的"品牌复检"习惯性只扫渲染层/主进程源码
 （`.tsx`/`.ts`），**很容易漏掉 locale JSON 里的大段说明性文案**——尤其是像"迁移公告信"
-这种一次性大段落文本，字符串数量多、grep 起来噪音大（`grep -rn AionUi locales/` 第一次
-因为漏了排除 `aionui.com` 而被我误判"没有异常"跳过细看），必须对**全部 locale 目录**做
+这种一次性大段落文本，字符串数量多、grep 起来噪音大（`grep -rn dream-ui locales/` 第一次
+因为漏了排除 `dream-ui.com` 而被我误判"没有异常"跳过细看），必须对**全部 locale 目录**做
 一次不设范围假设的完整扫描，而不是抽查几个模式就收尾。
 
-### 1.6 新教训：`AIONUI_BACKEND_LOCAL_PATH` 已改名为 `AIONUI_BACKEND_BIN`
+### 1.6 新教训：`DREAM_BACKEND_LOCAL_PATH` 已改名为 `DREAM_BACKEND_BIN`
 
-本机 memory 里 `packaging-local-aioncore-path.md` 记的旧变量名在这次上游同步里失效了
-（`out/main/index.js` 反编译确认现在读的是 `AIONUI_BACKEND_BIN`，`packages/desktop/src`
-全仓搜不到 `AIONUI_BACKEND_LOCAL_PATH` 任何引用）。用旧变量名启动 dev 会让
+本机 memory 里 `packaging-local-dreamcore-path.md` 记的旧变量名在这次上游同步里失效了
+（`out/main/index.js` 反编译确认现在读的是 `DREAM_BACKEND_BIN`，`packages/desktop/src`
+全仓搜不到 `DREAM_BACKEND_LOCAL_PATH` 任何引用）。用旧变量名启动 dev 会让
 `resolveBinaryPath()` 直接跳过 env override，报
-`BackendStartupError: aioncore startup failed while resolving backend binary`。
-下次要用本地编译的 aioncore.exe 跑 dev，记得用新名字。
+`BackendStartupError: dreamcore startup failed while resolving backend binary`。
+下次要用本地编译的 dreamcore.exe 跑 dev，记得用新名字。
 
 ---
 
@@ -167,7 +167,7 @@ target 跑 `Runtime.evaluate`，参照 [`cdp.md`](cdp.md) 的既有方法论。
 - **反馈邮箱字段（#4096）——❌ 判断错误，实际未实现**：打开设置页触发反馈弹窗
   （标题栏"反馈问题"按钮），表单里**没有任何邮箱输入框**。翻源码
   `FeedbackReportModal.tsx` 才发现真相：`readAccountEmail()` 只是**结构化读取已
-  登录账号的 email**（注释原文："aionui's AuthUser is { id, username } and carries
+  登录账号的 email**（注释原文："dream-ui's AuthUser is { id, username } and carries
   no email... yields undefined whenever the signed-in user has no email"），
   在未登录的个人版下恒为 `undefined`，**界面上从来没有让用户手填邮箱的 input**。
   这与上游 #4096 实际要的"表单里加一个可选邮箱字段"完全是两回事——共享了
@@ -175,7 +175,7 @@ target 跑 `Runtime.evaluate`，参照 [`cdp.md`](cdp.md) 的既有方法论。
   `FeedbackReportModal.tsx` 里真的加一个 `Input` 供未登录用户手填联系邮箱，
   `submitFeedbackReport.ts` 的 `contactEmail` 参数已经现成，接上即可。
 
-### 2.2 主仓库 worktree `D:\aionui-m0\1oneUI` 需要人工/下次会话清理
+### 2.2 主仓库 worktree `D:\旧中转目录\1oneUI` 需要人工/下次会话清理
 
 见 §0 的警告。清理方式建议：先确认那批畸形路径不是任何人需要的东西（看起来是
 release 脚本的临时产物误入版本控制），`git reset` 撤销 staged，`git clean` 前
@@ -202,13 +202,13 @@ release 脚本的临时产物误入版本控制），`git reset` 撤销 staged�
 0. **品牌复检必须对全部 locale 目录做无范围假设的完整扫描，不能只抽查几个模式**——
    本次真正的大头（184 处，13 语言 × `conversation.json`/`update.json`）是被用户提醒
    后才追加扫描出来的，说明"复检"如果只覆盖源码文件、不对 `locales/**/*.json` 做
-   一次完整 `AionUi` 全字匹配，会漏掉大段说明性文案（迁移公告信这类一次性长文本）。
+   一次完整 `dream-ui` 全字匹配，会漏掉大段说明性文案（迁移公告信这类一次性长文本）。
    下次任何上游同步的品牌复检，locale 目录要作为独立的、必查的一类，而不是顺带查一下。
 1. **渲染层永远不要 import `@/common/platform` 这个桶文件**——它虽然导出了
    `BRAND_DISPLAY_NAME` 这类看着"纯常量"的东西，但顶层依赖 Node 内建模块，渲染层
    import 会在模块加载阶段直接崩溃导致白屏。渲染层要品牌名，抄字面量（`'One Work'`），
    参照 `Titlebar/index.tsx`。
-2. **`AIONUI_BACKEND_LOCAL_PATH` 已被上游改名为 `AIONUI_BACKEND_BIN`**——本机 memory
+2. **`DREAM_BACKEND_LOCAL_PATH` 已被上游改名为 `DREAM_BACKEND_BIN`**——本机 memory
    记的旧名字已经过时，用错变量名 dev 环境会静默走"resolving backend binary"分支
    直接报错退出。
 3. **"文档里说前端半成品"不代表"上游同步做完之后仍然是半成品"**——上一份文档记录

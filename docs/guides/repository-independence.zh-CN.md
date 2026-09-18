@@ -1,11 +1,11 @@
-# 仓库独立化指南（脱离上游 iOfficeAI）
+# 仓库独立化指南（脱离上游 gaogg521）
 
 > **现状（2026-07-08）**
 >
-> - `gaogg521/1oneUI`、`gaogg521/1oneCore` 在 GitHub 上仍是 **fork**（parent = `iOfficeAI/*`）
+> - `gaogg521/1oneUI`、`gaogg521/1oneCore` 在 GitHub 上仍是 **fork**（parent = `gaogg521/*`）
 > - 本地仍有 `upstream` remote
-> - AionUi `one-main` 全历史约 **149** 个 commit，其中自 fork 后自有约 **46** 个
-> - AionCore `one-main` 约 **30** 个 commit（含「同步上游」merge）
+> - dream-ui `one-main` 全历史约 **149** 个 commit，其中自 fork 后自有约 **46** 个
+> - dream-core `one-main` 约 **30** 个 commit（含「同步上游」merge）
 
 独立化分 **两层**，只做一层不够：
 
@@ -27,7 +27,7 @@
 
 ### 方案 2：保留自有 commit 链（约 46 / 30 条）
 
-从 fork 起点 `f8c1206`（AionUi）之后 cherry-pick / rebase 到空根上。
+从 fork 起点 `f8c1206`（dream-ui）之后 cherry-pick / rebase 到空根上。
 
 - 优点：保留「M3/M4/M5…」等开发脉络
 - 缺点：操作复杂，merge commit 可能要手工解
@@ -46,7 +46,7 @@
 **务必先备份：**
 
 ```powershell
-cd D:\aionui-m0\1oneUI
+cd D:\旧中转目录\1oneUI
 git branch backup-one-main-20260708
 git push origin backup-one-main-20260708
 ```
@@ -54,7 +54,7 @@ git push origin backup-one-main-20260708
 **本地重写（在 1oneUI 执行）：**
 
 ```powershell
-cd D:\aionui-m0\1oneUI
+cd D:\旧中转目录\1oneUI
 git checkout --orphan main-standalone
 git add -A
 git commit -m "feat: initial 1ONE Code v2.1.31 standalone codebase"
@@ -66,7 +66,7 @@ git remote remove upstream   # 若存在
 git push --force origin one-main
 ```
 
-**1oneCore 同样流程**（在 `D:\aionui-m0\1oneCore` 重复，`commit` 文案改为 1oneCore 版本说明）。
+**1oneCore 同样流程**（在 `D:\旧中转目录\1oneCore` 重复，`commit` 文案改为 1oneCore 版本说明）。
 
 **GitHub 上（每个仓库各做一次）：**
 
@@ -85,12 +85,12 @@ git push --force origin one-main
 
 ## 洗历史之后还要改什么
 
-| 项               | 建议                                                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------ |
-| 默认分支         | 可保持 `one-main`，或改名为 `main` 并在 GitHub Settings 改 default                         |
-| 文档             | `contributing/development.md` 里上游 clone 地址可改指向 `gaogg521`                         |
-| 更新检查         | `updateBridge.ts` 默认 `iOfficeAI/AionUi` → 改为 `gaogg521/1oneUI`（否则检查更新仍查上游） |
-| package / 版权头 | 按需替换 `AionUi (aionui.com)` 等字样                                                      |
+| 项               | 建议                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| 默认分支         | 可保持 `one-main`，或改名为 `main` 并在 GitHub Settings 改 default                          |
+| 文档             | `contributing/development.md` 里上游 clone 地址可改指向 `gaogg521`                          |
+| 更新检查         | `updateBridge.ts` 默认 `gaogg521/dream-ui` → 改为 `gaogg521/1oneUI`（否则检查更新仍查上游） |
+| package / 版权头 | 按需替换 `dream-ui (dream-ui.com)` 等字样                                                   |
 
 ---
 

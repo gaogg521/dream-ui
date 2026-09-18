@@ -2,7 +2,7 @@
 
 > 状态：2026-07-07 代码层验证。**运行时 E2E 未做**——需用户在桌面端实测，且完整多用户场景卡 D5（多用户企业组织环境）。
 >
-> 范围：fork AionUi `4c5ec67` + AionCore `6c398e6`（含 aionui-team crate）。
+> 范围：fork dream-ui `4c5ec67` + dream-core `6c398e6`（含 dream-core-team crate）。
 
 ## 一、代码层验证结果
 
@@ -26,9 +26,9 @@
 - Run 控制：`cancelTeamRun` / `cancelAgentRun` / `pauseAgentRun`
 - WebSocket 事件：`agentStatusChanged` / `agentSpawned` / `agentRemoved` / `agentRenamed` / `listChanged` / `created` / `removed` / `sessionChanged` / `taskChanged` / `run` / `runAck` / `runState` / `teammateMessage` / `mcpStatus`
 
-### 3. 后端 aionui-team crate ✅
+### 3. 后端 dream-core-team crate ✅
 
-- `TEAM_CAPABLE_BACKENDS = ["claude", "codex", "gemini", "aionrs", "codebuddy"]`（`aionui-common/constants.rs:34`）—— 5 个 backend 支持 team。
+- `TEAM_CAPABLE_BACKENDS = ["claude", "codex", "gemini", "dream-engine", "codebuddy"]`（`dream-core-common/constants.rs:34`）—— 5 个 backend 支持 team。
 - `team_spawn_agent` MCP 工具（`mcp/tools.rs:53` `SpawnAgentInput`）—— **要求 `name` 字段**（issue #3363 提到的"missing field name"已修复：`pub name: String` 非 Option）。
 - `team_send_message` MCP 工具（`mcp/tools.rs:48` `SendMessageInput`）—— `to: String` 非 Option，支持 `"*"` 广播（`scheduler/actions.rs:132`）。
 - 调度器 `SchedulerAction::SendMessage` → `handle_send_message`（`scheduler/actions.rs:131`）实现单播 / 广播。
@@ -50,7 +50,7 @@
 
 - 桌面端 `npm run restart`（不是 WebUI，避免 PATH 不全导致 claude CLI not found）
 - 至少一个 provider 配好（建议先支持 function-calling 的模型，避开 #15 坑）
-- 至少一个 TEAM_CAPABLE_BACKENDS 的 CLI 已安装（claude / codex / gemini / aionrs / codebuddy）
+- 至少一个 TEAM_CAPABLE_BACKENDS 的 CLI 已安装（claude / codex / gemini / dream-engine / codebuddy）
 
 ### 步骤
 
@@ -72,8 +72,8 @@
 
 - agent 不响应 → 先看 #15（模型是否支持 function-calling）
 - `team_spawn_agent` 报 missing field → 检查 `SpawnAgentInput` 序列化（name 必填）
-- 消息不到达 → 看 aioncore 日志 `mailbox.write` 调用 + `to` 字段值
-- 重启后丢失 → 看 `SessionManager::load` 日志 + `.aionrs/sessions` 目录
+- 消息不到达 → 看 dreamcore 日志 `mailbox.write` 调用 + `to` 字段值
+- 重启后丢失 → 看 `SessionManager::load` 日志 + `.dream-engine/sessions` 目录
 
 ## 三、本会话不做的事
 

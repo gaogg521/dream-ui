@@ -1,8 +1,8 @@
 # 输出截断续写修复 + 三仓上游二次同步（07-20 批次）
 
 > **2026-07-20**。给后续 AI / 人类读的本轮完整交接。
-> 07-18/19 那轮同步见 [`session-2026-07-19-upstream-sync-changelog.zh-CN.md`](session-2026-07-19-upstream-sync-changelog.zh-CN.md)（基线：aionrs v0.2.5+#230 / Core v0.1.48 / UI 内容≈v2.1.37）。
-> 本轮是在那个基线之上，补上游 07-20 当天新落地的提交（三仓合计 20 个），外加一个独立的 aionrs 运行时 bug 修复。
+> 07-18/19 那轮同步见 [`session-2026-07-19-upstream-sync-changelog.zh-CN.md`](session-2026-07-19-upstream-sync-changelog.zh-CN.md)（基线：dream-engine v0.2.5+#230 / Core v0.1.48 / UI 内容≈v2.1.37）。
+> 本轮是在那个基线之上，补上游 07-20 当天新落地的提交（三仓合计 20 个），外加一个独立的 dream-engine 运行时 bug 修复。
 
 ---
 
@@ -15,14 +15,14 @@
 
 诊断过程澄清了机制，比用户最初的猜测更精确：
 
-- **根因不是硬编码 4096/8192**（那张表只挂在 `anthropic_defaults()`/`bedrock_defaults()`，DeepSeek 走的是 `openai_defaults()`，压根碰不到）。真正的机制是：aionrs 的 `openai_defaults()` 从不设置 `default_max_tokens`，所以当 UI 没有为该模型显式配置输出上限时，`max_tokens` 字段被**整个省略**，由上游网关自己的默认值兜底（往往远低于模型真实能力）。
-- 撞上限后，aionrs 引擎（`aion-agent`）之前的逻辑是**只补救一轮**：截断后追加一次"请把话说完，不要再调工具"的控制提示，这一轮如果还是不够长（对真正的长内容几乎必然不够），直接判定失败，吐出兜底报错，白白扔掉已经生成的内容。
+- **根因不是硬编码 4096/8192**（那张表只挂在 `anthropic_defaults()`/`bedrock_defaults()`，DeepSeek 走的是 `openai_defaults()`，压根碰不到）。真正的机制是：dream-engine 的 `openai_defaults()` 从不设置 `default_max_tokens`，所以当 UI 没有为该模型显式配置输出上限时，`max_tokens` 字段被**整个省略**，由上游网关自己的默认值兜底（往往远低于模型真实能力）。
+- 撞上限后，dream-engine 引擎（`dream-engine-agent`）之前的逻辑是**只补救一轮**：截断后追加一次"请把话说完，不要再调工具"的控制提示，这一轮如果还是不够长（对真正的长内容几乎必然不够），直接判定失败，吐出兜底报错，白白扔掉已经生成的内容。
 
 ---
 
-## 1. aionrs 独立修复：截断改为有界续写
+## 1. dream-engine 独立修复：截断改为有界续写
 
-仓库：`aionrs-local`，`master` 分支，commit `9fa951e`（+ `66f4db0` 修 rustfmt 违规，纯格式）。
+仓库：`旧引擎本地检出`，`master` 分支，commit `9fa951e`（+ `66f4db0` 修 rustfmt 违规，纯格式）。
 
 ### 改动点
 
@@ -40,7 +40,7 @@
 
 ### 验证
 
-新增 `crates/aion-agent/tests/truncation_e2e.rs`——用真实 HTTP + 真实 SSE 解析 + 真实 OpenAI provider 栈（不是 mock），配合 wiremock 模拟一个小输出上限的网关，跑通 3000 行 Python 代码生成。做过**反向对照**：把续写预算临时调到 1（等价修复前的单发补救），测试立刻复现用户截图里的故障（停在 500 行 + 同一条报错），确认测试确实锁住了这个 bug，而非碰巧通过。
+新增 `crates/dream-engine-agent/tests/truncation_e2e.rs`——用真实 HTTP + 真实 SSE 解析 + 真实 OpenAI provider 栈（不是 mock），配合 wiremock 模拟一个小输出上限的网关，跑通 3000 行 Python 代码生成。做过**反向对照**：把续写预算临时调到 1（等价修复前的单发补救），测试立刻复现用户截图里的故障（停在 500 行 + 同一条报错），确认测试确实锁住了这个 bug，而非碰巧通过。
 
 全 workspace 测试（`cargo test --workspace`）跑通，7 个 fork 专属补丁（含本次新增这个）全部存活。
 
@@ -52,35 +52,35 @@
 
 ### 版本对照
 
-| 仓             | 同步前                 | 上游新增                            | 结果                                                    |
-| -------------- | ---------------------- | ----------------------------------- | ------------------------------------------------------- |
-| `aionrs-local` | v0.2.5 + #230 + 6 补丁 | v0.2.6（openai responses api 支持） | `master` @ `b2b7bde`（v0.2.6 + 7 补丁，含本轮截断修复） |
-| `1oneCore`     | v0.1.48                | 9 个提交                            | `one-main` @ `faebcbe5`                                 |
-| `1oneUI`       | 内容≈v2.1.37           | 5 个提交                            | `one-main` @ `55757cee7`                                |
+| 仓               | 同步前                 | 上游新增                            | 结果                                                    |
+| ---------------- | ---------------------- | ----------------------------------- | ------------------------------------------------------- |
+| `旧引擎本地检出` | v0.2.5 + #230 + 6 补丁 | v0.2.6（openai responses api 支持） | `master` @ `b2b7bde`（v0.2.6 + 7 补丁，含本轮截断修复） |
+| `1oneCore`       | v0.1.48                | 9 个提交                            | `one-main` @ `faebcbe5`                                 |
+| `1oneUI`         | 内容≈v2.1.37           | 5 个提交                            | `one-main` @ `55757cee7`                                |
 
-### 2.1 aionrs → v0.2.6
+### 2.1 dream-engine → v0.2.6
 
 干净合并，无冲突。新增 OpenAI Responses API 支持（`gpt-5.6` 系列走 `/responses` 而非 `/chat/completions`）。
 
 ### 2.2 1oneCore（9 个上游提交）
 
-新增：#641 修 max_tokens 泄漏、#642 keep-awake 客户端偏好、#640 team idle-cleanup 会话 Stopped 广播、#638 会话重命名命令、#637 ACP Registry 目录同步、gpt-5.6 走 responses api、aionrs 依赖升到 v0.2.6。
+新增：#641 修 max_tokens 泄漏、#642 keep-awake 客户端偏好、#640 team idle-cleanup 会话 Stopped 广播、#638 会话重命名命令、#637 ACP Registry 目录同步、gpt-5.6 走 responses api、dream-engine 依赖升到 v0.2.6。
 
 **3 处真实冲突**，处理方式：
 
-1. **`Cargo.toml`**：上游把 `aion-*` 依赖改成钉官方 `iOfficeAI/aionrs` 的 tag——**保 fork 铁律**，改回 `gaogg521/aionrs` `master`，因为 6 个 fork 专属补丁（文本化工具历史、deferred schema 提升等）只有 fork 分支才有，绝不能切官方裸 tag。
-2. **`factory/aionrs.rs` 的 `max_tokens` 字段**：这是本轮唯一一处真正需要拍板的功能冲突。上游 **#641 "ignore max token limits for aionui requests"** 把 `max_tokens` 全链路强制清 `None`，理由是"防止独立部署的 aionrs 配置文件把值泄漏进内嵌运行时"。fork 这边曾经（07-12）加过一个"按模型配置最大输出 Token 数"的 UI 功能（`providers.model_max_tokens` 列 + 设置页输入框），一度想保留这个分支行为——**后来按用户明确指示"跟上游的 BUG 修复方案走"，完全撤销了这个分支**，`max_tokens` 现在和上游一样全链路恒为 `None`。副作用：**那个"最大输出"输入框现在是死 UI**——填了会存进数据库，但运行时不再读取，见下方「已知遗留」。
+1. **`Cargo.toml`**：上游把 `dream-engine-*` 依赖改成钉官方 `gaogg521/dream-engine` 的 tag——**保 fork 铁律**，改回 `gaogg521/dream-engine` `master`，因为 6 个 fork 专属补丁（文本化工具历史、deferred schema 提升等）只有 fork 分支才有，绝不能切官方裸 tag。
+2. **`factory/dream-engine.rs` 的 `max_tokens` 字段**：这是本轮唯一一处真正需要拍板的功能冲突。上游 **#641 "ignore max token limits for dream-ui requests"** 把 `max_tokens` 全链路强制清 `None`，理由是"防止独立部署的 dream-engine 配置文件把值泄漏进内嵌运行时"。fork 这边曾经（07-12）加过一个"按模型配置最大输出 Token 数"的 UI 功能（`providers.model_max_tokens` 列 + 设置页输入框），一度想保留这个分支行为——**后来按用户明确指示"跟上游的 BUG 修复方案走"，完全撤销了这个分支**，`max_tokens` 现在和上游一样全链路恒为 `None`。副作用：**那个"最大输出"输入框现在是死 UI**——填了会存进数据库，但运行时不再读取，见下方「已知遗留」。
 3. **迁移号撞车**：上游新增 `025_sync_and_add_acp_registry_agents.sql`，撞上 fork 07-14 已占用的 `025_add_user_data_secret.sql`，按既有惯例重排为 `030`。
 
 **顺带发现并修复的既有测试欠账**（`cargo test --workspace` 全量跑通才暴露，均与本次合并内容无关，但用同一次机会一起清了）：
 
-- `aionui-db` 里两个品牌断言过期：`"Aion CLI"`/`aion.svg` 改成 `"1ONE CLI"`/`1one.png`（fork 迁移 019/021 早在 07-11 就把数据改了，测试断言从那时起就没跟上，红了 9 天没人发现）。
+- `dream-core-db` 里两个品牌断言过期：`"Dream CLI"`/`aion.svg` 改成 `"1ONE CLI"`/`1one.png`（fork 迁移 019/021 早在 07-11 就把数据改了，测试断言从那时起就没跟上，红了 9 天没人发现）。
 - `assistant_definition_field_removal_migration.rs` 还在跑迁移号 24，实际内容 07-19 已重排到 029。
 - `cron_assistant_first_migration.rs` 里两个测试引用的是**更早一次未文档化的编号占用**：fork 早期把 `019`/`020` 让给了改名/内置 Cursor Agent CLI 命令，上游原本"清理遗留 client_preferences"和"清 codex ACP 桥接"两个迁移的真实内容被并入了 fork 的 `022`/`023`，测试从未跟着改——说明这个仓子有相当一段时间没人真正跑过 `cargo test --workspace`。
 
 （注：`020_fix_cursor_agent_cli_command.sql` 里的 "cursor" 指的是内置代理列表里的 **Cursor Agent CLI**（和 Codex、Claude Code 并列的可选后端），不是编辑器工具，别搞混。）
 
-**另发现 1 个既有 Windows 平台 bug，本轮不修**：`aionui-conversation::create_rejects_unavailable_workspace_with_trailing_whitespace_in_request` 失败，是 CLAUDE.md 早已记录的 `aionui-common` workspace 路径尾随空格校验在 Win32 API 下失效问题（07-18 上游同步带入），今日改动未触及相关 crate，非本次回归。
+**另发现 1 个既有 Windows 平台 bug，本轮不修**：`dream-core-conversation::create_rejects_unavailable_workspace_with_trailing_whitespace_in_request` 失败，是 CLAUDE.md 早已记录的 `dream-core-common` workspace 路径尾随空格校验在 Win32 API 下失效问题（07-18 上游同步带入），今日改动未触及相关 crate，非本次回归。
 
 ### 2.3 1oneUI（5 个上游提交）
 
@@ -93,18 +93,18 @@
    - 另一半冲突里，上游同一处引入了"桌面宠物"设置的 IPC provider（`getPetEnabled`/`setPetEnabled`/…）。**这里第一次合并时我直接采纳了上游这半边，结果 `tsc` 报错**——因为桌面宠物整个子系统在 **07-07 已按用户明确要求删除**（fork 提交 `33f8aae28 feat: 移除桌面宠物功能(整个子系统)`，删了 `process/pet`、`renderer/pet`、8 个 IPC 通道、设置 tab、tray 菜单等）。上游自己还留着这个功能，我们不要。修正：把这半边也删掉，恢复到"无宠物"状态，`ProcessConfig` 未使用的 import 一并清理。
 2. **`LocalAgents.tsx`**：两边各自给同一行 import 加了不同的 React hook（fork 加了 `useEffect`/`useRef`，上游加了 `useMemo`），取并集。
 3. **`AssistantHomeTabs.tsx`**（最复杂的一处，6 段冲突）：fork 自建的"扫描全部代理"按钮和上游新增的搜索框/`SettingsPageHeader` 改版不是互斥的，两个都留。关键细节：搜索过滤要建立在 fork 已经做过的 `visibleAssistants`（只显示已安装且在线的 CLI 助手）之上，而不是上游原本写的从裸 `assistants` 过滤——否则搜索会把本该隐藏的助手翻出来。
-4. **`i18n-keys.d.ts` + `en-US`/`zh-CN`/`zh-TW` 的 `cron.json`**：品牌文案冲突（`"AionUi"` vs 我们的 `"1One Work"`）按红线保 fork 品牌；上游新增的搜索相关 key（`searchPlaceholder`/`noSearchResults`）一并合入。
+4. **`i18n-keys.d.ts` + `en-US`/`zh-CN`/`zh-TW` 的 `cron.json`**：品牌文案冲突（`"dream-ui"` vs 我们的 `"1One Work"`）按红线保 fork 品牌；上游新增的搜索相关 key（`searchPlaceholder`/`noSearchResults`）一并合入。
 
 **验证过程中意外揪出两类真实 bug**（都不是本次合并引入，是全量跑 `bun run test` 第一次真正跑到才暴露）：
 
-**Bug① 品牌替换脚本误伤内部错误码标识符**——某次早前的品牌重写（commit `cf49252cc`）把 "AIONUI" 全局替换成 "1One Work" 时，连 **JSON 对象的 key 本身**也一起替换了，而这些 key 不是可翻译文本，是要和源码里的字面量精确匹配的错误码常量：
+**Bug① 品牌替换脚本误伤内部错误码标识符**——某次早前的品牌重写（commit `cf49252cc`）把 "DREAM" 全局替换成 "1One Work" 时，连 **JSON 对象的 key 本身**也一起替换了，而这些 key 不是可翻译文本，是要和源码里的字面量精确匹配的错误码常量：
 
-- `agentError.codes` 下 5 个 key（`AIONUI_CONVERSATION_BUSY`、`AIONUI_INTERNAL_ERROR`、`AIONUI_PERMISSION_ERROR`、`AIONUI_STATE_INCONSISTENT`、`AIONUI_STREAM_BROKEN`）被改成了 `"1One Work_CONVERSATION_BUSY"` 等。
-- `agentError.ownership` 下的 `aionui` key 同样被改成 `"1One Work"`。
+- `agentError.codes` 下 5 个 key（`DREAM_CONVERSATION_BUSY`、`DREAM_INTERNAL_ERROR`、`DREAM_PERMISSION_ERROR`、`DREAM_STATE_INCONSISTENT`、`DREAM_STREAM_BROKEN`）被改成了 `"1One Work_CONVERSATION_BUSY"` 等。
+- `agentError.ownership` 下的 `dream-ui` key 同样被改成 `"1One Work"`。
 
-源码（`buildSendFailureError.ts`、`hooks.ts`、`AgentErrorOwnership` 联合类型）用字面量精确匹配这些 code，key 一旦被本地化就永远查不到对应文案——**用户侧实际表现是：对话繁忙、内部错误、权限错误、状态不一致、流中断这 5 种真实错误状态，在全部 13 个语言下都显示不出正确提示文案**（要么空白要么直接显示原始 key）。已在全部 13 个 locale 文件里恢复正确 key，**只改 key，已经翻译好的显示文本原样不动**（例如 `zh-CN` 下 `aionui` 的值仍然是"应用"，没有被误伤，被误伤的只是外层 key 名）。
+源码（`buildSendFailureError.ts`、`hooks.ts`、`AgentErrorOwnership` 联合类型）用字面量精确匹配这些 code，key 一旦被本地化就永远查不到对应文案——**用户侧实际表现是：对话繁忙、内部错误、权限错误、状态不一致、流中断这 5 种真实错误状态，在全部 13 个语言下都显示不出正确提示文案**（要么空白要么直接显示原始 key）。已在全部 13 个 locale 文件里恢复正确 key，**只改 key，已经翻译好的显示文本原样不动**（例如 `zh-CN` 下 `dream-ui` 的值仍然是"应用"，没有被误伤，被误伤的只是外层 key 名）。
 
-**Bug② 自动更新 CDN 测试断言过期**——自动更新从上游默认域名 `static.aionui.com` 改指向自建腾讯 COS 桶是 07-16 已经落地的既定架构决策（含下载来源白名单收紧，`static.aionui.com` 已经不在白名单里），但三个测试文件（`updateBridgeCdnRewrite.test.ts`、`updateBridgeDownloadDedupe.test.ts`、`autoUpdaterService.test.ts`）里的断言从那次改动起就没跟着更新，一直断言旧域名。已同步更新为断言当前实际的 COS 域名。
+**Bug② 自动更新 CDN 测试断言过期**——自动更新从上游默认域名 `static.dream-ui.com` 改指向自建腾讯 COS 桶是 07-16 已经落地的既定架构决策（含下载来源白名单收紧，`static.dream-ui.com` 已经不在白名单里），但三个测试文件（`updateBridgeCdnRewrite.test.ts`、`updateBridgeDownloadDedupe.test.ts`、`autoUpdaterService.test.ts`）里的断言从那次改动起就没跟着更新，一直断言旧域名。已同步更新为断言当前实际的 COS 域名。
 
 **其余测试失败逐一排查确认与本次合并无关，顺手补上**：
 
@@ -123,21 +123,21 @@
 
 ## 3. 验证方式
 
-- **aionrs**：`cargo fmt --check` + `cargo clippy --workspace --all-targets`（0 error）+ `cargo test --workspace`（既有两个 `aion-skills` flaky 用例单独重跑 540/0 全过，与本次改动无关）。
+- **dream-engine**：`cargo fmt --check` + `cargo clippy --workspace --all-targets`（0 error）+ `cargo test --workspace`（既有两个 `dream-engine-skills` flaky 用例单独重跑 540/0 全过，与本次改动无关）。
 - **1oneCore**：`cargo build` + `cargo clippy --workspace --all-targets`（0 error）+ `cargo test --workspace`（唯一失败是上面提到的既有 Windows workspace-path bug）。
 - **1oneUI**：`bun run lint:fix`（0 error，833 个既有 warning 不算失败标准）+ `bun run format` + `bun run i18n:types` + `node scripts/check-i18n.js` + `bunx tsc --noEmit`（0 错误）+ `bun run test`（310/312 测试文件通过，2330/2338 用例通过，唯二失败即上面记录的 `SortableConversationRow` 两条已知项）。
 
 ## 4. 三仓最终 commit
 
-| 仓             | 分支       | commit      | 已推送 |
-| -------------- | ---------- | ----------- | ------ |
-| `aionrs-local` | `master`   | `b2b7bde`   | ✅     |
-| `1oneCore`     | `one-main` | `faebcbe5`  | ✅     |
-| `1oneUI`       | `one-main` | `55757cee7` | ✅     |
+| 仓               | 分支       | commit      | 已推送 |
+| ---------------- | ---------- | ----------- | ------ |
+| `旧引擎本地检出` | `master`   | `b2b7bde`   | ✅     |
+| `1oneCore`       | `one-main` | `faebcbe5`  | ✅     |
+| `1oneUI`         | `one-main` | `55757cee7` | ✅     |
 
 ## 5. 已知遗留 / 下一轮接手注意
 
-1. **"按模型配置最大输出 Token 数" UI 输入框现在是死功能**（见 §2.2 第 2 点）。设置页里 `ModelModalContent.tsx` 的"最大输出"输入框仍然存在、仍然能填、仍然会存进 `providers.model_max_tokens` 列，但 aionrs 运行时已经不再读取这个值（永远 `None`，交给各 provider 预设默认值处理）。这是本轮为了完全对齐上游 #641 的修复方案而产生的副作用，**没有删掉这个输入框/字段/迁移**，只是让它失效——下一轮要么彻底删掉这套死 UI（输入框 + `AionrsResolvedConfig.max_tokens` 字段 + migration 024），要么重新设计一套不与"防配置泄漏"冲突的实现。
+1. **"按模型配置最大输出 Token 数" UI 输入框现在是死功能**（见 §2.2 第 2 点）。设置页里 `ModelModalContent.tsx` 的"最大输出"输入框仍然存在、仍然能填、仍然会存进 `providers.model_max_tokens` 列，但 dream-engine 运行时已经不再读取这个值（永远 `None`，交给各 provider 预设默认值处理）。这是本轮为了完全对齐上游 #641 的修复方案而产生的副作用，**没有删掉这个输入框/字段/迁移**，只是让它失效——下一轮要么彻底删掉这套死 UI（输入框 + `DreamEngineResolvedConfig.max_tokens` 字段 + migration 024），要么重新设计一套不与"防配置泄漏"冲突的实现。
 2. `SortableConversationRow` 的拖拽手柄测试 UX 意图待确认（见 §2.3 已知不修第一条）。
 3. `ToolsModalContentImageGuide` 的"无 provider 纯文本"用例语义矛盾待产品侧拍板（见 §2.3 已知不修第二条）。
 4. 品牌替换脚本误伤内部标识符这个 bug 类型（§2.3 Bug①）值得写进以后跑品牌重写脚本前的检查清单——**只替换用户可见文案，不要碰任何看起来像常量/错误码/枚举值的 SCREAMING_SNAKE_CASE 或纯英文单值 key**。目前只在 `conversation.json` 的这两处发现，但没有做过全仓库范围的系统性扫描，不能排除其他 locale 文件里还有类似遗漏。

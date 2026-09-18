@@ -35,7 +35,7 @@
 
 ### 必须由人做的三件事
 
-**1. 打包前先 bump 版本。** `1oneUI/package.json` 仍是 `2.1.50`，而 `out/One-Work-2.1.50-win-x64.exe` **已存在**——不 bump 会覆盖它，违反「旧安装包一个都不许删」。另：`dist:win` 必须设 `AIONUI_BACKEND_LOCAL_PATH` 指向本地 `aioncore.exe`（私有 fork 没有 GitHub Release 产物）。
+**1. 打包前先 bump 版本。** `1oneUI/package.json` 仍是 `2.1.50`，而 `out/One-Work-2.1.50-win-x64.exe` **已存在**——不 bump 会覆盖它，违反「旧安装包一个都不许删」。另：`dist:win` 必须设 `DREAM_BACKEND_LOCAL_PATH` 指向本地 `dreamcore.exe`（私有 fork 没有 GitHub Release 产物）。
 
 **2. License 公私钥轮换（上线前必做）。** 内置的 `LICENSE_PUBLIC_KEY_B64` 是开发占位值，其私钥曾在 AI 会话里打印过，**必须视为已泄露**：
 
@@ -119,7 +119,7 @@ cargo run -p one-billing --example license_tool -- keygen
 
 此前知识库**只在"派发任务给数字员工"时**被自动引用（`one-devops/routes.rs:301`），员工日常对话中 Agent 完全不知道公司有知识库。
 
-复用仓内现成套路（`exportPdfMcpServer.ts`：主进程 TCP 服务 + stdio 转发）新增内置 MCP 工具 `search_team_knowledge`。**aionrs / Claude Code / Codex 三种后端全部受益**，因为 MCP 是三者都说的协议。ACL 由后端 `search_rag` 的 viewer 过滤**自动复用**，成员只搜得到有权看的。
+复用仓内现成套路（`exportPdfMcpServer.ts`：主进程 TCP 服务 + stdio 转发）新增内置 MCP 工具 `search_team_knowledge`。**dream-engine / Claude Code / Codex 三种后端全部受益**，因为 MCP 是三者都说的协议。ACL 由后端 `search_rag` 的 viewer 过滤**自动复用**，成员只搜得到有权看的。
 
 **客户端模式的坑**：`/api/one/devops` 是治理路径，客户端模式下知识库在**远端服务器**上，而主进程**读不到**渲染层 localStorage 里的企业会话（`enterpriseMode.ts` 明确写了主进程看不见这些 key）。故新增 `useGovernanceEndpointSync` 由渲染层主动把远端地址 + 令牌下发给主进程（**仅存内存，不落盘不打日志**）。
 
@@ -137,11 +137,11 @@ cargo run -p one-billing --example license_tool -- keygen
 
 用户最初拍板"一次做透，直接上 LanceDB"。按此实现并跑通（93 测试全绿，含真实 LanceDB 落盘的 ACL 前置过滤验证）后，实测体积：
 
-| 方案                    | `aioncore.exe` | 说明                      |
-| ----------------------- | -------------- | ------------------------- |
-| 改动前                  | 94.3 MB        | 基线                      |
-| **LanceDB**             | **299.3 MB**   | +205 MB，3.2 倍           |
-| **SQLite FTS5（最终）** | **97.4 MB**    | +3.1 MB，即本轮新代码本身 |
+| 方案                    | `dreamcore.exe` | 说明                      |
+| ----------------------- | --------------- | ------------------------- |
+| 改动前                  | 94.3 MB         | 基线                      |
+| **LanceDB**             | **299.3 MB**    | +205 MB，3.2 倍           |
+| **SQLite FTS5（最终）** | **97.4 MB**     | +3.1 MB，即本轮新代码本身 |
 
 排除过调试符号（pdb 是独立的 61.9 MB 文件，不在 exe 内），那 205 MB 是 arrow 58 + datafusion 54 的真实代码。**用户看到数字后改选 FTS5。**
 
@@ -257,14 +257,14 @@ P1-1 我按"企业后台功能"的直觉挂在了 `RequireOrgAdmin` 上，但 `b
 
 07-29 上游同步后，后端 `cmd_prepare_managed_resources` 改为产出 **`schemaVersion: 2`** 的 manifest（agent CLI 从 npm 包 `acpTools` 换成预备好的原生二进制 `clis`），但**两个校验器都还写死只认 v1**：
 
-| 位置                                                                   | 后果                                                                                       |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `packages/shared-scripts/src/verify-bundled-aioncore-resources.js:174` | `prepareAioncore` / `afterPack` 报 `unsupported_schema_version`，**`dist:win` 打包必失败** |
-| `resources/windows/support/verify-bundled-aioncore-install.ps1:346`    | **跑在终端用户装机时**——已装用户在校验/自愈流程里被误判成"安装损坏"                        |
+| 位置                                                                    | 后果                                                                                        |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `packages/shared-scripts/src/verify-bundled-dreamcore-resources.js:174` | `prepareDreamcore` / `afterPack` 报 `unsupported_schema_version`，**`dist:win` 打包必失败** |
+| `resources/windows/support/verify-bundled-dreamcore-install.ps1:346`    | **跑在终端用户装机时**——已装用户在校验/自愈流程里被误判成"安装损坏"                         |
 
 两处均已改为同时支持 v1 与 v2（老 bundle 仍要能过）。v2 按 `clis` 的真实字段校验：`name`/`version`/`root`/`platformDirectory`/`executable`，`requiredFiles`/`requiredDirectories` 可缺省；保留原有的路径逃逸防护、跨平台产物检测、必需 CLI 检查（v2 必需项是 `claude` + `codex`）。
 
-**测试**：原先有一条把 `schemaVersion: 2` 断言成"不支持"的用例——那是旧假设的固化，按 AGENTS.md 的规矩改用 `99` 探测真正不支持的版本，并补 6 条 v2 用例。20 条资产测试全绿，并用**真实 bundle** 跑 `prepareAioncore` 拿到**真实退出码 0**。
+**测试**：原先有一条把 `schemaVersion: 2` 断言成"不支持"的用例——那是旧假设的固化，按 AGENTS.md 的规矩改用 `99` 探测真正不支持的版本，并补 6 条 v2 用例。20 条资产测试全绿，并用**真实 bundle** 跑 `prepareDreamcore` 拿到**真实退出码 0**。
 
 ---
 
@@ -297,7 +297,7 @@ P1-1 我按"企业后台功能"的直觉挂在了 `RequireOrgAdmin` 上，但 `b
 
 4 条新单测锁死：代理生效且不回落磁盘、`/api/*` 仍走后端、不可达返回 502、URL 非法启动即抛。
 
-> **验证时的限制（如实记录）**：worktree 的 `node_modules` 是指向主检出的 junction，因此 `node_modules/@aionui/web-host` 也解析到**主检出**那份未改的副本——跑着的应用加载不到修改。不能就地改那个 junction（等于改主检出的 `node_modules`）。最终做法是临时把 3 个 web-host 源文件拷进主检出（那几个文件在那边是干净的），验完 `git checkout --` 还原；`tsc` 则用一份带 `paths` 映射的临时 tsconfig 验证。**所以"从一个干净检出直接启动就生效"这一步没走过**——这批合进主检出后启动一次 dev、打开 `:25809` 即可确认。
+> **验证时的限制（如实记录）**：worktree 的 `node_modules` 是指向主检出的 junction，因此 `node_modules/@dream-ui/web-host` 也解析到**主检出**那份未改的副本——跑着的应用加载不到修改。不能就地改那个 junction（等于改主检出的 `node_modules`）。最终做法是临时把 3 个 web-host 源文件拷进主检出（那几个文件在那边是干净的），验完 `git checkout --` 还原；`tsc` 则用一份带 `paths` 映射的临时 tsconfig 验证。**所以"从一个干净检出直接启动就生效"这一步没走过**——这批合进主检出后启动一次 dev、打开 `:25809` 即可确认。
 
 ---
 
@@ -383,8 +383,8 @@ bridge 方法缺失时（旧 preload、部分接线的宿主、测试 mock）`.i
 ### 踩坑手册
 
 - **退出码**：`(cmd) > log 2>&1; echo $?` 取到的是 `echo` 的退出码。判断构建结果**必须取命令自身的退出码**。
-- **PS 5.1**：`backend-rebuild.ps1` 对原生命令用 `2>&1` 会误报 `NativeCommandError`。改为手动执行 `cargo build` + `node scripts/prepareAioncore.js`。
-- **worktree 共享 `node_modules` 的连带坑**（本轮踩过两次）：worktree 里的 `node_modules` 若是指向主检出的 junction，则其中所有 workspace 包软链（`@aionui/*`）也都解析回**主检出**的源码。表现为「改了 worktree 里的包，跑起来 / `tsc` 都当没改」。另外 `packages/web-host/node_modules` 需单独 junction，否则该包单测报 `Cannot find package 'serve-handler'`。
+- **PS 5.1**：`backend-rebuild.ps1` 对原生命令用 `2>&1` 会误报 `NativeCommandError`。改为手动执行 `cargo build` + `node scripts/prepareDreamcore.js`。
+- **worktree 共享 `node_modules` 的连带坑**（本轮踩过两次）：worktree 里的 `node_modules` 若是指向主检出的 junction，则其中所有 workspace 包软链（`@dream-ui/*`）也都解析回**主检出**的源码。表现为「改了 worktree 里的包，跑起来 / `tsc` 都当没改」。另外 `packages/web-host/node_modules` 需单独 junction，否则该包单测报 `Cannot find package 'serve-handler'`。
 - **worktree + junction 的清理顺序**：`git worktree remove` 会**顺着 junction 把主检出的真实目录一起删掉**。必须先摘链接再 remove。PowerShell 里 `rmdir` 是 `Remove-Item` 的别名可能被安全策略拦，可靠写法是 `[System.IO.Directory]::Delete($path, $false)`——它不跟随 reparse point。
 - **Arco 页签的 `useState` 初始化**：只改 URL query 不会重新挂载组件，深链行为**必须整页 reload 验证**。
 - `.sync-worktree/` 与 `1oneUI-sync/` 是另一个会话的工作树，未触碰。

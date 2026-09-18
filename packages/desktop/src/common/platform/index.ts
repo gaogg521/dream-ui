@@ -16,7 +16,7 @@ let _services: IPlatformServices | null = null;
  * profile (and, for anyone opting into `*_MULTI_INSTANCE=1`, the same
  * secondary one too). dream-core's newer migrations then got applied to
  * 1oneUI's real multi-month dev/test conversation history, which the old
- * (pre-fork) aioncore binary can no longer open — see
+ * pre-fork backend binary can no longer open — see
  * `docs/guides/session-2026-08-24-dev-userdata-collision.zh-CN.md`. This
  * repo now uses a name no other repo can plausibly reuse.
  */
@@ -44,7 +44,7 @@ export const PROD_USERDATA_APP_NAME = 'One Work';
  * directory to move onto `PROD_USERDATA_APP_NAME` on first launch.
  *
  * ⚠️ Only names unambiguously owned by THIS fork belong here. Do NOT add
- * "AionUi" — that is upstream's directory name, and a user running both apps
+ * the upstream project's own directory name — a user running both apps
  * would have their upstream data hijacked.
  */
 export const LEGACY_PROD_USERDATA_APP_NAMES: readonly string[] = ['1ONE Code'];

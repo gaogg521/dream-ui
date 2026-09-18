@@ -362,7 +362,7 @@ electronDownload:
 # autoUpdaterService (CDN_UPDATE_BASE_URL → the fork's own Tencent COS bucket);
 # this block only decides what electron-builder bakes into app-update.yml and
 # the generated latest-*.yml metadata. It must NOT point at the upstream
-# iOfficeAI/AionUi GitHub repo, or forks would fetch upstream builds.
+# another project's GitHub repo, or forks would fetch the wrong builds.
 publish:
   provider: generic
   url: https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases

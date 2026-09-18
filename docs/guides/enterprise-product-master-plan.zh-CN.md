@@ -1,7 +1,7 @@
 # 企业能力产品主规划（PM 视角逐模块完善方案）
 
 > 2026-07-08 第二十三轮续。作者：接手 AI（PM 视角）。
-> 目标：以老架构（`D:\1one-command`，Node/Electron 版）为**产品需求底稿**，把 fork（`D:\aionui-m0`，Rust AionCore 版）里被精简/未迁/做得不够好的企业能力，逐模块补成「做对做全」的形态。
+> 目标：以老架构（`D:\1one-command`，Node/Electron 版）为**产品需求底稿**，把 fork（`D:\旧中转目录`，Rust dream-core 版）里被精简/未迁/做得不够好的企业能力，逐模块补成「做对做全」的形态。
 > 铁律：老架构是**参考不是照抄**——它策略分发 + 登录两块有 BUG（用户明确），且最深的运行时消费它也没接。我们要做对的版本。
 
 ---
@@ -95,11 +95,11 @@
 
 ## 四·五、fork 架构实勘修正（2026-07-08，直接影响 M1-M3 打法）
 
-深入 AionCore 后发现 fork 与主规划初始假设有关键差异，据此优化打法：
+深入 dream-core 后发现 fork 与主规划初始假设有关键差异，据此优化打法：
 
-1. **fork 无企业级 `team_memberships`**：现有 "team"（`aionui-team`、`teams` 表）是 Team Mode 多 agent 协作，**不是「企业团队 + 人成员」**。→ `team` scope 需先建地基（M1b 真的要新建 teams+成员关系）；`personal`/`org` 两级现在可做。
+1. **fork 无企业级 `team_memberships`**：现有 "team"（`dream-core-team`、`teams` 表）是 Team Mode 多 agent 协作，**不是「企业团队 + 人成员」**。→ `team` scope 需先建地基（M1b 真的要新建 teams+成员关系）；`personal`/`org` 两级现在可做。
 2. **fork 单租户模型**：`one-devops` 的 list/insert **没有 tenant_id**——每个企业服务器 = 一个租户。`list_skills` 直接返回**全部行（无 scope 过滤）**，`upsert_skill` 硬编码 `scope='org'`。→ org-scope 技能**其实已对成员可见**（client 模式读到全部）。缺口不在"可见"，在**消费（M2）+ 落地离线（M3）**。
-3. **本机技能链路**：磁盘存于 `aionui-extension/skill_service`（`/api/skills`），agent 经 `aionui-ai-agent/capability/skill_manager` 加载。→ **M3 把团队技能物化进这个磁盘目录后，现有 agent 加载路径自动消费——M2 的技能/MCP 部分顺带交付**，真正独立的 M2 只剩 RAG 对话检索。
+3. **本机技能链路**：磁盘存于 `dream-core-extension/skill_service`（`/api/skills`），agent 经 `dream-core-ai-agent/capability/skill_manager` 加载。→ **M3 把团队技能物化进这个磁盘目录后，现有 agent 加载路径自动消费——M2 的技能/MCP 部分顺带交付**，真正独立的 M2 只剩 RAG 对话检索。
 
 **优化后的执行序**：M1a(personal/org scope + 可见性过滤，防个人项外泄) → M1c(前端门控) → **M3(物化落地，顺带交付 M2-技能/MCP)** → M2-RAG(对话检索) → M1b+team scope(建 teams 地基后)。
 
@@ -107,7 +107,7 @@
 
 ### M1. scope 可见性 + 双门控（移植老架构，纯搬运）
 
-- AionCore `one-devops`：list 接口加 `VISIBLE_RESOURCE_WHERE` 等价逻辑（成员看 org∪个人∪团队），写入加 `resolveResourceScope` 校验。依赖 `team_memberships`（先 PORT teams 模块）。
+- dream-core `one-devops`：list 接口加 `VISIBLE_RESOURCE_WHERE` 等价逻辑（成员看 org∪个人∪团队），写入加 `resolveResourceScope` 校验。依赖 `team_memberships`（先 PORT teams 模块）。
 - fork Router：移植 `enterpriseRoutes` 的 role+platform 门控；配置类路由设 `platformPolicy='browser'`，消费类留桌面。**顺带修**上一轮发现的：企业后台地址直达 `/#/enterprise/console`、`/enterprise/console` 加 org-admin 角色门。
 
 ### M2. 运行时消费（真正的核心，两边都没有——新建）
@@ -122,7 +122,7 @@
 
 ### M3 实施进度（2026-07-08）
 
-- ✅ **离线地基（Rust）已建**：`AionCore/crates/aionui-extension/src/team_sync.rs`——`sync_team_skills(team_skills_dir, payloads, authoritative)` 把团队技能物化成 `{data_dir}/team-skills/{id}/SKILL.md`（带 frontmatter）+ `.team-origin` 标记；`authoritative=true`（服务端可达）才对账删除服务器已删项，`false`（离线）保留缓存；只动带标记的自有目录。`SkillPaths::team_skills_dir()` 方法派生路径（零构造点改动）。6 个单测全过（写入/passthrough/对账删除/离线保留/不碰外来目录/防穿越）。
+- ✅ **离线地基（Rust）已建**：`dream-core/crates/dream-core-extension/src/team_sync.rs`——`sync_team_skills(team_skills_dir, payloads, authoritative)` 把团队技能物化成 `{data_dir}/team-skills/{id}/SKILL.md`（带 frontmatter）+ `.team-origin` 标记；`authoritative=true`（服务端可达）才对账删除服务器已删项，`false`（离线）保留缓存；只动带标记的自有目录。`SkillPaths::team_skills_dir()` 方法派生路径（零构造点改动）。6 个单测全过（写入/passthrough/对账删除/离线保留/不碰外来目录/防穿越）。
 - ✅ **列举接入 + 同步路由（Rust）已建**：
   - `SkillSource::Team` 变体全链路（枚举 + `SkillSourceResponse::Team` serde + `skill_routes` 映射 + agent `skill_manager` 两处 match 加载/读内容都按 Custom 处理）。
   - `list_team_skills_from_disk` 并入 `list_available_skills` **和** `list_available_skills_with_repo`（生产 DB 路径）→ **agent loader（`skill_manager` 调 `list_available_skills`）自动加载团队技能 = M2-技能顺带交付**；Skills Hub UI 也能拿到（source=team 可绿标）。同名覆盖 builtin。

@@ -472,12 +472,12 @@ function registerCronResumeBridge(backendPort: number): void {
       method: 'POST',
       headers: {
         'x-dream-internal': '1',
-        // Also sent under the pre-rebrand name: this app pairs with a pinned
-        // dreamcore release, which may predate the backend half of the rename.
-        // Legacy duplicate: an enterprise server older than the rename only accepts
-        // this spelling. dream-core accepts both, so this can go once the oldest
-        // supported server is past it — until then, dropping it breaks remote setups.
-        'x-aionui-internal': '1',
+        // Legacy duplicate: this app pairs with a pinned dreamcore release, and an
+        // enterprise server older than the rename only accepts the previous spelling.
+        // dream-core's `is_internal` check accepts both (dream-core-cron/src/routes.rs),
+        // so this can go once the oldest supported server is past it — until then,
+        // dropping it makes system-resume silently 403 on those remote setups.
+        'x-one-internal': '1',
       },
     }).catch((error) => {
       console.error('[1ONE] Failed to notify backend about system resume:', error);

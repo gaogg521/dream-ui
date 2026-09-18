@@ -1,24 +1,24 @@
-# 2026-07-29 三仓上游全量同步（aionrs v0.2.8 / 1oneCore v0.1.53 / 1oneUI v2.1.43）
+# 2026-07-29 三仓上游全量同步（dream-engine v0.2.8 / 1oneCore v0.1.53 / 1oneUI v2.1.43）
 
 > 上一次同步是 2026-07-20。本轮把三仓一次性跟到上游最新，**包含团队作战那批更新**，
 > 前提是「不破坏 fork 自有产品能力」。累计约 148 个上游提交。
 
 ## 0. 最终 commit 与分支
 
-| 仓库                     | 分支         | 最终 commit | 相对 fork 主干新增 |
-| ------------------------ | ------------ | ----------- | ------------------ |
-| aionrs（`aionrs-local`） | `master`     | `8bb0e0b`   | 已直接落在 master  |
-| 1oneCore                 | `sync-v0153` | `8ec21dc5`  | 64                 |
-| 1oneUI                   | `sync-v2142` | `6302b444c` | 63                 |
+| 仓库                             | 分支         | 最终 commit | 相对 fork 主干新增 |
+| -------------------------------- | ------------ | ----------- | ------------------ |
+| dream-engine（`旧引擎本地检出`） | `master`     | `8bb0e0b`   | 已直接落在 master  |
+| 1oneCore                         | `sync-v0153` | `8ec21dc5`  | 64                 |
+| 1oneUI                           | `sync-v2142` | `6302b444c` | 63                 |
 
-版本级联：aionrs `8bb0e0b` → 1oneCore `0.1.53-one.1` → 1oneUI `aioncoreVersion: v0.1.53-one.1`。
+版本级联：dream-engine `8bb0e0b` → 1oneCore `0.1.53-one.1` → 1oneUI `dreamcoreVersion: v0.1.53-one.1`。
 
 ### ⚠️ 推送前必做（顺序不能颠倒）
 
-1. **先推 aionrs** `master`。
-2. 删掉 1oneCore `Cargo.toml` 末尾的临时 `[patch."https://github.com/gaogg521/aionrs.git"]`
-   段（它把 `aion-*` 指向本地 `../aionrs-local`，因为 aionrs 当时还没推）。
-3. `cargo update -p aion-mcp` 让 `Cargo.lock` 指向 aionrs 真实远端 commit，重新编译确认。
+1. **先推 dream-engine** `master`。
+2. 删掉 1oneCore `Cargo.toml` 末尾的临时 `[patch."https://github.com/gaogg521/dream-engine.git"]`
+   段（它把 `dream-engine-*` 指向本地 `../旧引擎本地检出`，因为 dream-engine 当时还没推）。
+3. `cargo update -p dream-engine-mcp` 让 `Cargo.lock` 指向 dream-engine 真实远端 commit，重新编译确认。
 4. 再推 1oneCore `one-main`，最后推 1oneUI `one-main`。
 
 ---
@@ -40,12 +40,12 @@
 - `services.rs` / `factory_provider_integration.rs`：移除随之无用的 spawner 装配。
 - 前端 #3572 同步不采纳——前端单独走新路径会跟仍在 ACP 路径的后端对不上。
 
-上游那批新代码（`session_agent.rs`、`aionui-session`、`aionui-process`）**照常合入
+上游那批新代码（`session_agent.rs`、`dream-core-session`、`dream-core-process`）**照常合入
 但未接线**，处于休眠状态，将来要迁移时把桥接 repo 串进 `SessionBuildInputs` 即可。
 
 ### 1.2 `acp_tool_runtime` 被静默删除——已恢复
 
-git 自动合并把 fork 独占的 `crates/aionui-runtime/src/acp_tool_runtime/`
+git 自动合并把 fork 独占的 `crates/dream-core-runtime/src/acp_tool_runtime/`
 （claude-agent-acp / codex-acp 包装 CLI 的**按需 npm 下载**逻辑）整个换成了上游新增的
 `managed_cli`（原生二进制、打包期预备，走新的 `prepare-managed-resources` 子命令），
 **没有产生任何冲突标记**。而 `factory/acp.rs` 仍在调用它 → 编译直接报错才暴露出来。
@@ -56,7 +56,7 @@ git 自动合并把 fork 独占的 `crates/aionui-runtime/src/acp_tool_runtime/`
 - `cache.rs::managed_acp_tool_root()`
 - `managed_resources.rs::acp_tool_sources()`
 - `runtime_status.rs` 的 `conversation_acp_tool_runtime_reporter` / `acp_tool_runtime_reporter` / `map_acp_phase` / `map_acp_failure_kind`
-- `aionui-api-types` 的 `RuntimeResourceKind::AcpTool`
+- `dream-core-api-types` 的 `RuntimeResourceKind::AcpTool`
 
 **未恢复**的只有 `managed_acp_tool_contract_for_export`——上游的
 `cmd_prepare_managed_resources.rs` 已改成只产出新的 schema-v2 `ManagedCliResourceContract`，
@@ -67,7 +67,7 @@ git 自动合并把 fork 独占的 `crates/aionui-runtime/src/acp_tool_runtime/`
 
 ---
 
-## 2. Phase 1 — aionrs（27 提交，5 个冲突文件）
+## 2. Phase 1 — dream-engine（27 提交，5 个冲突文件）
 
 冲突全部砸在 07-20/07-21 那批**截断恢复命脉补丁**同一片代码上：
 
@@ -114,14 +114,14 @@ git 自动合并把 fork 独占的 `crates/aionui-runtime/src/acp_tool_runtime/`
 另有一个 `025_sync_and_add_acp_registry_agents.sql` 与 fork 的 `030_*` **内容逐字节相同**，
 直接删除。
 
-⚠️ `crates/aionui-db/tests/provider_model_settings_migration.rs` 按编号回放迁移，
+⚠️ `crates/dream-core-db/tests/provider_model_settings_migration.rs` 按编号回放迁移，
 测试里的 25/27 已同步改成 37/38（函数名一并从 `migration_027_*` 改为 `migration_038_*`）。
 
 ### 3.3 其他值得记的冲突裁决
 
 - `cli_probe.rs`：取上游的 `validate_with_budget`（返回分类过的 `ProbeSuccess`/`ProbeFailure`）
   替代 fork 的 `validate()`——`registry.rs` / `services/availability/mod.rs` 已经在调新签名。
-- `manager/aionrs/agent_test.rs`：保 fork 的 `Some(32_000)` 断言（锁的是 `33c2bd2` 那个
+- `manager/dream-engine/agent_test.rs`：保 fork 的 `Some(32_000)` 断言（锁的是 `33c2bd2` 那个
   `default_max_tokens` 修复），不取上游的 `None`。
 - `AGENTS.md`：`just push` 那段合成「上游的完整门禁描述 + fork 的 `just` 不可用时的回退路径」。
 - `Cargo.lock`：34 个冲突块，直接删掉重新 `cargo generate-lockfile`。
@@ -140,9 +140,9 @@ git 自动合并把 fork 独占的 `crates/aionui-runtime/src/acp_tool_runtime/`
 | `provider_model_settings_migration` (1)    | 本轮重排编号导致                                                | 已修                                                   |
 | `session_service_integration` provider (2) | fork `8c778df1` 的 fail-fast 校验撞上游新用例的真空 provider 仓 | 已修（补假 provider，仿 `src/test_utils.rs` 既有写法） |
 | `session_service_integration` 路径 (3)     | 合并前就红，Windows 反斜杠断言                                  | 既有                                                   |
-| `aionui-project` (18)                      | 上游新 crate，测试硬编码 `file:///Users/Me/...` macOS 路径      | 既有（上游问题）                                       |
-| `aionui-extension`/`file`/`shell` (13)     | 本轮 **0 改动**，Windows 上跑 `.sh`（os error 193）             | 既有                                                   |
-| `aionui-runtime` (8)                       | 与本轮改动文件零 diff                                           | 既有                                                   |
+| `dream-core-project` (18)                  | 上游新 crate，测试硬编码 `file:///Users/Me/...` macOS 路径      | 既有（上游问题）                                       |
+| `dream-core-extension`/`file`/`shell` (13) | 本轮 **0 改动**，Windows 上跑 `.sh`（os error 193）             | 既有                                                   |
+| `dream-core-runtime` (8)                   | 与本轮改动文件零 diff                                           | 既有                                                   |
 
 ---
 
@@ -196,11 +196,11 @@ git 自动合并把 fork 独占的 `crates/aionui-runtime/src/acp_tool_runtime/`
 | ------------------ | ------------------------------------------------------------------------------- |
 | i18n locales       | 刷 52 处（上游新增的启动提示 / cron 默认提示）                                  |
 | 渲染层用户可见文案 | 3 处：`ButlerDiagnoseButton` 诊断提示 + 上游新桌面通知 #3715 的**两个通知标题** |
-| 安装器脚本         | 命中全是内部 NSIS 变量（`$AionUiSessionId` 等），**按边界规则保留**             |
+| 安装器脚本         | 命中全是内部 NSIS 变量（`$dream-uiSessionId` 等），**按边界规则保留**           |
 | 测试断言           | 仅 `tests/e2e/docs/*.md` 文档，非断言                                           |
 | 外链               | 均为注释 / GitHub 模板，合并前既有状态                                          |
 
-**刻意不改**：`BACKGROUND_BLOCK_START/END`（`/* AionUi Theme Background Start */`）——
+**刻意不改**：`BACKGROUND_BLOCK_START/END`（`/* dream-ui Theme Background Start */`）——
 这是写进**用户已保存主题 CSS** 里的分隔标记，改名会让存量自定义背景失效。
 
 ### 4.6 顺带揪出的「上游改了、fork 没跟上」
@@ -245,17 +245,17 @@ dom 仅剩 4 个文件失败，逐个核实均为**合并前就红的既有项**
 同步期间工作区里有**另一条工作线的未提交改动**（P0-3 知识库 LanceDB 重做 +
 License Key）。为不触碰它们：
 
-- 1oneUI / 1oneCore 各开一个 **仓库外** worktree（`D:/aionui-m0/1oneUI-sync`、
-  `D:/aionui-m0/1oneCore-sync`）做合并与验证。
+- 1oneUI / 1oneCore 各开一个 **仓库外** worktree（`D:/旧桌面端仓库-sync`、
+  `D:/旧后端仓库-sync`）做合并与验证。
 - ⚠️ **worktree 不能放在仓库内部**：`.git` 是文件而非目录，Vite 的工作区根探测会
   一路向上找到父仓库的真 `.git`，导致 `/@fs/` 路径全部解析到主仓库，
   180 个 dom 测试套件直接加载失败（假失败）。移到仓库外即恢复。
-- 1oneCore 的 `[patch]` 写的是相对路径 `../aionrs-local/...`，
-  worktree 与 `aionrs-local` 同级时正好解析正确。
+- 1oneCore 的 `[patch]` 写的是相对路径 `../旧引擎本地检出/...`，
+  worktree 与 `旧引擎本地检出` 同级时正好解析正确。
 - 另一条线加的 `lancedb` 依赖需要 `protoc`（本机没装），在主工作区**任何 workspace 级
   cargo 命令都编不过**；干净 worktree 里没有这批未提交改动，因此不受影响。
 
-## 6. `aionui-extension` 的 Windows 欠账：12 条（不是 5 条）——已全部修完
+## 6. `dream-core-extension` 的 Windows 欠账：12 条（不是 5 条）——已全部修完
 
 > **先纠正一个数**：本节初稿写「5 条」，是**我数错了**。`cargo test` 默认 fail-fast，
 > lib 目标一挂就不再运行后面的集成测试二进制，所以只看到 lib 里的 5 条。
@@ -346,7 +346,7 @@ lifecycle hook completed successfully extension="hook-smoke" hook="onActivate"
 
 ### 6.3c 排查过程中我自己犯的两个错（都因为截断输出）
 
-- `cargo build --release -p aioncore` **包名不存在**（真实是 `-p aionui-app --bin aioncore`），
+- `cargo build --release -p dreamcore` **包名不存在**（真实是 `-p dream-core-app --bin dreamcore`），
   但我只 `tail -3` 看输出，没看到 `error: package ID specification did not match`，
   于是拿着**旧二进制**测了一轮，得出「修复没生效」的错误结论。
 - 同一天早些时候 `cargo fmt -- --check` 的输出被我 `head -5` 截断，只看到第一个文件就
@@ -362,7 +362,7 @@ lifecycle hook completed successfully extension="hook-smoke" hook="onActivate"
   「clippy + fmt 绿」是错的**——那次 `cargo fmt -- --check` 的输出我 `head -5` 截断了，
   只看到第一个文件就下了结论。已补格式化。**教训：`--check` 的输出不能截断着看。**
 
-**结果**：`cargo test -p aionui-extension --no-fail-fast` → 18 个测试二进制全绿，0 失败。
+**结果**：`cargo test -p dream-core-extension --no-fail-fast` → 18 个测试二进制全绿，0 失败。
 
 ---
 
@@ -389,7 +389,7 @@ worktree 检出成 CRLF 导致失配"，于是给 `*.sql` 钉 `eol=lf`。实测�
 
 所以正确修法不是改文件字节，而是**让启动过程容忍纯行尾差异**：
 
-`aionui-db/src/database.rs` 的 `align_line_ending_only_checksums()`——
+`dream-core-db/src/database.rs` 的 `align_line_ending_only_checksums()`——
 `VersionMismatch` 时逐条比对，只有当已应用迁移的文本**去掉 `\r` 后完全一致**
 才对齐存储的校验和并重试；任何真实改动仍照常拒绝，「已应用迁移不可变」的保证不变。
 照抄既有 `align_reconciled_mcp_migration_checksum` 的模式，新增两条测试锁死
@@ -419,11 +419,11 @@ realigned their checksums and retrying versions=[19,20,21,25,31,32,33,34,35,36]
 
 推送时 `one-main` 上已有另一条线（企业版商业化 5 项待办）的 3 个提交，所以最后一步是**合并**而非 fast-forward。5 个冲突里有 3 个直接源于本轮同步，值得单独记下来：
 
-| 冲突文件                                                                                                                    | 裁决                                                                            |
-| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `CLAUDE.md`                                                                                                                 | **两个索引条目都保留**（本轮同步的 07-29 条 + 另一条线的 07-30 条），不是二选一 |
-| `i18n-keys.d.ts`                                                                                                            | 生成物，取 `one-main` 后直接 `bun run i18n:types` 重生成，不手工合 key union    |
-| `verify-bundled-aioncore-resources.js`<br>`verify-bundled-aioncore-install.ps1`<br>`verifyBundledAioncoreResources.test.ts` | **全取 `one-main`**——它是严格超集                                               |
+| 冲突文件                                                                                                                       | 裁决                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `CLAUDE.md`                                                                                                                    | **两个索引条目都保留**（本轮同步的 07-29 条 + 另一条线的 07-30 条），不是二选一 |
+| `i18n-keys.d.ts`                                                                                                               | 生成物，取 `one-main` 后直接 `bun run i18n:types` 重生成，不手工合 key union    |
+| `verify-bundled-dreamcore-resources.js`<br>`verify-bundled-dreamcore-install.ps1`<br>`verifyBundledDreamcoreResources.test.ts` | **全取 `one-main`**——它是严格超集                                               |
 
 第三行是关键因果：**另一条线那个"解除打包阻塞"的修复，起因就是本轮同步**。同步后后端改产 `schemaVersion: 2` manifest（agent CLI 从 npm 包换成原生二进制），而 JS 校验器和**装机侧 PS1 校验器**都写死只认 v1 —— 前者让 `dist:win` 直接失败，后者会把已装用户误判成"安装损坏"。他们的版本同时认 v1+v2，我这边只有 v2；取 `--ours` 会把这个修复覆盖掉、重新把打包堵死。
 
@@ -443,10 +443,10 @@ realigned their checksums and retrying versions=[19,20,21,25,31,32,33,34,35,36]
 
 ### 三仓级联最终核实
 
-| 环节                           | 实测值                        |
-| ------------------------------ | ----------------------------- |
-| aionrs `origin/master`         | `8bb0e0b`                     |
-| 1oneCore `Cargo.lock` → aionrs | `...#8bb0e0bb72e4...` ✅ 一致 |
-| 1oneCore 版本                  | `0.1.53-one.1`                |
-| 1oneUI `aioncoreVersion`       | `v0.1.53-one.1` ✅ 一致       |
-| `092e9071` ∈ `origin/one-main` | ✅                            |
+| 环节                                 | 实测值                        |
+| ------------------------------------ | ----------------------------- |
+| dream-engine `origin/master`         | `8bb0e0b`                     |
+| 1oneCore `Cargo.lock` → dream-engine | `...#8bb0e0bb72e4...` ✅ 一致 |
+| 1oneCore 版本                        | `0.1.53-one.1`                |
+| 1oneUI `dreamcoreVersion`            | `v0.1.53-one.1` ✅ 一致       |
+| `092e9071` ∈ `origin/one-main`       | ✅                            |

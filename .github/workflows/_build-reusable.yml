@@ -31,7 +31,7 @@ on:
 env:
   BUN_INSTALL_REGISTRY: 'https://registry.npmjs.org/'
   DREAM_HUB_TAG: 'dist-ebc6a2b'
-  # Discontinued-build flag: only AionUi's final `-final` tag (e.g.
+  # Discontinued-build flag: only the upstream project's final `-final` tag (e.g.
   # v2.1.40-final) produces a build that guides users to the AionPro website.
   # AionPro's own release tags never contain `-final`, so this stays 'false'
   # there and in-app update behavior is untouched.
@@ -779,7 +779,7 @@ jobs:
             out/*.msi
             out/*.dmg
             out/*.deb
-            # Brand rename leftover: this used to be AionUi-*-mac-*.zip, which
+            # Brand rename leftover: this used to carry the pre-rebrand product name, which
             # stopped matching when artifactName became One-Work-*. The zip is
             # what electron-updater downloads on macOS, and latest-mac.yml points
             # at it — so a stale glob here silently breaks macOS auto-update while

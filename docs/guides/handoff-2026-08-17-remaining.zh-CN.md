@@ -11,20 +11,20 @@
 **下面正文保留原样**（含当时的错误判断），因为其中几处前提**后来被证伪**，
 留着比删掉有用——它记录了「哪一类前提最容易写错」。逐条结论：
 
-| 原事项                  | 结论                | 关键点                                                                                                                                                                                       |
-| ----------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P0-1 图片识别           | ✅ 已做             | 新增 aionrs 的 `ReadImage` 工具（不要求主模型视觉能力）+ 1oneCore 的 `resolve_vision_delegate`。**范围比原文小**：ACP（Claude Code）后端本来就是好的，坏的只有 aionrs，详见下方「§真机证据」 |
-| P0-2 生图丢文字回复     | ✅ 已随 2.1.55 发出 | 代码早在主干，只差发版                                                                                                                                                                       |
-| P1-1 C 组 `eb4bd7f7`    | ⛔ **已定不采纳**   | 原文说难点是「撞 fork 改过的 `watch_service.rs`」——**证伪**，fork 对那几个文件零独立改动（blob 逐字节相同）。真实风险是它会删掉五个前端在用的端点。证据见 backlog §2.C-1                     |
-| P1-1 C 组 `b678d839e`   | ✅ 已做（等价重写） | 它与 `eb4bd7f7` **无依赖**，原文把二者归成一对是分组错误                                                                                                                                     |
-| P1-2 claude CLI 2.1.233 | ✅ 已做             | 先验证 npm 上真实可获取才动手                                                                                                                                                                |
-| P1-3 会话分叉           | ✅ 已做（完整移植） | 原文说「后端已合入只差前端」——**证伪**，`/api/conversations/{id}/fork` 在 1oneCore 整个不存在，直接合前端只会做出一个必然 404 的按钮                                                         |
-| P1-4 CDP 失效           | ✅ 已恢复           | 加回应用级调试端口，但改成**两道闸**：打包版无条件拒绝 + dev 下需显式设 `AIONUI_DEVTOOLS_CDP_PORT`。`cdp.md` 已重写                                                                          |
-| P2 发版                 | ✅ 已做             | 2.1.55                                                                                                                                                                                       |
-| P3-1 flaky              | ✅ 已做             | 全量 vitest 连跑两轮真实退出码 0                                                                                                                                                             |
-| P3-2 SessionCenter 覆盖 | ✅ 已做             | 17 条 dom 测试                                                                                                                                                                               |
-| P3-3 License 轮换       | ⬜ **仍待人工**     | 涉及私钥保管，AI 不代做                                                                                                                                                                      |
-| P3-4 杀软排除           | ⬜ **仍待人工**     | 属修改系统安全设置                                                                                                                                                                           |
+| 原事项                  | 结论                | 关键点                                                                                                                                                                                                   |
+| ----------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0-1 图片识别           | ✅ 已做             | 新增 dream-engine 的 `ReadImage` 工具（不要求主模型视觉能力）+ 1oneCore 的 `resolve_vision_delegate`。**范围比原文小**：ACP（Claude Code）后端本来就是好的，坏的只有 dream-engine，详见下方「§真机证据」 |
+| P0-2 生图丢文字回复     | ✅ 已随 2.1.55 发出 | 代码早在主干，只差发版                                                                                                                                                                                   |
+| P1-1 C 组 `eb4bd7f7`    | ⛔ **已定不采纳**   | 原文说难点是「撞 fork 改过的 `watch_service.rs`」——**证伪**，fork 对那几个文件零独立改动（blob 逐字节相同）。真实风险是它会删掉五个前端在用的端点。证据见 backlog §2.C-1                                 |
+| P1-1 C 组 `b678d839e`   | ✅ 已做（等价重写） | 它与 `eb4bd7f7` **无依赖**，原文把二者归成一对是分组错误                                                                                                                                                 |
+| P1-2 claude CLI 2.1.233 | ✅ 已做             | 先验证 npm 上真实可获取才动手                                                                                                                                                                            |
+| P1-3 会话分叉           | ✅ 已做（完整移植） | 原文说「后端已合入只差前端」——**证伪**，`/api/conversations/{id}/fork` 在 1oneCore 整个不存在，直接合前端只会做出一个必然 404 的按钮                                                                     |
+| P1-4 CDP 失效           | ✅ 已恢复           | 加回应用级调试端口，但改成**两道闸**：打包版无条件拒绝 + dev 下需显式设 `DREAM_DEVTOOLS_CDP_PORT`。`cdp.md` 已重写                                                                                       |
+| P2 发版                 | ✅ 已做             | 2.1.55                                                                                                                                                                                                   |
+| P3-1 flaky              | ✅ 已做             | 全量 vitest 连跑两轮真实退出码 0                                                                                                                                                                         |
+| P3-2 SessionCenter 覆盖 | ✅ 已做             | 17 条 dom 测试                                                                                                                                                                                           |
+| P3-3 License 轮换       | ⬜ **仍待人工**     | 涉及私钥保管，AI 不代做                                                                                                                                                                                  |
+| P3-4 杀软排除           | ⬜ **仍待人工**     | 属修改系统安全设置                                                                                                                                                                                       |
 
 ### §真机证据：图片问题的范围比原文写的小
 
@@ -33,11 +33,11 @@
 
 - **ACP 会话**（Claude Code）→ **本来就是好的**。它自己的 `Read` 工具直接返回
   base64，模型正确分析出了内容（认出是股票行情图、均线、MACD、KDJ、五档盘口）。
-- **aionrs 会话**（`deepseek-v4-flash`）→ 坏。
+- **dream-engine 会话**（`deepseek-v4-flash`）→ 坏。
 
 所以**不要把它做成内置 MCP** 去覆盖所有后端——那是给本来就正常的后端添乱。
 
-aionrs 会话里模型实际走过的四步（真机轨迹，可作为回归对照）：
+dream-engine 会话里模型实际走过的四步（真机轨迹，可作为回归对照）：
 `ToolSearch("view_image")` → `No deferred tools matching` →
 `Read` → `(binary file, 137968 bytes)` → 硬调 `ViewImage` → `not available` →
 模型自己宣布「我来改用本机 Windows OCR 能力……先写一个 PowerShell 脚本」。
@@ -68,14 +68,14 @@ aionrs 会话里模型实际走过的四步（真机轨迹，可作为回归对�
 ### 已查清的机制（代码级，非推测）
 
 当前链路：附件在后端被解析成**纯文本路径**注入提示词
-（`1oneCore/crates/aionui-ai-agent/src/manager/aionrs/content.rs`
+（`1oneCore/crates/dream-core-ai-agent/src/manager/dream-engine/content.rs`
 的 `build_content_blocks` → `[Attached files]\n<绝对路径>`）。
 然后：
 
-- aionrs 引擎里 `ViewImage` 工具带 `requires_image_input() == true`
-  （`aionrs/crates/aion-tools/src/view_image.rs:155`）；
+- dream-engine 引擎里 `ViewImage` 工具带 `requires_image_input() == true`
+  （`dream-engine/crates/dream-engine-tools/src/view_image.rs:155`）；
 - 引擎在组装工具清单时按能力过滤掉它
-  （`aionrs/crates/aion-agent/src/engine.rs:706` 与 `:713`：
+  （`dream-engine/crates/dream-engine-agent/src/engine.rs:706` 与 `:713`：
   `!tool.requires_image_input() || image_input.supports_images()`）；
 - 于是**文本模型的工具清单里根本没有任何能读图的工具**，
   它只拿到一个自己打不开的文件路径。
@@ -86,7 +86,7 @@ aionrs 会话里模型实际走过的四步（真机轨迹，可作为回归对�
 `attachmentTextExtractor.ts` / `buildAttachmentContextBlock` 的多模态转文字管线
 （图片走 vision API 转描述、PDF/docx 抽文本、音视频转写 + 关键帧）。
 **实测这些在当前代码里全部为 0 命中，且 `git log -S` 在本仓全部历史里也 0 命中**——
-即它属于更早的仓库形态（记忆里的路径是 `src/process/worker/aionrs.ts`，
+即它属于更早的仓库形态（记忆里的路径是 `src/process/worker/dream-engine.ts`，
 没有 `packages/desktop/` 前缀，是 monorepo 重构之前的布局），
 **从来没有被带进现在这套结构**。
 
@@ -116,7 +116,7 @@ conversationSendService        -> 0 files
 
 ### 我做过又回退的一次错误尝试（别重犯）
 
-我一度把 `1oneCore/crates/aionui-ai-agent/src/capability/image_input.rs` 里
+我一度把 `1oneCore/crates/dream-core-ai-agent/src/capability/image_input.rs` 里
 自定义网关未匹配模型的默认值从 `Unknown` 改成 `Supported`（提交 `7cf40b96`），
 想让图片"照常发出去让 provider 报错"。**用户当场否掉并已 revert（`a1caef8e`）**——
 理由是：文本模型不认图片本来就正常，正确做法是**插件/OCR/工具转文字**，
@@ -148,9 +148,9 @@ chat completion）只回文字不产图时，agent 只拿到一句空洞的
 | #   | 事项                                                                      | 为什么不是简单 pick                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | --- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | ~~**C 组剩 2 条**~~ → **已决定不采纳（2026-08-17 结案，别再重做）**       | **本行原先的判断已被证伪、作废**：它写着「正面撞 fork 自己独立改过的 `watch_service.rs`/`file_watching.rs`」——实测这几个文件 fork **零独立改动**，blob 哈希与上游同一 PR（`7f8ed6c5`）逐字节相同。真实不采纳理由是另外四条：①`eb4bd7f7` 删掉的五个端点 fork 前端全在用（`ipcBridge.ts:981-982` 的 office-watch、`:1455-1473` 的 preview-history）②它建在 fork 未采纳的 `6e77158c` 之上，而后者删的 browse/zip/remove/rename 前端有三处在用 ③夹带独立未评估功能 `system_file_opener.rs` ④会威胁 fork 原创 `8c8cf349` 的 `to_relative_path_string()`（Windows 反斜杠导致文件树塌成一个节点的修复）。**完整证据、复现命令与「将来若要做的正确路径」见 [`upstream-sync-backlog-2026-08-16.zh-CN.md`](upstream-sync-backlog-2026-08-16.zh-CN.md) §2.C-1。** 配对的 UI `b678d839e` 经核实与 `eb4bd7f7` **无任何依赖**（纯前端保存按钮），已按 fork 现状**等价手写实现**，不是 cherry-pick。 |
-| 2   | **内置 claude CLI 从 2.1.215 升到 2.1.233**（Core `9645dc5b`/`77acec68`） | 这两条各有一半落在 `aionui-session/backend/cli_version.rs`，而该文件来自上游 `ae817e32`「改用用户自己的 claude/codex、不再内置」——**fork 没采纳那套架构**（仍内置，pin 在 `aionui-runtime/managed_cli/mod.rs` 的 `CLAUDE_CLI_VERSION`）。另一半改的是 `claude_flags.rs` 里**刻意绑在 fork 自己 pin 值上**的断言。所以它等价于"fork 要不要升内置 CLI"的**打包决策**，需验证该版本二进制可获取。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| 3   | **会话分叉（session fork）前端半边** UI `ae2d2f53e`                       | aionrs 后端半边已随整体 merge 进来（`df1cf85`+`5889110`），但前端入口未合，所以功能不可见。**属产品决策**：要不要这个能力。注意它牵着 `ForkBranchIcon` 组件与 turn-id 两处（本轮已从别的提交里剥离过，见待办文档"顺带混进未同步功能"那节）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| 4   | **`docs/guides/cdp.md` 已失效，需重写或删除**                             | 那份文档教你连 `http://127.0.0.1:9230` 调试应用界面，**但应用级 `remote-debugging-port` 开关早已从代码里删掉**（`configureChromium.ts:97-98`/`245-255` 的注释明确写着"随应用级 remote-debugging-port 一起删除"，并连 9230-9250 号段预留也移除了）；文档里"设置 → 系统 → 开发者调试 → 启用远程调试"那个开关也不存在了（`enableRemoteDebugging`/`remoteDebugging`/`developerDebug` 全仓 0 命中）。**实测启动 dev 后 9230 确实不监听。** 现在唯一的 CDP 是 D 组新加的**单目标 agent 浏览器桥**（`127.0.0.1:<随机端口>`，需 token），而它**按设计就碰不到 AionUi 界面本身**（i18n 文案原话："它只能操作应用内浏览器这一个页面，碰不到 AionUi 界面本身"）。**后果：过去那套"用 CDP 驱动真实界面做验收"的方法论现在不可用**，真机验证只能人工点，或者先把应用级 CDP 开关加回来。                                                                                                            |
+| 2   | **内置 claude CLI 从 2.1.215 升到 2.1.233**（Core `9645dc5b`/`77acec68`） | 这两条各有一半落在 `dream-core-session/backend/cli_version.rs`，而该文件来自上游 `ae817e32`「改用用户自己的 claude/codex、不再内置」——**fork 没采纳那套架构**（仍内置，pin 在 `dream-core-runtime/managed_cli/mod.rs` 的 `CLAUDE_CLI_VERSION`）。另一半改的是 `claude_flags.rs` 里**刻意绑在 fork 自己 pin 值上**的断言。所以它等价于"fork 要不要升内置 CLI"的**打包决策**，需验证该版本二进制可获取。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 3   | **会话分叉（session fork）前端半边** UI `ae2d2f53e`                       | dream-engine 后端半边已随整体 merge 进来（`df1cf85`+`5889110`），但前端入口未合，所以功能不可见。**属产品决策**：要不要这个能力。注意它牵着 `ForkBranchIcon` 组件与 turn-id 两处（本轮已从别的提交里剥离过，见待办文档"顺带混进未同步功能"那节）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 4   | **`docs/guides/cdp.md` 已失效，需重写或删除**                             | 那份文档教你连 `http://127.0.0.1:9230` 调试应用界面，**但应用级 `remote-debugging-port` 开关早已从代码里删掉**（`configureChromium.ts:97-98`/`245-255` 的注释明确写着"随应用级 remote-debugging-port 一起删除"，并连 9230-9250 号段预留也移除了）；文档里"设置 → 系统 → 开发者调试 → 启用远程调试"那个开关也不存在了（`enableRemoteDebugging`/`remoteDebugging`/`developerDebug` 全仓 0 命中）。**实测启动 dev 后 9230 确实不监听。** 现在唯一的 CDP 是 D 组新加的**单目标 agent 浏览器桥**（`127.0.0.1:<随机端口>`，需 token），而它**按设计就碰不到 dream-ui 界面本身**（i18n 文案原话："它只能操作应用内浏览器这一个页面，碰不到 dream-ui 界面本身"）。**后果：过去那套"用 CDP 驱动真实界面做验收"的方法论现在不可用**，真机验证只能人工点，或者先把应用级 CDP 开关加回来。                                                                                                        |
 
 ### ⛔ 已明确不采纳的，别再重做
 
@@ -196,8 +196,8 @@ chat completion）只回文字不产图时，agent 只拿到一句空洞的
 
 > 下面每段都可以**原样粘贴**给一个新的 AI 会话。已经把「必读什么、坑在哪、
 > 什么算做完、什么绝对不要做」都写进去了，新会话不需要看这轮对话。
-> **共同前置**（每段开头都带了）：工作目录 `D:\aionui-m0`，三仓 fork
-> （`1oneUI` 前端 / `1oneCore` Rust 后端 / `aionrs-local` agent 引擎），
+> **共同前置**（每段开头都带了）：工作目录 `D:\旧中转目录`，三仓 fork
+> （`1oneUI` 前端 / `1oneCore` Rust 后端 / `旧引擎本地检出` agent 引擎），
 > 只单向同步上游、永不反向提 PR。
 
 ---
@@ -205,33 +205,33 @@ chat completion）只回文字不产图时，agent 只拿到一句空洞的
 ### 话术 A —— 图片识别（P0，最该先做）
 
 ```
-工作目录 D:\aionui-m0，三仓 fork：1oneUI(前端Electron) / 1oneCore(Rust后端) /
-aionrs-local(agent引擎)。先读 1oneUI/CLAUDE.md 和
+工作目录 D:\旧中转目录，三仓 fork：1oneUI(前端Electron) / 1oneCore(Rust后端) /
+旧引擎本地检出(agent引擎)。先读 1oneUI/CLAUDE.md 和
 1oneUI/docs/guides/handoff-2026-08-17-remaining.zh-CN.md 的 P0-1 那节。
 
 任务：让文本模型也能处理用户发的图片。
 
 现状（已由上一轮查到代码行，可直接复用，但请自己开文件复核）：
 - 附件目前只作为纯文本路径注入提示词：
-  1oneCore/crates/aionui-ai-agent/src/manager/aionrs/content.rs 的
+  1oneCore/crates/dream-core-ai-agent/src/manager/dream-engine/content.rs 的
   build_content_blocks() → "[Attached files]\n<绝对路径>"
 - 唯一能读图的 ViewImage 工具带 requires_image_input()==true
-  (aionrs-local/crates/aion-tools/src/view_image.rs:155)
-- aionrs 引擎按能力把它过滤掉：
-  aionrs-local/crates/aion-agent/src/engine.rs:706 和 :713
+  (旧引擎本地检出/crates/dream-engine-tools/src/view_image.rs:155)
+- dream-engine 引擎按能力把它过滤掉：
+  旧引擎本地检出/crates/dream-engine-agent/src/engine.rs:706 和 :713
   (!tool.requires_image_input() || image_input.supports_images())
 - 结论：文本模型的工具清单里没有任何能读图的工具，只拿到一个打不开的路径。
   这与用哪个文本模型无关（用户已确认"不管哪个文本模型都有问题"）。
 
 ⚠️ 两件事上一轮没证实，你要先自己钉死，别继承结论：
 1. 用户说 2.1.53 正常、2.1.54 不正常，但 git log v2.1.53..v2.1.54(12条) 与
-   aioncore v0.1.63..v0.1.65(16条) 逐条看过，没有任何图片/附件/vision 相关改动。
+   dreamcore v0.1.63..v0.1.65(16条) 逐条看过，没有任何图片/附件/vision 相关改动。
    所以"53好54坏"这个前提没验证成。请先拿 2.1.53 的安装包实测同一张图。
 2. 上一轮没做真机复现。注意：CDP 驱动界面的老办法已失效（见下面），
    真机验证只能人工点界面。
 
 ⛔ 绝对不要做的（上一轮做过、被用户当场否掉并已 revert）：
-不要去放宽 1oneCore/crates/aionui-ai-agent/src/capability/image_input.rs 里
+不要去放宽 1oneCore/crates/dream-core-ai-agent/src/capability/image_input.rs 里
 "自定义网关未匹配模型"的默认能力判定（曾把 Unknown 改成 Supported，
 提交 7cf40b96，已被 revert a1caef8e）。用户明确的方向是：
 "文本模型不认图片本来就正常，应该靠插件/工具/MCP/OCR 转文字来识别，
@@ -255,7 +255,7 @@ visionModelResolver 的"多模态转文字"管线，但 git log -S 在 1oneUI �
 ### 话术 B —— 上游同步剩余项（P1，可一次会话做完前两条）
 
 ```
-工作目录 D:\aionui-m0，三仓 fork，只单向同步上游、永不反向提 PR。
+工作目录 D:\旧中转目录，三仓 fork，只单向同步上游、永不反向提 PR。
 必读：1oneUI/docs/guides/upstream-sync-backlog-2026-08-16.zh-CN.md
 （尤其 §1 的九个坑）和 handoff-2026-08-17-remaining.zh-CN.md 的 P1 表。
 
@@ -263,21 +263,21 @@ visionModelResolver 的"多模态转文字"管线，但 git log -S 在 1oneUI �
 
 1) C组剩2条：1oneCore eb4bd7f7 + 1oneUI b678d839e
    eb4bd7f7 实际是文件监听子系统整体重写（45文件，
-   aionui-file/watch_service.rs 629行 + aionui-office/snapshot.rs 523行
+   dream-core-file/watch_service.rs 629行 + dream-core-office/snapshot.rs 523行
    整体删掉换成 watch_manager.rs/proxy.rs），远超原描述的"office刷新"量级，
    且正面撞 fork 自己独立改过的 watch_service.rs / file_watching.rs。
    建议单独一轮，逐个冲突核对。
 
 2) 内置 claude CLI 从 2.1.215 升到 2.1.233（1oneCore 9645dc5b + 77acec68）
    这不是例行 pick：两条各有一半落在
-   aionui-session/backend/cli_version.rs，而该文件来自上游 ae817e32
+   dream-core-session/backend/cli_version.rs，而该文件来自上游 ae817e32
    「改用用户自己的 claude/codex、不再内置」——本 fork 没采纳那套架构
-   （仍内置，pin 在 aionui-runtime/managed_cli/mod.rs 的 CLAUDE_CLI_VERSION）。
+   （仍内置，pin 在 dream-core-runtime/managed_cli/mod.rs 的 CLAUDE_CLI_VERSION）。
    另一半改的是 claude_flags.rs 里刻意绑在 fork 自己 pin 值上的断言。
    所以它等价于"要不要升内置 CLI"的打包决策，动手前先验证该版本二进制可获取。
 
 3) 会话分叉前端半边：1oneUI ae2d2f53e
-   aionrs 后端半边已随整体 merge 进来（df1cf85+5889110），但前端入口未合，
+   dream-engine 后端半边已随整体 merge 进来（df1cf85+5889110），但前端入口未合，
    功能不可见。属产品决策，先问用户要不要这个能力。
    它牵着 ForkBranchIcon 组件与 turn-id 两处。
 
@@ -301,7 +301,7 @@ SCM面板、open-system）。判据：git show <commit> -- <file> 里
 不要用 `cargo test ... | grep ...`（管道退出码是 grep 的，
 上一轮我据此把2个编译错误读成了 exit 0）。
 
-改完 1oneCore 的 Rust 必须跑 D:\aionui-m0\scripts\backend-rebuild.ps1
+改完 1oneCore 的 Rust 必须跑 D:\旧中转目录\scripts\backend-rebuild.ps1
 重编内嵌，否则 dev 用的还是旧后端（跑之前先确认应用没在跑，否则 EPERM）。
 ```
 
@@ -310,7 +310,7 @@ SCM面板、open-system）。判据：git show <commit> -- <file> 里
 ### 话术 C —— CDP 调试能力已失效，需重建或改文档（P1）
 
 ```
-工作目录 D:\aionui-m0。任务：处理 1oneUI/docs/guides/cdp.md 已失效的问题。
+工作目录 D:\旧中转目录。任务：处理 1oneUI/docs/guides/cdp.md 已失效的问题。
 
 实测结论（上一轮验证过，你可复核）：
 - cdp.md 教你连 http://127.0.0.1:9230 调试应用界面，但应用级
@@ -323,8 +323,8 @@ SCM面板、open-system）。判据：git show <commit> -- <file> 里
 - 实测 `bun run dev` 起来后 9230 确实不监听。
 - 现在唯一的 CDP 是新加的单目标 agent 浏览器桥
   (启动日志: "[CDP] Single-target bridge listening on 127.0.0.1:<port>")，
-  而它按设计就碰不到 AionUi 界面本身
-  (i18n 原话："它只能操作应用内浏览器这一个页面，碰不到 AionUi 界面本身")。
+  而它按设计就碰不到 dream-ui 界面本身
+  (i18n 原话："它只能操作应用内浏览器这一个页面，碰不到 dream-ui 界面本身")。
 
 影响：本仓历史上大量验收都依赖"用 CDP 驱动真实界面"这套方法论
 （见各 session 文档里的"真机 CDP 验证"），现在这条路断了，
@@ -342,7 +342,7 @@ SCM面板、open-system）。判据：git show <commit> -- <file> 里
 ### 话术 D —— 发版（P0-2 顺带修复 + 打包注意）
 
 ```
-工作目录 D:\aionui-m0。任务：发一个新版本。
+工作目录 D:\旧中转目录。任务：发一个新版本。
 
 必须知道的两件事：
 1) 提交 2d387b9f0（在 1oneUI one-main）修了"生图工具在无产出时丢弃模型
@@ -359,7 +359,7 @@ lint/format/tsc/test），主干上的漂移会攒到打 Mac 包那一刻一次�
 且失败会伪装成"Mac 构建失败"。历史上连挂三次全是这个原因。
 
 打包前按约定先 bump version patch +1 并 commit push。
-Windows 打包必须设 AIONUI_BACKEND_LOCAL_PATH 指向本地 aioncore
+Windows 打包必须设 DREAM_BACKEND_LOCAL_PATH 指向本地 dreamcore
 （已封装 scripts/package-win.ps1）。
 ⚠️ 不许删任何旧的 .exe 安装包。
 ```
@@ -369,7 +369,7 @@ Windows 打包必须设 AIONUI_BACKEND_LOCAL_PATH 指向本地 aioncore
 ### 话术 E —— 测试稳定性与欠账（P3，适合并行会话）
 
 ```
-工作目录 D:\aionui-m0。任务：清理测试稳定性欠账。读
+工作目录 D:\旧中转目录。任务：清理测试稳定性欠账。读
 1oneUI/docs/guides/handoff-2026-08-17-remaining.zh-CN.md 的 P3。
 
 1) 两个测试在并行负载下 flaky，单独跑必绿，非功能回归：

@@ -18,7 +18,7 @@
 
 ## 三、打包分发范围核实
 
-- **专家市场 252 条人设**（含系统提示词、头像）：`crates/aionui-app/assets/marketplace-personas` 通过 `include_dir!` 在**编译期**打进 `aioncore` 二进制（`aionui-assistant/src/marketplace.rs`），任何全新装机用户开箱即有完整目录，不需要额外打包步骤。
+- **专家市场 252 条人设**（含系统提示词、头像）：`crates/dream-core-app/assets/marketplace-personas` 通过 `include_dir!` 在**编译期**打进 `dreamcore` 二进制（`dream-core-assistant/src/marketplace.rs`），任何全新装机用户开箱即有完整目录，不需要额外打包步骤。
 - **应用自带的内置 MCP**（`one-export-pdf`/`one-image-generation`/`one-web-tools`）：随 `electron-builder.yml` 的 `asarUnpack` 一起打进安装包。
 - **`chrome-devtools`**：查到 [`runBackendMigrations.ts`](../../packages/desktop/src/process/utils/runBackendMigrations.ts) 的 `buildDefaultMcpServers()` 早就把它做成"每个用户首次启动自动种下的默认配置"（`npx -y chrome-devtools-mcp@latest`，`builtin: true`，默认 disabled 待用户手动开）——因为它是公开 npm 包不需要密钥。
 - **用户自己连接的其余 MCP**（`ftshare`/`stock-sdk`/`codegraph`）：不会随包分发，是个人账号配置。
@@ -32,32 +32,32 @@
 
 在 `buildDefaultMcpServers()` 里照抄 `chrome-devtools` 的写法各加一条 `builtin: true` 的默认种子配置（默认 `enabled: false`，用户自己开），新增两个常量 `BUILTIN_FTSHARE_NAME`/`BUILTIN_STOCK_SDK_NAME`。`bunx tsc --noEmit` 通过。**⚠️ 唯一无法从代码判断的点**：`market.ft.tech`/`stock-sdk-mcp` 这两个第三方服务端有没有对匿名/免费调用限流或使用条款——这个只有用户自己清楚，代码层面判断不了。
 
-## 五、ftshare 工具名不合法 bug 深挖 + 单工具级过滤修复（aionrs，已提交推送）
+## 五、ftshare 工具名不合法 bug 深挖 + 单工具级过滤修复（dream-engine，已提交推送）
 
 ### 现状核实（不是"已经修好"，是防线生效掩盖了）
 
-用户说"这个 bug 好像已经解决了"。真机 CDP 核实 ftshare 当前持久化的 172 个工具里，`ft_goodwill_market_overview` 的 `properties` 仍然是 `{ "（无业务参数）": {...} }`——上游（`market.ft.tech`）这个 schema bug 本身**没有修**，用户感知不到 400 崩溃，是因为 07-27 那轮加的防线（`aionui-common/tool_schema.rs` + 1oneCore `load_user_mcp_servers`）在起作用。
+用户说"这个 bug 好像已经解决了"。真机 CDP 核实 ftshare 当前持久化的 172 个工具里，`ft_goodwill_market_overview` 的 `properties` 仍然是 `{ "（无业务参数）": {...} }`——上游（`market.ft.tech`）这个 schema bug 本身**没有修**，用户感知不到 400 崩溃，是因为 07-27 那轮加的防线（`dream-core-common/tool_schema.rs` + 1oneCore `load_user_mcp_servers`）在起作用。
 
 ### 架构挖掘：两条运行路径行为不同
 
-查 `aionui-ai-agent` 发现 1oneCore 里有两条完全独立的会话执行路径，行为不一样：
+查 `dream-core-ai-agent` 发现 1oneCore 里有两条完全独立的会话执行路径，行为不一样：
 
 - **ACP 路径**（`factory/acp.rs`，Claude Code / Codex CLI）：MCP 工具发现发生在 CLI 子进程内部，1oneCore 只能传"要不要把这个 server 的配置发给它"，管不到单个工具——所以 `load_user_mcp_servers` 现在的逻辑是"这个 server 有任何一个工具不合法 → 整个 server 都不注入这次会话"（`factory/acp.rs:500-520` 注释原话："we cannot drop the single bad tool — the agent collects tools from the server itself"）。这条路径的架构限制是真的，本轮没有改。
-- **aionrs 路径**（`factory/aionrs.rs` → aionrs 自己的 `aion-mcp` crate）：`load_user_mcp_servers`（1oneCore 这一侧）完全没有任何 schema 校验，直接把 server 配置转发给 aionrs；但 aionrs **自己拥有** MCP 工具发现和拼装逻辑（`aion-mcp/src/manager.rs` 自己发 `tools/list`，`aion-mcp/src/tool_proxy.rs` 自己把工具注册进请求会用到的工具表）——这是 fork 自己的代码，可以改，而且改了是安全的（不像 ACP 那样是黑盒子进程）。
+- **dream-engine 路径**（`factory/dream-engine.rs` → dream-engine 自己的 `dream-engine-mcp` crate）：`load_user_mcp_servers`（1oneCore 这一侧）完全没有任何 schema 校验，直接把 server 配置转发给 dream-engine；但 dream-engine **自己拥有** MCP 工具发现和拼装逻辑（`dream-engine-mcp/src/manager.rs` 自己发 `tools/list`，`dream-engine-mcp/src/tool_proxy.rs` 自己把工具注册进请求会用到的工具表）——这是 fork 自己的代码，可以改，而且改了是安全的（不像 ACP 那样是黑盒子进程）。
 
-### 修复（aionrs 仓库，`347348f`，已推送 `gaogg521/aionrs` master）
+### 修复（dream-engine 仓库，`347348f`，已推送 `gaogg521/dream-engine` master）
 
-`aion-mcp/src/tool_proxy.rs` 新增 `has_valid_property_keys()`（同 `aionui-common/tool_schema.rs` 一样的 `^[a-zA-Z0-9_.-]{1,64}$` 规则，递归 `properties`/`items`/`anyOf`/`oneOf`/`allOf`/`$defs`/`definitions`），`register_mcp_tools`/`register_single_server_tools` 遇到不合规的工具改成**只跳过那一个工具**（`tracing::warn!` 记录），同一个 server 上其余工具照常注册可用——不再是"一颗老鼠屎坏一锅粥"式的整 server 排除。新增 `McpManager::new_for_test_with_tools` 测试专用构造器（区别于原有 `new_for_test` 恒空工具列表）。9 条新增单测（含"172 个工具只丢 1 个、其余照常注册"的集成用例）+ 全部既有 57 条 aion-mcp 测试 + 540 条 aion-skills 测试全绿，`cargo fmt`/`cargo clippy -D warnings` 干净。
+`dream-engine-mcp/src/tool_proxy.rs` 新增 `has_valid_property_keys()`（同 `dream-core-common/tool_schema.rs` 一样的 `^[a-zA-Z0-9_.-]{1,64}$` 规则，递归 `properties`/`items`/`anyOf`/`oneOf`/`allOf`/`$defs`/`definitions`），`register_mcp_tools`/`register_single_server_tools` 遇到不合规的工具改成**只跳过那一个工具**（`tracing::warn!` 记录），同一个 server 上其余工具照常注册可用——不再是"一颗老鼠屎坏一锅粥"式的整 server 排除。新增 `McpManager::new_for_test_with_tools` 测试专用构造器（区别于原有 `new_for_test` 恒空工具列表）。9 条新增单测（含"172 个工具只丢 1 个、其余照常注册"的集成用例）+ 全部既有 57 条 dream-engine-mcp 测试 + 540 条 dream-engine-skills 测试全绿，`cargo fmt`/`cargo clippy -D warnings` 干净。
 
 **范围边界（刻意没做的）**：ACP 路径的整 server 排除逻辑本轮没动——那是真实架构限制，不是本轮能力所及；`ft_goodwill_market_overview` 这一个工具本身依然不可用（它的远端 schema 本来就没法通过我们这边的代码修，得 `market.ft.tech` 自己改），但同一 server 剩下的 171 个工具（含股票专家实际在用的）不再被连坐。
 
 ### 已重编 + 已换入本机开发环境
 
-1oneCore `Cargo.lock` 更新指向 aionrs 新 commit（`cargo update -p aion-mcp`）→ `cargo build --release -p aionui-app`（约 4 分钟）→ 新 `aioncore.exe` 覆盖进 `1oneUI/resources/bundled-aioncore/win32-x64/aioncore.exe`。覆盖时发现本机开发环境（`aioncore.exe`/`electron.exe`）已经不在跑了（用户自己关掉的，与本轮操作无关），未打断任何正在进行的会话。**用户需要自己重新启动开发环境才能加载到新二进制，本轮未做真机复测**（真机验证留给用户自己用股票专家跑一次 ftshare）。
+1oneCore `Cargo.lock` 更新指向 dream-engine 新 commit（`cargo update -p dream-engine-mcp`）→ `cargo build --release -p dream-core-app`（约 4 分钟）→ 新 `dreamcore.exe` 覆盖进 `1oneUI/resources/bundled-dreamcore/win32-x64/dreamcore.exe`。覆盖时发现本机开发环境（`dreamcore.exe`/`electron.exe`）已经不在跑了（用户自己关掉的，与本轮操作无关），未打断任何正在进行的会话。**用户需要自己重新启动开发环境才能加载到新二进制，本轮未做真机复测**（真机验证留给用户自己用股票专家跑一次 ftshare）。
 
 ## 验证
 
-- aionrs：`cargo test -p aion-mcp`（57 全绿，含 9 条新增）+ `cargo test -p aion-skills`（540 全绿，确认下游未受影响）+ `cargo clippy -p aion-mcp -- -D warnings`（干净）+ `cargo fmt --all -- --check`（干净）。
+- dream-engine：`cargo test -p dream-engine-mcp`（57 全绿，含 9 条新增）+ `cargo test -p dream-engine-skills`（540 全绿，确认下游未受影响）+ `cargo clippy -p dream-engine-mcp -- -D warnings`（干净）+ `cargo fmt --all -- --check`（干净）。
 - 1oneUI：`bunx tsc --noEmit` 通过（`runBackendMigrations.ts` 改动部分）。
 - 真机 CDP 直连开发环境渲染进程（`ws://127.0.0.1:9230`）核实 `GET /api/mcp/servers` 返回的真实 `transport`/`tools` 字段，用于核实 ftshare/stock-sdk 无密钥、ftshare 那个坏工具当前仍未修。
-- **未做**：新 `aioncore.exe` 换入后的真机复测（开发环境本轮结束前已不在跑）；ftshare/stock-sdk 加入默认列表这条改动本身没有真机验证（只做了 `tsc` 类型检查）。
+- **未做**：新 `dreamcore.exe` 换入后的真机复测（开发环境本轮结束前已不在跑）；ftshare/stock-sdk 加入默认列表这条改动本身没有真机验证（只做了 `tsc` 类型检查）。

@@ -30,14 +30,14 @@
 
 ---
 
-## 2. Bundle ID 改名：`com.aionui.app` → `com.huanle.oneone.ai`
+## 2. Bundle ID 改名：`com.dream-ui.app` → `com.huanle.oneone.ai`
 
 用户要求配合新签发的 Developer ID 证书主体改 bundle ID。改了两处（`1oneUI` commit `3d5e555ff`）：
 
 - [`electron-builder.yml:1`](../../packages/desktop/electron-builder.yml) 的 `appId`
 - [`autoUpdaterService.ts`](../../packages/desktop/src/process/services/autoUpdaterService.ts) 里 dev 模式下必须与 appId 保持一致的 `updaterCacheDirName`（及一处解释性注释）
 
-`homebrew/aionui.rb.example` 里同样出现的 `com.aionui.app` **没有改**——那是文件自己标注"DO NOT MODIFY"的上游 AionUi 官方 Homebrew cask 模板，跟本 fork 的 bundle ID 无关。
+`homebrew/dream-ui.rb.example` 里同样出现的 `com.dream-ui.app` **没有改**——那是文件自己标注"DO NOT MODIFY"的上游 dream-ui 官方 Homebrew cask 模板，跟本 fork 的 bundle ID 无关。
 
 exe 文件名 (`1onecode`) 和 productName 不受此次改动影响。
 
@@ -51,7 +51,7 @@ exe 文件名 (`1onecode`) 和 productName 不受此次改动影响。
 
 ### 定位
 
-追到 [`1oneCore/crates/aionui-runtime/src/node_runtime/mod.rs:228`](../../../1oneCore/crates/aionui-runtime/src/node_runtime/mod.rs) 的 `validate_runtime()`：这个检测是真的在 spawn `node --version` 子进程，失败才报"无法启动"，不是简单查文件存在。当时内置 Node 版本钉的是 [`24.11.0`](../../../1oneCore/crates/aionui-runtime/src/node_runtime/managed.rs)（很新的大版本）。
+追到 [`1oneCore/crates/dream-core-runtime/src/node_runtime/mod.rs:228`](../../../1oneCore/crates/dream-core-runtime/src/node_runtime/mod.rs) 的 `validate_runtime()`：这个检测是真的在 spawn `node --version` 子进程，失败才报"无法启动"，不是简单查文件存在。当时内置 Node 版本钉的是 [`24.11.0`](../../../1oneCore/crates/dream-core-runtime/src/node_runtime/managed.rs)（很新的大版本）。
 
 **排除签名问题**：Apple 公证会递归校验包内所有可执行文件的签名，如果 Node 二进制没签好，公证会直接拒收，但两次公证都干净通过——所以不是签名/公证的问题。
 
@@ -61,8 +61,8 @@ exe 文件名 (`1onecode`) 和 productName 不受此次改动影响。
 
 只改 macOS（`darwin-arm64` / `darwin-x64`），Windows/Linux 不受影响仍用 24.11.0：
 
-- [`managed.rs`](../../../1oneCore/crates/aionui-runtime/src/node_runtime/managed.rs)：`PlatformSpec` 新增 `node_version` 字段（原来是全平台共享一个 `MANAGED_NODE_VERSION` 常量），macOS 两个分支改用新增的 `MACOS_MANAGED_NODE_VERSION = "22.11.0"`。
-- 同步改了 3 处测试夹具（`managed/tests.rs`）里硬编码的 `24.11.0`/`node-v24.11.0-darwin-arm64` 为对应新值，跑过 `cargo test -p aionui-runtime` + `cargo clippy` 确认无回归（2 个跟改动无关的既有失败——unix shebang 脚本在 Windows 开发机原生跑测试必然失败——已在提交前确认与本次 diff 无关）。
+- [`managed.rs`](../../../1oneCore/crates/dream-core-runtime/src/node_runtime/managed.rs)：`PlatformSpec` 新增 `node_version` 字段（原来是全平台共享一个 `MANAGED_NODE_VERSION` 常量），macOS 两个分支改用新增的 `MACOS_MANAGED_NODE_VERSION = "22.11.0"`。
+- 同步改了 3 处测试夹具（`managed/tests.rs`）里硬编码的 `24.11.0`/`node-v24.11.0-darwin-arm64` 为对应新值，跑过 `cargo test -p dream-core-runtime` + `cargo clippy` 确认无回归（2 个跟改动无关的既有失败——unix shebang 脚本在 Windows 开发机原生跑测试必然失败——已在提交前确认与本次 diff 无关）。
 - 提交：`1oneCore` commit `1797fcf7`。
 
 **✅ 真机已确认**：用户在同一台 Big Sur M1 机器上装了含修复的新包，"托管 Node 运行环境无法启动"报错消失，确认就是这个根因。
@@ -74,7 +74,7 @@ exe 文件名 (`1onecode`) 和 productName 不受此次改动影响。
 ## 4. 正式版本切号
 
 - `1oneCore`：`Cargo.toml` workspace 版本 `0.1.48-one.1` → `0.1.49-one.1`（含上面的 Node 兼容修复），commit `6054185e`，打 tag `v0.1.49-one.1` 推送，触发 `release.yml` 全平台构建，**6 个资产齐全**（这个 fork 本身就砍掉了 Windows arm64，5 个平台二进制 + 1 个 checksums.txt 是完整态，不是 7 个）。
-- `1oneUI`：`package.json` 的 `version` 字段当天已被另一路改动（品牌重命名为「One Work」那次提交 `8598e0777`）先行 bump 到 `2.1.48`；本轮只需把 `aioncoreVersion` 从 `v0.1.48-one.1` 改成 `v0.1.49-one.1`（commit `848e98147`），随后打 tag `v2.1.48` 推送。
+- `1oneUI`：`package.json` 的 `version` 字段当天已被另一路改动（品牌重命名为「One Work」那次提交 `8598e0777`）先行 bump 到 `2.1.48`；本轮只需把 `dreamcoreVersion` 从 `v0.1.48-one.1` 改成 `v0.1.49-one.1`（commit `848e98147`），随后打 tag `v2.1.48` 推送。
 
 ---
 
@@ -98,7 +98,7 @@ exe 文件名 (`1onecode`) 和 productName 不受此次改动影响。
 
 ## 7. 「下载最新版」按钮改指向自家宣传站
 
-[`InstallationIntegrityDialog.tsx`](../../packages/desktop/src/renderer/components/layout/InstallationIntegrityDialog.tsx) 硬编码的 `AIONUI_DOWNLOAD_URL` 之前是 `https://www.aionui.com/`（上游官网），用户点了会拿到上游安装包而不是这个 fork 自己的版本。改成 `https://work.1oneclaw.com/`（"1ONE Work" 宣传站，与上游那个常量的角色对应：宣传/下载入口页，不是文件存储桶本身）。commit `1426ea3e6`。
+[`InstallationIntegrityDialog.tsx`](../../packages/desktop/src/renderer/components/layout/InstallationIntegrityDialog.tsx) 硬编码的 `DREAM_DOWNLOAD_URL` 之前是 `https://www.dream-ui.com/`（上游官网），用户点了会拿到上游安装包而不是这个 fork 自己的版本。改成 `https://work.1oneclaw.com/`（"1ONE Work" 宣传站，与上游那个常量的角色对应：宣传/下载入口页，不是文件存储桶本身）。commit `1426ea3e6`。
 
 ---
 
@@ -133,7 +133,7 @@ exe 文件名 (`1onecode`) 和 productName 不受此次改动影响。
 
 ## 10. 三仓最终 commit
 
-| 仓         | 分支       | 关键 commit                                                                                                                                                                                                                                                                                                                                                      |
-| ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `1oneCore` | `one-main` | `1797fcf7`（macOS Node 降级）/ `6054185e`（版本 bump）/ tag `v0.1.49-one.1`                                                                                                                                                                                                                                                                                      |
-| `1oneUI`   | `one-main` | `3d5e555ff`（bundle ID）/ `848e98147`（aioncoreVersion 钉版）/ `1426ea3e6`（下载链接）/ `c56ae0254`→`9cd32e867`（`release-distribute.yml` 4 处 CI 修复，见 §8）/ `f788dd6ee`（品牌改名 One Work，另一路工作，见交叉引用文档）/ tag `v2.1.48`（打 tag 的自动构建流水线未触发，见 §5；但已用 `gh release create` 手动建出真实 Release，带 Windows 资产，见 §5/§9） |
+| 仓         | 分支       | 关键 commit                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1oneCore` | `one-main` | `1797fcf7`（macOS Node 降级）/ `6054185e`（版本 bump）/ tag `v0.1.49-one.1`                                                                                                                                                                                                                                                                                       |
+| `1oneUI`   | `one-main` | `3d5e555ff`（bundle ID）/ `848e98147`（dreamcoreVersion 钉版）/ `1426ea3e6`（下载链接）/ `c56ae0254`→`9cd32e867`（`release-distribute.yml` 4 处 CI 修复，见 §8）/ `f788dd6ee`（品牌改名 One Work，另一路工作，见交叉引用文档）/ tag `v2.1.48`（打 tag 的自动构建流水线未触发，见 §5；但已用 `gh release create` 手动建出真实 Release，带 Windows 资产，见 §5/§9） |

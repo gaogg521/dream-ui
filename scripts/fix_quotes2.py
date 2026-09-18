@@ -1,6 +1,7 @@
+import pathlib
 import re
 
-p = r'D:\aionui-m0\1oneUI\scripts\gen_doc_docx.py'
+p = str(pathlib.Path(__file__).resolve().with_name('gen_doc_docx.py'))
 with open(p, 'r', encoding='utf-8') as f:
     lines = f.readlines()
 

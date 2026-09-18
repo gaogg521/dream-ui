@@ -3,11 +3,11 @@ name: Issue Triage
 # Auto-label and auto-assign newly opened issues based on the
 # "Module" dropdown in the issue templates.
 # Mapping lives in .github/triage-map.json — edit owners there.
-# Issues labeled "bonus" are reserved for community contributors (Kimi
-# campaign): they are never auto-assigned, adding the label clears any
-# earlier auto-assignment, and a claim-invitation comment is posted so
-# contributors know the issue is up for grabs. (Labels set at creation
-# also fire "labeled" events, so that path is covered too.)
+# Issues labeled "bonus" are reserved for community contributors: they are
+# never auto-assigned, adding the label clears any earlier auto-assignment,
+# and a claim-invitation comment is posted so contributors know the issue is
+# up for grabs. (Labels set at creation also fire "labeled" events, so that
+# path is covered too.)
 
 on:
   issues:
@@ -37,8 +37,8 @@ jobs:
             const labelNames = (labels) => labels.map((l) => (typeof l === 'string' ? l : l.name));
 
             // "labeled" runs handle the "bonus" label only: bonus issues are
-            // reserved for community contributors (Kimi campaign), so clear
-            // any maintainer assignment and post the claim invitation.
+            // reserved for community contributors, so clear any maintainer
+            // assignment and post the claim invitation.
             if (context.payload.action === 'labeled') {
               if (context.payload.label?.name !== 'bonus') return;
 
@@ -64,15 +64,12 @@ jobs:
                 issue_number,
                 body: [
                   CLAIM_MARKER,
-                  '🎁 This issue is part of the **AionUi × Kimi contributor campaign** — merge 3 campaign PRs, get a free Kimi Allegretto plan ($39/mo value).',
+                  '🙌 This issue is open for community contributors — it will not be assigned to a maintainer.',
                   '',
                   '**To claim this issue:**',
                   '1. Comment below with your fix approach (a brief plan is enough)',
-                  '2. If it looks good, @IceyLiu will assign it to you',
+                  '2. If it looks good, a maintainer will assign it to you',
                   '3. Submit your PR referencing this issue (`Fixes #' + issue_number + '`)',
-                  '',
-                  '📋 Full rules: https://x.com/AionUi/status/2079493379914961069',
-                  '🙋 Claim your reward: https://github.com/iOfficeAI/AionUi/discussions/3640',
                 ].join('\n'),
               });
               core.info('Claim invitation posted.');

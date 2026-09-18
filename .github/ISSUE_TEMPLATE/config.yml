@@ -7,5 +7,5 @@ contact_links:
     url: https://github.com/gaogg521/dream-ui/wiki
     about: Check our documentation for setup guides, configuration, and troubleshooting
   - name: 🔒 Security Issues
-    url: mailto:security@aionui.com
+    url: https://github.com/gaogg521/dream-ui/security/advisories/new
     about: Report security vulnerabilities privately (DO NOT create public issues)

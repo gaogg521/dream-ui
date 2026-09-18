@@ -35,11 +35,11 @@ gh run download <run_id> --repo gaogg521/1oneUI -n macos-build-arm64-<hash> -D o
 
 ### 坑 2（真坑）：1oneCore 后端版本号在代码里改了，但从没发过对应 Release
 
-第二次绕开质检后，client 端（1oneUI）所有平台专属步骤全部通过（Node/依赖/native module 重编译/签名证书探测），最终卡在 **`Prepare aioncore binary`** 步骤：
+第二次绕开质检后，client 端（1oneUI）所有平台专属步骤全部通过（Node/依赖/native module 重编译/签名证书探测），最终卡在 **`Prepare dreamcore binary`** 步骤：
 
 ```
-Preparing aioncore for darwin-arm64 (version: v0.1.45-one.1)
-Downloading aioncore from https://github.com/gaogg521/1oneCore/releases/download/v0.1.45-one.1/aioncore-v0.1.45-one.1-aarch64-apple-darwin.tar.gz
+Preparing dreamcore for darwin-arm64 (version: v0.1.45-one.1)
+Downloading dreamcore from https://github.com/gaogg521/1oneCore/releases/download/v0.1.45-one.1/dreamcore-v0.1.45-one.1-aarch64-apple-darwin.tar.gz
 Download failed: 404
 ```
 
@@ -58,7 +58,7 @@ git push origin v0.1.45-one.1           # push tag 自动触发 release.yml（on
 
 等 1oneCore 的 release 跑完（五个平台，上次耗时约 18 分钟），回 1oneUI 重新触发打包即可成功。
 
-**通用排查方法**：以后 1oneUI **任何平台**打包卡在 `Prepare aioncore binary`，第一步先查 1oneCore 对应版本号是否真的发过 Release：
+**通用排查方法**：以后 1oneUI **任何平台**打包卡在 `Prepare dreamcore binary`，第一步先查 1oneCore 对应版本号是否真的发过 Release：
 
 ```bash
 gh release view v<X.Y.Z>-one.<N> --repo gaogg521/1oneCore
@@ -74,13 +74,13 @@ gh release view v<X.Y.Z>-one.<N> --repo gaogg521/1oneCore
 
 ## 坑 3（比坑 2 更隐蔽）：1oneCore 私有仓库导致打包时好时坏，跟 tag 是否存在无关
 
-补发了 `v0.1.45-one.1` release 之后，第一次重新触发 1oneUI mac 打包**成功了**，让人误以为问题已经解决。第二次同样的操作（没改任何代码）却又在同一个 `Prepare aioncore binary` 步骤 404 失败。
+补发了 `v0.1.45-one.1` release 之后，第一次重新触发 1oneUI mac 打包**成功了**，让人误以为问题已经解决。第二次同样的操作（没改任何代码）却又在同一个 `Prepare dreamcore binary` 步骤 404 失败。
 
-**根因**：`1oneCore` 是**私有仓库**。`packages/shared-scripts/src/prepare-aioncore.js` 里固定版本下载路径打的是匿名 `releases/download/...` 链接（`downloadFile()`），这个链接对私有仓库的正常访问权限校验是必挂的——404，不管有没有带 token 都一样（实测：browser_download_url + Bearer token 依然 404；只有官方 Releases Assets API `https://api.github.com/repos/.../releases/assets/{id}` + `Accept: application/octet-stream` 头才 200）。
+**根因**：`1oneCore` 是**私有仓库**。`packages/shared-scripts/src/prepare-dreamcore.js` 里固定版本下载路径打的是匿名 `releases/download/...` 链接（`downloadFile()`），这个链接对私有仓库的正常访问权限校验是必挂的——404，不管有没有带 token 都一样（实测：browser_download_url + Bearer token 依然 404；只有官方 Releases Assets API `https://api.github.com/repos/.../releases/assets/{id}` + `Accept: application/octet-stream` 头才 200）。
 
 **为什么第一次能成功**：大概率是 GitHub 刚发布 release 资产后有个短暂的 CDN 边缘缓存窗口，任何请求（不分权限）直接命中缓存拿到文件；窗口一过，就必须走正常的仓库权限校验，私有仓库匿名请求必 404。**这个"成功"具有欺骗性，不能当作问题已解决的信号。**
 
-**排查弯路**：一开始以为是"用错了下载方式"，改了 `prepare-aioncore.js` 让它走认证的 Assets API（[packages/shared-scripts/src/prepare-aioncore.js](../../packages/shared-scripts/src/prepare-aioncore.js) 新增 `downloadReleaseAsset()`，commit `282cd8d1d`）。这个改动本身是对的、也保留了（面向未来更规范），但**光改这个不够**——CI 里的 `GH_TOKEN` 实际解析成默认的 `GITHUB_TOKEN`（`gh secret list --repo gaogg521/1oneUI` 是空的，没有配任何跨仓库 PAT），而默认 `GITHUB_TOKEN` 天生只能访问当前仓库（1oneUI），对另一个私有仓库（1oneCore）**认证请求本身也是 404**（`repos/gaogg521/1oneCore/releases/tags/v0.1.45-one.1` 这个 API 都读不到）。
+**排查弯路**：一开始以为是"用错了下载方式"，改了 `prepare-dreamcore.js` 让它走认证的 Assets API（[packages/shared-scripts/src/prepare-dreamcore.js](../../packages/shared-scripts/src/prepare-dreamcore.js) 新增 `downloadReleaseAsset()`，commit `282cd8d1d`）。这个改动本身是对的、也保留了（面向未来更规范），但**光改这个不够**——CI 里的 `GH_TOKEN` 实际解析成默认的 `GITHUB_TOKEN`（`gh secret list --repo gaogg521/1oneUI` 是空的，没有配任何跨仓库 PAT），而默认 `GITHUB_TOKEN` 天生只能访问当前仓库（1oneUI），对另一个私有仓库（1oneCore）**认证请求本身也是 404**（`repos/gaogg521/1oneCore/releases/tags/v0.1.45-one.1` 这个 API 都读不到）。
 
 **真正根治**：把 `1oneCore` 仓库可见性从 private 改成 public（用户在 GitHub 网页 Settings → Danger Zone 手动操作，AI 不代为执行仓库权限变更）。改完后不需要任何 token，匿名下载路径永久稳定，跟 1oneUI 本来就是 public 的情况完全对齐。
 
@@ -101,5 +101,5 @@ gh release view v<X.Y.Z>-one.<N> --repo gaogg521/1oneCore
 - 产物已下载到本地 `1oneUI/out/mac-arm64-download/1ONE-Code-2.1.44-mac-arm64.dmg`
 - **用户已在真实 Mac 机器上测试，确认可以正常安装运行**
 - 2026-07-15 追加：`1oneCore` 改为 public 前，[run 29403809402](https://github.com/gaogg521/1oneUI/actions/runs/29403809402) 复现了 404（证明第一次成功是运气，不是真的修好了）；改为 public 后 [run 29406059168](https://github.com/gaogg521/1oneUI/actions/runs/29406059168) 成功，产出 `macos-build-arm64-282cd8d`，且不再依赖任何 token，稳定可复现
-- 2026-07-15 再追加：用户按上文指引生成 classic PAT，配进 `1oneUI` 和 `1oneCore` 两边的 `GH_TOKEN` repo secret（中途一次误把 Name 填成 `CLAUD`，删除重建后确认为 `GH_TOKEN`），随后把**两个仓库都改回了 private**。[run 29411771151](https://github.com/gaogg521/1oneUI/actions/runs/29411771151) 在两仓私有状态下成功，日志明确显示 `Downloading aioncore from gaogg521/1oneCore release asset 477620208 (authenticated)`——证明这次是真的走认证 API 拿到权限成功，不是 CDN 缓存窗口的运气。**至此结论：`GH_TOKEN` + `downloadReleaseAsset()` 认证下载方案在纯私有双仓场景下验证通过，可以放心私有化。**
+- 2026-07-15 再追加：用户按上文指引生成 classic PAT，配进 `1oneUI` 和 `1oneCore` 两边的 `GH_TOKEN` repo secret（中途一次误把 Name 填成 `CLAUD`，删除重建后确认为 `GH_TOKEN`），随后把**两个仓库都改回了 private**。[run 29411771151](https://github.com/gaogg521/1oneUI/actions/runs/29411771151) 在两仓私有状态下成功，日志明确显示 `Downloading dreamcore from gaogg521/1oneCore release asset 477620208 (authenticated)`——证明这次是真的走认证 API 拿到权限成功，不是 CDN 缓存窗口的运气。**至此结论：`GH_TOKEN` + `downloadReleaseAsset()` 认证下载方案在纯私有双仓场景下验证通过，可以放心私有化。**
 - ⚠️ 用户后续把 `1oneUI` 本身也改成了 private（此前只有 1oneCore 私有），这会导致 macOS runner Actions 分钟数不再免费不限额——私有仓库走账号的月度配额（Free 2000 分钟/月，macOS runner 按 10 倍计费），已提醒用户去 `https://github.com/settings/billing` 自查额度

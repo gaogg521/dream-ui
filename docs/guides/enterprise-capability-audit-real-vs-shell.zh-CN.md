@@ -6,10 +6,10 @@
 
 ## 决定性证据：消费端断链
 
-`one-devops` crate（团队技能/MCP/知识库/流水线/测试/需求 的后端）在整个 AionCore 里**只被 `aionui-app`（HTTP 路由装配）依赖**。agent 运行时那几个 crate——`aionui-ai-agent`、`aionui-conversation`、`aionui-mcp`、`aionui-assistant`——**没有任何一个引用 `one_devops`**。
+`one-devops` crate（团队技能/MCP/知识库/流水线/测试/需求 的后端）在整个 dream-core 里**只被 `dream-core-app`（HTTP 路由装配）依赖**。agent 运行时那几个 crate——`dream-core-ai-agent`、`dream-core-conversation`、`dream-core-mcp`、`dream-core-assistant`——**没有任何一个引用 `one_devops`**。
 
 - 团队技能：DB 存 `content`，agent 从不加载，也**不物化到磁盘**（one-devops 无任何 `fs::write`）→ 本地 FS 技能扫描也扫不到。
-- 团队 MCP：DB 存 endpoint，agent 的 MCP 客户端（`aionui-mcp`）从不连它。
+- 团队 MCP：DB 存 endpoint，agent 的 MCP 客户端（`dream-core-mcp`）从不连它。
 - 团队知识库 RAG：`embedding.rs` 是真的（OpenAI 兼容 embedding + 向量存 SQLite BLOB + 余弦检索 + 切分 + 单测），`searchRag` 接口也在，但 **agent 对话流程从不调用检索** → 是个孤立搜索框，不是 RAG 增强生成。
 
 **唯一真端到端**：需求（协作看板）→ `dispatch`/`breakdown` 接到 `one-employee` 的 `EmployeeService`，真的拉起数字员工 agent 跑（返回 `conversationId`/`runId`）。
@@ -30,14 +30,14 @@
 ## 战略结论（必须让用户知道的实话）
 
 1. **桌面消费视图今天几乎没有「真」内容可展示**——除了「派给我的协同任务」（需求 dispatch，真的）。用户最想要的**团队技能/MCP/知识下发，是壳**：因为阶段 B（下发落地）+ 阶段 C（运行时消费）**整块没建**。
-2. **「策略分发」的真实工作量在后端**（Rust）：要在 AionCore 里补①成员机把团队注册表 sync 落地 ②agent 运行时真加载团队技能 / 连团队 MCP / 对话检索团队 RAG。不是加 UI 就能变真。
+2. **「策略分发」的真实工作量在后端**（Rust）：要在 dream-core 里补①成员机把团队注册表 sync 落地 ②agent 运行时真加载团队技能 / 连团队 MCP / 对话检索团队 RAG。不是加 UI 就能变真。
 3. 我上一轮的桌面控制台，本质是给一堆「写入即死」的配置壳做了导航门户——方向错了。**配置搬网页后台，桌面只留真消费（协同任务 + 真正下发到本地的工具）。**
 
 ## 建议的推进顺序
 
 1. **网页管理后台**（真配置的家）：把 用户/邀请码/SSO/平台配置 + 团队技能/MCP/知识「定义」 都放这里，管理员浏览器登录进（先解决地址直达 + 管理员角色门，见 `session-2026-07-08-enterprise-console` §后续待办 #1）。
 2. **桌面消费视图**：降级为「我的团队工具（真下发到本地的）+ 派给我的协同任务」。协同任务今天就能接真数据；团队工具在阶段 B/C 落地前先如实显示「团队暂未下发」。
-3. **阶段 B/C（真正的策略分发）**：AionCore 补下发落地 + 运行时消费——这才是把技能/MCP/知识从壳变真的核心工程。
+3. **阶段 B/C（真正的策略分发）**：dream-core 补下发落地 + 运行时消费——这才是把技能/MCP/知识从壳变真的核心工程。
 4. **CUT 占位**：效能洞察/制品/代码库从功能位撤下。
 
 > 用户方针：企业管理是大工程，每块做完必桌面端自测，重点自测策略分发 + 用户登录；老架构这两块有 BUG，别照抄。

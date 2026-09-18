@@ -136,7 +136,7 @@ childProcess.execSync = function mockedExecSync(command) {
     const queryScript = readFileSync(resolve(repoRoot, 'resources/windows/support/query-lockers.ps1'), 'utf8');
     const captureMacro = script.match(/!macro ONEWORK_CAPTURE_FAILED_PATH_LOCKERS[\s\S]*?!macroend/)?.[0];
 
-    expect(script).toContain('aionui-query-lockers.ps1');
+    expect(script).toContain('onework-query-lockers.ps1');
     expect(captureMacro).toContain('ONEWORK_QUERY_LOCKERS');
     expect(captureMacro).not.toContain('ONEWORK_QUERY_LOCKERS_INLINE_LEGACY');
     expect(queryScript).toContain('$CurrentOutDir');
@@ -222,7 +222,7 @@ childProcess.execSync = function mockedExecSync(command) {
   it('routes app-cannot-be-closed cancellation through E1003 instead of quitting silently', () => {
     const script = readFileSync(resolve(repoRoot, 'resources/windows/installer-process-control.nsh'), 'utf8');
     const cannotCloseBranch = script.match(
-      /ONEWORK_MSG_CLOSE_OR_REMOVE_PREVIOUS_ZH[\s\S]*?IDRETRY aionui_wait_for_close([\s\S]*?)\$\{Else\}/
+      /ONEWORK_MSG_CLOSE_OR_REMOVE_PREVIOUS_ZH[\s\S]*?IDRETRY onework_wait_for_close([\s\S]*?)\$\{Else\}/
     )?.[1];
 
     expect(cannotCloseBranch).toBeTruthy();
@@ -443,7 +443,7 @@ describe('Windows installer in-use dialog', () => {
 
   it('backs the close-wait poll off instead of hammering a fixed one second', () => {
     const script = control();
-    const loop = script.match(/aionui_wait_for_close:([\s\S]*?)!insertmacro ONEWORK_FIND_APP_PROCESS/)?.[1];
+    const loop = script.match(/onework_wait_for_close:([\s\S]*?)!insertmacro ONEWORK_FIND_APP_PROCESS/)?.[1];
 
     expect(loop).toBeTruthy();
     // The wait has to grow with the attempt count; a literal `Sleep 1000` caps

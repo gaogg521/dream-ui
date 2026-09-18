@@ -36,8 +36,8 @@ describe('installerLastFailure service', () => {
         silent: true,
         updated: true,
         retryCount: 1,
-        instDir: 'D:\One Work',
-        logPath: 'C:\Users\me\AppData\Local\Temp\onework-installer.log',
+        instDir: 'D:\\One Work',
+        logPath: 'C:\\Users\\me\\AppData\\Local\\Temp\\onework-installer.log',
         at: '2026-07-01T00:00:00.000Z',
       })
     );

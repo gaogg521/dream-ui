@@ -71,7 +71,7 @@ log.transports.console.level = app.isPackaged ? false : CONSOLE_LOG_LEVEL;
 
 // Must match the prefix `BackendLifecycleManager` puts on bridged backend
 // stdout/stderr lines (`[dreamcore] …`). The rebrand renamed the emit side
-// but left this at the legacy `[aioncore]`, so the level-remap hook below silently
+// but left this at the legacy prefix, so the level-remap hook below silently
 // stopped firing and every backend stdout line (including ERROR/WARN from
 // dreamcore's tracing) landed in the log file at electron-log's default
 // `info` level.

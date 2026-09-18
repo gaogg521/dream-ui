@@ -136,8 +136,8 @@ echo "==> Validating desktop release assets ..."
 # electron-builder derives that prefix from `artifactName` in
 # packages/desktop/electron-builder.yml, so hardcoding it here means a brand
 # rename silently breaks release validation: the 2026-07 rename to "One Work"
-# left this check looking for "AionUi-*" forever, and it stayed green only
-# because create-mock-release-artifacts.sh happened to emit the same stale name.
+# left this check looking for the pre-rebrand prefix forever, and it stayed green
+# only because create-mock-release-artifacts.sh happened to emit the same stale name.
 for arch in x64 arm64; do
   for ext in dmg zip; do
     pattern="*-${VERSION}-mac-${arch}.${ext}"

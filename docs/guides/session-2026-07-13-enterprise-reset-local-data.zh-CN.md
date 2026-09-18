@@ -35,7 +35,7 @@
   （`archivedTenantCount` / `archivedMemberCount` / `archivePath`）。
 - `crates/one-org/src/routes.rs`：新增 `POST /api/one/org/reset-local`
   （挂在 `create`/`join`/`exit` 同一个已认证路由组，空 body）。
-- `crates/aionui-app/src/router/routes.rs`：构造 `OrgService::new` 时多传
+- `crates/dream-core-app/src/router/routes.rs`：构造 `OrgService::new` 时多传
   `services.data_dir.clone()`（`AppServices` 本来就有 `data_dir` 字段，
   不用额外新增）。
 
@@ -61,13 +61,13 @@
   `reset_local_enterprise_requires_system_admin`），另外把
   `one_server_hosts_only_one_enterprise` 的错误码断言从 `FORBIDDEN` 改成了
   `ALREADY_HOSTS_ENTERPRISE`。
-- `cargo clippy -p one-org -p aionui-app -- -D warnings`：通过。
+- `cargo clippy -p one-org -p dream-core-app -- -D warnings`：通过。
 - 前端：`bunx tsc --noEmit`、`bun run lint:fix`（0 error）、新增
   `tests/unit/renderer/OverviewTab.dom.test.tsx`（2 个用例：命中特定错误码
   显示重置按钮 / 其他错误不显示），全过。
-- **真实桌面端端到端**：`backend-rebuild` 编译release + `prepareAioncore.js`
+- **真实桌面端端到端**：`backend-rebuild` 编译release + `prepareDreamcore.js`
   搬进 bundled 后，`bun run dev` 起真实桌面端。直接对着真实运行的
-  aioncore.exe（`data-dir: C:\Users\allenzhao\AppData\Roaming\1one-Dev\1one`）
+  dreamcore.exe（`data-dir: C:\Users\allenzhao\AppData\Roaming\1one-Dev\1one`）
   `curl` 打 API：
   1. `POST /api/one/org/create` 第一次就 403 `ALREADY_HOSTS_ENTERPRISE`
      （dev 库里本来就有一条历史遗留的"欢乐盾"企业，天然复现了用户报的 bug）。
@@ -101,6 +101,6 @@ i18n key 加在 `settings.json`(`webui.switchToServerBlockedTitle`/`Desc`、`web
 
 改的是 `1oneCore` 后端（Rust）+ `1oneUI` 前端（TS）都有：
 
-- 后端已经 `backend-rebuild` 编过 release 并 `prepareAioncore.js` 搬进
-  `1oneUI/resources/bundled-aioncore/win32-x64/aioncore.exe`。
+- 后端已经 `backend-rebuild` 编过 release 并 `prepareDreamcore.js` 搬进
+  `1oneUI/resources/bundled-dreamcore/win32-x64/dreamcore.exe`。
 - 前端是 `bun run dev` 热更新即可，本次验证用的就是这条路径。

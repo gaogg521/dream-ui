@@ -11,45 +11,45 @@
 
 搭了一个本地转发代理，把涉事 provider 的 `base_url` 临时指向它，在 dev 环境实测复现，拿到了完整的真实请求/响应。机制比想象中更清楚：
 
-1. 请求体里**从不带 `max_tokens`**——`aion-config::compat::ProviderCompat::openai_defaults()` 没有设置 `default_max_tokens`（对比 `anthropic_defaults()` 会设 `Some(128_000)`），OpenAI 兼容这条协议路径永远解析成 `None`。上游网关按自己的默认值兜底，实测是 **4096 completion tokens**。
+1. 请求体里**从不带 `max_tokens`**——`dream-engine-config::compat::ProviderCompat::openai_defaults()` 没有设置 `default_max_tokens`（对比 `anthropic_defaults()` 会设 `Some(128_000)`），OpenAI 兼容这条协议路径永远解析成 `None`。上游网关按自己的默认值兜底，实测是 **4096 completion tokens**。
 2. 模型流式吐出一个巨大的 `Write` 工具调用（`content` 参数是整份文件）时，写到 4096 token 被硬截断（`finish_reason:"length"`），JSON 参数字符串截在文件内容中间。
-3. `aion-providers::openai.rs` 的 SSE 解析里，`finish_reason=="length"` 分支**只设置了 `pending_done`，从未处理 `state.tool_calls`**——这个半截的 `Write` 调用连 `LlmEvent::ToolUse` 都没触发，直接在 `StreamState` 作用域结束时被扔掉。`aion-agent` 层压根不知道曾经有过一次工具调用。
-4. `aion-agent::engine.rs::continue_truncated`（07-20 那次"有界续写"补丁引入）在续写轮里通过 `TurnKind::disable_tools()` **禁用工具**，注入"continue ... do not call any tools"。模型只能把"其实还没写完"的内容当纯文本继续吐——聊天记录看着像是把代码写完了，实际上从未再调用 `Write`，文件从始至终没有被创建。
+3. `dream-engine-providers::openai.rs` 的 SSE 解析里，`finish_reason=="length"` 分支**只设置了 `pending_done`，从未处理 `state.tool_calls`**——这个半截的 `Write` 调用连 `LlmEvent::ToolUse` 都没触发，直接在 `StreamState` 作用域结束时被扔掉。`dream-engine-agent` 层压根不知道曾经有过一次工具调用。
+4. `dream-engine-agent::engine.rs::continue_truncated`（07-20 那次"有界续写"补丁引入）在续写轮里通过 `TurnKind::disable_tools()` **禁用工具**，注入"continue ... do not call any tools"。模型只能把"其实还没写完"的内容当纯文本继续吐——聊天记录看着像是把代码写完了，实际上从未再调用 `Write`，文件从始至终没有被创建。
 
-`continue_truncated` 里那句 `debug!("dropped tool calls truncated mid-stream ...")` 对 OpenAI 这条路径其实是**死代码**——因为 `first.tool_calls` 在这条路径上早就是空的（真正携带半截参数的是 provider 层的 `ToolCallAccumulator`，还没等传到 `aion-agent` 就被丢了）。
+`continue_truncated` 里那句 `debug!("dropped tool calls truncated mid-stream ...")` 对 OpenAI 这条路径其实是**死代码**——因为 `first.tool_calls` 在这条路径上早就是空的（真正携带半截参数的是 provider 层的 `ToolCallAccumulator`，还没等传到 `dream-engine-agent` 就被丢了）。
 
 ---
 
-## 1. aionrs 修复：两处
+## 1. dream-engine 修复：两处
 
-仓库：`aionrs-local`，`master` 分支，commit `33c2bd2`。
+仓库：`旧引擎本地检出`，`master` 分支，commit `33c2bd2`。
 
 ### 方案 1：给 OpenAI 兼容请求补一个合理的 `default_max_tokens`
 
-`aion-config/src/compat.rs` 的 `openai_defaults()` 加一行：
+`dream-engine-config/src/compat.rs` 的 `openai_defaults()` 加一行：
 
 ```rust
 default_max_tokens: Some(32_000),
 ```
 
-这条路径本来就是打通的（`OpenAiProjector::project()` 早就在做 `request.max_tokens.or_else(|| compat.default_max_tokens_for_model(...))`），只是 OpenAI 兼容这条协议家族从没设过默认值。**没有碰** `1oneCore` 里那三处刻意把 `max_tokens` 锁死成 `None` 的地方（`factory/aionrs.rs`、`manager/aionrs/agent.rs`——对齐上游 #641，防止 standalone aionrs 配置泄漏进嵌入式运行时）；`compat.rs` 的 provider-family 级默认值正是为"调用方没给值"设计的兜底层，两者不冲突。
+这条路径本来就是打通的（`OpenAiProjector::project()` 早就在做 `request.max_tokens.or_else(|| compat.default_max_tokens_for_model(...))`），只是 OpenAI 兼容这条协议家族从没设过默认值。**没有碰** `1oneCore` 里那三处刻意把 `max_tokens` 锁死成 `None` 的地方（`factory/dream-engine.rs`、`manager/dream-engine/agent.rs`——对齐上游 #641，防止 standalone dream-engine 配置泄漏进嵌入式运行时）；`compat.rs` 的 provider-family 级默认值正是为"调用方没给值"设计的兜底层，两者不冲突。
 
 ### 方案 2：工具调用被截断时，可见提示 + 保留工具重试
 
 不做"续写半截 JSON 参数"这种复杂方案（要造流式局部 JSON 解析、给 Write 加 append 语义、处理 `file_path` 还没流出时不知道写哪的边界情况）。改成更简单、配合方案 1 之后大概率一次就成的做法：
 
-1. **`aion-types::llm::LlmEvent`** 新增 `ToolCallTruncated { id, name }`——一个"这个工具调用被截断了，没有真的执行"的标记事件，不是正常 `ToolUse`。
-2. **`aion-providers::openai.rs`** 的 `finish_reason=="length"` 分支：不再放任 `state.tool_calls` 被扔掉，逐个 drain 出来发 `ToolCallTruncated`。
-3. **`aion-agent::stream.rs`** 的 `StreamOutcome` 新增 `truncated_tool_calls: Vec<(String, String)>` 字段；`consume_stream` 收集这个新事件。
-4. **`aion-agent::engine.rs` 的 `run_inner`**：`TurnOutcome::Truncated(outcome)` 分支里，如果 `outcome.truncated_tool_calls` 非空——**不**走老的 `continue_truncated`（禁用工具续写纯文本），而是 `emit_info` 一条点名工具的可见提示，往历史里追加一条"上一次工具调用没有真正执行，请重新完整调用一次"的用户消息，然后 `continue` 外层循环——下一轮是完全**正常**的 `TurnKind::Normal`（工具照常开启）。纯文本被截断（没有工具调用）的场景完全不变，还是走原来的 `continue_truncated`。
+1. **`dream-engine-types::llm::LlmEvent`** 新增 `ToolCallTruncated { id, name }`——一个"这个工具调用被截断了，没有真的执行"的标记事件，不是正常 `ToolUse`。
+2. **`dream-engine-providers::openai.rs`** 的 `finish_reason=="length"` 分支：不再放任 `state.tool_calls` 被扔掉，逐个 drain 出来发 `ToolCallTruncated`。
+3. **`dream-engine-agent::stream.rs`** 的 `StreamOutcome` 新增 `truncated_tool_calls: Vec<(String, String)>` 字段；`consume_stream` 收集这个新事件。
+4. **`dream-engine-agent::engine.rs` 的 `run_inner`**：`TurnOutcome::Truncated(outcome)` 分支里，如果 `outcome.truncated_tool_calls` 非空——**不**走老的 `continue_truncated`（禁用工具续写纯文本），而是 `emit_info` 一条点名工具的可见提示，往历史里追加一条"上一次工具调用没有真正执行，请重新完整调用一次"的用户消息，然后 `continue` 外层循环——下一轮是完全**正常**的 `TurnKind::Normal`（工具照常开启）。纯文本被截断（没有工具调用）的场景完全不变，还是走原来的 `continue_truncated`。
 
 **没有改 `Write` 工具本身**——重试就是从头整份重新调用一次，复用现成的原子覆盖写，不引入 append/offset 语义。
 
-**范围说明**：Anthropic 原生协议路径（`anthropic_shared.rs`）的截断机制不同——它的 `content_block_stop` 会把半截 `input` 坍缩成 `{}` 再当成正常 `ToolUse` 发出，不是"直接丢弃"，是另一条相关但不同的缺口。⚠️**2026-07-21 晚些时候两次跟进已全部闭合**：①aionrs `34f827b` 补上了与本节 §2 同款的"连接中途断连、没走到终止事件就静默报成功"缺口（`process_anthropic_sse_stream` 现在没见到 `message_stop` 时返回 `FailedPartial`/`FailedEmpty`）；②aionrs `d309fb5` 补上了 `content_block_stop` 坍缩成 `{}` 这半个——现在区分「合法空参调用」与「被截断」（非空但解析失败→发 `ToolCallTruncated` 而非空参 `ToolUse`），并防御性地在 `message_delta` 收到 `max_tokens` 而 tool_use 块仍未闭合时补发 `ToolCallTruncated`；下游复用 `33c2bd2` 的可见提示+保留工具重试机制（协议无关),对 Anthropic/Vertex 一并生效。含 3 个 parse 级用例 + 1 个走真实 `/v1/messages` 的 wiremock e2e。至此 Anthropic 原生协议两半截断缺口全部闭合,详见 aionrs `CLAUDE.md` 第 10/11 条补丁。
+**范围说明**：Anthropic 原生协议路径（`anthropic_shared.rs`）的截断机制不同——它的 `content_block_stop` 会把半截 `input` 坍缩成 `{}` 再当成正常 `ToolUse` 发出，不是"直接丢弃"，是另一条相关但不同的缺口。⚠️**2026-07-21 晚些时候两次跟进已全部闭合**：①dream-engine `34f827b` 补上了与本节 §2 同款的"连接中途断连、没走到终止事件就静默报成功"缺口（`process_anthropic_sse_stream` 现在没见到 `message_stop` 时返回 `FailedPartial`/`FailedEmpty`）；②dream-engine `d309fb5` 补上了 `content_block_stop` 坍缩成 `{}` 这半个——现在区分「合法空参调用」与「被截断」（非空但解析失败→发 `ToolCallTruncated` 而非空参 `ToolUse`），并防御性地在 `message_delta` 收到 `max_tokens` 而 tool_use 块仍未闭合时补发 `ToolCallTruncated`；下游复用 `33c2bd2` 的可见提示+保留工具重试机制（协议无关),对 Anthropic/Vertex 一并生效。含 3 个 parse 级用例 + 1 个走真实 `/v1/messages` 的 wiremock e2e。至此 Anthropic 原生协议两半截断缺口全部闭合,详见 dream-engine `CLAUDE.md` 第 10/11 条补丁。
 
 ### 验证
 
-- `crates/aion-agent/tests/truncation_e2e.rs` 新增 `truncated_write_tool_call_recovers_via_retry_with_tools_enabled`：wiremock 模拟"第一轮 Write 调用被截断 + 第二轮完整重试"，断言截断当下文件不存在、截断提示确实被 emit、续写请求体里带 `tools`（证明走的是新分支不是老分支）、最终文件内容正确。
+- `crates/dream-engine-agent/tests/truncation_e2e.rs` 新增 `truncated_write_tool_call_recovers_via_retry_with_tools_enabled`：wiremock 模拟"第一轮 Write 调用被截断 + 第二轮完整重试"，断言截断当下文件不存在、截断提示确实被 emit、续写请求体里带 `tools`（证明走的是新分支不是老分支）、最终文件内容正确。
 - `cargo test --workspace` / `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --all -- --check` 全部通过（`just` 未装，手工按 `Justfile` 的 `push` recipe 顺序跑的等价检查）。
 - **实机复测**（不是只跑单测）：dev 环境（`%APPDATA%\1one-Dev`）重编嵌入新二进制后，用 CDP 登录桌面应用的 WebUI（端口 25809），拿 glm-5-2 重新发"写一个包含1000行代码的Python任务管理系统"——这次 `Write` 一次成功（`duration_ms:2`），磁盘上真实生成了 1560 行语法完整的文件，请求体里也确认带了 `max_tokens`。
 
@@ -67,14 +67,14 @@ default_max_tokens: Some(32_000),
 
 ### 后续处理（同日另一会话已跟进,2026-07-21 21～22 点）
 
-1. ✅ 确认 aionrs 的 HTTP 客户端（`reqwest::Client`，`aion-providers::transport.rs`）没有设置连接/读超时——`OpenAiTransport::new`/`AnthropicTransport::new` 两处都是 `reqwest::Client::new()`。**判定为不改**：这条路径要支持合法的 10+ 分钟长生成，笼统的总请求超时会把真实长流提前腰斩，风险大于收益。
-2. ✅ **已修**（aionrs commit `45cce3a`，Anthropic 原生协议同款缺口另补于 `34f827b`，详见 CLAUDE.md 第 9/10 条补丁）：`stream_process.rs::process_openai_sse_stream` 此前无论有没有见到 `[DONE]` 终止帧，循环自然结束就一律返回 `StreamOutcome::Ok`——`finish_reason` 到达时暂存进 `state.pending_done`，但 `OpenAiParser::finish()` 是空实现从不 flush，于是网关中途断连时这条 Done 事件连同 `finish_reason` 直接被吞掉，agent 侧静默以 `finished` 收场。改法是照抄同文件里姊妹函数 `process_openai_responses_sse_stream` 已有的正确写法：EOF 未见终止帧时按 `emitted_content` 返回 `FailedPartial`（已出内容→`stream_runner` 转成可见 `LlmEvent::Error`）或 `FailedEmpty`（全空→走既有重试退避逻辑自动重发）。新增单测；`cargo clippy` / `cargo fmt --all -- --check` 均通过。
-3. ✅ **2026-07-21 22 点左右已完成真机 CDP 复现验证**（用户主动要求补做）：1oneCore `cargo update` 对齐 aionrs `760d8b1` 并 `cargo build -p aionui-app --release` 重编、内嵌新 `aioncore.exe`、重启 dev 应用；CDP 直连渲染进程（端口 9230,`ws://127.0.0.1:9230/devtools/page/...`）模拟原生 DOM 操作发送 kimi-k3 消息「写一个纯控制台的贪吃蛇+俄罗斯方块+扫雷三合一小游戏，代码大约3000行」；**9 分 55 秒后真实复现**（`duration_ms:595137`，`termination:"eof"`，`done_seen:false`，`reasoning_delta_count:17565` 全程只在思考、`finish_reason:"length"` 已到达但没等到 `[DONE]`），修复前这种情况会静默收场；本次实测 UI 上出现**清晰可见的错误卡片**：「上游 Agent 或模型服务商出错」+「可重试」标签 + 技术详情 `Aionrs agent error: API error: Connection error: OpenAI stream ended without a terminal [DONE] event`——与修复代码里的错误文案完全吻合，确认端到端生效。复现方法记录供以后参考：kimi-k3 + 类似"写3000行"这种会让模型光思考就要好几分钟、总时长拖到 10 分钟量级的超大单文件请求。
+1. ✅ 确认 dream-engine 的 HTTP 客户端（`reqwest::Client`，`dream-engine-providers::transport.rs`）没有设置连接/读超时——`OpenAiTransport::new`/`AnthropicTransport::new` 两处都是 `reqwest::Client::new()`。**判定为不改**：这条路径要支持合法的 10+ 分钟长生成，笼统的总请求超时会把真实长流提前腰斩，风险大于收益。
+2. ✅ **已修**（dream-engine commit `45cce3a`，Anthropic 原生协议同款缺口另补于 `34f827b`，详见 CLAUDE.md 第 9/10 条补丁）：`stream_process.rs::process_openai_sse_stream` 此前无论有没有见到 `[DONE]` 终止帧，循环自然结束就一律返回 `StreamOutcome::Ok`——`finish_reason` 到达时暂存进 `state.pending_done`，但 `OpenAiParser::finish()` 是空实现从不 flush，于是网关中途断连时这条 Done 事件连同 `finish_reason` 直接被吞掉，agent 侧静默以 `finished` 收场。改法是照抄同文件里姊妹函数 `process_openai_responses_sse_stream` 已有的正确写法：EOF 未见终止帧时按 `emitted_content` 返回 `FailedPartial`（已出内容→`stream_runner` 转成可见 `LlmEvent::Error`）或 `FailedEmpty`（全空→走既有重试退避逻辑自动重发）。新增单测；`cargo clippy` / `cargo fmt --all -- --check` 均通过。
+3. ✅ **2026-07-21 22 点左右已完成真机 CDP 复现验证**（用户主动要求补做）：1oneCore `cargo update` 对齐 dream-engine `760d8b1` 并 `cargo build -p dream-core-app --release` 重编、内嵌新 `dreamcore.exe`、重启 dev 应用；CDP 直连渲染进程（端口 9230,`ws://127.0.0.1:9230/devtools/page/...`）模拟原生 DOM 操作发送 kimi-k3 消息「写一个纯控制台的贪吃蛇+俄罗斯方块+扫雷三合一小游戏，代码大约3000行」；**9 分 55 秒后真实复现**（`duration_ms:595137`，`termination:"eof"`，`done_seen:false`，`reasoning_delta_count:17565` 全程只在思考、`finish_reason:"length"` 已到达但没等到 `[DONE]`），修复前这种情况会静默收场；本次实测 UI 上出现**清晰可见的错误卡片**：「上游 Agent 或模型服务商出错」+「可重试」标签 + 技术详情 `DreamEngine agent error: API error: Connection error: OpenAI stream ended without a terminal [DONE] event`——与修复代码里的错误文案完全吻合，确认端到端生效。复现方法记录供以后参考：kimi-k3 + 类似"写3000行"这种会让模型光思考就要好几分钟、总时长拖到 10 分钟量级的超大单文件请求。
 
 ---
 
 ## 3. 下游影响
 
-- `1oneCore` 的 `aion-* = { git="gaogg521/aionrs", branch="master" }` 直接吃 `aionrs-local` 新 commit，已 `cargo update` 对齐到 `33c2bd22`，`backend-rebuild.ps1` 重编并内嵌验证过。
-- 本轮改动全部在 `aionrs-local` 内，`1oneCore`/`1oneUI` 侧代码没有改动。
+- `1oneCore` 的 `dream-engine-* = { git="gaogg521/dream-engine", branch="master" }` 直接吃 `旧引擎本地检出` 新 commit，已 `cargo update` 对齐到 `33c2bd22`，`backend-rebuild.ps1` 重编并内嵌验证过。
+- 本轮改动全部在 `旧引擎本地检出` 内，`1oneCore`/`1oneUI` 侧代码没有改动。
 - ⚠️ 同日另一个并行会话在 [`session-2026-07-21-brand-rename-and-release-fixes.zh-CN.md`](session-2026-07-21-brand-rename-and-release-fixes.zh-CN.md) 里打了正式安装包 `v2.1.48` 并建了 GitHub Release——但那次重编依赖的版本 bump 提交（`6054185e`，15:30）早于本轮 1oneCore 对齐提交（`700e7f75`，20:22），**那个已打好的安装包大概率不含本轮这条修复**。如果要发布 `v2.1.48`，先看那份文档的「§8」再决定要不要重编。
