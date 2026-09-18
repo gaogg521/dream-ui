@@ -127,14 +127,22 @@ DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev
 详细结论（含凭据解密、迁移 057、团队 MCP 不泄漏）记在 dream-core 同日文档的
 「七、验证」。
 
-> ⚠️ **本仓的 CDP 方法论有一处必须知道**：应用级 CDP 已经被**故意删掉**，
-> `cdpBridge` 只暴露应用内浏览器那一个 webContents、带 token，碰不到 Dream UI 界面。
-> 要驱动真实界面只能用开发者通道 `DREAM_DEVTOOLS_CDP_PORT`（dev 专用，打包版硬拒）。
+> ⚠️ **本仓的 CDP 方法论有一处必须知道**，而且这句话要说准 ——
+> 被删掉的只是**「默认常开」那个形态**，不是整个应用级 CDP：
+> `configureChromium.ts` 保留了开发者通道 `DREAM_DEVTOOLS_CDP_PORT`
+> （dev 专用；`app.isPackaged` 为真时无条件拒绝，两道闸是「与」关系）。
+> **所以「驱动真实界面验证」一直是做得到的。**
+> 本轮就是因为把这句话记成了"应用级 CDP 删干净了"，白白推迟了一整轮真机点检 ——
+> 见 harvest 文档 §5 的更正框。
+> 另一条是真的：`cdpBridge` 只暴露应用内浏览器那一个 webContents、带 token，
+> 碰不到 Dream UI 界面 —— 它和上面那个开发者通道是两个不同的 CDP 面，别混。
 > 另外 `docs/guides/cdp.md` 说得对：**裸 `ws` 客户端比浏览器自动化 MCP 可靠** ——
 > 渲染层走 IPC 桥不走 HTTP，直接 `fetch` 后端端口会 `Failed to fetch`，
 > 相对路径 `/api/...` 在 dev server 下是 404。正确做法是驱动界面本身让它去取。
 
 ### 仍未验证
+
+> 📋 **本轮的未竟项总登记在 [`handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md`](handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md) §4** —— 09-18 一轮产出 5 份文档，每份都有自己的这一节，散着看必漏。本节留原文细节，总表在那边。
 
 - **安装器与发布脚本**（第 1/2/3/4 条）需要真的打一次包 / 真的装一次才算验过，
   下次发版时留意
