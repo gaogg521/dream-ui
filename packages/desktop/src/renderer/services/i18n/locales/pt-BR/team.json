@@ -29,6 +29,8 @@
     "runtimeFailed": "Não foi possível iniciar este membro.",
     "removing": "Removendo este membro…",
     "sessionStopped": "A sessão da equipe foi encerrada.",
+    "providerSpendBlocked": "Seu provedor de modelo limitou esta conta. Verifique sua cota com o provedor e tente novamente.",
+    "providerSpendBlockedBy": "\"{{name}}\" atingiu o limite do provedor de modelo. Verifique a cota desse provedor e tente novamente.",
     "retryStart": "Tentar iniciar novamente"
   },
   "sendBox": {

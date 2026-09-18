@@ -29,6 +29,8 @@
     "runtimeFailed": "No se pudo iniciar este miembro.",
     "removing": "Eliminando este miembro…",
     "sessionStopped": "La sesión del equipo se detuvo.",
+    "providerSpendBlocked": "Tu proveedor de modelos ha limitado esta cuenta. Comprueba tu cuota con el proveedor e inténtalo de nuevo.",
+    "providerSpendBlockedBy": "\"{{name}}\" ha alcanzado el límite de su proveedor de modelos. Comprueba la cuota de ese proveedor e inténtalo de nuevo.",
     "retryStart": "Reintentar inicio"
   },
   "sendBox": {

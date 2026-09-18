@@ -29,6 +29,8 @@
     "runtimeFailed": "Bu üye başlatılamadı.",
     "removing": "Bu üye kaldırılıyor…",
     "sessionStopped": "Takım oturumu durdu.",
+    "providerSpendBlocked": "Model sağlayıcınız bu hesabı sınırladı. Kotanızı sağlayıcınızla kontrol edip yeniden deneyin.",
+    "providerSpendBlockedBy": "\"{{name}}\" model sağlayıcısının sınırına ulaştı. O sağlayıcının kotasını kontrol edip yeniden deneyin.",
     "retryStart": "Başlatmayı yeniden dene"
   },
   "sendBox": {

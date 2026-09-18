@@ -29,6 +29,8 @@
     "runtimeFailed": "此成員啟動失敗。",
     "removing": "正在移除此成員……",
     "sessionStopped": "團隊工作階段已停止。",
+    "providerSpendBlocked": "您的額度已經被限制了，請聯繫您的服務商檢查額度後再次嘗試。",
+    "providerSpendBlockedBy": "「{{name}}」的額度已被限制，請聯繫該專家所用的服務商檢查額度後再次嘗試。",
     "retryStart": "重試啟動"
   },
   "sendBox": {

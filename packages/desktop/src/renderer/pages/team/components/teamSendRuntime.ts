@@ -79,6 +79,7 @@ type TeamWorkStatusTextFormatters = {
   runtimeFailed: () => string;
   removing: () => string;
   sessionStopped: () => string;
+  providerSpendBlocked: (blockedSlotId: string | null) => string;
 };
 
 export const getTeamWorkQueuedCount = (work?: ITeamSlotWork): number =>
@@ -102,6 +103,11 @@ export const buildTeamWorkStatusText = (
       return format.removing();
     case 'session_stopped':
       return format.sessionStopped();
+    case 'provider_spend_blocked':
+      // Name the teammate whose provider refused: each slot can sit on a
+      // different channel, so "your quota is limited" alone leaves the user
+      // with no idea which account to go and check.
+      return format.providerSpendBlocked(work?.provider_blocked_slot_id ?? null);
     default:
       break;
   }

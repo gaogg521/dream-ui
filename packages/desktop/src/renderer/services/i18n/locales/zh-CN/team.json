@@ -29,6 +29,8 @@
     "runtimeFailed": "该成员启动失败。",
     "removing": "正在移除该成员……",
     "sessionStopped": "团队会话已停止。",
+    "providerSpendBlocked": "您的额度已经被限制了，请联系您的服务商检查额度后再次尝试。",
+    "providerSpendBlockedBy": "「{{name}}」的额度已被限制，请联系该专家所用的服务商检查额度后再次尝试。",
     "retryStart": "重试启动"
   },
   "sendBox": {

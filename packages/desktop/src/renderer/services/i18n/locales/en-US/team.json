@@ -29,6 +29,8 @@
     "runtimeFailed": "This assistant failed to start.",
     "removing": "Removing this assistant…",
     "sessionStopped": "The team session has stopped.",
+    "providerSpendBlocked": "Your model provider has limited this account. Check your quota with the provider, then try again.",
+    "providerSpendBlockedBy": "\"{{name}}\" has hit its model provider's limit. Check that provider's quota, then try again.",
     "retryStart": "Retry start"
   },
   "sendBox": {

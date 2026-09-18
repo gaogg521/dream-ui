@@ -136,7 +136,7 @@ const TeamChatView: React.FC<TeamChatViewProps> = ({
   onTeamSlotPaused,
 }) => {
   const { t } = useTranslation();
-  const { activeSlotId, switchTab } = useTeamTabs();
+  const { activeSlotId, switchTab, assistants: teamAssistants } = useTeamTabs();
   const { info: presetAssistantInfo } = usePresetAssistantInfo(conversation);
   const capabilitySnapshot = conversation.extra as TeamConversationCapabilitySnapshot | undefined;
   // Single source of truth for the team greeting. Each *Chat simply forwards
@@ -191,6 +191,24 @@ const TeamChatView: React.FC<TeamChatViewProps> = ({
         runtimeFailed: () => t('team.work.runtimeFailed', { defaultValue: 'This assistant failed to start.' }),
         removing: () => t('team.work.removing', { defaultValue: 'Removing this assistant…' }),
         sessionStopped: () => t('team.work.sessionStopped', { defaultValue: 'The team session has stopped.' }),
+        providerSpendBlocked: (blockedSlotId) => {
+          // Teammates can each sit on a different provider, so lead with WHOSE
+          // quota ran out — the status line truncates, and the name is the part
+          // the user needs to act. Falls back to the unnamed wording when the
+          // slot is gone (removed teammate, stale snapshot).
+          const blockedName = blockedSlotId
+            ? (teamAssistants.find((a) => a.slot_id === blockedSlotId)?.assistant_name ?? null)
+            : null;
+          return blockedName
+            ? t('team.work.providerSpendBlockedBy', {
+                name: blockedName,
+                defaultValue: `"${blockedName}" has hit its model provider's limit. Check that provider's quota, then try again.`,
+              })
+            : t('team.work.providerSpendBlocked', {
+                defaultValue:
+                  'Your model provider has limited this account. Check your quota with the provider, then try again.',
+              });
+        },
       });
   const isRuntimeFailed = slot_id ? slotWork?.blocked_reason === 'runtime_failed' : false;
   const interruptAndSend =
