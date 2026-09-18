@@ -289,7 +289,7 @@ describe('SessionCenter detailed table columns', () => {
     expect(within(detailedRow('pinned-1')).queryByText('对话')).not.toBeInTheDocument();
   });
 
-  it('shows the persisted chat model for an aionrs conversation and a dash when there is none', () => {
+  it('shows the persisted chat model for an dream-engine conversation and a dash when there is none', () => {
     setHistory([
       makeConversation({ id: 'h1', name: 'DreamEngine chat' }),
       makeConversation({ id: 'h2', name: 'Acp chat', type: 'acp', extra: { backend: 'claude' } }),

@@ -27,7 +27,7 @@ import {
   resolveUserUnitPriceUsd,
 } from '@/common/media/pricing';
 
-describe('built-in rate table (mirrors aionui-common/src/license.rs)', () => {
+describe('built-in rate table (mirrors one-common/src/license.rs)', () => {
   it('prices images per asset produced', () => {
     expect(estimateMediaCostMicros('image', 'gpt-image-2', 1, 0)).toBe(40_000);
     expect(estimateMediaCostMicros('image', 'gpt-image-2', 3, 0)).toBe(120_000);

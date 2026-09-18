@@ -42,11 +42,11 @@ describe('brand surfaces outside i18n', () => {
   });
 
   it('leaves no upstream product name in user-visible main-process strings', () => {
-    // Scoped to the surfaces users read. Internal identifiers (AIONUI_*,
-    // aionui-*) and package/URL references are deliberately out of scope — see
+    // Scoped to the surfaces users read. Internal identifiers (ONE_*,
+    // one-*) and package/URL references are deliberately out of scope — see
     // the brand boundary rule. Log prefixes used to be excluded too; they have
     // since been swept to "[1ONE] ...", so the guard now covers them and a
-    // reintroduced "[AionUi]" prefix fails here.
+    // reintroduced "[OneWork]" prefix fails here.
     const files = [
       'packages/desktop/src/process/utils/tray.ts',
       'packages/desktop/src/process/startup/architectureCompatibility.ts',
@@ -60,9 +60,9 @@ describe('brand surfaces outside i18n', () => {
         .filter((line) => !/^\s*(\/\/|\/\*|\*)/.test(line))
         .join('\n');
 
-      const offenders = [...source.matchAll(/(['"`])([^'"`\n]*AionUi[^'"`\n]*)\1/g)]
+      const offenders = [...source.matchAll(/(['"`])([^'"`\n]*OneWork[^'"`\n]*)\1/g)]
         .map((match) => match[2])
-        .filter((text) => !/^aionui[-_]/i.test(text) && !text.includes('aionui.com'));
+        .filter((text) => !/^one[-_]/i.test(text) && !text.includes('one.com'));
 
       expect(offenders, `${file} carries a user-visible upstream brand string`).toEqual([]);
     }

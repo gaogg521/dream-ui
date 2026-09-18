@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const usePresetAssistantInfoMock = vi.fn();
 const acpChatMock = vi.fn(() => <div data-testid='mock-acp-chat' />);
-const aionrsChatMock = vi.fn(() => <div data-testid='mock-aionrs-chat' />);
+const dreamEngineChatMock = vi.fn(() => <div data-testid='mock-dream-engine-chat' />);
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -23,7 +23,7 @@ vi.mock('@/renderer/pages/conversation/platforms/acp/AcpChat', () => ({
 
 vi.mock('@/renderer/pages/conversation/platforms/dreamEngine/DreamEngineChat', () => ({
   __esModule: true,
-  default: (props: unknown) => aionrsChatMock(props),
+  default: (props: unknown) => dreamEngineChatMock(props),
 }));
 
 vi.mock('@/renderer/pages/conversation/platforms/legacy/LegacyReadOnlyConversation', () => ({
@@ -44,7 +44,7 @@ describe('TeamChatView', () => {
   beforeEach(() => {
     usePresetAssistantInfoMock.mockReset();
     acpChatMock.mockClear();
-    aionrsChatMock.mockClear();
+    dreamEngineChatMock.mockClear();
     switchTabMock.mockClear();
     teamTabsState.activeSlotId = 'slot-a';
   });
@@ -204,8 +204,8 @@ describe('TeamChatView', () => {
       />
     );
 
-    expect(await screen.findByTestId('mock-aionrs-chat')).toBeInTheDocument();
-    expect(aionrsChatMock.mock.calls[0]?.[0]).toEqual(
+    expect(await screen.findByTestId('mock-dream-engine-chat')).toBeInTheDocument();
+    expect(dreamEngineChatMock.mock.calls[0]?.[0]).toEqual(
       expect.objectContaining({
         loadedSkills: ['excel'],
         loadedMcpServers: ['office'],

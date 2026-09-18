@@ -5,14 +5,14 @@ import { getInstallationIntegrityModalActions } from '@/renderer/components/layo
 
 describe('classifyBackendStartupFailure', () => {
   it('classifies missing GLIBC symbols as an incompatible backend runtime', () => {
-    const error = new Error('aioncore exited before health check passed') as Error & {
+    const error = new Error('dreamcore exited before health check passed') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
       stage: 'early_exit',
       stderrTail:
-        "/opt/AionUi/resources/bundled-dreamcore/linux-x64/aioncore.bin: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.34' not found\n" +
-        "/opt/AionUi/resources/bundled-dreamcore/linux-x64/aioncore.bin: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32' not found",
+        "/opt/OneWork/resources/bundled-dreamcore/linux-x64/dreamcore.bin: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.34' not found\n" +
+        "/opt/OneWork/resources/bundled-dreamcore/linux-x64/dreamcore.bin: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32' not found",
     };
 
     expect(classifyBackendStartupFailure(error)).toEqual({
@@ -23,7 +23,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('keeps unrelated startup failures in the generic bucket', () => {
-    const error = new Error('aioncore failed to start within timeout') as Error & {
+    const error = new Error('dreamcore failed to start within timeout') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -37,7 +37,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('classifies missing startup directory preparation as a startup directory failure', () => {
-    const error = new Error('aioncore startup directory preparation failed') as Error & {
+    const error = new Error('dreamcore startup directory preparation failed') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -53,7 +53,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('classifies startup directory permission failures separately from incomplete installs', () => {
-    const error = new Error('aioncore startup directory preparation failed') as Error & {
+    const error = new Error('dreamcore startup directory preparation failed') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -69,13 +69,13 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('does not classify post-resolution binary spawn ENOENT as a startup directory failure', () => {
-    const error = new Error('aioncore process emitted an error before startup') as Error & {
+    const error = new Error('dreamcore process emitted an error before startup') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
       stage: 'spawn_error',
-      binaryPath: 'D:\\apps\\AionUi\\resources\\bundled-dreamcore\\win32-x64\\dreamcore.exe',
-      causeMessage: 'spawn D:\\apps\\AionUi\\resources\\bundled-dreamcore\\win32-x64\\dreamcore.exe ENOENT',
+      binaryPath: 'D:\\apps\\OneWork\\resources\\bundled-dreamcore\\win32-x64\\dreamcore.exe',
+      causeMessage: 'spawn D:\\apps\\OneWork\\resources\\bundled-dreamcore\\win32-x64\\dreamcore.exe ENOENT',
     };
 
     expect(classifyBackendStartupFailure(error)).toEqual({
@@ -86,7 +86,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('preserves backend bootstrap code and stage for generic startup failures', () => {
-    const error = new Error('aioncore exited before health check passed') as Error & {
+    const error = new Error('dreamcore exited before health check passed') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -104,7 +104,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('classifies database migration boundary failures as local data migration failures', () => {
-    const error = new Error('aioncore exited before health check passed') as Error & {
+    const error = new Error('dreamcore exited before health check passed') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -112,7 +112,7 @@ describe('classifyBackendStartupFailure', () => {
       backendBoundaryCode: 'BOOTSTRAP_DATA_INIT_FAILED',
       backendBoundaryStage: 'database.migration',
       stderrTail:
-        'BOOTSTRAP_DATA_INIT_FAILED stage=database.migration databasePath=/db/aionui-backend.db: failed to initialize application data',
+        'BOOTSTRAP_DATA_INIT_FAILED stage=database.migration databasePath=/db/one-backend.db: failed to initialize application data',
     };
 
     expect(classifyBackendStartupFailure(error)).toEqual({
@@ -123,7 +123,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('classifies recoverable database corruption boundary failures separately from data migration failures', () => {
-    const error = new Error('aioncore exited before health check passed') as Error & {
+    const error = new Error('dreamcore exited before health check passed') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -131,7 +131,7 @@ describe('classifyBackendStartupFailure', () => {
       backendBoundaryCode: 'BOOTSTRAP_DATA_INIT_FAILED',
       backendBoundaryStage: 'database.recoverable_corruption',
       stderrTail:
-        'BOOTSTRAP_DATA_INIT_FAILED stage=database.recoverable_corruption databasePath=/db/aionui-backend.db: failed to initialize application data',
+        'BOOTSTRAP_DATA_INIT_FAILED stage=database.recoverable_corruption databasePath=/db/one-backend.db: failed to initialize application data',
     };
 
     expect(classifyBackendStartupFailure(error)).toEqual({
@@ -142,7 +142,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('classifies database schema repair boundary failures as local data migration failures', () => {
-    const error = new Error('aioncore exited before health check passed') as Error & {
+    const error = new Error('dreamcore exited before health check passed') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -159,7 +159,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('classifies agent metadata invalid utf8 during services init as local data repair failure', () => {
-    const error = new Error('aioncore exited before health check passed') as Error & {
+    const error = new Error('dreamcore exited before health check passed') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -179,7 +179,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('keeps unrelated services init failures in the generic bucket', () => {
-    const error = new Error('aioncore exited before health check passed') as Error & {
+    const error = new Error('dreamcore exited before health check passed') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -197,7 +197,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('does not classify vague invalid utf8 text without the agent metadata database-query signature', () => {
-    const error = new Error('aioncore exited before health check passed') as Error & {
+    const error = new Error('dreamcore exited before health check passed') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -215,7 +215,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('classifies packaged app resources missing from installation as incomplete installation', () => {
-    const error = new Error('aioncore startup failed while resolving backend binary') as Error & {
+    const error = new Error('dreamcore startup failed while resolving backend binary') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -250,7 +250,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('classifies packaged runtime directories without the backend binary as incomplete installation', () => {
-    const error = new Error('aioncore startup failed while resolving backend binary') as Error & {
+    const error = new Error('dreamcore startup failed while resolving backend binary') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {
@@ -290,7 +290,7 @@ describe('classifyBackendStartupFailure', () => {
   });
 
   it('classifies packaged macOS architecture mismatches separately from generic startup failures', () => {
-    const error = new Error('AionUi package architecture does not match this Mac') as Error & {
+    const error = new Error('OneWork package architecture does not match this Mac') as Error & {
       details?: Record<string, unknown>;
     };
     error.details = {

@@ -540,7 +540,7 @@ test.describe('Assistant Settings Conversation Defaults', () => {
       expect(payload.assistant?.conversation_overrides?.mcp_ids).toContain(firstMcp.id);
 
       const userDataPath = await getUserDataPath(electronApp);
-      const dbPath = path.join(userDataPath, 'aionui', 'aionui-backend.db');
+      const dbPath = path.join(userDataPath, 'one', 'one-backend.db');
       const snapshot = querySnapshotByConversationId(dbPath, conversationId);
 
       expect(snapshot.default_model_mode).toBe('fixed');
@@ -610,7 +610,7 @@ test.describe('Assistant Settings Conversation Defaults', () => {
       expect(payload.assistant?.conversation_overrides?.mcp_ids).toContain(firstMcp.id);
 
       const userDataPath = await getUserDataPath(electronApp);
-      const dbPath = path.join(userDataPath, 'aionui', 'aionui-backend.db');
+      const dbPath = path.join(userDataPath, 'one', 'one-backend.db');
       const snapshot = querySnapshotByConversationId(dbPath, conversationId);
       const preferences = queryPreferencesByAssistantKey(dbPath, assistantId);
 
@@ -666,7 +666,7 @@ test.describe('Assistant Settings Conversation Defaults', () => {
     await waitForAiReply(page);
 
     const userDataPath = await getUserDataPath(electronApp);
-    const dbPath = path.join(userDataPath, 'aionui', 'aionui-backend.db');
+    const dbPath = path.join(userDataPath, 'one', 'one-backend.db');
 
     try {
       const beforeSwitch = querySnapshotByConversationId(dbPath, conversationId);
@@ -742,7 +742,7 @@ test.describe('Assistant Settings Conversation Defaults', () => {
     await waitForAiReply(page);
 
     const userDataPath = await getUserDataPath(electronApp);
-    const dbPath = path.join(userDataPath, 'aionui', 'aionui-backend.db');
+    const dbPath = path.join(userDataPath, 'one', 'one-backend.db');
 
     try {
       const beforeSwitch = querySnapshotByConversationId(dbPath, conversationId);
@@ -780,7 +780,7 @@ test.describe('Assistant Settings Conversation Defaults', () => {
     electronApp,
   }) => {
     const assistantName = `Auto Fixed Switch ${Date.now()}`;
-    const aionrsModels = await ensureDreamEngineTestModels(page);
+    const dreamEngineModels = await ensureDreamEngineTestModels(page);
 
     await goToAssistantSettings(page);
     const skills = await httpGet<SkillRecord[]>(page, '/api/skills');
@@ -802,15 +802,15 @@ test.describe('Assistant Settings Conversation Defaults', () => {
     if (!assistantId) return;
 
     const userDataPath = await getUserDataPath(electronApp);
-    const dbPath = path.join(userDataPath, 'aionui', 'aionui-backend.db');
+    const dbPath = path.join(userDataPath, 'one', 'one-backend.db');
     try {
       await httpInvoke(page, 'PUT', `/api/assistants/${assistantId}`, {
         id: assistantId,
-        preset_agent_type: 'aionrs',
+        preset_agent_type: 'dream-engine',
         defaults: {
           model: {
             mode: 'fixed',
-            value: aionrsModels.modelA.useModel,
+            value: dreamEngineModels.modelA.useModel,
           },
           permission: {
             mode: 'fixed',
@@ -853,8 +853,8 @@ test.describe('Assistant Settings Conversation Defaults', () => {
       await httpDelete(page, `/api/conversations/${fixedConversationId}`).catch(() => {});
     } finally {
       await httpDelete(page, `/api/assistants/${assistantId}`).catch(() => {});
-      if (aionrsModels.cleanupProviderId) {
-        await httpDelete(page, `/api/providers/${aionrsModels.cleanupProviderId}`).catch(() => {});
+      if (dreamEngineModels.cleanupProviderId) {
+        await httpDelete(page, `/api/providers/${dreamEngineModels.cleanupProviderId}`).catch(() => {});
       }
     }
   });
@@ -864,7 +864,7 @@ test.describe('Assistant Settings Conversation Defaults', () => {
     electronApp,
   }) => {
     const assistantName = `Fixed Auto Switch ${Date.now()}`;
-    const aionrsModels = await ensureDreamEngineTestModels(page);
+    const dreamEngineModels = await ensureDreamEngineTestModels(page);
 
     await goToAssistantSettings(page);
     const skills = await httpGet<SkillRecord[]>(page, '/api/skills');
@@ -886,16 +886,16 @@ test.describe('Assistant Settings Conversation Defaults', () => {
     if (!assistantId) return;
 
     const userDataPath = await getUserDataPath(electronApp);
-    const dbPath = path.join(userDataPath, 'aionui', 'aionui-backend.db');
+    const dbPath = path.join(userDataPath, 'one', 'one-backend.db');
 
     try {
       await httpInvoke(page, 'PUT', `/api/assistants/${assistantId}`, {
         id: assistantId,
-        preset_agent_type: 'aionrs',
+        preset_agent_type: 'dream-engine',
         defaults: {
           model: {
             mode: 'fixed',
-            value: aionrsModels.modelA.useModel,
+            value: dreamEngineModels.modelA.useModel,
           },
           permission: {
             mode: 'fixed',
@@ -971,8 +971,8 @@ test.describe('Assistant Settings Conversation Defaults', () => {
       await httpDelete(page, `/api/conversations/${autoConversationId}`).catch(() => {});
     } finally {
       await httpDelete(page, `/api/assistants/${assistantId}`).catch(() => {});
-      if (aionrsModels.cleanupProviderId) {
-        await httpDelete(page, `/api/providers/${aionrsModels.cleanupProviderId}`).catch(() => {});
+      if (dreamEngineModels.cleanupProviderId) {
+        await httpDelete(page, `/api/providers/${dreamEngineModels.cleanupProviderId}`).catch(() => {});
       }
     }
   });

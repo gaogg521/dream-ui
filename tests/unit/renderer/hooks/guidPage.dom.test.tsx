@@ -31,9 +31,9 @@ const {
     resetCurrentModel: vi.fn(),
   },
   agentSelectionMock: {
-    selectedAssistantId: 'bare-aionrs',
+    selectedAssistantId: 'bare-dream-engine',
     selectedAssistant: {
-      id: 'bare-aionrs',
+      id: 'bare-dream-engine',
       source: 'generated',
       name: 'Aion CLI',
       name_i18n: {},
@@ -54,7 +54,7 @@ const {
     },
     assistants: [
       {
-        id: 'bare-aionrs',
+        id: 'bare-dream-engine',
         source: 'generated',
         name: 'Aion CLI',
         name_i18n: {},
@@ -81,7 +81,7 @@ const {
     selectedAcpModel: null,
     setSelectedAcpModel: vi.fn(),
     currentAcpCachedModelInfo: null,
-    defaultAssistantId: 'bare-aionrs',
+    defaultAssistantId: 'bare-dream-engine',
     setSelectedAssistantId: vi.fn(),
   },
   guidInputMock: {
@@ -291,7 +291,7 @@ vi.mock('swr', async () => {
 import GuidPage from '@/renderer/pages/guid/GuidPage';
 
 const guidInputCardProps = {
-  input: 'Existing Guid draft\nCreate with /cron in AionUi',
+  input: 'Existing Guid draft\nCreate with /cron in OneWork',
   onInputChange: vi.fn(),
   onKeyDown: vi.fn(),
   onPaste: vi.fn(),
@@ -338,7 +338,7 @@ describe('GuidPage', () => {
     agentSelectionMock.setSelectedMode.mockReset();
     agentSelectionMock.assistants = [
       {
-        id: 'bare-aionrs',
+        id: 'bare-dream-engine',
         source: 'generated',
         name: 'Aion CLI',
         name_i18n: {},
@@ -392,7 +392,7 @@ describe('GuidPage', () => {
 
   it('appends a draft-preserving prefill without clearing attachments or workspace', () => {
     locationMock.state = {
-      prefillPrompt: 'Create with /cron in AionUi',
+      prefillPrompt: 'Create with /cron in OneWork',
       preservePrefillDraft: true,
       focusPrefill: true,
       returnTo: 'conversation-sidebar',
@@ -405,7 +405,7 @@ describe('GuidPage', () => {
 
     const inputUpdater = guidInputMock.setInput.mock.calls[0]?.[0];
     expect(inputUpdater).toBeTypeOf('function');
-    expect(inputUpdater('Existing Guid draft')).toBe('Existing Guid draft\nCreate with /cron in AionUi');
+    expect(inputUpdater('Existing Guid draft')).toBe('Existing Guid draft\nCreate with /cron in OneWork');
     expect(guidInputMock.setFiles).not.toHaveBeenCalled();
     expect(guidInputMock.setDir).not.toHaveBeenCalled();
     expect(capturedGuidInputCardProps.at(-1)?.focusRequestKey).toBe('guid-location');
@@ -429,7 +429,7 @@ describe('GuidPage', () => {
 
   it('removes a consumed preserved prefill even when no other navigation state remains', () => {
     locationMock.state = {
-      prefillPrompt: 'Create with /cron in AionUi',
+      prefillPrompt: 'Create with /cron in OneWork',
       preservePrefillDraft: true,
       focusPrefill: true,
     };
@@ -483,7 +483,7 @@ describe('GuidPage', () => {
   it('renders example prompts with wrapping text for long assistant suggestions', () => {
     agentSelectionMock.assistants = [
       {
-        id: 'bare-aionrs',
+        id: 'bare-dream-engine',
         source: 'generated',
         name: 'Aion CLI',
         name_i18n: {},
@@ -538,7 +538,7 @@ describe('GuidPage', () => {
   it('does not seed skill defaults from the assistant list while detail is loading', async () => {
     agentSelectionMock.assistants = [
       {
-        id: 'bare-aionrs',
+        id: 'bare-dream-engine',
         source: 'generated',
         name: 'Aion CLI',
         name_i18n: {},
@@ -571,7 +571,7 @@ describe('GuidPage', () => {
     });
   });
 
-  it('applies an aionrs assistant default model after provider models load', async () => {
+  it('applies an dream-engine assistant default model after provider models load', async () => {
     // A blanket mockReturnValue answers every useSWR call in the tree with
     // this one fixture -- harmless while GuidPage only had one useSWR
     // consumer, wrong now that useMediaComposer's provider list is a second

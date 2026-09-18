@@ -58,7 +58,7 @@ describe('buildAssistantEditorBackends', () => {
   it('uses localized management names and falls back to agent_type when backend is empty', () => {
     const agents: ManagedAgent[] = [
       managedAgent({
-        id: 'agent-aionrs',
+        id: 'agent-dream-engine',
         backend: undefined,
         agent_type: 'dream',
         name: 'Aion CLI',
@@ -69,7 +69,7 @@ describe('buildAssistantEditorBackends', () => {
 
     expect(buildAssistantEditorBackends(agents, 'zh-CN')).toEqual([
       {
-        id: 'agent-aionrs',
+        id: 'agent-dream-engine',
         name: 'Aion 命令行',
         runtimeKey: 'dream',
         modelOptions: [],

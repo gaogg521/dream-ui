@@ -28,7 +28,7 @@ describe('startBackendOrExit', () => {
   });
 
   it('captures startup failure and exits without registering a backend port by default', async () => {
-    const error = new Error('aioncore failed to start within timeout');
+    const error = new Error('dreamcore failed to start within timeout');
     const calls: string[] = [];
     const onStarted = vi.fn();
     const captureFailure = vi.fn(async () => {
@@ -60,7 +60,7 @@ describe('startBackendOrExit', () => {
   });
 
   it('captures startup failure without dialog or exit when exitOnFailure is disabled', async () => {
-    const error = new Error('aioncore exited before health check passed');
+    const error = new Error('dreamcore exited before health check passed');
     const onStarted = vi.fn();
     const captureFailure = vi.fn();
     const exitApp = vi.fn();
@@ -85,7 +85,7 @@ describe('startBackendOrExit', () => {
   });
 
   it('does not capture or exit when backend startup is cancelled by shutdown', async () => {
-    const error = new Error('aioncore startup cancelled');
+    const error = new Error('dreamcore startup cancelled');
     error.name = 'BackendStartupCancelledError';
     const onStarted = vi.fn();
     const captureFailure = vi.fn();

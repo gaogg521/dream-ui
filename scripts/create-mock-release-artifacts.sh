@@ -93,7 +93,7 @@ WEB_PLATFORMS=(
 for plat in "${WEB_PLATFORMS[@]}"; do
   dir="$ARTIFACTS_DIR/web-cli-${plat}"
   mkdir -p "$dir"
-  tarball="aionui-web-1.0.0-${plat}.tar.gz"
+  tarball="dream-web-1.0.0-${plat}.tar.gz"
   touch "$dir/$tarball"
   # Produce a deterministic fake SHA256 file in the expected format:
   # "<64 hex chars>  <filename>"

@@ -72,7 +72,7 @@ export interface DreamEngineTestModels {
  */
 export function resolveDreamEngineBinary(): string | null {
   try {
-    const result = execSync('which aionrs', { encoding: 'utf-8', timeout: 5000 }).trim();
+    const result = execSync('which dream-engine', { encoding: 'utf-8', timeout: 5000 }).trim();
     if (result && fs.existsSync(result)) {
       return result;
     }
@@ -183,7 +183,7 @@ export async function createDreamEngineConversationViaBridge(
     page,
     'create-conversation',
     {
-      type: 'aionrs',
+      type: 'dream-engine',
       name,
       model: opts.provider,
       extra: {
@@ -375,9 +375,9 @@ export function createTempWorkspace(scenario: string): { path: string; cleanup: 
 /** Select an available dream assistant on the guid page. */
 export async function selectDreamEngineAgent(page: Page): Promise<void> {
   await goToGuid(page);
-  const assistantId = await selectAssistantForBackend(page, 'aionrs');
+  const assistantId = await selectAssistantForBackend(page, 'dream-engine');
   if (!assistantId) {
-    throw new Error('No available aionrs assistant found on guid page');
+    throw new Error('No available dream-engine assistant found on guid page');
   }
 }
 

@@ -1239,7 +1239,7 @@ test.describe('Conversation Full Cycle', () => {
     stopAutoApprove?.();
   });
 
-  const cronConversationAgents = ['claude', 'codex', 'gemini', 'aionrs', 'opencode'] as const;
+  const cronConversationAgents = ['claude', 'codex', 'gemini', 'dream-engine', 'opencode'] as const;
 
   for (const backend of cronConversationAgents) {
     test(`cron -- ${backend} conversation skill creates task with full-auto job mode`, async ({ page }) => {
@@ -1255,10 +1255,10 @@ test.describe('Conversation Full Cycle', () => {
         await page
           .waitForFunction(() => (document.body.textContent?.length ?? 0) > 200, { timeout: 15_000 })
           .catch(() => {});
-        if (backend === 'aionrs') {
+        if (backend === 'dream-engine') {
           const preconditions = await resolveDreamEnginePreconditions(page);
           if (!preconditions.binary || !preconditions.models) {
-            test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
+            test.skip(true, 'No dream-engine-compatible provider found, skipping E2E tests');
             return;
           }
         }

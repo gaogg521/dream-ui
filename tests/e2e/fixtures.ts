@@ -31,12 +31,12 @@ type RendererDiagnostic = {
 // Singleton – one app per test worker
 let app: ElectronApplication | null = null;
 let mainPage: Page | null = null;
-const e2eStateSandboxDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aionui-e2e-state-'));
+const e2eStateSandboxDir = fs.mkdtempSync(path.join(os.tmpdir(), 'one-e2e-state-'));
 const e2eStateFile = path.join(e2eStateSandboxDir, 'extension-states.json');
 // Disposable userData root so Dream Core migrates a fresh DB per run instead of
 // touching the developer's real database (a shared DB that fails migration
 // blocks the whole app from booting). Consumed by configureChromium.ts.
-const e2eUserDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aionui-e2e-userdata-'));
+const e2eUserDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'one-e2e-userdata-'));
 const rendererDiagnostics = new WeakMap<Page, RendererDiagnostic[]>();
 
 function isDevToolsWindow(page: Page): boolean {
@@ -208,7 +208,7 @@ async function launchApp(): Promise<ElectronApplication> {
     ONE_EXTENSIONS_PATH: process.env.ONE_EXTENSIONS_PATH || path.join(projectRoot, 'examples'),
     ONE_EXTENSION_STATES_FILE: process.env.ONE_EXTENSION_STATES_FILE || e2eStateFile,
     DREAM_DISABLE_AUTO_UPDATE: '1',
-    AIONUI_DISABLE_DEVTOOLS: '1',
+    ONE_DISABLE_DEVTOOLS: '1',
     DREAM_E2E_TEST: '1',
     DREAM_E2E_USER_DATA_DIR: process.env.DREAM_E2E_USER_DATA_DIR || e2eUserDataDir,
     /**

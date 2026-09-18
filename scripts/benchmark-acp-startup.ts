@@ -87,8 +87,8 @@ function agentPillByBackend(backend: string) {
 function getLogFilePath(): string {
   const today = new Date().toISOString().slice(0, 10);
   // Dev mode uses "Dream UI-Dev", production uses "Dream UI"
-  const devPath = path.join(os.homedir(), 'Library', 'Logs', 'AionUi-Dev', `${today}.log`);
-  const prodPath = path.join(os.homedir(), 'Library', 'Logs', 'AionUi', `${today}.log`);
+  const devPath = path.join(os.homedir(), 'Library', 'Logs', 'dream-ui-Dev', `${today}.log`);
+  const prodPath = path.join(os.homedir(), 'Library', 'Logs', 'One Work', `${today}.log`);
   return fs.existsSync(devPath) ? devPath : prodPath;
 }
 

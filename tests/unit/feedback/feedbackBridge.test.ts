@@ -37,7 +37,7 @@ vi.mock('electron', () => ({
     on: vi.fn(),
   },
   app: {
-    getPath: vi.fn(() => '/tmp/aionui-test-logs-nonexistent'),
+    getPath: vi.fn(() => '/tmp/one-test-logs-nonexistent'),
     getVersion: vi.fn(() => '0.0.0'),
   },
   BrowserWindow: {
@@ -133,7 +133,7 @@ describe('feedbackBridge — capture-screenshot', () => {
 
 describe('feedback logs', () => {
   it('collects top-level frontend logs and nested backend logs through the IPC handler', async () => {
-    const logsDir = mkdtempSync(path.join(tmpdir(), 'aionui-feedback-bridge-'));
+    const logsDir = mkdtempSync(path.join(tmpdir(), 'one-feedback-bridge-'));
     try {
       const backendLogsDir = path.join(logsDir, 'logs');
       mkdirSync(backendLogsDir);
@@ -164,11 +164,11 @@ describe('feedback logs', () => {
   });
 
   it('collects the same recent three log days used by user feedback reports', () => {
-    const logsDir = mkdtempSync(path.join(tmpdir(), 'aionui-feedback-logs-'));
+    const logsDir = mkdtempSync(path.join(tmpdir(), 'one-feedback-logs-'));
     try {
       writeFileSync(path.join(logsDir, '2026-05-25.log'), 'today frontend\n');
-      writeFileSync(path.join(logsDir, '2026-05-25.aioncore.log'), 'today backend\n');
-      writeFileSync(path.join(logsDir, '2026-05-24.aionrs.log'), 'yesterday rust\n');
+      writeFileSync(path.join(logsDir, '2026-05-25.dreamcore.log'), 'today backend\n');
+      writeFileSync(path.join(logsDir, '2026-05-24.dream-engine.log'), 'yesterday rust\n');
       writeFileSync(path.join(logsDir, '2026-05-23.log'), 'third day frontend\n');
       writeFileSync(path.join(logsDir, '2026-05-22.log'), 'too old frontend\n');
       writeFileSync(path.join(logsDir, '2026-05-25.txt'), 'not a log\n');
@@ -191,7 +191,7 @@ describe('feedback logs', () => {
   });
 
   it('collects recent logs from dated year/month/day directories', () => {
-    const logsDir = mkdtempSync(path.join(tmpdir(), 'aionui-feedback-dated-logs-'));
+    const logsDir = mkdtempSync(path.join(tmpdir(), 'one-feedback-dated-logs-'));
     try {
       const recentDir = path.join(logsDir, '2026', '07', '02');
       const previousDir = path.join(logsDir, '2026', '07', '01');
@@ -200,8 +200,8 @@ describe('feedback logs', () => {
       mkdirSync(previousDir, { recursive: true });
       mkdirSync(oldDir, { recursive: true });
       writeFileSync(path.join(recentDir, '2026-07-02.log'), 'today frontend nested\n');
-      writeFileSync(path.join(recentDir, '2026-07-02.aioncore.log'), 'today backend nested\n');
-      writeFileSync(path.join(previousDir, '2026-07-01.aionrs.log'), 'yesterday rust nested\n');
+      writeFileSync(path.join(recentDir, '2026-07-02.dreamcore.log'), 'today backend nested\n');
+      writeFileSync(path.join(previousDir, '2026-07-01.dream-engine.log'), 'yesterday rust nested\n');
       writeFileSync(path.join(oldDir, '2026-06-30.log'), 'third day frontend nested\n');
       writeFileSync(path.join(logsDir, '2026-06-29.log'), 'too old flat\n');
 
@@ -214,7 +214,7 @@ describe('feedback logs', () => {
       expect(content).toContain('yesterday rust nested');
       expect(content).toContain('third day frontend nested');
       expect(content).not.toContain('too old flat');
-      expect(content).toContain('2026/07/02/2026-07-02.aioncore.log');
+      expect(content).toContain('2026/07/02/2026-07-02.dreamcore.log');
     } finally {
       rmSync(logsDir, { recursive: true, force: true });
     }

@@ -69,14 +69,14 @@ describe('selectableAssistants', () => {
 
   it('shows installed generated CLI assistants (online or offline), hides missing/unchecked', () => {
     const result = selectableAssistants([
-      mk('bare-aionrs', 'generated', 1, true, 'online', { type: 'aionrs', source: 'internal' }),
+      mk('bare-dream-engine', 'generated', 1, true, 'online', { type: 'dream-engine', source: 'internal' }),
       mk('bare-claude', 'generated', 2, true, 'online', { type: 'acp', source: 'builtin', acp_backend: 'claude' }),
       // Cursor's `agent`: installed but the ACP handshake failed (needs login) → offline, still shown.
       mk('bare-cursor', 'generated', 3, true, 'offline', { type: 'acp', source: 'builtin', acp_backend: 'cursor' }),
       mk('bare-codex', 'generated', 4, true, 'missing', { type: 'acp', source: 'builtin', acp_backend: 'codex' }),
       mk('bare-gemini', 'generated', 5, true, 'unchecked', { type: 'acp', source: 'builtin', acp_backend: 'gemini' }),
     ]);
-    expect(result.map((a) => a.id)).toEqual(['bare-aionrs', 'bare-claude', 'bare-cursor']);
+    expect(result.map((a) => a.id)).toEqual(['bare-dream-engine', 'bare-claude', 'bare-cursor']);
   });
 
   it('applies one preferred order across CLI, custom, and official assistants', () => {
@@ -127,9 +127,12 @@ describe('isInstalledGeneratedCliAssistant', () => {
     expect(isInstalledGeneratedCliAssistant(mk('b', 'builtin', 1, true, 'offline'))).toBe(true);
   });
 
-  it('always shows the built-in aionrs assistant even when unchecked', () => {
-    const aionrs = mk('bare-aionrs', 'generated', 1, true, 'unchecked', { type: 'dream', source: 'internal' });
-    expect(isInstalledGeneratedCliAssistant(aionrs)).toBe(true);
+  it('always shows the built-in dream-engine assistant even when unchecked', () => {
+    const dreamEngine = mk('bare-dream-engine', 'generated', 1, true, 'unchecked', {
+      type: 'dream',
+      source: 'internal',
+    });
+    expect(isInstalledGeneratedCliAssistant(dreamEngine)).toBe(true);
   });
 
   it('treats offline (installed but handshake failed) generated CLIs as installed', () => {

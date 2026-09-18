@@ -193,7 +193,7 @@ describe('useGuidSend', () => {
 
   it('forwards local skill overrides for generated Aion CLI assistants through assistant conversation overrides', async () => {
     const deps = createDeps();
-    deps.selectedAssistantId = 'bare:aionrs';
+    deps.selectedAssistantId = 'bare:dream-engine';
     deps.selectedAssistantBackend = 'dream';
     deps.current_model = { provider_id: 'openai', model: 'gemini-2.5-pro', use_model: 'gemini-2.5-pro' } as never;
     deps.guidEnabledSkills = ['pdf-reader'];
@@ -208,7 +208,7 @@ describe('useGuidSend', () => {
     const payload = createConversationInvokeMock.mock.calls[0][0];
     expect(payload.type).toBeUndefined();
     expect(payload.model).toBe(deps.current_model);
-    expect(payload.assistant?.id).toBe('bare:aionrs');
+    expect(payload.assistant?.id).toBe('bare:dream-engine');
     expect(payload.assistant?.conversation_overrides?.skill_ids).toEqual(['pdf-reader']);
     expect(payload.assistant?.conversation_overrides?.disabled_builtin_skill_ids).toEqual(['todo-tracker']);
     expect(payload.extra.session_mode).toBeUndefined();
@@ -216,7 +216,7 @@ describe('useGuidSend', () => {
 
   it('does not write legacy preset_assistant_id for generated Aion CLI assistant conversations', async () => {
     const deps = createDeps();
-    deps.selectedAssistantId = 'bare:aionrs';
+    deps.selectedAssistantId = 'bare:dream-engine';
     deps.selectedAssistantBackend = 'dream';
     deps.current_model = { provider_id: 'openai', model: 'gemini-2.5-pro', use_model: 'gemini-2.5-pro' } as never;
 
@@ -227,7 +227,7 @@ describe('useGuidSend', () => {
     });
 
     const payload = createConversationInvokeMock.mock.calls[0][0];
-    expect(payload.assistant?.id).toBe('bare:aionrs');
+    expect(payload.assistant?.id).toBe('bare:dream-engine');
     expect(payload.extra.preset_assistant_id).toBeUndefined();
   });
 
@@ -251,7 +251,7 @@ describe('useGuidSend', () => {
     expect(payload.extra.backend).toBeUndefined();
   });
 
-  it('does not hand a CLI agent the aionrs provider model on its first turn', async () => {
+  it('does not hand a CLI agent the dream-engine provider model on its first turn', async () => {
     // Reproduces the first-use failure: before the agent's catalog has been
     // probed there is no ACP model to offer, and the provider selection used to
     // fill the gap. A brand new Antigravity conversation therefore started on
@@ -275,7 +275,7 @@ describe('useGuidSend', () => {
     expect(payload.assistant.conversation_overrides.model).toBeUndefined();
   });
 
-  it('still gives aionrs its provider model', async () => {
+  it('still gives dream-engine its provider model', async () => {
     // The fallback exists for dream, whose model IS the provider selection.
     const deps = createDeps();
     deps.selectedAssistantBackend = 'dream';

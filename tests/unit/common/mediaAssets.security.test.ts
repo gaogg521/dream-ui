@@ -29,7 +29,7 @@ function createWorkspace(): string {
   // realpathSync: on the Windows CI runner `tmpdir()` is an 8.3 short path
   // (`C:\Users\RUNNER~1\...`) while `resolveLocalInputPath` canonicalizes to
   // the long form — compare against the same canonical form.
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'aionui-media-assets-test-')));
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'one-media-assets-test-')));
   cleanupDirs.push(dir);
   return dir;
 }
@@ -57,7 +57,7 @@ const PNG_1x1 = Buffer.from(
 );
 
 const symlinkSupported = (() => {
-  const dir = mkdtempSync(join(tmpdir(), 'aionui-symlink-probe-'));
+  const dir = mkdtempSync(join(tmpdir(), 'one-symlink-probe-'));
   const target = join(dir, 'target');
   const link = join(dir, 'link');
   try {
@@ -92,7 +92,7 @@ describe('resolveLocalInputPath (agent tool-call args — image_uris / first_fra
     // as "image_uris" — before this fix, resolveLocalInputPath returned this
     // path unchanged and the caller read + uploaded it to a remote provider.
     const outside = createWorkspace();
-    const secret = createImageFile(outside, 'aionui.db');
+    const secret = createImageFile(outside, 'one.db');
 
     await expect(resolveLocalInputPath(secret, ws)).rejects.toThrow('Path traversal blocked');
   });

@@ -18,7 +18,7 @@ const conversation = (id: string, modified_at: number): TChatConversation =>
     type: 'acp',
     created_at: modified_at,
     modified_at,
-    extra: { backend: 'aioncore' },
+    extra: { backend: 'dreamcore' },
   }) as TChatConversation;
 
 describe('groupConversationsByRecency', () => {

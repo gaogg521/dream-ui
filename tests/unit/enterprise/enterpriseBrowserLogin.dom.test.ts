@@ -39,13 +39,13 @@ describe('openEnterpriseOAuthInBrowser deep-link scheme', () => {
   });
 
   it("tells the backend this build's deep-link scheme so the callback returns to the right process", async () => {
-    window.__deepLinkScheme = 'aionui-dev';
+    window.__deepLinkScheme = 'one-dev';
 
     await openEnterpriseOAuthInBrowser('feishu', { remoteOrigin: 'http://192.168.11.159:25808' });
 
     expect(openExternalUrl).toHaveBeenCalledTimes(1);
     const openedUrl = new URL(openExternalUrl.mock.calls[0][0] as string);
-    expect(openedUrl.searchParams.get('scheme')).toBe('aionui-dev');
+    expect(openedUrl.searchParams.get('scheme')).toBe('one-dev');
     expect(openedUrl.searchParams.get('desktop')).toBe('1');
   });
 
@@ -59,9 +59,9 @@ describe('openEnterpriseOAuthInBrowser deep-link scheme', () => {
   });
 
   /**
-   * An aioncore older than the scheme rename maps anything it does not know back
-   * to `aionui`, so asking for `dream` against a pinned older backend returns an
-   * `aionui://` callback. The app registers and accepts both names, so this is a
+   * An dreamcore older than the scheme rename maps anything it does not know back
+   * to `one`, so asking for `dream` against a pinned older backend returns an
+   * `one://` callback. The app registers and accepts both names, so this is a
    * working combination rather than a broken one — but only as long as the value
    * sent here stays one the backend can recognise.
    */
@@ -71,7 +71,7 @@ describe('openEnterpriseOAuthInBrowser deep-link scheme', () => {
     await openEnterpriseOAuthInBrowser('feishu', { remoteOrigin: 'http://192.168.11.159:25808' });
 
     const openedUrl = new URL(openExternalUrl.mock.calls[0][0] as string);
-    expect(['dream', 'dream-dev', 'aionui', 'aionui-dev']).toContain(openedUrl.searchParams.get('scheme'));
+    expect(['dream', 'dream-dev', 'one', 'one-dev']).toContain(openedUrl.searchParams.get('scheme'));
   });
 });
 

@@ -279,7 +279,7 @@ describe('runBackendMigrations', () => {
 
   /**
    * The bug these pin: "already registered" was decided by exact current name,
-   * so a row still called `aionui-image-generation` was invisible to the check
+   * so a row still called `one-image-generation` was invisible to the check
    * and a second row was inserted beside it. Both stayed enabled, so every
    * media tool existed twice and the agent used whichever it saw first.
    */

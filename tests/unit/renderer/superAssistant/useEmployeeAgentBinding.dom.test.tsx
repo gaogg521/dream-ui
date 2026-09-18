@@ -51,7 +51,7 @@ vi.mock('@renderer/hooks/agent/useModelProviderList', () => ({
 import { NO_EXPERT_ID, useEmployeeAgentBinding } from '@/renderer/pages/superAssistant/hooks/useEmployeeAgentBinding';
 
 const CLAUDE_AGENT = { id: 'agent_claude', name: 'Claude Code', backend: 'claude', agent_type: 'acp', enabled: true };
-const AIONRS_AGENT = { id: 'agent_aionrs', name: '1ONE CLI', backend: null, agent_type: 'dream', enabled: true };
+const AIONRS_AGENT = { id: 'agent_dream-engine', name: '1ONE CLI', backend: null, agent_type: 'dream', enabled: true };
 
 function assistant(
   id: string,
@@ -76,11 +76,11 @@ describe('useEmployeeAgentBinding', () => {
     setStateMock.mockReset();
     assistantsRef.current = [
       assistant('acp_persona', 'agent_claude', 'acp', { acpBackend: 'claude' }),
-      assistant('cli_persona', 'agent_aionrs', 'dream'),
+      assistant('cli_persona', 'agent_dream-engine', 'dream'),
       // Bare CLI rows are backends, not experts — they must never be offered.
-      assistant('bare:632f31d2', 'agent_aionrs', 'dream', { source: 'generated' }),
+      assistant('bare:632f31d2', 'agent_dream-engine', 'dream', { source: 'generated' }),
       // Official templates ship disabled; they must still be offered.
-      assistant('disabled_official', 'agent_aionrs', 'dream', { enabled: false }),
+      assistant('disabled_official', 'agent_dream-engine', 'dream', { enabled: false }),
     ];
     personasRef.current = [];
     catalogRef.current = [CLAUDE_AGENT, AIONRS_AGENT];
@@ -154,15 +154,15 @@ describe('useEmployeeAgentBinding', () => {
     await waitFor(() => expect(result.current.selectedBackendAgentId).toBe('agent_claude'));
 
     // Manual override latches...
-    act(() => result.current.setBackendAgentId('agent_aionrs'));
+    act(() => result.current.setBackendAgentId('agent_dream-engine'));
     await waitFor(() => expect(result.current.resolvedBackend).toBe('dream'));
 
     // ...so switching the expert must NOT snap the backend back.
     act(() => result.current.selectAssistant('cli_persona'));
-    await waitFor(() => expect(result.current.selectedBackendAgentId).toBe('agent_aionrs'));
+    await waitFor(() => expect(result.current.selectedBackendAgentId).toBe('agent_dream-engine'));
   });
 
-  it('auto-picks a provider model for aionrs and reports it as a top-level model', async () => {
+  it('auto-picks a provider model for dream-engine and reports it as a top-level model', async () => {
     const { result } = renderHook(() => useEmployeeAgentBinding());
 
     act(() => result.current.selectAssistant('cli_persona'));
@@ -195,8 +195,8 @@ describe('useEmployeeAgentBinding', () => {
     act(() => result.current.selectAssistant('acp_persona'));
     await waitFor(() => expect(result.current.selectedBackendAgentId).toBe('agent_claude'));
 
-    act(() => result.current.setBackendAgentId('agent_aionrs'));
-    await waitFor(() => expect(result.current.buildBinding()?.agentIdOverride).toBe('agent_aionrs'));
+    act(() => result.current.setBackendAgentId('agent_dream-engine'));
+    await waitFor(() => expect(result.current.buildBinding()?.agentIdOverride).toBe('agent_dream-engine'));
   });
 
   it('cannot be submitted without an expert', () => {
@@ -204,7 +204,7 @@ describe('useEmployeeAgentBinding', () => {
     expect(result.current.buildBinding()).toBeUndefined();
   });
 
-  it('cannot be submitted for aionrs when no provider is configured', async () => {
+  it('cannot be submitted for dream-engine when no provider is configured', async () => {
     providersRef.current = [];
     const { result } = renderHook(() => useEmployeeAgentBinding());
 
@@ -219,7 +219,7 @@ describe('useEmployeeAgentBinding', () => {
     const { result } = renderHook(() =>
       useEmployeeAgentBinding({
         assistantId: 'cli_persona',
-        agentIdOverride: 'agent_aionrs',
+        agentIdOverride: 'agent_dream-engine',
         modelId: 'kimi-k3',
         model: { provider_id: 'prov_1', model: 'kimi-k3', use_model: 'kimi-k3' },
       })

@@ -13,7 +13,7 @@ import { processImageUri, saveGeneratedImage, executeImageGeneration } from '@/c
 let cleanupDirs: string[] = [];
 
 function createWorkspace(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'aionui-image-gen-test-'));
+  const dir = mkdtempSync(join(tmpdir(), 'one-image-gen-test-'));
   cleanupDirs.push(dir);
   return dir;
 }
@@ -51,7 +51,7 @@ const DATA_URL_PNG =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
 const symlinkSupported = (() => {
-  const dir = mkdtempSync(join(tmpdir(), 'aionui-symlink-probe-'));
+  const dir = mkdtempSync(join(tmpdir(), 'one-symlink-probe-'));
   const target = join(dir, 'target');
   const link = join(dir, 'link');
   try {
