@@ -99,13 +99,14 @@ cd dream-core
 cargo test -p dream-domain-sso --lib
 ```
 
-**通过标准**：`79 passed; 0 failed`。其中直接管深链的 3 条：
+**通过标准**：`80 passed; 0 failed`。其中直接管深链的 4 条：
 
 | 测试                                                                      | 管什么                                          |
 | ------------------------------------------------------------------------- | ----------------------------------------------- |
 | `sanitize_deep_link_scheme_allows_only_the_known_schemes`                 | 白名单 + 兜底值 + 注入拦截                      |
 | `deep_link_scheme_survives_the_state_round_trip_for_every_allowed_scheme` | **本轮新增** · scheme 穿越 state token 不丢不变 |
 | `state_nonce_cannot_be_consumed_twice`                                    | **本轮新增** · state 一次性                     |
+| `callback_page_carries_the_current_product_name`                          | **本轮新增** · 落地页产品名                     |
 
 **为什么这一档就足以覆盖本轮改动**（这点很关键，别被「没走真实 IdP」吓退）：
 
@@ -193,10 +194,17 @@ scheme **不走查询串穿越 IdP**。它在 `authorize` 时被 `sanitize_deep_
    这条最容易被无声改坏 —— 老用户升级前的客户端只认这个 scheme。
 3. **落地页正常渲染**：登录成功后那页要出得来，「打开应用」按钮可点。
 
-> 📌 顺带说清一个**不是缺陷**的东西：落地页写的是 `1One Work`，而品牌常量
-> `BRAND_DISPLAY_NAME` 是 `One Work`。**带 `one` 的名字都是自家品牌，不在
-> aionui 清理范围内**（用户 2026-09-18 明确）。本轮一度改成 `One Work`，已还原。
-> 要清的只有 `aionui` 家族 —— 别把 `1One` / `1ONE CLI` 这类顺手扫了。
+> 📌 **`1One Work` 已于 2026-09-19 改为 `One Work`。**
+> 它是上一代的叫法（与 `1ONE Code` 同期），现行产品名是 **One Work**。
+> 2026-07-21 那轮改名做了 825 处替换并验证「全库为空」，但**只扫了 dream-ui** ——
+> dream-core 这几处是漏网的：SSO 落地页（标题/正文）、ACP 握手的 `clientInfo.name`、
+> 4 个内置技能 markdown（45 处）。
+>
+> **没有跟着改的**（改了会弄坏存量安装，别顺手扫）：
+> `LEGACY_PROD_USERDATA_APP_NAMES = ['1ONE Code']`、
+> `resources/windows/support/report-installer-failure.ps1` 的目录探测列表、
+> `data_paths.rs` 里说明这些冻结值的注释 —— 那是**查找旧数据目录用的键，不是品牌文案**。
+> `1ONE CLI` 是 CLI agent 自己的名字，也不在范围内。
 
 ---
 
