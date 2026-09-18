@@ -788,7 +788,8 @@
       }
     },
     "pathCopied": "已复制路径",
-    "copyFailed": "复制路径失败"
+    "copyFailed": "复制路径失败",
+    "collapseAll": "全部折叠"
   },
   "terminal": {
     "running": "运行中",

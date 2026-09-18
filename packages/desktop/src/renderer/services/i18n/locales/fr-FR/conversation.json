@@ -783,7 +783,8 @@
       }
     },
     "pathCopied": "Chemin copié",
-    "copyFailed": "Échec de la copie du chemin"
+    "copyFailed": "Échec de la copie du chemin",
+    "collapseAll": "Tout réduire"
   },
   "terminal": {
     "running": "En cours",

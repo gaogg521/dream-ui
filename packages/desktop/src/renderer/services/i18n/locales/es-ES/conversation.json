@@ -784,7 +784,8 @@
       }
     },
     "pathCopied": "Ruta copiada",
-    "copyFailed": "No se pudo copiar la ruta"
+    "copyFailed": "No se pudo copiar la ruta",
+    "collapseAll": "Contraer todo"
   },
   "terminal": {
     "running": "En ejecución",

@@ -783,7 +783,8 @@
       }
     },
     "pathCopied": "경로가 복사되었습니다",
-    "copyFailed": "경로 복사에 실패했습니다"
+    "copyFailed": "경로 복사에 실패했습니다",
+    "collapseAll": "모두 접기"
   },
   "terminal": {
     "running": "실행 중",

@@ -783,7 +783,8 @@
       }
     },
     "pathCopied": "مسیر کپی شد",
-    "copyFailed": "کپی مسیر ناموفق بود"
+    "copyFailed": "کپی مسیر ناموفق بود",
+    "collapseAll": "جمع کردن همه"
   },
   "terminal": {
     "running": "در حال اجرا",

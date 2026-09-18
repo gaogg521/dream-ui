@@ -783,7 +783,8 @@
       }
     },
     "pathCopied": "パスをコピーしました",
-    "copyFailed": "パスのコピーに失敗しました"
+    "copyFailed": "パスのコピーに失敗しました",
+    "collapseAll": "すべて折りたたむ"
   },
   "terminal": {
     "running": "実行中",

@@ -391,6 +391,15 @@ export const setExpandedKeys = (keys: PeKey[]): void => {
 };
 
 /** Expand or collapse a directory. Collapse keeps descendant expanded marks. */
+/**
+ * Collapse every expanded directory in the tree at once, so the tree shows only
+ * its root nodes. Routed through `setExpandedKeys`, so it persists the collapsed
+ * state normally (a genuine, user-driven collapse — not the transient empty that
+ * `persistUi`'s guard protects against) and reconciles subscriptions down to what
+ * is still visible.
+ */
+export const collapseAll = (): void => setExpandedKeys([]);
+
 export const setExpanded = (key: PeKey, isExpanded: boolean): void => {
   if (isExpanded) expanded.add(key);
   else expanded.delete(key); // keep descendants' marks (VS Code手感; they fall out of want)
