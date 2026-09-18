@@ -2484,6 +2484,7 @@ export type I18nKey =
   | 'settings.browserData.title'
   | 'settings.browserNotification.bodyConfirmation'
   | 'settings.browserNotification.bodyTurnCompleted'
+  | 'settings.browserNotification.bodyTurnCompletedNamed'
   | 'settings.browserNotification.denied'
   | 'settings.browserNotification.enable'
   | 'settings.browserNotification.granted'
