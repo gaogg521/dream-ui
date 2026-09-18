@@ -21,7 +21,7 @@ const KATEX_MATHML_HIDE =
   '.katex .katex-mathml { position: absolute; clip: rect(1px, 1px, 1px, 1px); height: 1px; overflow: hidden; }';
 const KATEX_FONT_FACE = '@font-face { font-family: KaTeX_Main; src: url(fonts/KaTeX_Main.woff2); }';
 // A sheet that only *references* `.katex` (mirrors the preview `.dream-markdown` theme).
-const PARTIAL_THEME_RULE = '.aionui-markdown :where(.katex, .katex *) { line-height: normal; }';
+const PARTIAL_THEME_RULE = '.one-markdown :where(.katex, .katex *) { line-height: normal; }';
 
 describe('collectKatexCssRules', () => {
   it('includes the real KaTeX hide rule even when a partial theme sheet appears first', () => {

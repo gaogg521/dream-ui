@@ -252,7 +252,7 @@ if (electronSquirrelStartup) {
 // Sentry automatically captures these, but we keep the handlers to prevent Electron's default error dialog.
 // Control flow is unchanged — both handlers still swallow the failure and keep the process alive; they only
 // log allow-listed attribution first, because a Sentry event for e.g. `read ECONNRESET` otherwise carries
-// nothing but Node-internal frames (TCP.onStreamRead) and cannot be traced back to a subsystem (AIONUI-128).
+// nothing but Node-internal frames (TCP.onStreamRead) and cannot be traced back to a subsystem (legacy Sentry id AIONUI-128).
 process.on('uncaughtException', (error, origin) => {
   logUncaught(describeUncaughtError(error, origin));
 });
@@ -474,6 +474,9 @@ function registerCronResumeBridge(backendPort: number): void {
         'x-dream-internal': '1',
         // Also sent under the pre-rebrand name: this app pairs with a pinned
         // dreamcore release, which may predate the backend half of the rename.
+        // Legacy duplicate: an enterprise server older than the rename only accepts
+        // this spelling. dream-core accepts both, so this can go once the oldest
+        // supported server is past it — until then, dropping it breaks remote setups.
         'x-aionui-internal': '1',
       },
     }).catch((error) => {
@@ -748,7 +751,7 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
   // crashes, escalate to a throttled app relaunch when the renderer cannot
   // launch at all (e.g. app files replaced by an update while running).
   // An unconditional immediate reload here caused a ~50/s crash storm on
-  // `launch-failed` (Sentry AIONUI-DESKTOP-A).
+  // `launch-failed` (legacy Sentry id AIONUI-DESKTOP-A).
   const rendererRecovery = createRendererRecoveryPolicy();
 
   mainWindow.webContents.on('render-process-gone', (_event, details) => {
@@ -1280,7 +1283,7 @@ const handleAppReady = async (): Promise<void> => {
 
 // ============ Protocol Registration ============
 // Claim every scheme this build answers to, not just the current one: an
-// aioncore older than the rename still emits `aionui://` callbacks (it maps
+// A legacy aioncore older than the rename still emits `aionui://` callbacks (it maps
 // unknown schemes back to that), and an existing install already has the old
 // association pointing here. Registering only the new name would make those
 // callbacks open nothing at all.

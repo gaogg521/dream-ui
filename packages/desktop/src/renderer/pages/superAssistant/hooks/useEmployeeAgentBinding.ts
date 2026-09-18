@@ -35,7 +35,7 @@ import { buildAgentRuntimeModelInfo } from '@renderer/utils/model/agentRuntimeCa
 import { buildAssistantModelInfo } from '@renderer/pages/guid/hooks/useGuidAssistantSelection';
 
 /** Backends whose model is chosen from the provider list rather than an ACP catalog. */
-const AIONRS_BACKEND = 'dream';
+const DREAM_ENGINE_BACKEND = 'dream';
 const GEMINI_BACKEND = 'gemini';
 /** dream cannot use Google-Auth providers. Same filter as the cron dialog. */
 const GOOGLE_AUTH_PLATFORM = 'gemini-with-google-auth';
@@ -155,7 +155,7 @@ export const useEmployeeAgentBinding = (initial?: EmployeeBindingInitial): UseEm
 
   const resolvedBackend =
     selectedCatalogAgent?.backend || selectedCatalogAgent?.agent_type || assistantRuntimeKey(selectedAssistant);
-  const isDreamEngineBackend = resolvedBackend === AIONRS_BACKEND;
+  const isDreamEngineBackend = resolvedBackend === DREAM_ENGINE_BACKEND;
   const isGeminiMode = isDreamEngineBackend || resolvedBackend === GEMINI_BACKEND;
 
   const backendOptions = useMemo<BackendOption[]>(

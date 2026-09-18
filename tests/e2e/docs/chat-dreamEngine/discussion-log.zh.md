@@ -124,7 +124,7 @@
 2. **对话页需新增 15+ testid**（否则无法定位元素）
    - **P0 优先级**（阻塞测试）: 5 个
      ```tsx
-     [data-testid="aionrs-sendbox"]
+     [data-testid="dream-engine-sendbox"]
      [data-testid="aionrs-model-selector"]
      [data-testid="agent-mode-selector-aionrs"]
      [data-testid="aionrs-file-upload-input"]

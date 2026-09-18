@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 // `aionui_workspace_expansion` over at renderer start, so an upgrade keeps the
 // tree expanded the way the user left it instead of collapsing everything.
 export const WORKSPACE_EXPANSION_STORAGE_KEY = 'one_workspace_expansion';
-export const WORKSPACE_EXPANSION_EVENT = 'aionui:workspace-expansion-changed';
+export const WORKSPACE_EXPANSION_EVENT = 'one:workspace-expansion-changed';
 
 type WorkspaceExpansionChangeDetail = {
   expandedWorkspaces: string[];

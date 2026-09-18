@@ -387,8 +387,8 @@ const DreamEngineSendBox: React.FC<{
   useEffect(() => {
     if (!conversation_id || !current_model?.use_model) return;
 
-    const storageKey = `aionrs_initial_message_${conversation_id}`;
-    const processedKey = `aionrs_initial_processed_${conversation_id}`;
+    const storageKey = `one_initial_message_${conversation_id}`;
+    const processedKey = `one_initial_processed_${conversation_id}`;
 
     const processInitialMessage = async () => {
       if (sessionStorage.getItem(processedKey)) return;
@@ -835,7 +835,7 @@ const DreamEngineSendBox: React.FC<{
         onRetryStart={teamRuntime?.onRetryStart ? () => void teamRuntime.onRetryStart?.() : undefined}
       />
       <SendBox
-        data-testid='aionrs-sendbox'
+        data-testid='dream-engine-sendbox'
         onMobilePlusClick={isMobile ? () => setIsMobileSheetOpen(true) : undefined}
         value={content}
         onChange={handleContentChange}
@@ -955,7 +955,7 @@ const DreamEngineSendBox: React.FC<{
                     return (
                       <Tag
                         key={item.path}
-                        data-testid={`aionrs-folder-tag-${folderIndex}`}
+                        data-testid={`dream-engine-folder-tag-${folderIndex}`}
                         color='blue'
                         closable
                         onClose={() => {

@@ -240,7 +240,7 @@
     "pickExpertHint": "Offizielle Assistenten und der Expertenmarkt stehen hier gemeinsam — noch nicht hinzugefügte werden per Klick hinzugefügt und ausgewählt.",
     "modelRequired": "Bitte ein Modell für diesen Mitarbeiter auswählen",
     "expertInstallFailed": "Experte konnte nicht hinzugefügt werden",
-    "aionrsProviderRequired": "Richten Sie zuerst unter „Einstellungen – Modell“ einen Modellanbieter ein",
+    "providerRequired": "Richten Sie zuerst unter „Einstellungen – Modell“ einen Modellanbieter ein",
     "runErrorProviderNotFound": "Das mit diesem Mitarbeiter verknüpfte Modell existiert nicht mehr – wählen Sie unter „Verwalten“ ein neues.",
     "collaborationContext": {
       "ragEmpty": "Wissensdatenbank ist leer – hochladen"

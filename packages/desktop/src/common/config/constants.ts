@@ -72,11 +72,18 @@ export const BUILTIN_BROWSER_MCP_LEGACY_NAMES = ['aionui-browser'] as const;
 
 // ===== 文件处理相关常量 =====
 
-/** 临时文件时间戳分隔符 */
-export const AIONUI_TIMESTAMP_SEPARATOR = '_aionui_';
-
-/** 用于匹配和清理时间戳后缀的正则表达式 */
-export const AIONUI_TIMESTAMP_REGEX = /_aionui_\d{13}(\.\w+)?$/;
+/**
+ * 匹配改名前写盘的临时文件时间戳后缀，用于展示时清理掉。
+ *
+ * 这个**值**必须保持 `_aionui_`：它匹配的是已经躺在用户磁盘上的历史文件名，
+ * 不是我们现在生成的格式（现在没有任何代码再写这个后缀）。改了值就等于不再
+ * 认识老文件，用户会看到一串裸时间戳。
+ *
+ * Matches the pre-rebrand timestamp suffix on files ALREADY on disk, so it can be
+ * stripped for display. The value must stay `_aionui_` — nothing writes this suffix
+ * any more; changing it just stops recognising the old names.
+ */
+export const LEGACY_TIMESTAMP_SUFFIX_REGEX = /_aionui_\d{13}(\.\w+)?$/;
 export const FILES_MARKER = '[[DREAM_FILES]]';
 /** Conversations that predate the rebrand persist the legacy marker. */
 export const LEGACY_FILES_MARKER = '[[AION_FILES]]';

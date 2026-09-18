@@ -240,7 +240,7 @@
     "pickExpertHint": "공식 어시스턴트와 전문가 마켓이 모두 표시됩니다. 추가하지 않은 항목은 클릭하면 추가 후 선택됩니다.",
     "modelRequired": "이 직원에 사용할 모델을 선택하세요",
     "expertInstallFailed": "전문가 추가에 실패했습니다",
-    "aionrsProviderRequired": "먼저 «설정 - 모델»에서 모델 공급자를 설정하세요",
+    "providerRequired": "먼저 «설정 - 모델»에서 모델 공급자를 설정하세요",
     "runErrorProviderNotFound": "이 직원에 연결된 모델이 더 이상 존재하지 않습니다. «관리»에서 모델을 다시 선택하세요.",
     "collaborationContext": {
       "ragEmpty": "지식 베이스가 비어 있습니다 — 업로드"

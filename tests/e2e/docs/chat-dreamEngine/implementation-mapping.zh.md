@@ -261,7 +261,7 @@ expect(extra.workspace).toBe(workspacePath); // 或 undefined（无文件夹）
 2. **数据库清理**：调用 `cleanupE2EAionrsConversations(page)`
    - 使用 `remove-conversation` 批量删除 `E2E-aionrs-` 开头对话
    - 依赖 FK CASCADE 自动删除关联 messages
-3. **sessionStorage 清理**：清除 `aionrs_initial_message_*` 和 `aionrs_initial_processed_*` keys
+3. **sessionStorage 清理**：清除 `one_initial_message_*` 和 `one_initial_processed_*` keys
 4. **临时文件清理**：各测试在 `finally` 块调用 `tempWorkspace.cleanup()`
 
 **清理失败策略**：按需求文档，清理失败必须 throw（已在 helper 实现）

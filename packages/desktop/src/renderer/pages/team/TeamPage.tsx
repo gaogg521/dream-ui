@@ -51,6 +51,8 @@ type Props = {
   team: TTeam;
 };
 
+// 'aionrs' is the legacy persisted value for the dream engine backend; rows written
+// before the rename still carry it, so it has to stay in this set.
 const NON_ACP_BACKENDS = new Set(['aionrs', 'openclaw-gateway', 'nanobot', 'remote']);
 
 function isAcpLikeBackend(backend: string | undefined): boolean {

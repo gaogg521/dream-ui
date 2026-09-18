@@ -631,6 +631,7 @@ const classifyPersistedSendFailure = (
     };
   }
 
+  // Legacy prefix: codes persisted before the rename still carry it.
   if (persistedCode?.startsWith('AIONUI_')) {
     return { message, code: persistedCode, ownership: 'dream', detail: message, retryable: true };
   }

@@ -18,7 +18,7 @@ export const OPEN_MIGRATION_DIALOG_EVENT = 'one-open-migration-dialog';
 
 // Official website users are guided to for the Dream UI Pro download. Kept as a
 // module constant (not i18n) — it is a URL, not translatable copy.
-const AIONUI_WEBSITE_URL = 'https://www.dream.com/';
+const WEBSITE_URL = 'https://www.dream.com/';
 
 // localStorage flag remembering that the migration invite already auto-opened
 // once on this machine. First launch of the discontinued build pops the card
@@ -96,7 +96,7 @@ const UpdateMigrationDialog: React.FC = () => {
   const close = () => setVisible(false);
 
   const gotoWebsite = () => {
-    void openExternalUrl(AIONUI_WEBSITE_URL).catch((error) => {
+    void openExternalUrl(WEBSITE_URL).catch((error) => {
       console.error('Failed to open the Pro website:', error);
     });
     close();

@@ -73,7 +73,7 @@ const EmployeeBindingFields: React.FC<EmployeeBindingFieldsProps> = ({ binding }
         return {
           ...option,
           team_selectable: false,
-          team_block_reason: t('common.superAssistant.aionrsProviderRequired', {
+          team_block_reason: t('common.superAssistant.providerRequired', {
             defaultValue: '需要先在「设置 - 模型」中配置一个模型服务商',
           }),
         };

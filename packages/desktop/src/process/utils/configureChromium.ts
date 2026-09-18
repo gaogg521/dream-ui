@@ -108,7 +108,7 @@ if (isWebUI || isResetPassword) {
 // OS-assigned ephemeral port via listen(0) and backfills it here through setActiveCdpPort,
 // so there is exactly one port concept in the codebase: the one you can actually connect to.
 //
-// The 9230-9250 reservation and the ~/.aionui-cdp-registry.json instance registry were
+// The 9230-9250 reservation and the legacy ~/.aionui-cdp-registry.json instance registry were
 // removed with Chromium's application-wide remote-debugging-port switch. Once that switch
 // was gone nothing listened on that range, so the registry tracked a service that did not
 // exist, multi-instance avoidance was avoiding phantoms, and — worst of all — the settings
@@ -160,7 +160,7 @@ export interface CdpStatus {
 /**
  * 顺手删掉遗留的实例注册表文件。
  *
- * 这个文件（`~/.aionui-cdp-registry.json`）以前记录「每个实例占了哪个 CDP 端口」。相关逻辑
+ * 这个 legacy 文件（`~/.aionui-cdp-registry.json`）以前记录「每个实例占了哪个 CDP 端口」。相关逻辑
  * 已随应用级 remote-debugging-port 一起删除，但升级上来的机器上文件还在，里面是一堆早已
  * 无效的 pid/端口。留着只会让人以为还有这套机制，所以清掉。best-effort，失败无所谓。
  *

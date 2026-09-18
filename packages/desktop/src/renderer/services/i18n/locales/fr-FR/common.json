@@ -240,7 +240,7 @@
     "pickExpertHint": "Les assistants officiels et la place de marché des experts sont réunis ici — cliquez sur un expert non ajouté pour l'ajouter et le sélectionner.",
     "modelRequired": "Veuillez sélectionner un modèle pour cet employé",
     "expertInstallFailed": "Échec de l'ajout de l'expert",
-    "aionrsProviderRequired": "Configurez d'abord un fournisseur de modèles dans « Paramètres – Modèle »",
+    "providerRequired": "Configurez d'abord un fournisseur de modèles dans « Paramètres – Modèle »",
     "runErrorProviderNotFound": "Le modèle associé à cet employé n'existe plus — choisissez-en un autre dans « Gérer ».",
     "collaborationContext": {
       "ragEmpty": "La base de connaissances est vide — importer"

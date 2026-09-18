@@ -211,6 +211,8 @@ function getInstallPathKind(resourcesPath: unknown): string | undefined {
   // follows productName ("One Work"). `1onecode` (the old executableName) and
   // `aionui` (upstream) are kept so reports from pre-3.0 installs still classify
   // instead of falling through to `custom`.
+  // Legacy install-directory names are kept so reports from pre-3.0 installs
+  // still classify; they are matched, never produced.
   const installDirs = ['onework', 'one work', '1onecode', 'aionui'];
   if (installDirs.some((dir) => normalized.includes(`\\appdata\\local\\programs\\${dir}\\resources`))) {
     return 'user_local_programs';

@@ -597,7 +597,7 @@ test('should verify DB records after conversation', async ({ page }) => {
 
 ```tsx
 // src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineSendBox.tsx
-<div data-testid="aionrs-sendbox">
+<div data-testid="dream-engine-sendbox">
   {/* SendBox 根元素 */}
 </div>
 
@@ -638,7 +638,7 @@ test('should verify DB records after conversation', async ({ page }) => {
 <FilePreview key={path} data-testid={`aionrs-file-preview-${idx}`} />
 
 // 文件夹 Tag
-<Tag key={item.path} data-testid={`aionrs-folder-tag-${idx}`} />
+<Tag key={item.path} data-testid={`dream-engine-folder-tag-${idx}`} />
 
 // 模型下拉菜单项
 <Menu.Item key={modelId} data-testid={`aionrs-model-menu-item-${modelId}`} />

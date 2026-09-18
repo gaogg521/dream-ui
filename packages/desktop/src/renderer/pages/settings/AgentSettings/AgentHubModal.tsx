@@ -14,7 +14,7 @@ interface AgentHubModalProps {
   onCancel: () => void;
 }
 
-const AION_HUB_REPO_URL = 'https://1one.1oneclaw.com';
+const HUB_REPO_URL = 'https://1one.1oneclaw.com';
 
 export const AgentHubModal: React.FC<AgentHubModalProps> = ({ visible, onCancel }) => {
   const { t } = useTranslation();
@@ -22,7 +22,7 @@ export const AgentHubModal: React.FC<AgentHubModalProps> = ({ visible, onCancel 
   const { agents, loading, error, install, retryInstall, update } = useHubAgents();
   const actionButtonClassName = '!min-w-80px !rounded-9px !px-10px';
   const openDreamHubRepo = () => {
-    void openExternalUrl(AION_HUB_REPO_URL).catch(console.error);
+    void openExternalUrl(HUB_REPO_URL).catch(console.error);
   };
 
   const renderActionBtn = (agent: IHubAgentItem) => {

@@ -43,6 +43,12 @@ export const LEGACY_LOCAL_STORAGE_KEYS: Readonly<Record<string, string>> = {
   // whole renderer is the cheap check that would have caught them.
   one_cron_unread: 'aionui_cron_unread',
   one_workspace_expansion: 'aionui_workspace_expansion',
+  // Found by the 2026-09-18 brand sweep, the same way as the two above: both were
+  // plain literals sitting outside anything that looks like storage code (a layout
+  // component and an in-app-browser notice helper). Without these two, renaming the
+  // keys resets a sider width the user dragged and re-shows a notice they dismissed.
+  'one:desktopSiderWidth': 'aionui:desktopSiderWidth',
+  one_agent_browser_first_use_notified: 'aionui_agent_browser_first_use_notified',
 };
 
 /**

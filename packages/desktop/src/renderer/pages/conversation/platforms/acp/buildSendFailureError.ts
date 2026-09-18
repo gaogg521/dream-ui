@@ -10,7 +10,7 @@ import { classifyConversationBusyError } from '../conversationBusyError';
 import { buildRawErrorSummary } from './errorDiagnostics';
 import type { AgentStreamErrorInfo } from '@/common/chat/chatLib';
 
-const AIONUI_TRANSPORT_ERROR_CODES = new Set([
+const TRANSPORT_ERROR_CODES = new Set([
   'MCP_HTTP_RESPONSE_READ_FAILED',
   'MCP_TOOL_REMOTE_ERROR',
   'MCP_TOOL_RESPONSE_UNEXPECTED',
@@ -47,7 +47,7 @@ export const buildSendFailureError = (error: unknown, message: string): AgentStr
     };
   }
 
-  if (isBackendHttpError(error) && AIONUI_TRANSPORT_ERROR_CODES.has(error.code)) {
+  if (isBackendHttpError(error) && TRANSPORT_ERROR_CODES.has(error.code)) {
     return {
       message,
       code: error.code,

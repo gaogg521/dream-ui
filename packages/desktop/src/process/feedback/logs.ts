@@ -8,6 +8,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as zlib from 'node:zlib';
 
+// The last two are legacy suffixes, matched so a bundle collected on an install
+// that predates the rename still picks up its backend logs. Never written.
 const LOG_SUFFIXES = ['.log', '.dreamcore.log', '.dream-engine.log', '.aioncore.log', '.aionrs.log'];
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}/;
 const YEAR_DIR_PATTERN = /^\d{4}$/;

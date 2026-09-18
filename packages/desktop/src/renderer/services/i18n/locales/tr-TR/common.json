@@ -240,7 +240,7 @@
     "pickExpertHint": "Resmî asistanlar ve uzman pazarı burada birlikte — henüz eklemediğiniz birine tıklayın, eklenip seçilsin.",
     "modelRequired": "Lütfen bu çalışan için bir model seçin",
     "expertInstallFailed": "Uzman eklenemedi",
-    "aionrsProviderRequired": "Önce «Ayarlar - Model» bölümünden bir model sağlayıcısı yapılandırın",
+    "providerRequired": "Önce «Ayarlar - Model» bölümünden bir model sağlayıcısı yapılandırın",
     "runErrorProviderNotFound": "Bu çalışana bağlı model artık mevcut değil — «Yönet» bölümünden yeni bir model seçin.",
     "collaborationContext": {
       "ragEmpty": "Bilgi tabanı boş — yükle"

@@ -240,7 +240,7 @@ Var /GLOBAL AionUiCurrentOutDir
     ${If} ${Silent}
       nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& { \
         $$ErrorActionPreference = 'Stop'; \
-        $$appDir = Join-Path $$env:APPDATA 'AionUi'; \
+        $$appDir = Join-Path $$env:APPDATA 'One Work'; \
         $$marker = Join-Path $$appDir 'installer-last-failure.json'; \
         $$log = '$OneWorkSessionLogPath'; \
         if (-not $$log) { $$log = Join-Path $$env:TEMP '${AIONUI_FALLBACK_LOG}' }; \

@@ -15,7 +15,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import CssThemeModal from './CssThemeModal.tsx';
 import { BUILTIN_THEMES, DEFAULT_THEME_ID } from './presets.ts';
-import { BACKGROUND_BLOCK_START, injectBackgroundCssBlock } from './backgroundUtils.ts';
+import { hasBackgroundBlock, injectBackgroundCssBlock } from './backgroundUtils.ts';
 import { resolveExtensionAssetUrl } from '@renderer/utils/platform.ts';
 import { LIGHT_THEME_ID, SYSTEM_THEME_ID } from '@/common/theme/constants';
 
@@ -228,7 +228,9 @@ const ensureBackgroundCss = <T extends { id?: string; cover?: string; css?: stri
   if (theme.builtin) {
     return theme;
   }
-  if (theme.cover && theme.css && !theme.css.includes(BACKGROUND_BLOCK_START)) {
+  // Checks both spellings: a theme carrying the pre-rebrand markers already has a
+  // block, and injecting again would stack a second background on top of it.
+  if (theme.cover && theme.css && !hasBackgroundBlock(theme.css)) {
     return { ...theme, css: injectBackgroundCssBlock(theme.css, theme.cover) };
   }
   return theme;

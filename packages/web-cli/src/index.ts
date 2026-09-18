@@ -196,9 +196,9 @@ async function runStart(flags: Map<string, string | true>): Promise<void> {
     if (autoOpenBrowser) {
       const openResult = openBrowserUrl(handle.localUrl);
       if (openResult.ok) {
-        console.log(`[aionui-web] opened ${handle.localUrl} in your browser.`);
+        console.log(`[dream-web] opened ${handle.localUrl} in your browser.`);
       } else {
-        console.warn(`[aionui-web] could not open the browser automatically: ${openResult.reason}`);
+        console.warn(`[dream-web] could not open the browser automatically: ${openResult.reason}`);
       }
     }
     console.log('');
@@ -251,9 +251,9 @@ async function runStart(flags: Map<string, string | true>): Promise<void> {
     if (autoOpenBrowser) {
       const openResult = openBrowserUrl(handle.localUrl);
       if (openResult.ok) {
-        console.log(`[aionui-web] opened ${handle.localUrl} in your browser.`);
+        console.log(`[dream-web] opened ${handle.localUrl} in your browser.`);
       } else {
-        console.warn(`[aionui-web] could not open the browser automatically: ${openResult.reason}`);
+        console.warn(`[dream-web] could not open the browser automatically: ${openResult.reason}`);
       }
     }
 
@@ -265,11 +265,11 @@ async function runStart(flags: Map<string, string | true>): Promise<void> {
   const shutdown = async (signal: string): Promise<void> => {
     if (shuttingDown) return;
     shuttingDown = true;
-    console.log(`\n[aionui-web] received ${signal}, stopping...`);
+    console.log(`\n[dream-web] received ${signal}, stopping...`);
     try {
       if (currentHandle) await currentHandle.stop();
     } catch (err) {
-      console.error('[aionui-web] stop failed:', err);
+      console.error('[dream-web] stop failed:', err);
     }
     process.exit(0);
   };
@@ -286,7 +286,7 @@ async function runStart(flags: Map<string, string | true>): Promise<void> {
 async function runResetPassword(flags: Map<string, string | true>): Promise<void> {
   const backendBin = resolveBackendBinary(flags);
   if (!fs.existsSync(backendBin)) {
-    console.error(`[aionui-web] backend binary not found: ${backendBin}`);
+    console.error(`[dream-web] backend binary not found: ${backendBin}`);
     console.error('  hint: pass --backend-bin <path> or set DREAM_BACKEND_BIN');
     process.exit(1);
   }
@@ -297,7 +297,7 @@ async function runResetPassword(flags: Map<string, string | true>): Promise<void
   const staticDir = resolveStaticDir(flags);
   const version = readPackageVersion();
 
-  console.log(`[aionui-web] resetting admin password in ${dataDir}`);
+  console.log(`[dream-web] resetting admin password in ${dataDir}`);
 
   const handle = await startWebHost({
     app: {
@@ -336,7 +336,7 @@ async function runResetPassword(flags: Map<string, string | true>): Promise<void
       await delay(500);
     }
     if (!ready) {
-      console.error('[aionui-web] backend did not become ready within 15s');
+      console.error('[dream-web] backend did not become ready within 15s');
       process.exit(1);
     }
 
@@ -344,7 +344,7 @@ async function runResetPassword(flags: Map<string, string | true>): Promise<void
       method: 'POST',
     });
     if (!res.ok) {
-      console.error(`[aionui-web] /api/webui/reset-password returned ${res.status}`);
+      console.error(`[dream-web] /api/webui/reset-password returned ${res.status}`);
       process.exit(1);
     }
     const payload = (await res.json()) as {
@@ -355,12 +355,12 @@ async function runResetPassword(flags: Map<string, string | true>): Promise<void
     const newPassword = payload.data?.new_password ?? payload.new_password;
     const username = payload.data?.username ?? payload.username ?? 'admin';
     if (!newPassword) {
-      console.error('[aionui-web] reset-password response missing new_password');
+      console.error('[dream-web] reset-password response missing new_password');
       process.exit(1);
     }
-    console.log(`[aionui-web] username: ${username}`);
-    console.log(`[aionui-web] new password: ${newPassword}`);
-    console.log('[aionui-web] existing sessions have been invalidated.');
+    console.log(`[dream-web] username: ${username}`);
+    console.log(`[dream-web] new password: ${newPassword}`);
+    console.log('[dream-web] existing sessions have been invalidated.');
   } finally {
     try {
       await handle.stop();
@@ -380,7 +380,7 @@ async function main(): Promise<void> {
   }
 
   if (command === '--help' || command === 'help' || command === '-h') {
-    console.log(`Usage: aionui-web <command> [options]
+    console.log(`Usage: dream-web <command> [options]
 
 Commands:
   start              Start the WebUI (default)
@@ -393,13 +393,13 @@ Options for start:
   --remote                Bind 0.0.0.0 instead of 127.0.0.1
   --open                  Force opening the local URL in a browser
   --no-open               Disable automatic browser opening
-  --data-dir <path>       Override data dir (default: ~/.aionui-web)
+  --data-dir <path>       Override data dir (default: ~/.dream-web)
   --log-dir <path>        Override log dir (default: <data-dir>/logs)
   --static-dir <path>     Override static assets dir
   --backend-bin <path>    Override backend binary path
 
 Options for resetpass:
-  --data-dir <path>       Which data dir to reset (default: ~/.aionui-web)
+  --data-dir <path>       Which data dir to reset (default: ~/.dream-web)
   --backend-bin <path>    Override backend binary path
 
 Environment variables:
@@ -416,7 +416,7 @@ Environment variables:
 
   if (command !== 'start') {
     console.error(`Unknown command: ${command}`);
-    console.error('Usage: aionui-web [start|resetpass|version|help]');
+    console.error('Usage: dream-web [start|resetpass|version|help]');
     process.exit(1);
   }
 
@@ -424,7 +424,7 @@ Environment variables:
 }
 
 main().catch((err: Error) => {
-  console.error('[aionui-web] fatal:', err.message);
+  console.error('[dream-web] fatal:', err.message);
   if (currentHandle) void currentHandle.stop().catch(() => undefined);
   process.exit(1);
 });

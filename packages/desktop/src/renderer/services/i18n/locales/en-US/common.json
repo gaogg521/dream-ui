@@ -574,7 +574,7 @@
     },
     "modelRequired": "Please select a model for this employee",
     "expertInstallFailed": "Failed to add the expert",
-    "aionrsProviderRequired": "Configure a model provider under Settings → Model first",
+    "providerRequired": "Configure a model provider under Settings → Model first",
     "runErrorProviderNotFound": "The model bound to this employee no longer exists — pick a new one under Manage.",
     "noExpertOption": "No expert (use the backend only)",
     "backendRequired": "Please choose a runtime backend",
