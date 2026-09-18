@@ -69,7 +69,7 @@ while [[ $# -gt 0 ]]; do
   shift || true
 done
 mkdir -p "$out"
-printf 'archive' > "$out/aioncore-v0.1.46-x86_64-unknown-linux-gnu.tar.gz"
+printf 'archive' > "$out/dreamcore-v0.1.46-x86_64-unknown-linux-gnu.tar.gz"
 `
   );
   writeExecutable(
@@ -85,11 +85,11 @@ while [[ $# -gt 0 ]]; do
   shift || true
 done
 mkdir -p "$out"
-cat > "$out/aioncore" <<'SH'
+cat > "$out/dreamcore" <<'SH'
 #!/usr/bin/env bash
 exit 0
 SH
-chmod +x "$out/aioncore"
+chmod +x "$out/dreamcore"
 `
   );
 
@@ -99,8 +99,8 @@ chmod +x "$out/aioncore"
 afterEach(() => {
   delete process.env.DREAM_BACKEND_RUN_ID;
   delete process.env.DREAM_BACKEND_LOCAL_BINARY;
-  rmSync(join(tmpdir(), 'aioncore-prepare', 'v0.1.46'), { recursive: true, force: true });
-  rmSync(join(tmpdir(), 'aioncore-prepare-actions', '123'), { recursive: true, force: true });
+  rmSync(join(tmpdir(), 'dreamcore-prepare', 'v0.1.46'), { recursive: true, force: true });
+  rmSync(join(tmpdir(), 'dreamcore-prepare-actions', '123'), { recursive: true, force: true });
 });
 
 describe('prepare-dreamcore GitHub Actions artifact resolver', () => {
@@ -136,7 +136,7 @@ describe('prepare-dreamcore GitHub Actions artifact resolver', () => {
   // These cases execute a temporary POSIX shell-script dreamcore binary. Windows
   // coverage for contract rejection lives in the verifier/local-bundle tests.
   posixFakeToolchainIt('hard fails Actions artifact input when prepared managed resources lack contract', () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'aionui-actions-gate-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'one-actions-gate-'));
     const fakeBin = createFakeToolchain(tmp);
     const previousPath = process.env.PATH;
     process.env.PATH = `${fakeBin}${delimiter}${previousPath || ''}`;
@@ -159,7 +159,7 @@ describe('prepare-dreamcore GitHub Actions artifact resolver', () => {
   });
 
   posixFakeToolchainIt('hard fails GitHub release download input when prepared managed resources lack contract', () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'aionui-download-gate-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'one-download-gate-'));
     const fakeBin = createFakeToolchain(tmp);
     const previousPath = process.env.PATH;
     process.env.PATH = `${fakeBin}${delimiter}${previousPath || ''}`;
@@ -181,8 +181,8 @@ describe('prepare-dreamcore GitHub Actions artifact resolver', () => {
   });
 
   posixFakeToolchainIt('hard fails local binary fallback when prepared managed resources lack contract', () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'aionui-local-binary-gate-'));
-    const localBinary = join(tmp, 'aioncore');
+    const tmp = mkdtempSync(join(tmpdir(), 'one-local-binary-gate-'));
+    const localBinary = join(tmp, 'dreamcore');
     writeExecutable(localBinary, '#!/usr/bin/env bash\nexit 0\n');
     const fakeBin = createFakeToolchain(tmp, { curlFails: true });
     const previousPath = process.env.PATH;

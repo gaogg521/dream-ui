@@ -44,7 +44,7 @@ test.describe('DreamEngine Chat - Basic Flow (P0)', () => {
   test.beforeAll(async ({ page }) => {
     preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
-      test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
+      test.skip(true, 'No dream-engine-compatible provider found, skipping E2E tests');
     }
   });
 
@@ -64,7 +64,7 @@ test.describe('DreamEngine Chat - Basic Flow (P0)', () => {
       const keysToRemove: string[] = [];
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
-        if (key && (key.startsWith('aionrs_initial_message_') || key.startsWith('aionrs_initial_processed_'))) {
+        if (key && (key.startsWith('one_initial_message_') || key.startsWith('one_initial_processed_'))) {
           keysToRemove.push(key);
         }
       }
@@ -85,7 +85,7 @@ test.describe('DreamEngine Chat - Basic Flow (P0)', () => {
       // Step 1: Screenshot initial guid page
       await page.goto(`${page.url().split('#')[0]}#/guid`);
       await page.waitForLoadState('networkidle');
-      await takeScreenshot(page, `chat-aionrs/tc-a-01/01-guid-page-initial.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-01/01-guid-page-initial.png`);
 
       // Step 2: Create conversation via bridge (uses prioritized dream-compatible provider)
       const conversationId = await createDreamEngineConversationViaBridge(page, {
@@ -94,15 +94,15 @@ test.describe('DreamEngine Chat - Basic Flow (P0)', () => {
         provider: preconditions.models!.modelA,
         sessionMode: 'default',
       });
-      await takeScreenshot(page, `chat-aionrs/tc-a-01/02-conversation-created.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-01/02-conversation-created.png`);
 
       // Step 3: Send simple message
       await sendDreamEngineMessage(page, conversationId, 'Say hi in one word.');
-      await takeScreenshot(page, `chat-aionrs/tc-a-01/03-message-sent.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-01/03-message-sent.png`);
 
       // Step 4: Wait for AI reply
       await waitForDreamEngineReply(page, conversationId);
-      await takeScreenshot(page, `chat-aionrs/tc-a-01/04-reply-completed.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-01/04-reply-completed.png`);
 
       // ============================================================================
       // DB Assertions
@@ -111,7 +111,7 @@ test.describe('DreamEngine Chat - Basic Flow (P0)', () => {
       // 1. Verify conversation created
       const conversation = await getDreamEngineConversationDB(page, conversationId);
       expect(conversation).toBeDefined();
-      expect(conversation.type).toBe('aionrs');
+      expect(conversation.type).toBe('dream-engine');
 
       // Parse extra field
       const extra =
@@ -162,7 +162,7 @@ test.describe('DreamEngine Chat - Basic Flow (P0)', () => {
       await fs.writeFile(path.join(testFolderPath, 'sample.txt'), 'sample content');
 
       // Screenshot 01: guid page initial
-      await takeScreenshot(page, `chat-aionrs/tc-a-02/01-guid-page-before-create.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-02/01-guid-page-before-create.png`);
 
       // Step 2: Create conversation via bridge with workspace pre-configured
       const conversationId = await createDreamEngineConversationViaBridge(page, {
@@ -176,13 +176,13 @@ test.describe('DreamEngine Chat - Basic Flow (P0)', () => {
       await sendDreamEngineMessage(page, conversationId, 'What files are in the attached folder?');
 
       // Screenshot 02: message sent
-      await takeScreenshot(page, `chat-aionrs/tc-a-02/02-message-sent.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-02/02-message-sent.png`);
 
       // Step 4: Wait for AI reply
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: AI reply completed
-      await takeScreenshot(page, `chat-aionrs/tc-a-02/03-reply-completed.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-02/03-reply-completed.png`);
 
       // ============================================================================
       // DB Assertions
@@ -227,10 +227,10 @@ test.describe('DreamEngine Chat - Basic Flow (P0)', () => {
     try {
       // Step 1: Create test file in workspace
       const testFilePath = path.join(tempWorkspace.path, 'e2e-test-file.txt');
-      await fs.writeFile(testFilePath, 'Test file content for aionrs E2E');
+      await fs.writeFile(testFilePath, 'Test file content for dream-engine E2E');
 
       // Screenshot 01: before creating conversation
-      await takeScreenshot(page, `chat-aionrs/tc-a-03/01-before-create.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-03/01-before-create.png`);
 
       // Step 2: Create conversation via bridge (Electron mode)
       // Note: In real usage, file would be uploaded via UI. For E2E, we create conversation
@@ -250,13 +250,13 @@ test.describe('DreamEngine Chat - Basic Flow (P0)', () => {
       );
 
       // Screenshot 02: message sent
-      await takeScreenshot(page, `chat-aionrs/tc-a-03/02-message-sent.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-03/02-message-sent.png`);
 
       // Step 4: Wait for AI reply
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: reply completed
-      await takeScreenshot(page, `chat-aionrs/tc-a-03/03-reply-completed.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-03/03-reply-completed.png`);
 
       // ============================================================================
       // DB Assertions

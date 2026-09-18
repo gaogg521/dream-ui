@@ -40,7 +40,7 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
   test.beforeAll(async ({ page }) => {
     preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
-      test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
+      test.skip(true, 'No dream-engine-compatible provider found, skipping E2E tests');
     }
   });
 
@@ -56,7 +56,7 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
       const keysToRemove: string[] = [];
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
-        if (key && (key.startsWith('aionrs_initial_message_') || key.startsWith('aionrs_initial_processed_'))) {
+        if (key && (key.startsWith('one_initial_message_') || key.startsWith('one_initial_processed_'))) {
           keysToRemove.push(key);
         }
       }
@@ -80,7 +80,7 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
       await fs.writeFile(path.join(testFolderPath, 'data.txt'), 'Combo test data');
 
       // Screenshot 01: before creation
-      await takeScreenshot(page, `chat-aionrs/tc-a-10/01-before.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-10/01-before.png`);
 
       // Step 2: Create conversation via bridge with yolo mode
       const conversationId = await createDreamEngineConversationViaBridge(page, {
@@ -112,14 +112,14 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
       await page.waitForTimeout(1000);
 
       // Screenshot 02: after model switch
-      await takeScreenshot(page, `chat-aionrs/tc-a-10/02-model-switched.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-10/02-model-switched.png`);
 
       // Step 5: Send message
       await sendDreamEngineMessage(page, conversationId, 'List files in the attached folder.');
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: reply completed
-      await takeScreenshot(page, `chat-aionrs/tc-a-10/03-reply.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-10/03-reply.png`);
 
       // ============================================================================
       // DB Assertions
@@ -157,7 +157,7 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
       await fs.writeFile(testFilePath, 'File content for combo test');
 
       // Screenshot 01: before creation
-      await takeScreenshot(page, `chat-aionrs/tc-a-11/01-before.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-11/01-before.png`);
 
       // Step 2: Create conversation via bridge with default mode
       const conversationId = await createDreamEngineConversationViaBridge(page, {
@@ -173,7 +173,7 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
 
       // Step 4: Switch to second model
       if (!preconditions.models!.modelB) {
-        test.skip(true, 'Need 2nd aionrs-compatible model for combo test');
+        test.skip(true, 'Need 2nd dream-engine-compatible model for combo test');
       }
 
       const modelSelector = page.locator('[data-testid="dream-engine-model-selector"]');
@@ -189,14 +189,14 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
       await page.waitForTimeout(1000);
 
       // Screenshot 02: after model switch
-      await takeScreenshot(page, `chat-aionrs/tc-a-11/02-model-switched.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-11/02-model-switched.png`);
 
       // Step 5: Send message about file
       await sendDreamEngineMessage(page, conversationId, 'Read the content of test-file.txt in the workspace.');
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: reply completed
-      await takeScreenshot(page, `chat-aionrs/tc-a-11/03-reply.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-11/03-reply.png`);
 
       // ============================================================================
       // DB Assertions
@@ -236,7 +236,7 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
       await fs.writeFile(path.join(testFolderPath, 'file2.txt'), 'Second file content');
 
       // Screenshot 01: before creation
-      await takeScreenshot(page, `chat-aionrs/tc-a-12/01-before.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-12/01-before.png`);
 
       // Step 2: Create conversation via bridge with yolo mode
       const conversationId = await createDreamEngineConversationViaBridge(page, {
@@ -268,7 +268,7 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
       await page.waitForTimeout(1000);
 
       // Screenshot 02: after model switch
-      await takeScreenshot(page, `chat-aionrs/tc-a-12/02-model-switched.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-12/02-model-switched.png`);
 
       // Step 5: Send message about folder and files
       await sendDreamEngineMessage(
@@ -279,7 +279,7 @@ test.describe('DreamEngine Chat - Combo Scenarios (P1)', () => {
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: reply completed
-      await takeScreenshot(page, `chat-aionrs/tc-a-12/03-reply.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-12/03-reply.png`);
 
       // ============================================================================
       // DB Assertions

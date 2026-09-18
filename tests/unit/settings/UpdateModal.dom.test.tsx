@@ -90,7 +90,7 @@ describe('UpdateModal manual install fallback', () => {
           draft: false,
           assets: [],
           recommendedAsset: {
-            name: 'AionUi-2.1.14-mac-arm64.dmg',
+            name: 'OneWork-2.1.14-mac-arm64.dmg',
             url: 'https://static.dream.com/releases/2.1.14/Dream UI-2.1.14-mac-arm64.dmg',
             fallbackUrl:
               'https://github.com/iOfficeAI/Dream UI/releases/download/v2.1.14/Dream UI-2.1.14-mac-arm64.dmg',
@@ -107,13 +107,13 @@ describe('UpdateModal manual install fallback', () => {
         receivedBytes: 123,
         totalBytes: 123,
         percent: 100,
-        file_path: '/tmp/AionUi-2.1.14-mac-arm64.dmg',
+        file_path: '/tmp/OneWork-2.1.14-mac-arm64.dmg',
       });
       return {
         success: true,
         data: {
           downloadId,
-          file_path: '/tmp/AionUi-2.1.14-mac-arm64.dmg',
+          file_path: '/tmp/OneWork-2.1.14-mac-arm64.dmg',
         },
       };
     });
@@ -144,7 +144,7 @@ describe('UpdateModal manual install fallback', () => {
       downloadId: expect.any(String),
       url: 'https://static.dream.com/releases/2.1.14/Dream UI-2.1.14-mac-arm64.dmg',
       fallbackUrl: 'https://github.com/iOfficeAI/Dream UI/releases/download/v2.1.14/Dream UI-2.1.14-mac-arm64.dmg',
-      file_name: 'AionUi-2.1.14-mac-arm64.dmg',
+      file_name: 'OneWork-2.1.14-mac-arm64.dmg',
     });
     expect(screen.queryByText('update.manualInstall')).not.toBeInTheDocument();
   });

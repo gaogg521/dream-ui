@@ -36,7 +36,7 @@ test.describe('DreamEngine Chat - Edge Cases (P2)', () => {
   test.beforeAll(async ({ page }) => {
     preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
-      test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
+      test.skip(true, 'No dream-engine-compatible provider found, skipping E2E tests');
     }
   });
 
@@ -55,7 +55,7 @@ test.describe('DreamEngine Chat - Edge Cases (P2)', () => {
       const keysToRemove: string[] = [];
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
-        if (key && (key.startsWith('aionrs_initial_message_') || key.startsWith('aionrs_initial_processed_'))) {
+        if (key && (key.startsWith('one_initial_message_') || key.startsWith('one_initial_processed_'))) {
           keysToRemove.push(key);
         }
       }
@@ -67,7 +67,7 @@ test.describe('DreamEngine Chat - Edge Cases (P2)', () => {
   // TC-A-13: Binary不可达时跳过 (Binary unreachable skip)
   // ============================================================================
 
-  test('TC-A-13: should skip when aionrs binary is not reachable', async ({ page }) => {
+  test('TC-A-13: should skip when dream-engine binary is not reachable', async ({ page }) => {
     // This test verifies the skip logic in beforeAll when resolveDreamEngineBinary() returns null
     // In normal test environment, this test will pass because binary IS available
     // The actual skip behavior is tested by the beforeAll hook above
@@ -78,7 +78,7 @@ test.describe('DreamEngine Chat - Edge Cases (P2)', () => {
 
     // Screenshot for documentation (shows test skipping verification)
     await page.goto(`${page.url().split('#')[0]}#/guid`);
-    await takeScreenshot(page, `chat-aionrs/tc-a-13/01-binary-available.png`);
+    await takeScreenshot(page, `chat-dream-engine/tc-a-13/01-binary-available.png`);
   });
 
   // ============================================================================
@@ -107,7 +107,7 @@ test.describe('DreamEngine Chat - Edge Cases (P2)', () => {
 
       // Screenshot 01: before upload attempt
       await page.goto(`${page.url().split('#')[0]}#/guid`);
-      await takeScreenshot(page, `chat-aionrs/tc-a-14/01-before-upload.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-14/01-before-upload.png`);
 
       // Step 2: Try to create conversation with 100MB file in workspace
       // Note: dream binary may reject large files or UI may block upload
@@ -132,7 +132,7 @@ test.describe('DreamEngine Chat - Edge Cases (P2)', () => {
       }
 
       // Screenshot 02: after upload attempt (error or warning should be visible)
-      await takeScreenshot(page, `chat-aionrs/tc-a-14/02-after-upload-attempt.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-14/02-after-upload-attempt.png`);
 
       // ============================================================================
       // DB Assertions
@@ -175,7 +175,7 @@ test.describe('DreamEngine Chat - Edge Cases (P2)', () => {
 
       // Screenshot 01: before attempting to associate deleted folder
       await page.goto(`${page.url().split('#')[0]}#/guid`);
-      await takeScreenshot(page, `chat-aionrs/tc-a-15/01-before-association.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-15/01-before-association.png`);
 
       // Step 2: Try to create conversation with deleted folder path
       // We expect bridge to throw error or UI to show error message
@@ -199,7 +199,7 @@ test.describe('DreamEngine Chat - Edge Cases (P2)', () => {
       }
 
       // Screenshot 02: after association attempt (error message should be visible)
-      await takeScreenshot(page, `chat-aionrs/tc-a-15/02-after-association-attempt.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-15/02-after-association-attempt.png`);
 
       // ============================================================================
       // DB Assertions

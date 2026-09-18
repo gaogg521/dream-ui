@@ -117,7 +117,7 @@ describe('verifyBundledDreamcoreResources', () => {
   let codexRoot: string;
 
   beforeEach(() => {
-    tmp = mkdtempSync(join(tmpdir(), 'aionui-bundled-resources-'));
+    tmp = mkdtempSync(join(tmpdir(), 'one-bundled-resources-'));
     resourcesDir = join(tmp, 'resources');
     managedResourcesDir = join(resourcesDir, 'bundled-dreamcore', 'win32-x64', 'managed-resources');
 

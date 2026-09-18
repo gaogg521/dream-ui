@@ -52,7 +52,7 @@ function layOutAcpWrappers(managedRoot: string, runtimeKey = 'win32-x64') {
   }
 }
 
-describe('Windows bundled aioncore install verifier', () => {
+describe('Windows bundled dreamcore install verifier', () => {
   it('reads managed resources manifest instead of deriving Codex platform paths', () => {
     expect(script).toContain("Join-Path $managedRoot 'manifest.json'");
     expect(script).toContain('schemaVersion');
@@ -76,7 +76,7 @@ describe('Windows bundled aioncore install verifier', () => {
   const runOnWindows = process.platform === 'win32' ? it : it.skip;
 
   runOnWindows('fails an old-version-only Codex CLI install directory', () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'aionui-install-verify-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'one-install-verify-'));
     const installDir = join(tmp, 'install');
     const managedRoot = join(installDir, 'resources', 'bundled-dreamcore', 'win32-x64', 'managed-resources');
     const logPath = join(tmp, 'verify.log');
@@ -162,7 +162,7 @@ describe('Windows bundled aioncore install verifier', () => {
    * own integrity check has to call it out rather than report a healthy install.
    */
   runOnWindows('fails a v2 install whose ACP wrapper layer is absent', () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'aionui-install-verify-acp-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'one-install-verify-acp-'));
     const installDir = join(tmp, 'install');
     const managedRoot = join(installDir, 'resources', 'bundled-dreamcore', 'win32-x64', 'managed-resources');
     const logPath = join(tmp, 'verify.log');

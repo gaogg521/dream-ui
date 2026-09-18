@@ -5,8 +5,8 @@
  *
  * Storage file names were rebranded by aliasing, not by moving files.
  *
- * These names ARE the user's data — `.aionui-env` holds their custom
- * cache/work/log directories, `aionui-chat.txt` their conversation index. A
+ * These names ARE the user's data — `.one-env` holds their custom
+ * cache/work/log directories, `one-chat.txt` their conversation index. A
  * rename that pointed at a name nothing on disk uses would not fail loudly: the
  * JSON store would come up empty and write a fresh file, and the user would find
  * their settings and history apparently gone. So the resolver prefers the
@@ -23,7 +23,7 @@ import * as path from 'path';
 import { resolveWithLegacyName } from '@process/utils';
 
 const CURRENT = 'one-chat.txt';
-const LEGACY = 'aionui-chat.txt';
+const LEGACY = 'one-chat.txt';
 
 describe('resolveWithLegacyName', () => {
   let dir: string;
@@ -54,11 +54,9 @@ describe('resolveWithLegacyName', () => {
   });
 
   it('resolves a legacy directory the same way it resolves a legacy file', () => {
-    fs.mkdirSync(path.join(dir, 'aionui-chat-history'));
+    fs.mkdirSync(path.join(dir, 'one-chat-history'));
 
-    expect(resolveWithLegacyName(dir, 'one-chat-history', 'aionui-chat-history')).toBe(
-      path.join(dir, 'aionui-chat-history')
-    );
+    expect(resolveWithLegacyName(dir, 'one-chat-history', 'one-chat-history')).toBe(path.join(dir, 'one-chat-history'));
   });
 
   it('does not invent a path outside the parent directory', () => {

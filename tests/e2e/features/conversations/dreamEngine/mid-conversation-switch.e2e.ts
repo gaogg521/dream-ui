@@ -37,7 +37,7 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
   test.beforeAll(async ({ page }) => {
     preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
-      test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
+      test.skip(true, 'No dream-engine-compatible provider found, skipping E2E tests');
     }
   });
 
@@ -53,7 +53,7 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
       const keysToRemove: string[] = [];
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
-        if (key && (key.startsWith('aionrs_initial_message_') || key.startsWith('aionrs_initial_processed_'))) {
+        if (key && (key.startsWith('one_initial_message_') || key.startsWith('one_initial_processed_'))) {
           keysToRemove.push(key);
         }
       }
@@ -73,7 +73,7 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
     // Next: Product team investigation of dream binary runtime state handling
 
     if (!preconditions.models!.modelB) {
-      test.skip(true, 'Need 2nd aionrs-compatible model for mid-conversation switch');
+      test.skip(true, 'Need 2nd dream-engine-compatible model for mid-conversation switch');
     }
 
     const timestamp = Date.now();
@@ -90,14 +90,14 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
       });
 
       // Screenshot 01: conversation created
-      await takeScreenshot(page, `chat-aionrs/tc-a-08/01-created.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-08/01-created.png`);
 
       // Step 2: Send initial message
       await sendDreamEngineMessage(page, conversationId, 'Hello, initial message.');
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 02: initial reply
-      await takeScreenshot(page, `chat-aionrs/tc-a-08/02-initial-reply.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-08/02-initial-reply.png`);
 
       // Step 3: Navigate to conversation page
       await page.goto(`${page.url().split('#')[0]}#/conversation/${conversationId}`);
@@ -117,7 +117,7 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
       await page.waitForTimeout(1000);
 
       // Screenshot 03: model switched
-      await takeScreenshot(page, `chat-aionrs/tc-a-08/03-model-switched.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-08/03-model-switched.png`);
 
       // Step 5: Switch permission (mode switch)
       const modeSelector = page.locator('[data-testid="agent-mode-selector-dream-engine"]');
@@ -131,7 +131,7 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
       await page.waitForTimeout(1000);
 
       // Screenshot 04: permission switched
-      await takeScreenshot(page, `chat-aionrs/tc-a-08/04-permission-switched.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-08/04-permission-switched.png`);
 
       // Step 6: Switch back to modelA (model switch #2)
       await modelSelector.click();
@@ -145,14 +145,14 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
       await page.waitForTimeout(1000);
 
       // Screenshot 05: model switched again
-      await takeScreenshot(page, `chat-aionrs/tc-a-08/05-model-switched-again.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-08/05-model-switched-again.png`);
 
       // Step 7: Send message after all switches
       await sendDreamEngineMessage(page, conversationId, 'After all switches.');
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 06: final reply
-      await takeScreenshot(page, `chat-aionrs/tc-a-08/06-final-reply.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-08/06-final-reply.png`);
 
       // ============================================================================
       // DB Assertions
@@ -185,7 +185,7 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
     // See tests/e2e/docs/chat-dream/implementation-mapping.zh.md "Known Issues" section
 
     if (!preconditions.models!.modelB) {
-      test.skip(true, 'Need 2nd aionrs-compatible model for mid-conversation switch');
+      test.skip(true, 'Need 2nd dream-engine-compatible model for mid-conversation switch');
     }
 
     const timestamp = Date.now();
@@ -206,7 +206,7 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 01: after round 1
-      await takeScreenshot(page, `chat-aionrs/tc-a-09/01-round1.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-09/01-round1.png`);
 
       // Step 3: Navigate to conversation page
       await page.goto(`${page.url().split('#')[0]}#/conversation/${conversationId}`);
@@ -237,28 +237,28 @@ test.describe('DreamEngine Chat - Mid-Conversation Switch (P1)', () => {
       await page.waitForTimeout(1000);
 
       // Screenshot 02: after switches
-      await takeScreenshot(page, `chat-aionrs/tc-a-09/02-after-switches.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-09/02-after-switches.png`);
 
       // Step 6: Round 2 - send and wait
       await sendDreamEngineMessage(page, conversationId, 'Round 2: After model and permission switch.');
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 03: after round 2
-      await takeScreenshot(page, `chat-aionrs/tc-a-09/03-round2.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-09/03-round2.png`);
 
       // Step 7: Round 3 - send and wait
       await sendDreamEngineMessage(page, conversationId, 'Round 3: Continue with switched config.');
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 04: after round 3
-      await takeScreenshot(page, `chat-aionrs/tc-a-09/04-round3.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-09/04-round3.png`);
 
       // Step 8: Round 4 (bonus) - send and wait
       await sendDreamEngineMessage(page, conversationId, 'Round 4: Final message.');
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 05: after round 4
-      await takeScreenshot(page, `chat-aionrs/tc-a-09/05-round4.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-09/05-round4.png`);
 
       // ============================================================================
       // DB Assertions

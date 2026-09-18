@@ -25,9 +25,9 @@ describe('PROD_USERDATA_APP_NAME / brand identity', () => {
     expect(PROD_USERDATA_APP_NAME).toBe(BRAND_DISPLAY_NAME);
   });
 
-  it('keeps "1ONE Code" as a legacy migration source and never "AionUi"', () => {
+  it('keeps "1ONE Code" as a legacy migration source and never "OneWork"', () => {
     expect(LEGACY_PROD_USERDATA_APP_NAMES).toContain('1ONE Code');
-    expect(LEGACY_PROD_USERDATA_APP_NAMES).not.toContain('AionUi');
+    expect(LEGACY_PROD_USERDATA_APP_NAMES).not.toContain('OneWork');
     expect(LEGACY_PROD_USERDATA_APP_NAMES).not.toContain(PROD_USERDATA_APP_NAME);
   });
 });
@@ -179,7 +179,7 @@ describe('requested legacy userData import', () => {
     });
 
     it('offers one holding only the pre-rebrand catalog name', () => {
-      const legacy = seedProfile(legacyName, 'aionui-backend.db');
+      const legacy = seedProfile(legacyName, 'one-backend.db');
       const current = seedProfile(PROD_USERDATA_APP_NAME);
 
       expect(findImportableLegacyUserDataDir(root, current)).toBe(legacy);

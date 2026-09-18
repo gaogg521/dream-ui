@@ -52,7 +52,7 @@ export async function installMonitorRecorder(page: Page): Promise<void> {
 
     const port = win.__backendPort;
     if (!port) {
-      throw new Error('window.__backendPort is not available — is aioncore running?');
+      throw new Error('window.__backendPort is not available — is dreamcore running?');
     }
 
     const store: { status: MonitorRecorderStatus; events: MonitorEvent[] } = {

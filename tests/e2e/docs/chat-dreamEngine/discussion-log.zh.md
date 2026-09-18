@@ -1,7 +1,7 @@
-# Aion CLI (aionrs) E2E 测试 - 讨论记录
+# Aion CLI (dream-engine) E2E 测试 - 讨论记录
 
-**项目**: AionUi E2E Coverage
-**子组**: chat-aionrs
+**项目**: OneWork E2E Coverage
+**子组**: chat-dream-engine
 **日期**: 2026-04-22
 
 ---
@@ -10,23 +10,23 @@
 
 ### 2026-04-22 初稿完成
 
-**参与人**: chat-aionrs-analyst
+**参与人**: chat-dream-engine-analyst
 
 **完成内容**:
 
-1. 分析 aionrs 源码（guid 入口、对话页、进程端、权限枚举、DB schema）
+1. 分析 dream-engine 源码（guid 入口、对话页、进程端、权限枚举、DB schema）
 2. 起草 `requirements.zh.md` 初稿
 3. 识别 8 个重大不确定性（模型切换、权限存储范围、binary 来源等）
 
 **待办事项**:
 
-- [x] chat-aionrs-designer 审核需求，补充测试用例设计建议
-- [ ] chat-aionrs-engineer 审核需求，评估技术可行性
+- [x] chat-dream-engine-designer 审核需求，补充测试用例设计建议
+- [ ] chat-dream-engine-engineer 审核需求，评估技术可行性
 - [ ] team-lead 澄清 §8 重大不确定性
 
 **已知约束**:
 
-- aionrs **不支持 Google Auth**（`useDreamEngineModelSelection.ts:36-40` 过滤）
+- dream-engine **不支持 Google Auth**（`useDreamEngineModelSelection.ts:36-40` 过滤）
 - 权限 "always allow" 当前仅内存存储（进程重启后失效）
 - ~~guid 页和对话页均无 `data-testid`~~ **更正**（engineer 发现）：guid 页已有 `data-agent-backend` 等属性，对话页需新增 15+ testid
 
@@ -34,7 +34,7 @@
 
 ### 2026-04-22 designer 审核完成
 
-**参与人**: chat-aionrs-designer
+**参与人**: chat-dream-engine-designer
 
 **审核结论**: ✅ **无重大阻塞问题，可进入 Gate 2**
 
@@ -83,10 +83,10 @@
    await ipcBridge.conversation.stopAgent.invoke(conversationId);
 
    // 2. 清理 DB（级联删除 messages）
-   await db.exec("DELETE FROM conversations WHERE name LIKE 'E2E-aionrs-%'");
+   await db.exec("DELETE FROM conversations WHERE name LIKE 'E2E-dream-engine-%'");
 
    // 3. 清理 FS
-   await fs.rm('/tmp/e2e-aionrs-*', { recursive: true });
+   await fs.rm('/tmp/e2e-dream-engine-*', { recursive: true });
 
    // 4. 清理 sessionStorage
    sessionStorage.clear();
@@ -99,7 +99,7 @@
 | 1. 模型切换是否需重启 binary？      | 等 team-lead 验证能力                | A（运行时切换）验证 sessionId 不变；B（需重启）验证 sessionId 变化；C（不支持）UI 降级 |
 | 2. 权限 "always allow" 是否持久化？ | 保持内存存储（B 选项）               | 验证单次对话内生效 + 重启应用后失效                                                    |
 | 3. 工具确认中途切换权限/模型？      | 切换权限取消 pending 确认            | 用例：弹窗确认中 → 切换 yolo → 验证弹窗消失 + 自动批准                                 |
-| 4. CI 环境 binary 来源？            | 跳过 CI E2E（C 选项） + 本地测试套件 | `test.beforeAll()` 检查 binary，不存在则 `test.skip('aionrs binary not found')`        |
+| 4. CI 环境 binary 来源？            | 跳过 CI E2E（C 选项） + 本地测试套件 | `test.beforeAll()` 检查 binary，不存在则 `test.skip('dream-engine binary not found')`  |
 
 **下一步**:
 
@@ -111,24 +111,24 @@
 
 ### 2026-04-22 engineer 审核完成
 
-**参与人**: chat-aionrs-engineer
+**参与人**: chat-dream-engine-engineer
 
 **审核结论**: ✅ **技术可行**，需求文档质量 ⭐⭐⭐⭐⭐ (5/5)
 
 **关键发现**:
 
 1. **guid 页 data-testid 已有**（之前误判为 0 个）
-   - 现有属性: `data-agent-pill="true"`, `data-agent-backend="aionrs"`, `data-agent-selected`
+   - 现有属性: `data-agent-pill="true"`, `data-agent-backend="dream-engine"`, `data-agent-selected`
    - 位置: `AgentPillBar.tsx:79-82`
 
 2. **对话页需新增 15+ testid**（否则无法定位元素）
    - **P0 优先级**（阻塞测试）: 5 个
      ```tsx
      [data-testid="dream-engine-sendbox"]
-     [data-testid="aionrs-model-selector"]
-     [data-testid="agent-mode-selector-aionrs"]
-     [data-testid="aionrs-file-upload-input"]
-     [data-testid="aionrs-attach-folder-btn"]
+     [data-testid="dream-engine-model-selector"]
+     [data-testid="agent-mode-selector-dream-engine"]
+     [data-testid="dream-engine-file-upload-input"]
+     [data-testid="dream-engine-attach-folder-btn"]
      ```
    - **P1 优先级**（提升稳定性）: 10 个
      - 发送按钮、文件预览、文件夹 Tag、模型/权限下拉项等
@@ -138,8 +138,8 @@
    - 函数: `cleanupE2EAionrsConversations()`, `getAionrsMessages()` 等
 
 4. **binary 已验证可用**
-   - 版本: aionrs v0.1.12
-   - 路径: `/Users/zhoukai/.local/bin/aionrs`
+   - 版本: dream-engine v0.1.12
+   - 路径: `/Users/zhoukai/.local/bin/dream-engine`
 
 **技术建议**（对 §8 不确定性）:
 
@@ -148,7 +148,7 @@
 | 1. 模型切换是否需重启 binary？      | 用 **E2E 探测式测试** 记录当前行为       | 发送消息 A（模型 M1）→ 切换到 M2 → 发送消息 B → 查 DB: `messages[B].extra.model === M2 ?` |
 | 2. 权限 "always allow" 是否持久化？ | **内存存储不阻塞 E2E**，持久化属产品需求 | 同一对话内验证 "always allow" 生效即可                                                    |
 | 3. 工具确认中途切换权限/模型？      | E2E 先 **记录当前行为**（截图+日志）     | 触发弹窗 → 切换模式 → 观察弹窗状态 → 提交 team-lead 决策                                  |
-| 4. CI 环境 binary 来源？            | 短期 **CI skip**，长期 DevOps 配置       | `test.skip(() => resolveAionrsBinary() === null, 'aionrs binary not found')`              |
+| 4. CI 环境 binary 来源？            | 短期 **CI skip**，长期 DevOps 配置       | `test.skip(() => resolveAionrsBinary() === null, 'dream-engine binary not found')`        |
 
 **工作量预估**:
 
@@ -231,28 +231,28 @@
 
 ### 议题 4: CI 环境 binary 来源？
 
-**背景**: E2E 需依赖 aionrs binary
+**背景**: E2E 需依赖 dream-engine binary
 
 **选项**:
 
 - A) CI 预装（需 DevOps 配置）
 - B) 测试前动态下载（需提供 URL + 版本锁定）
-- C) 跳过 aionrs E2E（标记 skip + 原因）
+- C) 跳过 dream-engine E2E（标记 skip + 原因）
 
 **engineer 建议**: 先实现 **local E2E**，CI 策略延后
 
-- **短期**: CI 跳过 aionrs E2E（`test.skip(() => resolveAionrsBinary() === null, 'aionrs binary not found')`）
+- **短期**: CI 跳过 dream-engine E2E（`test.skip(() => resolveAionrsBinary() === null, 'dream-engine binary not found')`）
 - **长期**: DevOps 配置预装 或 动态下载（需 team-lead 协调）
 
 **team-lead 决策**: **选 C CI 跳过**（短期）
 
 - **理由**: 长期 CI 策略延后，不阻塞本轮 E2E 交付
-- **实施**: `test.skip(() => resolveAionrsBinary() === null, 'aionrs binary not found')`
+- **实施**: `test.skip(() => resolveAionrsBinary() === null, 'dream-engine binary not found')`
 
 **实现方案**:
 
 ```typescript
-// tests/e2e/setup/aionrs.setup.ts
+// tests/e2e/setup/dream-engine.setup.ts
 export async function checkAionrsBinary(): Promise<boolean> {
   try {
     const binary = await ipcBridge.fs.findAionrsBinary.invoke();
@@ -262,11 +262,11 @@ export async function checkAionrsBinary(): Promise<boolean> {
   }
 }
 
-// tests/e2e/specs/chat-aionrs/*.spec.ts
+// tests/e2e/specs/chat-dream-engine/*.spec.ts
 test.beforeAll(async () => {
   const hasBinary = await checkAionrsBinary();
   if (!hasBinary) {
-    test.skip('aionrs binary not found, skipping E2E tests');
+    test.skip('dream-engine binary not found, skipping E2E tests');
   }
 });
 ```
@@ -277,7 +277,7 @@ test.beforeAll(async () => {
 
 ### 2026-04-22 用例设计完成
 
-**参与人**: chat-aionrs-designer
+**参与人**: chat-dream-engine-designer
 
 **完成内容**:
 
@@ -287,7 +287,7 @@ test.beforeAll(async () => {
 
 **关键设计决策**:
 
-1. **权限命名统一**：使用 aionrs runtime capabilities 上报的 `auto_edit`，避免与 Gemini 的 `autoEdit` 混淆
+1. **权限命名统一**：使用 dream-engine runtime capabilities 上报的 `auto_edit`，避免与 Gemini 的 `autoEdit` 混淆
 2. **模型选择回退**：TC-A-04 若 guid 页模型选择器未启用，改为对话页切换模型（见 TC-A-07）
 3. **组合矩阵收敛**：原 30+ 用例 → 15 用例，优先覆盖单维度 + 代表性组合
 4. **异常场景简化**：P2 用例只覆盖 binary 检查 + 大文件限制 + 不存在路径（并发对话延后）
@@ -302,7 +302,7 @@ test.beforeAll(async () => {
 
 **待办事项**:
 
-- [ ] chat-aionrs-engineer review 用例设计，评估实现工作量
+- [ ] chat-dream-engine-engineer review 用例设计，评估实现工作量
 - [ ] team-lead 批准后进入 Gate 3（实现）
 
 **已知约束**:
@@ -316,7 +316,7 @@ test.beforeAll(async () => {
 
 ### 2026-04-22 engineer review Gate 2 test-cases
 
-**参与人**: chat-aionrs-engineer
+**参与人**: chat-dream-engine-engineer
 
 **审核结论**: ✅ **整体优秀**，需调整 4 处细节
 
@@ -338,19 +338,19 @@ TC-A-04 备注称"若 guid 页模型选择器未启用（`isGeminiMode` 分支�
 **源码验证**（`GuidPage.tsx:467-469`）:
 
 ```typescript
-const PROVIDER_BASED_AGENTS = new Set(['gemini', 'aionrs']);
+const PROVIDER_BASED_AGENTS = new Set(['gemini', 'dream-engine']);
 const isGeminiMode =
   PROVIDER_BASED_AGENTS.has(effectiveAgentType) &&
   (!agentSelection.isPresetAgent || agentSelection.currentEffectiveAgentInfo.isAvailable);
 ```
 
-**结论**: **备注不成立** — `isGeminiMode` 对 `aionrs` 默认为 **true**（`PROVIDER_BASED_AGENTS` 包含 aionrs）
+**结论**: **备注不成立** — `isGeminiMode` 对 `dream-engine` 默认为 **true**（`PROVIDER_BASED_AGENTS` 包含 dream-engine）
 
 **建议调整**:
 
 - 删除 TC-A-04 备注："若 guid 页模型选择器未启用...改为 TC-A-07"
 - 保留 TC-A-04 操作步骤 2："打开模型选择器（`GuidModelSelector`），选择第二个模型"
-- 补充 TC-A-04 前置条件："验证 `isGeminiMode=true`（aionrs 默认启用）"
+- 补充 TC-A-04 前置条件："验证 `isGeminiMode=true`（dream-engine 默认启用）"
 
 ---
 
@@ -438,7 +438,7 @@ async processDroppedFiles(files: FileList, ...) {
 **E2E 环境评估**:
 
 - `process.env` 在 **Node.js 测试进程**中修改，但 **不影响已启动的 Electron 子进程**
-- aionrs binary 解析在 **main process**（`binaryResolver.ts`），读取 `process.env.AION_CLI_PATH`
+- dream-engine binary 解析在 **main process**（`binaryResolver.ts`），读取 `process.env.AION_CLI_PATH`
 
 **建议调整**:
 
@@ -476,7 +476,7 @@ TC-A-07 备注"根据议题 1 决策，不验证 binary 内部 sessionId"，但 
 
 | 审核点          | 状态          | 调整建议                                                |
 | --------------- | ------------- | ------------------------------------------------------- |
-| 1. TC-A-04 备注 | ⚠️ 不成立     | 删除"改为 TC-A-07"备注，aionrs 默认启用模型选择器       |
+| 1. TC-A-04 备注 | ⚠️ 不成立     | 删除"改为 TC-A-07"备注，dream-engine 默认启用模型选择器 |
 | 2. TC-A-05 断言 | ⚠️ 选择器错误 | 补充 testid 到 ConversationChatConfirm 或改用文本选择器 |
 | 3. TC-A-08 断言 | ✅ 有效       | 无需调整，`Canceled` 状态存在且写入 DB                  |
 | 4. TC-A-14 断言 | ⚠️ 需调整     | Electron 无前端限制，改测 binary 层错误处理             |

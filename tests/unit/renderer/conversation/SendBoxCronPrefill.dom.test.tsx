@@ -157,10 +157,10 @@ describe('SendBox scheduled-task prefill', () => {
     expect(textarea).not.toHaveFocus();
 
     act(() => {
-      requestConversationSendBoxPrefill('sendbox-prefill-conversation', 'Create with /cron in AionUi');
+      requestConversationSendBoxPrefill('sendbox-prefill-conversation', 'Create with /cron in OneWork');
     });
 
-    await waitFor(() => expect(textarea).toHaveValue('Existing draft\nCreate with /cron in AionUi'));
+    await waitFor(() => expect(textarea).toHaveValue('Existing draft\nCreate with /cron in OneWork'));
     await waitFor(() => expect(textarea).toHaveFocus());
     expect(textarea.selectionStart).toBe(textarea.value.length);
     expect(textarea.selectionEnd).toBe(textarea.value.length);
@@ -179,10 +179,10 @@ describe('SendBox scheduled-task prefill', () => {
     screen.getByRole('button', { name: 'Mobile outside target' }).focus();
 
     act(() => {
-      requestConversationSendBoxPrefill('sendbox-prefill-conversation', 'Create with /cron in AionUi');
+      requestConversationSendBoxPrefill('sendbox-prefill-conversation', 'Create with /cron in OneWork');
     });
 
-    await waitFor(() => expect(textarea).toHaveValue('Existing draft\nCreate with /cron in AionUi'));
+    await waitFor(() => expect(textarea).toHaveValue('Existing draft\nCreate with /cron in OneWork'));
     expect(textarea).not.toHaveFocus();
   });
 
@@ -216,10 +216,10 @@ describe('SendBox scheduled-task prefill', () => {
     });
 
     act(() => {
-      requestConversationSendBoxPrefill('sendbox-prefill-conversation', 'Create with /cron in AionUi');
+      requestConversationSendBoxPrefill('sendbox-prefill-conversation', 'Create with /cron in OneWork');
     });
 
-    await waitFor(() => expect(textarea).toHaveValue('Existing draft\nCreate with /cron in AionUi'));
+    await waitFor(() => expect(textarea).toHaveValue('Existing draft\nCreate with /cron in OneWork'));
     expect(outsideTarget).toHaveFocus();
 
     querySelectorSpy.mockRestore();

@@ -109,7 +109,7 @@ test.describe('Agent browser control (single-target CDP bridge)', () => {
     expect((token ?? '').length).toBeGreaterThanOrEqual(32);
   });
 
-  test('aioncore inherits the bridge port and token, so the browser MCP can start', async ({ electronApp }) => {
+  test('dreamcore inherits the bridge port and token, so the browser MCP can start', async ({ electronApp }) => {
     /**
      * Regression test for a bug that shipped past the whole rest of this file.
      *
@@ -135,7 +135,7 @@ test.describe('Agent browser control (single-target CDP bridge)', () => {
     const readOurAioncoreEnv = (): { token: string | null; activePort: string | null } | null => {
       let listing = '';
       try {
-        listing = execSync('ps -eo pid,args | grep -i aioncore | grep -v grep || true', { encoding: 'utf8' });
+        listing = execSync('ps -eo pid,args | grep -i dreamcore | grep -v grep || true', { encoding: 'utf8' });
       } catch {
         return null;
       }

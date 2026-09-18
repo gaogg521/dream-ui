@@ -124,7 +124,7 @@ describe('teamMapper', () => {
         slot_id: 'slot-1',
         conversation_id: 'conversation-1',
         role: 'teammate',
-        backend: 'aionrs',
+        backend: 'dream-engine',
         name: 'Worker',
         assistant_id: 'assistant-1',
       }).assistant_id
@@ -138,7 +138,7 @@ describe('teamMapper', () => {
         slot_id: 'slot-2',
         conversation_id: 'conversation-2',
         role: 'teammate',
-        backend: 'aionrs',
+        backend: 'dream-engine',
         name: 'Worker',
         custom_agent_id: 'assistant-legacy',
       }).assistant_id
@@ -149,7 +149,7 @@ describe('teamMapper', () => {
     expect(
       toBackendAssistant({
         role: 'leader',
-        assistant_backend: 'aionrs',
+        assistant_backend: 'dream-engine',
         assistant_name: 'Aion CLI',
         status: 'pending',
         assistant_id: 'assistant-1',
@@ -190,7 +190,7 @@ describe('teamMapper', () => {
     expect(
       toBackendAssistant({
         role: 'teammate',
-        assistant_backend: 'aionrs',
+        assistant_backend: 'dream-engine',
         assistant_name: 'Butler',
         status: 'pending',
         assistant_id: 'assistant-butler',

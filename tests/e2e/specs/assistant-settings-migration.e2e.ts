@@ -72,7 +72,7 @@ function resolveBackendBinary(): string {
   const candidates = [
     process.env.DREAM_BACKEND_BINARY,
     path.join(projectRoot, '../dream-core/target/debug/dreamcore'),
-    path.join(os.homedir(), '.cargo', 'bin', 'aioncore'),
+    path.join(os.homedir(), '.cargo', 'bin', 'dreamcore'),
   ].filter((value): value is string => Boolean(value));
 
   for (const candidate of candidates) {
@@ -89,12 +89,12 @@ function schemaPath(): string {
 }
 
 function querySqliteValue(dataDir: string, sql: string): string {
-  const dbPath = path.join(dataDir, 'aionui-backend.db');
+  const dbPath = path.join(dataDir, 'one-backend.db');
   return execFileSync('sqlite3', ['-readonly', dbPath, sql], { encoding: 'utf8' }).trim();
 }
 
 function seedLegacyDatabase(dataDir: string): void {
-  const legacyDbPath = path.join(dataDir, 'aionui.db');
+  const legacyDbPath = path.join(dataDir, 'one.db');
   const schemaSql = fs.readFileSync(schemaPath(), 'utf8');
   execFileSync('sqlite3', [legacyDbPath], { input: schemaSql, encoding: 'utf8' });
 
@@ -109,7 +109,7 @@ function seedLegacyDatabase(dataDir: string): void {
       'Legacy Writer',
       'Migrated from legacy schema',
       '✍️',
-      'aionrs',
+      'dream-engine',
       '["officecli-data-dashboard","officecli"]',
       '[]',
       '["cron"]',
@@ -210,7 +210,7 @@ test.describe('Assistant Settings Migration', () => {
   }
 
   test.beforeEach(async () => {
-    dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aionui-assistant-migration-'));
+    dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'one-assistant-migration-'));
     seedLegacyDatabase(dataDir);
     await startBackend();
   });
@@ -231,14 +231,14 @@ test.describe('Assistant Settings Migration', () => {
     expect(migrated?.description).toBe('Migrated from legacy schema');
     expect(migrated?.enabled).toBe(false);
     expect(migrated?.sort_order).toBe(7);
-    expect(migrated?.preset_agent_type).toBe('aionrs');
+    expect(migrated?.preset_agent_type).toBe('dream-engine');
 
     const detail = await httpJson<AssistantDetail>(baseUrl, 'GET', `/api/assistants/${LEGACY_USER_ID}?locale=en-US`);
     expect(detail.profile.name).toBe('Legacy Writer');
     expect(detail.profile.description).toBe('Migrated from legacy schema');
     expect(detail.state.enabled).toBe(false);
     expect(detail.state.sort_order).toBe(7);
-    expect(detail.engine.agent_backend).toBe('aionrs');
+    expect(detail.engine.agent_backend).toBe('dream-engine');
     expect(detail.rules.content).toBe(LEGACY_RULE);
     expect(detail.prompts.recommended).toEqual([LEGACY_PROMPT]);
     expect(detail.defaults.model.mode).toBe('auto');

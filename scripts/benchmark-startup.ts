@@ -140,16 +140,27 @@ const AGENT_PILL = '[data-agent-pill="true"]';
 function getLogFilePath(): string {
   const today = new Date().toISOString().slice(0, 10);
   const candidates: string[] = [];
+  // Current names first, then the legacy ones so an older install still resolves.
   if (process.platform === 'darwin') {
     candidates.push(
+      path.join(os.homedir(), 'Library', 'Logs', 'dream-ui-Dev', `${today}.log`),
+      path.join(os.homedir(), 'Library', 'Logs', 'One Work', `${today}.log`),
       path.join(os.homedir(), 'Library', 'Logs', 'AionUi-Dev', `${today}.log`),
       path.join(os.homedir(), 'Library', 'Logs', 'AionUi', `${today}.log`)
     );
   } else if (process.platform === 'win32') {
     const appData = process.env.APPDATA ?? path.join(os.homedir(), 'AppData', 'Roaming');
-    candidates.push(path.join(appData, 'AionUi', 'logs', `${today}.log`));
+    candidates.push(
+      path.join(appData, 'dream-ui-Dev', 'logs', `${today}.log`),
+      path.join(appData, 'One Work', 'logs', `${today}.log`),
+      path.join(appData, 'AionUi', 'logs', `${today}.log`)
+    );
   } else {
-    candidates.push(path.join(os.homedir(), '.config', 'AionUi', 'logs', `${today}.log`));
+    candidates.push(
+      path.join(os.homedir(), '.config', 'dream-ui-Dev', 'logs', `${today}.log`),
+      path.join(os.homedir(), '.config', 'One Work', 'logs', `${today}.log`),
+      path.join(os.homedir(), '.config', 'AionUi', 'logs', `${today}.log`)
+    );
   }
   return candidates.find((p) => fs.existsSync(p)) ?? candidates[0];
 }
@@ -179,9 +190,9 @@ function readNewLogLines(logPath: string, offset: number): string[] {
 // ── Log parsing ─────────────────────────────────────────────────────────────
 
 // Matches: [Dream UI:ready] <label> +<ms>ms
-// Matches: [Dream UI:init]  <label> +<ms>ms
-// Matches: [Dream UI:process] <label> +<ms>ms
-const MARK_REGEX = /\[AionUi:(ready|init|process)\]\s+([^+]+?)\s+\+(\d+)ms/;
+// Matches: [1ONE:ready] <label> +<ms>ms — the prefix index.ts actually emits.
+// The legacy prefix stays in the alternation so logs from before the rename parse.
+const MARK_REGEX = /\[(?:1ONE|AionUi):(ready|init|process)\]\s+([^+]+?)\s+\+(\d+)ms/;
 
 type ParsedMarks = {
   ready: Map<string, number>;

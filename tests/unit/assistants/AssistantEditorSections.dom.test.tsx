@@ -455,7 +455,7 @@ describe('AssistantEditorSections', () => {
     expect(within(defaultsCard).getByText('User MCP、Disabled MCP、Builtin MCP')).toBeInTheDocument();
   });
 
-  it('uses provider-backed models for aionrs even when detected agent metadata exposes model options', () => {
+  it('uses provider-backed models for dream-engine even when detected agent metadata exposes model options', () => {
     mockUseModelProviderList.mockReturnValue({
       providers: [{ id: 'provider-a', name: 'Provider A', model: ['provider-model'], enabled: true }],
       getAvailableModels: () => ['provider-model'],
@@ -465,11 +465,11 @@ describe('AssistantEditorSections', () => {
       <AssistantEditorSections
         editor={createEditor({
           agent: {
-            value: 'agent-aionrs',
+            value: 'agent-dream-engine',
             setValue: vi.fn(),
             availableBackends: [
               {
-                id: 'agent-aionrs',
+                id: 'agent-dream-engine',
                 name: 'DreamEngine',
                 runtimeKey: 'dream',
                 isExtension: false,
@@ -652,10 +652,10 @@ describe('AssistantEditorSections', () => {
     );
   });
 
-  it('uses aionrs runtime catalog for default permission options', async () => {
+  it('uses dream-engine runtime catalog for default permission options', async () => {
     mockManagedAgentRuntimeCatalog = [
       {
-        id: 'agent-aionrs',
+        id: 'agent-dream-engine',
         available_modes: {
           current_mode_id: 'default',
           available_modes: [
@@ -686,9 +686,9 @@ describe('AssistantEditorSections', () => {
       <AssistantEditorSections
         editor={createEditor({
           agent: {
-            value: 'agent-aionrs',
+            value: 'agent-dream-engine',
             setValue: vi.fn(),
-            availableBackends: [backendOption('agent-aionrs', 'aionrs', 'Aion CLI')],
+            availableBackends: [backendOption('agent-dream-engine', 'dream-engine', 'Aion CLI')],
           },
         })}
         activeAssistant={null}

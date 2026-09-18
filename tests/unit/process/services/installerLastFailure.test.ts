@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 const tempDirs: string[] = [];
 
 const makeAppDataDir = () => {
-  const dir = mkdtempSync(path.join(tmpdir(), 'aionui-installer-last-failure-'));
+  const dir = mkdtempSync(path.join(tmpdir(), 'onework-installer-last-failure-'));
   tempDirs.push(dir);
   return dir;
 };
@@ -65,10 +65,10 @@ describe('installerLastFailure service', () => {
         silent: true,
         updated: true,
         retryCount: 3,
-        instDir: 'D:\\AionUi',
-        logPath: 'C:\\Users\\me\\AppData\\Local\\Temp\\aionui-installer-2.1.27-20260702-151830-ab12cd34ef56.log',
+        instDir: 'D:\\OneWork',
+        logPath: 'C:\\Users\\me\\AppData\\Local\\Temp\\onework-installer-2.1.27-20260702-151830-ab12cd34ef56.log',
         at: '2026-07-01T00:00:00.000Z',
-        blockers: [{ pid: 1234, name: 'AionUi.exe' }],
+        blockers: [{ pid: 1234, name: 'OneWork.exe' }],
       })
     );
 
@@ -81,11 +81,11 @@ describe('installerLastFailure service', () => {
       silent: true,
       updated: true,
       retryCount: 3,
-      instDir: 'D:\\AionUi',
-      logPath: 'C:\\Users\\me\\AppData\\Local\\Temp\\aionui-installer-2.1.27-20260702-151830-ab12cd34ef56.log',
+      instDir: 'D:\\OneWork',
+      logPath: 'C:\\Users\\me\\AppData\\Local\\Temp\\onework-installer-2.1.27-20260702-151830-ab12cd34ef56.log',
       at: '2026-07-01T00:00:00.000Z',
     });
-    expect(consumed?.blockers).toEqual([{ pid: 1234, name: 'AionUi.exe' }]);
+    expect(consumed?.blockers).toEqual([{ pid: 1234, name: 'OneWork.exe' }]);
     expect(existsSync(markerPath)).toBe(false);
     await expect(consumeInstallerLastFailure({ appDataDir })).resolves.toBeNull();
   });
@@ -119,8 +119,8 @@ describe('installerLastFailure service', () => {
         silent: true,
         updated: true,
         retryCount: 3,
-        instDir: 'D:\\AionUi',
-        logPath: 'C:\\Users\\me\\AppData\\Local\\Temp\\aionui-installer-2.1.27-20260702-151830-ab12cd34ef56.log',
+        instDir: 'D:\\OneWork',
+        logPath: 'C:\\Users\\me\\AppData\\Local\\Temp\\onework-installer-2.1.27-20260702-151830-ab12cd34ef56.log',
         at: '2026-07-01T00:00:00.000Z',
       })}`,
       'utf8'
@@ -128,7 +128,7 @@ describe('installerLastFailure service', () => {
 
     await expect(consumeInstallerLastFailure({ appDataDir })).resolves.toMatchObject({
       kind: 'app-cannot-be-closed',
-      logPath: 'C:\\Users\\me\\AppData\\Local\\Temp\\aionui-installer-2.1.27-20260702-151830-ab12cd34ef56.log',
+      logPath: 'C:\\Users\\me\\AppData\\Local\\Temp\\onework-installer-2.1.27-20260702-151830-ab12cd34ef56.log',
     });
     expect(existsSync(markerPath)).toBe(false);
   });

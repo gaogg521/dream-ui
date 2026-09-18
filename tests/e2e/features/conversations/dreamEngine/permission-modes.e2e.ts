@@ -38,7 +38,7 @@ test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
   test.beforeAll(async ({ page }) => {
     preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
-      test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
+      test.skip(true, 'No dream-engine-compatible provider found, skipping E2E tests');
     }
   });
 
@@ -54,7 +54,7 @@ test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
       const keysToRemove: string[] = [];
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
-        if (key && (key.startsWith('aionrs_initial_message_') || key.startsWith('aionrs_initial_processed_'))) {
+        if (key && (key.startsWith('one_initial_message_') || key.startsWith('one_initial_processed_'))) {
           keysToRemove.push(key);
         }
       }
@@ -77,7 +77,7 @@ test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
       await page.waitForLoadState('networkidle');
 
       // Screenshot 01: guid page loaded
-      await takeScreenshot(page, `chat-aionrs/tc-a-05/01-guid-page.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-05/01-guid-page.png`);
 
       // Step 2: Select dream agent
       await selectDreamEngineAgent(page);
@@ -89,7 +89,7 @@ test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
       await page.waitForTimeout(500);
 
       // Screenshot 02: mode selector open
-      await takeScreenshot(page, `chat-aionrs/tc-a-05/02-mode-selector-open.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-05/02-mode-selector-open.png`);
 
       // Select yolo option
       const yoloOption = page.locator('[data-testid="dream-engine-mode-option-yolo"]');
@@ -98,7 +98,7 @@ test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
       await page.waitForTimeout(500);
 
       // Screenshot 03: yolo mode selected
-      await takeScreenshot(page, `chat-aionrs/tc-a-05/03-yolo-selected.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-05/03-yolo-selected.png`);
 
       // Step 4: Send message
       const inputBox = page.locator('[data-testid="guid-input"]');
@@ -119,7 +119,7 @@ test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 04: reply completed
-      await takeScreenshot(page, `chat-aionrs/tc-a-05/04-reply-completed.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-05/04-reply-completed.png`);
 
       // ============================================================================
       // DB Assertions
@@ -165,7 +165,7 @@ test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
       });
 
       // Screenshot 01: before first message
-      await takeScreenshot(page, `chat-aionrs/tc-a-06/01-conversation-created.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-06/01-conversation-created.png`);
 
       // Step 2: Send first message
       await sendDreamEngineMessage(page, conversationId, 'Hello, please respond.');
@@ -174,7 +174,7 @@ test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 02: first reply completed
-      await takeScreenshot(page, `chat-aionrs/tc-a-06/02-first-reply.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-06/02-first-reply.png`);
 
       // Step 4: Navigate to conversation page
       await page.goto(`${page.url().split('#')[0]}#/conversation/${conversationId}`);
@@ -187,7 +187,7 @@ test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
       await page.waitForTimeout(500);
 
       // Screenshot 03: mode selector open
-      await takeScreenshot(page, `chat-aionrs/tc-a-06/03-mode-selector-open.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-06/03-mode-selector-open.png`);
 
       const yoloOption = page.locator('[data-testid="dream-engine-mode-option-yolo"]');
       await expect(yoloOption).toBeVisible();
@@ -195,7 +195,7 @@ test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
       await page.waitForTimeout(1000);
 
       // Screenshot 04: mode switched to yolo
-      await takeScreenshot(page, `chat-aionrs/tc-a-06/04-mode-switched.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-06/04-mode-switched.png`);
 
       // Step 6: Send second message
       await sendDreamEngineMessage(page, conversationId, 'What mode are we using now?');
@@ -204,7 +204,7 @@ test.describe('DreamEngine Chat - Permission Modes (P0 + P1)', () => {
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 05: second reply completed
-      await takeScreenshot(page, `chat-aionrs/tc-a-06/05-second-reply.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-06/05-second-reply.png`);
 
       // ============================================================================
       // DB Assertions

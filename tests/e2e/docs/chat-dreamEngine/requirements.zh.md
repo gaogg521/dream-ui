@@ -1,9 +1,9 @@
-# Aion CLI (aionrs) E2E 测试需求
+# Aion CLI (dream-engine) E2E 测试需求
 
 **版本**: v1.1（修订版）
-**作者**: chat-aionrs-analyst
+**作者**: chat-dream-engine-analyst
 **日期**: 2026-04-22
-**状态**: 已完成 Gate 1 + v1.1 修订（纠正 aionrs 模型来源）
+**状态**: 已完成 Gate 1 + v1.1 修订（纠正 dream-engine 模型来源）
 
 ---
 
@@ -11,30 +11,30 @@
 
 ### 1.1 端到端流程
 
-用户从 **guid 首页** 选择 aionrs agent，配置上下文（文件/文件夹/模型/权限），发送消息，进入 **aionrs 对话页**，接收流式回复，并可在对话中切换模型/权限。
+用户从 **guid 首页** 选择 dream-engine agent，配置上下文（文件/文件夹/模型/权限），发送消息，进入 **dream-engine 对话页**，接收流式回复，并可在对话中切换模型/权限。
 
 **关键路径**（源码追溯）：
 
 1. **guid 首页** (`src/renderer/pages/guid/GuidPage.tsx:83-100`)
-   - 用户点击 `AgentPillBar` 中 aionrs pill（`data-agent-backend="aionrs"`）
+   - 用户点击 `AgentPillBar` 中 dream-engine pill（`data-agent-backend="dream-engine"`）
    - 可选：通过 `GuidModelSelector` 选择模型（ACP 模型列表）
    - 可选：通过 `AgentModeSelector` 选择权限模式
    - 可选：上传文件 / 关联文件夹（guid 页暂不支持，对话页支持）
-   - 输入消息，点击发送 → 创建对话并导航到 `/conversation/aionrs/<id>`
+   - 输入消息，点击发送 → 创建对话并导航到 `/conversation/dream-engine/<id>`
 
-2. **aionrs 对话页** (`src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineChat.tsx:27-54`)
+2. **dream-engine 对话页** (`src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineChat.tsx:27-54`)
    - 显示 `MessageList`（历史消息）
    - `DreamEngineSendBox` 提供文件上传、文件夹关联、模型选择、权限选择
    - 发送消息后，前端通过 `ipcBridge.conversation.sendMessage.invoke()` 调用进程端
 
 3. **进程端** (`src/process/task/AionrsManager.ts:78-781`)
-   - 创建 `AionrsAgent` 实例（`src/process/agent/aionrs/index.ts:54-450`）
-   - 启动 aionrs binary（stdin/stdout JSON Lines 协议）
+   - 创建 `AionrsAgent` 实例（`src/process/agent/dream-engine/index.ts:54-450`）
+   - 启动 dream-engine binary（stdin/stdout JSON Lines 协议）
    - 处理流式事件（`stream_start`, `text_delta`, `thinking`, `tool_request`, `stream_end` 等）
    - 权限确认逻辑（`auto_edit` / `yolo` 自动批准部分工具）
 
 4. **后端持久化**
-   - backend 独占 `aionui.db`，Electron 不再直接访问 SQLite
+   - backend 独占 `one.db`，Electron 不再直接访问 SQLite
    - 对话记录由 `/api/conversations*` 相关 contract 持久化
    - 消息记录由 backend message persistence 负责
 
@@ -49,7 +49,7 @@
 | **文件夹关联** | 2 档 | 无关联 / 关联                          | `DreamEngineSendBox.tsx:331-337` atPath 状态 + event listener |
 | **文件上传**   | 2 档 | 无上传 / 上传                          | `DreamEngineSendBox.tsx:103-125` file input handler           |
 | **模型**       | 2 档 | 从 ACP 模型列表挑 2 个（推荐配置见下） | `GuidModelSelector.tsx` + `useGuidModelSelection.ts`          |
-| **权限模式**   | 3 档 | default / auto_edit / yolo             | aionrs runtime capabilities + `AgentModeSelector`             |
+| **权限模式**   | 3 档 | default / auto_edit / yolo             | dream-engine runtime capabilities + `AgentModeSelector`       |
 | **对话中切换** | 必测 | 切换模型 + 切换权限                    | `DreamEngineModelSelector.tsx` + `AgentModeSelector`          |
 
 ### 2.2 维度详细说明
@@ -59,17 +59,17 @@
 **档位 1 - 无关联**:
 
 - 发送消息时 `atPath = []`
-- `workspace` 指向临时目录 `/tmp/e2e-chat-aionrs-<scenario>-<ts>/`
+- `workspace` 指向临时目录 `/tmp/e2e-chat-dream-engine-<scenario>-<ts>/`
 
 **档位 2 - 关联文件夹**:
 
-- 通过 `emitter.emit('aionrs.selected.file', items)` 触发
+- 通过 `emitter.emit('dream-engine.selected.file', items)` 触发
 - `atPath` 包含 `{path: '/tmp/...', name: 'folder-name', isFile: false}`
 - 对话页显示蓝色 Tag（`DreamEngineSendBox.tsx:423-446`）
 
 **前置条件**:
 
-- E2E 在 `/tmp/e2e-chat-aionrs-<scenario>-<ts>/` 创建临时文件夹
+- E2E 在 `/tmp/e2e-chat-dream-engine-<scenario>-<ts>/` 创建临时文件夹
 - 通过 `invokeBridge(page, 'fs.readdir', ...)` 或 UI 文件树选择
 
 **验证点**:
@@ -93,7 +93,7 @@
 
 **前置条件**:
 
-- E2E 创建测试文件 `/tmp/e2e-chat-aionrs-<scenario>-<ts>/test.txt`（内容: "E2E test file"）
+- E2E 创建测试文件 `/tmp/e2e-chat-dream-engine-<scenario>-<ts>/test.txt`（内容: "E2E test file"）
 
 **验证点**:
 
@@ -107,7 +107,7 @@
 
 **模型来源**（用户配置的 provider 列表）:
 
-**重要纠正**: aionrs **不使用 ACP 模型列表**，而是使用用户在 Settings → Model 里配置的通用 provider 列表。
+**重要纠正**: dream-engine **不使用 ACP 模型列表**，而是使用用户在 Settings → Model 里配置的通用 provider 列表。
 
 **源码追溯**:
 
@@ -125,7 +125,7 @@
 **与 ACP agent 的区别**:
 
 - **ACP agent**（Claude Code / Qwen Code / iFlow）: 模型从 `ipcBridge.acpConversation.getModelInfo` 探测（agent 进程启动后反馈）
-- **aionrs**: 模型从 `ipcBridge.mode.getModelConfig` 读取（用户配置文件，排除 `gemini-with-google-auth`）
+- **dream-engine**: 模型从 `ipcBridge.mode.getModelConfig` 读取（用户配置文件，排除 `gemini-with-google-auth`）
 
 **档位定义**（runtime 动态决定，不可 hardcode）:
 
@@ -152,17 +152,17 @@
 
 **已知约束**:
 
-- aionrs **不支持 Google Auth**（`useDreamEngineModelSelection.ts:36-40` 过滤）
+- dream-engine **不支持 Google Auth**（`useDreamEngineModelSelection.ts:36-40` 过滤）
 - 模型切换行为: E2E 只验证 DB 字段更新，不验证 binary 重启（见 §8 议题 1 决策）
 
 ---
 
 #### 权限模式（3 档）
 
-**档位枚举**（由 aionrs runtime capabilities 上报）:
+**档位枚举**（由 dream-engine runtime capabilities 上报）:
 
 ```typescript
-aionrs: [
+dream-engine: [
   { value: 'default', label: 'Default' },
   { value: 'auto_edit', label: 'Auto-Accept Edits' },
   { value: 'yolo', label: 'YOLO' },
@@ -250,7 +250,7 @@ aionrs: [
 **选项 1 - Hardcode 路径**:
 
 ```typescript
-const AIONRS_BINARY_PATH = '/Users/zhoukai/.local/bin/aionrs';
+const AIONRS_BINARY_PATH = '/Users/zhoukai/.local/bin/dream-engine';
 ```
 
 **选项 2 - 从 PATH 查找**（**推荐**，更健壮）:
@@ -259,45 +259,45 @@ const AIONRS_BINARY_PATH = '/Users/zhoukai/.local/bin/aionrs';
 // 通过 binaryResolver 查找
 const binary = await ipcBridge.fs.findAionrsBinary.invoke();
 if (!binary) {
-  test.skip('aionrs binary not found in PATH or ~/.local/bin/aionrs, skipping E2E tests');
+  test.skip('dream-engine binary not found in PATH or ~/.local/bin/dream-engine, skipping E2E tests');
 }
 ```
 
-**源码追溯**: `src/process/agent/aionrs/binaryResolver.ts`
+**源码追溯**: `src/process/agent/dream-engine/binaryResolver.ts`
 
-- 解析顺序: 环境变量 `AION_CLI_PATH` → `~/.aionui/bin/aion-<platform>-<arch>` → 系统 PATH 中的 `aion` 命令
+- 解析顺序: 环境变量 `AION_CLI_PATH` → `~/.one/bin/aion-<platform>-<arch>` → 系统 PATH 中的 `aion` 命令
 
 **验证命令**（team-lead 已确认）:
 
 ```bash
-$ which aionrs
-/Users/zhoukai/.local/bin/aionrs
+$ which dream-engine
+/Users/zhoukai/.local/bin/dream-engine
 ```
 
 **E2E 实现规范**:
 
 ```typescript
-// tests/e2e/setup/aionrs.setup.ts
+// tests/e2e/setup/dream-engine.setup.ts
 export async function checkAionrsBinary(page: Page): Promise<boolean> {
   try {
     const binary = await invokeBridge(page, 'fs.findAionrsBinary');
     if (!binary) {
-      console.error('[E2E Setup] aionrs binary not found in PATH or ~/.local/bin/aionrs');
+      console.error('[E2E Setup] dream-engine binary not found in PATH or ~/.local/bin/dream-engine');
       return false;
     }
-    console.log(`[E2E Setup] aionrs binary found: ${binary}`);
+    console.log(`[E2E Setup] dream-engine binary found: ${binary}`);
     return true;
   } catch (error) {
-    console.error('[E2E Setup] Failed to check aionrs binary:', error);
+    console.error('[E2E Setup] Failed to check dream-engine binary:', error);
     return false;
   }
 }
 
-// tests/e2e/specs/chat-aionrs/*.spec.ts
+// tests/e2e/specs/chat-dream-engine/*.spec.ts
 test.beforeAll(async ({ page }) => {
   const hasBinary = await checkAionrsBinary(page);
   if (!hasBinary) {
-    test.skip('aionrs binary not found, skipping E2E tests');
+    test.skip('dream-engine binary not found, skipping E2E tests');
   }
 });
 ```
@@ -305,13 +305,13 @@ test.beforeAll(async ({ page }) => {
 **关键要求**（team-lead 指示）:
 
 - 若 binary 不存在，**必须** `test.skip()` 并打印明确错误信息（不要悄悄跳过）
-- 错误信息示例: `aionrs binary not found in PATH or ~/.local/bin/aionrs`
+- 错误信息示例: `dream-engine binary not found in PATH or ~/.local/bin/dream-engine`
 
 ---
 
 ### 3.2 Binary 启动与超时
 
-**启动流程** (`src/process/agent/aionrs/index.ts:85-157`):
+**启动流程** (`src/process/agent/dream-engine/index.ts:85-157`):
 
 1. 创建 `AionrsAgent` 实例
 2. 调用 `spawn(binaryPath, args, { env, stdio: ['pipe', 'pipe', 'pipe'] })`
@@ -322,7 +322,7 @@ test.beforeAll(async ({ page }) => {
 
 ```typescript
 test(
-  'should start aionrs conversation',
+  'should start dream-engine conversation',
   async ({ page }) => {
     // Playwright test timeout: 60s（留足 binary 启动时间）
   },
@@ -332,7 +332,7 @@ test(
 
 **失败场景**:
 
-- 启动超时: 抛出 `Error('aionrs ready timeout (30s)')`
+- 启动超时: 抛出 `Error('dream-engine ready timeout (30s)')`
 - 进程崩溃: `childProcess.on('exit')` 触发，前端收到 `error` 事件
 
 ---
@@ -344,11 +344,11 @@ test(
 **目录结构**:
 
 ```
-/tmp/e2e-chat-aionrs-<scenario>-<timestamp>/
+/tmp/e2e-chat-dream-engine-<scenario>-<timestamp>/
 ├── test-file.txt          # 文件上传测试文件
 ├── test-folder/           # 文件夹关联测试目录
 │   └── sample.md
-└── .aionrs/               # aionrs session 文件（binary 自动创建）
+└── .dream-engine/               # dream-engine session 文件（binary 自动创建）
 ```
 
 **命名规范**:
@@ -370,15 +370,15 @@ afterEach(async ({ page }) => {
   const tmpDir = /* 当前用例的临时目录 */;
 
   try {
-    // 1. 停止 aionrs binary 进程
+    // 1. 停止 dream-engine binary 进程
     await invokeBridge(page, 'conversation.stop', { conversation_id: conversationId });
 
     // 2. 清理 DB（级联删除 messages）
     await invokeBridge(page, 'db.exec', {
-      sql: "DELETE FROM conversations WHERE name LIKE 'E2E-aionrs-%'"
+      sql: "DELETE FROM conversations WHERE name LIKE 'E2E-dream-engine-%'"
     });
 
-    // 3. 清理 FS（临时目录 + aionrs session 文件）
+    // 3. 清理 FS（临时目录 + dream-engine session 文件）
     await invokeBridge(page, 'fs.rm', { path: tmpDir, recursive: true });
 
     // 4. 清理 UI state（ESC×5 关闭所有弹窗/模态框）
@@ -394,7 +394,7 @@ afterEach(async ({ page }) => {
 
     // 6. 验证清理完成（可选，但推荐）
     const remaining = await invokeBridge(page, 'db.query', {
-      sql: "SELECT COUNT(*) as count FROM conversations WHERE name LIKE 'E2E-aionrs-%'"
+      sql: "SELECT COUNT(*) as count FROM conversations WHERE name LIKE 'E2E-dream-engine-%'"
     });
     if (remaining[0].count > 0) {
       throw new Error(`E2E cleanup failed: ${remaining[0].count} conversations still exist`);
@@ -409,25 +409,25 @@ afterEach(async ({ page }) => {
 
 #### 清理范围
 
-| 资源类型              | 清理规则                                | 验证方式                      |
-| --------------------- | --------------------------------------- | ----------------------------- |
-| **DB conversations**  | `DELETE WHERE name LIKE 'E2E-aionrs-%'` | `SELECT COUNT(*)` 期望 0      |
-| **DB messages**       | 级联删除（`ON DELETE CASCADE`）         | 自动清理                      |
-| **FS 临时目录**       | `rm -rf /tmp/e2e-chat-aionrs-*`         | `fs.existsSync()` 期望 false  |
-| **FS aionrs session** | 包含在临时目录内                        | 同上                          |
-| **UI state**          | ESC×5 + 导航到安全页面（如 `/guid`）    | 截图验证                      |
-| **sessionStorage**    | `clear()`                               | `sessionStorage.length === 0` |
+| 资源类型                    | 清理规则                                      | 验证方式                      |
+| --------------------------- | --------------------------------------------- | ----------------------------- |
+| **DB conversations**        | `DELETE WHERE name LIKE 'E2E-dream-engine-%'` | `SELECT COUNT(*)` 期望 0      |
+| **DB messages**             | 级联删除（`ON DELETE CASCADE`）               | 自动清理                      |
+| **FS 临时目录**             | `rm -rf /tmp/e2e-chat-dream-engine-*`         | `fs.existsSync()` 期望 false  |
+| **FS dream-engine session** | 包含在临时目录内                              | 同上                          |
+| **UI state**                | ESC×5 + 导航到安全页面（如 `/guid`）          | 截图验证                      |
+| **sessionStorage**          | `clear()`                                     | `sessionStorage.length === 0` |
 
 #### 对话命名规范（必须遵守）
 
 ```typescript
-const conversationName = `E2E-aionrs-${scenario}-${Date.now()}`;
-// 示例: 'E2E-aionrs-no-attach-1745327890123'
+const conversationName = `E2E-dream-engine-${scenario}-${Date.now()}`;
+// 示例: 'E2E-dream-engine-no-attach-1745327890123'
 ```
 
 **关键要求**:
 
-- 前缀 **必须** 是 `E2E-aionrs-`（清理 SQL 依赖此前缀）
+- 前缀 **必须** 是 `E2E-dream-engine-`（清理 SQL 依赖此前缀）
 - 包含场景描述（便于日志追溯）
 - 包含时间戳（避免重名）
 
@@ -442,8 +442,8 @@ const conversationName = `E2E-aionrs-${scenario}-${Date.now()}`;
 | 字段         | 类型        | 验证规则                               | 源码追溯                   |
 | ------------ | ----------- | -------------------------------------- | -------------------------- |
 | `id`         | TEXT PK     | 非空，UUID 格式                        | -                          |
-| `name`       | TEXT        | 匹配 `'E2E-aionrs-*'` 模式             | -                          |
-| `type`       | TEXT        | 固定 `'aionrs'`                        | -                          |
+| `name`       | TEXT        | 匹配 `'E2E-dream-engine-*'` 模式       | -                          |
+| `type`       | TEXT        | 固定 `'dream-engine'`                  | -                          |
 | `model`      | TEXT        | 模型 ID（如 `'claude-opus-4-7'`）      | `AionrsManager.ts:108`     |
 | `status`     | TEXT        | `'pending' \| 'running' \| 'finished'` | `AionrsManager.ts:524-526` |
 | `extra`      | TEXT (JSON) | 见 §5.1.1 extra 字段                   | -                          |
@@ -454,7 +454,7 @@ const conversationName = `E2E-aionrs-${scenario}-${Date.now()}`;
 
 ```json
 {
-  "workspace": "/tmp/e2e-chat-aionrs-...",
+  "workspace": "/tmp/e2e-chat-dream-engine-...",
   "sessionMode": "default" | "auto_edit" | "yolo",
   "lastTokenUsage": {
     "totalTokens": 1234
@@ -549,7 +549,7 @@ test('should verify DB records after conversation', async ({ page }) => {
   // 1. 验证 conversation 存在且类型正确
   const conv = await invokeBridge(page, 'conversation.get', { id: conversationId });
   expect(conv).toBeDefined();
-  expect(conv.type).toBe('aionrs');
+  expect(conv.type).toBe('dream-engine');
   expect(conv.status).toBe('finished');
   expect(conv.extra.sessionMode).toBe('default');
 
@@ -582,7 +582,7 @@ test('should verify DB records after conversation', async ({ page }) => {
 
 **guid 页**（engineer 发现，之前误判）:
 
-- ✅ **已有**: `data-agent-pill="true"`, `data-agent-backend="aionrs"`, `data-agent-selected`
+- ✅ **已有**: `data-agent-pill="true"`, `data-agent-backend="dream-engine"`, `data-agent-selected`
 - 位置: `src/renderer/pages/guid/components/AgentPillBar.tsx:79-82`
 
 **对话页**:
@@ -602,26 +602,26 @@ test('should verify DB records after conversation', async ({ page }) => {
 </div>
 
 // src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineModelSelector.tsx
-<Button data-testid="aionrs-model-selector">
+<Button data-testid="dream-engine-model-selector">
   {/* 模型选择器按钮 */}
 </Button>
 
 // src/renderer/components/agent/AgentModeSelector.tsx（通用组件）
 <Button data-testid={`agent-mode-selector-${backend}`}>
-  {/* backend='aionrs' 时 → data-testid="agent-mode-selector-aionrs" */}
+  {/* backend='dream-engine' 时 → data-testid="agent-mode-selector-dream-engine" */}
 </Button>
 
 // src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineSendBox.tsx（file input）
 <input
   type="file"
-  data-testid="aionrs-file-upload-input"
+  data-testid="dream-engine-file-upload-input"
   multiple
   style={{ display: 'none' }}
 />
 
 // src/renderer/pages/guid/components/GuidActionRow.tsx（文件夹关联按钮）
 <Button
-  data-testid="aionrs-attach-folder-btn"
+  data-testid="dream-engine-attach-folder-btn"
   onClick={() => ipcBridge.dialog.showOpen({ properties: ['openDirectory'] })}
 >
   {/* 关联文件夹按钮（仅桌面端） */}
@@ -632,19 +632,19 @@ test('should verify DB records after conversation', async ({ page }) => {
 
 ```tsx
 // 发送按钮
-<Button data-testid="aionrs-send-btn" />
+<Button data-testid="dream-engine-send-btn" />
 
 // 文件预览卡片
-<FilePreview key={path} data-testid={`aionrs-file-preview-${idx}`} />
+<FilePreview key={path} data-testid={`dream-engine-file-preview-${idx}`} />
 
 // 文件夹 Tag
 <Tag key={item.path} data-testid={`dream-engine-folder-tag-${idx}`} />
 
 // 模型下拉菜单项
-<Menu.Item key={modelId} data-testid={`aionrs-model-menu-item-${modelId}`} />
+<Menu.Item key={modelId} data-testid={`dream-engine-model-menu-item-${modelId}`} />
 
 // 权限下拉菜单项
-<Menu.Item key={mode} data-testid={`aionrs-mode-menu-item-${mode}`} />
+<Menu.Item key={mode} data-testid={`dream-engine-mode-menu-item-${mode}`} />
 ```
 
 ---
@@ -654,26 +654,26 @@ test('should verify DB records after conversation', async ({ page }) => {
 **场景**: 无附件 + 默认模型 + default 权限
 
 ```typescript
-test('should complete aionrs conversation with no attachments', async ({ page }) => {
+test('should complete dream-engine conversation with no attachments', async ({ page }) => {
   // 1. 导航到 guid 页
   await page.goto('/#/guid');
 
-  // 2. 选择 aionrs agent
-  await page.click('[data-agent-backend="aionrs"][data-agent-selected="false"]');
+  // 2. 选择 dream-engine agent
+  await page.click('[data-agent-backend="dream-engine"][data-agent-selected="false"]');
 
   // 3. 输入消息（通过 Playwright locator）
-  const textarea = page.locator('textarea[placeholder*="aionrs"]');
-  await textarea.fill('Hello, aionrs!');
+  const textarea = page.locator('textarea[placeholder*="dream-engine"]');
+  await textarea.fill('Hello, dream-engine!');
 
   // 4. 点击发送按钮
-  await page.click('.send-button-custom'); // 或 [data-testid="aionrs-send-btn"]
+  await page.click('.send-button-custom'); // 或 [data-testid="dream-engine-send-btn"]
 
   // 5. 等待导航到对话页
-  await page.waitForURL(/\/conversation\/aionrs\/.+/, { timeout: 10000 });
+  await page.waitForURL(/\/conversation\/dream-engine\/.+/, { timeout: 10000 });
 
   // 6. 提取 conversationId
   const url = page.url();
-  const conversationId = url.match(/\/conversation\/aionrs\/(.+)/)?.[1];
+  const conversationId = url.match(/\/conversation\/dream-engine\/(.+)/)?.[1];
   expect(conversationId).toBeTruthy();
 
   // 7. 等待 AI 回复（轮询 DB）
@@ -696,18 +696,18 @@ test('should complete aionrs conversation with no attachments', async ({ page })
 
 ### 7.1 Binary 层异常
 
-| 场景            | 预期行为                                | 源码追溯                   |
-| --------------- | --------------------------------------- | -------------------------- |
-| binary 不存在   | `test.skip()` + 明确错误信息            | `binaryResolver.ts`        |
-| 启动超时（30s） | 抛出 `Error('aionrs ready timeout')`    | `index.ts:136-140`         |
-| 进程崩溃        | 前端收到 `error` 事件，对话标记为 error | `AionrsManager.ts:297-298` |
-| resume 失败     | 自动降级为新 session                    | `index.ts:143-154`         |
+| 场景            | 预期行为                                   | 源码追溯                   |
+| --------------- | ------------------------------------------ | -------------------------- |
+| binary 不存在   | `test.skip()` + 明确错误信息               | `binaryResolver.ts`        |
+| 启动超时（30s） | 抛出 `Error('dream-engine ready timeout')` | `index.ts:136-140`         |
+| 进程崩溃        | 前端收到 `error` 事件，对话标记为 error    | `AionrsManager.ts:297-298` |
+| resume 失败     | 自动降级为新 session                       | `index.ts:143-154`         |
 
 ---
 
 ### 7.2 并发对话
 
-**场景**: 同时打开 2 个 aionrs 对话，轮流发送消息
+**场景**: 同时打开 2 个 dream-engine 对话，轮流发送消息
 
 **预期**: 每个对话独立维护 binary 进程 + session（`AionrsManager` 实例独立）
 
@@ -739,7 +739,7 @@ test('should complete aionrs conversation with no attachments', async ({ page })
 
 **预期**: 前端解析失败，记录错误日志，不崩溃
 
-**源码追溯**: `src/process/agent/aionrs/index.ts:116-119` — `try-catch` 包裹 `JSON.parse()`
+**源码追溯**: `src/process/agent/dream-engine/index.ts:116-119` — `try-catch` 包裹 `JSON.parse()`
 
 ---
 
@@ -747,7 +747,7 @@ test('should complete aionrs conversation with no attachments', async ({ page })
 
 ### 议题 0: E2E 环境 provider 配置前置条件（新增）
 
-**背景**: aionrs 使用用户配置的 provider 列表（非 ACP 探测），E2E 需依赖测试环境的 provider 配置
+**背景**: dream-engine 使用用户配置的 provider 列表（非 ACP 探测），E2E 需依赖测试环境的 provider 配置
 
 **前置条件**:
 
@@ -757,12 +757,12 @@ test('should complete aionrs conversation with no attachments', async ({ page })
 **降级策略**（若条件不满足）:
 
 - 若只有 1 个 model: 测试降级为"只验证当前 model，跳过切换场景"
-- 若无可用 provider: `test.skip('No available providers for aionrs, skipping E2E tests')`
+- 若无可用 provider: `test.skip('No available providers for dream-engine, skipping E2E tests')`
 
 **动态 model 选择**（E2E setup 实现）:
 
 ```typescript
-// tests/e2e/setup/aionrs.setup.ts
+// tests/e2e/setup/dream-engine.setup.ts
 export async function getAionrsTestModels(page: Page): Promise<{
   defaultModel: { providerId: string; modelId: string } | null;
   switchModel: { providerId: string; modelId: string } | null;
@@ -844,7 +844,7 @@ test('模型切换探测', async ({ page }) => {
 **实现方案**（若选 C）:
 
 ```typescript
-// tests/e2e/setup/aionrs.setup.ts
+// tests/e2e/setup/dream-engine.setup.ts
 export async function checkAionrsBinary(page: Page): Promise<boolean> {
   try {
     const binary = await invokeBridge(page, 'fs.findAionrsBinary');
@@ -854,11 +854,11 @@ export async function checkAionrsBinary(page: Page): Promise<boolean> {
   }
 }
 
-// tests/e2e/specs/chat-aionrs/*.spec.ts
+// tests/e2e/specs/chat-dream-engine/*.spec.ts
 test.beforeAll(async ({ page }) => {
   const hasBinary = await checkAionrsBinary(page);
   if (!hasBinary) {
-    test.skip('aionrs binary not found in PATH or ~/.local/bin/aionrs, skipping E2E tests');
+    test.skip('dream-engine binary not found in PATH or ~/.local/bin/dream-engine, skipping E2E tests');
   }
 });
 ```
@@ -869,12 +869,12 @@ test.beforeAll(async ({ page }) => {
 
 ## 9. 交付文档清单
 
-| 文档            | 路径                                              | 状态                        |
-| --------------- | ------------------------------------------------- | --------------------------- |
-| Gate 1 需求文档 | `tests/e2e/docs/chat-aionrs/requirements.zh.md`   | ✅ 完成（本文档）           |
-| Gate 1 讨论记录 | `tests/e2e/docs/chat-aionrs/discussion-log.zh.md` | ✅ 完成（双 reviewer 审核） |
-| Gate 2 测试用例 | `tests/e2e/docs/chat-aionrs/test-cases.zh.md`     | ⏳ 待 designer 起草         |
-| Gate 3 实现映射 | `tests/e2e/docs/chat-aionrs/implementation.md`    | ⏳ 待 engineer 起草         |
+| 文档            | 路径                                                    | 状态                        |
+| --------------- | ------------------------------------------------------- | --------------------------- |
+| Gate 1 需求文档 | `tests/e2e/docs/chat-dream-engine/requirements.zh.md`   | ✅ 完成（本文档）           |
+| Gate 1 讨论记录 | `tests/e2e/docs/chat-dream-engine/discussion-log.zh.md` | ✅ 完成（双 reviewer 审核） |
+| Gate 2 测试用例 | `tests/e2e/docs/chat-dream-engine/test-cases.zh.md`     | ⏳ 待 designer 起草         |
+| Gate 3 实现映射 | `tests/e2e/docs/chat-dream-engine/implementation.md`    | ⏳ 待 engineer 起草         |
 
 ---
 
@@ -895,8 +895,8 @@ test.beforeAll(async ({ page }) => {
 
 ### v1.1 (2026-04-22)
 
-**修订人**: chat-aionrs-analyst
-**触发原因**: 用户指出调研错误 — aionrs 模型来源非 ACP 探测
+**修订人**: chat-dream-engine-analyst
+**触发原因**: 用户指出调研错误 — dream-engine 模型来源非 ACP 探测
 
 **修订内容**:
 
@@ -926,7 +926,7 @@ test.beforeAll(async ({ page }) => {
 
 | 文件                                                                                    | 行号   | 关键功能                                                            |
 | --------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------- |
-| `src/renderer/pages/guid/GuidPage.tsx`                                                  | 83-100 | providerAgentKey 状态（aionrs/gemini）                              |
+| `src/renderer/pages/guid/GuidPage.tsx`                                                  | 83-100 | providerAgentKey 状态（dream-engine/gemini）                        |
 | `src/renderer/pages/guid/components/AgentPillBar.tsx`                                   | 79-82  | agent pill 渲染 + data-testid                                       |
 | `src/renderer/pages/guid/components/GuidActionRow.tsx`                                  | 67-330 | 文件附件 + 模式选择器 + 发送按钮                                    |
 | `src/renderer/pages/guid/components/GuidModelSelector.tsx`                              | 35-100 | 模型选择器（guid 页）                                               |
@@ -936,8 +936,8 @@ test.beforeAll(async ({ page }) => {
 | `src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineModelSelector.tsx`    | 19-135 | 模型选择器（对话页）                                                |
 | `src/renderer/pages/conversation/platforms/dreamEngine/useDreamEngineModelSelection.ts` | 24-73  | 模型选择 hook（过滤 google auth）                                   |
 | `src/renderer/pages/conversation/platforms/dreamEngine/useDreamEngineMessage.ts`        | 20-321 | 流式消息处理 + 工具状态                                             |
-| `src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineSendBox.tsx`          | —      | aionrs runtime capabilities 转换为权限选项                          |
+| `src/renderer/pages/conversation/platforms/dreamEngine/DreamEngineSendBox.tsx`          | —      | dream-engine runtime capabilities 转换为权限选项                    |
 | `src/process/task/AionrsManager.ts`                                                     | 78-781 | 进程管理 + 权限审批 + DB 持久化                                     |
-| `src/process/agent/aionrs/index.ts`                                                     | 54-450 | binary 启动 + stdin/stdout 协议                                     |
-| `src/process/agent/aionrs/binaryResolver.ts`                                            | —      | binary 路径解析逻辑                                                 |
-| `aioncore aionui.db`                                                                    | —      | conversations + messages 由 backend 独占持久化                      |
+| `src/process/agent/dream-engine/index.ts`                                               | 54-450 | binary 启动 + stdin/stdout 协议                                     |
+| `src/process/agent/dream-engine/binaryResolver.ts`                                      | —      | binary 路径解析逻辑                                                 |
+| `dreamcore one.db`                                                                      | —      | conversations + messages 由 backend 独占持久化                      |

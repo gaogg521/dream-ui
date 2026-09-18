@@ -119,7 +119,7 @@ describe('apiModelMapper', () => {
   });
 
   describe('buildCreateConversationBody', () => {
-    const aionrsModel = {
+    const dreamEngineModel = {
       id: 'openai',
       use_model: 'gemini-2.5-pro',
       platform: 'openai',
@@ -134,8 +134,8 @@ describe('apiModelMapper', () => {
       // "Provider '' not found".
       const body = buildCreateConversationBody({
         name: 'hello',
-        model: aionrsModel,
-        assistant: { id: 'bare:aionrs' },
+        model: dreamEngineModel,
+        assistant: { id: 'bare:dream-engine' },
         extra: { workspace: '' },
       });
 

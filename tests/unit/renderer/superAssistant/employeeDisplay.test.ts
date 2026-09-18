@@ -16,7 +16,7 @@ import type { Assistant } from '@/common/types/agent/assistantTypes';
 
 const CATALOG = [
   { id: 'agent_claude', name: 'Claude Code', backend: 'claude', agent_type: 'acp' },
-  { id: 'agent_aionrs', name: '1ONE CLI', agent_type: 'aionrs' },
+  { id: 'agent_dream-engine', name: '1ONE CLI', agent_type: 'dream-engine' },
 ] as unknown as ManagedAgent[];
 
 const t = ((_key: string, options?: { defaultValue?: string }) =>
@@ -26,12 +26,12 @@ describe('resolveEmployeeBackendLabel', () => {
   it('shows the product name instead of the raw backend id', () => {
     // The roster used to render `agent.agentType` verbatim, which is why an
     // dream employee displayed a bare "dream".
-    expect(resolveEmployeeBackendLabel({ agentType: 'aionrs' }, CATALOG)).toBe('1ONE CLI');
+    expect(resolveEmployeeBackendLabel({ agentType: 'dream-engine' }, CATALOG)).toBe('1ONE CLI');
     expect(resolveEmployeeBackendLabel({ agentType: 'claude' }, CATALOG)).toBe('Claude Code');
   });
 
   it('prefers the explicit backend override over the stored label', () => {
-    expect(resolveEmployeeBackendLabel({ agentType: 'claude', agentIdOverride: 'agent_aionrs' }, CATALOG)).toBe(
+    expect(resolveEmployeeBackendLabel({ agentType: 'claude', agentIdOverride: 'agent_dream-engine' }, CATALOG)).toBe(
       '1ONE CLI'
     );
   });

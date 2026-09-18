@@ -6,7 +6,7 @@
  * DreamEngineChat must inject the conversation detail's `fork_capability` into
  * ConversationContext — that context value is the only thing gating the
  * shared message fork button (see MessageText + isForkEnabled). A dropped
- * prop silently hides the fork entry point for every aionrs conversation,
+ * prop silently hides the fork entry point for every dream-engine conversation,
  * which is exactly the bug this guards against.
  */
 
@@ -73,7 +73,7 @@ import type { DreamEngineModelSelection } from '@renderer/pages/conversation/pla
 const renderChat = (forkCapability?: { at_turn: boolean }) =>
   render(
     <DreamEngineChat
-      conversation_id='conv-aionrs-1'
+      conversation_id='conv-dream-engine-1'
       workspace='/workspace/demo'
       modelSelection={{} as DreamEngineModelSelection}
       forkCapability={forkCapability}

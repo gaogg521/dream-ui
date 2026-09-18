@@ -308,7 +308,7 @@ describe('migrateAssistants', () => {
       // User picked 'dream' explicitly (or the legacy default already matched):
       // writing an identical override would be a no-op row.
       const config = makeConfig({
-        assistants: [{ id: 'builtin-word-creator', enabled: true, presetAgentType: 'aionrs', isBuiltin: true }],
+        assistants: [{ id: 'builtin-word-creator', enabled: true, presetAgentType: 'dream-engine', isBuiltin: true }],
       });
 
       (ipcBridge.assistants.list.invoke as any).mockResolvedValue(

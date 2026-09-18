@@ -49,7 +49,7 @@ const MIGRATION_BACKEND_PORT = 25902;
  * Node version used at install time (Electron vs. Playwright worker mismatch).
  */
 function querySqliteIds(dataDir: string, sql: string): string[] {
-  const dbPath = path.join(dataDir, 'aionui.db');
+  const dbPath = path.join(dataDir, 'one.db');
   const out = execFileSync('sqlite3', ['-readonly', dbPath, sql], { encoding: 'utf8' });
   return out
     .split('\n')
@@ -59,13 +59,13 @@ function querySqliteIds(dataDir: string, sql: string): string[] {
 
 /** Backend binary resolved from PATH / cargo bin. */
 function resolveBackendBinary(): string {
-  const candidates = [process.env.DREAM_BACKEND_BINARY, path.join(os.homedir(), '.cargo', 'bin', 'aioncore')].filter(
+  const candidates = [process.env.DREAM_BACKEND_BINARY, path.join(os.homedir(), '.cargo', 'bin', 'dreamcore')].filter(
     (x): x is string => typeof x === 'string' && x.length > 0
   );
   for (const c of candidates) {
     if (fs.existsSync(c)) return c;
   }
-  throw new Error(`aioncore binary not found. Set DREAM_BACKEND_BINARY or install to ~/.cargo/bin/aioncore.`);
+  throw new Error(`dreamcore binary not found. Set DREAM_BACKEND_BINARY or install to ~/.cargo/bin/dreamcore.`);
 }
 
 // ── Backend HTTP contract (shared with renderer httpBridge) ──────────────────
@@ -393,7 +393,7 @@ test.describe('Assistant User Data Migration (T5)', () => {
 
     async function startBackend(): Promise<void> {
       const bin = resolveBackendBinary();
-      const logPath = path.join(dataDir, 'sibling-aioncore.log');
+      const logPath = path.join(dataDir, 'sibling-dreamcore.log');
       const logFd = fs.openSync(logPath, 'a');
       // Scrub env vars that would drag the main Electron's backend state in.
       const parentEnv = { ...process.env };
@@ -414,7 +414,7 @@ test.describe('Assistant User Data Migration (T5)', () => {
     }
 
     test.beforeEach(async () => {
-      dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aionui-e2e-migrate-'));
+      dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'one-e2e-migrate-'));
       await startBackend();
     });
 

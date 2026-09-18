@@ -78,11 +78,11 @@ const makeUpdateInfo = (): UpdateInfo => ({
   releaseDate: '2026-04-29T00:00:00Z',
   releaseNotes: 'release notes',
   files: [
-    { url: 'AionUi-1.9.22-mac-arm64.dmg', sha512: 'sha-mac', size: 123 },
-    { url: 'AionUi-1.9.22-win-x64.exe', sha512: 'sha-win', size: 456 },
-    { url: 'AionUi-1.9.22-linux-amd64.deb', sha512: 'sha-linux', size: 789 },
+    { url: 'OneWork-1.9.22-mac-arm64.dmg', sha512: 'sha-mac', size: 123 },
+    { url: 'OneWork-1.9.22-win-x64.exe', sha512: 'sha-win', size: 456 },
+    { url: 'OneWork-1.9.22-linux-amd64.deb', sha512: 'sha-linux', size: 789 },
   ],
-  path: 'AionUi-1.9.22-win-x64.exe',
+  path: 'OneWork-1.9.22-win-x64.exe',
   sha512: 'sha-win',
 });
 
@@ -157,15 +157,15 @@ describe('updateBridge CDN URL rewriting', () => {
       const assets = result.data?.latest?.assets ?? [];
       expect(assets.length).toBe(3);
 
-      const macAsset = assets.find((a: { name: string }) => a.name === 'AionUi-1.9.22-mac-arm64.dmg');
+      const macAsset = assets.find((a: { name: string }) => a.name === 'OneWork-1.9.22-mac-arm64.dmg');
       expect(macAsset).toBeDefined();
       expect(macAsset?.url).toBe(
-        'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/1.9.22/AionUi-1.9.22-mac-arm64.dmg'
+        'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/1.9.22/OneWork-1.9.22-mac-arm64.dmg'
       );
 
-      const linuxAsset = assets.find((a: { name: string }) => a.name === 'AionUi-1.9.22-linux-amd64.deb');
+      const linuxAsset = assets.find((a: { name: string }) => a.name === 'OneWork-1.9.22-linux-amd64.deb');
       expect(linuxAsset?.url).toBe(
-        'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/1.9.22/AionUi-1.9.22-linux-amd64.deb'
+        'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/1.9.22/OneWork-1.9.22-linux-amd64.deb'
       );
     } finally {
       vi.unstubAllGlobals();
@@ -210,8 +210,8 @@ describe('updateBridge allowlist includes CDN host', () => {
 
       const result = await handler({
         downloadId: 'manual-download-1',
-        url: 'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/1.9.22/AionUi-1.9.22-mac-arm64.dmg',
-        file_name: 'AionUi-1.9.22-mac-arm64.dmg',
+        url: 'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/1.9.22/OneWork-1.9.22-mac-arm64.dmg',
+        file_name: 'OneWork-1.9.22-mac-arm64.dmg',
       });
 
       expect(result.success).toBe(true);

@@ -12,7 +12,7 @@ describe('team agent type policy', () => {
     // frontend trusts that flag instead of re-deriving it from the backend slug.
     const options = [
       assistantToOption(assistant('assistant-claude', true, undefined, 'claude')),
-      assistantToOption(assistant('assistant-aionrs', true, undefined, 'aionrs')),
+      assistantToOption(assistant('assistant-dream-engine', true, undefined, 'dream-engine')),
       assistantToOption(assistant('assistant-openclaw', false, undefined, 'openclaw-gateway')),
       assistantToOption(assistant('assistant-nanobot', false, undefined, 'nanobot')),
       assistantToOption(assistant('assistant-remote', false, undefined, 'remote')),
@@ -21,7 +21,7 @@ describe('team agent type policy', () => {
 
     expect(filterTeamSupportedAssistants(options)).toEqual([
       expect.objectContaining({ backend: 'claude', team_selectable: true }),
-      expect.objectContaining({ backend: 'aionrs', team_selectable: true }),
+      expect.objectContaining({ backend: 'dream-engine', team_selectable: true }),
       expect.objectContaining({ backend: 'openclaw-gateway', team_selectable: false }),
       expect.objectContaining({ backend: 'nanobot', team_selectable: false }),
       expect.objectContaining({ backend: 'remote', team_selectable: false }),
@@ -58,7 +58,7 @@ describe('team agent type policy', () => {
 
 function assistant(id: string, team_selectable: boolean, team_block_reason?: string, runtimeKey = 'claude'): Assistant {
   const agentId = `agent-${runtimeKey}`;
-  const isDreamEngine = runtimeKey === 'aionrs';
+  const isDreamEngine = runtimeKey === 'dream-engine';
   return {
     id,
     source: 'generated',
@@ -69,7 +69,7 @@ function assistant(id: string, team_selectable: boolean, team_block_reason?: str
     sort_order: 0,
     agent_id: agentId,
     agent: isDreamEngine
-      ? { type: 'aionrs', source: 'internal' }
+      ? { type: 'dream-engine', source: 'internal' }
       : { type: 'acp', source: 'builtin', acp_backend: runtimeKey },
     enabled_skills: [],
     custom_skill_names: [],

@@ -77,7 +77,7 @@ const UNSUPPORTED_SAMPLES = [
 async function createProjectConversation(page: import('@playwright/test').Page, workspace: string): Promise<string> {
   const conversationId = await page.evaluate(async (ws) => {
     const port = (window as BackendWindow).__backendPort;
-    if (!port) throw new Error('window.__backendPort is not available — is aioncore running?');
+    if (!port) throw new Error('window.__backendPort is not available — is dreamcore running?');
 
     const created = await fetch(`http://127.0.0.1:${port}/api/conversations`, {
       method: 'POST',
@@ -122,7 +122,7 @@ test.describe('Preview — file type routing', () => {
   let conversationId: string | null = null;
 
   test.beforeAll(() => {
-    workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'aionui-e2e-filetypes-'));
+    workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'one-e2e-filetypes-'));
     // Contents are irrelevant: routing is by extension, and these formats are
     // never parsed. Small stubs keep the tree fast to load.
     for (const { file } of UNSUPPORTED_SAMPLES) {

@@ -9,15 +9,15 @@ import type { Assistant, AssistantAgent } from '@/common/types/agent/assistantTy
 import { resolveCronAgentConfig } from '@/renderer/pages/cron/ScheduledTasksPage/resolveCronAgentConfig';
 
 describe('resolveCronAgentConfig', () => {
-  it('stores provider id for preset aionrs assistants instead of literal aionrs backend', () => {
+  it('stores provider id for preset dream-engine assistants instead of literal dream-engine backend', () => {
     const result = resolveCronAgentConfig({
       agentValue: 'assistant-1',
       presetAssistants: [
         assistant({
           id: 'assistant-1',
           name: '文件规划助手',
-          agent_id: 'agent-aionrs',
-          agent: agent('agent-aionrs', 'dream'),
+          agent_id: 'agent-dream-engine',
+          agent: agent('agent-dream-engine', 'dream'),
         }),
       ],
       selectedDreamEngineProvider: {
@@ -95,7 +95,7 @@ describe('resolveCronAgentConfig', () => {
     expect(result.agent_config?.name).toBe('代码助手');
   });
 
-  it('omits backend for non-aionrs assistants and lets the backend derive runtime identity', () => {
+  it('omits backend for non-dream-engine assistants and lets the backend derive runtime identity', () => {
     const result = resolveCronAgentConfig({
       agentValue: 'assistant-4',
       presetAssistants: [

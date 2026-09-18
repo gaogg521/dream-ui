@@ -102,7 +102,7 @@ import type { Assistant } from '@/common/types/agent/assistantTypes';
 
 const makeAgents = () => [
   {
-    id: 'aionrs',
+    id: 'dream-engine',
     name: 'Aion CLI',
     agent_type: 'dream',
     agent_source: 'internal',
@@ -161,7 +161,7 @@ describe('LocalAgents', () => {
     fireEvent.click(screen.getAllByText('settings.agentManagement.testConnection')[0]);
 
     await waitFor(() => {
-      expect(ipcBridge.acpConversation.checkManagedAgentHealthById.invoke).toHaveBeenCalledWith({ id: 'aionrs' });
+      expect(ipcBridge.acpConversation.checkManagedAgentHealthById.invoke).toHaveBeenCalledWith({ id: 'dream-engine' });
     });
     await waitFor(() => {
       expect(refreshCatalog).toHaveBeenCalled();
@@ -296,7 +296,7 @@ describe('LocalAgents', () => {
   });
 
   it('binds assistants to managed agents by agent_id instead of runtime backend', () => {
-    const [aionrsAgent, claudeAgent] = makeAgents();
+    const [dreamEngineAgent, claudeAgent] = makeAgents();
     const assistants: Assistant[] = [
       {
         id: 'assistant-on-claude-runtime',
@@ -345,10 +345,10 @@ describe('LocalAgents', () => {
     expect(getBoundAssistants(claudeAgent, assistants).map((assistant) => assistant.id)).toEqual([
       'assistant-on-claude-agent',
     ]);
-    expect(getBoundAssistants(aionrsAgent, assistants)).toEqual([]);
+    expect(getBoundAssistants(dreamEngineAgent, assistants)).toEqual([]);
   });
 
-  it('pins Kimi right after the aionrs agent in the official list', () => {
+  it('pins Kimi right after the dream-engine agent in the official list', () => {
     useManagedAgents.mockReturnValue({
       agents: [
         ...makeAgents(),

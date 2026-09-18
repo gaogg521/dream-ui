@@ -123,7 +123,7 @@ describe('the orphaned-install sweep', () => {
 
   /**
    * The sweep must not grow a second copy of the stale-registry rule.
-   * AIONUI_HEAL_INSTALL_REGISTRY already clears an entry whose
+   * ONE_HEAL_INSTALL_REGISTRY already clears an entry whose
    * InstallLocation has no onework.exe, and two rules for one fact is the
    * failure this whole file exists to pin.
    */

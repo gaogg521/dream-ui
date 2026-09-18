@@ -26,7 +26,7 @@ describe('useConversationAssistants', () => {
   it('loads only enabled assistants from the backend catalog', async () => {
     (ipcBridge.assistants.list.invoke as never as ReturnType<typeof vi.fn>).mockResolvedValue([
       {
-        id: 'bare-aionrs',
+        id: 'bare-dream-engine',
         name: 'Aion CLI',
         enabled: true,
         source: 'generated',
@@ -40,13 +40,16 @@ describe('useConversationAssistants', () => {
 
     await waitFor(() => expect(result.current.presetAssistants).toHaveLength(2));
 
-    expect(result.current.presetAssistants.map((assistant) => assistant.id)).toEqual(['bare-aionrs', 'assistant-1']);
+    expect(result.current.presetAssistants.map((assistant) => assistant.id)).toEqual([
+      'bare-dream-engine',
+      'assistant-1',
+    ]);
   });
 
   it('keeps the filtered assistant list stable across rerenders when SWR data is unchanged', async () => {
     const catalog = [
       {
-        id: 'bare-aionrs',
+        id: 'bare-dream-engine',
         name: 'Aion CLI',
         enabled: true,
         source: 'generated',

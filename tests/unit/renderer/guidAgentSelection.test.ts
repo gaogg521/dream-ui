@@ -9,7 +9,7 @@ import {
 describe('guid assistant selection helpers', () => {
   const assistants: Assistant[] = [
     assistant({ id: 'builtin-writer', source: 'builtin', runtimeKey: 'claude', sort_order: 20 }),
-    assistant({ id: 'bare-aionrs', source: 'generated', runtimeKey: 'aionrs', sort_order: 10 }),
+    assistant({ id: 'bare-dream-engine', source: 'generated', runtimeKey: 'dream-engine', sort_order: 10 }),
     assistant({ id: 'user-research', source: 'user', runtimeKey: 'gemini', sort_order: 30 }),
   ];
 
@@ -19,11 +19,11 @@ describe('guid assistant selection helpers', () => {
 
   it('does not accept legacy backend keys as assistant selection ids', () => {
     expect(resolveAssistantSelectionKey('claude', assistants)).toBeUndefined();
-    expect(resolveAssistantSelectionKey('aionrs', assistants)).toBeUndefined();
+    expect(resolveAssistantSelectionKey('dream-engine', assistants)).toBeUndefined();
   });
 
-  it('defaults to the generated aionrs assistant when available', () => {
-    expect(pickDefaultAssistantSelectionKey(assistants)).toBe('bare-aionrs');
+  it('defaults to the generated dream-engine assistant when available', () => {
+    expect(pickDefaultAssistantSelectionKey(assistants)).toBe('bare-dream-engine');
   });
 
   it('returns null when no assistants are available', () => {
@@ -39,7 +39,7 @@ describe('guid assistant selection helpers', () => {
       agent_status: 'offline',
     });
 
-    expect(pickDefaultAssistantSelectionKey([unavailable, ...assistants])).toBe('bare-aionrs');
+    expect(pickDefaultAssistantSelectionKey([unavailable, ...assistants])).toBe('bare-dream-engine');
   });
 });
 
@@ -47,7 +47,7 @@ function assistant(
   overrides: Partial<Assistant> & { id: string; source: Assistant['source']; runtimeKey: string }
 ): Assistant {
   const agentId = `agent-${overrides.runtimeKey}`;
-  const isDreamEngine = overrides.runtimeKey === 'aionrs';
+  const isDreamEngine = overrides.runtimeKey === 'dream-engine';
   return {
     id: overrides.id,
     source: overrides.source,

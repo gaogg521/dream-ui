@@ -30,7 +30,7 @@ vi.mock('@/common/platform/bridge', () => ({
 vi.mock('electron', () => ({
   app: {
     getVersion: vi.fn(() => '1.0.0'),
-    getPath: vi.fn(() => '/tmp/aionui-update-dedupe-test'),
+    getPath: vi.fn(() => '/tmp/one-update-dedupe-test'),
     exit: vi.fn(),
     isPackaged: true,
   },
@@ -114,7 +114,7 @@ describe('updateBridge manual download dedupe', () => {
     const request = {
       url: 'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/2.2.0/Dream UI-2.2.0-mac-arm64.dmg',
       fallbackUrl: 'https://github.com/iOfficeAI/Dream UI/releases/download/v2.2.0/Dream UI-2.2.0-mac-arm64.dmg',
-      file_name: 'AionUi-2.2.0-mac-arm64.dmg',
+      file_name: 'OneWork-2.2.0-mac-arm64.dmg',
     };
 
     const first = await handler({
@@ -133,7 +133,7 @@ describe('updateBridge manual download dedupe', () => {
   });
 
   it('creates a new manual download after the prior matching task reaches a terminal state', async () => {
-    fs.mkdirSync('/tmp/aionui-update-dedupe-test', { recursive: true });
+    fs.mkdirSync('/tmp/one-update-dedupe-test', { recursive: true });
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -151,7 +151,7 @@ describe('updateBridge manual download dedupe', () => {
     const request = {
       url: 'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/2.2.0/Dream UI-2.2.0-mac-arm64.dmg',
       fallbackUrl: 'https://github.com/iOfficeAI/Dream UI/releases/download/v2.2.0/Dream UI-2.2.0-mac-arm64.dmg',
-      file_name: 'AionUi-2.2.0-mac-arm64.dmg',
+      file_name: 'OneWork-2.2.0-mac-arm64.dmg',
     };
 
     const first = await handler({
@@ -178,7 +178,7 @@ describe('updateBridge manual download dedupe', () => {
   });
 
   it('cancels an active manual download by download id and clears its dedupe slot', async () => {
-    fs.mkdirSync('/tmp/aionui-update-dedupe-test', { recursive: true });
+    fs.mkdirSync('/tmp/one-update-dedupe-test', { recursive: true });
     vi.stubGlobal(
       'fetch',
       vi.fn((_url: string, init?: RequestInit) => {
@@ -195,7 +195,7 @@ describe('updateBridge manual download dedupe', () => {
     const request = {
       url: 'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/2.2.0/Dream UI-2.2.0-mac-arm64.dmg',
       fallbackUrl: 'https://github.com/iOfficeAI/Dream UI/releases/download/v2.2.0/Dream UI-2.2.0-mac-arm64.dmg',
-      file_name: 'AionUi-2.2.0-mac-arm64.dmg',
+      file_name: 'OneWork-2.2.0-mac-arm64.dmg',
     };
 
     const first = await download({

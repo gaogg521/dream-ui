@@ -37,7 +37,7 @@ test.describe('DreamEngine Chat - Model Selection (P0 + P1)', () => {
   test.beforeAll(async ({ page }) => {
     preconditions = await resolveDreamEnginePreconditions(page);
     if (!preconditions.binary || !preconditions.models) {
-      test.skip(true, 'No aionrs-compatible provider found, skipping E2E tests');
+      test.skip(true, 'No dream-engine-compatible provider found, skipping E2E tests');
     }
   });
 
@@ -51,7 +51,7 @@ test.describe('DreamEngine Chat - Model Selection (P0 + P1)', () => {
       const keysToRemove: string[] = [];
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
-        if (key && (key.startsWith('aionrs_initial_message_') || key.startsWith('aionrs_initial_processed_'))) {
+        if (key && (key.startsWith('one_initial_message_') || key.startsWith('one_initial_processed_'))) {
           keysToRemove.push(key);
         }
       }
@@ -70,7 +70,7 @@ test.describe('DreamEngine Chat - Model Selection (P0 + P1)', () => {
     // Next: Product team investigation of dream binary runtime state handling
 
     if (!preconditions.models!.modelB) {
-      test.skip(true, 'Need 2nd aionrs-compatible model, modelB is null');
+      test.skip(true, 'Need 2nd dream-engine-compatible model, modelB is null');
     }
 
     const timestamp = Date.now();
@@ -81,7 +81,7 @@ test.describe('DreamEngine Chat - Model Selection (P0 + P1)', () => {
       // Screenshot 01: guid page initial
       await page.goto(`${page.url().split('#')[0]}#/guid`);
       await page.waitForLoadState('networkidle');
-      await takeScreenshot(page, `chat-aionrs/tc-a-04/01-guid-page-initial.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-04/01-guid-page-initial.png`);
 
       // Step 2: Create conversation via bridge using modelB (bypasses UI selector issues)
       const conversationId = await createDreamEngineConversationViaBridge(page, {
@@ -90,15 +90,15 @@ test.describe('DreamEngine Chat - Model Selection (P0 + P1)', () => {
         provider: preconditions.models!.modelB,
         sessionMode: 'default',
       });
-      await takeScreenshot(page, `chat-aionrs/tc-a-04/02-conversation-created.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-04/02-conversation-created.png`);
 
       // Step 3: Send message
       await sendDreamEngineMessage(page, conversationId, 'Say hi in one word.');
-      await takeScreenshot(page, `chat-aionrs/tc-a-04/03-message-sent.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-04/03-message-sent.png`);
 
       // Step 4: Wait for AI reply
       await waitForDreamEngineReply(page, conversationId);
-      await takeScreenshot(page, `chat-aionrs/tc-a-04/04-reply-completed.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-04/04-reply-completed.png`);
 
       // ============================================================================
       // DB Assertions
@@ -134,7 +134,7 @@ test.describe('DreamEngine Chat - Model Selection (P0 + P1)', () => {
     // Next: Product team investigation of dream binary runtime state handling
 
     if (!preconditions.models!.modelB) {
-      test.skip(true, 'Need 2nd aionrs-compatible model for mid-conversation switch');
+      test.skip(true, 'Need 2nd dream-engine-compatible model for mid-conversation switch');
     }
 
     const timestamp = Date.now();
@@ -151,7 +151,7 @@ test.describe('DreamEngine Chat - Model Selection (P0 + P1)', () => {
       });
 
       // Screenshot 01: before first message
-      await takeScreenshot(page, `chat-aionrs/tc-a-07/01-conversation-created.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-07/01-conversation-created.png`);
 
       // Step 2: Send first message
       await sendDreamEngineMessage(page, conversationId, 'Hello, please respond.');
@@ -160,7 +160,7 @@ test.describe('DreamEngine Chat - Model Selection (P0 + P1)', () => {
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 02: first reply completed
-      await takeScreenshot(page, `chat-aionrs/tc-a-07/02-first-reply.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-07/02-first-reply.png`);
 
       // Step 4: Navigate to conversation page
       await page.goto(`${page.url().split('#')[0]}#/conversation/${conversationId}`);
@@ -173,7 +173,7 @@ test.describe('DreamEngine Chat - Model Selection (P0 + P1)', () => {
       await page.waitForTimeout(500);
 
       // Screenshot 03: model selector open
-      await takeScreenshot(page, `chat-aionrs/tc-a-07/03-model-selector-open.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-07/03-model-selector-open.png`);
 
       const secondModelOption = page.locator(
         `[data-testid="dream-engine-model-option-${preconditions.models!.modelB.useModel}"]`
@@ -189,7 +189,7 @@ test.describe('DreamEngine Chat - Model Selection (P0 + P1)', () => {
       await waitForDreamEngineReply(page, conversationId);
 
       // Screenshot 04: second reply completed
-      await takeScreenshot(page, `chat-aionrs/tc-a-07/04-second-reply.png`);
+      await takeScreenshot(page, `chat-dream-engine/tc-a-07/04-second-reply.png`);
 
       // ============================================================================
       // DB Assertions

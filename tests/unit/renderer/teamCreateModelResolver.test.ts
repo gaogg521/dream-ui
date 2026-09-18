@@ -148,7 +148,7 @@ describe('resolveDefaultTeamAgentModel', () => {
     ).resolves.toBe('default');
   });
 
-  it('resolves an aionrs teammate to the first enabled provider model, not a placeholder', async () => {
+  it('resolves an dream-engine teammate to the first enabled provider model, not a placeholder', async () => {
     getAssistantMock.mockRejectedValue(new Error('no assistant id'));
     listProvidersMock.mockResolvedValue([
       { id: 'p1', enabled: false, models: ['ignored-model'] },
@@ -180,7 +180,7 @@ describe('resolveDefaultTeamAgentModel', () => {
     ).resolves.toBe('usable-model');
   });
 
-  it('throws instead of returning a placeholder model when no provider is available for aionrs', async () => {
+  it('throws instead of returning a placeholder model when no provider is available for dream-engine', async () => {
     getAssistantMock.mockRejectedValue(new Error('no assistant id'));
     listProvidersMock.mockResolvedValue([]);
 
@@ -192,13 +192,13 @@ describe('resolveDefaultTeamAgentModel', () => {
   });
 });
 
-describe('resolveDefaultTeamAgentModel — aionrs models must exist server-side', () => {
+describe('resolveDefaultTeamAgentModel — dream-engine models must exist server-side', () => {
   beforeEach(() => {
     getAssistantMock.mockReset();
     listProvidersMock.mockReset();
   });
 
-  const aionrsAssistant = (lastModelId?: string) => ({
+  const dreamEngineAssistant = (lastModelId?: string) => ({
     defaults: { model: { mode: 'auto' } },
     preferences: { last_model_id: lastModelId },
     engine: {
@@ -213,21 +213,21 @@ describe('resolveDefaultTeamAgentModel — aionrs models must exist server-side'
   /// "no enabled provider offers model 'opus'", and the user cannot create the
   /// team at all.
   it('replaces a remembered model that no enabled provider offers', async () => {
-    getAssistantMock.mockResolvedValue(aionrsAssistant('opus'));
+    getAssistantMock.mockResolvedValue(dreamEngineAssistant('opus'));
     listProvidersMock.mockResolvedValue([{ id: 'p1', enabled: true, models: ['kimi-k2-6', 'minimax-2-7'] }]);
 
     await expect(resolveDefaultTeamAgentModel({ assistant_id: 'expert-with-stale-model' })).resolves.toBe('kimi-k2-6');
   });
 
   it('keeps a remembered model that an enabled provider does offer', async () => {
-    getAssistantMock.mockResolvedValue(aionrsAssistant('minimax-2-7'));
+    getAssistantMock.mockResolvedValue(dreamEngineAssistant('minimax-2-7'));
     listProvidersMock.mockResolvedValue([{ id: 'p1', enabled: true, models: ['kimi-k2-6', 'minimax-2-7'] }]);
 
     await expect(resolveDefaultTeamAgentModel({ assistant_id: 'expert-with-live-model' })).resolves.toBe('minimax-2-7');
   });
 
   it('skips a model the provider has individually disabled', async () => {
-    getAssistantMock.mockResolvedValue(aionrsAssistant('kimi-k2-6'));
+    getAssistantMock.mockResolvedValue(dreamEngineAssistant('kimi-k2-6'));
     listProvidersMock.mockResolvedValue([
       { id: 'p1', enabled: true, models: ['kimi-k2-6', 'minimax-2-7'], model_enabled: { 'kimi-k2-6': false } },
     ]);

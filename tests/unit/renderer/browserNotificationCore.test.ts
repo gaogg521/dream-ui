@@ -88,7 +88,7 @@ describe('createBrowserNotificationController.onStreamMessage', () => {
     expect(show).toHaveBeenCalledWith({ body: 'confirmation', conversationId: 'c2', kind: 'confirmation' });
   });
 
-  it('shows a confirmation notification on a permission stream message (aionrs)', () => {
+  it('shows a confirmation notification on a permission stream message (dream-engine)', () => {
     const { show, controller } = makeDeps();
     controller.onStreamMessage({ type: 'permission', conversation_id: 'c3' });
     expect(show).toHaveBeenCalledWith({ body: 'confirmation', conversationId: 'c3', kind: 'confirmation' });
