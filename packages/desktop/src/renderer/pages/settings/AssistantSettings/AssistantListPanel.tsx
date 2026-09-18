@@ -124,7 +124,7 @@ const SortableAssistantCard: React.FC<SortableAssistantCardProps> = ({
       key={assistant.id}
       style={style}
       data-testid={`assistant-card-${assistant.id}`}
-      className={`group flex cursor-pointer items-center justify-between gap-12px rounded-12px border border-solid px-14px py-10px transition-all duration-180 hover:border-1 hover:bg-fill-1 ${highlightedId === assistant.id ? 'border-primary-5 bg-primary-1' : 'border-transparent bg-base'}`}
+      className={`group flex cursor-pointer items-center justify-between gap-12px rounded-12px border border-solid px-14px py-10px transition-all duration-180 hover:border-primary-2 hover:bg-fill-1 ${highlightedId === assistant.id ? 'border-primary-5 bg-primary-1' : 'border-2 bg-base'}`}
       onClick={() => {
         setActiveAssistantId(assistant.id);
         onEdit(assistant);
