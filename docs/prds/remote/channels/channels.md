@@ -299,7 +299,15 @@ idle → loading_qr → showing_qr → scanned → connected
 
 ---
 
-## (F-WEBUI-17) WeCom 渠道配置（WebSocket 长连接） [已实现]
+## (F-WEBUI-17) WeCom 渠道配置（WebSocket 长连接） [未实现]
+
+> **状态更正（2026-09-18）**：本节原标 `[已实现]`，但后端从来没有实现过 ——
+> 既没有 `PluginType::WeCom` 变体，也没有 `crates/dream-core-channel/src/plugins/wecom/`。
+> 前端是诚实的（渠道列表里企业微信带「即将上线」标记），但后端的内置渠道清单里
+> 曾经有一条 `("wecom", "WeCom")`，于是 `GET /api/channel/settings/wecom` 每次
+> 都返回 `400 Invalid platform: wecom`。那条假条目已删除，并加了
+> `builtin_ids_all_parse_as_a_plugin_type` 断言防止再次漂移。
+> 下面的验收标准描述的是**目标形态**，不是现状。
 
 **用户故事**：作为用户，我希望通过配置企业微信机器人 ID 和密钥连接 WeCom 渠道，使用 WebSocket 长连接模式无需回调 URL。
 
