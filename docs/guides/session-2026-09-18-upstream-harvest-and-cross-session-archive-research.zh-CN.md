@@ -197,6 +197,9 @@ catalog 是**按 agent 持久化、后写覆盖**的 —— 所以某个会话�
 
 **建议**：这一步先只做一个决定 —— 团队邮箱和跨会话投递的关系。这个决定定了，实现路径才有意义；没定之前写代码一定返工。
 
+> **已完成**：这个决定和完整设计写在 dream-core `docs/guides/design-cross-conversation-message-delivery.zh-CN.md`。
+> 结论是**分层、不合并** —— 团队成员本身就是会话、团队投递也已经落在 `ConversationService` 上，但两者的**并发模型**（每 slot 独立循环 vs 共享 drainer）、**持久化语义**（`persist_user_message: false` + 投影 vs 必须成为真实用户消息）和**寻址权威**（有 leader 的编排 vs 无编排的对等）三条都相反，合并会同时弄坏两边。共享的是 `ConversationService`，不是投递层。
+
 ---
 
 ## 5. 本轮的验证状态（有一处没做完，明说）
