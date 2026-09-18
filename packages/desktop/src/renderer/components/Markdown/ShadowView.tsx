@@ -254,6 +254,10 @@ export const createInitStyle = (
       border: 1px solid var(--bg-3);
       background-color: var(--bg-1);
       font-weight: bold;
+      /* 不写这行就会落到 UA 默认的 center，表头居中而每一行正文靠起始边。
+         GFM 的对齐标记（:---、:---:、---:）仍然优先：remark-gfm 把它们发成
+         inline style，优先级高于这条规则。 */
+      text-align: start;
     }
     td{
         padding: 8px;
