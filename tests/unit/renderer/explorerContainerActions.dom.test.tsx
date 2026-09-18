@@ -129,6 +129,7 @@ vi.mock('@/common', () => ({
 }));
 
 import { ExplorerContainer } from '@/renderer/pages/conversation/explorer/ExplorerContainer';
+import * as explorerStore from '@/renderer/pages/conversation/explorer/explorerStore';
 import { resetExplorerStoreForTest } from '@/renderer/pages/conversation/explorer/explorerStore';
 
 const entry = (over: Partial<ProjectEntryDto>): ProjectEntryDto => ({
@@ -266,6 +267,24 @@ describe('ExplorerContainer attach/remove', () => {
     fireEvent.click(screen.getByTestId('do-remove'));
     await waitFor(() => expect(removeFolder).toHaveBeenCalledWith({ project_id: 'p1', pe_id: 'peA' }));
     await waitFor(() => expect(projectGet).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe('ExplorerContainer collapse all', () => {
+  it('shows Collapse all on the Files tab and clicking it collapses the tree', async () => {
+    const collapseSpy = vi.spyOn(explorerStore, 'collapseAll').mockImplementation(() => {});
+    renderIt();
+    await screen.findByTestId('roots');
+    fireEvent.click(screen.getByLabelText('conversation.explorer.collapseAll'));
+    expect(collapseSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides Collapse all on the Changes tab — there is no tree to collapse there', async () => {
+    renderIt();
+    await screen.findByTestId('roots');
+    // Switch to the Changes tab (react-i18next `t` is mocked to echo the key).
+    fireEvent.click(screen.getByText('conversation.explorer.tabs.changes'));
+    expect(screen.queryByLabelText('conversation.explorer.collapseAll')).toBeNull();
   });
 });
 

@@ -784,7 +784,8 @@
       }
     },
     "pathCopied": "已複製路徑",
-    "copyFailed": "複製路徑失敗"
+    "copyFailed": "複製路徑失敗",
+    "collapseAll": "全部摺疊"
   },
   "terminal": {
     "running": "執行中",

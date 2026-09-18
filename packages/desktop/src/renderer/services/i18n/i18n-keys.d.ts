@@ -1054,6 +1054,7 @@ export type I18nKey =
   | 'conversation.explorer.attachDuplicate'
   | 'conversation.explorer.attachFailed'
   | 'conversation.explorer.attachOverlap'
+  | 'conversation.explorer.collapseAll'
   | 'conversation.explorer.contextMenu.addToChat'
   | 'conversation.explorer.contextMenu.copyAbsolutePath'
   | 'conversation.explorer.contextMenu.copyRelativePath'

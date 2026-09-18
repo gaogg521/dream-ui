@@ -789,7 +789,8 @@
       }
     },
     "pathCopied": "Caminho copiado",
-    "copyFailed": "Falha ao copiar o caminho"
+    "copyFailed": "Falha ao copiar o caminho",
+    "collapseAll": "Recolher tudo"
   },
   "terminal": {
     "running": "Executando",

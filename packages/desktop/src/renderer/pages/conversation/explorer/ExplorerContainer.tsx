@@ -17,7 +17,7 @@
  */
 
 import { Button, Input, Message, Modal, Spin, Tooltip } from '@arco-design/web-react';
-import { FolderPlus } from '@icon-park/react';
+import { FolderPlus, FoldUpOne } from '@icon-park/react';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
@@ -57,7 +57,7 @@ import {
 } from './explorerModel';
 import { initExplorerRuntime } from './monitorTransport';
 import { toRootRefs } from './projectRoots';
-import { reveal, select } from './explorerStore';
+import { collapseAll, reveal, select } from './explorerStore';
 import { useCurrentConversation } from './currentConversationStore';
 import { SearchPanel } from './search/SearchPanel';
 import type { SearchHit } from './search/searchModel';
@@ -525,6 +525,21 @@ export const ExplorerContainer: React.FC<ExplorerContainerProps> = ({ projectId 
             />
           </Tooltip>
           {workspacePath && <WorkspaceOpenButton workspacePath={workspacePath} isTemporary={false} />}
+          {/* Files-tab only: the changes tab has no tree to collapse. Anchored
+              bottom-right so a long localized label extends leftward instead of
+              being squeezed against the window edge and wrapping mid-word. */}
+          {activeTab === 'files' && (
+            <Tooltip content={t('conversation.explorer.collapseAll')} mini position='br'>
+              <Button
+                type='text'
+                size='small'
+                className='flex items-center justify-center'
+                icon={<FoldUpOne theme='outline' size='16' />}
+                aria-label={t('conversation.explorer.collapseAll')}
+                onClick={() => collapseAll()}
+              />
+            </Tooltip>
+          )}
         </div>
       </div>
       {/* Files tab (explorer): kept mounted across tab switches so the tree + WS

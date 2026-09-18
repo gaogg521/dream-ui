@@ -785,7 +785,8 @@
       }
     },
     "pathCopied": "Yol kopyalandı",
-    "copyFailed": "Yol kopyalanamadı"
+    "copyFailed": "Yol kopyalanamadı",
+    "collapseAll": "Tümünü daralt"
   },
   "terminal": {
     "running": "Çalışıyor",
