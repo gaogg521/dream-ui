@@ -12,9 +12,22 @@
 
 ---
 
-## 一、开工前必读：企业路由是**编译期**开关，默认不编进去
+## 一、开工前必读：个人版与企业版是两个构建，SSO 只存在于后者
 
-这是本轮验证过程中最贵的一课，写在最前面。
+**这是刻意的产品设计，不是坑。** 一开始我把它当成「踩到的雷」写，是错的 ——
+`Cargo.toml` 的注释本身就给了安全理由：
+
+> Enterprise governance plane. **OFF by default: the personal edition must not
+> ship the admin backend**, and until this existed the only thing standing
+> between a member and it was a client-side role check in the UI.
+
+企业版是独立形态（`dream-en/`，自带 admin-web + 部署脚本），
+`--features enterprise` 是它既定的构建方式 —— dream-en 的十几份 audit / handoff
+都这么写，还有 `just build-enterprise`。
+`audit-2026-09-07-capability-distribution-recheck.zh-CN.md` 原话就是
+「个人版构建（不含 `--features enterprise`）」。
+
+所以下面这些不是排障技巧，是**「你现在在哪个形态上」的判定方法**。
 
 ```rust
 // crates/dream-core-app/src/router/routes.rs:2659
@@ -38,12 +51,15 @@ GET /api/one/sso/providers            → 404 {"code":"NOT_FOUND","error":"Route
 GET /api/one/sso/feishu/authorize?... → 404 同上
 ```
 
-> **所以**：任何「SSO 不工作」的报告，**第一步不是查配置，是查二进制编没编 `enterprise`**。
-> 404 而不是 401/403 就是这个信号。
+> 上面那两条 404 是在**个人版 dev** 上打的 —— 对个人版来说这是**正确行为**，
+> 治理面本来就不该在用户机器上存在。
 >
-> 要带上：`cargo build -p dream-core-app --features enterprise`，
-> 或者直接用独立的 `dreamcore-admin` 二进制（`src/bin/admin.rs`，它只挂治理面，
-> 跟主服务用的是同一个 `build_governance_plane`，两边不会漂）。
+> 企业形态要这么起：`cargo build -p dream-core-app --features enterprise`，
+> 或用独立的 `dreamcore-admin`（`src/bin/admin.rs`，只挂治理面，
+> 跟主服务共用同一个 `build_governance_plane`，两边不会漂）。
+>
+> **判定「SSO 不工作」时**：先确认是哪个形态。个人版上 404 = 符合预期；
+> 企业版上 404 = 才是问题。
 
 还有第二道**运行期**闸门，位置在 `SsoService::sso_login_allowed()`：
 
@@ -376,24 +392,164 @@ roadmap 记的是 `[ ]`（未做）。本轮核实：**主体已经实现并且�
 
 ---
 
-## 四、本轮两份 session 文档里「仍未验证」的收口
+## 四、本轮全部未竟项（总登记）
 
-| 原条目                                          | 现状                                                                                                                                           |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| SSO 登录回调（dream-core 文档）                 | **部分关闭**：深链 scheme 的完整链路（sanitize → state → callback → 落地页）已由 3 条新测试覆盖，并做过反证。真实 IdP 往返仍待人工，见 §2 档 3 |
-| 安装器与发布脚本（dream-ui 文档 第 1/2/3/4 条） | **仍未验证**。必须真打一次包、真装一次。留到下次发版                                                                                           |
-| `install-web.sh` 的 COS 镜像布局                | **仍未验证**。没有实测过                                                                                                                       |
+> **这一节是本轮唯一的未竟项清单。** 09-18 这一轮产出了 5 份文档，
+> 每份末尾都有自己的「还没做 / 遗留 / 明确不做」小节，散着看必然漏。
+> 下面把它们合并到一处，每条标明**出处**，去原文看细节。
+>
+> 文档代号：
+> **[harvest]** `session-2026-09-18-upstream-harvest-and-cross-session-archive-research.zh-CN.md`
+> **[sweep-ui]** `session-2026-09-18-brand-sweep-and-what-it-uncovered.zh-CN.md`
+> **[compact]** `session-2026-09-18-context-compaction-and-team-provider-block.zh-CN.md`
+> **[sweep-core]** dream-core `session-2026-09-18-brand-sweep-and-the-compat-layers-it-broke.zh-CN.md`
+> **[spend]** dream-core `session-2026-09-18-team-provider-spend-block.zh-CN.md`
 
-本轮顺带修掉的（不是原计划内的）：
+### A. 做了，但没验（验证欠账）
 
-- （已在前序完成）WeCom 假内置渠道条目 + `builtin_ids_all_parse_as_a_plugin_type`
-  断言防漂移 + PRD 状态由 `[已实现]` 订正为 `[未实现]`。
+| 条目                              | 状态                                                                                                                                  | 出处         |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| SSO 登录回调                      | **部分关闭**。深链链路（sanitize → state → callback → 落地页）已由 3 条测试覆盖并反证过；真实 IdP 往返仍待人工，见 §2 档 3            | [sweep-core] |
+| 安装器与发布脚本（第 1/2/3/4 条） | **未验**。必须真打一次包、真装一次，留到下次发版                                                                                      | [sweep-ui]   |
+| `install-web.sh` 的 COS 镜像布局  | **未验**。没有实测过                                                                                                                  | [sweep-ui]   |
+| 聊天里的 mermaid / WaveDrom 缩放  | **未真机验**。dev 库里没有任何 mermaid/wavedrom 内容，无可验之物；改由 6 个测试文件 / 46 条覆盖，全过。要真机验需要先造一条带图的会话 | [harvest] §5 |
+| 企业形态下的全部改动              | **未验**。个人版验证按构造覆盖不到，见 §5                                                                                             | 本文新增     |
+
+### B. 没做完（半成品，不是没验）
+
+| 条目                          | 缺什么                                                                                                                                                                                                                                                                                                          | 出处                |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| **Explorer 只取了一半**       | 上游 #4202 的另一半「tab 级刷新」建在 `refreshRoot` 上，它调 `fs/remount` —— **我们 core 没有这个方法**（`dispatch.rs` 只有 subscribe/unsubscribe/mkdir/createFile/remove/rename/copy/move/search）。要补齐得给 FS 监视器加「重新 arm watch + 重读 baseline」。**做错了能把整个文件监视弄坏**，所以本轮明确不做 | [harvest] §3        |
+| `sendbox.css` 的重复规则块    | 本轮只删了造成当次问题的那一处，**其他重复块没排查**                                                                                                                                                                                                                                                            | [compact]           |
+| 队长信箱重复「已暂停」通知    | 成员因**非额度**原因反复失败时通知会重复；每条消息 3 次预算有界，但新消息不断到达时总量无界。合并同槽位通知没做                                                                                                                                                                                                 | [compact] / [spend] |
+| `engine.rs:1102` 截断工具调用 | 仍直接发英文串，没走 `emit_info_coded`。**正常使用可达**                                                                                                                                                                                                                                                        | [spend]             |
+
+### C. 明确不做（有理由的决策，别当成遗漏重做）
+
+| 上游改动                                                             | 为什么不做                                                                                                                                           | 出处         |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| `feat(skills)!` 技能交付改造（89 文件 + 迁移 043）                   | 破坏性变更，与我们的 SkillsHub / 仓库下载+用户导入 架构正面冲突                                                                                      | [harvest] §6 |
+| `@@` 跨会话消息、sidebar 归档                                        | 转调研。结论是我们**根本没有**这两个功能（不是做得不好）；思路可抄、代码不能抄（要新建 crate + 迁移，而我们已到 056、上游才 040/041，schema 早分叉） | [harvest] §4 |
+| `feat(auth)` 双 token + singleflight、account/secret CLI、解耦加密根 | 直接压在我们改造过的企业身份 / `one_user_org` / SSO 上，**风险最高**                                                                                 | [harvest] §6 |
+| `feat(conversation)` agent 驱动建会话 API                            | 新 API 面，没有明确收益                                                                                                                              | [harvest] §6 |
+| Explorer tab 级刷新                                                  | 见 B 表第一行                                                                                                                                        | [harvest] §6 |
+| 队长自动下线不用的专家                                               | 用户明确说先不做                                                                                                                                     | [spend]      |
+| 团队不活动看门狗                                                     | 上游也只有定义没接线（58 个 `dream-core-team/*.rs` 全扫过），跟着不做                                                                                | [spend]      |
+
+> ⚠️ **C 表里藏着一条真待办，别被「不做」两个字盖过去**：
+> 不做技能交付改造，但**上游的动机值得单独查** —— 它是为了别把技能符号链接物化进
+> 用户的 git 仓库，而我们 `constants.rs:111` 也有 `(".claude/skills", "claude")`。
+> **需要确认我们是不是也在往用户仓库里写东西。** 这条没人跟进。
+
+### D. 产品决策待定（不是技术欠账）
+
+| 条目                                        | 说明                                                                                                            | 出处         |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------ |
+| `AgentType::display_name()` 返回 `1ONE CLI` | 迁移 019 也把库里展示名写成了它，用户在界面上天天看见。改成什么是产品决策 —— **用户 2026-09-18 已明确「不动」** | [sweep-core] |
+| `resources/hub/` 构建期从第三方 hub 下载    | **用户已明确接受**                                                                                              | [sweep-core] |
+| OfficeCLI 技能里的手动安装兜底链接          | 指向厂商域名 `https://officecli.ai`，它 301 跳到自己的 GitHub 仓库，跳转目标仍是第三方组织                      | [sweep-core] |
+
+### E. 已知的过期注释（会误导下一个人）
+
+- `DEFAULT_CHAR_BUDGET` 那句「2% of 200k × 4」**已过时**（`bootstrap.rs` 传的是 `None`，
+  固定 16k 字符）。**别照着它改成 `80_000`。** [spend]
+
+### F. 本轮顺带修掉的（不在原计划内）
+
+- WeCom 假内置渠道条目 + `builtin_ids_all_parse_as_a_plugin_type` 断言防漂移 +
+  PRD 状态由 `[已实现]` 订正为 `[未实现]`。
+- `1One Work` → `One Work`（2026-09-19，上一代叫法，51 处 / 6 文件；哪些必须冻结见 §2 的 📌）。
+- 技能文档里 `ps aux | grep 1One Work` 这条本来就坏的 shell（没加引号）。
 
 ---
 
-## 五、给下一个 AI 的三条硬提醒
+## 五、企业版复验清单（本轮改动是否联动生效）
 
-1. **`enterprise` 是编译期 feature。** 见到 `/api/one/**` 返回 404，先怀疑二进制，别查配置。
+**为什么需要这一节**：本轮所有真机验证都跑在**个人版 dev** 上。而企业治理面在个人版里
+**根本没被编译进去**（见 §1）—— 所以 SSO 那部分改动在真机上的覆盖率按构造就是 **0**，
+不是"没顾上"，是"不可能覆盖到"。
+
+### 5.1 本轮改动落在哪一侧
+
+用 feature 列表（`dream-core-app/Cargo.toml` 的 `enterprise = [...]`）对本轮改过的文件做差集：
+
+**企业专属（个人版验证完全不适用）—— 只有 2 个文件，全在 SSO：**
+
+```
+crates/dream-domain-sso/src/routes.rs    # sanitize_deep_link_scheme 还原 + 落地页 + 3 条新测试
+crates/dream-domain-sso/src/service.rs   # 测试 fixture
+```
+
+**共享 crate（两个形态都编译，个人版验证对"代码"有效，对"企业数据集"无效）：**
+密钥盐还原（`dream-core-app/src/config.rs`）、团队 MCP 旧名兼容、扩展前缀、
+`serde(alias)` 旧值、迁移 057、WeCom 内置清单修正。
+
+### 5.2 已经查清、**不需要**复验的
+
+| 项                                      | 结论                                                                                                                                                                                                                         |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 迁移 057 要不要 MySQL / Postgres 对应物 | **不要**。`migrations_mysql/` 与 `migrations_postgres/` 各只有一个 `001_users.sql`，是**全新安装的 schema、不是迁移历史**；文件头原话：企业部署没有遗留 SQLite 数据要规整，主会话 schema 按设计留在 SQLite（混合存储，P3-3） |
+| dream-en 有没有本轮该清的品牌残留       | **没有**。全仓只剩两处 `aionui`，都是正当兼容层：`admin-web/index.html` 的 `__aionui_theme` 旧主题键回退、`Login.tsx` 的 scheme allowlist                                                                                    |
+| 企业版能否编译（含本轮改动）            | ✅ **已验**（2026-09-19）：`cargo test -p dream-core-app --features enterprise --no-run` 0 error 0 warning，全部测试二进制链接成功                                                                                           |
+
+### 5.3 ⚠️ 本轮才发现的跨仓约束：deep-link scheme 是**两边各写一份**的
+
+`dream-en/admin-web/src/pages/Login.tsx` 有一个 `sanitizeDeepLinkScheme`，
+注释里明写「mirrors the backend's `sso/routes.rs::sanitize_deep_link_scheme`
+**exactly** — same four literals, same fallback」：
+
+```ts
+const DEEP_LINK_SCHEMES = ['dream', 'dream-dev', 'aionui-dev', 'aionui'] as const;
+//                        兜底同样是 'aionui'
+```
+
+实测与还原后的后端**逐字一致**。但这意味着：
+
+> **如果当初那次 sweep 把后端的 `aionui` 扫掉而没有还原，两边会静默漂移** ——
+> 后端把未知值兜底成新 scheme、前端仍兜底成 `aionui`，dream-en 管理后台的
+> 桌面登录深链就会断，而且两边各自的测试都还是绿的。
+>
+> **以后改这四个字面量中的任何一个，必须两个仓库一起改。**
+> dream-en 侧有 `admin-web/tests/sanitize-deep-link-scheme.test.ts` 锁着，
+> dream-core 侧有 `sanitize_deep_link_scheme_allows_only_the_known_schemes` 锁着 ——
+> **但没有任何东西锁住"这两份要一致"。**
+
+### 5.4 还要在企业形态上真跑一遍的
+
+按「不做会漏掉什么」排序：
+
+- [ ] **SSO 深链往返**（唯一的企业专属改动，真机覆盖率为 0）。
+      办法见 §2 档 2 / 档 3；档 3 要人填密钥。
+      重点是**旧客户端那条路**：不传 `scheme` → 落地页 href 必须是 `aionui://`。
+- [ ] **凭据解密**在企业数据集上。个人版上 5 个 provider 全部解密成功已验；
+      企业部署有自己的 `data_secret` 和库，同一个 `derive_encryption_key`，
+      结论应当相同，但**没在企业库上跑过**。
+- [ ] **迁移 057** 在企业 SQLite 库上落一次（账本出现 `version=57 success=1`，
+      `icon/avatar_value LIKE '%aion%'` 为 0 行）。
+- [ ] **dream-en 管理后台**整体回归：本轮没动过 dream-en 一行代码，但它消费
+      dream-core 的治理面路由，后端换了二进制就该过一遍。
+- [ ] **WeCom 修正**在企业形态下：内置渠道清单少了一条假的 `wecom`，
+      确认 dream-en 侧没有任何地方硬编码期待 7 条。
+
+### 5.5 起企业实例的最短路径
+
+```bash
+cd dream-core
+cargo build -p dream-core-app --features enterprise --bin dreamcore
+# 或只要治理面：--bin dreamcore-admin
+```
+
+dream-en 那边有成套做法（`just build-enterprise`、`deploy/install.sh`、
+`docs/audit-*.zh-CN.md` 里逐份都记了验证环境），**照它们来，不要另起一套**。
+
+## 六、给下一个 AI 的四条硬提醒
+
+1. **先问「这是哪个形态」。** 个人版与企业版是两个构建（`--features enterprise`），
+   个人版上 `/api/one/**` 返回 404 是**正确行为**，不是故障。
+   本轮的真机验证全在个人版上做的 —— 企业侧的复验清单见 §5。
 2. **不要代填密钥。** 真实 IdP 验证需要 App Secret / bind 密码，那一步交给人。
 3. **文档状态两个方向都会错。** 本轮一条 `[已实现]` 是假的（WeCom），一条 `[ ]` 也是假的（P0-3）。
    标状态之前先找到对应实现文件；验收之前先找到对应**负向测试**。
+4. **deep-link scheme 那四个字面量是跨仓的**，dream-core 和 dream-en 各写了一份，
+   两边各有测试锁自己、**没有任何东西锁「两边一致」**。改一个就必须改另一个，
+   否则两边测试都绿、桌面登录深链静默断掉。见 §5.3。
