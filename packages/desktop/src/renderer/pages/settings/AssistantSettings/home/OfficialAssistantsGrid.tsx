@@ -127,7 +127,7 @@ const OfficialAssistantsGrid: React.FC<OfficialAssistantsGridProps> = ({
             <div
               key={assistant.id}
               data-testid={`official-card-${assistant.id}`}
-              className='group flex cursor-pointer flex-col rounded-14px border border-solid border-transparent bg-base p-16px transition-all duration-180 hover:border-2'
+              className='group flex cursor-pointer flex-col rounded-14px border border-solid border-2 bg-base p-16px transition-all duration-180 hover:border-primary-2'
               onClick={() => onOpenSettings(assistant)}
             >
               {/* Header row: avatar on the left, enable switch on the right. */}

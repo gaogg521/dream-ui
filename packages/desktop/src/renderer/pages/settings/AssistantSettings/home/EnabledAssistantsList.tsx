@@ -88,7 +88,7 @@ const EnabledAssistantRow: React.FC<EnabledAssistantRowProps> = ({
       ref={setNodeRef}
       style={style}
       data-testid={`enabled-assistant-row-${assistant.id}`}
-      className='group flex cursor-pointer items-center justify-between gap-12px rounded-12px border border-solid border-transparent bg-base px-14px py-12px transition-all duration-180 hover:border-2'
+      className='group flex cursor-pointer items-center justify-between gap-12px rounded-12px border border-solid border-2 bg-base px-14px py-12px transition-all duration-180 hover:border-primary-2'
       onClick={() => onOpenDetail(assistant)}
     >
       <div className='flex min-w-0 flex-1 items-center gap-12px'>

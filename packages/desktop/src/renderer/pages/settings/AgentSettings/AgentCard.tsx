@@ -124,7 +124,7 @@ const AgentCard: React.FC<AgentCardProps> = (props) => {
   return (
     <div
       data-testid={`agent-row-${agent.id}`}
-      className='group flex cursor-pointer items-center justify-between gap-12px rounded-12px border border-solid border-transparent bg-base px-14px py-10px transition-all duration-180 hover:border-1 hover:bg-fill-1'
+      className='group flex cursor-pointer items-center justify-between gap-12px rounded-12px border border-solid border-2 bg-base px-14px py-10px transition-all duration-180 hover:border-primary-2 hover:bg-fill-1'
       onClick={onConfigure}
     >
       <div className={`flex min-w-0 flex-1 items-center gap-12px ${isDisabled ? 'opacity-50' : ''}`}>

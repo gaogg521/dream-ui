@@ -1106,7 +1106,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                   ref={(el) => {
                     skillRefs.current[skill.name] = el;
                   }}
-                  className={`flex flex-col sm:flex-row gap-16px p-16px bg-base border hover:border-1 hover:bg-fill-1 rd-12px transition-all duration-200 ${highlightedSkill === skill.name ? 'border-primary-5 bg-primary-1' : 'border-transparent'}`}
+                  className={`flex flex-col sm:flex-row gap-16px p-16px bg-base border border-solid hover:border-primary-2 hover:bg-fill-1 rd-12px transition-all duration-200 ${highlightedSkill === skill.name ? 'border-primary-5 bg-primary-1' : 'border-2'}`}
                 >
                   <div className='shrink-0 flex items-start sm:mt-2px'>
                     <div className='w-40px h-40px rd-10px bg-[rgba(var(--primary-6),0.08)] flex items-center justify-center shadow-sm'>
@@ -1153,7 +1153,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                   ref={(el) => {
                     skillRefs.current[skill.name] = el;
                   }}
-                  className={`flex flex-col sm:flex-row gap-16px p-16px bg-base border hover:border-1 hover:bg-fill-1 rd-12px transition-all duration-200 ${highlightedSkill === skill.name ? 'border-primary-5 bg-primary-1' : 'border-transparent'}`}
+                  className={`flex flex-col sm:flex-row gap-16px p-16px bg-base border border-solid hover:border-primary-2 hover:bg-fill-1 rd-12px transition-all duration-200 ${highlightedSkill === skill.name ? 'border-primary-5 bg-primary-1' : 'border-2'}`}
                 >
                   <div className='shrink-0 flex items-start sm:mt-2px'>
                     <div className='w-40px h-40px rd-10px bg-[rgba(var(--success-6),0.08)] flex items-center justify-center shadow-sm'>

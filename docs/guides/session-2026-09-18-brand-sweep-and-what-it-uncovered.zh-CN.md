@@ -102,10 +102,40 @@ issue 指派会抛错然后掉进 `needs-triage` 兜底 —— 也就是这四�
 
 ## 五、验证
 
+### 自动化
+
 - `bunx tsc --noEmit` 通过
 - `npx vitest run tests/unit`：**605 文件 / 5643 通过 / 7 skipped**（对照 AGENTS.md
   里"数字比 exit code 可信"那条，文件数与上一次全量一致）
 - `bun run lint` error 数 0（warning 是既有的）
 - `bun run format` 已跑
-- **没有做真机验证**：本轮没有改渲染层行为。安装器与发布脚本的改动需要真的打一次
-  包 / 真的装一次才算验过，建议下次发版时留意第 1、2 条。
+
+### 真机（dev + CDP，2026-09-18 夜）
+
+重编 `dreamcore.exe` 并 `prepareDreamcore.js` 落地 bundled 后，用
+
+```bash
+DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev
+```
+
+起真实 dev，对**存量 dev 库**走查。后端落在 `127.0.0.1:64407`，
+`[dreamcore]` 前缀与 `DREAMCORE_LISTENING` 标记都正常 —— 这两个正好是本轮碰过的
+跨进程契约，等于顺带验了。
+
+界面侧全部通过：会话/团队/定时任务/历史正常加载；Agents、模型、技能、系统、关于
+五个设置页扫描无 `aionui`/`aioncore`/`aionrs`；无任何含旧品牌的资源请求、无坏图。
+详细结论（含凭据解密、迁移 057、团队 MCP 不泄漏）记在 dream-core 同日文档的
+「七、验证」。
+
+> ⚠️ **本仓的 CDP 方法论有一处必须知道**：应用级 CDP 已经被**故意删掉**，
+> `cdpBridge` 只暴露应用内浏览器那一个 webContents、带 token，碰不到 Dream UI 界面。
+> 要驱动真实界面只能用开发者通道 `DREAM_DEVTOOLS_CDP_PORT`（dev 专用，打包版硬拒）。
+> 另外 `docs/guides/cdp.md` 说得对：**裸 `ws` 客户端比浏览器自动化 MCP 可靠** ——
+> 渲染层走 IPC 桥不走 HTTP，直接 `fetch` 后端端口会 `Failed to fetch`，
+> 相对路径 `/api/...` 在 dev server 下是 404。正确做法是驱动界面本身让它去取。
+
+### 仍未验证
+
+- **安装器与发布脚本**（第 1/2/3/4 条）需要真的打一次包 / 真的装一次才算验过，
+  下次发版时留意
+- `install-web.sh` 的 COS 镜像布局没有实测（见第 3 条的警告）
