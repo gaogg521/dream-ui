@@ -183,5 +183,13 @@
   "historyNotSupported": "El contenido actual no admite historial",
   "snapshot": "Instantánea",
   "largeTextTruncatedHint": "Modo de vista previa de archivo grande: mostrando los primeros {{count}} caracteres por rendimiento.",
-  "truncatedBanner": "El contenido de la vista previa fue truncado. Haz clic en descargar para ver el archivo completo."
+  "truncatedBanner": "El contenido de la vista previa fue truncado. Haz clic en descargar para ver el archivo completo.",
+  "maximizePanel": "Maximizar",
+  "restorePanel": "Restaurar",
+  "close": "Cerrar",
+  "closeUnmodified": "Cerrar sin modificar",
+  "copyPath": "Copiar ruta",
+  "copyRelativePath": "Copiar ruta relativa",
+  "openLocation": "Mostrar en carpeta",
+  "openLocationFailed": "Error al abrir la carpeta contenedora"
 }

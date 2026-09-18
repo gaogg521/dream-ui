@@ -183,5 +183,13 @@
   "historyNotSupported": "محتوای فعلی از تاریخچه پشتیبانی نمی‌کند",
   "snapshot": "اسنپ‌شات",
   "largeTextTruncatedHint": "حالت پیش‌نمایش فایل بزرگ: نمایش {{count}} کاراکتر اول برای عملکرد بهتر.",
-  "truncatedBanner": "محتوای پیش‌نمایش کوتاه شده است. برای مشاهده فایل کامل روی دانلود کلیک کنید."
+  "truncatedBanner": "محتوای پیش‌نمایش کوتاه شده است. برای مشاهده فایل کامل روی دانلود کلیک کنید.",
+  "maximizePanel": "بزرگ‌نمایی",
+  "restorePanel": "بازگردانی",
+  "close": "بستن",
+  "closeUnmodified": "بستن تغییرنیافته‌ها",
+  "copyPath": "کپی مسیر",
+  "copyRelativePath": "کپی مسیر نسبی",
+  "openLocation": "نمایش در پوشه",
+  "openLocationFailed": "باز کردن پوشه حاوی ناموفق بود"
 }

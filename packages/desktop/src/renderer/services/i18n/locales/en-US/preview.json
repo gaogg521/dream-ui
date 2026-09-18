@@ -183,5 +183,13 @@
   "historyNotSupported": "Current content does not support history",
   "snapshot": "Snapshot",
   "largeTextTruncatedHint": "Large file preview mode: showing first {{count}} characters for performance.",
-  "truncatedBanner": "Preview content was truncated. Click download to view the full file."
+  "truncatedBanner": "Preview content was truncated. Click download to view the full file.",
+  "maximizePanel": "Maximize",
+  "restorePanel": "Restore",
+  "close": "Close",
+  "closeUnmodified": "Close Unmodified",
+  "copyPath": "Copy Path",
+  "copyRelativePath": "Copy Relative Path",
+  "openLocation": "Show in folder",
+  "openLocationFailed": "Failed to open containing folder"
 }

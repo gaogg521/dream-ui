@@ -183,5 +183,13 @@
   "historyNotSupported": "現在のコンテンツは履歴をサポートしていません",
   "snapshot": "スナップショット",
   "largeTextTruncatedHint": "大きなファイルのプレビューでは、パフォーマンスのため先頭 {{count}} 文字のみ表示します。",
-  "truncatedBanner": "プレビュー内容は途中で切り詰められています。完全な内容はダウンロードして確認してください。"
+  "truncatedBanner": "プレビュー内容は途中で切り詰められています。完全な内容はダウンロードして確認してください。",
+  "maximizePanel": "最大化",
+  "restorePanel": "元に戻す",
+  "close": "閉じる",
+  "closeUnmodified": "未変更を閉じる",
+  "copyPath": "パスをコピー",
+  "copyRelativePath": "相対パスをコピー",
+  "openLocation": "ファイルの場所を開く",
+  "openLocationFailed": "フォルダーを開けませんでした"
 }
