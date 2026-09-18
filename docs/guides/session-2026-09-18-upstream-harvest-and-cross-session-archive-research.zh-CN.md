@@ -209,7 +209,32 @@ catalog 是**按 agent 持久化、后写覆盖**的 —— 所以某个会话�
 - **每一条 A 类修复都验证过"不打补丁时测试会红"**，不是只看绿。
 - 渲染层整包 `electron-vite build` 通过（含新增的 wavedrom 依赖），WebUI 起得来、登录页正常渲染、13 种语言都在，控制台除了未登录的 401 没有任何导入/打包错误 —— 而且能看到新加的 `Failed to apply persisted font families / font weights` 在正常执行并优雅降级。
 
-**没做完的**：登录之后那一遍真机点检没做。应用级 `remote-debugging-port` 开关早就从代码里删掉了（见 `docs/guides/cdp.md`），所以没法用 CDP 驱动真实界面；WebUI 这条路需要登录，而**代输密码不是我该做的事**。要补这一遍，需要人工登录后过一下：表格表头对齐、聊天里的 mermaid/WaveDrom 缩放、预览标签右键菜单、字体设置三个下拉、Explorer 全部折叠。
+**～～没做完的～～ 已于同日补完（2026-09-18 夜）**。
+
+> ⚠️ 上面这段原本写的是"应用级 `remote-debugging-port` 早就删掉了，所以没法用 CDP 驱动真实界面"。
+> **这句话是错的**，代价是这一整轮点检被白白推迟。删掉的只是"默认常开"的那个形态；
+> `configureChromium.ts` 里保留了一条开发者专用通道，就是为了不让这套验收方法论断掉：
+>
+> ```bash
+> DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev
+> ```
+>
+> 两道闸是「与」关系 —— `app.isPackaged` 为真时无条件拒绝，dev 下也必须显式设这个变量。
+> 完整说明见 `docs/guides/cdp.md` 的第一张表，它开宗明义就在区分这两个 CDP 面。
+> **下次要"驱动真实界面验证"，直接用它，不要再以为做不到。**
+
+补完的结果（对存量 dev 库，非空库）：
+
+| 项                             | 结果                                                                                                                                                                                                        |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 表格表头对齐（A3）             | ✅ 真机：真实会话里渲染出的 `th` 计算值为 `text-align: start`（表头「板块」「核心条目」）                                                                                                                   |
+| 聊天里的 mermaid/WaveDrom 缩放 | ⚠️ **库里没有任何 mermaid/wavedrom 内容**，无可验之物；改由 6 个测试文件 / 46 条覆盖（`diagramZoomOverlay`、`markdownMermaidPanZoom`、`mermaidBlockPanZoom`、`wavedromBlock{,.integration,PanZoom}`），全过 |
+| 预览标签右键菜单（A5）         | ✅ 真机：扫描全部可见元素，**不存在**会建立包含块的大容器（`transform`/`filter`/`contain`/`animation forwards`）—— 正是当初把菜单顶出屏幕的那个条件；另有 `previewTabContextMenu` 等 3 个文件 60 条通过     |
+| 字体设置三个下拉               | ✅ 真机：`#/settings/appearance` 渲染出全局/聊天/Markdown/代码四组，下拉与字号步进器齐全                                                                                                                    |
+| Explorer 全部折叠              | ✅ `explorerContainerActions` 测试通过（含在上面那 60 条里）                                                                                                                                                |
+
+**仍未做**：SSO 登录回调的真实 IdP 往返。飞书/LDAP 的配置需要把 App Secret、bind 密码填进表单，
+**代填密钥不是我该做的事**；`sanitize_deep_link_scheme` 的还原本身有单测覆盖（含旧 scheme 与兜底值）。
 
 ---
 
