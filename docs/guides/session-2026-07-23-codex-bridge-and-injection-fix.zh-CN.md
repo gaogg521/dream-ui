@@ -6,19 +6,19 @@
 
 ## 0. 背景与动机
 
-内置的 `oneCore`（aionrs fork）天然支持任意自定义 provider（GLM/DeepSeek/Kimi 等，走 `litellm-internal.123u.com` 网关），但用户观察到它明显比 Claude Code CLI 慢。想法：能不能让 Codex CLI 这个外部重型 Agent 也用上自定义模型，同时不牺牲多 provider 能力、不需要 OpenAI 订阅。
+内置的 `oneCore`（dream-engine fork）天然支持任意自定义 provider（GLM/DeepSeek/Kimi 等，走 `litellm-internal.123u.com` 网关），但用户观察到它明显比 Claude Code CLI 慢。想法：能不能让 Codex CLI 这个外部重型 Agent 也用上自定义模型，同时不牺牲多 provider 能力、不需要 OpenAI 订阅。
 
-先做了真机验证（装 Codex CLI 直连网关测试），确认网关的 Responses API 协议面是非官方/不受支持的，不能作为长期方案。于是决定走「桥接」路线：本地起一个兼容 `/v1/chat/completions`（Responses 协议）的 HTTP 端点，内部复用 `aion_providers::create_provider` 那套已经踩过坑的多 provider 转发逻辑，Codex 的 `model_provider` 指向这个本地端点而不是网关本身。
+先做了真机验证（装 Codex CLI 直连网关测试），确认网关的 Responses API 协议面是非官方/不受支持的，不能作为长期方案。于是决定走「桥接」路线：本地起一个兼容 `/v1/chat/completions`（Responses 协议）的 HTTP 端点，内部复用 `dream_engine_providers::create_provider` 那套已经踩过坑的多 provider 转发逻辑，Codex 的 `model_provider` 指向这个本地端点而不是网关本身。
 
 ## 1. 已完成的三块（本轮 + 上一轮）
 
 ### 1.1 后端桥接服务（1oneCore）
 
-新 crate `crates/aionui-codex-bridge`：OpenAI Responses API ↔ Codex 之间的协议转换层，内部转发到 `aion_providers::create_provider` 构造的 provider。关键点：
+新 crate `crates/dream-core-codex-bridge`：OpenAI Responses API ↔ Codex 之间的协议转换层，内部转发到 `dream_engine_providers::create_provider` 构造的 provider。关键点：
 
 - 一个全局设置项（不是按会话）：管理员在设置页选一个已保存的 provider + model，专门给 Codex 桥接用（migration `032_codex_bridge_config.sql`）。
 - `reasoning`/`thinking` 内容走 `encrypted_content` 自编码往返（`onework-thinking-v1:` 前缀的 base64 JSON，**不是真加密**，只是为了让 Codex 把不透明的 reasoning token 原样传回来时能还原成真实文本+签名）。
-- 挂载在 `aionui-app` 已有的 axum 监听上（`router/state.rs`/`routes.rs`），只绑定本机回环。
+- 挂载在 `dream-core-app` 已有的 axum 监听上（`router/state.rs`/`routes.rs`），只绑定本机回环。
 
 ### 1.2 设置页（1oneUI）
 
@@ -48,7 +48,7 @@ auth error: 401, auth error code: invalid_api_key
 
 第一直觉（配置文件/CLI 参数没生效）被证伪后，顺藤摸瓜查到：**应用内置的"Codex CLI"根本不是用户系统里装的 `codex-cli`，也不读用户的 `~/.codex/config.toml`**。
 
-`crates/aionui-ai-agent/src/factory/acp.rs::resolve_agent_command_spec` 对 `backend=="codex"` 的内置 agent 走 `ManagedAcpToolId::from_backend("codex")` 分支——实际 spawn 的是应用自己托管、随包分发的 **`@agentclientprotocol/codex-acp`** 这个 Node 包（`crates/aionui-runtime/src/acp_tool_runtime/types.rs`），它内部依赖 `@openai/codex`（真正的 Codex Rust 核心，vendor 进自己的 `node_modules`），完全独立于系统装的那份。
+`crates/dream-core-ai-agent/src/factory/acp.rs::resolve_agent_command_spec` 对 `backend=="codex"` 的内置 agent 走 `ManagedAcpToolId::from_backend("codex")` 分支——实际 spawn 的是应用自己托管、随包分发的 **`@agentclientprotocol/codex-acp`** 这个 Node 包（`crates/dream-core-runtime/src/acp_tool_runtime/types.rs`），它内部依赖 `@openai/codex`（真正的 Codex Rust 核心，vendor 进自己的 `node_modules`），完全独立于系统装的那份。
 
 关键坑：这个包装层**自己的 `process.argv` 解析只认 `login`/`cli`/`--version` 三个特殊子命令**（反解包 `dist/index.js` 确认），其余所有 argv（包括我们此前用 `-c model_provider="..."` 注入的所有参数）在它默认的 ACP-server 启动路径里**全部被无声丢弃，从未到达任何地方**。它真正读取配置覆盖的方式是两个**环境变量**：
 
@@ -69,7 +69,7 @@ const config2 = configString ? JSON.parse(configString) : void 0;
 
 ### 2.2 修复
 
-[`crates/aionui-ai-agent/src/factory/acp_launch_policy.rs`](../../1oneCore/crates/aionui-ai-agent/src/factory/acp_launch_policy.rs)（1oneCore）整个重写注入机制：
+[`crates/dream-core-ai-agent/src/factory/acp_launch_policy.rs`](../../1oneCore/crates/dream-core-ai-agent/src/factory/acp_launch_policy.rs)（1oneCore）整个重写注入机制：
 
 - 不再拼 `-c key=value` argv；改成累积一个 `serde_json::Map` 表示 `CODEX_CONFIG` 的内容（`shell_environment_policy`/`sandbox_mode`/`windows.sandbox`/`model`/`model_providers`），最后统一序列化成一个 `CODEX_CONFIG` 环境变量。
 - 桥接激活的 provider id 单独设成 `MODEL_PROVIDER` 环境变量。
@@ -77,15 +77,15 @@ const config2 = configString ? JSON.parse(configString) : void 0;
 - 11 个单测全部改成断言 `CODEX_CONFIG`/`MODEL_PROVIDER` 环境变量的 JSON 内容，而不是 argv 数组。
 
 ```bash
-cargo test -p aionui-ai-agent acp_launch_policy   # 11 passed
-cargo clippy -p aionui-ai-agent -- -D warnings    # 干净
+cargo test -p dream-core-ai-agent acp_launch_policy   # 11 passed
+cargo clippy -p dream-core-ai-agent -- -D warnings    # 干净
 ```
 
 ### 2.3 真机验证（不是只跑单测）
 
-1. `cargo build -p aionui-app --release` 重编 `aioncore.exe`。
-2. `AIONUI_BACKEND_LOCAL_PATH=<新 exe 路径> node scripts/prepareAioncore.js` 内嵌进 1oneUI 的 dev bundled 目录。
-3. `taskkill` 掉旧 electron/aioncore 进程，重启 `bun run dev`，这次额外设了 `APP_SERVER_LOGS` 环境变量（`codex-acp` 自带一个只在这个 env var 存在时才写的诊断日志，见其源码 `Logger` 类）。
+1. `cargo build -p dream-core-app --release` 重编 `dreamcore.exe`。
+2. `DREAM_BACKEND_LOCAL_PATH=<新 exe 路径> node scripts/prepareDreamcore.js` 内嵌进 1oneUI 的 dev bundled 目录。
+3. `taskkill` 掉旧 electron/dreamcore 进程，重启 `bun run dev`，这次额外设了 `APP_SERVER_LOGS` 环境变量（`codex-acp` 自带一个只在这个 env var 存在时才写的诊断日志，见其源码 `Logger` 类）。
 4. 用一个原始 CDP WebSocket 脚本（`ws` 包，`Runtime.evaluate` + `Page.captureScreenshot`；`chrome-devtools` MCP 工具管理的是独立浏览器实例，连不上 dev 应用自己的 CDP 端口 9230，这是已知限制）连上正在跑的会话，往一个真实 Codex 会话发了条测试消息。
 5. `codex-acp` 自己的诊断日志确认启动时**真的收到了正确配置**：
    ```json
@@ -114,7 +114,7 @@ cargo clippy -p aionui-ai-agent -- -D warnings    # 干净
 
 用户问了这个问题，没有直接假设"应该没事"，照同样的反解包方法查了 `claude-agent-acp`（Claude 那边同类的托管 ACP 包装层）：
 
-- Claude Code 早就有等价能力：`cc_switch`（`crates/aionui-ai-agent/src/cc_switch/provider_env.rs`），通过 `ANTHROPIC_BASE_URL`/`ANTHROPIC_AUTH_TOKEN` 两个环境变量重定向。
+- Claude Code 早就有等价能力：`cc_switch`（`crates/dream-core-ai-agent/src/cc_switch/provider_env.rs`），通过 `ANTHROPIC_BASE_URL`/`ANTHROPIC_AUTH_TOKEN` 两个环境变量重定向。
 - `claude-agent-acp` 内部**在同一个 Node 进程里直接 `new Anthropic({...})`**，调用官方 `@anthropic-ai/sdk`；该 SDK 直接从 `process.env` 读这两个环境变量——没有 Codex 那种"单独 spawn 二进制 + 自定义 JSON 协议二次翻译"的中间层，因此不存在"参数传了但没人读"的失效路径。
 - 唯一顺手翻到的、**不确定是否命中**的细节：SDK 里还有一条更深的企业级 OIDC 联邦鉴权配置文件（`configs/<profile>.json`）优先于环境变量的逻辑；但那条走的是完全不同的 SSO 联邦身份认证路径，`cc_switch` 走纯 api-key+base_url，不会碰到这个分支——记录在案，不是确认存在的 bug。
 
@@ -131,19 +131,19 @@ cargo clippy -p aionui-ai-agent -- -D warnings    # 干净
 Claude Code 已经原生说 Anthropic Messages 协议，`litellm-internal` 网关本来就有兼容的 Anthropic 协议面（这也是本轮开头"Claude Code 一直很快"的原因）——**不需要本地 HTTP 协议转换服务**，只需要：
 
 1. 一张新表 `claude_bridge_config`（migration `033_claude_bridge_config.sql`，结构同 `codex_bridge_config` 但不需要 `bearer_token`——没有本地服务要保护）。
-2. 一个新的轻量 crate `aionui-claude-bridge`（只有 `GET`/`PUT /api/claude-bridge/config` 的设置 CRUD，没有 encoder/protocol 转换层，没有 `provider_repo`/`encryption_key` 依赖）。
+2. 一个新的轻量 crate `dream-core-claude-bridge`（只有 `GET`/`PUT /api/claude-bridge/config` 的设置 CRUD，没有 encoder/protocol 转换层，没有 `provider_repo`/`encryption_key` 依赖）。
 3. 设置页 `ClaudeBridgeSettings/`，UI 与 Codex 桥接页几乎一样（少了"已生效"依赖 `bearer_token` 的 `configured` 概念）。
-4. **核心注入点**：`crates/aionui-ai-agent/src/factory/acp.rs` 新增 `resolve_claude_bridge_env()`——桥接开启时直接解密保存的 provider 的真实 `api_key` + 拼 `base_url`，构造 `ANTHROPIC_BASE_URL`/`ANTHROPIC_AUTH_TOKEN`/`ANTHROPIC_MODEL` 三个环境变量；`acp_launch_policy.rs` 的 `append_claude_provider_env` 优先用这份解析结果，**只有它为空时才 fall back 到原有的外部 cc-switch 文件读取**（不破坏已经在用那个工具的人）。
+4. **核心注入点**：`crates/dream-core-ai-agent/src/factory/acp.rs` 新增 `resolve_claude_bridge_env()`——桥接开启时直接解密保存的 provider 的真实 `api_key` + 拼 `base_url`，构造 `ANTHROPIC_BASE_URL`/`ANTHROPIC_AUTH_TOKEN`/`ANTHROPIC_MODEL` 三个环境变量；`acp_launch_policy.rs` 的 `append_claude_provider_env` 优先用这份解析结果，**只有它为空时才 fall back 到原有的外部 cc-switch 文件读取**（不破坏已经在用那个工具的人）。
 5. 模型选择器锁定复用同一套机制：`AcpModelSelector.tsx`/`AcpSendBox.tsx` 的 `isBridgeLocked` 现在是 `isCodexBridgeLocked || isClaudeBridgeLocked` 的合并判断，新增 `useClaudeBridgeStatus.ts` hook + 全部 13 语言 `agent.model.claudeBridgeLocked`/`claudeBridgeLockedTooltip`。
 
 反解包确认了两个关键字段名（`claude-agent-acp` 的 `dist/acp-agent.js`）：`process.env.ANTHROPIC_MODEL`（第 3770 行左右）被直接读取；另有一条 `_meta.gateway` 覆盖路径但**只在 ACP 客户端显式声明 `auth._meta.gateway` capability 时才生效**，本应用不声明这个 capability，不会碰撞。
 
 ### 4.2 真机验证（同一套 CDP 方法论）
 
-1. `cargo test -p aionui-claude-bridge -p aionui-ai-agent` 全过（`aionui-claude-bridge` 5 个 service 测试 + 4 个 route 测试；`acp_launch_policy` 新增 4 个 `append_claude_provider_env_*` 测试，其中"fallback 到 cc-switch 为空"两个断言因为**这台开发机真的装了外部 cc-switch 工具**读到了真实数据而失败一次——改成只断言"不 panic"而不断言具体返回值，因为这条路径读的是机器本地文件、天生不可确定性测试）。
-2. `cargo clippy -p aionui-ai-agent -p aionui-claude-bridge -p aionui-db -- -D warnings` 干净（⚠️ 注意 `-p aionui-app` 会因为 `one-org`/`one-sso` 里跟本次改动无关的既有 warning 被 `-D warnings` 放大成 error，按仓库惯例只 scope 到实际改动的 crate）。
+1. `cargo test -p dream-core-claude-bridge -p dream-core-ai-agent` 全过（`dream-core-claude-bridge` 5 个 service 测试 + 4 个 route 测试；`acp_launch_policy` 新增 4 个 `append_claude_provider_env_*` 测试，其中"fallback 到 cc-switch 为空"两个断言因为**这台开发机真的装了外部 cc-switch 工具**读到了真实数据而失败一次——改成只断言"不 panic"而不断言具体返回值，因为这条路径读的是机器本地文件、天生不可确定性测试）。
+2. `cargo clippy -p dream-core-ai-agent -p dream-core-claude-bridge -p dream-core-db -- -D warnings` 干净（⚠️ 注意 `-p dream-core-app` 会因为 `one-org`/`one-sso` 里跟本次改动无关的既有 warning 被 `-D warnings` 放大成 error，按仓库惯例只 scope 到实际改动的 crate）。
 3. 前端 `bunx tsc --noEmit`、`i18n:types`/`check-i18n.js`、`lint:fix`、相关 `*.dom.test.tsx`（`AcpModelSelector`/`AcpSendBox`/`CodexBridgeModalContent`/新增 `ClaudeBridgeModalContent`，共 44 个测试）全绿。
-4. **重编 `aioncore.exe`（release）+ 内嵌 + 重启 dev**，用同一套原始 CDP WebSocket 脚本：设置页点开桥接开关→选 provider（`openai` 平台）→模型自动选到 `minimax-2-7`→保存成功。
+4. **重编 `dreamcore.exe`（release）+ 内嵌 + 重启 dev**，用同一套原始 CDP WebSocket 脚本：设置页点开桥接开关→选 provider（`openai` 平台）→模型自动选到 `minimax-2-7`→保存成功。
 5. **真机发现一个真 bug 并顺手修了**：保存桥接配置后，已经挂载的会话页面模型选择器读的是**保存前的 SWR 缓存**，不会自动感知刚刚打开的桥接状态（需要整个应用重启才会生效）——`CodexBridgeModalContent`/`ClaudeBridgeModalContent` 的 `handleSave` 里都加了 `mutate(BRIDGE_STATUS_SWR_KEY, ...)` 手动触发失效重取，这样设置页保存后同一个运行中的会话立刻就能看到锁定态，不需要重启应用（两个桥接功能共享同一个 bug，一并修复）。
 6. 新建一个真实 Claude Code 会话，发消息「claude桥接验证-请回复OK」：截图确认头部显示 `claude-sonnet-latest · Default · 已桥接`，模型真实回复了「OK」，**没有** Anthropic 401/鉴权错误。
 7. **⚠️ 已知的、有意保留的小瑕疵**：会话头部显示的模型名文本（如上面的 `claude-sonnet-latest`）来自 `agent_task.rs::get_model()` 里未改动的 `cc_switch::read_claude_model_info()`（读外部 cc-switch 文件的展示层，本轮明确没碰），跟桥接实际注入生效的 `ANTHROPIC_MODEL`（本例是 `minimax-2-7`）不是同一个来源——**只是展示文案不准，不影响实际路由正确性**（真实请求确实走的是桥接配置的 provider/model，回复内容就是证明）。这一条本身没修（见 §5.3 说明为什么范围上不动它），但下面 §5.2 把 Guid 首页"能不能手滑切走模型"这个更要紧的锁定漏洞补上了。
@@ -158,7 +158,7 @@ Claude Code 已经原生说 Anthropic Messages 协议，`litellm-internal` 网�
 
 反解包真实安装的 `codex.exe` 二进制自身的字符串表（`grep -a` 直接读二进制里的 serde 字段名），确认 `model_context_window` **确实是** `ConfigToml` 的顶层字段（紧跟在 `model_provider` 后面，符合真实 struct 布局）。已经：
 
-- `crates/aionui-ai-agent/src/factory/acp.rs` 新增 `resolve_codex_bridge_context_window()`，从桥接 provider 行的 `context_limit` 字段取值。
+- `crates/dream-core-ai-agent/src/factory/acp.rs` 新增 `resolve_codex_bridge_context_window()`，从桥接 provider 行的 `context_limit` 字段取值。
 - `acp_launch_policy.rs` 的 `append_codex_bridge_config` 新增第 7 个参数，`Some` 时把 `model_context_window` 写进 `CODEX_CONFIG`。
 - 单测覆盖：`context_limit` 为 `None` 时不写这个字段（不伪造数据）、为 `Some` 时正确写入。
 
@@ -198,15 +198,15 @@ Guid 页锁定后，模型下拉框**不能再点开切换**了（安全性/一�
 反解包 `claude-agent-acp` 实际内嵌的 `@anthropic-ai/claude-agent-sdk`（`sdk.mjs`）确认两件事：
 
 - `Xt()`（配置目录解析函数）**确实**读 `process.env.CLAUDE_CONFIG_DIR`，settings.json **文件本身**的隔离是有效的（`userSettings` 路径正确算到隔离目录下）。
-- 但 SDK 的模型别名解析（`/model haiku` 这类快捷名）额外读取 `ANTHROPIC_DEFAULT_HAIKU_MODEL`/`ANTHROPIC_DEFAULT_SONNET_MODEL`/`ANTHROPIC_DEFAULT_OPUS_MODEL`/`ANTHROPIC_SMALL_FAST_MODEL` 这 4 个**独立于 settings.json 文件之外的进程环境变量**（`grep -a -o` 反解包字符串表实锤存在）。这些变量在这台开发机的进程树里本来就是"环境态"常驻（继承自操作者自己日常使用真实 Claude Code 的登录环境——这台机器上随手起一个新进程都能在其环境里看到这 4 个变量,包括真实值),而 `aionui_runtime::agent_process_env()`（`crates/aionui-runtime/src/agent_env.rs`）只清理 `NODE_OPTIONS`/`NODE_INSPECT`/`NODE_DEBUG`/`CLAUDECODE`/`npm_*`，从未涉及这几个 Anthropic 专属别名变量，于是它们原样透传进托管的 `claude-agent-acp` 子进程，叠加在我们注入的 `ANTHROPIC_MODEL` 之上生效。
+- 但 SDK 的模型别名解析（`/model haiku` 这类快捷名）额外读取 `ANTHROPIC_DEFAULT_HAIKU_MODEL`/`ANTHROPIC_DEFAULT_SONNET_MODEL`/`ANTHROPIC_DEFAULT_OPUS_MODEL`/`ANTHROPIC_SMALL_FAST_MODEL` 这 4 个**独立于 settings.json 文件之外的进程环境变量**（`grep -a -o` 反解包字符串表实锤存在）。这些变量在这台开发机的进程树里本来就是"环境态"常驻（继承自操作者自己日常使用真实 Claude Code 的登录环境——这台机器上随手起一个新进程都能在其环境里看到这 4 个变量,包括真实值),而 `dream_core_runtime::agent_process_env()`（`crates/dream-core-runtime/src/agent_env.rs`）只清理 `NODE_OPTIONS`/`NODE_INSPECT`/`NODE_DEBUG`/`CLAUDECODE`/`npm_*`，从未涉及这几个 Anthropic 专属别名变量，于是它们原样透传进托管的 `claude-agent-acp` 子进程，叠加在我们注入的 `ANTHROPIC_MODEL` 之上生效。
 
 ### 5.4.2 修复
 
-`crates/aionui-ai-agent/src/factory/acp.rs` 的 `resolve_claude_bridge_env()` 新增 `CLAUDE_BRIDGE_MODEL_ALIAS_OVERRIDE_ENV_KEYS` 常量（上述 4 个 key），把它们全部钉死为桥接自己配置的 `model` 值，与其余 4 个环境变量（`ANTHROPIC_BASE_URL`/`_AUTH_TOKEN`/`_MODEL`/`CLAUDE_CONFIG_DIR`）一起注入。不改动认证相关变量（`ANTHROPIC_API_KEY`/`CLAUDE_CODE_OAUTH_TOKEN`）——虽然反解包也发现 SDK 认证优先级里 `ANTHROPIC_API_KEY` 排在 `ANTHROPIC_AUTH_TOKEN` 之前，但本轮认证路径此前已经过真机验证确实生效（§2 的 401 消失证据），只对**新确认**存在问题的模型别名范围做最小化修复，不做未经验证的推测性加固。
+`crates/dream-core-ai-agent/src/factory/acp.rs` 的 `resolve_claude_bridge_env()` 新增 `CLAUDE_BRIDGE_MODEL_ALIAS_OVERRIDE_ENV_KEYS` 常量（上述 4 个 key），把它们全部钉死为桥接自己配置的 `model` 值，与其余 4 个环境变量（`ANTHROPIC_BASE_URL`/`_AUTH_TOKEN`/`_MODEL`/`CLAUDE_CONFIG_DIR`）一起注入。不改动认证相关变量（`ANTHROPIC_API_KEY`/`CLAUDE_CODE_OAUTH_TOKEN`）——虽然反解包也发现 SDK 认证优先级里 `ANTHROPIC_API_KEY` 排在 `ANTHROPIC_AUTH_TOKEN` 之前，但本轮认证路径此前已经过真机验证确实生效（§2 的 401 消失证据），只对**新确认**存在问题的模型别名范围做最小化修复，不做未经验证的推测性加固。
 
 ### 5.4.3 真机验证（决定性证据来自磁盘，不是 UI）
 
-重编 + 重新内嵌 aioncore.exe + 重启桌面 dev app 后，通过 CDP 驱动 Guid 页真实输入框发送一条新消息（桥接当前配置的真实模型是 `minimax-2-7`，一个跟真实 settings.json 里任何别名值都不相同的干净对照值）：
+重编 + 重新内嵌 dreamcore.exe + 重启桌面 dev app 后，通过 CDP 驱动 Guid 页真实输入框发送一条新消息（桥接当前配置的真实模型是 `minimax-2-7`，一个跟真实 settings.json 里任何别名值都不相同的干净对照值）：
 
 - 新会话的 transcript 文件里**完全没有** `/model haiku` 这类启动引导命令（这次没有再触发）。
 - 响应消息的 `"model"` 字段正确显示为 `"MiniMax-M2.7"`——`minimax-2-7` 对应的真实底层模型名，不是任何 haiku 解析结果。
@@ -230,7 +230,7 @@ Guid 页锁定后，模型下拉框**不能再点开切换**了（安全性/一�
 
 ### 真机验证
 
-沿用同一个 dev app（纯前端改动，Vite HMR 直接生效，无需重编/重启 aioncore），刷新页面后：
+沿用同一个 dev app（纯前端改动，Vite HMR 直接生效，无需重编/重启 dreamcore），刷新页面后：
 
 - 新建一个 Codex 会话发消息，头部胶囊显示 `glm-5-2-aliyun · 已桥接`，与桥接设置页当前保存值（`GET /api/codex-bridge/config` 返回 `"model":"glm-5-2-aliyun"`）完全一致。
 - 打开一个更早创建的历史会话（同一次真机验证里的旧对话），头部胶囊**同样**显示 `glm-5-2-aliyun · 已桥接`——不同会话不再各自显示各自 spawn 时的旧快照，全部统一读桥接当前配置。
@@ -251,13 +251,13 @@ Guid 页锁定后，模型下拉框**不能再点开切换**了（安全性/一�
 
 **1oneCore**：
 
-- `crates/aionui-codex-bridge/`（Codex 桥接 crate，上一轮）
-- `crates/aionui-claude-bridge/`（本轮新 crate，仅设置 CRUD，无协议转换）
-- `crates/aionui-ai-agent/src/factory/acp_launch_policy.rs`（重写 Codex 注入机制 + 新增 Claude 桥接 env 优先级）
-- `crates/aionui-ai-agent/src/factory/acp.rs`（新增 `resolve_claude_bridge_env` + `resolve_codex_bridge_context_window`；`resolve_claude_bridge_env` 内 `CLAUDE_BRIDGE_MODEL_ALIAS_OVERRIDE_ENV_KEYS` 为 §5.4 的别名环境变量覆盖修复）
-- `crates/aionui-ai-agent/src/factory/mod.rs`（`AgentFactoryDeps` 新增 `claude_bridge_config_repo`）
-- `crates/aionui-app/src/services.rs`、`crates/aionui-app/src/router/state.rs`、`crates/aionui-app/src/router/routes.rs`（Claude 桥接 DI + 路由挂载）
-- `crates/aionui-db/migrations/032_codex_bridge_config.sql`（上一轮）、`033_claude_bridge_config.sql`（本轮）+ 对应 model/repository
+- `crates/dream-core-codex-bridge/`（Codex 桥接 crate，上一轮）
+- `crates/dream-core-claude-bridge/`（本轮新 crate，仅设置 CRUD，无协议转换）
+- `crates/dream-core-ai-agent/src/factory/acp_launch_policy.rs`（重写 Codex 注入机制 + 新增 Claude 桥接 env 优先级）
+- `crates/dream-core-ai-agent/src/factory/acp.rs`（新增 `resolve_claude_bridge_env` + `resolve_codex_bridge_context_window`；`resolve_claude_bridge_env` 内 `CLAUDE_BRIDGE_MODEL_ALIAS_OVERRIDE_ENV_KEYS` 为 §5.4 的别名环境变量覆盖修复）
+- `crates/dream-core-ai-agent/src/factory/mod.rs`（`AgentFactoryDeps` 新增 `claude_bridge_config_repo`）
+- `crates/dream-core-app/src/services.rs`、`crates/dream-core-app/src/router/state.rs`、`crates/dream-core-app/src/router/routes.rs`（Claude 桥接 DI + 路由挂载）
+- `crates/dream-core-db/migrations/032_codex_bridge_config.sql`（上一轮）、`033_claude_bridge_config.sql`（本轮）+ 对应 model/repository
 
 **1oneUI**：
 

@@ -5,6 +5,7 @@
 - 页码
 """
 import os
+import pathlib
 import glob
 from docx import Document
 from docx.shared import Pt, Cm, RGBColor
@@ -15,19 +16,13 @@ SOFTWARE_NAME = "One Work 智能协作平台软件"
 VERSION = "V2.1"
 LINES_PER_PAGE = 50
 PAGES = 30
-PROJECT_ROOT = r"D:\aionui-m0\1oneUI"
-OUTPUT = r"D:\aionui-m0\1oneUI\One_Work_源代码鉴别材料.docx"
+PROJECT_ROOT = str(pathlib.Path(__file__).resolve().parents[1])
+OUTPUT = str(pathlib.Path(PROJECT_ROOT) / 'One_Work_源代码鉴别材料.docx')
 
 # dream 命名空间替换映射（按长度从长到短排序，避免部分替换）
 NAME_REPLACEMENTS = [
-    ("@aionui/", "@dream/"),
-    ("AIONUI_", "DREAM_"),
-    ("aioncore", "dreamcore"),
-    ("aionrs", "dreamrs"),
-    ("AionUi", "Dream"),
-    ("AIONUI", "DREAM"),
-    ("aionui", "dream"),
-    ("AION_", "DREAM_"),
+    # The sources carry the current technical names already; what still differs in
+    # the filing copy is the legal/product name in the older headers.
     ("1ONE Work", "One Work"),
     ("1ONE Code", "One Work"),
     ("1ONE", "One Work"),

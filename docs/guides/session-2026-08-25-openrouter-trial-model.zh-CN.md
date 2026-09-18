@@ -139,7 +139,7 @@ dream-ui：拿到结果后直接调用已有的 POST /api/providers（CreateProv
 1. ~~决定 `dream-trial-broker` 部署在哪、怎么发布~~ → 已部署，见下方"2026-08-28 补充"
 2. ~~部署后设置 `DREAM_TRIAL_BROKER_URL` 环境变量~~ → 已由 `packages/web-host` 内置默认值
 3. 补一次**打包桌面端**手动冒烟：两个入口点击 → 出现 provider → 能正常发消息 → 二次点击/
-   重启后正确显示"已体验"（2026-08-28 只用 headless 的 aioncore 二进制验到 `POST
+   重启后正确显示"已体验"（2026-08-28 只用 headless 的 dreamcore 二进制验到 `POST
 /api/providers/trial-key` 这一层，没点过真实 UI）
 4. 如果要做 Phase 2 付费订阅，重新读一遍本文档"背景"一节里关于 `limit_reset` 不认支付
    状态的坑（订阅到期必须主动 `PATCH` 降额/禁用 key，不能只靠 OpenRouter 自动重置）
@@ -171,19 +171,19 @@ DB 已重置）：
 - 签出来的 key：`limit=1` / `limit_reset="daily"` / `expires_at=+90d`，与设计完全一致
 - 用这把 key 真实调 `deepseek/deepseek-chat` → 正常返回
 - 同一 `install_id` 二次请求 → 409 `already_issued`
-- 用**打包用的 bundled aioncore 二进制**（`resources/bundled-aioncore/win32-x64/`，当天构建）
+- 用**打包用的 bundled dreamcore 二进制**（`resources/bundled-dreamcore/win32-x64/`，当天构建）
   设 `DREAM_TRIAL_BROKER_URL` 后打 `POST /api/providers/trial-key` → 200 拿到真实 key；
   二次 → 409 "this device has already claimed a trial model key"
 
 ### dream-ui 接线（`packages/web-host`）
 
-`aioncore` 只有拿到 `DREAM_TRIAL_BROKER_URL` 才会开这个端点。为了"开箱即用"，改成由
-`packages/web-host/src/backend-launcher.ts` 在 spawn aioncore 时注入默认值：
+`dreamcore` 只有拿到 `DREAM_TRIAL_BROKER_URL` 才会开这个端点。为了"开箱即用"，改成由
+`packages/web-host/src/backend-launcher.ts` 在 spawn dreamcore 时注入默认值：
 
 - 新增常量 `TRIAL_BROKER_URL_DEFAULT = 'https://work.1oneclaw.com/trial-broker'`
 - 新增 `resolveTrialBrokerUrl(isPackaged, raw?)`，优先级：
   **显式非空 env 覆盖 > 显式空值（关闭）> 未设时看 `isPackaged`**
-- `buildSpawnEnv(dirs, { isPackaged })` 统一 normalize，保证 aioncore 只会看到"一个可用
+- `buildSpawnEnv(dirs, { isPackaged })` 统一 normalize，保证 dreamcore 只会看到"一个可用
   URL"或"完全没有"，不会拿到继承来的空串（dream-core 会把空串当成配错了的值）
 
 **关键决策：默认值只在打包版生效**（`app.isPackaged === true`）。理由是这个 broker 签出的

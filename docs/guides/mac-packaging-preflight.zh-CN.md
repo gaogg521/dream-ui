@@ -9,11 +9,11 @@
 
 不是 Mac 不稳定，是**它是这个仓库唯一带质量门禁的路径**。
 
-|                 | Windows                                          | Mac                                                                 |
-| --------------- | ------------------------------------------------ | ------------------------------------------------------------------- |
-| 怎么打          | 本地 `scripts/package-win.ps1`                   | 只能走 GitHub Actions（没有 Mac 机器）                              |
-| aioncore 从哪来 | `AIONUI_BACKEND_LOCAL_PATH` 指向本地刚编的二进制 | 按 `package.json` 的 `aioncoreVersion` 从 1oneCore Release **下载** |
-| 跑不跑门禁      | **完全不跑**                                     | 跑 `Code Quality`：lint + format:check + tsc + **全量测试**         |
+|                  | Windows                                         | Mac                                                                  |
+| ---------------- | ----------------------------------------------- | -------------------------------------------------------------------- |
+| 怎么打           | 本地 `scripts/package-win.ps1`                  | 只能走 GitHub Actions（没有 Mac 机器）                               |
+| dreamcore 从哪来 | `DREAM_BACKEND_LOCAL_PATH` 指向本地刚编的二进制 | 按 `package.json` 的 `dreamcoreVersion` 从 1oneCore Release **下载** |
+| 跑不跑门禁       | **完全不跑**                                    | 跑 `Code Quality`：lint + format:check + tsc + **全量测试**          |
 
 于是：**日常开发从不触发门禁 → 主干上悄悄积累格式漂移与红测试 → 打 Mac 包时一次性全爆**。
 失败会显示成 `build-pipeline / Code Quality`，读起来像 Mac 构建炸了，其实是这个仓库
@@ -88,7 +88,7 @@ Release 的旧后端**，而 Windows 包是新的——同版本号两平台跑�
 git tag vX.Y.Z-one.N && git push origin vX.Y.Z-one.N   # 触发 release.yml，约 25 分钟
 gh release view vX.Y.Z-one.N --repo gaogg521/1oneCore --json assets -q '.assets[].name'
 # 确认 6 平台产物齐全（含两个 apple-darwin）后
-# 再改 1oneUI package.json 的 aioncoreVersion 指向新 tag
+# 再改 1oneUI package.json 的 dreamcoreVersion 指向新 tag
 ```
 
 只改前端时跳过这一节。
@@ -166,7 +166,7 @@ MSYS_NO_PATHCONV=1 gh run view <run-id> --repo gaogg521/1oneUI --log-failed 2>&1
 | 46 秒挂，日志一堆 git 凭据                         | `format:check` 有文件没格式化                          |
 | 5 分钟挂，测试报"找不到元素"                       | 手写 `vi.mock` 少了 namespace，组件抛异常没渲染        |
 | 5 分钟挂，`No "xxx" export is defined on the mock` | 同上，改成部分 mock                                    |
-| 包出来了但功能是旧的                               | `aioncoreVersion` 没指向新 Release（见 §2）            |
+| 包出来了但功能是旧的                               | `dreamcoreVersion` 没指向新 Release（见 §2）           |
 | 构建报绿，但用户装上收不到自动更新                 | 忘了 `-f installers_only=false`，zip/yml 被删（见 §3） |
 
 ---

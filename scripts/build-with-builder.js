@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Simplified build script for AionUi
+ * Simplified build script for One Work
  * Coordinates electron-vite (bundling) and electron-builder (packaging)
  *
  * Features:
@@ -979,11 +979,11 @@ try {
     return;
   }
 
-  // 5. Prepare aioncore binary (for packaged runtime usage)
+  // 5. Prepare dreamcore binary (for packaged runtime usage)
   const projectRoot = path.resolve(__dirname, '..');
   writeGeneratedSentryDsnInclude(projectRoot);
-  if (process.env.DREAM_SKIP_AIONCORE_PREPARE === '1') {
-    console.log('⚡ DREAM_SKIP_AIONCORE_PREPARE=1: skipping aioncore prepare step');
+  if (process.env.DREAM_SKIP_BACKEND_PREPARE === '1') {
+    console.log('⚡ DREAM_SKIP_BACKEND_PREPARE=1: skipping dreamcore prepare step');
   } else {
     const { prepareDreamcore } = require('../packages/shared-scripts/src/prepare-dreamcore.js');
     const { resolveDreamcoreVersion } = require('./resolveDreamcoreVersion.js');
@@ -1070,6 +1070,8 @@ try {
         isProcessRunningWindows('onework.exe') ||
         isProcessRunningWindows('One Work.exe') ||
         isProcessRunningWindows('1onecode.exe') ||
+        // Legacy executable names: an in-place upgrade can still have the pre-rebrand
+        // process running, and it holds the same install directory.
         isProcessRunningWindows('AionUi.exe');
       const electronRunning = isProcessRunningWindows('electron.exe');
       if (aionRunning || electronRunning) {
@@ -1103,6 +1105,8 @@ try {
   try {
     buildWithDmgRetry(builderCommand, targetArch);
   } catch (error) {
+    // Legacy executable names, newest first — an in-place upgrade can leave an
+    // older binary in the install dir.
     const winExePath = ['One Work.exe', '1onecode.exe', 'AionUi.exe']
       .map((name) => path.join(outDir, 'win-unpacked', name))
       .find((p) => fs.existsSync(p));
@@ -1127,6 +1131,7 @@ try {
     }
     console.log('   Retrying local build with win.signAndEditExecutable=false...');
     console.log('   This fallback is intended for transient rcedit / file-lock failures on developer machines.');
+    // Legacy executable names included on purpose; see the list above.
     killWindowsProcesses(['One Work.exe', '1onecode.exe', 'AionUi.exe', 'electron.exe']);
     cleanupWindowsPackOutput();
 

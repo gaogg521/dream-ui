@@ -200,8 +200,8 @@ function Get-OptionalHandleDiagnostics {
 
   $diag.target = $target
   $pid = $context.outerInstallerPid
-  $outPath = Join-Path $env:TEMP ('aionui-handle-' + [guid]::NewGuid().ToString('N') + '.out')
-  $errPath = Join-Path $env:TEMP ('aionui-handle-' + [guid]::NewGuid().ToString('N') + '.err')
+  $outPath = Join-Path $env:TEMP ('onework-handle-' + [guid]::NewGuid().ToString('N') + '.out')
+  $errPath = Join-Path $env:TEMP ('onework-handle-' + [guid]::NewGuid().ToString('N') + '.err')
 
   try {
     $args = @('-accepteula', '-nobanner')
@@ -338,7 +338,7 @@ try {
     level = 'error'
     platform = 'other'
     release = $Release
-    logger = 'aionui.installer'
+    logger = 'onework.installer'
     fingerprint = @('installer-failure', $Code)
     tags = @{
       type = 'installer-failure'

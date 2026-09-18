@@ -25,10 +25,10 @@ export const PROTOCOL_SCHEME = app.isPackaged ? 'dream' : 'dream-dev';
 /**
  * Schemes this build still answers to, newest first.
  *
- * The OS registration is not the only place the old name survives: an aioncore
- * older than the rename maps any scheme it does not know back to `aionui`, so a
- * new app talking to a pinned older backend gets an `aionui://` callback even
- * though it asked for `dream://`. Dropping that on the floor would mean login
+ * The OS registration is not the only place the old name survives: a dreamcore
+ * older than the rename maps any scheme it does not know back to the legacy
+ * scheme, so a new app talking to a pinned older backend gets a legacy callback
+ * even though it asked for `dream://`. Dropping that on the floor would mean login
  * succeeding in the browser and never arriving in the app. Both names are
  * registered with the OS and accepted here; only `PROTOCOL_SCHEME` is ever
  * handed out.

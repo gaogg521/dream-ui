@@ -79,15 +79,15 @@ function main() {
 
   const compileOnly = process.argv.includes('--compile-only');
   const makensis = findMakensis();
-  const root = mkdtempSync(path.join(tmpdir(), 'aionui-rm-ui-'));
+  const root = mkdtempSync(path.join(tmpdir(), 'onework-rm-ui-'));
   const installDir = path.join(root, 'install-dir');
   mkdirSync(installDir, { recursive: true });
   const lockedFile = path.join(installDir, 'locked-by-smoke.txt');
-  writeFileSync(lockedFile, 'AionUi Restart Manager UI smoke lock\n', 'utf8');
+  writeFileSync(lockedFile, 'One Work Restart Manager UI smoke lock\n', 'utf8');
 
   let locker = null;
-  const nsiPath = path.join(root, 'aionui-rstrtmgr-ui-smoke.nsi');
-  const exePath = path.join(root, 'aionui-rstrtmgr-ui-smoke.exe');
+  const nsiPath = path.join(root, 'onework-rstrtmgr-ui-smoke.nsi');
+  const exePath = path.join(root, 'onework-rstrtmgr-ui-smoke.exe');
   const logPath = path.join(
     process.env.TEMP || tmpdir(),
     `onework-installer-smoke-${new Date().toISOString().replace(/[-:]/g, '').replace(/\..+$/, '').replace('T', '-')}.log`
@@ -97,15 +97,15 @@ function main() {
 
   const nsi = `
 Unicode true
-Name "AionUi Restart Manager UI Smoke"
+Name "One Work Restart Manager UI Smoke"
 OutFile "${nsisQuote(exePath)}"
 RequestExecutionLevel user
 SilentInstall normal
 !define ONEWORK_FALLBACK_LOG "onework-installer-smoke-fallback.log"
 !define VERSION "rstrtmgr-ui-smoke"
 !define ONEWORK_TARGET_ARCH "x64"
-!define ONEWORK_APP_EXECUTABLE_FILENAME "AionUi.exe"
-!define UNINSTALL_FILENAME "Uninstall AionUi.exe"
+!define ONEWORK_APP_EXECUTABLE_FILENAME "onework.exe"
+!define UNINSTALL_FILENAME "Uninstall onework.exe"
 !define PROJECT_DIR "${nsisQuote(repoRoot)}"
 !include LogicLib.nsh
 !include "${nsisQuote(messagesPath)}"
@@ -123,12 +123,12 @@ Section
   InitPluginsDir
   BringToFront
 
-  aionui_query_lockers:
+  onework_query_lockers:
     !insertmacro ONEWORK_QUERY_LOCKERS "${nsisQuote(lockedFile)}" $OneWorkLockerResult
     StrCpy $OneWorkLockerList ""
     ClearErrors
     SetDetailsPrint none
-    FileOpen $OneWorkLockerListFile "$PLUGINSDIR\\aionui-rm-lockers.txt" r
+    FileOpen $OneWorkLockerListFile "$PLUGINSDIR\\onework-rm-lockers.txt" r
     \${IfNot} \${Errors}
       FileRead $OneWorkLockerListFile $OneWorkLockerList
       FileClose $OneWorkLockerListFile
@@ -142,7 +142,7 @@ Section
       StrCpy $OneWorkLockerListZh "$OneWorkLockerList"
       StrCpy $OneWorkLockerListEn "$OneWorkLockerList"
     \${EndIf}
-    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "\${ONEWORK_MSG_FILE_OR_FOLDER_IN_USE_ZH}$\\r$\\n${nsisQuote(lockedFile)}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_APPLICATION_USING_IT_ZH}$\\r$\\n$OneWorkLockerListZh$\\r$\\n$\\r$\\n\${ONEWORK_MSG_CLOSE_LISTED_RETRY_ZH}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_INSTALLER_LOG_ZH}:$\\r$\\n$OneWorkSessionLogPath$\\r$\\n$\\r$\\n\${ONEWORK_MSG_BLOCK_SEPARATOR}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_FILE_OR_FOLDER_IN_USE_EN}$\\r$\\n${nsisQuote(lockedFile)}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_APPLICATION_USING_IT_EN}$\\r$\\n$OneWorkLockerListEn$\\r$\\n$\\r$\\n\${ONEWORK_MSG_CLOSE_LISTED_RETRY_EN}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_INSTALLER_LOG_EN}:$\\r$\\n$OneWorkSessionLogPath" /SD IDCANCEL IDRETRY aionui_query_lockers
+    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "\${ONEWORK_MSG_FILE_OR_FOLDER_IN_USE_ZH}$\\r$\\n${nsisQuote(lockedFile)}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_APPLICATION_USING_IT_ZH}$\\r$\\n$OneWorkLockerListZh$\\r$\\n$\\r$\\n\${ONEWORK_MSG_CLOSE_LISTED_RETRY_ZH}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_INSTALLER_LOG_ZH}:$\\r$\\n$OneWorkSessionLogPath$\\r$\\n$\\r$\\n\${ONEWORK_MSG_BLOCK_SEPARATOR}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_FILE_OR_FOLDER_IN_USE_EN}$\\r$\\n${nsisQuote(lockedFile)}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_APPLICATION_USING_IT_EN}$\\r$\\n$OneWorkLockerListEn$\\r$\\n$\\r$\\n\${ONEWORK_MSG_CLOSE_LISTED_RETRY_EN}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_INSTALLER_LOG_EN}:$\\r$\\n$OneWorkSessionLogPath" /SD IDCANCEL IDRETRY onework_query_lockers
 SectionEnd
 `;
 

@@ -14,7 +14,7 @@
 ## ⭐ 关键定性:这是机制级修复,不是给某个模型打补丁
 
 > 三处改动**没有任何一行按模型名判断**(没有 `if model == "glm"`),完全
-> 符合本仓铁律 [No Hardcoded Provider Quirks](../../../aionrs-local/AGENTS.md)。
+> 符合本仓铁律 [No Hardcoded Provider Quirks](../../../旧引擎本地检出/AGENTS.md)。
 > 修的是「deferred 工具机制」本身的健壮性缺陷,让它对**所有模型**都正确;
 > GLM 只是恰好第一个把这个缺陷踩崩、让问题暴露出来的模型。
 
@@ -37,7 +37,7 @@
 
 ### ① deferred 工具的 stub schema 让 GLM 只能吐空参(空参死循环,已修)
 
-aionrs deferred 机制:向模型申报 `{"type":"object","properties":{}}` 空
+dream-engine deferred 机制:向模型申报 `{"type":"object","properties":{}}` 空
 stub,完整 schema 只在 ToolSearch 命中后**以文本**进入对话,申报层面永不
 升级。
 
@@ -52,7 +52,7 @@ stub,完整 schema 只在 ToolSearch 命中后**以文本**进入对话,申报�
 GLM 按**申报的** schema 做受约束解码,`properties:{}` 只能生成 `{}`。
 空参 → 报错让它重试 → 仍空参 → 三轮熔断。
 
-**修复(aionrs `8de0bf5`)**:`ToolRegistry` 加会话级 `loaded_schemas`;
+**修复(dream-engine `8de0bf5`)**:`ToolRegistry` 加会话级 `loaded_schemas`;
 `to_tool_defs` 对已加载的 deferred 工具按完整 schema 申报;`ToolSearch`
 命中即写入集合;deferred 工具缺必填参失败时也现场提升,提示改「schema
 已加载,直接带参重试」。空参重试由死循环变为一次自愈。
@@ -68,7 +68,7 @@ Read/Write/Edit/Grep/Glob/ExecCommand/Skill(全是非 deferred、满 schema
 根因:系统提示里「部分工具是 deferred,调用前先 ToolSearch」被 GLM 过度
 泛化;它把 ToolSearch 当成用任何工具的前置步骤。
 
-**修复(aionrs `92d9242`)**:
+**修复(dream-engine `92d9242`)**:
 
 - `context` 系统提示重写「Using your tools」末段:明确「几乎所有工具现在
   就能直接按名调用,别用 ToolSearch 去发现已可见的工具」;技能用 Skill
@@ -79,7 +79,7 @@ Read/Write/Edit/Grep/Glob/ExecCommand/Skill(全是非 deferred、满 schema
 
 ### ③ 熔断错误被错报成 UNKNOWN_UPSTREAM_ERROR(诊断误导,已修)
 
-aionrs `ToolCallFailures`(本地连续工具失败熔断)在 1oneCore 被硬编码映射
+dream-engine `ToolCallFailures`(本地连续工具失败熔断)在 1oneCore 被硬编码映射
 成 `UnknownUpstreamError`,UI 显示「上游 Agent 或模型服务商出错,无法判断
 来源」——把明确的本地熔断伪装成不可知上游错误,每次排障都被带偏。
 
@@ -89,15 +89,15 @@ aionrs `ToolCallFailures`(本地连续工具失败熔断)在 1oneCore 被硬编�
 
 ## ⚠️ 误判纠正:根因②(技能没物化)是错的,已回滚
 
-排查中一度怀疑「助手勾选的技能从未接进 aionrs」,并在 `factory/aionrs.rs`
+排查中一度怀疑「助手勾选的技能从未接进 dream-engine」,并在 `factory/dream-engine.rs`
 加了 `materialize_skills_into_workspace` 把技能目录复制进 workspace。
 **真机验证推翻了它**:
 
-- workspace `.aionrs/skills/` 里 `officecli-financial-model` 等 5 个技能
+- workspace `.dream-engine/skills/` 里 `officecli-financial-model` 等 5 个技能
   **一直有正常的 symlink**;
-- aioncore.log 明确 `wired skill symlinks into workspace ... links=5`;
-- 来源是既有的 `aionui-conversation/src/service.rs:944` →
-  `link_workspace_skills`,对 temp/用户 workspace 都生效,早就覆盖 aionrs。
+- dreamcore.log 明确 `wired skill symlinks into workspace ... links=5`;
+- 来源是既有的 `dream-core-conversation/src/service.rs:944` →
+  `link_workspace_skills`,对 temp/用户 workspace 都生效,早就覆盖 dream-engine。
 
 所以那段 factory 代码 + `AcpSkillManager::resolve_skill_dirs` + 相关测试
 **已全部 `git checkout` 回滚**。技能物化不是问题,GLM 不肯调 Skill 工具
@@ -108,18 +108,18 @@ aionrs `ToolCallFailures`(本地连续工具失败熔断)在 1oneCore 被硬编�
 
 | 仓库                | commit    | 内容                                                               |
 | ------------------- | --------- | ------------------------------------------------------------------ |
-| aionrs              | `8de0bf5` | deferred schema 命中即提升(根因①)                                  |
-| aionrs              | `92d9242` | GLM 盲搜纠偏:系统提示 + ToolSearch 未命中清单(根因②)               |
-| aionrs              | `f7d4318` | CLAUDE.md fork 补丁清单登记                                        |
+| dream-engine        | `8de0bf5` | deferred schema 命中即提升(根因①)                                  |
+| dream-engine        | `92d9242` | GLM 盲搜纠偏:系统提示 + ToolSearch 未命中清单(根因②)               |
+| dream-engine        | `f7d4318` | CLAUDE.md fork 补丁清单登记                                        |
 | 1oneCore (one-main) | 本轮      | `USER_AGENT_TOOL_CALL_LOOP` 错误码(根因③)+ Cargo.lock 对齐 92d9242 |
 | 1oneUI (one-main)   | 本轮      | 新错误码 zh-CN/en-US 文案 + i18n types + 本文档                    |
 
 ## 排查方法论沉淀
 
-- **会话取证**:`%APPDATA%\<数据目录>\1one\aionrs-sessions/sessions/<id>/
+- **会话取证**:`%APPDATA%\<数据目录>\1one\dream-engine-sessions/sessions/<id>/
 state.json` 存完整 message 历史(含 tool_use input 原文),比日志更接近
   真相——18 次 ToolSearch 空转就是这里看出来的。
-- **黑盒探测网关**:`users.jwt_secret` → SHA256("aionui-encryption-key:"+
+- **黑盒探测网关**:`users.jwt_secret` → SHA256("dream-ui-encryption-key:"+
   secret) → AES-GCM 解 `providers.api_key_encrypted` → 直接 curl 构造变体,
   一锤区分「模型行为」vs「客户端 bug」。
 - **真机 E2E 用 CDP**:dev 桌面端开 `--remote-debugging-port=9230`,用
@@ -131,15 +131,15 @@ state.json` 存完整 message 历史(含 tool_use input 原文),比日志更接�
 
 ## 验证
 
-- aionrs:`cargo test -p aion-agent -p aion-tools` 全绿(新增 registry 提升、
+- dream-engine:`cargo test -p dream-engine-agent -p dream-engine-tools` 全绿(新增 registry 提升、
   ToolSearch 提升/直连清单、context Skill 引导等单测)。
-- 1oneCore:`aionui-ai-agent`/`aionui-api-types` 全绿。
+- 1oneCore:`dream-core-ai-agent`/`dream-core-api-types` 全绿。
 - 真机 E2E(glm-5-2 + 财务建模助手 +「做一个简单的数据报表」),CDP 驱动:
 
-  | 版本              | ToolSearch | Skill | ExecCommand | 结果                                                              |
-  | ----------------- | ---------- | ----- | ----------- | ----------------------------------------------------------------- |
-  | 修复前(旧 aionrs) | **33**     | 0     | 0           | 疯狂盲搜,从不调 Skill;线上更早期直接崩 UNKNOWN_UPSTREAM           |
-  | 修复后(①+② 全上)  | **1**      | **1** | 4           | 先调 Skill 加载 officecli-financial-model,再 ExecCommand 直接建表 |
+  | 版本                    | ToolSearch | Skill | ExecCommand | 结果                                                              |
+  | ----------------------- | ---------- | ----- | ----------- | ----------------------------------------------------------------- |
+  | 修复前(旧 dream-engine) | **33**     | 0     | 0           | 疯狂盲搜,从不调 Skill;线上更早期直接崩 UNKNOWN_UPSTREAM           |
+  | 修复后(①+② 全上)        | **1**      | **1** | 4           | 先调 Skill 加载 officecli-financial-model,再 ExecCommand 直接建表 |
 
   修复后 glm 的叙述即为正解:「让我先加载 excel 技能，然后创建报表」→ 调
   Skill → ExecCommand 逐步建 `销售数据报表.xlsx`,全程零盲搜、零失败熔断,

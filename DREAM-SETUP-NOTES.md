@@ -4,28 +4,28 @@
 
 这是一份迁移期间的说明文件，不是产品 README（本目录下的 `README.md` 是从 `1oneUI` 原样复制过来的产品说明，内容仍大量使用"1ONE Work"/"1oneUI"/"1oneCore"叙述和指向 `gaogg521/1oneUI`、`gaogg521/1oneCore` 的链接——这是一次独立的文案改写工作，本轮未动，见下方"尚未做的事"）。
 
-完整决策背景、命名规范、迁移原则、P0 身份清单见旧仓库中的规划文档：`D:\aionui-m0\DREAM-PLATFORM-DIRECTION.md`。
+完整决策背景、命名规范、迁移原则、P0 身份清单见旧仓库中的规划文档：`D:\旧中转目录\DREAM-PLATFORM-DIRECTION.md`。
 
 ## 已完成（2026-08-23）
 
-- [x] 4 个 `@aionui/*` workspace 包改名为 `@dream/*`（`desktop`、`shared-scripts`、`web-cli`、`web-host`），及其在 `package.json`/`.ts`/`.py` 脚本中的全部引用
+- [x] 4 个 `@one/*` workspace 包改名为 `@dream/*`（`desktop`、`shared-scripts`、`web-cli`、`web-host`），及其在 `package.json`/`.ts`/`.py` 脚本中的全部引用
 - [x] 7 个 `Aion*` 基础组件文件改名为 `Dream*`（`AionModal`→`DreamModal`、`AionSelect`→`DreamSelect`、`AionSteps`→`DreamSteps`、`AionCollapse`→`DreamCollapse`、`AionScrollArea`→`DreamScrollArea`、`AionSearchInput`→`DreamSearchInput`、`AionInlineSearchInput`→`DreamInlineSearchInput`，含 `.module.css` 同名文件）及其全部导入引用
-- [x] `pages/conversation/platforms/aionrs/` 目录改名为 `platforms/dreamEngine/`，内含 5 个文件同步改名（`AionrsChat`→`DreamEngineChat`、`AionrsModelSelector`→`DreamEngineModelSelector`、`AionrsSendBox`→`DreamEngineSendBox`、`useAionrsMessage`→`useDreamEngineMessage`、`useAionrsModelSelection`→`useDreamEngineModelSelection`）
-- [x] Cookie 名与后端 `dream-core` 的改名同步（`web-host/src/static-server.unit.test.ts` 里的 `aionui-session` → `dream-session`）
+- [x] `pages/conversation/platforms/dream-engine/` 目录改名为 `platforms/dreamEngine/`，内含 5 个文件同步改名（`AionrsChat`→`DreamEngineChat`、`AionrsModelSelector`→`DreamEngineModelSelector`、`AionrsSendBox`→`DreamEngineSendBox`、`useAionrsMessage`→`useDreamEngineMessage`、`useAionrsModelSelection`→`useDreamEngineModelSelection`）
+- [x] Cookie 名与后端 `dream-core` 的改名同步（`web-host/src/static-server.unit.test.ts` 里的 `one-session` → `dream-session`）
 - [x] `npx tsc --noEmit`（`packages/desktop`）编译通过
 
 ## ⚠️ 命名冲突处理原则（重要，避免重蹈覆辙）
 
 改名过程中两次踩到"字符串看起来像普通标识符/注释，实际是持久化匹配值"的坑，处理方式是**只改代码符号，不碰持久化字符串**：
 
-- `type: 'aionrs'`、`preset_agent_type: 'aionrs'` 等**小写字符串字面量**是与后端 `AgentType::serde_name()` 对应的 wire-format 判别值，后端已决定保留 `"aionrs"` 不变（见决策文档第 13 节），前端这些字符串**同步保持不变**；只有 `AionrsChat`/`AionrsModelSelector` 这类**大写开头的组件/函数标识符**被重命名，两者靠大小写严格区分，脚本按精确大小写匹配，未发生误伤。
-- `BUILTIN_IMAGE_GEN_LEGACY_NAMES = ['AionUi Image Generation', ...]`（`common/config/storage.ts`）是用于识别/迁移**存量已安装 MCP 服务器名称**的遗留匹配名单，不是普通文案，本轮**未改动**——改了会让存量用户的旧版内置图片生成 MCP 服务器识别失效。
+- `type: 'dream-engine'`、`preset_agent_type: 'dream-engine'` 等**小写字符串字面量**是与后端 `AgentType::serde_name()` 对应的 wire-format 判别值，后端已决定保留 `"dream-engine"` 不变（见决策文档第 13 节），前端这些字符串**同步保持不变**；只有 `AionrsChat`/`AionrsModelSelector` 这类**大写开头的组件/函数标识符**被重命名，两者靠大小写严格区分，脚本按精确大小写匹配，未发生误伤。
+- `BUILTIN_IMAGE_GEN_LEGACY_NAMES`（`common/config/storage.ts`）是用于识别/迁移**存量已安装 MCP 服务器名称**的遗留匹配名单，不是普通文案，本轮**未改动**——改了会让存量用户的旧版内置图片生成 MCP 服务器识别失效。
 
 ## 已完成（第二轮，2026-08-23）
 
-- [x] **注释/文档字符串里的"AionUi"/"AionCore"提及已批量清理**：用一个只识别"是否处于注释语法内"的逐字符扫描脚本（正确跳过 Rust 生命周期 `'a`/raw string/模板字符串插值，正确处理 `/** */` 跨行版权头保护），共处理 159 个文件。第一次运行有个多行版权头检测的 bug（`Copyright` 与实际改动不在同一行时漏检），已发现并修复后重跑，确认 0 处版权头被误改
-- [x] **41 个真实运行时环境变量已改名**：`AIONUI_BACKEND_*`、`AIONUI_DATA_DIR`、`AIONUI_PORT`、`AIONUI_CDP_*`、`AIONUI_MEDIA_*`、`AIONUI_IMG_*`、`AIONUI_E2E_*`、`AIONUI_HUB_*` 等（逐一用 `process.env.AIONUI_X` 实测确认是真实读取点，不是靠字符串扫描猜的），均改为 `DREAM_*`；NSIS 安装器宏名（`AIONUI_MSG_*`/`AIONUI_E_*` 等 150+ 个）按既定规则不动
-- [x] 测试文件名同步改名：`AionrsSendBox.dom.test.tsx`→`DreamEngineSendBox.dom.test.tsx` 等 4 个测试文件、`tests/e2e/features/conversations/aionrs/`→`dreamEngine/`、`tests/e2e/docs/chat-aionrs/`→`chat-dreamEngine/`、`tests/e2e/helpers/chatAionrs.ts`→`chatDreamEngine.ts`，含内部路径引用同步修正
+- [x] **注释/文档字符串里的上游品牌名提及已批量清理**：用一个只识别"是否处于注释语法内"的逐字符扫描脚本（正确跳过 Rust 生命周期 `'a`/raw string/模板字符串插值，正确处理 `/** */` 跨行版权头保护），共处理 159 个文件。第一次运行有个多行版权头检测的 bug（`Copyright` 与实际改动不在同一行时漏检），已发现并修复后重跑，确认 0 处版权头被误改
+- [x] **41 个真实运行时环境变量已改名**：`ONE_BACKEND_*`、`ONE_DATA_DIR`、`ONE_PORT`、`ONE_CDP_*`、`ONE_MEDIA_*`、`ONE_IMG_*`、`ONE_E2E_*`、`ONE_HUB_*` 等（逐一用 `process.env.ONE_X` 实测确认是真实读取点，不是靠字符串扫描猜的），均改为 `DREAM_*`；NSIS 安装器宏名（`ONE_MSG_*`/`ONE_E_*` 等 150+ 个）按既定规则不动
+- [x] 测试文件名同步改名：`AionrsSendBox.dom.test.tsx`→`DreamEngineSendBox.dom.test.tsx` 等 4 个测试文件、`tests/e2e/features/conversations/dream-engine/`→`dreamEngine/`、`tests/e2e/docs/chat-dream-engine/`→`chat-dreamEngine/`、`tests/e2e/helpers/chatAionrs.ts`→`chatDreamEngine.ts`，含内部路径引用同步修正
 - [x] `npx tsc --noEmit`（`packages/desktop`）连续 4 轮验证通过
 
 ## 尚未做的事（按重要性排序）

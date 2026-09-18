@@ -20,7 +20,7 @@ Arguments: $ARGUMENTS
 
 Before doing anything, check whether this skill has already been packaged:
 
-1. Check if `aionui/src/process/resources/skills/<skill-name>/` exists
+1. Check if `one/src/process/resources/skills/<skill-name>/` exists
 2. Check if the assistant-id already appears in `assistantPresets.ts`
 
 - **Both exist** → **Update mode**: Only re-copy skill files (Step 1). Skip Steps 2–4.
@@ -32,10 +32,10 @@ Before doing anything, check whether this skill has already been packaged:
 ## Step 1 — Copy Skill Files
 
 1. Read all files from `officecli/skills/<skill-name>/` (SKILL.md, creating.md, editing.md, reference/, etc.)
-2. Create target directory at `aionui/src/process/resources/skills/<skill-name>/` — **directory name must be identical** to the officecli source directory name (both repos use the same `officecli-xxx` naming convention)
+2. Create target directory at `one/src/process/resources/skills/<skill-name>/` — **directory name must be identical** to the officecli source directory name (both repos use the same `officecli-xxx` naming convention)
 3. Copy all files, but apply these transformations to SKILL.md:
    - **Remove version comments**: Delete any `# officecli: vX.X.X` line from inside the frontmatter. One Work's frontmatter parser (`/^---\s*\n([\s\S]*?)\n---/`) requires clean YAML — version tracking comments break parsing and skills won't appear in the Skills Center.
-   - **Verify `name` field matches directory name**: The `name` field in SKILL.md frontmatter **MUST match the skill directory name exactly**. Both officecli and aionui use the same directory name (e.g. `officecli-docx`), so the `name` field should already be correct. If not, fix it. Mismatches cause: `params/name must be equal to one of the allowed values`.
+   - **Verify `name` field matches directory name**: The `name` field in SKILL.md frontmatter **MUST match the skill directory name exactly**. Both officecli and one use the same directory name (e.g. `officecli-docx`), so the `name` field should already be correct. If not, fix it. Mismatches cause: `params/name must be equal to one of the allowed values`.
    - **Keep frontmatter fields**: `name` and `description` must stay intact
    - **Keep BEFORE YOU START section**: The officecli install/update check section must be preserved — it's critical for users who don't have officecli installed
 4. Copy creating.md, editing.md, and any other files (reference/ directories, etc.) as-is
@@ -45,7 +45,7 @@ Before doing anything, check whether this skill has already been packaged:
 Before writing descriptions and prompts, **study the skill thoroughly**:
 
 1. **Read the full skill content**: SKILL.md, creating.md, editing.md — understand what it uniquely does
-2. **Identify differentiators**: What makes this skill different from other similar assistants already in aionui? The `descriptionI18n` must clearly communicate this so users can tell assistants apart at a glance
+2. **Identify differentiators**: What makes this skill different from other similar assistants already in one? The `descriptionI18n` must clearly communicate this so users can tell assistants apart at a glance
 3. **Mine iteration test results**: Check `/Users/veryliu/Documents/GitHub/officecli/iterations/` for test reports related to this skill:
    - Look for subdirectories matching the skill name (e.g. `data-dashboard/`, `xlsx/`, etc.) or related keywords
    - Find documents/prompts that scored highest or produced the best results
@@ -55,7 +55,7 @@ Before writing descriptions and prompts, **study the skill thoroughly**:
 
 ## Step 3 — Create Assistant Rule Files (New Mode Only)
 
-Create two rule files in `aionui/src/process/resources/assistant/<assistant-id>/`:
+Create two rule files in `one/src/process/resources/assistant/<assistant-id>/`:
 
 **`<assistant-id>.md`** (English):
 
@@ -90,7 +90,7 @@ Same structure translated to natural Chinese. Keep the tone friendly and profess
 
 ## Step 4 — Add Preset Entry (New Mode Only)
 
-Add a new entry to `ASSISTANT_PRESETS` array in `aionui/src/common/config/presets/assistantPresets.ts`.
+Add a new entry to `ASSISTANT_PRESETS` array in `one/src/common/config/presets/assistantPresets.ts`.
 
 **Placement**: New officecli-based assistants go at the **top** of the array (after morph-ppt).
 
@@ -156,7 +156,7 @@ Add a new entry to `ASSISTANT_PRESETS` array in `aionui/src/common/config/preset
 - The `_builtin/office-cli` skill already handles officecli discovery, but each skill's "BEFORE YOU START" section provides skill-specific install guidance — keep both.
 - Avatar selection guide: 📝 for docx/word, 📊 for pptx/slides, 📈 for xlsx/excel, 📉 for dashboards/data, ✨ for morph/animation
 - All assistants use `presetAgentType: 'gemini'` as default
-- Both officecli and aionui use the same `officecli-xxx` directory naming convention. The skill directory name, SKILL.md `name` field, and `defaultEnabledSkills` entry must all be identical (e.g. `officecli-docx`). Exception: `morph-ppt` does not use the prefix.
+- Both officecli and one use the same `officecli-xxx` directory naming convention. The skill directory name, SKILL.md `name` field, and `defaultEnabledSkills` entry must all be identical (e.g. `officecli-docx`). Exception: `morph-ppt` does not use the prefix.
 
 ## Existing Assistants Reference
 

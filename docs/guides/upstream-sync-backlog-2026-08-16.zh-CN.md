@@ -5,10 +5,10 @@
 >
 > **新会话接手时先读这份，再读 [`upstream-sync-reference.zh-CN.md`](upstream-sync-reference.zh-CN.md)（套路与不变量）。**
 >
-> ## ✅ 2026-08-17：清单基本清空（A~G 全部处理完 + aionrs merge + triage）
+> ## ✅ 2026-08-17：清单基本清空（A~G 全部处理完 + dream-engine merge + triage）
 >
 > 本轮做完 **F(3条)、G(6条)、1oneCore CLI发现三条、C组前3条、B(4条)、E(2条)、
-> A.SCM面板(4条)、D.内置浏览器(2条)、aionrs 整体 merge 至 0.2.11(12条)、
+> A.SCM面板(4条)、D.内置浏览器(2条)、dream-engine 整体 merge 至 0.2.11(12条)、
 > triage 的 1oneUI 2条 + 1oneCore 3条**，均已跑过检查并合回各仓 `one-main` / `master`。
 >
 > **本轮反复出现且必须记住的坑**：多条提交在 cherry-pick 冲突视图里会"顺带"混进
@@ -22,12 +22,12 @@
 >
 > ### ⛔ 已明确不采纳（**下轮别再重做**）
 >
-> | 提交                                                                 | 仓      | 不采纳的原因                                                                                                                                                                                                                            |
-> | -------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | `e187ac746` 移除 11 套社区主题                                       | UI      | **用户拍板永久保留主题。** 已核实它不碰 `BACKGROUND_BLOCK_START/END`、11 套全是上游作者的、上游也已处理回落（选中已删主题安全落回浅色）；但会让存量用户主题被静默重置，判为不可接受的用户可见功能损失。                                 |
-> | `fe99ff60` 恢复 direct CLI 的 Team MCP                               | Core    | 它把 `route_for_backend` 的 claude/codex 重新指回 `DirectCli`，而 fork 刻意让二者走 `AcpManager` 以保住桥接注入（§1.4，`acp.rs:1549-1550` 有测试锁死）；它新增的两条契约测试在本仓必失败；其余改动全在 fork 未接线的 `aionui-session`。 |
-> | `36d632de5` bump 2.1.56 / `48a8b9bf` release 0.1.67                  | UI/Core | 版本号按 fork 自己节奏，不照搬。                                                                                                                                                                                                        |
-> | `eb4bd7f7` 预览 v2 后端半边（office 刷新 / 溢出标记 / 内容变更信号） | Core    | **2026-08-17 拍板不采纳，理由见下方 §2.C-1 专条。** 一句话：它删掉的五个端点 fork 前端全部在用，且它建在 fork 未采纳的 `6e77158c` 之上，代价远大于收益。                                                                                |
+> | 提交                                                                 | 仓      | 不采纳的原因                                                                                                                                                                                                                                |
+> | -------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | `e187ac746` 移除 11 套社区主题                                       | UI      | **用户拍板永久保留主题。** 已核实它不碰 `BACKGROUND_BLOCK_START/END`、11 套全是上游作者的、上游也已处理回落（选中已删主题安全落回浅色）；但会让存量用户主题被静默重置，判为不可接受的用户可见功能损失。                                     |
+> | `fe99ff60` 恢复 direct CLI 的 Team MCP                               | Core    | 它把 `route_for_backend` 的 claude/codex 重新指回 `DirectCli`，而 fork 刻意让二者走 `AcpManager` 以保住桥接注入（§1.4，`acp.rs:1549-1550` 有测试锁死）；它新增的两条契约测试在本仓必失败；其余改动全在 fork 未接线的 `dream-core-session`。 |
+> | `36d632de5` bump 2.1.56 / `48a8b9bf` release 0.1.67                  | UI/Core | 版本号按 fork 自己节奏，不照搬。                                                                                                                                                                                                            |
+> | `eb4bd7f7` 预览 v2 后端半边（office 刷新 / 溢出标记 / 内容变更信号） | Core    | **2026-08-17 拍板不采纳，理由见下方 §2.C-1 专条。** 一句话：它删掉的五个端点 fork 前端全部在用，且它建在 fork 未采纳的 `6e77158c` 之上，代价远大于收益。                                                                                    |
 >
 > ### 🕗 仍然挂着的
 >
@@ -35,15 +35,15 @@
 >   （见上表与 §2.C-1）；UI `b678d839e` 判定与 `eb4bd7f7` **无任何依赖关系**（纯前端保存按钮），
 >   已按 fork 现状**等价手写实现**（不是 cherry-pick，原因见 §2.C-1 末段）。
 > - **claude CLI pin 从 2.1.215 升到 2.1.233**（Core `9645dc5b`/`77acec68`）——这两条**不是
->   例行 pick**：一半落在 `aionui-session/backend/cli_version.rs`，而该文件来自上游
+>   例行 pick**：一半落在 `dream-core-session/backend/cli_version.rs`，而该文件来自上游
 >   `ae817e32`「改用用户自己的 claude/codex、不再内置」，fork 没采纳那套架构（仍内置，
->   pin 在 `aionui-runtime/managed_cli/mod.rs`）；另一半改的是 `claude_flags.rs` 里
+>   pin 在 `dream-core-runtime/managed_cli/mod.rs`）；另一半改的是 `claude_flags.rs` 里
 >   **刻意绑在 fork 自己 pin 值上**的断言。所以它等价于「fork 要不要升内置 CLI」的
 >   打包决策，需单独一轮并验证该版本二进制可获取。
-> - **会话分叉（session fork）跨仓功能**——aionrs 侧已随整体 merge 进来（`df1cf85`+`5889110`），
+> - **会话分叉（session fork）跨仓功能**——dream-engine 侧已随整体 merge 进来（`df1cf85`+`5889110`），
 >   但 **1oneUI 侧的 `ae2d2f53e` 未合**，所以前端没有分叉入口。要不要这个能力属产品决策；
 >   注意它还牵着 `ForkBranchIcon` 与 turn-id 两处（本轮已从别的提交里剥离过）。
-> - **TUI REPL 已合入但结构上不可能被触发**（无需额外处置）：`aion-cli/src/run.rs` 里
+> - **TUI REPL 已合入但结构上不可能被触发**（无需额外处置）：`dream-engine-cli/src/run.rs` 里
 >   `--json-stream` 在 TUI 探测之前就 return，且 TUI 还要求 prompt 为空 + stdin/stdout
 >   双双是 TTY；1oneCore 走 JSON 流且管道化 stdin/stdout。
 
@@ -51,11 +51,11 @@
 
 ## 0. 一句话现状
 
-| 仓       | 我们停在                                    | 上游到      | 待处理（2026-08-17 收尾后）                                                                                                         |
-| -------- | ------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 1oneUI   | 2.1.54 + 本轮全部 cherry-pick（未打版本号） | **2.1.56**  | A~G 全部已合；C 组 `b678d839e` 已**等价手写实现**（§2.C-1）；剩会话分叉 `ae2d2f53e`（产品决策）；`e187ac746`/`36d632de5` 已定不采纳 |
-| 1oneCore | v0.1.65 相当 + 本轮全部 cherry-pick         | **v0.1.67** | C 组 `eb4bd7f7` 已定**不采纳**（§2.C-1）；剩 claude pin 升级（打包决策）；`fe99ff60`/`48a8b9bf` 已定不采纳                          |
-| aionrs   | **0.2.11（已整体 merge）**                  | 0.2.11      | ✅ 已对齐；1oneCore 的 `Cargo.lock` 已 `cargo update` 指向 `e4d1638`                                                                |
+| 仓           | 我们停在                                    | 上游到      | 待处理（2026-08-17 收尾后）                                                                                                         |
+| ------------ | ------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1oneUI       | 2.1.54 + 本轮全部 cherry-pick（未打版本号） | **2.1.56**  | A~G 全部已合；C 组 `b678d839e` 已**等价手写实现**（§2.C-1）；剩会话分叉 `ae2d2f53e`（产品决策）；`e187ac746`/`36d632de5` 已定不采纳 |
+| 1oneCore     | v0.1.65 相当 + 本轮全部 cherry-pick         | **v0.1.67** | C 组 `eb4bd7f7` 已定**不采纳**（§2.C-1）；剩 claude pin 升级（打包决策）；`fe99ff60`/`48a8b9bf` 已定不采纳                          |
+| dream-engine | **0.2.11（已整体 merge）**                  | 0.2.11      | ✅ 已对齐；1oneCore 的 `Cargo.lock` 已 `cargo update` 指向 `e4d1638`                                                                |
 
 **原先那 34 条推迟不是"漏了"，是当时判断冲突集中且与发布无关而主动押后的。**
 它们大多是**前后端成对**的，见 §2。**现在绝大多数已处理完，剩下的都在上面那张
@@ -69,7 +69,7 @@
 
 ### 1.1 前后端必须成对合 —— 已经踩过三次
 
-上游经常把一个功能拆成 `AionUi`（前端）+ `AionCore`（后端）两个 PR。
+上游经常把一个功能拆成 `dream-ui`（前端）+ `dream-core`（后端）两个 PR。
 **只合一半的表现是「功能看起来在，但永远空/永远 404」，而且不报错。**
 
 已发生三例：`model_kind`（前端有字段后端 serde 静默丢弃）、`ChatFileRef`（前端发标签
@@ -103,9 +103,9 @@
 | `providers` 作用域  | **部署级共享**（`user_id` 不参与查询）               | 按 user 隔离                     | 照搬会让成员看不到模型                                  |
 | 迁移编号            | fork 占用了上游也在用的号                            | —                                | 撞号必须重排，且 `migrate_repair.rs` 的版本常量要跟着改 |
 | `acp_tool_runtime`  | fork 独占                                            | 已删                             | 见 §1.3                                                 |
-| 品牌                | One Work / 1ONE Code                                 | AionUi                           | 见 §1.6                                                 |
+| 品牌                | One Work / 1ONE Code                                 | dream-ui                         | 见 §1.6                                                 |
 
-**`session_agent.rs` / `aionui-session` / antigravity 相关代码照常 pick 但不接线**——
+**`session_agent.rs` / `dream-core-session` / antigravity 相关代码照常 pick 但不接线**——
 这是 2026-08-14 拍板的：跟随用户本机装的 claude/codex，但桥接用我们自己的。
 即使这些代码零效果也要跟上游同步，方便下次合并。
 
@@ -166,7 +166,7 @@ i18n 文案 / **渲染层与主进程**硬编码 / 安装器脚本 / 任务栏�
 **冲突面**：新增 `SourceControl/` 目录为主，与 fork 改动重叠少。
 **收益**：面向开发者的核心能力，我们目前完全没有。
 **难度**：57 个前端文件，但集中在新目录，真正的风险是 Core 侧两条要接进
-`aionui-project` 的监听体系。
+`dream-core-project` 的监听体系。
 **建议**：整组一起做，单独一轮。
 
 ### B. Explorer 右键菜单 —— 🟡 收益中 / 🟡 难度中 / 非必须
@@ -208,22 +208,22 @@ fork 在这个文件上有改动。`31ec26a90` 还带 13 语言 i18n。
 > `watch_service.rs`/`file_watching.rs`」——**这是错的**。实测用 blob 哈希逐字节比对，
 > fork 的这几个文件与上游同一个 PR（`7f8ed6c5`，即 fork 的 `65455953`，PR #669）**完全相同**：
 >
-> | 文件                                                 | fork blob   | 上游 `7f8ed6c5` blob |
-> | ---------------------------------------------------- | ----------- | -------------------- |
-> | `crates/aionui-file/src/watch_service.rs`            | `c6f8850f…` | `c6f8850f…`          |
-> | `crates/aionui-file/tests/file_watching.rs`          | `190e1891…` | `190e1891…`          |
-> | `crates/aionui-office/src/snapshot.rs`               | `e74c6713…` | `e74c6713…`          |
-> | `crates/aionui-office/tests/snapshot_integration.rs` | 同上一致    | —                    |
+> | 文件                                                     | fork blob   | 上游 `7f8ed6c5` blob |
+> | -------------------------------------------------------- | ----------- | -------------------- |
+> | `crates/dream-core-file/src/watch_service.rs`            | `c6f8850f…` | `c6f8850f…`          |
+> | `crates/dream-core-file/tests/file_watching.rs`          | `190e1891…` | `190e1891…`          |
+> | `crates/dream-core-office/src/snapshot.rs`               | `e74c6713…` | `e74c6713…`          |
+> | `crates/dream-core-office/tests/snapshot_integration.rs` | 同上一致    | —                    |
 >
 > `git log --oneline -- <file>` 对这几个文件也只有两条提交，全是上游的
 > （`c0b50baf` 挤压基线 + `65455953`）。**fork 从未在这四个文件上写过一行自己的代码。**
-> 复现命令：`git rev-parse HEAD:crates/aionui-file/src/watch_service.rs` 与
-> `git rev-parse 7f8ed6c5:crates/aionui-file/src/watch_service.rs` 对比。
+> 复现命令：`git rev-parse HEAD:crates/dream-core-file/src/watch_service.rs` 与
+> `git rev-parse 7f8ed6c5:crates/dream-core-file/src/watch_service.rs` 对比。
 
 **真实不采纳理由（四条，均可复现）：**
 
 **① 它删掉的五个端点，fork 前端全部在用。**
-`git show eb4bd7f7 -- crates/aionui-file/src/routes.rs crates/aionui-office/src/routes.rs`
+`git show eb4bd7f7 -- crates/dream-core-file/src/routes.rs crates/dream-core-office/src/routes.rs`
 里这五行都是 `-`（被删），而 fork 的 `packages/desktop/src/common/adapter/ipcBridge.ts` 正在调：
 
 | 被删端点                                                  | fork 调用点              |
@@ -237,7 +237,7 @@ fork 在这个文件上有改动。`31ec26a90` 还带 13 语言 i18n。
 
 **② 它建在 fork 未采纳的 `6e77158c` 之上，而 `6e77158c` 删的东西 fork 前端有三处在用。**
 `6e77158c`「remove dead preview file endpoints」上游删了 3018 行，含整个
-`crates/aionui-file/src/browse.rs`（523 行）与 `tests/zip_packaging.rs`（398 行）。
+`crates/dream-core-file/src/browse.rs`（523 行）与 `tests/zip_packaging.rs`（398 行）。
 上游认定「dead」的这批端点在 fork 里是活的：
 
 | 上游认定 dead 的端点               | fork 调用方                                                           |
@@ -247,7 +247,7 @@ fork 在这个文件上有改动。`31ec26a90` 还带 13 语言 i18n。
 | `/api/fs/zip`                      | `common/adapter/ipcBridge.ts`                                         |
 
 **③ 它夹带一个独立且未评估的功能。** 45 个文件里含
-`crates/aionui-app/src/router/system_file_opener.rs`（新增）+ `/api/fs/open-system`
+`crates/dream-core-app/src/router/system_file_opener.rs`（新增）+ `/api/fs/open-system`
 路由——就是本文档开头点名警告的「用默认应用打开 `open-system`」，与预览 v2 无关。
 
 **④ fork 在受影响范围内真正要保住的资产不在被删文件里，而在会被大改的邻居里。**
@@ -256,14 +256,14 @@ Windows 上文件树层级会塌掉`）里的 **`to_relative_path_string()`**：
 必须按 `components()` 拼 `/`，否则 Windows 上发出去的是 `folder\file.txt`，而前端
 恒按 `/` 拆层级（`explorer/explorerModel.ts` 顶部注释写死了这个协议约定），
 **整棵文件树会塌成一个名字里带反斜杠的顶层节点**。它落在
-`crates/aionui-file/src/service.rs` + `crates/aionui-shell/src/shell.rs`，
-而 `eb4bd7f7` 恰好大改 `service.rs`（+165）、`aionui-project/src/runtime/tree_model.rs`、
+`crates/dream-core-file/src/service.rs` + `crates/dream-core-shell/src/shell.rs`，
+而 `eb4bd7f7` 恰好大改 `service.rs`（+165）、`dream-core-project/src/runtime/tree_model.rs`、
 `chat_files.rs` —— 全是 `relative_path` 的产出路径。同类还有 `2b825571`
 （让上游新 crate 的测试在 Windows 上真正跑起来）。
 
 **试合并实测数据（只读，未落盘）**：45 文件里 `git apply --check` **13 个失败**；
 按 `eb4bd7f7^` 作 base 的 `git merge-file` 三方合并 **8 个文件冲突**，其中
-`aionui-file/src/routes.rs` 单文件 **8 段**、`aionui-app/src/router/state.rs` **5 段**。
+`dream-core-file/src/routes.rs` 单文件 **8 段**、`dream-core-app/src/router/state.rs` **5 段**。
 根因是 fork 相对上游**一会儿超前一会儿落后**：fork 已 pick 了上游**晚于** `eb4bd7f7`
 的 `a621ed88`（copy-absolute-path，fork 里是 `394d1be9`），却没 pick 早于它的
 `6e77158c` 与 `bdb6d619`。
@@ -339,7 +339,7 @@ preview-v2 刷新链（`handleSaveActiveTab`/`refreshActionable`/`refreshState`/
 
 ## 3. triage 之后上游新增的（本轮没评估过）
 
-### aionrs 12 条 —— ⚠️ 需要专项评估
+### dream-engine 12 条 —— ⚠️ 需要专项评估
 
 ```
 5889110 feat(agent): stamp per-run turn ids onto conversation messages
@@ -354,12 +354,12 @@ df1cf85 feat(session): add session forking with lineage and turn-anchored bounda
 
 **两件事值得单独判断**：
 
-1. **会话分叉（session fork）是跨仓功能**：aionrs `df1cf85` + `5889110`，
-   1oneUI 侧对应 `ae2d2f53e`（在 aionrs 会话里露出分叉入口）。
+1. **会话分叉（session fork）是跨仓功能**：dream-engine `df1cf85` + `5889110`，
+   1oneUI 侧对应 `ae2d2f53e`（在 dream-engine 会话里露出分叉入口）。
    **又是一个前后端配对**，要合就一起合。收益取决于产品上要不要这个能力。
-2. **TUI REPL（`4ffa967` + `6a91939` + 两条修复）是 aionrs 的命令行界面**，
+2. **TUI REPL（`4ffa967` + `6a91939` + 两条修复）是 dream-engine 的命令行界面**，
    我们的产品是 Electron 桌面端，**这部分对我们大概率零价值**，
-   但 aionrs 是整体 merge 的，硬拆反而制造冲突。
+   但 dream-engine 是整体 merge 的，硬拆反而制造冲突。
    **建议**：整体 merge 进来但不接线（同 §1.4 对 session_agent 的处置方式）。
 
 ### 1oneUI 4 条
@@ -401,7 +401,7 @@ df1cf85 feat(session): add session forking with lineage and turn-anchored bounda
    ⚠️ **合完仍需重打包验证**（动了 `electron-builder.yml` 的 `asarUnpack`，
    新增 `builtin-mcp-browser.js` 必须真的被解包出来，否则外部 node 进程执行不到）。
    实际冲突面比本文档原预估小得多——`productName`/`artifactName`/`appId` 一处没碰。
-9. ✅ **aionrs 整体 merge 至 0.2.11**（12 条，TUI 结构上已不可触发）**[已完成 2026-08-17]**
+9. ✅ **dream-engine 整体 merge 至 0.2.11**（12 条，TUI 结构上已不可触发）**[已完成 2026-08-17]**
    唯一冲突在 `engine.rs` 的 `TurnOutcome::Truncated` 分派点：上游改成拿到截断就立刻
    `finalize(MaxTokens)`，而这正是 fork `9fa951e` 替换掉的放弃式行为。已核实
    `continue_truncated`/`recover_truncated_tool_call`/`MAX_TRUNCATION_CONTINUATIONS`
@@ -416,6 +416,6 @@ df1cf85 feat(session): add session forking with lineage and turn-anchored bounda
 ## 5. 与本轮无关但仍挂着的
 
 - **采纳上游多模态提示 `5a78a0b2`**——图片走原生块而非文件路径（本轮判定需独立一轮）
-- **修 Windows 尾随空格工作区路径校验失效**（`tc6b`，`aionui-common`，地基层既有缺陷）
+- **修 Windows 尾随空格工作区路径校验失效**（`tc6b`，`dream-core-common`，地基层既有缺陷）
 - **License 公私钥轮换**——当前内置的是开发占位公钥，私钥已泄露（在会话里打印过、
   且明文存在 `C:\Users\allenzhao\Desktop\feishu.txt`），**上线前必须 keygen 换掉**

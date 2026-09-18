@@ -2,15 +2,15 @@
 
 There are **two unrelated CDP surfaces** in this app. Mixing them up costs hours, so start here:
 
-|                             | Developer app-wide CDP                                         | Agent browser bridge                        |
-| --------------------------- | -------------------------------------------------------------- | ------------------------------------------- |
-| What it exposes             | **Every** WebContents — the main window, settings, chat, WebUI | Exactly one page: the in-app browser        |
-| Who it is for               | Developers debugging / driving the real UI                     | The agent, so it can browse                 |
-| Port                        | `9230` by default, fixed                                       | OS-assigned ephemeral (`listen(0)`)         |
-| Auth                        | **None**                                                       | Token required                              |
-| Default                     | **Off.** Dev builds only, must be requested explicitly         | On, production included                     |
-| Can it drive the AionUi UI? | **Yes**                                                        | **No — by design**                          |
-| Code                        | `process/utils/configureChromium.ts` + `devtoolsCdp.ts`        | `process/resources/builtinMcp/cdpBridge.ts` |
+|                               | Developer app-wide CDP                                         | Agent browser bridge                        |
+| ----------------------------- | -------------------------------------------------------------- | ------------------------------------------- |
+| What it exposes               | **Every** WebContents — the main window, settings, chat, WebUI | Exactly one page: the in-app browser        |
+| Who it is for                 | Developers debugging / driving the real UI                     | The agent, so it can browse                 |
+| Port                          | `9230` by default, fixed                                       | OS-assigned ephemeral (`listen(0)`)         |
+| Auth                          | **None**                                                       | Token required                              |
+| Default                       | **Off.** Dev builds only, must be requested explicitly         | On, production included                     |
+| Can it drive the dream-ui UI? | **Yes**                                                        | **No — by design**                          |
+| Code                          | `process/utils/configureChromium.ts` + `devtoolsCdp.ts`        | `process/resources/builtinMcp/cdpBridge.ts` |
 
 If your goal is _"drive the real app UI to verify a change"_, you want the **first** column.
 
@@ -128,7 +128,7 @@ This is what lets the agent browse. It starts on its own and logs:
 The port is ephemeral by design — that, plus the token, is the only real barrier against other
 local processes, so do not move it onto a fixed port.
 
-**It cannot touch the AionUi interface itself.** It exposes exactly one `webContents`: the in-app
+**It cannot touch the dream-ui interface itself.** It exposes exactly one `webContents`: the in-app
 browser page. If you connect to it hoping to click a settings toggle, you are on the wrong
 surface — use the developer port above.
 
@@ -153,15 +153,15 @@ gone; drive the port from the environment variable instead.
 
 这个应用里有**两套互不相干的 CDP**，搞混会白折腾几个小时，所以先看这张表：
 
-|                      | 开发者应用级 CDP                                        | agent 浏览器通道                            |
-| -------------------- | ------------------------------------------------------- | ------------------------------------------- |
-| 暴露什么             | **每一个** WebContents——主窗口、设置、聊天、WebUI       | 只有一个页面：应用内浏览器                  |
-| 给谁用               | 开发者调试 / 驱动真实界面                               | agent，让它能上网                           |
-| 端口                 | 默认固定 `9230`                                         | 系统分配的临时端口（`listen(0)`）           |
-| 认证                 | **无**                                                  | 需要 token                                  |
-| 默认                 | **关闭。** 仅 dev 构建，且必须显式开启                  | 开启，正式版也开                            |
-| 能驱动 AionUi 界面吗 | **能**                                                  | **不能——按设计就碰不到**                    |
-| 代码                 | `process/utils/configureChromium.ts` + `devtoolsCdp.ts` | `process/resources/builtinMcp/cdpBridge.ts` |
+|                        | 开发者应用级 CDP                                        | agent 浏览器通道                            |
+| ---------------------- | ------------------------------------------------------- | ------------------------------------------- |
+| 暴露什么               | **每一个** WebContents——主窗口、设置、聊天、WebUI       | 只有一个页面：应用内浏览器                  |
+| 给谁用                 | 开发者调试 / 驱动真实界面                               | agent，让它能上网                           |
+| 端口                   | 默认固定 `9230`                                         | 系统分配的临时端口（`listen(0)`）           |
+| 认证                   | **无**                                                  | 需要 token                                  |
+| 默认                   | **关闭。** 仅 dev 构建，且必须显式开启                  | 开启，正式版也开                            |
+| 能驱动 dream-ui 界面吗 | **能**                                                  | **不能——按设计就碰不到**                    |
+| 代码                   | `process/utils/configureChromium.ts` + `devtoolsCdp.ts` | `process/resources/builtinMcp/cdpBridge.ts` |
 
 如果你的目的是**「驱动真实界面来验收一个改动」**，你要的是**左边那一列**。
 
@@ -269,7 +269,7 @@ ACL、没有任何认证**。一开就把每个 WebContents（含挂着 preload 
 
 端口是临时的，这是刻意的——它加上 token 是本机唯一真实屏障，所以**不要**把它改到固定端口。
 
-**它碰不到 AionUi 界面本身。** 它只暴露一个 `webContents`：应用内浏览器那个页面。如果你连上
+**它碰不到 dream-ui 界面本身。** 它只暴露一个 `webContents`：应用内浏览器那个页面。如果你连上
 它想点一下设置里的开关，说明你连错了那一套，请用上面的开发者端口。
 
 用户可以在设置里关掉它，关掉后 agent 就无法操作浏览器（此时 MCP 启动器会拒绝启动，不会

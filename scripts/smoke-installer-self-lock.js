@@ -68,13 +68,13 @@ function main() {
   }
 
   const makensis = findMakensis();
-  const root = mkdtempSync(path.join(tmpdir(), 'aionui-self-lock-'));
+  const root = mkdtempSync(path.join(tmpdir(), 'onework-self-lock-'));
   const installDir = path.join(root, 'install-dir');
   mkdirSync(installDir, { recursive: true });
   writeFileSync(path.join(installDir, 'existing-file.txt'), 'self-lock smoke\n', 'utf8');
 
-  const nsiPath = path.join(root, 'aionui-self-lock-smoke.nsi');
-  const exePath = path.join(root, 'aionui-self-lock-smoke.exe');
+  const nsiPath = path.join(root, 'onework-self-lock-smoke.nsi');
+  const exePath = path.join(root, 'onework-self-lock-smoke.exe');
   const logPath = path.join(
     process.env.TEMP || tmpdir(),
     `onework-installer-self-lock-${new Date()
@@ -88,15 +88,15 @@ function main() {
 
   const nsi = `
 Unicode true
-Name "AionUi Installer Self Lock Smoke"
+Name "One Work Installer Self Lock Smoke"
 OutFile "${nsisQuote(exePath)}"
 RequestExecutionLevel user
 SilentInstall silent
 !define VERSION "self-lock-smoke"
 !define ONEWORK_TARGET_ARCH "x64"
 !define ONEWORK_FALLBACK_LOG "onework-installer-self-lock-fallback.log"
-!define ONEWORK_APP_EXECUTABLE_FILENAME "AionUi.exe"
-!define UNINSTALL_FILENAME "Uninstall AionUi.exe"
+!define ONEWORK_APP_EXECUTABLE_FILENAME "onework.exe"
+!define UNINSTALL_FILENAME "Uninstall onework.exe"
 !define PROJECT_DIR "${nsisQuote(repoRoot)}"
 !include LogicLib.nsh
 !include "${nsisQuote(processControlPath)}"

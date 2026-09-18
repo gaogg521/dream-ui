@@ -145,6 +145,7 @@ function getLogFilePath(): string {
     candidates.push(
       path.join(os.homedir(), 'Library', 'Logs', 'dream-ui-Dev', `${today}.log`),
       path.join(os.homedir(), 'Library', 'Logs', 'One Work', `${today}.log`),
+      // legacy directory names, newest first
       path.join(os.homedir(), 'Library', 'Logs', 'AionUi-Dev', `${today}.log`),
       path.join(os.homedir(), 'Library', 'Logs', 'AionUi', `${today}.log`)
     );
@@ -153,12 +154,14 @@ function getLogFilePath(): string {
     candidates.push(
       path.join(appData, 'dream-ui-Dev', 'logs', `${today}.log`),
       path.join(appData, 'One Work', 'logs', `${today}.log`),
+      // legacy directory name
       path.join(appData, 'AionUi', 'logs', `${today}.log`)
     );
   } else {
     candidates.push(
       path.join(os.homedir(), '.config', 'dream-ui-Dev', 'logs', `${today}.log`),
       path.join(os.homedir(), '.config', 'One Work', 'logs', `${today}.log`),
+      // legacy directory name
       path.join(os.homedir(), '.config', 'AionUi', 'logs', `${today}.log`)
     );
   }
@@ -269,7 +272,7 @@ async function launchApp(timeoutMs: number, withMemory: boolean): Promise<Electr
       ...process.env,
       DREAM_DISABLE_AUTO_UPDATE: '1',
       DREAM_E2E_TEST: '1',
-      AIONUI_DISABLE_DEVTOOLS: '1',
+      ONE_DISABLE_DEVTOOLS: '1',
       DREAM_CDP_PORT: '0',
       NODE_ENV: 'production',
     },

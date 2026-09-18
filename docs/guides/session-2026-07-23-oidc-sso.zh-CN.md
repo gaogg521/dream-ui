@@ -1,7 +1,7 @@
 # P0-2 通用 SSO（第一步：OIDC）— 打通 Okta / Azure AD / Google Workspace
 
 **日期**：2026-07-23
-**状态**：三仓源码改完，one-sso 单测全绿（53，含 7 个新 OIDC）+ 前端 tsc/oxlint/check-i18n 全过；**真机 CDP + 打包待做**（与 P0-1 合并一次 aioncore 重编）。
+**状态**：三仓源码改完，one-sso 单测全绿（53，含 7 个新 OIDC）+ 前端 tsc/oxlint/check-i18n 全过；**真机 CDP + 打包待做**（与 P0-1 合并一次 dreamcore 重编）。
 **上下文**：企业/团队路线图 P0 第二项的第一步。交付方式=**逐个做透**（P0-2 → P0-4 → P0-3）。用户拍板 P0-2 本轮**先做 OIDC**（SAML/SCIM 紧跟其后）。
 
 ## Context（为什么）
@@ -34,13 +34,13 @@ SSO provider 全是**管理员显式配置、默认关闭**；个人单机版从
 ## 验证状态
 
 - `cargo test -p one-sso`：**53 全过**（46→+7 OIDC：`discover_parses_endpoints`/`build_authorize_url_contains_required_params`/`exchange_code_returns_access_token`/`exchange_code_surfaces_provider_error`/`fetch_user_info_maps_claims`/`to_provider_user_info_falls_back_to_email_then_prefix`/`test_credentials_ok_and_rejects_bad_issuer`，全用 wiremock mock discovery+token+userinfo，无需真 IdP）。
-- clippy：新代码零告警（既有 dingtalk/wecom/rbac 告警 ratchet 不动）。`cargo check -p aionui-app` 通过。
+- clippy：新代码零告警（既有 dingtalk/wecom/rbac 告警 ratchet 不动）。`cargo check -p dream-core-app` 通过。
 - 前端：tsc 0 错、oxlint 0/0（改动文件）、check-i18n 全绿。
 - **待做**：真机 CDP（起本地 mock-OIDC 配进设置页走 authorize→callback）+ 真 Okta/Azure/Google 用户点测 + 打包。
 
 ## 待办 / 后续（顺序执行）
 
-1. P0-1（多成员）+ P0-2（OIDC）合并一次 aioncore 重编 → 真机 CDP 验证 → 分别提交。
+1. P0-1（多成员）+ P0-2（OIDC）合并一次 dreamcore 重编 → 真机 CDP 验证 → 分别提交。
 2. **P0-2 后续**：SAML（XML 签名，重）+ SCIM 2.0 入站 provisioning（离职自动回收，合规红线）+ id_token 签名校验硬化。
 3. **P0-4 细粒度 RBAC**：one-devops 看板（skills/mcp/rag）现对任何登录成员开放读写 → capability 模型 + 按资源 ACL；RAG 按文档/角色可见。
 4. **P0-3 License 分级 + 席位 + 用量看板**（不接支付）。

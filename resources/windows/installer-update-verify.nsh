@@ -182,7 +182,7 @@ Var /GLOBAL OneWorkActiveMarkerResult
   !insertmacro ONEWORK_VERIFY_REQUIRED_FILE "$INSTDIR\resources\app.asar" "resources\app.asar"
 !macroend
 
-!macro ONEWORK_VERIFY_BUNDLED_AIONCORE_RESOURCES _RUNTIME_KEY
+!macro ONEWORK_VERIFY_BUNDLED_CORE_RESOURCES _RUNTIME_KEY
   InitPluginsDir
   File "/oname=$PLUGINSDIR\verify-bundled-dreamcore-install.ps1" "${PROJECT_DIR}\resources\windows\support\verify-bundled-dreamcore-install.ps1"
   nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\verify-bundled-dreamcore-install.ps1" -InstallDir "$INSTDIR" -RuntimeKey "${_RUNTIME_KEY}" -LogPath "$OneWorkSessionLogPath"`
@@ -190,14 +190,14 @@ Var /GLOBAL OneWorkActiveMarkerResult
 
   ${If} $OneWorkVerifyResourceResult != 0
     !insertmacro ONEWORK_FAIL_UX \
-      "${ONEWORK_E_BUNDLED_AIONCORE_INCOMPLETE}" \
-      "event=session-end result=fail code=${ONEWORK_E_BUNDLED_AIONCORE_INCOMPLETE} detail=bundled-aioncore-incomplete runtime=${_RUNTIME_KEY} result=$OneWorkVerifyResourceResult" \
-      "${ONEWORK_MSG_BUNDLED_AIONCORE_INCOMPLETE_ZH}" \
-      "${ONEWORK_MSG_BUNDLED_AIONCORE_INCOMPLETE_EN}" \
-      "${ONEWORK_MSG_BUNDLED_AIONCORE_INCOMPLETE_ACTION_ZH}" \
-      "${ONEWORK_MSG_BUNDLED_AIONCORE_INCOMPLETE_ACTION_EN}" \
-      "bundled-aioncore-incomplete runtime=${_RUNTIME_KEY} result=$OneWorkVerifyResourceResult instDir=$INSTDIR" \
-      "bundled-aioncore-incomplete runtime=${_RUNTIME_KEY} result=$OneWorkVerifyResourceResult instDir=$INSTDIR"
+      "${ONEWORK_E_BUNDLED_CORE_INCOMPLETE}" \
+      "event=session-end result=fail code=${ONEWORK_E_BUNDLED_CORE_INCOMPLETE} detail=bundled-core-incomplete runtime=${_RUNTIME_KEY} result=$OneWorkVerifyResourceResult" \
+      "${ONEWORK_MSG_BUNDLED_CORE_INCOMPLETE_ZH}" \
+      "${ONEWORK_MSG_BUNDLED_CORE_INCOMPLETE_EN}" \
+      "${ONEWORK_MSG_BUNDLED_CORE_INCOMPLETE_ACTION_ZH}" \
+      "${ONEWORK_MSG_BUNDLED_CORE_INCOMPLETE_ACTION_EN}" \
+      "bundled-core-incomplete runtime=${_RUNTIME_KEY} result=$OneWorkVerifyResourceResult instDir=$INSTDIR" \
+      "bundled-core-incomplete runtime=${_RUNTIME_KEY} result=$OneWorkVerifyResourceResult instDir=$INSTDIR"
   ${EndIf}
 !macroend
 
@@ -260,7 +260,7 @@ Var /GLOBAL OneWorkActiveMarkerResult
 
 !macro customInstall
   !insertmacro ONEWORK_VERIFY_CORE_APP_FILES
-  !insertmacro ONEWORK_VERIFY_BUNDLED_AIONCORE_RESOURCES "${ONEWORK_RUNTIME_KEY}"
+  !insertmacro ONEWORK_VERIFY_BUNDLED_CORE_RESOURCES "${ONEWORK_RUNTIME_KEY}"
   !insertmacro ONEWORK_LOG_EVENT "verify-install ok instDir=$INSTDIR"
   !insertmacro DREAM_REMOVE_ORPHANED_INSTALLS
   !insertmacro ONEWORK_CLEAR_ACTIVE_INSTALLER_MARKER

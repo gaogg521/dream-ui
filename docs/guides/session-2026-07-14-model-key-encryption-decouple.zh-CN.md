@@ -14,7 +14,7 @@
 
 ### 根因（本轮实锤）
 
-数据加密链路：所有存库的密钥（Provider API Key、团队 agent、MCP、channel、remote agent）都用 `derive_encryption_key(jwt_secret)` 派生的 AES key 加密（`aionui-app/src/config.rs` `derive_encryption_key`）。
+数据加密链路：所有存库的密钥（Provider API Key、团队 agent、MCP、channel、remote agent）都用 `derive_encryption_key(jwt_secret)` 派生的 AES key 加密（`dream-core-app/src/config.rs` `derive_encryption_key`）。
 
 而 `jwt_secret` 是**登录会话密钥**，`one-org`（企业域）会在下列操作里**故意轮换它来注销会话**（`one-org/src/service.rs` `invalidate_user_tokens` → `update_jwt_secret`）：
 
@@ -23,7 +23,7 @@
 - `leave`（退出企业）
 - `reset_local_enterprise`（重置本机企业数据）
 
-`aionui-auth` 改密码（`routes.rs` change-password）也会轮换。
+`dream-core-auth` 改密码（`routes.rs` change-password）也会轮换。
 
 于是：**每做一次企业操作，就把单机版所有模型 Key 的加密密钥换掉，导致此前加密的 Key 全部解不开** —— 这正是用户直觉"模型 Key 跟企业本该没关系"的错误耦合。用户高频测试企业功能，所以反复中招（真实库里 07-09/07-13/07-14 三个 Provider 全部解不开，且后端日志出现 team agent "1ONE CLI" 同款 `Decryption failed`）。
 
@@ -40,13 +40,13 @@
 **后端（1oneCore）**
 
 - `migrations/025_add_user_data_secret.sql`：`users` 表加 `data_secret TEXT`（可空）。
-- `aionui-db` `models/user.rs` 加字段；`repository/user.rs` + `sqlite_user.rs` 加 `update_data_secret`（与 `update_jwt_secret` 平行，独立列）；`create_user` 补 `data_secret: None`。
-- `aionui-app/src/services.rs` `from_config`：解析 jwt 之后，解析 `data_secret`——
+- `dream-core-db` `models/user.rs` 加字段；`repository/user.rs` + `sqlite_user.rs` 加 `update_data_secret`（与 `update_jwt_secret` 平行，独立列）；`create_user` 补 `data_secret: None`。
+- `dream-core-app/src/services.rs` `from_config`：解析 jwt 之后，解析 `data_secret`——
   - 库里已有非空 `data_secret` → 直接复用；
   - 为空（老库首次升级）→ **用当前 jwt_secret 回填一次**并持久化（保证升级前用当前 jwt 还能解密的数据继续可读），之后永不随 jwt 变。
   - 新增 `AppServices.data_secret_raw` 字段。
 - 5 处 `derive_encryption_key(&services.jwt_secret_raw)`（`router/state.rs` ×4 + `services.rs` ×1）全部改用 `data_secret_raw`。`jwt_secret_raw` 仅剩给 `JwtService` 签名用。
-- **解不开的 Provider 不再静默隐藏**：`aionui-system/src/provider.rs` `list()` 把 `row_to_response` 拆成 `build_response`（不含解密），解密失败的行改为返回**空 api_key + `key_status=Unrecoverable`**，而不是 `continue` 丢掉。新增 `ProviderKeyStatus`（`aionui-api-types/src/provider.rs`，`Ok`/`Unrecoverable`，`#[serde(default)]`）。
+- **解不开的 Provider 不再静默隐藏**：`dream-core-system/src/provider.rs` `list()` 把 `row_to_response` 拆成 `build_response`（不含解密），解密失败的行改为返回**空 api_key + `key_status=Unrecoverable`**，而不是 `continue` 丢掉。新增 `ProviderKeyStatus`（`dream-core-api-types/src/provider.rs`，`Ok`/`Unrecoverable`，`#[serde(default)]`）。
 
 **前端（1oneUI）**
 
@@ -60,8 +60,8 @@
 
 ### 验证
 
-- 单测：`aionui-db` `update_data_secret_*`（含"jwt 轮换后 data*secret 不变"）；`aionui-app` `data_secret_is_seeded_from_jwt_on_first_init` + `data_secret_survives_jwt_secret_rotation`；`aionui-system` `list_surfaces_undecryptable_provider_rows_as_unrecoverable`（原 `list_skips*...` 因行为变更改写）。
-- 干净库 E2E（headless `aioncore --local`，全新空 data-dir，进程间用 taskkill）：BOOT1 建 Provider → BOOT2 普通重启存活 → 同进程 `org/create` 轮换 jwt 后存活 → **BOOT3 企业操作后重启仍存活**（reseed=0）。三场景全 `key_status=ok`。
+- 单测：`dream-core-db` `update_data_secret_*`（含"jwt 轮换后 data*secret 不变"）；`dream-core-app` `data_secret_is_seeded_from_jwt_on_first_init` + `data_secret_survives_jwt_secret_rotation`；`dream-core-system` `list_surfaces_undecryptable_provider_rows_as_unrecoverable`（原 `list_skips*...` 因行为变更改写）。
+- 干净库 E2E（headless `dreamcore --local`，全新空 data-dir，进程间用 taskkill）：BOOT1 建 Provider → BOOT2 普通重启存活 → 同进程 `org/create` 轮换 jwt 后存活 → **BOOT3 企业操作后重启仍存活**（reseed=0）。三场景全 `key_status=ok`。
 - 真实库（dev app 起新后端）：迁移 025 应用、`data_secret` 回填、3 个老 Provider 后端返回 `unrecoverable`、UI 显示 3 个"密钥失效"红标（CDP `hasUnrecoverableTag:true`）。**没在真实库做建企业等破坏性操作**，避免污染用户数据。
 
 > ⚠️ 测试踩坑：第一次 E2E **热拷贝了正在运行的 dev 库**（连 4MB 活跃 WAL 一起拷），那是不一致快照，硬杀后 seed 写入没被下次启动读到 → 假象"重启后仍丢"。换全新空库后三场景全过。**别热拷贝运行中的 SQLite 库做测试。**
@@ -78,8 +78,8 @@
 
 两层：
 
-1. **安装包根本没内置 officecli 二进制**（`electron-builder.yml` `extraResources` 只有 `bundled-aioncore`），agent 首次用必走 `irm https://d.officecli.ai/install.ps1 | iex`，装到 `%LOCALAPPDATA%\OfficeCLI\officecli.exe`（`OfficeCLI/install.ps1`）。
-2. **装完当次会话也认不出来**：officecli 装完把目录写进注册表用户级 PATH，但后端 `aioncore` 的 PATH 是启动时一次性合并冻结的（`aionui-runtime/src/shell_env.rs` `enhance_process_path` 只在 `main()` 跑一次），注册表 PATH 变更不会进已运行进程。agent 发的 `officecli --version` 永远看不到它 → 只能反复重装。
+1. **安装包根本没内置 officecli 二进制**（`electron-builder.yml` `extraResources` 只有 `bundled-dreamcore`），agent 首次用必走 `irm https://d.officecli.ai/install.ps1 | iex`，装到 `%LOCALAPPDATA%\OfficeCLI\officecli.exe`（`OfficeCLI/install.ps1`）。
+2. **装完当次会话也认不出来**：officecli 装完把目录写进注册表用户级 PATH，但后端 `dreamcore` 的 PATH 是启动时一次性合并冻结的（`dream-core-runtime/src/shell_env.rs` `enhance_process_path` 只在 `main()` 跑一次），注册表 PATH 变更不会进已运行进程。agent 发的 `officecli --version` 永远看不到它 → 只能反复重装。
 
 ### 修复
 
@@ -89,15 +89,15 @@
 
 ### 扩大担忧已排除：其他内置 SKILL 会不会也没打进包？
 
-**不会。** 所有内置 SKILL（officecli-\*、mermaid、pdf、moltbook 等全部）用 `include_dir!` 编进 `aioncore.exe`（`aionui-extension/src/skill_service.rs` `BUILTIN_SKILLS`），每次启动按内容 SHA-256 指纹校验重新落地到 `<data_dir>/builtin-skills/`（`startup_materialize.rs`）。不会漏、不会因 app 更新而 stale。`electron-builder.yml` 里没有也不需要 skills 条目。officecli 那个问题只针对**外部工具二进制**，与 SKILL 文件无关。
+**不会。** 所有内置 SKILL（officecli-\*、mermaid、pdf、moltbook 等全部）用 `include_dir!` 编进 `dreamcore.exe`（`dream-core-extension/src/skill_service.rs` `BUILTIN_SKILLS`），每次启动按内容 SHA-256 指纹校验重新落地到 `<data_dir>/builtin-skills/`（`startup_materialize.rs`）。不会漏、不会因 app 更新而 stale。`electron-builder.yml` 里没有也不需要 skills 条目。officecli 那个问题只针对**外部工具二进制**，与 SKILL 文件无关。
 
 ---
 
 ## 改动索引
 
-**1oneCore**（`one-main`）：`aionui-db`(migration 025 + user model/repo)、`aionui-app`(services 密钥解析 + router/state 5 处 derive)、`aionui-system`(provider list surface)、`aionui-api-types`(ProviderKeyStatus)、`aionui-runtime`(shell_env officecli PATH)。
+**1oneCore**（`one-main`）：`dream-core-db`(migration 025 + user model/repo)、`dream-core-app`(services 密钥解析 + router/state 5 处 derive)、`dream-core-system`(provider list surface)、`dream-core-api-types`(ProviderKeyStatus)、`dream-core-runtime`(shell_env officecli PATH)。
 **1oneUI**（`one-main`）：`common/config/storage.ts`、`ModelModalContent.tsx`、i18n(zh-CN/en-US settings + 生成的 i18n-keys.d.ts)。
 
 ## 加载 / 部署
 
-改了后端 → 必须 `cargo build -p aionui-app --release` 并把 exe 搬进 `1oneUI/resources/bundled-aioncore/win32-x64/`（dev app 运行时该文件被锁，需先关 app）。前端改动走 `bun run dev` HMR。**未打 Release 安装包**。
+改了后端 → 必须 `cargo build -p dream-core-app --release` 并把 exe 搬进 `1oneUI/resources/bundled-dreamcore/win32-x64/`（dev app 运行时该文件被锁，需先关 app）。前端改动走 `bun run dev` HMR。**未打 Release 安装包**。

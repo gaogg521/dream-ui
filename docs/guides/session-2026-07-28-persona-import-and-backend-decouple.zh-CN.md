@@ -17,7 +17,7 @@
 
 ### 会话创建支持 `conversation_overrides.agent_id`
 
-`AssistantConversationOverridesRequest` 新增 `agent_id: Option<String>`，`aionui-conversation/src/service.rs` 的 `effective_agent_id` 解析优先级改为：`overrides.agent_id` > 助手自身持久化覆盖(`state.agent_id_override`) > 助手默认值(`definition.agent_id`)。无效 id 沿用既有 `resolve_assistant_agent_binding` 返回 `None` 时的 400 路径。3 条 e2e 测试（override 生效/不传回退默认/无效 id 400）。
+`AssistantConversationOverridesRequest` 新增 `agent_id: Option<String>`，`dream-core-conversation/src/service.rs` 的 `effective_agent_id` 解析优先级改为：`overrides.agent_id` > 助手自身持久化覆盖(`state.agent_id_override`) > 助手默认值(`definition.agent_id`)。无效 id 沿用既有 `resolve_assistant_agent_binding` 返回 `None` 时的 400 路径。3 条 e2e 测试（override 生效/不传回退默认/无效 id 400）。
 
 ### `AssistantService::import_personas` + `POST /api/assistants/import-personas`
 
@@ -27,7 +27,7 @@
 
 **迁移 `034_persona_import_assistants.sql`**：SQLite 不支持 `ALTER TABLE ... MODIFY CHECK`，照抄本仓已有先例（迁移 013 的 `_assistants_new` 重建套路）整表重建以放宽 `source` 的 CHECK 约束。
 
-**⚠️ 已知遗留（未修，记录在案）**：`aionui-api-types::AssistantSource`（API 响应枚举，只有 `Builtin/Generated/User` 三个变体）被 `classify_source` 复用于内部分派，同一个类型服务了"内部路径分支"和"对外序列化"两个目的。给它加 `Imported` 变体要同步改 15+ 处 match 分支（真机测试时直接验证到：`GET /api/assistants` 返回的 `source` 字段对导入的人设显示 `"user"`，不是 `"imported"`）。DB 列的 `'imported'` 值本身是真实可用的（upsert-by-id 语义已验证正确），只是没有透传到 API 层——如果后续要在 UI 上把"导入的人设"单独分组展示，需要把这个类型拆成两个（内部分派用 vs 对外序列化用），本轮范围内不做。
+**⚠️ 已知遗留（未修，记录在案）**：`dream-core-api-types::AssistantSource`（API 响应枚举，只有 `Builtin/Generated/User` 三个变体）被 `classify_source` 复用于内部分派，同一个类型服务了"内部路径分支"和"对外序列化"两个目的。给它加 `Imported` 变体要同步改 15+ 处 match 分支（真机测试时直接验证到：`GET /api/assistants` 返回的 `source` 字段对导入的人设显示 `"user"`，不是 `"imported"`）。DB 列的 `'imported'` 值本身是真实可用的（upsert-by-id 语义已验证正确），只是没有透传到 API 层——如果后续要在 UI 上把"导入的人设"单独分组展示，需要把这个类型拆成两个（内部分派用 vs 对外序列化用），本轮范围内不做。
 
 7 条新增单测（`import_personas_writes_rule_content_and_tags_source_imported`/`_reimport_overwrites_instead_of_skipping`/`_skips_builtin_collision`/`_fails_on_missing_id` + 3 条 conversation e2e）全绿。
 
@@ -53,9 +53,9 @@
 
 ## 验证
 
-- 后端：`cargo test -p aionui-assistant`（106 全绿，含新增 7 条）+ `cargo build --workspace`（全量编译过）。
+- 后端：`cargo test -p dream-core-assistant`（106 全绿，含新增 7 条）+ `cargo build --workspace`（全量编译过）。
 - 前端：`bunx tsc --noEmit`（0 错误）+ `bun run lint:fix`（0 错误，842 条无关预存警告）+ `node scripts/check-i18n.js`（通过，264 条无关预存警告）。
-- 真机（重编 `aioncore.exe` release 内嵌 + `bun run dev`，走 CDP 原始 WebSocket 直连渲染进程 `127.0.0.1:9230`，未用 chrome-devtools MCP——它连的是独立浏览器实例，看不到 Electron 窗口）：
+- 真机（重编 `dreamcore.exe` release 内嵌 + `bun run dev`，走 CDP 原始 WebSocket 直连渲染进程 `127.0.0.1:9230`，未用 chrome-devtools MCP——它连的是独立浏览器实例，看不到 Electron 窗口）：
   - Guid 页初始渲染：后端切换器 5 个 pill（1ONE CLI/Claude Code/Codex CLI/Cursor/OpenClaw），人设行只有 3 个真实人设（不含裸 CLI）——确认拆分生效且默认状态未变。
   - 点裸 CLI 后端 pill（无人设选中态）→ 人设行保持无高亮（旧"裸 CLI 模式切换即换身份"语义保留）。
   - 选人设"股票专家"→ 再点"1ONE CLI"后端 pill → 再选人设"管家" → 再选回"股票专家"：全程后端切换器停在"1ONE CLI"不跳，人设 pill 正确跟随点击——解耦行为符合设计。
@@ -72,9 +72,9 @@
 
 ### 后端
 
-新表 `assistant_marketplace_personas`（迁移 035）+ `IAssistantMarketplaceRepository`（`aionui-db`，list/get/upsert_many）。目录内容随二进制打包（新增 `crates/aionui-app/assets/marketplace-personas/personas.json` + `rules/{id}.md`，281 个人设的 name/description/rule_content，照抄 `builtin.rs` 的 `include_dir!` 套路），新模块 `crates/aionui-assistant/src/marketplace.rs` 负责加载 + `materialize_marketplace_personas()`（幂等 upsert，每次启动跑一遍，和 `materialize_builtin_definitions()` 并列调用于 `aionui-app/src/router/state.rs`）——**这意味着全新装机的用户也能看到完整 281 条目录，不是这台机器独有的一次性数据**。
+新表 `assistant_marketplace_personas`（迁移 035）+ `IAssistantMarketplaceRepository`（`dream-core-db`，list/get/upsert_many）。目录内容随二进制打包（新增 `crates/dream-core-app/assets/marketplace-personas/personas.json` + `rules/{id}.md`，281 个人设的 name/description/rule_content，照抄 `builtin.rs` 的 `include_dir!` 套路），新模块 `crates/dream-core-assistant/src/marketplace.rs` 负责加载 + `materialize_marketplace_personas()`（幂等 upsert，每次启动跑一遍，和 `materialize_builtin_definitions()` 并列调用于 `dream-core-app/src/router/state.rs`）——**这意味着全新装机的用户也能看到完整 281 条目录，不是这台机器独有的一次性数据**。
 
-刻意不把 marketplace 逻辑塞进已经 6479 行的 `aionui-assistant/src/service.rs`（AGENTS.md 明文规定 1000 行/文件上限，这个文件已经 6.5 倍超标）——`AssistantRouterState` 新增平级字段 `marketplace_repo`，新路由 `GET /api/assistants/marketplace`（浏览，逐条查 `AssistantService::exists()` 判断 `installed`）+ `POST /api/assistants/marketplace/{id}/install`（安装，读目录条目组一个单元素 `ImportAssistantsRequest` 直接调用**已有的** `import_personas()`——安装就是复用上一轮做完测过的 upsert-by-id 逻辑，没有重新造"变成我自己的助手"这一段）。
+刻意不把 marketplace 逻辑塞进已经 6479 行的 `dream-core-assistant/src/service.rs`（AGENTS.md 明文规定 1000 行/文件上限，这个文件已经 6.5 倍超标）——`AssistantRouterState` 新增平级字段 `marketplace_repo`，新路由 `GET /api/assistants/marketplace`（浏览，逐条查 `AssistantService::exists()` 判断 `installed`）+ `POST /api/assistants/marketplace/{id}/install`（安装，读目录条目组一个单元素 `ImportAssistantsRequest` 直接调用**已有的** `import_personas()`——安装就是复用上一轮做完测过的 upsert-by-id 逻辑，没有重新造"变成我自己的助手"这一段）。
 
 顺带修了真机 CDP 验证时发现的遗留：`AssistantSource` 枚举只有 `Builtin/Generated/User` 三个变体，导入的人设在四处分散的字符串→枚举映射里全被 collapse 成 `"user"` 对外吐出（DB 列本身是对的，upsert-by-source_ref 判重靠它，只是没透传到 API）。加 `Imported` 变体后编译器揪出 10 处非穷尽 match 全部按"等同 User"处理，`deletable` 字段判定同步修正，新增回归测试锁死。
 
@@ -88,7 +88,7 @@
 
 ### 验证
 
-- 后端：新增 7 条测试（`aionui-db` 仓储 CRUD 2 条 + `aionui-assistant` 内嵌加载器 1 条 + `aionui-app` marketplace 路由 e2e 3 条含"浏览不产生真实助手行"的显式断言 + `AssistantSource` API 契约回归 1 条）全绿；`cargo build --workspace` 全量编译通过；`assistants_e2e.rs` 全量 55 条无回归。
+- 后端：新增 7 条测试（`dream-core-db` 仓储 CRUD 2 条 + `dream-core-assistant` 内嵌加载器 1 条 + `dream-core-app` marketplace 路由 e2e 3 条含"浏览不产生真实助手行"的显式断言 + `AssistantSource` API 契约回归 1 条）全绿；`cargo build --workspace` 全量编译通过；`assistants_e2e.rs` 全量 55 条无回归。
 - 前端：`tsc`/`lint`/`check-i18n` 全过。
 - 真机（重编 release + 内嵌，CDP 原始 WebSocket 直连）：
   - 侧边栏确认渲染豆包头像 + "助手与专家"文案。
@@ -99,13 +99,13 @@
 
 ### 起因
 
-用户通过 WorkBuddy 另外拉到一批更完整的专家数据（同一天但独立于上面"三、专家市场"用的那批），核实后确认可用，明确要求"换成更好数据"。原数据源（`crates/aionui-app/assets/marketplace-personas/personas.json` 旧版）连中文名和头像都没有——id/name 是 `a-share-advisor` 这类通用 kebab-case 标识，`rules/*.md` 没有 frontmatter，真机截图确认卡片全部显示统一机器人占位图标 + 英文标识符。新数据源（WorkBuddy `catalog_data.json` 252 条，`id/prof_zh/role_zh/desc_zh/cat_zh/avatar` 字段齐全）离产品要的"中文名+头像+分类"只差一层数据搬运。
+用户通过 WorkBuddy 另外拉到一批更完整的专家数据（同一天但独立于上面"三、专家市场"用的那批），核实后确认可用，明确要求"换成更好数据"。原数据源（`crates/dream-core-app/assets/marketplace-personas/personas.json` 旧版）连中文名和头像都没有——id/name 是 `a-share-advisor` 这类通用 kebab-case 标识，`rules/*.md` 没有 frontmatter，真机截图确认卡片全部显示统一机器人占位图标 + 英文标识符。新数据源（WorkBuddy `catalog_data.json` 252 条，`id/prof_zh/role_zh/desc_zh/cat_zh/avatar` 字段齐全）离产品要的"中文名+头像+分类"只差一层数据搬运。
 
-### 后端（`aionui-assistant`/`aionui-db`/`aionui-api-types`）
+### 后端（`dream-core-assistant`/`dream-core-db`/`dream-core-api-types`）
 
 - **`marketplace.rs`**：`MarketplaceManifestEntry`/`MarketplacePersona` 新增 `display_name`/`role_name`/`category`/`has_avatar` 四个字段；新增 `marketplace_avatar_bytes(id)` 从内嵌 `avatars/{id}.webp` 读字节。**`materialize_marketplace_personas` 补了一步 `repo.delete_missing(&keep_ids)`**——`upsert_many` 是纯 UPSERT，从不删除旧行，直接换 manifest 会让上一代的 281 个 id 变成永久孤儿行（这是本轮踩到的真实教训，不是预防性代码）。
-- **迁移 `036_marketplace_persona_display_fields.sql`**：给 `assistant_marketplace_personas` 加 `display_name TEXT`/`role_name TEXT`/`category TEXT`/`has_avatar INTEGER NOT NULL DEFAULT 0`（纯 flag，头像字节不进这张表，走内嵌资源）。`aionui-db` 的 `MarketplacePersonaRow`/`UpsertMarketplacePersonaParams`/`IAssistantMarketplaceRepository`（新增 `delete_missing`）/`sqlite_assistant_marketplace.rs` 同步跟进。
-- **`aionui-api-types::MarketplacePersonaResponse`** 加 `display_name`/`role_name`/`category`/`avatar`（`avatar` 是相对路由 `/api/assistants/marketplace/{id}/avatar`，不是字节本身）。`routes.rs` 新增 `GET /api/assistants/marketplace/{id}/avatar`（未安装状态下也能取头像，复用 `get_avatar` 同款 content-type 推断）。
+- **迁移 `036_marketplace_persona_display_fields.sql`**：给 `assistant_marketplace_personas` 加 `display_name TEXT`/`role_name TEXT`/`category TEXT`/`has_avatar INTEGER NOT NULL DEFAULT 0`（纯 flag，头像字节不进这张表，走内嵌资源）。`dream-core-db` 的 `MarketplacePersonaRow`/`UpsertMarketplacePersonaParams`/`IAssistantMarketplaceRepository`（新增 `delete_missing`）/`sqlite_assistant_marketplace.rs` 同步跟进。
+- **`dream-core-api-types::MarketplacePersonaResponse`** 加 `display_name`/`role_name`/`category`/`avatar`（`avatar` 是相对路由 `/api/assistants/marketplace/{id}/avatar`，不是字节本身）。`routes.rs` 新增 `GET /api/assistants/marketplace/{id}/avatar`（未安装状态下也能取头像，复用 `get_avatar` 同款 content-type 推断）。
 - **`marketplace_install` 的两处关键修正**：①安装时把新建助手的 `name` 换成 `entry.display_name`（不是原来的 `entry.name`）——快捷选择 chip、会话头部等展示面直接渲染 `assistant.name`，不会去读市场卡片的展示层覆盖，不改这行的话装完的助手名字会打回原始 PascalCase id；②`import_personas` 本身刻意不写头像（那是给用户手填路径设计的），安装成功后用新增的 `AssistantService::set_avatar_from_bytes(id, bytes, "webp")` 单独补一刀，把内嵌头像字节写进真正的助手记录（`avatar_type='user_asset'`），让"我的助手"tab 里也能看到同一张头像。
 - 数据资产：`personas.json`（`version: "2"`，252 条，`id` 沿用 PascalCase 与个人 `~/.claude/agents` 保持一致可追溯）+ `rules/{id}.md`（去 frontmatter 纯正文）+ `avatars/{id}.webp`（源图 512×512 PNG 用 ffmpeg 压到 128×128 WebP，8 张 SVG 头像该 ffmpeg build 解不了，脚本里 fallback 到 `npx sharp-cli`）。
 
@@ -115,7 +115,7 @@
 
 ### 验证
 
-`cargo test -p aionui-assistant -p aionui-db -p aionui-api-types -p aionui-app`（含 `assistants_e2e.rs`）全绿；前端 `tsc`/`lint` 过。真机重编内嵌 + CDP：专家市场标签页从显示 281 张机器人占位卡片变为 252 张真实中文名+头像卡片；点击安装后"我的助手"里的新条目头像正确显示（验证 `set_avatar_from_bytes` 链路）；直接查 SQLite 确认 `assistant_marketplace_personas` 行数收敛到 252，无旧数据孤儿行。
+`cargo test -p dream-core-assistant -p dream-core-db -p dream-core-api-types -p dream-core-app`（含 `assistants_e2e.rs`）全绿；前端 `tsc`/`lint` 过。真机重编内嵌 + CDP：专家市场标签页从显示 281 张机器人占位卡片变为 252 张真实中文名+头像卡片；点击安装后"我的助手"里的新条目头像正确显示（验证 `set_avatar_from_bytes` 链路）；直接查 SQLite 确认 `assistant_marketplace_personas` 行数收敛到 252，无旧数据孤儿行。
 
 ## 五、Guid 页聊天框"+"菜单新增专家选择器（对标 WorkBuddy 交互，纯前端新功能）
 

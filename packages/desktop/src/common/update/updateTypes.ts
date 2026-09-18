@@ -35,8 +35,6 @@ export interface UpdateCheckResult {
 
 export interface UpdateCheckRequest {
   includePrerelease?: boolean;
-  /** Defaults to iOfficeAI/Dream UI when omitted */
-  repo?: string;
 }
 
 export interface UpdateDownloadRequest {

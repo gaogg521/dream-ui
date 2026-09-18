@@ -8,7 +8,7 @@ const KILLABLE_NAMES = new Set([
   'electron',
   'onework',
   'onework.exe',
-  // Historical process names, kept so dev cleanup reaches old installs too.
+  // Legacy process names, kept so dev cleanup reaches old installs too.
   'aionui',
   'aionui.exe',
   '1onecode',
@@ -17,6 +17,14 @@ const KILLABLE_NAMES = new Set([
   'one work.exe',
   'one-work',
 ]);
+
+/**
+ * Substrings that identify one of OUR processes in a process-name listing.
+ * Kept next to KILLABLE_NAMES: the two drifted apart once already, and the name
+ * sweep below silently stopped matching the app after `onework` replaced the old
+ * executable name — so `bun run dev` left the previous run's window alive.
+ */
+const APP_NAME_FRAGMENTS = ['electron', 'onework', 'one work', 'one-work', '1onecode', 'aionui' /* legacy */];
 
 const log = (...args) => console.log('[dev-bootstrap]', ...args);
 const warn = (...args) => console.warn('[dev-bootstrap]', ...args);
@@ -77,16 +85,18 @@ function getProcessName(pid) {
 }
 
 function listLikelyConflictingProcesses() {
+  // The legacy executable names stay in both listings below so a dev run started
+  // from an older build is still found and cleaned up.
   try {
     if (isWindows()) {
       const output = run(
-        "powershell -NoProfile -Command \"Get-Process | Where-Object { $_.ProcessName -in @('electron','AionUi','node','bun') } | Select-Object ProcessName,Id | ConvertTo-Json -Compress\""
+        "powershell -NoProfile -Command \"Get-Process | Where-Object { $_.ProcessName -in @('electron','onework','1onecode','AionUi','node','bun') } | Select-Object ProcessName,Id | ConvertTo-Json -Compress\""
       );
       const parsed = output ? JSON.parse(output) : [];
       return Array.isArray(parsed) ? parsed : [parsed];
     }
 
-    const output = run(`ps -A -o pid=,comm= | egrep "electron|AionUi|node|bun" || true`);
+    const output = run(`ps -A -o pid=,comm= | egrep "electron|onework|1onecode|AionUi|node|bun" || true`);
     return output
       .split(/\r?\n/)
       .filter(Boolean)
@@ -133,7 +143,7 @@ function cleanupByName() {
     const pid = Number(proc.Id ?? proc.id);
     const rawName = String(proc.ProcessName ?? proc.name ?? '').toLowerCase();
     if (!pid || pid === process.pid) continue;
-    if (!['electron', 'aionui'].some((k) => rawName.includes(k))) continue;
+    if (!APP_NAME_FRAGMENTS.some((k) => rawName.includes(k))) continue;
     if (killPid(pid)) {
       killed.push({ pid, name: rawName });
     }

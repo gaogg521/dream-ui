@@ -5,6 +5,7 @@
 - 页码
 """
 import os
+import pathlib
 import glob
 from fpdf import FPDF
 
@@ -12,8 +13,8 @@ SOFTWARE_NAME = "1ONE Work 智能协作平台软件"
 VERSION = "V2.1"
 LINES_PER_PAGE = 50
 PAGES = 30  # 前30页 + 后30页
-PROJECT_ROOT = r"D:\aionui-m0\1oneUI"
-OUTPUT = r"D:\aionui-m0\1oneUI\1ONE_Work_源代码鉴别材料.pdf"
+PROJECT_ROOT = str(pathlib.Path(__file__).resolve().parents[1])
+OUTPUT = str(pathlib.Path(PROJECT_ROOT) / 'One_Work_源代码鉴别材料.pdf')
 
 # 中文字体（Windows 微软雅黑）
 FONT_REG = r"C:\Windows\Fonts\msyh.ttc"

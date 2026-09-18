@@ -38,8 +38,8 @@ BUG5（`merge_config` 按键合并，见 [`session-2026-07-13-enterprise-client-
 
 ## 踩坑
 
-- 重编后落地 bundled 时 `prepareAioncore.js` 报 `EPERM` 删不掉 `resources/bundled-aioncore/win32-x64`（`fs.rmSync` 失败），但 Bash `rm -rf` 能删掉同一目录——疑似 Windows 侧瞬时文件锁（Defender 扫描之类），不是真的被进程占用。重试 `rm -rf` 后再跑脚本就通过了。
-- 桌面端已经有个旧实例在跑（用户正在看的那个窗口，CDP 显示停在 `#/enterprise/console`），新起的 dev 检测到单例锁直接退出。新代码要生效必须重启窗口——这个操作会丢失当前页面状态，所以先问了用户再动手（`taskkill /F /T` 杀掉整个 electron 进程树，包括子进程 aioncore.exe，再重新 `bun run dev`）。
+- 重编后落地 bundled 时 `prepareDreamcore.js` 报 `EPERM` 删不掉 `resources/bundled-dreamcore/win32-x64`（`fs.rmSync` 失败），但 Bash `rm -rf` 能删掉同一目录——疑似 Windows 侧瞬时文件锁（Defender 扫描之类），不是真的被进程占用。重试 `rm -rf` 后再跑脚本就通过了。
+- 桌面端已经有个旧实例在跑（用户正在看的那个窗口，CDP 显示停在 `#/enterprise/console`），新起的 dev 检测到单例锁直接退出。新代码要生效必须重启窗口——这个操作会丢失当前页面状态，所以先问了用户再动手（`taskkill /F /T` 杀掉整个 electron 进程树，包括子进程 dreamcore.exe，再重新 `bun run dev`）。
 - CDP MCP 工具默认没连桌面端的 9230 端口（那是它自己的独立 Chrome 实例），跟上一轮一样改用 node 原生 WebSocket 直连 `/json/list` 的 page ws 跑 `Runtime.evaluate`（helper 见 scratchpad `cdp-eval.mjs`）。renderer 内部 `fetch('/api/one/...')` 相对路径直接 404（vite dev server 没代理这条），验证 API 层行为改成直接操作 DOM 触发真实保存流程 + 页面 reload 拉取，而不是绕过 UI 直接打 API。
 
 ## 提交 / 推送（已完成）

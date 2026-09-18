@@ -204,6 +204,7 @@ worktrees/
 docs/superpowers/
 resources/bundled-bun
 resources/bundled-dreamcore
+# legacy directory name, still produced by older local checkouts
 resources/bundled-aioncore
 resources/hub
 /resources/windows/support/_sentry-dsn.generated.nsh
@@ -218,6 +219,9 @@ dist-server/
 # machine (e.g. ~/.one-dev/builtin-skills/...), so committing them gives
 # everyone else broken links. The repo's own skills live in real directories
 # next to them (.claude/skills/architecture/, /testing/, ...) and stay tracked.
+.dream/skills/
+.claude/skills/one-config
+# legacy names, still present in older working copies
 .aionrs/skills/
 .claude/skills/aionui-config
 .claude/skills/antigravity-cli-issue-triage

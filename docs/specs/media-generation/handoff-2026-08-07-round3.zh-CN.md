@@ -98,7 +98,7 @@ HTTP 与 IPC **共用同一份实现**（原本两处接线各自内联了一份
 
 ### ⚠️ 安全面：必须知道的一条实测事实
 
-这条路由**会花钱**，而且它和只读文件路由一样，绕开了 `/api/*` → aioncore 的鉴权。为判断这是不是我新开的门，我实测了：
+这条路由**会花钱**，而且它和只读文件路由一样，绕开了 `/api/*` → dreamcore 的鉴权。为判断这是不是我新开的门，我实测了：
 
 ```
 curl -o /dev/null -w "%{http_code}" http://127.0.0.1:25809/api/conversations   # → 200，无任何凭据
@@ -145,7 +145,7 @@ curl -o /dev/null -w "%{http_code}" http://127.0.0.1:25809/api/conversations   #
      是否已设过 WebUI 密码，都可能影响结论。**别拿 dev 的观察直接当发布态的结论**——
      先看打包版/开启远程访问后的实际表现，再决定要不要改。
    - 若确认是缺口，**收紧的位置是 WebUI 那一层**（`packages/web-host` 的静态服务器，
-     它现在只是把 `/api/*` 原样转发给 aioncore），而不是给 `/media/*` 单独加锁——
+     它现在只是把 `/api/*` 原样转发给 dreamcore），而不是给 `/media/*` 单独加锁——
      后者只会让 `/api/*` 那一大片仍然敞着，却给人一种已经锁上的错觉。
    - 改动会影响所有 WebUI 用户的登录体验，属于**动手前先跟用户对齐方案**的那类，别直接改。
 
@@ -156,8 +156,8 @@ curl -o /dev/null -w "%{http_code}" http://127.0.0.1:25809/api/conversations   #
 - dev 应用第四轮**已重启**（`bun run dev`，日志 `dev-round4.log`，启动于 2026-08-07 20:0x，**含 `6029d291f`/`bbaf22f3d`**）。
   后端 **61253**、WebUI **25809**（配置值，重启不变）、CDP **9230**。**后端端口每次重启都变，从日志现取；
   写交接时务必连同 app 的启动时间一起写。**
-- 探测产物：`D:\aionui-m0\media-multin-probe\`（3 张，其中两张是 n=2 扇出实证）、
-  `D:\aionui-m0\media-seedream-probe\`（1 张，**第四轮图生图的实证，删之前先看一眼**）。均可删。
+- 探测产物：`D:\旧中转目录\media-multin-probe\`（3 张，其中两张是 n=2 扇出实证）、
+  `D:\旧中转目录\media-seedream-probe\`（1 张，**第四轮图生图的实证，删之前先看一眼**）。均可删。
 - 第四轮在 WebUI 里留下测试会话 `83e921a3`（柴犬图，含完整结果卡片），可删。
 - 工作区里有不属于本线的未跟踪文件：`electron.vite.config.*.mjs`、`resources/文生图.png` 等三张用户放的截图。**别提交**。
 
@@ -238,9 +238,9 @@ curl -o /dev/null -w "%{http_code}" http://127.0.0.1:25809/api/conversations   #
 
 **先回答 §6 第 5 条要求的那个前置问题：这不是 dev 造成的。** 证据链四条，全部读的是代码或实测：
 
-1. `packages/web-host` **自己没有任何鉴权**，`/api/*` 原样反代给 aioncore（`static-server.ts` 顶部注释明写「All auth goes to backend's aionui-auth crate」）；
+1. `packages/web-host` **自己没有任何鉴权**，`/api/*` 原样反代给 dreamcore（`static-server.ts` 顶部注释明写「All auth goes to backend's dream-core-auth crate」）；
 2. `backend-launcher.ts:637` **无条件** `local: true` → 恒传 `--local`，**不分 dev / 打包**；
-3. `aionui-auth/middleware.rs:63-79`：local 模式下**永不返回 401**，没有 token 就注入 `system_default_user`（机主身份，带管理员角色）；
+3. `dream-core-auth/middleware.rs:63-79`：local 模式下**永不返回 401**，没有 token 就注入 `system_default_user`（机主身份，带管理员角色）；
 4. `allowRemote` 打开时 WebUI 绑 **0.0.0.0**（本机实测 25809 就绑在 0.0.0.0，后端 61253 只在 127.0.0.1）。
 
 四条叠起来的实测后果（**全部从 LAN 地址、零凭据**）：
@@ -255,7 +255,7 @@ POST /media/jobs               → 建作业成功（会花钱）
 
 ⚠️ **还有一处比 `/api/conversations` 更糟的**：`/api/webui/{reset-password,change-password,change-username,generate-qr-token}` 这组端点在 `routes.rs:179` 注释里写的是「local-only, enforced inside each handler」，但 `ensure_local_mode(state.local)` 检查的是**进程 flag**，不是**调用方是不是本机**——全仓 grep 不到任何 `ConnectInfo` / `is_loopback` / peer-address 校验。我用 `GET` 打这三条 POST 路由，从 LAN 拿到的是 **405**（说明路由可达、没被鉴权拦下），即从 LAN `POST /api/webui/reset-password` 大概率能重置机主的 WebUI 密码并在响应里拿到新密码。**我没有真的 POST**——那会改掉你的密码。这一条需要你自己验或授权我验。
 
-**推荐方案（A）：把闸门从「进程 flag」改成「连接来源」。** 在 aioncore 取 `ConnectInfo<SocketAddr>`：peer 是环回 → 保持现在的 operator 回落（桌面端免登录不变）；peer 非环回 → 走完整 JWT 校验（WebUI 登录这才真正生效）。同一改动顺带堵住上面那组 `/api/webui/*`。
+**推荐方案（A）：把闸门从「进程 flag」改成「连接来源」。** 在 dreamcore 取 `ConnectInfo<SocketAddr>`：peer 是环回 → 保持现在的 operator 回落（桌面端免登录不变）；peer 非环回 → 走完整 JWT 校验（WebUI 登录这才真正生效）。同一改动顺带堵住上面那组 `/api/webui/*`。
 
 - 收在正确的层：`/api/*` 一大片和 `/media/*` 一起被覆盖，不会出现「只锁了媒体、其余照样敞着」的错觉；
 - **不能只把 `local` 改成 `false`**：桌面端渲染层不发 token（middleware 注释明写），那样会把桌面端自己打成 401。
@@ -277,7 +277,7 @@ POST /media/jobs               → 建作业成功（会花钱）
 
 ### 10.2 为什么不能直接取 ConnectInfo（原推荐方案的机制被实测推翻）
 
-我一开始的建议是「在 aioncore 取 `ConnectInfo<SocketAddr>`，peer 非环回就要求 JWT」。**行不通**：
+我一开始的建议是「在 dreamcore 取 `ConnectInfo<SocketAddr>`，peer 非环回就要求 JWT」。**行不通**：
 `static-server.ts` 的用户侧监听是 `net.createServer`，它把连接**裸 TCP splice** 给内部 http server 或后端，
 所以后端看到的 peer **恒为 127.0.0.1**——远程和本地在那一层长得一模一样。
 
@@ -287,10 +287,10 @@ POST /media/jobs               → 建作业成功（会花钱）
 
 | 层                                    | 改动                                                                                                                                          |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `static-server.ts` `forwardToBackend` | 给每个转发给后端的请求**设置**（非追加）`x-aionui-forwarded-origin: webui`                                                                    |
+| `static-server.ts` `forwardToBackend` | 给每个转发给后端的请求**设置**（非追加）`x-dream-ui-forwarded-origin: webui`                                                                  |
 | `static-server.ts` `stampProxyOrigin` | `/ws` 与 `/api/stt/stream` 是裸 splice、不经 `forwardToBackend`，改为把该头**插进请求头字节**（插在请求行之后，因而排在客户端任何同名头之前） |
-| `aionui-auth/middleware.rs`           | `auth_middleware` 的 operator 回落改为 `state.local && !is_webui_proxied(...)`；带标记的请求落到严格分支，无有效 session 即 401               |
-| `aionui-auth/routes.rs`               | 把原 `api_public` 拆成「真·公开」(`/api/auth/status`) 与 `api_local_only`，后者整组加 `reject_webui_proxied_middleware` → 403                 |
+| `dream-core-auth/middleware.rs`       | `auth_middleware` 的 operator 回落改为 `state.local && !is_webui_proxied(...)`；带标记的请求落到严格分支，无有效 session 即 401               |
+| `dream-core-auth/routes.rs`           | 把原 `api_public` 拆成「真·公开」(`/api/auth/status`) 与 `api_local_only`，后者整组加 `reject_webui_proxied_middleware` → 403                 |
 | `static-server.ts` extraHandlers 前   | `/media/*` 不经后端，**自己不做 JWT 校验**，而是拿调用方凭据去问后端 `/api/auth/user`（唯一事实源仍在后端），失败即 401                       |
 
 **信任模型**：后端只绑环回，所以伪造这个头需要已经能在这台机器上跑代码；且该头只会让检查**更严**，
@@ -313,8 +313,8 @@ POST /media/jobs               → 建作业成功（会花钱）
 
 ### 10.5 验证
 
-- 后端：`cargo test -p aionui-auth` 全绿（新增 3 条）、`cargo fmt --check` 与 `clippy -p aionui-auth -D warnings` 干净、
-  `cargo test -p aionui-app --test auth_e2e` 14 绿（确认没改坏既有鉴权契约）。
+- 后端：`cargo test -p dream-core-auth` 全绿（新增 3 条）、`cargo fmt --check` 与 `clippy -p dream-core-auth -D warnings` 干净、
+  `cargo test -p dream-core-app --test auth_e2e` 14 绿（确认没改坏既有鉴权契约）。
 - 前端：`static-server.unit.test.ts` 22 绿（新增 6 条）、`bunx tsc --noEmit` 0 错。
 - **两处负向验证**（关掉机制、确认恰好该红的红）：后端闸门（2 红，而「带有效 session 仍放行」那条照常绿，
   证明不是把断言写松了）、前端标记与 `/media/*` 闸门（3 红，而「有 session 就放行」那条照常绿）。
@@ -397,7 +397,7 @@ GET /ws HTTP/1.1\r\nHost: h\r\n\r\nGET /api/providers HTTP/1.1\r\nHost: h\r\n\r\
 
 审计称 `/api/office-watch-proxy/{port}` 的 port 直接来自路径、无白名单，可打本机任意端口。
 **我实测打不通**：任意端口一律 **403**。读码确认存在校验——
-`aionui-office/src/proxy.rs:66,79` 的 `is_active_port` / `is_active_watch_port`，
+`dream-core-office/src/proxy.rs:66,79` 的 `is_active_port` / `is_active_watch_port`，
 失败即 `ProxyError::PortNotActive` → Forbidden。
 
 它之所以下错结论，是因为 grep 的是 `allowed_ports` / `is_managed` 这些**它自己猜的名字**，
@@ -408,7 +408,7 @@ GET /ws HTTP/1.1\r\nHost: h\r\n\r\nGET /api/providers HTTP/1.1\r\nHost: h\r\n\r\
 ### 11.5 【既有 · 未修 · 交给你判断】
 
 - `/api/providers` **明文返回 api_key**，而且这是被测试**主动锁死**的行为
-  （`aionui-api-types/src/provider.rs` 的 `test_provider_response_api_key_plaintext` 断言不含 `***`）。
+  （`dream-core-api-types/src/provider.rs` 的 `test_provider_response_api_key_plaintext` 断言不含 `***`）。
   收紧鉴权后它不再匿名可读，但对企业部署里任何**已登录的普通成员**依然可读。要改的话得先改那条测试。
 - `--local` 时 **CSRF 中间件整个不挂**（`router/routes.rs:639-646`），而桌面端恒传 `--local`。
   会话 cookie 是 `SameSite=Lax`，跨站 POST 打不进来，所以**审计没能给出可用的利用链**，
@@ -436,7 +436,7 @@ GET /ws HTTP/1.1\r\nHost: h\r\n\r\nGET /api/providers HTTP/1.1\r\nHost: h\r\n\r\
 | 修复过程中自己引入的 2 个缺陷 | 已修 + 回归测试（§11.1 / §11.2）                                 |
 | 长期红的 6 条测试             | 已修，**全量 3281 绿 / 0 失败**                                  |
 | 提交                          | 1oneUI `da0a00bda` / 1oneCore `ba4e7ee6`，均在 `origin/one-main` |
-| 内嵌 aioncore                 | 已重编（20:40），晚于全部 Rust 改动                              |
+| 内嵌 dreamcore                | 已重编（20:40），晚于全部 Rust 改动                              |
 
 两仓工作区干净，只余 4 个**不属于本线**的未跟踪文件（`electron.vite.config.*.mjs` 与用户放的三张截图）。
 
@@ -451,8 +451,8 @@ GET /ws HTTP/1.1\r\nHost: h\r\n\r\nGET /api/providers HTTP/1.1\r\nHost: h\r\n\r\
 
 ### 12.3 环境残留（可删，但删之前知道它们是什么）
 
-- 探测产物：`D:\aionui-m0\media-multin-probe\`（3 张，n=2 扇出实证）、
-  `D:\aionui-m0\media-seedream-probe\`（2 张，**图生图实证 + 一次取消验证**）。
+- 探测产物：`D:\旧中转目录\media-multin-probe\`（3 张，n=2 扇出实证）、
+  `D:\旧中转目录\media-seedream-probe\`（2 张，**图生图实证 + 一次取消验证**）。
 - dev 日志：`1oneUI/dev-fanout.log`、`dev-multin.log`、`dev-verify*.log`、`dev-round4{,b,c,d,e}.log`。
 - WebUI 里的测试会话 `83e921a3`（柴犬图，含完整结果卡片）。
 - dev 应用**仍在跑**：启动于 2026-08-07 21:0x（`dev-round4e.log`），后端 **62923**、WebUI **25809**、CDP **9230**。
@@ -506,7 +506,7 @@ GET /ws HTTP/1.1\r\nHost: h\r\n\r\nGET /api/providers HTTP/1.1\r\nHost: h\r\n\r\
 | 3   | `api_key` 可见性        | ✅ 已按用户边界处理（13.2） |
 | 4   | `--local` 下 CSRF 不挂  | 用户明确**暂不考虑**        |
 
-全量：前端 **3284 绿 / 0 失败**；后端 `aionui-system` / `aionui-auth` 全绿。
+全量：前端 **3284 绿 / 0 失败**；后端 `dream-core-system` / `dream-core-auth` 全绿。
 
 ### 13.4 README 已补多媒体能力（1oneUI `7328d2438`）
 

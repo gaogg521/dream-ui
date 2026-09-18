@@ -1,6 +1,6 @@
 # 2026-07-08：企业部署模式迁移 + 企业管理后台控制台首页
 
-> 读者：后续接手的 AI / 开发者。仓库 `D:\aionui-m0\AionUi`(one-main)。**纯前端改动,未 commit、未打包。**
+> 读者：后续接手的 AI / 开发者。仓库 `D:\旧中转目录\dream-ui`(one-main)。**纯前端改动,未 commit、未打包。**
 
 ## 背景（用户两个需求）
 
@@ -52,7 +52,7 @@
 - 纯前端:`bunx tsc --noEmit` 过、`oxlint` 5 文件 0/0、两个 common.json 合法、`i18n:types` unchanged。
 - 改动仅 `packages/desktop/src/renderer/**` → `frontend-dev.ps1` 热更新即可,**不用重编后端**。
 - dev 单实例锁:安装版在跑时 dev 会 exit code 5(`Another instance`),需先关安装版。
-- computer-use 授权:dev 窗口是 `electron.exe`(路径 `d:\aionui-m0\...\electron.exe`),不是安装版 `1onecode.exe`——授权时传 basename `electron.exe`。
+- computer-use 授权:dev 窗口是 `electron.exe`(路径 `d:\旧中转目录\...\electron.exe`),不是安装版 `1onecode.exe`——授权时传 basename `electron.exe`。
 
 ## 自测进度 / 下一步
 

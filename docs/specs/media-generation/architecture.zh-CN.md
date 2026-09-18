@@ -19,7 +19,7 @@
 | 白名单只能硬编码三条规则（gemini / openrouter.ai / antigravity）+ 模型名含 `image\|banana\|imagine`             | `imageModelAllowlist.ts:30-48`                                               |
 | 工具 schema 只有 `prompt` / `image_uris` / `workspace_dir`，无尺寸/比例/张数/质量/seed/负面词                   | `imageGenServer.ts:78-96`                                                    |
 | 多图输出只取 `images[0]`，其余直接丢                                                                            | `imageGenCore.ts:299`                                                        |
-| 全局唯一图片模型，靠 `AIONUI_IMG_*` 环境变量下发给 MCP 子进程（**api_key 明文进子进程 env**），不能按会话切     | `packages/desktop/src/common/config/imageGenerationMcpEnv.ts`                |
+| 全局唯一图片模型，靠 `DREAM_IMG_*` 环境变量下发给 MCP 子进程（**api_key 明文进子进程 env**），不能按会话切      | `packages/desktop/src/common/config/imageGenerationMcpEnv.ts`                |
 | 能力判定靠模型名正则                                                                                            | `packages/desktop/src/common/utils/modelCapabilities.ts:18-28`               |
 
 被结构性排除（不是没配，是接不了）：DALL·E 3、gpt-image-1、Flux、SD、Seedream/即梦、通义万相、Midjourney、Recraft、Ideogram，以及一切 OpenAI 兼容网关（new-api/one-api）上的图片模型。
@@ -31,7 +31,7 @@
 
 ### 1.3 输入侧不弱，短板在生成与呈现
 
-aionrs 有 `ContentBlock::Image` + `view_image` 工具（JPEG/PNG/GIF/WebP ≤20MB），看图是通的。**但 aionrs 整体是纯文本架构**（图片/音视频/PDF 转文字注入 agentPrompt），视频内容 agent 看不了——这是本设计的边界约束之一。
+dream-engine 有 `ContentBlock::Image` + `view_image` 工具（JPEG/PNG/GIF/WebP ≤20MB），看图是通的。**但 dream-engine 整体是纯文本架构**（图片/音视频/PDF 转文字注入 agentPrompt），视频内容 agent 看不了——这是本设计的边界约束之一。
 
 ### 1.4 凭据侧的好消息
 
@@ -60,14 +60,14 @@ DashScope（`dashscope.aliyuncs.com/compatible-mode/v1`）与火山方舟 Ark（
 5. 参数面完整并按模型校验；多图全收不再只取第一张。
 6. 呈现侧媒体一等公民：多图画廊、视频播放器、进度卡片；附件认视频。
 7. 企业管控闭环：媒体生成纳入成本上限与模型 allowlist（当前完全绕过，是真实合规缺口）。
-8. 三种 agent 后端（aionrs / Claude Code / Codex CLI）零区别对待——继续走 MCP 一次接线全通。
+8. 三种 agent 后端（dream-engine / Claude Code / Codex CLI）零区别对待——继续走 MCP 一次接线全通。
 
 ### 非目标（本期不做）
 
 - 不做本地推理（本地 SD/ComfyUI 集成）。
 - 不做音频生成 / TTS（语音已有独立链路）。
 - 不做媒体编辑器（裁剪/标注）；「重新生成/出变体/以图生视频」按钮属呈现层增强，排在主链路之后。
-- 不动 aioncore 会话消息 schema（阶段一至四完全在 1oneUI 内闭环；见 §8 开放问题 Q4）。
+- 不动 dreamcore 会话消息 schema（阶段一至四完全在 1oneUI 内闭环；见 §8 开放问题 Q4）。
 
 ---
 
@@ -76,7 +76,7 @@ DashScope（`dashscope.aliyuncs.com/compatible-mode/v1`）与火山方舟 Ark（
 ```
                     ┌─────────────────────────────────────────────┐
   agent 后端         │ 1oneUI 主进程                                │
-  (aionrs/Claude/    │                                             │
+  (dream-engine/Claude/    │                                             │
    Codex, 说 MCP)    │  ┌──────────────────┐   ┌────────────────┐  │
       │              │  │ MediaJobService  │──▶│ 企业管控 precheck│  │
       ▼              │  │  (job 状态机/持久化│   │ (阶段五,调1oneCore│ │
@@ -114,7 +114,7 @@ DashScope（`dashscope.aliyuncs.com/compatible-mode/v1`）与火山方舟 Ark（
 
 **D3 — 能力判定数据驱动。** 新建 `mediaModelCatalog`（声明式目录，§4.2），`isImageGenSupported` 与 `CAPABILITY_PATTERNS.image_generation` 降级为目录未命中时的兜底。白名单从「硬编码规则」变「目录查询」。
 
-**D4 — job 落库在主进程本地，不动 aioncore schema。** 阶段一至四 1oneUI 内闭环；企业管控通过调用 1oneCore 既有风格的 HTTP 端点实现（阶段五，跨仓）。个人版红线：无企业配置时零额外请求、行为零变化。
+**D4 — job 落库在主进程本地，不动 dreamcore schema。** 阶段一至四 1oneUI 内闭环；企业管控通过调用 1oneCore 既有风格的 HTTP 端点实现（阶段五，跨仓）。个人版红线：无企业配置时零额外请求、行为零变化。
 
 **D5 — 三种形态统一收敛到一个适配器接口。** Form B 现有逻辑（`imageGenCore.ts`）不重写，整体挪进 `ChatMultimodalAdapter`，同批修掉 `images[0]` 只取第一张的问题。
 
@@ -260,14 +260,14 @@ type MediaModelSpec = {
 
 参数校验在**主进程**按 catalog spec 做（不在薄壳做）：不支持的参数**裁剪并在返回文本中注明**，而不是报错——避免 agent 在参数上反复试错盲搜（deferred-schema 盲搜的教训：给 agent 的失败信号要可收敛）。
 
-**imageGenServer.ts 薄壳化**：保留工具注册与 schema，`executeImageGeneration` 调用替换为 TCP 转发；`AIONUI_IMG_*` env 读取逻辑保留一个版本作为降级兼容（主进程 TCP 端口缺失时报清晰错误，不静默回落——静默回落到旧行为正是要根除的模式）。
+**imageGenServer.ts 薄壳化**：保留工具注册与 schema，`executeImageGeneration` 调用替换为 TCP 转发；`DREAM_IMG_*` env 读取逻辑保留一个版本作为降级兼容（主进程 TCP 端口缺失时报清晰错误，不静默回落——静默回落到旧行为正是要根除的模式）。
 
 ### 4.5 配置与会话级模型选择
 
 - `ClientBusinessSettingMap` 增 `'tools.videoGenerationModel'`（形状同 `ImageGenerationModelSetting`）；设置页 Tools 区图片/视频模型分开选。
 - 模型下拉的候选 = 遍历 providers × models 中 catalog 能解析出对应 kind spec 的组合（替代现在的 allowlist 硬规则）。
 - **会话级覆盖**：聊天输入框「+」菜单加「图片模型 / 视频模型」选择器（复用专家选择器的交互模式与单排 chip 布局先例）；会话覆盖存会话侧配置，主进程执行时优先级：会话覆盖 > 全局设置。
-- env 下发瘦身：`AIONUI_IMG_*` 五个变量退役为兼容层，薄壳只需 `AIONUI_MEDIA_MCP_PORT` 一个变量（对齐 `TEAM_KNOWLEDGE_MCP_PORT` 模式）。
+- env 下发瘦身：`DREAM_IMG_*` 五个变量退役为兼容层，薄壳只需 `DREAM_MEDIA_MCP_PORT` 一个变量（对齐 `TEAM_KNOWLEDGE_MCP_PORT` 模式）。
 
 ### 4.6 呈现层
 
@@ -276,7 +276,7 @@ type MediaModelSpec = {
 - **结果展示**：多图画廊（缩略图网格 + 点开大图）、视频 `<video>` 播放器 + 封面帧（下载完成时用 ffmpeg 不可依赖——桌面端无内置 ffmpeg，封面帧取「视频元素首帧截图」由渲染层实现，主进程不做转码）。
 - **文本兼容**：工具返回文本仍带 `Generated image saved to: <path>` 行（存量渲染逻辑与 agent 引用习惯不破坏），新增结构化展示是叠加不是替换。
 - **附件**：上传入口认视频（供图生视频首帧/参考）；大小上限单独设（视频 ≫ 图片）。
-- **agent 边界**：aionrs 纯文本架构 + `view_image` 只认图片——视频结果对 agent 只呈现为「路径 + 元数据文本」，工具描述中明确告知 agent 不要尝试读取视频内容。
+- **agent 边界**：dream-engine 纯文本架构 + `view_image` 只认图片——视频结果对 agent 只呈现为「路径 + 元数据文本」，工具描述中明确告知 agent 不要尝试读取视频内容。
 
 ### 4.7 企业管控（阶段五，跨仓 1oneCore）
 
@@ -377,13 +377,13 @@ agent 调 one_video_generation(prompt, duration=5, first_frame_image=...)
 1. **图片优先 vs 视频优先**：本文按「图片起步、阶段二建 Form C 地基」排（另一会话已给出同样建议）。若商业演示急需视频，可将阶段三提前与阶段二并行（阶段二本就为视频铺路）。
 2. **job 持久化形式**：起步 `media-jobs.json`（userData）。若后续要做 job 中心页/历史检索再升 SQLite——⚠️ 注意本机 SQLite 曾有 WAL 损坏史（已切 DELETE journal），新库如引入需沿用同配置。
 3. **企业 precheck 端点形状**：`media-precheck` 放 one-billing 还是复用 SendGate 的 check 逻辑抽公共函数？涉及 1oneCore 侧设计，阶段五前需单独对齐。
-4. **媒体消息要不要成为 aioncore 会话 schema 的一等公民**：本设计刻意回避（文本路径 + 渲染层识别叠加展示），代价是历史会话跨端同步时富展示依赖渲染层重解析。若未来 WebUI/移动端要求一致富展示，再评估动消息 schema。
+4. **媒体消息要不要成为 dreamcore 会话 schema 的一等公民**：本设计刻意回避（文本路径 + 渲染层识别叠加展示），代价是历史会话跨端同步时富展示依赖渲染层重解析。若未来 WebUI/移动端要求一致富展示，再评估动消息 schema。
 5. **统一 mediaGenServer vs 独立 videoGenServer**：一个 stdio 进程注册三个工具（省进程、Defender 扫描少一次）vs 两个进程（隔离、但多一份启动开销）。倾向**统一进 mediaGenServer**（imageGenServer 更名迁移，保留旧 js 文件名兼容既有 transport 识别），实现期定。
 
 ---
 
 ## 9. 与既有约定的关系
 
-- **命名/品牌**:新增用户可见文案全走 i18n;新工具/常量用 `one_` / `BUILTIN_MEDIA_*` 前缀;`aionui_image_generation` 工具名与 `AIONUI_IMG_*` env 作为对外 API 保留不改。
+- **命名/品牌**:新增用户可见文案全走 i18n;新工具/常量用 `one_` / `BUILTIN_MEDIA_*` 前缀;`aionui_image_generation` 工具名与 `DREAM_IMG_*` env 作为对外 API 保留不改。
 - **验证成本与改动匹配**:阶段一是机械性适配器（编译器兜底 + 单测 + 一次真机出图即可）;阶段二/三是地基工程,按「做透」标准全场景验证（恢复/取消/超时/并发）。
 - **文档**:每阶段落地后按惯例补 session 文档并回链本设计;本设计文档随实现演进保持更新。

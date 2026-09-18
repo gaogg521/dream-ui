@@ -12,11 +12,11 @@
 
 ## 0. 三十秒看懂现在是什么状态
 
-| 仓           | HEAD        | 状态                                   |
-| ------------ | ----------- | -------------------------------------- |
-| **aionrs**   | `051ff54`   | ✅ **已提交、已推送**                  |
-| **1oneUI**   | `5694f7a60` | ✅ 已提交（纯文档），⚠️ **未推送**     |
-| **1oneCore** | `f5120f15`  | ⚠️ **代码全在工作区，一次都没 commit** |
+| 仓               | HEAD        | 状态                                   |
+| ---------------- | ----------- | -------------------------------------- |
+| **dream-engine** | `051ff54`   | ✅ **已提交、已推送**                  |
+| **1oneUI**       | `5694f7a60` | ✅ 已提交（纯文档），⚠️ **未推送**     |
+| **1oneCore**     | `f5120f15`  | ⚠️ **代码全在工作区，一次都没 commit** |
 
 **功能上是做完的**：两个洞都修了、测试都补了、三条负向验证都做过。
 **流程上没做完**：1oneCore 没提交没推送、临时 `[patch]` 还在、内嵌后端没重编、
@@ -30,16 +30,16 @@
 本地 OCR 那条）在 19:30 把本轮的 1oneCore 代码一并吞进了它自己的提交并推了出去**，
 所以"1oneCore 一次都没 commit"不再成立。
 
-| 仓           | 收尾后 HEAD | 说明                                                                    |
-| ------------ | ----------- | ----------------------------------------------------------------------- |
-| **aionrs**   | `051ff54`   | 未变，早已推送                                                          |
-| **1oneUI**   | `fe56b8e3c` | 另一会话推到 `a877942bd`；本次补了 `docs/README.md` 漏掉的索引行        |
-| **1oneCore** | `38cdf307`  | 另一会话推到 `0886193f`（含本轮代码）；本次修 Cargo.lock + 补 CLAUDE.md |
+| 仓               | 收尾后 HEAD | 说明                                                                    |
+| ---------------- | ----------- | ----------------------------------------------------------------------- |
+| **dream-engine** | `051ff54`   | 未变，早已推送                                                          |
+| **1oneUI**       | `fe56b8e3c` | 另一会话推到 `a877942bd`；本次补了 `docs/README.md` 漏掉的索引行        |
+| **1oneCore**     | `38cdf307`  | 另一会话推到 `0886193f`（含本轮代码）；本次修 Cargo.lock + 补 CLAUDE.md |
 
 ### ⚠️ 那次合并推送留下了一个真缺陷：主干编不过
 
 `0886193f` 提交的 `capability/backend_output_sink.rs` 实现了
-`OutputSink::emit_delegate_usage`，但**它的 Cargo.lock 仍指向 aionrs `1d485e5`**
+`OutputSink::emit_delegate_usage`，但**它的 Cargo.lock 仍指向 dream-engine `1d485e5`**
 —— 那是 `DelegateUsageSink` 加入之前的提交，其 `OutputSink` 根本没有这个方法。
 本地那个临时 `[patch]` 块替它兜住了，所以本机一路编译通过，**而干净 checkout
 会直接编译失败**。已在 `38cdf307` 修好（删 patch 块 + `cargo update` 到 `051ff54`）。
@@ -50,20 +50,20 @@
 
 ### 代码在那次重构里的位置变化（治理逻辑已核实完好）
 
-`resolve_vision_delegate` 从 `factory/aionrs.rs` 搬到了
-`capability/vision_delegate.rs`，`factory/aionrs_vision_delegate_test.rs` 相应
+`resolve_vision_delegate` 从 `factory/dream-engine.rs` 搬到了
+`capability/vision_delegate.rs`，`factory/dream-engine_vision_delegate_test.rs` 相应
 变成 `capability/vision_delegate_test.rs`。逐项核实过**闸门没有在搬家中被削弱**：
 仍在能力判定之后、`resolve_provider_config_for_bridge` 之前，`Ok(false)` 与 `Err`
 都 fail closed，6 条治理测试 + relay 3 + orchestrator 3 全部存活。
 
 ### 验证补齐情况
 
-| 项目                                    | 原文状态                         | 收尾后                                                                                                                                                      |
-| --------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 对着 git 上的 aionrs 编译               | ❌ 从没做过（全在 patch 下做的） | ✅ **0 error**                                                                                                                                              |
-| `cargo test --workspace --no-fail-fast` | ⚠️ 被叫停、没跑完                | ✅ **跑完**：255 个测试二进制，8 条失败，与基线**逐个同名**（aionui-project scm discard/revert 6 + `scm_request_path` 1 + `team_e2e` 尾随空格 1），一条未增 |
-| `backend-rebuild.ps1` 重编内嵌          | ❌ 没做                          | ✅ exit 0                                                                                                                                                   |
-| 真机验证                                | ❌ 没做                          | ✅ **两条判据都过**，见下                                                                                                                                   |
+| 项目                                    | 原文状态                         | 收尾后                                                                                                                                                          |
+| --------------------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 对着 git 上的 dream-engine 编译         | ❌ 从没做过（全在 patch 下做的） | ✅ **0 error**                                                                                                                                                  |
+| `cargo test --workspace --no-fail-fast` | ⚠️ 被叫停、没跑完                | ✅ **跑完**：255 个测试二进制，8 条失败，与基线**逐个同名**（dream-core-project scm discard/revert 6 + `scm_request_path` 1 + `team_e2e` 尾随空格 1），一条未增 |
+| `backend-rebuild.ps1` 重编内嵌          | ❌ 没做                          | ✅ exit 0                                                                                                                                                       |
+| 真机验证                                | ❌ 没做                          | ✅ **两条判据都过**，见下                                                                                                                                       |
 
 ### 真机验证记录（企业 `测试科技公司` / 成员 `system_default_user` admin+active 席位）
 
@@ -104,8 +104,8 @@
 而**主模型这一侧的计价本来就没落到账上**。这是主路径计量的长期状况、与本轮改动
 无关，但它意味着"成本上限"目前主要靠委托行之外的什么机制在生效，值得单独查一轮。
 
-⚠️ **一个必须先处置的东西**：aionrs 工作区里有**不是这轮的改动**
-（`crates/aion-agent/src/context.rs` + `context_test.rs`，往系统提示里加了一段
+⚠️ **一个必须先处置的东西**：dream-engine 工作区里有**不是这轮的改动**
+（`crates/dream-engine-agent/src/context.rs` + `context_test.rs`，往系统提示里加了一段
 "工具报做不到时先自己想办法"）。**它不是我写的**，我第一次 `git add -A` 时误把它
 扫进提交，已 `reset --soft` 拆出来，现在原样留在工作区未提交。**别顺手提交它**，
 先问清楚是谁的。
@@ -119,13 +119,13 @@
 
 ### 洞 A：allowlist 够到视觉委托（纯 1oneCore）
 
-| 改动                                                                                                                        | 文件                                                        |
-| --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| 新 trait `ModelAllowlistGate`                                                                                               | `crates/aionui-ai-agent/src/model_policy.rs`（**新文件**）  |
-| `AgentFactoryDeps.model_allowlist: Option<Arc<dyn ModelAllowlistGate>>`                                                     | `factory/mod.rs`                                            |
-| `resolve_vision_delegate` 加闸门；返回类型 `Option<VisionModelConfig>` → 新结构 `VisionDelegate { config, policy_blocked }` | `factory/aionrs.rs`                                         |
-| 适配器 `BillingModelAllowlistGate`（调 `check_model_allowed`）                                                              | `aionui-app/src/router/routes.rs`                           |
-| `BillingService` 构造**从 `routes.rs` 上移到 `AppServices`**，`routes.rs` 改为复用 `services.billing.clone()`               | `aionui-app/src/services.rs` + `router/mod.rs`（re-export） |
+| 改动                                                                                                                        | 文件                                                            |
+| --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| 新 trait `ModelAllowlistGate`                                                                                               | `crates/dream-core-ai-agent/src/model_policy.rs`（**新文件**）  |
+| `AgentFactoryDeps.model_allowlist: Option<Arc<dyn ModelAllowlistGate>>`                                                     | `factory/mod.rs`                                                |
+| `resolve_vision_delegate` 加闸门；返回类型 `Option<VisionModelConfig>` → 新结构 `VisionDelegate { config, policy_blocked }` | `factory/dream-engine.rs`                                       |
+| 适配器 `BillingModelAllowlistGate`（调 `check_model_allowed`）                                                              | `dream-core-app/src/router/routes.rs`                           |
+| `BillingService` 构造**从 `routes.rs` 上移到 `AppServices`**，`routes.rs` 改为复用 `services.billing.clone()`               | `dream-core-app/src/services.rs` + `router/mod.rs`（re-export） |
 
 **为什么要上移 BillingService**：agent 工厂在 `AppServices::from_config` 里装配，
 **早于任何 router 存在**，而 `BillingService` 原本在 `routes.rs` 才构造。它自述
@@ -141,12 +141,12 @@ dependency-free（只要 pool + `ManualBillingProvider`），上移零风险。
 3. **`Ok(false)` 与 `Err` 都 fail closed**（都 `continue`），与 `BillingSendGate`
    的 `POLICY_CHECK_FAILED` 同一态度。
 
-### 洞 B：委托用量进账本（跨 aionrs → 1oneCore）
+### 洞 B：委托用量进账本（跨 dream-engine → 1oneCore）
 
-**aionrs（已推 `051ff54`）**
+**dream-engine（已推 `051ff54`）**
 
-- `aion-types/src/usage.rs` 新增 `DelegateUsageSink`。**必须放 aion-types**：
-  aion-tools 需要它，而 aion-tools 不能依赖 aion-agent（成环）。
+- `dream-engine-types/src/usage.rs` 新增 `DelegateUsageSink`。**必须放 dream-engine-types**：
+  dream-engine-tools 需要它，而 dream-engine-tools 不能依赖 dream-engine-agent（成环）。
 - `OutputSink::emit_delegate_usage`，**默认 no-op** → terminal / null / protocol
   三个 sink 零改动，与上游同步冲突面最小。
 - `bootstrap.rs` 加 bridge struct 适配；`read_image.rs` 的
@@ -170,7 +170,7 @@ dependency-free（只要 pool + `ManualBillingProvider`），上移零风险。
 
 被 allowlist 拦掉时，原文案是"去 Settings → Models 加一个视觉模型"，对被管理员
 封禁的成员既是错的也无法执行。现经
-`VisionDelegate.policy_blocked` → `AionrsResolvedConfig.vision_unavailable_reason`
+`VisionDelegate.policy_blocked` → `DreamEngineResolvedConfig.vision_unavailable_reason`
 → `AgentBootstrap::vision_unavailable_reason()` → `ReadImageTool::with_unavailable_reason()`
 替换成点名被拦模型 + 找管理员。
 
@@ -189,14 +189,14 @@ dependency-free（只要 pool + `ManualBillingProvider`），上移零风险。
 
 ## 2. 验证做到哪一步（**照实说**）
 
-| 项目                                                                                        | 结果                                                                                                                                             |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| aionrs `cargo fmt` / `clippy --workspace --all-targets` / `test --workspace --no-fail-fast` | **全部退出码 0，零 FAILED**                                                                                                                      |
-| 1oneCore `cargo fmt --all -- --check`                                                       | **0**                                                                                                                                            |
-| 1oneCore `cargo clippy --no-deps` (5 个改动 crate)                                          | ❌ **红，但全是既有债务**——`aionui-ai-agent` 里 `spawn_sdk.rs` / `factory/acp.rs` 测试块的 unused imports，**不在我的 diff 里**，按 ratchet 未碰 |
-| 1oneCore `cargo test --workspace --no-fail-fast`                                            | ⚠️ **被我中途叫停，没跑完**。停在 30 个测试二进制、**0 个 FAILED**，但**不是完整结论**                                                           |
-| 真机验证                                                                                    | ❌ **没做**                                                                                                                                      |
-| `backend-rebuild.ps1` 重编内嵌                                                              | ❌ **没做**                                                                                                                                      |
+| 项目                                                                                              | 结果                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| dream-engine `cargo fmt` / `clippy --workspace --all-targets` / `test --workspace --no-fail-fast` | **全部退出码 0，零 FAILED**                                                                                                                          |
+| 1oneCore `cargo fmt --all -- --check`                                                             | **0**                                                                                                                                                |
+| 1oneCore `cargo clippy --no-deps` (5 个改动 crate)                                                | ❌ **红，但全是既有债务**——`dream-core-ai-agent` 里 `spawn_sdk.rs` / `factory/acp.rs` 测试块的 unused imports，**不在我的 diff 里**，按 ratchet 未碰 |
+| 1oneCore `cargo test --workspace --no-fail-fast`                                                  | ⚠️ **被我中途叫停，没跑完**。停在 30 个测试二进制、**0 个 FAILED**，但**不是完整结论**                                                               |
+| 真机验证                                                                                          | ❌ **没做**                                                                                                                                          |
+| `backend-rebuild.ps1` 重编内嵌                                                                    | ❌ **没做**                                                                                                                                          |
 
 **负向验证（三条，每条恢复后都复绿了）**
 
@@ -211,7 +211,7 @@ dependency-free（只要 pool + `ManualBillingProvider`），上移零风险。
 **新增测试 17 条**（每条都验证过桩闸门/桩 sink 真的被调用——"绿"只对真正跑到的
 那条路径有意义）
 
-- `aionrs_vision_delegate_test.rs` **6 条**：踢出清单不可被选 / 在清单内仍可选 /
+- `dream-engine_vision_delegate_test.rs` **6 条**：踢出清单不可被选 / 在清单内仍可选 /
   跳过被拦的继续找下一个 / 判定失败 fail closed / 无闸门（个人版）行为不变 /
   纯文本模型根本不问闸门
 - `read_image_test.rs` **5 条**：用量上报且模型名是委托模型 / 调用失败不报零用量 /
@@ -226,7 +226,7 @@ dependency-free（只要 pool + `ManualBillingProvider`），上移零风险。
 ### ① 先处置那两个不是我的文件
 
 ```bash
-cd D:\aionui-m0\aionrs-local && git status --porcelain
+cd D:\旧中转目录\旧引擎本地检出 && git status --porcelain
 ```
 
 `context.rs` / `context_test.rs` 有改动。**不是这轮的**，问清楚归属再决定提交还是丢弃。
@@ -234,24 +234,24 @@ cd D:\aionui-m0\aionrs-local && git status --porcelain
 ### ② 跑完 1oneCore 全量测试
 
 ```bash
-cd /d/aionui-m0/1oneCore && cargo test --workspace --no-fail-fast > /tmp/t.log 2>&1; echo $?
+cd /d/旧后端仓库 && cargo test --workspace --no-fail-fast > /tmp/t.log 2>&1; echo $?
 ```
 
-判据：**既有失败 8 条**（`aionui-project` scm/discard 6 + `scm_request_path` 1 +
+判据：**既有失败 8 条**（`dream-core-project` scm/discard 6 + `scm_request_path` 1 +
 `team_e2e` Windows 尾随空格 1），**数字不能变多**。
 ⚠️ 取被测命令自己的退出码，别隔着管道看。
 
 ### ③ 删临时 patch + 重新解析 Cargo.lock
 
-`1oneCore/Cargo.toml` **末尾有一个临时 `[patch."https://github.com/gaogg521/aionrs.git"]` 块**
-（块内有醒目注释）。aionrs 已推到 `051ff54`，所以：
+`1oneCore/Cargo.toml` **末尾有一个临时 `[patch."https://github.com/gaogg521/dream-engine.git"]` 块**
+（块内有醒目注释）。dream-engine 已推到 `051ff54`，所以：
 
 ```bash
-cd /d/aionui-m0/1oneCore && cargo update -p aion-agent -p aion-tools -p aion-types
+cd /d/旧后端仓库 && cargo update -p dream-engine-agent -p dream-engine-tools -p dream-engine-types
 ```
 
 （先手动删掉 Cargo.toml 里那个块，再跑）
-删完必须**重新编译一次**确认 1oneCore 真的能对着 git 上的 aionrs 编过——本轮所有
+删完必须**重新编译一次**确认 1oneCore 真的能对着 git 上的 dream-engine 编过——本轮所有
 1oneCore 验证都是在 patch 生效下做的。
 
 ### ④ 提交 1oneCore
@@ -262,7 +262,7 @@ cd /d/aionui-m0/1oneCore && cargo update -p aion-agent -p aion-tools -p aion-typ
 ### ⑤ 重编内嵌 + 真机验证
 
 ```powershell
-D:\aionui-m0\scripts\backend-rebuild.ps1
+D:\旧中转目录\scripts\backend-rebuild.ps1
 ```
 
 跑之前确认 dev 应用没在跑（否则 EPERM）；⚠️ **不要**用 `*>` 或 `2>&1` 重定向它——
@@ -276,7 +276,7 @@ PS 5.1 会把 cargo 的 stderr 包成 ErrorRecord 报 NativeCommandError，看�
 2. allowlist 放开 → 再发一张图 → `one_usage_events` 里出现**一条委托模型名**的记录
    （与主模型那条是两行，不是合并的一行）
 
-CDP 连法见 [`cdp.md`](cdp.md)：`AIONUI_DEVTOOLS_CDP_PORT=9230 bun run dev`，
+CDP 连法见 [`cdp.md`](cdp.md)：`DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev`，
 **用裸 ws 客户端，别用浏览器自动化 MCP**；窗口被遮挡时 Chromium 会停止产帧，
 会把正常代码测成 BUG。
 
@@ -294,12 +294,12 @@ CDP 连法见 [`cdp.md`](cdp.md)：`AIONUI_DEVTOOLS_CDP_PORT=9230 bun run dev`�
   （`check_model` 也只在切模型那一刻查）。
 - **本轮只让成本上限"看得见"委托花费，没有在委托调用前拦预算。**
   预算判定留在 send 路径，理由见 §1 拍板点 ①。
-- **aionrs master 在 `1d485e5` 上本来就是 fmt 脏的**（全在上一轮 ReadImage 提交碰过
+- **dream-engine master 在 `1d485e5` 上本来就是 fmt 脏的**（全在上一轮 ReadImage 提交碰过
   的那几个文件里，我用干净 worktree 核实过），本轮 `cargo fmt --all` 顺手清掉了，
-  所以 aionrs 的 diff 里有 `engine_test.rs` / `image_source_test.rs` 两个我没改
+  所以 dream-engine 的 diff 里有 `engine_test.rs` / `image_source_test.rs` 两个我没改
   逻辑的文件。
 - **1oneCore 有既有 clippy 债务**：`one-sso` 两处 dead_code + 一处 collapsible_if、
-  `aionui-ai-agent` 若干 unused imports（都在测试块 / `spawn_sdk.rs`）。按 ratchet
+  `dream-core-ai-agent` 若干 unused imports（都在测试块 / `spawn_sdk.rs`）。按 ratchet
   未碰，但意味着 `just push` 会被卡住。
 
 ---
@@ -315,33 +315,33 @@ CDP 连法见 [`cdp.md`](cdp.md)：`AIONUI_DEVTOOLS_CDP_PORT=9230 bun run dev`�
 ## 6. 📋 可直接粘给新会话的话术
 
 ```
-工作目录 D:\aionui-m0，三仓 fork：1oneUI(前端Electron) / 1oneCore(Rust后端) /
-aionrs-local(agent引擎)。只单向同步上游、永不反向提 PR。
+工作目录 D:\旧中转目录，三仓 fork：1oneUI(前端Electron) / 1oneCore(Rust后端) /
+旧引擎本地检出(agent引擎)。只单向同步上游、永不反向提 PR。
 先读 1oneUI/docs/guides/handoff-2026-08-18b-vision-delegate-wip.zh-CN.md 全文。
 
 任务：把「视觉委托受企业治理管辖」这个改动收尾并推出去。**代码已经写完并验证过
 了，你要做的是收尾流程，不是重写。**
 
 ## 现状
-- aionrs：已提交已推（051ff54）
+- dream-engine：已提交已推（051ff54）
 - 1oneUI：已提交未推（5694f7a60，纯文档）
 - 1oneCore：**代码全在工作区，一次都没 commit**
 
 ## 按这个顺序做
-1) 先看 aionrs 工作区里的 crates/aion-agent/src/context.rs 与 context_test.rs
+1) 先看 dream-engine 工作区里的 crates/dream-engine-agent/src/context.rs 与 context_test.rs
    ——**那不是这轮的改动**，是别人在途的工作（往系统提示加了一段"工具报做不到时
    先自己想办法"）。别顺手提交，先问归属。
 2) 1oneCore 跑完 `cargo test --workspace --no-fail-fast`（上一轮跑到 30 个测试
    二进制、0 FAILED 时被叫停，没跑完）。判据是**既有失败 8 条不能变多**
-   （aionui-project scm/discard 6 + scm_request_path 1 + team_e2e 尾随空格 1）。
+   （dream-core-project scm/discard 6 + scm_request_path 1 + team_e2e 尾随空格 1）。
    取被测命令自己的退出码，别隔着管道看。
 3) 删掉 1oneCore/Cargo.toml **末尾的临时 [patch] 块**（块内有醒目注释），
-   然后 `cargo update -p aion-agent -p aion-tools -p aion-types` 让 Cargo.lock
-   指向 aionrs 的 051ff54，**再完整编译一次**——本轮所有 1oneCore 验证都是在
-   patch 生效下做的，对着 git 上的 aionrs 还没编过。
+   然后 `cargo update -p dream-engine-agent -p dream-engine-tools -p dream-engine-types` 让 Cargo.lock
+   指向 dream-engine 的 051ff54，**再完整编译一次**——本轮所有 1oneCore 验证都是在
+   patch 生效下做的，对着 git 上的 dream-engine 还没编过。
 4) 提交 1oneCore（主干 one-main，中文 commit message，**禁止 AI 署名**），
    用 `git push` 不用 `just push`（后者 workspace-wide -D warnings 会被既有债务卡）。
-5) 跑 D:\aionui-m0\scripts\backend-rebuild.ps1 重编内嵌。跑之前确认 dev 应用没在
+5) 跑 D:\旧中转目录\scripts\backend-rebuild.ps1 重编内嵌。跑之前确认 dev 应用没在
    跑（否则 EPERM）；⚠️ 不要用 `*>` 或 `2>&1` 重定向它，PS 5.1 会把 cargo 的
    stderr 包成 ErrorRecord 报 NativeCommandError，看起来像编译失败其实没有。
 6) 真机验证两条（dev profile 里已有真实企业「测试科技公司」）：
@@ -354,7 +354,7 @@ aionrs-local(agent引擎)。只单向同步上游、永不反向提 PR。
 7) 推 1oneUI 的 5694f7a60。
 
 ## ⛔ 不要做
-- 不要放宽 1oneCore/crates/aionui-ai-agent/src/capability/image_input.rs 的能力
+- 不要放宽 1oneCore/crates/dream-core-ai-agent/src/capability/image_input.rs 的能力
   判定或白名单（有测试锁死，提交 7cf40b96 改过被当场 revert 成 a1caef8e）。
 - 不要把委托的 allowlist 检查改成 check_send_allowed。刻意用 allowlist-only：
   委托在 session 构建时解析一次并缓存整个会话，此刻查预算会把"那一瞬间预算耗尽"

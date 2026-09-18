@@ -336,6 +336,6 @@ cd dream-ui && bun install && bun run dev
 
 <br>
 
-<sub>基于 <a href="https://github.com/iOfficeAI/AionUi">AionUi</a> 二次开发 · Apache-2.0 · Built by <a href="https://github.com/gaogg521">gaogg521</a></sub>
+<sub>Apache-2.0 · Built by <a href="https://github.com/gaogg521">gaogg521</a></sub>
 
 </div>

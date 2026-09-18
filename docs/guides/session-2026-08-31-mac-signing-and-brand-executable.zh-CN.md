@@ -140,12 +140,12 @@ this.productFilename = executableName != null ? sanitizeFileName(executableName)
 - A 层：`electron-builder.yml`（删 `executableName`，Linux 加 `executableName: one-work` +
   `desktop.Icon: one-work`）、`packages/desktop/resources/installer.nsh`（安装目录 →
   `$LOCALAPPDATA\Programs\One Work`）、`resources/windows/installer-observability.nsh`
-  （`AIONUI_APP_EXECUTABLE_FILENAME "One Work.exe"`）、`resources/windows/support/query-lockers.ps1`
+  （`DREAM_APP_EXECUTABLE_FILENAME "One Work.exe"`）、`resources/windows/support/query-lockers.ps1`
   （加 `One Work.exe` / `Uninstall One Work.exe`，旧名保留）、`scripts/build-with-builder.js`
   （kill 列表 + winExePath 加 `One Work.exe`）、`scripts/packaged-launch.mjs`、`scripts/dev-bootstrap.mjs`、
   `tests/e2e/fixtures.ts`、`packages/desktop/src/sentry.ts`（`installDirs` 加 `one work`）。
 - B 层：`common/platform/index.ts` 新增 `migrateAndResolveProdUserDataDir()` +
-  `LEGACY_PROD_USERDATA_APP_NAMES = ['1ONE Code']`（**刻意不含 `AionUi`**——那是上游目录名，
+  `LEGACY_PROD_USERDATA_APP_NAMES = ['1ONE Code']`（**刻意不含 `dream-ui`**——那是上游目录名，
   会误搬同机跑上游的人的数据）；`PROD_USERDATA_APP_NAME` 改 `One Work`（`=== BRAND_DISPLAY_NAME`）；
   `configureChromium.ts` + `getPlatformServices()` 两个调用点接入迁移；
   `report-installer-failure.ps1` 先探 `One Work` 再探 `1ONE Code`；`package.json` `description`。
@@ -159,7 +159,7 @@ this.productFilename = executableName != null ? sanitizeFileName(executableName)
 - **Win 迁移真机验证过**：本地打 `out/win-unpacked/One Work.exe`，用 `--user-data-dir=<沙箱>`
   启动（Electron 在 Windows 读 `SHGetKnownFolderPath` 不认 `%APPDATA%` 环境变量，只有
   `--user-data-dir` 能重定向）。沙箱里预置 `<父>\1ONE Code\`（放 `MARKER.txt` + 假 db），
-  启动后：`1ONE Code` 消失、`One Work` 出现、`MARKER.txt` 和 `db\aioncore.sqlite` 原样保留，
+  启动后：`1ONE Code` 消失、`One Work` 出现、`MARKER.txt` 和 `db\dreamcore.sqlite` 原样保留，
   app 正常接着用 `One Work\`。真实 `%APPDATA%\1ONE Code` 未被触碰。
   - Mac 侧用同一 `migrateAndResolveProdUserDataDir`、同一 `configureChromium.ts` 生产分支，
     只有 `dirname(userData)` 落点不同（`~/Library/Application Support`），本地无 Mac 未单独真机验。

@@ -40,7 +40,7 @@
 
 - 单测：`cargo test -p one-org`（10 passed）、`cargo test -p one-sso`（25 passed，含新增 `merge_config_keeps_untouched_fields`/`merge_config_from_empty_existing`）。
 - 前端：`bunx tsc --noEmit`（0 error）、`oxlint`（0 warn/err）、`bun run i18n:types` + `check-i18n`（passed）。
-- 后端重编：`cargo build -p aionui-app --release` + `AIONUI_BACKEND_LOCAL_PATH=... node scripts/prepareAioncore.js` 落地 bundled；`bun run dev` 起桌面（后端端口动态，本轮 63692，local 模式 operator=system_admin）。
+- 后端重编：`cargo build -p dream-core-app --release` + `DREAM_BACKEND_LOCAL_PATH=... node scripts/prepareDreamcore.js` 落地 bundled；`bun run dev` 起桌面（后端端口动态，本轮 63692，local 模式 operator=system_admin）。
 
 ### 实测结论（桌面端 CDP，2026-07-13）
 
@@ -52,7 +52,7 @@
 
 ## 踩坑
 
-- **`backend-rebuild.ps1` 用 PowerShell 工具 + `*>&1 | Tee-Object` 会在第一行 cargo stderr 进度就 NativeCommandError 中止**（`$ErrorActionPreference='Stop'` + stderr 合流）。改用 **Bash 直接 `cargo build -p aionui-app --release`** 再手动跑 `prepareAioncore.js`（`AIONUI_BACKEND_LOCAL_PATH=target/release/aioncore.exe`）落地 bundled。
+- **`backend-rebuild.ps1` 用 PowerShell 工具 + `*>&1 | Tee-Object` 会在第一行 cargo stderr 进度就 NativeCommandError 中止**（`$ErrorActionPreference='Stop'` + stderr 合流）。改用 **Bash 直接 `cargo build -p dream-core-app --release`** 再手动跑 `prepareDreamcore.js`（`DREAM_BACKEND_LOCAL_PATH=target/release/dreamcore.exe`）落地 bundled。
 
 ## 追加 BUG7-9（用户二轮：主动排查企业登录链发现）
 
@@ -89,9 +89,9 @@
 
 ## 后续排查：3 个预存失败测试（已解决，2026-07-14）
 
-根因：`7cef2d28e`（品牌改名）给 `buildAssistantEditorBackends` 加了 `agent.agent_type === 'aionrs' ? '1ONE CLI' : ...` 的硬编码改名分支，后续上游合并 `2aa06d9de` 把这段逻辑替换回了朴素的 `agent.name_i18n?.[localeKey] || agent.name`（用户手动决定的合并取舍，非误删）；同期 `isAionrsAssistant` 也从判断顶层字段改成判断 `assistant.agent.type === 'aionrs'`。两个测试文件的断言/fixture 停留在改动前的旧行为，不是代码回归。
+根因：`7cef2d28e`（品牌改名）给 `buildAssistantEditorBackends` 加了 `agent.agent_type === 'dream-engine' ? '1ONE CLI' : ...` 的硬编码改名分支，后续上游合并 `2aa06d9de` 把这段逻辑替换回了朴素的 `agent.name_i18n?.[localeKey] || agent.name`（用户手动决定的合并取舍，非误删）；同期 `isDreamEngineAssistant` 也从判断顶层字段改成判断 `assistant.agent.type === 'dream-engine'`。两个测试文件的断言/fixture 停留在改动前的旧行为，不是代码回归。
 
-修法：更新测试断言与 fixture 以匹配当前行为（`useDetectedAgents.dom.test.ts` 期望值改回 `name_i18n` 解析结果；`useConversationAssistants.dom.test.ts` 的 `bare-aionrs` fixture 补上 `agent: { type: 'aionrs', source: 'internal' }`）。`bun run test` 全量 2228 passed。
+修法：更新测试断言与 fixture 以匹配当前行为（`useDetectedAgents.dom.test.ts` 期望值改回 `name_i18n` 解析结果；`useConversationAssistants.dom.test.ts` 的 `bare-dream-engine` fixture 补上 `agent: { type: 'dream-engine', source: 'internal' }`）。`bun run test` 全量 2228 passed。
 
 commit：1oneUI `c31b77570` → one-main。
 
@@ -252,7 +252,7 @@ commit：1oneUI `a400d4c36` → one-main（无需改 1oneCore）。
 
 用户在真实部署上配置飞书 SSO 后反馈"其他用户没办法飞书验证，访问不了"，并贴出浏览器截图：飞书授权成功后跳到 `http://172.29.128.120:25808/api/auth/feishu/callback?code=...&state=...`，返回 `{"success":false,"error":"Route not found.","code":"NOT_FOUND"}`；同时贴了 SSO 设置页（Redirect URI 填的正是这个 `/api/auth/feishu/callback` 地址）和飞书开放平台后台"重定向 URL"配置截图（同样登记的是这个地址）。
 
-**根因**：查 `crates/one-sso/src/routes.rs` 的 `one_sso_public_routes` 确认真实回调路由是 `GET /api/one/sso/{provider}/callback`，不是 `/api/auth/{provider}/callback`。管理员在 SSO 设置的 Redirect URI 字段和飞书后台都填错了路径前缀——这是纯手填文本框，没有任何提示告诉管理员正确路径该长什么样，而这个应用绝大多数认证相关端点（`/api/auth/status`、`/api/auth/user`、`/api/auth/qr-login` 等，见 `crates/aionui-auth/src/routes.rs`）确实都在 `/api/auth/` 下，管理员照着这个模式类推填了 SSO 回调地址，恰好踩进了 SSO 走的是独立的 `/api/one/sso/` 前缀这个坑。
+**根因**：查 `crates/one-sso/src/routes.rs` 的 `one_sso_public_routes` 确认真实回调路由是 `GET /api/one/sso/{provider}/callback`，不是 `/api/auth/{provider}/callback`。管理员在 SSO 设置的 Redirect URI 字段和飞书后台都填错了路径前缀——这是纯手填文本框，没有任何提示告诉管理员正确路径该长什么样，而这个应用绝大多数认证相关端点（`/api/auth/status`、`/api/auth/user`、`/api/auth/qr-login` 等，见 `crates/dream-core-auth/src/routes.rs`）确实都在 `/api/auth/` 下，管理员照着这个模式类推填了 SSO 回调地址，恰好踩进了 SSO 走的是独立的 `/api/one/sso/` 前缀这个坑。
 
 **即时解法**（先说给用户听，让他解封）：Redirect URI 改成 `http://172.29.128.120:25808/api/one/sso/feishu/callback`，飞书开放平台后台同步登记这条正确地址，然后重新走一次登录（老 code/state 一次性已失效不能重放）。
 
@@ -273,7 +273,7 @@ commit：1oneUI `842cf2f48` → one-main（无需改 1oneCore，纯前端修复�
 
 用户把 Redirect URI 改对、真实走通飞书 SSO 之后，追问三个问题：①External ID Field(union_id/open_id) 是干嘛的（纯答疑，见下方 Q&A）；②SSO 登录成功、加入企业后，成员列表拉不到这个人的真实姓名和部门；③用户认证完毕后，飞书授权页标签页一直停留不自动关闭。用户明确要求修 ②③ 两个 bug，并特别加了一条约束："修复这两个企业的登录BUG，一定不能影响单机版的功能"——因为涉及 one-sso/one-org 的表结构改动，先进 plan 模式过了一遍方案再动手。
 
-**根因①：真实姓名丢失**。`FeishuProvider::to_provider_user_info`（`crates/one-sso/src/providers/feishu.rs`）正确解析出了 `name`/`en_name`，但 `resolve_or_provision_user`（`crates/one-sso/src/service.rs`）JIT 建号时把这个值喂给 `sanitize_username()` 生成登录用户名——这个函数**只要发现非 ASCII 字符就整段丢弃**（不是 SSO 独有规则，是全系统统一的 `aionui_auth::validate_username` 约定，`validation_tests.rs` 专门测试锁死，`users.username` 绝对不能碰），中文姓名必然触发丢弃，回退成 `sso_<8位随机>`，真实姓名彻底没地方存。
+**根因①：真实姓名丢失**。`FeishuProvider::to_provider_user_info`（`crates/one-sso/src/providers/feishu.rs`）正确解析出了 `name`/`en_name`，但 `resolve_or_provision_user`（`crates/one-sso/src/service.rs`）JIT 建号时把这个值喂给 `sanitize_username()` 生成登录用户名——这个函数**只要发现非 ASCII 字符就整段丢弃**（不是 SSO 独有规则，是全系统统一的 `dream_core_auth::validate_username` 约定，`validation_tests.rs` 专门测试锁死，`users.username` 绝对不能碰），中文姓名必然触发丢弃，回退成 `sso_<8位随机>`，真实姓名彻底没地方存。
 
 **根因②：部门信息丢失**。飞书的 `tenant_key` 同样被正确解析进 `ProviderUserInfo.org_unit_path`，但顺着调用链往下追，`resolve_or_provision_user` 只用这份 profile 建 `users` 行 + 绑定 `one_sso_identities`，**从未使用过 `org_unit_path`**。更进一步：SSO 登录本身**不会**自动把人加进企业租户（`common.enterprise.loginBrowserHint` 的既有文案就写着"完成后返回本应用，在「企业」页加入团队"）——真正建 `one_user_org`（租户成员关系）行的只有 `join_with_invite`/`create_tenant`，而这两处的 INSERT 语句都不带 `org_unit_path`。**关键发现**：`one_user_org` 表（`crates/one-org/migrations/001_init.sql`）里其实早就有 `org_unit_path`/`org_profile_source`/`org_profile_synced_at` 三列，前端 `UsersTab.tsx` 也早就渲染了"部门"列——这是本会话里第三次遇到同款半成品（前两次是运行时节点心跳、知识库文件导入）：字段/UI 早搭好了，写入这一步从来没接上。
 
@@ -283,13 +283,13 @@ commit：1oneUI `842cf2f48` → one-main（无需改 1oneCore，纯前端修复�
 - `one-org`：`one_user_org` 加 `display_name` 一列（新迁移 `002_membership_display.sql`），新增私有方法 `sso_profile_for(user_id)` 直接查 `one_sso_identities`（跟 `one-sso::effective_role` 直读 `one_user_org` 是同一个"跨领域 crate 直接读表"的既有先例，不算破例），`join_with_invite`/`create_tenant` 建成员行前查一下加入者的 SSO 身份，有则连同姓名/部门一起抄进去，没有（本地密码创建的成员）留空不报错。`list_users` 加 `uo.display_name` 到 SELECT。
 - 1oneUI：`AdminUser` 类型加 `displayName`，`UsersTab.tsx` 新增「姓名」列（`displayName ?? username` 兜底），「部门」列本来就在渲染 `org_unit_path`，数据补上后不用改前端就直接生效。
 
-**根因③：授权页不自动关闭**。`crates/one-sso/src/routes.rs` 的 `callback()` 对桌面端流程（`entry.desktop == true`）原来是裸 302 跳 `aionui://sso-callback?...`——浏览器没法真正"导航"到自定义协议，只会弹个"是否打开 1One Work"提示条，标签页本身停在原地，从没写过任何关闭逻辑。改成返回一段自包含 HTML（`axum::response::Html`）：脚本立即触发 `aionui://` 深链跳转，同时展示中英文"登录成功，可以关闭此页面"提示，延迟后尝试 `window.close()`（浏览器安全策略下不一定生效，但无害）。浏览器 Cookie 会话那条分支不受影响。
+**根因③：授权页不自动关闭**。`crates/one-sso/src/routes.rs` 的 `callback()` 对桌面端流程（`entry.desktop == true`）原来是裸 302 跳 `dream-ui://sso-callback?...`——浏览器没法真正"导航"到自定义协议，只会弹个"是否打开 1One Work"提示条，标签页本身停在原地，从没写过任何关闭逻辑。改成返回一段自包含 HTML（`axum::response::Html`）：脚本立即触发 `dream-ui://` 深链跳转，同时展示中英文"登录成功，可以关闭此页面"提示，延迟后尝试 `window.close()`（浏览器安全策略下不一定生效，但无害）。浏览器 Cookie 会话那条分支不受影响。
 
 **External ID Field 答疑**：决定用飞书哪个标识符做跨会话稳定的用户身份键——`open_id` 只在这一个飞书 App 下唯一，换个 App/集成看到的值会不一样；`union_id`（默认）在整个飞书开发者账号名下所有 App 范围内唯一，哪怕以后重建 App 也不变，更稳定。单一应用场景保持默认 union_id 即可，不用改。
 
 **明确排除的范围**：用户还提到"正常情况下应该拉到姓名，部门，岗位"——"岗位"（职位）当前调用的飞书 `/open-apis/authen/v1/user_info` 轻量端点根本不返回，需要额外调用飞书 Contact API（`/open-apis/contact/v3/users/:id`）并申请新的权限范围（`contact:user.department_v1`/`contact:user.employee_v1`），管理员要在飞书开放平台重新走一次权限审批——比"把已经拿到手但被丢弃的数据存下来"大得多的新集成面，本次不做，留作独立后续。
 
-**单机版隔离**：全部新列可空、纯 `ALTER TABLE ADD COLUMN`；one-sso/one-org 的迁移在单机版也无条件跑（`aionui-app/src/router/routes.rs` 不分单机/企业执行），单机版从第一天起这两张表就存在只是从来没数据；`sanitize_username`/`validate_username`/`users` 表结构完全不碰。
+**单机版隔离**：全部新列可空、纯 `ALTER TABLE ADD COLUMN`；one-sso/one-org 的迁移在单机版也无条件跑（`dream-core-app/src/router/routes.rs` 不分单机/企业执行），单机版从第一天起这两张表就存在只是从来没数据；`sanitize_username`/`validate_username`/`users` 表结构完全不碰。
 
 **自测**：
 
@@ -310,7 +310,7 @@ commit：1oneCore `283e788a`→one-main；1oneUI `73a0140b6`→one-main。
 
 **改动**：`crates/one-sso/src/providers/feishu.rs` 的 `to_provider_user_info` 不再把 `tenant_key` 塞进 `org_unit_path`（改成留空，交给异步的 `fetch_org_profile` 补全）；`ProviderUserInfo` 加 `job_title` 字段，钉钉/企业微信/LDAP 都留空（这次只做飞书）；`crates/one-sso/routes.rs` 的 `run_provider_oauth` Feishu 分支拿到基础 profile 后再异步补一次 `fetch_org_profile` 覆盖 `job_title`/`org_unit_path`。数据库层走上一轮刚搭好的同一条 profile 快照管线（`one_sso_identities`/`one_user_org` 各加 `job_title` 列，append-only 新迁移不改上一轮已提交的 002；`bind_identity`/`touch_identity`/`join_with_invite`/`create_tenant`/`list_users` 都顺着加一个字段）。前端 `UsersTab.tsx` 在"部门"后加"岗位"列，"部门"列渲染逻辑本身不用改（数据源换了，前端读的还是同一个 `orgUnitPath`）。
 
-**测试基建的顺手补充**：`FeishuProviderConfig` 加了一个 `base_url`（`#[serde(default, skip_serializing_if)]`，可选，测试专用，从不出现在管理表单/持久化配置里）——跟 `aionui-shell` 现成的 LLM provider 配置同款测试注入模式（`tests/stt_integration.rs` 的 `base_url: Some(mock_server.uri())`）。`one-sso` 的 `Cargo.toml` 加了 `wiremock`（workspace 已有 0.6，这是第一次在 `one-sso` 里用），给新增的三个 HTTP 调用写了真正的集成测试（mock 全链路成功 + tenant-token 失败退化 + 无 department_ids + 部门查询单独失败但 job_title 不受影响），而不只是纯 JSON 解析单测——这是本会话第一次能对一个外部 OAuth/API 集成做到"真的模拟网络请求"级别的验证，而不是只能测测字符串处理。
+**测试基建的顺手补充**：`FeishuProviderConfig` 加了一个 `base_url`（`#[serde(default, skip_serializing_if)]`，可选，测试专用，从不出现在管理表单/持久化配置里）——跟 `dream-core-shell` 现成的 LLM provider 配置同款测试注入模式（`tests/stt_integration.rs` 的 `base_url: Some(mock_server.uri())`）。`one-sso` 的 `Cargo.toml` 加了 `wiremock`（workspace 已有 0.6，这是第一次在 `one-sso` 里用），给新增的三个 HTTP 调用写了真正的集成测试（mock 全链路成功 + tenant-token 失败退化 + 无 department_ids + 部门查询单独失败但 job_title 不受影响），而不只是纯 JSON 解析单测——这是本会话第一次能对一个外部 OAuth/API 集成做到"真的模拟网络请求"级别的验证，而不是只能测测字符串处理。
 
 **踩坑**：`fetch_contact_user`/`fetch_department_name` 第一版直接把飞书返回的顶层 JSON（`{code, msg, data: {...}}`）反序列化进只有 `user`/`department` 字段的 wrapper struct——没有先取 `data` 字段就整体反序列化，导致目标字段永远解析不到（`serde` 静默返回 default，不报错，非常隐蔽）。4 个 wiremock 测试跑起来后 3 个直接失败（`left: None, right: Some(...)`），才发现两处都漏了 `.get("data")` 这一步——改成先 `json.get("data").and_then(|d| serde_json::from_value(d.clone()).ok())` 再解析，4 个测试全部通过。这也印证了写真实 HTTP mock 测试的价值：如果只写"手工构造 JSON 字符串传给反序列化函数"这种更贴近实现细节的单测，很可能会跟着同一个错误假设走，测不出这个 bug。
 

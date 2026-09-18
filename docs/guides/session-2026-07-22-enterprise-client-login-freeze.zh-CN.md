@@ -34,11 +34,11 @@ useEffect(() => {
 
 ## 定位方法（可复用）
 
-打包版默认不开 CDP（`configureChromium.ts` 里 `shouldEnableCdp` 在 `app.isPackaged` 时无条件返回 false，只有环境变量 `AIONUI_CDP_PORT` 能开）。企业会话存 localStorage、**重启后自动回到卡死态**，无需重新登录：
+打包版默认不开 CDP（`configureChromium.ts` 里 `shouldEnableCdp` 在 `app.isPackaged` 时无条件返回 false，只有环境变量 `DREAM_CDP_PORT` 能开）。企业会话存 localStorage、**重启后自动回到卡死态**，无需重新登录：
 
 ```powershell
-Stop-Process -Name 1onecode -Force; Stop-Process -Name aioncore -Force
-$env:AIONUI_CDP_PORT='9230'; Start-Process 'C:\Users\<user>\AppData\Local\Programs\1onecode\1onecode.exe'
+Stop-Process -Name 1onecode -Force; Stop-Process -Name dreamcore -Force
+$env:DREAM_CDP_PORT='9230'; Start-Process 'C:\Users\<user>\AppData\Local\Programs\1onecode\1onecode.exe'
 ```
 
 然后用原始 CDP（Node 24 内置 WebSocket）连 `ws://127.0.0.1:9230/devtools/page/<id>`：
@@ -92,7 +92,7 @@ EnterpriseIdentityCard → useEnterpriseIdentity → /api/one/enterprise/me（�
 卡片：identity==null && error==null → 显示"尚未通过企业 SSO 登录"
 ```
 
-记录为空的**唯一**原因（wiring 全查过是对的：`aionui-app` 已 `.with_enterprise_sync(EnterpriseSyncAdapter)`；回调 `org_external_id` 透传；`run_provider_oauth` feishu 分支保留 tenant_key，仅覆盖 job_title/dept）：
+记录为空的**唯一**原因（wiring 全查过是对的：`dream-core-app` 已 `.with_enterprise_sync(EnterpriseSyncAdapter)`；回调 `org_external_id` 透传；`run_provider_oauth` feishu 分支保留 tenant_key，仅覆盖 job_title/dept）：
 
 ```rust
 // EnterpriseService::sync_member
@@ -110,7 +110,7 @@ if external_id.is_empty() { return Ok(()); }   // tenant_key 空 → 空转，�
 2. **[WorkspaceIdentityEntry.tsx]** — 左下角徽标下拉重构：**标题改回用户 `displayName`（SSO 姓名）而非项目组名**，先列"我的身份（SSO/企业）"，再单独列"项目组：{名称}"，两个维度视觉分离（此前标题用 `tenantName` + 内容全是项目组动作，把"我是谁"和"我在哪个项目组"揉在一起，两者恰好都叫王小明2 放大了混乱）。
 3. **[one-sso/routes.rs]** — SSO 回调加 `info!` 记录 `has_company_id`（tenant_key 是否存在，不含敏感值），下次登录即可从服务端日志判定飞书到底返没返 tenant_key。
 
-**验证**：`bunx tsc --noEmit` 干净、`oxlint` 0 error、`cargo check -p one-sso` 通过。**待办**：后端诊断日志需重编 aioncore 生效；下次真机 SSO 登录看服务端日志确认 tenant_key 缺失原因（飞书应用权限/scope，或 v2-token+v1-user_info 搭配），再决定是否修飞书取值方式或让后端在无公司时也返回纯 SSO 身份。
+**验证**：`bunx tsc --noEmit` 干净、`oxlint` 0 error、`cargo check -p one-sso` 通过。**待办**：后端诊断日志需重编 dreamcore 生效；下次真机 SSO 登录看服务端日志确认 tenant_key 缺失原因（飞书应用权限/scope，或 v2-token+v1-user_info 搭配），再决定是否修飞书取值方式或让后端在无公司时也返回纯 SSO 身份。
 
 ---
 

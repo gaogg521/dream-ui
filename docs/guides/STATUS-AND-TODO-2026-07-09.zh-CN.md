@@ -1,13 +1,13 @@
 # 当前状态 + 待办清单（2026-07-09）
 
 > 下个会话**先读这份**，再按需读 `session-2026-07-09-team-skill-distribution.zh-CN.md`（实现细节）和 `enterprise-system-audit-2026-07-09.zh-CN.md`（审计缺陷全表）。
-> 两仓：`D:\aionui-m0\AionCore`(1oneCore) + `D:\aionui-m0\AionUi`(1oneUI)，分支 `one-main`。**均已 commit + push，工作区干净。当前版本 2.1.34，未打包。**
+> 两仓：`D:\旧中转目录\dream-core`(1oneCore) + `D:\旧中转目录\dream-ui`(1oneUI)，分支 `one-main`。**均已 commit + push，工作区干净。当前版本 2.1.34，未打包。**
 
 ---
 
 ## 🖥️ 桌面 dev 实机验证（同日续，重编后端+真实点点点测出的问题）
 
-重编 AionCore release + 启动 `frontend-dev.ps1`，用真实数据库（`1one-Dev`）+ 磁盘 + HTTP API 逐项核对，**不是自动化测试，是真人操作走查**。发现并修复 3 个真实 bug（`b9c12d0`）：
+重编 dream-core release + 启动 `frontend-dev.ps1`，用真实数据库（`1one-Dev`）+ 磁盘 + HTTP API 逐项核对，**不是自动化测试，是真人操作走查**。发现并修复 3 个真实 bug（`b9c12d0`）：
 
 1. **身份徽标下拉菜单文案写死**：已加入企业的管理员点自己头像，看到的是"访客模式/加入团队"提示——`SiderEnterpriseEntry` 没挂载主导航，这个徽标是唯一入口却给错误引导，连"进入管理后台"的链接都没有。已按 `context.isEnterprise` 分支修复。
 2. **MCP/Skills 编辑表单竞态丢数据**（较严重）：`openEdit` 命令式 `form.setFieldsValue()` 抢跑 Modal 挂载，导致编辑时 Select/Switch/TextArea 字段显示默认值而非真实数据；**新建 MCP 时凭据 JSON 因此从未真正落库**（实测验证 `secrets_json` 始终为 null，直到修复后才正确物化进 `transport.headers`）。已改声明式 `key`+动态 `initialValues` 根治。
@@ -38,16 +38,16 @@
 
 **测试全绿（企业相关，2026-07-09 全量复核）：**
 
-| 范围                                                | 结果    |
-| --------------------------------------------------- | ------- |
-| one-devops                                          | 20/20   |
-| one-org                                             | 8/8     |
-| aionui-mcp team_sync                                | 4/4     |
-| aionui-extension team_sync（单测）                  | 7/7     |
-| aionui-extension team_skill_sync_e2e                | 4/4     |
-| **aionui-app team_distribution_e2e（HTTP 全链路）** | **2/2** |
+| 范围                                                    | 结果    |
+| ------------------------------------------------------- | ------- |
+| one-devops                                              | 20/20   |
+| one-org                                                 | 8/8     |
+| dream-core-mcp team_sync                                | 4/4     |
+| dream-core-extension team_sync（单测）                  | 7/7     |
+| dream-core-extension team_skill_sync_e2e                | 4/4     |
+| **dream-core-app team_distribution_e2e（HTTP 全链路）** | **2/2** |
 
-**HTTP E2E 实测**（`crates/aionui-app/tests/team_distribution_e2e.rs`，穿真实路由：auth 中间件 → one-devops → skills/mcp team-sync → 本机列举）：
+**HTTP E2E 实测**（`crates/dream-core-app/tests/team_distribution_e2e.rs`，穿真实路由：auth 中间件 → one-devops → skills/mcp team-sync → 本机列举）：
 
 - 管理员建 `auto_active` 技能 → 成员同步物化 → `/api/skills` 出现 `source=team` + `is_auto_inject=true` → 空集对账删除。
 - 管理员建带凭据 MCP → 成员同步物化 → `/api/mcp/servers` 出现且凭据真的进了 `transport.headers`。
@@ -75,7 +75,7 @@
 2. **不删任何旧 .exe**（打包脚本已内建保护，只清 `win-unpacked` 中间目录）。
 3. **不许空壳**：每模块必须真实测试数据实证——本轮见证：45 项企业测试 + 1 条 HTTP 全链路 E2E。
 4. **提交**：中文 commit、无 AI 签名、直接 `one-main`、精确 `git add`（**绝不 `git add -A`**，fork 有他人改动 + temp/out_old 垃圾）。**注意**：`cargo fmt -p <crate>` 会顺手重排该 crate 里他人未提交的文件——提交前务必 `git status` 核对，把非本人改动 `git checkout --` 撤销（本轮踩过两次坑）。
-5. 运行的 app 在 fork `D:\aionui-m0`，不是 `D:\1one-command`（老架构，仅作参考）。
+5. 运行的 app 在 fork `D:\旧中转目录`，不是 `D:\1one-command`（老架构，仅作参考）。
 
 ---
 

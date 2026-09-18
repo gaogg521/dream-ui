@@ -2,7 +2,7 @@
 
 > 日期：2026-07-09。读者：后续接手的 AI / 开发者。
 > 一句话：把「企业管理员定义的团队技能」端到端下发到成员机、离线可用、被 agent 加载、绿标只读，**后端(Rust)是主体，前端是薄触发层**。
-> 涉及两仓：`D:\aionui-m0\AionCore`(1oneCore, Rust 后端) + `D:\aionui-m0\AionUi`(1oneUI, 前端)。**均已提交 + 推送 `one-main`。版本 2.1.34（未打包，用户暂停）。**
+> 涉及两仓：`D:\旧中转目录\dream-core`(1oneCore, Rust 后端) + `D:\旧中转目录\dream-ui`(1oneUI, 前端)。**均已提交 + 推送 `one-main`。版本 2.1.34（未打包，用户暂停）。**
 
 ---
 
@@ -21,7 +21,7 @@
 管理员在企业 registry 定义团队技能 (one-devops: skills_registry, 已有)
         │  成员桌面端(客户端模式)拉 oneDevops.listSkills → 远端服务器
         ▼
-POST /api/skills/team-sync  →  本地 aioncore (httpPostLocal, 客户端也打本地)
+POST /api/skills/team-sync  →  本地 dreamcore (httpPostLocal, 客户端也打本地)
         │  team_sync::sync_team_skills 物化
         ▼
 {data_dir}/team-skills/{registry_id}/SKILL.md  +  .team-origin 标记
@@ -41,16 +41,16 @@ POST /api/skills/team-sync  →  本地 aioncore (httpPostLocal, 客户端也打
 
 ## 2. 后端改动（1oneCore，本次核心，commit `9a1c279` + fmt `52bb7f0`）
 
-| 文件                                                         | 改动                                                                                                                                                                                                                 | 作用                   |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `crates/aionui-extension/src/team_sync.rs` 🆕 235行          | `TeamSkillPayload`/`TeamSyncReport`/`sync_team_skills(dir, payloads, authoritative)` + `build_skill_md`/`sanitize_id` + 6 单测                                                                                       | **物化 + 对账核心**    |
-| `crates/aionui-extension/src/skill_service.rs` +54           | `SkillSource::Team` 变体；`SkillPaths::team_skills_dir()` 方法(从 data_dir 派生,**零构造点改动**)；`list_team_skills_from_disk`；并入 `list_available_skills` **和** `list_available_skills_with_repo`(生产 DB 路径) | 让团队技能被列举/加载  |
-| `crates/aionui-extension/src/skill_routes.rs` +69            | `POST /api/skills/team-sync` handler(在 auth_middleware 之后)                                                                                                                                                        | 成员触发同步           |
-| `crates/aionui-extension/src/constants.rs`                   | `TEAM_SKILLS_DIR_NAME = "team-skills"`                                                                                                                                                                               | 目录名                 |
-| `crates/aionui-extension/src/lib.rs`                         | `pub mod team_sync;`                                                                                                                                                                                                 | 模块注册               |
-| `crates/aionui-api-types/src/skill.rs`                       | `SkillSourceResponse::Team`(serde "team")                                                                                                                                                                            | 前端契约               |
-| `crates/aionui-ai-agent/src/capability/skill_manager/mod.rs` | 两处 match 臂加 `SkillSource::Team`(按 Custom 处理:加载 + 读内容)                                                                                                                                                    | **agent 消费团队技能** |
-| `crates/aionui-extension/tests/team_skill_sync_e2e.rs` 🆕    | 3 条 E2E 集成测试                                                                                                                                                                                                    | 真数据实证             |
+| 文件                                                             | 改动                                                                                                                                                                                                                 | 作用                   |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `crates/dream-core-extension/src/team_sync.rs` 🆕 235行          | `TeamSkillPayload`/`TeamSyncReport`/`sync_team_skills(dir, payloads, authoritative)` + `build_skill_md`/`sanitize_id` + 6 单测                                                                                       | **物化 + 对账核心**    |
+| `crates/dream-core-extension/src/skill_service.rs` +54           | `SkillSource::Team` 变体；`SkillPaths::team_skills_dir()` 方法(从 data_dir 派生,**零构造点改动**)；`list_team_skills_from_disk`；并入 `list_available_skills` **和** `list_available_skills_with_repo`(生产 DB 路径) | 让团队技能被列举/加载  |
+| `crates/dream-core-extension/src/skill_routes.rs` +69            | `POST /api/skills/team-sync` handler(在 auth_middleware 之后)                                                                                                                                                        | 成员触发同步           |
+| `crates/dream-core-extension/src/constants.rs`                   | `TEAM_SKILLS_DIR_NAME = "team-skills"`                                                                                                                                                                               | 目录名                 |
+| `crates/dream-core-extension/src/lib.rs`                         | `pub mod team_sync;`                                                                                                                                                                                                 | 模块注册               |
+| `crates/dream-core-api-types/src/skill.rs`                       | `SkillSourceResponse::Team`(serde "team")                                                                                                                                                                            | 前端契约               |
+| `crates/dream-core-ai-agent/src/capability/skill_manager/mod.rs` | 两处 match 臂加 `SkillSource::Team`(按 Custom 处理:加载 + 读内容)                                                                                                                                                    | **agent 消费团队技能** |
+| `crates/dream-core-extension/tests/team_skill_sync_e2e.rs` 🆕    | 3 条 E2E 集成测试                                                                                                                                                                                                    | 真数据实证             |
 
 **验证**：`cargo build` 干净 · `team_sync` 6/6 · `team_skill_sync_e2e` 3/3 · `skill_manager` 23/23(无回归) · clippy 干净 · fmt 通过。`skill_service` 81/82（唯一失败 `import_skills_replaces_dangling_link_with_copy` 是 Windows 符号链接权限的**既有环境问题**，测 `import_skills`，与本改动无关）。
 
@@ -98,20 +98,20 @@ POST /api/skills/team-sync  →  本地 aioncore (httpPostLocal, 客户端也打
 2. **MCP 下发消费**：团队 MCP → 本机 MCP 配置。难点：MCP 存 SQLite(`IMcpServerRepository`) 需加 origin 字段做对账；带密钥(`hasKeys`)的团队 MCP 客户端无法完整物化(密钥在服务端)。**别硬塞成空壳。**
 3. **RAG 下发消费**：agent 对话检索团队知识库（`oneDevops.searchRag` 已有向量管线，缺对话接入）。
 4. **M1 scope 细化 + M1b teams**：`personal/team/organization` 三级 scope（fork 现在全 `org`，无 `team_memberships`；老架构参考 `1one-command/src/process/webserver/routes/resourceScope.ts`）。
-5. **桌面 E2E 实测**：建团队技能→成员同步→绿标+agent 加载（走 cargo/API 或桌面 dev，**别启动裸 Electron**——新架构核心是 AionCore 后端 + WebUI）。
+5. **桌面 E2E 实测**：建团队技能→成员同步→绿标+agent 加载（走 cargo/API 或桌面 dev，**别启动裸 Electron**——新架构核心是 dream-core 后端 + WebUI）。
 6. **打包**：`scripts/backend-rebuild.ps1`(cargo release + 内嵌) → `npm run dist:win`（用户暂停中）。
 
 ---
 
 ## 7. 关键入口速查
 
-- 后端物化核心：`AionCore/crates/aionui-extension/src/team_sync.rs`
+- 后端物化核心：`dream-core/crates/dream-core-extension/src/team_sync.rs`
 - 列举接入：`skill_service.rs::list_available_skills` / `list_available_skills_with_repo`
 - API 路由：`skill_routes.rs::sync_team_skills_handler`（`/api/skills/team-sync`）
-- agent 消费：`aionui-ai-agent/src/capability/skill_manager/mod.rs`（两处 `SkillSource::Team` match 臂）
+- agent 消费：`dream-core-ai-agent/src/capability/skill_manager/mod.rs`（两处 `SkillSource::Team` match 臂）
 - 前端触发：`teamSkillSync.ts` + `useTeamResourceSync.ts`（挂在 `Layout.tsx`）
 - 绿标：`SkillsHubSettings.tsx`（`source==='team'`）
-- registry 数据源（团队技能定义）：`AionCore/crates/one-devops`（`oneDevops.listSkills` = `/api/one/devops/skills`）
+- registry 数据源（团队技能定义）：`dream-core/crates/one-devops`（`oneDevops.listSkills` = `/api/one/devops/skills`）
 
 ---
 
@@ -137,11 +137,11 @@ POST /api/skills/team-sync  →  本地 aioncore (httpPostLocal, 客户端也打
 | D6 协作/注册表审计              | `DevopsService::audit` 写 one_audit_logs，接入注册表写/派发/breakdown，表缺静默跳过                                                                                                                                                                          | `08b1b83`             |
 | D7 名称唯一约束                 | 团队技能/MCP upsert 重名拒绝，防 last-wins 遮蔽                                                                                                                                                                                                              | `1e24a5a`             |
 
-**测试**：one-devops 20/20、aionui-mcp 全绿、one-org 8/8、one-employee 6/6、team_sync 7/7、e2e 4/4。**单机零影响**全程复核（企业上下文门控 + fail-safe + 无 org 行=放行）。
+**测试**：one-devops 20/20、dream-core-mcp 全绿、one-org 8/8、one-employee 6/6、team_sync 7/7、e2e 4/4。**单机零影响**全程复核（企业上下文门控 + fail-safe + 无 org 行=放行）。
 
 ## 10. HTTP 全链路 E2E 实测（同日续，`c4ed4e0`）
 
-新增 `crates/aionui-app/tests/team_distribution_e2e.rs`——穿**真实路由**（auth 中间件 → one-devops → skills/mcp team-sync → 本机列举），不碰 Electron：
+新增 `crates/dream-core-app/tests/team_distribution_e2e.rs`——穿**真实路由**（auth 中间件 → one-devops → skills/mcp team-sync → 本机列举），不碰 Electron：
 
 - **技能链路**：管理员 POST 建 `auto_active` 团队技能 → 成员 `team-sync` 物化 → `GET /api/skills` 出现 `source=team` + `is_auto_inject=true`（D1 混合模型验证成立）→ 空集 authoritative 对账删除。
 - **MCP+凭据链路**：管理员建带凭据 sse 连接 → 成员 `team-sync` → `GET /api/mcp/servers` 出现且凭据真的进了 `transport.headers`（D5 验证成立）。

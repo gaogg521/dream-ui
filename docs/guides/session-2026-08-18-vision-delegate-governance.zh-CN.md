@@ -22,14 +22,14 @@
 交接文档 §1 的两条断言我逐条开文件核对过，**都属实**：
 
 **洞 A：allowlist 够不到委托模型。**
-`resolve_vision_delegate`（`1oneCore/crates/aionui-ai-agent/src/factory/aionrs.rs`）
+`resolve_vision_delegate`（`1oneCore/crates/dream-core-ai-agent/src/factory/dream-engine.rs`）
 遍历用户已配置的 provider 挑视觉模型，只查 `enabled` / `model_enabled` / 能力判定。
 全仓 allowlist 强制点只有两处，都在「会话模型」那一侧——`routes.rs` 的 `check_send`
 （发消息）与 `routes_aux.rs` 的 `check_model`（改模型设置），各只有一个调用点。
 管理员把某模型踢出清单后，它仍可能被当视觉委托调用。
 
 **洞 B：这次调用的 token 用量被丢弃。**
-`aionrs-local/crates/aion-tools/src/read_image.rs` 里写的是
+`旧引擎本地检出/crates/dream-engine-tools/src/read_image.rs` 里写的是
 `LlmEvent::Done { .. } => break`——`Done` 明明带 `usage`，直接丢掉。1oneCore 只在
 `turn_orchestrator.rs` 记主模型那一次。后果：企业成本上限与用量看板看不见这笔花费。
 
@@ -41,17 +41,17 @@
 
 ## 2. 修复 A：allowlist 够到视觉委托（纯 1oneCore）
 
-`aionui-ai-agent` 与 `one-billing` 同层，不能直接依赖，按本仓既有安排走 trait 注入。
-形状照抄现成的三个先例：`aionui_auth::IpAllowlistGate` / `aionui_conversation::SendGate`
+`dream-core-ai-agent` 与 `one-billing` 同层，不能直接依赖，按本仓既有安排走 trait 注入。
+形状照抄现成的三个先例：`dream_core_auth::IpAllowlistGate` / `dream_core_conversation::SendGate`
 / `UsageRecorder`。
 
-| 改动                                                                           | 位置                                  |
-| ------------------------------------------------------------------------------ | ------------------------------------- |
-| 新 trait `ModelAllowlistGate`（`is_model_allowed -> Result<bool, String>`）    | `aionui-ai-agent/src/model_policy.rs` |
-| `AgentFactoryDeps` 新增 `model_allowlist: Option<Arc<dyn ModelAllowlistGate>>` | `factory/mod.rs`                      |
-| `resolve_vision_delegate` 增加闸门，返回类型改为 `VisionDelegate`              | `factory/aionrs.rs`                   |
-| 适配器 `BillingModelAllowlistGate`（调 `check_model_allowed`）                 | `aionui-app/src/router/routes.rs`     |
-| `BillingService` 构造上移到 `AppServices`，`routes.rs` 改为复用同一实例        | `aionui-app/src/services.rs`          |
+| 改动                                                                           | 位置                                      |
+| ------------------------------------------------------------------------------ | ----------------------------------------- |
+| 新 trait `ModelAllowlistGate`（`is_model_allowed -> Result<bool, String>`）    | `dream-core-ai-agent/src/model_policy.rs` |
+| `AgentFactoryDeps` 新增 `model_allowlist: Option<Arc<dyn ModelAllowlistGate>>` | `factory/mod.rs`                          |
+| `resolve_vision_delegate` 增加闸门，返回类型改为 `VisionDelegate`              | `factory/dream-engine.rs`                 |
+| 适配器 `BillingModelAllowlistGate`（调 `check_model_allowed`）                 | `dream-core-app/src/router/routes.rs`     |
+| `BillingService` 构造上移到 `AppServices`，`routes.rs` 改为复用同一实例        | `dream-core-app/src/services.rs`          |
 
 ### 三个拍板点
 
@@ -71,7 +71,7 @@
 
 被 allowlist 拦掉时，原兜底文案是「去 Settings → Models 加一个视觉模型」——这对
 被管理员封禁的成员既是错的、也无法执行，用户只会一直试。现在 `VisionDelegate` 带
-`policy_blocked` 列表，经 `AionrsResolvedConfig.vision_unavailable_reason` →
+`policy_blocked` 列表，经 `DreamEngineResolvedConfig.vision_unavailable_reason` →
 `AgentBootstrap::vision_unavailable_reason()` → `ReadImageTool::with_unavailable_reason()`
 替换掉那句 remedy，改成点名被拦模型 + 让用户找管理员。
 
@@ -87,15 +87,15 @@
 
 ---
 
-## 3. 修复 B：委托用量进账本（跨 aionrs → 1oneCore）
+## 3. 修复 B：委托用量进账本（跨 dream-engine → 1oneCore）
 
-用量要从 `aion-tools` 一路穿回 1oneCore 的 `record_turn`。
+用量要从 `dream-engine-tools` 一路穿回 1oneCore 的 `record_turn`。
 
-**aionrs 侧**
+**dream-engine 侧**
 
-- `aion-types/src/usage.rs` 新增 `DelegateUsageSink` trait。**放 aion-types 是必须的**：
-  `aion-tools` 已依赖它，而 aion-tools **不能**依赖 aion-agent（会成环）。
-- `aion-agent` 的 `OutputSink` 加 `emit_delegate_usage`，**默认 no-op**——terminal /
+- `dream-engine-types/src/usage.rs` 新增 `DelegateUsageSink` trait。**放 dream-engine-types 是必须的**：
+  `dream-engine-tools` 已依赖它，而 dream-engine-tools **不能**依赖 dream-engine-agent（会成环）。
+- `dream-engine-agent` 的 `OutputSink` 加 `emit_delegate_usage`，**默认 no-op**——terminal /
   null / protocol 三个 sink 因此零改动，与上游同步的冲突面最小。
 - `bootstrap.rs` 加 bridge struct 把 `Arc<dyn OutputSink>` 适配成 `DelegateUsageSink`。
 - `read_image.rs` 的 `Done` 分支解构出 `usage` 并上报，报的是**委托模型名**。
@@ -111,7 +111,7 @@
 
 ### 拍板：用量记「委托模型」名，不记主模型
 
-费率表（`aionui-common/src/license.rs`）按族名 substring 匹配：`kimi-k2-6`→`kimi`、
+费率表（`dream-core-common/src/license.rs`）按族名 substring 匹配：`kimi-k2-6`→`kimi`、
 `gpt-4o`→`gpt-4`、`glm-4v`→`glm`，主流视觉模型都匹配得上。记主模型是明确的
 misattribution，而且费率也会算错。
 
@@ -134,18 +134,18 @@ was invented` 钉死）。本轮给 `record_turn` 补了同款 zero-cost warn，
 
 恢复后全仓搜 `unreachable_code` / `NEGATIVE` / `TEMPORARY` 确认没留下破坏。
 
-**测试**：aionrs `cargo test --workspace --no-fail-fast` 退出码 0、零 FAILED。
+**测试**：dream-engine `cargo test --workspace --no-fail-fast` 退出码 0、零 FAILED。
 
 1oneCore 的全量测试**写这份文档时被中途叫停、没有跑完**（停在 30 个测试二进制、
 0 FAILED，不是完整结论）。**收尾时补跑完了**：255 个测试二进制、累计 8 条失败，
-与既有基线**逐个同名**——`aionui-project` 的 scm `discard*`/`revert*` 6 条 +
+与既有基线**逐个同名**——`dream-core-project` 的 scm `discard*`/`revert*` 6 条 +
 `scm_request_path::a_blank_basename_folder_does_not_become_a_blank_label` 1 条 +
 `team_e2e::tc6b_workspace_with_whitespace_segment_is_accepted` 1 条，**一条未增**。
 退出码 101（有失败即非零，符合预期）。判定一律取被测命令自己的退出码，不隔着管道看。
 
 **新增测试**（都验证过桩闸门/桩 sink 真的被调用——「绿」只对真正跑到的那条路径有意义）
 
-- `capability/vision_delegate_test.rs`（原 `factory/aionrs_vision_delegate_test.rs`，见 §10）6 条：踢出清单不可被选、在清单内仍可选、跳过被拦
+- `capability/vision_delegate_test.rs`（原 `factory/dream-engine_vision_delegate_test.rs`，见 §10）6 条：踢出清单不可被选、在清单内仍可选、跳过被拦
   的继续找下一个、判定失败 fail closed、无闸门（个人版）行为不变、纯文本模型根本
   不问闸门
 - `read_image_test.rs` 5 条：用量上报且模型名是委托模型、调用失败不报零用量、
@@ -162,7 +162,7 @@ was invented` 钉死）。本轮给 `record_turn` 补了同款 zero-cost warn，
   也只在切模型那一刻查）。
 - **本次只让上限「看得见」委托花费，没有在委托调用前拦预算。** 预算判定留在 send
   路径，理由见 §2 拍板点 ①。
-- `aionrs` master 在 HEAD (`1d485e5`) 上**本来就是 fmt 脏的**（全在上一轮 ReadImage
+- `dream-engine` master 在 HEAD (`1d485e5`) 上**本来就是 fmt 脏的**（全在上一轮 ReadImage
   提交碰过的那几个文件里），本轮 `cargo fmt --all` 顺手清掉了，所以 diff 里会看到
   `engine_test.rs` / `image_source_test.rs` 这两个我没改过的文件。
 
@@ -172,11 +172,11 @@ was invented` 钉死）。本轮给 `record_turn` 补了同款 zero-cost warn，
 
 写这份文档时 1oneCore 的改动全在工作区、一次都没 commit。**现已全部收尾**：
 
-| 仓       | HEAD        |                                                         |
-| -------- | ----------- | ------------------------------------------------------- |
-| aionrs   | `051ff54`   | 已推                                                    |
-| 1oneCore | `2c27acae`  | 已推（代码在 `0886193f`，Cargo.lock 修复在 `38cdf307`） |
-| 1oneUI   | `e0ca14025` | 已推                                                    |
+| 仓           | HEAD        |                                                         |
+| ------------ | ----------- | ------------------------------------------------------- |
+| dream-engine | `051ff54`   | 已推                                                    |
+| 1oneCore     | `2c27acae`  | 已推（代码在 `0886193f`，Cargo.lock 修复在 `38cdf307`） |
+| 1oneUI       | `e0ca14025` | 已推                                                    |
 
 临时 `[patch]` 块已删、内嵌后端已用 `backend-rebuild.ps1` 重编（exit 0）、
 真机两条判据均已通过（见 §11）。收尾实况见
@@ -188,7 +188,7 @@ was invented` 钉死）。本轮给 `record_turn` 补了同款 zero-cost warn，
 
 ⚠️ **实际发生过的事故**：本轮代码后来被另一个会话（§8/§9 那条桥接降级）一并吞进
 它自己的提交推了出去，**而下面第 2、3 步没做** —— 提交里实现了
-`OutputSink::emit_delegate_usage`，Cargo.lock 却仍指向 aionrs `1d485e5`（该方法
+`OutputSink::emit_delegate_usage`，Cargo.lock 却仍指向 dream-engine `1d485e5`（该方法
 尚不存在）。本地 `[patch]` 块替它兜住，所以本机编译测试全绿，**干净 checkout 直接
 编不过**。已由 `38cdf307` 修复。
 
@@ -196,14 +196,14 @@ was invented` 钉死）。本轮给 `record_turn` 补了同款 zero-cost warn，
 `[patch]`，"本机编译通过"就不能作为可推送的判据——它把跨仓依赖的版本错配整个隐藏掉。
 删块 + `cargo update` + **重编一次**之后才算验证过。
 
-1. 先推 **aionrs**
-2. 删掉 `1oneCore/Cargo.toml` 末尾的临时 `[patch."https://github.com/gaogg521/aionrs.git"]`
+1. 先推 **dream-engine**
+2. 删掉 `1oneCore/Cargo.toml` 末尾的临时 `[patch."https://github.com/gaogg521/dream-engine.git"]`
    块（本轮为联调加的，块内有醒目注释）
-3. `cargo update -p aion-agent` 让 `Cargo.lock` 指向 aionrs 的新 commit
+3. `cargo update -p dream-engine-agent` 让 `Cargo.lock` 指向 dream-engine 的新 commit
 4. 再推 **1oneCore**
 
 **本任务不需要改 1oneUI（除本文档）。**
-改完 1oneCore 的 Rust 必须跑 `D:\aionui-m0\scripts\backend-rebuild.ps1` 重编内嵌，
+改完 1oneCore 的 Rust 必须跑 `D:\旧中转目录\scripts\backend-rebuild.ps1` 重编内嵌，
 否则 dev 用的还是旧后端。
 
 ---
@@ -212,10 +212,10 @@ was invented` 钉死）。本轮给 `record_turn` 补了同款 zero-cost warn，
 
 ### 真因
 
-Claude Code / Codex 的 ACP 桥接路径与内嵌 aionrs 不同：
-`aionui-project/src/chat_files.rs` 把附件展平成
+Claude Code / Codex 的 ACP 桥接路径与内嵌 dream-engine 不同：
+`dream-core-project/src/chat_files.rs` 把附件展平成
 `[[AION_FILES]]` 后的绝对路径文本；
-`aionui-ai-agent/src/manager/acp/agent.rs` 只把这段文本送入外部 CLI，
+`dream-core-ai-agent/src/manager/acp/agent.rs` 只把这段文本送入外部 CLI，
 没有传图片字节。因此，一个被桥接到纯文本模型的 CLI 会以为自己能看图，却只能看到
 路径，可能据文件名编造内容。
 
@@ -233,12 +233,12 @@ Claude Code / Codex 的 ACP 桥接路径与内嵌 aionrs 不同：
 
 ### 验证与加载
 
-- `cargo fmt --all -- --check`、`cargo clippy -p aionui-ai-agent -- -D warnings` 通过。
-- `cargo test -p aionui-ai-agent` 通过；新增覆盖了未桥接字节不变、无委托诚实降级、
+- `cargo fmt --all -- --check`、`cargo clippy -p dream-core-ai-agent -- -D warnings` 通过。
+- `cargo test -p dream-core-ai-agent` 通过；新增覆盖了未桥接字节不变、无委托诚实降级、
   委托描述/用量归属、单图失败继续处理，以及实际 pipeline 链路。
 - 改的是 `1oneCore` Rust：必须运行
-  `D:\aionui-m0\scripts\backend-rebuild.ps1`，再重启/运行
-  `D:\aionui-m0\scripts\frontend-dev.ps1`；否则桌面端仍使用旧的 bundled backend。
+  `D:\旧中转目录\scripts\backend-rebuild.ps1`，再重启/运行
+  `D:\旧中转目录\scripts\frontend-dev.ps1`；否则桌面端仍使用旧的 bundled backend。
 - 真机检查：给桥接到纯文本模型的 Claude Code 或 Codex 会话附一张图，应获得真实委托
   描述或明确不可读提示，绝不能得到臆测的图片分析。
 
@@ -272,7 +272,7 @@ Claude Code / Codex 的 ACP 桥接路径与内嵌 aionrs 不同：
 
 ### 打包与实机验证
 
-- `aionui-extension/build.rs` 会递归声明 builtin-skill assets 的 Cargo 依赖；因此改动
+- `dream-core-extension/build.rs` 会递归声明 builtin-skill assets 的 Cargo 依赖；因此改动
   `SKILL.md` 或脚本也会重建内嵌语料，而不会因 `include_dir!` 缓存而保留旧内容。
 - Windows 脚本同时接受原始 Win32 扩展路径前缀，以及 ACP→PowerShell 引号传递时少一条
   前导反斜杠的等价形态；两者都会先转换为普通绝对路径，再调用 WinRT OCR。
@@ -282,12 +282,12 @@ Claude Code / Codex 的 ACP 桥接路径与内嵌 aionrs 不同：
 
 **verified:**
 
-- `1oneCore/crates/aionui-ai-agent/src/capability/local_ocr_skill.rs`
-- `1oneCore/crates/aionui-ai-agent/src/manager/acp/hooks.rs`
-- `1oneCore/crates/aionui-ai-agent/src/manager/acp/vision_image_hook.rs`
-- `1oneCore/crates/aionui-ai-agent/src/capability/image_description.rs`
-- `1oneCore/crates/aionui-extension/build.rs`
-- `1oneCore/crates/aionui-app/assets/builtin-skills/local-ocr-{windows,macos,linux}/`
+- `1oneCore/crates/dream-core-ai-agent/src/capability/local_ocr_skill.rs`
+- `1oneCore/crates/dream-core-ai-agent/src/manager/acp/hooks.rs`
+- `1oneCore/crates/dream-core-ai-agent/src/manager/acp/vision_image_hook.rs`
+- `1oneCore/crates/dream-core-ai-agent/src/capability/image_description.rs`
+- `1oneCore/crates/dream-core-extension/build.rs`
+- `1oneCore/crates/dream-core-app/assets/builtin-skills/local-ocr-{windows,macos,linux}/`
 
 ---
 
@@ -295,10 +295,10 @@ Claude Code / Codex 的 ACP 桥接路径与内嵌 aionrs 不同：
 
 §8/§9 把视觉委托从工厂里抽了出来，所以本文 §2 提到的路径已经过期：
 
-| 本文原写                                           | 现在                                 |
-| -------------------------------------------------- | ------------------------------------ |
-| `factory/aionrs.rs` 里的 `resolve_vision_delegate` | `capability/vision_delegate.rs`      |
-| `factory/aionrs_vision_delegate_test.rs`           | `capability/vision_delegate_test.rs` |
+| 本文原写                                                 | 现在                                 |
+| -------------------------------------------------------- | ------------------------------------ |
+| `factory/dream-engine.rs` 里的 `resolve_vision_delegate` | `capability/vision_delegate.rs`      |
+| `factory/dream-engine_vision_delegate_test.rs`           | `capability/vision_delegate_test.rs` |
 
 **闸门没有在搬家中被削弱**，逐项核实过：
 
@@ -312,7 +312,7 @@ Claude Code / Codex 的 ACP 桥接路径与内嵌 aionrs 不同：
   `fails_closed_when_the_policy_check_itself_errors` /
   `without_a_gate_the_delegate_is_chosen_on_capability_alone` /
   `does_not_consult_the_gate_for_models_that_cannot_see_images`）+ relay 3 +
-  orchestrator 3（+ aionrs 侧 read_image 5）
+  orchestrator 3（+ dream-engine 侧 read_image 5）
 - `ModelAllowlistGate` / `AgentFactoryDeps.model_allowlist` /
   `BillingModelAllowlistGate` / `AppServices.billing` 均在原处
 - ⛔ `capability/image_input.rs` **未被碰过**（最后一次改动仍是 `a1caef8e` 那次 revert）
@@ -326,7 +326,7 @@ id `019f8aa0…`），成员 `system_default_user` role=admin、seat_status=acti
 allowlist 存 `one_enterprise_license.allowed_models`。
 
 **方法**：走**后端 HTTP 直连**（dev 本地模式无鉴权，端口见主进程日志
-`AIONCORE_LISTENING`），比驱动 DOM 稳得多。
+`DREAMCORE_LISTENING`），比驱动 DOM 稳得多。
 **关键简化**：`ReadImage` 是**按路径**调用的工具，所以不必上传附件——发一句
 「用 ReadImage 读 &lt;绝对路径&gt;」即可触发委托。主模型固定 `minimax-2-7`
 （被 `image_input.rs` 锁死为纯文本 lookalike，正好触发委托）。

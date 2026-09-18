@@ -9,12 +9,12 @@
 **`2.2.0` 是 dream 三仓新架构的第一个版本。** 从这个版本起：
 
 - 代码来自 `dream-ui` / `dream-core` / `dream-engine` 三个独立仓库（外加云端的
-  `dream-trial-broker`），不再是 `1oneUI` / `1oneCore` / `aionrs-local` 那套旧仓库，
-  也不再跟随开源上游 [AionUi](https://github.com/iOfficeAI/AionUi)。背景见
+  `dream-trial-broker`），不再是 `1oneUI` / `1oneCore` / `旧引擎本地检出` 那套旧仓库，
+  也不再跟随开源上游 [dream-ui](https://github.com/gaogg521/dream-ui)。背景见
   [`../../CLAUDE.md`](../../CLAUDE.md) 的"三仓架构"与
   [`../guides/repository-independence.zh-CN.md`](../guides/repository-independence.zh-CN.md)。
 - `2.1.x` 及更早的版本属于旧仓库时期。它们的 CHANGELOG 条目里还留着指向
-  `iOfficeAI/AionUi` 的 compare 链接，那是历史事实，**不要回头改写**。
+  `gaogg521/dream-ui` 的 compare 链接，那是历史事实，**不要回头改写**。
 
 选 `2.2.0` 而不是继续 `2.1.62`，是因为仓库身份和构建来源整体换了一次——这对使用者不可见，
 但对任何要定位问题、对齐版本、找源码的人是分水岭。次版本号跳一格是最便宜的标记方式。
@@ -49,7 +49,7 @@
 | 位置                                | 内容                           | 备注                                                                             |
 | ----------------------------------- | ------------------------------ | -------------------------------------------------------------------------------- |
 | `package.json` → `version`          | `2.2.0`                        | 安装包文件名、`app.getVersion()`、自动更新比对全看它                             |
-| `package.json` → `aioncoreVersion`  | 指向 dream-core 的 Release tag | **该 tag 必须真实存在**，否则 Mac CI 在下载 aioncore 时 404                      |
+| `package.json` → `dreamcoreVersion` | 指向 dream-core 的 Release tag | **该 tag 必须真实存在**，否则 Mac CI 在下载 dreamcore 时 404                     |
 | `CHANGELOG.md`                      | 新增一节                       | 面向开发者，按 commit 类型分组                                                   |
 | `docs/release-notes/<version>.json` | 新增一份                       | 面向用户，扁平数组、纯文本；桌面端更新面板 / GitHub Release / 官网三处共用这一份 |
 

@@ -69,13 +69,13 @@ ORDER BY (uo.tenant_id = (SELECT tenant_id FROM one_active_tenant WHERE user_id 
 
 - **后端单测全绿**：one-org 28（新增 `join_second_group_auto_activates_and_lists_both` / `switch_active_tenant_changes_resolution` / `effective_role_follows_active_tenant` / `leave_active_group_reselects_remaining_and_is_scoped` / `active_tenant_defaults_when_no_membership`；改 `create_for_enterprise_seeds_initial_admin_across_multiple_groups`）、one-sso 46（新增 `effective_role_scopes_to_active_tenant`）、one-enterprise 12、one-devops 23。三个跨 crate 测试 setup 补建了 `one_active_tenant`（否则相关子查询因表缺失报错、one-devops 还会被「no such table」兜底误判为 standalone）。
 - clippy：我的改动零新增告警；surfaced 的都是**既有**未触碰文件（one-org `heartbeat_runtime_node` too_many_args、one-sso dingtalk/wecom serde 字段 never-read、one-sso rbac collapsible_if、one-employee 3 处），ratchet 不动，push 用 plain `git push`。
-- `cargo check -p aionui-app` 通过（composition 层照旧编译）。
+- `cargo check -p dream-core-app` 通过（composition 层照旧编译）。
 - 前端：`i18n:types` / `tsc --noEmit`（0 错）/ `oxlint`（改动文件 0/0）/ `check-i18n`（通过，我的 key 解析成功）。
 
 ## 待办（真机 + 发版）
 
 1. **真机 CDP 验证**：dev 服务器模式建两个项目组、同一用户加入两个 → 徽标切换器切换 → 确认成员 / 团队技能 / 看板随激活组变；个人装机徽标无切换器、行为不变。
-2. 打包（用户说不急）：`backend-rebuild.ps1` 重编 aioncore（Phase 1 的坑：第 2 步 `prepareAioncore.js` 若 exit1 就手动 `cp target/release/aioncore.exe → bundled/win32-x64/`；起 dev 前杀干净旧 electron/aioncore）→ bump 版本出安装包。
+2. 打包（用户说不急）：`backend-rebuild.ps1` 重编 dreamcore（Phase 1 的坑：第 2 步 `prepareDreamcore.js` 若 exit1 就手动 `cp target/release/dreamcore.exe → bundled/win32-x64/`；起 dev 前杀干净旧 electron/dreamcore）→ bump 版本出安装包。
 3. 其余 11 语言 `settings.workspaceIdentity.myGroupsTitle/switchDone` + `common.company.*` 精翻（当前回退 en/defaultValue）。
 
 ## 关联

@@ -12,7 +12,7 @@ Automate the One Work release preparation: query dreamcore release → verify ar
 - `/bump-version` — auto patch + latest dreamcore
 - `/bump-version 2.2.0` — explicit One Work version + latest dreamcore
 - `/bump-version 2.2.0 --core v0.1.12` — explicit both versions
-- `/bump-version --skip-core` — pure frontend release (don't touch aioncoreVersion)
+- `/bump-version --skip-core` — pure frontend release (don't touch dreamcoreVersion)
 
 ## Workflow
 
@@ -48,30 +48,30 @@ Display: "Bumping One Work: {current} → {target}"
 **Skip entirely if `--skip-core` is set.**
 
 ```bash
-gh release view --repo iOfficeAI/dreamcore --json tagName,body
+gh release view --repo gaogg521/dream-core --json tagName,body
 ```
 
 - If `--core <version>` provided → use that tag instead of latest
 - Display the dreamcore version and ask user to confirm before continuing
-- Also read current `aioncoreVersion` from `package.json` — if it already matches the queried version, warn the user and ask whether to proceed or use `--skip-core`
+- Also read current `dreamcoreVersion` from `package.json` — if it already matches the queried version, warn the user and ask whether to proceed or use `--skip-core`
 
 ### Step 5: Verify dreamcore Artifacts
 
 **Skip if `--skip-core`.**
 
 ```bash
-gh release view <tag> --repo iOfficeAI/dreamcore --json assets --jq '.assets[].name'
+gh release view <tag> --repo gaogg521/dream-core --json assets --jq '.assets[].name'
 ```
 
 Verify all 7 expected assets exist:
 
-- `aioncore-<tag>-x86_64-unknown-linux-gnu.tar.gz`
-- `aioncore-<tag>-aarch64-unknown-linux-gnu.tar.gz`
-- `aioncore-<tag>-x86_64-apple-darwin.tar.gz`
-- `aioncore-<tag>-aarch64-apple-darwin.tar.gz`
-- `aioncore-<tag>-x86_64-pc-windows-msvc.zip`
-- `aioncore-<tag>-aarch64-pc-windows-msvc.zip`
-- `aioncore-checksums.txt`
+- `dreamcore-<tag>-x86_64-unknown-linux-gnu.tar.gz`
+- `dreamcore-<tag>-aarch64-unknown-linux-gnu.tar.gz`
+- `dreamcore-<tag>-x86_64-apple-darwin.tar.gz`
+- `dreamcore-<tag>-aarch64-apple-darwin.tar.gz`
+- `dreamcore-<tag>-x86_64-pc-windows-msvc.zip`
+- `dreamcore-<tag>-aarch64-pc-windows-msvc.zip`
+- `dreamcore-checksums.txt`
 
 Missing → Stop: "dreamcore {tag} is missing artifacts: {list}. Wait for CI to complete or check for build failures."
 
@@ -80,7 +80,7 @@ Missing → Stop: "dreamcore {tag} is missing artifacts: {list}. Wait for CI to 
 Use Edit tool to replace:
 
 - `"version": "{current}"` → `"version": "{target}"`
-- `"aioncoreVersion": "{old}"` → `"aioncoreVersion": "{new core tag}"` (skip if `--skip-core`)
+- `"dreamcoreVersion": "{old}"` → `"dreamcoreVersion": "{new core tag}"` (skip if `--skip-core`)
 
 ### Step 7: Generate CHANGELOG Entry
 
@@ -119,7 +119,7 @@ Prepend the new entry in this format:
 ```markdown
 # Changelog
 
-## [{target}](https://github.com/iOfficeAI/One Work/compare/v{previous}...v{target}) ({date YYYY-MM-DD})
+## [{target}](https://github.com/gaogg521/dream-ui/compare/v{previous}...v{target}) ({date YYYY-MM-DD})
 
 ### Desktop
 
@@ -131,7 +131,7 @@ Prepend the new entry in this format:
 
 - **thinking:** add streaming indicator (#3015)
 
-### Core ([{core tag}](https://github.com/iOfficeAI/dreamcore/releases/tag/{core tag}))
+### Core ([{core tag}](https://github.com/gaogg521/dream-core/releases/tag/{core tag}))
 
 #### Bug Fixes
 
@@ -172,7 +172,7 @@ Fails → Stop: "Tests failed. Please fix before bumping."
 ```bash
 git checkout -b chore/bump-version-{target}
 git add package.json CHANGELOG.md
-git commit -m "chore: bump version to {target} and aioncore to {core tag}"
+git commit -m "chore: bump version to {target} and dreamcore to {core tag}"
 just push -u origin chore/bump-version-{target}
 ```
 
@@ -263,7 +263,7 @@ Display: "Tag v{target} created and pushed. Release build triggered! Action: {ru
  3. Determine One Work target version (patch+1 or explicit)
  4. Query dreamcore latest release (or --core / --skip-core)
  5. Verify dreamcore artifacts (7 files)
- 6. Edit package.json (version + aioncoreVersion)
+ 6. Edit package.json (version + dreamcoreVersion)
  7. Generate CHANGELOG entry (frontend commits + dreamcore release body)
  8. lint + format + tsc
  9. vitest run

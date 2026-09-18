@@ -49,7 +49,7 @@ const INSTALLER_ERROR_SCENARIOS = [
     code: 'E1010',
     message: 'One Work could not extract the application files correctly.',
     action: 'Download a fresh installer and run it again.',
-    diagnostics: 'scenario=extract-failed phase=extract method=zip missing=AionUi.exe',
+    diagnostics: 'scenario=extract-failed phase=extract method=zip missing=onework.exe',
   },
   {
     id: 'disk-insufficient',
@@ -61,7 +61,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'bundled-dreamcore-incomplete',
-    defineName: 'ONEWORK_E_BUNDLED_AIONCORE_INCOMPLETE',
+    defineName: 'ONEWORK_E_BUNDLED_CORE_INCOMPLETE',
     code: 'E1030',
     message: 'One Work installed, but the bundled One Work Core resources are incomplete.',
     action: 'Download a fresh installer and run it again.',
@@ -397,7 +397,7 @@ SilentInstall normal
 !include "${nsisQuote(path.join(projectRoot, 'resources', 'windows', 'installer-errors-sentry.nsh'))}"
 
 Section
-  StrCpy $INSTDIR "$TEMP\\AionUi-messagebox-smoke"
+  StrCpy $INSTDIR "$TEMP\\onework-messagebox-smoke"
   StrCpy $OneWorkSessionId "smokembox-${nsisQuote(scenario.code)}"
   StrCpy $OneWorkIsUpdated "1"
   StrCpy $OneWorkSessionLogPath "${nsisQuote(logPath)}"

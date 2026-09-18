@@ -13,7 +13,7 @@ import { execSync } from 'node:child_process';
 
 const BINARY_NAME = 'dreamcore';
 // Backend bundles published before the rebrand shipped the binary (and its
-// enclosing resources dir) under the legacy `aioncore` name. Keep resolving
+// enclosing resources dir) under the legacy binary name. Keep resolving
 // them so a not-yet-rebuilt dev bundle or an in-place upgrade still boots.
 const LEGACY_BINARY_NAME = 'aioncore';
 const BUNDLED_DIR_NAMES = ['bundled-dreamcore', 'bundled-aioncore'] as const;

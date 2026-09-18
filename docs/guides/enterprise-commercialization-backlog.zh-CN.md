@@ -11,7 +11,7 @@
 > **⚠️ 两处本文档原有结论已作废，不要再按它执行：**
 >
 > 1. **P0-3 的"移植 AnythingLLM UI + 换 LanceDB 内核"作废**。LanceDB 实测让
->    `aioncore.exe` 从 94.3 MB 涨到 **299.3 MB**（+205 MB），且需要 CI 额外安装
+>    `dreamcore.exe` 从 94.3 MB 涨到 **299.3 MB**（+205 MB），且需要 CI 额外安装
 >    `protoc`。最终改用 **SQLite 内置 FTS5**（BM25 + 向量 cosine，RRF 融合），
 >    体积只 +3.1 MB。取舍与 LanceDB 的三个坑见交接文档 §1。
 > 2. **P1-2 说的"统一 `created_by`"是错的**。实际是两套字段，其中五张看板表
@@ -99,7 +99,7 @@
 **背景**：核查发现团队知识库是个孤岛——全仓唯一自动引用点是
 `one-devops/routes.rs:295`（只在"派发任务给数字员工"时注入 top-3），
 **员工日常聊天时 Agent 完全不知道公司有知识库**
-（`aionui-conversation`/`aionui-ai-agent` 对 rag 零引用）。
+（`dream-core-conversation`/`dream-core-ai-agent` 对 rag 零引用）。
 且用户判断现有 RAG "很初级"（暴力余弦全表扫、固定切片、无重排）。
 
 **选型经过（重要，避免重复调研）**：
@@ -111,7 +111,7 @@
 | LlamaIndexTS | ❌ 2026-03 后停更 |
 | MaxKB | ❌ GPL-3.0 传染 |
 | **AnythingLLM (64k, MIT)** | ✅ **UI 移植来源**（React 18 + Vite + Tailwind，与我们同栈，MIT 可合法移植） |
-| **LanceDB (Rust crate)** | ✅ **检索内核**（v0.33，77万下载，活跃；ANN + BM25 + 混合检索 + reranker；编译进 aioncore，零部署） |
+| **LanceDB (Rust crate)** | ✅ **检索内核**（v0.33，77万下载，活跃；ANN + BM25 + 混合检索 + reranker；编译进 dreamcore，零部署） |
 
 关键佐证：**AnythingLLM 自己的默认向量库就是 LanceDB**
 （`VECTOR_DB="lancedb"`），而 Chroma 在它那里反而是要连 endpoint 的服务型选项。
@@ -183,8 +183,8 @@
 
 ## 四、交接注意事项
 
-- **1oneCore 有其他会话留下的未提交改动**（`aionui-assistant`/`aionui-db`/
-  `aionui-team`/`aionui-app/router/state.rs`），提交时用
+- **1oneCore 有其他会话留下的未提交改动**（`dream-core-assistant`/`dream-core-db`/
+  `dream-core-team`/`dream-core-app/router/state.rs`），提交时用
   `git commit -- <指定路径>` 只提交自己的部分，别混进去
 - 改完 Rust 必须 `scripts/backend-rebuild.ps1` 重编进 bundled 才生效；
   **重编前要关掉 dev app**，否则 bundled 文件被锁报 EPERM

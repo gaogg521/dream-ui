@@ -1,9 +1,9 @@
 # 开发会话记录：2026-07-07 晚间（侧栏 / 企业 / 超级助手 / dev 环境）
 
 > **读者**：后续接手的 AI 或人类开发者。  
-> **代码位置**：`D:\aionui-m0\1oneUI` 分支 `one-main`（截至本文撰写时**大量改动未 commit**）。  
-> **后端**：`D:\aionui-m0\1oneCore`（Rust，`one-employee` / `one-org` 等 crate）。  
-> **启动脚本**：`D:\aionui-m0\scripts\`（不进入 1oneUI git 历史）。
+> **代码位置**：`D:\旧中转目录\1oneUI` 分支 `one-main`（截至本文撰写时**大量改动未 commit**）。  
+> **后端**：`D:\旧中转目录\1oneCore`（Rust，`one-employee` / `one-org` 等 crate）。  
+> **启动脚本**：`D:\旧中转目录\scripts\`（不进入 1oneUI git 历史）。
 
 ---
 
@@ -22,7 +22,7 @@ Fork v2：**1oneUI 桌面前端 + 内嵌 1oneCore 后端**。本轮工作集中�
 
 | 域                                                 | 应走哪里                         | 说明                       |
 | -------------------------------------------------- | -------------------------------- | -------------------------- |
-| 个人会话、助手、MCP 执行、定时任务、**数字员工**   | **本机** aioncore                | 算力与数据在个人工作台     |
+| 个人会话、助手、MCP 执行、定时任务、**数字员工**   | **本机** dreamcore               | 算力与数据在个人工作台     |
 | Issues 看板、组织 SSO、管理员下发 MCP/Skill 注册表 | **远端** 企业服务器              | 协同与管控                 |
 | 开「连接远端」                                     | **不应**把上述个人域全部切到远端 | 压力大、易 404、丢本机数据 |
 
@@ -35,41 +35,41 @@ Fork v2：**1oneUI 桌面前端 + 内嵌 1oneCore 后端**。本轮工作集中�
 
 ### 2.1 前端 ≠ 后端源码
 
-`bun run dev` / `frontend-dev.ps1` 会 spawn **编译好的** `aioncore.exe`，不是 1oneCore 源码实时编译。
+`bun run dev` / `frontend-dev.ps1` 会 spawn **编译好的** `dreamcore.exe`，不是 1oneCore 源码实时编译。
 
-| 场景           | 命令                                                                                              |
-| -------------- | ------------------------------------------------------------------------------------------------- |
-| 只改前端       | `D:\aionui-m0\scripts\frontend-dev.ps1`                                                           |
-| 改了 1oneCore  | `D:\aionui-m0\scripts\backend-rebuild.ps1` 然后 `frontend-dev.ps1`，或 `backend-rebuild.ps1 -Dev` |
-| 只 curl 测 API | `D:\aionui-m0\scripts\backend-run.ps1`（默认 `127.0.0.1:25912 --local`）                          |
+| 场景           | 命令                                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| 只改前端       | `D:\旧中转目录\scripts\frontend-dev.ps1`                                                           |
+| 改了 1oneCore  | `D:\旧中转目录\scripts\backend-rebuild.ps1` 然后 `frontend-dev.ps1`，或 `backend-rebuild.ps1 -Dev` |
+| 只 curl 测 API | `D:\旧中转目录\scripts\backend-run.ps1`（默认 `127.0.0.1:25912 --local`）                          |
 
-数据目录（dev）：`%APPDATA%\1one-Dev`（日志里可见 `1one-Dev`，与旧 `AionUi-Dev` 命名并存时注意）。
+数据目录（dev）：`%APPDATA%\1one-Dev`（日志里可见 `1one-Dev`，与旧 `dream-ui-Dev` 命名并存时注意）。
 
-### 2.2 坑：dev 曾用到 Electron 自带的旧 aioncore
+### 2.2 坑：dev 曾用到 Electron 自带的旧 dreamcore
 
-**现象**：`backend-rebuild.ps1` 已更新 `AionUi/resources/bundled-aioncore/...`，但 Electron 日志里仍出现：
+**现象**：`backend-rebuild.ps1` 已更新 `dream-ui/resources/bundled-dreamcore/...`，但 Electron 日志里仍出现：
 
 ```text
-node_modules/.../electron/dist/resources/bundled-aioncore/win32-x64/aioncore.exe
+node_modules/.../electron/dist/resources/bundled-dreamcore/win32-x64/dreamcore.exe
 /health → version 0.1.41；employee API → 404
 ```
 
 **修复**：`packages/desktop/src/process/backend/binaryResolver.ts`  
 解析顺序改为：
 
-1. `AIONUI_BACKEND_BUNDLED_DIR`（显式覆盖）
-2. `{cwd}/resources/bundled-aioncore`（`backend-rebuild` 输出，**dev 优先**）
-3. `process.resourcesPath/bundled-aioncore`（打包 / Electron 内置，dev 下常过期）
+1. `DREAM_BACKEND_BUNDLED_DIR`（显式覆盖）
+2. `{cwd}/resources/bundled-dreamcore`（`backend-rebuild` 输出，**dev 优先**）
+3. `process.resourcesPath/bundled-dreamcore`（打包 / Electron 内置，dev 下常过期）
 
-**验证**：主进程日志应出现 `starting: D:\aionui-m0\1oneUI\resources\bundled-aioncore\...`，`/health` 版本与本地编译一致（如 `0.1.42`）。
+**验证**：主进程日志应出现 `starting: D:\旧中转目录\1oneUI\resources\bundled-dreamcore\...`，`/health` 版本与本地编译一致（如 `0.1.42`）。
 
 ### 2.3 进程清理
 
-多开 `electron` / `aioncore` 会导致端口错乱、假死。重启前：
+多开 `electron` / `dreamcore` 会导致端口错乱、假死。重启前：
 
 ```powershell
 taskkill /F /IM electron.exe /T
-taskkill /F /IM aioncore.exe /T
+taskkill /F /IM dreamcore.exe /T
 ```
 
 ---
@@ -167,17 +167,17 @@ taskkill /F /IM aioncore.exe /T
 
 ## 5. 冒烟测试清单（后续 AI 必做）
 
-改完 **前端** 且在 `D:\aionui-m0` 工作时，至少执行：
+改完 **前端** 且在 `D:\旧中转目录` 工作时，至少执行：
 
 ```powershell
 # 1. 若动过 1oneCore
-D:\aionui-m0\scripts\backend-rebuild.ps1
+D:\旧中转目录\scripts\backend-rebuild.ps1
 
 # 2. 启动（无旧进程）
-D:\aionui-m0\scripts\frontend-dev.ps1
+D:\旧中转目录\scripts\frontend-dev.ps1
 
 # 3. 静态检查
-cd D:\aionui-m0\1oneUI
+cd D:\旧中转目录\1oneUI
 bunx tsc --noEmit
 bun run test tests/unit/common-adapter/httpBridge.test.ts
 ```
@@ -192,7 +192,7 @@ bun run test tests/unit/common-adapter/httpBridge.test.ts
 
 **日志确认**：
 
-- `[aioncore] starting:` 路径为 `1oneUI\resources\bundled-aioncore\...`
+- `[dreamcore] starting:` 路径为 `1oneUI\resources\bundled-dreamcore\...`
 - `/health` 的 `version` 与本地编译一致
 
 **可选 CDP**（Electron 已开 `--remote-debugging-port=9230`）：
@@ -219,7 +219,7 @@ packages/desktop/src/renderer/components/layout/Sider/index.tsx
 
 ```
 crates/one-employee/src/routes.rs
-crates/aionui-app/src/router/routes.rs   # CORS: Allow-Origin *
+crates/dream-core-app/src/router/routes.rs   # CORS: Allow-Origin *
 ```
 
 ---
@@ -229,7 +229,7 @@ crates/aionui-app/src/router/routes.rs   # CORS: Allow-Origin *
 - **Git**：上述改动均在 `one-main` 工作区，**未 commit**（用户未要求推送）。
 - **混合路由**：仅 `personalAgent` 本地化；会话/助手/cron 等远端模式行为待产品化拆分。
 - **wecom 渠道**：日志有 `Invalid platform: wecom`（400），与本轮 UI 无关，后端/配置待查。
-- **1one-command 旧仓**：`D:\1one-command` 为过渡期生产仓；本轮主要在 `aionui-m0`。
+- **1one-command 旧仓**：`D:\1one-command` 为过渡期生产仓；本轮主要在 `旧中转目录`。
 
 ---
 
@@ -249,7 +249,7 @@ crates/aionui-app/src/router/routes.rs   # CORS: Allow-Origin *
 
 ## 9. 相关文档
 
-- 启动脚本说明：`D:\aionui-m0\scripts\README.md`
+- 启动脚本说明：`D:\旧中转目录\scripts\README.md`
 - 贡献 / 开发：`docs/contributing/development.md`
 - WebUI / 远端：`docs/guides/webui.md`、`docs/prds/remote/webui/`
 

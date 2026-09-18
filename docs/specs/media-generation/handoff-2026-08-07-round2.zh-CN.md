@@ -56,11 +56,11 @@ agent 生成的图落在 `%APPDATA%\...\1one\` 而不是会话工作目录，而
 
 **修一处，三个症状全解。** 根因链三段缺一不可：
 
-1. `StdioTransport::spawn`（aionrs 的 `aion-mcp`）**不设 `current_dir`** → MCP 子进程继承 aioncore 的 cwd
+1. `StdioTransport::spawn`（dream-engine 的 `dream-engine-mcp`）**不设 `current_dir`** → MCP 子进程继承 dreamcore 的 cwd
 2. 工具调用里**没有任何会话标识** → 主进程也无从解析
 3. 于是薄壳只能落到 `process.cwd()` 或应用 workDir
 
-解法是在 `FactoryContext` 那一层注入——那是唯一同时知道「哪个会话」和「MCP 配置」的地方。新增 `aionui-mcp/media_workspace.rs`，**刻意只给媒体这一个 server**：把工作目录发给所有会话 MCP，等于告诉任意用户配置的进程用户文件在哪。
+解法是在 `FactoryContext` 那一层注入——那是唯一同时知道「哪个会话」和「MCP 配置」的地方。新增 `dream-core-mcp/media_workspace.rs`，**刻意只给媒体这一个 server**：把工作目录发给所有会话 MCP，等于告诉任意用户配置的进程用户文件在哪。
 
 ---
 
@@ -124,7 +124,7 @@ export const buildMediaUrl = (absolutePath: string): string =>
 
 ### 4. 需要用户拍板：`X-Title` 该不该改
 
-本轮把 `ClientFactory` 的 `X-Title: 'AionUi'` / `HTTP-Referer: 'https://aionui.com'` 改成了 `One Work` / `work.1oneclaw.com`（提交 `b377afbcf`）。
+本轮把 `ClientFactory` 的 `X-Title: 'dream-ui'` / `HTTP-Referer: 'https://dream-ui.com'` 改成了 `One Work` / `work.1oneclaw.com`（提交 `b377afbcf`）。
 
 这两个 header 会显示在 OpenRouter 类网关**自己的应用榜单**上。我按「展示名」处理改了，但它严格说介于「品牌文案」与「外部标识符」之间——如果应当像 `appId` 一样钉死历史值（例如已有归属统计），这一处需要回退。**已向用户提出，未得到答复。**
 
@@ -132,16 +132,16 @@ export const buildMediaUrl = (absolutePath: string): string =>
 
 ## 六、⚠️ 环境里留下的东西
 
-| 东西                                                          | 状态                                                       | 处置                                                            |
-| ------------------------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------- |
-| dev 应用                                                      | **本轮重启过多次**，最后一次后端 **62558**，CDP 9230       | 端口每次都变，从 `dev-verify3.log` grep `AIONCORE_LISTENING` 取 |
-| 内嵌 aioncore                                                 | **已重编两次**，含本轮全部 Rust 改动                       | 保留                                                            |
-| `out/main/builtin-mcp-image-gen.js`                           | **已手动构建**，含 `AIONUI_MEDIA_WORKSPACE_DIR` 与裁剪告知 | 保留。`bun run dev` **不会**构建它                              |
-| 测试会话 `548527ee` / `1f31b7a2` / `af2dfaf7`                 | 三次真实生成留下                                           | 可删                                                            |
-| `%APPDATA%\1one-Dev\1one\img-1786087100434.png`               | 修复**前**那次生成的产物，落在根目录                       | 可删。它正是缺陷的证据                                          |
-| `RemotionVideoExpert` 已安装人设                              | 被反复改写用于验证，**最后已恢复为新版**                   | 已恢复，无需处理                                                |
-| `dev-mediaverify.log` / `dev-verify2.log` / `dev-verify3.log` | 诊断日志                                                   | 可删                                                            |
-| `out/renderer`                                                | **仍是 07-31 的产物**                                      | 见 §7                                                           |
+| 东西                                                          | 状态                                                      | 处置                                                             |
+| ------------------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------- |
+| dev 应用                                                      | **本轮重启过多次**，最后一次后端 **62558**，CDP 9230      | 端口每次都变，从 `dev-verify3.log` grep `DREAMCORE_LISTENING` 取 |
+| 内嵌 dreamcore                                                | **已重编两次**，含本轮全部 Rust 改动                      | 保留                                                             |
+| `out/main/builtin-mcp-image-gen.js`                           | **已手动构建**，含 `DREAM_MEDIA_WORKSPACE_DIR` 与裁剪告知 | 保留。`bun run dev` **不会**构建它                               |
+| 测试会话 `548527ee` / `1f31b7a2` / `af2dfaf7`                 | 三次真实生成留下                                          | 可删                                                             |
+| `%APPDATA%\1one-Dev\1one\img-1786087100434.png`               | 修复**前**那次生成的产物，落在根目录                      | 可删。它正是缺陷的证据                                           |
+| `RemotionVideoExpert` 已安装人设                              | 被反复改写用于验证，**最后已恢复为新版**                  | 已恢复，无需处理                                                 |
+| `dev-mediaverify.log` / `dev-verify2.log` / `dev-verify3.log` | 诊断日志                                                  | 可删                                                             |
+| `out/renderer`                                                | **仍是 07-31 的产物**                                     | 见 §7                                                            |
 
 ⚠️ **工作区里有不属于这条线的未跟踪文件，别 `git add -A`**：
 `electron.vite.config.1786086570528.mjs`（构建临时产物）、`resources/文生图.png` / `文生视频.png` / `文生连环图图.png`（用户放的截图）。

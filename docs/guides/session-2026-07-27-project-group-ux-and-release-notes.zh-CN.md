@@ -147,7 +147,7 @@ client → server 现在弹 `Modal.confirm`（`webui.promoteConfirmTitle` / `pro
 | ① 确认框       | 点「本机作为服务器」弹出「切换为服务器？…」；**取消**→ 单选回滚到客户端且地址还在                                                                                               |
 | ① 地址不丢     | **确定**后读 `/api/settings/client`：`role=server` 而 `enterpriseServerUrl` 仍是 `192.168.1.77:25809`、history 保留（修复前这里会是空串）；切回客户端输入框自动回填             |
 | ④ 头像菜单     | 注入 SSO 会话后菜单为「赵高 / 企业 SSO：… / 尚未加入项目组 / **加入项目组**」，无「登录 / 加入项目组」；点击落到 `#/settings/enterprise` 的邀请码加入 UI，`登录您的账户` 未出现 |
-| ⑤ 更新日志     | 合成 `aionui-update-available` 事件复现原 BUG（弹窗只有半句「获取失败，可」）→ 修完显示「暂无更新说明。前往查看」                                                               |
+| ⑤ 更新日志     | 合成 `dream-ui-update-available` 事件复现原 BUG（弹窗只有半句「获取失败，可」）→ 修完显示「暂无更新说明。前往查看」                                                             |
 | ⑤ sidecar 路径 | `curl releases/2.1.50/release-notes.md` → 404 + `NoSuchKey` XML（`!response.ok` 分支覆盖；同桶 `latest.yml` 200 说明路径形态对）                                                |
 
 > 冒烟注入的假会话与 `192.168.1.77` 地址**已清理**（`one-enterprise:session` 删除、`webui.deploymentRole=client` / `enterpriseServerUrl=''` / history `[]`）。dev 数据目录是 `%APPDATA%\1one-Dev`，与正式安装版隔离。

@@ -4,6 +4,7 @@
 软件设计说明书
 """
 import os
+import pathlib
 from docx import Document
 from docx.shared import Pt, Cm, RGBColor, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -11,7 +12,7 @@ from docx.oxml.ns import qn
 
 SOFTWARE_NAME = 'One Work 智能协作平台软件'
 VERSION = 'V2.1'
-OUTPUT = r'D:\aionui-m0\1oneUI\One_Work_软件设计说明书.docx'
+OUTPUT = str(pathlib.Path(__file__).resolve().parents[1] / 'One_Work_软件设计说明书.docx')
 
 
 def set_font(run, name='微软雅黑', size=10.5, bold=False, color=None):
@@ -55,7 +56,7 @@ def add_bullet(doc, text):
 
 def add_screenshot(doc, filename, caption=None):
     """插入产品截图，居中显示，可选加图注"""
-    img_path = os.path.join(r'D:\aionui-m0\1oneUI\resources', filename)
+    img_path = os.path.join(str(pathlib.Path(__file__).resolve().parents[1] / 'resources'), filename)
     if not os.path.exists(img_path):
         return
     p = doc.add_paragraph()
