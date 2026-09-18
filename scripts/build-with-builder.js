@@ -187,9 +187,9 @@ function patchElectronBuilderNsisInstaller() {
   // node_modules may still carry a block patched before the executable rename;
   // upgrade it in place instead of failing the template check.
   const legacyBundledUninstallerOverride = [
-    '  ${if} ${FileExists} "$PLUGINSDIR\\AionUi-fixed-uninstaller.exe"',
+    '  ${if} ${FileExists} "$PLUGINSDIR\\onework-fixed-uninstaller.exe"',
     '    DetailPrint `AionUi-bundled-uninstaller override source.`',
-    '    StrCpy $uninstallerFileName "$PLUGINSDIR\\AionUi-fixed-uninstaller.exe"',
+    '    StrCpy $uninstallerFileName "$PLUGINSDIR\\onework-fixed-uninstaller.exe"',
     '  ${endIf}',
   ].join('\n');
   const bundledUninstallerCopySource = [
@@ -664,7 +664,7 @@ function writeGeneratedSentryDsnInclude(projectRoot) {
   fs.mkdirSync(path.dirname(generatedInclude), { recursive: true });
   fs.writeFileSync(
     generatedInclude,
-    `!define AIONUI_SENTRY_DSN "${escapeNsisDefineValue(process.env.SENTRY_DSN || '')}"\n`
+    `!define ONEWORK_SENTRY_DSN "${escapeNsisDefineValue(process.env.SENTRY_DSN || '')}"\n`
   );
 }
 

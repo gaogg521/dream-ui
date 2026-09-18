@@ -65,7 +65,7 @@ function Write-InstallerLog([string]$event, [hashtable]$properties = @{}) {
   Add-Content -LiteralPath $log -Encoding UTF8 -Value ($payload | ConvertTo-Json -Compress -Depth 8)
 }
 
-function Read-AionUiAnalyticsId {
+function Read-OneWorkAnalyticsId {
   # `userData` is pinned to PROD_USERDATA_APP_NAME in production (see
   # `common/platform/index.ts`). As of 3.0.0 that is "One Work"; a pre-3.0
   # install (or one whose first-launch migration has not run yet) still has it
@@ -332,7 +332,7 @@ try {
   $endpoint = $uri.Scheme + '://' + $uri.Authority + '/api/' + $projectId + '/envelope/'
   $logText = if (Test-Path -LiteralPath $log) { Get-Content -LiteralPath $log -Raw } else { '' }
   $eventId = [guid]::NewGuid().ToString('N')
-  $userId = Read-AionUiAnalyticsId
+  $userId = Read-OneWorkAnalyticsId
   $eventPayload = @{
     message = ('installer-failure ' + $Code)
     level = 'error'

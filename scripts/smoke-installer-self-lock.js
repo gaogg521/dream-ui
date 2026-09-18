@@ -93,34 +93,34 @@ OutFile "${nsisQuote(exePath)}"
 RequestExecutionLevel user
 SilentInstall silent
 !define VERSION "self-lock-smoke"
-!define AIONUI_TARGET_ARCH "x64"
-!define AIONUI_FALLBACK_LOG "onework-installer-self-lock-fallback.log"
-!define AIONUI_APP_EXECUTABLE_FILENAME "AionUi.exe"
+!define ONEWORK_TARGET_ARCH "x64"
+!define ONEWORK_FALLBACK_LOG "onework-installer-self-lock-fallback.log"
+!define ONEWORK_APP_EXECUTABLE_FILENAME "AionUi.exe"
 !define UNINSTALL_FILENAME "Uninstall AionUi.exe"
 !define PROJECT_DIR "${nsisQuote(repoRoot)}"
 !include LogicLib.nsh
 !include "${nsisQuote(processControlPath)}"
 
 Var OneWorkSessionId
-Var AionUiIsUpdated
+Var OneWorkIsUpdated
 Var OneWorkSessionLogPath
 Var ResultFile
 
 Section
   StrCpy $INSTDIR "${nsisQuote(installDir)}"
   StrCpy $OneWorkSessionId "selflock"
-  StrCpy $AionUiIsUpdated "1"
+  StrCpy $OneWorkIsUpdated "1"
   StrCpy $OneWorkSessionLogPath "${nsisQuote(logPath)}"
   StrCpy $ResultFile "${nsisQuote(resultPath)}"
   InitPluginsDir
   SetOutPath $INSTDIR
-  StrCpy $AionUiCurrentOutDir "$INSTDIR"
-  !insertmacro AIONUI_QUERY_LOCKERS "$INSTDIR" $AionUiLockerResult
+  StrCpy $OneWorkCurrentOutDir "$INSTDIR"
+  !insertmacro ONEWORK_QUERY_LOCKERS "$INSTDIR" $OneWorkLockerResult
   FileOpen $0 "$ResultFile" w
-  FileWrite $0 "$AionUiLockerResult"
-  FileWrite $0 "|$AionUiCurrentOutDir|$OneWorkSessionLogPath"
+  FileWrite $0 "$OneWorkLockerResult"
+  FileWrite $0 "|$OneWorkCurrentOutDir|$OneWorkSessionLogPath"
   FileClose $0
-  \${If} $AionUiLockerResult != 0
+  \${If} $OneWorkLockerResult != 0
     SetErrorLevel 10
     Quit
   \${EndIf}

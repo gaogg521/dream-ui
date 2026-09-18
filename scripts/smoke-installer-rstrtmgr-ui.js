@@ -101,10 +101,10 @@ Name "AionUi Restart Manager UI Smoke"
 OutFile "${nsisQuote(exePath)}"
 RequestExecutionLevel user
 SilentInstall normal
-!define AIONUI_FALLBACK_LOG "onework-installer-smoke-fallback.log"
+!define ONEWORK_FALLBACK_LOG "onework-installer-smoke-fallback.log"
 !define VERSION "rstrtmgr-ui-smoke"
-!define AIONUI_TARGET_ARCH "x64"
-!define AIONUI_APP_EXECUTABLE_FILENAME "AionUi.exe"
+!define ONEWORK_TARGET_ARCH "x64"
+!define ONEWORK_APP_EXECUTABLE_FILENAME "AionUi.exe"
 !define UNINSTALL_FILENAME "Uninstall AionUi.exe"
 !define PROJECT_DIR "${nsisQuote(repoRoot)}"
 !include LogicLib.nsh
@@ -113,36 +113,36 @@ SilentInstall normal
 
 Var OneWorkSessionLogPath
 Var OneWorkSessionId
-Var AionUiIsUpdated
+Var OneWorkIsUpdated
 
 Section
   StrCpy $INSTDIR "${nsisQuote(installDir)}"
   StrCpy $OneWorkSessionLogPath "${nsisQuote(logPath)}"
   StrCpy $OneWorkSessionId "rstrtmgrui"
-  StrCpy $AionUiIsUpdated "1"
+  StrCpy $OneWorkIsUpdated "1"
   InitPluginsDir
   BringToFront
 
   aionui_query_lockers:
-    !insertmacro AIONUI_QUERY_LOCKERS "${nsisQuote(lockedFile)}" $AionUiLockerResult
-    StrCpy $AionUiLockerList ""
+    !insertmacro ONEWORK_QUERY_LOCKERS "${nsisQuote(lockedFile)}" $OneWorkLockerResult
+    StrCpy $OneWorkLockerList ""
     ClearErrors
     SetDetailsPrint none
-    FileOpen $AionUiLockerListFile "$PLUGINSDIR\\aionui-rm-lockers.txt" r
+    FileOpen $OneWorkLockerListFile "$PLUGINSDIR\\aionui-rm-lockers.txt" r
     \${IfNot} \${Errors}
-      FileRead $AionUiLockerListFile $AionUiLockerList
-      FileClose $AionUiLockerListFile
+      FileRead $OneWorkLockerListFile $OneWorkLockerList
+      FileClose $OneWorkLockerListFile
     \${EndIf}
     SetDetailsPrint lastused
-    \${If} $AionUiLockerList == ""
-      StrCpy $AionUiLockerList "\${AIONUI_MSG_UNKNOWN_PROCESS_EN}"
-      StrCpy $AionUiLockerListZh "\${AIONUI_MSG_UNKNOWN_PROCESS_ZH}"
-      StrCpy $AionUiLockerListEn "\${AIONUI_MSG_UNKNOWN_PROCESS_EN}"
+    \${If} $OneWorkLockerList == ""
+      StrCpy $OneWorkLockerList "\${ONEWORK_MSG_UNKNOWN_PROCESS_EN}"
+      StrCpy $OneWorkLockerListZh "\${ONEWORK_MSG_UNKNOWN_PROCESS_ZH}"
+      StrCpy $OneWorkLockerListEn "\${ONEWORK_MSG_UNKNOWN_PROCESS_EN}"
     \${Else}
-      StrCpy $AionUiLockerListZh "$AionUiLockerList"
-      StrCpy $AionUiLockerListEn "$AionUiLockerList"
+      StrCpy $OneWorkLockerListZh "$OneWorkLockerList"
+      StrCpy $OneWorkLockerListEn "$OneWorkLockerList"
     \${EndIf}
-    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "\${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_ZH}$\\r$\\n${nsisQuote(lockedFile)}$\\r$\\n$\\r$\\n\${AIONUI_MSG_APPLICATION_USING_IT_ZH}$\\r$\\n$AionUiLockerListZh$\\r$\\n$\\r$\\n\${AIONUI_MSG_CLOSE_LISTED_RETRY_ZH}$\\r$\\n$\\r$\\n\${AIONUI_MSG_INSTALLER_LOG_ZH}:$\\r$\\n$OneWorkSessionLogPath$\\r$\\n$\\r$\\n\${AIONUI_MSG_BLOCK_SEPARATOR}$\\r$\\n$\\r$\\n\${AIONUI_MSG_FILE_OR_FOLDER_IN_USE_EN}$\\r$\\n${nsisQuote(lockedFile)}$\\r$\\n$\\r$\\n\${AIONUI_MSG_APPLICATION_USING_IT_EN}$\\r$\\n$AionUiLockerListEn$\\r$\\n$\\r$\\n\${AIONUI_MSG_CLOSE_LISTED_RETRY_EN}$\\r$\\n$\\r$\\n\${AIONUI_MSG_INSTALLER_LOG_EN}:$\\r$\\n$OneWorkSessionLogPath" /SD IDCANCEL IDRETRY aionui_query_lockers
+    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "\${ONEWORK_MSG_FILE_OR_FOLDER_IN_USE_ZH}$\\r$\\n${nsisQuote(lockedFile)}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_APPLICATION_USING_IT_ZH}$\\r$\\n$OneWorkLockerListZh$\\r$\\n$\\r$\\n\${ONEWORK_MSG_CLOSE_LISTED_RETRY_ZH}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_INSTALLER_LOG_ZH}:$\\r$\\n$OneWorkSessionLogPath$\\r$\\n$\\r$\\n\${ONEWORK_MSG_BLOCK_SEPARATOR}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_FILE_OR_FOLDER_IN_USE_EN}$\\r$\\n${nsisQuote(lockedFile)}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_APPLICATION_USING_IT_EN}$\\r$\\n$OneWorkLockerListEn$\\r$\\n$\\r$\\n\${ONEWORK_MSG_CLOSE_LISTED_RETRY_EN}$\\r$\\n$\\r$\\n\${ONEWORK_MSG_INSTALLER_LOG_EN}:$\\r$\\n$OneWorkSessionLogPath" /SD IDCANCEL IDRETRY aionui_query_lockers
 SectionEnd
 `;
 

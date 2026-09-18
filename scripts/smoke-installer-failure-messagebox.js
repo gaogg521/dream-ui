@@ -19,7 +19,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const INSTALLER_ERROR_SCENARIOS = [
   {
     id: 'uninstaller-copy-or-rebuild-failed',
-    defineName: 'AIONUI_E_UNINSTALLER_COPY_OR_REBUILD_FAILED',
+    defineName: 'ONEWORK_E_UNINSTALLER_COPY_OR_REBUILD_FAILED',
     code: 'E1001',
     message: 'One Work could not repair the installed uninstaller.',
     action: 'Close One Work, restart Windows if needed, then run this installer again.',
@@ -28,7 +28,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'old-uninstall-failed',
-    defineName: 'AIONUI_E_OLD_UNINSTALL_FAILED',
+    defineName: 'ONEWORK_E_OLD_UNINSTALL_FAILED',
     code: 'E1002',
     message: 'The previous One Work uninstaller returned an error.',
     action:
@@ -37,7 +37,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'install-dir-remove-or-locked',
-    defineName: 'AIONUI_E_INSTALL_DIR_REMOVE_OR_LOCKED',
+    defineName: 'ONEWORK_E_INSTALL_DIR_REMOVE_OR_LOCKED',
     code: 'E1003',
     message: 'One Work could not remove or replace the previous installation directory.',
     action: 'Close One Work and any program using the install folder, then run this installer again.',
@@ -45,7 +45,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'extract-failed',
-    defineName: 'AIONUI_E_EXTRACT_FAILED',
+    defineName: 'ONEWORK_E_EXTRACT_FAILED',
     code: 'E1010',
     message: 'One Work could not extract the application files correctly.',
     action: 'Download a fresh installer and run it again.',
@@ -53,7 +53,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'disk-insufficient',
-    defineName: 'AIONUI_E_DISK_INSUFFICIENT',
+    defineName: 'ONEWORK_E_DISK_INSUFFICIENT',
     code: 'E1020',
     message: 'One Work cannot continue because the target disk does not have enough free space.',
     action: 'Free disk space on the target drive, then run this installer again.',
@@ -61,7 +61,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'bundled-dreamcore-incomplete',
-    defineName: 'AIONUI_E_BUNDLED_AIONCORE_INCOMPLETE',
+    defineName: 'ONEWORK_E_BUNDLED_AIONCORE_INCOMPLETE',
     code: 'E1030',
     message: 'One Work installed, but the bundled One Work Core resources are incomplete.',
     action: 'Download a fresh installer and run it again.',
@@ -69,7 +69,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'core-app-files-incomplete',
-    defineName: 'AIONUI_E_CORE_APP_FILES_INCOMPLETE',
+    defineName: 'ONEWORK_E_CORE_APP_FILES_INCOMPLETE',
     code: 'E1031',
     message: 'One Work installation is incomplete because a required application file is missing.',
     action: 'Reinstall One Work or download a newer installer.',
@@ -77,7 +77,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'arch-mismatch',
-    defineName: 'AIONUI_E_ARCH_MISMATCH',
+    defineName: 'ONEWORK_E_ARCH_MISMATCH',
     code: 'E1040',
     message: 'Installation package architecture mismatch.',
     action: 'Download the One Work installer that matches this Windows architecture, then run it again.',
@@ -85,7 +85,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'active-installer-conflict',
-    defineName: 'AIONUI_E_ACTIVE_INSTALLER_CONFLICT',
+    defineName: 'ONEWORK_E_ACTIVE_INSTALLER_CONFLICT',
     code: 'E1050',
     message: 'Another One Work installer appears to still be active.',
     action: 'Close the other installer window or wait for it to finish, then run this installer again.',
@@ -93,7 +93,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'registry-state-invalid',
-    defineName: 'AIONUI_E_REGISTRY_STATE_INVALID',
+    defineName: 'ONEWORK_E_REGISTRY_STATE_INVALID',
     code: 'E1060',
     message: 'One Work found an invalid previous-install registry state.',
     action: 'Uninstall the old One Work from Windows Settings, then run this installer again.',
@@ -101,7 +101,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'active-marker-write-failed',
-    defineName: 'AIONUI_E_ACTIVE_MARKER_WRITE_FAILED',
+    defineName: 'ONEWORK_E_ACTIVE_MARKER_WRITE_FAILED',
     code: 'E1070',
     message: 'One Work could not write the active-installer marker.',
     action: 'Restart Windows, then run this installer again.',
@@ -109,7 +109,7 @@ const INSTALLER_ERROR_SCENARIOS = [
   },
   {
     id: 'invalid-install-path',
-    defineName: 'AIONUI_E_INVALID_INSTALL_PATH',
+    defineName: 'ONEWORK_E_INVALID_INSTALL_PATH',
     code: 'E1090',
     message: 'The selected install path is invalid.',
     action: 'Choose a local install path that is writable, then run this installer again.',
@@ -176,7 +176,7 @@ function copyHarnessProject(projectRoot) {
     path.join(repoRoot, 'resources', 'windows', 'support', 'report-installer-failure.ps1'),
     path.join(supportDir, 'report-installer-failure.ps1')
   );
-  writeFileSync(path.join(supportDir, '_sentry-dsn.generated.nsh'), '!define AIONUI_SENTRY_DSN ""\n', 'utf8');
+  writeFileSync(path.join(supportDir, '_sentry-dsn.generated.nsh'), '!define ONEWORK_SENTRY_DSN ""\n', 'utf8');
 }
 
 function getArg(name, fallback) {
@@ -187,12 +187,12 @@ function getArg(name, fallback) {
 
 function readInstallerErrorDefinitions() {
   const source = readFileSync(path.join(repoRoot, 'resources', 'windows', 'installer-errors-sentry.nsh'), 'utf8');
-  const definitions = Array.from(source.matchAll(/!define\s+(AIONUI_E_[A-Z0-9_]+)\s+"(E\d{4})"/g), (match) => ({
+  const definitions = Array.from(source.matchAll(/!define\s+(ONEWORK_E_[A-Z0-9_]+)\s+"(E\d{4})"/g), (match) => ({
     defineName: match[1],
     code: match[2],
   }));
   if (definitions.length === 0) {
-    throw new Error('No AIONUI_E_* installer error codes found.');
+    throw new Error('No ONEWORK_E_* installer error codes found.');
   }
   return definitions;
 }
@@ -387,22 +387,22 @@ RequestExecutionLevel user
 SilentInstall normal
 !define PROJECT_DIR "${nsisQuote(projectRoot)}"
 !define VERSION "0.0.0-smoke"
-!define AIONUI_TARGET_ARCH "x64"
-!define AIONUI_RUNTIME_KEY "win32-x64"
+!define ONEWORK_TARGET_ARCH "x64"
+!define ONEWORK_RUNTIME_KEY "win32-x64"
 !include LogicLib.nsh
 !include nsDialogs.nsh
 !include "${nsisQuote(path.join(projectRoot, 'resources', 'windows', 'installer-observability.nsh'))}"
-!macro AIONUI_CLEAR_ACTIVE_INSTALLER_MARKER
+!macro ONEWORK_CLEAR_ACTIVE_INSTALLER_MARKER
 !macroend
 !include "${nsisQuote(path.join(projectRoot, 'resources', 'windows', 'installer-errors-sentry.nsh'))}"
 
 Section
   StrCpy $INSTDIR "$TEMP\\AionUi-messagebox-smoke"
   StrCpy $OneWorkSessionId "smokembox-${nsisQuote(scenario.code)}"
-  StrCpy $AionUiIsUpdated "1"
+  StrCpy $OneWorkIsUpdated "1"
   StrCpy $OneWorkSessionLogPath "${nsisQuote(logPath)}"
   BringToFront
-  !insertmacro AIONUI_FAIL_UX \
+  !insertmacro ONEWORK_FAIL_UX \
     "${nsisQuote(scenario.code)}" \
     "${nsisQuote(detail)}" \
     "${nsisQuote(scenario.message)}" \

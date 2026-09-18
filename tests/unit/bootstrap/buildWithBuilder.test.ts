@@ -23,7 +23,7 @@ const repoRoot = resolve(__dirname, '../../..');
 
 function readInstallerErrorDefinitions(): Array<{ defineName: string; code: string }> {
   const source = readFileSync(resolve(repoRoot, 'resources/windows/installer-errors-sentry.nsh'), 'utf8');
-  return Array.from(source.matchAll(/!define\s+(AIONUI_E_[A-Z0-9_]+)\s+"(E\d{4})"/g), (match) => ({
+  return Array.from(source.matchAll(/!define\s+(ONEWORK_E_[A-Z0-9_]+)\s+"(E\d{4})"/g), (match) => ({
     defineName: match[1],
     code: match[2],
   }));
@@ -107,17 +107,17 @@ childProcess.execSync = function mockedExecSync(command) {
 
   it('releases the NSIS output directory before any update repair or uninstall work', () => {
     const script = readFileSync(resolve(repoRoot, 'resources/windows/installer-update-verify.nsh'), 'utf8');
-    const preInit = script.match(/!macro AIONUI_INSTALLER_PREINIT([\s\S]*?)!macroend/)?.[1];
-    const releaseMacro = script.match(/!macro AIONUI_RELEASE_INSTALL_DIR_OUTDIR([\s\S]*?)!macroend/)?.[1];
+    const preInit = script.match(/!macro ONEWORK_INSTALLER_PREINIT([\s\S]*?)!macroend/)?.[1];
+    const releaseMacro = script.match(/!macro ONEWORK_RELEASE_INSTALL_DIR_OUTDIR([\s\S]*?)!macroend/)?.[1];
 
     expect(preInit).toBeTruthy();
     expect(releaseMacro).toBeTruthy();
     expect(releaseMacro).toContain('InitPluginsDir');
     expect(releaseMacro).toContain('SetOutPath "$PLUGINSDIR"');
     expect(releaseMacro).not.toContain('SetOutPath $INSTDIR');
-    expect(preInit).toContain('!insertmacro AIONUI_RELEASE_INSTALL_DIR_OUTDIR');
-    expect(preInit!.indexOf('AIONUI_RELEASE_INSTALL_DIR_OUTDIR')).toBeLessThan(
-      preInit!.indexOf('AIONUI_SESSION_BEGIN')
+    expect(preInit).toContain('!insertmacro ONEWORK_RELEASE_INSTALL_DIR_OUTDIR');
+    expect(preInit!.indexOf('ONEWORK_RELEASE_INSTALL_DIR_OUTDIR')).toBeLessThan(
+      preInit!.indexOf('ONEWORK_SESSION_BEGIN')
     );
   });
 
@@ -128,17 +128,17 @@ childProcess.execSync = function mockedExecSync(command) {
     expect(script).toContain('$$ownedPrefix');
     expect(script).toContain('StartsWith($$ownedPrefix');
     expect(script).toContain('[System.IO.Path]::GetFullPath($$path)');
-    expect(script).not.toContain("Name -ieq '${AIONUI_APP_EXECUTABLE_FILENAME}'");
+    expect(script).not.toContain("Name -ieq '${ONEWORK_APP_EXECUTABLE_FILENAME}'");
   });
 
   it('records installer self-lock diagnostics when Restart Manager finds no locking process', () => {
     const script = readFileSync(resolve(repoRoot, 'resources/windows/installer-process-control.nsh'), 'utf8');
     const queryScript = readFileSync(resolve(repoRoot, 'resources/windows/support/query-lockers.ps1'), 'utf8');
-    const captureMacro = script.match(/!macro AIONUI_CAPTURE_FAILED_PATH_LOCKERS[\s\S]*?!macroend/)?.[0];
+    const captureMacro = script.match(/!macro ONEWORK_CAPTURE_FAILED_PATH_LOCKERS[\s\S]*?!macroend/)?.[0];
 
     expect(script).toContain('aionui-query-lockers.ps1');
-    expect(captureMacro).toContain('AIONUI_QUERY_LOCKERS');
-    expect(captureMacro).not.toContain('AIONUI_QUERY_LOCKERS_INLINE_LEGACY');
+    expect(captureMacro).toContain('ONEWORK_QUERY_LOCKERS');
+    expect(captureMacro).not.toContain('ONEWORK_QUERY_LOCKERS_INLINE_LEGACY');
     expect(queryScript).toContain('$CurrentOutDir');
     expect(queryScript).toContain('$script:installerSelfLock');
     expect(queryScript).toContain("'installer-self-lock'");
@@ -152,14 +152,14 @@ childProcess.execSync = function mockedExecSync(command) {
     const messages = readFileSync(resolve(repoRoot, 'resources/windows/installer-messages.nsh'), 'utf8');
 
     const retryFailureBranch = script.match(
-      /\$\{If\} \$\{Errors\}\s+([\s\S]*?)\$\{Else\}\s+!insertmacro AIONUI_LOG_UNINSTALLER_REPAIR "after-copy-retry"/
+      /\$\{If\} \$\{Errors\}\s+([\s\S]*?)\$\{Else\}\s+!insertmacro ONEWORK_LOG_UNINSTALLER_REPAIR "after-copy-retry"/
     )?.[1];
 
     expect(retryFailureBranch).toBeTruthy();
     expect(retryFailureBranch).toContain('copy-failed-using-bundled');
-    expect(retryFailureBranch).toContain('$AionUiBundledUninstaller');
+    expect(retryFailureBranch).toContain('$OneWorkBundledUninstaller');
     expect(retryFailureBranch).not.toContain('MessageBox');
-    expect(retryFailureBranch).not.toContain('AIONUI_MSG_UNINSTALLER_LOCKED');
+    expect(retryFailureBranch).not.toContain('ONEWORK_MSG_UNINSTALLER_LOCKED');
     expect(messages).not.toContain('existing uninstaller is locked');
   });
 
@@ -171,10 +171,10 @@ childProcess.execSync = function mockedExecSync(command) {
     for (const file of files) {
       const source = readFileSync(resolve(resourcesDir, file), 'utf8');
       source.split(/\r?\n/).forEach((line, index) => {
-        if (line.includes('!macro AIONUI_FAIL ')) {
+        if (line.includes('!macro ONEWORK_FAIL ')) {
           offenders.push(`${file}:${index + 1}: defines non-reportable coded failure macro`);
         }
-        if (line.includes('!insertmacro AIONUI_FAIL ')) {
+        if (line.includes('!insertmacro ONEWORK_FAIL ')) {
           offenders.push(`${file}:${index + 1}: uses non-reportable coded failure macro`);
         }
         if (/^\s*Abort\b/.test(line)) {
@@ -197,7 +197,7 @@ childProcess.execSync = function mockedExecSync(command) {
       ['installer-errors-sentry.nsh', [/MessageBox MB_YESNO\|MB_ICONSTOP/]],
       [
         'installer-process-control.nsh',
-        [/AIONUI_MSG_FILE_OR_FOLDER_IN_USE_ZH/, /\$\(appRunning\)/, /AIONUI_MSG_CLOSE_OR_REMOVE_PREVIOUS_ZH/],
+        [/ONEWORK_MSG_FILE_OR_FOLDER_IN_USE_ZH/, /\$\(appRunning\)/, /ONEWORK_MSG_CLOSE_OR_REMOVE_PREVIOUS_ZH/],
       ],
     ]);
 
@@ -222,12 +222,12 @@ childProcess.execSync = function mockedExecSync(command) {
   it('routes app-cannot-be-closed cancellation through E1003 instead of quitting silently', () => {
     const script = readFileSync(resolve(repoRoot, 'resources/windows/installer-process-control.nsh'), 'utf8');
     const cannotCloseBranch = script.match(
-      /AIONUI_MSG_CLOSE_OR_REMOVE_PREVIOUS_ZH[\s\S]*?IDRETRY aionui_wait_for_close([\s\S]*?)\$\{Else\}/
+      /ONEWORK_MSG_CLOSE_OR_REMOVE_PREVIOUS_ZH[\s\S]*?IDRETRY aionui_wait_for_close([\s\S]*?)\$\{Else\}/
     )?.[1];
 
     expect(cannotCloseBranch).toBeTruthy();
-    expect(cannotCloseBranch).toContain('AIONUI_E_INSTALL_DIR_REMOVE_OR_LOCKED');
-    expect(cannotCloseBranch).toContain('AIONUI_FAIL_REPORTABLE_BILINGUAL_DIAGNOSTICS');
+    expect(cannotCloseBranch).toContain('ONEWORK_E_INSTALL_DIR_REMOVE_OR_LOCKED');
+    expect(cannotCloseBranch).toContain('ONEWORK_FAIL_REPORTABLE_BILINGUAL_DIAGNOSTICS');
     expect(cannotCloseBranch).not.toMatch(/^\s*Quit\s*$/m);
   });
 
@@ -357,7 +357,7 @@ childProcess.execSync = function mockedExecSync(command) {
 
       expect(result.status, result.stderr || result.stdout).toBe(0);
       expect(readFileSync(resolve(repoRoot, 'resources/windows/support/_sentry-dsn.generated.nsh'), 'utf8')).toBe(
-        '!define AIONUI_SENTRY_DSN ""\n'
+        '!define ONEWORK_SENTRY_DSN ""\n'
       );
 
       if (args.includes('--win')) {
@@ -394,64 +394,64 @@ describe('Windows installer in-use dialog', () => {
   const messages = () => readFileSync(resolve(repoRoot, 'resources/windows/installer-messages.nsh'), 'utf8');
 
   it('records whether Restart Manager actually named a process', () => {
-    const capture = control().match(/!macro AIONUI_CAPTURE_FAILED_PATH_LOCKERS[\s\S]*?!macroend/)?.[0];
+    const capture = control().match(/!macro ONEWORK_CAPTURE_FAILED_PATH_LOCKERS[\s\S]*?!macroend/)?.[0];
 
     expect(capture).toBeTruthy();
     // Set optimistically, cleared on the empty-list branch — so the flag tracks
     // the list itself rather than a second, driftable condition.
-    expect(capture).toContain('StrCpy $AionUiLockerIdentified "1"');
-    const emptyBranch = capture!.match(/\$\{If\} \$AionUiLockerList == ""([\s\S]*?)\$\{Else\}/)?.[1];
-    expect(emptyBranch).toContain('StrCpy $AionUiLockerIdentified "0"');
+    expect(capture).toContain('StrCpy $OneWorkLockerIdentified "1"');
+    const emptyBranch = capture!.match(/\$\{If\} \$OneWorkLockerList == ""([\s\S]*?)\$\{Else\}/)?.[1];
+    expect(emptyBranch).toContain('StrCpy $OneWorkLockerIdentified "0"');
   });
 
   it('shows a different dialog when no process was named, and never asks to close a placeholder', () => {
-    const prompt = control().match(/!macro AIONUI_PROMPT_FAILED_PATH_LOCKERS[\s\S]*?!macroend/)?.[0];
+    const prompt = control().match(/!macro ONEWORK_PROMPT_FAILED_PATH_LOCKERS[\s\S]*?!macroend/)?.[0];
 
-    expect(prompt).toContain('$AionUiLockerIdentified == "1"');
+    expect(prompt).toContain('$OneWorkLockerIdentified == "1"');
 
-    const identified = prompt!.match(/\$AionUiLockerIdentified == "1"([\s\S]*?)\$\{Else\}/)?.[1];
+    const identified = prompt!.match(/\$OneWorkLockerIdentified == "1"([\s\S]*?)\$\{Else\}/)?.[1];
     const unidentified = prompt!.match(/\$\{Else\}([\s\S]*?)\$\{EndIf\}/)?.[1];
 
     // Named: list the process and ask for it to be closed.
-    expect(identified).toContain('AIONUI_MSG_APPLICATION_USING_IT_ZH');
-    expect(identified).toContain('AIONUI_MSG_CLOSE_LISTED_RETRY_ZH');
+    expect(identified).toContain('ONEWORK_MSG_APPLICATION_USING_IT_ZH');
+    expect(identified).toContain('ONEWORK_MSG_CLOSE_LISTED_RETRY_ZH');
 
     // Unnamed: no "Application using it:" header, no "close the listed app",
     // and no placeholder standing in for a process the user could act on.
-    expect(unidentified).toContain('AIONUI_MSG_NO_LOCKER_FOUND_ZH');
-    expect(unidentified).toContain('AIONUI_MSG_NO_LOCKER_RETRY_ZH');
-    expect(unidentified).not.toContain('AIONUI_MSG_APPLICATION_USING_IT_');
-    expect(unidentified).not.toContain('AIONUI_MSG_CLOSE_LISTED_RETRY_');
-    expect(unidentified).not.toContain('AIONUI_MSG_UNKNOWN_PROCESS_');
+    expect(unidentified).toContain('ONEWORK_MSG_NO_LOCKER_FOUND_ZH');
+    expect(unidentified).toContain('ONEWORK_MSG_NO_LOCKER_RETRY_ZH');
+    expect(unidentified).not.toContain('ONEWORK_MSG_APPLICATION_USING_IT_');
+    expect(unidentified).not.toContain('ONEWORK_MSG_CLOSE_LISTED_RETRY_');
+    expect(unidentified).not.toContain('ONEWORK_MSG_UNKNOWN_PROCESS_');
   });
 
   it('explains the transient causes rather than sending the user to reboot', () => {
     const text = messages();
     for (const key of [
-      'AIONUI_MSG_NO_LOCKER_FOUND_EN',
-      'AIONUI_MSG_NO_LOCKER_FOUND_ZH',
-      'AIONUI_MSG_NO_LOCKER_RETRY_EN',
-      'AIONUI_MSG_NO_LOCKER_RETRY_ZH',
+      'ONEWORK_MSG_NO_LOCKER_FOUND_EN',
+      'ONEWORK_MSG_NO_LOCKER_FOUND_ZH',
+      'ONEWORK_MSG_NO_LOCKER_RETRY_EN',
+      'ONEWORK_MSG_NO_LOCKER_RETRY_ZH',
     ]) {
       expect(text, `${key} must be defined`).toContain(`!define ${key} `);
     }
-    const zhAdvice = text.match(/!define AIONUI_MSG_NO_LOCKER_RETRY_ZH "(.*)"/)?.[1] ?? '';
-    const enAdvice = text.match(/!define AIONUI_MSG_NO_LOCKER_RETRY_EN "(.*)"/)?.[1] ?? '';
+    const zhAdvice = text.match(/!define ONEWORK_MSG_NO_LOCKER_RETRY_ZH "(.*)"/)?.[1] ?? '';
+    const enAdvice = text.match(/!define ONEWORK_MSG_NO_LOCKER_RETRY_EN "(.*)"/)?.[1] ?? '';
     expect(zhAdvice).not.toContain('重启 Windows');
     expect(enAdvice.toLowerCase()).not.toContain('restart windows');
   });
 
   it('backs the close-wait poll off instead of hammering a fixed one second', () => {
     const script = control();
-    const loop = script.match(/aionui_wait_for_close:([\s\S]*?)!insertmacro AIONUI_FIND_APP_PROCESS/)?.[1];
+    const loop = script.match(/aionui_wait_for_close:([\s\S]*?)!insertmacro ONEWORK_FIND_APP_PROCESS/)?.[1];
 
     expect(loop).toBeTruthy();
     // The wait has to grow with the attempt count; a literal `Sleep 1000` caps
     // total patience at the retry limit in seconds, which is short for an
     // Electron app flushing its session database on exit.
     expect(loop).not.toMatch(/^\s*Sleep 1000\s*$/m);
-    expect(loop).toContain('$AionUiCloseRetries');
-    expect(loop).toContain('Sleep $AionUiCloseWaitMs');
-    expect(script).toContain('Var /GLOBAL AionUiCloseWaitMs');
+    expect(loop).toContain('$OneWorkCloseRetries');
+    expect(loop).toContain('Sleep $OneWorkCloseWaitMs');
+    expect(script).toContain('Var /GLOBAL OneWorkCloseWaitMs');
   });
 });
