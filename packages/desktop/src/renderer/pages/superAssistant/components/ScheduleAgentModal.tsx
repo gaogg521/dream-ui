@@ -134,7 +134,7 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
               <div>
                 {t('common.superAssistant.settingsScheduleDesc', {
                   defaultValue:
-                    '调度格式与上游 aionui-cron 一致：At（绝对时间戳）、Every（毫秒间隔）、Cron（标准 cron 表达式 + 可选时区）。扫描器每 30s 巡检一次。',
+                    '调度格式：At（绝对时间戳）、Every（毫秒间隔）、Cron（标准 cron 表达式 + 可选时区）。扫描器每 30s 巡检一次。',
                 })}
               </div>
               <div className='mt-6px'>

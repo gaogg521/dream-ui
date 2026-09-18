@@ -109,7 +109,7 @@
       "clearFolder": "Limpiar",
       "model": "Modelo",
       "dreamEngineModelRequired": "Por favor selecciona un modelo para 1ONE CLI",
-      "aionrsNoProvider": "No hay modelos disponibles",
+      "noProvider": "No hay modelos disponibles",
       "assistant": "Assistant",
       "assistantRequired": "Please select an assistant",
       "assistantPlaceholder": "Select the assistant to execute this task",

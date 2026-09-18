@@ -57,7 +57,7 @@ export async function getAionrsTestModels(page: Page): Promise<{
 1. 停止 binary 进程：`ipcBridge.conversation.stopAgent.invoke(conversationId)`
 2. 删除 DB 记录：`DELETE FROM conversations WHERE name LIKE 'E2E-aionrs-%'`（级联删除 messages）
 3. 删除临时目录：`fs.rm('/tmp/e2e-aionrs-*', { recursive: true })`
-4. 清理 sessionStorage：`sessionStorage.removeItem('aionrs_initial_message_*')` + `sessionStorage.removeItem('aionrs_initial_processed_*')`
+4. 清理 sessionStorage：`sessionStorage.removeItem('one_initial_message_*')` + `sessionStorage.removeItem('one_initial_processed_*')`
 
 ### 1.5 截图要求
 
@@ -130,7 +130,7 @@ SELECT COUNT(*) FROM messages WHERE conversation_id = ?;
 
 - conversations name: `E2E-aionrs-<timestamp>-minimal-path`
 - temp dir: `/tmp/e2e-aionrs-<timestamp>-tc-a-01/`（workspace）
-- sessionStorage: `aionrs_initial_message_${conversationId}`, `aionrs_initial_processed_${conversationId}`
+- sessionStorage: `one_initial_message_${conversationId}`, `one_initial_processed_${conversationId}`
 
 **截图数**: 3
 

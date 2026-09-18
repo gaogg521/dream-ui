@@ -233,6 +233,8 @@ export function findImportableLegacyUserDataDir(appSupportDir: string, currentUs
   // actually run in a directory. Both names, because dreamcore itself resolves
   // the current one and falls back to the pre-rebrand one.
   const hasBackendCatalog = (dir: string): boolean =>
+    // Second entry is the legacy pre-rebrand database name: an install that has it
+    // keeps using it, so probing for only the current name would miss those dirs.
     ['one-backend.db', 'aionui-backend.db'].some((name) => fs.existsSync(path.join(dir, USERDATA_DATA_SUBDIR, name)));
 
   const current = path.resolve(currentUserDataDir);

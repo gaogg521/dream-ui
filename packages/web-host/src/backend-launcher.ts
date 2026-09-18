@@ -1111,7 +1111,7 @@ export class BackendLifecycleManager {
   ): void {
     void (async () => {
       // Race the (unbounded) background /health poll against a late-arriving
-      // AIONCORE_READY marker so either can deterministically resolve the
+      // legacy AIONCORE_READY marker so either can deterministically resolve the
       // pending "still starting" state.
       const outcome = await Promise.race([
         this.waitForHealth(

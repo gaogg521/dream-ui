@@ -320,7 +320,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
           input,
           files: files.length > 0 ? files : undefined,
         };
-        sessionStorage.setItem(`aionrs_initial_message_${conversation.id}`, JSON.stringify(initialMessage));
+        sessionStorage.setItem(`one_initial_message_${conversation.id}`, JSON.stringify(initialMessage));
 
         await navigate(`/conversation/${conversation.id}`);
       } catch (error: unknown) {

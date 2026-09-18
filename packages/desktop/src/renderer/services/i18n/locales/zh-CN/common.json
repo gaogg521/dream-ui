@@ -574,7 +574,7 @@
     },
     "modelRequired": "请为该员工选择一个模型",
     "expertInstallFailed": "添加专家失败",
-    "aionrsProviderRequired": "需要先在「设置 - 模型」中配置一个模型服务商",
+    "providerRequired": "需要先在「设置 - 模型」中配置一个模型服务商",
     "runErrorProviderNotFound": "该员工绑定的模型已不存在，请在「管理」里重新选择模型",
     "noExpertOption": "不指定专家（仅用运行后端）",
     "backendRequired": "请选择运行后端",

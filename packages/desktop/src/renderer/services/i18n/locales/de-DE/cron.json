@@ -106,7 +106,7 @@
       "clearFolder": "Leeren",
       "model": "Modell",
       "dreamEngineModelRequired": "Bitte wähle ein Modell für 1ONE CLI",
-      "aionrsNoProvider": "Keine verfügbaren Modelle",
+      "noProvider": "Keine verfügbaren Modelle",
       "assistantLockedExistingConversation": "Aufgaben mit laufendem Gespräch müssen den ursprünglichen Assistenten behalten. Erstelle eine neue Aufgabe, um einen anderen Assistenten zu verwenden.",
       "teamTaskExecutionModeLockedReason": "Geplante Team-Aufgaben müssen im zugehörigen Team-Gespräch weiterlaufen, deshalb kann der Ausführungsmodus nicht geändert werden.",
       "assistant": "Assistant",

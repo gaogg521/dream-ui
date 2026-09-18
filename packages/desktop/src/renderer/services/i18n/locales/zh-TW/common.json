@@ -240,7 +240,7 @@
     "pickExpertHint": "官方助手與專家市集都在這裡，未新增的點一下會自動新增並選取",
     "modelRequired": "請為該員工選擇一個模型",
     "expertInstallFailed": "新增專家失敗",
-    "aionrsProviderRequired": "需要先在「設定 - 模型」中設定一個模型服務商",
+    "providerRequired": "需要先在「設定 - 模型」中設定一個模型服務商",
     "runErrorProviderNotFound": "該員工綁定的模型已不存在，請在「管理」中重新選擇模型",
     "collaborationContext": {
       "ragEmpty": "知識庫為空，前往上傳"

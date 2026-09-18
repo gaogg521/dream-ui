@@ -61,7 +61,7 @@ export interface DreamStepsProps extends StepsProps {
  * @see arco-override.css for custom styles (.dream-steps)
  */
 const DreamSteps: React.FC<DreamStepsProps> & { Step: typeof Steps.Step } = ({ className, ...props }) => {
-  return <Steps {...props} className={classNames('aionui-steps', className)} />;
+  return <Steps {...props} className={classNames('one-steps', className)} />;
 };
 
 DreamSteps.displayName = 'DreamSteps';

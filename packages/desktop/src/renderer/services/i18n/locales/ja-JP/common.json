@@ -240,7 +240,7 @@
     "pickExpertHint": "公式アシスタントとエキスパートマーケットの両方が表示されます。未追加のものはクリックで追加して選択します。",
     "modelRequired": "この従業員のモデルを選択してください",
     "expertInstallFailed": "エキスパートの追加に失敗しました",
-    "aionrsProviderRequired": "先に「設定 - モデル」でモデルプロバイダーを設定してください",
+    "providerRequired": "先に「設定 - モデル」でモデルプロバイダーを設定してください",
     "runErrorProviderNotFound": "この従業員に紐づくモデルは存在しません。「管理」でモデルを再選択してください。",
     "collaborationContext": {
       "ragEmpty": "ナレッジベースが空です — アップロード"

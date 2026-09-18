@@ -133,6 +133,7 @@ function classifyIncompleteInstallation(details: ErrorWithDetails['details']): B
   if (!hasPackagedApp) return undefined;
 
   const missingBundledDreamcoreDir =
+    // Second name is the legacy bundled directory, still shipped by older packages.
     !resourcesDirEntries.includes('bundled-dreamcore/') && !resourcesDirEntries.includes('bundled-aioncore/');
   const missingRuntimeDir = details.runtimeDirExists === false && typeof details.runtimeKey === 'string';
   const missingResources = missingBundledDreamcoreDir ? ['bundled-dreamcore/'] : [];
