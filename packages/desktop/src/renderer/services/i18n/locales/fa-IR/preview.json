@@ -50,6 +50,7 @@
   "noTabs": "تبی باز نیست",
   "openInPanelTooltip": "مشاهده در پنل پیش‌نمایش",
   "mermaidTitle": "نمودار Mermaid",
+  "wavedromTitle": "نمودار WaveDrom",
   "oversized": {
     "title": "حجم فایل برای پیش‌نمایش بیش از حد زیاد است",
     "detail": "حجم فایل {{size}} از محدودیت {{threshold}} بیشتر است. لطفاً آن را در ویرایشگر سیستم باز کنید.",
@@ -191,5 +192,6 @@
   "copyPath": "کپی مسیر",
   "copyRelativePath": "کپی مسیر نسبی",
   "openLocation": "نمایش در پوشه",
-  "openLocationFailed": "باز کردن پوشه حاوی ناموفق بود"
+  "openLocationFailed": "باز کردن پوشه حاوی ناموفق بود",
+  "diagramZoomHint": "برای بزرگنمایی اسکرول کنید • برای جابهجایی بکشید • ESC برای بستن"
 }

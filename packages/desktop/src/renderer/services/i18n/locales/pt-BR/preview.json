@@ -50,6 +50,7 @@
   "noTabs": "Nenhuma guia aberta",
   "openInPanelTooltip": "Ver no painel de visualização",
   "mermaidTitle": "Diagrama Mermaid",
+  "wavedromTitle": "Diagrama WaveDrom",
   "oversized": {
     "title": "Arquivo muito grande para pré-visualizar",
     "detail": "O tamanho do arquivo {{size}} excede o limite de {{threshold}}. Abra-o em um editor do sistema.",
@@ -191,5 +192,6 @@
   "copyPath": "Copiar Caminho",
   "copyRelativePath": "Copiar Caminho Relativo",
   "openLocation": "Mostrar na pasta",
-  "openLocationFailed": "Falha ao abrir a pasta que contém o arquivo"
+  "openLocationFailed": "Falha ao abrir a pasta que contém o arquivo",
+  "diagramZoomHint": "Role para ampliar • Arraste para mover • ESC para fechar"
 }

@@ -50,6 +50,7 @@
   "noTabs": "暂无标签页",
   "openInPanelTooltip": "在预览面板中查看",
   "mermaidTitle": "Mermaid 图表",
+  "wavedromTitle": "WaveDrom 波形图",
   "oversized": {
     "title": "文件过大，无法预览",
     "detail": "文件尺寸 {{size}} 超过 {{threshold}}，请用系统编辑器打开。",
@@ -191,5 +192,6 @@
   "copyPath": "复制路径",
   "copyRelativePath": "复制相对路径",
   "openLocation": "打开文件所在目录",
-  "openLocationFailed": "无法打开所在目录"
+  "openLocationFailed": "无法打开所在目录",
+  "diagramZoomHint": "滚轮缩放 • 拖拽平移 • ESC 关闭"
 }

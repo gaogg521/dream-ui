@@ -50,6 +50,7 @@
   "noTabs": "尚無標籤",
   "openInPanelTooltip": "在預覽面板中查看",
   "mermaidTitle": "Mermaid 圖表",
+  "wavedromTitle": "WaveDrom 波形圖",
   "oversized": {
     "title": "檔案過大，無法預覽",
     "detail": "檔案大小 {{size}} 超過 {{threshold}}，請使用系統編輯器開啟。",
@@ -191,5 +192,6 @@
   "copyPath": "複製路徑",
   "copyRelativePath": "複製相對路徑",
   "openLocation": "開啟檔案所在資料夾",
-  "openLocationFailed": "無法開啟所在資料夾"
+  "openLocationFailed": "無法開啟所在資料夾",
+  "diagramZoomHint": "滾輪縮放 • 拖曳平移 • ESC 關閉"
 }
