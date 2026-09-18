@@ -4639,6 +4639,8 @@ export type I18nKey =
   | 'team.warmup.title'
   | 'team.warmup.unknownError'
   | 'team.work.processingWithQueued'
+  | 'team.work.providerSpendBlocked'
+  | 'team.work.providerSpendBlockedBy'
   | 'team.work.queued'
   | 'team.work.removing'
   | 'team.work.retryStart'

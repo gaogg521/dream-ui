@@ -29,6 +29,8 @@
     "runtimeFailed": "このメンバーを起動できませんでした。",
     "removing": "このメンバーを削除しています…",
     "sessionStopped": "チームセッションは停止しました。",
+    "providerSpendBlocked": "モデルプロバイダーによってアカウントが制限されています。プロバイダーで利用枠を確認してから再試行してください。",
+    "providerSpendBlockedBy": "「{{name}}」のモデルプロバイダーで利用枠の上限に達しました。そのプロバイダーの利用枠を確認してから再試行してください。",
     "retryStart": "起動を再試行"
   },
   "sendBox": {

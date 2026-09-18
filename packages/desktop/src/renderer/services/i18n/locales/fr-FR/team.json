@@ -29,6 +29,8 @@
     "runtimeFailed": "Cet assistant n'a pas pu démarrer.",
     "removing": "Suppression de cet assistant…",
     "sessionStopped": "La session d'équipe est arrêtée.",
+    "providerSpendBlocked": "Votre fournisseur de modèle a limité ce compte. Vérifiez votre quota auprès du fournisseur, puis réessayez.",
+    "providerSpendBlockedBy": "« {{name}} » a atteint la limite de son fournisseur de modèle. Vérifiez le quota de ce fournisseur, puis réessayez.",
     "retryStart": "Réessayer le démarrage"
   },
   "sendBox": {

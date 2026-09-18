@@ -29,6 +29,8 @@
     "runtimeFailed": "이 멤버를 시작하지 못했습니다.",
     "removing": "이 멤버를 제거하는 중…",
     "sessionStopped": "팀 세션이 중지되었습니다.",
+    "providerSpendBlocked": "모델 제공업체가 이 계정을 제한했습니다. 제공업체에서 할당량을 확인한 뒤 다시 시도하세요.",
+    "providerSpendBlockedBy": "'{{name}}'의 모델 제공업체 한도에 도달했습니다. 해당 제공업체의 할당량을 확인한 뒤 다시 시도하세요.",
     "retryStart": "시작 재시도"
   },
   "sendBox": {

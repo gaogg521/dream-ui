@@ -194,7 +194,36 @@ describe('buildTeamWorkStatusText', () => {
       runtimeFailed: () => 'runtime failed',
       removing: () => 'removing',
       sessionStopped: () => 'session stopped',
+      providerSpendBlocked: (slot) => (slot ? `provider spend blocked by ${slot}` : 'provider spend blocked'),
     });
+
+  it('explains a provider spend block instead of leaving the team silently paused', () => {
+    expect(text(work({ state: 'paused', blocked_reason: 'provider_spend_blocked', queued_foreground_count: 4 }))).toBe(
+      'provider spend blocked'
+    );
+  });
+
+  it('names the teammate whose provider refused, since each slot can use a different one', () => {
+    expect(
+      text(
+        work({
+          state: 'paused',
+          blocked_reason: 'provider_spend_blocked',
+          provider_blocked_slot_id: 'expert-7',
+        })
+      )
+    ).toBe('provider spend blocked by expert-7');
+  });
+
+  it('keeps a provider-blocked slot sendable, because sending is how the user resumes the team', () => {
+    const runtime = buildTeamSendRuntime({
+      slot_id: 'lead',
+      runView: view(work({ state: 'paused', blocked_reason: 'provider_spend_blocked' })),
+    });
+
+    expect(runtime.runtimeGate.canSendMessage).toBe(true);
+    expect(runtime.loading).toBe(false);
+  });
 
   it('shows processing instead of queued for a freshly accepted single work item', () => {
     expect(text(work({ state: 'queued', queued_foreground_count: 1 }))).toBe('processing');

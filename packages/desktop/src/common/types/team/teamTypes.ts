@@ -93,7 +93,15 @@ export type IInterruptTeamAgentParams = ISendTeamAgentMessageParams & {
 export type TeamRunTargetRole = 'lead' | 'teammate';
 export type TeamRunStatus = 'accepted' | 'running' | 'cancelling' | 'completed' | 'cancelled' | 'failed';
 export type TeamSlotWorkState = 'idle' | 'queued' | 'starting' | 'running' | 'paused' | 'blocked';
-export type TeamSlotBlockedReason = 'runtime_starting' | 'runtime_failed' | 'removing' | 'session_stopped';
+export type TeamSlotBlockedReason =
+  | 'runtime_starting'
+  | 'runtime_failed'
+  | 'removing'
+  | 'session_stopped'
+  // The model provider refused the whole team on spend grounds. Deliberately
+  // not fatal: the user clears it by sending a message, so the send box must
+  // stay usable.
+  | 'provider_spend_blocked';
 export type TeamMessageEnqueueStatus = 'accepted' | 'queued' | 'blocked_runtime_starting';
 
 export type ITeamSlotWork = {
@@ -108,6 +116,8 @@ export type ITeamSlotWork = {
   active_turn_slow: boolean | null;
   active_turn_slow_threshold_ms: number | null;
   blocked_reason: TeamSlotBlockedReason | null;
+  /** With `provider_spend_blocked`, the slot whose provider did the refusing. */
+  provider_blocked_slot_id?: string | null;
   team_run_id: string | null;
 };
 

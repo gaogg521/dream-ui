@@ -29,6 +29,8 @@
     "runtimeFailed": "Dieses Mitglied konnte nicht gestartet werden.",
     "removing": "Dieses Mitglied wird entfernt…",
     "sessionStopped": "Die Teamsitzung wurde beendet.",
+    "providerSpendBlocked": "Ihr Modellanbieter hat dieses Konto eingeschränkt. Prüfen Sie Ihr Kontingent beim Anbieter und versuchen Sie es erneut.",
+    "providerSpendBlockedBy": "„{{name}}“ hat das Limit seines Modellanbieters erreicht. Prüfen Sie das Kontingent dieses Anbieters und versuchen Sie es erneut.",
     "retryStart": "Neustart versuchen"
   },
   "sendBox": {
