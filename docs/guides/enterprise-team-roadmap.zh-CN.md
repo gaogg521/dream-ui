@@ -29,6 +29,20 @@
   - [ ] **SCIM 2.0 入站 provisioning**（IdP 推送用户增删改，离职自动回收，合规红线）。
   - [ ] OIDC 硬化：id_token 签名校验（JWKS）。
 - [ ] **P0-3 席位 / license + 用量成本看板**：席位/套餐/计费 + license 管控（free/pro/enterprise）；管理员用量看板（谁用了多少、哪个模型、花了多少）。商业化闭环 + 管理员刚需。
+  > ⚠️ **状态订正（2026-09-18 核实）：这条的主体其实已经实现了**，上面的 `[ ]` 是过期的。
+  > 证据：`crates/dream-domain-billing/` 是完整 crate（`license_key` / `models` / `routes` /
+  > `service` / `migrate`），`routes.rs` 有 20+ 路由（`plan`/`usage`/`enterprise-report`/
+  > `llm-calls`/`key-usage`/`tier`/`model-control`/`license/request`/`checkout`/`webhook`…）；
+  > `dream-core-app/src/router/routes.rs:2768` 构建它、`:3150` 与 `:3723` 两处 `.merge(governance.billing)`
+  > 都挂上了；管理后台有 `BillingTab`/`LicenseTab`/`UsageOverviewTab`/`EnterpriseReportTab`
+  > （`dream-en/admin-web/src/console/components/`）；`dream-domain-sso/src/service.rs:294`
+  > 的注释原文就是「P0-3 license gate」，它已经在拦 SSO 开关了。
+  > **真正剩下的是「接真实支付」** —— `BillingProvider` 目前是打桩的 seam（见
+  > `dream-domain-billing/src/lib.rs` 的 crate 文档）。
+  > **没有代勾**：核实到的是「代码接上了、闸门在跑」，不是「端到端跑过一遍」；
+  > 本轮刚好抓到过反方向的假状态（`channels.md` 的 WeCom 标 `[已实现]` 而后端从未实现），
+  > 所以两个方向都不拿文档当验收依据。接手前先读
+  > [`handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md`](handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md) §3。
 - [ ] **P0-4 细粒度 RBAC + 资源分权**：现只有 member/org_admin/system_admin 三档 → 细粒度权限（谁能建技能/下发 MCP/看哪个知识库）；知识库(RAG)从团队级 → 按文档/按角色分权。
 
 ### P1 — 企业信任

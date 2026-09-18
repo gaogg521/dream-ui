@@ -139,3 +139,9 @@ DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev
 - **安装器与发布脚本**（第 1/2/3/4 条）需要真的打一次包 / 真的装一次才算验过，
   下次发版时留意
 - `install-web.sh` 的 COS 镜像布局没有实测（见第 3 条的警告）
+
+> SSO 深链那一条**已经不在这个清单里了** —— 同日补了 2 条测试把
+> 「sanitize → state token → callback → 落地页」整条链路覆盖住，并做过反证。
+> 剩下的只有「真实 IdP 往返」，需要人工填密钥。
+> 完整验证办法（含两道闸门的区分速查）见
+> [`handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md`](handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md)。
