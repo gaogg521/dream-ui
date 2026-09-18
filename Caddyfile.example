@@ -1,4 +1,4 @@
-# Example Caddyfile for TLS termination in front of aionui-web.
+# Example Caddyfile for TLS termination in front of dream-web.
 # Copy to Caddyfile, replace the placeholder domain, and enable with:
 #   docker compose --profile tls up -d
 #
