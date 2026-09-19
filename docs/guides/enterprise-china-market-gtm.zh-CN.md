@@ -1,5 +1,16 @@
 # 企业版 · 国内市场能不能卖出去（活文档）
 
+> 🚨 **过期提示（2026-09-19 标注）**
+>
+> 本文内容成文于 **2026-08-23 或更早**，早于企业版仓库 `dream-en` 建仓（2026-08-26）。
+> 之后企业能力大量落地，本文**没有跟着更新**，其中「我们缺 X / X 没做」一类判断
+> **不可再作为依据**。
+>
+> **企业版当前实际能力以 [`dream-en/docs/enterprise-capability-manifest-2026-09-19.zh-CN.md`](../../../dream-en/docs/enterprise-capability-manifest-2026-09-19.zh-CN.md) 为准**
+> —— 那份是按路由清单 + 迁移清单量出来的（9 个 domain crate / 135 条路由 / 62 个管理页签）。
+>
+> 本文保留作**历史决策记录**，不再删改。
+
 > 创建 2026-08-08。**这份文档回答的是"为什么签不下单"，不是"还缺哪些功能"。**
 > 功能维度的待办在 [`enterprise-commercialization-backlog.zh-CN.md`](enterprise-commercialization-backlog.zh-CN.md)，
 > 那份已把 P0/P1/P2 的纯代码项做完；这份是站在"客户为什么不掏钱"的角度重新排一次序。

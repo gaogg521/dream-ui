@@ -1,5 +1,28 @@
 # 企业能力审计：真功能 vs 空壳（keep / cut / rebuild）
 
+> 🚨 **过期提示（2026-09-19 实测推翻了本文的核心结论）**
+>
+> 本文成文于 **2026-07-08**，开篇断言「大多数团队能力是写入即死的配置壳 ——
+> 存得进 DB，agent 跑的时候根本不读」。**这句话今天已经不成立**，而它被后续
+> 文档反复引用，是「企业版是空壳」这个错误印象的源头之一。
+>
+> 当场复核的两条：
+>
+> - **团队知识库不再是孤立搜索框。** `one-team-knowledge` 是 agent 能拿到的
+>   **MCP server**（`dream-core-ai-agent/src/factory/session_mcp.rs`）。它**刻意不自动注入**
+>   —— 源码注释原话是「自动注入会把 PDF 导出器和团队知识库也塞给每个 agent，
+>   那是个大得多的决定」。**不自动注入是产品决策，不是没接线。**
+> - **检索本身也早不是当初那个样子**：`dream-domain-devops/src/retrieval.rs` 是
+>   向量 + 词法双路召回 + RRF 融合，且带 **ACL 谓词**（`acl_predicate`）。
+>
+> 本文那条 Cargo 依赖证据（「只有 `dream-core-app` 依赖 devops」）**字面上仍然成立**，
+> 但今天这套架构靠 **trait seam** 和 **MCP** 传递能力，不靠 crate 直连 ——
+> `ResourceGrantSource` / `ProxyUsageRecorder` 都是这个模式。
+> **用 crate 依赖图判断「agent 消不消费」这个方法本身已经失效了。**
+>
+> 企业版当前实际能力以 [`dream-en/docs/enterprise-capability-manifest-2026-09-19.zh-CN.md`](../../../dream-en/docs/enterprise-capability-manifest-2026-09-19.zh-CN.md) 为准。
+> 本文保留作历史记录，不再删改。
+
 > 2026-07-08 第二十三轮续。审计范围：桌面「企业管理后台」宫格里的全部团队能力。
 > 判据两条：①**后端存储/处理**是否真做了事；②**agent 运行时是否消费**（存进去有没有被用起来）。
 > 结论先行：**大多数「团队能力」是写入即死的配置壳——存得进 DB，agent 跑的时候根本不读。**
