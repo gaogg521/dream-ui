@@ -15,8 +15,18 @@
 > | `[ ]` P1-4 安全策略               | 已建 —— `one_security_policy`（platform 迁移 005）+ MFA 路由                                       |
 > | `[ ]` P1-5 DLP                    | 已建 —— `dream-domain-devops/src/dlp_service.rs` + `ContentInspectionTab`                          |
 >
-> **真正还没做的只剩三条**：SAML（全仓 0 命中）、SCIM 2.0（无端点）、
-> OIDC id_token JWKS 验签（`oidc.rs:15-21` 明写是 v1 之后的硬化项）。
+> | `[ ]` P1-3 部署/备份/升级 | 大部分已建 —— `/admin/backup/export`·`import`、`/admin/runtime/nodes`、`deploy/docker-compose.yml`、离线包 |
+> | `[ ]` P2-3 组织层级（部门树） | 已建 —— `one_departments`（org 迁移 009，含 `parent_id`）+ OrgTreeTab；资源授权按部门走树 |
+> | `[ ]` P2-4 onboarding 批量邀请 | 大部分已建 —— `/admin/invites/bulk`、`/org/invites/preview`、`/admin/invites/{id}/revoke` |
+> | `[ ]` P2-1 集成 | 🟡 半成品 —— 配置面在（`/admin/integrations` + IntegrationsTab），但**没有 connector client**，同步没接 |
+> | `[ ]` P2-2 实时协同 | 🟡 只有 `/platform/collaboration/probe` 探针 |
+>
+> **真正还没做的**：SAML（全仓 0 命中）、SCIM 2.0（无端点）、
+> OIDC id*token JWKS 验签（`oidc.rs:15-21` 明写是 v1 之后的硬化项）、
+> 角色细分（`ROLE*\*` 仍三档）、P2-1 的 connector client、P2-2 实时协同。
+>
+> 📋 **完整对账见 [`dream-en/docs/enterprise-capability-manifest-2026-09-19.zh-CN.md`](../../../dream-en/docs/enterprise-capability-manifest-2026-09-19.zh-CN.md)**
+> —— 9 个 domain crate / 135 条路由 / 62 个管理页签，逐条列了证据位置和重做核对的命令。
 >
 > **没有代勾任何一个框** —— 核实到的是「代码在、执行点在、UI 在」，不是「端到端验收过」。
 > 接手前请读
