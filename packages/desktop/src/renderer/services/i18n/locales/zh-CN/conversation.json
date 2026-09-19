@@ -663,6 +663,9 @@
       },
       "ANTIGRAVITY_VERSION_NEWER": {
         "body": "已安装的 agy {{reported}} 高于本集成验证过的 {{verified}}。通常仍可正常使用；如遇异常行为请反馈。"
+      },
+      "TRUNCATED_TOOL_CALL_RETRY": {
+        "body": "工具调用 {{names}} 被输出上限截断，未能完成；没有执行任何操作，正在重试。"
       }
     }
   },
