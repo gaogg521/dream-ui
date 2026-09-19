@@ -122,6 +122,16 @@ export const useDreamEngineMessage = (
   // Only reset waitingResponse when finish arrives after content (not after tool calls)
   const hasContentInTurnRef = useRef(false);
 
+  // True from `finish` until the next `start`. The auto-recover branches below
+  // deliberately re-arm `streamRunning` for a frame that lands after `finish`
+  // (this backend does emit trailing frames — that is why those branches exist),
+  // but the turn is over, so no second `finish` is coming to turn it back off
+  // and the send box stays on "processing" forever. The ACP hook has carried
+  // this same guard for exactly this reason.
+  const turnFinishedRef = useRef(false);
+  /** Turn whose `finish` raised the guard, so a newer turn can lower it again. */
+  const finishedTurnIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     onConfigChangedRef.current = onConfigChanged;
   }, [onConfigChanged]);
@@ -267,6 +277,8 @@ export const useDreamEngineMessage = (
       }
 
       if (isErrorTipMessage(message)) {
+        turnFinishedRef.current = true;
+        finishedTurnIdRef.current = message.turn_id ?? null;
         setStreamRunning(false);
         streamRunningRef.current = false;
         setWaitingResponse(false);
@@ -280,6 +292,27 @@ export const useDreamEngineMessage = (
           mergeLiveMessage(transformedMessage);
         }
         return;
+      }
+
+      // A frame from a DIFFERENT turn than the one that finished is not trailing
+      // it — it belongs to a newer turn, so the guard must come back down or the
+      // next turn never lights the indicator. Mirrors the sidebar's late-frame
+      // rule, which already learned this from codex streaming past its own turn
+      // end. A turn that opens with `start` is covered there; this covers one
+      // whose first frame is something else.
+      if (turnFinishedRef.current) {
+        const streamTurnId = message.turn_id;
+        const finishedTurnId = finishedTurnIdRef.current;
+        const isNewerTurn =
+          typeof streamTurnId === 'string' &&
+          streamTurnId.length > 0 &&
+          typeof finishedTurnId === 'string' &&
+          finishedTurnId.length > 0 &&
+          streamTurnId !== finishedTurnId;
+        if (isNewerTurn) {
+          turnFinishedRef.current = false;
+          finishedTurnIdRef.current = null;
+        }
       }
 
       // Filter out events not belonging to current active request (prevents aborted events from interfering)
@@ -310,14 +343,18 @@ export const useDreamEngineMessage = (
 
       switch (message.type) {
         case 'thought':
-          // Auto-recover streamRunning if thought arrives after finish
-          if (!streamRunningRef.current) {
+          // Auto-recover streamRunning for a frame that belongs to a turn still
+          // in flight — but never for one trailing a finished turn.
+          if (!streamRunningRef.current && !turnFinishedRef.current) {
             setStreamRunning(true);
             streamRunningRef.current = true;
           }
           throttledSetThought(message.data as ThoughtData);
           break;
         case 'start':
+          // New turn starting — drop the finished guard so auto-recover works again
+          turnFinishedRef.current = false;
+          finishedTurnIdRef.current = null;
           setStreamRunning(true);
           streamRunningRef.current = true;
           // Don't reset waitingResponse here - let tool completion flow handle it
@@ -379,8 +416,21 @@ export const useDreamEngineMessage = (
                   // worth surfacing — the token count stands on its own.
                 });
             }
+            // `running` is the OR of three flags, so the turn is only actually
+            // over once all three are down. `hasActiveTools` was left standing
+            // here: a turn whose last seen tool_group still had a tool in
+            // Executing/Confirming/Pending kept the send box on "processing"
+            // until the user switched conversations and back (the hydration
+            // path below is the only other place that clears it). The error
+            // path a few lines up has always cleared all three.
+            turnFinishedRef.current = true;
+            finishedTurnIdRef.current = message.turn_id ?? null;
             setStreamRunning(false);
+            streamRunningRef.current = false;
             setWaitingResponse(false);
+            waitingResponseRef.current = false;
+            setHasActiveTools(false);
+            hasActiveToolsRef.current = false;
             setThought({ subject: '', description: '' });
             if (message.msg_id) {
               void processCompletedAssistantMessage(message.msg_id);
@@ -473,8 +523,8 @@ export const useDreamEngineMessage = (
             // Mark that current turn has content output
             hasContentInTurnRef.current = true;
 
-            // Auto-recover streamRunning if tool_group arrives after finish
-            if (!streamRunningRef.current) {
+            // Auto-recover only while the turn is still in flight.
+            if (!streamRunningRef.current && !turnFinishedRef.current) {
               setStreamRunning(true);
               streamRunningRef.current = true;
             }
@@ -482,7 +532,11 @@ export const useDreamEngineMessage = (
             // Check if any tools are executing or awaiting confirmation
             const tools = message.data as Array<{ status: string; name?: string }>;
             const activeStatuses = new Set(['Executing', 'Confirming', 'Pending']);
-            const hasActive = tools.some((tool) => activeStatuses.has(tool.status));
+            // A tool_group trailing a finished turn is still rendered, but it
+            // must not drive turn state: the turn is over, so nothing further
+            // will arrive to take `hasActiveTools` (and with it the "processing"
+            // indicator) back down. Same reasoning as the auto-recover guards.
+            const hasActive = tools.some((tool) => activeStatuses.has(tool.status)) && !turnFinishedRef.current;
             const wasActive = hasActiveToolsRef.current;
 
             setHasActiveTools(hasActive);
@@ -490,7 +544,7 @@ export const useDreamEngineMessage = (
 
             // When tools transition from active to inactive, set waitingResponse=true
             // because backend needs to continue sending requests to model
-            if (wasActive && !hasActive && tools.length > 0) {
+            if (wasActive && !hasActive && tools.length > 0 && !turnFinishedRef.current) {
               setWaitingResponse(true);
               waitingResponseRef.current = true;
             }
@@ -521,7 +575,7 @@ export const useDreamEngineMessage = (
           break;
         case 'permission':
         case 'acp_permission':
-          if (!streamRunningRef.current) {
+          if (!streamRunningRef.current && !turnFinishedRef.current) {
             setStreamRunning(true);
             streamRunningRef.current = true;
           }
@@ -550,8 +604,8 @@ export const useDreamEngineMessage = (
               setWaitingResponse(false);
               waitingResponseRef.current = false;
             }
-            // Auto-recover streamRunning if content arrives after finish
-            if (!streamRunningRef.current) {
+            // Auto-recover only while the turn is still in flight.
+            if (!streamRunningRef.current && !turnFinishedRef.current) {
               setStreamRunning(true);
               streamRunningRef.current = true;
             }
@@ -573,6 +627,8 @@ export const useDreamEngineMessage = (
     // Belongs to the conversation being left, not the one being opened.
     setContextLimit(0);
     hasContentInTurnRef.current = false;
+    turnFinishedRef.current = false;
+    finishedTurnIdRef.current = null;
     setHasHydratedRunningState(false);
 
     // Check actual conversation status from backend before resetting all running states
@@ -683,6 +739,10 @@ export const useDreamEngineMessage = (
     hasActiveToolsRef.current = false;
     setThought({ subject: '', description: '' });
     hasContentInTurnRef.current = false;
+    // resetState is the explicit stop/reset path: the next turn is a fresh one,
+    // so the finished guard must not survive into it.
+    turnFinishedRef.current = false;
+    finishedTurnIdRef.current = null;
     // Clear active message ID to prevent filtering events from new messages after stop
     activeMsgIdRef.current = null;
   }, []);
