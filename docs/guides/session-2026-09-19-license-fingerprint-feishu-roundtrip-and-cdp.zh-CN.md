@@ -28,12 +28,12 @@
 
 ### 接手时是半成品（4 个缺口，全部补齐）
 
-| # | 缺口 | 后果 | 修复位置 |
-| - | ---- | ---- | -------- |
-| 1 | `LicensePayload` 缺 `deployment_fingerprint` 字段 | 签发引擎**编译不过**（E0560，实测复现） | `license_key.rs`（serde default，旧 license 无此字段保持可携） |
-| 2 | billing_011 两个 SQL **没注册**进 `migrate.rs` 的 `MIGRATIONS`/`MIGRATIONS_MYSQL` 手写数组 | 迁移**永远不执行**，表不存在 | 两个数组各补一行 |
-| 3 | 申请码路由的"指纹"是 `sha256(instance_id\|app_id)` **算出来的** | 指纹可从申请码推出，绑定形同虚设；迁移表无任何代码引用 | `routes.rs` 改读 `deployment_fingerprint()`（惰性播种 + 首启引导种子，见 `dream-core-app/src/router/routes.rs` bootstrap） |
-| 4 | `activate_license` **不比对、不落库**指纹 | "复制到其他部署被拒"完全是空中楼阁 | 激活前 `verify_deployment_binding`（大小写不敏感），激活行新增列，读回 DTO 带出 |
+| #   | 缺口                                                                                       | 后果                                                   | 修复位置                                                                                                                   |
+| --- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `LicensePayload` 缺 `deployment_fingerprint` 字段                                          | 签发引擎**编译不过**（E0560，实测复现）                | `license_key.rs`（serde default，旧 license 无此字段保持可携）                                                             |
+| 2   | billing_011 两个 SQL **没注册**进 `migrate.rs` 的 `MIGRATIONS`/`MIGRATIONS_MYSQL` 手写数组 | 迁移**永远不执行**，表不存在                           | 两个数组各补一行                                                                                                           |
+| 3   | 申请码路由的"指纹"是 `sha256(instance_id\|app_id)` **算出来的**                            | 指纹可从申请码推出，绑定形同虚设；迁移表无任何代码引用 | `routes.rs` 改读 `deployment_fingerprint()`（惰性播种 + 首启引导种子，见 `dream-core-app/src/router/routes.rs` bootstrap） |
+| 4   | `activate_license` **不比对、不落库**指纹                                                  | "复制到其他部署被拒"完全是空中楼阁                     | 激活前 `verify_deployment_binding`（大小写不敏感），激活行新增列，读回 DTO 带出                                            |
 
 **测试**：billing 77 全绿（新增 3 条：指纹稳定/格式、匹配+异指纹+旧 license 可携、
 读回带指纹）。MySQL 分支语法在 `migrations_mysql/` 有对应物，真实 MySQL 跑法
