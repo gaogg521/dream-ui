@@ -61,6 +61,28 @@ describe('BackupSection', () => {
   afterEach(cleanup);
 
   /**
+   * Fills in the passphrase dialog and confirms it.
+   *
+   * Every export goes through this now: the archive is encrypted, so the POST
+   * does not happen until a passphrase exists. Driving the real dialog rather
+   * than reaching past it is the point — the flow a person walks is export ->
+   * pick a file -> set a passphrase, and a test that skipped the middle step
+   * would keep passing if the dialog stopped appearing entirely.
+   */
+  const enterPassphrase = async (passphrase: string, { confirm = true } = {}) => {
+    const field = await screen.findByPlaceholderText('settings.backup.passphrasePlaceholder');
+    fireEvent.change(field, { target: { value: passphrase } });
+    if (confirm) {
+      const again = screen.getByPlaceholderText('settings.backup.passphraseConfirmPlaceholder');
+      fireEvent.change(again, { target: { value: passphrase } });
+    }
+    // The dialog's own confirm button, not the section's export button.
+    const ok = document.querySelector('.arco-modal-footer .arco-btn-primary');
+    expect(ok).not.toBeNull();
+    fireEvent.click(ok as Element);
+  };
+
+  /**
    * A backup names a path on the machine running the backend. In WebUI that is
    * a server the user cannot browse, so offering the picker would write the
    * archive somewhere they can never retrieve it.
@@ -80,6 +102,7 @@ describe('BackupSection', () => {
     // trivial everything-on case.
     fireEvent.click(screen.getByText('settings.backup.scope.skills'));
     fireEvent.click(screen.getByText('settings.backup.exportButton'));
+    await enterPassphrase('correct-horse-battery');
 
     await waitFor(() => expect(mocks.httpRequestMock).toHaveBeenCalled());
     const [method, path, body] = mocks.httpRequestMock.mock.calls[0];
@@ -88,6 +111,7 @@ describe('BackupSection', () => {
     expect(body).toEqual({
       destination: 'D:/backups/mine.zip',
       scope: { conversations: true, attachments: false, providers: true, skills: false, appSettings: true },
+      passphrase: 'correct-horse-battery',
     });
   });
 
@@ -103,6 +127,7 @@ describe('BackupSection', () => {
 
     render(<BackupSection />);
     fireEvent.click(screen.getByText('settings.backup.exportButton'));
+    await enterPassphrase('correct-horse-battery');
 
     await waitFor(() => expect(mocks.httpRequestMock).toHaveBeenCalled());
     expect(mocks.httpRequestMock.mock.calls[0][2].scope.attachments).toBe(false);
@@ -120,6 +145,7 @@ describe('BackupSection', () => {
     expect(screen.queryByText('settings.backup.revealButton')).toBeNull();
 
     fireEvent.click(screen.getByText('settings.backup.exportButton'));
+    await enterPassphrase('correct-horse-battery');
     await waitFor(() => expect(screen.queryByText('settings.backup.revealButton')).not.toBeNull());
     // The path is shown too, so it is findable even without the button.
     expect(screen.queryByText('D:/backups/mine.zip')).not.toBeNull();
@@ -209,7 +235,95 @@ describe('BackupSection', () => {
     expect(mocks.httpRequestMock).toHaveBeenLastCalledWith('POST', '/api/system/backup/restore', {
       source: 'D:/backups/mine.zip',
       scope: archiveScope,
+      // A version 2 archive has no encryption header, so it is restored
+      // without asking for something that cannot exist.
+      passphrase: '',
     });
+  });
+
+  /**
+   * An encrypted archive cannot be opened without the passphrase, so the
+   * restore waits for one instead of sending a request that would be refused.
+   */
+  it('asks for the passphrase before restoring an encrypted archive', async () => {
+    mocks.showOpenMock.mockResolvedValue(['D:/backups/sealed.zip']);
+    const archiveScope = {
+      conversations: true,
+      attachments: false,
+      providers: true,
+      skills: false,
+      appSettings: false,
+    };
+    mocks.httpRequestMock.mockResolvedValue({
+      formatVersion: 3,
+      exportedAt: 1_700_000_000_000,
+      appVersion: '3.0.6',
+      scope: archiveScope,
+      totalBytes: 1024,
+      containsCredentials: true,
+      encryption: { cipher: 'aes-256-gcm', kdf: 'argon2id' },
+    });
+
+    render(<BackupSection />);
+    fireEvent.click(screen.getByText('settings.backup.importButton'));
+    await waitFor(() => expect(mocks.modalConfirmMock).toHaveBeenCalled());
+
+    // Confirming the merge does NOT restore yet — it opens the passphrase
+    // dialog. Only the preview has gone out so far.
+    await mocks.modalConfirmMock.mock.calls[0][0].onOk();
+    expect(mocks.httpRequestMock).toHaveBeenCalledTimes(1);
+
+    mocks.httpRequestMock.mockResolvedValue({ rowsByTable: { conversations: 3 }, filesRestored: 0 });
+    await enterPassphrase('correct-horse-battery', { confirm: false });
+
+    await waitFor(() =>
+      expect(mocks.httpRequestMock).toHaveBeenLastCalledWith('POST', '/api/system/backup/restore', {
+        source: 'D:/backups/sealed.zip',
+        scope: archiveScope,
+        passphrase: 'correct-horse-battery',
+      })
+    );
+  });
+
+  /**
+   * The archive is written only once a passphrase exists. Abandoning the dialog
+   * must leave nothing behind — least of all a file the person believes is
+   * protected.
+   */
+  it('writes nothing when the passphrase dialog is cancelled', async () => {
+    mocks.showSaveMock.mockResolvedValue('D:/backups/mine.zip');
+
+    render(<BackupSection />);
+    fireEvent.click(screen.getByText('settings.backup.exportButton'));
+    await screen.findByPlaceholderText('settings.backup.passphrasePlaceholder');
+
+    const cancel = document.querySelector('.arco-modal-footer .arco-btn-secondary');
+    expect(cancel).not.toBeNull();
+    fireEvent.click(cancel as Element);
+
+    expect(mocks.httpRequestMock).not.toHaveBeenCalled();
+  });
+
+  /**
+   * A passphrase nobody can recover has to be typed twice, and a mismatch must
+   * not be exportable — the archive would be unopenable and the person would
+   * find out on the day they needed it.
+   */
+  it('refuses to export until both passphrase fields agree', async () => {
+    mocks.showSaveMock.mockResolvedValue('D:/backups/mine.zip');
+
+    render(<BackupSection />);
+    fireEvent.click(screen.getByText('settings.backup.exportButton'));
+
+    const field = await screen.findByPlaceholderText('settings.backup.passphrasePlaceholder');
+    fireEvent.change(field, { target: { value: 'correct-horse-battery' } });
+    const again = screen.getByPlaceholderText('settings.backup.passphraseConfirmPlaceholder');
+    fireEvent.change(again, { target: { value: 'something-else-entirely' } });
+
+    const ok = document.querySelector('.arco-modal-footer .arco-btn-primary') as HTMLButtonElement;
+    expect(ok.disabled).toBe(true);
+    fireEvent.click(ok);
+    expect(mocks.httpRequestMock).not.toHaveBeenCalled();
   });
 
   it('reports a preview failure without opening the confirm dialog', async () => {
