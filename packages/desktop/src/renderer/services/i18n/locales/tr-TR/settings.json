@@ -1599,6 +1599,16 @@
     "restoreFailed": "Bu yedekten geri yüklenemedi",
     "attachmentsSlowWarning": "Çalışma alanı dosyaları çok sayıda küçük dosyadan oluşur; bu işlem birkaç dakika sürebilir ve uygulama bu süre boyunca meşgul görünür. Yeni bir makineye taşınmak için gerekenler diğer kategorilerde yer alır.",
     "revealButton": "Klasörde göster",
-    "revealFailed": "Klasör açılamadı"
+    "revealFailed": "Klasör açılamadı",
+    "restoreSuccessWithDropped": "{{rows}} kayıt ve {{files}} dosya geri yüklendi. {{dropped}} tanesi, atıfta bulundukları veri bu geri yüklemeye dahil olmadığı için atlandı.",
+    "passphraseSetTitle": "Bu yedek için bir parola belirleyin",
+    "passphraseEnterTitle": "Yedek parolasını girin",
+    "passphraseSetHint": "Yedek bu parolayla şifrelenir. Başka bir makinede geri yüklerken gerekir.",
+    "passphraseEnterHint": "Bu yedek şifrelenmiş. Oluşturulurken belirlenen parolayı girin.",
+    "passphrasePlaceholder": "Parola",
+    "passphraseConfirmPlaceholder": "Parolayı tekrar girin",
+    "passphraseTooShort": "En az {{min}} karakter kullanın.",
+    "passphraseMismatch": "İki giriş eşleşmiyor.",
+    "passphraseNoRecovery": "Bu parola kurtarılamaz. Kaybederseniz yedek bir daha açılamaz."
   }
 }

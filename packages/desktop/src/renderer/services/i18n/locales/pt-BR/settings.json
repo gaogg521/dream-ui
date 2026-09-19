@@ -1602,6 +1602,16 @@
     "restoreFailed": "Não foi possível restaurar a partir desse backup",
     "attachmentsSlowWarning": "Os arquivos do espaço de trabalho são muitos e pequenos, então isso pode levar vários minutos e o app parecerá ocupado o tempo todo. Tudo o que é preciso para mudar de máquina está nas outras categorias.",
     "revealButton": "Mostrar na pasta",
-    "revealFailed": "Não foi possível abrir essa pasta"
+    "revealFailed": "Não foi possível abrir essa pasta",
+    "restoreSuccessWithDropped": "{{rows}} registros e {{files}} arquivos restaurados. {{dropped}} foram ignorados porque aquilo a que se referiam não fazia parte desta restauração.",
+    "passphraseSetTitle": "Defina uma senha para este backup",
+    "passphraseEnterTitle": "Digite a senha do backup",
+    "passphraseSetHint": "O backup é criptografado com esta senha. Você precisará dela para restaurar em outra máquina.",
+    "passphraseEnterHint": "Este backup está criptografado. Digite a senha usada ao criá-lo.",
+    "passphrasePlaceholder": "Senha",
+    "passphraseConfirmPlaceholder": "Repita a senha",
+    "passphraseTooShort": "Use pelo menos {{min}} caracteres.",
+    "passphraseMismatch": "As duas entradas não coincidem.",
+    "passphraseNoRecovery": "Não há como recuperar esta senha. Se perdê-la, o backup não poderá ser aberto."
   }
 }

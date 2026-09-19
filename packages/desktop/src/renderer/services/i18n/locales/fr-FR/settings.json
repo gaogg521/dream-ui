@@ -1596,6 +1596,16 @@
     "restoreFailed": "Impossible de restaurer depuis cette sauvegarde",
     "attachmentsSlowWarning": "Les fichiers de l'espace de travail sont nombreux : l'opération peut prendre plusieurs minutes et l'application paraîtra occupée pendant tout ce temps. Tout ce qu'il faut pour changer de machine se trouve dans les autres catégories.",
     "revealButton": "Afficher dans le dossier",
-    "revealFailed": "Impossible d'ouvrir ce dossier"
+    "revealFailed": "Impossible d'ouvrir ce dossier",
+    "restoreSuccessWithDropped": "{{rows}} enregistrements et {{files}} fichiers restaurés. {{dropped}} ont été ignorés car ce à quoi ils renvoyaient ne faisait pas partie de cette restauration.",
+    "passphraseSetTitle": "Définir un mot de passe pour cette sauvegarde",
+    "passphraseEnterTitle": "Saisir le mot de passe de la sauvegarde",
+    "passphraseSetHint": "La sauvegarde est chiffrée avec ce mot de passe. Il sera nécessaire pour restaurer sur une autre machine.",
+    "passphraseEnterHint": "Cette sauvegarde est chiffrée. Saisissez le mot de passe défini lors de sa création.",
+    "passphrasePlaceholder": "Mot de passe",
+    "passphraseConfirmPlaceholder": "Répéter le mot de passe",
+    "passphraseTooShort": "Utilisez au moins {{min}} caractères.",
+    "passphraseMismatch": "Les deux saisies ne correspondent pas.",
+    "passphraseNoRecovery": "Ce mot de passe est irrécupérable. S’il est perdu, la sauvegarde ne pourra plus être ouverte."
   }
 }

@@ -3249,6 +3249,16 @@
     "restoreFailed": "Could not restore from that backup",
     "attachmentsSlowWarning": "Workspace files are many small files, so this can take several minutes and the app will look busy the whole time. Everything needed to move to a new machine is in the other categories.",
     "revealButton": "Show in folder",
-    "revealFailed": "Could not open that folder"
+    "revealFailed": "Could not open that folder",
+    "restoreSuccessWithDropped": "Restored {{rows}} records and {{files}} files. {{dropped}} were skipped because what they referred to was not part of this restore.",
+    "passphraseSetTitle": "Set a passphrase for this backup",
+    "passphraseEnterTitle": "Enter the backup passphrase",
+    "passphraseSetHint": "The backup is encrypted with this passphrase. You will need it to restore on another machine.",
+    "passphraseEnterHint": "This backup is encrypted. Enter the passphrase it was created with.",
+    "passphrasePlaceholder": "Passphrase",
+    "passphraseConfirmPlaceholder": "Repeat the passphrase",
+    "passphraseTooShort": "Use at least {{min}} characters.",
+    "passphraseMismatch": "The two entries do not match.",
+    "passphraseNoRecovery": "There is no way to recover this passphrase. Lose it and the backup cannot be opened."
   }
 }

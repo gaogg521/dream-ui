@@ -1601,6 +1601,16 @@
     "restoreFailed": "해당 백업에서 복원하지 못했습니다",
     "attachmentsSlowWarning": "작업 공간 파일은 수가 많아 압축에 몇 분이 걸릴 수 있으며 그동안 앱은 계속 처리 중으로 표시됩니다. 새 컴퓨터로 옮기는 데 필요한 것은 다른 항목에 모두 들어 있습니다.",
     "revealButton": "폴더 열기",
-    "revealFailed": "폴더를 열지 못했습니다"
+    "revealFailed": "폴더를 열지 못했습니다",
+    "restoreSuccessWithDropped": "{{rows}}개의 레코드와 {{files}}개의 파일을 복원했습니다. {{dropped}}개는 참조 대상이 이번 복원에 포함되지 않아 건너뛰었습니다.",
+    "passphraseSetTitle": "이 백업의 암호 설정",
+    "passphraseEnterTitle": "백업 암호 입력",
+    "passphraseSetHint": "백업은 이 암호로 암호화됩니다. 다른 기기에서 복원할 때 필요합니다.",
+    "passphraseEnterHint": "이 백업은 암호화되어 있습니다. 만들 때 설정한 암호를 입력하세요.",
+    "passphrasePlaceholder": "암호",
+    "passphraseConfirmPlaceholder": "한 번 더 입력",
+    "passphraseTooShort": "{{min}}자 이상 입력하세요.",
+    "passphraseMismatch": "두 입력이 일치하지 않습니다.",
+    "passphraseNoRecovery": "이 암호는 복구할 수 없습니다. 잃어버리면 백업을 열 수 없습니다."
   }
 }
