@@ -170,7 +170,14 @@ LDAP 通道上一轮已完整往返（`ldaps://10.0.127.110:636`，AD 凭据见
 
 ## 七、仍未竟
 
-只剩两条（用户 09-19 拍板，其余 §7 条目当轮做掉）：
+> 📋 **这一节是「本轮范围内」的仍未竟，不是全局。**
+> 跨 dream-ui / dream-core / **dream-engine** 三仓的总表在
+> [`handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md`](handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md) §4.1 ——
+> 那里 2026-09-19 复核后**仍有 6 条开着**（Explorer 另一半、`sendbox.css` 重复块、
+> `DEFAULT_CHAR_BUDGET` 过期注释，以及三条只能靠真环境跑的验证欠账）。
+> 本轮做掉的 4 条也已在那边 §4.0 附证据销账。
+
+本轮范围内只剩两条（用户 09-19 拍板，其余 §7 条目当轮做掉）：
 
 - SAML / SCIM 2.0 / OIDC JWKS / 细粒度 RBAC —— 09-18 handoff §3 的 P0 大项，
   需单独立项，各有独立验收标准。
