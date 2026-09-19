@@ -168,14 +168,26 @@ LDAP 通道上一轮已完整往返（`ldaps://10.0.127.110:636`，AD 凭据见
   本轮**没有**改这个常量（feishu.txt 里那对密钥是旧仓库时期的，公钥对不上）。
 - CDP 工具：`D:/dream/scratchpad/cdp/cdp.mjs`（list/new/nav/eval/shot/events）。
 
-## 七、仍未竟（别当遗漏重做）
+## 七、仍未竟
+
+只剩两条（用户 09-19 拍板，其余 §7 条目当轮做掉）：
 
 - SAML / SCIM 2.0 / OIDC JWKS / 细粒度 RBAC —— 09-18 handoff §3 的 P0 大项，
   需单独立项，各有独立验收标准。
 - 宝云支付 Phase 4 —— 用户明确暂缓。
-- dream-en 管理台 License 详情页**渲染** `deploymentFingerprint`（DTO 已带出，
-  UI 可选；dream-en 工作区有他人未提交 WIP，本轮没碰）。
-- `resourceMatrixTab.test.tsx` 在 dream-en main 上就有 1 个既有失败
-  （getByText 歧义），与本轮无关。
-- §5.3 跨仓 scheme 字面量「两边一致」**仍然没有任何东西锁住**（本轮只做了
-  人工比对一致）；要真正锁住需要 CI 跨仓校验，待决策。
+
+**已做掉的原 §7 条目**（2026-09-19，dream-en `0de0acb`/`8382c17`/`1baa047`）：
+
+- **License 详情页渲染 `deploymentFingerprint`**：接手工作区里现成的半成品
+  （类型字段 + 渲染行），把写死的中文标签改到 `common.billing.*` i18n
+  （13 语种补 `licenseDeploymentFingerprint`），licenseTab 测试补 2 条断言
+  （有指纹渲染、无指纹不渲染）。
+- **resourceMatrixTab 既有失败**：不止是测试写错——修歧义断言时暴露了
+  **真 BUG**：`EffectiveSummary` 的 effect 把 `t` 列进依赖，mock 环境 t 每渲染
+  换新引用 → `effective` 无限重取（19,096 次）。组件去掉 `t` 依赖 + 测试 mock
+  改模块级稳定 `t`，4/4 过。
+- **§5.3 跨仓 scheme 一致性锁**：
+  `dream-en/admin-web/tests/deep-link-scheme-cross-repo.test.ts` 直接读兄弟
+  checkout 的 dream-core `routes.rs` 源码，断言两侧字面量**有效等价**
+  （同一 fallback、并集内每个 scheme 两侧都自映射）；非并排检出时自动 skip。
+  这就是文档里说"没有任何东西锁住"的那把锁。
