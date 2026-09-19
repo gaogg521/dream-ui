@@ -658,6 +658,9 @@
       },
       "ANTIGRAVITY_VERSION_NEWER": {
         "body": "설치된 agy {{reported}}은(는) 이 통합이 검증한 {{verified}}보다 최신 버전입니다. 대개 정상 동작하지만, 이상이 있으면 알려주세요."
+      },
+      "TRUNCATED_TOOL_CALL_RETRY": {
+        "body": "도구 호출 {{names}}이(가) 출력 한도로 인해 완료되지 못했습니다. 실행된 내용이 없으므로 다시 시도합니다."
       }
     }
   },

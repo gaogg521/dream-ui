@@ -962,6 +962,7 @@ export type I18nKey =
   | 'conversation.agentTip.codes.CODEX_RETRYING.body'
   | 'conversation.agentTip.codes.CONTEXT_WINDOW_LEARNED.body'
   | 'conversation.agentTip.codes.MESSAGE_LARGER_THAN_WINDOW.body'
+  | 'conversation.agentTip.codes.TRUNCATED_TOOL_CALL_RETRY.body'
   | 'conversation.chat.apiErrorNoCli'
   | 'conversation.chat.apiErrorSwitchFailed'
   | 'conversation.chat.apiErrorSwitched'

@@ -660,6 +660,9 @@
       },
       "ANTIGRAVITY_VERSION_NEWER": {
         "body": "Kurulu agy {{reported}} sürümü, bu entegrasyonun doğrulandığı {{verified}} sürümünden yeni. Yine de çalışması beklenir; tuhaf davranışları bildirin."
+      },
+      "TRUNCATED_TOOL_CALL_RETRY": {
+        "body": "Araç çağrı(lar)ı {{names}} çıkış sınırı nedeniyle tamamlanamadan kesildi; hiçbir şey yürütülmedi. Şimdi yeniden deneniyor."
       }
     }
   },

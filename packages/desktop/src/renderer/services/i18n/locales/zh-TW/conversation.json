@@ -659,6 +659,9 @@
       },
       "ANTIGRAVITY_VERSION_NEWER": {
         "body": "已安裝的 agy {{reported}} 高於本整合驗證過的 {{verified}}。通常仍可正常使用；如遇異常行為請回報。"
+      },
+      "TRUNCATED_TOOL_CALL_RETRY": {
+        "body": "工具呼叫 {{names}} 被輸出上限截斷，未能完成；沒有執行任何操作，正在重試。"
       }
     }
   },

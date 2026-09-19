@@ -658,6 +658,9 @@
       },
       "ANTIGRAVITY_VERSION_NEWER": {
         "body": "インストールされている agy {{reported}} は、この統合が検証した {{verified}} より新しいバージョンです。通常は問題なく動作しますが、異常があればご報告ください。"
+      },
+      "TRUNCATED_TOOL_CALL_RETRY": {
+        "body": "ツール呼び出し {{names}} が出力上限で中断され、完了しませんでした。何も実行されていないため、再試行します。"
       }
     }
   },

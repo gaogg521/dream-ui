@@ -664,6 +664,9 @@
       },
       "ANTIGRAVITY_VERSION_NEWER": {
         "body": "A versão instalada do agy {{reported}} é mais recente que a {{verified}} verificada nesta integração. Deve continuar funcionando; relate qualquer comportamento estranho."
+      },
+      "TRUNCATED_TOOL_CALL_RETRY": {
+        "body": "A(s) chamada(s) de ferramenta {{names}} foram interrompidas pelo limite de saída antes de concluírem; nada foi executado. Tentando novamente agora."
       }
     }
   },

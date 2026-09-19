@@ -663,6 +663,9 @@
       },
       "ANTIGRAVITY_VERSION_NEWER": {
         "body": "agy {{reported}} is newer than the {{verified}} this integration was verified against. It should still work; report anything that behaves oddly."
+      },
+      "TRUNCATED_TOOL_CALL_RETRY": {
+        "body": "Tool call(s) {{names}} were cut off by the output limit before completing; nothing was executed. Retrying now."
       }
     }
   },
