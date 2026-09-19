@@ -565,3 +565,74 @@ gh run list --repo gaogg521/1oneUI --workflow=build-manual.yml --limit 4 --json 
 - Fork 上手 / 本地 dev / 打包：[`fork-dev-onboarding.zh-CN.md`](fork-dev-onboarding.zh-CN.md)
 - 发版只走官网 + COS、不发 GitHub Release：见 memory `release-channel-cos-website-only`
 - 自动升级改指向自建 COS：见 memory `autoupdate-cos-repoint`
+- **3.0.6 发版全记录（数字、决策、遗留项）**：[`dream-en/docs/release-record-2026-09-19-3.0.6.zh-CN.md`](../../../../dream-en/docs/release-record-2026-09-19-3.0.6.zh-CN.md)
+
+---
+
+## 9. 2026-09-19 增补：3.0.6 发版轮的新坑 + 下次发版的标准走法
+
+> 3.0.6 花了一个下午，其中约七成不在打包本身。本节把那次的新坑收进来，
+> 并给出 main 干净时的标准路径（实测各环节耗时后的推算：**约 1.5 小时**）。
+
+### 9.1 桌面发版必带 dreamcore 换钉 —— 划界时先查"UI 配对"
+
+3.0.5→3.0.6 之间 dream-core 攒了 45 个 commit，其中「个人版备份恢复」「web search
+到会话」「Agnes 读图」与 dream-ui 的 UI 改动**配对**——不换后端钉版，这些功能上线
+就是空壳。判据：划界后 grep dream-core 的 `feat(system)/feat(mcp)/fix(capability)`
+，看有没有与 dream-ui commit 同主题的。有，就先打 dreamcore tag（one.N+1）、
+bump `dreamcoreVersion`，再开打包。
+
+### 9.2 ⚠️ Test job 编译期死掉时，后面所有真实回归都静音
+
+dream-core 的 main CI 连红 6 天（40+ run），根因是一个 example 的 E0063 编译错——
+`cargo nextest run --workspace` 在编译期就死，**一个测试都没跑过**。等编译修好，
+一口气冒出三个被遮住的真实回归：channel_e2e 断言没跟上 wecom 移除（7→6，两处）、
+enterprise_bootstrap_e2e 没跟上 license 默认档位改 free、brand_residue 抓到 legacy
+scheme 没标记。三条修法都是"跟上已经发生的正确事实"，但要警惕的是结构问题：
+
+> **测试编译失败是红色静音键。它存在期间引入的每个回归都不报警。**
+> 所以 Test job 挂在编译期时，修复当天必须把整套件全量跑一遍（`--no-fail-fast`），
+> 不能只修编译错就收工。
+
+### 9.3 nextest / cargo 的三个现场坑（本轮全部实操踩过）
+
+1. **两个 nextest 不能并行**：channel_e2e 会 spawn `target\debug\dreamcore.exe` 当
+   被测进程，第二个 run 重链接同名文件必撞 os error 5。跑 Rust 测试就一次跑一个
+   full suite；撞了就 `Get-Process dreamcore` 按 **PID** 清泄漏（总结里会报
+   "N leaky"），别按进程名杀。
+2. **`| tail` 吞退出码**：`cargo ... | tail` 的 `$?` 是 tail 的。本轮两次被它骗
+   （一次误报成功、一次误报失败）。固定写法：`REAL_EXIT=$?` 紧跟命令后再处理输出。
+3. **磁盘满 = os error 112 / LNK1108 写入失败**：dream-core/target 一夜能涨到
+   871 GB（两套 RUSTFLAGS profile 翻倍 + 历史堆积）。见到"无法写入 rmeta"先
+   `df -h /d`，再 `cargo clean`。871 GB 这刀清完，盘回 39%。
+
+### 9.4 Release Please 连红的两个独立病根（2026-09-19 修绿）
+
+dream-core / dream-engine 的 Release Please 连红数周，两仓病根不同、都修了：
+
+- **dream-core**：仓库 index 里根 `Cargo.toml` 是 CRLF、platform 的是混合行尾，
+  release-please 的 TOML 解析器直接拒绝（"control characters … not allowed in
+  comments"）。修法：两文件转 LF + `.gitattributes` 钉 `*.toml text eol=lf`
+  （Windows 检出/保存会不断把 CRLF 带回来，没有这条防不住）。
+- **两仓共同**：仓库设置里「Allow GitHub Actions to create and approve pull
+  requests」没开，工作流无权建 PR。已用 API 开启：
+  `gh api -X PUT repos/gaogg521/<repo>/actions/permissions/workflow -f can_approve_pull_request_reviews=true`。
+- ⚠️ **release-please 的版本 PR 与 fork 的 `-one.N` tag 方案冲突**（它提的是
+  `0.1.72`，惯例是 bump `0.1.71-one.N` 后缀）。两个 PR（core#5 / engine#4）**先
+  挂着别合**，除非整体决定改用 release-please 驱动的版本方案。
+
+### 9.5 下次发版的标准走法（main 干净时 ≈ 1.5 小时）
+
+| 步骤                         | 耗时    | 要点                                                                                                                                                                          |
+| ---------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0. 预检三件                  | 2 min   | ① 四仓 main 与 origin 齐平且 CI 绿（按用户决策可绕过 CI 直接 tag）② D 盘余量 >100 GB ③ 划界（COS Last-Modified，**不是** commit 时间）+ 查 UI 配对（9.1）                     |
+| 1. dreamcore tag → Release   | ~26 min | `git tag v0.1.71-one.N+1 && git push origin <tag>`；release.yml 六资产齐了才继续                                                                                              |
+| 2. bump + 发版 commit + push | 5 min   | `package.json` version + `dreamcoreVersion` + `docs/release-notes/<ver>.json`（用户给的清单三件套），一个 `chore(release): <ver>` commit                                      |
+| 3. Windows + Mac CI **并行** | ~35 min | 本机 `bun run build-win:x64`；`gh workflow run build-manual.yml -f platform=macos-arm64 / macos-x64 -f installers_only=false`。窗口内预生成 `release-notes.md`、注入 COS 凭据 |
+| 4. Windows 腿先上线          | ~15 min | 验收（sha512 对账 / VersionInfo / ACP 版本逐字一致 / asar 失效类名 0 处）→ 传 exe+latest.yml+release-notes.md → 官网只切 `win` 键 → build+deploy → 验 200                     |
+| 5. Mac 产物落地              | ~20 min | `scripts/download-gh-artifact.sh` 两架构并行；arm64 清单改名 `latest-arm64-mac.yml`（x64 保持原名）；逐文件 sha512 对账 + asar 抽查                                           |
+| 6. Mac 腿上线 + 终验         | ~15 min | 每架构 5 对象上传 → 官网切 `macArm`/`macIntel` + 真实尺寸 → 终验 13 对象 200 + 三份根清单版本号                                                                               |
+
+脚本模板：`D:\dream\scratchpad\release-3.0.6-upload.sh`（阶段 A 凭据含
+BASEURL 补 `/oapi/qcloud/alloc` 后缀的坑；下次复制改版本号即可；跑过一整轮后可
+考虑提升进 `scripts/`）。
