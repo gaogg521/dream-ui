@@ -1,8 +1,8 @@
-# 交接：企业版 P0 五条 + SSO 到底怎么验（2026-09-18）
+# 交接：企业版 P0（核实后只剩 3 条）+ SSO 到底怎么验（2026-09-18，2026-09-19 复核）
 
 > **这份文档的范围**（先划清，免得跟别的混起来）：
 >
-> - ✅ 讲两件事：① 本轮动过 SSO 深链 scheme 之后**怎么验证**；② 企业版 P0 那五条**下一个人怎么接着做、怎么验收**。
+> - ✅ 讲两件事：① 本轮动过 SSO 深链 scheme 之后**怎么验证**；② 企业版 P0 **下一个人怎么接着做、怎么验收**（最初写作五条，2026-09-19 核实后真正没做的只有 3 条 —— SAML / SCIM / OIDC-JWKS，见 §3）。
 > - ❌ 不讲本轮品牌清扫本身干了什么 —— 那在
 >   [`session-2026-09-18-brand-sweep-and-what-it-uncovered.zh-CN.md`](session-2026-09-18-brand-sweep-and-what-it-uncovered.zh-CN.md)
 >   和 dream-core 的
@@ -225,9 +225,30 @@ scheme **不走查询串穿越 IdP**。它在 `authorize` 时被 `sanitize_deep_
 
 ---
 
-## 三、企业版 P0 五条 —— 接手指南
+## 三、企业版 P0 —— 接手指南（核实后真正没做的只有 3 条）
 
 来源：[`enterprise-team-roadmap.zh-CN.md`](enterprise-team-roadmap.zh-CN.md) §2 P0。
+
+> 🚨 **先读这段再用下面的清单：那份 roadmap 写于 2026-07-22，比 dream-en 建仓还早约一个月，
+> 已经严重过期，不能当 backlog 源用。** 2026-09-19 对着代码量，它标 `[ ]` 的条目里
+> **至少 6 条其实已经建好了**：
+>
+> | roadmap 标记                      | 实测                                                                                               |
+> | --------------------------------- | -------------------------------------------------------------------------------------------------- |
+> | `[ ]` P0-3 席位/license/用量看板  | 已建（`dream-domain-billing` 全套 + 后台四个页签）                                                 |
+> | `[ ]` P0-4 细粒度 RBAC + 资源分权 | 已建（资源授权矩阵，按文档+动作，见下）                                                            |
+> | `[ ]` P1-1 agent 运行审计         | 已建（`/billing/llm-calls`、`/sessions` + `AgentAuditTab`/`AgentSessionDetailPage`/`LlmTraceTab`） |
+> | `[ ]` P1-2 模型管控               | 已建（`ModelNotAllowed` + `/billing/model-control`）                                               |
+> | `[ ]` P1-4 安全策略               | 已建（`one_security_policy`，platform 迁移 005 + MFA 路由）                                        |
+> | `[ ]` P1-5 DLP                    | 已建（`dream-domain-devops/src/dlp_service.rs` + `ContentInspectionTab`）                          |
+>
+> **真正还没做的只有三条**：SAML（全仓 0 命中）、SCIM 2.0（无端点，只有 `oidc.rs:250`
+> 一句「以后走 SCIM」的注释）、OIDC id_token JWKS 验签（只有 `oidc.rs:15-21` 那段
+> 「v1 不做」的说明）。
+>
+> 📌 **教训**：本文 §3 最初把 roadmap 的 `[ ]` 直接抄成了待办，于是把两条已完成的大项
+> 当成没做在反复传递。**企业能力的真相在 dream-en + `dream-domain-*` 的代码里，
+> 不在那份 roadmap 里。**
 
 > **⚠️ 路径漂移**：roadmap 写于改名之前，里面的 `one-sso/...` 现在叫
 > `crates/dream-domain-sso/...`，`one-billing` → `dream-domain-billing`，
@@ -235,13 +256,13 @@ scheme **不走查询串穿越 IdP**。它在 `authorize` 时被 `sanitize_deep_
 
 ### 总览
 
-| #   | 条目                         | roadmap 状态 | **实际状态（本轮核实）**                    | 体量       |
-| --- | ---------------------------- | ------------ | ------------------------------------------- | ---------- |
-| 1   | SAML                         | `[ ]`        | ✅ 属实，没做                               | 大         |
-| 2   | SCIM 2.0 入站                | `[ ]`        | ✅ 属实，没做                               | 中         |
-| 3   | OIDC 硬化（JWKS 验签）       | `[ ]`        | ✅ 属实，没做（代码里有明确的 v1 范围说明） | 小         |
-| 4   | P0-3 席位/license + 用量看板 | `[ ]`        | ⚠️ **状态过期 —— 主体已实现**，见下         | 已大半完成 |
-| 5   | P0-4 细粒度 RBAC + 资源分权  | `[ ]`        | ✅ 属实，没做                               | 大         |
+| #   | 条目                         | roadmap 状态 | **实际状态（本轮核实）**                    | 体量         |
+| --- | ---------------------------- | ------------ | ------------------------------------------- | ------------ |
+| 1   | SAML                         | `[ ]`        | ✅ 属实，没做                               | 大           |
+| 2   | SCIM 2.0 入站                | `[ ]`        | ✅ 属实，没做                               | 中           |
+| 3   | OIDC 硬化（JWKS 验签）       | `[ ]`        | ✅ 属实，没做（代码里有明确的 v1 范围说明） | 小           |
+| 4   | P0-3 席位/license + 用量看板 | `[ ]`        | ⚠️ **状态过期 —— 主体已实现**，见下         | 已大半完成   |
+| 5   | P0-4 细粒度 RBAC + 资源分权  | `[ ]`        | ⚠️ **状态过期 —— 资源分权已建好**，见下     | 仅剩角色细分 |
 
 ---
 
@@ -329,34 +350,28 @@ IdP 推送才能做到即时。
 
 ---
 
-### P0-4 · 细粒度 RBAC + 资源分权
+### ⚠️ P0-4 · 细粒度 RBAC + 资源分权 —— **roadmap 状态是过期的，这条已经建好了**
 
-**现状**：三档写死 —— `member` / `org_admin` / `system_admin`
-（`crates/dream-domain-org/src/models.rs:25-26`），判定入口是
-`OrgService::effective_role()`（`service.rs:242`）和
-`crates/dream-domain-org/src/rbac.rs`。
+roadmap 记 `[ ]`。**2026-09-19 对着代码量，结论是已实现**，而且正好覆盖它列的两个诉求
+（「谁能建技能 / 下发 MCP / 看哪个知识库」「知识库从团队级 → 按文档/按角色分权」）。
 
-**目标**：谁能建技能 / 谁能下发 MCP / 谁能看哪个知识库；RAG 知识库从**团队级**
-细化到**按文档、按角色**。
+| 证据                      | 位置                                                                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 授权矩阵表                | `dream-domain-platform/migrations/003_resource_grants.sql` —— `subject_type` (member \| department) × `resource_type` × `resource_id`（`'*'` 表示该类全部）                |
+| 支持的资源类型            | `platform/src/service.rs:66` `GRANT_RESOURCE_TYPES = ["skill", "mcp", "model_channel", "knowledge", "employee"]`                                                           |
+| **按文档粒度 + 动作维度** | 测试 `knowledge_is_a_valid_grant_resource_type`：`grant_resource("t1", "member", "alice", "knowledge", "doc_1", "use", "admin1")` —— 主体/资源/**具体文档**/**动作**四元组 |
+| 部门授权走树              | 不展开成人头行，读时走 `effective_resource_ids` 爬部门树（部门改名/移动是一行变更，不是扇出重写）                                                                          |
+| **白名单模式**            | `migrations/011_resource_grant_modes.sql` —— 每租户每资源类型可选 `additive` / `restrictive`。默认无行＝加性＝存量行为不变                                                 |
+| 执行点                    | dream-domain-devops 的 `apply_grants`，通过 `ResourceGrantSource` seam 取模式（**个人版编译时不含 platform crate，所以它从不读那张表**）                                   |
+| 员工 / 记忆授权           | `one_employee_grants`（platform 012 统一）、`one_memory_grants`（memory 001）                                                                                              |
+| 管理后台 UI               | dream-en `ResourceGrantEditor` / `ResourceMatrixTab` / `ResourceRegistryTab` / `GrantModeBanner` / `MemoryGrantsTab` / `KnowledgeBasesTab`                                 |
 
-**接手前务必先读这两条既有约束**，否则会做出一个在客户机器上不生效的权限系统：
+**没有代勾**，理由同 P0-3：核实到的是「表、执行点、UI 都在，且有按文档授权的测试」，
+不是「端到端验收过」。
 
-1. 治理面是编译期 feature（见 §1）。客户端跑的个人版二进制里**根本没有**这些闸门 ——
-   权限必须在**服务端**判定，不能只在客户端判。
-2. `one_user_org` 是能力下发的唯一凭据；安全策略对**无租户**用户是
-   **fail-open**（个人版必须能用）。加细粒度权限时不要把这个默认改成 fail-closed，
-   会把所有个人版用户锁死。
-
-**验收标准**：
-
-- [ ] 新权限模型对**无租户**用户完全无影响（照抄现有的个人版锁死测试形式）。
-- [ ] 每一条新权限都有**负向测试**：无权角色访问 → 403，且是**服务端**返回的 403。
-- [ ] 知识库按文档分权：A 能看文档 1、看不到文档 2，**且 RAG 检索结果里不出现文档 2**
-      （只把 UI 藏掉不算过）。
-- [ ] 角色变更后，**已签发的会话**权限随之收紧（同样复用 `session_revoker`）。
-- [ ] 迁移把存量三档角色**无损**映射到新模型。
-
----
+**剩下的**：`ROLE_*` 仍是 member / org_admin / system_admin 三档
+（`dream-domain-org/src/models.rs:24-26`）。也就是**「资源分权」做了，「角色本身细分」没做**。
+接手前先判断你要的到底是哪一个 —— 多数「谁能看哪个知识库」的诉求，资源矩阵已经答了。
 
 ### ⚠️ P0-3 · 席位/license + 用量看板 —— **roadmap 状态是过期的**
 
@@ -445,7 +460,8 @@ roadmap 记的是 `[ ]`（未做）。本轮核实：**主体已经实现并且�
 
 ### 4.2 另有两条大项（单独立项，不在上面 6 条里）
 
-- **SAML / SCIM 2.0 / OIDC JWKS 硬化 / 细粒度 RBAC** —— 见 §3，各有独立验收标准。
+- **SAML / SCIM 2.0 / OIDC JWKS 硬化** —— 见 §3，各有独立验收标准。
+  （原本这里还列着「细粒度 RBAC」，**已核实是过期状态，资源分权早已建好**，见 §3 的 P0-4。）
 - **宝云支付 Phase 4（真实支付）** —— 用户明确暂缓。P0-3 的其余部分已实现，见 §3 末尾。
 
 ### C. 明确不做（有理由的决策，别当成遗漏重做）
