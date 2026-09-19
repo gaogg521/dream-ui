@@ -261,6 +261,14 @@ describe('BackupSection', () => {
       scope: archiveScope,
       totalBytes: 1024,
       containsCredentials: true,
+      // This shape was an ASSUMPTION about the backend contract, not a
+      // verified one, until 2026-09-19: `BackupManifestResponse` never
+      // actually carried `encryption`, so this mock passed while every real
+      // `/api/system/backup/preview` call came back without it -- the
+      // passphrase prompt this test exercises had never once appeared for a
+      // real user. Fixed backend-side in dream-core commit b25a756, guarded
+      // there by `manifest_response_tests` asserting the real wire JSON.
+      // This mock is now DERIVED from that fix, not independent of it.
       encryption: { cipher: 'aes-256-gcm', kdf: 'argon2id' },
     });
 
