@@ -185,21 +185,22 @@ scheme **不走查询串穿越 IdP**。它在 `authorize` 时被 `sanitize_deep_
 **这一档验不到什么**（别高估它）：它到不了 `callback`，所以深链最终长什么样它看不见。
 那一段由档 1 覆盖。
 
-> 本轮只把这一档跑到了「路由挂上 + provider 未配置时的正确拒绝」为止
-> （见 §1 末尾的实测输出），**没有**建 license、没有写 provider 行 ——
-> 那两步会落库，属于改环境，留给要真正做这一档的人。
+> ~~本轮只把这一档跑到了「路由挂上 + provider 未配置时的正确拒绝」为止~~
+> **✅ 已于 2026-09-19 完成**（license 走真实激活路径、provider 行落库、探针矩阵全过、
+> 伪造指纹 403），复现步骤与结果见
+> [`session-2026-09-19-license-fingerprint-feishu-roundtrip-and-cdp.zh-CN.md`](session-2026-09-19-license-fingerprint-feishu-roundtrip-and-cdp.zh-CN.md) §一/§四。
 
 ### 档 3 — 真实 IdP 往返（**需要人工，我没做**）
 
-只有这一档能证明「真的能登进去」。它需要把**真的** App Secret / LDAP bind 密码
-填进管理后台表单。
-
-> **我没有做这一档，也不会做**：代填密钥不是我该做的事。
-> 需要的凭据在 `C:\Users\allenzhao\Desktop\feishu.txt`，请**由人**填。
->
-> ⚠️ 顺带提醒：本轮会话里我的一个脱敏正则漏了全角冒号 `：`，把该文件里的
-> **飞书 App Secret、Agnes KEY、豆包 KEY、license 签名 SECRET** 明文打进了对话记录。
-> **建议全部轮换。**
+> **✅ 已于 2026-09-19 完成**：飞书（用户扫码，真实 OAuth 往返 + 重复登录刷新）
+> 与 LDAP（`ldaps` 域控完整往返 + JIT 建号 + 负向）两路都已闭环，用户明确授权从
+> `feishu.txt` 取凭据代填。过程、根因（提参数 bug 把 "Redirect URI：…" 存成了
+> appSecret）与排障方法见
+> [`session-2026-09-19-license-fingerprint-feishu-roundtrip-and-cdp.zh-CN.md`](session-2026-09-19-license-fingerprint-feishu-roundtrip-and-cdp.zh-CN.md) §二/§三。
+> 下面三条验收全部实测通过，保留原文供复查口径。
+> ⚠️ 早前会话泄漏进对话记录的**飞书 App Secret / Agnes KEY / 豆包 KEY / license
+> 签名 SECRET 仍建议轮换**（本轮未再泄漏；licore 签名身份现走 DPAPI 密钥库，
+> 与 feishu.txt 里那对旧公钥已不匹配）。
 
 人工做的时候，重点盯这三条（前两条是本轮改动的真正风险面）：
 
@@ -409,7 +410,7 @@ roadmap 记的是 `[ ]`（未做）。本轮核实：**主体已经实现并且�
 
 | 条目                              | 状态                                                                                                                                  | 出处         |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| SSO 登录回调                      | **部分关闭**。深链链路（sanitize → state → callback → 落地页）已由 3 条测试覆盖并反证过；真实 IdP 往返仍待人工，见 §2 档 3            | [sweep-core] |
+| SSO 登录回调                      | **✅ 已关闭（2026-09-19）**。深链链路（sanitize → state → callback → 落地页）由测试覆盖并反证过；真实 IdP 往返已完成（飞书 + LDAP 双路，见 §2 档 3 订正与 [`session-2026-09-19-…cdp.zh-CN.md`](session-2026-09-19-license-fingerprint-feishu-roundtrip-and-cdp.zh-CN.md)） | [sweep-core] |
 | 安装器与发布脚本（第 1/2/3/4 条） | **未验**。必须真打一次包、真装一次，留到下次发版                                                                                      | [sweep-ui]   |
 | `install-web.sh` 的 COS 镜像布局  | **未验**。没有实测过                                                                                                                  | [sweep-ui]   |
 | 聊天里的 mermaid / WaveDrom 缩放  | **未真机验**。dev 库里没有任何 mermaid/wavedrom 内容，无可验之物；改由 6 个测试文件 / 46 条覆盖，全过。要真机验需要先造一条带图的会话 | [harvest] §5 |
@@ -516,20 +517,28 @@ const DEEP_LINK_SCHEMES = ['dream', 'dream-dev', 'aionui-dev', 'aionui'] as cons
 
 ### 5.4 还要在企业形态上真跑一遍的
 
-按「不做会漏掉什么」排序：
+> **✅ 以下五条已于 2026-09-19 全部真跑通过**（企业形态真机，详见
+> [`session-2026-09-19-license-fingerprint-feishu-roundtrip-and-cdp.zh-CN.md`](session-2026-09-19-license-fingerprint-feishu-roundtrip-and-cdp.zh-CN.md)）。
+> 勾选留档，复查口径保留如下：
 
-- [ ] **SSO 深链往返**（唯一的企业专属改动，真机覆盖率为 0）。
+- [x] **SSO 深链往返**（唯一的企业专属改动，真机覆盖率为 0）。
       办法见 §2 档 2 / 档 3；档 3 要人填密钥。
       重点是**旧客户端那条路**：不传 `scheme` → 落地页 href 必须是 `aionui://`。
-- [ ] **凭据解密**在企业数据集上。个人版上 5 个 provider 全部解密成功已验；
+      **→ 已验**：飞书+LDAP 双路往返、旧客户端兜底、注入清洗全过。
+- [x] **凭据解密**在企业数据集上。个人版上 5 个 provider 全部解密成功已验；
       企业部署有自己的 `data_secret` 和库，同一个 `derive_encryption_key`，
       结论应当相同，但**没在企业库上跑过**。
-- [ ] **迁移 057** 在企业 SQLite 库上落一次（账本出现 `version=57 success=1`，
+      **→ 已验**：企业库存取凭据 → 离线按同推导解密，明文精确匹配。
+- [x] **迁移 057** 在企业 SQLite 库上落一次（账本出现 `version=57 success=1`，
       `icon/avatar_value LIKE '%aion%'` 为 0 行）。
-- [ ] **dream-en 管理后台**整体回归：本轮没动过 dream-en 一行代码，但它消费
+      **→ 已验**（另有 billing_011 同库落账）。
+- [x] **dream-en 管理后台**整体回归：本轮没动过 dream-en 一行代码，但它消费
       dream-core 的治理面路由，后端换了二进制就该过一遍。
-- [ ] **WeCom 修正**在企业形态下：内置渠道清单少了一条假的 `wecom`，
+      **→ 已验**：CDP 走登录/RBAC 拒成员/SSO 页/License 页；vitest 243/244
+      （1 个 main 既有失败与本轮无关）。
+- [x] **WeCom 修正**在企业形态下：内置渠道清单少了一条假的 `wecom`，
       确认 dream-en 侧没有任何地方硬编码期待 7 条。
+      **→ 已验**：全仓无 7 条硬编码；`ImChannelsTab` 的 wecom 只是筛选项。
 
 ### 5.5 起企业实例的最短路径
 
@@ -553,3 +562,7 @@ dream-en 那边有成套做法（`just build-enterprise`、`deploy/install.sh`�
 4. **deep-link scheme 那四个字面量是跨仓的**，dream-core 和 dream-en 各写了一份，
    两边各有测试锁自己、**没有任何东西锁「两边一致」**。改一个就必须改另一个，
    否则两边测试都绿、桌面登录深链静默断掉。见 §5.3。
+5. **（2026-09-19 追记）本文的 SSO/企业侧待办已全部完成并真机验证**——档 2/档 3、
+   §5.4 五条、飞书+LDAP 双路往返。接手先读
+   [`session-2026-09-19-license-fingerprint-feishu-roundtrip-and-cdp.zh-CN.md`](session-2026-09-19-license-fingerprint-feishu-roundtrip-and-cdp.zh-CN.md)；
+   剩余未竟的只有 §3 的 P0 大项（SAML/SCIM/RBAC/OIDC-JWKS）与宝云 Phase 4。
