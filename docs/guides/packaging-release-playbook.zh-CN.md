@@ -144,7 +144,7 @@ Mac CI 前本地把四道 gate 跑绿（`bun run format:check` / `bunx tsc --noE
 
 ### S5. Windows 腿先上线（增量发版：谁好谁先走，不等齐）
 
-验收五件（全过才传）：
+验收六件（全过才传）：
 
 ```bash
 # ① sha512 与 out/latest.yml 对账（openssl dgst -sha512 -binary <exe> | openssl base64 -A）
@@ -158,6 +158,14 @@ Mac CI 前本地把四道 gate 跑绿（`bun run format:check` / `bunx tsc --noE
 #    · bundled dreamcore 来自 release 而非本机：
 #      resources/bundled-dreamcore/<plat>/manifest.json 的 sourceType 必须是 release、
 #      version 等于本轮钉版；sourceType: local 说明打进去的是本机编译产物。
+# ⑥ 涉及备份/恢复这类「前端读后端返回值决定要不要弹某个框」的功能，必须走真实点击路径，
+#    不能只用正确参数直接调 API。2026-09-19 的教训：跨安装恢复验证连续多轮都是直接拿
+#    正确密码调 POST /restore，从未走「先 preview → 前端读 manifest.encryption 决定
+#    弹不弹密码框」这条真实分支——而这个字段从加密功能上线第一天起就没在 preview 的
+#    响应里出现过，密码框对任何用户都从未真正弹出过。装机后手动操作一次才复现。
+#    验法：CDP 驱动真实点击（原生对话框由 PowerShell 驱动，见
+#    scripts/../scratchpad 里的 drive-open-dialog.ps1 模式），断言中间态的
+#    DOM（密码框是否真的出现），不要只断言最终 API 调用的返回码。
 ```
 
 ```bash
