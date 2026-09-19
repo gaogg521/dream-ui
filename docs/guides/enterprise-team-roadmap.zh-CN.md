@@ -1,5 +1,31 @@
 # 企业 / 项目团队方向 — 竞品对标与迭代路线图（living backlog）
 
+> 🚨 **2026-09-19 核实：本文已严重过期，不要拿它当 backlog 源。**
+>
+> 它写于 **2026-07-22**，比企业版仓库 `dream-en` 建仓还早约一个月。之后企业能力
+> 在 `dream-en` + `dream-domain-*` 里大量落地，而本文的勾选框**没有跟着更新**。
+> 逐条对着代码量之后，下面这些标着 `[ ]` 的其实**都已经建好了**：
+>
+> | 本文标记                          | 实测                                                                                               |
+> | --------------------------------- | -------------------------------------------------------------------------------------------------- |
+> | `[ ]` P0-3 席位/license/用量看板  | 已建 —— `dream-domain-billing` 全套 + 后台 Billing/License/UsageOverview/EnterpriseReport          |
+> | `[ ]` P0-4 细粒度 RBAC + 资源分权 | 已建 —— 资源授权矩阵（见下条注）                                                                   |
+> | `[ ]` P1-1 agent 运行审计         | 已建 —— `/billing/llm-calls`、`/sessions` + `AgentAuditTab`/`AgentSessionDetailPage`/`LlmTraceTab` |
+> | `[ ]` P1-2 模型管控               | 已建 —— `ModelNotAllowed` + `/billing/model-control`                                               |
+> | `[ ]` P1-4 安全策略               | 已建 —— `one_security_policy`（platform 迁移 005）+ MFA 路由                                       |
+> | `[ ]` P1-5 DLP                    | 已建 —— `dream-domain-devops/src/dlp_service.rs` + `ContentInspectionTab`                          |
+>
+> **真正还没做的只剩三条**：SAML（全仓 0 命中）、SCIM 2.0（无端点）、
+> OIDC id_token JWKS 验签（`oidc.rs:15-21` 明写是 v1 之后的硬化项）。
+>
+> **没有代勾任何一个框** —— 核实到的是「代码在、执行点在、UI 在」，不是「端到端验收过」。
+> 接手前请读
+> [`handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md`](handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md) §3，
+> 那里逐条附了证据位置。
+>
+> **教训**：企业能力的真相在 `dream-en` 和 `dream-domain-*` 的代码里，不在本文的勾选框里。
+> 有人照着本文把两条已完成的大项当成待办，在交接文档之间传了好几轮。
+
 > 面向商业化。基于当前代码库现状 + 对成熟竞品的对标，梳理「守什么、补什么、先做什么」。改动落地后请回来勾掉 / 更新状态。
 > 相关落地记录：[`session-2026-07-22-company-tier-direction-b.zh-CN.md`](session-2026-07-22-company-tier-direction-b.zh-CN.md)（企业三层 Phase 1）。
 
@@ -44,6 +70,21 @@
   > 所以两个方向都不拿文档当验收依据。接手前先读
   > [`handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md`](handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md) §3。
 - [ ] **P0-4 细粒度 RBAC + 资源分权**：现只有 member/org_admin/system_admin 三档 → 细粒度权限（谁能建技能/下发 MCP/看哪个知识库）；知识库(RAG)从团队级 → 按文档/按角色分权。
+  > ⚠️ **状态订正（2026-09-19 核实）：「资源分权」这半已经实现了**，上面的 `[ ]` 是过期的。
+  > 证据：`dream-domain-platform/migrations/003_resource_grants.sql` 是一张
+  > `subject_type`(member|department) × `resource_type` × `resource_id` 的授权矩阵；
+  > `platform/src/service.rs:66` 的 `GRANT_RESOURCE_TYPES` 覆盖
+  > `skill / mcp / model_channel / knowledge / employee`；
+  > **按文档分权也在** —— 测试 `knowledge_is_a_valid_grant_resource_type` 直接
+  > `grant_resource(..., "knowledge", "doc_1", "use", ...)`，主体/资源/具体文档/动作四元组；
+  > 迁移 011 还加了每租户每类型的 `additive` / `restrictive`（白名单）模式；
+  > 执行点在 devops 的 `apply_grants`（个人版不编 platform crate，所以从不读那张表）；
+  > 后台 UI 是 `ResourceGrantEditor` / `ResourceMatrixTab` / `ResourceRegistryTab` /
+  > `GrantModeBanner` / `MemoryGrantsTab`。
+  > **还没做的是「角色本身细分」**：`ROLE_*` 仍是三档
+  > （`dream-domain-org/src/models.rs:24-26`）。接手前先判断诉求是哪一半 ——
+  > 多数「谁能看哪个知识库」的问题，资源矩阵已经答了。
+  > **没有代勾**，理由同 P0-3。
 
 ### P1 — 企业信任
 
