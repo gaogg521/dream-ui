@@ -39,13 +39,18 @@ git log --format='%h %ad %s' --date=format:'%m-%d %H:%M' --since='<上一步的�
 
 1. **全量 commit 检测，不许有遗漏。** 上面的清单逐条过，每条归类为
    「用户可见 / 内部实现 / 文档」，用户可见的必须映射进更新记录的条目——
-   条目可以合并（几条 commit 并成一条），**不可以遗漏**（3.0.6 就漏了
-   截断提示本地化、MCP 启动健壮性、输出预算三条，被用户抓到）。
+   条目可以合并（几条 commit 并成一条），**不可以遗漏**。3.0.6 被用户
+   连抓两轮：第一轮漏了截断提示本地化、MCP 启动健壮性、输出预算上限；
+   第二轮漏了 dream-core 的四个 `fix(team)`（供应商拒付停队、投递耗尽通知
+   合并、过期信号卡死、收尾去重）和会话 Cookie 401 循环。
+   **最容易漏的就是后端独有的 fix 分类（没有 UI 对应物）**——它们不配对
+   任何前端 commit，扫漏时按"主题"（团队调度 / 会话状态 / 媒体）归类，
+   不是按仓库归类。
    四仓都要看：dream-ui + dream-core + dream-engine（个人版功能在这三个仓配对），
    dream-en 只影响企业后台。
-2. **话术简化。** 每条只留「改了什么 + 关键数字」，删叙事性的"为什么"；
-   相关的多条 commit 合成一条条目，不要三合一埋没重点（3.0.6 的
-   「新建团队可拖拽」曾埋在三合一条目末尾被用户当成漏了）。
+2. **话术简化 + 成段呈现。** 每条只留「改了什么 + 关键数字」，删叙事性的
+   "为什么"；相关条目按主题独立成段（如【团队协作】），不要三合一埋没
+   重点（3.0.6 的「新建团队可拖拽」曾埋在三合一条目末尾被用户当成漏了）。
 
 ### S2. 后端钉版决策：UI 配对才换 dreamcore tag
 
@@ -113,7 +118,9 @@ scripts/publish-cos-release-asset.sh <tmp>/release-notes.md <ver>           # si
 scripts/download-gh-artifact.sh gaogg521/dream-ui <run_id> macos-build-arm64-<sha> <dir>
 # 逐文件 sha512 与清单对账；arm64 的 latest-mac.yml 改名 latest-arm64-mac.yml
 # （electron-updater 按 ${channel}-mac.yml 拼名，arm64 channel 是 latest-arm64——
-#  prepare-release-assets.sh 的改名规则就是这条；x64 的保持 latest-mac.yml）
+#  prepare-release-assets.sh 的改名规则就是这条；x64 的保持 latest-mac.yml。
+#  该脚本校验已改为按本轮实际构建的平台派生（2026-09-19），增量集能直接跑过，
+#  清单与产物单边缺失会指名报错；全量矩阵跑 STRICT=1 恢复旧合同）
 # asar 抽查同 S5-④（从 zip 里解 onework.app/Contents/Resources/app.asar）
 ```
 
@@ -203,21 +210,37 @@ SmartScreen"未知发布者"，**与线上所有历史版本一致，是预期�
   changelog，两处永远同文；
 - `sync-changelog-to-site.js` 无去重：重跑改文案前先删 `src/changelog.js` 里的旧条目。
 
+### 2.8 dream-ui 的 pre-push 门（2026-09-19 起）
+
+`git push` 跑四道检查：format / types / i18n / `vitest --changed origin/main`，
+热缓存约 50 秒。两条新坑（当天都发生过）：
+
+1. **钩子验证的是工作区，不是推送内容。** commit 信息写了测试改动、
+   `git add` 却漏了 `tests/`——pre-push 全绿（工作区里是修好的），
+   origin 上还是旧断言，发现它的将是 push 后的 Main Guard 而不是你。
+   推送前 `git show --stat HEAD` 对一眼，确认信息里声称的文件真的在。
+2. **`vitest --changed` 包含工作区未提交改动。** 另一个会话的进行中
+   WIP 会挡住你的纯文档推送——此时 `git push --no-verify` 是钩子自述
+   的合法场景（docs-only），但先 `git diff --stat origin/main..main`
+   确认自己的推送范围确实碰不到代码。
+
 ---
 
 ## 第三部分：历史教训（1oneCore / 1oneUI 时代，一句话版）
 
-| 事故                       | 一句话教训                                                            |
-| -------------------------- | --------------------------------------------------------------------- |
-| 2.1.49 bun cache 损坏      | native rebuild 失败先清 `bun pm cache rm`                             |
-| 2.1.51 ACP 组件缺失        | 内嵌资源 + 用户目录缓存双来源的组件，有缓存的机器验证等于没验证       |
-| 2.1.51 CI 全挡             | 私有仓 macOS 10 倍计费；3 秒零步骤失败 = 看账单不是看代码             |
-| 3.0.0 Mac"已损坏"          | 签名失败的兜底重试会产出假绿；验收只认日志三连                        |
-| 3.0.0 改名                 | `executableName` 决定 .app/exe 壳名；appId 才是冻结项                 |
-| 3.0.1/3.0.2 macos-x64 超时 | 公证排队不可控，timeout 90 min + 构建步内自重试已落地                 |
-| 3.0.2 根清单停旧版         | "传完记得同步根"当人工步骤必丢——publish-cos-release-asset.sh 因此而生 |
-| release-distribute.yml     | CI→COS 限速 + runner 连不上内网凭据服务，永远本地传                   |
-| auto-retry job             | 在自己 run 里调 rerun API 必 403，已移除                              |
+| 事故                       | 一句话教训                                                                                |
+| -------------------------- | ----------------------------------------------------------------------------------------- |
+| 2.1.49 bun cache 损坏      | native rebuild 失败先清 `bun pm cache rm`                                                 |
+| 2.1.51 ACP 组件缺失        | 内嵌资源 + 用户目录缓存双来源的组件，有缓存的机器验证等于没验证                           |
+| 2.1.51 CI 全挡             | 私有仓 macOS 10 倍计费；3 秒零步骤失败 = 看账单不是看代码                                 |
+| 3.0.0 Mac"已损坏"          | 签名失败的兜底重试会产出假绿；验收只认日志三连                                            |
+| 3.0.0 改名                 | `executableName` 决定 .app/exe 壳名；appId 才是冻结项                                     |
+| 3.0.1/3.0.2 macos-x64 超时 | 公证排队不可控，timeout 90 min + 构建步内自重试已落地                                     |
+| 3.0.2 根清单停旧版         | "传完记得同步根"当人工步骤必丢——publish-cos-release-asset.sh 因此而生                     |
+| release-distribute.yml     | CI→COS 限速 + runner 连不上内网凭据服务，永远本地传                                       |
+| auto-retry job             | 在自己 run 里调 rerun API 必 403，已移除                                                  |
+| Release Please 连红数周    | 两个独立病根：index 里的 CRLF TOML（解析器拒 CR）+ Actions 无权建 PR 的仓库设置；均已修绿 |
+| 3.0.6 更新记录两轮返工     | 全量 commit 扫漏 + 话术成段，见 S1 两条规矩                                               |
 
 ---
 
