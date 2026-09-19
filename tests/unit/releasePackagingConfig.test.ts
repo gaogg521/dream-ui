@@ -201,7 +201,14 @@ ${prepareResult.stderr}`).not.toContain('::error::');
         });
 
         expect(prepareResult.status).not.toBe(0);
-        expect(`${prepareResult.stdout}\n${prepareResult.stderr}`).toContain('Missing macOS zip artifact');
+        // Validation went platform-scoped in 7fbf7a9, so the refusal now names
+        // the arch and the file it wanted instead of saying "macOS" and leaving
+        // whoever reads the failed run to work out which of the two builds it
+        // meant. Assert on that specificity rather than a substring that would
+        // also pass if the wrong arch were reported.
+        expect(`${prepareResult.stdout}\n${prepareResult.stderr}`).toContain(
+          'mac-arm64 metadata found but no *-1.0.0-mac-arm64.zip'
+        );
       } finally {
         rmSync(tempDir, { force: true, recursive: true });
       }
