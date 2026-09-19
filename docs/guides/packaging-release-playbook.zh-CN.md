@@ -27,7 +27,17 @@ done
 
 # ④ 上次发版的真实时点 = COS Last-Modified，不是 commit 时间（3.0.5 的教训）
 curl -sI https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/<上版>/One-Work-<上版>-win-x64.exe | grep -i last-modified
+
+# ⑤ 目标版本号在 semver 上必须 > 线上版本，否则 electron-updater 永远不推送。
+#    "修订版"这种语义不能靠后缀表达：3.0.6-1 是 3.0.6 的预发布版，排在它前面。
+cd /d/dream/dream-ui && node -e "const s=require('semver');const [cur,next]=process.argv.slice(1);
+  console.log(next, s.gt(next,cur) ? 'OK 会推送' : '❌ 小于/等于 '+cur+'，装了旧版的用户收不到')" <线上版> <目标版>
 ```
+
+> **3.0.6-1 那类版本号的代价**：`3.0.6-1 < 3.0.6`，自动更新不会触发，用户只能
+> 手动去官网下载。要既表达「3.0.6 的修订」又能推送，版本号用 `3.0.7`、把
+> 「3.0.6 修订版」写进更新记录标题。`3.0.6+1`（build metadata）同样无效，
+> electron-updater 直接忽略 `+` 之后的部分。
 
 ### S1. 划界 + 全量 commit 检测（更新记录的完整来源）
 
@@ -57,14 +67,41 @@ git log --format='%h %ad %s' --date=format:'%m-%d %H:%M' --since='<上一步的�
 S1 的清单里若 dream-ui 新功能与 dream-core 划界后的 commit **配对**
 （备份↔个人版备份端点、搜索 UI↔web search 到会话、图片 UI↔Agnes 能力），
 
+**手工打 `-one.N` tag 的做法已作废（2026-09-19）。** 改走 release-please：
+
 ```bash
-cd /d/dream/dream-core && git tag v0.1.71-one.<N+1> && git push origin v0.1.71-one.<N+1>
-# release.yml 自动出 6 资产（~26 min）；出包期间可并行做 S3
-gh release view v0.1.71-one.<N+1> --json assets --jq '.assets[].name'
+# 推到 main 后机器人自动开/更新一个 release PR；合它就打 tag、出 6 资产（~26 min）
+gh pr list --repo gaogg521/dream-core            # 找 "chore(main): release X.Y.Z"
+gh pr merge <N> --repo gaogg521/dream-core --squash
+gh release view v<X.Y.Z> --repo gaogg521/dream-core --json assets --jq '.assets[].name'
 ```
+
+原因是 semver，不是偏好：`-one.N` 是**预发布后缀**，永远小于同号正式版。
+
+```
+0.1.71-one.5  <  0.1.71-one.6  <  0.1.71  <  0.1.72-one.1  <  0.1.72
+```
+
+该方案只在「正式版 0.1.71 从未发布」时成立。0.1.72 一发，`-one.N` 就再也
+排不到它前面了，无论换不换底。
+
+**资产是 6 个不是 7 个。** `bump-version` 技能 Step 5 的清单里有
+`aarch64-pc-windows-msvc.zip`，但这条管线从 one.4 起就没建过 Windows ARM64——
+one.4 / one.5 / 0.1.72 三版产物集完全一致。**照技能走会在这一步误判发版失败。**
 
 没有配对就沿用现钉版。**桌面发版伴随 dreamcore 换钉是惯例，不是例外**——
 不换，新 UI 功能上线就是空壳。
+
+> ⚠️ **换钉版后必须验证那个二进制真含本轮修复**，别只看 tag 号。release 构建
+> 会剥符号，`strings | grep <fn_name>` 查不到，用修复独有的**字符串字面量**：
+>
+> ```bash
+> grep -qa "<修复独有的 tracing/错误文案>" dreamcore.exe   # 目标
+> grep -qa "<已知在内的文案>"              dreamcore.exe   # 对照，验证手段本身有效
+> ```
+>
+> 2026-09-19 的实例：v0.1.72 带着一个让恢复直接 500 的 bug 发了出去，而本地那次
+> 「验过了」用的是 mtime 早于修复提交 17 分钟的产物。详见 dream-en 发版记录 §7.2/§7.3。
 
 ### S3. bump 三件套 + 发版 commit
 
@@ -92,13 +129,20 @@ Mac CI 前本地把四道 gate 跑绿（`bun run format:check` / `bunx tsc --noE
 
 ### S5. Windows 腿先上线（增量发版：谁好谁先走，不等齐）
 
-验收四件（全过才传）：
+验收五件（全过才传）：
 
 ```bash
 # ① sha512 与 out/latest.yml 对账（openssl dgst -sha512 -binary <exe> | openssl base64 -A）
 # ② 版本资源 = 新版本（PowerShell Get-Item …VersionInfo）
 # ③ ACP 内嵌组件在包里且版本与 dream-core 常量逐字一致（见 §2.2）
 # ④ asar 抽查：失效类名（border-border-N / bg-bg-N）0 处，修复类在 CSS 有规则
+# ⑤ 只能在打包版验的两件（dev 构建结构上验不了，别在 dev 里下结论）：
+#    · 内置联网搜索：设置→工具→one-web-search 显示「可用」而不是「当前版本没有内置搜索」。
+#      dev 里必然显示不可用——resolveTrialBrokerUrl(isPackaged=false) 返回 undefined，
+#      理由写在测试里：每次内置搜索都花公司额度，开发环境不该烧。
+#    · bundled dreamcore 来自 release 而非本机：
+#      resources/bundled-dreamcore/<plat>/manifest.json 的 sourceType 必须是 release、
+#      version 等于本轮钉版；sourceType: local 说明打进去的是本机编译产物。
 ```
 
 ```bash
