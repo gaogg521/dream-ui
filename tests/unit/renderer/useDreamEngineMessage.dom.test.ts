@@ -306,3 +306,143 @@ describe('useDreamEngineMessage turn clock', () => {
     });
   });
 });
+
+describe('useDreamEngineMessage turn end', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetConversationTurnClockForTests();
+    conversationUpdateInvokeMock.mockResolvedValue(undefined);
+    conversationGetUsageInvokeMock.mockResolvedValue(undefined);
+    responseStreamHandlerRef.current = undefined;
+    vi.mocked(getConversationOrNull).mockResolvedValue(null);
+  });
+
+  const emit = (message: Partial<IResponseMessage>) => {
+    act(() => {
+      responseStreamHandlerRef.current?.({
+        conversation_id: 'conv-1',
+        msg_id: 'msg-1',
+        ...message,
+      } as IResponseMessage);
+    });
+  };
+
+  const mountHook = async () => {
+    const hook = renderHook(() => useDreamEngineMessage('conv-1'));
+    await waitFor(() => {
+      expect(hook.result.current.hasHydratedRunningState).toBe(true);
+    });
+    return hook;
+  };
+
+  /**
+   * `running` is the OR of three flags. `finish` used to clear only two, so a
+   * turn whose last seen tool_group still had a live tool kept the send box on
+   * "processing" until the user switched conversations and back.
+   */
+  it('stops reporting a running turn when finish lands with a tool still marked active', async () => {
+    const { result } = await mountHook();
+
+    emit({ type: 'start' });
+    emit({
+      type: 'tool_group',
+      data: [{ callId: 'c1', name: 'Write', status: 'Executing' }],
+    });
+    await waitFor(() => {
+      expect(result.current.running).toBe(true);
+    });
+
+    emit({ type: 'finish', data: {} });
+
+    await waitFor(() => {
+      expect(result.current.running).toBe(false);
+    });
+  });
+
+  /**
+   * The auto-recover branches exist because this backend does emit frames after
+   * `finish`. Re-arming on one is what left the spinner on forever: the turn is
+   * over, so no second `finish` is coming to turn it off again.
+   */
+  it('does not let a frame trailing a finished turn re-arm the spinner', async () => {
+    const { result } = await mountHook();
+
+    emit({ type: 'start' });
+    emit({ type: 'finish', data: {} });
+    await waitFor(() => {
+      expect(result.current.running).toBe(false);
+    });
+
+    emit({ type: 'thought', data: { subject: 'late', description: 'trailing frame' } });
+    emit({
+      type: 'tool_group',
+      data: [{ callId: 'c2', name: 'Read', status: 'Executing' }],
+    });
+
+    await waitFor(() => {
+      expect(result.current.running).toBe(false);
+    });
+  });
+
+  /**
+   * The guard is lowered by `start`, but a turn need not open with one. A frame
+   * carrying a different turn_id than the finished turn belongs to a newer turn
+   * and must still drive the indicator — the same rule the sidebar's late-frame
+   * guard already uses.
+   */
+  it('lets a newer turn light the indicator even without a start frame', async () => {
+    const { result } = await mountHook();
+
+    emit({ type: 'start', turn_id: 'turn-1' });
+    emit({ type: 'finish', data: {}, turn_id: 'turn-1' });
+    await waitFor(() => {
+      expect(result.current.running).toBe(false);
+    });
+
+    // Newer turn, no `start` of its own.
+    emit({
+      type: 'tool_group',
+      turn_id: 'turn-2',
+      data: [{ callId: 'c3', name: 'Write', status: 'Executing' }],
+    });
+
+    await waitFor(() => {
+      expect(result.current.running).toBe(true);
+    });
+  });
+
+  it('still treats a same-turn trailing frame as late', async () => {
+    const { result } = await mountHook();
+
+    emit({ type: 'start', turn_id: 'turn-1' });
+    emit({ type: 'finish', data: {}, turn_id: 'turn-1' });
+    await waitFor(() => {
+      expect(result.current.running).toBe(false);
+    });
+
+    emit({
+      type: 'tool_group',
+      turn_id: 'turn-1',
+      data: [{ callId: 'c4', name: 'Write', status: 'Executing' }],
+    });
+
+    await waitFor(() => {
+      expect(result.current.running).toBe(false);
+    });
+  });
+
+  it('still runs again for the next turn', async () => {
+    const { result } = await mountHook();
+
+    emit({ type: 'start' });
+    emit({ type: 'finish', data: {} });
+    await waitFor(() => {
+      expect(result.current.running).toBe(false);
+    });
+
+    emit({ type: 'start' });
+    await waitFor(() => {
+      expect(result.current.running).toBe(true);
+    });
+  });
+});
