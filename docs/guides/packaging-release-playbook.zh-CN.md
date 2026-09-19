@@ -1,638 +1,233 @@
 # Windows + Mac 打包与发布踩坑手册（Playbook）
 
-> 给后续 AI / 人类的**可操作**打包发布手册。把散落在各 session 文档里的打包/发布坑集中成一份「照着做 + 出错怎么查」的清单。首次整理于 **2026-07-21**（发 `v2.1.49` 时，Mac CI 连挂 3 次总结出来的）。
+> 可操作的打包发布手册。2026-09-19 按 **最近三次成功发版（3.0.4 / 3.0.5 / 3.0.6）**
+> 重构：第一部分就是现在的标准流程，照着走即可；第二部分是仍然有效的坑的快速索引；
+> 1oneCore / 1oneUI 时代的历史教训压缩成第三部分的一张表，细节在文末的 session 文档里。
 >
-> 权威的"当前发布状态"永远用实时命令查（见 [§7](#7-实时核实命令)），别信任何文档里写死的时间点快照。
+> 权威的"当前发布状态"永远用实时命令查（§3），别信任何文档里写死的时间点快照。
 
 ---
 
-## 0. 一句话全景
+## 第一部分：标准流程（3.0.4 → 3.0.5 → 3.0.6 三次成功发版提炼）
 
-发一个跨平台版本要走 5 仓/步，**顺序不能乱**：
-
-```
-dream-engine 改完推 master
-  → 1oneCore: cargo update 对齐 dream-engine + bump 版本 + 打 tag（触发 release.yml 产 6 个跨平台 dreamcore 二进制）
-    → 1oneUI: bump package.json version + dreamcoreVersion 指向上面那个 1oneCore tag
-      → Windows: 本地 package-win.ps1（用本地 dreamcore.exe，不走 CI）
-      → Mac: GitHub Actions build-manual.yml（macOS runner，签名+公证；从 1oneCore Release 下载 dreamcore）
-        → gh release create v<ver>（Win + Mac 资产）
-          → COS 上传（releases/<ver>/ + releases/latest*.yml，App 自动更新的源）
-            → 官网 work.1oneclaw.com（D:\website\1onework，改 site.config.js + 部署）
-```
-
-> ⚠️ **发版前必过项**：见 [§2.6](#26-️-内嵌-acp-运行组件claude-agent-acp--codex-acp缺失--全平台且只有全新安装才会暴露)——内嵌 ACP 运行组件缺失会让**全新安装的用户**用不了 Claude Code / Codex，而**有缓存的开发机完全看不出来**，2.1.51 已经这样发出去过一次。
-
-**为什么 Mac 必须等 1oneCore 先发 Release**：Mac 包（`build-manual.yml`）在打包时会去 **1oneCore 的 GitHub Release** 按 `1oneUI/package.json` 的 `dreamcoreVersion` 下载对应平台的 dreamcore 二进制内嵌。1oneCore Release 不存在 → Mac 包拿不到后端。Windows 本地打包不受此限（用 `DREAM_BACKEND_LOCAL_PATH` 指本地编译产物）。
-
----
-
-## 1. Mac 打包（GitHub Actions `build-manual.yml`）——本 fork 最容易挂的地方
-
-> **CI 挂了先看这张表，别从头推理**（2026-07-31 复发一次，从零重推花了十几分钟，而答案就在 §1.2）：
->
-> | 症状                                                               | 去看                             |
-> | ------------------------------------------------------------------ | -------------------------------- |
-> | run 几秒失败、`jobs[].steps` 为空、`--log-failed` 报 log not found | §1.2 计费拦截                    |
-> | 在 `Prepare dreamcore binary` 步骤 404                             | §1.5 + 下方「后端 tag 必须先发」 |
-> | 卡在 oxfmt / oxlint / tsc / vitest                                 | §1.3                             |
-> | 签名成功但装上报未签名                                             | §1.4                             |
->
-> **判据**：同期公开仓库（1oneCore）的 CI 跑得动、私有仓库（1oneUI）全挡 → 一定是计费，不是代码。私有仓库连最便宜的 ubuntu job 都会被挡，不只 macOS。
->
-> **后端 tag 必须先发**：`package.json` 的 `dreamcoreVersion` 指向的 1oneCore Release 必须真实存在，CI 才下得到 dreamcore。这个 tag 不会自己产生——2026-07-31 打 2.1.51 时 `dreamcoreVersion` 已是 `v0.1.53-one.1` 而 1oneCore 最新 Release 只到 `v0.1.49-one.3`，必须先去 1oneCore 打 tag（`release.yml` 由 `v*` 触发，六平台约 22 分钟）再触发前端构建。
-
-触发方式（dream-ui，默认分支就是 `main`）：
-`gh workflow run build-manual.yml --repo gaogg521/dream-ui --ref main -f branch=main -f platform=macos-arm64 -f installers_only=false`
-
-- `platform` 是单选，没有"两个 Mac 一起"选项——arm64 / x64 各触发一次（或 `all`，但会连 win/linux 一起打，浪费）。
-- **要发版就 `installers_only=false`**（默认 `true`）：`true` 会在上传 artifact 前删掉 `.zip`/`.yml`，而 Mac 自动更新的 `latest*.yml` 指向的是 `.zip` 不是 `.dmg`——只留 `.dmg` 的包等于没自动更新。
-
-### 1.1 `branch` 输入：dream-ui 填 `main`（旧 1oneUI 是 `one-main`）
-
-workflow 的 `branch` input 默认值是 `main`。**dream-ui 的默认分支就是 `main`**，直接用即可。
-（历史遗留：旧仓库 `gaogg521/1oneUI` 的默认分支是 `one-main`，那边要 `--ref one-main` + `-f branch=one-main` 都给；别把两仓搞混。）
-
-### 1.2 GitHub Actions 计费拦截（私有仓库）——3 秒零步骤失败，错误藏得很深
-
-**症状**：run 在 ~3 秒内 `conclusion=failure`，`jobs[].steps` 是**空数组**（一个 step 都没跑）。`gh run view --log-failed` 报 "log not found"。
-
-**真正的错误信息**在 job 的 check-run annotations 里，普通 `gh run view` 看不到：
+### S0. 预检（发版窗口打开前，2 分钟）
 
 ```bash
-gh api "repos/gaogg521/1oneUI/check-runs/<jobId>/annotations" \
-  --jq '.[] | "\(.annotation_level) :: \(.message)"'
-# → "The job was not started because recent account payments have failed
-#    or your spending limit needs to be increased..."
+# ① 四仓本地 = origin/main，无未推送 commit（用户红线：不许有 commit 遗留或搞错仓库）
+for repo in dream-ui dream-core dream-en dream-engine; do
+  cd /d/dream/$repo && git status -sb | head -2 && git rev-list --left-right --count origin/main...main
+done
+
+# ② CI 绿：dream-core 主 CI + dream-ui Main Guard（最新 commit）
+#    main 红时按既定决策可绕过：release.yml 只认 tag、不跑测试，与 ci.yml 无依赖——
+#    直接打 tag 先出包，CI 修复挪到发版后（3.0.6 的实操决策）。
+
+# ③ 磁盘余量 >100GB：D 盘曾被 target 的 871GB 撑爆（os error 112 / LNK1108 就是它）
+
+# ④ 上次发版的真实时点 = COS Last-Modified，不是 commit 时间（3.0.5 的教训）
+curl -sI https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/<上版>/One-Work-<上版>-win-x64.exe | grep -i last-modified
 ```
 
-**根因**：私有仓库的 macOS runner 按 **10 倍**计费；账号付款失败或超了 spending limit，GitHub 直接拒绝派发**所有**计费 job（Mac/Windows/Linux 全挡，不只 Mac）。
-
-**解法**（二选一）：
-
-- **把仓库改 public**（GitHub Actions 对公开仓库免费，含 macOS runner）——`v2.1.49` 就是这么解的，改完 `gh run rerun <id>` 立刻从 3 秒失败变正常 in_progress。⚠️ 改 public 会公开全部代码 + git 历史（公开镜像/克隆即使改回 private 也可能留存）；GitHub **secrets**（COS/Apple 证书）存在 Actions 设置里、不随仓库公开而泄露。
-- 或到 GitHub → Settings → Billing & plans 修付款/提额度。
-
-### 1.3 Code Quality gate 挡在 Build 之前（4 道：oxfmt / oxlint / tsc / vitest）
-
-`build-manual.yml` 的 build 依赖 `code-quality` job（见 `_build-reusable.yml`），任一挂了 Build step 直接 skip。**本地 `package-win.ps1` 打 Windows 包不跑这道 gate**——所以格式漂移/测试失败能溜过 Windows、却挡死 Mac CI。
-
-四道 gate 各自的坑：
-
-| Gate          | 命令                                       | 本 fork 已知坑                                                                                                     | 解法                                                     |
-| ------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| Prettier 格式 | `bun run format:check`（=`oxfmt --check`） | 未格式化的 **docs**（`.md`）会挂。写会话文档很容易漏                                                               | `bun run format` 格式化后提交（只动空白/表格对齐，安全） |
-| Lint          | `bun run lint`（oxlint）                   | 只 warning，一般不挂                                                                                               | —                                                        |
-| 类型          | `bunx tsc --noEmit`                        | —                                                                                                                  | 本地先跑一遍，快                                         |
-| 单测          | `bunx vitest run`                          | **2 个既有失败**：`SortableConversationRow.dom.test.tsx`（拖拽 handle 的 DOM 测试，与后端/协议改动无关，长期未修） | 见下                                                     |
-
-**vitest 的既有失败怎么办**：如果本次发布**没动前端源码**（只改了 docs/version/yaml/后端），这 2 个失败是**既有的、与本次无关**，不该挡发布。用 `-f skip_code_quality=true` 触发 Mac 构建跳过整个 gate。**前提**：先本地手动确认 `format:check` + `tsc` 过（`skip_code_quality` 把这几道一起跳了，别把真问题也跳过去）。
-
-> 判断"失败是否既有/无关"：本次 diff 有没有碰 `.ts/.tsx`？没碰就是既有失败。`git log --oneline v<上个tag>..HEAD -- 'packages/**/*.tsx'` 一看便知。
-
-### 1.4 macOS 签名/公证的坑
-
-- **`IDENTITY` secret 不能带 `Developer ID Application:` 前缀**，只要公司名部分（electron-builder 自己加前缀）。带了 electron-builder 26.x 直接报 `⨯ Please remove prefix "Developer ID Application:" from the specified name — appropriate certificate will be chosen automatically`，签名失败。正确值：`Huanle Entertainment (Shanghai)Technology Co., Ltd. (HKT9687899)`（去掉 `Developer ID Application: ` 前缀）。
-  - **2026-08-31 在 dream-ui 真踩过并已修**：配 secret 时把证书完整 CN 原样填进了 `IDENTITY`，3.0.0 的 arm64/x64 两个 Mac 包都签名失败、兜底打出未签名包发了出去、CI 报绿、用户装机"已损坏"。已 `gh secret set IDENTITY --repo gaogg521/dream-ui` 改对（值非机密——证书 CN 在任何已签名二进制里都可见）。1oneUI 的 secret 一直是对的。
-  - `build-with-builder.js` 的 `normalizeSigningIdentityEnv()` 现在跑 electron-builder 前**自动剥掉** `CSC_NAME`/`identity` 的 `Developer ID Application:` / `Developer ID Installer:` 前缀（日志打 `🔑 Stripped "Developer ID …:" prefix`），secret 写错也不再连累签名——但 secret 本身也该是对的。
-- **DMG 重试兜底曾造成假阳性 success（已修，2026-08-31）**：`buildWithDmgRetry` 检测到 ".app 有了但 .dmg 没生成"会用 `--prepackaged` 重试，这条路**跳过签名**、只把已有的 `.app`（`afterSign.js` 的 ad-hoc 兜底签名）塞进 DMG。而 CI 只看"DMG 是否存在"就报绿——于是 3.0.0 一路把 ad-hoc 包发到了 COS。
-  - 现在 `buildWithDmgRetry` 重试前先判断：配了签名（`CSC_LINK`/`CSC_NAME`/`CSC_KEYCHAIN` 任一存在）但 `.app` 的 `codesign -dv` 里没有 `Authority=Developer ID Application` → 判定签名失败，**直接 throw 让 CI 红**，不再兜底；`createMacArtifactsWithPrepackaged` 产物也复查同条件。
-  - `_build-reusable.yml` "Build with electron-builder (macOS)" step：`build.log` 出现 `remove prefix "Developer ID` / `code signing failed` / `No identity found` → `::error` + `exit 1`；只有 `build.log` 里**真有** `signing … Developer ID Application` 成功行、且只是 `notariz`/`staple` 挂了，才降级 warning。
-  - **验收判据永远是日志三连**：`• signing file=out/mac-*/One Work.app … identityName=Developer ID Application:` → `App One Work is properly code signed` → `Notarization completed successfully`，且**没有** `Retrying … --prepackaged`。别只看 CI 绿灯。
-- **`codesign` 偶发挂死近 6 小时**：`codesign` 默认做在线证书吊销检查（OCSP），网络请求卡住且它没内部超时会死等。是 flaky，不是配置问题；`build` step 卡几小时不动就是它，取消重跑（现有 `timeout-minutes: 60` 会兜底）。
-- 需要的 6 个 secrets：`BUILD_CERTIFICATE_BASE64` / `P12_PASSWORD` / `IDENTITY` / `TEAM_ID` / `APPLE_ID` / `APPLE_ID_PASSWORD`（涉及证书/密码的 base64/导入都由用户自己在 GitHub 网页做，AI 不经手明文；`IDENTITY` 是证书 CN、非机密，AI 可以 `gh secret set`）。`afterSign.js` 读的是小写 `appleId`/`appleIdPassword`/`teamId` env，workflow 已同时喂 `appleId=APPLE_ID` 等。
-- macOS 老系统（Big Sur 11.x）兼容：内置托管 Node 已按平台降到 22.11.0（新 Xcode 的 chained-fixups 格式老 dyld 加载不了），见 1oneCore `1797fcf7`。
-
-### 1.5 ⚠️ `Build and Release`（打 tag 自动发布）在本 fork 从未真正触发过
-
-`build-and-release.yml`（`on: push tags`）历史上 `total_count: 0`，从没跑过（GitHub 层面某设置卡着，未查明）。**别指望打 dream-ui tag 自动出包**。正式路径是：`build-manual.yml` 手动出各平台产物 → 本地 aws-cli 传 COS（**不发 GitHub Release**，见 memory `release-channel-cos-website-only` 和 §6）。（注意：**dream-core 的 `release.yml` 是好的**，`v*` tag 能正常触发产 6 资产，别和 dream-ui 的搞混。）
-
-### 1.6 复盘：2026-08-31 v3.0.0 Mac 发布（"已损坏"根治 + `1onecode`→`One Work` 改名）
-
-一次把「用户下的 Mac 包已损坏」查到底 + 顺手清掉历史品牌名的完整过程。踩到的坑按出现顺序：
-
-**A. `.app` / DMG / Gatekeeper 弹窗显示的是 `1onecode` 不是 `One Work`——不是拉了老资源**
-
-`electron-builder.yml` 里的 `executableName: 1onecode`。electron-builder 26.x（`app-builder-lib/out/appInfo.js`）：
-
-```js
-this.productFilename = executableName != null ? sanitizeFileName(executableName) : this.sanitizedProductName;
-```
-
-`productFilename` 决定 **`.app` 目录名、DMG 卷标题、Windows `.exe` 名、Windows 默认安装目录**——`productName: One Work` 在这几处**全不生效**。装完启动后窗口标题 / Dock / 关于页都对（那些读 `CFBundleName`），只有「装之前的壳」是 `1onecode`。已验证 2.1.61 发布包内部就是 `1onecode.app`，每个包都这样，不是回归。
-
-- **修法**：直接删 `executableName`（回落 `productName`）。Linux 单独加 `linux.executableName: one-work`（deb / 二进制名不要空格）+ `desktop.entry.Icon: one-work`。
-- **`executableName` 冻结跟 userData 无关**——生产 userData 是 `configureChromium.ts` / `common/platform/index.ts` 用 `app.setName(PROD_USERDATA_APP_NAME)` + 显式 `app.setPath('userData', …)` 钉的，跟 `executableName` / `productName` 都无关。CLAUDE.md 旧「运行时身份·刻意不改」表把三个值绑一起是过度保守，实际只有 `appId` 真必须冻结（Squirrel.Mac 按 `CFBundleIdentifier` 匹配升级包、Win 卸载注册表 GUID 由它派生、签名证书 team 也绑它）。
-- 连带要一起改的 fork 自有文件：`resources/installer.nsh`（`$LOCALAPPDATA\Programs\1onecode` → `One Work`）、`resources/windows/installer-observability.nsh`（`DREAM_APP_EXECUTABLE_FILENAME`）、`resources/windows/support/query-lockers.ps1`、`scripts/build-with-builder.js` 的进程 kill 列表、`scripts/packaged-launch.mjs`、`scripts/dev-bootstrap.mjs`、`tests/e2e/fixtures.ts`、`packages/desktop/src/sentry.ts` 的 `installDirs`。旧名一律留作兜底，别删。
-
-**B. `PROD_USERDATA_APP_NAME` 改名要配首启迁移**
-
-`1ONE Code` → `One Work` 直接改会让存量用户开 3.0.0 看到空白（数据没删、只是不读了）。加了 `common/platform/index.ts` 的 `migrateAndResolveProdUserDataDir(appSupportDir)`：目标目录已存在就用它；否则旧目录（`LEGACY_PROD_USERDATA_APP_NAMES`）存在就 `renameSync` 搬过去；rename 失败（跨卷 / 被锁）就**就地用旧目录**，数据绝不丢。`configureChromium.ts` + `getPlatformServices()` 两个调用点都换成它。
-
-- ⚠️ `LEGACY_PROD_USERDATA_APP_NAMES` **刻意只放 `1ONE Code`，不放 `dream-ui`**——`dream-ui` 是上游的目录名，同机跑着上游 App 的人会被误搬数据（跟 `getDevAppName` 撞库同一类事故）。
-- **Windows 真机验迁移的正确姿势**：Electron 在 Windows 读 `SHGetKnownFolderPath(FOLDERID_RoamingAppData)`，**不认 `%APPDATA%` 环境变量**——`Start-Process` 前 `$env:APPDATA=...` 没用，会打到真实目录去。用 Chromium 开关 `--user-data-dir=<沙箱>`：`app.getPath('userData')` 会返回它，迁移里的 `path.dirname(userData)` 就落在沙箱里，预置 `<沙箱>\1ONE Code\` 就能安全验。跑完 `1ONE Code` 消失、`One Work` 出现、marker 文件原样保留 = 通过。
-- Mac 侧同一函数、同一 `configureChromium.ts` 生产分支，只有 `dirname(userData)` 落点不同（`~/Library/Application Support`）。本地无 Mac 时单测 + Win 真机 + 代码同源可作为可接受的信心，但**能上真 Mac 就上**。
-- 全仓无 `safeStorage`/`keytar` → 模型 key 在 SQLite，迁移 = 纯目录搬移，不涉及 keychain 重新加密。
-
-**C. `gh run download` 从公司专线拉 CI 产物：慢 + 抽风，必须带重试**
-
-跟 §6 说的"内网→GitHub 上传慢"是同一条链路，下载同样慢（实测 ~1-2.5 MiB/s，一个 ~1.4GB 的 Mac artifact 要 10-20 分钟）而且会中途报 `error extracting zip archive` / `The file exists`（上一次失败留的半成品）。**每个 artifact 单独 `gh run download --name <artifact> -D <dir>` + 5 次重试 + 每次先 `rm -rf` 目标目录 + 下完检查预期文件在不在**。别用一条 `gh run download <run>`（多 artifact 顺序下、中间挂了前功尽弃）。
-
-**D. 后台跑长脚本：用 Bash 工具原生 `run_in_background`，别 `nohup … &` 套娃**
-
-`nohup cmd & ` 塞进一个 `run_in_background` 调用里，外层 wrapper 一退，MSYS 会把子进程连带杀掉（实测第一次上传脚本这么死的）。直接 `bash publish.sh > log 2>&1` 配 `run_in_background: true`——那个能稳跑 20+ 分钟。
-
-**E. `format:check` 是整仓跑，不是只跑改动文件**
-
-两个 PR 都改了 `CLAUDE.md` 的**不同段落**，各自分支 `oxfmt <changed files>` 都过；合进 main 后，同一张 Markdown 表格的列宽要按所有行重算，`bun run format:check`（整仓）挂。**合并涉及 `.md` 的多个分支后，务必再 `bun run format:check` 整仓跑一遍**，别只信各分支的 changed-files 检查。playbook §1.3 早写了"未格式化的 docs 会挂"，这是它的一个新变种。
-
-**F. 发布 = 覆盖 COS `releases/3.0.0/` + 更新根 `latest*.yml`（不发 GitHub Release）**
-
-官网 `site.config.js` 的下载地址是 `releases/{version}/One-Work-{version}-{os}-{arch}.{ext}` 按版本号拼的。3.0.0 那几个对象**已经在**（是坏的），发新版 = **原地覆盖同名对象** + 重算 `latest*.yml`（`.zip` 的 sha512/size）传 `releases/3.0.0/` 和 `releases/` 根两处。根的 `latest-arm64-mac.yml`（darwin arm64）/ `latest-mac.yml`（darwin x64 默认）/ `latest.yml`（win）是自动更新轮询点，改它 = 存量用户会被推自动升级——发数据迁移类版本前**先跟用户确认要不要推**。官网 `dist/` 和 `site.config.js` 若版本号没变就不用动，直接覆盖 COS 对象即可。
-
----
-
-## 2. Windows 打包（本地 `D:\旧中转目录\scripts\package-win.ps1`）
-
-用法：`.\package-win.ps1`（用现有 `1oneCore/target/release/dreamcore.exe`）或 `-Rebuild`（先 cargo build 再打）。
-
-坑：
-
-- **必须设 `DREAM_BACKEND_LOCAL_PATH`**（脚本已自动设）：否则打包链去 GitHub Release 下载 `dreamcoreVersion` 对应二进制，私有 fork tag 常无产物 → `dreamcore binary not found`。日志出现 `Bundled dreamcore prepared: ... [source=local]` 才对。
-- **PowerShell `$ErrorActionPreference='Stop'` 会把 cargo/npm/vite 往 stderr 写的正常进度行当成终止错误**（`NativeCommandError`）打断构建。脚本已在调原生命令前后切 `Continue`、只靠 `$LASTEXITCODE` 判真失败。
-- **bun cache 损坏 → `better-sqlite3` native rebuild 失败**（`v2.1.49` 踩到）：`afterPack.js` 用 `bun x prebuild-install` / `bun x electron-rebuild` 重编原生模块，bunx 把这些包下到 `%TEMP%\bunx-*` 时可能**下不全**，报 `Cannot find module '...prebuild-install/bin.js'` / `Cannot find module 'chalk'`。解法：
-  ```bash
-  bun pm cache rm && rm -rf "$TEMP"/bunx-*   # 清缓存，重跑 dist:win
-  ```
-- **打包前停 dev 应用**（避免文件锁）：`taskkill /F /IM electron.exe /T; taskkill /F /IM dreamcore.exe /T`。electron 主进程有看门狗会**自动重启 dreamcore**，只杀 dreamcore 没用，要连 electron 一起杀。
-
----
-
-## 2.5 AI 代理发布时的额外坑（2026-07-26 v2.1.50 首次遇到）
-
-### 2.5.1 ⚠️ `gh release create` 会被 Auto Mode 分类器拦下，必须显式问用户
-
-`gh release create` 是"发布公开内容"动作（GitHub Release 是公开可见、影响下游用户的），Claude Code 的 auto-mode 安全分类器会**直接拒绝执行**，报错 "Permission for this action was denied by the Claude Code auto mode classifier"。这不是 gh 认证问题，也不是权限配置问题——**每次**要发新 Release 都必须先向用户说清楚要发布的内容（tag/资产列表），拿到明确同意后再跑 `gh release create`。同理，`gh release create/upload`、`git push --tags` 触发公开发布的操作都可能被拦；`release-distribute.yml` 的 CI 自动触发（release published 事件）不受此限，因为那是 GitHub 自己触发的，不是本地新执行的 shell 命令。
-
-### 2.5.2 ⚠️ CI 打的 Mac 包默认不含 update yml，需要自己算 sha512 补上
-
-`build-manual.yml` 用 `upload_installers_only: true`，会在上传 artifact 前删掉所有 `.yml`（见 `_build-reusable.yml` 的 "Clean up non-installer artifacts" 步骤），所以 `gh run download` 下来的产物只有 `.dmg`，没有 `latest-mac.yml`。需要自己补一份：
+### S1. 划界 + 全量 commit 检测（更新记录的完整来源）
 
 ```bash
-DMG=path/to/One-Work-<ver>-mac-arm64.dmg
-SHA512=$(openssl dgst -sha512 -binary "$DMG" | openssl base64 -A)
-SIZE=$(stat -c%s "$DMG")
+git log --format='%h %ad %s' --date=format:'%m-%d %H:%M' --since='<上一步的时间，时区+8>' | tac
 ```
 
-再手写 yml（格式抄现有 `releases/latest.yml` / `releases/latest-mac.yml`，字段：`version`/`files[].url,sha512,size`/顶层 `path`/`sha512`/`releaseDate`）。
+**规矩（3.0.6 后固化的两条）：**
 
-### 2.5.3 ⚠️ Mac 更新 yml 文件名必须区分架构，别覆盖 `latest-mac.yml`
+1. **全量 commit 检测，不许有遗漏。** 上面的清单逐条过，每条归类为
+   「用户可见 / 内部实现 / 文档」，用户可见的必须映射进更新记录的条目——
+   条目可以合并（几条 commit 并成一条），**不可以遗漏**（3.0.6 就漏了
+   截断提示本地化、MCP 启动健壮性、输出预算三条，被用户抓到）。
+   四仓都要看：dream-ui + dream-core + dream-engine（个人版功能在这三个仓配对），
+   dream-en 只影响企业后台。
+2. **话术简化。** 每条只留「改了什么 + 关键数字」，删叙事性的"为什么"；
+   相关的多条 commit 合成一条条目，不要三合一埋没重点（3.0.6 的
+   「新建团队可拖拽」曾埋在三合一条目末尾被用户当成漏了）。
 
-App 自己的 `packages/desktop/src/process/services/autoUpdaterService.ts`（`resolveChannel`）明确写了：darwin **arm64** 走 `latest-arm64-mac.yml`，darwin **x64**（默认）才走 `latest-mac.yml`。COS 上现有 `releases/latest-mac.yml` 是历史 x64 构建产物；**只打了 arm64 包时绝不能把生成的 yml 命名成 `latest-mac.yml` 上传**——那会把 x64 用户的自动更新指向一个他们装不了的 arm64 dmg。正确做法：命名为 `latest-arm64-mac.yml`，作为独立 Release 资产上传，`release-distribute.yml` 的 `dist/latest*.yml` glob 会自动捞到并按文件名镜像到 COS 根目录，不影响已有的 `latest-mac.yml`。**若某次发布同时打了 x64 + arm64 两个 Mac 包，两份 yml 都要生成、都要传，缺哪个哪个架构就没有自动更新。**
+### S2. 后端钉版决策：UI 配对才换 dreamcore tag
 
-### 2.5.4 打包前先跑 `bun run format:check` + `tsc`，且要甄别新失败是否与本次改动相关
-
-见 §1.3 的既有坑；v2.1.50 这次额外发现 vitest 全跑一遍后失败列表可能比 playbook 记录的旧列表更多（历史失败没被跟踪更新）。判断某个失败文件是否"既有、与本次无关"不能只看 playbook 静态记录，要 `git log --oneline -3 -- <失败测试对应的源文件>` 现查最后改动是哪次提交，确认不在本次改动范围内，才可以用 `skip_code_quality=true` 跳过整道 gate。
-
----
-
-## 2.6 ⚠️ 内嵌 ACP 运行组件（claude-agent-acp / codex-acp）缺失 —— 全平台，且**只有全新安装才会暴露**
-
-**2026-08-07 由用户真机截图发现**：装完点 Claude Code，弹「One Work 安装不完整 …… Claude ACP 运行组件 无法启动」，正文路径指向 `…\resources\bundled-dreamcore\win32-x64\…`。Codex 同理（同一套代码路径）。
-
-### 2.6.1 成因（每一环都已核对源码）
-
-fork 走的是「ACP 包装层按 npm 包内嵌」这条路（`acp_tool_runtime`，07-29 同步时从上游删除中恢复），打包版**硬性要求**内嵌目录下存在：
-
-```
-resources/bundled-dreamcore/<runtimeKey>/managed-resources/acp/<slug>/<version>/<runtimeKey>/
-```
-
-但上游 `#609`（2026-07-23，随 07-29 同步进 fork）把 [`cmd_prepare_managed_resources.rs`](../../../1oneCore/crates/dream-core-app/src/commands/cmd_prepare_managed_resources.rs) 整体换成了 `managed_cli` 方案——它只产出 `node/` + `cli/claude`、`cli/codex` 两个**原生二进制**，`acp/` 这一层从此不再生成。而 fork 里本该产出它的 `prepare_managed_acp_tool_to_root`（`dream-core-runtime/src/acp_tool_runtime/mod.rs`）**全仓库零调用方**，只在 `lib.rs` 里 re-export 了一下。
-
-运行时后果：打包版才带 `--managed-resources-mode bundled`（`packages/web-host/src/backend-launcher.ts`），于是 `activate_local_tool_source` 直接抛 `bundled managed Claude ACP artifact missing under …`；而 npm 兜底路径在 bundled 模式下**第一行就 return**，没有任何回退，直接硬失败。
-
-### 2.6.2 ⚠️ 为什么它能一路混过测试 —— 本机缓存会伪装成"正常"
-
-`ensure_managed_acp_tool` 的解析顺序是「**先查用户数据目录缓存，命中就直接返回**」，命中时根本走不到内嵌包那一步：
-
-```
-%APPDATA%\1ONE Code\1one\runtime\managed-tools\acp\<slug>\<version>\<runtimeKey>\
-```
-
-而 2026-07-12 ~ 07-28 之间的构建，版本常量已经是 `claude-agent-acp 0.58.1` / `codex-acp 1.1.2`，且内嵌包**还带着 `acp/`**——那段时间装过的机器，早把 0.58.1 物化进了自己的缓存。于是：
-
-| 用户类型                                              | 缓存里有当前版本吗 | 结果                             |
-| ----------------------------------------------------- | ------------------ | -------------------------------- |
-| 7 月中旬装过、一路升级上来（**所有开发机 / 测试机**） | 有                 | 一切正常，**完全看不到这个 bug** |
-| 全新安装 / 换机 / 重装 / 缓存被杀软清掉               | 没有               | **必挂**，弹「安装不完整」       |
-
-**教训：凡是"内嵌资源 + 用户目录缓存"双来源的组件，在有缓存的机器上验证等于没验证。** 必须在清空缓存的前提下验，见 2.6.4。
-
-### 2.6.3 ⚠️ 原本的闸门被自己关掉了
-
-`verify-bundled-dreamcore-resources.js` 本来只认 schema v1（校验 `acpTools` → `acp/…` 真在盘上），正是能拦住这个问题的检查。07-30 为「解除打包阻塞」（`3c40734c7`）改成 v1/v2 都接受，而 v2 只校验 `cli/claude/…` 存不存在——**唯一的防线在这里被放行了**。装机侧的 `verify-bundled-dreamcore-install.ps1` 同样。
-
-**⚠️ 更要紧的是当时为什么觉得这样安全**——`3c40734c7` 自己的提交信息写着：
-
-> 必需 CLI 为 claude 与 codex(对应 v1 的 codex-acp/claude-agent-acp)
-
-**根因就是这个「对应」不成立**：v2 的原生二进制并**不能**替代 fork 运行时要的 `acp/` 包装层（fork 明确没有采纳 session-port 迁移，见 §2.6.1）。这不是疏忽，是一个看起来完全合理的等价判断——所以写进防线的提醒应该是「**别再相信这两者等价**」，而不只是「别关掉闸门」。后者挡不住下一次上游同步。
-
-### 2.6.4 修复状态（① 已完成，② 仍是每次发版必做）
-
-**① ✅ 已于 2026-08-07 修复，无需再做。**
-
-- 1oneCore：`run_prepare_managed_resources` 现在对 `ClaudeAgentAcp` / `CodexAcp` 各调一次 `prepare_managed_acp_tool_to_root`（新增失败阶段 `acp.prepare`，与 `cli.prepare` 分开报），并恢复了 `managed_acp_tool_contract_for_export`（07-29 同步时**唯一没恢复**的那个函数，正是缺口所在）。v2 契约新增 `acpTools` 段，**形状与 v1 逐字段相同**——这样两个校验器不必各写第二套实现。
-- 契约校验 `validate_contract` 现在缺 `acp/` 直接失败（缺 slug / 声明了但盘上没有 / 缺每工具 `manifest.json` / 平台不匹配 / 路径逃逸各有用例）。⚠️ 该函数**只在打包期调用、运行时零读取方**（`acp_tool_sources` 只探目录不读 manifest），所以收紧它对存量安装零风险。
-- 1oneUI：`verify-bundled-dreamcore-resources.js` 与 `verify-bundled-dreamcore-install.ps1` 的 v2 分支改为**同时**校验 `acpTools` 与 `clis`（原为二选一）。装机侧校验器随包分发，故只影响新包，不会把存量 2.1.51 用户误判成损坏。
-- 测试：Rust 契约 15 条、JS 校验器 19 条、PS1 5 条，新增的负向用例**都做过负向验证**（拆掉闸门重跑，确认失败的正是它们）。
-- **未采纳的顺带项**：`cli/claude`、`cli/codex` 两个原生二进制保留入包。它们确实是当前用不到的重量，但删除属独立决策、且会缩小将来接 session-port 的余地，不在本次修复范围。
-
-**② 打完包，按下面两步验，不许省。**（①只保证代码会产出并拦截，仍不能替代真机验证）
+S1 的清单里若 dream-ui 新功能与 dream-core 划界后的 commit **配对**
+（备份↔个人版备份端点、搜索 UI↔web search 到会话、图片 UI↔Agnes 能力），
 
 ```bash
-# 检查一：内嵌包里的 acp/ 版本必须与后端常量逐字一致
-grep -A5 'pub fn version' 1oneCore/crates/dream-core-runtime/src/acp_tool_runtime/types.rs
-ls -d 1oneUI/resources/bundled-dreamcore/*/managed-resources/acp/*/*/
-# 两边对不上（或 acp/ 根本不存在）= 这个包发出去会让所有新用户装完用不了 Claude/Codex
+cd /d/dream/dream-core && git tag v0.1.71-one.<N+1> && git push origin v0.1.71-one.<N+1>
+# release.yml 自动出 6 资产（~26 min）；出包期间可并行做 S3
+gh release view v0.1.71-one.<N+1> --json assets --jq '.assets[].name'
+```
+
+没有配对就沿用现钉版。**桌面发版伴随 dreamcore 换钉是惯例，不是例外**——
+不换，新 UI 功能上线就是空壳。
+
+### S3. bump 三件套 + 发版 commit
+
+1. `dream-ui/package.json`：`version` +1，`dreamcoreVersion` 指向 S2 的 tag；
+2. `docs/release-notes/<ver>.json`：按 S1 的全量清单写（zh/en × 单机/企业 四段）；
+3. `chore(release): <ver>` 一个 commit 推 main（Mac CI 构建的就是它）。
+
+### S4. 三路并行打包
+
+```bash
+# Windows 本机（~20 min；先确认无 electron/dreamcore dev 进程占文件，杀按 PID）
+cd /d/dream/dream-ui && bun run build-win:x64
+
+# Mac CI ×2（~35 min；installers_only=false 是默认，别手滑传 true）
+gh workflow run build-manual.yml --repo gaogg521/dream-ui --ref main \
+  -f branch=main -f platform=macos-arm64 -f installers_only=false
+gh workflow run build-manual.yml --repo gaogg521/dream-ui --ref main \
+  -f branch=main -f platform=macos-x64  -f installers_only=false
+```
+
+Mac CI 前本地把四道 gate 跑绿（`bun run format:check` / `bunx tsc --noEmit` /
+`bunx vitest run`），别为一个格式错烧一个 35 分钟的 cycle。
+等待窗口内：生成 `release-notes.md`（`node scripts/generate-release-notes.js --out …`）、
+注入 COS 凭据（§2.3）。
+
+### S5. Windows 腿先上线（增量发版：谁好谁先走，不等齐）
+
+验收四件（全过才传）：
+
+```bash
+# ① sha512 与 out/latest.yml 对账（openssl dgst -sha512 -binary <exe> | openssl base64 -A）
+# ② 版本资源 = 新版本（PowerShell Get-Item …VersionInfo）
+# ③ ACP 内嵌组件在包里且版本与 dream-core 常量逐字一致（见 §2.2）
+# ④ asar 抽查：失效类名（border-border-N / bg-bg-N）0 处，修复类在 CSS 有规则
 ```
 
 ```bash
-# 检查二：清空缓存后装机冒烟（模拟全新用户，这一步才是真正的判据）
-mv "$APPDATA/1ONE Code/1one/runtime/managed-tools/acp" \
-   "$APPDATA/1ONE Code/1one/runtime/managed-tools/acp.bak"
-# 然后装包 → 新建会话 → 后端各选 Claude Code / Codex CLI → 各发一条真消息
-# 验完想恢复自己的环境就把 acp.bak 改回来
+scripts/publish-cos-release-asset.sh out/One-Work-<ver>-win-x64.exe <ver>   # exe：只进版本目录
+scripts/publish-cos-release-asset.sh out/latest.yml <ver>                   # yml：自动镜像根
+scripts/publish-cos-release-asset.sh <tmp>/release-notes.md <ver>           # sidecar：只进版本目录
 ```
 
-> 这条冒烟应固化为**每次发版的必过项**，而不只是本次的补救——只要 fork 还走 `acp_tool_runtime` 这条路，任何一次上游同步都可能再次悄悄切走 `prepare` 的产出。
+官网切 `platformVersions.win` + `platformSizes.windows`（真实字节数 ÷ 1048576）→
+`cd D:\website\1onework && npm run build` → `python D:\game\scripts\deploy-1onework-www.py`
+→ 验下载 URL 200 + 线上 bundle 含 `win:"<ver>"`。
 
-### 2.6.5 用户侧的观感缺陷（同批已修）
-
-这次暴露的不只是打包。**弹「安装不完整」的那个对话框曾经没有任何可见的关闭出口**——底部只有「发送诊断报告」和「下载最新版」，`closable: false` + `maskClosable: false`。它由两条前提相反的路径共用：
-
-| 路径                                | 触发时机                        | 无出口是否合理                         |
-| ----------------------------------- | ------------------------------- | -------------------------------------- |
-| `InstallationIntegrityModalHost`    | 后端启动失败                    | 合理，后端死了，关掉也没有可回去的地方 |
-| `RuntimeFailureDialogs`（本次这条） | 应用**运行中**收到 runtime 事件 | **不合理**                             |
-
-后者触发时应用是活的（用户截图里聊天还在处理中、模型是 deepseek），却被一个关不掉的模态框挡住，把「Claude 用不了」放大成「应用用不了」。同一文件里**非**完整性的运行时失败分支本来就带 `okText`，可见这是继承来的姿态而非有意设计。已按路径区分：运行时路径可关（`closable` + 「继续使用」按钮），后端启动路径维持不可关。
-
-> ⚠️ 严格说 Esc 一直能关（Arco `escToExit` 默认 `true`），所以补的是**看得见的出口**，不是从无到有。
-
-**文案也是错的**：正文写「请重新安装最新版 One Work」，但按 §2.6.2，07-29 之后所有包都 100% 复现，重装拿到的是同样坏的包；「请检查杀毒软件是否隔离」还把打包缺陷归给用户环境。更糟的是撞上缓存机制——真正受害的是全新安装用户，而重装**不会**创建那个缓存。已改为：说明哪个组件不可用、其余功能不受影响、两种可能原因并列而不预设，并把诊断报告作为真正有用的下一步（13 语言）。
-
----
-
-## 3. 快速诊断技巧（省时间）
-
-- **哪个 step 挂了**：`gh run view <id> --repo gaogg521/1oneUI --json jobs`，遍历 `jobs[].steps` 找 `conclusion=failure`。
-- **3 秒零步骤失败** = 账号/billing 层面，走 §1.2 的 check-runs annotations。
-- **别翻 CI 大日志找 gate 失败，本地复现更快**：`bun run format:check`（列出未格式化文件）/ `bunx tsc --noEmit` / `bunx vitest run`（列出失败测试文件）。
-- **省 Mac CI 钱**：Mac runner 慢又（私有时）贵，触发前先本地把 `format:check` + `tsc` 跑绿，避免为一个格式/类型错白烧一个 30–45 分钟的 cycle。
-
----
-
-## 4. 版本号规则
-
-- **1oneUI**：`package.json` `version` patch+1（如 `2.1.48`→`2.1.49`），`electron-builder.yml` 读 `${version}` 不用改；同时把 `dreamcoreVersion` 指向新的 1oneCore tag。
-- **1oneCore**：`Cargo.toml` `[workspace.package] version`。上游基线没变时**只 bump fork 后缀**（`0.1.49-one.1`→`0.1.49-one.2`）；上游基线变了才动前面（`0.1.48-one.1`→`0.1.49-one.1`）。
-- exe 内部名（`1onecode.exe`）、appId（`com.huanle.oneone.ai`）**不随版本/品牌走**（改了会丢用户 userData，见品牌红线）。
-
----
-
-## 5. 产物命名与 COS 布局
-
-- 安装包名：`One-Work-<ver>-<os>-<arch>.<ext>`（electron-builder `artifactName`）。win: `.exe`，mac: `.dmg`。
-- **App 自动更新源**（electron-updater 轮询）：COS `releases/latest.yml`（根）+ `releases/<ver>/One-Work-...` + `releases/<ver>/latest*.yml`。
-- **官网下载**（`work.1oneclaw.com`）：`D:\website\1onework\src\site.config.js` 的 `release.version` + download URL，历史上指向 COS 根的旧名 `1ONE-Code-...`，发新版要一并对齐到实际上传的对象。
-
-### ⚠️ 5.1 增量发布是标准做法——谁先打出来就先发谁，不要等齐再一次性切
-
-**这是从 2026-09-07 起的标准流程，不是应急处理。** 五个平台（win / macArm / macIntel / linux-x64 / linux-arm64）里任何一个包一出，COS 传完验过 200，**立刻**把官网那一个平台的版本钉切过去、build、部署——不等其余平台。原因：
-
-- Windows 本机打、Linux/macOS 走 CI，**没有任何理由让五个平台绑在一起**——本来就不是同一条流水线，谁快谁慢完全独立，用户也是按平台各自下载，不存在"必须同一批发"的产品要求。
-- 憋着等全部到齐才发，等于让**已经打好的包**陪着**还没打好的包**一起被晚上线——那次实测（3.0.2）macOS Intel 反复卡在 codesign（见 [§6.3](#63-macos-intel-反复出问题的三条根因2026-09-07-用真实-api-证据查清纠正了当天早些时候的错误结论)），如果等它，Windows/Linux/macOS Apple Silicon 四个早就验证通过的包会被平白晚发几个小时。
-- 分开发布的唯一前提是**不能 404**：`site.config.js` 的 `release.platformVersions` 键是**按下载条目分的**（`win` / `macArm` / `macIntel` / `linux`），**macOS 的两个架构互相独立、不共享一个 `mac` 键**——这是 3.0.2 当天才拆开的（拆之前 macArm 想先发，会被卡着的 macIntel 一起拖住，因为两者共用 `versionFor("mac")`）。某个条目这一轮没出包，就把它单独留在上一个真实存在于 COS 的版本，其余该切的照常切、照常部署。
-
-官网三个 os 段（win / mac / linux）拼出来的下载 URL 都是**按版本号拼**的：`releases/{version}/One-Work-{version}-{os}-{arch}.{ext}`。哪个条目的版本钉往前挪了却对应对象还没传上 COS，链接直接 404，而页面看上去一切正常——这条铁律不因为改成增量发布而放松，**只是判断粒度从"平台"细到了"下载条目"**。
-
-2026-07-31 发 2.1.51 时实测过一次代价：`sync-changelog-to-site.js` 顺手把 `release.version` 改成新版本，两个 mac 链接当场变成 404（`curl -sI` 实证）。`site.config.js` 的 `release.platformVersions` 就是那次加的；2026-09-07 从"win/mac/linux 三个键"细化成"win/macArm/macIntel/linux 四个键"，把 macOS 两个架构解耦开。
-
-> ⚠️ **每个版本目录还欠一个 `release-notes.md`——3.0.0 / 3.0.1 / 3.0.2 三版全都没传。**
-> 应用里「检查更新」面板的更新说明读的是 `releases/{version}/release-notes.md`
-> （`updateBridge.ts` 的 `fetchCdnReleaseNotes`）。electron-builder 生成的
-> `latest*.yml` 里不带 `releaseNotes` 字段，这个 sidecar 是面板唯一的内容来源。
-> 它原本由 `release-distribute.yml` 从 GitHub Release 正文写出——而自
-> [§6 的结论](#6-cos-上传--️-首选本地-aws-cli别指望-ci)起我们**不再建 GitHub Release**，
-> 那条工作流从此不触发，这个文件就再也没人写了。缺失不会报错（取不到就当没有说明），
-> 所以三个版本的用户点「检查更新」看到的都是一个没有任何说明的新版本。
-> **补法**：`node scripts/generate-release-notes.js --out <tmp>/release-notes.md`
-> 然后和安装包一样 `scripts/publish-cos-release-asset.sh <tmp>/release-notes.md <version>`
-> （它不是 `latest*.yml`，只会进版本目录，不会误镜像到根）。放在第一个平台上传时一起做，
-> 它跟平台无关，一个版本只需要传一次。
-
-**每次切完就部署，不要攒。流程固定四步**：
-
-1. 传完一个平台的包到 COS 后，`curl -o /dev/null -w '%{http_code}' <该平台的下载URL>` 确认 200。
-2. 只改这一个平台在 `platformVersions` 里对应的键，其余键不动。
-3. `cd D:\website\1onework && npm run build`，然后 `python D:\game\scripts\deploy-1onework-www.py`。
-4. 部署后**必须按 URL 而不是按文案验收**——文案改对了不代表对象存在：
+### S6. Mac 落地（每架构 5 对象：dmg / dmg.blockmap / zip / zip.blockmap / 清单）
 
 ```bash
-node -e "import('./src/site.config.js').then(m=>{const d=m.site.downloads;for(const k of ['windows','macArm','macIntel','linuxX64','linuxArm64'])console.log(k,d[k].versionLabel,d[k].url)})"
+# 下载（两架构并行；公司网络慢，用这个脚本别裸跑 gh run download）
+scripts/download-gh-artifact.sh gaogg521/dream-ui <run_id> macos-build-arm64-<sha> <dir>
+# 逐文件 sha512 与清单对账；arm64 的 latest-mac.yml 改名 latest-arm64-mac.yml
+# （electron-updater 按 ${channel}-mac.yml 拼名，arm64 channel 是 latest-arm64——
+#  prepare-release-assets.sh 的改名规则就是这条；x64 的保持 latest-mac.yml）
+# asar 抽查同 S5-④（从 zip 里解 onework.app/Contents/Resources/app.asar）
 ```
 
-再把打印出的五个 URL 逐个 `curl -sI` 确认 200，理想情况下用真机浏览器（不只是 curl）抓一次 `document.querySelectorAll('a[href*="cos.ap-shanghai"]')` 核对页面实际渲染的 href，因为 curl 验证的是对象存在，不代表页面真的引用对了那个 URL。
+10 个对象逐个 `publish-cos-release-asset.sh` 上传 → 官网切 `macArm`/`macIntel`
 
-i18n 文案在 `src/i18n.js`（zh/en 两套）+ `index.html` 静态 fallback，同样要按平台分别改，别全局替换。
+- 真实尺寸 → build + deploy。
+
+### S7. 终验（不看文案看 URL）
+
+1. 版本目录 13 个对象逐个 `curl -sI` = 200；
+2. 三份根清单 `releases/latest.yml` / `latest-mac.yml` / `latest-arm64-mac.yml`
+   的 `version:` = 新版本，其 `path:` 指向的对象同目录真实存在；
+3. 线上 `main-*.js` 含 `win/macArm/macIntel:"<ver>"` 与三个新尺寸；
+4. `platformVersions.linux` **没动**（本轮没打 deb 时它必须停在上一版，一个键管两条链）；
+5. 发版记录落盘 `dream-en/docs/release-record-<日期>-<ver>.zh-CN.md` 并推送。
 
 ---
 
-## 6. COS 上传 —— ⚠️ 首选本地 aws-cli，别指望 CI
+## 第二部分：仍然有效的坑（快速索引）
 
-**2026-07-21 和 2026-07-26 两次发布，`release-distribute.yml` 的 CI→上海 COS 网络路径都传不动**（07-21 卡 2 小时+被取消；07-26 连续两次卡满 20 分钟超时，且传输量越大越慢——215 KiB/s 掉到 123 KiB/s，是系统性限速不是偶发抖动）。**这不是配置问题**（元数据校验/virtual寻址/multipart阈值三个真坑早就修过了），就是 GitHub Actions 出口到国内 COS 这条链路本身不可靠。
+### 2.1 Mac CI（build-manual.yml）
 
-**结论：直接用本地 aws-cli 上传，不要先跑 CI 等它超时再切换**（省 20-40 分钟）：
+| 症状                                  | 病根 / 解法                                                                                                                                                                 |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| run 几秒失败、steps 空、log not found | **计费拦截**（私有仓 macOS 10 倍计费）。用 `gh api repos/gaogg521/dream-ui/check-runs/<jobId>/annotations` 看真因；解法是修付款/提额度或转 public                           |
+| Prepare dreamcore 404                 | `dreamcoreVersion` 指向的 Release 不存在——S2 的 tag 先出包再 dispatch                                                                                                       |
+| 卡 oxfmt/tsc/vitest                   | 本地先跑绿四道 gate 再 dispatch；vitest 历史失败要现查是否与本次相关                                                                                                        |
+| 签名成功但装机报已损坏                | 看 build step 的守卫：`signing file=… Developer ID Application` → `properly code signed` → `Notarization completed` 三连，缺一即红（IDENTITY secret 只填证书 CN、不带前缀） |
+| 超时 60:17                            | x64 公证排队不可控，timeout 已提到 90 min；codesign 偶发卡死是 OCSP flaky，重跑                                                                                             |
 
-1. 检查本机是否已有 aws-cli：`Get-Command aws`（PowerShell）。如果只在 Git Bash 里找不到，先查 PowerShell 的 PATH，两个 shell 的 PATH 不共享。
-2. 没装的话优先 `python -m pip install --user awscli`（用户态，不用 UAC）。**别用 `winget install Amazon.AWSCLI`**——它的 MSI 装到一半要 UAC 确认，非交互会话里会直接 exit 1602（"用户取消安装"），卡在这走不下去。pip 装的 `aws.cmd` 在 `%APPDATA%\Roaming\Python\Python3xx\Scripts\`，不在系统 PATH，要用绝对路径调用。
-3. **凭据（2026-08 起改了机制）**：公司安全改造后不再发长期 AK/SK，改成 **Token（凭据 Key）+ SignKey（签名密钥）** 换取短期 ak/sk。`~/.aws/credentials` 里的历史长期凭据已作废，别再用。取凭据走仓库脚本 [`scripts/fetch-cos-credentials.js`](../../scripts/fetch-cos-credentials.js)，详见下面 §6.1。**Token / SignKey 绝不贴进对话、绝不写进仓库**，只放本机环境变量或 GitHub Secrets。
-4. 配 COS 兼容参数（两个真坑）：`aws configure set default.s3.addressing_style virtual`（COS 拒绝 path-style）+ `aws configure set default.s3.multipart_threshold 5GB`（COS 分片上传缺 Content-Length 会拒绝，抬阈值让几百MB的安装包走单次 PUT）。
-5. 上传：`aws s3 cp <本地文件> s3://1onework-1251001122/releases/<ver>/ --endpoint-url https://cos.ap-shanghai.myqcloud.com --acl public-read`，版本目录传完再把 `latest*.yml` 单独 cp 一份到 `releases/` 根（App 自动更新轮询这里）。本地网络路径通常 10-20 MiB/s，几百MB到1GB+的量几分钟传完。
-6. CI 工作流 `release-distribute.yml` 仍保留作为"网络路径好的时候能用"的自动化选项（Release published 事件自动触发），已修的 3 个真坑同上；只是别死等它，`--timeout-minutes 20` 一超时就直接转本地方案，不用重跑 CI 第二次。
-7. 验证（公开读，不需要凭据）：`curl https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/latest.yml`，以及 `releases/<ver>/` 下每个安装包 `curl -o /dev/null -w '%{http_code}'` 应为 200。
+`installers_only` 必须为 **false**：Mac 自动更新走 `.zip` 不是 `.dmg`，
+true 会在上传前把 zip+yml 删掉（3.0.1 / 3.0.2 各踩一次）。
 
-### 6.1 取短期 COS 凭据（Token + 签名，2026-08 起）
+### 2.2 ACP 内嵌组件 —— 每次发版必查
 
-签名口径由凭据服务给定：`payload = token={token}&Timestamp={unix秒}`，`hmac-sha256`/`hmac-sha1` 取 `hex(hmac(signKey, payload))`，`md5` 取 `hex(md5(payload + signKey))`；POST `{"token":…,"Timestamp":…,"sign":…}`，返回 `{"code":0,"data":{"ak","sk","expire_at"}}`。脚本已封装，**别手搓 openssl**。
-
-端点（**2026-08-06 实测可用**）：`https://codo-honeypot.123u.com/api/honeypot/oapi/qcloud/alloc`，算法 `hmac-sha256`（脚本默认，实测一次通过）。两个必填环境变量（PowerShell）：
-
-```powershell
-$env:COS_ALLOC_URL='https://codo-honeypot.123u.com/api/honeypot/oapi/qcloud/alloc'; $env:COS_ALLOC_TOKEN='<凭据 Key>'; $env:COS_ALLOC_SIGN_KEY='<签名密钥>'
-```
-
-算法哪天改了再加 `$env:COS_ALLOC_SIGN_ALGO='hmac-sha1'`（或 `md5`），要和凭据服务网页上配的一致。
-
-然后把凭据注入当前 shell，再照常跑 `aws s3 cp`：
-
-```powershell
-node scripts/fetch-cos-credentials.js --format ps1 | Invoke-Expression
-```
-
-Git Bash / CI 之外的 bash 用 `eval "$(node scripts/fetch-cos-credentials.js --format sh)"`。脚本按需设置 `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`，返回体带 session token 时一并设 `AWS_SESSION_TOKEN`（没有则显式清掉，防上一次的残留串味）。
-
-**凭据形态（2026-08-06 实测）**：返回的是 `AKID` 开头的普通 ak/sk，**不带 session token**，有效期约 **7 天**——所以一次发布全程够用，不必中途重取。但别把它当长期凭据缓存进 `~/.aws/credentials`，每次发布现取即可。脚本在剩余有效期不足 15 分钟时会在 stderr 警告；上传中途报 403 / `InvalidAccessKeyId` 基本就是过期，重取一次即可。
-
-#### ⚠️ 所有凭据的权威副本在 `C:\Users\allenzhao\Desktop\feishu.txt`
-
-这个文件在**所有仓库之外**，含（只列类别）：飞书 App ID/Secret、**COS 的 BASEURL /
-SignKey（`COS_ALLOC_SIGN_KEY`）/ Token（`COS_ALLOC_TOKEN`）**、豆包与 Agnes 的模型 KEY、
-License 签发的 SECRET 私钥与 PUBLIC 公钥。
-
-**三条规则**：
-
-1. **绝不提交，也绝不复制任何值进仓库。** 2026-08-16 已按真实值扫过三仓全部历史提交：
-   真密钥零命中；唯一命中是 License 的 **PUBLIC 公钥**
-   （`crates/one-billing/src/license_key.rs`），那是刻意提交的、不是泄露。
-2. **绝不贴进对话。** 读取时用脚本直接注入环境变量，输出一律脱敏（只报长度/有无）。
-3. **要密钥先来这个文件找，别翻历史会话记录。** 2026-08-16 我为取 COS 凭据去翻 8-07 的
-   会话 `.jsonl`，拿到一把**过期的**，据此断言"token 过期了，你去重新签发"，浪费了一轮。
-
-⚠️ 文件里 COS 那行的 `BASEURL` 是**基地址**，脚本需要的是完整 alloc 路径
-`https://codo-honeypot.123u.com/api/honeypot/oapi/qcloud/alloc`。
-
-#### 三个错误码怎么读（凭据服务自己的定义）
-
-| code   | 含义                                                                |
-| ------ | ------------------------------------------------------------------- |
-| `2001` | token 无效：不是最新 Token、与 SignKey 混用了、或带了多余空格/换行  |
-| `2010` | 签名失败：SignKey / 算法 / Timestamp 不对（算法就是 `hmac-sha256`） |
-| `5000` | 云厂商签发失败 —— **看 `reason` 字段，别看 `message`**              |
-
-**把算法换一遍就能定位在哪一层挂的**：`hmac-sha1`/`md5` 报 `2010` 而 `hmac-sha256` 报别的，
-说明签名与 token 都过了，故障在更下游。
-
-#### `5000` 实战：子账号有一把 Inactive 的 AK 卡住配额
-
-2026-08-16 实测原始报文：
-
-```json
-{
-  "code": 5000,
-  "message": "云厂商签发失败",
-  "reason": "sub-account has a disabled access key (AKID4we8… is Inactive) on cloud"
-}
-```
-
-腾讯/阿里/火山一致：**子用户 AK 配额通常只有 2 把**。一把在云控制台被**停用但没删除**时，
-它照样占位，于是 alloc 签不出新的。本次那把正是 `~/.aws/credentials` 里 2026-07-21 缓存的
-长期 AK——所以"把旧 AK 留在那儿不管"会在一个月后变成发布卡死。
-
-**解法**：去腾讯云控制台把那把 Inactive 的密钥**删掉**（禁用无用，禁用状态本身就是占位原因）。
-
-`~/.aws/credentials` 现已清空并留了说明（备份在同目录 `.disabled-akid-2026-08-16.bak`）。
-**短期凭据只进程内生效，永远不要写回这个文件**。
-
-⚠️ `scripts/fetch-cos-credentials.js` 原本只打印 `message`、把 `reason` 丢了，于是这个可修的
-问题看起来像"云厂商挂了"。已修为一并输出 `reason`。
-
-### ⚠️ 6.2 GitHub 托管 runner 从此彻底用不了 —— 凭据服务在内网
-
-**2026-08-06 实测坐实（run [31101621547](https://github.com/gaogg521/1oneUI/actions/runs/31101621547)）**：两条 secret 都配好后跑冒烟，卡在换凭据这步，报 `fetch failed`。查明 `codo-honeypot.123u.com` 解析到 **`10.241.5.174`**——RFC1918 内网地址，只在公司网内可路由（本机 51ms 返回 200，公网 runner 连不上）。
-
-**这不是配置问题，改 secret / 换算法 / 加重试都没用**，是路由层面的死路。三条出路：
-
-1. **就走本地 aws-cli**（推荐，且本来就是 §6 的首选）——两次发布已经证明 CI→上海 COS 的带宽本来就不可靠，现在只是多了一个硬理由。**本轮已实测本地全链路通**：换凭据 → `aws s3 ls` 列出桶里 4 个版本目录。
-2. 在公司网内架 **self-hosted runner**（要基建 + 安全评审）。
-3. 找凭据服务方要一个**公网可达的端点**。
-
-在选定 2 或 3 之前，`release-distribute.yml` 在 GitHub 托管 runner 上**必然失败**，工作流头部注释与失败提示都已写明，别再花时间调它。
-
-其余配置（供将来接自建 runner 用）：仓库 Secrets 只需 **`COS_ALLOC_TOKEN` + `COS_ALLOC_SIGN_KEY`** 两条（端点作为非密钥默认值写在工作流 `env` 里，服务搬家时用 `COS_ALLOC_URL` secret 覆盖；算法非默认时加仓库变量 `COS_ALLOC_SIGN_ALGO`）；旧的 `COS_SECRET_ID` / `COS_SECRET_KEY` 已不再读取，可以删掉。**env 回落与 secret 打码这两条本轮已在真实 CI 日志里验证正确**，坏的只有网络这一环。
-
----
-
-## 6.3 macOS Intel 反复出问题的三条根因——2026-09-07 用真实 API 证据查清，纠正了当天早些时候的错误结论
-
-**背景**：3.0.1、3.0.2 两次发版，macOS Intel（`macos-x64`）都没能跟着 matrix 正常出包，
-每次都要用 `build-manual.yml` 单独补。3.0.1 发版当晚我（AI）看着 job 时序猜了一个
-「`windows-arm64` 失败 → 触发自动重试 → rerun 取消掉还在跑的 macOS」的连锁，
-写进了当时的 commit message 和这份手册。**这个猜测是错的**——事后拉 GitHub API 查真实
-时间戳才发现，三件事是各自独立的坑，叠在一起才显得像一条连锁。**教训：CI 时序问题
-别靠日志时间点脑补因果，去 `gh api .../jobs` 拿 `started_at`/`completed_at` 核对。**
-
-**根因 1（真正的主因）：`macos-x64` 的 job timeout 对它来说太紧。**
-`_build-reusable.yml` 的 `timeout-minutes` 原来是 60，是照 macOS arm64 的健康耗时
-（~16 分钟）定的。但 x64 这条腿是**公证排队时间不可控**，跟 arm64 的分布根本不同——
-3.0.1 那轮实测：`macos-x64` 从 `started_at` 到 `completed_at` 精确是 **60:17**，
-同一轮 `macos-arm64` 只用了 13:32。3.0.2 那轮復現了一次一样的 60:17。
-**已把 timeout 提到 90 分钟**（该文件里的注释记了完整依据）。
-
-**根因 2（无关但值得顺手清掉）：`windows-arm64` 是已知必失败的死腿。**
-dream-core 的 release 不产 `aarch64-pc-windows` 二进制，这条腿卡死在
-"Prepare dreamcore binary"，官网也没有 Windows ARM64 下载入口——它从来没产出过
-任何东西，纯粹每次都白烧一个 runner。**已从 matrix 摘掉。**
-⚠️ 它**不会**拖累 macOS 构建被取消——`_build-reusable.yml` 的 matrix 本来就是
-`fail-fast: false`，这条已经验证过了。
-
-**根因 3（真正无关的第三个坑，同一批修复里顺手发现）：`auto-retry-workflow`
-这个"自动重试"机制从建立以来就没成功过一次。** 它是 workflow 内的一个 job，
-在 `build-pipeline` 失败后等 5 分钟，调用**本 run 自己**的 GitHub rerun API。
-但只要这个 job 还在执行（它必然在执行，因为正是它在发这个 HTTP 请求），
-本 run 在 GitHub 眼里就还是 `in_progress`，rerun API 因此**必定** 403
-`"This workflow is already running"`——这是设计上的自我矛盾，不是偶发的时序竞争。
-3.0.1 那次实测：调用发出、10 毫秒内收到 403，从未成功过。**已彻底移除这个 job**——
-留着只会让人误以为构建失败会自动恢复，实际每次都要人工重跑。真要做自动重试，
-得是一个独立的 workflow，靠 `workflow_run` 事件在这个 run 真正结束之后触发。
-
-**补救 macOS Intel 时容易再踩的第四个坑**：`build-manual.yml` 单独重建时，
-`installers_only` 输入原来默认 `true`，会把 `.zip` 和 `latest-mac.yml` 一起删掉只留
-`.dmg`。**macOS 自动更新走的是 `.zip` 不是 `.dmg`**——3.0.1 就是这么把 Intel 的
-自动更新源拖欠到下一版的，而 3.0.2 第一次单独重建 Intel 时**同一个坑又踩了一次**
-（默认值没变，操作者忘了这个 flag）。**已把默认值翻成 `false`**：手动构建绝大多数
-情况就是在补发版素材，不是在冒烟测试，"保留完整产物"应该是更安全的默认。
-
-**验收**：`curl https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/latest-mac.yml`
-的 `version:` 必须等于当前发布版本，且它 `path:` 指向的 `.zip` 在同目录下真实存在。
-
----
-
-## 6.4 ⚠️ `PUBLISH_RELEASE` 仓库变量——"绿色但什么都没构建"的真相
-
-**2026-09-07 查明。这条直接推翻了 [§1.5](#15-️-build-and-release打-tag-自动发布在本-fork-从未真正触发过)
-"从未真正触发过"的旧结论——它其实**每次都在跑，只是把活全跳过了**。**
-
-`build-and-release.yml` 的 `build-pipeline` 与 `pack-web-cli` 两个 job 的 `if:` 都带
-`vars.PUBLISH_RELEASE == 'true'`。这个仓库变量**从来没设过**，于是：
-
-- 两个 job 全部 `skipped`；
-- 而最终 `release` job 的条件里写的是 `vars.PUBLISH_RELEASE != 'true' || (...)`，
-  变量没设时**前半句为真**，于是它照样 `success`——**整个 run 显示绿色，却一个包都没产出**。
-
-这是最坏的一种假绿：不是红的所以没人查，又确实什么都没做。
-
-**已于 2026-09-07 设为 `true`**（`gh variable set PUBLISH_RELEASE --body true --repo gaogg521/dream-ui`）。
-查证：`gh variable list --repo gaogg521/dream-ui`。
-
-**判据**：打完 tag 后别看 run 的总色，去看 `Build Pipeline / Build <平台>` 这些 job 是不是
-真的 `success`——`skipped` 就等于没出包。
-
-### 6.5 三个已经落进机制、别再手打一遍的东西（2026-09-07）
-
-同一晚查出来的三处问题，都已经改成代码而不是留在这份文档里让人凭记忆执行：
-
-- **macOS 构建卡死自动重试**：`_build-reusable.yml` 的 "Build with electron-builder (macOS)"
-  步骤现在自己重试（最多 3 次，每次 20 分钟上限），不用再干等超时或手动重跑整个 job。
-  依据见 §6.3 的 codesign 卡死记录。
-- **`scripts/download-gh-artifact.sh`** —— 取代手打 `gh run download` + 重试循环。
-  `curl` 直接打产物 API，`--speed-limit`/`--speed-time` 检测卡顿自动重连，`-C -` 断点续传
-  不用每次从头来。用法：`scripts/download-gh-artifact.sh <owner/repo> <run_id> <artifact-name> <out-dir>`。
-- **`scripts/publish-cos-release-asset.sh`** —— 取代手动的"传版本目录 + 记得也传根目录"。
-  按文件名自动判断：`latest*.yml` 会自动镜像到根目录（自动更新真正轮询的位置），
-  安装包只传版本目录。用法：`scripts/publish-cos-release-asset.sh <本地文件> <version>`
-  （COS 凭据仍要先按 §6.1 注入环境变量）。**这条是从一次真实事故里长出来的**：
-  3.0.2 发布当晚，五个平台里四个的根 `latest*.yml` 都停在上一版，只有明确记得两步都做的
-  那一个是对的——"传完记得同步根目录"当人工步骤时，四次里丢了三次。
-
----
-
-## 7. 实时核实命令
+打包后核对两处（缓存会伪装正常，只有全新安装才暴露，2.1.51 发出去过一次）：
 
 ```bash
-# 1oneCore Release 是否有齐 6 资产
-gh release view v<core-ver> --repo gaogg521/1oneCore --json assets --jq '.assets[].name'
+grep -A5 'pub fn version' <dream-core>/crates/dream-core-runtime/src/acp_tool_runtime/types.rs
+ls -d <包>/resources/bundled-dreamcore/*/managed-resources/acp/*/*/
+# claude-agent-acp / codex-acp 两套版本必须逐字一致
+```
 
-# 1oneUI Release 资产（Win + Mac 齐没）
-gh release view v<ver> --repo gaogg521/1oneUI --json assets --jq '.assets[].name'
+### 2.3 COS 上传（本地 aws-cli，CI 上传不可用）
 
-# App 自动更新源发没发
+- 凭据：`C:\Users\allenzhao\Desktop\feishu.txt` 的 Token/SignKey（**绝不进仓库、
+  绝不贴对话**），`COS_ALLOC_URL` 要在文件 BASEURL 后补 `/oapi/qcloud/alloc`；
+  `eval "$(node scripts/fetch-cos-credentials.js --format sh)"` 注入，短期有效 ~7 天。
+- 寻址：`addressing_style=virtual` + `multipart_threshold=5GB` 已配好，别动。
+- **CI→COS 的网络路径不可靠**（限速 120-215 KiB/s 且超时），GitHub runner 还连不上
+  内网凭据服务——永远本地 aws-cli，别先试 CI 再切换。
+- `publish-cos-release-asset.sh`：按文件名自动判断 `latest*.yml` 并镜像到根
+  （3.0.2 那次五平台四根清单停在旧版的事故就是"根目录忘记同步"造成的）。
+
+### 2.4 官网切版
+
+- `sync-changelog-to-site.js --version <ver>` 无去重，**重跑前先删旧条目**；
+  它会顺手 bump `release.version`。
+- `platformVersions` 四个键按下载条目独立（macArm / macIntel 不共享 mac 键），
+  每个键停在它自己最后一次真实上传 COS 的版本，没出包就别动；
+  `platformSizes` 与版本是同一个事实，一起改（尺寸 = 实际字节数 ÷ 1048576 取整）。
+- 部署后按 URL 验收，不信文案：bundle 里 `win:"<ver>"` 等 + 逐 URL 200。
+
+### 2.5 工具链三坑（3.0.6 实操记录）
+
+1. 两个 nextest 不能并行（channel_e2e spawn 的 dreamcore.exe 撞链接）；
+   泄漏进程按 PID 清，不按名字。
+2. `cmd | tail` 吞退出码；固定 `REAL_EXIT=$?` 紧跟命令。
+3. dream-core/target 会无限膨胀（871GB 事故）；`df -h /d` 先看盘，`cargo clean` 兜底。
+
+### 2.6 Windows 签名 —— 决策已定，不再询问
+
+**现阶段不购买 Authenticode 证书。** 本管线的 Windows 包只带 electron-builder 的
+asar 完整性自签：`Get-AuthenticodeSignature` 显示 `NotSigned`、用户装机见到
+SmartScreen"未知发布者"，**与线上所有历史版本一致，是预期状态不是缺陷**。
+发版验收不含 Authenticode 检查；除非用户主动改变决策，发版流程里不要再提。
+
+### 2.7 更新记录生成（S1 两条规矩的落地工具）
+
+- 全量清单来自 S1 的 `git log --since=<COS Last-Modified>`（四仓）；
+- canonical 源 `docs/release-notes/<ver>.json` 同时喂桌面端面板（COS sidecar）与官网
+  changelog，两处永远同文；
+- `sync-changelog-to-site.js` 无去重：重跑改文案前先删 `src/changelog.js` 里的旧条目。
+
+---
+
+## 第三部分：历史教训（1oneCore / 1oneUI 时代，一句话版）
+
+| 事故                       | 一句话教训                                                            |
+| -------------------------- | --------------------------------------------------------------------- |
+| 2.1.49 bun cache 损坏      | native rebuild 失败先清 `bun pm cache rm`                             |
+| 2.1.51 ACP 组件缺失        | 内嵌资源 + 用户目录缓存双来源的组件，有缓存的机器验证等于没验证       |
+| 2.1.51 CI 全挡             | 私有仓 macOS 10 倍计费；3 秒零步骤失败 = 看账单不是看代码             |
+| 3.0.0 Mac"已损坏"          | 签名失败的兜底重试会产出假绿；验收只认日志三连                        |
+| 3.0.0 改名                 | `executableName` 决定 .app/exe 壳名；appId 才是冻结项                 |
+| 3.0.1/3.0.2 macos-x64 超时 | 公证排队不可控，timeout 90 min + 构建步内自重试已落地                 |
+| 3.0.2 根清单停旧版         | "传完记得同步根"当人工步骤必丢——publish-cos-release-asset.sh 因此而生 |
+| release-distribute.yml     | CI→COS 限速 + runner 连不上内网凭据服务，永远本地传                   |
+| auto-retry job             | 在自己 run 里调 rerun API 必 403，已移除                              |
+
+---
+
+## 实时核实命令
+
+```bash
+gh release view v<core-ver> --repo gaogg521/dream-core --json assets --jq '.assets[].name'
+gh run list --repo gaogg521/dream-ui --workflow=build-manual.yml --limit 4 --json databaseId,status,conclusion
 curl https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/latest.yml
-
-# Mac 构建 run 状态
-gh run list --repo gaogg521/1oneUI --workflow=build-manual.yml --limit 4 --json databaseId,status,conclusion,createdAt
 ```
 
----
+## 相关文档
 
-## 8. 相关文档
-
-- **v3.0.0 Mac"已损坏"根治 + `1onecode`→`One Work` 改名的完整过程**（含 §1.6 每条坑的现场细节、迁移代码、真机验证方法）：[`session-2026-08-31-mac-signing-and-brand-executable.zh-CN.md`](session-2026-08-31-mac-signing-and-brand-executable.zh-CN.md)
-- 发布链路当前状态 + `release-distribute.yml` 4 个 CI bug 诊断：[`session-2026-07-21-brand-rename-and-release-fixes.zh-CN.md`](session-2026-07-21-brand-rename-and-release-fixes.zh-CN.md) §6
-- Mac 签名/公证配置 + 老系统 Node 兼容 + 打 tag 流水线排障：[`session-2026-07-21-mac-signing-and-node-compat.zh-CN.md`](session-2026-07-21-mac-signing-and-node-compat.zh-CN.md)
-- Fork 上手 / 本地 dev / 打包：[`fork-dev-onboarding.zh-CN.md`](fork-dev-onboarding.zh-CN.md)
-- 发版只走官网 + COS、不发 GitHub Release：见 memory `release-channel-cos-website-only`
-- 自动升级改指向自建 COS：见 memory `autoupdate-cos-repoint`
-- **3.0.6 发版全记录（数字、决策、遗留项）**：[`dream-en/docs/release-record-2026-09-19-3.0.6.zh-CN.md`](../../../../dream-en/docs/release-record-2026-09-19-3.0.6.zh-CN.md)
-
----
-
-## 9. 2026-09-19 增补：3.0.6 发版轮的新坑 + 下次发版的标准走法
-
-> 3.0.6 花了一个下午，其中约七成不在打包本身。本节把那次的新坑收进来，
-> 并给出 main 干净时的标准路径（实测各环节耗时后的推算：**约 1.5 小时**）。
-
-### 9.1 桌面发版必带 dreamcore 换钉 —— 划界时先查"UI 配对"
-
-3.0.5→3.0.6 之间 dream-core 攒了 45 个 commit，其中「个人版备份恢复」「web search
-到会话」「Agnes 读图」与 dream-ui 的 UI 改动**配对**——不换后端钉版，这些功能上线
-就是空壳。判据：划界后 grep dream-core 的 `feat(system)/feat(mcp)/fix(capability)`
-，看有没有与 dream-ui commit 同主题的。有，就先打 dreamcore tag（one.N+1）、
-bump `dreamcoreVersion`，再开打包。
-
-### 9.2 ⚠️ Test job 编译期死掉时，后面所有真实回归都静音
-
-dream-core 的 main CI 连红 6 天（40+ run），根因是一个 example 的 E0063 编译错——
-`cargo nextest run --workspace` 在编译期就死，**一个测试都没跑过**。等编译修好，
-一口气冒出三个被遮住的真实回归：channel_e2e 断言没跟上 wecom 移除（7→6，两处）、
-enterprise_bootstrap_e2e 没跟上 license 默认档位改 free、brand_residue 抓到 legacy
-scheme 没标记。三条修法都是"跟上已经发生的正确事实"，但要警惕的是结构问题：
-
-> **测试编译失败是红色静音键。它存在期间引入的每个回归都不报警。**
-> 所以 Test job 挂在编译期时，修复当天必须把整套件全量跑一遍（`--no-fail-fast`），
-> 不能只修编译错就收工。
-
-### 9.3 nextest / cargo 的三个现场坑（本轮全部实操踩过）
-
-1. **两个 nextest 不能并行**：channel_e2e 会 spawn `target\debug\dreamcore.exe` 当
-   被测进程，第二个 run 重链接同名文件必撞 os error 5。跑 Rust 测试就一次跑一个
-   full suite；撞了就 `Get-Process dreamcore` 按 **PID** 清泄漏（总结里会报
-   "N leaky"），别按进程名杀。
-2. **`| tail` 吞退出码**：`cargo ... | tail` 的 `$?` 是 tail 的。本轮两次被它骗
-   （一次误报成功、一次误报失败）。固定写法：`REAL_EXIT=$?` 紧跟命令后再处理输出。
-3. **磁盘满 = os error 112 / LNK1108 写入失败**：dream-core/target 一夜能涨到
-   871 GB（两套 RUSTFLAGS profile 翻倍 + 历史堆积）。见到"无法写入 rmeta"先
-   `df -h /d`，再 `cargo clean`。871 GB 这刀清完，盘回 39%。
-
-### 9.4 Release Please 连红的两个独立病根（2026-09-19 修绿）
-
-dream-core / dream-engine 的 Release Please 连红数周，两仓病根不同、都修了：
-
-- **dream-core**：仓库 index 里根 `Cargo.toml` 是 CRLF、platform 的是混合行尾，
-  release-please 的 TOML 解析器直接拒绝（"control characters … not allowed in
-  comments"）。修法：两文件转 LF + `.gitattributes` 钉 `*.toml text eol=lf`
-  （Windows 检出/保存会不断把 CRLF 带回来，没有这条防不住）。
-- **两仓共同**：仓库设置里「Allow GitHub Actions to create and approve pull
-  requests」没开，工作流无权建 PR。已用 API 开启：
-  `gh api -X PUT repos/gaogg521/<repo>/actions/permissions/workflow -f can_approve_pull_request_reviews=true`。
-- ⚠️ **release-please 的版本 PR 与 fork 的 `-one.N` tag 方案冲突**（它提的是
-  `0.1.72`，惯例是 bump `0.1.71-one.N` 后缀）。两个 PR（core#5 / engine#4）**先
-  挂着别合**，除非整体决定改用 release-please 驱动的版本方案。
-
-### 9.5 下次发版的标准走法（main 干净时 ≈ 1.5 小时）
-
-| 步骤                         | 耗时    | 要点                                                                                                                                                                          |
-| ---------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0. 预检三件                  | 2 min   | ① 四仓 main 与 origin 齐平且 CI 绿（按用户决策可绕过 CI 直接 tag）② D 盘余量 >100 GB ③ 划界（COS Last-Modified，**不是** commit 时间）+ 查 UI 配对（9.1）                     |
-| 1. dreamcore tag → Release   | ~26 min | `git tag v0.1.71-one.N+1 && git push origin <tag>`；release.yml 六资产齐了才继续                                                                                              |
-| 2. bump + 发版 commit + push | 5 min   | `package.json` version + `dreamcoreVersion` + `docs/release-notes/<ver>.json`（用户给的清单三件套），一个 `chore(release): <ver>` commit                                      |
-| 3. Windows + Mac CI **并行** | ~35 min | 本机 `bun run build-win:x64`；`gh workflow run build-manual.yml -f platform=macos-arm64 / macos-x64 -f installers_only=false`。窗口内预生成 `release-notes.md`、注入 COS 凭据 |
-| 4. Windows 腿先上线          | ~15 min | 验收（sha512 对账 / VersionInfo / ACP 版本逐字一致 / asar 失效类名 0 处）→ 传 exe+latest.yml+release-notes.md → 官网只切 `win` 键 → build+deploy → 验 200                     |
-| 5. Mac 产物落地              | ~20 min | `scripts/download-gh-artifact.sh` 两架构并行；arm64 清单改名 `latest-arm64-mac.yml`（x64 保持原名）；逐文件 sha512 对账 + asar 抽查                                           |
-| 6. Mac 腿上线 + 终验         | ~15 min | 每架构 5 对象上传 → 官网切 `macArm`/`macIntel` + 真实尺寸 → 终验 13 对象 200 + 三份根清单版本号                                                                               |
-
-脚本模板：`D:\dream\scratchpad\release-3.0.6-upload.sh`（阶段 A 凭据含
-BASEURL 补 `/oapi/qcloud/alloc` 后缀的坑；下次复制改版本号即可；跑过一整轮后可
-考虑提升进 `scripts/`）。
+- **3.0.6 发版全记录**（数字、决策、遗留）：[`dream-en/docs/release-record-2026-09-19-3.0.6.zh-CN.md`](../../../../dream-en/docs/release-record-2026-09-19-3.0.6.zh-CN.md)
+- **3.0.5 发版全记录 + 三个大坑**（划界、失效类名、双清单）：[`dream-en/docs/handoff-2026-09-13-openocta-parity.zh-CN.md`](../../../../dream-en/docs/handoff-2026-09-13-openocta-parity.zh-CN.md) §10
+- 3.0.0 Mac"已损坏"根治 + 改名：[`session-2026-08-31-mac-signing-and-brand-executable.zh-CN.md`](session-2026-08-31-mac-signing-and-brand-executable.zh-CN.md)
+- 发布链路 + release-distribute 诊断：[`session-2026-07-21-brand-rename-and-release-fixes.zh-CN.md`](session-2026-07-21-brand-rename-and-release-fixes.zh-CN.md) §6
+- 发版只走官网 + COS、不发 GitHub Release：memory `release-channel-cos-website-only`
+- 发版脚本模板：`D:\dream\scratchpad\release-3.0.6-upload.sh`（复制改版本号）

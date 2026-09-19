@@ -132,14 +132,14 @@ describe('WavedromBlock pan/zoom', () => {
     expect(inner.style.transform).toContain('translate(0px, 0px) scale(1)');
   });
 
-  it('opens the zoom overlay when the static diagram is clicked', () => {
+  it('opens the zoom overlay when the static diagram is clicked', async () => {
     render(<WavedromBlock code={VALID_WAVEJSON} />);
     const diagram = screen.getByTestId('wavedrom-diagram');
     fireEvent.click(diagram);
-    expect(screen.getByTestId('diagram-zoom-overlay')).toBeInTheDocument();
+    expect(await screen.findByTestId('diagram-zoom-overlay')).toBeInTheDocument();
   });
 
-  it('opens the zoom overlay on click without panning when drag-to-pan is enabled', () => {
+  it('opens the zoom overlay on click without panning when drag-to-pan is enabled', async () => {
     render(<WavedromBlock code={VALID_WAVEJSON} enablePanZoom />);
     const diagram = screen.getByTestId('wavedrom-diagram');
 
@@ -149,7 +149,7 @@ describe('WavedromBlock pan/zoom', () => {
 
     const inner = diagram.firstElementChild as HTMLElement;
     expect(inner.style.transform).toContain('translate(0px, 0px) scale(1)');
-    expect(screen.getByTestId('diagram-zoom-overlay')).toBeInTheDocument();
+    expect(await screen.findByTestId('diagram-zoom-overlay')).toBeInTheDocument();
   });
 
   it('pans instead of opening the overlay when the pointer drags past the threshold', () => {
@@ -165,10 +165,10 @@ describe('WavedromBlock pan/zoom', () => {
     expect(screen.queryByTestId('diagram-zoom-overlay')).toBeNull();
   });
 
-  it('closes the zoom overlay via its close button', () => {
+  it('closes the zoom overlay via its close button', async () => {
     render(<WavedromBlock code={VALID_WAVEJSON} />);
     fireEvent.click(screen.getByTestId('wavedrom-diagram'));
-    expect(screen.getByTestId('diagram-zoom-overlay')).toBeInTheDocument();
+    expect(await screen.findByTestId('diagram-zoom-overlay')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('diagram-overlay-close'));
     expect(screen.queryByTestId('diagram-zoom-overlay')).toBeNull();

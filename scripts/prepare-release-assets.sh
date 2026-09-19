@@ -114,80 +114,126 @@ echo "==> Writing architecture-specific updater metadata ..."
 [ -n "$MAC_ARM64_LATEST" ]  && cp -f "$MAC_ARM64_LATEST"  "$OUTPUT_DIR/latest-arm64-mac.yml"
 
 # ---------------------------------------------------------------------------
-# 5) Hard validation for required updater metadata
+# 5) Validation — scoped to what this run actually built.
+#
+# Since 2026-09-07 releases are incremental (playbook §5.1): a run may carry
+# one platform or all five. Demanding all four updater manifests unconditionally
+# made this script fail on exactly the flows it exists to serve, so every check
+# below is derived from what the artifacts directory contains: a platform with
+# updater metadata must also have its distributables, and vice versa — either
+# half alone ships an updater-less package silently. STRICT=1 restores the
+# full-matrix demands (a complete build-and-release.yml matrix run).
 # ---------------------------------------------------------------------------
-echo "==> Validating required metadata ..."
+echo "==> Validating metadata for what was built ..."
 
 VERSION="${MOCK_VERSION:-$(node -p "require('./package.json').version")}"
 MISSING=0
-for required in latest.yml latest-mac.yml latest-linux.yml latest-linux-arm64.yml; do
-  if [ ! -f "$OUTPUT_DIR/$required" ]; then
-    echo "::error::Missing required updater metadata: $required"
+
+find_dist() { find "$OUTPUT_DIR" -maxdepth 1 -type f -name "$1" | head -n 1; }
+
+# windows-x64: exe + latest.yml
+if [ -n "$WIN_X64_LATEST" ]; then
+  if [ ! -f "$OUTPUT_DIR/latest.yml" ]; then
+    echo "::error::windows-x64 metadata found but latest.yml missing in output"
+    MISSING=1
+  fi
+  if [ -z "$(find_dist "*-${VERSION}-win-x64.exe")" ]; then
+    echo "::error::windows-x64 metadata found but no *-${VERSION}-win-x64.exe"
+    MISSING=1
+  fi
+elif [ -n "$(find_dist "*-${VERSION}-win-x64.exe")" ]; then
+  echo "::error::windows-x64 installer present without latest.yml — its auto-update would silently die"
+  MISSING=1
+fi
+
+# windows-arm64 (dropped from the release matrix, kept for ad-hoc runs): exe + latest-win-arm64.yml
+if [ -n "$WIN_ARM64_LATEST" ]; then
+  if [ ! -f "$OUTPUT_DIR/latest-win-arm64.yml" ]; then
+    echo "::error::windows-arm64 metadata found but latest-win-arm64.yml missing in output"
+    MISSING=1
+  fi
+  if [ -z "$(find_dist "*-${VERSION}-win-arm64.exe")" ]; then
+    echo "::error::windows-arm64 metadata found but no *-${VERSION}-win-arm64.exe"
+    MISSING=1
+  fi
+fi
+
+# macOS: per arch, dmg+zip and the arch's manifest must travel together
+for arch in x64 arm64; do
+  META_SRC="MAC_${arch^^}_LATEST"   # MAC_X64_LATEST / MAC_ARM64_LATEST
+  META_NAME="latest-mac.yml"
+  if [ "$arch" = "arm64" ]; then META_NAME="latest-arm64-mac.yml"; fi
+
+  if [ -n "${!META_SRC:-}" ]; then
+    if [ ! -f "$OUTPUT_DIR/$META_NAME" ]; then
+      echo "::error::mac-$arch metadata found but $META_NAME missing in output"
+      MISSING=1
+    fi
+    for ext in dmg zip; do
+      if [ -z "$(find_dist "*-${VERSION}-mac-${arch}.${ext}")" ]; then
+        echo "::error::mac-$arch metadata found but no *-${VERSION}-mac-${arch}.${ext}"
+        MISSING=1
+      fi
+    done
+  elif [ -n "$(find_dist "*-${VERSION}-mac-${arch}.zip")" ] || [ -n "$(find_dist "*-${VERSION}-mac-${arch}.dmg")" ]; then
+    echo "::error::mac-$arch installer present without ${META_NAME} — mac-$arch auto-update would silently die"
     MISSING=1
   fi
 done
 
-# ---------------------------------------------------------------------------
-# 5b) Hard validation for desktop release assets
-# ---------------------------------------------------------------------------
-echo "==> Validating desktop release assets ..."
-
-# Match on version+arch+ext rather than on the product-name prefix.
-# electron-builder derives that prefix from `artifactName` in
-# packages/desktop/electron-builder.yml, so hardcoding it here means a brand
-# rename silently breaks release validation: the 2026-07 rename to "One Work"
-# left this check looking for the pre-rebrand prefix forever, and it stayed green
-# only because create-mock-release-artifacts.sh happened to emit the same stale name.
+# linux: per arch, installers and latest-linux*.yml must travel together
 for arch in x64 arm64; do
-  for ext in dmg zip; do
-    pattern="*-${VERSION}-mac-${arch}.${ext}"
-    found=$(find "$OUTPUT_DIR" -maxdepth 1 -type f -name "$pattern" | head -n 1)
-    if [ -z "$found" ]; then
-      if [ "$ext" = "zip" ]; then
-        echo "::error::Missing macOS zip artifact matching: $pattern"
-      else
-        echo "::error::Missing macOS DMG artifact matching: $pattern"
-      fi
+  META_SRC="LINUX_${arch^^}_LATEST"
+  META_NAME="latest-linux.yml"
+  if [ "$arch" = "arm64" ]; then META_NAME="latest-linux-arm64.yml"; fi
+
+  if [ -n "${!META_SRC:-}" ]; then
+    if [ ! -f "$OUTPUT_DIR/$META_NAME" ]; then
+      echo "::error::linux-$arch metadata found but $META_NAME missing in output"
+      MISSING=1
+    fi
+  elif [ -n "$(find_dist "*-${VERSION}-linux-*.deb")" ]; then
+    echo "::error::linux installer present without ${META_NAME} — linux auto-update would silently die"
+    MISSING=1
+  fi
+done
+
+# --- STRICT: the full-matrix contract, for build-and-release.yml after a complete matrix ---
+if [ "${STRICT:-0}" = "1" ]; then
+  for required in latest.yml latest-mac.yml latest-linux.yml latest-linux-arm64.yml; do
+    if [ ! -f "$OUTPUT_DIR/$required" ]; then
+      echo "::error::STRICT: Missing required updater metadata: $required"
       MISSING=1
     fi
   done
-done
+  for arch in x64 arm64; do
+    for ext in dmg zip; do
+      if [ -z "$(find_dist "*-${VERSION}-mac-${arch}.${ext}")" ]; then
+        echo "::error::STRICT: Missing macOS $ext artifact for $arch matching *-${VERSION}-mac-${arch}.${ext}"
+        MISSING=1
+      fi
+    done
+  done
+fi
 
-# No blockmap gate here any more. Differential packaging was turned off on
-# 2026-09-11 when the NSIS payload moved to zip (the two are mutually
-# exclusive in NsisTarget), so no arch emits a blockmap and demanding one
-# would fail every release. If differential packaging is ever turned back on,
-# restore this check with it -- a missing blockmap degrades silently to a full
-# download and nothing else in the pipeline reports it.
-
-# ---------------------------------------------------------------------------
-# 5c) Hard validation for web-cli release assets
-# ---------------------------------------------------------------------------
-echo "==> Validating web-cli assets ..."
-
-WEB_PLATFORMS=(
-  "darwin-arm64"
-  "darwin-x86_64"
-  "linux-arm64"
-  "linux-x86_64"
-  "win-x86_64"
-)
-
-for plat in "${WEB_PLATFORMS[@]}"; do
-  tarball="dream-web-${VERSION}-${plat}.tar.gz"
-  if [ ! -f "$OUTPUT_DIR/$tarball" ]; then
-    echo "::error::Missing web-cli tarball: $tarball"
+# --- web-cli: all-or-nothing (pack-web-cli always emits the full set) ---
+WEB_TARBALL_COUNT=$(find "$OUTPUT_DIR" -maxdepth 1 -type f -name "dream-web-*.tar.gz" | wc -l)
+if [ "$WEB_TARBALL_COUNT" -gt 0 ]; then
+  for plat in darwin-arm64 darwin-x86_64 linux-arm64 linux-x86_64 win-x86_64; do
+    tarball="dream-web-${VERSION}-${plat}.tar.gz"
+    if [ ! -f "$OUTPUT_DIR/$tarball" ]; then
+      echo "::error::Missing web-cli tarball: $tarball"
+      MISSING=1
+    fi
+    if [ ! -f "$OUTPUT_DIR/${tarball}.sha256" ]; then
+      echo "::error::Missing web-cli checksum: ${tarball}.sha256"
+      MISSING=1
+    fi
+  done
+  if [ ! -f "$OUTPUT_DIR/install-web.sh" ]; then
+    echo "::error::web-cli tarballs present but install-web.sh missing"
     MISSING=1
   fi
-  if [ ! -f "$OUTPUT_DIR/${tarball}.sha256" ]; then
-    echo "::error::Missing web-cli checksum: ${tarball}.sha256"
-    MISSING=1
-  fi
-done
-
-if [ ! -f "$OUTPUT_DIR/install-web.sh" ]; then
-  echo "::error::Missing install-web.sh"
-  MISSING=1
 fi
 
 if [ "$MISSING" -ne 0 ]; then
