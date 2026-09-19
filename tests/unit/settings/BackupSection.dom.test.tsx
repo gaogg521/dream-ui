@@ -326,6 +326,40 @@ describe('BackupSection', () => {
     expect(mocks.httpRequestMock).not.toHaveBeenCalled();
   });
 
+  /**
+   * The eight-character floor is the one rule in this dialog that the UI states
+   * out loud and that nothing was checking. It matters more than it looks: the
+   * passphrase is unrecoverable, so a short one is not a weak password the user
+   * can rotate later -- it is the only thing standing between an archive full
+   * of API keys and whoever picks the file up.
+   *
+   * Seven characters, matching in both fields, so the only thing that can
+   * refuse this is the length rule itself.
+   */
+  it('refuses to export a passphrase shorter than the stated minimum', async () => {
+    mocks.showSaveMock.mockResolvedValue('D:/backups/mine.zip');
+
+    render(<BackupSection />);
+    fireEvent.click(screen.getByText('settings.backup.exportButton'));
+
+    const field = await screen.findByPlaceholderText('settings.backup.passphrasePlaceholder');
+    fireEvent.change(field, { target: { value: 'sevench' } });
+    const again = screen.getByPlaceholderText('settings.backup.passphraseConfirmPlaceholder');
+    fireEvent.change(again, { target: { value: 'sevench' } });
+
+    const ok = document.querySelector('.arco-modal-footer .arco-btn-primary') as HTMLButtonElement;
+    expect(ok.disabled).toBe(true);
+    fireEvent.click(ok);
+    expect(mocks.httpRequestMock).not.toHaveBeenCalled();
+
+    // One more character is the whole difference: this proves the refusal was
+    // the length rule and not some unrelated invalid state.
+    fireEvent.change(field, { target: { value: 'eightchr' } });
+    fireEvent.change(again, { target: { value: 'eightchr' } });
+    const okNow = document.querySelector('.arco-modal-footer .arco-btn-primary') as HTMLButtonElement;
+    expect(okNow.disabled).toBe(false);
+  });
+
   it('reports a preview failure without opening the confirm dialog', async () => {
     mocks.showOpenMock.mockResolvedValue(['D:/backups/broken.zip']);
     mocks.httpRequestMock.mockRejectedValue(new Error('This file is not a One Work backup.'));
