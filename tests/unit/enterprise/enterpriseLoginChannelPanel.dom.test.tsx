@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import React from "react";
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import EnterpriseLoginChannelPanel from '@/renderer/pages/enterprise/components/EnterpriseLoginChannelPanel';
 
@@ -8,6 +8,25 @@ const localBase = 'http://127.0.0.1:59999';
 vi.mock('@/common/adapter/httpBridge', () => ({
   getLocalBaseUrl: () => localBase,
 }));
+
+// Arco's `Message` renders through the legacy `ReactDOM.render`, which no
+// longer exists on React 18 — the click paths below call it, and the resulting
+// unhandled rejection pollutes the suite-wide "0 unhandled errors" signal the
+// repo's own guidance tells readers to grep for. Keep every real component and
+// neutralize only the toast, the way SkillConfirmModals.dom.test.tsx does.
+vi.mock('@arco-design/web-react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@arco-design/web-react')>();
+  return {
+    ...actual,
+    Message: {
+      ...actual.Message,
+      info: vi.fn(),
+      success: vi.fn(),
+      warning: vi.fn(),
+      error: vi.fn(),
+    },
+  };
+});
 
 const openOAuth = vi.fn().mockResolvedValue(true);
 const openPassword = vi.fn().mockResolvedValue(true);
@@ -73,7 +92,7 @@ describe('EnterpriseLoginChannelPanel first-frame recovery', () => {
       );
     });
 
-    rerender(<EnterpriseLoginChannelPanel remoteOrigin="http://172.29.128.120:25810" />);
+    rerender(<EnterpriseLoginChannelPanel remoteOrigin='http://172.29.128.120:25810' />);
 
     // Frame 2: the remote list names feishu + ldap ready — no tile may keep a
     // 未配置/不可用 badge, and the failure hint must be gone.
@@ -93,7 +112,7 @@ describe('EnterpriseLoginChannelPanel first-frame recovery', () => {
       },
     });
 
-    render(<EnterpriseLoginChannelPanel remoteOrigin="http://172.29.128.120:25810" />);
+    render(<EnterpriseLoginChannelPanel remoteOrigin='http://172.29.128.120:25810' />);
 
     // feishu/dingtalk/wecom/oidc have no row: badge up front, click explains
     // instead of opening.
