@@ -22,7 +22,8 @@ done
 #    main 红时按既定决策可绕过：release.yml 只认 tag、不跑测试，与 ci.yml 无依赖——
 #    直接打 tag 先出包，CI 修复挪到发版后（3.0.6 的实操决策）。
 
-# ③ 磁盘余量 >100GB：D 盘曾被 target 的 871GB 撑爆（os error 112 / LNK1108 就是它）
+# ③ 磁盘余量 >100GB：cargo incremental 缓存只增不清，连红排查期曾把 target 堆到
+#    871GB（症状 os error 112 / LNK1108）；排查期建议挂 cargo-sweep 或每日 cargo clean
 
 # ④ 上次发版的真实时点 = COS Last-Modified，不是 commit 时间（3.0.5 的教训）
 curl -sI https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/<上版>/One-Work-<上版>-win-x64.exe | grep -i last-modified
@@ -181,7 +182,12 @@ ls -d <包>/resources/bundled-dreamcore/*/managed-resources/acp/*/*/
 1. 两个 nextest 不能并行（channel_e2e spawn 的 dreamcore.exe 撞链接）；
    泄漏进程按 PID 清，不按名字。
 2. `cmd | tail` 吞退出码；固定 `REAL_EXIT=$?` 紧跟命令。
-3. dream-core/target 会无限膨胀（871GB 事故）；`df -h /d` 先看盘，`cargo clean` 兜底。
+3. **cargo 的 incremental 缓存只增不清**（cargo 已知痛点，不是操作失误）。CI 连红
+   期间为了不吃一轮 20 分钟的红往返，本地会反复全量编译验证，`target/` 下的
+   incremental 缓存随之堆积旧版本——3.0.6 那晚堆到 **871GB**（D 盘 100% 满，
+   表面症状是 os error 112 / LNK1108 写入失败）。清理后 target 34GB 是正常水平。
+   **这个问题一定会复发**：连红排查期间给 dream-core 配 cargo-sweep，或每天
+   `cargo clean` 一次；`df -h /d` 先看盘再猜代码。
 
 ### 2.6 Windows 签名 —— 决策已定，不再询问
 
