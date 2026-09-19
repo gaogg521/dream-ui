@@ -1,6 +1,6 @@
 {
   "name": "1one-claudecode",
-  "version": "3.0.6",
+  "version": "3.0.7",
   "description": "One Work — Visual control center for Claude Code native capabilities.",
   "keywords": [],
   "license": "Apache-2.0",
@@ -261,7 +261,7 @@
   "engines": {
     "node": ">=22 <25"
   },
-  "dreamcoreVersion": "v0.1.71-one.5",
+  "dreamcoreVersion": "v0.1.73",
   "electronRebuild": {
     "electronVersion": "^39.8.10"
   },

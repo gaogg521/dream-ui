@@ -92,12 +92,27 @@ one.4 / one.5 / 0.1.72 三版产物集完全一致。**照技能走会在这一�
 没有配对就沿用现钉版。**桌面发版伴随 dreamcore 换钉是惯例，不是例外**——
 不换，新 UI 功能上线就是空壳。
 
-> ⚠️ **换钉版后必须验证那个二进制真含本轮修复**，别只看 tag 号。release 构建
-> 会剥符号，`strings | grep <fn_name>` 查不到，用修复独有的**字符串字面量**：
+> ⚠️ **换钉版后必须验证那个二进制真含本轮修复**，别只看 tag 号。
+>
+> **字符串检查只在修复新增了字符串时管用，是必要条件不是充分条件。** release
+> 构建会剥符号，所以 `strings | grep <fn_name>` 一定查不到；能查的是修复独有的
+> tracing / 错误文案：
 >
 > ```bash
-> grep -qa "<修复独有的 tracing/错误文案>" dreamcore.exe   # 目标
-> grep -qa "<已知在内的文案>"              dreamcore.exe   # 对照，验证手段本身有效
+> grep -qa "<修复独有的文案>" dreamcore.exe   # 目标
+> grep -qa "<已知在内的文案>" dreamcore.exe   # 对照，验证手段本身有效
+> ```
+>
+> **改动不新增字符串时（改 SQL 关键字、改比较符、调顺序），这招无效——必须跑行为。**
+> v0.1.72 和 v0.1.73 的这四条字符串完全一样，而前者恢复 500、后者 200；区别只是
+> `UPDATE` 变成了 `UPDATE OR IGNORE`。跑法（`--app-version` 必须给 dream-ui 的
+> 版本号，否则被「备份来自更新版本」的闸门挡掉）：
+>
+> ```bash
+> dreamcore.exe --local --identity-mode local --port 18907 \
+>   --data-dir <临时目录> --app-version <本轮 dream-ui 版本> --log-level warn &
+> curl -s -X POST http://127.0.0.1:18907/api/system/backup/restore \
+>   -H 'Content-Type: application/json' -d @restore.json   # 期望 200 且 FK 违规 0
 > ```
 >
 > 2026-09-19 的实例：v0.1.72 带着一个让恢复直接 500 的 bug 发了出去，而本地那次
