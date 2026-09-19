@@ -294,12 +294,10 @@ body[arco-theme='dark'] .sendbox-panel .send-button-custom--disabled svg * {
 .sendbox-tools .sendbox-model-btn:hover,
 .sendbox-tools .sendbox-model-btn:active,
 .sendbox-tools .sendbox-model-btn:focus,
-.sendbox-tools .sendbox-model-btn:focus-visible,
 .sendbox-actions .sendbox-model-btn,
 .sendbox-actions .sendbox-model-btn:hover,
 .sendbox-actions .sendbox-model-btn:active,
-.sendbox-actions .sendbox-model-btn:focus,
-.sendbox-actions .sendbox-model-btn:focus-visible {
+.sendbox-actions .sendbox-model-btn:focus {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -596,12 +594,9 @@ body[arco-theme='dark'] .sendbox-panel .send-button-custom--disabled svg * {
 }
 
 .sendbox-highlight-textarea {
-  background: transparent !important;
-}
-
-.sendbox-highlight-textarea {
   position: relative;
   z-index: 1;
+  background: transparent !important;
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
   caret-color: var(--text-primary) !important;
