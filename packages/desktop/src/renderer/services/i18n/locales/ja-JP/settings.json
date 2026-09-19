@@ -1601,6 +1601,16 @@
     "restoreFailed": "そのバックアップから復元できませんでした",
     "attachmentsSlowWarning": "ワークスペースのファイルは数が多いため、圧縮に数分かかり、その間アプリは処理中のままになります。新しいマシンへの移行に必要なものは他の項目に含まれています。",
     "revealButton": "フォルダーを開く",
-    "revealFailed": "フォルダーを開けませんでした"
+    "revealFailed": "フォルダーを開けませんでした",
+    "restoreSuccessWithDropped": "{{rows}} 件のレコードと {{files}} 個のファイルを復元しました。{{dropped}} 件は参照先が今回の復元に含まれていないためスキップされました。",
+    "passphraseSetTitle": "このバックアップのパスフレーズを設定",
+    "passphraseEnterTitle": "バックアップのパスフレーズを入力",
+    "passphraseSetHint": "バックアップはこのパスフレーズで暗号化されます。別のマシンで復元する際に必要です。",
+    "passphraseEnterHint": "このバックアップは暗号化されています。作成時のパスフレーズを入力してください。",
+    "passphrasePlaceholder": "パスフレーズ",
+    "passphraseConfirmPlaceholder": "もう一度入力",
+    "passphraseTooShort": "{{min}} 文字以上にしてください。",
+    "passphraseMismatch": "入力が一致しません。",
+    "passphraseNoRecovery": "このパスフレーズは復旧できません。失うとバックアップは二度と開けません。"
   }
 }

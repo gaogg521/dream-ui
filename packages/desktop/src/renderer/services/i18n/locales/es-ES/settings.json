@@ -1599,6 +1599,16 @@
     "restoreFailed": "No se pudo restaurar desde esa copia de seguridad",
     "attachmentsSlowWarning": "Los archivos del espacio de trabajo son muchos y pequeños, así que esto puede tardar varios minutos y la aplicación parecerá ocupada todo el rato. Todo lo necesario para cambiar de equipo está en las demás categorías.",
     "revealButton": "Mostrar en la carpeta",
-    "revealFailed": "No se pudo abrir esa carpeta"
+    "revealFailed": "No se pudo abrir esa carpeta",
+    "restoreSuccessWithDropped": "Se restauraron {{rows}} registros y {{files}} archivos. Se omitieron {{dropped}} porque aquello a lo que hacían referencia no formaba parte de esta restauración.",
+    "passphraseSetTitle": "Establece una contraseña para esta copia",
+    "passphraseEnterTitle": "Introduce la contraseña de la copia",
+    "passphraseSetHint": "La copia se cifra con esta contraseña. La necesitarás para restaurar en otro equipo.",
+    "passphraseEnterHint": "Esta copia está cifrada. Introduce la contraseña con la que se creó.",
+    "passphrasePlaceholder": "Contraseña",
+    "passphraseConfirmPlaceholder": "Repite la contraseña",
+    "passphraseTooShort": "Usa al menos {{min}} caracteres.",
+    "passphraseMismatch": "Las dos entradas no coinciden.",
+    "passphraseNoRecovery": "Esta contraseña no se puede recuperar. Si la pierdes, la copia no podrá abrirse."
   }
 }

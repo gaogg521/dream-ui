@@ -1599,6 +1599,16 @@
     "restoreFailed": "Wiederherstellung aus dieser Sicherung fehlgeschlagen",
     "attachmentsSlowWarning": "Arbeitsbereichsdateien sind viele kleine Dateien, daher kann dies mehrere Minuten dauern und die App wirkt durchgehend beschäftigt. Alles für den Umzug auf einen neuen Rechner steckt in den anderen Kategorien.",
     "revealButton": "Im Ordner anzeigen",
-    "revealFailed": "Der Ordner konnte nicht geöffnet werden"
+    "revealFailed": "Der Ordner konnte nicht geöffnet werden",
+    "restoreSuccessWithDropped": "{{rows}} Datensätze und {{files}} Dateien wiederhergestellt. {{dropped}} wurden übersprungen, weil das Referenzierte nicht Teil dieser Wiederherstellung war.",
+    "passphraseSetTitle": "Passwort für dieses Backup festlegen",
+    "passphraseEnterTitle": "Backup-Passwort eingeben",
+    "passphraseSetHint": "Das Backup wird mit diesem Passwort verschlüsselt. Sie brauchen es, um auf einem anderen Rechner wiederherzustellen.",
+    "passphraseEnterHint": "Dieses Backup ist verschlüsselt. Geben Sie das beim Erstellen festgelegte Passwort ein.",
+    "passphrasePlaceholder": "Passwort",
+    "passphraseConfirmPlaceholder": "Passwort wiederholen",
+    "passphraseTooShort": "Mindestens {{min}} Zeichen verwenden.",
+    "passphraseMismatch": "Die beiden Eingaben stimmen nicht überein.",
+    "passphraseNoRecovery": "Dieses Passwort lässt sich nicht wiederherstellen. Geht es verloren, bleibt das Backup für immer verschlossen."
   }
 }

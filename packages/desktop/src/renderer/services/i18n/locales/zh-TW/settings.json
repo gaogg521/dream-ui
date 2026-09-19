@@ -3417,6 +3417,16 @@
     "restoreFailed": "從該備份還原失敗",
     "attachmentsSlowWarning": "工作區檔案數量多、體積大，打包可能需要幾分鐘，期間介面會一直顯示處理中。換新機器所需的內容都在其他幾項裡。",
     "revealButton": "開啟所在資料夾",
-    "revealFailed": "無法開啟該資料夾"
+    "revealFailed": "無法開啟該資料夾",
+    "restoreSuccessWithDropped": "已還原 {{rows}} 筆記錄和 {{files}} 個檔案；{{dropped}} 筆因為引用的資料不在本次還原範圍內而略過。",
+    "passphraseSetTitle": "為這個備份設定密碼",
+    "passphraseEnterTitle": "輸入備份密碼",
+    "passphraseSetHint": "備份會用這個密碼加密，在另一台機器上還原時需要它。",
+    "passphraseEnterHint": "這個備份是加密的，請輸入建立時設定的密碼。",
+    "passphrasePlaceholder": "密碼",
+    "passphraseConfirmPlaceholder": "再輸入一次",
+    "passphraseTooShort": "至少 {{min}} 個字元。",
+    "passphraseMismatch": "兩次輸入不一致。",
+    "passphraseNoRecovery": "這個密碼無法找回。遺失後備份將永遠無法開啟。"
   }
 }

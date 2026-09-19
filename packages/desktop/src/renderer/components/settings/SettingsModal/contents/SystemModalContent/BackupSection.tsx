@@ -12,6 +12,7 @@ import { FolderOpen } from '@icon-park/react';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { iconColors } from '@/renderer/styles/colors';
+import PassphrasePrompt from './PassphrasePrompt';
 
 /**
  * 备份与恢复 / Backup and restore.
@@ -39,6 +40,16 @@ type BackupScope = {
   appSettings: boolean;
 };
 
+/**
+ * How the archive is sealed. Absent on an archive written before backups were
+ * encrypted — those still restore, and asking for a passphrase they do not have
+ * would be asking for something that cannot exist.
+ */
+type ArchiveEncryption = {
+  cipher: string;
+  kdf: string;
+};
+
 type BackupManifest = {
   formatVersion: number;
   exportedAt: number;
@@ -46,6 +57,7 @@ type BackupManifest = {
   scope: BackupScope;
   totalBytes: number;
   containsCredentials: boolean;
+  encryption?: ArchiveEncryption;
 };
 
 type CreateBackupResponse = {
@@ -57,6 +69,13 @@ type CreateBackupResponse = {
 type RestoreBackupResponse = {
   rowsByTable: Record<string, number>;
   filesRestored: number;
+  /**
+   * Rows the backend dropped because what they pointed at was not part of this
+   * restore — restoring conversations without app settings leaves the assistant
+   * snapshots referring to definitions that never arrived. Reported so a
+   * partial restore is not presented as a lossless one.
+   */
+  orphansRemoved?: Record<string, number>;
 };
 
 const SCOPE_KEYS = ['conversations', 'attachments', 'providers', 'skills', 'appSettings'] as const;
@@ -109,6 +128,18 @@ const BackupSection: React.FC = () => {
   const [restoring, setRestoring] = useState(false);
   /** The archive just written, so it can be revealed without re-picking it. */
   const [lastArchive, setLastArchive] = useState<string | null>(null);
+  /**
+   * The passphrase dialog, and what it is for.
+   *
+   * Held as one piece of state rather than a boolean per flow: the dialog is
+   * the same dialog, and what changes is which operation is waiting on it and
+   * what that operation already knows (the destination, or the archive and its
+   * manifest).
+   */
+  const [prompt, setPrompt] = useState<
+    null | { kind: 'export'; destination: string } | { kind: 'import'; source: string; manifest: BackupManifest }
+  >(null);
+  const [promptError, setPromptError] = useState<string | undefined>(undefined);
 
   const nothingSelected = useMemo(() => SCOPE_KEYS.every((key) => !scope[key]), [scope]);
 
@@ -122,29 +153,43 @@ const BackupSection: React.FC = () => {
       filters: [{ name: 'Zip', extensions: ['zip'] }],
     });
     if (!destination) return;
+    // The archive is written only once the passphrase is set: every backup
+    // carries this install's identity secret, so there is no scope that would
+    // be safe to write in the clear.
+    setPromptError(undefined);
+    setPrompt({ kind: 'export', destination });
+  }, []);
 
-    setExporting(true);
-    try {
-      const result = await httpRequest<CreateBackupResponse>('POST', '/api/system/backup', {
-        destination,
-        scope,
-      });
-      // Remember where it went, so the button below can open it. A path the
-      // user chose minutes ago in a native dialog is not something they should
-      // have to go hunting for afterwards.
-      setLastArchive(result.path);
-      Message.success({
-        content: t('settings.backup.exportSuccess', { size: formatBytes(result.archiveBytes) }),
-        // A long export outlives the default toast: someone who waited minutes
-        // for it should not have to wonder whether it finished.
-        duration: 6000,
-      });
-    } catch (error) {
-      Message.error(error instanceof Error ? error.message : t('settings.backup.exportFailed'));
-    } finally {
-      setExporting(false);
-    }
-  }, [scope, t]);
+  const runExport = useCallback(
+    async (destination: string, passphrase: string) => {
+      setExporting(true);
+      try {
+        const result = await httpRequest<CreateBackupResponse>('POST', '/api/system/backup', {
+          destination,
+          scope,
+          passphrase,
+        });
+        // Remember where it went, so the button below can open it. A path the
+        // user chose minutes ago in a native dialog is not something they should
+        // have to go hunting for afterwards.
+        setLastArchive(result.path);
+        setPrompt(null);
+        Message.success({
+          content: t('settings.backup.exportSuccess', { size: formatBytes(result.archiveBytes) }),
+          // A long export outlives the default toast: someone who waited minutes
+          // for it should not have to wonder whether it finished.
+          duration: 6000,
+        });
+      } catch (error) {
+        // Kept on the dialog rather than a toast: a passphrase the backend
+        // refused is something to fix in the field that is still open.
+        setPromptError(error instanceof Error ? error.message : t('settings.backup.exportFailed'));
+      } finally {
+        setExporting(false);
+      }
+    },
+    [scope, t]
+  );
 
   const handleReveal = useCallback(() => {
     if (!lastArchive) return;
@@ -152,6 +197,44 @@ const BackupSection: React.FC = () => {
       Message.error(t('settings.backup.revealFailed'));
     });
   }, [lastArchive, t]);
+
+  const runRestore = useCallback(
+    async (source: string, manifest: BackupManifest, passphrase: string) => {
+      setRestoring(true);
+      try {
+        const result = await httpRequest<RestoreBackupResponse>('POST', '/api/system/backup/restore', {
+          source,
+          scope: manifest.scope,
+          passphrase,
+        });
+        const rows = Object.values(result.rowsByTable).reduce((sum, count) => sum + count, 0);
+        const dropped = Object.values(result.orphansRemoved || {}).reduce((sum, count) => sum + count, 0);
+        setPrompt(null);
+        if (dropped > 0) {
+          // A warning rather than a success: the restore worked, but it did not
+          // bring everything, and "restored N rows" alone would read as
+          // lossless.
+          Message.warning(
+            t('settings.backup.restoreSuccessWithDropped', { rows, files: result.filesRestored, dropped })
+          );
+        } else {
+          Message.success(t('settings.backup.restoreSuccess', { rows, files: result.filesRestored }));
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : t('settings.backup.restoreFailed');
+        // A wrong passphrase belongs on the dialog, where it can be retyped.
+        // Anything else is a toast, because the dialog is not where it is fixed.
+        if (manifest.encryption) {
+          setPromptError(message);
+        } else {
+          Message.error(message);
+        }
+      } finally {
+        setRestoring(false);
+      }
+    },
+    [t]
+  );
 
   const handleImport = useCallback(async () => {
     const picked = await dialog.showOpen.invoke({
@@ -189,23 +272,29 @@ const BackupSection: React.FC = () => {
           </div>
         </div>
       ),
-      onOk: async () => {
-        setRestoring(true);
-        try {
-          const result = await httpRequest<RestoreBackupResponse>('POST', '/api/system/backup/restore', {
-            source,
-            scope: manifest.scope,
-          });
-          const rows = Object.values(result.rowsByTable).reduce((sum, count) => sum + count, 0);
-          Message.success(t('settings.backup.restoreSuccess', { rows, files: result.filesRestored }));
-        } catch (error) {
-          Message.error(error instanceof Error ? error.message : t('settings.backup.restoreFailed'));
-        } finally {
-          setRestoring(false);
+      onOk: () => {
+        // An archive written before encryption existed has no passphrase to
+        // ask for; one written since cannot be opened without it.
+        if (manifest.encryption) {
+          setPromptError(undefined);
+          setPrompt({ kind: 'import', source, manifest });
+          return;
         }
+        void runRestore(source, manifest, '');
       },
     });
-  }, [t]);
+  }, [runRestore, t]);
+  const handlePassphrase = useCallback(
+    (passphrase: string) => {
+      if (!prompt) return;
+      if (prompt.kind === 'export') {
+        void runExport(prompt.destination, passphrase);
+      } else {
+        void runRestore(prompt.source, prompt.manifest, passphrase);
+      }
+    },
+    [prompt, runExport, runRestore]
+  );
 
   if (!isNativeDialogAvailable()) return null;
 
@@ -250,6 +339,18 @@ const BackupSection: React.FC = () => {
         )}
       </div>
       {lastArchive && <div className='text-12px text-t-secondary mt-8px break-all'>{lastArchive}</div>}
+
+      <PassphrasePrompt
+        visible={!!prompt}
+        mode={prompt?.kind === 'import' ? 'open' : 'create'}
+        busy={exporting || restoring}
+        error={promptError}
+        onCancel={() => {
+          setPrompt(null);
+          setPromptError(undefined);
+        }}
+        onSubmit={handlePassphrase}
+      />
     </div>
   );
 };
