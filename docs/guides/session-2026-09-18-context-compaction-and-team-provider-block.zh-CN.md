@@ -49,7 +49,7 @@ CDP 实测才看出来——SVG 属性是 16，渲染出来是 20。
 
 ## 四、分清"在等你"和"在忙"（移植上游 #4198）
 
-上游 `gaogg521/dream-ui` 提交 `7d1c7b7`。侧边栏里等待用户授权的会话和正在跑的会话长得
+上游 `iOfficeAI/AionUi` 提交 `7d1c7b7`。侧边栏里等待用户授权的会话和正在跑的会话长得
 一模一样，都是转圈。
 
 | 文件                                                   | 改动                                                                                                                                                                                          |
@@ -95,6 +95,40 @@ CDP 实测才看出来——SVG 属性是 16，渲染出来是 20。
 「…再次尝试。处理...」。去掉第二句——用户原话里的"再次尝试"本身就是解除动作的说明。
 后来用户指出不同专家配不同渠道，才改成点名版。
 
+## 五点五、"任务完成了还显示正在处理中"（09-19 追加）
+
+用户报的是**单机会话**，跟团队那两个 bug 无关，在渲染层。
+
+dream 会话的 `running` 是三个标志的**或**：
+
+```ts
+const running = waitingResponse || streamRunning || hasActiveTools;
+```
+
+`finish` 只清了前两个。**最后看到的那帧 `tool_group` 里还有工具处于
+`Executing`/`Confirming`/`Pending` 时，`hasActiveTools` 永远留着 true**——转圈不停，只有
+切走再切回来才会好（hydration 是唯一另一个清它的地方）。几行之上的**报错**路径一直是三个
+都清的，这个不对称就是线索。
+
+第二条路：三处 auto-recover 的注释白纸黑字写着「_Auto-recover streamRunning if thought
+arrives after finish_」——它们**故意**在 finish 之后重新点亮（这个后端确实会发尾随帧），
+可轮次已结束，不会再来第二个 `finish` 关掉它。
+
+修法照抄同仓里已经验证过的两处：ACP hook 的 `turnFinishedRef`（那边有 13 处，dream 这边
+0 处）+ 侧边栏 `getSidebarStreamGuardDecision` 的**迟到帧按 turn_id 判定**。记住结束的那个
+turn，属于它的帧一律不驱动状态；**turn_id 不同的帧说明是新一轮**，放下守卫——否则新一轮
+若不以 `start` 开头就会被误伤。
+
+### 扫了一遍，只有这一处
+
+6 个订阅 `responseStream` 的地方：`useAcpMessage` 有守卫且三处 re-arm 都是真正的轮次开始；
+侧边栏早就有；另外三个（`useAcpConfigOptions` / `useAcpModelInfo` / `SkillRuleGenerator`）
+不跟踪轮次状态；gemini / legacy 只有模型选择器和只读视图。**同一类 bug 在侧边栏修过，
+发送框没跟上。**
+
+> **教训**：第一版只挡了 `streamRunning` 的 auto-recover，漏了迟到的 `tool_group` 是走
+> `hasActiveTools` 点亮的。回滚验证时测试红了才发现——5 个测试全做了回滚验证。
+
 ## 六、验证
 
 - 全量 `bunx vitest run`：**588 文件 / 5544 测试通过**（基线 5541 + 本次新增 3）。
@@ -110,4 +144,9 @@ CDP 实测才看出来——SVG 属性是 16，渲染出来是 20。
 > 📋 **本轮的未竟项总登记在 [`handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md`](handoff-2026-09-18-enterprise-p0-and-sso-verification.zh-CN.md) §4** —— 09-18 一轮产出 5 份文档，每份都有自己的这一节，散着看必漏。本节留原文细节，总表在那边。
 
 - `sendbox.css` 可能还有其他重复规则块，本次只删了造成本问题的那一处。
-- 团队里成员因**非额度**原因反复失败时，队长信箱仍会收到重复的"已暂停"通知，前端没做合并。
+- ~~成员因非额度原因反复失败时队长信箱收到重复"已暂停"通知~~ —— **09-19 在后端做了合并**
+  （dream-core `fix(team): merge repeat delivery-exhaustion notices to the lead`），前端不用改。
+- **`docs/` 里的上游引用被一次改名 sweep 误伤**：`iOfficeAI/AionUi` / `iOfficeAI/AionCore`
+  被替换成了我们自己的仓库地址，产生「不再跟随开源上游 gaogg521/dream-ui」这种自指的胡话，
+  约 30 份文档中招。`CLAUDE.md` 的溯源段落没被动，所以两边现在矛盾。本文档自己那处已改回，
+  其余未动（不是本轮的改动，需要单独拉一轮全仓核对）。
