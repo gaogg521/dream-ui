@@ -1,20 +1,29 @@
 #!/usr/bin/env node
 /**
- * Unified DEV CDP acceptance for diagram pan/zoom (+ optional enterprise HTTP smoke).
+ * DEV CDP acceptance: diagram pan/zoom in the real conversation UI (+ optional enterprise HTTP smoke).
+ *
+ * Seeds an assistant (left) markdown message — user bubbles render plain text and would not
+ * exercise Mermaid/WaveDrom. Writes via local dream-ui-Dev SQLite when available.
  *
  * Prerequisites:
  *   $env:DREAM_DEVTOOLS_CDP_PORT = "9230"; bun run dev   (dream-ui, dev build)
  *
  * Usage:
  *   node scripts/dev-cdp-acceptance.mjs
+ *   DREAM_CDP_CONVERSATION_ID=<id> node scripts/dev-cdp-acceptance.mjs
  *   DREAM_BACKEND_URL=http://127.0.0.1:25808 DREAM_ADMIN_TOKEN=... node scripts/dev-cdp-acceptance.mjs
  */
+import { execSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import WebSocket from '../node_modules/ws/index.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 const CDP_PORT = process.env.DREAM_DEVTOOLS_CDP_PORT || '9230';
-const RENDERER_ORIGIN = process.env.DREAM_RENDERER_ORIGIN || 'http://localhost:5173';
 const BACKEND = process.env.DREAM_BACKEND_URL;
 const ADMIN_TOKEN = process.env.DREAM_ADMIN_TOKEN;
+const CONV_ID_OVERRIDE = process.env.DREAM_CDP_CONVERSATION_ID;
 
 const base = `http://127.0.0.1:${CDP_PORT}`;
 
@@ -48,8 +57,49 @@ function pass(label) {
   console.log(`[dev-cdp-acceptance] PASS: ${label}`);
 }
 
-async function cdpEval(pageTarget, expression) {
-  const sock = await new Promise((resolve, reject) => {
+function runDiagramSeed() {
+  const seedScript = path.join(__dirname, 'seed-dev-diagram-conversation.mjs');
+  return execSync(`bun "${seedScript}"`, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'inherit'],
+    env: process.env,
+    cwd: path.join(__dirname, '..'),
+    shell: true,
+  }).trim();
+}
+
+function seedDiagramConversationId() {
+  if (CONV_ID_OVERRIDE) {
+    try {
+      runDiagramSeed();
+    } catch {
+      // Best-effort refresh when overriding id; acceptance still navigates to the given id.
+    }
+    return CONV_ID_OVERRIDE;
+  }
+  try {
+    return runDiagramSeed();
+  } catch {
+    return null;
+  }
+}
+
+function buildNavigateExpression(conversationId) {
+  const id = JSON.stringify(conversationId);
+  return `
+(function () {
+  var conversationId = ${id};
+  var hash = '#/conversation/' + conversationId;
+  if (window.location.hash !== hash) {
+    window.location.hash = hash;
+  }
+  return { conversationId: conversationId, hash: hash, href: window.location.href };
+})()
+`;
+}
+
+function connectCdp(pageTarget) {
+  return new Promise((resolve, reject) => {
     const ws = new WebSocket(pageTarget.webSocketDebuggerUrl);
     let id = 0;
     const pending = new Map();
@@ -77,19 +127,44 @@ async function cdpEval(pageTarget, expression) {
     );
     ws.on('error', reject);
   });
+}
+
+async function cdpReload(pageTarget) {
+  const sock = await connectCdp(pageTarget);
   try {
-    await sock.send('Runtime.enable');
-    const payload = await sock.send('Runtime.evaluate', {
-      expression,
-      awaitPromise: true,
-      returnByValue: true,
-    });
-    if (payload.exceptionDetails) {
-      throw new Error(JSON.stringify(payload.exceptionDetails));
-    }
-    return payload.result?.value;
+    await sock.send('Page.enable');
+    await sock.send('Page.reload');
   } finally {
     sock.close();
+  }
+}
+
+async function cdpEval(pageTarget, expression, attempt = 0) {
+  try {
+    const sock = await connectCdp(pageTarget);
+    try {
+      await sock.send('Runtime.enable');
+      const payload = await sock.send('Runtime.evaluate', {
+        expression,
+        awaitPromise: true,
+        returnByValue: true,
+      });
+      if (payload.exceptionDetails) {
+        throw new Error(JSON.stringify(payload.exceptionDetails));
+      }
+      return payload.result?.value;
+    } finally {
+      sock.close();
+    }
+  } catch (err) {
+    if (attempt < 5 && /Unexpected server response|ECONNRESET/i.test(String(err))) {
+      await new Promise((r) => setTimeout(r, 700));
+      const freshTarget = (await fetch(`${base}/json`).then((r) => r.json())).find(
+        (t) => t.id === pageTarget.id && t.type === 'page'
+      );
+      return cdpEval(freshTarget || pageTarget, expression, attempt + 1);
+    }
+    throw err;
   }
 }
 
@@ -106,7 +181,7 @@ async function pickMainPage() {
   return hit;
 }
 
-async function waitForEval(target, expression, { timeoutMs = 20000, intervalMs = 500 } = {}) {
+async function waitForEval(target, expression, { timeoutMs = 45000, intervalMs = 500 } = {}) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const ok = await cdpEval(target, expression);
@@ -116,27 +191,32 @@ async function waitForEval(target, expression, { timeoutMs = 20000, intervalMs =
   return null;
 }
 
-async function diagramPanZoomCheck(target) {
-  await cdpEval(
-    target,
-    `(() => {
-      if (window.location.hash !== '#/test/components') {
-        window.location.hash = '#/test/components';
-      }
-      const el = document.getElementById('diagram-cdp-fixture');
-      el?.scrollIntoView({ block: 'center' });
-      return window.location.hash;
-    })()`
-  );
+async function diagramPanZoomCheck(target, conversationId) {
+  pass(`Conversation ready for CDP (${conversationId})`);
+
+  const nav = await cdpEval(target, buildNavigateExpression(conversationId));
+  if (
+    nav?.href?.includes(`#/conversation/${conversationId}`) &&
+    target.url.includes(`#/conversation/${conversationId}`)
+  ) {
+    await cdpReload(target);
+  }
+  await new Promise((r) => setTimeout(r, 3500));
+  const pageTarget = await pickMainPage();
 
   const mermaidReady = await waitForEval(
-    target,
+    pageTarget,
     `${SHADOW_PIERCE}; __deepQuery('[data-testid="mermaid-diagram"]') !== null`
   );
-  if (!mermaidReady) fail('Mermaid diagram not rendered on /test/components fixture (waited 20s)');
+  if (!mermaidReady) {
+    fail(
+      'Mermaid diagram not rendered in conversation message list (waited 45s). ' +
+        'Ensure dream-ui dev is running and backend reachable via window.__backendPort.'
+    );
+  }
 
   const mermaidZoom = await cdpEval(
-    target,
+    pageTarget,
     `${SHADOW_PIERCE}; (function () {
       var btn = __deepQuery('[data-testid="mermaid-zoom-in"]');
       if (!btn) return { ok: false, reason: 'missing zoom-in control' };
@@ -148,16 +228,16 @@ async function diagramPanZoomCheck(target) {
     })()`
   );
   if (!mermaidZoom?.ok) fail(`Mermaid zoom-in did not change transform: ${JSON.stringify(mermaidZoom)}`);
-  pass('Mermaid pan/zoom control');
+  pass('Mermaid pan/zoom in conversation UI');
 
   const wavedromReady = await waitForEval(
-    target,
+    pageTarget,
     `${SHADOW_PIERCE}; __deepQuery('[data-testid="wavedrom-diagram"]') !== null`
   );
-  if (!wavedromReady) fail('WaveDrom diagram not rendered on fixture (waited 20s)');
+  if (!wavedromReady) fail('WaveDrom diagram not rendered in conversation (waited 45s)');
 
   const wavedromZoom = await cdpEval(
-    target,
+    pageTarget,
     `${SHADOW_PIERCE}; (function () {
       var btn = __deepQuery('[data-testid="wavedrom-zoom-in"]');
       if (!btn) return { ok: false, reason: 'missing zoom-in control' };
@@ -169,7 +249,7 @@ async function diagramPanZoomCheck(target) {
     })()`
   );
   if (!wavedromZoom?.ok) fail(`WaveDrom zoom-in did not change transform: ${JSON.stringify(wavedromZoom)}`);
-  pass('WaveDrom pan/zoom control');
+  pass('WaveDrom pan/zoom in conversation UI');
 }
 
 async function enterpriseHttpSmoke() {
@@ -221,10 +301,17 @@ async function main() {
   if (!version?.ok) fail(`CDP port ${CDP_PORT} not reachable — start dream-ui with DREAM_DEVTOOLS_CDP_PORT`);
   pass(`CDP listening on ${CDP_PORT}`);
 
+  const conversationId = seedDiagramConversationId();
+  if (!conversationId) {
+    fail(
+      '无法准备助理侧 diagram 消息：本机缺少 dream-ui-Dev 的 one-backend.db，或请设置 DREAM_CDP_CONVERSATION_ID 指向已含左侧 Mermaid/WaveDrom 的会话'
+    );
+  }
+
   const target = await pickMainPage();
   pass(`Using page target ${target.url.slice(0, 80)}`);
 
-  await diagramPanZoomCheck(target);
+  await diagramPanZoomCheck(target, conversationId);
   await enterpriseHttpSmoke();
 
   console.log('[dev-cdp-acceptance] All required checks passed.');

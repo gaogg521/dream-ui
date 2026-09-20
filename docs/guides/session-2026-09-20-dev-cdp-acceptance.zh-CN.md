@@ -6,15 +6,27 @@
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **dream-en**   | IntegrationsTab「立即同步」→ `POST /api/one/admin/integrations/{provider}/sync`；PlatformTab「测试中继」→ collaboration relay |
 | **dream-core** | `POST /api/one/admin/platform/collaboration/relay`（`relay_collaboration`）                                                   |
-| **dream-ui**   | `/test/components` 增加 Mermaid + WaveDrom CDP fixture；`scripts/dev-cdp-acceptance.mjs`                                      |
+| **dream-ui**   | `scripts/dev-cdp-acceptance.mjs`：在 **真实会话页** `#/conversation/:id` 验 Mermaid/WaveDrom 缩放（不经 `/test/components`）  |
 
 ## DEV CDP 怎么跑
+
+脚本会：
+
+1. 运行 `scripts/seed-dev-diagram-conversation.mjs`（bun + 本机 `%APPDATA%/dream-ui-Dev/1one/one-backend.db`，可用 `DREAM_DEV_USERDATA` 覆盖），写入 **助理侧（position=left）** markdown（用户气泡走纯文本，不会渲染 Mermaid/WaveDrom）；
+2. 通过 CDP（Node + `ws`）打开 `#/conversation/<id>`，在 **MessageText → MarkdownView** 路径上点缩放控件。
 
 ```powershell
 $env:DREAM_DEVTOOLS_CDP_PORT = "9230"
 cd D:\dream\dream-ui
 bun run dev
-# 另开终端
+# 另开终端（dev 窗口需已启动且后端可用）
+bun run dev:cdp-acceptance
+```
+
+已有会话时可跳过创建逻辑：
+
+```powershell
+$env:DREAM_CDP_CONVERSATION_ID = "<conversation-id>"
 bun run dev:cdp-acceptance
 ```
 
@@ -25,14 +37,6 @@ $env:DREAM_BACKEND_URL = "http://127.0.0.1:25808"
 $env:DREAM_ADMIN_TOKEN = "<runtime token>"
 node scripts/dev-cdp-acceptance.mjs
 ```
-
-## 2026-09-20 本机结果
-
-在 `DREAM_DEVTOOLS_CDP_PORT=9230` + `bun run dev` 下执行 `bun run dev:cdp-acceptance`：
-
-- PASS：CDP 9230 监听
-- PASS：Mermaid / WaveDrom pan/zoom（穿透 ShadowView 查询 `data-testid`）
-- SKIP：企业 HTTP（未设 `DREAM_BACKEND_URL`）
 
 ## 仍 intentionally 未做
 

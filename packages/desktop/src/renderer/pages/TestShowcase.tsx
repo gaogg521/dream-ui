@@ -2,23 +2,7 @@ import { Button, Message, Collapse, Tag } from '@arco-design/web-react';
 import React, { useState } from 'react';
 import StepsWrapper from '@/renderer/components/base/StepsWrapper';
 import ModalWrapper from '@/renderer/components/base/ModalWrapper';
-import Markdown from '@/renderer/components/Markdown';
 import { Check } from '@icon-park/react';
-
-const DIAGRAM_FIXTURE_MD = `# Diagram CDP fixture
-
-\`\`\`mermaid
-flowchart LR
-  A[CDP] --> B[Mermaid zoom]
-\`\`\`
-
-\`\`\`wavedrom
-{ "signal": [
-  { "name": "clk", "wave": "p.....|..." },
-  { "name": "data", "wave": "x.345x|=", "data": ["head", "body", "tail", "data"] }
-] }
-\`\`\`
-`;
 
 const ComponentsShowcase: React.FC = () => {
   const [message, contextHolder] = Message.useMessage();
@@ -139,12 +123,6 @@ const ComponentsShowcase: React.FC = () => {
             下一步
           </Button>
         </div>
-      </section>
-
-      {/* Mermaid / WaveDrom pan-zoom — DEV CDP acceptance lands here */}
-      <section className='space-y-4' id='diagram-cdp-fixture' data-testid='diagram-cdp-fixture'>
-        <h2 className='text-xl font-semibold'>Diagram pan/zoom (CDP fixture)</h2>
-        <Markdown>{DIAGRAM_FIXTURE_MD}</Markdown>
       </section>
 
       {/* Modal */}
