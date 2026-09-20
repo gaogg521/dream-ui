@@ -7,7 +7,7 @@
 //! a real Tavily payload is covered by the unit tests in `search::tests`,
 //! against a body captured from a live 200.
 
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -23,6 +23,7 @@ use dream_trial_broker::search::{
 };
 use dream_trial_broker::service::AppState;
 use dream_trial_broker::vendor::openrouter::OpenRouterVendor;
+use dream_trial_broker::vendor::TokenVendor;
 
 const INSTALL: &str = "install-abc";
 
@@ -93,6 +94,7 @@ fn hit(url: &str) -> SearchHit {
 fn base_config() -> Config {
     Config {
         openrouter_management_key: "unused".to_string(),
+        baoyun: None,
         database_url: "sqlite::memory:".to_string(),
         daily_budget_usd_cap: 50.0,
         trial_key_limit_usd: 1.0,
@@ -159,10 +161,15 @@ async fn harness_chain(limits: SearchLimits, chain: ScriptedChain) -> Harness {
         .map(|u| Box::new(SharedUpstream(u.clone())) as Box<dyn Upstream>)
         .collect();
 
+    let mut vendors: HashMap<&'static str, Arc<dyn TokenVendor>> = HashMap::new();
+    let openrouter_vendor: Arc<dyn TokenVendor> =
+        Arc::new(OpenRouterVendor::new("unused".to_string()));
+    vendors.insert(openrouter_vendor.id(), openrouter_vendor);
+
     let state = Arc::new(AppState {
         pool,
         config: Arc::new(base_config()),
-        vendor: Arc::new(OpenRouterVendor::new("unused".to_string())),
+        vendors,
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(SearchRuntime::new(limits, providers)),

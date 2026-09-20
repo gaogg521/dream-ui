@@ -23,6 +23,9 @@ pub enum AppError {
     /// Anything else (bad input, DB error, etc). -> 500 / 400
     Internal(String),
     BadRequest(String),
+    /// `/v1/trial-keys` (or friends) named a vendor this broker has no
+    /// [`crate::vendor::TokenVendor`] configured for. -> 404
+    VendorUnknown,
 
     // --- mode B (metered proxy) ---
     /// `/v1/metered/*` named a vendor that is not configured. -> 404
@@ -58,6 +61,7 @@ impl AppError {
             AppError::UpstreamError(_) => StatusCode::BAD_GATEWAY,
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
             AppError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::VendorUnknown => StatusCode::NOT_FOUND,
             AppError::MeteredVendorUnknown => StatusCode::NOT_FOUND,
             AppError::MeteredAccountUnknown => StatusCode::NOT_FOUND,
             AppError::MeteredPackageUnknown => StatusCode::BAD_REQUEST,
@@ -78,6 +82,7 @@ impl AppError {
             AppError::UpstreamError(_) => "upstream_error",
             AppError::BadRequest(_) => "bad_request",
             AppError::Internal(_) => "internal_error",
+            AppError::VendorUnknown => "vendor_unknown",
             AppError::MeteredVendorUnknown => "metered_vendor_unknown",
             AppError::MeteredAccountUnknown => "metered_account_unknown",
             AppError::MeteredPackageUnknown => "metered_package_unknown",

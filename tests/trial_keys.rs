@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -8,13 +9,14 @@ use dream_trial_broker::config::Config;
 use dream_trial_broker::db;
 use dream_trial_broker::error::AppError;
 use dream_trial_broker::rate_limit::RateLimiter;
-use dream_trial_broker::service::{issue_trial_key, read_quota_status, AppState};
+use dream_trial_broker::service::{apply_top_up, issue_trial_key, read_quota_status, AppState};
 use dream_trial_broker::vendor::{
     IssuedKey, KeySpec, KeyUsage, ProvisioningMode, ResetPeriod, TokenVendor, VendorClientConfig,
     VendorError,
 };
 
 const MODELS: &[&str] = &["vendor/free", "vendor/paid"];
+const MOCK_VENDOR_ID: &str = "mockvendor";
 
 /// A stand-in vendor: never touches the network, records what it was asked
 /// for, and can be told to fail or to report a particular spend position.
@@ -39,6 +41,7 @@ impl MockVendor {
                 remaining_usd: Some(0.75),
                 reset: Some(ResetPeriod::Monthly),
                 disabled: false,
+                currency: "USD".to_string(),
             }),
         }
     }
@@ -62,7 +65,7 @@ impl MockVendor {
 #[async_trait]
 impl TokenVendor for MockVendor {
     fn id(&self) -> &'static str {
-        "mockvendor"
+        MOCK_VENDOR_ID
     }
 
     fn provisioning_mode(&self) -> ProvisioningMode {
@@ -73,7 +76,8 @@ impl TokenVendor for MockVendor {
         VendorClientConfig {
             platform: "MockPlatform",
             base_url: "https://mock.example/v1",
-            models: MODELS,
+            currency: "USD",
+            models: MODELS.iter().map(|s| s.to_string()).collect(),
         }
     }
 
@@ -102,7 +106,19 @@ impl TokenVendor for MockVendor {
         Ok(self.usage.lock().unwrap().clone())
     }
 
-    async fn set_limit(&self, _handle: &str, _limit_usd: f64) -> Result<(), VendorError> {
+    async fn set_limit(&self, _handle: &str, limit_usd: f64) -> Result<(), VendorError> {
+        if self.should_fail {
+            return Err(VendorError::Request {
+                vendor: "mockvendor",
+                message: "simulated set_limit failure".to_string(),
+            });
+        }
+        // Real enough to exercise the trait's default `top_up` (read_usage +
+        // set_limit) end to end: raising the limit frees up the same amount
+        // to spend, `used` is untouched.
+        let mut usage = self.usage.lock().unwrap();
+        usage.limit_usd = Some(limit_usd);
+        usage.remaining_usd = Some(limit_usd - usage.used_usd);
         Ok(())
     }
 
@@ -114,6 +130,7 @@ impl TokenVendor for MockVendor {
 fn base_config() -> Config {
     Config {
         openrouter_management_key: "test-management-key".to_string(),
+        baoyun: None,
         database_url: "sqlite::memory:".to_string(),
         daily_budget_usd_cap: 50.0,
         trial_key_limit_usd: 1.0,
@@ -149,10 +166,14 @@ async fn make_state_with(
     let rate_limit = config.per_ip_rate_limit_per_hour;
     let vendor = Arc::new(vendor);
 
+    let mut vendors: HashMap<&'static str, Arc<dyn TokenVendor>> = HashMap::new();
+    let dyn_vendor: Arc<dyn TokenVendor> = vendor.clone();
+    vendors.insert(MOCK_VENDOR_ID, dyn_vendor);
+
     let state = AppState {
         pool,
         config: Arc::new(config),
-        vendor: vendor.clone(),
+        vendors,
         rate_limiter: Arc::new(RateLimiter::new(rate_limit, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
@@ -168,7 +189,7 @@ fn ip(a: u8, b: u8, c: u8, d: u8) -> IpAddr {
 async fn fresh_install_id_succeeds_and_persists_a_row() {
     let state = make_state(false, 50.0, 5).await;
 
-    let response = issue_trial_key(&state, "install-fresh", ip(127, 0, 0, 1))
+    let response = issue_trial_key(&state, MOCK_VENDOR_ID, "install-fresh", ip(127, 0, 0, 1))
         .await
         .expect("first issuance should succeed");
 
@@ -196,12 +217,13 @@ async fn fresh_install_id_succeeds_and_persists_a_row() {
 #[tokio::test]
 async fn the_response_names_the_platform_so_the_client_need_not_hardcode_it() {
     let state = make_state(false, 50.0, 5).await;
-    let response = issue_trial_key(&state, "install-platform", ip(127, 0, 0, 1))
+    let response = issue_trial_key(&state, MOCK_VENDOR_ID, "install-platform", ip(127, 0, 0, 1))
         .await
         .unwrap();
 
-    assert_eq!(response.platform, state.vendor.client_config().platform);
-    assert_eq!(response.base_url, state.vendor.client_config().base_url);
+    let vendor = state.vendors.get(MOCK_VENDOR_ID).unwrap();
+    assert_eq!(response.platform, vendor.client_config().platform);
+    assert_eq!(response.base_url, vendor.client_config().base_url);
 }
 
 #[tokio::test]
@@ -209,11 +231,11 @@ async fn duplicate_install_id_returns_409() {
     let state = make_state(false, 50.0, 5).await;
     let caller_ip = ip(127, 0, 0, 1);
 
-    issue_trial_key(&state, "install-dup", caller_ip)
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-dup", caller_ip)
         .await
         .expect("first issuance should succeed");
 
-    let err = issue_trial_key(&state, "install-dup", caller_ip)
+    let err = issue_trial_key(&state, MOCK_VENDOR_ID, "install-dup", caller_ip)
         .await
         .expect_err("second issuance for same install_id should fail");
 
@@ -226,14 +248,14 @@ async fn exceeding_per_ip_rate_limit_returns_429() {
     let state = make_state(false, 50.0, 2).await;
     let caller_ip = ip(127, 0, 0, 2);
 
-    issue_trial_key(&state, "install-rl-1", caller_ip)
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-rl-1", caller_ip)
         .await
         .expect("first request within limit should succeed");
-    issue_trial_key(&state, "install-rl-2", caller_ip)
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-rl-2", caller_ip)
         .await
         .expect("second request within limit should succeed");
 
-    let err = issue_trial_key(&state, "install-rl-3", caller_ip)
+    let err = issue_trial_key(&state, MOCK_VENDOR_ID, "install-rl-3", caller_ip)
         .await
         .expect_err("third request should exceed the per-IP rate limit");
 
@@ -247,14 +269,14 @@ async fn daily_budget_cap_returns_503() {
     let state = make_state(false, 2.0, 100).await;
     let caller_ip = ip(127, 0, 0, 3);
 
-    issue_trial_key(&state, "install-budget-1", caller_ip)
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-budget-1", caller_ip)
         .await
         .expect("first issuance should succeed");
-    issue_trial_key(&state, "install-budget-2", caller_ip)
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-budget-2", caller_ip)
         .await
         .expect("second issuance should succeed");
 
-    let err = issue_trial_key(&state, "install-budget-3", caller_ip)
+    let err = issue_trial_key(&state, MOCK_VENDOR_ID, "install-budget-3", caller_ip)
         .await
         .expect_err("third issuance should trip the daily circuit breaker");
 
@@ -273,7 +295,7 @@ async fn daily_budget_cap_returns_503() {
 async fn issued_keys_carry_the_configured_monthly_spend_cap() {
     let (state, vendor) = make_state_with(MockVendor::new(false), |_| {}).await;
 
-    issue_trial_key(&state, "install-cap", ip(127, 0, 0, 9))
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-cap", ip(127, 0, 0, 9))
         .await
         .expect("issuance should succeed");
 
@@ -298,7 +320,7 @@ async fn limit_reset_is_configurable_for_deployments_that_want_daily() {
     })
     .await;
 
-    issue_trial_key(&state, "install-daily", ip(127, 0, 0, 10))
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-daily", ip(127, 0, 0, 10))
         .await
         .expect("issuance should succeed");
 
@@ -315,9 +337,14 @@ async fn a_vendor_that_cannot_cap_a_key_is_refused_before_issuing() {
     )
     .await;
 
-    let err = issue_trial_key(&state, "install-uncappable", ip(127, 0, 0, 11))
-        .await
-        .expect_err("a vendor without capped keys must not be used to issue one");
+    let err = issue_trial_key(
+        &state,
+        MOCK_VENDOR_ID,
+        "install-uncappable",
+        ip(127, 0, 0, 11),
+    )
+    .await
+    .expect_err("a vendor without capped keys must not be used to issue one");
 
     assert!(matches!(err, AppError::Internal(_)));
     assert!(
@@ -331,7 +358,7 @@ async fn vendor_failure_surfaces_as_502_without_persisting() {
     let state = make_state(true, 50.0, 5).await;
     let caller_ip = ip(127, 0, 0, 4);
 
-    let err = issue_trial_key(&state, "install-upstream-fail", caller_ip)
+    let err = issue_trial_key(&state, MOCK_VENDOR_ID, "install-upstream-fail", caller_ip)
         .await
         .expect_err("simulated vendor failure should surface as an error");
 
@@ -350,11 +377,11 @@ async fn vendor_failure_surfaces_as_502_without_persisting() {
 #[tokio::test]
 async fn quota_status_reports_the_vendors_spend_position() {
     let state = make_state(false, 50.0, 5).await;
-    issue_trial_key(&state, "install-quota", ip(127, 0, 0, 5))
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-quota", ip(127, 0, 0, 5))
         .await
         .expect("issuance should succeed");
 
-    let status = read_quota_status(&state, "install-quota")
+    let status = read_quota_status(&state, MOCK_VENDOR_ID, "install-quota")
         .await
         .expect("quota should be readable for an issued install");
 
@@ -363,13 +390,14 @@ async fn quota_status_reports_the_vendors_spend_position() {
     assert_eq!(status.used_usd, 0.25);
     assert_eq!(status.remaining_usd, Some(0.75));
     assert_eq!(status.reset.as_deref(), Some("monthly"));
+    assert_eq!(status.currency, "USD");
     assert!(!status.exhausted);
 }
 
 #[tokio::test]
 async fn quota_status_reports_exhaustion_once_nothing_remains() {
     let (state, vendor) = make_state_with(MockVendor::new(false), |_| {}).await;
-    issue_trial_key(&state, "install-spent", ip(127, 0, 0, 6))
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-spent", ip(127, 0, 0, 6))
         .await
         .unwrap();
 
@@ -379,9 +407,12 @@ async fn quota_status_reports_exhaustion_once_nothing_remains() {
         remaining_usd: Some(0.0),
         reset: Some(ResetPeriod::Monthly),
         disabled: false,
+        currency: "USD".to_string(),
     };
 
-    let status = read_quota_status(&state, "install-spent").await.unwrap();
+    let status = read_quota_status(&state, MOCK_VENDOR_ID, "install-spent")
+        .await
+        .unwrap();
     assert!(status.exhausted);
     assert_eq!(status.remaining_usd, Some(0.0));
 }
@@ -393,7 +424,7 @@ async fn quota_status_reports_exhaustion_once_nothing_remains() {
 async fn quota_status_for_an_unknown_install_is_404() {
     let state = make_state(false, 50.0, 5).await;
 
-    let err = read_quota_status(&state, "install-never-claimed")
+    let err = read_quota_status(&state, MOCK_VENDOR_ID, "install-never-claimed")
         .await
         .expect_err("an install with no key has no quota to report");
 
@@ -404,8 +435,65 @@ async fn quota_status_for_an_unknown_install_is_404() {
 #[tokio::test]
 async fn quota_status_rejects_an_empty_install_id() {
     let state = make_state(false, 50.0, 5).await;
-    let err = read_quota_status(&state, "   ")
+    let err = read_quota_status(&state, MOCK_VENDOR_ID, "   ")
         .await
         .expect_err("empty id is a bad request");
     assert!(matches!(err, AppError::BadRequest(_)));
+}
+
+/// Naming a vendor this broker has no `TokenVendor` for must fail before
+/// touching the database or any upstream call — not panic, not fall back to
+/// whichever vendor happens to be configured.
+#[tokio::test]
+async fn issuing_for_an_unconfigured_vendor_is_404() {
+    let state = make_state(false, 50.0, 5).await;
+
+    let err = issue_trial_key(&state, "not-a-real-vendor", "install-x", ip(127, 0, 0, 20))
+        .await
+        .expect_err("an unconfigured vendor must be refused");
+    assert!(matches!(err, AppError::VendorUnknown));
+    assert_eq!(err.status_code(), axum::http::StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn quota_status_for_an_unconfigured_vendor_is_404() {
+    let state = make_state(false, 50.0, 5).await;
+
+    let err = read_quota_status(&state, "not-a-real-vendor", "install-x")
+        .await
+        .expect_err("an unconfigured vendor must be refused");
+    assert!(matches!(err, AppError::VendorUnknown));
+}
+
+/// The top-up path this broker will eventually call from a payment webhook.
+/// `MockVendor` has no atomic delta of its own, so this exercises the trait's
+/// default (`read_usage` + `set_limit`) implementation end to end.
+#[tokio::test]
+async fn top_up_raises_the_limit_by_the_given_delta() {
+    let (state, _vendor) = make_state_with(MockVendor::new(false), |_| {}).await;
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-topup", ip(127, 0, 0, 21))
+        .await
+        .expect("issuance should succeed");
+
+    // Starting position: limit 1.0, used 0.25, remaining 0.75 (see
+    // `MockVendor::new`). A +2.0 top-up should raise the limit to 3.0 and
+    // free up 2.0 more to spend, leaving `used` untouched.
+    let status = apply_top_up(&state, MOCK_VENDOR_ID, "install-topup", 2.0)
+        .await
+        .expect("top-up should succeed");
+
+    assert_eq!(status.limit_usd, Some(3.0));
+    assert_eq!(status.used_usd, 0.25);
+    assert_eq!(status.remaining_usd, Some(2.75));
+    assert!(!status.exhausted);
+}
+
+#[tokio::test]
+async fn top_up_for_an_install_with_no_issuance_is_404() {
+    let state = make_state(false, 50.0, 5).await;
+
+    let err = apply_top_up(&state, MOCK_VENDOR_ID, "install-never-claimed", 5.0)
+        .await
+        .expect_err("nothing to top up for an install that never claimed a key");
+    assert!(matches!(err, AppError::NotIssued));
 }

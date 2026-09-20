@@ -26,6 +26,7 @@ use dream_trial_broker::rate_limit::RateLimiter;
 use dream_trial_broker::routes::build_router;
 use dream_trial_broker::service::AppState;
 use dream_trial_broker::vendor::openrouter::OpenRouterVendor;
+use dream_trial_broker::vendor::TokenVendor;
 
 const VENDOR: &str = baoyun::ID;
 const MASTER_KEY: &str = "master-key-xyz";
@@ -115,6 +116,7 @@ async fn spawn_upstream(request_id: &str) -> (String, Arc<Mutex<Option<String>>>
 fn base_config() -> Config {
     Config {
         openrouter_management_key: "unused".to_string(),
+        baoyun: None,
         database_url: "sqlite::memory:".to_string(),
         daily_budget_usd_cap: 50.0,
         trial_key_limit_usd: 1.0,
@@ -164,10 +166,15 @@ async fn harness(
         http: reqwest::Client::new(),
     });
 
+    let mut vendors: HashMap<&'static str, Arc<dyn TokenVendor>> = HashMap::new();
+    let openrouter_vendor: Arc<dyn TokenVendor> =
+        Arc::new(OpenRouterVendor::new("unused".to_string()));
+    vendors.insert(openrouter_vendor.id(), openrouter_vendor);
+
     let state = Arc::new(AppState {
         pool,
         config: Arc::new(base_config()),
-        vendor: Arc::new(OpenRouterVendor::new("unused".to_string())),
+        vendors,
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered,
         // Mode C is off for these tests: it shares nothing with mode B.

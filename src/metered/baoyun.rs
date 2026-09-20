@@ -1,4 +1,15 @@
-//! Baoyun (`ai.baoyun.com`) as a metered vendor.
+//! Baoyun (`ai.baoyun.com`) as a metered vendor (mode B).
+//!
+//! **Superseded as Baoyun's actual integration.** This was written when
+//! Baoyun had no capped-key API, so metering inference here in the broker was
+//! the only way to bound spend. Baoyun has since added one
+//! (`/apis/v1/api-keys`, 2026-09-20) and moved to mode A —
+//! see `crate::vendor::baoyun`, the vendor now actually in use, and
+//! `crate::metered` for why this file stays: it is mode B's reference
+//! implementation, not dead code, kept for a future vendor that genuinely
+//! cannot issue a capped key. It is disabled by default
+//! (`BAOYUN_MASTER_API_KEY` unset) and nothing currently sets that variable
+//! in any deployment.
 //!
 //! Verified against the live docs (2026-09-02), not guessed:
 //!

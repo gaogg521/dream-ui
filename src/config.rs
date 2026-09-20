@@ -2,11 +2,28 @@ use std::env;
 
 use crate::vendor::ResetPeriod;
 
+/// Baoyun-specific mode A settings. `Option`-wrapped on [`Config`]: absent
+/// `BAOYUN_ACCESS_TOKEN` means the vendor is not enabled, mirroring how mode
+/// B's Baoyun config is opt-in (`crate::metered::baoyun::config_from_env`).
+#[derive(Clone, Debug)]
+pub struct BaoyunAccountConfig {
+    /// System access token from Baoyun's console (a different credential
+    /// from any `sk-` key — see `crate::vendor::baoyun`). Never logged.
+    pub access_token: String,
+    /// Free trial grant, in CNY. Baoyun's `remain` never renews on its own,
+    /// so this is a one-time balance, not a monthly allowance.
+    pub trial_key_limit_cny: f64,
+    /// Same role as `daily_budget_usd_cap` but scoped to Baoyun's own
+    /// currency — see `count_active_issued_since`'s per-vendor scoping.
+    pub daily_budget_cny_cap: f64,
+}
+
 #[derive(Clone, Debug)]
 pub struct Config {
     /// Privileged OpenRouter "Management Key" used to mint trial keys.
     /// Never logged, never hardcoded.
     pub openrouter_management_key: String,
+    pub baoyun: Option<BaoyunAccountConfig>,
     pub database_url: String,
     /// Ceiling on how much *new* spend liability may be handed out in a single
     /// day. One issuance adds `trial_key_limit_usd` of liability per
@@ -42,6 +59,16 @@ impl Config {
             anyhow::bail!("OPENROUTER_MANAGEMENT_KEY must not be empty");
         }
 
+        let baoyun = match env::var("BAOYUN_ACCESS_TOKEN") {
+            Ok(access_token) if !access_token.trim().is_empty() => Some(BaoyunAccountConfig {
+                access_token,
+                trial_key_limit_cny: parse_env_or("BAOYUN_TRIAL_KEY_LIMIT_CNY", 10.0)?,
+                daily_budget_cny_cap: parse_env_or("BAOYUN_DAILY_BUDGET_CNY_CAP", 500.0)?,
+            }),
+            Ok(_) => anyhow::bail!("BAOYUN_ACCESS_TOKEN is set but empty"),
+            Err(_) => None,
+        };
+
         let database_url =
             env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://trial-broker.db".to_string());
 
@@ -64,6 +91,7 @@ impl Config {
 
         Ok(Self {
             openrouter_management_key,
+            baoyun,
             database_url,
             daily_budget_usd_cap,
             trial_key_limit_usd,

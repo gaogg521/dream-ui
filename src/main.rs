@@ -11,6 +11,7 @@ use dream_trial_broker::rate_limit::RateLimiter;
 use dream_trial_broker::routes::build_router;
 use dream_trial_broker::search;
 use dream_trial_broker::service::AppState;
+use dream_trial_broker::vendor::baoyun::BaoyunVendor;
 use dream_trial_broker::vendor::openrouter::OpenRouterVendor;
 use dream_trial_broker::vendor::TokenVendor;
 
@@ -28,11 +29,21 @@ async fn main() -> anyhow::Result<()> {
     let listen_addr: SocketAddr = config.listen_addr.parse()?;
 
     let pool = db::init_pool(&config.database_url).await?;
-    // One vendor for now. When there are several this becomes a lookup keyed
-    // by config; the trait boundary is already where it needs to be.
-    let vendor: Arc<dyn TokenVendor> = Arc::new(OpenRouterVendor::new(
+
+    // Mode A vendors. OpenRouter is required at startup; Baoyun is opt-in on
+    // `BAOYUN_ACCESS_TOKEN` (same convention as mode B's per-vendor configs).
+    let mut vendors: HashMap<&'static str, Arc<dyn TokenVendor>> = HashMap::new();
+    let openrouter_vendor: Arc<dyn TokenVendor> = Arc::new(OpenRouterVendor::new(
         config.openrouter_management_key.clone(),
     ));
+    vendors.insert(openrouter_vendor.id(), openrouter_vendor);
+    if let Some(baoyun_config) = &config.baoyun {
+        let baoyun_vendor: Arc<dyn TokenVendor> =
+            Arc::new(BaoyunVendor::new(baoyun_config.access_token.clone()));
+        vendors.insert(baoyun_vendor.id(), baoyun_vendor);
+        tracing::info!("mode A vendor enabled: baoyun");
+    }
+
     let rate_limiter = Arc::new(RateLimiter::new(
         config.per_ip_rate_limit_per_hour,
         Duration::from_secs(3600),
@@ -54,7 +65,7 @@ async fn main() -> anyhow::Result<()> {
     let state = Arc::new(AppState {
         pool,
         config: Arc::new(config),
-        vendor,
+        vendors,
         rate_limiter,
         metered,
         search,
@@ -62,7 +73,7 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!(
         %listen_addr,
-        vendor = state.vendor.id(),
+        vendors = state.vendors.keys().copied().collect::<Vec<_>>().join(","),
         metered_vendors = state.metered.configs.len(),
         hosted_search = state.search.enabled(),
         search_providers = state.search.provider_ids().join(","),

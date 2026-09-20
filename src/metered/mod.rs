@@ -11,6 +11,15 @@
 //! can be asked what a call actually cost, a [`CostResolver`]. Adding a second
 //! metered vendor is a config entry and maybe one resolver impl — it does not
 //! touch forwarding, the ledger, or payments.
+//!
+//! **Not currently wired to any vendor by default.** Baoyun — the vendor
+//! [`baoyun`] was originally built for — added a real capped-key API in its
+//! `/apis/v1/api-keys` account API (2026-09-20) and moved to mode A
+//! ([`crate::vendor::baoyun`]) instead, since mode A is simpler whenever a
+//! vendor supports it. [`baoyun`] here (the [`CostResolver`] impl, opt-in on
+//! `BAOYUN_MASTER_API_KEY`) is kept as this mode's reference implementation
+//! for whatever future vendor genuinely cannot issue a capped key — with no
+//! env var set it stays inert and `/v1/metered/*` 404s, same as before.
 
 use async_trait::async_trait;
 use axum::http::HeaderMap;

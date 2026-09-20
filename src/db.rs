@@ -56,18 +56,24 @@ pub async fn find_active_by_install_id(
     .await
 }
 
-/// Counts issuances that are active (not expired as of `now_ms`, not
-/// disabled) and were issued at or after `since_ms`. Used both by the daily
-/// circuit breaker and the `/internal/stats` endpoint.
+/// Counts issuances on `vendor` that are active (not expired as of `now_ms`,
+/// not disabled) and were issued at or after `since_ms`. Used both by the
+/// daily circuit breaker and the `/internal/stats` endpoint.
+///
+/// Scoped per vendor: each vendor's per-key limit is in its own currency, so
+/// a global count would sum liability across currencies into one meaningless
+/// number and let one vendor's budget gate another's issuance.
 pub async fn count_active_issued_since(
     pool: &SqlitePool,
+    vendor: &str,
     since_ms: i64,
     now_ms: i64,
 ) -> sqlx::Result<i64> {
     let (count,): (i64,) = sqlx::query_as(
         "SELECT COUNT(*) FROM issuances
-         WHERE issued_at >= ? AND expires_at > ? AND disabled = 0",
+         WHERE vendor = ? AND issued_at >= ? AND expires_at > ? AND disabled = 0",
     )
+    .bind(vendor)
     .bind(since_ms)
     .bind(now_ms)
     .fetch_one(pool)

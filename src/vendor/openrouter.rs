@@ -157,6 +157,7 @@ impl From<KeyData> for KeyUsage {
                 Some(raw) => ResetPeriod::parse(raw),
             },
             disabled: data.disabled.unwrap_or(false),
+            currency: "USD".to_string(),
         }
     }
 }
@@ -175,7 +176,8 @@ impl TokenVendor for OpenRouterVendor {
         VendorClientConfig {
             platform: PLATFORM,
             base_url: BASE_URL,
-            models: TRIAL_MODELS,
+            models: TRIAL_MODELS.iter().map(|s| s.to_string()).collect(),
+            currency: "USD",
         }
     }
 
@@ -297,6 +299,7 @@ mod tests {
             disabled: None,
         }
         .into();
+        assert_eq!(usage.currency, "USD");
         assert_eq!(usage.reset, Some(ResetPeriod::Cumulative));
         assert!(!usage.is_exhausted());
     }
@@ -309,6 +312,7 @@ mod tests {
             remaining_usd: Some(0.0),
             reset: Some(ResetPeriod::Monthly),
             disabled: false,
+            currency: "USD".to_string(),
         };
         assert!(spent.is_exhausted());
 

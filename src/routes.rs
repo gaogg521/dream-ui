@@ -13,8 +13,8 @@ use crate::error::AppError;
 use crate::metered::proxy::proxy_handler;
 use crate::metered::service as metered;
 use crate::service::{
-    issue_trial_key, read_quota_status, AppState, QuotaStatusResponse, TrialKeyRequest,
-    TrialKeyResponse,
+    apply_top_up, issue_trial_key, read_quota_status, AppState, QuotaStatusResponse,
+    TrialKeyRequest, TrialKeyResponse,
 };
 
 pub fn build_router(state: Arc<AppState>) -> Router {
@@ -36,6 +36,16 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         // the broker, so the client never names it.
         .route("/v1/search", post(crate::search::service::search_handler))
         .route("/internal/stats", get(stats))
+        // Ops-only: apply a top-up to a mode A key. No client (dream-ui) calls
+        // this yet — there is no end-user payment collection wired up for
+        // either vendor — but the capability itself is real, not a stub: a
+        // future payment webhook, or an operator by hand, can drive it today.
+        // Same trust tier as `/internal/stats`: reachable, not authenticated
+        // beyond network placement, not advertised to the desktop client.
+        .route(
+            "/internal/vendors/:vendor/trial-keys/:install_id/topup",
+            post(internal_top_up),
+        )
         .with_state(state)
 }
 
@@ -46,12 +56,13 @@ async fn create_trial_key(
     Json(payload): Json<TrialKeyRequest>,
 ) -> Result<Json<TrialKeyResponse>, AppError> {
     let ip = extract_client_ip(&headers, addr);
-    let response = issue_trial_key(&state, &payload.install_id, ip).await?;
+    let response = issue_trial_key(&state, &payload.vendor, &payload.install_id, ip).await?;
     Ok(Json(response))
 }
 
 #[derive(Debug, Deserialize)]
 struct QuotaStatusRequest {
+    vendor: String,
     install_id: String,
 }
 
@@ -62,7 +73,27 @@ async fn quota_status(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<QuotaStatusRequest>,
 ) -> Result<Json<QuotaStatusResponse>, AppError> {
-    Ok(Json(read_quota_status(&state, &payload.install_id).await?))
+    Ok(Json(
+        read_quota_status(&state, &payload.vendor, &payload.install_id).await?,
+    ))
+}
+
+#[derive(Debug, Deserialize)]
+struct TopUpRequest {
+    /// Positive to credit, negative to deduct. Amount is in the vendor's own
+    /// currency (see `TrialKeyResponse.currency` / `QuotaStatusResponse.currency`
+    /// for which one that is).
+    amount: f64,
+}
+
+async fn internal_top_up(
+    State(state): State<Arc<AppState>>,
+    axum::extract::Path((vendor, install_id)): axum::extract::Path<(String, String)>,
+    Json(payload): Json<TopUpRequest>,
+) -> Result<Json<QuotaStatusResponse>, AppError> {
+    Ok(Json(
+        apply_top_up(&state, &vendor, &install_id, payload.amount).await?,
+    ))
 }
 
 async fn stats(State(state): State<Arc<AppState>>) -> Result<Json<serde_json::Value>, AppError> {
@@ -75,18 +106,33 @@ async fn stats(State(state): State<Arc<AppState>>) -> Result<Json<serde_json::Va
         .timestamp_millis();
     let now_ms = now.timestamp_millis();
 
-    let issued_today = db::count_active_issued_since(&state.pool, today_start_ms, now_ms)
+    // Mode A: one entry per configured vendor. Liability *added today*, not
+    // spend incurred today — each key issued today can spend up to its
+    // vendor's per-key limit for as long as it lives, so naming it "daily
+    // spend" would badly understate the commitment under a renewing reset.
+    let mut vendor_stats = Vec::with_capacity(state.vendors.len());
+    for vendor_id in state.vendors.keys() {
+        let issued_today = db::count_active_issued_since(
+            &state.pool,
+            vendor_id,
+            today_start_ms,
+            now_ms,
+        )
         .await
         .map_err(|e| {
-            tracing::error!(error = %e, "db error while computing stats");
+            tracing::error!(error = %e, vendor = *vendor_id, "db error while computing stats");
             AppError::Internal("database error".into())
         })?;
-
-    // Liability *added today*, not spend incurred today: each key issued today
-    // can spend up to `trial_key_limit_usd` per `limit_reset` period for as
-    // long as it lives. Naming it "daily spend" would badly understate the
-    // commitment under the default monthly reset.
-    let liability_added_today_usd = issued_today as f64 * state.config.trial_key_limit_usd;
+        let policy = state.issuance_policy(vendor_id);
+        vendor_stats.push(json!({
+            "vendor": vendor_id,
+            "issued_today": issued_today,
+            "liability_added_today": issued_today as f64 * policy.limit_amount,
+            "per_key_limit": policy.limit_amount,
+            "per_key_limit_reset": policy.reset.as_str(),
+            "daily_budget_cap": policy.daily_budget_cap,
+        }));
+    }
 
     // Which vendor mode C is spending, and how much of its allowance is left.
     // The handover from a free plan to a paid one is invisible from outside,
@@ -115,14 +161,9 @@ async fn stats(State(state): State<Arc<AppState>>) -> Result<Json<serde_json::Va
         .collect();
 
     Ok(Json(json!({
-        "vendor": state.vendor.id(),
+        "vendors": vendor_stats,
         "search_month": month,
         "search_providers": search_providers,
-        "issued_today": issued_today,
-        "issuance_budget_cap_usd": state.config.daily_budget_usd_cap,
-        "liability_added_today_usd": liability_added_today_usd,
-        "per_key_limit_usd": state.config.trial_key_limit_usd,
-        "per_key_limit_reset": state.config.trial_key_limit_reset.as_str(),
     })))
 }
 

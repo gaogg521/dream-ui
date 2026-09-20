@@ -11,11 +11,12 @@ use crate::config::Config;
 use crate::db::{self, Issuance};
 use crate::error::AppError;
 use crate::rate_limit::RateLimiter;
-use crate::vendor::{KeySpec, ProvisioningMode, TokenVendor, VendorError};
+use crate::vendor::{baoyun, KeySpec, ProvisioningMode, ResetPeriod, TokenVendor, VendorError};
 
 #[derive(Debug, Deserialize)]
 pub struct TrialKeyRequest {
     pub install_id: String,
+    pub vendor: String,
 }
 
 #[derive(Debug, Serialize, PartialEq)]
@@ -29,6 +30,10 @@ pub struct TrialKeyResponse {
     /// Stable vendor id, for anything that needs to distinguish issuers
     /// without parsing the platform label.
     pub vendor: String,
+    /// ISO 4217 code for `limit_usd`-style fields the client reads later from
+    /// `/v1/quota/status`. Not itself an amount field here, but sent from the
+    /// same call site that will report one.
+    pub currency: String,
 }
 
 /// A key's spend position, for the client's quota display.
@@ -41,20 +46,67 @@ pub struct QuotaStatusResponse {
     /// `monthly`, `daily`, or `cumulative`.
     pub reset: Option<String>,
     pub exhausted: bool,
+    /// ISO 4217 code the amount fields above are denominated in.
+    pub currency: String,
+}
+
+/// How generously this broker issues a trial key on one vendor: the cap
+/// amount (in that vendor's own currency), how it resets, and the daily
+/// liability ceiling across all issuances on that vendor.
+///
+/// A flat `match` over two known vendors rather than a config map: mode A has
+/// exactly the vendors wired into `AppState.vendors`, each with its own env
+/// block (see `Config`), and a third vendor is rare enough that adding its
+/// arm here is proportionate — unlike mode B, which is built to take vendors
+/// nobody has written yet.
+pub(crate) struct VendorIssuancePolicy {
+    pub(crate) limit_amount: f64,
+    pub(crate) reset: ResetPeriod,
+    pub(crate) daily_budget_cap: f64,
 }
 
 /// Shared application state handed to every request handler.
 pub struct AppState {
     pub pool: SqlitePool,
     pub config: Arc<Config>,
-    pub vendor: Arc<dyn TokenVendor>,
+    /// Mode A vendors, keyed by [`TokenVendor::id`]. OpenRouter is always
+    /// present (its management key is required at startup); Baoyun is
+    /// opt-in on `BAOYUN_ACCESS_TOKEN`.
+    pub vendors: std::collections::HashMap<&'static str, Arc<dyn TokenVendor>>,
     pub rate_limiter: Arc<RateLimiter>,
-    /// Mode B. Independent of `vendor` above — its own vendors, its own
+    /// Mode B. Independent of `vendors` above — its own vendors, its own
     /// tables. Empty when no metered vendor is configured.
     pub metered: Arc<crate::metered::MeteredRuntime>,
     /// Mode C. Also independent: its own key, its own table, its own limiter.
     /// Disabled when no search key is configured.
     pub search: Arc<crate::search::SearchRuntime>,
+}
+
+impl AppState {
+    /// Baoyun gets its own dedicated, opt-in config block (see `Config`);
+    /// every other vendor id falls back to the general `trial_key_limit_*` /
+    /// `daily_budget_usd_cap` fields. That fallback is deliberately not
+    /// scoped to `openrouter::ID` specifically: those fields have no
+    /// OpenRouter-specific shape (they're just "amount, reset, daily cap"),
+    /// so a vendor registered in `AppState.vendors` without its own block —
+    /// today only ever OpenRouter, or a test double — gets a sensible policy
+    /// rather than `VendorUnknown` for a vendor the caller already resolved.
+    pub(crate) fn issuance_policy(&self, vendor_id: &str) -> VendorIssuancePolicy {
+        if vendor_id == baoyun::ID {
+            if let Some(c) = &self.config.baoyun {
+                return VendorIssuancePolicy {
+                    limit_amount: c.trial_key_limit_cny,
+                    reset: ResetPeriod::Cumulative,
+                    daily_budget_cap: c.daily_budget_cny_cap,
+                };
+            }
+        }
+        VendorIssuancePolicy {
+            limit_amount: self.config.trial_key_limit_usd,
+            reset: self.config.trial_key_limit_reset,
+            daily_budget_cap: self.config.daily_budget_usd_cap,
+        }
+    }
 }
 
 fn log_vendor_error(error: &VendorError) {
@@ -80,6 +132,7 @@ fn log_vendor_error(error: &VendorError) {
 /// HTTP layer so it can be unit tested directly.
 pub async fn issue_trial_key(
     state: &AppState,
+    vendor_id: &str,
     install_id: &str,
     ip: IpAddr,
 ) -> Result<TrialKeyResponse, AppError> {
@@ -87,11 +140,15 @@ pub async fn issue_trial_key(
         return Err(AppError::BadRequest("install_id must not be empty".into()));
     }
 
-    let vendor_id = state.vendor.id();
+    let vendor = state
+        .vendors
+        .get(vendor_id)
+        .ok_or(AppError::VendorUnknown)?;
+    let policy = state.issuance_policy(vendor_id);
 
     // Refuse before spending anything if this vendor cannot cap a key at all.
     // Issuing an uncapped key would be worse than issuing none.
-    if state.vendor.provisioning_mode() != ProvisioningMode::IssuedKey {
+    if vendor.provisioning_mode() != ProvisioningMode::IssuedKey {
         tracing::error!(
             vendor = vendor_id,
             "configured vendor cannot issue capped keys"
@@ -122,7 +179,8 @@ pub async fn issue_trial_key(
         return Err(AppError::RateLimited);
     }
 
-    // 3. Daily global circuit breaker.
+    // 3. Daily circuit breaker, scoped to this vendor: liability in one
+    // vendor's currency must never gate issuance on another's.
     let now = Utc::now();
     let today_start_ms = now
         .date_naive()
@@ -132,18 +190,20 @@ pub async fn issue_trial_key(
         .timestamp_millis();
     let now_ms = now.timestamp_millis();
 
-    let issued_today = db::count_active_issued_since(&state.pool, today_start_ms, now_ms)
-        .await
-        .map_err(|e| {
-            tracing::error!(error = %e, "db error counting today's issuances");
-            AppError::Internal("database error".into())
-        })?;
+    let issued_today =
+        db::count_active_issued_since(&state.pool, vendor_id, today_start_ms, now_ms)
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "db error counting today's issuances");
+                AppError::Internal("database error".into())
+            })?;
 
-    let projected_liability = issued_today as f64 * state.config.trial_key_limit_usd;
-    if projected_liability >= state.config.daily_budget_usd_cap {
+    let projected_liability = issued_today as f64 * policy.limit_amount;
+    if projected_liability >= policy.daily_budget_cap {
         tracing::info!(
+            vendor = vendor_id,
             count = issued_today,
-            threshold_usd = state.config.daily_budget_usd_cap,
+            threshold = policy.daily_budget_cap,
             "daily circuit breaker tripped"
         );
         return Err(AppError::BudgetExhausted);
@@ -153,12 +213,12 @@ pub async fn issue_trial_key(
     let expires_at = now + ChronoDuration::days(state.config.trial_key_expires_days);
     let spec = KeySpec {
         label: format!("onework-trial-{}", short_uuid()),
-        limit_usd: state.config.trial_key_limit_usd,
-        reset: state.config.trial_key_limit_reset,
+        limit_usd: policy.limit_amount,
+        reset: policy.reset,
         expires_at: Some(expires_at.to_rfc3339_opts(SecondsFormat::Secs, true)),
     };
 
-    let issued = state.vendor.issue_key(spec).await.map_err(|e| {
+    let issued = vendor.issue_key(spec).await.map_err(|e| {
         log_vendor_error(&e);
         AppError::UpstreamError("failed to issue upstream key".into())
     })?;
@@ -189,13 +249,14 @@ pub async fn issue_trial_key(
     );
 
     // 6. Respond.
-    let client = state.vendor.client_config();
+    let client = vendor.client_config();
     Ok(TrialKeyResponse {
         key: issued.secret,
         base_url: client.base_url.to_string(),
-        models: client.models.iter().map(|s| s.to_string()).collect(),
+        models: client.models,
         platform: client.platform.to_string(),
         vendor: vendor_id.to_string(),
+        currency: client.currency.to_string(),
     })
 }
 
@@ -206,13 +267,18 @@ pub async fn issue_trial_key(
 /// client holds the only copy of that, and this stays true for the paid tier.
 pub async fn read_quota_status(
     state: &AppState,
+    vendor_id: &str,
     install_id: &str,
 ) -> Result<QuotaStatusResponse, AppError> {
     if install_id.trim().is_empty() {
         return Err(AppError::BadRequest("install_id must not be empty".into()));
     }
 
-    let vendor_id = state.vendor.id();
+    let vendor = state
+        .vendors
+        .get(vendor_id)
+        .ok_or(AppError::VendorUnknown)?;
+
     let issuance = db::find_active_by_install_id(&state.pool, vendor_id, install_id)
         .await
         .map_err(|e| {
@@ -223,8 +289,7 @@ pub async fn read_quota_status(
         // this service never issued. 404 says exactly that.
         .ok_or(AppError::NotIssued)?;
 
-    let usage = state
-        .vendor
+    let usage = vendor
         .read_usage(&issuance.vendor_key_handle)
         .await
         .map_err(|e| {
@@ -239,6 +304,55 @@ pub async fn read_quota_status(
         remaining_usd: usage.remaining_usd,
         reset: usage.reset.map(|r| r.as_str().to_string()),
         exhausted: usage.is_exhausted(),
+        currency: usage.currency,
+    })
+}
+
+/// Applies a top-up to this install's key on `vendor_id` and returns the
+/// resulting quota. The install must already hold an active issuance — there
+/// is nothing to top up otherwise.
+pub async fn apply_top_up(
+    state: &AppState,
+    vendor_id: &str,
+    install_id: &str,
+    delta_amount: f64,
+) -> Result<QuotaStatusResponse, AppError> {
+    let vendor = state
+        .vendors
+        .get(vendor_id)
+        .ok_or(AppError::VendorUnknown)?;
+
+    let issuance = db::find_active_by_install_id(&state.pool, vendor_id, install_id)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "db error during top-up lookup");
+            AppError::Internal("database error".into())
+        })?
+        .ok_or(AppError::NotIssued)?;
+
+    let usage = vendor
+        .top_up(&issuance.vendor_key_handle, delta_amount)
+        .await
+        .map_err(|e| {
+            log_vendor_error(&e);
+            AppError::UpstreamError("failed to top up upstream key".into())
+        })?;
+
+    tracing::info!(
+        vendor = vendor_id,
+        install_id_hash = %hash_prefix(install_id),
+        delta = delta_amount,
+        "applied top-up"
+    );
+
+    Ok(QuotaStatusResponse {
+        vendor: vendor_id.to_string(),
+        limit_usd: usage.limit_usd,
+        used_usd: usage.used_usd,
+        remaining_usd: usage.remaining_usd,
+        reset: usage.reset.map(|r| r.as_str().to_string()),
+        exhausted: usage.is_exhausted(),
+        currency: usage.currency,
     })
 }
 
