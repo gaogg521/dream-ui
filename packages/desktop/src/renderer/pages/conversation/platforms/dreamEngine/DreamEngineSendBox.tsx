@@ -281,6 +281,9 @@ const DreamEngineSendBox: React.FC<{
     setUploadFile,
   });
 
+  const [replyRequested, setReplyRequested] = useState(false);
+  const hasSessionToken = /@@conv:[A-Za-z0-9_-]+/.test(content);
+
   const executeCommand = useCallback(
     async ({ input, files }: Pick<ConversationCommandQueueItem, 'input' | 'files'>) => {
       if (teamPermission) await teamPermission.warmupSession();
@@ -484,8 +487,6 @@ const DreamEngineSendBox: React.FC<{
   };
 
   const [interrupting, setInterrupting] = useState(false);
-  const [replyRequested, setReplyRequested] = useState(false);
-  const hasSessionToken = /@@conv:[A-Za-z0-9_-]+/.test(content);
   const handleInterruptSend = async () => {
     if (!teamRuntime?.onInterruptSend || !content.trim() || interrupting) return;
     const files = collectChatFileRefs(uploadFile, atPath);
