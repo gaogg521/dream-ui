@@ -895,7 +895,8 @@
     "cta": "前往儲值"
   },
   "mediaIntentSwitchedImage": "已切換到圖片生成模式，再次傳送即可生成。",
-  "mediaIntentSwitchedVideo": "已切換到影片生成模式，再次傳送即可生成。",  "sessionDelivery": {
+  "mediaIntentSwitchedVideo": "已切換到影片生成模式，再次傳送即可生成。",
+  "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",
     "delivered": "Message delivered to the other session",

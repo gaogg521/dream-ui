@@ -893,7 +893,8 @@
     "cta": "شارژ"
   },
   "mediaIntentSwitchedImage": "به حالت ساخت تصویر تغییر کرد. برای ساخت دوباره ارسال کنید.",
-  "mediaIntentSwitchedVideo": "به حالت ساخت ویدیو تغییر کرد. برای ساخت دوباره ارسال کنید.",  "sessionDelivery": {
+  "mediaIntentSwitchedVideo": "به حالت ساخت ویدیو تغییر کرد. برای ساخت دوباره ارسال کنید.",
+  "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",
     "delivered": "Message delivered to the other session",

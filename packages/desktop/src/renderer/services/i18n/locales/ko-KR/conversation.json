@@ -893,7 +893,8 @@
     "cta": "충전하기"
   },
   "mediaIntentSwitchedImage": "이미지 생성 모드로 전환했습니다. 다시 보내면 생성합니다.",
-  "mediaIntentSwitchedVideo": "동영상 생성 모드로 전환했습니다. 다시 보내면 생성합니다.",  "sessionDelivery": {
+  "mediaIntentSwitchedVideo": "동영상 생성 모드로 전환했습니다. 다시 보내면 생성합니다.",
+  "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",
     "delivered": "Message delivered to the other session",

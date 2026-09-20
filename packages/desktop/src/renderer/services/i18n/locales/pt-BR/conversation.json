@@ -899,7 +899,8 @@
     "cta": "Recarregar"
   },
   "mediaIntentSwitchedImage": "Alterado para geração de imagens. Envie novamente para gerar.",
-  "mediaIntentSwitchedVideo": "Alterado para geração de vídeos. Envie novamente para gerar.",  "sessionDelivery": {
+  "mediaIntentSwitchedVideo": "Alterado para geração de vídeos. Envie novamente para gerar.",
+  "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",
     "delivered": "Message delivered to the other session",

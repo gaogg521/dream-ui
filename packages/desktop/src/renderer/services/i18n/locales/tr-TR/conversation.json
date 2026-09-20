@@ -895,7 +895,8 @@
     "cta": "Yükle"
   },
   "mediaIntentSwitchedImage": "Görsel üretimine geçildi. Oluşturmak için tekrar gönderin.",
-  "mediaIntentSwitchedVideo": "Video üretimine geçildi. Oluşturmak için tekrar gönderin.",  "sessionDelivery": {
+  "mediaIntentSwitchedVideo": "Video üretimine geçildi. Oluşturmak için tekrar gönderin.",
+  "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",
     "delivered": "Message delivered to the other session",

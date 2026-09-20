@@ -893,7 +893,8 @@
     "cta": "チャージ"
   },
   "mediaIntentSwitchedImage": "画像生成モードに切り替えました。もう一度送信すると生成します。",
-  "mediaIntentSwitchedVideo": "動画生成モードに切り替えました。もう一度送信すると生成します。",  "sessionDelivery": {
+  "mediaIntentSwitchedVideo": "動画生成モードに切り替えました。もう一度送信すると生成します。",
+  "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",
     "delivered": "Message delivered to the other session",
