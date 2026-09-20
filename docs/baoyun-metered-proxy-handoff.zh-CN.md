@@ -627,6 +627,31 @@ async fn verify_webhook(&self, headers, body)          // 宝付异步通知：�
   跟 OpenRouter 现状对齐，充值 UI 还没接给任何一个 vendor。
 - tsc 干净，118/118 provider 单测过，i18n 检查过。
 
+### 11.2.5 真机验证（2026-09-20，用户现场生成系统访问令牌）
+
+用户在宝云个人设置页现场生成了一个系统访问令牌，本地起 broker（`BAOYUN_ACCESS_TOKEN`
+指向它，`BAOYUN_TRIAL_KEY_LIMIT_CNY=1.0` 故意调小避免真实占用太多余额），跑通了完整
+真实链路，全部对着宝云生产环境，不是 mock：
+
+1. `POST /v1/trial-keys` → 真发一把 `sk-...` key，`remain=1.0 CNY`。
+2. `POST /v1/quota/status` → 读到 `remaining_usd: 1.0`。
+3. `POST /internal/vendors/baoyun/trial-keys/{id}/topup {"amount":0.5}` → 用
+   `remain_delta` 原子充值，返回 `remaining_usd: 1.5`。
+4. 再读一次 `/v1/quota/status` → 独立确认确实是 `1.5`（不是 top-up 接口自己撒谎）。
+5. **拿刚发的真实 key 直接调 `POST https://ai-api.baoyun.com/v1/chat/completions`**
+   →`model: "deepseek-chat"` 返回 `503 model_not_found`（"无可用渠道"）——
+   `PLACEHOLDER_MODELS` 那个占位符从一开始就是错的；换成宝云模型广场真实 slug
+   `deepseek-v4-1-flash` 后 `200`，模型真的回话了。**已修（commit `c9dd55f`）**，
+   `PLACEHOLDER_MODELS` 现在是 `["deepseek-v4-1-flash"]`。
+6. 验证完清理：`DELETE /apis/v1/api-keys/{id}` 撤销了这把 demo key（用系统访问令牌
+   直接调宝云账户 API，不是走 broker——broker 目前没暴露 revoke 的 HTTP 路由，
+   `TokenVendor::revoke` 只有 Rust 层接口）；本地 broker 进程和临时 sqlite 库、
+   `.env` 里含明文令牌的文件全部删除，令牌本身没写进任何提交的文件。
+
+**用户手上的系统访问令牌本身还有效**（我只撤销了 demo 期间发的那把 `sk-` key，没有
+撤销/重新生成系统访问令牌）——如果要部署到生产 broker，用户需要自己保管这个令牌
+（生成时只显示一次，我这边没有留存），配成生产环境的 `BAOYUN_ACCESS_TOKEN`。
+
 ### 11.3 没做的事（明确不在这轮范围内）
 
 - **终端用户付费充值**：`top_up`/`remain_delta` 这个能力本身已经写好、测试过、
