@@ -47,9 +47,15 @@ pub const CURRENCY: &str = "CNY";
 
 /// Placeholder trial model, used only when `BAOYUN_TRIAL_MODELS` is unset.
 ///
-/// **Unverified.** Same caveat as mode B carried: the real catalogue has not
-/// been curated. Set `BAOYUN_TRIAL_MODELS` before promoting the offer.
-const PLACEHOLDER_MODELS: &[&str] = &["deepseek-chat"];
+/// Verified live (2026-09-20): issuing a real key and calling
+/// `POST /v1/chat/completions` with `model: "deepseek-chat"` (mode B's old
+/// guess) returned `503 model_not_found` — "无可用渠道（distributor）". The
+/// real marketplace slug for DeepSeek's cheapest current model is
+/// `deepseek-v4-1-flash` (¥1/¥4 per M input/output tokens), confirmed with a
+/// live `200` response. Slugs on this marketplace churn as new model
+/// versions ship — re-verify before trusting this placeholder long-term, and
+/// prefer `BAOYUN_TRIAL_MODELS` for anything beyond a quick local test.
+const PLACEHOLDER_MODELS: &[&str] = &["deepseek-v4-1-flash"];
 
 fn trial_models_from_env() -> Vec<String> {
     match std::env::var("BAOYUN_TRIAL_MODELS") {
