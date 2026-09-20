@@ -45,17 +45,21 @@ const ACCOUNT_API_BASE: &str = "https://ai-api.baoyun.com/apis/v1";
 pub const PLATFORM: &str = "custom";
 pub const CURRENCY: &str = "CNY";
 
-/// Placeholder trial model, used only when `BAOYUN_TRIAL_MODELS` is unset.
+/// Default (and, server-side, *only*) trial model, used unless
+/// `BAOYUN_TRIAL_MODELS` overrides it.
 ///
-/// Verified live (2026-09-20): issuing a real key and calling
-/// `POST /v1/chat/completions` with `model: "deepseek-chat"` (mode B's old
-/// guess) returned `503 model_not_found` — "无可用渠道（distributor）". The
-/// real marketplace slug for DeepSeek's cheapest current model is
-/// `deepseek-v4-1-flash` (¥1/¥4 per M input/output tokens), confirmed with a
-/// live `200` response. Slugs on this marketplace churn as new model
-/// versions ship — re-verify before trusting this placeholder long-term, and
-/// prefer `BAOYUN_TRIAL_MODELS` for anything beyond a quick local test.
-const PLACEHOLDER_MODELS: &[&str] = &["deepseek-v4-1-flash"];
+/// Product call (2026-09-20): the free trial offers exactly one model,
+/// `qwen3.7-flash` — cheap (¥0.20 / ¥0.80 per M input/output tokens per the
+/// marketplace listing) and capable enough for most trial usage. This list
+/// is not just a client-side suggestion: `issue_key` also sends it as the
+/// key's `model_limits`, so the cap holds even if someone points a client at
+/// a different model by hand.
+///
+/// (Superseded guesses, for the record: `deepseek-chat` doesn't exist on
+/// this marketplace at all — live `503 model_not_found`; the model was
+/// briefly `deepseek-v4-1-flash`, verified working live, before this
+/// product decision picked `qwen3.7-flash` instead for cost reasons.)
+const PLACEHOLDER_MODELS: &[&str] = &["qwen3.7-flash"];
 
 fn trial_models_from_env() -> Vec<String> {
     match std::env::var("BAOYUN_TRIAL_MODELS") {
@@ -83,6 +87,10 @@ struct CreateKeyBody {
     unlimited: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     expired_time: Option<i64>,
+    /// Server-side model whitelist — makes the trial model list an actual
+    /// cap, not just what the client happens to offer.
+    model_limits_enabled: bool,
+    model_limits: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -209,12 +217,18 @@ impl TokenVendor for BaoyunVendor {
                 })?,
         };
 
+        // Whatever model list the client will be told about (env override or
+        // the placeholder) is also the server-side whitelist — one source of
+        // truth, so the two can never drift apart.
+        let trial_models = trial_models_from_env();
         let body = CreateKeyBody {
             name: spec.label,
             currency: CURRENCY,
             remain: spec.limit_usd,
             unlimited: false,
             expired_time: Some(expired_time),
+            model_limits_enabled: true,
+            model_limits: trial_models,
         };
 
         let resp: CreateKeyResponse = self
@@ -352,6 +366,30 @@ mod tests {
             .into();
             assert!(usage.disabled, "status {status} should read as disabled");
         }
+    }
+
+    #[test]
+    fn the_placeholder_model_list_is_qwen_flash_only() {
+        assert_eq!(PLACEHOLDER_MODELS, &["qwen3.7-flash"]);
+    }
+
+    /// `issue_key` must send the trial model list as a server-side whitelist,
+    /// not just leave it to the client — otherwise a trial key can be pointed
+    /// at any (possibly expensive) model by hand.
+    #[test]
+    fn create_key_body_whitelists_the_trial_models() {
+        let body = CreateKeyBody {
+            name: "x".into(),
+            currency: CURRENCY,
+            remain: 5.0,
+            unlimited: false,
+            expired_time: Some(-1),
+            model_limits_enabled: true,
+            model_limits: vec!["qwen3.7-flash".to_string()],
+        };
+        let json = serde_json::to_value(&body).unwrap();
+        assert_eq!(json["model_limits_enabled"], true);
+        assert_eq!(json["model_limits"], serde_json::json!(["qwen3.7-flash"]));
     }
 
     /// A top-up must serialize as `remain_delta`, never `remain` — sending
