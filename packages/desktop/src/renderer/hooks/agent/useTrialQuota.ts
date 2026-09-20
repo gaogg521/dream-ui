@@ -27,7 +27,7 @@ async function fetchTrialQuota(vendor: TrialVendor): Promise<TrialQuotaView | nu
     const data = await ipcBridge.mode.meteredQuota.invoke({ vendor });
     return data ? { kind: 'metered', vendor, data } : null;
   }
-  const data = await ipcBridge.mode.trialKeyQuota.invoke();
+  const data = await ipcBridge.mode.trialKeyQuota.invoke({ vendor });
   return data ? { kind: 'issued', vendor, data } : null;
 }
 
@@ -49,15 +49,20 @@ export function useRefreshTrialQuota() {
   return useCallback((vendor: TrialVendor) => mutate(swrKey(vendor)), [mutate]);
 }
 
-/** `remaining` in a trial view, in minor units for metered / whole USD for issued. */
+/** `remaining` in a trial view, in minor units for metered / major units for issued. */
 export function remainingLabel(view: TrialQuotaView): { text: string; exhausted: boolean } {
   if (view.kind === 'metered') {
     const { remaining_cents, currency } = view.data;
     return { text: formatMinorUnits(remaining_cents, currency), exhausted: view.data.exhausted };
   }
-  const { remaining_usd, exhausted } = view.data;
+  const { remaining_usd, exhausted, currency } = view.data;
+  if (remaining_usd === null) return { text: '', exhausted };
+  // `currency` is optional only for a broker predating multi-vendor mode A,
+  // whose one vendor (OpenRouter) was always USD.
+  const symbol = CURRENCY_SYMBOL[currency ?? 'USD'];
+  const amount = remaining_usd.toFixed(2);
   return {
-    text: remaining_usd === null ? '' : `$${remaining_usd.toFixed(2)}`,
+    text: symbol ? `${symbol}${amount}` : `${amount} ${currency}`,
     exhausted,
   };
 }

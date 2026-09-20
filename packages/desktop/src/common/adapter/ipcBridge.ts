@@ -1329,14 +1329,16 @@ export const mode = {
    * request body — dream-core resolves this install's own dedup id. Turn the
    * result into a normal provider via `createProvider`.
    */
-  requestTrialKey: httpPost<TrialKeyResponse, void>('/api/providers/trial-key'),
+  requestTrialKey: httpPost<TrialKeyResponse, { vendor: string }>('/api/providers/trial-key'),
   /**
    * Where this install's trial allowance stands. The desktop talks to the
    * model provider directly, so without this it only learns the allowance is
    * spent by being refused mid-request; this asks first. 404 means this device
    * never claimed a key.
    */
-  trialKeyQuota: httpGet<TrialQuotaStatusResponse, void>('/api/providers/trial-key/quota'),
+  trialKeyQuota: httpGet<TrialQuotaStatusResponse, { vendor: string }>(
+    (p) => `/api/providers/trial-key/quota?vendor=${encodeURIComponent(p.vendor)}`
+  ),
   /**
    * Mode B (metered proxy). Opens (or re-opens) a metered account for a
    * vendor the broker cannot cap a key on — the broker proxies inference and

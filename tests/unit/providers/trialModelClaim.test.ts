@@ -32,6 +32,7 @@ vi.mock('@/renderer/hooks/agent/useModelProviderList', () => ({
 }));
 
 import {
+  claimMeteredAccount,
   claimTrialModel,
   isTrialProviderClaimed,
   TRIAL_PROVIDER_ID,
@@ -77,6 +78,7 @@ describe('claimTrialModel — openrouter (mode A)', () => {
   });
 
   it.each([
+    [404, 'unavailable'],
     [409, 'already_claimed'],
     [429, 'rate_limited'],
     [503, 'budget_exhausted'],
@@ -95,7 +97,55 @@ describe('claimTrialModel — openrouter (mode A)', () => {
   });
 });
 
-describe('claimTrialModel — baoyun (mode B)', () => {
+describe('claimTrialModel — baoyun (mode A, since 2026-09-20)', () => {
+  beforeEach(() => {
+    requestTrialKey.mockReset();
+    createProvider.mockReset().mockResolvedValue({ id: TRIAL_PROVIDER_ID_BY_VENDOR.baoyun });
+  });
+
+  it('claims through the issued-key path, not the metered one', async () => {
+    requestTrialKey.mockResolvedValue({ ...trialKey, platform: 'custom', vendor: 'baoyun', currency: 'CNY' });
+
+    const result = await claimTrialModel('baoyun', 'Baoyun trial');
+
+    expect(requestTrialKey).toHaveBeenCalledWith({ vendor: 'baoyun' });
+    expect(meteredClaim).not.toHaveBeenCalled();
+    expect(result.outcome).toBe('claimed');
+    expect(createProvider).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'trial-baoyun',
+        platform: 'custom',
+        base_url: trialKey.base_url,
+        api_key: trialKey.key,
+      })
+    );
+  });
+
+  it("falls back to 'custom' when the broker sent no platform", async () => {
+    requestTrialKey.mockResolvedValue(trialKey);
+    await claimTrialModel('baoyun', 'Baoyun trial');
+    expect(createProvider).toHaveBeenCalledWith(expect.objectContaining({ platform: 'custom' }));
+  });
+
+  it.each([
+    [404, 'unavailable'],
+    [409, 'already_claimed'],
+    [429, 'rate_limited'],
+    [503, 'budget_exhausted'],
+    [400, 'unavailable'],
+  ])('maps a %i from the broker to %s', async (status, outcome) => {
+    requestTrialKey.mockRejectedValue({ status });
+    const result = await claimTrialModel('baoyun', 'Baoyun trial');
+    expect(result.outcome).toBe(outcome);
+    expect(createProvider).not.toHaveBeenCalled();
+  });
+});
+
+// Mode B is not currently reachable through `claimTrialModel` for any vendor
+// (`METERED_TRIAL_VENDORS` is empty — see the module doc: it's kept ready for
+// a future vendor that genuinely cannot issue a capped key). Exercised
+// directly here so that code path stays covered while unreachable.
+describe('claimMeteredAccount (mode B, currently unreachable via claimTrialModel)', () => {
   beforeEach(() => {
     meteredClaim.mockReset().mockResolvedValue(meteredAccess);
     createProvider.mockReset().mockResolvedValue({ id: TRIAL_PROVIDER_ID_BY_VENDOR.baoyun });
@@ -103,7 +153,7 @@ describe('claimTrialModel — baoyun (mode B)', () => {
   });
 
   it('materializes the metered account as a custom provider pointed at the broker proxy', async () => {
-    const result = await claimTrialModel('baoyun', 'Baoyun trial');
+    const result = await claimMeteredAccount('baoyun', 'Baoyun trial');
 
     expect(meteredClaim).toHaveBeenCalledWith({ vendor: 'baoyun' });
     expect(result.outcome).toBe('claimed');
@@ -120,7 +170,7 @@ describe('claimTrialModel — baoyun (mode B)', () => {
   it('overwrites the stale local provider when a re-claim rotated the token', async () => {
     createProvider.mockRejectedValue({ status: 409 });
 
-    const result = await claimTrialModel('baoyun', 'Baoyun trial');
+    const result = await claimMeteredAccount('baoyun', 'Baoyun trial');
 
     expect(result.outcome).toBe('claimed');
     expect(updateProvider).toHaveBeenCalledWith(expect.objectContaining({ id: 'trial-baoyun', api_key: 'dtk_abc' }));
@@ -132,7 +182,7 @@ describe('claimTrialModel — baoyun (mode B)', () => {
     [429, 'rate_limited'],
   ])('maps a %i from the broker to %s', async (status, outcome) => {
     meteredClaim.mockRejectedValue({ status });
-    const result = await claimTrialModel('baoyun', 'Baoyun trial');
+    const result = await claimMeteredAccount('baoyun', 'Baoyun trial');
     expect(result.outcome).toBe(outcome);
     expect(createProvider).not.toHaveBeenCalled();
   });

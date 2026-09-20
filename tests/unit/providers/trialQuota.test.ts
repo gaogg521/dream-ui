@@ -76,4 +76,23 @@ describe('remainingLabel', () => {
     };
     expect(remainingLabel(uncapped)).toEqual({ text: '', exhausted: false });
   });
+
+  // Baoyun is issued (mode A) too, but CNY-denominated — must render `¥`,
+  // never the `$` that was hardcoded before every vendor could be USD or CNY.
+  it('reads an issued view in the vendor-reported currency, not always USD', () => {
+    const baoyunView: TrialQuotaView = {
+      kind: 'issued',
+      vendor: 'baoyun',
+      data: {
+        vendor: 'baoyun',
+        limit_usd: 10,
+        used_usd: 3.5,
+        remaining_usd: 6.5,
+        reset: 'cumulative',
+        exhausted: false,
+        currency: 'CNY',
+      },
+    };
+    expect(remainingLabel(baoyunView)).toEqual({ text: '¥6.50', exhausted: false });
+  });
 });

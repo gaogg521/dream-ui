@@ -124,6 +124,13 @@ export interface TrialKeyResponse {
   platform?: string;
   /** Stable id of the platform that issued the key. */
   vendor?: string;
+  /**
+   * ISO 4217 code the quota amounts are denominated in (`USD` for
+   * OpenRouter, `CNY` for Baoyun). Optional so an older broker still works —
+   * treat a missing value as `USD`, its implicit meaning before this field
+   * existed.
+   */
+  currency?: string;
 }
 
 /** Where a trial key's spend allowance stands, as the broker reports it. */
@@ -136,6 +143,8 @@ export interface TrialQuotaStatusResponse {
   /** How the allowance renews: `monthly`, `daily`, or `cumulative` (never). */
   reset: string | null;
   exhausted: boolean;
+  /** ISO 4217 code the amounts above are denominated in. See `TrialKeyResponse.currency`. */
+  currency?: string;
 }
 
 /**

@@ -14,19 +14,26 @@ import { PROVIDERS_SWR_KEY, fetchProviders } from './useModelProviderList';
 /**
  * A trial vendor the one-click offer can claim from.
  *
- *  - `openrouter` — mode A: the broker mints a capped upstream key, the
- *    client talks to OpenRouter directly.
- *  - `baoyun` — mode B: the broker proxies inference under its own key and
- *    meters spend against a local CNY ledger; when it runs out the user tops
- *    up (see `MeteredTopUpModal`).
+ * Both are mode A: the broker mints a capped upstream key (OpenRouter's own
+ * API for one, Baoyun's `/apis/v1/api-keys` account API for the other) and
+ * the client talks to the vendor directly. Baoyun ran mode B (the broker
+ * proxying inference and metering a local ledger, see `MeteredTopUpModal`)
+ * until 2026-09-20, when Baoyun added the capped-key API mode A needs —
+ * simpler, and no request traffic through the broker.
  */
 export type TrialVendor = 'openrouter' | 'baoyun';
 
 /** All vendors, in the order the picker offers them. */
 export const TRIAL_VENDORS: readonly TrialVendor[] = ['baoyun', 'openrouter'];
 
-/** The subset that is metered (mode B) — the ones a top-up applies to. */
-export const METERED_TRIAL_VENDORS: readonly TrialVendor[] = ['baoyun'];
+/**
+ * The subset still on mode B (the ones a top-up applies to). Empty for now —
+ * kept, not removed, for whichever future vendor genuinely cannot issue a
+ * capped key; `isMeteredTrialVendor` and the mode B UI it gates
+ * (`MeteredTopUpModal`, `MeteredTopUpCta`) stay ready for that, unreachable
+ * until then.
+ */
+export const METERED_TRIAL_VENDORS: readonly TrialVendor[] = [];
 
 export function isMeteredTrialVendor(vendor: TrialVendor): boolean {
   return METERED_TRIAL_VENDORS.includes(vendor);
@@ -81,12 +88,20 @@ export function trialVendorOfProviderId(providerId: string): TrialVendor | undef
   );
 }
 
-async function claimIssuedKey(displayName: string): Promise<TrialClaimResult> {
+/** Fallback platform label per vendor, only used against a broker deployed
+ * before `TrialKeyResponse.platform` existed (or before it knew this vendor). */
+const FALLBACK_PLATFORM_BY_VENDOR: Record<TrialVendor, string> = {
+  openrouter: 'OpenRouter',
+  baoyun: 'custom',
+};
+
+async function claimIssuedKey(vendor: TrialVendor, displayName: string): Promise<TrialClaimResult> {
   let trial;
   try {
-    trial = await ipcBridge.mode.requestTrialKey.invoke();
+    trial = await ipcBridge.mode.requestTrialKey.invoke({ vendor });
   } catch (e) {
     if (isBackendHttpError(e)) {
+      if (e.status === 404) return { outcome: 'unavailable' };
       if (e.status === 409) return { outcome: 'already_claimed' };
       if (e.status === 429) return { outcome: 'rate_limited' };
       if (e.status === 503) return { outcome: 'budget_exhausted' };
@@ -98,11 +113,11 @@ async function claimIssuedKey(displayName: string): Promise<TrialClaimResult> {
 
   try {
     const provider = await ipcBridge.mode.createProvider.invoke({
-      id: TRIAL_PROVIDER_ID_BY_VENDOR.openrouter,
+      id: TRIAL_PROVIDER_ID_BY_VENDOR[vendor],
       // The broker names the platform — it can be repointed at a different
       // token platform without a client release. The fallback is only for a
       // broker deployed before the field existed.
-      platform: trial.platform || 'OpenRouter',
+      platform: trial.platform || FALLBACK_PLATFORM_BY_VENDOR[vendor],
       name: displayName,
       base_url: trial.base_url,
       api_key: trial.key,
@@ -119,7 +134,13 @@ async function claimIssuedKey(displayName: string): Promise<TrialClaimResult> {
   }
 }
 
-async function claimMeteredAccount(vendor: TrialVendor, displayName: string): Promise<TrialClaimResult> {
+/**
+ * Exported (unlike `claimIssuedKey`) so mode B's code path stays under test
+ * even while `METERED_TRIAL_VENDORS` is empty and nothing dispatches to it
+ * through `claimTrialModel` — see the module doc: this is kept working for a
+ * future vendor, not dead code.
+ */
+export async function claimMeteredAccount(vendor: TrialVendor, displayName: string): Promise<TrialClaimResult> {
   let access;
   try {
     access = await ipcBridge.mode.meteredClaim.invoke({ vendor });
@@ -175,7 +196,7 @@ async function claimMeteredAccount(vendor: TrialVendor, displayName: string): Pr
  * already-translated string since this has no i18n context of its own.
  */
 export async function claimTrialModel(vendor: TrialVendor, displayName: string): Promise<TrialClaimResult> {
-  return isMeteredTrialVendor(vendor) ? claimMeteredAccount(vendor, displayName) : claimIssuedKey(displayName);
+  return isMeteredTrialVendor(vendor) ? claimMeteredAccount(vendor, displayName) : claimIssuedKey(vendor, displayName);
 }
 
 /**
