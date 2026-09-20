@@ -684,6 +684,19 @@ URL/字段名还没拿到，下面只是确认了的架构约束，不能直接�
 撤销/重新生成系统访问令牌）——如果要部署到生产 broker，用户需要自己保管这个令牌
 （生成时只显示一次，我这边没有留存），配成生产环境的 `BAOYUN_ACCESS_TOKEN`。
 
+### 11.2.6 两处产品拍板（2026-09-20 当天晚些时候）
+
+- **免费额度 ¥10 → ¥5**：`BAOYUN_TRIAL_KEY_LIMIT_CNY` 默认值改了（`config.rs`），
+  `BAOYUN_DAILY_BUDGET_CNY_CAP` 默认也从 500 等比减到 250（维持"每天最多 50 个
+  新用户"这条策略不变，不是随便改的）。dream-ui 13 语种试用文案的"¥10"同步改
+  "¥5"。broker commit `4f4ba18`，dream-ui commit `3a4ba39`。
+- **免费用户默认只能用 `qwen3.7-flash`**：便宜（¥0.20/¥0.80 每百万 token 输入/输出）
+  又够用。不只是客户端展示的模型列表改了——`issue_key` 现在把这份模型列表也当
+  `model_limits` 传给宝云、`model_limits_enabled: true`，是**服务端强制**，不是
+  纯客户端建议：就算有人手改 base_url/model 想拿这把免费 key 去调贵模型，宝云
+  那边会直接拒绝。之前真机验证过的 `deepseek-v4-1-flash`（确认能跑）被这个产品
+  决策换掉，不是发现它有问题。broker commit `88e1b1b`，69/69 测试过。
+
 ### 11.3 没做的事（明确不在这轮范围内）
 
 - **终端用户付费充值**：`top_up`/`remain_delta` 这个能力本身已经写好、测试过、
