@@ -897,7 +897,10 @@
   "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",
-    "delivered": "Message delivered to the other session",
+    "menuLabel": "Session mentions",
+    "delivered": "Message delivered to {{peer}}",
+    "deliveryFailed": "Cross-session delivery to {{peer}} failed",
+    "disabled": "Cross-session delivery is turned off in settings"
     "rateLimited": "Cross-session delivery is rate-limited. Stop sending or wait."
   }
 }

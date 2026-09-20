@@ -327,6 +327,8 @@
   "cacheClearFailed": "پاکسازی کش ناموفق بود",
   "language": "زبان",
   "saveUploadToWorkspace": "ذخیره آپلودها در پوشه پروژه",
+  "crossSessionDelivery": "Cross-session delivery (@@)",
+  "crossSessionDeliveryDesc": "Allow sending messages to other sessions using @@conv:<id> in the composer.",
   "startOnBoot": "اجرا هنگام راه‌اندازی",
   "startOnBootDesc": "One Work هنگام ورود به macOS یا Windows به‌صورت خودکار اجرا شود.",
   "startOnBootUnsupported": "فقط در نسخه‌های بسته‌بندی‌شده macOS و Windows در دسترس است.",

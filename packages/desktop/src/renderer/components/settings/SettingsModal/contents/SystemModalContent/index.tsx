@@ -75,6 +75,7 @@ const SystemModalContent: React.FC = () => {
   const [previewLimitMb, setPreviewLimitMb] = useState<number>(DEFAULT_TEXT_PREVIEW_LIMIT_MB);
   const previewLimitDraftRef = useRef<string>(String(DEFAULT_TEXT_PREVIEW_LIMIT_MB));
   const [saveUploadToWorkspace, setSaveUploadToWorkspace] = useState(false);
+  const [crossSessionDelivery, setCrossSessionDelivery] = useState(true);
 
   useEffect(() => {
     if (!isDesktop) {
@@ -114,6 +115,14 @@ const SystemModalContent: React.FC = () => {
     setNotificationEnabled(configService.get('system.notificationEnabled') ?? true);
     setCronNotificationEnabled(configService.get('system.cronNotificationEnabled') ?? false);
     setSaveUploadToWorkspace(configService.get('upload.saveToWorkspace') ?? false);
+    ipcBridge.systemSettings.getCrossSessionDelivery
+      .invoke()
+      .then((enabled) => {
+        if (typeof enabled === 'boolean') {
+          setCrossSessionDelivery(enabled);
+        }
+      })
+      .catch(() => {});
   }, [isDesktop]);
 
   useEffect(() => {
@@ -324,6 +333,13 @@ const SystemModalContent: React.FC = () => {
     });
   }, []);
 
+  const handleCrossSessionDeliveryChange = useCallback((checked: boolean) => {
+    setCrossSessionDelivery(checked);
+    ipcBridge.systemSettings.setCrossSessionDelivery.invoke({ enabled: checked }).catch(() => {
+      setCrossSessionDelivery(!checked);
+    });
+  }, []);
+
   // Get system directory info
   const { data: systemInfo } = useSWR('system.dir.info', () => ipcBridge.application.systemInfo.invoke());
 
@@ -427,6 +443,12 @@ const SystemModalContent: React.FC = () => {
       key: 'saveUploadToWorkspace',
       label: t('settings.saveUploadToWorkspace'),
       component: <Switch checked={saveUploadToWorkspace} onChange={handleSaveUploadToWorkspaceChange} />,
+    },
+    {
+      key: 'crossSessionDelivery',
+      label: t('settings.crossSessionDelivery'),
+      description: t('settings.crossSessionDeliveryDesc'),
+      component: <Switch checked={crossSessionDelivery} onChange={handleCrossSessionDeliveryChange} />,
     },
   ];
 

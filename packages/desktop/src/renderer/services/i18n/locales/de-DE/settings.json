@@ -327,6 +327,8 @@
   "cacheClearFailed": "Cache leeren fehlgeschlagen",
   "language": "Sprache",
   "saveUploadToWorkspace": "Uploads im Arbeitsbereich speichern",
+  "crossSessionDelivery": "Cross-session delivery (@@)",
+  "crossSessionDeliveryDesc": "Allow sending messages to other sessions using @@conv:<id> in the composer.",
   "startOnBoot": "Beim Start ausführen",
   "startOnBootDesc": "One Work automatisch starten, wenn du dich bei macOS oder Windows anmeldest.",
   "startOnBootUnsupported": "Nur in gepackten macOS- und Windows-Apps verfügbar.",

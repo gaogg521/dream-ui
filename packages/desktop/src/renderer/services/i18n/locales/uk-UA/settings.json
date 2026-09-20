@@ -335,6 +335,8 @@
   "cacheClearFailed": "Не вдалося очистити кеш",
   "language": "Мова",
   "saveUploadToWorkspace": "Зберігати завантаження в папці проєкту",
+  "crossSessionDelivery": "Cross-session delivery (@@)",
+  "crossSessionDeliveryDesc": "Allow sending messages to other sessions using @@conv:<id> in the composer.",
   "startOnBoot": "Запуск при завантаженні",
   "startOnBootDesc": "Автоматично запускати One Work при вході в систему.",
   "startOnBootUnsupported": "Доступно лише в упакованих програмах для macOS та Windows.",

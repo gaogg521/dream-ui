@@ -6,6 +6,7 @@
 
 import { ipcBridge } from '@/common';
 import AtFileMenu from '@/renderer/components/chat/AtFileMenu';
+import SessionAtMenu, { type SessionAtMenuItem } from '@/renderer/components/chat/SessionAtMenu';
 import BtwOverlay from '@/renderer/components/chat/BtwOverlay';
 import { useInputFocusRing } from '@/renderer/hooks/chat/useInputFocusRing';
 import SlashCommandMenu, { type SlashCommandMenuItem } from '@/renderer/components/chat/SlashCommandMenu';
@@ -21,6 +22,11 @@ import {
   getAllAtFileQueries,
   resolveAtFileMenuKey,
 } from '@/renderer/utils/chat/atFileQuery';
+import {
+  buildSessionConvInsertion,
+  getActiveSessionAtQuery,
+  resolveSessionAtMenuKey,
+} from '@/renderer/utils/chat/sessionAtQuery';
 import { getLastAssistantText } from '@/renderer/utils/chat/getLastAssistantText';
 import { emitter, type ReplyQuote, useAddEventListener } from '@/renderer/utils/emitter';
 import { mergeFileSelectionItems, type FileSelectionItem } from '@/renderer/utils/file/fileSelection';
@@ -280,6 +286,8 @@ const SendBox: React.FC<{
    * sits above both the box's surface and a preceding ThoughtDisplay bar.
    */
   topRightOverlay?: React.ReactNode;
+  /** Other conversations the user can @@-mention for cross-session delivery. */
+  sessionConversationOptions?: SessionAtMenuItem[];
 }> = ({
   onSend,
   onStop,
@@ -317,6 +325,7 @@ const SendBox: React.FC<{
   active = true,
   onFocused,
   topRightOverlay,
+  sessionConversationOptions,
 }) => {
   const layout = useLayoutContext();
   const isMobile = layout?.isMobile ?? false;
@@ -352,7 +361,9 @@ const SendBox: React.FC<{
   const [workspaceMentionItems, setWorkspaceMentionItems] = useState<FileOrFolderItem[]>([]);
   const [workspaceMentionLoading, setWorkspaceMentionLoading] = useState(false);
   const [atFileMenuActiveIndex, setAtFileMenuActiveIndex] = useState(0);
+  const [sessionAtMenuActiveIndex, setSessionAtMenuActiveIndex] = useState(0);
   const [dismissedAtFileToken, setDismissedAtFileToken] = useState<string | null>(null);
+  const [dismissedSessionAtToken, setDismissedSessionAtToken] = useState<string | null>(null);
   const mentionOwnedPathsRef = useRef<Set<string>>(new Set());
   const everMentionOwnedPathsRef = useRef<Set<string>>(new Set());
   const externalOwnedPathsRef = useRef<Set<string>>(new Set());
@@ -497,12 +508,24 @@ const SendBox: React.FC<{
   });
   const btwCommand = useBtwCommand(conversationContext?.conversation_id, enableBtw);
   const btwQuestion = useMemo(() => extractBtwQuestion(input), [input]);
+  const activeSessionAtQuery = useMemo(() => {
+    if (!sessionConversationOptions?.length) {
+      return null;
+    }
+    return getActiveSessionAtQuery(input, caretPosition);
+  }, [caretPosition, input, sessionConversationOptions?.length]);
+  const activeSessionAtTokenKey = useMemo(() => {
+    if (!activeSessionAtQuery) {
+      return null;
+    }
+    return `${activeSessionAtQuery.start}:${activeSessionAtQuery.query}`;
+  }, [activeSessionAtQuery]);
   const activeAtFileQuery = useMemo(() => {
-    if (!conversationContext?.workspace) {
+    if (!conversationContext?.workspace || activeSessionAtQuery) {
       return null;
     }
     return getActiveAtFileQuery(input, caretPosition);
-  }, [caretPosition, conversationContext?.workspace, input]);
+  }, [activeSessionAtQuery, caretPosition, conversationContext?.workspace, input]);
   const activeAtFileTokenKey = useMemo(() => {
     if (!activeAtFileQuery) {
       return null;
@@ -642,11 +665,34 @@ const SendBox: React.FC<{
   );
 
   const isCommandMenuOpen = conversationExport.isOpen || slashController.isOpen;
+  const isSessionAtMenuOpen =
+    Boolean(sessionConversationOptions?.length) &&
+    Boolean(activeSessionAtQuery) &&
+    activeSessionAtTokenKey !== dismissedSessionAtToken &&
+    !isCommandMenuOpen;
+  const visibleSessionAtMenuItems = useMemo(() => {
+    if (!sessionConversationOptions?.length) {
+      return [];
+    }
+    const q = activeSessionAtQuery?.query ?? '';
+    const currentId = conversationContext?.conversation_id;
+    return sessionConversationOptions.filter((item) => {
+      if (currentId && item.id === currentId) {
+        return false;
+      }
+      if (!q) {
+        return true;
+      }
+      const hay = `${item.title} ${item.id}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [activeSessionAtQuery?.query, conversationContext?.conversation_id, sessionConversationOptions]);
   const isAtFileMenuOpen =
     Boolean(conversationContext?.workspace) &&
     Boolean(activeAtFileQuery) &&
     activeAtFileTokenKey !== dismissedAtFileToken &&
-    !isCommandMenuOpen;
+    !isCommandMenuOpen &&
+    !isSessionAtMenuOpen;
   // `@`-mention data source is an INTENTIONAL dual path (not dead code). While
   // the project's pe roots are unresolved (backfill / async project.get loading
   // window — see useProjectMentionSearch) `active` is false and `@` uses the
@@ -666,7 +712,7 @@ const SendBox: React.FC<{
     }
     return filterWorkspaceMentionItems(workspaceMentionItems, deferredAtFileQuery);
   }, [deferredAtFileQuery, projectMention.active, projectMention.items, workspaceMentionItems]);
-  const isOverlayOpen = isCommandMenuOpen || btwCommand.isOpen || isAtFileMenuOpen;
+  const isOverlayOpen = isCommandMenuOpen || btwCommand.isOpen || isAtFileMenuOpen || isSessionAtMenuOpen;
 
   const getTextareaElement = useCallback((): HTMLTextAreaElement | null => {
     const textarea = containerRef.current?.querySelector('textarea');
@@ -926,6 +972,22 @@ const SendBox: React.FC<{
   }, [activeAtFileTokenKey]);
 
   useEffect(() => {
+    if (!activeSessionAtTokenKey) {
+      setSessionAtMenuActiveIndex(0);
+      return;
+    }
+    setSessionAtMenuActiveIndex(0);
+  }, [activeSessionAtTokenKey]);
+
+  useEffect(() => {
+    if (!visibleSessionAtMenuItems.length) {
+      setSessionAtMenuActiveIndex(0);
+      return;
+    }
+    setSessionAtMenuActiveIndex((previous) => Math.min(previous, visibleSessionAtMenuItems.length - 1));
+  }, [visibleSessionAtMenuItems]);
+
+  useEffect(() => {
     if (!visibleAtFileMenuItems.length) {
       setAtFileMenuActiveIndex(0);
       return;
@@ -1128,6 +1190,31 @@ const SendBox: React.FC<{
     ]
   );
 
+  const insertSelectedSession = useCallback(
+    (item: SessionAtMenuItem) => {
+      if (!activeSessionAtQuery) {
+        return;
+      }
+      const nextInsertion = `${buildSessionConvInsertion(item.id)} `;
+      const nextValue =
+        input.slice(0, activeSessionAtQuery.start) + nextInsertion + input.slice(activeSessionAtQuery.end);
+      const nextCaret = activeSessionAtQuery.start + nextInsertion.length;
+      const insertedTokenKey = `${activeSessionAtQuery.start}:${buildSessionConvInsertion(item.id)}`;
+      setDismissedSessionAtToken(insertedTokenKey);
+      setInput(nextValue);
+      requestAnimationFrame(() => {
+        const textarea = getTextareaElement();
+        if (!textarea) {
+          return;
+        }
+        textarea.focus();
+        textarea.setSelectionRange(nextCaret, nextCaret);
+        setCaretPosition(nextCaret);
+      });
+    },
+    [activeSessionAtQuery, getTextareaElement, input, setInput]
+  );
+
   // 使用共享的输入法合成处理
   const { compositionHandlers, isComposingState, createKeyDownHandler } = useCompositionInput();
 
@@ -1280,6 +1367,49 @@ const SendBox: React.FC<{
       return false;
     },
     [applyHistoryInput, exitHistoryNavigation, historyNavigationIndex, inputHistory, latestInputRef]
+  );
+
+  const handleSessionAtMenuKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (!isSessionAtMenuOpen || !activeSessionAtTokenKey) {
+        return false;
+      }
+      const action = resolveSessionAtMenuKey(event.key, visibleSessionAtMenuItems.length > 0);
+      if (!action) {
+        return false;
+      }
+      if (action === 'dismiss') {
+        event.preventDefault();
+        setDismissedSessionAtToken(activeSessionAtTokenKey);
+        return true;
+      }
+      if (action === 'down') {
+        event.preventDefault();
+        setSessionAtMenuActiveIndex((previous) => (previous + 1) % visibleSessionAtMenuItems.length);
+        return true;
+      }
+      if (action === 'up') {
+        event.preventDefault();
+        setSessionAtMenuActiveIndex((previous) =>
+          previous === 0 ? visibleSessionAtMenuItems.length - 1 : previous - 1
+        );
+        return true;
+      }
+      const selectedItem = visibleSessionAtMenuItems[sessionAtMenuActiveIndex];
+      if (!selectedItem) {
+        return false;
+      }
+      event.preventDefault();
+      insertSelectedSession(selectedItem);
+      return true;
+    },
+    [
+      activeSessionAtTokenKey,
+      insertSelectedSession,
+      isSessionAtMenuOpen,
+      sessionAtMenuActiveIndex,
+      visibleSessionAtMenuItems,
+    ]
   );
 
   const handleAtFileMenuKeyDown = useCallback(
@@ -1673,6 +1803,20 @@ const SendBox: React.FC<{
           parentTaskRunning={Boolean(loading || isLoading)}
           question={btwCommand.question}
         />
+        {isSessionAtMenuOpen && (
+          <div className='absolute start-12px end-12px bottom-[calc(100%+8px)] z-70'>
+            <SessionAtMenu
+              activeIndex={sessionAtMenuActiveIndex}
+              emptyText={t('conversation.sessionDelivery.pickSession', {
+                defaultValue: 'Type @@ to pick another session (inserts @@conv:<id>)',
+              })}
+              items={visibleSessionAtMenuItems}
+              label={t('conversation.sessionDelivery.menuLabel', { defaultValue: 'Session mentions' })}
+              onHoverItem={setSessionAtMenuActiveIndex}
+              onSelectItem={insertSelectedSession}
+            />
+          </div>
+        )}
         {isAtFileMenuOpen && (
           <div className='absolute start-12px end-12px bottom-[calc(100%+8px)] z-70'>
             <AtFileMenu
@@ -1902,6 +2046,7 @@ const SendBox: React.FC<{
               onKeyDown={createKeyDownHandler(handlePrimaryAction, (event) => {
                 return (
                   handleAddToDraftShortcut(event) ||
+                  handleSessionAtMenuKeyDown(event) ||
                   handleAtFileMenuKeyDown(event) ||
                   handleOverlayKeyDown(event) ||
                   handleHistoryKeyDown(event)

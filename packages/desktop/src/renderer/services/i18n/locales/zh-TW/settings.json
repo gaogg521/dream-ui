@@ -909,6 +909,8 @@
   "cacheClearFailed": "Failed to clear cache",
   "language": "語言",
   "saveUploadToWorkspace": "上傳檔案儲存到專案資料夾",
+  "crossSessionDelivery": "Cross-session delivery (@@)",
+  "crossSessionDeliveryDesc": "Allow sending messages to other sessions using @@conv:<id> in the composer.",
   "startOnBoot": "開機啟動",
   "startOnBootDesc": "登入 macOS 或 Windows 後自動啟動 One Work。",
   "startOnBootUnsupported": "僅在打包後的 macOS 與 Windows 用戶端中可用。",

@@ -913,7 +913,10 @@
   "sessionDelivery": {
     "replyRequested": "要求收件会话回信",
     "pickSession": "输入 @@ 可选择其他会话（插入 @@conv:<id>）",
-    "delivered": "消息已投递到目标会话",
+    "menuLabel": "会话提及",
+    "delivered": "消息已投递到「{{peer}}」",
+    "deliveryFailed": "向「{{peer}}」的跨会话投递失败",
+    "disabled": "已在设置中关闭跨会话投递",
     "rateLimited": "跨会话投递已被限流，请稍后再试或停止发送"
   }
 }

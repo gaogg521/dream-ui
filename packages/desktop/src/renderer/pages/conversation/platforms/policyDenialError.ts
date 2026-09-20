@@ -39,6 +39,8 @@ const DENIAL_MESSAGE_KEYS = {
   // code existed and nothing ever produced it, which is why it was missing
   // from this map.
   SEND_RATE_LIMITED: { key: 'conversation.policyDenied_sendRateLimited', params: [] },
+  SESSION_DELIVERY_RATE_LIMIT: { key: 'conversation.sessionDelivery.rateLimited', params: [] },
+  SESSION_DELIVERY_DISABLED: { key: 'conversation.sessionDelivery.disabled', params: [] },
   // T7: a tighter cap layered under BUDGET_EXCEEDED, scoped to the sender's
   // department. Distinct copy so the reader knows to look at their
   // department's budget, not the company-wide one.

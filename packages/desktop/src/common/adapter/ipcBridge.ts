@@ -447,6 +447,16 @@ export const conversation = {
     };
   }),
   listChanged: wsEmitter<IConversationListChangedEvent>('conversation.listChanged'),
+  sessionDeliveryCompleted: wsEmitter<{
+    user_id: string;
+    conversation_id: string;
+    peer_conversation_id: string;
+  }>('session.delivery.completed'),
+  sessionDeliveryFailed: wsEmitter<{
+    user_id: string;
+    conversation_id: string;
+    peer_conversation_id: string;
+  }>('session.delivery.failed'),
   // Uses httpRequest directly (instead of httpGet + withResponseMap) because the
   // response mapper needs `workspace` from params to build fullPath/relativePath,
   // and withResponseMap's map function does not receive the original params.
@@ -1938,6 +1948,10 @@ export const systemSettings = {
   getAutoPreviewOfficeFiles: httpGetClientSetting<boolean>('autoPreviewOfficeFiles'),
   setAutoPreviewOfficeFiles: httpPut<void, { enabled: boolean }>('/api/settings/client', (p) => ({
     autoPreviewOfficeFiles: p.enabled,
+  })),
+  getCrossSessionDelivery: httpGetClientSetting<boolean>('crossSessionDelivery'),
+  setCrossSessionDelivery: httpPut<void, { enabled: boolean }>('/api/settings/client', (p) => ({
+    crossSessionDelivery: p.enabled,
   })),
   ensureNodeRuntime: httpPost<{ ready: boolean }, { scope: IRuntimeStatusScope }>('/api/system/ensure-node-runtime'),
   ensureManagedAcpTool: httpPost<{ ready: boolean }, { scope: IRuntimeStatusScope; tool_id: string }>(

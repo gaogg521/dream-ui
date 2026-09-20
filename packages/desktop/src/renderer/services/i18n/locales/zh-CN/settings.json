@@ -911,6 +911,8 @@
   "cacheClearFailed": "缓存清理失败",
   "language": "语言",
   "saveUploadToWorkspace": "上传文件保存到项目文件夹",
+  "crossSessionDelivery": "跨会话投递（@@）",
+  "crossSessionDeliveryDesc": "允许在输入框用 @@conv:<id> 向其他会话投递消息。",
   "startOnBoot": "开机启动",
   "startOnBootDesc": "登录 macOS 或 Windows 后自动启动 One Work。",
   "startOnBootUnsupported": "仅在打包后的 macOS 和 Windows 客户端中可用。",

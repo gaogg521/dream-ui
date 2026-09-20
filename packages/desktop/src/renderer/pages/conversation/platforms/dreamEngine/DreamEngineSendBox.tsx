@@ -24,12 +24,14 @@ import MobileActionSheet, {
   useAttachEntry,
 } from '@/renderer/components/chat/MobileActionSheet';
 import SendBox from '@/renderer/components/chat/SendBox';
+import type { SessionAtMenuItem } from '@/renderer/components/chat/SessionAtMenu';
 import ThoughtDisplay from '@/renderer/components/chat/ThoughtDisplay';
 import FileAttachButton from '@/renderer/components/media/FileAttachButton';
 import FilePreview from '@/renderer/components/media/FilePreview';
 import HorizontalFileList from '@/renderer/components/media/HorizontalFileList';
 import { classifyConfigSetError, useAcpConfigOptions } from '@/renderer/hooks/agent/useAcpConfigOptions';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
+import { useConversationHistoryContext } from '@/renderer/hooks/context/ConversationHistoryContext';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useAutoTitle } from '@/renderer/hooks/chat/useAutoTitle';
 import { getSendBoxDraftHook, type FileOrFolderItem } from '@/renderer/hooks/chat/useSendBoxDraft';
@@ -141,6 +143,12 @@ const DreamEngineSendBox: React.FC<{
   const layout = useLayoutContext();
   const isMobile = Boolean(layout?.isMobile);
   const conversationContext = useConversationContextSafe();
+  const { conversations: historyConversations } = useConversationHistoryContext();
+  const sessionConversationOptions = useMemo((): SessionAtMenuItem[] => {
+    return historyConversations
+      .filter((entry) => entry.type === 'dream')
+      .map((entry) => ({ id: entry.id, title: entry.name || entry.id }));
+  }, [historyConversations]);
   // Media mode is shared with the ACP send box through this hook so the two
   // behave identically — an inconsistency here is indistinguishable from a bug.
   const { data: mediaProviders } = useProvidersQuery();
@@ -283,6 +291,38 @@ const DreamEngineSendBox: React.FC<{
 
   const [replyRequested, setReplyRequested] = useState(false);
   const hasSessionToken = /@@conv:[A-Za-z0-9_-]+/.test(content);
+
+  useEffect(() => {
+    const resolvePeerLabel = (peerId: string) =>
+      historyConversations.find((entry) => entry.id === peerId)?.name ?? peerId;
+
+    const offCompleted = ipcBridge.conversation.sessionDeliveryCompleted.on((event) => {
+      if (event.conversation_id !== conversation_id) {
+        return;
+      }
+      Message.success(
+        t('conversation.sessionDelivery.delivered', {
+          peer: resolvePeerLabel(event.peer_conversation_id),
+          defaultValue: 'Message delivered to the other session',
+        })
+      );
+    });
+    const offFailed = ipcBridge.conversation.sessionDeliveryFailed.on((event) => {
+      if (event.conversation_id !== conversation_id) {
+        return;
+      }
+      Message.error(
+        t('conversation.sessionDelivery.deliveryFailed', {
+          peer: resolvePeerLabel(event.peer_conversation_id),
+          defaultValue: 'Cross-session delivery failed',
+        })
+      );
+    });
+    return () => {
+      offCompleted();
+      offFailed();
+    };
+  }, [conversation_id, historyConversations, t]);
 
   const executeCommand = useCallback(
     async ({ input, files }: Pick<ConversationCommandQueueItem, 'input' | 'files'>) => {
@@ -842,6 +882,7 @@ const DreamEngineSendBox: React.FC<{
       <SendBox
         data-testid='dream-engine-sendbox'
         onMobilePlusClick={isMobile ? () => setIsMobileSheetOpen(true) : undefined}
+        sessionConversationOptions={sessionConversationOptions}
         value={content}
         onChange={handleContentChange}
         selectedWorkspaceItems={atPath}

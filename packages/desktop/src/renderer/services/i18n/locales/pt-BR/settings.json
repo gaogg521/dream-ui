@@ -327,6 +327,8 @@
   "cacheClearFailed": "Falha ao limpar o cache",
   "language": "Idioma",
   "saveUploadToWorkspace": "Salvar Uploads na Pasta do Projeto",
+  "crossSessionDelivery": "Cross-session delivery (@@)",
+  "crossSessionDeliveryDesc": "Allow sending messages to other sessions using @@conv:<id> in the composer.",
   "startOnBoot": "Iniciar com o Sistema",
   "startOnBootDesc": "Inicia o One Work automaticamente ao entrar no macOS ou Windows.",
   "startOnBootUnsupported": "Disponível apenas em aplicativos empacotados para macOS e Windows.",

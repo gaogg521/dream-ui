@@ -327,6 +327,8 @@
   "cacheClearFailed": "Önbellek temizlenemedi",
   "language": "Dil",
   "saveUploadToWorkspace": "Yüklemeleri Proje Klasörüne Kaydet",
+  "crossSessionDelivery": "Cross-session delivery (@@)",
+  "crossSessionDeliveryDesc": "Allow sending messages to other sessions using @@conv:<id> in the composer.",
   "startOnBoot": "Açılışta Başlat",
   "startOnBootDesc": "macOS veya Windows oturumu açtığınızda One Work'yi otomatik olarak başlatır.",
   "startOnBootUnsupported": "Yalnızca paketlenmiş macOS ve Windows uygulamalarında kullanılabilir.",
