@@ -909,5 +909,11 @@
     "cta": "去充值"
   },
   "mediaIntentSwitchedImage": "已切换到图片生成模式，再次发送即可生成。",
-  "mediaIntentSwitchedVideo": "已切换到视频生成模式，再次发送即可生成。"
+  "mediaIntentSwitchedVideo": "已切换到视频生成模式，再次发送即可生成。",
+  "sessionDelivery": {
+    "replyRequested": "要求收件会话回信",
+    "pickSession": "输入 @@ 可选择其他会话（插入 @@conv:<id>）",
+    "delivered": "消息已投递到目标会话",
+    "rateLimited": "跨会话投递已被限流，请稍后再试或停止发送"
+  }
 }

@@ -56,7 +56,7 @@ import { localSelectionItems, mergeFileSelectionItems } from '@/renderer/utils/f
 import { collectChatFileRefs, splitChatFileRefs } from '@/renderer/utils/file/messageFiles';
 import { baseName, splitReferenceInputs } from '@/common/media/referenceInputs';
 import type { AgentModeOption } from '@/renderer/utils/model/agentTypes';
-import { Button, Message, Tag } from '@arco-design/web-react';
+import { Button, Checkbox, Message, Tag } from '@arco-design/web-react';
 import { Brain, Lightning, MagicHat, Shield } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -309,6 +309,7 @@ const DreamEngineSendBox: React.FC<{
           input,
           conversation_id,
           files,
+          reply_requested: replyRequested,
         });
         setActiveMsgId(res.msg_id);
         markSendAccepted(res.turn_id, res.runtime, res.msg_id);
@@ -358,6 +359,7 @@ const DreamEngineSendBox: React.FC<{
       t,
       teamPermission,
       teamSendMessage,
+      replyRequested,
     ]
   );
 
@@ -482,6 +484,8 @@ const DreamEngineSendBox: React.FC<{
   };
 
   const [interrupting, setInterrupting] = useState(false);
+  const [replyRequested, setReplyRequested] = useState(false);
+  const hasSessionToken = /@@conv:[A-Za-z0-9_-]+/.test(content);
   const handleInterruptSend = async () => {
     if (!teamRuntime?.onInterruptSend || !content.trim() || interrupting) return;
     const files = collectChatFileRefs(uploadFile, atPath);
@@ -989,6 +993,11 @@ const DreamEngineSendBox: React.FC<{
         allowSendWhileLoading
         sendButtonPrefix={
           <>
+            {hasSessionToken && (
+              <Checkbox checked={replyRequested} onChange={setReplyRequested} className='mr-8px'>
+                {t('conversation.sessionDelivery.replyRequested', { defaultValue: 'Request reply' })}
+              </Checkbox>
+            )}
             {teamRuntime?.onInterruptSend && content.trim() && (
               <Button
                 size='mini'

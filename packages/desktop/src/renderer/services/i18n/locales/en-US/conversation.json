@@ -909,5 +909,11 @@
     "cta": "Top up"
   },
   "mediaIntentSwitchedImage": "Switched to image generation. Press send again to generate.",
-  "mediaIntentSwitchedVideo": "Switched to video generation. Press send again to generate."
+  "mediaIntentSwitchedVideo": "Switched to video generation. Press send again to generate.",
+  "sessionDelivery": {
+    "replyRequested": "Request reply from recipient session",
+    "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",
+    "delivered": "Message delivered to the other session",
+    "rateLimited": "Cross-session delivery is rate-limited. Stop sending or wait."
+  }
 }

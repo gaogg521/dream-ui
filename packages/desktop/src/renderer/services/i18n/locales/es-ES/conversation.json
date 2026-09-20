@@ -894,5 +894,10 @@
     "cta": "Recargar"
   },
   "mediaIntentSwitchedImage": "Se cambió a generación de imágenes. Envía de nuevo para generar.",
-  "mediaIntentSwitchedVideo": "Se cambió a generación de vídeos. Envía de nuevo para generar."
+  "mediaIntentSwitchedVideo": "Se cambió a generación de vídeos. Envía de nuevo para generar.",  "sessionDelivery": {
+    "replyRequested": "Request reply from recipient session",
+    "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",
+    "delivered": "Message delivered to the other session",
+    "rateLimited": "Cross-session delivery is rate-limited. Stop sending or wait."
+  }
 }

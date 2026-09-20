@@ -911,5 +911,10 @@
     "cta": "Пополнить"
   },
   "mediaIntentSwitchedImage": "Переключено на генерацию изображений. Отправьте ещё раз, чтобы создать.",
-  "mediaIntentSwitchedVideo": "Переключено на генерацию видео. Отправьте ещё раз, чтобы создать."
+  "mediaIntentSwitchedVideo": "Переключено на генерацию видео. Отправьте ещё раз, чтобы создать.",  "sessionDelivery": {
+    "replyRequested": "Request reply from recipient session",
+    "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",
+    "delivered": "Message delivered to the other session",
+    "rateLimited": "Cross-session delivery is rate-limited. Stop sending or wait."
+  }
 }

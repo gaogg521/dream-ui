@@ -314,6 +314,7 @@ export const conversation = {
       files: p.files,
       loading_id: p.loading_id,
       inject_skills: p.inject_skills,
+      reply_requested: p.reply_requested,
     })
   ),
   getSlashCommands: httpGet<AcpSlashCommandApiItem[], { conversation_id: string }>(
@@ -2231,6 +2232,8 @@ interface ISendMessageParams {
   files?: ChatFileRef[];
   loading_id?: string;
   inject_skills?: string[];
+  /** When true, cross-session deliveries include a reply address for the recipient agent. */
+  reply_requested?: boolean;
 }
 
 // Server-assigned identifier for the newly created user message. Clients must
