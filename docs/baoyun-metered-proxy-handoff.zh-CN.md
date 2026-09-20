@@ -1,5 +1,14 @@
 # 宝云（Baoyun）模式 B 计量代理 —— 设计与交接文档
 
+> **⚠️ 2026-09-20 更新：宝云已迁移到模式 A，本文档记录的模式 B 从此不再是宝云的
+> 实际接入方式，仅作历史/参考保留（见文末 §十）。** 用户带着本文档 §7"未决问题"
+> 里的 4 个疑问去问了宝云，对方新开了「账户 API」（`/apis/v1/api-keys`），完整支持
+> 程序化限额创建、原子充值（`remain_delta`）、用量查询、干净的耗尽错误码——正是
+> §一 第 2 点当时没确认的那件事，现在确认支持了。三端已经把宝云切到模式 A
+> （`dream-trial-broker/src/vendor/baoyun.rs`，跟 OpenRouter 同一套机制），下面
+> §一~§九 描述的模式 B 三端实现**代码还在、能跑、单测覆盖，但默认不接任何 vendor**，
+> 新会话看到"要不要继续 Phase 4（宝付真实支付）"，先读 §十，不要照着旧状态块继续冲。
+>
 > **状态：Phase 1（broker）+ Phase 2（dream-core）+ Phase 3（dream-ui）已实现
 > （2026-09-02）；Phase 4（真实支付）未开始，Phase 3 的 CDP 真机全链路验证待做。**
 > broker 侧：四张新表、`CostResolver`/`PaymentGateway` trait、claim/代理转发/quota/
@@ -442,10 +451,13 @@ CTA → 充值弹窗 → 套餐 → 下单 → mock webhook → 轮询到 paid �
 
 ---
 
-## 十、Phase 4 交接：接真实收款（宝付）
+## 十、Phase 4 交接：接真实收款（宝付）——⚠️ 已被 §十一 取代，仅作历史记录
 
-> **状态：未开始，卡外部依赖。** Phase 1-3 的代码都在各仓 `main`/`master` 上、真机验证过；
-> Phase 4 是把 `MockGateway` 换成真实的宝付网关。
+> **状态：本节写于 2026-09-20 当天更早些时候，几小时后宝云上线账户 API、三端切到
+> 模式 A，这一整节的前提（"宝云只能走模式 B，收款要靠宝付网关"）不再成立。** 免费
+> 试用额度现在完全不需要宝付/收款网关——直接见 §十一。真要给终端用户做付费充值，
+> 也不再是"接宝付网关+本地订单表"这套，而是"收到钱之后调用
+> `TokenVendor::top_up`"，见 §十一.3。本节原文保留在下面，只是别再照着执行。
 
 ### 10.1 前因后果（新会话先读这段）
 
@@ -541,3 +553,95 @@ async fn verify_webhook(&self, headers, body)          // 宝付异步通知：�
 3. 宝付给的是哪个支付产品（H5 收银台 / 扫码 / 快捷）—— 决定 `precreate` 和 dream-ui 付款 UI 的形态。
 4. 套餐定价细则：59/99/199 是否 1:1、是否赠送、是否设有效期（§七）。
 5. 免费 ¥10 的防刷：现在只按 `install_id` 去重，是否要设备指纹 / 限速阈值（§七、§3.6）。
+
+---
+
+## 十一、宝云迁移到模式 A（2026-09-20，取代 §十）
+
+### 11.1 发生了什么
+
+用户拿着 §7"未决问题"里当初问宝云的 4 个问题（能否程序化设额度/事后追加/查用量/
+识别耗尽报错），主动去找宝云要来了答案——宝云控制台新开了「账户 API」
+（`/apis/v1`，系统访问令牌鉴权，跟 `/v1` 推理接口用的 `sk-` key 是两套完全独立的
+凭据）。四个问题全部有了肯定答案：
+
+1. `POST /apis/v1/api-keys` 创建 Key 时可传 `remain`/`daily_limit`/`monthly_limit`
+   程序化设额度，不限于控制台手动点。
+2. `PATCH /apis/v1/api-keys/{id}` 传 `remain_delta` 原子追加——宝云文档原话"充值场景
+   推荐用此字段，避免 GET 再 SET 与并发扣费互相覆盖"。
+3. `GET /apis/v1/api-keys/{id}` 返回 `remain`/`used`，查询已用/剩余毫无问题。
+4. `/v1` 推理接口鉴权失败给出干净的机器可读 `error.code`（`token_quota_exhausted`
+   / `pre_consume_token_quota_failed` / `insufficient_user_quota` 等），不用像现在
+   dream-core 里那样靠文本启发式猜。
+
+这正是 `dream-trial-broker/src/vendor/mod.rs` 里 `ProvisioningMode::IssuedKey`
+（模式 A）成立的前提——宝云现在跟 OpenRouter 一样，能发限额子 Key。用户拍板：
+宝云直接切到模式 A，快速做完；模式 B 现有代码不删，轻改造成"不指名宝云的通用
+参考实现"，只是前端不再展示，留给以后真遇到做不到限额 Key 的中转站用。
+
+**顺带查到的、这次没用上但以后有用的**：`GET /apis/v1/account` 能查**我们自己**
+的宝云账户余额（`balance`/`used`），可以以后接进 `/internal/stats` 做余额监控；
+`GET /apis/v1/logs` 分页查用量日志（消费/错误/退款，可按 Key 名/模型/时间过滤），
+以后能做"用户查自己消费明细"。**账单与定价页确认**：宝云自己的"充值"
+（支付宝/微信/银行转账，可开自动充值）是给**我们自己的宝云账户**充值用的，不是
+给终端用户个人充值的 API——"我们要不要自己维护账户池子里有钱"这件事，宝云已经
+包圆了，不用接任何支付渠道；但"终端用户自己掏钱买套餐"这个产品功能如果要做，
+收这笔钱依然得我们自己接（宝付/支付宝/微信商户号），这点没变。
+
+### 11.2 三端改了什么（已完成、已测试、已提交）
+
+**`dream-trial-broker`**（commit 在本仓 `master`，仓库无 remote，只在本机）：
+- 新增 `src/vendor/baoyun.rs`：`BaoyunVendor` 实现 `TokenVendor`（`issue_key`/
+  `read_usage`/`set_limit`/`revoke`，外加 trait 新增的 `top_up` 原子实现，用
+  `remain_delta`）。
+- `AppState.vendor`（单个）→ `AppState.vendors: HashMap<vendor_id, Arc<dyn
+  TokenVendor>>`，OpenRouter 必配、宝云按 `BAOYUN_ACCESS_TOKEN` 是否存在 opt-in。
+- 每日熔断按 vendor 分开算（原来全局一个 `daily_budget_usd_cap`，混不同币种是错的）。
+- 新增 `POST /internal/vendors/{vendor}/trial-keys/{install_id}/topup`——运维/未来
+  支付 webhook 用的原子充值端点，跟 `/internal/stats` 同一信任层级（不对外、不需要
+  dream-ui 调）。
+- `TokenVendor` trait 新增 `top_up(handle, delta) -> KeyUsage`，默认实现走
+  `read_usage`+`set_limit`（OpenRouter 用默认），宝云覆写成 `remain_delta` 原子调用。
+- `KeyUsage`/`VendorClientConfig`/`TrialKeyResponse`/`QuotaStatusResponse` 都加了
+  `currency` 字段，前端不再假设所有 vendor 都是美元。
+- `src/metered/*`（模式 B）功能完全没动，只改了模块级文档注释说明"现在是参考实现，
+  默认不接任何 vendor，宝云已经用不着它了"。
+- 67/67 单测过，clippy 干净。
+
+**`dream-core`**（commit + push 到 `origin/main`）：
+- `TrialKeyClaimRequest{vendor}` / `TrialQuotaQuery{vendor}`（新类型，照抄已有的
+  `MeteredClaimRequest`/`MeteredQuotaQuery`）。
+- `TrialKeyResponse`/`TrialQuotaStatusResponse` 加 `currency`（默认 `"USD"`，兼容
+  老 broker）。
+- `TrialKeyService::request_trial_key`/`read_quota_status` 加 `vendor` 参数转发
+  给 broker；`/api/providers/trial-key` 系列路由跟着改。
+- 955/955 `dream-core-system` 测试过，clippy 干净。
+
+**`dream-ui`**（commit 到 `main`，push 中）：
+- `METERED_TRIAL_VENDORS` 从 `['baoyun']` 改成 `[]`——`isMeteredTrialVendor`/
+  `claimMeteredAccount`/`MeteredTopUpModal`/`MeteredTopUpCta` 全部保留、
+  `claimMeteredAccount` 单独导出保持单测覆盖，只是现在没有 vendor 会走到那条分支。
+  `TrialVendorOptions.tsx` 完全不用改，两个 vendor 现在统一走 `claimIssuedKey`。
+- `remainingLabel` 按 `currency` 字段选符号（`¥`/`$`），不再硬编码美元。
+- 宝云试用文案（13 语种）去掉"用完可充值"承诺——这轮只做免费额度发放+查余额，
+  跟 OpenRouter 现状对齐，充值 UI 还没接给任何一个 vendor。
+- tsc 干净，118/118 provider 单测过，i18n 检查过。
+
+### 11.3 没做的事（明确不在这轮范围内）
+
+- **终端用户付费充值**：`top_up`/`remain_delta` 这个能力本身已经写好、测试过、
+  能通过 `/internal/vendors/.../topup` 调用，但"用户点了购买按钮之后钱从哪来"
+  （宝付/支付宝/微信商户号）完全没做——这个是独立的、以后再排期的工作，两个
+  vendor（OpenRouter 和宝云）现状对齐，都停在"能发免费额度，不能收费"这一步。
+- 宝云自己的 `GET /apis/v1/account`（我方账户余额监控）、`GET /apis/v1/logs`
+  （用户消费明细）都还没接进任何地方，见 §11.1 最后一段。
+
+### 11.4 §十（宝付集成）还有用吗
+
+**没有了，除非以后真的要做"用户点按钮付款"这个功能**。§十当初设想的整套
+"broker 自己接宝付网关、维护订单表、处理 webhook"是**给宝云 mode B 用的**——
+mode B 需要 broker 自己算账、自己触发充值。现在宝云是 mode A，充值只是调一次
+`vendor.top_up()`，不需要 broker 自己维护订单/账本这套东西了。如果以后真做
+"用户按钮付款"，需要的是"某个支付渠道通知我们钱到账了"这一小块（可以是宝付，
+也可以是别的，跟 vendor 是不是宝云无关），收到通知后调 `top_up` 就完了——
+比 §十设想的"整套订单系统"轻得多。
