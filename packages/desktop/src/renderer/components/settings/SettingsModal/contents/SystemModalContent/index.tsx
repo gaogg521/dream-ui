@@ -116,8 +116,8 @@ const SystemModalContent: React.FC = () => {
     setCronNotificationEnabled(configService.get('system.cronNotificationEnabled') ?? false);
     setSaveUploadToWorkspace(configService.get('upload.saveToWorkspace') ?? false);
     ipcBridge.systemSettings.getCrossSessionDelivery
-      .invoke()
-      .then((enabled) => {
+      ?.invoke()
+      ?.then((enabled) => {
         if (typeof enabled === 'boolean') {
           setCrossSessionDelivery(enabled);
         }
@@ -335,7 +335,7 @@ const SystemModalContent: React.FC = () => {
 
   const handleCrossSessionDeliveryChange = useCallback((checked: boolean) => {
     setCrossSessionDelivery(checked);
-    ipcBridge.systemSettings.setCrossSessionDelivery.invoke({ enabled: checked }).catch(() => {
+    ipcBridge.systemSettings.setCrossSessionDelivery?.invoke({ enabled: checked }).catch(() => {
       setCrossSessionDelivery(!checked);
     });
   }, []);

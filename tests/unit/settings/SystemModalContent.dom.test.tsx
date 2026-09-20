@@ -75,6 +75,8 @@ vi.mock('@/common', () => ({
     systemSettings: {
       getCloseToTray: { invoke: vi.fn(() => Promise.resolve(false)) },
       setCloseToTray: { invoke: vi.fn(() => Promise.resolve()) },
+      getCrossSessionDelivery: { invoke: vi.fn(() => Promise.resolve(true)) },
+      setCrossSessionDelivery: { invoke: vi.fn(() => Promise.resolve()) },
     },
     dialog: {
       showOpen: { invoke: showOpenMock },
