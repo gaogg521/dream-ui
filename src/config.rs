@@ -62,8 +62,11 @@ impl Config {
         let baoyun = match env::var("BAOYUN_ACCESS_TOKEN") {
             Ok(access_token) if !access_token.trim().is_empty() => Some(BaoyunAccountConfig {
                 access_token,
-                trial_key_limit_cny: parse_env_or("BAOYUN_TRIAL_KEY_LIMIT_CNY", 10.0)?,
-                daily_budget_cny_cap: parse_env_or("BAOYUN_DAILY_BUDGET_CNY_CAP", 500.0)?,
+                trial_key_limit_cny: parse_env_or("BAOYUN_TRIAL_KEY_LIMIT_CNY", 5.0)?,
+                // Kept at 50 new trial users/day (matches the OpenRouter cap's
+                // stated policy) — halved alongside the ¥10 -> ¥5 grant so the
+                // per-day user count this implies doesn't silently double.
+                daily_budget_cny_cap: parse_env_or("BAOYUN_DAILY_BUDGET_CNY_CAP", 250.0)?,
             }),
             Ok(_) => anyhow::bail!("BAOYUN_ACCESS_TOKEN is set but empty"),
             Err(_) => None,
