@@ -14,6 +14,7 @@
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev --config packages/desktop/electron.vite.config.ts",
+    "dev:cdp-acceptance": "node scripts/dev-cdp-acceptance.mjs",
     "start": "electron-vite dev --config packages/desktop/electron.vite.config.ts",
     "start:multi": "cross-env DREAM_MULTI_INSTANCE=1 electron-vite dev --config packages/desktop/electron.vite.config.ts",
     "cli": "electron-vite dev --config packages/desktop/electron.vite.config.ts",
