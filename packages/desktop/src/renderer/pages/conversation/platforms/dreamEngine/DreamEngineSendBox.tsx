@@ -31,7 +31,7 @@ import FilePreview from '@/renderer/components/media/FilePreview';
 import HorizontalFileList from '@/renderer/components/media/HorizontalFileList';
 import { classifyConfigSetError, useAcpConfigOptions } from '@/renderer/hooks/agent/useAcpConfigOptions';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
-import { useConversationHistoryContext } from '@/renderer/hooks/context/ConversationHistoryContext';
+import { useConversationHistoryContextSafe } from '@/renderer/hooks/context/ConversationHistoryContext';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useAutoTitle } from '@/renderer/hooks/chat/useAutoTitle';
 import { getSendBoxDraftHook, type FileOrFolderItem } from '@/renderer/hooks/chat/useSendBoxDraft';
@@ -143,7 +143,8 @@ const DreamEngineSendBox: React.FC<{
   const layout = useLayoutContext();
   const isMobile = Boolean(layout?.isMobile);
   const conversationContext = useConversationContextSafe();
-  const { conversations: historyConversations } = useConversationHistoryContext();
+  const historyContext = useConversationHistoryContextSafe();
+  const historyConversations = historyContext?.conversations ?? [];
   const sessionConversationOptions = useMemo((): SessionAtMenuItem[] => {
     return historyConversations
       .filter((entry) => entry.type === 'dream')
@@ -293,10 +294,16 @@ const DreamEngineSendBox: React.FC<{
   const hasSessionToken = /@@conv:[A-Za-z0-9_-]+/.test(content);
 
   useEffect(() => {
+    const completedEmitter = ipcBridge.conversation.sessionDeliveryCompleted;
+    const failedEmitter = ipcBridge.conversation.sessionDeliveryFailed;
+    if (!completedEmitter?.on || !failedEmitter?.on) {
+      return;
+    }
+
     const resolvePeerLabel = (peerId: string) =>
       historyConversations.find((entry) => entry.id === peerId)?.name ?? peerId;
 
-    const offCompleted = ipcBridge.conversation.sessionDeliveryCompleted.on((event) => {
+    const offCompleted = completedEmitter.on((event) => {
       if (event.conversation_id !== conversation_id) {
         return;
       }
@@ -307,7 +314,7 @@ const DreamEngineSendBox: React.FC<{
         })
       );
     });
-    const offFailed = ipcBridge.conversation.sessionDeliveryFailed.on((event) => {
+    const offFailed = failedEmitter.on((event) => {
       if (event.conversation_id !== conversation_id) {
         return;
       }

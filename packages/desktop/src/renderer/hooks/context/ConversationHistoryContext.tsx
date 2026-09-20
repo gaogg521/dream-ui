@@ -43,3 +43,7 @@ export const useConversationHistoryContext = (): ConversationHistoryContextValue
 
   return context;
 };
+
+export const useConversationHistoryContextSafe = (): ConversationHistoryContextValue | null => {
+  return useContext(ConversationHistoryContext);
+};
