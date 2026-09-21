@@ -938,7 +938,14 @@
     "noOtherConversation": "没有其他会话可作为分享目标",
     "snapshotOf": "会话记录分享「{{name}}」",
     "messageCount": "{{count}} 条消息",
-    "loadFailed": "加载共享会话失败"
+    "loadFailed": "加载共享会话失败",
+    "scopeTenant": "本组（项目组）",
+    "scopeEnterprise": "全企业",
+    "scopeUser": "指定成员",
+    "pickMember": "选择成员",
+    "imported": "已导入为我的会话",
+    "importFailed": "导入失败",
+    "importAsCopy": "导入为我的会话副本（可继续对话）"
   },
   "sharedInbox": {
     "title": "企业共享会话",
@@ -947,6 +954,9 @@
     "scopeEnterprise": "全企业",
     "scopeTenant": "本组",
     "truncated": "仅显示最近一页消息",
-    "loadFailed": "加载共享会话失败"
+    "loadFailed": "加载共享会话失败",
+    "imported": "已导入为我的会话",
+    "importFailed": "导入失败",
+    "importAsCopy": "导入为我的会话副本（可继续对话）"
   }
 }

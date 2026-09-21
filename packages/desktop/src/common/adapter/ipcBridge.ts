@@ -317,6 +317,10 @@ export const conversation = {
       reply_requested: p.reply_requested,
     })
   ),
+  importShared: httpPost<
+    { conversationId: string; importedMessages: number },
+    { name: string; messages: Array<{ type: string; content: string; position?: string; createdAt?: number }> }
+  >('/api/conversations/import-shared'),
   getSlashCommands: httpGet<AcpSlashCommandApiItem[], { conversation_id: string }>(
     (p) => `/api/conversations/${p.conversation_id}/slash-commands`
   ),
@@ -3384,8 +3388,9 @@ export const onePlatform = {
     { conversationId: string; uploaded: boolean },
     {
       conversationId: string;
+      targetUserId?: string;
       name?: string;
-      scope: 'tenant' | 'enterprise';
+      scope: 'tenant' | 'enterprise' | 'user';
       messages?: Array<{
         id?: string;
         type: string;

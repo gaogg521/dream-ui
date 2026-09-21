@@ -922,7 +922,14 @@
     "noOtherConversation": "گفتگوی دیگری وجود ندارد",
     "snapshotOf": "اسنپ‌شات گفتگو «{{name}}»",
     "messageCount": "{{count}} پیام",
-    "loadFailed": "خطا در بارگذاری"
+    "loadFailed": "خطا در بارگذاری",
+    "scopeTenant": "گروه پروژه",
+    "scopeEnterprise": "کل سازمان",
+    "scopeUser": "عضو مشخص",
+    "pickMember": "انتخاب عضو",
+    "imported": "به‌عنوان گفتگوی من وارد شد",
+    "importFailed": "ورود ناموفق بود",
+    "importAsCopy": "وارد کردن به‌عنوان نسخه من (ادامه گفتگو)"
   },
   "sharedInbox": {
     "title": "گفتگوهای مشترک",
@@ -931,6 +938,9 @@
     "scopeEnterprise": "کل سازمان",
     "scopeTenant": "گروه پروژه",
     "truncated": "فقط آخرین صفحه",
-    "loadFailed": "خطا در بارگذاری"
+    "loadFailed": "خطا در بارگذاری",
+    "imported": "به‌عنوان گفتگوی من وارد شد",
+    "importFailed": "ورود ناموفق بود",
+    "importAsCopy": "وارد کردن به‌عنوان نسخه من (ادامه گفتگو)"
   }
 }

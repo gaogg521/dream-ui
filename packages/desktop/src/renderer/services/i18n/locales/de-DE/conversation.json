@@ -923,7 +923,14 @@
     "noOtherConversation": "Keine andere Unterhaltung vorhanden",
     "snapshotOf": "Unterhaltungs-Snapshot \"{{name}}\"",
     "messageCount": "{{count}} Nachrichten",
-    "loadFailed": "Laden fehlgeschlagen"
+    "loadFailed": "Laden fehlgeschlagen",
+    "scopeTenant": "Projektgruppe",
+    "scopeEnterprise": "Gesamtes Unternehmen",
+    "scopeUser": "Bestimmtes Mitglied",
+    "pickMember": "Mitglied wählen",
+    "imported": "Als meine Unterhaltung importiert",
+    "importFailed": "Import fehlgeschlagen",
+    "importAsCopy": "Als meine Kopie importieren (weiter chatten)"
   },
   "sharedInbox": {
     "title": "Geteilte Unterhaltungen",
@@ -932,6 +939,9 @@
     "scopeEnterprise": "Unternehmen",
     "scopeTenant": "Projektgruppe",
     "truncated": "Nur die neueste Seite wird angezeigt",
-    "loadFailed": "Laden fehlgeschlagen"
+    "loadFailed": "Laden fehlgeschlagen",
+    "imported": "Als meine Unterhaltung importiert",
+    "importFailed": "Import fehlgeschlagen",
+    "importAsCopy": "Als meine Kopie importieren (weiter chatten)"
   }
 }

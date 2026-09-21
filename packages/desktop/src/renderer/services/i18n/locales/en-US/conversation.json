@@ -938,7 +938,14 @@
     "noOtherConversation": "No other conversation to share into",
     "snapshotOf": "Conversation snapshot \"{{name}}\"",
     "messageCount": "{{count}} messages",
-    "loadFailed": "Failed to load shared conversations"
+    "loadFailed": "Failed to load shared conversations",
+    "scopeTenant": "Project group",
+    "scopeEnterprise": "Whole company",
+    "scopeUser": "Specific member",
+    "pickMember": "Pick a member",
+    "imported": "Imported as my conversation",
+    "importFailed": "Import failed",
+    "importAsCopy": "Import as my copy (continue chatting)"
   },
   "sharedInbox": {
     "title": "Shared conversations",
@@ -947,6 +954,9 @@
     "scopeEnterprise": "Enterprise",
     "scopeTenant": "Project group",
     "truncated": "Showing the latest page of messages",
-    "loadFailed": "Failed to load shared conversations"
+    "loadFailed": "Failed to load shared conversations",
+    "imported": "Imported as my conversation",
+    "importFailed": "Import failed",
+    "importAsCopy": "Import as my copy (continue chatting)"
   }
 }

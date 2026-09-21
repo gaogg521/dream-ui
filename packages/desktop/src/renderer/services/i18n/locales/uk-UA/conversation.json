@@ -940,7 +940,14 @@
     "noOtherConversation": "Немає інших чатів",
     "snapshotOf": "Знімок чату «{{name}}»",
     "messageCount": "{{count}} повідомлень",
-    "loadFailed": "Помилка завантаження"
+    "loadFailed": "Помилка завантаження",
+    "scopeTenant": "Група проєкту",
+    "scopeEnterprise": "Вся компанія",
+    "scopeUser": "Конкретний учасник",
+    "pickMember": "Виберіть учасника",
+    "imported": "Імпортовано як мій чат",
+    "importFailed": "Помилка імпорту",
+    "importAsCopy": "Імпортувати як свою копію (продовжити чат)"
   },
   "sharedInbox": {
     "title": "Спільні чати",
@@ -949,6 +956,9 @@
     "scopeEnterprise": "Вся компанія",
     "scopeTenant": "Група проєкту",
     "truncated": "Показано останню сторінку",
-    "loadFailed": "Помилка завантаження"
+    "loadFailed": "Помилка завантаження",
+    "imported": "Імпортовано як мій чат",
+    "importFailed": "Помилка імпорту",
+    "importAsCopy": "Імпортувати як свою копію (продовжити чат)"
   }
 }

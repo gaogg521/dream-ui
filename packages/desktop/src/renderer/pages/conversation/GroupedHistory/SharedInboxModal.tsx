@@ -6,7 +6,7 @@
 
 import { ipcBridge } from '@/common';
 import { friendlyEnterpriseError } from '@renderer/utils/enterprise/friendlyEnterpriseError';
-import { Message, Modal, Spin, Tag } from '@arco-design/web-react';
+import { Button, Message, Modal, Spin, Tag } from '@arco-design/web-react';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -61,6 +61,7 @@ const SharedInboxModal: React.FC<{ visible: boolean; onCancel: () => void }> = (
   const [rows, setRows] = useState<SharedRow[] | null>(null);
   const [detail, setDetail] = useState<SharedDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     if (!visible) {
@@ -124,6 +125,39 @@ const SharedInboxModal: React.FC<{ visible: boolean; onCancel: () => void }> = (
     >
       {detail ? (
         <div className='flex flex-col gap-6px max-h-[60vh] overflow-y-auto' data-testid='shared-conversation-detail'>
+          <Button
+            size='small'
+            type='primary'
+            data-testid='shared-inbox-import'
+            loading={importing}
+            onClick={() => {
+              setImporting(true);
+              void ipcBridge.conversation.importShared
+                .invoke({
+                  name: detail.share.name,
+                  messages: detail.messages.map((m) => ({
+                    type: m.type,
+                    content: m.content,
+                    position: m.position,
+                    createdAt: m.createdAt,
+                  })),
+                })
+                .then((result) => {
+                  Message.success(t('conversation.sharedInbox.imported', { defaultValue: '已导入为我的会话' }));
+                  window.location.hash = `#/conversation/${result.conversationId}`;
+                  onCancel();
+                })
+                .catch((error) =>
+                  Message.error(
+                    friendlyEnterpriseError(error, t) ||
+                      t('conversation.sharedInbox.importFailed', { defaultValue: '导入失败' })
+                  )
+                )
+                .finally(() => setImporting(false));
+            }}
+          >
+            {t('conversation.sharedInbox.importAsCopy', { defaultValue: '导入为我的会话副本（可继续对话）' })}
+          </Button>
           {detail.hasMoreBefore && (
             <div className='text-12px text-t-secondary'>
               {t('conversation.sharedInbox.truncated', { defaultValue: '仅显示最近一页消息' })}

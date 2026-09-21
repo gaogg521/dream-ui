@@ -922,7 +922,14 @@
     "noOtherConversation": "共有先の会話がありません",
     "snapshotOf": "会話スナップショット「{{name}}」",
     "messageCount": "{{count}} 件のメッセージ",
-    "loadFailed": "共有会話の読み込みに失敗"
+    "loadFailed": "共有会話の読み込みに失敗",
+    "scopeTenant": "プロジェクトグループ",
+    "scopeEnterprise": "全社",
+    "scopeUser": "メンバー指定",
+    "pickMember": "メンバーを選択",
+    "imported": "自分の会話としてインポートしました",
+    "importFailed": "インポートに失敗しました",
+    "importAsCopy": "自分のコピーとしてインポート（会話を続ける）"
   },
   "sharedInbox": {
     "title": "共有された会話",
@@ -931,6 +938,9 @@
     "scopeEnterprise": "全社",
     "scopeTenant": "プロジェクトグループ",
     "truncated": "最新ページのみ表示",
-    "loadFailed": "読み込みに失敗しました"
+    "loadFailed": "読み込みに失敗しました",
+    "imported": "自分の会話としてインポートしました",
+    "importFailed": "インポートに失敗しました",
+    "importAsCopy": "自分のコピーとしてインポート（会話を続ける）"
   }
 }

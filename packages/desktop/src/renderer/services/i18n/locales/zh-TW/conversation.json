@@ -924,7 +924,14 @@
     "noOtherConversation": "沒有其他會話可作為分享目標",
     "snapshotOf": "會話記錄分享「{{name}}」",
     "messageCount": "{{count}} 條訊息",
-    "loadFailed": "載入共享會話失敗"
+    "loadFailed": "載入共享會話失敗",
+    "scopeTenant": "本組（專案組）",
+    "scopeEnterprise": "全企業",
+    "scopeUser": "指定成員",
+    "pickMember": "選擇成員",
+    "imported": "已匯入為我的會話",
+    "importFailed": "匯入失敗",
+    "importAsCopy": "匯入為我的會話副本（可繼續對話）"
   },
   "sharedInbox": {
     "title": "企業共享會話",
@@ -933,6 +940,9 @@
     "scopeEnterprise": "全企業",
     "scopeTenant": "本組",
     "truncated": "僅顯示最近一頁訊息",
-    "loadFailed": "載入共享會話失敗"
+    "loadFailed": "載入共享會話失敗",
+    "imported": "已匯入為我的會話",
+    "importFailed": "匯入失敗",
+    "importAsCopy": "匯入為我的會話副本（可繼續對話）"
   }
 }

@@ -26,10 +26,11 @@ import React from 'react';
 import type { TFunction } from 'i18next';
 import { Modal, Message, Radio, Select } from '@arco-design/web-react';
 import { ipcBridge } from '@/common';
+import { useTranslation } from 'react-i18next';
 import { friendlyEnterpriseError } from './friendlyEnterpriseError';
 
 export type ConversationShareMode = 'off' | 'tenant' | 'enterprise';
-export type ConversationShareScope = 'tenant' | 'enterprise';
+export type ConversationShareScope = 'tenant' | 'enterprise' | 'user';
 
 /** One uploaded message row — the raw JSON blob is preserved verbatim. */
 export type ShareMessageInput = {
@@ -81,21 +82,52 @@ async function readLocalSnapshotMessages(conversationId: string): Promise<ShareM
 
 function ShareScopePicker(props: {
   defaultValue: ConversationShareScope;
-  onChange: (value: ConversationShareScope) => void;
+  onChange: (value: ConversationShareScope, targetUserId?: string) => void;
 }) {
+  const { t } = useTranslation('conversation');
   const [value, setValue] = React.useState<ConversationShareScope>(props.defaultValue);
+  const [targetUserId, setTargetUserId] = React.useState<string | undefined>(undefined);
+  const [members, setMembers] = React.useState<
+    Array<{ userId: string; displayName?: string | null; username: string }>
+  >([]);
+  React.useEffect(() => {
+    if (value !== 'user') return;
+    void ipcBridge.onePlatform.orgMembers
+      .invoke()
+      .then((list) => setMembers(list ?? []))
+      .catch(() => setMembers([]));
+  }, [value]);
   return (
-    <Radio.Group
-      value={value}
-      onChange={(v) => {
-        const next = v as ConversationShareScope;
-        setValue(next);
-        props.onChange(next);
-      }}
-    >
-      <Radio value='tenant'>本组（项目组）</Radio>
-      <Radio value='enterprise'>全企业</Radio>
-    </Radio.Group>
+    <div>
+      <Radio.Group
+        value={value}
+        onChange={(v) => {
+          const next = v as ConversationShareScope;
+          setValue(next);
+          props.onChange(next, undefined);
+        }}
+      >
+        <Radio value='tenant'>{t('conversation.sessionShare.scopeTenant', { defaultValue: '本组（项目组）' })}</Radio>
+        <Radio value='enterprise'>{t('conversation.sessionShare.scopeEnterprise', { defaultValue: '全企业' })}</Radio>
+        <Radio value='user'>{t('conversation.sessionShare.scopeUser', { defaultValue: '指定成员' })}</Radio>
+      </Radio.Group>
+      {value === 'user' && (
+        <Select
+          style={{ width: '100%', marginTop: 8 }}
+          placeholder={t('conversation.sessionShare.pickMember', { defaultValue: '选择成员' })}
+          onChange={(v: string) => {
+            setTargetUserId(v);
+            props.onChange('user', v);
+          }}
+        >
+          {members.map((member) => (
+            <Select.Option key={member.userId} value={member.userId}>
+              {member.displayName || member.username}
+            </Select.Option>
+          ))}
+        </Select>
+      )}
+    </div>
   );
 }
 
@@ -205,6 +237,7 @@ export async function shareConversationToOrg(
   // `tenant` mode has exactly one scope to offer. `enterprise` mode lets the
   // member choose per share; the safer default (project group) is preselected.
   let scope: ConversationShareScope = 'tenant';
+  let targetUserId: string | undefined = undefined;
   if (mode === 'enterprise') {
     let chosen: ConversationShareScope | null = 'tenant';
     const confirmed = await new Promise<boolean>((resolve) => {
@@ -215,8 +248,9 @@ export async function shareConversationToOrg(
             <div style={{ marginBottom: 8 }}>分享后，会话内容将上传至企业服务器，供被分享范围的同事查看。</div>
             <ShareScopePicker
               defaultValue='tenant'
-              onChange={(value) => {
+              onChange={(value, target) => {
                 chosen = value;
+                targetUserId = target;
               }}
             />
           </div>
@@ -235,9 +269,10 @@ export async function shareConversationToOrg(
       conversationId: conversation.id,
       name: conversation.name,
       scope,
+      targetUserId,
       messages,
     });
-    Message.success(scope === 'tenant' ? '已分享给本组' : '已分享给全企业');
+    Message.success(scope === 'tenant' ? '已分享给本组' : scope === 'user' ? '已分享给指定成员' : '已分享给全企业');
     return 'shared';
   } catch (error) {
     // The server has reasons the member can act on — a conversation id already

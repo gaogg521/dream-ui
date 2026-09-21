@@ -928,7 +928,14 @@
     "noOtherConversation": "Nenhuma outra conversa disponível",
     "snapshotOf": "Instantâneo da conversa \"{{name}}\"",
     "messageCount": "{{count}} mensagens",
-    "loadFailed": "Falha ao carregar"
+    "loadFailed": "Falha ao carregar",
+    "scopeTenant": "Grupo de projeto",
+    "scopeEnterprise": "Toda a empresa",
+    "scopeUser": "Membro específico",
+    "pickMember": "Escolher membro",
+    "imported": "Importado como minha conversa",
+    "importFailed": "Falha na importação",
+    "importAsCopy": "Importar como minha cópia (continuar a conversa)"
   },
   "sharedInbox": {
     "title": "Conversas compartilhadas",
@@ -937,6 +944,9 @@
     "scopeEnterprise": "Empresa",
     "scopeTenant": "Grupo de projeto",
     "truncated": "Mostrando a última página",
-    "loadFailed": "Falha ao carregar"
+    "loadFailed": "Falha ao carregar",
+    "imported": "Importado como minha conversa",
+    "importFailed": "Falha na importação",
+    "importAsCopy": "Importar como minha cópia (continuar a conversa)"
   }
 }

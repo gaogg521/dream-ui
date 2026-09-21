@@ -940,7 +940,14 @@
     "noOtherConversation": "Нет других чатов",
     "snapshotOf": "Снимок чата «{{name}}»",
     "messageCount": "{{count}} сообщений",
-    "loadFailed": "Ошибка загрузки"
+    "loadFailed": "Ошибка загрузки",
+    "scopeTenant": "Группа проекта",
+    "scopeEnterprise": "Вся компания",
+    "scopeUser": "Конкретный участник",
+    "pickMember": "Выберите участника",
+    "imported": "Импортировано как мой чат",
+    "importFailed": "Ошибка импорта",
+    "importAsCopy": "Импортировать как свою копию (продолжить чат)"
   },
   "sharedInbox": {
     "title": "Общие чаты",
@@ -949,6 +956,9 @@
     "scopeEnterprise": "Вся компания",
     "scopeTenant": "Группа проекта",
     "truncated": "Показана последняя страница",
-    "loadFailed": "Ошибка загрузки"
+    "loadFailed": "Ошибка загрузки",
+    "imported": "Импортировано как мой чат",
+    "importFailed": "Ошибка импорта",
+    "importAsCopy": "Импортировать как свою копию (продолжить чат)"
   }
 }

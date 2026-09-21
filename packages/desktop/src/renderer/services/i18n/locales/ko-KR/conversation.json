@@ -922,7 +922,14 @@
     "noOtherConversation": "공유할 다른 대화가 없습니다",
     "snapshotOf": "대화 스냅샷 \"{{name}}\"",
     "messageCount": "{{count}}개 메시지",
-    "loadFailed": "공유 대화 로드 실패"
+    "loadFailed": "공유 대화 로드 실패",
+    "scopeTenant": "프로젝트 그룹",
+    "scopeEnterprise": "전사",
+    "scopeUser": "특정 멤버",
+    "pickMember": "멤버 선택",
+    "imported": "내 대화로 가져왔습니다",
+    "importFailed": "가져오기 실패",
+    "importAsCopy": "내 복사본으로 가져오기(대화 계속)"
   },
   "sharedInbox": {
     "title": "공유된 대화",
@@ -931,6 +938,9 @@
     "scopeEnterprise": "전사",
     "scopeTenant": "프로젝트 그룹",
     "truncated": "최근 페이지만 표시",
-    "loadFailed": "로드 실패"
+    "loadFailed": "로드 실패",
+    "imported": "내 대화로 가져왔습니다",
+    "importFailed": "가져오기 실패",
+    "importAsCopy": "내 복사본으로 가져오기(대화 계속)"
   }
 }

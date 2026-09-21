@@ -14,6 +14,8 @@ import type {
 } from '@renderer/utils/chat/sessionBlockParser';
 import CollapsibleContent from '@renderer/components/chat/CollapsibleContent';
 import { useNavigate } from 'react-router-dom';
+import { ipcBridge } from '@/common';
+import { Button, Message as ArcoMessage } from '@arco-design/web-react';
 import { iconColors } from '@renderer/styles/colors';
 import { Message, Right } from '@icon-park/react';
 import React from 'react';
@@ -178,6 +180,27 @@ const SnapshotMessageRow: React.FC<{ message: SharedSnapshotMessage }> = ({ mess
 
 const ShareCard: React.FC<{ payload: SessionSharePayload }> = ({ payload }) => {
   const { t } = useTranslation('conversation');
+  const navigate = useNavigate();
+  const [importing, setImporting] = React.useState(false);
+  const importCopy = () => {
+    setImporting(true);
+    void ipcBridge.conversation.importShared
+      .invoke({
+        name: payload.name,
+        messages: payload.messages.map((message) => ({
+          type: message.type,
+          content: message.content,
+          position: message.position ?? undefined,
+          createdAt: message.createdAt ?? undefined,
+        })),
+      })
+      .then((result) => {
+        ArcoMessage.success(t('conversation.sharedInbox.imported', { defaultValue: '已导入为我的会话' }));
+        navigate(`/conversation/${result.conversationId}`);
+      })
+      .catch(() => ArcoMessage.error(t('conversation.sharedInbox.importFailed', { defaultValue: '导入失败' })))
+      .finally(() => setImporting(false));
+  };
   return (
     <div
       className='w-full rd-8px border border-4 bg-1 px-10px py-8px flex flex-col gap-6px'
