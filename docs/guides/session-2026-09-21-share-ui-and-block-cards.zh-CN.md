@@ -32,7 +32,7 @@
 ## 坑（下次必读）
 
 1. **electron.vite.config.ts 的 icon-park 插件不支持 `as` 别名**：`import { X as Y }
-   from '@icon-park/react'` 会被改写成非法语法 → 会话页整块白屏（esbuild 报
+from '@icon-park/react'` 会被改写成非法语法 → 会话页整块白屏（esbuild 报
    `Expected "}" but found "as"`）。本仓所有 icon-park 导入禁止 `as`；需要别名时
    `import { X } from ...; const Y = X;`。根治 = 修插件正则/包装逻辑。
 2. **Vite 对转换失败的文件在模块图里留脏状态**：修复磁盘文件后白屏可能不恢复，
