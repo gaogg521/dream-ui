@@ -167,17 +167,91 @@ async fn stats(State(state): State<Arc<AppState>>) -> Result<Json<serde_json::Va
     })))
 }
 
-/// Trust boundary: this service is expected to sit behind a reverse proxy
-/// that sets X-Forwarded-For; if present we take the first (left-most,
-/// i.e. original client) address from it, otherwise we fall back to the
-/// TCP peer address.
+/// Trust boundary: this service sits behind our nginx reverse proxy, which is
+/// configured to set `X-Real-IP` from `$remote_addr` — the TCP peer address
+/// nginx itself observed on the connection, which a client cannot influence
+/// through any request header of its own. That is the only header we trust
+/// for the caller's real IP, and it feeds the per-IP rate limiters
+/// (`PER_IP_RATE_LIMIT_PER_HOUR`, `SEARCH_RATE_LIMIT_PER_HOUR`).
+///
+/// We deliberately do **not** read `X-Forwarded-For`: nginx is configured to
+/// *append* to it (`proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`),
+/// not to overwrite it, so a client can send its own `X-Forwarded-For` header
+/// with an arbitrary address and have that value land in the left-most
+/// ("original client") position — which is exactly what naive XFF parsing
+/// picks. Trusting that header let any caller forge a different IP on every
+/// request and bypass the rate limiter entirely. Never resurrect trust in a
+/// client-supplied `X-Forwarded-For` here.
+///
+/// Falls back to the TCP peer address from `ConnectInfo` when `X-Real-IP` is
+/// absent or fails to parse — e.g. running locally without the reverse proxy
+/// in front, or in tests. That fallback is still safe: `ConnectInfo` comes
+/// from the actual accepted socket, not from a header.
 pub(crate) fn extract_client_ip(headers: &HeaderMap, peer: SocketAddr) -> std::net::IpAddr {
-    if let Some(value) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
-        if let Some(first) = value.split(',').next() {
-            if let Ok(ip) = first.trim().parse() {
-                return ip;
-            }
-        }
+    if let Some(ip) = headers
+        .get("x-real-ip")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.trim().parse().ok())
+    {
+        return ip;
     }
     peer.ip()
+}
+
+#[cfg(test)]
+mod extract_client_ip_tests {
+    use super::extract_client_ip;
+    use axum::http::HeaderMap;
+    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+    fn peer(ip: [u8; 4], port: u16) -> SocketAddr {
+        SocketAddr::from((Ipv4Addr::from(ip), port))
+    }
+
+    #[test]
+    fn uses_x_real_ip_set_by_nginx() {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-real-ip", "203.0.113.9".parse().unwrap());
+        let ip = extract_client_ip(&headers, peer([10, 0, 0, 1], 1234));
+        assert_eq!(ip, IpAddr::V4(Ipv4Addr::new(203, 0, 113, 9)));
+    }
+
+    #[test]
+    fn ignores_spoofed_x_forwarded_for_even_without_x_real_ip() {
+        // A malicious client sends its own X-Forwarded-For, hoping the
+        // left-most, attacker-chosen address gets treated as the real IP so
+        // it can dodge the per-IP rate limiter on every request. It must be
+        // ignored entirely; only the real TCP peer address counts here.
+        let mut headers = HeaderMap::new();
+        headers.insert("x-forwarded-for", "1.2.3.4, 5.6.7.8".parse().unwrap());
+        let ip = extract_client_ip(&headers, peer([192, 168, 0, 42], 5555));
+        assert_eq!(ip, IpAddr::V4(Ipv4Addr::new(192, 168, 0, 42)));
+    }
+
+    #[test]
+    fn x_real_ip_wins_even_when_client_also_forges_x_forwarded_for() {
+        // nginx sets X-Real-IP itself from $remote_addr, so even if the
+        // client also sends a forged X-Forwarded-For in the same request,
+        // the trustworthy header must be the one that decides.
+        let mut headers = HeaderMap::new();
+        headers.insert("x-real-ip", "198.51.100.7".parse().unwrap());
+        headers.insert("x-forwarded-for", "6.6.6.6".parse().unwrap());
+        let ip = extract_client_ip(&headers, peer([10, 0, 0, 1], 1234));
+        assert_eq!(ip, IpAddr::V4(Ipv4Addr::new(198, 51, 100, 7)));
+    }
+
+    #[test]
+    fn falls_back_to_peer_when_x_real_ip_missing() {
+        let headers = HeaderMap::new();
+        let ip = extract_client_ip(&headers, peer([172, 16, 0, 5], 9999));
+        assert_eq!(ip, IpAddr::V4(Ipv4Addr::new(172, 16, 0, 5)));
+    }
+
+    #[test]
+    fn falls_back_to_peer_when_x_real_ip_unparsable() {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-real-ip", "not-an-ip".parse().unwrap());
+        let ip = extract_client_ip(&headers, peer([172, 16, 0, 9], 9999));
+        assert_eq!(ip, IpAddr::V4(Ipv4Addr::new(172, 16, 0, 9)));
+    }
 }

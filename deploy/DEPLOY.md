@@ -59,8 +59,17 @@ services on the target box (`operone`) are deployed.
    ```bash
    nginx -t && systemctl reload nginx
    ```
-   The `X-Forwarded-For` header the snippet sets is what the broker's per-IP
-   rate limiter reads (`src/routes.rs::extract_client_ip`).
+   The `X-Real-IP` header the snippet sets (from nginx's own `$remote_addr`,
+   not from anything the client sends) is what the broker's per-IP rate
+   limiter reads (`src/routes.rs::extract_client_ip`). The broker does not
+   trust `X-Forwarded-For` for this — nginx only appends to it
+   (`$proxy_add_x_forwarded_for`), so a client could otherwise prepend an
+   arbitrary address to it and spoof its way past the rate limiter. **Deploy
+   the nginx snippet and the broker binary together**: if the broker is
+   updated without the nginx config also setting `X-Real-IP`, every request
+   falls back to the TCP peer address as seen by nginx itself — meaning if
+   there's ever more than one hop in front of the broker, all callers would
+   collapse onto that hop's IP and share one rate-limit bucket.
 
 4. **Smoke test.**
    ```bash
