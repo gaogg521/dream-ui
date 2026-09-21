@@ -85,7 +85,8 @@
     "reorderPinned": "برای تغییر ترتیب گفتگوی سنجاق‌شده بکشید",
     "forkedFrom": "انشعاب از «{{name}}»",
     "forkedConversation": "گفتگوی منشعب",
-    "viewAllTooltip": "مشاهده همه در مرکز نشست‌ها"
+    "viewAllTooltip": "مشاهده همه در مرکز نشست‌ها",
+    "shareToSession": "هم‌رسانی در گفتگوی من"
   },
   "historySearch": {
     "tooltip": "جستجوی پیام‌ها",
@@ -911,5 +912,25 @@
     "viewConversation": "مشاهده گفتگو",
     "replyRequested": "فرستنده پاسخ خواسته است؛ در همین گفتگو پاسخ دهید.",
     "replyRequestedOutbound": "پاسخ درخواست شد."
+  },
+  "sessionShare": {
+    "shareToSession": "هم‌رسانی در گفتگوی من",
+    "pickTitle": "«{{name}}» را در کدام گفتگو به اشتراک بگذاریم؟",
+    "pickPlaceholder": "گفتگوی مقصد را انتخاب کنید",
+    "sent": "به اشتراک گذاشته شد",
+    "sendFailed": "هم‌رسانی ناموفق بود",
+    "noOtherConversation": "گفتگوی دیگری وجود ندارد",
+    "snapshotOf": "اسنپ‌شات گفتگو «{{name}}»",
+    "messageCount": "{{count}} پیام",
+    "loadFailed": "خطا در بارگذاری"
+  },
+  "sharedInbox": {
+    "title": "گفتگوهای مشترک",
+    "empty": "هنوز چیزی مشترک نشده",
+    "viewTitle": "گفتگوی مشترک: {{name}}",
+    "scopeEnterprise": "کل سازمان",
+    "scopeTenant": "گروه پروژه",
+    "truncated": "فقط آخرین صفحه",
+    "loadFailed": "خطا در بارگذاری"
   }
 }

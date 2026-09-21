@@ -7,9 +7,12 @@
 import type {
   ParsedSessionBlock,
   SessionMessagePayload,
+  SessionSharePayload,
   SessionTarget,
   SessionsPayload,
+  SharedSnapshotMessage,
 } from '@renderer/utils/chat/sessionBlockParser';
+import CollapsibleContent from '@renderer/components/chat/CollapsibleContent';
 import { useNavigate } from 'react-router-dom';
 import { iconColors } from '@renderer/styles/colors';
 import { Message, Right } from '@icon-park/react';
@@ -146,6 +149,62 @@ const OutboundCard: React.FC<{ payload: SessionsPayload }> = ({ payload }) => {
   );
 };
 
+const SnapshotMessageRow: React.FC<{ message: SharedSnapshotMessage }> = ({ message }) => {
+  let text = '';
+  try {
+    const parsed: unknown = JSON.parse(message.content);
+    if (typeof parsed === 'string') text = parsed;
+    else if (parsed && typeof parsed === 'object' && typeof (parsed as { content?: unknown }).content === 'string') {
+      text = (parsed as { content: string }).content;
+    }
+  } catch {
+    text = message.content;
+  }
+  const isUser = message.position === 'right';
+  return (
+    <div className={classNames('flex', isUser ? 'justify-end' : 'justify-start')}>
+      <div
+        className={classNames(
+          'max-w-[85%] px-8px py-4px rd-6px text-12px whitespace-pre-wrap [overflow-wrap:anywhere]',
+          isUser ? 'bg-aou-2' : 'bg-3'
+        )}
+        style={{ color: 'var(--text-primary)' }}
+      >
+        {text || '(non-text message)'}
+      </div>
+    </div>
+  );
+};
+
+const ShareCard: React.FC<{ payload: SessionSharePayload }> = ({ payload }) => {
+  const { t } = useTranslation('conversation');
+  return (
+    <div
+      className='w-full rd-8px border border-4 bg-1 px-10px py-8px flex flex-col gap-6px'
+      data-testid='session-share-block'
+    >
+      <div className='flex items-center gap-8px flex-wrap'>
+        <span className='text-13px font-medium' style={{ color: 'var(--text-primary)' }}>
+          <Message theme='outline' size='14' fill={iconColors.secondary} />{' '}
+          {t('sessionShare.snapshotOf', { defaultValue: '会话记录分享「{{name}}」', name: payload.name })}
+        </span>
+        <span className='text-11px px-6px py-1px rd-4px bg-3 select-none' style={{ color: 'var(--text-secondary)' }}>
+          {t('sessionShare.messageCount', { defaultValue: '{{count}} 条消息', count: payload.messages.length })}
+        </span>
+      </div>
+      {payload.messages.length > 0 && (
+        <CollapsibleContent maxHeight={260} defaultCollapsed={true}>
+          <div className='flex flex-col gap-4px pt-2px'>
+            {payload.messages.map((message, index) => (
+              <SnapshotMessageRow key={index} message={message} />
+            ))}
+          </div>
+        </CollapsibleContent>
+      )}
+    </div>
+  );
+};
+
 /**
  * Styled rendering of a cross-session delivery block. `block.head` (user text
  * before the marker, possibly empty) is NOT rendered here — MessageText keeps
@@ -154,6 +213,9 @@ const OutboundCard: React.FC<{ payload: SessionsPayload }> = ({ payload }) => {
 const SessionDeliveryBlock: React.FC<{ block: ParsedSessionBlock }> = ({ block }) => {
   if (block.marker === '[[DREAM_SESSION_MESSAGE]]') {
     return <InboundCard payload={block.payload} />;
+  }
+  if (block.marker === '[[SESSION_SHARE]]') {
+    return <ShareCard payload={block.payload} />;
   }
   return <OutboundCard payload={block.payload} />;
 };

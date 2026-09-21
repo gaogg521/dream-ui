@@ -85,7 +85,8 @@
     "reorderPinned": "ドラッグしてピン留め会話の順序を変更",
     "forkedFrom": "「{{name}}」から分岐",
     "forkedConversation": "分岐した会話",
-    "viewAllTooltip": "セッションセンターですべて表示"
+    "viewAllTooltip": "セッションセンターですべて表示",
+    "shareToSession": "自分の会話へ共有"
   },
   "historySearch": {
     "tooltip": "メッセージを検索",
@@ -911,5 +912,25 @@
     "viewConversation": "会話を表示",
     "replyRequested": "送信者が返信を要求しています。この会話で返信できます。",
     "replyRequestedOutbound": "返信を要求しました。"
+  },
+  "sessionShare": {
+    "shareToSession": "自分の会話へ共有",
+    "pickTitle": "「{{name}}」をどの会話に共有しますか？",
+    "pickPlaceholder": "共有先を選択",
+    "sent": "共有しました",
+    "sendFailed": "共有に失敗しました",
+    "noOtherConversation": "共有先の会話がありません",
+    "snapshotOf": "会話スナップショット「{{name}}」",
+    "messageCount": "{{count}} 件のメッセージ",
+    "loadFailed": "共有会話の読み込みに失敗"
+  },
+  "sharedInbox": {
+    "title": "共有された会話",
+    "empty": "まだ共有はありません",
+    "viewTitle": "共有会話: {{name}}",
+    "scopeEnterprise": "全社",
+    "scopeTenant": "プロジェクトグループ",
+    "truncated": "最新ページのみ表示",
+    "loadFailed": "読み込みに失敗しました"
   }
 }

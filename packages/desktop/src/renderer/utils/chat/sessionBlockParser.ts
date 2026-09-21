@@ -18,6 +18,14 @@
 
 export const SESSIONS_MARKER = '[[DREAM_SESSIONS]]';
 export const SESSION_MESSAGE_MARKER = '[[DREAM_SESSION_MESSAGE]]';
+/**
+ * Personal-edition share block: a conversation snapshot forwarded into
+ * another of the user's own conversations. Deliberately NOT a `[[DREAM_...]]`
+ * marker — the backend escaper breaks that prefix inside user-sent text, and
+ * this block travels through the ordinary send edge. Forgery renders a
+ * cosmetic card in the forger's own conversation; nothing else consumes it.
+ */
+export const SESSION_SHARE_MARKER = '[[SESSION_SHARE]]';
 
 export type SessionTarget = {
   id: string;
@@ -43,9 +51,24 @@ export type SessionMessagePayload = {
   reply_to_conversation_id?: string;
 };
 
+export type SharedSnapshotMessage = {
+  type: string;
+  /** Raw JSON string of the original message content — parsed at render time. */
+  content: string;
+  position: string | null;
+  createdAt: number | null;
+};
+
+export type SessionSharePayload = {
+  name: string;
+  shared_at: number | null;
+  messages: SharedSnapshotMessage[];
+};
+
 export type ParsedSessionBlock =
   | { marker: typeof SESSIONS_MARKER; payload: SessionsPayload; head: string }
-  | { marker: typeof SESSION_MESSAGE_MARKER; payload: SessionMessagePayload; head: string };
+  | { marker: typeof SESSION_MESSAGE_MARKER; payload: SessionMessagePayload; head: string }
+  | { marker: typeof SESSION_SHARE_MARKER; payload: SessionSharePayload; head: string };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -121,14 +144,24 @@ const parseSessionMessagePayload = (value: unknown): SessionMessagePayload | nul
  * to rendering the text as-is.
  */
 export const parseSessionDeliveryBlock = (content: string): ParsedSessionBlock | null => {
-  if (!content.includes(SESSIONS_MARKER) && !content.includes(SESSION_MESSAGE_MARKER)) {
+  if (
+    !content.includes(SESSIONS_MARKER) &&
+    !content.includes(SESSION_MESSAGE_MARKER) &&
+    !content.includes(SESSION_SHARE_MARKER)
+  ) {
     return null;
   }
   const lines = content.split(/\r?\n/);
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index].trim();
     const marker =
-      line === SESSION_MESSAGE_MARKER ? SESSION_MESSAGE_MARKER : line === SESSIONS_MARKER ? SESSIONS_MARKER : null;
+      line === SESSION_MESSAGE_MARKER
+        ? SESSION_MESSAGE_MARKER
+        : line === SESSIONS_MARKER
+          ? SESSIONS_MARKER
+          : line === SESSION_SHARE_MARKER
+            ? SESSION_SHARE_MARKER
+            : null;
     if (!marker) {
       continue;
     }
@@ -148,10 +181,30 @@ export const parseSessionDeliveryBlock = (content: string): ParsedSessionBlock |
     if (marker === SESSION_MESSAGE_MARKER) {
       const payload = parseSessionMessagePayload(parsed);
       if (payload) return { marker, payload, head };
+    } else if (marker === SESSION_SHARE_MARKER) {
+      const payload = parseSessionSharePayload(parsed);
+      if (payload) return { marker, payload, head };
     } else {
       const payload = parseSessionsPayload(parsed);
       if (payload) return { marker, payload, head };
     }
   }
   return null;
+};
+
+const parseSessionSharePayload = (value: unknown): SessionSharePayload | null => {
+  if (!isRecord(value) || typeof value.name !== 'string' || !Array.isArray(value.messages)) {
+    return null;
+  }
+  const messages: SharedSnapshotMessage[] = [];
+  for (const message of value.messages) {
+    if (!isRecord(message) || typeof message.type !== 'string' || typeof message.content !== 'string') {
+      return null;
+    }
+    const position = typeof message.position === 'string' ? message.position : null;
+    const createdAt = typeof message.createdAt === 'number' ? message.createdAt : null;
+    messages.push({ type: message.type, content: message.content, position, createdAt });
+  }
+  const sharedAt = typeof value.sharedAt === 'number' ? value.sharedAt : null;
+  return { name: value.name, shared_at: sharedAt, messages };
 };

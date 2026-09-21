@@ -91,7 +91,8 @@
     "reorderPinned": "Перетащите, чтобы изменить порядок закреплённых бесед",
     "forkedFrom": "Ответвление от «{{name}}»",
     "forkedConversation": "Ответвлённая беседа",
-    "viewAllTooltip": "Смотреть все в Центре сессий"
+    "viewAllTooltip": "Смотреть все в Центре сессий",
+    "shareToSession": "Поделиться в мой чат"
   },
   "historySearch": {
     "tooltip": "Поиск сообщений",
@@ -929,5 +930,25 @@
     "viewConversation": "Открыть чат",
     "replyRequested": "Отправитель запросил ответ; ответьте в этом чате.",
     "replyRequestedOutbound": "Запрошен ответ."
+  },
+  "sessionShare": {
+    "shareToSession": "Поделиться в мой чат",
+    "pickTitle": "В какой чат поделиться «{{name}}»?",
+    "pickPlaceholder": "Выберите чат",
+    "sent": "Отправлено",
+    "sendFailed": "Не удалось поделиться",
+    "noOtherConversation": "Нет других чатов",
+    "snapshotOf": "Снимок чата «{{name}}»",
+    "messageCount": "{{count}} сообщений",
+    "loadFailed": "Ошибка загрузки"
+  },
+  "sharedInbox": {
+    "title": "Общие чаты",
+    "empty": "Пока ничего не общее",
+    "viewTitle": "Общий чат: {{name}}",
+    "scopeEnterprise": "Вся компания",
+    "scopeTenant": "Группа проекта",
+    "truncated": "Показана последняя страница",
+    "loadFailed": "Ошибка загрузки"
   }
 }

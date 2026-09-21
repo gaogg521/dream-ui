@@ -85,7 +85,8 @@
     "reorderPinned": "Faites glisser pour réorganiser la conversation épinglée",
     "forkedFrom": "Bifurquée depuis « {{name}} »",
     "forkedConversation": "Conversation bifurquée",
-    "viewAllTooltip": "Voir tout dans le Centre de sessions"
+    "viewAllTooltip": "Voir tout dans le Centre de sessions",
+    "shareToSession": "Partager dans ma conversation"
   },
   "historySearch": {
     "tooltip": "Rechercher des messages",
@@ -911,5 +912,25 @@
     "viewConversation": "Voir la conversation",
     "replyRequested": "L'expéditeur demande une réponse ; répondez dans cette conversation.",
     "replyRequestedOutbound": "Une réponse a été demandée."
+  },
+  "sessionShare": {
+    "shareToSession": "Partager dans ma conversation",
+    "pickTitle": "Partager « {{name}} » dans quelle conversation ?",
+    "pickPlaceholder": "Choisir la conversation cible",
+    "sent": "Partagé",
+    "sendFailed": "Échec du partage",
+    "noOtherConversation": "Aucune autre conversation disponible",
+    "snapshotOf": "Instantané de conversation « {{name}} »",
+    "messageCount": "{{count}} messages",
+    "loadFailed": "Échec du chargement"
+  },
+  "sharedInbox": {
+    "title": "Conversations partagées",
+    "empty": "Rien de partagé pour l'instant",
+    "viewTitle": "Partagé : {{name}}",
+    "scopeEnterprise": "Entreprise",
+    "scopeTenant": "Groupe projet",
+    "truncated": "Affichage de la dernière page",
+    "loadFailed": "Échec du chargement"
   }
 }

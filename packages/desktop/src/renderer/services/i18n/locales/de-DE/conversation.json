@@ -85,7 +85,8 @@
     "reorderPinned": "Ziehen, um angeheftete Unterhaltung neu anzuordnen",
     "forkedFrom": "Verzweigt von „{{name}}“",
     "forkedConversation": "Verzweigte Unterhaltung",
-    "viewAllTooltip": "Alle im Sitzungscenter anzeigen"
+    "viewAllTooltip": "Alle im Sitzungscenter anzeigen",
+    "shareToSession": "In meine Unterhaltung teilen"
   },
   "historySearch": {
     "tooltip": "Nachrichten durchsuchen",
@@ -912,5 +913,25 @@
     "viewConversation": "Unterhaltung anzeigen",
     "replyRequested": "Der Absender hat eine Antwort angefordert; antworte in dieser Unterhaltung.",
     "replyRequestedOutbound": "Eine Antwort wurde angefordert."
+  },
+  "sessionShare": {
+    "shareToSession": "In meine Unterhaltung teilen",
+    "pickTitle": "\"{{name}}\" in welche Unterhaltung teilen?",
+    "pickPlaceholder": "Zielunterhaltung wählen",
+    "sent": "Geteilt",
+    "sendFailed": "Teilen fehlgeschlagen",
+    "noOtherConversation": "Keine andere Unterhaltung vorhanden",
+    "snapshotOf": "Unterhaltungs-Snapshot \"{{name}}\"",
+    "messageCount": "{{count}} Nachrichten",
+    "loadFailed": "Laden fehlgeschlagen"
+  },
+  "sharedInbox": {
+    "title": "Geteilte Unterhaltungen",
+    "empty": "Noch nichts geteilt",
+    "viewTitle": "Geteilt: {{name}}",
+    "scopeEnterprise": "Unternehmen",
+    "scopeTenant": "Projektgruppe",
+    "truncated": "Nur die neueste Seite wird angezeigt",
+    "loadFailed": "Laden fehlgeschlagen"
   }
 }

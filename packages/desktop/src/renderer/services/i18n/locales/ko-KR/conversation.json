@@ -85,7 +85,8 @@
     "reorderPinned": "드래그하여 고정된 대화 순서 변경",
     "forkedFrom": "“{{name}}”에서 분기됨",
     "forkedConversation": "분기된 대화",
-    "viewAllTooltip": "세션 센터에서 모두 보기"
+    "viewAllTooltip": "세션 센터에서 모두 보기",
+    "shareToSession": "내 대화에 공유"
   },
   "historySearch": {
     "tooltip": "메시지 검색",
@@ -911,5 +912,25 @@
     "viewConversation": "대화 보기",
     "replyRequested": "발신자가 답장을 요청했습니다. 이 대화에서 답장하세요.",
     "replyRequestedOutbound": "답장을 요청했습니다."
+  },
+  "sessionShare": {
+    "shareToSession": "내 대화에 공유",
+    "pickTitle": "\"{{name}}\"을(를) 어느 대화에 공유할까요?",
+    "pickPlaceholder": "대상 대화 선택",
+    "sent": "공유되었습니다",
+    "sendFailed": "공유 실패, 다시 시도하세요",
+    "noOtherConversation": "공유할 다른 대화가 없습니다",
+    "snapshotOf": "대화 스냅샷 \"{{name}}\"",
+    "messageCount": "{{count}}개 메시지",
+    "loadFailed": "공유 대화 로드 실패"
+  },
+  "sharedInbox": {
+    "title": "공유된 대화",
+    "empty": "아직 공유된 것이 없습니다",
+    "viewTitle": "공유 대화: {{name}}",
+    "scopeEnterprise": "전사",
+    "scopeTenant": "프로젝트 그룹",
+    "truncated": "최근 페이지만 표시",
+    "loadFailed": "로드 실패"
   }
 }

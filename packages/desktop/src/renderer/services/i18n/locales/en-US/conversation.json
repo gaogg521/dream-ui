@@ -86,7 +86,8 @@
     "forkedFrom": "Forked from “{{name}}”",
     "forkedConversation": "Forked conversation",
     "viewAllTooltip": "View all in Session Center",
-    "shareToOrg": "Share to company"
+    "shareToOrg": "Share to company",
+    "shareToSession": "Share to my conversation"
   },
   "historySearch": {
     "tooltip": "Search messages",
@@ -927,5 +928,25 @@
     "viewConversation": "View conversation",
     "replyRequested": "The sender requested a reply; reply in this conversation.",
     "replyRequestedOutbound": "A reply was requested."
+  },
+  "sessionShare": {
+    "shareToSession": "Share to my conversation",
+    "pickTitle": "Share \"{{name}}\" to which conversation?",
+    "pickPlaceholder": "Pick a target conversation",
+    "sent": "Shared to the target conversation",
+    "sendFailed": "Share failed, please try again",
+    "noOtherConversation": "No other conversation to share into",
+    "snapshotOf": "Conversation snapshot \"{{name}}\"",
+    "messageCount": "{{count}} messages",
+    "loadFailed": "Failed to load shared conversations"
+  },
+  "sharedInbox": {
+    "title": "Shared conversations",
+    "empty": "Nothing shared yet",
+    "viewTitle": "Shared: {{name}}",
+    "scopeEnterprise": "Enterprise",
+    "scopeTenant": "Project group",
+    "truncated": "Showing the latest page of messages",
+    "loadFailed": "Failed to load shared conversations"
   }
 }

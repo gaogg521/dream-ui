@@ -3325,6 +3325,20 @@ export const onePlatform = {
     { id: string; machineId: string; displayName: string; status: string; lastSeenAt: number; visibility: string }[],
     void
   >('/api/one/org/runtime/nodes'),
+  /** The "shared with me" inbox: every share row this member may read. */
+  sharedWithMe: httpGet<
+    { conversationId: string; ownerUserId: string; name: string; scope: string; sharedAt: number }[],
+    void
+  >('/api/one/platform/conversation-shares'),
+  /** Read a shared conversation's snapshot. Authorization is the share row alone. */
+  readSharedConversation: httpGet<
+    {
+      share: { conversationId: string; ownerUserId: string; name: string; scope: string; sharedAt: number };
+      messages: { id: string; type: string; content: string; position?: string; createdAt?: number }[];
+      hasMoreBefore: boolean;
+    },
+    { conversationId: string }
+  >((p) => `/api/one/platform/conversation-shares/${p.conversationId}/messages`),
   /** Conversations this member has shared, for review and revocation. */
   myConversationShares: httpGet<{ conversationId: string; name: string; scope: string; sharedAt: number }[], void>(
     '/api/one/platform/conversation-shares/owned'

@@ -9,12 +9,14 @@ import DreamModal from '@/renderer/components/base/DreamModal';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useCronJobsMap } from '@/renderer/pages/cron';
 import { useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
-import { shareConversationToOrg } from '@renderer/utils/enterprise/conversationShare';
+import { shareConversationToOrg, shareConversationToMySession } from '@renderer/utils/enterprise/conversationShare';
+import SharedInboxModal from './SharedInboxModal';
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Button, Dropdown, Empty, Input, Menu, Modal, Tooltip } from '@arco-design/web-react';
-import { Delete, FolderOpen, FullScreen, MoreOne, Plus, Right } from '@icon-park/react';
+import { Delete, FolderOpen, FullScreen, MoreOne, Plus, Right, ShareOne } from '@icon-park/react';
 import classNames from 'classnames';
+import { useState } from 'react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -49,6 +51,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
   // Gates the "分享到企业" row below; see the note on `onShare`.
   const { context: orgContext } = useOrgContext();
   const isEnterpriseMember = orgContext?.isEnterprise ?? false;
+  const [sharedInboxVisible, setSharedInboxVisible] = useState(false);
 
   const {
     conversations,
@@ -254,6 +257,8 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
         ? (conversation: TChatConversation) =>
             void shareConversationToOrg({ id: conversation.id, name: conversation.name ?? '' }, t)
         : undefined,
+      onShareToSession: (conversation: TChatConversation): void =>
+        void shareConversationToMySession({ id: conversation.id, name: conversation.name ?? '' }, conversations, t),
     }),
     [
       collapsed,
@@ -278,6 +283,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       getJobStatus,
       resolveConversationName,
       isEnterpriseMember,
+      conversations,
       t,
     ]
   );

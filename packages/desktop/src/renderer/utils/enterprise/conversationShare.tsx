@@ -24,7 +24,7 @@
 
 import React from 'react';
 import type { TFunction } from 'i18next';
-import { Modal, Message, Radio } from '@arco-design/web-react';
+import { Modal, Message, Radio, Select } from '@arco-design/web-react';
 import { ipcBridge } from '@/common';
 import { friendlyEnterpriseError } from './friendlyEnterpriseError';
 
@@ -97,6 +97,91 @@ function ShareScopePicker(props: {
       <Radio value='enterprise'>全企业</Radio>
     </Radio.Group>
   );
+}
+
+const SNAPSHOT_MESSAGE_CAP = 50;
+
+/**
+ * Personal/all-editions share: forward this conversation's record into
+ * another of the user's OWN conversations as a `[[SESSION_SHARE]]` snapshot
+ * message. No governance plane involved — the target is picked from the
+ * member's history, the send goes through the ordinary local send edge, and
+ * the recipient conversation renders it as a styled snapshot card.
+ *
+ * The marker deliberately avoids the `[[DREAM_...]]` prefix: the backend
+ * escapes that prefix inside user-sent text, and this block must survive it.
+ */
+export async function shareConversationToMySession(
+  conversation: { id: string; name: string },
+  allConversations: Array<{ id: string; name?: string | null; type?: string }>,
+  t: TFunction
+): Promise<'shared' | 'cancelled' | 'unavailable'> {
+  const targets = allConversations.filter((entry) => entry.id !== conversation.id);
+  if (!targets.length) {
+    Message.info(t('conversation.sessionShare.noOtherConversation', { defaultValue: '没有其他会话可作为分享目标' }));
+    return 'unavailable';
+  }
+
+  let targetId: string | undefined;
+  const accepted = await new Promise<boolean>((resolve) => {
+    let selected: string | undefined;
+    Modal.confirm({
+      title: t('conversation.sessionShare.pickTitle', {
+        defaultValue: '把「{{name}}」分享到哪个会话？',
+        name: conversation.name,
+      }),
+      content: (
+        <Select
+          placeholder={t('conversation.sessionShare.pickPlaceholder', { defaultValue: '选择目标会话' })}
+          style={{ width: '100%' }}
+          onChange={(value: string) => {
+            selected = value;
+          }}
+        >
+          {targets.map((entry) => (
+            <Select.Option key={entry.id} value={entry.id}>
+              {entry.name || entry.id}
+            </Select.Option>
+          ))}
+        </Select>
+      ),
+      onOk: () => {
+        targetId = selected;
+        resolve(Boolean(selected));
+      },
+      onCancel: () => resolve(false),
+    });
+  });
+  if (!accepted || !targetId) return 'cancelled';
+
+  try {
+    const messages = (await readLocalSnapshotMessages(conversation.id)).slice(-SNAPSHOT_MESSAGE_CAP);
+    const payload = {
+      name: conversation.name,
+      sharedAt: Date.now(),
+      messages: messages.map((message) => ({
+        type: message.type,
+        content: message.content,
+        position: message.position ?? null,
+        createdAt: message.createdAt ?? null,
+      })),
+    };
+    const content = `[[SESSION_SHARE]]
+${JSON.stringify(payload)}`;
+    await ipcBridge.conversation.sendMessage.invoke({
+      conversation_id: targetId,
+      input: content,
+      reply_requested: false,
+    });
+    Message.success(t('conversation.sessionShare.sent', { defaultValue: '已分享到目标会话' }));
+    return 'shared';
+  } catch (error) {
+    Message.error(
+      friendlyEnterpriseError(error, t) ||
+        t('conversation.sessionShare.sendFailed', { defaultValue: '分享失败，请稍后重试' })
+    );
+    return 'unavailable';
+  }
 }
 
 /**

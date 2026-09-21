@@ -85,7 +85,8 @@
     "reorderPinned": "Sabitlenmiş sohbetin sırasını değiştirmek için sürükleyin",
     "forkedFrom": "“{{name}}” konuşmasından çatallandı",
     "forkedConversation": "Çatallanmış konuşma",
-    "viewAllTooltip": "Oturum Merkezi'nde tümünü görüntüle"
+    "viewAllTooltip": "Oturum Merkezi'nde tümünü görüntüle",
+    "shareToSession": "Sohbetime paylaş"
   },
   "historySearch": {
     "tooltip": "Mesajları ara",
@@ -913,5 +914,25 @@
     "viewConversation": "Sohbeti görüntüle",
     "replyRequested": "Gönderen yanıt istedi; bu sohbette yanıtlayın.",
     "replyRequestedOutbound": "Yanıt istendi."
+  },
+  "sessionShare": {
+    "shareToSession": "Sohbetime paylaş",
+    "pickTitle": "\"{{name}}\" sohbetini hangi sohbete paylaşayım?",
+    "pickPlaceholder": "Hedef sohbeti seçin",
+    "sent": "Paylaşıldı",
+    "sendFailed": "Paylaşım başarısız",
+    "noOtherConversation": "Başka sohbet yok",
+    "snapshotOf": "Sohbet anlık görüntüsü \"{{name}}\"",
+    "messageCount": "{{count}} mesaj",
+    "loadFailed": "Yükleme başarısız"
+  },
+  "sharedInbox": {
+    "title": "Paylaşılan sohbetler",
+    "empty": "Henüz bir şey paylaşılmadı",
+    "viewTitle": "Paylaşılan: {{name}}",
+    "scopeEnterprise": "Tüm şirket",
+    "scopeTenant": "Proje grubu",
+    "truncated": "Yalnızca son sayfa gösteriliyor",
+    "loadFailed": "Yükleme başarısız"
   }
 }

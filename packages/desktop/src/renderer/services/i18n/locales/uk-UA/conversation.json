@@ -91,7 +91,8 @@
     "reorderPinned": "Перетягніть, щоб змінити порядок закріплених розмов",
     "forkedFrom": "Відгалуження від «{{name}}»",
     "forkedConversation": "Відгалужена розмова",
-    "viewAllTooltip": "Переглянути все в Центрі сесій"
+    "viewAllTooltip": "Переглянути все в Центрі сесій",
+    "shareToSession": "Поділитися в мій чат"
   },
   "historySearch": {
     "tooltip": "Пошук повідомлень",
@@ -929,5 +930,25 @@
     "viewConversation": "Відкрити чат",
     "replyRequested": "Відправник просить відповіді; відповідайте в цьому чаті.",
     "replyRequestedOutbound": "Відповідь запрошено."
+  },
+  "sessionShare": {
+    "shareToSession": "Поділитися в мій чат",
+    "pickTitle": "До якого чату поділитися «{{name}}»?",
+    "pickPlaceholder": "Виберіть чат",
+    "sent": "Надіслано",
+    "sendFailed": "Не вдалося поділитися",
+    "noOtherConversation": "Немає інших чатів",
+    "snapshotOf": "Знімок чату «{{name}}»",
+    "messageCount": "{{count}} повідомлень",
+    "loadFailed": "Помилка завантаження"
+  },
+  "sharedInbox": {
+    "title": "Спільні чати",
+    "empty": "Поки нічого не поширено",
+    "viewTitle": "Спільний чат: {{name}}",
+    "scopeEnterprise": "Вся компанія",
+    "scopeTenant": "Група проєкту",
+    "truncated": "Показано останню сторінку",
+    "loadFailed": "Помилка завантаження"
   }
 }

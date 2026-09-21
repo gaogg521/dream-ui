@@ -103,6 +103,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
     onDelete,
     onExport,
     onShare,
+    onShareToSession,
     onTogglePin,
     onToggleManualUnread,
     isManualUnread,
@@ -427,6 +428,10 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
                       onShare?.(conversation);
                       return;
                     }
+                    if (key === 'shareToSession') {
+                      onShareToSession?.(conversation);
+                      return;
+                    }
                     if (key === 'delete') {
                       onDelete(conversation.id);
                     }
@@ -471,6 +476,14 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
                       <div className='flex items-center gap-8px'>
                         <ShareOne theme='outline' size='14' />
                         <span>{t('conversation.history.shareToOrg', { defaultValue: '分享到企业' })}</span>
+                      </div>
+                    </Menu.Item>
+                  )}
+                  {onShareToSession && (
+                    <Menu.Item key='shareToSession'>
+                      <div className='flex items-center gap-8px'>
+                        <ShareOne theme='outline' size='14' />
+                        <span>{t('conversation.history.shareToSession', { defaultValue: '分享到我的会话' })}</span>
                       </div>
                     </Menu.Item>
                   )}

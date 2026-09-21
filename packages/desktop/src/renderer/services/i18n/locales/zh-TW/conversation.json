@@ -86,7 +86,8 @@
     "forkedFrom": "分叉自「{{name}}」",
     "forkedConversation": "分叉對話",
     "viewAllTooltip": "在會話中心查看全部",
-    "shareToOrg": "分享到企業"
+    "shareToOrg": "分享到企業",
+    "shareToSession": "分享到我的會話"
   },
   "historySearch": {
     "tooltip": "搜尋訊息",
@@ -913,5 +914,25 @@
     "viewConversation": "查看會話",
     "replyRequested": "發送方要求回信，可直接回覆本會話。",
     "replyRequestedOutbound": "已要求對方回信。"
+  },
+  "sessionShare": {
+    "shareToSession": "分享到我的會話",
+    "pickTitle": "把「{{name}}」分享到哪個會話？",
+    "pickPlaceholder": "選擇目標會話",
+    "sent": "已分享到目標會話",
+    "sendFailed": "分享失敗，請稍後重試",
+    "noOtherConversation": "沒有其他會話可作為分享目標",
+    "snapshotOf": "會話記錄分享「{{name}}」",
+    "messageCount": "{{count}} 條訊息",
+    "loadFailed": "載入共享會話失敗"
+  },
+  "sharedInbox": {
+    "title": "企業共享會話",
+    "empty": "還沒有人分享會話",
+    "viewTitle": "共享會話：{{name}}",
+    "scopeEnterprise": "全企業",
+    "scopeTenant": "本組",
+    "truncated": "僅顯示最近一頁訊息",
+    "loadFailed": "載入共享會話失敗"
   }
 }
