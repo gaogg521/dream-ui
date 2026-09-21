@@ -53,10 +53,10 @@ node scripts/dev-cdp-acceptance.mjs
 
 ### 本轮抓到的两个坑（下次直接避开）
 
-| # | 坑 | 现象 | 处理 |
-| - | --- | --- | --- |
-| 1 | **bundled 后端过期** | `bun run dev` 不自动编译 Rust，起的是 `resources/bundled-dreamcore/win32-x64/dreamcore.exe`（当时 09-19 18:07，早于 09-20 20:20 的投递提交）。`@@conv:` 原样落库、投递从未入队——功能"看起来没做"，其实是后端没有这份代码 | 关 dev 应用（文件被锁会 EPERM）→ `cargo build -p dream-core-app` → 拷 `target/debug/dreamcore.exe` 到 `resources/bundled-dreamcore/win32-x64/` → 重启 dev。原 `backend-rebuild.ps1` 在旧工作区布局（`D:\旧中转目录\scripts\`），改名搬迁后未随仓，暂用上述手动等效流程 |
-| 2 | **CDP 页面目标 WS 单客户端 + 脏槽位** | 同一 page target 的 `webSocketDebuggerUrl` 一次只允许一个调试客户端；被强杀的脚本（Windows 上杀 bash 管道可能留下孤儿连接）会让后续所有连接 `open` 永久挂起，且 `connectCdp` 无超时保护，表现为脚本静默卡死 | 关掉全部 dev 实例重启一个干净的，让验收脚本成为第一个客户端；根治需要给 `dev-cdp-acceptance.mjs` 的 `connectCdp` 加超时 |
+| #   | 坑                                    | 现象                                                                                                                                                                                                                     | 处理                                                                                                                                                                                                                                                                   |
+| --- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **bundled 后端过期**                  | `bun run dev` 不自动编译 Rust，起的是 `resources/bundled-dreamcore/win32-x64/dreamcore.exe`（当时 09-19 18:07，早于 09-20 20:20 的投递提交）。`@@conv:` 原样落库、投递从未入队——功能"看起来没做"，其实是后端没有这份代码 | 关 dev 应用（文件被锁会 EPERM）→ `cargo build -p dream-core-app` → 拷 `target/debug/dreamcore.exe` 到 `resources/bundled-dreamcore/win32-x64/` → 重启 dev。原 `backend-rebuild.ps1` 在旧工作区布局（`D:\旧中转目录\scripts\`），改名搬迁后未随仓，暂用上述手动等效流程 |
+| 2   | **CDP 页面目标 WS 单客户端 + 脏槽位** | 同一 page target 的 `webSocketDebuggerUrl` 一次只允许一个调试客户端；被强杀的脚本（Windows 上杀 bash 管道可能留下孤儿连接）会让后续所有连接 `open` 永久挂起，且 `connectCdp` 无超时保护，表现为脚本静默卡死              | 关掉全部 dev 实例重启一个干净的，让验收脚本成为第一个客户端；根治需要给 `dev-cdp-acceptance.mjs` 的 `connectCdp` 加超时                                                                                                                                                |
 
 ### 附：消费测试改动的后端三步（手动版 backend-rebuild）
 

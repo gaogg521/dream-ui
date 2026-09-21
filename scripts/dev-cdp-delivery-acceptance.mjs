@@ -14,29 +14,53 @@ import { createRequire } from 'node:module';
 const WebSocket = createRequire('D:/dream/dream-ui/package.json')('ws');
 
 const CDP_PORT = process.env.DREAM_DEVTOOLS_CDP_PORT || '9230';
-const fail = (m) => { console.error(`[cdp-delivery] FAIL: ${m}`); process.exit(1); };
+const fail = (m) => {
+  console.error(`[cdp-delivery] FAIL: ${m}`);
+  process.exit(1);
+};
 const pass = (m) => console.log(`[cdp-delivery] PASS: ${m}`);
 const log = (m) => console.log(`[cdp-delivery] ${m}`);
 
-const targets = await fetch(`http://127.0.0.1:${CDP_PORT}/json`).then(r => r.json()).catch(() => null);
+const targets = await fetch(`http://127.0.0.1:${CDP_PORT}/json`)
+  .then((r) => r.json())
+  .catch(() => null);
 if (!targets) fail(`CDP not reachable on ${CDP_PORT}`);
-const page = targets.find(t => t.type === 'page' && t.url.includes('localhost:5173')) || targets.find(t => t.type === 'page');
+const page =
+  targets.find((t) => t.type === 'page' && t.url.includes('localhost:5173')) || targets.find((t) => t.type === 'page');
 if (!page) fail('no page target');
 
 const ws = new WebSocket(page.webSocketDebuggerUrl);
 let id = 0;
 const pending = new Map();
-ws.on('message', (raw) => { const m = JSON.parse(raw); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } });
-await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('ws open timeout')), 8000); ws.on('open', () => { clearTimeout(t); res(); }); ws.on('error', rej); });
-const send = (method, params = {}) => new Promise((r, j) => {
-  const mid = ++id;
-  const t = setTimeout(() => j(new Error(method + ' timeout')), 15000);
-  pending.set(mid, (m) => { clearTimeout(t); r(m); });
-  ws.send(JSON.stringify({ id: mid, method, params }));
+ws.on('message', (raw) => {
+  const m = JSON.parse(raw);
+  if (m.id && pending.has(m.id)) {
+    pending.get(m.id)(m);
+    pending.delete(m.id);
+  }
 });
+await new Promise((res, rej) => {
+  const t = setTimeout(() => rej(new Error('ws open timeout')), 8000);
+  ws.on('open', () => {
+    clearTimeout(t);
+    res();
+  });
+  ws.on('error', rej);
+});
+const send = (method, params = {}) =>
+  new Promise((r, j) => {
+    const mid = ++id;
+    const t = setTimeout(() => j(new Error(method + ' timeout')), 15000);
+    pending.set(mid, (m) => {
+      clearTimeout(t);
+      r(m);
+    });
+    ws.send(JSON.stringify({ id: mid, method, params }));
+  });
 const evalJs = async (expr) => {
   const res = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true });
-  if (res.result?.exceptionDetails) fail('page eval threw: ' + JSON.stringify(res.result.exceptionDetails).slice(0, 400));
+  if (res.result?.exceptionDetails)
+    fail('page eval threw: ' + JSON.stringify(res.result.exceptionDetails).slice(0, 400));
   return res.result?.result?.value;
 };
 
@@ -65,7 +89,8 @@ pass('backend reachable on port ' + boot.port);
 const mk = (name) => evalJs(`boot.j('POST', '/api/conversations', { name: ${JSON.stringify(name)}, type: 'dream' })`);
 boot.j = undefined; // not serializable across returnByValue — rebuild below
 // (returnByValue dropped the function; re-create helpers in a fresh eval scope each time.)
-const api = async (method, path, body) => evalJs(`(async () => {
+const api = async (method, path, body) =>
+  evalJs(`(async () => {
   const r = await fetch('http://127.0.0.1:' + window.__backendPort + '${path}', {
     method: '${method}',
     headers: ${body ? "'application/json'" : 'undefined'} ? { 'Content-Type': 'application/json' } : undefined,
@@ -99,7 +124,10 @@ for (let i = 0; i < 15; i++) {
   const r = await api('GET', `/api/conversations/${created.b}/messages?limit=20`);
   const items = r.json?.data?.items ?? r.json?.items ?? [];
   const hit = items.find((m) => (m.content?.content || '').includes('[[DREAM_SESSION_MESSAGE]]'));
-  if (hit) { inbound = hit; break; }
+  if (hit) {
+    inbound = hit;
+    break;
+  }
 }
 if (!inbound) fail('drainer did not deliver within 15s');
 pass('inbound [[DREAM_SESSION_MESSAGE]] block found in B history');
