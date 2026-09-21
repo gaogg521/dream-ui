@@ -902,5 +902,14 @@
     "deliveryFailed": "Cross-session delivery to {{peer}} failed",
     "disabled": "Cross-session delivery is turned off in settings",
     "rateLimited": "Cross-session delivery is rate-limited. Stop sending or wait."
+  },
+  "sessionBlock": {
+    "messageFrom": "대화 \"{{title}}\"의 메시지",
+    "sameWorkspace": "동일 워크스페이스",
+    "differentWorkspace": "워크스페이스 간",
+    "forwardedTo": "{{count}}개 대화로 전달됨",
+    "viewConversation": "대화 보기",
+    "replyRequested": "발신자가 답장을 요청했습니다. 이 대화에서 답장하세요.",
+    "replyRequestedOutbound": "답장을 요청했습니다."
   }
 }

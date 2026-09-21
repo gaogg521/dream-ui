@@ -918,5 +918,14 @@
     "deliveryFailed": "向「{{peer}}」的跨会话投递失败",
     "disabled": "已在设置中关闭跨会话投递",
     "rateLimited": "跨会话投递已被限流，请稍后再试或停止发送"
+  },
+  "sessionBlock": {
+    "messageFrom": "来自会话「{{title}}」的消息",
+    "sameWorkspace": "同一工作区",
+    "differentWorkspace": "跨工作区",
+    "forwardedTo": "已转发到 {{count}} 个会话",
+    "viewConversation": "查看会话",
+    "replyRequested": "发送方要求回信，可直接回复本会话。",
+    "replyRequestedOutbound": "已要求对方回信。"
   }
 }

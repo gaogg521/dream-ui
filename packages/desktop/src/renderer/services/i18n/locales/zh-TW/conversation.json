@@ -904,5 +904,14 @@
     "deliveryFailed": "Cross-session delivery to {{peer}} failed",
     "disabled": "Cross-session delivery is turned off in settings",
     "rateLimited": "Cross-session delivery is rate-limited. Stop sending or wait."
+  },
+  "sessionBlock": {
+    "messageFrom": "來自會話「{{title}}」的訊息",
+    "sameWorkspace": "同一工作區",
+    "differentWorkspace": "跨工作區",
+    "forwardedTo": "已轉發到 {{count}} 個會話",
+    "viewConversation": "查看會話",
+    "replyRequested": "發送方要求回信，可直接回覆本會話。",
+    "replyRequestedOutbound": "已要求對方回信。"
   }
 }

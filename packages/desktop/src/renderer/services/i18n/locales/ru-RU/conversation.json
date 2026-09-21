@@ -920,5 +920,14 @@
     "deliveryFailed": "Cross-session delivery to {{peer}} failed",
     "disabled": "Cross-session delivery is turned off in settings",
     "rateLimited": "Cross-session delivery is rate-limited. Stop sending or wait."
+  },
+  "sessionBlock": {
+    "messageFrom": "Сообщение из чата «{{title}}»",
+    "sameWorkspace": "То же рабочее пространство",
+    "differentWorkspace": "Другое рабочее пространство",
+    "forwardedTo": "Переслано в {{count}} чатов",
+    "viewConversation": "Открыть чат",
+    "replyRequested": "Отправитель запросил ответ; ответьте в этом чате.",
+    "replyRequestedOutbound": "Запрошен ответ."
   }
 }

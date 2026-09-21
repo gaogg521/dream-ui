@@ -119,14 +119,16 @@ pass('delivered to B');
 // Recipient side first (the headline effect), then sender side.
 await navigate(created.b);
 const bCheck = await evalJs(
-  `(function(){ return { marker: document.body.innerText.indexOf('[[DREAM_SESSION_MESSAGE]]') >= 0, text: document.body.innerText.slice(0, 0) || null }; })()`
+  `(function(){ function deep(sel){ function walk(root){ if(!root||!root.querySelectorAll) return null; var d=root.querySelector(sel); if(d) return d; var n=root.querySelectorAll('*'); for(var i=0;i<n.length;i++){ if(n[i].shadowRoot){ var h=walk(n[i].shadowRoot); if(h) return h; } } return null; } return walk(document); }
+    return { marker: !!deep('[data-testid="session-message-block"]') }; })()`
 );
-if (!bCheck.marker) fail('inbound block not rendered in B UI');
+if (!bCheck.marker) fail('inbound card not rendered in B UI');
 await shot('cdp-delivery-B-recipient.png');
 
 await navigate(created.a);
 const aCheck = await evalJs(
-  `(function(){ return { sessions: document.body.innerText.indexOf('[[DREAM_SESSIONS]]') >= 0 }; })()`
+  `(function(){ function deep(sel){ function walk(root){ if(!root||!root.querySelectorAll) return null; var d=root.querySelector(sel); if(d) return d; var n=root.querySelectorAll('*'); for(var i=0;i<n.length;i++){ if(n[i].shadowRoot){ var h=walk(n[i].shadowRoot); if(h) return h; } } return null; } return walk(document); }
+    return { sessions: !!deep('[data-testid="session-sessions-block"]') }; })()`
 );
 if (!aCheck.sessions)
   console.log(

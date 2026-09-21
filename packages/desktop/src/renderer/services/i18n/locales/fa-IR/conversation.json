@@ -902,5 +902,14 @@
     "deliveryFailed": "Cross-session delivery to {{peer}} failed",
     "disabled": "Cross-session delivery is turned off in settings",
     "rateLimited": "Cross-session delivery is rate-limited. Stop sending or wait."
+  },
+  "sessionBlock": {
+    "messageFrom": "پیام از گفتگوی «{{title}}»",
+    "sameWorkspace": "همان فضای کاری",
+    "differentWorkspace": "فضای کاری متفاوت",
+    "forwardedTo": "به {{count}} گفتگو ارسال شد",
+    "viewConversation": "مشاهده گفتگو",
+    "replyRequested": "فرستنده پاسخ خواسته است؛ در همین گفتگو پاسخ دهید.",
+    "replyRequestedOutbound": "پاسخ درخواست شد."
   }
 }

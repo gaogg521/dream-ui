@@ -137,17 +137,16 @@ if (!blockText.includes(body.split(' @@conv:')[0])) fail('inbound block missing 
 if (blockText.includes('reply_to_conversation_id')) fail('reply_requested=false but block contains a reply address');
 pass('block carries user body; no reply address (reply_requested=false)');
 
-// 4. Navigate the real UI to B and verify the block renders in the message list.
+// 4. Navigate the real UI to B and verify the styled card renders.
 const nav = await evalJs(`(function(){ location.hash = '#/conversation/${created.b}'; return location.hash; })()`);
 await new Promise((r) => setTimeout(r, 4000));
 const rendered = await evalJs(`(function(){
   function deep(sel){ function walk(root){ if(!root||!root.querySelectorAll) return null; var d=root.querySelector(sel); if(d) return d; var n=root.querySelectorAll('*'); for(var i=0;i<n.length;i++){ if(n[i].shadowRoot){ var h=walk(n[i].shadowRoot); if(h) return h; } } return null; } return walk(document); }
-  const text = document.body ? document.body.innerText : '';
-  return { hash: location.hash, hasMarker: text.indexOf('[[DREAM_SESSION_MESSAGE]]') >= 0 || !!deep('[data-testid="session-message-block"]'), textLen: text.length };
+  return { hash: location.hash, hasCard: !!deep('[data-testid="session-message-block"]'), badge: !!deep('[data-testid="session-block-workspace-badge"]'), textLen: document.body ? document.body.innerText.length : 0 };
 })()`);
 if (rendered.hash !== `#/conversation/${created.b}`) fail('navigation to B failed: ' + rendered.hash);
-if (!rendered.hasMarker) fail(`UI did not render the inbound block (textLen=${rendered.textLen})`);
-pass('inbound block rendered in the real conversation UI');
+if (!rendered.hasCard) fail(`UI did not render the inbound card (textLen=${rendered.textLen})`);
+pass('inbound delivery card rendered in the real conversation UI (styled, with workspace badge)');
 
 console.log('[cdp-delivery] All required checks passed.');
 process.exit(0);

@@ -23,6 +23,8 @@ import MarkdownView from '@renderer/components/Markdown';
 import { stripThinkTags, hasThinkTags } from '@renderer/utils/chat/thinkTagFilter';
 import { buildTurnClipboardText } from '@renderer/utils/chat/turnCopy';
 import { stripSkillSuggest, hasSkillSuggest } from '@renderer/utils/chat/skillSuggestParser';
+import { parseSessionDeliveryBlock } from '@renderer/utils/chat/sessionBlockParser';
+import SessionDeliveryBlock from './SessionDeliveryBlock';
 import { isForkEnabled } from '@/common/chat/forkConversation';
 import { useForkConversation } from '@/renderer/hooks/chat/useForkConversation';
 import ForkBranchIcon from '@renderer/components/base/ForkBranchIcon';
@@ -213,6 +215,11 @@ const MessageText: React.FC<{
     () => parseFileMarker(contentToRender, isUserMessage),
     [contentToRender, isUserMessage]
   );
+  // Cross-session delivery blocks ([[DREAM_SESSION_MESSAGE]] inbound,
+  // [[DREAM_SESSIONS]] outbound) are server-minted payloads that would
+  // otherwise surface as raw JSON in the plain-text user bubble. Parse strictly;
+  // on any doubt render the text unchanged.
+  const sessionBlock = useMemo(() => parseSessionDeliveryBlock(text), [text]);
   const contextResetNotice = useMemo(
     () => (isTeammateMessage && senderName === 'team_system' ? parseTeamContextResetNotice(text) : null),
     [isTeammateMessage, senderName, text]
@@ -349,8 +356,16 @@ const MessageText: React.FC<{
         >
           {/* JSON 内容使用折叠组件 Use CollapsibleContent for JSON content */}
           {shouldRenderPlainText ? (
-            <div className='whitespace-pre-wrap [overflow-wrap:anywhere]' data-testid='message-text-content'>
-              {renderedText}
+            <div className='flex flex-col gap-6px'>
+              {sessionBlock && sessionBlock.head && (
+                <div className='whitespace-pre-wrap [overflow-wrap:anywhere]'>{sessionBlock.head}</div>
+              )}
+              {sessionBlock && <SessionDeliveryBlock block={sessionBlock} />}
+              {!sessionBlock && (
+                <div className='whitespace-pre-wrap [overflow-wrap:anywhere]' data-testid='message-text-content'>
+                  {renderedText}
+                </div>
+              )}
             </div>
           ) : json ? (
             <CollapsibleContent maxHeight={200} defaultCollapsed={true}>

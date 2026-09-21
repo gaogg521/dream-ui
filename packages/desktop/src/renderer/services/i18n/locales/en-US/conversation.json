@@ -918,5 +918,14 @@
     "deliveryFailed": "Cross-session delivery to {{peer}} failed",
     "disabled": "Cross-session delivery is turned off in settings",
     "rateLimited": "Cross-session delivery is rate-limited. Stop sending or wait."
+  },
+  "sessionBlock": {
+    "messageFrom": "Message from conversation \"{{title}}\"",
+    "sameWorkspace": "Same workspace",
+    "differentWorkspace": "Cross-workspace",
+    "forwardedTo": "Forwarded to {{count}} conversations",
+    "viewConversation": "View conversation",
+    "replyRequested": "The sender requested a reply; reply in this conversation.",
+    "replyRequestedOutbound": "A reply was requested."
   }
 }
