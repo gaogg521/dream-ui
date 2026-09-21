@@ -7,30 +7,16 @@ import { resolveSafeRedirect } from '@renderer/utils/navigation';
 import AppLoader from '@renderer/components/layout/AppLoader';
 import { useAuth } from '../../hooks/context/AuthContext';
 import LoginSsoButtons from './components/LoginSsoButtons';
+import {
+  clearRememberedCredentials,
+  loadRememberedCredentials,
+  saveRememberedCredentials,
+} from './utils/credentialStorage';
 import './LoginPage.css';
 
 type MessageState = {
   type: 'error' | 'success';
   text: string;
-};
-
-const REMEMBER_ME_KEY = 'rememberMe';
-const REMEMBERED_USERNAME_KEY = 'rememberedUsername';
-const REMEMBERED_PASSWORD_KEY = 'rememberedPassword';
-
-// Simple obfuscation for stored credentials (not cryptographically secure, but prevents plain text storage)
-const obfuscate = (text: string): string => {
-  const encoded = btoa(encodeURIComponent(text));
-  return encoded.split('').toReversed().join('');
-};
-
-const deobfuscate = (text: string): string => {
-  try {
-    const reversed = text.split('').toReversed().join('');
-    return decodeURIComponent(atob(reversed));
-  } catch {
-    return '';
-  }
 };
 
 const LoginPage: React.FC = () => {
@@ -66,19 +52,26 @@ const LoginPage: React.FC = () => {
   }, [i18n.language]);
 
   useEffect(() => {
-    const isRememberMe = localStorage.getItem(REMEMBER_ME_KEY) === 'true';
-    if (isRememberMe) {
-      const storedUsername = localStorage.getItem(REMEMBERED_USERNAME_KEY);
-      const storedPassword = localStorage.getItem(REMEMBERED_PASSWORD_KEY);
-      if (storedUsername) setUsername(deobfuscate(storedUsername));
-      if (storedPassword) setPassword(deobfuscate(storedPassword));
-      setRememberMe(true);
-    }
+    let cancelled = false;
+    // Also migrates a legacy (pre-safeStorage) stored password to the new
+    // encrypted format as a side effect — see credentialStorage.ts.
+    loadRememberedCredentials()
+      .then((credentials) => {
+        if (cancelled || !credentials) return;
+        setUsername(credentials.username);
+        setPassword(credentials.password);
+        setRememberMe(true);
+      })
+      .catch(() => {
+        // Best-effort prefill only — a failure here should never block login.
+      });
+
     window.setTimeout(() => {
       usernameRef.current?.focus();
     }, 0);
 
     return () => {
+      cancelled = true;
       if (messageTimer.current) {
         window.clearTimeout(messageTimer.current);
       }
@@ -151,13 +144,16 @@ const LoginPage: React.FC = () => {
 
       if (result.success) {
         if (rememberMe) {
-          localStorage.setItem(REMEMBER_ME_KEY, 'true');
-          localStorage.setItem(REMEMBERED_USERNAME_KEY, obfuscate(trimmedUsername));
-          localStorage.setItem(REMEMBERED_PASSWORD_KEY, obfuscate(password));
+          const persisted = await saveRememberedCredentials({ username: trimmedUsername, password });
+          if (!persisted) {
+            // OS-backed encryption isn't available on this device (e.g. WebUI,
+            // or a desktop system without a usable safeStorage backend) —
+            // degrade to "don't remember the password" rather than falling
+            // back to a reversible encoding.
+            console.warn('[LoginPage] Remember-me password is not available on this device; not persisted.');
+          }
         } else {
-          localStorage.removeItem(REMEMBER_ME_KEY);
-          localStorage.removeItem(REMEMBERED_USERNAME_KEY);
-          localStorage.removeItem(REMEMBERED_PASSWORD_KEY);
+          clearRememberedCredentials();
         }
 
         const successText = t('login.success');

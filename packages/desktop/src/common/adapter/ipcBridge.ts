@@ -949,6 +949,25 @@ export const webSearch = {
   >('webSearch.test'),
 };
 
+// ---------------------------------------------------------------------------
+// Credential — OS-backed encryption for locally remembered login credentials
+// (the login page's "remember me"). The renderer cannot call Electron's
+// `safeStorage` directly (it's a main-process-only API), so this proxies
+// encrypt/decrypt through IPC. Electron-only: WebUI has no main process behind
+// it to answer these channels, so callers must gate on
+// {@link isNativeDialogAvailable} before invoking — otherwise the call hangs
+// forever instead of rejecting, same as `show-open` above.
+// ---------------------------------------------------------------------------
+
+export type CredentialCryptoResult = { success: true; data: { value: string } } | { success: false; msg: string };
+
+export const credential = {
+  /** Whether this OS/session can actually encrypt (`safeStorage.isEncryptionAvailable()`). */
+  isAvailable: bridge.buildProvider<boolean, void>('credential.isAvailable'),
+  encrypt: bridge.buildProvider<CredentialCryptoResult, { plainText: string }>('credential.encrypt'),
+  decrypt: bridge.buildProvider<CredentialCryptoResult, { cipherText: string }>('credential.decrypt'),
+};
+
 export const memory = {
   list: bridge.buildProvider<MemoryFileEntry[], void>('memory.list'),
   read: bridge.buildProvider<string, { filename: string; path?: string }>('memory.read'),
