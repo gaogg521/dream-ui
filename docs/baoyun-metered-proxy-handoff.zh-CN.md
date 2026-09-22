@@ -842,12 +842,47 @@ format/types/i18n/`vitest --changed` 全绿）：
   `bunx vitest run --changed HEAD` 296 文件 2510 测试全过，新增
   `isToppableVendor`/`formatMajorUnits` 单测。
 
-**没做的事（明确留到以后）**：
+### 11.7 真机全链路验证（2026-09-22 当天晚些时候，用户现场扫码真付款）
 
-- **真实扫码付款的端到端验证**：只验证到"创建订单成功、拿到 `qr_code`、
-  轮询能拿到 `pending` 状态"这条链路（走的是单测里的 mock vendor，不是打
-  真实宝云接口），没有用真实系统访问令牌跑一遍"真扫码、真到账、`top_up`
-  真的加到 Key 上"——这一步涉及真花钱，且需要用户再给一次系统访问令牌，
-  本轮范围里明确写了不强制。
+用户又生成了一个新的系统访问令牌（上次那个没留存），本地起 broker
+（`BAOYUN_TRIAL_KEY_LIMIT_CNY=1.0` 故意调小），dream-core 用本机编译的
+release 二进制、`DREAM_TRIAL_BROKER_URL` 指向本地 broker，dream-ui 用
+`DREAM_DEVTOOLS_CDP_PORT=9230 bun run dev` 开发者级 CDP（见 dream-ui
+`docs/guides/cdp.md`），写了个一次性脚本（未提交，验证完删了）用原始 ws
+连 CDP、`Runtime.evaluate` 驱动真实界面——全链路对着宝云生产环境，不是 mock：
+
+1. `claimTrialModel('baoyun', ...)`（走应用自己的 `/@fs/` 模块导入调用，
+   跟点"一键体验免费模型"按钮走的是同一段代码）→ 真发一把 `sk-...` key。
+   顺带验证了 §11.5 的动态选型：**broker 没设 `BAOYUN_TRIAL_MODELS`，实时
+   查询宝云目录+定价后选出的还是 `qwen3.7-flash`**——不是走了兜底占位符，
+   是这一刻真实计算出它仍是最便宜的纯文本模型。
+2. 导航到 `#/settings/model`，点击宝云那行的余额标签 → `TrialTopUpModal`
+   弹出、选 ¥10 → **真实调用宝云 `POST /apis/v1/topup/orders`**，拿到真实
+   `qr_code`（`huishouqian.com` 的支付链接）、Modal 正确渲染出可扫的二维码
+   （CDP 截图确认）。
+3. 另外用 curl 单独测过 `get_topup_order` 的两个安全/正确性分支：轮询能
+   查到 `pending`；**用另一个已 claim 的 install 去轮询这个订单会被拒绝
+   `topup_order_mismatch`（404）**——防蹭付款的 `reference` 校验在真实数据
+   上生效。
+4. **用户用手机扫码真付了 ¥10**。等了一个轮询周期（3s）后，Modal 自动
+   变成"充值已到账 ¥10.00，新余额：¥11.00"，设置页余额标签同步刷新成
+   "剩余 ¥11.00"。
+5. **四个独立信号交叉验证**（不只信 UI 自己的说法）：用户手机支付结果、
+   dream-ui 弹窗、broker 本地 `topup_credits` 表（`sqlite3` 直接查，确认
+   `credit_once` 的幂等 reservation 行真的落库了）、**绕开 broker 和
+   dream-core、直接拿系统访问令牌打宝云原始账户 API**
+   `GET /apis/v1/api-keys/{id}` 确认 `remain: 11`——四处独立数据完全吻合。
+6. 验证完撤销了三把 demo key（`DELETE /apis/v1/api-keys/{id}`，用系统访问
+   令牌直接调宝云账户 API），停掉本地 broker/dream-ui dev 整棵进程树
+   （PowerShell 按精确 PID 杀，不是按名字批量杀），删掉临时 sqlite 库、
+   截图和一次性 CDP 脚本。**用户的系统访问令牌本身仍然有效，没有被我这边
+   留存**——如果要部署到生产 broker，用户需要自己保管这个令牌。
+
+这是本轮（§11.6）第一次真实走通"用户点按钮→扫码→自动到账"完整闭环，不再
+只是"创建订单+拿到二维码"这一半；`credit_once` 的幂等/回滚设计（§11.6）在
+真实数据上没有暴露问题。
+
+**仍没做的事（明确留到以后）**：
+
 - 宝云 `GET /apis/v1/account`（账户余额监控）、`GET /apis/v1/logs`（用户
   消费明细）仍未接，见 §11.3。
