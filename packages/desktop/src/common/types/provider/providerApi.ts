@@ -199,6 +199,29 @@ export interface MeteredOrderResponse {
   payment?: Record<string, unknown> | null;
 }
 
+/**
+ * Mode A's real-money top-up order, as the broker reports it — a scan-to-pay
+ * QR for an arbitrary amount, settling into the vendor's own shared account
+ * balance rather than a specific key (see `TopupService` on the dream-core
+ * side for why that split exists).
+ */
+export interface TopupOrderResponse {
+  id: string;
+  vendor: string;
+  /** `pending` | `success` | `failed` | `expired`. */
+  status: string;
+  /** ISO 4217 code, e.g. `CNY`. */
+  currency: string;
+  /** In the vendor's own currency (not minor units, unlike `MeteredOrderResponse`). */
+  amount: number;
+  /** Scannable pay link/QR payload. Present only while `pending`. */
+  qr_code?: string | null;
+  /** Unix seconds. Present only while `pending`. */
+  expires_at?: number | null;
+  /** Unix seconds. Present only once `success`. */
+  completed_at?: number | null;
+}
+
 export interface ProviderHealthCheckResponse {
   provider_id: string;
   platform: string;

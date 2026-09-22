@@ -34,6 +34,7 @@ vi.mock('@/renderer/hooks/agent/useModelProviderList', () => ({
 import {
   claimMeteredAccount,
   claimTrialModel,
+  isToppableVendor,
   isTrialProviderClaimed,
   TRIAL_PROVIDER_ID,
   TRIAL_PROVIDER_ID_BY_VENDOR,
@@ -199,5 +200,15 @@ describe('isTrialProviderClaimed', () => {
   it('scopes to one vendor when asked', () => {
     expect(isTrialProviderClaimed([{ id: 'trial-baoyun' }] as never, 'baoyun')).toBe(true);
     expect(isTrialProviderClaimed([{ id: 'trial-baoyun' }] as never, 'openrouter')).toBe(false);
+  });
+});
+
+// Which vendor accepts a real-money top-up order is a separate question from
+// which vendor is on mode B (`isMeteredTrialVendor`) — they currently
+// coincide on Baoyun only by chance, not by definition.
+describe('isToppableVendor', () => {
+  it('is true only for baoyun, the one vendor whose account API has a top-up endpoint', () => {
+    expect(isToppableVendor('baoyun')).toBe(true);
+    expect(isToppableVendor('openrouter')).toBe(false);
   });
 });

@@ -5,7 +5,12 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { formatMinorUnits, remainingLabel, type TrialQuotaView } from '@/renderer/hooks/agent/useTrialQuota';
+import {
+  formatMajorUnits,
+  formatMinorUnits,
+  remainingLabel,
+  type TrialQuotaView,
+} from '@/renderer/hooks/agent/useTrialQuota';
 
 describe('formatMinorUnits', () => {
   it('renders a known currency with its symbol', () => {
@@ -16,6 +21,21 @@ describe('formatMinorUnits', () => {
 
   it('falls back to a code suffix for an unknown currency', () => {
     expect(formatMinorUnits(1234, 'XXX')).toBe('12.34 XXX');
+  });
+});
+
+// Mode A's real-money top-up (`TopupOrderResponse.amount`) carries the
+// vendor's major currency unit directly, not cents — a different input shape
+// from `formatMinorUnits`, so it gets its own formatter and its own tests.
+describe('formatMajorUnits', () => {
+  it('renders a known currency with its symbol', () => {
+    expect(formatMajorUnits(10, 'CNY')).toBe('¥10.00');
+    expect(formatMajorUnits(9.78, 'CNY')).toBe('¥9.78');
+    expect(formatMajorUnits(0, 'CNY')).toBe('¥0.00');
+  });
+
+  it('falls back to a code suffix for an unknown currency', () => {
+    expect(formatMajorUnits(12.34, 'XXX')).toBe('12.34 XXX');
   });
 });
 

@@ -52,6 +52,7 @@ import type {
   MeteredQuotaStatusResponse,
   ProviderHealthCheckRequest,
   ProviderHealthCheckResponse,
+  TopupOrderResponse,
   TrialKeyResponse,
   TrialQuotaStatusResponse,
   UpdateProviderRequest,
@@ -1390,6 +1391,16 @@ export const mode = {
   /** Mode B: poll one top-up order's status. */
   meteredGetOrder: httpGet<MeteredOrderResponse, { id: string }>(
     (p) => `/api/providers/metered/orders/${encodeURIComponent(p.id)}`
+  ),
+  /**
+   * Mode A's real-money top-up: create a scan-to-pay order for an arbitrary
+   * amount in the vendor's own currency. Only vendors whose broker-side
+   * `TokenVendor` impl supports it accept this (Baoyun, so far).
+   */
+  topupCreateOrder: httpPost<TopupOrderResponse, { vendor: string; amount: number }>('/api/providers/topup/orders'),
+  /** Mode A: poll one real-money top-up order's status. */
+  topupGetOrder: httpGet<TopupOrderResponse, { id: string; vendor: string }>(
+    (p) => `/api/providers/topup/orders/${encodeURIComponent(p.id)}?vendor=${encodeURIComponent(p.vendor)}`
   ),
   detectProtocol: httpPost<ProtocolDetectionResponse, ProtocolDetectionRequest>('/api/providers/detect-protocol'),
   /**

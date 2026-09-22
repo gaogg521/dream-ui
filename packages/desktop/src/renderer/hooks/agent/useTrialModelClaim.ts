@@ -40,6 +40,22 @@ export function isMeteredTrialVendor(vendor: TrialVendor): boolean {
 }
 
 /**
+ * Vendors whose broker-side `TokenVendor` implementation accepts a real-money
+ * top-up order (scan-to-pay QR, settling into the vendor's own shared
+ * account balance — see `dream-trial-broker`'s `TopupOrderSpec`). Separate
+ * from `METERED_TRIAL_VENDORS`: that one is about *how inference is billed*
+ * (mode A capped key vs. mode B metered proxy), this one is about *whether
+ * this vendor's account API exposes a top-up endpoint at all*. They
+ * currently coincide on Baoyun, but a future mode A vendor without a
+ * top-up API — or the reverse — would need them to diverge.
+ */
+export const TOPUP_CAPABLE_VENDORS: readonly TrialVendor[] = ['baoyun'];
+
+export function isToppableVendor(vendor: TrialVendor): boolean {
+  return TOPUP_CAPABLE_VENDORS.includes(vendor);
+}
+
+/**
  * Fixed local provider id per vendor.
  *
  * A stable id does double duty: `isTrialProviderClaimed` becomes a plain

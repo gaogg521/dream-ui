@@ -1552,6 +1552,20 @@
     "pollTimeout": "Warte noch auf die Zahlung. Dein Guthaben wird aktualisiert, sobald sie durch ist.",
     "orderFailed": "Aufladen konnte nicht abgeschlossen werden. Bitte erneut versuchen."
   },
+  "trialTopUp": {
+    "title": "Aufladen",
+    "currentBalance": "Aktuelles Guthaben: {{amount}}",
+    "selectAmount": "Betrag wählen",
+    "amountOption": "¥{{amount}}",
+    "payAmount": "{{amount}} zahlen",
+    "scanHint": "Scanne den QR-Code, um zu bezahlen — das Guthaben aktualisiert sich von selbst.",
+    "waitingPayment": "Warte auf Zahlung…",
+    "chooseAnother": "Anderen Betrag wählen",
+    "creditedAmount": "{{amount}} zu deinem Guthaben hinzugefügt",
+    "newBalance": "Neues Guthaben: {{amount}}",
+    "pollTimeout": "Warte noch auf die Zahlung. Dein Guthaben wird aktualisiert, sobald sie durch ist.",
+    "orderFailed": "Aufladen konnte nicht abgeschlossen werden. Bitte erneut versuchen."
+  },
   "mediaModelUndeclared": "Nicht festgelegt —— markiere ein Modell auf der Modellseite als Bild oder Video",
   "enterpriseKeyMaskedTip": "Verteilte Unternehmensschlüssel sind maskiert (nur Anfang/Ende). Speichern ohne Änderung behält den ursprünglichen Schlüssel; ein neuer Schlüssel ersetzt ihn vollständig.",
   "enterpriseMachineBlockedNotice": "Dieses Gerät wurde von Ihrem Organisationsadministrator gesperrt. Die Team-Ressourcen auf diesem Gerät wurden gelöscht.",

@@ -1552,6 +1552,20 @@
     "pollTimeout": "Ödeme hâlâ bekleniyor. Onaylandığında bakiyeniz güncellenecek.",
     "orderFailed": "Yükleme tamamlanamadı. Lütfen tekrar deneyin."
   },
+  "trialTopUp": {
+    "title": "Yükle",
+    "currentBalance": "Mevcut bakiye: {{amount}}",
+    "selectAmount": "Bir tutar seçin",
+    "amountOption": "¥{{amount}}",
+    "payAmount": "{{amount}} öde",
+    "scanHint": "Ödemeyi tamamlamak için QR kodu tarayın — bakiye kendiliğinden güncellenir.",
+    "waitingPayment": "Ödeme bekleniyor…",
+    "chooseAnother": "Farklı bir tutar seç",
+    "creditedAmount": "Bakiyenize {{amount}} eklendi",
+    "newBalance": "Yeni bakiye: {{amount}}",
+    "pollTimeout": "Ödeme hâlâ bekleniyor. Onaylandığında bakiyeniz güncellenecek.",
+    "orderFailed": "Yükleme tamamlanamadı. Lütfen tekrar deneyin."
+  },
   "mediaModelUndeclared": "Ayarlanmadı —— Modeller sayfasında bir modeli Görsel veya Video olarak işaretleyin",
   "enterpriseKeyMaskedTip": "Kurum tarafından dağıtılan anahtarlar maskelenir (yalnızca baş/son). Değiştirmeden kaydederseniz mevcut anahtar korunur; yeni anahtar yazmak tamamen değiştirir.",
   "enterpriseMachineBlockedNotice": "Bu cihaz, kuruluş yöneticiniz tarafından engellendi. Bu makinedeki takım kaynakları temizlendi.",

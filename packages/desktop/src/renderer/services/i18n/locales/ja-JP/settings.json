@@ -1554,6 +1554,20 @@
     "pollTimeout": "支払いの確認を待っています。完了すると残高が更新されます。",
     "orderFailed": "チャージを完了できませんでした。もう一度お試しください。"
   },
+  "trialTopUp": {
+    "title": "チャージ",
+    "currentBalance": "現在の残高：{{amount}}",
+    "selectAmount": "金額を選択",
+    "amountOption": "¥{{amount}}",
+    "payAmount": "{{amount}} を支払う",
+    "scanHint": "QRコードをスキャンして支払いを完了してください。残高は自動で更新されます。",
+    "waitingPayment": "支払いを待っています…",
+    "chooseAnother": "別の金額を選ぶ",
+    "creditedAmount": "{{amount}} が残高に追加されました",
+    "newBalance": "新しい残高：{{amount}}",
+    "pollTimeout": "支払いの確認を待っています。完了すると残高が更新されます。",
+    "orderFailed": "チャージを完了できませんでした。もう一度お試しください。"
+  },
   "mediaModelUndeclared": "未設定 —— モデルページでモデルを画像または動画として指定してください",
   "enterpriseKeyMaskedTip": "企業配布のキーはマスク表示されています（先頭と末尾のみ表示）。変更せずに保存すると元のキーが保持され、新しいキーを入力すると全体的に置き換えられます。",
   "enterpriseMachineBlockedNotice": "このデバイスは組織の管理者によってブロックされました。このマシン上のチームリソースはクリアされました。",

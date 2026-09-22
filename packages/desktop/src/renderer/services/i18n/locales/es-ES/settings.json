@@ -1552,6 +1552,20 @@
     "pollTimeout": "Seguimos esperando el pago. Tu saldo se actualizará cuando se confirme.",
     "orderFailed": "No se pudo completar la recarga. Inténtalo de nuevo."
   },
+  "trialTopUp": {
+    "title": "Recargar",
+    "currentBalance": "Saldo actual: {{amount}}",
+    "selectAmount": "Elige un importe",
+    "amountOption": "¥{{amount}}",
+    "payAmount": "Pagar {{amount}}",
+    "scanHint": "Escanea el código QR para pagar: el saldo se actualiza solo.",
+    "waitingPayment": "Esperando el pago…",
+    "chooseAnother": "Elegir otro importe",
+    "creditedAmount": "{{amount}} añadido a tu saldo",
+    "newBalance": "Nuevo saldo: {{amount}}",
+    "pollTimeout": "Seguimos esperando el pago. Tu saldo se actualizará cuando se confirme.",
+    "orderFailed": "No se pudo completar la recarga. Inténtalo de nuevo."
+  },
   "mediaModelUndeclared": "Sin definir —— marca un modelo como Imagen o Vídeo en la página de Modelos",
   "enterpriseKeyMaskedTip": "Las claves emitidas por la empresa aparecen enmascaradas (solo inicio/fin). Guardar sin cambios conserva la clave original; escribir una nueva la sustituye por completo.",
   "enterpriseMachineBlockedNotice": "Este dispositivo ha sido bloqueado por el administrador de tu organización. Los recursos del equipo en esta máquina se han eliminado.",

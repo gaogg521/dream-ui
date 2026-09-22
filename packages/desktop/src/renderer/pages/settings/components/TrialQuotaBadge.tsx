@@ -7,20 +7,21 @@
 import { Tag } from '@arco-design/web-react';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { isMeteredTrialVendor, type TrialVendor } from '@renderer/hooks/agent/useTrialModelClaim';
+import { isToppableVendor, type TrialVendor } from '@renderer/hooks/agent/useTrialModelClaim';
 import { remainingLabel, useTrialQuota } from '@renderer/hooks/agent/useTrialQuota';
-import MeteredTopUpModal from './MeteredTopUpModal';
+import TrialTopUpModal from './TrialTopUpModal';
 
 /**
  * Small balance tag on a trial provider's row: "¥9.78 left" / "$0.42 left",
- * or a red "used up". For a metered vendor the tag is clickable and opens the
- * top-up modal — the one place in settings to add credit.
+ * or a red "used up". For a vendor whose broker-side account API supports a
+ * top-up order, the tag is clickable and opens the top-up modal — the one
+ * place in settings to add credit.
  */
 const TrialQuotaBadge: React.FC<{ vendor: TrialVendor }> = ({ vendor }) => {
   const { t } = useTranslation();
   const { data: view } = useTrialQuota(vendor);
   const [topUpOpen, setTopUpOpen] = useState(false);
-  const metered = isMeteredTrialVendor(vendor);
+  const toppable = isToppableVendor(vendor);
 
   if (!view) return null;
   const { text, exhausted } = remainingLabel(view);
@@ -35,9 +36,9 @@ const TrialQuotaBadge: React.FC<{ vendor: TrialVendor }> = ({ vendor }) => {
       <Tag
         size='small'
         color={exhausted ? 'red' : 'arcoblue'}
-        className={`shrink-0 ${metered ? 'cursor-pointer' : ''}`}
+        className={`shrink-0 ${toppable ? 'cursor-pointer' : ''}`}
         onClick={
-          metered
+          toppable
             ? (e) => {
                 e.stopPropagation();
                 setTopUpOpen(true);
@@ -47,7 +48,7 @@ const TrialQuotaBadge: React.FC<{ vendor: TrialVendor }> = ({ vendor }) => {
       >
         {label}
       </Tag>
-      {metered && <MeteredTopUpModal visible={topUpOpen} vendor={vendor} onClose={() => setTopUpOpen(false)} />}
+      {toppable && <TrialTopUpModal visible={topUpOpen} vendor={vendor} onClose={() => setTopUpOpen(false)} />}
     </>
   );
 };

@@ -1554,6 +1554,20 @@
     "pollTimeout": "결제 확인을 기다리는 중입니다. 완료되면 잔액이 업데이트됩니다.",
     "orderFailed": "충전을 완료하지 못했습니다. 다시 시도하세요."
   },
+  "trialTopUp": {
+    "title": "충전",
+    "currentBalance": "현재 잔액: {{amount}}",
+    "selectAmount": "금액 선택",
+    "amountOption": "¥{{amount}}",
+    "payAmount": "{{amount}} 결제",
+    "scanHint": "QR 코드를 스캔하여 결제를 완료하세요. 잔액은 자동으로 업데이트됩니다.",
+    "waitingPayment": "결제 대기 중…",
+    "chooseAnother": "다른 금액 선택",
+    "creditedAmount": "{{amount}}이(가) 잔액에 추가되었습니다",
+    "newBalance": "새 잔액: {{amount}}",
+    "pollTimeout": "결제 확인을 기다리는 중입니다. 완료되면 잔액이 업데이트됩니다.",
+    "orderFailed": "충전을 완료하지 못했습니다. 다시 시도하세요."
+  },
   "mediaModelUndeclared": "설정되지 않음 —— 모델 페이지에서 모델을 이미지 또는 비디오로 지정하세요",
   "enterpriseKeyMaskedTip": "기업 배포 키는 마스킹되어 표시됩니다(앞뒤만 표시). 수정하지 않고 저장하면 기존 키가 유지되며, 새 키를 입력하면 전체가 대체됩니다.",
   "enterpriseMachineBlockedNotice": "이 기기는 조직 관리자에 의해 차단되었습니다. 이 기기의 팀 리소스가 삭제되었습니다.",

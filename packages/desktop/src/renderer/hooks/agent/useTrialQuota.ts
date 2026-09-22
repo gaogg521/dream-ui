@@ -74,6 +74,18 @@ export function formatMinorUnits(cents: number, currency: string): string {
   return symbol ? `${symbol}${major}` : `${major} ${currency}`;
 }
 
+/**
+ * `10` in `CNY` -> `¥10.00`; unknown currency falls back to `10.00 XXX`.
+ * Unlike `formatMinorUnits`, the input is already in the vendor's major
+ * currency unit — mode A's real-money top-up orders (`TopupOrderResponse`)
+ * carry `amount` this way, not minor-unit cents.
+ */
+export function formatMajorUnits(amount: number, currency: string): string {
+  const major = amount.toFixed(2);
+  const symbol = CURRENCY_SYMBOL[currency];
+  return symbol ? `${symbol}${major}` : `${major} ${currency}`;
+}
+
 const CURRENCY_SYMBOL: Record<string, string> = {
   CNY: '¥',
   USD: '$',
