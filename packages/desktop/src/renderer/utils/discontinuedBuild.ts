@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 // Compile-time product fork flag, injected by electron.vite.config.ts renderer

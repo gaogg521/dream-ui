@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 1ONE
+ * Copyright 2026 One Work
  * SPDX-License-Identifier: Apache-2.0
  *
  * Generated media lands in `<workspace>/outputs/`, not the workspace root.

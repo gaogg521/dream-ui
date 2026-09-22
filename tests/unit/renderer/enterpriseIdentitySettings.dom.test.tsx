@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 1ONE
+ * Copyright 2026 One Work
  * SPDX-License-Identifier: Apache-2.0
  *
  * Page composition, not component behaviour: "type the server address",

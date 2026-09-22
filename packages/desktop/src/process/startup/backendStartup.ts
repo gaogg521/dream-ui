@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 type BackendStartupResult = { ok: true; port: number } | { ok: false };
@@ -28,7 +26,7 @@ export async function startBackendOrExit(options: StartBackendOrExitOptions): Pr
     if (isBackendStartupCancelledError(error)) {
       return { ok: false };
     }
-    options.logError?.('[1ONE] Failed to start dreamcore:', error);
+    options.logError?.('[OneWork] Failed to start dreamcore:', error);
     await options.captureFailure(error);
     if (options.exitOnFailure ?? true) {
       options.exitApp(1);

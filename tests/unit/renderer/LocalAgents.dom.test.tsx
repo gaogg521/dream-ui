@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 1ONE
+ * Copyright 2026 One Work
  * SPDX-License-Identifier: Apache-2.0
  *
  * Render test for the LocalAgents settings surface. Its purpose is to lock in

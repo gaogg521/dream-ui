@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 // configureChromium sets app name (dev isolation) and Chromium flags — must run before
@@ -151,7 +149,7 @@ const onSecondInstance = (
     (additionalData as { deepLinkUrl?: string } | undefined)?.deepLinkUrl || argv.find((arg) => isDeepLinkUrl(arg));
   // This path was silent for years — a dropped token looked identical to a
   // browser that never launched. Log the handoff either way.
-  console.log('[1ONE] second-instance: deep link', deepLinkUrl ? 'received' : 'absent');
+  console.log('[OneWork] second-instance: deep link', deepLinkUrl ? 'received' : 'absent');
   if (deepLinkUrl) {
     handleDeepLinkUrl(deepLinkUrl);
   }
@@ -167,7 +165,7 @@ const onSecondInstance = (
     showOrCreateMainWindow({
       mainWindow,
       createWindow: () => {
-        console.log('[1ONE] second-instance received with no active main window, recreating main window');
+        console.log('[OneWork] second-instance received with no active main window, recreating main window');
         createWindow();
       },
     });
@@ -204,13 +202,13 @@ if (useDeepLinkBus) {
     // The URL was delivered to the bus holder via additionalData — nothing
     // left to do here. Quit instead of booting a second app that would drop
     // the token into its own (bare-env) profile.
-    console.warn('[1ONE] Deep-link bus held by a running instance; forwarding protocol URL and exiting.');
+    console.warn('[OneWork] Deep-link bus held by a running instance; forwarding protocol URL and exiting.');
     app.quit();
   }
   // Bus busy + no protocol URL: a deliberate second dev instance. It boots
   // without the handler — deep links belong to the bus holder.
 } else if (!(gotTheLock = app.requestSingleInstanceLock({ deepLinkUrl: deepLinkFromArgv }))) {
-  console.warn('[1ONE] Another instance is already running; current process will exit.');
+  console.warn('[OneWork] Another instance is already running; current process will exit.');
   app.quit();
 } else {
   app.on('second-instance', onSecondInstance);
@@ -263,7 +261,7 @@ process.on('unhandledRejection', (reason, _promise) => {
 
 function logUncaught(diagnostics: UncaughtErrorDiagnostics): void {
   try {
-    console.error(`[1ONE] ${diagnostics.origin}:`, diagnostics);
+    console.error(`[OneWork] ${diagnostics.origin}:`, diagnostics);
   } catch {
     // Logging must never escalate a swallowed error into a fatal one: a throw inside an
     // uncaughtException listener terminates the process, and the log transport itself can
@@ -460,7 +458,7 @@ function markBackendRuntimeCrashed(context: { exitCode?: number; signal?: string
     backendBoundaryStage: `runtime_crash_exit_${context.exitCode ?? context.signal ?? 'unknown'}`,
   };
   (globalThis as typeof globalThis & { __backendStartupFailed?: boolean }).__backendStartupFailed = true;
-  console.error('[1ONE] backend crashed past its restart budget; surfacing to the user', context);
+  console.error('[OneWork] backend crashed past its restart budget; surfacing to the user', context);
   broadcastBackendStartupState(backendStartupFailureInfo);
 }
 
@@ -480,7 +478,7 @@ function registerCronResumeBridge(backendPort: number): void {
         'x-one-internal': '1',
       },
     }).catch((error) => {
-      console.error('[1ONE] Failed to notify backend about system resume:', error);
+      console.error('[OneWork] Failed to notify backend about system resume:', error);
     });
   };
 
@@ -503,9 +501,9 @@ const scheduleBackendMigrations = (): void => {
     try {
       const { runBackendMigrations } = await import('./process/utils/runBackendMigrations');
       await runBackendMigrations(ProcessConfig);
-      console.info('[1ONE] runBackendMigrations completed');
+      console.info('[OneWork] runBackendMigrations completed');
     } catch (error) {
-      console.error('[1ONE] Backend migration hook threw:', error);
+      console.error('[OneWork] Backend migration hook threw:', error);
     }
   })();
 };
@@ -534,7 +532,7 @@ function ensureAdminUserOnce(backendPort: number): Promise<void> {
 
 function markBackendReady(backendPort: number, source: string): void {
   if (backendStartedOk) return;
-  console.log(`[1ONE] ${source} ready (port=${backendPort})`);
+  console.log(`[OneWork] ${source} ready (port=${backendPort})`);
   exposeBackendPort(backendPort);
   registerCronResumeBridge(backendPort);
   backendStartedOk = true;
@@ -553,7 +551,7 @@ function resolveDebugBackendStartupFailure(): BackendStartupFailureInfo | null {
     return null;
   }
   if ((app.isPackaged && !isE2ETestMode) || isWebUIMode || isResetPasswordMode) {
-    console.warn('[1ONE] Ignoring DREAM_DEBUG_BACKEND_STARTUP_FAILURE outside desktop dev/e2e mode.');
+    console.warn('[OneWork] Ignoring DREAM_DEBUG_BACKEND_STARTUP_FAILURE outside desktop dev/e2e mode.');
     return null;
   }
 
@@ -593,7 +591,7 @@ function resolveDebugBackendStartupFailure(): BackendStartupFailureInfo | null {
     return { reason };
   }
 
-  console.warn(`[1ONE] Ignoring unknown DREAM_DEBUG_BACKEND_STARTUP_FAILURE value: ${reason}`);
+  console.warn(`[OneWork] Ignoring unknown DREAM_DEBUG_BACKEND_STARTUP_FAILURE value: ${reason}`);
   return null;
 }
 
@@ -604,7 +602,7 @@ function applyDebugBackendStartupFailure(failure: BackendStartupFailureInfo): vo
 }
 
 const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): void => {
-  console.log('[1ONE] Creating main window...');
+  console.log('[OneWork] Creating main window...');
   const { x: windowX, y: windowY, width: windowWidth, height: windowHeight } = resolveInitialBounds();
 
   // Get app icon for development mode (Windows/Linux need icon in BrowserWindow)
@@ -653,7 +651,7 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
       webviewTag: true, // 启用 webview 标签用于 HTML 预览 / Enable webview tag for HTML preview
     },
   });
-  console.log(`[1ONE] Main window created (id=${mainWindow.id})`);
+  console.log(`[OneWork] Main window created (id=${mainWindow.id})`);
 
   // Show window after content is ready to prevent FOUC (Flash of Unstyled Content)
   // Use 'ready-to-show' which fires when renderer has painted first frame,
@@ -661,18 +659,18 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
   if (showOnReady) {
     const showWindow = () => {
       if (!mainWindow.isDestroyed() && !mainWindow.isVisible()) {
-        console.log('[1ONE] Showing main window');
+        console.log('[OneWork] Showing main window');
         mainWindow.show();
         mainWindow.focus();
       }
     };
     mainWindow.once('ready-to-show', () => {
-      console.log('[1ONE] Window ready-to-show');
+      console.log('[OneWork] Window ready-to-show');
       showWindow();
     });
     // Belt-and-suspenders: also show on did-finish-load in case ready-to-show already fired
     mainWindow.webContents.once('did-finish-load', () => {
-      console.log('[1ONE] Renderer did-finish-load');
+      console.log('[OneWork] Renderer did-finish-load');
       showWindow();
       scheduleBackendMigrations();
     });
@@ -721,7 +719,7 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
         console.error('[App] Failed to initialize autoUpdaterService:', error);
       });
   } else {
-    console.log('[1ONE] Auto-updater disabled via env/CI guard');
+    console.log('[OneWork] Auto-updater disabled via env/CI guard');
   }
 
   // Load the renderer: dev server URL in development, built HTML file in production
@@ -729,22 +727,22 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
   const fallbackFile = path.join(__dirname, '../renderer/index.html');
 
   if (!app.isPackaged && rendererUrl) {
-    console.log(`[1ONE] Loading renderer URL: ${rendererUrl}`);
+    console.log(`[OneWork] Loading renderer URL: ${rendererUrl}`);
     mainWindow.loadURL(rendererUrl).catch((error) => {
-      console.error('[1ONE] loadURL failed, falling back to file:', error.message || error);
+      console.error('[OneWork] loadURL failed, falling back to file:', error.message || error);
       mainWindow.loadFile(fallbackFile).catch((e2) => {
-        console.error('[1ONE] loadFile fallback also failed:', e2.message || e2);
+        console.error('[OneWork] loadFile fallback also failed:', e2.message || e2);
       });
     });
   } else {
-    console.log(`[1ONE] Loading renderer file: ${fallbackFile}`);
+    console.log(`[OneWork] Loading renderer file: ${fallbackFile}`);
     mainWindow.loadFile(fallbackFile).catch((error) => {
-      console.error('[1ONE] loadFile failed:', error.message || error);
+      console.error('[OneWork] loadFile failed:', error.message || error);
     });
   }
 
   mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
-    console.error('[1ONE] did-fail-load:', { errorCode, errorDescription, validatedURL, isMainFrame });
+    console.error('[OneWork] did-fail-load:', { errorCode, errorDescription, validatedURL, isMainFrame });
   });
 
   // Recovery policy for renderer crashes: reload with backoff for ordinary
@@ -755,20 +753,20 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
   const rendererRecovery = createRendererRecoveryPolicy();
 
   mainWindow.webContents.on('render-process-gone', (_event, details) => {
-    console.error('[1ONE] render-process-gone:', details);
+    console.error('[OneWork] render-process-gone:', details);
     if (mainWindow.isDestroyed()) return;
 
     const action = rendererRecovery.onCrash(details.reason);
 
     if (action.kind === 'relaunch') {
-      console.warn(`[1ONE] renderer cannot be recovered in-place (reason=${details.reason}); relaunching app`);
+      console.warn(`[OneWork] renderer cannot be recovered in-place (reason=${details.reason}); relaunching app`);
       app.relaunch();
       app.exit(0);
       return;
     }
 
     if (action.kind === 'give-up') {
-      console.error(`[1ONE] renderer recovery exhausted (reason=${details.reason}); not retrying`);
+      console.error(`[OneWork] renderer recovery exhausted (reason=${details.reason}); not retrying`);
       return;
     }
 
@@ -776,15 +774,15 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
     // to the dead webContents while the reload is in progress.
     const reload = () => {
       if (mainWindow.isDestroyed()) return;
-      console.log('[1ONE] Attempting to recover from renderer crash by reloading...');
+      console.log('[OneWork] Attempting to recover from renderer crash by reloading...');
 
       if (!app.isPackaged && rendererUrl) {
         mainWindow.loadURL(rendererUrl).catch((error) => {
-          console.error('[1ONE] Recovery loadURL failed:', error.message || error);
+          console.error('[OneWork] Recovery loadURL failed:', error.message || error);
         });
       } else {
         mainWindow.loadFile(fallbackFile).catch((error) => {
-          console.error('[1ONE] Recovery loadFile failed:', error.message || error);
+          console.error('[OneWork] Recovery loadFile failed:', error.message || error);
         });
       }
     };
@@ -797,11 +795,11 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
   });
 
   mainWindow.webContents.on('unresponsive', () => {
-    console.warn('[1ONE] Renderer became unresponsive');
+    console.warn('[OneWork] Renderer became unresponsive');
   });
 
   mainWindow.on('closed', () => {
-    console.log('[1ONE] Main window closed');
+    console.log('[OneWork] Main window closed');
   });
 
   // DevTools is no longer auto-opened at startup.
@@ -829,7 +827,7 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
 
 const handleAppReady = async (): Promise<void> => {
   const t0 = performance.now();
-  const mark = (label: string) => console.log(`[1ONE:ready] ${label} +${Math.round(performance.now() - t0)}ms`);
+  const mark = (label: string) => console.log(`[OneWork:ready] ${label} +${Math.round(performance.now() - t0)}ms`);
   mark('start');
 
   // Serves generated media to the renderer. Must be installed after ready; the
@@ -1046,7 +1044,7 @@ const handleAppReady = async (): Promise<void> => {
               const { terminateStaleBackendProcesses } =
                 await import('./process/startup/terminateStaleBackendProcesses');
               const killed = await terminateStaleBackendProcesses(getDataPath());
-              console.warn(`[1ONE] Cleared ${killed} stale dreamcore process(es) holding the data directory.`);
+              console.warn(`[OneWork] Cleared ${killed} stale dreamcore process(es) holding the data directory.`);
             },
             allowPendingOnHealthTimeout: !(isWebUIMode || isResetPasswordMode),
             onHealthTimeout: async (error) => {
@@ -1111,7 +1109,7 @@ const handleAppReady = async (): Promise<void> => {
     initializeZoomFactor(await ProcessConfig.get('ui.zoomFactor'));
     mark('initializeZoomFactor');
   } catch (error) {
-    console.error('[1ONE] Failed to restore zoom factor:', error);
+    console.error('[OneWork] Failed to restore zoom factor:', error);
     initializeZoomFactor(undefined);
   }
 
@@ -1119,7 +1117,7 @@ const handleAppReady = async (): Promise<void> => {
     loadSavedWindowBounds(await ProcessConfig.get('window.bounds'));
     mark('restoreWindowBounds');
   } catch (error) {
-    console.error('[1ONE] Failed to restore window bounds:', error);
+    console.error('[OneWork] Failed to restore window bounds:', error);
     loadSavedWindowBounds(undefined);
   }
 
@@ -1322,7 +1320,7 @@ if (shouldRegisterBackendStartup(gotTheLock)) {
     .then(handleAppReady)
     .catch((error) => {
       // App initialization failed
-      console.error('[1ONE] App initialization failed:', error);
+      console.error('[OneWork] App initialization failed:', error);
       app.quit();
     });
 }
@@ -1380,11 +1378,11 @@ installQuitCleanup({
 });
 
 app.on('will-quit', () => {
-  console.log('[1ONE] will-quit — all cleanup should be complete');
+  console.log('[OneWork] will-quit — all cleanup should be complete');
 });
 
 app.on('quit', (_event, exitCode) => {
-  console.log(`[1ONE] quit (exitCode=${exitCode})`);
+  console.log(`[OneWork] quit (exitCode=${exitCode})`);
 });
 
 // In this file you can include the rest of your app's specific main process

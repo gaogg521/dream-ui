@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 1ONE
+ * Copyright 2026 One Work
  * SPDX-License-Identifier: Apache-2.0
  *
  * Regression test for #3656: a message with many attached files stretched the

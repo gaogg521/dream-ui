@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 1ONE
+ * Copyright 2026 One Work
  * SPDX-License-Identifier: Apache-2.0
  *
  * Unit tests for the upload state store, focused on the abort wiring added

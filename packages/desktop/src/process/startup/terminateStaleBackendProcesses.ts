@@ -121,7 +121,7 @@ export async function terminateStaleBackendProcesses(dataDir: string): Promise<n
     // Best-effort by contract: a missed kill shows up as the recovery's own
     // "file in use" failure, which is now surfaced to the user (N3) instead
     // of being silently swallowed here.
-    console.warn('[1ONE] terminateStaleBackendProcesses failed (best-effort):', error);
+    console.warn('[OneWork] terminateStaleBackendProcesses failed (best-effort):', error);
     return 0;
   }
 }

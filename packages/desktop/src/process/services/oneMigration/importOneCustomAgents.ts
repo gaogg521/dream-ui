@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 /**
@@ -196,16 +194,16 @@ export async function migrateOneCustomAgents(configFile: ConfigFile): Promise<bo
   results.forEach((result, index) => {
     if (result.status === 'rejected') {
       failed += 1;
-      console.error(`[1ONE] Failed to import 1one custom agent '${toImport[index].name}':`, result.reason);
+      console.error(`[OneWork] Failed to import 1one custom agent '${toImport[index].name}':`, result.reason);
     }
   });
 
   if (failed > 0) {
-    console.error(`[1ONE] 1one custom agent migration partial: ${failed}/${toImport.length} failed`);
+    console.error(`[OneWork] 1one custom agent migration partial: ${failed}/${toImport.length} failed`);
     return false;
   }
   if (toImport.length > 0) {
-    console.log(`[1ONE] Migrated ${toImport.length} 1one custom agent(s)`);
+    console.log(`[OneWork] Migrated ${toImport.length} 1one custom agent(s)`);
   }
   await setFlag();
   return true;

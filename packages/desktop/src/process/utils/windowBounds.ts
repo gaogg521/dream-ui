@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  *
  * Main-window bounds persistence: restore the last-known size and position
  * when the app re-opens, and write back the user's adjustments as they
@@ -102,7 +100,7 @@ export const attachWindowBoundsPersistence = (
     // boot-time snapshot.
     cachedBounds = bounds;
     const op = Promise.resolve(persist(bounds)).catch((error) => {
-      console.error('[1ONE] Failed to persist window bounds:', error);
+      console.error('[OneWork] Failed to persist window bounds:', error);
     });
     trackPersistedWrite(op);
   };

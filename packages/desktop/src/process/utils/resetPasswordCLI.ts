@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  *
  * Reset password CLI utility for packaged applications
  * 打包应用的密码重置命令行工具

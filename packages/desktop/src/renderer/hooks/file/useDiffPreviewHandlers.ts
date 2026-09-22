@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 import type { FileChangeItem } from '@/renderer/components/base/FileChangesPanel';

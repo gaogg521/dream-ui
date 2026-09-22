@@ -1,5 +1,5 @@
 /**
- * Apply 1ONE sidebar color presets (data-color-scheme + light/dark + body background).
+ * Apply One Work sidebar color presets (data-color-scheme + light/dark + body background).
  */
 
 import type { ColorScheme } from '@renderer/hooks/ui/useColorScheme';

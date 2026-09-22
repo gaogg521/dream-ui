@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 1ONE
+ * Copyright 2026 One Work
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -45,7 +45,7 @@ describe('brand surfaces outside i18n', () => {
     // Scoped to the surfaces users read. Internal identifiers (ONE_*,
     // one-*) and package/URL references are deliberately out of scope — see
     // the brand boundary rule. Log prefixes used to be excluded too; they have
-    // since been swept to "[1ONE] ...", so the guard now covers them and a
+    // since been swept to "[OneWork] ...", so the guard now covers them and a
     // reintroduced "[OneWork]" prefix fails here.
     const files = [
       'packages/desktop/src/process/utils/tray.ts',

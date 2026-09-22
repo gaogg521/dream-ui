@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 import { BrowserWindow } from 'electron';
@@ -95,7 +93,7 @@ export const setupZoomForWindow = (win: BrowserWindow): void => {
         const { ProcessConfig } = await import('./initStorage');
         await ProcessConfig.set('ui.zoomFactor', factor);
       } catch (error) {
-        console.error('[1ONE] Failed to persist zoom factor from keyboard shortcut:', error);
+        console.error('[OneWork] Failed to persist zoom factor from keyboard shortcut:', error);
       }
     })();
     trackPersistedWrite(op);

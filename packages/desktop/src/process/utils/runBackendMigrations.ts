@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 import { execFile } from 'node:child_process';
@@ -56,6 +54,13 @@ const BUILTIN_STOCK_SDK_NAME = 'stock-sdk';
  * happens in the side preview panel where the user can watch it.
  */
 const BUILTIN_BROWSER_SCRIPT = 'builtin-mcp-browser';
+const BUILTIN_PAGE_READER_SCRIPT = 'builtin-mcp-page-reader';
+/**
+ * 内置「读网页」MCP 的注册名。
+ *
+ * Registered name of the built-in page reader MCP.
+ */
+const BUILTIN_PAGE_READER_MCP_NAME = 'one-page-reader';
 const BUILTIN_WEB_SEARCH_SCRIPT = 'builtin-mcp-web-search';
 
 const LEGACY_BACKEND_CLIENT_PREFERENCE_KEYS = [
@@ -302,6 +307,44 @@ function buildBuiltinBrowserServer(): McpImportServer {
 }
 
 /**
+ * 内置「读网页」MCP。
+ *
+ * 浏览器自动化的阅读缺口：chrome-devtools-mcp 的 take_screenshot 要模型从像素里
+ * 猜内容，take_snapshot 只有带语义的元素。这个服务把页面可见文本直接取回来，
+ * 默认开启（与浏览器同进退：零配置可用）。端口与口令经进程继承链传入，与
+ * browserServer 相同，注册记录保持静态。
+ *
+ * The built-in page reader MCP. Browser automation had a reading gap:
+ * take_screenshot makes the model guess from pixels and take_snapshot only carries
+ * elements with semantics. This service returns the page's visible text directly.
+ * Enabled by default (it ships and dies with the browser: zero configuration). The
+ * port travels down the process inheritance chain exactly as for browserServer, so
+ * the registration record stays static.
+ */
+function buildBuiltinPageReaderServer(): McpImportServer {
+  const scriptPath = getBuiltinMcpScriptPath(BUILTIN_PAGE_READER_SCRIPT);
+  const serverConfig = {
+    command: 'node',
+    args: [scriptPath],
+  };
+
+  return {
+    name: BUILTIN_PAGE_READER_MCP_NAME,
+    description:
+      'Read the text content of the page open in the built-in browser preview. ' +
+      'Agents should use this instead of screenshots whenever they need to read page content.',
+    enabled: true,
+    builtin: true,
+    transport: {
+      type: 'stdio',
+      command: serverConfig.command,
+      args: serverConfig.args,
+    },
+    original_json: JSON.stringify({ mcpServers: { [BUILTIN_PAGE_READER_MCP_NAME]: serverConfig } }, null, 2),
+  };
+}
+
+/**
  * 内置「联网搜索」能走公司 broker 时的环境变量。
  *
  * The env that points the built-in search MCP at the company broker, or `{}`
@@ -512,6 +555,7 @@ function buildDefaultMcpServers(): McpImportServer[] {
       original_json: JSON.stringify({ mcpServers: { [BUILTIN_FTSHARE_NAME]: ftshareConfig } }, null, 2),
     },
     buildBuiltinBrowserServer(),
+    buildBuiltinPageReaderServer(),
     buildBuiltinWebSearchServer(),
   ];
 }
@@ -945,7 +989,7 @@ async function syncBuiltinMcpConfig(configFile: ConfigFile): Promise<void> {
   }
 
   await httpRequest<void>('PUT', '/api/settings/client', { 'mcp.config': mergedMcpConfig });
-  console.info('[1ONE] Synced builtin MCP config to backend settings (%d builtin servers)', localBuiltinServers.length);
+  console.info('[OneWork] Synced builtin MCP config to backend settings (%d builtin servers)', localBuiltinServers.length);
 }
 
 export async function runBackendMigrations(configFile: ConfigFile): Promise<void> {
@@ -954,9 +998,9 @@ export async function runBackendMigrations(configFile: ConfigFile): Promise<void
     const start = Date.now();
     try {
       await step.run();
-      console.info(`[1ONE] Backend migration step completed: ${step.name} (${Date.now() - start}ms)`);
+      console.info(`[OneWork] Backend migration step completed: ${step.name} (${Date.now() - start}ms)`);
     } catch (error) {
-      console.error(`[1ONE] Backend migration step failed: ${step.name} (${Date.now() - start}ms)`, error);
+      console.error(`[OneWork] Backend migration step failed: ${step.name} (${Date.now() - start}ms)`, error);
     }
   }, Promise.resolve());
 
@@ -967,21 +1011,21 @@ export async function runBackendMigrations(configFile: ConfigFile): Promise<void
       const completed = await step.run(configFile);
       const elapsed = Date.now() - start;
       if (!completed) {
-        console.warn(`[1ONE] Backend migration step incomplete: ${step.name} (${elapsed}ms)`);
+        console.warn(`[OneWork] Backend migration step incomplete: ${step.name} (${elapsed}ms)`);
         return;
       }
-      console.info(`[1ONE] Backend migration step completed: ${step.name} (${elapsed}ms)`);
+      console.info(`[OneWork] Backend migration step completed: ${step.name} (${elapsed}ms)`);
     } catch (error) {
       const elapsed = Date.now() - start;
-      console.error(`[1ONE] Backend migration step failed: ${step.name} (${elapsed}ms)`, error);
+      console.error(`[OneWork] Backend migration step failed: ${step.name} (${elapsed}ms)`, error);
     }
   }, Promise.resolve());
 
   const syncStart = Date.now();
   try {
     await syncBuiltinMcpConfig(configFile);
-    console.info(`[1ONE] Backend migration step completed: syncBuiltinMcpConfig (${Date.now() - syncStart}ms)`);
+    console.info(`[OneWork] Backend migration step completed: syncBuiltinMcpConfig (${Date.now() - syncStart}ms)`);
   } catch (error) {
-    console.error(`[1ONE] Backend migration step failed: syncBuiltinMcpConfig (${Date.now() - syncStart}ms)`, error);
+    console.error(`[OneWork] Backend migration step failed: syncBuiltinMcpConfig (${Date.now() - syncStart}ms)`, error);
   }
 }

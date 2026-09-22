@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 import { mkdirSync as _mkdirSync, existsSync, readdirSync, readFileSync } from 'fs';
@@ -91,7 +89,7 @@ const migrateLegacyData = async () => {
         try {
           return existsSync(newDir) && readdirSync(newDir).length === 0;
         } catch (error) {
-          console.warn('[1ONE] Warning: Could not read new directory during migration check:', error);
+          console.warn('[OneWork] Warning: Could not read new directory during migration check:', error);
           return false; // 假设非空以避免迁移覆盖
         }
       })();
@@ -112,7 +110,7 @@ const migrateLegacyData = async () => {
           try {
             await fs.rm(oldDir, { recursive: true });
           } catch (cleanupError) {
-            console.warn('[1ONE] 原目录清理失败，请手动删除:', oldDir, cleanupError);
+            console.warn('[OneWork] 原目录清理失败，请手动删除:', oldDir, cleanupError);
           }
         }
       }
@@ -120,7 +118,7 @@ const migrateLegacyData = async () => {
       return true;
     }
   } catch (error) {
-    console.error('[1ONE] 数据迁移失败:', error);
+    console.error('[OneWork] 数据迁移失败:', error);
   }
 
   return false;
@@ -340,7 +338,7 @@ const cleanupLegacyBuiltinSkillsDir = () => {
   const legacyDir = path.join(cacheDir, LEGACY_BUILTIN_SKILLS_DIR);
   if (!existsSync(legacyDir)) return;
   fs.rm(legacyDir, { recursive: true, force: true })
-    .then(() => console.log('[1ONE] Cleaned up legacy builtin-skills cache'))
+    .then(() => console.log('[OneWork] Cleaned up legacy builtin-skills cache'))
     .catch(() => {
       /* swallow — cleanup is not critical */
     });
@@ -418,7 +416,7 @@ const initStorage = async () => {
     await ensureAssistantDirs();
     mark('5. ensureAssistantDirs');
   } catch (error) {
-    console.error('[1ONE] Failed to ensure assistant dirs:', error);
+    console.error('[OneWork] Failed to ensure assistant dirs:', error);
   }
 
   // 5b. Best-effort cleanup of the legacy builtin-skills cache left behind
@@ -451,7 +449,7 @@ const initStorage = async () => {
     );
     mark(`6.5. oneLegacyImport ${oneImportSummary}`);
   } catch (error) {
-    console.error('[1ONE] 1one legacy import failed (will retry next launch):', error);
+    console.error('[OneWork] 1one legacy import failed (will retry next launch):', error);
     mark('6.5. oneLegacyImport failed');
   }
 

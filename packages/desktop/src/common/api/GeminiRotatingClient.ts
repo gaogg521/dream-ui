@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 import { GoogleGenAI, type GenerateContentParameters, type GoogleGenAIOptions } from '@google/genai';

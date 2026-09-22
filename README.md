@@ -32,9 +32,9 @@
 
 <br><br>
 
-| **38+** CLI Agent | **274** 助手与专家 | **Apache-2.0** 开源 | **v3.0** 开箱即用 |
+| **38+** CLI Agent | **274** 助手与专家 | **私有化部署** | **v3.0** 开箱即用 |
 | :---------------: | :----------------: | :-----------------: | :---------------: |
-|   本机自动识别    | 22 官方 + 252 专家 |    可私有化部署     | 免费模型一键开聊  |
+|   本机自动识别    | 22 官方 + 252 专家 |    数据不出本机     | 免费模型一键开聊  |
 
 <img src="https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-64748b?style=flat-square" alt="Platform">
 <img src="https://img.shields.io/github/v/release/gaogg521/dream-ui?display_name=tag&sort=semver&style=flat-square&color=2563eb" alt="Version">
@@ -254,7 +254,6 @@ AI 一键拆单，任务直接交给 Agent，进度团队可见。
 
 |                               | **One Work** | Cursor | Copilot | Claude Code |
 | ----------------------------- | :----------: | :----: | :-----: | :---------: |
-| 开源                          |      ✅      |   🔒   |   🔒    |     🔒      |
 | **Codex/Claude 桥接自配模型** | ✅ **独家**  |   ❌   |   ❌    |     ❌      |
 | 38 款 Agent + Team 编队       |      ✅      |   ⚠️   |   ⚠️    |     ❌      |
 | 274 助手与专家内置            |      ✅      |   ❌   |   ❌    |     ⚠️      |
@@ -336,6 +335,6 @@ cd dream-ui && bun install && bun run dev
 
 <br>
 
-<sub>Apache-2.0 · Built by <a href="https://github.com/gaogg521">gaogg521</a></sub>
+<sub>© 2026 One Work · 专有软件，保留所有权利</sub>
 
 </div>

@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 /** Models valid for the file-based /audio/transcriptions endpoint and the streaming /api/stt/stream endpoint. */

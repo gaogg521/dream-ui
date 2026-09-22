@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 1ONE
+ * Copyright 2026 One Work
  * SPDX-License-Identifier: Apache-2.0
  *
  * Unit tests for renderer/pages/settings/AssistantSettings/assistantUtils.ts (A5 in N4a).

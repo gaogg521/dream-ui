@@ -193,7 +193,7 @@ function readNewLogLines(logPath: string, offset: number): string[] {
 // ── Log parsing ─────────────────────────────────────────────────────────────
 
 // Matches: [Dream UI:ready] <label> +<ms>ms
-// Matches: [1ONE:ready] <label> +<ms>ms — the prefix index.ts actually emits.
+// Matches: [OneWork:ready] <label> +<ms>ms — the prefix index.ts actually emits.
 // The legacy prefix stays in the alternation so logs from before the rename parse.
 const MARK_REGEX = /\[(?:1ONE|AionUi):(ready|init|process)\]\s+([^+]+?)\s+\+(\d+)ms/;
 
@@ -224,9 +224,9 @@ function parseStartupLog(lines: string[]): ParsedMarks {
       continue;
     }
 
-    if (line.includes('[1ONE] Renderer did-finish-load')) marks.logs.rendererDidFinishLoad = true;
-    else if (line.includes('[1ONE] Window ready-to-show')) marks.logs.windowReadyToShow = true;
-    else if (line.includes('[1ONE] Showing main window')) marks.logs.showingMainWindow = true;
+    if (line.includes('[OneWork] Renderer did-finish-load')) marks.logs.rendererDidFinishLoad = true;
+    else if (line.includes('[OneWork] Window ready-to-show')) marks.logs.windowReadyToShow = true;
+    else if (line.includes('[OneWork] Showing main window')) marks.logs.showingMainWindow = true;
   }
 
   return marks;

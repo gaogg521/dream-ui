@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  *
  * On first tarball launch, the dreamcore's SQLite `users` table holds the
  * seeded `system_default_user` row with an empty password_hash. We probe

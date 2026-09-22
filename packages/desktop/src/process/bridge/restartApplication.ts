@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 import type { IAppRestartResult } from '@/common/adapter/ipcBridge';
@@ -11,7 +9,7 @@ type RestartableApp = Pick<App, 'isPackaged' | 'relaunch' | 'exit'>;
 
 export function restartApplication(app: RestartableApp): IAppRestartResult {
   if (!app.isPackaged) {
-    console.info('[1ONE] Restart skipped in development mode; manual restart required');
+    console.info('[OneWork] Restart skipped in development mode; manual restart required');
     return {
       restarted: false,
       manualRestartRequired: true,
@@ -19,7 +17,7 @@ export function restartApplication(app: RestartableApp): IAppRestartResult {
     };
   }
 
-  console.info('[1ONE] Relaunching application to apply changes');
+  console.info('[OneWork] Relaunching application to apply changes');
   app.relaunch();
   app.exit(0);
   return {

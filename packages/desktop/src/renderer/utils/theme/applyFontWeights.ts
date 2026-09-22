@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 import { FONT_WEIGHT_KEYS, FONT_WEIGHT_SPECS, sanitizeFontWeight, type FontWeights } from '@/common/config/fontWeights';

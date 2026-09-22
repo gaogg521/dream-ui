@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 const WORKSPACE_UPDATE_TIME_KEY = 'one_workspace_update_time';

@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 import type { IDirOrFile } from '@/common/adapter/ipcBridge';
@@ -384,7 +382,7 @@ export async function verifyDirectoryFiles(dir1: string, dir2: string): Promise<
 
     return true;
   } catch (error) {
-    console.warn('[1ONE] Error verifying directory files:', error);
+    console.warn('[OneWork] Error verifying directory files:', error);
     return false;
   }
 }
@@ -409,8 +407,8 @@ export const copyFilesToDirectory = async (
     try {
       await fs.access(absoluteFilePath);
     } catch (error) {
-      console.warn(`[1ONE] Source file does not exist, skipping: ${absoluteFilePath}`);
-      console.warn(`[1ONE] Original path: ${file}`);
+      console.warn(`[OneWork] Source file does not exist, skipping: ${absoluteFilePath}`);
+      console.warn(`[OneWork] Original path: ${file}`);
       // 跳过不存在的文件，而不是抛出错误
       continue;
     }
@@ -441,7 +439,7 @@ export const copyFilesToDirectory = async (
       await fs.copyFile(absoluteFilePath, destPath);
       copiedFiles.push(destPath);
     } catch (error) {
-      console.error(`[1ONE] Failed to copy file from ${absoluteFilePath} to ${destPath}:`, error);
+      console.error(`[OneWork] Failed to copy file from ${absoluteFilePath} to ${destPath}:`, error);
       // 继续处理其他文件，而不是完全失败
     }
 

@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  *
  * Tracks fire-and-forget persistence writes so they can finish flushing to
  * disk before the app exits. Without this, the last write triggered by an

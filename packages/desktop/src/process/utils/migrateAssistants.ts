@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 import { ipcBridge } from '@/common';
@@ -191,7 +189,7 @@ async function backendSupportsAssistantDefinitions(): Promise<boolean> {
       detail && typeof detail === 'object' && 'profile' in detail && 'defaults' in detail && 'preferences' in detail
     );
   } catch (error) {
-    console.warn('[1ONE] Failed to probe unified assistant detail support:', error);
+    console.warn('[OneWork] Failed to probe unified assistant detail support:', error);
     return false;
   }
 }
@@ -207,7 +205,7 @@ async function markAssistantsMigrationDone(configFile: ConfigFile): Promise<void
   try {
     await accessor.set(ASSISTANTS_MIGRATION_FLAG, true);
   } catch (err) {
-    console.warn('[1ONE] failed to persist assistants migration flag', err);
+    console.warn('[OneWork] failed to persist assistants migration flag', err);
   }
 }
 
@@ -260,20 +258,20 @@ async function applyBuiltinOverrides(overrides: BuiltinOverride[]): Promise<numb
       if (isBackendHttpError(reason) && reason.status === 404) {
         skipped += 1;
         console.warn(
-          `[1ONE] Skipped override for retired built-in '${overrides[i].id}' (no longer in backend manifest)`
+          `[OneWork] Skipped override for retired built-in '${overrides[i].id}' (no longer in backend manifest)`
         );
         return;
       }
       failed += 1;
-      console.error(`[1ONE] Failed to apply builtin override for ${overrides[i].id}:`, reason);
+      console.error(`[OneWork] Failed to apply builtin override for ${overrides[i].id}:`, reason);
     }
   });
   const applied = overrides.length - failed - skipped;
   if (failed === 0) {
-    console.log(`[1ONE] Applied ${applied} builtin disabled-state override(s) (skipped ${skipped} retired id(s))`);
+    console.log(`[OneWork] Applied ${applied} builtin disabled-state override(s) (skipped ${skipped} retired id(s))`);
   } else {
     console.error(
-      `[1ONE] Builtin override partial: ${failed}/${overrides.length} failed, ${skipped} skipped, ${applied} applied`
+      `[OneWork] Builtin override partial: ${failed}/${overrides.length} failed, ${skipped} skipped, ${applied} applied`
     );
   }
   return failed;
@@ -353,20 +351,20 @@ async function applyBuiltinAgentIdOverrides(overrides: BuiltinAgentIdOverride[])
       if (isBackendHttpError(reason) && reason.status === 404) {
         skipped += 1;
         console.warn(
-          `[1ONE] Skipped agent_id override for retired built-in '${overrides[i].id}' (no longer in backend manifest)`
+          `[OneWork] Skipped agent_id override for retired built-in '${overrides[i].id}' (no longer in backend manifest)`
         );
         return;
       }
       failed += 1;
-      console.error(`[1ONE] Failed to apply agent_id override for ${overrides[i].id}:`, reason);
+      console.error(`[OneWork] Failed to apply agent_id override for ${overrides[i].id}:`, reason);
     }
   });
   const applied = overrides.length - failed - skipped;
   if (failed === 0) {
-    console.log(`[1ONE] Applied ${applied} builtin agent_id override(s) (skipped ${skipped} retired id(s))`);
+    console.log(`[OneWork] Applied ${applied} builtin agent_id override(s) (skipped ${skipped} retired id(s))`);
   } else {
     console.error(
-      `[1ONE] Builtin agent_id override partial: ${failed}/${overrides.length} failed, ${skipped} skipped, ${applied} applied`
+      `[OneWork] Builtin agent_id override partial: ${failed}/${overrides.length} failed, ${skipped} skipped, ${applied} applied`
     );
   }
   return failed;
@@ -389,7 +387,7 @@ async function fetchCurrentBuiltinAgentIds(): Promise<Map<string, string>> {
     }
     return map;
   } catch (error) {
-    console.error('[1ONE] Failed to fetch current builtin agent_id map:', error);
+    console.error('[OneWork] Failed to fetch current builtin agent_id map:', error);
     return new Map();
   }
 }
@@ -413,7 +411,7 @@ async function fetchAgentIdByRuntimeKey(): Promise<Map<string, string>> {
     }
     return map;
   } catch (error) {
-    console.error('[1ONE] Failed to fetch agent runtime identity map:', error);
+    console.error('[OneWork] Failed to fetch agent runtime identity map:', error);
     return new Map();
   }
 }
@@ -458,7 +456,7 @@ async function uploadLegacyAssistantRules(legacyAssistantIds: Set<string>): Prom
       // No legacy assistants dir at all — nothing to upload.
       return 0;
     }
-    console.error('[1ONE] Failed to read legacy assistant rules dir:', error);
+    console.error('[OneWork] Failed to read legacy assistant rules dir:', error);
     return 1;
   }
 
@@ -500,7 +498,7 @@ async function uploadLegacyAssistantRules(legacyAssistantIds: Set<string>): Prom
     if (r.status === 'rejected') {
       failed += 1;
       console.error(
-        `[1ONE] Failed to upload legacy rule for '${ruleEntries[i].id}' (${ruleEntries[i].locale}):`,
+        `[OneWork] Failed to upload legacy rule for '${ruleEntries[i].id}' (${ruleEntries[i].locale}):`,
         r.reason
       );
       return;
@@ -510,10 +508,10 @@ async function uploadLegacyAssistantRules(legacyAssistantIds: Set<string>): Prom
   });
   if (failed === 0) {
     if (uploaded > 0 || skipped > 0) {
-      console.log(`[1ONE] Legacy rule upload: ${uploaded} uploaded, ${skipped} skipped`);
+      console.log(`[OneWork] Legacy rule upload: ${uploaded} uploaded, ${skipped} skipped`);
     }
   } else {
-    console.error(`[1ONE] Legacy rule upload partial: ${failed}/${ruleEntries.length} failed`);
+    console.error(`[OneWork] Legacy rule upload partial: ${failed}/${ruleEntries.length} failed`);
   }
   return failed;
 }
@@ -552,7 +550,7 @@ async function uploadLegacyAssistantRules(legacyAssistantIds: Set<string>): Prom
  */
 export async function migrateAssistantsToBackend(configFile: ConfigFile): Promise<boolean> {
   if (process.env.DREAM_SKIP_ELECTRON_MIGRATION === '1') {
-    console.log('[1ONE] Assistant migration skipped (env flag set)');
+    console.log('[OneWork] Assistant migration skipped (env flag set)');
     return false;
   }
 
@@ -620,14 +618,14 @@ export async function migrateAssistantsToBackend(configFile: ConfigFile): Promis
         assistants: userAssistants.map((assistant) => legacyAssistantToCreateRequest(assistant, agentIdByRuntimeKey)),
       });
       if (result.failed !== 0) {
-        console.error(`[1ONE] Assistant migration partial: ${result.failed} failed`, result.errors);
+        console.error(`[OneWork] Assistant migration partial: ${result.failed} failed`, result.errors);
         return false;
       }
       if (result.imported > 0 || result.skipped > 0) {
-        console.log(`[1ONE] migrated ${result.imported} assistants (skipped ${result.skipped})`);
+        console.log(`[OneWork] migrated ${result.imported} assistants (skipped ${result.skipped})`);
       }
     } catch (error) {
-      console.error('[1ONE] Assistant migration failed:', error);
+      console.error('[OneWork] Assistant migration failed:', error);
       return false;
     }
   }

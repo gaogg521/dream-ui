@@ -23,11 +23,11 @@ export type RecoverCorruptedDatabaseDeps = {
 export async function recoverCorruptedDatabaseAfterUserConfirmation(deps: RecoverCorruptedDatabaseDeps): Promise<void> {
   const failure = deps.getFailure();
   if (failure?.reason !== 'backend_recoverable_database_corruption') {
-    deps.logWarn('[1ONE] Ignoring corrupted database recovery request outside recoverable failure state.');
+    deps.logWarn('[OneWork] Ignoring corrupted database recovery request outside recoverable failure state.');
     throw new Error('backend_corrupted_database_recovery_not_available');
   }
 
-  deps.logInfo('[1ONE] User confirmed corrupted database backup and rebuild.');
+  deps.logInfo('[OneWork] User confirmed corrupted database backup and rebuild.');
   try {
     await deps.stopBackend();
     await deps.terminateStaleBackendProcesses?.();
@@ -36,7 +36,7 @@ export async function recoverCorruptedDatabaseAfterUserConfirmation(deps: Recove
     deps.reloadMainWindow();
   } catch (error) {
     deps.logWarn(
-      `[1ONE] Corrupted database recovery attempt failed: ${error instanceof Error ? error.message : String(error)}`
+      `[OneWork] Corrupted database recovery attempt failed: ${error instanceof Error ? error.message : String(error)}`
     );
     deps.markRecoveryFailed?.(error);
     throw error;

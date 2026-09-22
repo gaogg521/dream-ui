@@ -1,7 +1,5 @@
 /**
- * @license
- * Copyright 2026 1ONE
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 One Work
  */
 
 /**
@@ -102,7 +100,17 @@ export const buildMcpSpawnCommand = (deps: {
   version: string;
   browserUrl: string;
 }): { command: string; args: string[] } => {
-  const mcpArgs = ['-y', `chrome-devtools-mcp@${deps.version}`, '--browser-url', deps.browserUrl];
+  // --no-page-id-routing：1.9.0 起页面级工具默认要求 pageId（多页路由，面向并发
+  // Agent 会话）。我们的桥只暴露唯一一个页面，多页路由纯属摩擦——模型每一步都得
+  // 先 list_pages 再把 id 原样传回去，错一次就白跑一轮。关掉后回到「选中页」模式，
+  // 所有页面级工具直接作用于那个唯一页面。
+  //
+  // --no-page-id-routing: since 1.9.0 page-scoped tools require a pageId (multi-page
+  // routing for concurrent agent sessions). Our bridge exposes exactly one page, so
+  // the routing is pure friction — every step would need list_pages first, with the
+  // id echoed back and one mistake costing a whole turn. Disabling restores the
+  // selected-page mode where every page-scoped tool acts on the one page there is.
+  const mcpArgs = ['-y', `chrome-devtools-mcp@${deps.version}`, '--browser-url', deps.browserUrl, '--no-page-id-routing'];
   return deps.platform === 'win32'
     ? { command: 'cmd.exe', args: ['/c', 'npx', ...mcpArgs] }
     : { command: 'npx', args: mcpArgs };
