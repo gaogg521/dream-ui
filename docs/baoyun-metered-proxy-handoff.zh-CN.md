@@ -699,15 +699,17 @@ URL/字段名还没拿到，下面只是确认了的架构约束，不能直接�
 
 ### 11.3 没做的事（明确不在这轮范围内）
 
-- **终端用户付费充值**：`top_up`/`remain_delta` 这个能力本身已经写好、测试过、
-  能通过 `/internal/vendors/.../topup` 调用，但"用户点了购买按钮之后钱从哪来"
-  完全没做——这个是独立的、以后再排期的工作，两个 vendor（OpenRouter 和宝云）
-  现状对齐，都停在"能发免费额度，不能收费"这一步。**架构方向已经比之前明朗**
-  （见 §11.1.5）：不用接宝付/自己的商户号了，改成调宝云自己的订单 API（创建
-  订单+二维码+轮询，商户是宝云那边，我们不是商户）——但具体接口字段还没拿到，
-  真开工前得先找宝云对接人要 URL/字段/鉴权方式，不能凭转述写代码。
+- ~~终端用户付费充值~~ **已在 §11.6 做完**（2026-09-22，三端：broker+dream-core+
+  dream-ui），下面这段是当时（2026-09-20）的原始记录，保留作决策过程存档。
+  > `top_up`/`remain_delta` 这个能力本身已经写好、测试过、能通过
+  > `/internal/vendors/.../topup` 调用，但"用户点了购买按钮之后钱从哪来"完全
+  > 没做——两个 vendor（OpenRouter 和宝云）现状对齐，都停在"能发免费额度，不能
+  > 收费"这一步。**架构方向已经比之前明朗**（见 §11.1.5）：不用接宝付/自己的
+  > 商户号了，改成调宝云自己的订单 API（创建订单+二维码+轮询，商户是宝云那边，
+  > 我们不是商户）——但具体接口字段还没拿到，真开工前得先找宝云对接人要
+  > URL/字段/鉴权方式，不能凭转述写代码。
 - 宝云自己的 `GET /apis/v1/account`（我方账户余额监控）、`GET /apis/v1/logs`
-  （用户消费明细）都还没接进任何地方，见 §11.1 最后一段。
+  （用户消费明细）都还没接进任何地方，见 §11.1 最后一段。仍未做。
 
 ### 11.4 §十（宝付集成）还有用吗
 
@@ -718,3 +720,134 @@ mode B 需要 broker 自己算账、自己触发充值。现在宝云是 mode A�
 "用户按钮付款"，需要的是"某个支付渠道通知我们钱到账了"这一小块（可以是宝付，
 也可以是别的，跟 vendor 是不是宝云无关），收到通知后调 `top_up` 就完了——
 比 §十设想的"整套订单系统"轻得多。
+
+### 11.5 免费模型不再写死，从宝云实时目录+定价动态挑最便宜的文本模型（2026-09-21）
+
+**起因**：用户看到宝云市场页面（按价格从低到高排序模型）后提出——与其写死
+`qwen3.7-flash`，不如让 broker 自己去查宝云的目录+定价接口、每次发 key 时选
+当前最便宜的纯文本生成模型，这样宝云以后下架这个型号也不会悄悄弄挂免费
+体验（`503 model_not_found`）。之前确实发生过一次：最早选的 `deepseek-chat`
+就是错的、`503`；换成 `deepseek-v4-1-flash` 真机验证过能跑，但 §11.2.6 的
+产品决策又把默认改成更便宜的 `qwen3.7-flash`——两次教训都是"写死一个模型
+名"这条路径本身脆弱，动态选型是从根上解决。
+
+**实现**（`src/vendor/baoyun.rs`）：
+
+- `pick_cheapest_text_model(models, pricing) -> Option<String>`：纯函数，
+  先按宝云目录的 `tags` 过滤——必须含 `output.text`，且不能含
+  `output.image`/`output.video`/`output.audio`（排除多模态模型，即使它也
+  支持文本输出）；再用 `id` 去定价表里找 `billing == "token"` 的条目（非
+  token 计费的模型直接跳过，价格口径不可比）；按 `input + output` 单价求
+  最小值。5 个单测覆盖：多个候选选最便宜的、排除图片/视频模型即使更便宜、
+  找不到定价的模型被跳过、非 token 计费即使打了文本 tag 也被忽略、完全没
+  候选返回 `None` 而不是 panic。
+- `fetch_cheapest_text_model()`：真实调宝云 `GET /apis/v1/models` +
+  `GET /apis/v1/pricing` 两个接口，喂给上面的纯函数，两个接口任一失败或
+  选不出结果都报错（不会返回空模型列表）。
+- `resolve_trial_models()`：`BAOYUN_TRIAL_MODELS` 环境变量存在就直接用（给
+  部署方手动覆盖的逃生舱），否则调 `fetch_cheapest_text_model()`，成功就把
+  单个结果包成 `vec![...]`。`issue_key` 只调一次这个方法，结果同时用作
+  服务端强制的 `model_limits`（见 §11.2.6）和返回给客户端的 `IssuedKey.models`
+  ——为此把 `models` 字段从 `VendorClientConfig` 挪到了 `IssuedKey`，避免同一次
+  发 key 对宝云打两次网络请求（一次选模型、一次告诉客户端选了什么）。
+- `PLACEHOLDER_MODELS`（还是 `["qwen3.7-flash"]`）现在只是"实时查询失败时"
+  的静态兜底，不再是默认路径。
+- commit `5cb5889`（本仓无远程，仅本地）。
+
+### 11.6 三端打通真实充值：宝云 2026-09-22 上线的 `/apis/v1/topup/*` 接口
+
+**触发**：用户去问宝云要正式的充值 API，对方当天上线了（文档 sidebar 新增
+"充值"分类：`充值方式 GET`、`创建充值订单 POST`、`充值订单列表/详情 GET`），
+用户确认"功能已上线，可以正常使用"并给了文档链接。跟用户核对实现范围后
+（`AskUserQuestion`），选择**三端一次做完，包括 dream-ui 充值 UI**，而不是
+只做 broker 侧占位。
+
+**broker**（`dream-trial-broker`，commit `ec7f442`，本仓无远程，仅本地）：
+
+- `TokenVendor` trait 新增 `create_topup_order`/`get_topup_order`，默认
+  实现是 `VendorError::Unsupported`（OpenRouter 不用管，天然继承默认值）。
+  `BaoyunVendor` 覆写：`POST {account_api_base}/topup/orders`（body
+  `{method: "online", amount, reference, idempotency_key}`）、
+  `GET {account_api_base}/topup/orders/{id}`。
+- 新模块 `src/topup.rs`：`reference_for(vendor_id, install_id)` 生成
+  `"{vendor_id}:{install_id}"` 当作宝云订单的 `reference`（宝云文档允许的
+  字符集是 `[A-Za-z0-9._:@/-]`，`install_id` 是 UUID 天然合法）。
+- **幂等入账**：新迁移 `0006_baoyun_topup_credits.sql` 建 `topup_credits`
+  表，`get_topup_order` 看到 `status == success` 时先
+  `INSERT ... ON CONFLICT DO NOTHING`，`rows_affected() == 1` 才真正调
+  `vendor.top_up()`——多次轮询同一个已成功订单只会真正充值一次，跟模式 B
+  `mark_order_paid_and_credit` 同一套心法（见 §3.6）。如果 `top_up()` 调用
+  本身失败，会把这条 reservation 删掉，让下一次轮询重试，不会出现"宝云
+  那边钱已经到账、broker 这边却永久卡在没入账"的情况。
+- **安全**：`get_topup_order` 要求宝云返回的订单 `reference` 必须等于
+  `"{vendor_id}:{install_id}"`，对不上直接报 `topup_order_mismatch`（映射成
+  404，不是 403）——刻意不告诉调用方"这个订单其实存在，只是不是你的"，防止
+  有人拿别人真实付款成功的订单号、换一个自己的 `install_id` 去轮询、蹭上别人
+  的付款。
+- 新路由 `POST /v1/topup/orders`（body `{vendor, install_id, amount}`）、
+  `GET /v1/topup/orders/{id}?vendor=&install_id=`。
+- 验证：`cargo nextest run` 91/91（新增 `tests/topup.rs` 9 个用例 + 单测），
+  `cargo clippy --all-targets -- -D warnings` 干净，`cargo fmt --all -- --check`
+  干净。**过程中抓到一个真实 bug**：测试里的 mock vendor 在一个 struct
+  字面量表达式里对同一个 `Mutex` `.lock()` 了两次，Rust 的临时值生命周期
+  规则导致第一个 `MutexGuard` 在第二次 `.lock()` 之前没释放，直接自死锁、
+  `cargo nextest run` 卡死不动——拆成两条独立语句分别绑定局部变量后解决。
+
+**dream-core**（commit `9bd2aae`，已 push 到 `origin/main`）：
+
+- `dream-core-api-types`：新增 `TopupOrderCreateRequest{vendor, amount}`、
+  `TopupOrderQuery{vendor}`、`TopupOrderResponse{id, vendor, status,
+  currency, amount, qr_code?, expires_at?, completed_at?}`。
+- 新文件 `crates/dream-core-system/src/topup.rs`：`TopupService`，结构和
+  错误映射原样照抄 `MeteredAccessService`（`create_order`/`get_order`，
+  `parse_broker_json` 同一套状态码分流，新增 `topup_unsupported` →
+  400、`topup_order_mismatch` → 404 两条 reason 映射）。查询串用
+  `url::form_urlencoded::Serializer` 拼（workspace 已经有 `url` 依赖，
+  补成 `dream-core-system` 的直接依赖，没有手撸百分号编码）。
+- `routes.rs`：`SystemRouterState` 加 `topup_service` 字段；新路由
+  `POST /api/providers/topup/orders`、`GET /api/providers/topup/orders/{id}`。
+- `router/state.rs`：`build_system_state()` 里构造 `TopupService`，读同一个
+  `DREAM_TRIAL_BROKER_URL`。
+- 6 个 `crates/dream-core-system/tests/*_routes.rs` 测试 fixture 各补一行
+  `topup_service: TopupService::new(None, ...)`——按 CLAUDE.md 的既有规则，
+  只加这一行，没对这些文件跑 rustfmt（它们有大量 pre-existing 格式漂移）。
+- 验证：`cargo nextest run -p dream-core-system` 382/382，
+  `cargo clippy -p dream-core-system -- -D warnings` 干净（唯一警告在
+  `dream-core-api-types/src/conversation.rs` 一处 `derivable_impls`，跟
+  本次改动完全无关，是这次改动之前就有的既有代码）。
+
+**dream-ui**（commit `4a44362`，已 push 到 `origin/main`，pre-push 钩子
+format/types/i18n/`vitest --changed` 全绿）：
+
+- 新组件 `TrialTopUpModal.tsx`：三态机 `select → paying → done`，照抄
+  `MeteredTopUpModal.tsx` 的轮询/超时/重置逻辑，两处不同：金额是三档预设
+  按钮（¥10/¥20/¥50，不做自定义输入，缩小这轮范围）而不是套餐 id；
+  `paying` 阶段渲染真实二维码（`qrcode.react` 的 `QRCodeSVG`，懒加载写法
+  照抄 `WebuiModalContent.tsx` 的 `React.lazy(() => import('qrcode.react')...)`），
+  不再是模式 B 那种纯文本 `pay_url`。
+- `useTrialModelClaim.ts` 新增 `TOPUP_CAPABLE_VENDORS`/`isToppableVendor`。
+  **这个判定跟 `isMeteredTrialVendor` 语义不同**：后者问"这个 vendor 的
+  推理计费是不是模式 B（计量代理）"，前者问"这个 vendor 的账户 API 支不支持
+  充值订单"——两者现在都只对宝云成立，纯属巧合，不是定义上等价，未来加新
+  vendor 时用错哪一个都会算错。
+- `useTrialQuota.ts` 新增 `formatMajorUnits`（区别于既有的 `formatMinorUnits`
+  ——模式 A 充值订单的 `amount` 是浮点主单位，不是分）。
+- `TrialQuotaBadge.tsx` 的可点击判定从 `isMeteredTrialVendor` 换成
+  `isToppableVendor`，弹窗组件从 `MeteredTopUpModal` 换成 `TrialTopUpModal`。
+- `settings.trialTopUp.*` i18n key，13 语种全加（`title`/`currentBalance`/
+  `selectAmount`/`amountOption`/`payAmount`/`scanHint`/`waitingPayment`/
+  `chooseAnother`/`creditedAmount`/`newBalance`/`pollTimeout`/`orderFailed`）。
+- 验证：`bunx tsc --noEmit` 干净、`bunx oxlint`（新增/改动文件零警告）、
+  `node scripts/check-i18n.js` 通过（无新增缺失/未知 key）、
+  `bunx vitest run --changed HEAD` 296 文件 2510 测试全过，新增
+  `isToppableVendor`/`formatMajorUnits` 单测。
+
+**没做的事（明确留到以后）**：
+
+- **真实扫码付款的端到端验证**：只验证到"创建订单成功、拿到 `qr_code`、
+  轮询能拿到 `pending` 状态"这条链路（走的是单测里的 mock vendor，不是打
+  真实宝云接口），没有用真实系统访问令牌跑一遍"真扫码、真到账、`top_up`
+  真的加到 Key 上"——这一步涉及真花钱，且需要用户再给一次系统访问令牌，
+  本轮范围里明确写了不强制。
+- 宝云 `GET /apis/v1/account`（账户余额监控）、`GET /apis/v1/logs`（用户
+  消费明细）仍未接，见 §11.3。
