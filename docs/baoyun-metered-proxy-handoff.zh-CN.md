@@ -991,3 +991,50 @@ systemd）。旧代码目录整个搬去 `dream-trial-broker.bak-<timestamp>` �
   修，只是排查清楚并记下来**——如果以后要做自动过期清理/滥用检测，必须
   先解决"删 key 前先把 `remain` 转移/退回"这一步，否则等于给自己埋了一个
   会引发真实用户投诉的坑。
+
+### 11.11 §11.8 的更正：宝云自己就有按 reference 查询的接口，不用等改前端
+
+§11.8 当时的结论是"宝云控制台没有任何入口能展示 `reference`，只能靠我们
+自己的对账端点"——**这个结论下早了，只做了网页控制台这一层的调研，漏看了
+宝云账户 API 里本来就有的 `GET /apis/v1/topup/orders`（充值订单列表）**。
+用户去问宝云技术支持才发现的，不是我自己找到的。
+
+这个接口（文档：账户 API → 充值 → 充值订单列表）：
+
+```
+GET https://ai-api.baoyun.com/apis/v1/topup/orders
+  ?reference=<精确匹配>   # 按对账字符串过滤，必须传完整 "baoyun:{install_id}"
+  &status=<pending|success|failed|expired>
+  &page=1&page_size=10（默认，最大100）
+Authorization: Bearer <系统访问令牌>
+```
+
+真实数据验证过（用当天生成的系统访问令牌）：
+
+```bash
+curl "https://ai-api.baoyun.com/apis/v1/topup/orders?reference=baoyun:install_01a04786-0f25-76b1-9744-3122152b8c04" \
+  -H "Authorization: Bearer ..."
+# → {"data":[{"id":"BF1790060213184ZmYPyX","status":"success","amount":10,
+#     "created":1790060213,"reference":"baoyun:install_...","completed_at":1790060228}],
+#    "total":1,"has_more":false}
+```
+
+**这比 §11.8 那个对账端点还完整**：返回 `pending`/`success`/`failed`/
+`expired` 全部状态（不只是"已经成功入账"的），是宝云自己的原始记录，不
+依赖我们本地 `topup_credits` 表有没有正确记账。之前 curl 测试创建、从未
+付款的那笔 ¥1 订单，现在查出来 `status` 已经自然变成了 `expired`/`failed`
+——这个状态流转宝云自己在管，我们完全不用操心。
+
+**跟 §11.8 的对账端点分工**：
+
+| 场景 | 用哪个 |
+|---|---|
+| 拿交易号查是谁充的 | 直接 `GET .../topup/orders/{id}`（我们的 `get_topup_order` 本来就在用这个） |
+| 拿 install_id 查某用户全部充值历史 | `GET .../topup/orders?reference=baoyun:{install_id}` |
+| 想知道钱最后落在宝云哪把 key（数字 id）上 | 只能查 §11.8 我们自己那个端点——宝云订单层面根本不知道"key"这个概念，充值从来不跟具体 key 绑定 |
+
+**结论**：§11.8 那条"必须加对账端点"的判断依然成立（`vendor_key_handle`
+这层信息宝云确实没有、也不可能有），但"宝云控制台需要加 `reference` 列"
+这条建议可以撤回了——**运维现在就能直接拿系统访问令牌查，不用等宝云研发
+排期改前端**。已经把这条更正同步给用户，以后接手的会话看到 §11.8 别再
+重复建议"找宝云加列"。
