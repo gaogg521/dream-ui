@@ -24,6 +24,11 @@
 //!   every Baoyun key this broker issues uses [`ResetPeriod::Cumulative`].
 //!   `daily_limit`/`monthly_limit` are a separate, additional rate-limit
 //!   knob this broker does not use for the trial offer.
+//! - `GET /apis/v1/models` (catalog) and `GET /apis/v1/pricing` (per-model
+//!   pricing), live since 2026-09-22, are what `issue_key` uses to pick the
+//!   trial model instead of a hardcoded id — join by `id`, filter to
+//!   token-billed models tagged `output.text` and nothing else `output.*`,
+//!   take the cheapest by `input + output`. See `pick_cheapest_text_model`.
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -45,38 +50,67 @@ const ACCOUNT_API_BASE: &str = "https://ai-api.baoyun.com/apis/v1";
 pub const PLATFORM: &str = "custom";
 pub const CURRENCY: &str = "CNY";
 
-/// Default (and, server-side, *only*) trial model, used unless
-/// `BAOYUN_TRIAL_MODELS` overrides it.
-///
-/// Product call (2026-09-20): the free trial offers exactly one model,
-/// `qwen3.7-flash` — cheap (¥0.20 / ¥0.80 per M input/output tokens per the
-/// marketplace listing) and capable enough for most trial usage. This list
-/// is not just a client-side suggestion: `issue_key` also sends it as the
-/// key's `model_limits`, so the cap holds even if someone points a client at
-/// a different model by hand.
-///
-/// (Superseded guesses, for the record: `deepseek-chat` doesn't exist on
-/// this marketplace at all — live `503 model_not_found`; the model was
-/// briefly `deepseek-v4-1-flash`, verified working live, before this
-/// product decision picked `qwen3.7-flash` instead for cost reasons.)
-const PLACEHOLDER_MODELS: &[&str] = &["qwen3.7-flash"];
+/// Text-generation output tag in Baoyun's model catalog (`GET /apis/v1/models`,
+/// live since 2026-09-22). A model qualifies for the trial offer if it has
+/// this tag and none of the other `output.*` tags below — that admits vision
+/// *input* and deep-thinking models (still plain text out), and excludes
+/// image/video/audio generation.
+const TAG_OUTPUT_TEXT: &str = "output.text";
+const NON_TEXT_OUTPUT_TAGS: &[&str] = &["output.image", "output.video", "output.audio"];
+/// Only token-metered models sort sensibly against `input + output` — a
+/// per-second or per-image billing scheme isn't comparable on that axis, and
+/// in practice won't have `output.text` anyway.
+const TOKEN_BILLING: &str = "token";
 
-fn trial_models_from_env() -> Vec<String> {
-    match std::env::var("BAOYUN_TRIAL_MODELS") {
-        Ok(v) => v
-            .split(',')
-            .map(|s| s.trim())
-            .filter(|s| !s.is_empty())
-            .map(str::to_string)
-            .collect(),
-        Err(_) => {
-            tracing::warn!(
-                "BAOYUN_TRIAL_MODELS unset; serving placeholder model list {:?} — curate before promoting the offer",
-                PLACEHOLDER_MODELS
-            );
-            PLACEHOLDER_MODELS.iter().map(|s| s.to_string()).collect()
-        }
-    }
+#[derive(Debug, Deserialize)]
+struct ModelListResponse {
+    data: Vec<ModelEntry>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ModelEntry {
+    id: String,
+    #[serde(default)]
+    tags: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PricingListResponse {
+    data: Vec<PricingEntry>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PricingEntry {
+    id: String,
+    #[serde(default)]
+    billing: String,
+    #[serde(default)]
+    input: f64,
+    #[serde(default)]
+    output: f64,
+}
+
+/// Picks the cheapest (input + output, per 1M tokens) text-generation model
+/// this account can currently see. Pure and unit-tested separately from the
+/// two live HTTP calls that feed it (`BaoyunVendor::fetch_cheapest_text_model`).
+fn pick_cheapest_text_model(models: &[ModelEntry], pricing: &[PricingEntry]) -> Option<String> {
+    models
+        .iter()
+        .filter(|m| {
+            m.tags.iter().any(|t| t == TAG_OUTPUT_TEXT)
+                && !m
+                    .tags
+                    .iter()
+                    .any(|t| NON_TEXT_OUTPUT_TAGS.contains(&t.as_str()))
+        })
+        .filter_map(|m| {
+            let price = pricing
+                .iter()
+                .find(|p| p.id == m.id && p.billing == TOKEN_BILLING)?;
+            Some((m.id.clone(), price.input + price.output))
+        })
+        .min_by(|(_, a), (_, b)| a.total_cmp(b))
+        .map(|(id, _)| id)
 }
 
 #[derive(Debug, Serialize)]
@@ -176,6 +210,48 @@ impl BaoyunVendor {
             message: e.to_string(),
         })
     }
+
+    /// Live catalog + pricing lookup, joined down to the single cheapest
+    /// text-generation model this account can currently see. Two extra
+    /// account-API calls, made once per issuance — trial issuance is
+    /// low-frequency (the daily circuit breaker caps it at ~50/day), so this
+    /// trades a little latency for never drifting from what Baoyun actually
+    /// offers, which is the whole point: a hardcoded model id goes stale the
+    /// day Baoyun delists or re-prices it.
+    async fn fetch_cheapest_text_model(&self) -> Result<String, VendorError> {
+        let models: ModelListResponse = self
+            .request(self.http.get(format!("{}/models", self.account_api_base)))
+            .await?;
+        let pricing: PricingListResponse = self
+            .request(self.http.get(format!(
+                "{}/pricing?currency={CURRENCY}",
+                self.account_api_base
+            )))
+            .await?;
+
+        pick_cheapest_text_model(&models.data, &pricing.data).ok_or_else(|| VendorError::Request {
+            vendor: ID,
+            message: "no token-billed text-generation model found in Baoyun's catalog".into(),
+        })
+    }
+
+    /// The trial model list to advertise to the client *and* whitelist
+    /// server-side on the issued key — one resolution feeds both, so they
+    /// can never disagree. `BAOYUN_TRIAL_MODELS` is an operator override
+    /// (skips the live lookup entirely, e.g. to pin a model or route around
+    /// a catalog-API outage); unset, it always defers to Baoyun's own current
+    /// cheapest text model rather than a value baked into this binary.
+    async fn resolve_trial_models(&self) -> Result<Vec<String>, VendorError> {
+        match std::env::var("BAOYUN_TRIAL_MODELS") {
+            Ok(v) => Ok(v
+                .split(',')
+                .map(|s| s.trim())
+                .filter(|s| !s.is_empty())
+                .map(str::to_string)
+                .collect()),
+            Err(_) => Ok(vec![self.fetch_cheapest_text_model().await?]),
+        }
+    }
 }
 
 #[async_trait]
@@ -193,7 +269,6 @@ impl TokenVendor for BaoyunVendor {
             platform: PLATFORM,
             base_url: BASE_URL,
             currency: CURRENCY,
-            models: trial_models_from_env(),
         }
     }
 
@@ -218,9 +293,9 @@ impl TokenVendor for BaoyunVendor {
         };
 
         // Whatever model list the client will be told about (env override or
-        // the placeholder) is also the server-side whitelist — one source of
-        // truth, so the two can never drift apart.
-        let trial_models = trial_models_from_env();
+        // the live cheapest-text-model lookup) is also the server-side
+        // whitelist — one resolution, so the two can never drift apart.
+        let trial_models = self.resolve_trial_models().await?;
         let body = CreateKeyBody {
             name: spec.label,
             currency: CURRENCY,
@@ -228,7 +303,7 @@ impl TokenVendor for BaoyunVendor {
             unlimited: false,
             expired_time: Some(expired_time),
             model_limits_enabled: true,
-            model_limits: trial_models,
+            model_limits: trial_models.clone(),
         };
 
         let resp: CreateKeyResponse = self
@@ -242,6 +317,7 @@ impl TokenVendor for BaoyunVendor {
         Ok(IssuedKey {
             secret: resp.key,
             handle: resp.id,
+            models: trial_models,
         })
     }
 
@@ -368,9 +444,75 @@ mod tests {
         }
     }
 
+    fn model(id: &str, tags: &[&str]) -> ModelEntry {
+        ModelEntry {
+            id: id.to_string(),
+            tags: tags.iter().map(|s| s.to_string()).collect(),
+        }
+    }
+
+    fn price(id: &str, billing: &str, input: f64, output: f64) -> PricingEntry {
+        PricingEntry {
+            id: id.to_string(),
+            billing: billing.to_string(),
+            input,
+            output,
+        }
+    }
+
     #[test]
-    fn the_placeholder_model_list_is_qwen_flash_only() {
-        assert_eq!(PLACEHOLDER_MODELS, &["qwen3.7-flash"]);
+    fn picks_the_cheapest_of_several_text_models() {
+        let models = [
+            model("qwen3.7-flash", &["input.text", "output.text"]),
+            model("gpt-4o", &["input.text", "input.image", "output.text"]),
+            model("deepseek-v4-1-flash", &["input.text", "output.text"]),
+        ];
+        let pricing = [
+            price("qwen3.7-flash", "token", 0.20, 0.80),
+            price("gpt-4o", "token", 17.5, 70.0),
+            price("deepseek-v4-1-flash", "token", 1.0, 4.0),
+        ];
+        assert_eq!(
+            pick_cheapest_text_model(&models, &pricing),
+            Some("qwen3.7-flash".to_string())
+        );
+    }
+
+    #[test]
+    fn excludes_image_and_video_models_even_when_cheaper() {
+        let models = [
+            // Cheaper on paper, but it doesn't produce text — must not win.
+            model("gpt-image-2.5-flare", &["input.text", "output.image"]),
+            model("qwen3.7-flash", &["input.text", "output.text"]),
+        ];
+        let pricing = [
+            price("gpt-image-2.5-flare", "token", 0.01, 0.01),
+            price("qwen3.7-flash", "token", 0.20, 0.80),
+        ];
+        assert_eq!(
+            pick_cheapest_text_model(&models, &pricing),
+            Some("qwen3.7-flash".to_string())
+        );
+    }
+
+    #[test]
+    fn a_model_with_no_matching_pricing_entry_is_skipped() {
+        let models = [model("mystery-model", &["output.text"])];
+        assert_eq!(pick_cheapest_text_model(&models, &[]), None);
+    }
+
+    #[test]
+    fn ignores_non_token_billing_even_if_tagged_text() {
+        // Shouldn't happen in practice (video/audio models don't carry
+        // output.text), but the billing filter must hold regardless.
+        let models = [model("per-second-thing", &["output.text"])];
+        let pricing = [price("per-second-thing", "per_second", 0.5, 0.0)];
+        assert_eq!(pick_cheapest_text_model(&models, &pricing), None);
+    }
+
+    #[test]
+    fn no_candidates_at_all_is_none_not_a_panic() {
+        assert_eq!(pick_cheapest_text_model(&[], &[]), None);
     }
 
     /// `issue_key` must send the trial model list as a server-side whitelist,

@@ -77,7 +77,6 @@ impl TokenVendor for MockVendor {
             platform: "MockPlatform",
             base_url: "https://mock.example/v1",
             currency: "USD",
-            models: MODELS.iter().map(|s| s.to_string()).collect(),
         }
     }
 
@@ -93,6 +92,7 @@ impl TokenVendor for MockVendor {
         Ok(IssuedKey {
             secret: "sk-mock-key".to_string(),
             handle: "mock-handle".to_string(),
+            models: MODELS.iter().map(|s| s.to_string()).collect(),
         })
     }
 

@@ -87,6 +87,13 @@ pub struct IssuedKey {
     /// usage can be read and limits raised **without ever holding the
     /// plaintext** — the paid tier does not have to weaken that.
     pub handle: String,
+    /// Which models this key can actually be used with, in the order the
+    /// client should offer them — the first is what it selects. Lives here
+    /// rather than on [`VendorClientConfig`] because resolving it can require
+    /// the same live lookup `issue_key` already had to do to set the key's
+    /// server-side model whitelist (see `BaoyunVendor::issue_key`) — one
+    /// resolution, not two.
+    pub models: Vec<String>,
 }
 
 /// A key's spend position, as the vendor reports it.
@@ -124,11 +131,6 @@ pub struct VendorClientConfig {
     pub base_url: &'static str,
     /// ISO 4217 code this vendor issues keys and reports usage in.
     pub currency: &'static str,
-    /// Preset model list, in the order the client should offer them — the
-    /// first is what it selects. Owned rather than `&'static` because a
-    /// vendor like Baoyun curates this from an environment variable at
-    /// startup, not a compile-time const.
-    pub models: Vec<String>,
 }
 
 #[derive(Debug, thiserror::Error)]

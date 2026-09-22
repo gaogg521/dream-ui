@@ -253,7 +253,7 @@ pub async fn issue_trial_key(
     Ok(TrialKeyResponse {
         key: issued.secret,
         base_url: client.base_url.to_string(),
-        models: client.models,
+        models: issued.models,
         platform: client.platform.to_string(),
         vendor: vendor_id.to_string(),
         currency: client.currency.to_string(),

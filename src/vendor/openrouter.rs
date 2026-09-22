@@ -176,7 +176,6 @@ impl TokenVendor for OpenRouterVendor {
         VendorClientConfig {
             platform: PLATFORM,
             base_url: BASE_URL,
-            models: TRIAL_MODELS.iter().map(|s| s.to_string()).collect(),
             currency: "USD",
         }
     }
@@ -204,6 +203,7 @@ impl TokenVendor for OpenRouterVendor {
         Ok(IssuedKey {
             secret: resp.key,
             handle: resp.data.hash,
+            models: TRIAL_MODELS.iter().map(|s| s.to_string()).collect(),
         })
     }
 
