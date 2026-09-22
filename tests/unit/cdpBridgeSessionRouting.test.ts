@@ -77,6 +77,25 @@ describe('cdpTargetProtocol — session routing contract', () => {
     expect(browserLevel.kind).toBe('reply-and-emit');
     if (browserLevel.kind === 'reply-and-emit') {
       expect(browserLevel.emit.map((e) => e.method)).toContain('Target.attachedToTarget');
+      /**
+       * 事件必须先于回包 —— 这是功能约束，不是风格。
+       *
+       * puppeteer 的 TargetManager.initialize() 只 await setDiscoverTargets / setAutoAttach
+       * 的回包，随后立刻结束初始化；它的待等列表只收 type==='tab' 的目标，我们发的是
+       * 'page'，所以没有任何东西拦住 `connect()`。回包一旦先走，`connect()` 就在
+       * attachedToTarget 之前返回，调用方立刻问页面只会拿到 0 个。
+       *
+       * 实测：唯一改动是把这两帧对调，chrome-devtools-mcp 的 list_pages 就从
+       * "No page selected" 变成 "1: https://… [selected]"，take_snapshot 也能读出正文。
+       *
+       * The event must precede the reply — functional, not cosmetic. puppeteer's
+       * TargetManager.initialize() awaits only the responses and its wait-list only tracks
+       * 'tab' targets, so nothing holds `connect()` open for our 'page'. Reply-first means
+       * connect() resolves before attachedToTarget lands and an immediate pages() sees none.
+       * Swapping only these two frames flips chrome-devtools-mcp's list_pages from
+       * "No page selected" to the live page.
+       */
+      expect(browserLevel.emitFirst).toBe(true);
     }
 
     const sessionLevel = decideCdpCommand(

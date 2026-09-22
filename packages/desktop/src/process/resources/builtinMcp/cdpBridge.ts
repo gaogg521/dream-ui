@@ -207,8 +207,22 @@ const handleSocketMessage = async (ws: WebSocket, raw: string, announcedSessions
   }
 
   if (decision.kind === 'reply' || decision.kind === 'reply-and-emit') {
-    ws.send(JSON.stringify({ id, result: decision.payload, sessionId }));
-    if (decision.kind === 'reply-and-emit') {
+    const sendReply = () => ws.send(JSON.stringify({ id, result: decision.payload, sessionId }));
+    if (decision.kind !== 'reply-and-emit') {
+      sendReply();
+      return;
+    }
+    /**
+     * 事件相对回包的先后由 `emitFirst` 决定，**不是风格问题**：puppeteer 的
+     * TargetManager 只等回包，页面注册却靠事件，顺序反了 `connect()` 就会在页面
+     * 注册之前返回。详见 cdpTargetProtocol.ts 里 `emitFirst` 的说明。
+     *
+     * Whether events precede the reply is decided by `emitFirst` and is NOT cosmetic:
+     * puppeteer's TargetManager awaits only the reply while page registration rides on the
+     * event, so the wrong order lets `connect()` resolve before the page exists. See the
+     * `emitFirst` docs in cdpTargetProtocol.ts.
+     */
+    const emitAll = () => {
       for (const evt of decision.emit) {
         /**
          * 同一个 sessionId 只宣布一次 attachedToTarget —— 重复宣布会让 puppeteer 换掉
@@ -253,6 +267,13 @@ const handleSocketMessage = async (ws: WebSocket, raw: string, announcedSessions
         }
         ws.send(JSON.stringify({ method: evt.method, params: evt.params }));
       }
+    };
+    if (decision.emitFirst) {
+      emitAll();
+      sendReply();
+    } else {
+      sendReply();
+      emitAll();
     }
     return;
   }

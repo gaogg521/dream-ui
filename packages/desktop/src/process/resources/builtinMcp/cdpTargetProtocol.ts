@@ -62,6 +62,30 @@ export type CdpDecision =
       kind: 'reply-and-emit';
       payload: Record<string, unknown>;
       emit: Array<{ method: string; params: Record<string, unknown> }>;
+      /**
+       * 先发事件再回包（真实 Chrome 的顺序）。**这个顺序是功能性的，不是风格问题。**
+       *
+       * puppeteer 的 TargetManager.initialize() 只 await 两条命令的**回包**：
+       * setDiscoverTargets、setAutoAttach，然后立刻 `#finishInitializationIfReady()`。
+       * 而待等列表 `#targetsIdsForInit` **只收 type==='tab' 的目标**，我们的目标是
+       * 'page'，一个都进不去 —— 于是 `connect()` 在 attachedToTarget 到达之前就返回了。
+       *
+       * 调用方只要连上就问页面（chrome-devtools-mcp 正是如此：日志里 "Connected
+       * Puppeteer" 和 "list_pages context: resolved" 在同一毫秒），拿到的就是 0 个页面，
+       * 报 "No page selected"。事件晚几毫秒才到，但那时快照已经取过了。
+       *
+       * Emit the events before the reply, the way real Chrome orders them. **This ordering is
+       * functional, not cosmetic.**
+       *
+       * puppeteer's TargetManager.initialize() awaits only the RESPONSES to
+       * setDiscoverTargets and setAutoAttach, then calls `#finishInitializationIfReady()`.
+       * Its wait-list `#targetsIdsForInit` only ever collects targets of type 'tab', and ours
+       * is a 'page', so nothing holds initialization open and `connect()` resolves before
+       * attachedToTarget arrives. A caller that asks for pages immediately after connecting
+       * — chrome-devtools-mcp does exactly that — sees zero pages and reports
+       * "No page selected".
+       */
+      emitFirst?: boolean;
     }
   | { kind: 'forward' }
   | { kind: 'error'; message: string };
@@ -186,6 +210,15 @@ export const decideCdpCommand = (req: CdpRequest, getTargetInfo: () => TargetInf
       return {
         kind: 'reply-and-emit',
         payload: {},
+        /**
+         * 必须先于回包发出，见 `emitFirst` 的说明。晚一步这个页面就注册不上，
+         * 表现是所有页面级工具报 "No page selected"、list_pages 永远为空。
+         *
+         * Must precede the reply — see `emitFirst`. One step later and the page never
+         * registers: every page-scoped tool reports "No page selected" and list_pages
+         * stays empty.
+         */
+        emitFirst: true,
         emit: [
           {
             method: 'Target.attachedToTarget',
