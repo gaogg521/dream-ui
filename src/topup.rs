@@ -313,15 +313,22 @@ impl From<db::TopupCredit> for TopupCreditView {
 /// Lists credited real-money top-ups for `vendor_id`, newest first. Ops-only
 /// — same trust tier as `/internal/stats`: reachable, not authenticated
 /// beyond network placement, not advertised to the desktop client.
+///
+/// `order_id` filters to one order — for the "I'm staring at an unfamiliar
+/// row in Baoyun's own wallet console, whose was it" direction (Baoyun
+/// support confirmed their "交易号" column *is* this broker's order id).
+/// `install_id` filters to one user's whole top-up history instead. Either,
+/// both, or neither may be set.
 pub async fn list_topups(
     state: &AppState,
     vendor_id: &str,
     install_id: Option<&str>,
+    order_id: Option<&str>,
 ) -> Result<Vec<TopupCreditView>, AppError> {
     if !state.vendors.contains_key(vendor_id) {
         return Err(AppError::VendorUnknown);
     }
-    let credits = db::list_topup_credits(&state.pool, vendor_id, install_id)
+    let credits = db::list_topup_credits(&state.pool, vendor_id, install_id, order_id)
         .await
         .map_err(db_error("list topup credits"))?;
     Ok(credits.into_iter().map(TopupCreditView::from).collect())
@@ -364,6 +371,7 @@ pub async fn get_topup_order_handler(
 #[derive(Debug, Deserialize)]
 pub struct ListTopupsQuery {
     pub install_id: Option<String>,
+    pub order_id: Option<String>,
 }
 
 pub async fn list_topups_handler(
@@ -372,6 +380,12 @@ pub async fn list_topups_handler(
     Query(query): Query<ListTopupsQuery>,
 ) -> Result<Json<Vec<TopupCreditView>>, AppError> {
     Ok(Json(
-        list_topups(&state, &vendor, query.install_id.as_deref()).await?,
+        list_topups(
+            &state,
+            &vendor,
+            query.install_id.as_deref(),
+            query.order_id.as_deref(),
+        )
+        .await?,
     ))
 }

@@ -385,7 +385,7 @@ async fn polling_without_an_issuance_is_not_issued() {
 #[tokio::test]
 async fn listing_topups_is_empty_before_anything_is_credited() {
     let (state, _vendor) = make_state(Some("install-1")).await;
-    let topups = list_topups(&state, VENDOR_ID, None)
+    let topups = list_topups(&state, VENDOR_ID, None, None)
         .await
         .expect("listing should succeed even with nothing credited yet");
     assert!(topups.is_empty());
@@ -398,7 +398,7 @@ async fn listing_topups_does_not_show_a_still_pending_order() {
         .await
         .unwrap();
     // Never polled to success — nothing should have been credited.
-    let topups = list_topups(&state, VENDOR_ID, None).await.unwrap();
+    let topups = list_topups(&state, VENDOR_ID, None, None).await.unwrap();
     assert!(topups.is_empty());
 }
 
@@ -413,7 +413,7 @@ async fn listing_topups_shows_a_credited_order_with_its_vendor_key_handle() {
         .await
         .expect("poll should credit");
 
-    let topups = list_topups(&state, VENDOR_ID, None).await.unwrap();
+    let topups = list_topups(&state, VENDOR_ID, None, None).await.unwrap();
     assert_eq!(topups.len(), 1);
     assert_eq!(topups[0].order_id, "order-1");
     assert_eq!(topups[0].install_id, "install-1");
@@ -452,22 +452,48 @@ async fn listing_topups_can_be_scoped_to_one_install() {
     // up when scoped, and the unscoped listing must still see both none
     // (install-2 has zero credits) so this also doubles as a check that the
     // filter doesn't accidentally hide install-1's own row.
-    let scoped = list_topups(&state, VENDOR_ID, Some("install-1"))
+    let scoped = list_topups(&state, VENDOR_ID, Some("install-1"), None)
         .await
         .unwrap();
     assert_eq!(scoped.len(), 1);
     assert_eq!(scoped[0].install_id, "install-1");
 
-    let scoped_to_other = list_topups(&state, VENDOR_ID, Some("install-2"))
+    let scoped_to_other = list_topups(&state, VENDOR_ID, Some("install-2"), None)
         .await
         .unwrap();
     assert!(scoped_to_other.is_empty());
 }
 
+/// The direction Baoyun's own support pointed at: their wallet console's
+/// "交易号" column is this broker's order id, so an operator staring at an
+/// unfamiliar row there should be able to paste it in and find the install.
+#[tokio::test]
+async fn listing_topups_can_be_scoped_to_one_order_id() {
+    let (state, vendor) = make_state(Some("install-1")).await;
+    create_topup_order(&state, VENDOR_ID, "install-1", 10.0)
+        .await
+        .unwrap();
+    vendor.set_status(TopupOrderStatus::Success);
+    get_topup_order(&state, VENDOR_ID, "install-1", "order-1")
+        .await
+        .unwrap();
+
+    let found = list_topups(&state, VENDOR_ID, None, Some("order-1"))
+        .await
+        .unwrap();
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].install_id, "install-1");
+
+    let not_found = list_topups(&state, VENDOR_ID, None, Some("some-other-order"))
+        .await
+        .unwrap();
+    assert!(not_found.is_empty());
+}
+
 #[tokio::test]
 async fn listing_topups_for_an_unknown_vendor_is_404() {
     let (state, _vendor) = make_state(Some("install-1")).await;
-    let err = list_topups(&state, "not-a-vendor", None)
+    let err = list_topups(&state, "not-a-vendor", None, None)
         .await
         .expect_err("unknown vendor must be refused");
     assert!(matches!(err, AppError::VendorUnknown));
