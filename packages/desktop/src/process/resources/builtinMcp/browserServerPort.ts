@@ -110,7 +110,13 @@ export const buildMcpSpawnCommand = (deps: {
   // the routing is pure friction — every step would need list_pages first, with the
   // id echoed back and one mistake costing a whole turn. Disabling restores the
   // selected-page mode where every page-scoped tool acts on the one page there is.
-  const mcpArgs = ['-y', `chrome-devtools-mcp@${deps.version}`, '--browser-url', deps.browserUrl, '--no-page-id-routing'];
+  const mcpArgs = [
+    '-y',
+    `chrome-devtools-mcp@${deps.version}`,
+    '--browser-url',
+    deps.browserUrl,
+    '--no-page-id-routing',
+  ];
   return deps.platform === 'win32'
     ? { command: 'cmd.exe', args: ['/c', 'npx', ...mcpArgs] }
     : { command: 'npx', args: mcpArgs };
