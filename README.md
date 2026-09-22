@@ -33,8 +33,8 @@
 <br><br>
 
 | **38+** CLI Agent | **274** 助手与专家 | **私有化部署** | **v3.0** 开箱即用 |
-| :---------------: | :----------------: | :-----------------: | :---------------: |
-|   本机自动识别    | 22 官方 + 252 专家 |    数据不出本机     | 免费模型一键开聊  |
+| :---------------: | :----------------: | :------------: | :---------------: |
+|   本机自动识别    | 22 官方 + 252 专家 |  数据不出本机  | 免费模型一键开聊  |
 
 <img src="https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-64748b?style=flat-square" alt="Platform">
 <img src="https://img.shields.io/github/v/release/gaogg521/dream-ui?display_name=tag&sort=semver&style=flat-square&color=2563eb" alt="Version">

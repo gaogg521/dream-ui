@@ -1,7 +1,7 @@
 {
-  "private": true,
   "name": "1one-claudecode",
   "version": "3.0.7",
+  "private": true,
   "description": "One Work — Visual control center for Claude Code native capabilities.",
   "keywords": [],
   "license": "UNLICENSED",
