@@ -279,3 +279,22 @@ export const tokensMatch = (a: string, b: string): boolean => {
   }
   return diff === 0;
 };
+
+/**
+ * 客户端发来的命令这座桥不认识吗？
+ *
+ * CDP 对未知方法的回复是固定形状 `'Domain.method' wasn't found`（JSON-RPC
+ * -32601）。**只**匹配这个形状，绝不匹配任何含 "not found" 的自由文本：
+ * `Node with given id not found` / `Target not found` / `Session not found`
+ * 都是正常的业务失败，吞掉它们等于告诉调用方「成功了」。
+ *
+ * Does the bridge simply not know this command?
+ *
+ * CDP reports an unknown method in one fixed shape — `'Domain.method' wasn't
+ * found` (JSON-RPC -32601). Match that shape ONLY, never free text that merely
+ * contains "not found": `Node with given id not found`, `Target not found` and
+ * `Session not found` are ordinary operational failures, and swallowing one
+ * tells the caller the operation succeeded.
+ */
+export const isUnknownCdpMethodError = (message: string): boolean =>
+  /^'[A-Za-z]+\.[A-Za-z]+' wasn't found\.?$/.test(message.trim()) || /(^|\D)-32601(\D|$)/.test(message);

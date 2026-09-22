@@ -187,27 +187,37 @@ const connectCdp = (wsUrl: string): Promise<CdpConnection> =>
     });
   });
 
-const withTimeout = <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> =>
-  Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${label} timeout`)), ms))]);
+const withTimeout = <T>(promise: Promise<T>, ms: number, label: string): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${label} timeout`)), ms)),
+  ]);
 
 /** 抽正文：attach → evaluate → 取 value。/ Attach, evaluate, take the value. */
 const readPage = async (mode: 'article' | 'full'): Promise<PageContent> => {
   const browserUrl = resolveBrowserUrl({ env: env() });
   if (!browserUrl) {
-    throw new Error('应用内浏览器 CDP 通道不可用（DREAM_CDP_ACTIVE_PORT 未设置）。请从 One Work 应用内发起本调用，并确认浏览器面板已打开。');
+    throw new Error(
+      '应用内浏览器 CDP 通道不可用（DREAM_CDP_ACTIVE_PORT 未设置）。请从 One Work 应用内发起本调用，并确认浏览器面板已打开。'
+    );
   }
   const port = Number(new URL(browserUrl).port);
   if (!Number.isInteger(port) || port <= 0) throw new Error(`CDP 地址异常: ${browserUrl}`);
   const { wsUrl, targetId } = await withTimeout(discoverPage(port), CONNECT_TIMEOUT_MS, 'discovery');
   const conn = await withTimeout(connectCdp(wsUrl), CONNECT_TIMEOUT_MS, 'connect');
   try {
-    const attached = (await withTimeout(conn.send('Target.attachToTarget', { targetId, flatten: true }), CONNECT_TIMEOUT_MS, 'attach')) as {
+    const attached = (await withTimeout(
+      conn.send('Target.attachToTarget', { targetId, flatten: true }),
+      CONNECT_TIMEOUT_MS,
+      'attach'
+    )) as {
       sessionId?: string;
     };
     const sessionId = attached.sessionId;
-    const expression = mode === 'full'
-      ? `(() => { const b = document.body; return { title: document.title || '', url: location.href, text: (b ? b.innerText : '').replace(/\\n{3,}/g, '\\n\\n').trim(), length: (b ? b.innerText : '').length } })()`
-      : EXTRACT_SCRIPT;
+    const expression =
+      mode === 'full'
+        ? `(() => { const b = document.body; return { title: document.title || '', url: location.href, text: (b ? b.innerText : '').replace(/\\n{3,}/g, '\\n\\n').trim(), length: (b ? b.innerText : '').length } })()`
+        : EXTRACT_SCRIPT;
     const result = (await withTimeout(
       conn.send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: false }, sessionId),
       EVALUATE_TIMEOUT_MS,
@@ -238,7 +248,14 @@ const main = async (): Promise<void> => {
       'screenshot makes the model guess from pixels. Long pages come back in slices; if the response says there is more, ' +
       'call again with start=nextStart to continue.',
     {
-      start: z.number().int().min(0).optional().describe('Character offset to start reading from (0-based). Omit on the first call; use nextStart from the previous response to continue.'),
+      start: z
+        .number()
+        .int()
+        .min(0)
+        .optional()
+        .describe(
+          'Character offset to start reading from (0-based). Omit on the first call; use nextStart from the previous response to continue.'
+        ),
       length: z
         .number()
         .int()
@@ -249,7 +266,9 @@ const main = async (): Promise<void> => {
       mode: z
         .enum(['article', 'full'])
         .optional()
-        .describe("article (default) extracts the main content and skips sidebars/headers; full returns everything visible on the page."),
+        .describe(
+          'article (default) extracts the main content and skips sidebars/headers; full returns everything visible on the page.'
+        ),
     },
     async ({ start, length, mode }) => {
       const sliceStart = start ?? 0;
@@ -258,13 +277,23 @@ const main = async (): Promise<void> => {
         const page = await readPage(mode ?? 'article');
         if (page.length === 0) {
           return {
-            content: [{ type: 'text' as const, text: `页面没有可见文本（title: ${page.title || '无'}，url: ${page.url}）。可能是空白页、纯图片页或内容尚未加载完成。` }],
+            content: [
+              {
+                type: 'text' as const,
+                text: `页面没有可见文本（title: ${page.title || '无'}，url: ${page.url}）。可能是空白页、纯图片页或内容尚未加载完成。`,
+              },
+            ],
             isError: true,
           };
         }
         if (sliceStart >= page.length) {
           return {
-            content: [{ type: 'text' as const, text: `start=${sliceStart} 已超出本文长度（共 ${page.length} 字）。全文已读完；需要重读请从 start=0 开始。` }],
+            content: [
+              {
+                type: 'text' as const,
+                text: `start=${sliceStart} 已超出本文长度（共 ${page.length} 字）。全文已读完；需要重读请从 start=0 开始。`,
+              },
+            ],
             isError: true,
           };
         }

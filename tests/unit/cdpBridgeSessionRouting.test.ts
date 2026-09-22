@@ -48,6 +48,7 @@ import {
   buildTargetInfo,
   decideCdpCommand,
   isAcceptableSessionId,
+  isUnknownCdpMethodError,
   tokensMatch,
 } from '@process/resources/builtinMcp/cdpTargetProtocol';
 
@@ -225,5 +226,43 @@ describe('cdpBridge reply shape — sessionId must be echoed', () => {
      */
     const reply = buildErrorReply(1, 'nope', undefined);
     expect('sessionId' in reply).toBe(false);
+  });
+});
+
+/**
+ * 「方法不存在」可以吞，业务错误不能吞。
+ *
+ * 桥对客户端伪装成 Chrome，而客户端按自己的协议版本探测域（puppeteer 25.10 在
+ * 页面初始化时必发 Autofill.*，Electron 没这个域）。把这种探测回成空成功是对的。
+ * 但同一段代码一旦放宽到裸的 "not found"，就会把 `Node with given id not found`
+ * 这类正常失败也改写成成功——调用方拿到 `{}` 会以为操作生效了。
+ *
+ * Swallow "method not found"; never swallow an operational error. Widening the
+ * match to a bare "not found" turns real failures into `{}` successes, which the
+ * caller reads as "it worked".
+ */
+describe('cdpBridge unknown-method tolerance — scoped to method-not-found only', () => {
+  it('treats an unimplemented CDP domain as unknown-method', () => {
+    expect(isUnknownCdpMethodError("'Autofill.enable' wasn't found")).toBe(true);
+    expect(isUnknownCdpMethodError("'Autofill.setAddresses' wasn't found.")).toBe(true);
+    expect(isUnknownCdpMethodError("  'WebMCP.enable' wasn't found  ")).toBe(true);
+  });
+
+  it('treats the JSON-RPC method-not-found code as unknown-method', () => {
+    expect(isUnknownCdpMethodError('{"code":-32601,"message":"no such method"}')).toBe(true);
+  });
+
+  it('does NOT swallow operational errors that merely say "not found"', () => {
+    expect(isUnknownCdpMethodError('Node with given id not found')).toBe(false);
+    expect(isUnknownCdpMethodError('Target not found')).toBe(false);
+    expect(isUnknownCdpMethodError('Session not found')).toBe(false);
+    expect(isUnknownCdpMethodError('Cookie not found')).toBe(false);
+    expect(isUnknownCdpMethodError('No frame with given id found')).toBe(false);
+  });
+
+  it('does NOT swallow the vaguer phrasings an earlier draft matched', () => {
+    expect(isUnknownCdpMethodError('unsupported color format')).toBe(false);
+    expect(isUnknownCdpMethodError('Uncaught (in promise): unknown command received')).toBe(false);
+    expect(isUnknownCdpMethodError("The browser doesn't support this feature")).toBe(false);
   });
 });

@@ -27,6 +27,7 @@ import {
   buildVersionPayload,
   decideCdpCommand,
   isAcceptableSessionId,
+  isUnknownCdpMethodError,
   tokensMatch,
   type CdpRequest,
 } from './cdpTargetProtocol';
@@ -282,6 +283,43 @@ const handleSocketMessage = async (ws: WebSocket, raw: string, announcedSessions
     ws.send(JSON.stringify({ id, result: result ?? {}, sessionId }));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    /**
+     * 「方法不存在」按空成功应答，而不是把错误回给客户端。
+     *
+     * 桥对客户端伪装成一个 Chrome，客户端会按它自己认知的协议版本探测域——新版
+     * puppeteer 25.10 在页面初始化时固定发 Autofill.enable / Autofill.setAddresses，
+     * Electron 的 debugger 没实现这两个域，直接回错会让整个 CdpPage 创建链中途
+     * 抛弃，页面永远注册不上，所有页面级工具都报 "No page selected"。真实的
+     * 浏览器行为是：旧版本遇到未实现的域只影响该域本身，不会拖垮页面。
+     * 所以这里对明确的「方法不存在」类错误回空结果，其他错误照常上报。
+     *
+     * "Method not found" errors are answered with an empty success instead of the
+     * error. The bridge impersonates a Chrome, and clients probe domains per their
+     * own protocol version — puppeteer 25.10 unconditionally sends
+     * Autofill.enable / Autofill.setAddresses during page setup, the Electron
+     * debugger has no Autofill domain, and failing that request aborts the whole
+     * CdpPage creation chain: the page never registers and every page-scoped tool
+     * reports "No page selected". A real browser treats an unimplemented domain as
+     * a per-domain no-op, never as a page-level failure.
+     *
+     * 只认「方法不存在」这一种形状：CDP 回的是 `'Domain.method' wasn't found`
+     * （JSON-RPC -32601）。**绝不能**放宽到裸的 `not found`——
+     * `Node with given id not found`、`Target not found`、`Session not found`
+     * 都是正常的业务错误，把它们改写成空成功，调用方会以为操作成功了，
+     * 比直接报错更难查。见本文件测试「refuses commands it cannot honour
+     * instead of pretending they worked」。
+     *
+     * Matches ONE shape: method-not-found, which CDP reports as
+     * `'Domain.method' wasn't found` (JSON-RPC -32601). It must NOT be widened to
+     * a bare `not found` — `Node with given id not found`, `Target not found` and
+     * `Session not found` are ordinary operational errors, and rewriting those
+     * into an empty success tells the caller the operation succeeded, which is
+     * strictly harder to debug than the error it replaced.
+     */
+    if (isUnknownCdpMethodError(message)) {
+      ws.send(JSON.stringify({ id, result: {}, sessionId }));
+      return;
+    }
     ws.send(JSON.stringify({ id, error: { code: -32000, message }, sessionId }));
   }
 };
