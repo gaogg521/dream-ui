@@ -121,6 +121,69 @@ impl KeyUsage {
     }
 }
 
+/// What to ask the vendor to create a real-money top-up order for.
+#[derive(Debug, Clone)]
+pub struct TopupOrderSpec {
+    /// In the vendor's own currency (CNY for Baoyun).
+    pub amount: f64,
+    /// Caller-supplied reconciliation string, echoed back by the vendor on
+    /// every later read of this order — this broker uses it to bind an order
+    /// to the install that created it (see `topup::get_topup_order`), not to
+    /// route the money: for a wallet-style vendor the payment always lands in
+    /// the shared account balance, never a specific key.
+    pub reference: String,
+    /// Lets a retried create-call return the existing order instead of
+    /// minting a second one.
+    pub idempotency_key: String,
+}
+
+/// A real-money top-up order, as the vendor reports it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TopupOrder {
+    pub id: String,
+    pub status: TopupOrderStatus,
+    /// ISO 4217 code `amount` is denominated in.
+    pub currency: String,
+    pub amount: f64,
+    /// Echoed back exactly as supplied at creation.
+    pub reference: Option<String>,
+    /// A scannable pay link/QR payload. Present only while `Pending`.
+    pub qr_code: Option<String>,
+    /// Unix seconds. Present only while `Pending`.
+    pub expires_at: Option<i64>,
+    /// Unix seconds. Present only once `Success`.
+    pub completed_at: Option<i64>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TopupOrderStatus {
+    Pending,
+    Success,
+    Failed,
+    Expired,
+}
+
+impl TopupOrderStatus {
+    pub fn parse(raw: &str) -> Option<Self> {
+        match raw {
+            "pending" => Some(Self::Pending),
+            "success" => Some(Self::Success),
+            "failed" => Some(Self::Failed),
+            "expired" => Some(Self::Expired),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Pending => "pending",
+            Self::Success => "success",
+            Self::Failed => "failed",
+            Self::Expired => "expired",
+        }
+    }
+}
+
 /// Everything the desktop client needs to turn an issued key into a working
 /// provider row. Carrying the platform here is what stops the client from
 /// hardcoding one vendor's name.
@@ -146,8 +209,10 @@ pub enum VendorError {
         status: u16,
         body: String,
     },
-    /// The vendor cannot do what was asked — currently only
-    /// [`ProvisioningMode::MeteredProxy`] reaching an issuance call.
+    /// The vendor cannot do what was asked: either
+    /// [`ProvisioningMode::MeteredProxy`] reaching an issuance call, or a
+    /// vendor with no top-up-order API reaching
+    /// [`TokenVendor::create_topup_order`] / [`TokenVendor::get_topup_order`].
     #[error("{vendor} does not support {operation}")]
     Unsupported {
         vendor: &'static str,
@@ -207,4 +272,24 @@ pub trait TokenVendor: Send + Sync {
     }
 
     async fn revoke(&self, handle: &str) -> Result<(), VendorError>;
+
+    /// Creates a real-money top-up order. Defaults to `Unsupported` — most
+    /// vendors have no such API; a vendor that does (Baoyun's
+    /// `/apis/v1/topup/orders`) overrides this rather than the caller having
+    /// to know in advance which vendors can take real money.
+    async fn create_topup_order(&self, _spec: TopupOrderSpec) -> Result<TopupOrder, VendorError> {
+        Err(VendorError::Unsupported {
+            vendor: self.id(),
+            operation: "topup_order_create",
+        })
+    }
+
+    /// Reads one top-up order's current status. Same default-refuses shape as
+    /// [`Self::create_topup_order`].
+    async fn get_topup_order(&self, _order_id: &str) -> Result<TopupOrder, VendorError> {
+        Err(VendorError::Unsupported {
+            vendor: self.id(),
+            operation: "topup_order_get",
+        })
+    }
 }

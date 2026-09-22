@@ -29,13 +29,21 @@
 //!   trial model instead of a hardcoded id — join by `id`, filter to
 //!   token-billed models tagged `output.text` and nothing else `output.*`,
 //!   take the cheapest by `input + output`. See `pick_cheapest_text_model`.
+//! - `POST /apis/v1/topup/orders` / `GET /apis/v1/topup/orders/{id}`, also
+//!   live since 2026-09-22: real-money top-up via a scan-to-pay QR order.
+//!   The money always lands in **this account's shared balance**, never a
+//!   specific key — there is no "top up this key" concept on Baoyun's side,
+//!   only `reference` (an opaque string this broker sets and gets back
+//!   unchanged) for tying an order back to the install that created it. See
+//!   `crate::topup` for how that reference is used to route the eventual
+//!   `top_up` call to the right key.
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    IssuedKey, KeySpec, KeyUsage, ProvisioningMode, ResetPeriod, TokenVendor, VendorClientConfig,
-    VendorError,
+    IssuedKey, KeySpec, KeyUsage, ProvisioningMode, ResetPeriod, TokenVendor, TopupOrder,
+    TopupOrderSpec, TopupOrderStatus, VendorClientConfig, VendorError,
 };
 
 pub const ID: &str = "baoyun";
@@ -165,6 +173,56 @@ impl From<KeyDetail> for KeyUsage {
             disabled: data.status != 1,
             currency: CURRENCY.to_string(),
         }
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct CreateTopupOrderBody {
+    /// Always sent explicitly rather than omitted — `online` happens to be
+    /// the only method Baoyun offers today, but a future silent addition of
+    /// a second method must not change what this broker asks for.
+    method: &'static str,
+    amount: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reference: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    idempotency_key: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct TopupOrderResponseBody {
+    id: String,
+    status: String,
+    currency: String,
+    amount: f64,
+    #[serde(default)]
+    reference: Option<String>,
+    #[serde(default)]
+    qr_code: Option<String>,
+    #[serde(default)]
+    expires_at: Option<i64>,
+    #[serde(default)]
+    completed_at: Option<i64>,
+}
+
+impl TryFrom<TopupOrderResponseBody> for TopupOrder {
+    type Error = VendorError;
+
+    fn try_from(body: TopupOrderResponseBody) -> Result<Self, VendorError> {
+        let status = TopupOrderStatus::parse(&body.status).ok_or_else(|| VendorError::Request {
+            vendor: ID,
+            message: format!("unrecognised topup order status `{}`", body.status),
+        })?;
+        Ok(Self {
+            id: body.id,
+            status,
+            currency: body.currency,
+            amount: body.amount,
+            reference: body.reference,
+            qr_code: body.qr_code,
+            expires_at: body.expires_at,
+            completed_at: body.completed_at,
+        })
     }
 }
 
@@ -394,6 +452,33 @@ impl TokenVendor for BaoyunVendor {
             })
         }
     }
+
+    async fn create_topup_order(&self, spec: TopupOrderSpec) -> Result<TopupOrder, VendorError> {
+        let body = CreateTopupOrderBody {
+            method: "online",
+            amount: spec.amount,
+            reference: Some(spec.reference),
+            idempotency_key: Some(spec.idempotency_key),
+        };
+        let resp: TopupOrderResponseBody = self
+            .request(
+                self.http
+                    .post(format!("{}/topup/orders", self.account_api_base))
+                    .json(&body),
+            )
+            .await?;
+        resp.try_into()
+    }
+
+    async fn get_topup_order(&self, order_id: &str) -> Result<TopupOrder, VendorError> {
+        let resp: TopupOrderResponseBody = self
+            .request(
+                self.http
+                    .get(format!("{}/topup/orders/{order_id}", self.account_api_base)),
+            )
+            .await?;
+        resp.try_into()
+    }
 }
 
 #[cfg(test)]
@@ -565,5 +650,74 @@ mod tests {
             }))
         });
         assert!(result.is_err(), "expected the debug_assert to panic");
+    }
+
+    #[test]
+    fn create_topup_order_body_carries_reference_and_idempotency_key() {
+        let body = CreateTopupOrderBody {
+            method: "online",
+            amount: 10.0,
+            reference: Some("baoyun:install-1".to_string()),
+            idempotency_key: Some("ord-1".to_string()),
+        };
+        let json = serde_json::to_value(&body).unwrap();
+        assert_eq!(json["method"], "online");
+        assert_eq!(json["amount"], 10.0);
+        assert_eq!(json["reference"], "baoyun:install-1");
+        assert_eq!(json["idempotency_key"], "ord-1");
+    }
+
+    /// Mirrors the docs' "pending (with QR)" example.
+    #[test]
+    fn parses_a_pending_topup_order() {
+        let body: TopupOrderResponseBody = serde_json::from_value(serde_json::json!({
+            "object": "topup_order",
+            "id": "BF1715367049Ab12Cd",
+            "method": "online",
+            "status": "pending",
+            "currency": "CNY",
+            "amount": 10,
+            "created": 1715367049,
+            "reference": "inv-1001",
+            "qr_code": "https://pay.example/qr",
+            "expires_at": 1715368849
+        }))
+        .unwrap();
+        let order = TopupOrder::try_from(body).unwrap();
+        assert_eq!(order.status, TopupOrderStatus::Pending);
+        assert_eq!(order.qr_code.as_deref(), Some("https://pay.example/qr"));
+        assert_eq!(order.reference.as_deref(), Some("inv-1001"));
+        assert_eq!(order.completed_at, None);
+    }
+
+    /// Mirrors the docs' "settled" example: no `qr_code`/`expires_at`, has
+    /// `completed_at`.
+    #[test]
+    fn parses_a_settled_topup_order() {
+        let body: TopupOrderResponseBody = serde_json::from_value(serde_json::json!({
+            "object": "topup_order",
+            "id": "BF1715367049Ab12Cd",
+            "method": "online",
+            "status": "success",
+            "currency": "CNY",
+            "amount": 10,
+            "created": 1715367049,
+            "reference": "inv-1001",
+            "completed_at": 1715367200
+        }))
+        .unwrap();
+        let order = TopupOrder::try_from(body).unwrap();
+        assert_eq!(order.status, TopupOrderStatus::Success);
+        assert_eq!(order.qr_code, None);
+        assert_eq!(order.completed_at, Some(1715367200));
+    }
+
+    #[test]
+    fn an_unrecognised_status_is_a_request_error_not_a_panic() {
+        let body: TopupOrderResponseBody = serde_json::from_value(serde_json::json!({
+            "id": "x", "status": "something_new", "currency": "CNY", "amount": 1.0
+        }))
+        .unwrap();
+        assert!(TopupOrder::try_from(body).is_err());
     }
 }

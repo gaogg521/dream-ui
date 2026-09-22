@@ -26,6 +26,15 @@ pub enum AppError {
     /// `/v1/trial-keys` (or friends) named a vendor this broker has no
     /// [`crate::vendor::TokenVendor`] configured for. -> 404
     VendorUnknown,
+    /// `/v1/topup/orders` named a vendor with no top-up-order API — the
+    /// vendor's [`crate::vendor::TokenVendor::create_topup_order`] /
+    /// `get_topup_order` refused with `VendorError::Unsupported`. -> 400
+    TopupUnsupported,
+    /// A polled top-up order's `reference` did not match the install polling
+    /// it. Reported as "no such order" rather than "wrong owner" — same
+    /// reasoning as `NotIssued`: the honest answer without confirming the
+    /// order exists for someone else. -> 404
+    TopupOrderMismatch,
 
     // --- mode B (metered proxy) ---
     /// `/v1/metered/*` named a vendor that is not configured. -> 404
@@ -62,6 +71,8 @@ impl AppError {
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
             AppError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::VendorUnknown => StatusCode::NOT_FOUND,
+            AppError::TopupUnsupported => StatusCode::BAD_REQUEST,
+            AppError::TopupOrderMismatch => StatusCode::NOT_FOUND,
             AppError::MeteredVendorUnknown => StatusCode::NOT_FOUND,
             AppError::MeteredAccountUnknown => StatusCode::NOT_FOUND,
             AppError::MeteredPackageUnknown => StatusCode::BAD_REQUEST,
@@ -83,6 +94,8 @@ impl AppError {
             AppError::BadRequest(_) => "bad_request",
             AppError::Internal(_) => "internal_error",
             AppError::VendorUnknown => "vendor_unknown",
+            AppError::TopupUnsupported => "topup_unsupported",
+            AppError::TopupOrderMismatch => "topup_order_mismatch",
             AppError::MeteredVendorUnknown => "metered_vendor_unknown",
             AppError::MeteredAccountUnknown => "metered_account_unknown",
             AppError::MeteredPackageUnknown => "metered_package_unknown",

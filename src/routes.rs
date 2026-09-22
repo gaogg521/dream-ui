@@ -16,11 +16,18 @@ use crate::service::{
     apply_top_up, issue_trial_key, read_quota_status, AppState, QuotaStatusResponse,
     TrialKeyRequest, TrialKeyResponse,
 };
+use crate::topup;
 
 pub fn build_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/v1/trial-keys", post(create_trial_key))
         .route("/v1/quota/status", post(quota_status))
+        // Real-money top-up (mode A vendors that support it — see
+        // TokenVendor::create_topup_order). Literal `/orders` before
+        // `/orders/:id` for the same reason mode B's order routes are
+        // ordered this way.
+        .route("/v1/topup/orders", post(topup::create_topup_order_handler))
+        .route("/v1/topup/orders/:id", get(topup::get_topup_order_handler))
         // Mode B (metered proxy). The forwarding catch-all lives under its own
         // `/proxy/` segment so it never collides with these fixed routes.
         .route("/v1/metered/claim", post(metered::claim_handler))
