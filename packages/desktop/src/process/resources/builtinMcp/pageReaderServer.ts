@@ -242,11 +242,15 @@ const main = async (): Promise<void> => {
 
   server.tool(
     'read_page',
-    'Read the visible text content of the page currently open in the One Work built-in browser (the side preview panel). ' +
-      'Use this instead of take_screenshot whenever the task is to READ what the page says — articles, documentation, ' +
-      'search results, prices, reviews, tables: this returns the actual complete text, reliably and cheaply, while a ' +
-      'screenshot makes the model guess from pixels. Long pages come back in slices; if the response says there is more, ' +
-      'call again with start=nextStart to continue.',
+    'Read the page currently open in the One Work built-in browser (the side preview panel). ' +
+      'The response ALWAYS begins with the page title and URL, so this one call also answers ' +
+      '"what page/site am I on" — there is no need to call list_pages first, and no need to call ' +
+      'take_snapshot or take_screenshot afterwards just to see the content. ' +
+      'Use this whenever the task is to READ what the page says — articles, documentation, search results, ' +
+      'prices, reviews, tables: it returns the actual text, reliably and cheaply, while a snapshot returns an ' +
+      'accessibility tree built for clicking and a screenshot makes the model guess from pixels. ' +
+      'Reach for take_snapshot only when you actually need element handles to interact with the page. ' +
+      'Long pages come back in slices; if the response says there is more, call again with start=nextStart.',
     {
       start: z
         .number()
