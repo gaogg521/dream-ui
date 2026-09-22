@@ -82,6 +82,49 @@ pub async fn count_active_issued_since(
     Ok(count)
 }
 
+/// One credited real-money top-up, joined against `issuances` so an operator
+/// can tell which vendor key the money landed on without a second lookup.
+/// `vendor_key_handle` is `None` only if the issuance was since disabled/
+/// deleted from this table by something other than the normal flow — the
+/// `topup_credits` row itself is never removed once written (see
+/// `crate::topup::credit_once`'s rollback path, which only fires *before* a
+/// row is ever considered credited).
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct TopupCredit {
+    pub order_id: String,
+    pub vendor: String,
+    pub install_id: String,
+    pub vendor_key_handle: Option<String>,
+    pub amount: f64,
+    pub credited_at: i64,
+}
+
+/// Lists credited top-ups for `vendor`, newest first — the reconciliation
+/// view `/internal/topups` exists for: "who did this real-money payment
+/// belong to." Optionally scoped to one `install_id`. Only rows that made it
+/// into `topup_credits` appear here (i.e. orders that actually settled and
+/// were credited) — a `pending`/`failed`/`expired` order was never inserted,
+/// so it has nothing to show here by design; those still show up in the
+/// vendor's own payment console, just not attributable to an install there.
+pub async fn list_topup_credits(
+    pool: &SqlitePool,
+    vendor: &str,
+    install_id: Option<&str>,
+) -> sqlx::Result<Vec<TopupCredit>> {
+    sqlx::query_as::<_, TopupCredit>(
+        "SELECT tc.order_id, tc.vendor, tc.install_id, i.vendor_key_handle, tc.amount, tc.credited_at
+         FROM topup_credits tc
+         LEFT JOIN issuances i ON i.vendor = tc.vendor AND i.install_id = tc.install_id
+         WHERE tc.vendor = ? AND (? IS NULL OR tc.install_id = ?)
+         ORDER BY tc.credited_at DESC",
+    )
+    .bind(vendor)
+    .bind(install_id)
+    .bind(install_id)
+    .fetch_all(pool)
+    .await
+}
+
 pub async fn insert_issuance(pool: &SqlitePool, issuance: &Issuance) -> sqlx::Result<()> {
     sqlx::query(
         "INSERT INTO issuances (id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, disabled)

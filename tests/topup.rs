@@ -13,7 +13,7 @@ use dream_trial_broker::db::{self, Issuance};
 use dream_trial_broker::error::AppError;
 use dream_trial_broker::rate_limit::RateLimiter;
 use dream_trial_broker::service::AppState;
-use dream_trial_broker::topup::{create_topup_order, get_topup_order};
+use dream_trial_broker::topup::{create_topup_order, get_topup_order, list_topups};
 use dream_trial_broker::vendor::{
     IssuedKey, KeySpec, KeyUsage, ProvisioningMode, ResetPeriod, TokenVendor, TopupOrder,
     TopupOrderSpec, TopupOrderStatus, VendorClientConfig, VendorError,
@@ -378,4 +378,97 @@ async fn polling_without_an_issuance_is_not_issued() {
         .await
         .expect_err("polling an install with no key has nothing to credit");
     assert!(matches!(err, AppError::NotIssued));
+}
+
+// --- /internal/vendors/:vendor/topups (the reconciliation listing) -------
+
+#[tokio::test]
+async fn listing_topups_is_empty_before_anything_is_credited() {
+    let (state, _vendor) = make_state(Some("install-1")).await;
+    let topups = list_topups(&state, VENDOR_ID, None)
+        .await
+        .expect("listing should succeed even with nothing credited yet");
+    assert!(topups.is_empty());
+}
+
+#[tokio::test]
+async fn listing_topups_does_not_show_a_still_pending_order() {
+    let (state, _vendor) = make_state(Some("install-1")).await;
+    create_topup_order(&state, VENDOR_ID, "install-1", 10.0)
+        .await
+        .unwrap();
+    // Never polled to success — nothing should have been credited.
+    let topups = list_topups(&state, VENDOR_ID, None).await.unwrap();
+    assert!(topups.is_empty());
+}
+
+#[tokio::test]
+async fn listing_topups_shows_a_credited_order_with_its_vendor_key_handle() {
+    let (state, vendor) = make_state(Some("install-1")).await;
+    create_topup_order(&state, VENDOR_ID, "install-1", 10.0)
+        .await
+        .unwrap();
+    vendor.set_status(TopupOrderStatus::Success);
+    get_topup_order(&state, VENDOR_ID, "install-1", "order-1")
+        .await
+        .expect("poll should credit");
+
+    let topups = list_topups(&state, VENDOR_ID, None).await.unwrap();
+    assert_eq!(topups.len(), 1);
+    assert_eq!(topups[0].order_id, "order-1");
+    assert_eq!(topups[0].install_id, "install-1");
+    assert_eq!(topups[0].vendor_key_handle.as_deref(), Some(HANDLE));
+    assert_eq!(topups[0].amount, 10.0);
+}
+
+#[tokio::test]
+async fn listing_topups_can_be_scoped_to_one_install() {
+    let (state, vendor) = make_state(Some("install-1")).await;
+    db::insert_issuance(
+        &state.pool,
+        &Issuance {
+            id: Uuid::new_v4().to_string(),
+            vendor: VENDOR_ID.to_string(),
+            install_id: "install-2".to_string(),
+            ip: "127.0.0.1".to_string(),
+            vendor_key_handle: "other-handle".to_string(),
+            issued_at: 0,
+            expires_at: 9_999_999_999_999,
+            disabled: 0,
+        },
+    )
+    .await
+    .unwrap();
+
+    create_topup_order(&state, VENDOR_ID, "install-1", 10.0)
+        .await
+        .unwrap();
+    vendor.set_status(TopupOrderStatus::Success);
+    get_topup_order(&state, VENDOR_ID, "install-1", "order-1")
+        .await
+        .unwrap();
+
+    // install-2 never actually paid — only install-1's credit should show
+    // up when scoped, and the unscoped listing must still see both none
+    // (install-2 has zero credits) so this also doubles as a check that the
+    // filter doesn't accidentally hide install-1's own row.
+    let scoped = list_topups(&state, VENDOR_ID, Some("install-1"))
+        .await
+        .unwrap();
+    assert_eq!(scoped.len(), 1);
+    assert_eq!(scoped[0].install_id, "install-1");
+
+    let scoped_to_other = list_topups(&state, VENDOR_ID, Some("install-2"))
+        .await
+        .unwrap();
+    assert!(scoped_to_other.is_empty());
+}
+
+#[tokio::test]
+async fn listing_topups_for_an_unknown_vendor_is_404() {
+    let (state, _vendor) = make_state(Some("install-1")).await;
+    let err = list_topups(&state, "not-a-vendor", None)
+        .await
+        .expect_err("unknown vendor must be refused");
+    assert!(matches!(err, AppError::VendorUnknown));
 }

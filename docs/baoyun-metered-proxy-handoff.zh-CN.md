@@ -882,7 +882,42 @@ release 二进制、`DREAM_TRIAL_BROKER_URL` 指向本地 broker，dream-ui 用
 只是"创建订单+拿到二维码"这一半；`credit_once` 的幂等/回滚设计（§11.6）在
 真实数据上没有暴露问题。
 
-**仍没做的事（明确留到以后）**：
+### 11.8 对账端点：`GET /internal/vendors/:vendor/topups`（2026-09-22）
 
-- 宝云 `GET /apis/v1/account`（账户余额监控）、`GET /apis/v1/logs`（用户
-  消费明细）仍未接，见 §11.3。
+真机验证完之后用户去宝云后台确认了一件事：「用户充完钱他要能用」这条已经
+验证过没问题，但「我在宝云后台要能看到他的充值和消费记录」这条——去实际
+点了一圈宝云控制台才发现是**两个完全不同的答案**：
+
+- **消费记录**：不用我们做任何事。宝云自己的「用量统计」页本来就是按
+  **API Key 名称**筛选展示的（时间/模型/tokens/费用），而我们给每个试用
+  用户发的 key 都有独立的名字（`onework-trial-<random>`），所以按用户查
+  消费明细，宝云控制台原生就支持。
+- **充值记录**：宝云「钱包管理 → 充值记录」这个页面是**账户级流水**，列只有
+  时间/交易号/支付方式/渠道订单号——**没有任何字段能显示这笔钱是哪个用户
+  充的**。broker 创建订单时传给宝云的 `reference`（`"{vendor}:{install_id}"`，
+  见 §11.6）宝云只在 API 响应里原样返回，**网页控制台完全不展示这个字段**。
+  这是宝云控制台本身的限制，不是我们漏做了什么，也没有别的路径能让它在
+  宝云的网页上显示出来。
+
+所以新增了一个只读对账端点，跟现有 `/internal/stats`/`/internal/vendors/
+:vendor/trial-keys/:install_id/topup` 同一信任等级（可达但不鉴权，不对
+dream-ui 客户端暴露，只给运维/操作者手动查）：
+
+```
+GET /internal/vendors/:vendor/topups                  # 全部已入账的充值
+GET /internal/vendors/:vendor/topups?install_id=xxx   # 只看一个用户的
+```
+
+读的是 `topup_credits` LEFT JOIN `issuances`（按 `vendor`+`install_id`），
+按 `credited_at` 倒序返回 `{order_id, install_id, vendor_key_handle, amount,
+credited_at}`。**只有 `topup_credits` 里已经真正入账成功的订单会出现**——
+`pending`/`failed`/`expired` 的订单从来没写进这张表（见 §11.6 的
+`credit_once` 设计），这些仍然只能在宝云自己的「充值记录」里看到原始交易，
+只是对不上是哪个用户。`vendor_key_handle` 是宝云那边的数字 key id，跟
+「用量统计」页按名字查消费明细需要再查一次 `GET /apis/v1/api-keys/{id}`
+拿到 key 名字对上——这一步暂时没有自动化，是运维手动核对的最后一环。
+
+新增 5 个单测（`tests/topup.rs`）：空列表、pending 订单不出现、已入账订单
+带对的 `vendor_key_handle`、按 `install_id` 过滤、未知 vendor 返回
+`VendorUnknown`。`cargo nextest run` 96/96，clippy/fmt 干净。**还没部署到
+生产**（本仓无 remote，只在本机 commit；部署时记得同步这个改动）。

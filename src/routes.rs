@@ -53,6 +53,14 @@ pub fn build_router(state: Arc<AppState>) -> Router {
             "/internal/vendors/:vendor/trial-keys/:install_id/topup",
             post(internal_top_up),
         )
+        // Ops-only reconciliation view: which install a credited real-money
+        // top-up belonged to. Exists because the vendor's own payment
+        // console (Baoyun's included) has no column for the `reference` this
+        // broker sets — see docs/baoyun-metered-proxy-handoff.zh-CN.md §11.7.
+        .route(
+            "/internal/vendors/:vendor/topups",
+            get(topup::list_topups_handler),
+        )
         .with_state(state)
 }
 

@@ -278,6 +278,55 @@ async fn credit_once(
     Ok(())
 }
 
+/// One credited top-up, as `/internal/vendors/:vendor/topups` reports it —
+/// the reconciliation view for "which end user did this real-money payment
+/// belong to," since the vendor's own console shows the payment but not that
+/// (see the handoff doc's §11.7 for why: Baoyun's wallet page has no column
+/// for the `reference` this broker sets).
+#[derive(Debug, Serialize)]
+pub struct TopupCreditView {
+    pub order_id: String,
+    pub install_id: String,
+    /// The vendor's own key id this credit landed on — cross-reference with
+    /// that vendor's own key list/usage console to see the human-readable
+    /// key name and subsequent spend. `None` only if the local issuance
+    /// record is gone.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vendor_key_handle: Option<String>,
+    pub amount: f64,
+    /// Unix ms.
+    pub credited_at: i64,
+}
+
+impl From<db::TopupCredit> for TopupCreditView {
+    fn from(c: db::TopupCredit) -> Self {
+        Self {
+            order_id: c.order_id,
+            install_id: c.install_id,
+            vendor_key_handle: c.vendor_key_handle,
+            amount: c.amount,
+            credited_at: c.credited_at,
+        }
+    }
+}
+
+/// Lists credited real-money top-ups for `vendor_id`, newest first. Ops-only
+/// — same trust tier as `/internal/stats`: reachable, not authenticated
+/// beyond network placement, not advertised to the desktop client.
+pub async fn list_topups(
+    state: &AppState,
+    vendor_id: &str,
+    install_id: Option<&str>,
+) -> Result<Vec<TopupCreditView>, AppError> {
+    if !state.vendors.contains_key(vendor_id) {
+        return Err(AppError::VendorUnknown);
+    }
+    let credits = db::list_topup_credits(&state.pool, vendor_id, install_id)
+        .await
+        .map_err(db_error("list topup credits"))?;
+    Ok(credits.into_iter().map(TopupCreditView::from).collect())
+}
+
 // --- axum handlers -----------------------------------------------
 
 #[derive(Debug, Deserialize)]
@@ -309,5 +358,20 @@ pub async fn get_topup_order_handler(
 ) -> Result<Json<TopupOrderResponse>, AppError> {
     Ok(Json(
         get_topup_order(&state, &query.vendor, &query.install_id, &order_id).await?,
+    ))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ListTopupsQuery {
+    pub install_id: Option<String>,
+}
+
+pub async fn list_topups_handler(
+    State(state): State<Arc<AppState>>,
+    Path(vendor): Path<String>,
+    Query(query): Query<ListTopupsQuery>,
+) -> Result<Json<Vec<TopupCreditView>>, AppError> {
+    Ok(Json(
+        list_topups(&state, &vendor, query.install_id.as_deref()).await?,
     ))
 }
