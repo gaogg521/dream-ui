@@ -55,6 +55,29 @@ gh release view --repo gaogg521/dream-core --json tagName,body
 - Display the dreamcore version and ask user to confirm before continuing
 - Also read current `dreamcoreVersion` from `package.json` — if it already matches the queried version, warn the user and ask whether to proceed or use `--skip-core`
 
+> 🚨 **"Latest release" is NOT the same as "contains this round's backend work."**
+>
+> A dream-core commit only becomes a tag after its release-please PR is merged, so
+> work that landed on `main` tonight is in NO release yet. Pinning the latest tag —
+> or taking the `--skip-core` shortcut the bullet above offers — then ships a binary
+> without it, **and nothing anywhere reports a failure**: the feature is simply absent.
+>
+> Before accepting a tag, verify it actually contains the commits this UI release
+> depends on:
+>
+> ```bash
+> git -C ../dream-core fetch --tags
+> git -C ../dream-core tag --contains <commit>     # empty = that tag predates the fix
+> ```
+>
+> If the commits are not in any tag, stop and cut the dream-core release first
+> (merge its `chore(main): release X.Y.Z` PR), then pin the new tag.
+>
+> Backend-only changes that have bitten this way: built-in skills are
+> `include_dir!`-embedded at compile time, and the MCP auto-inject allowlist lives in
+> the binary — both are invisible to dream-ui and both fail silently when the pin is
+> stale. See `docs/guides/packaging-release-playbook.zh-CN.md` §S2.
+
 ### Step 5: Verify dreamcore Artifacts
 
 **Skip if `--skip-core`.**

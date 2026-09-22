@@ -64,6 +64,46 @@ git log --format='%h %ad %s' --date=format:'%m-%d %H:%M' --since='<上一步的�
 
 ### S2. 后端钉版决策：UI 配对才换 dreamcore tag
 
+> 🚨 **3.0.8 必须换钉版：`v0.1.74` 里没有本轮的后端改动。**
+>
+> 2026-09-22 夜里进 dream-core main 的两个 commit **都不在任何 tag 内**
+> （`git tag --contains 7ff14c1` 为空）：
+>
+> | commit    | 内容                                                               | 钉错版的后果                                               |
+> | --------- | ------------------------------------------------------------------ | ---------------------------------------------------------- |
+> | `508e1e0` | `one-browser` / `one-page-reader` 进 `AUTO_INJECTED_BUILTIN_NAMES` | 浏览器工具永远进不了会话，Agent 老实回答「我没有这个工具」 |
+> | `7ff14c1` | 内置技能 24 → 115（`include_dir!` 编译期嵌入）                     | 技能市场仍然只有 24 个                                     |
+>
+> 两条都**只存在于二进制里**，dream-ui 侧怎么改都救不回来。`dreamcoreVersion`
+> 停在 `v0.1.74` 出的包 = 这两件事一件都没有，**而且界面不会有任何异常提示**：
+> 条目 enabled、连接测试 connected、设置页照常列工具，只有会话日志的
+> `mcp_names=[...]` 是真相。这正是它此前躲过整整一轮排查的原因。
+>
+> 做法照本节正文：dream-core 合 release-please 的 PR 出 `v0.1.75`，
+> `dream-ui/package.json` 的 `dreamcoreVersion` 指过去。
+>
+> **不要拿本机 `resources/bundled-dreamcore/win32-x64/dreamcore.exe` 顶替。**
+> 那是 2026-09-22 做 dev 真机验证时本机编的（`manifest.json` 里
+> `sourceType: local`），S5 第 ⑤ 条就是拦它的。
+>
+> 验证钉对了 —— 技能带来大量独有字符串，属于上面说的「字符串检查管用」的情形：
+>
+> ```bash
+> grep -qa "一人公司教练"            dreamcore.exe   # 7ff14c1：91 个新技能之一
+> grep -qa "Injecting MCP servers"  dreamcore.exe   # 对照：已知在内，验手段有效
+> ```
+>
+> ⚠️ **`508e1e0` 不能用整串搜。** 它改的是短字面量相等比较，release 优化把比较
+> 内联成了 8 字节立即数，整串在文件里根本不连续 —— 连早就存在的 `one-web-search`
+> 也搜不到，据此会误判成「修复没进去」。按 8 字节切片搜：
+>
+> ```bash
+> grep -qa "one-page" dreamcore.exe && grep -qa "e-reader" dreamcore.exe   # one-page-reader
+> grep -qa "one-brow" dreamcore.exe && grep -qa "-browser" dreamcore.exe   # one-browser
+> ```
+>
+> 体积 123MB → 138MB 是技能嵌入的正常结果，不是产物损坏或拉错文件。
+
 S1 的清单里若 dream-ui 新功能与 dream-core 划界后的 commit **配对**
 （备份↔个人版备份端点、搜索 UI↔web search 到会话、图片 UI↔Agnes 能力），
 
@@ -158,6 +198,10 @@ Mac CI 前本地把四道 gate 跑绿（`bun run format:check` / `bunx tsc --noE
 #    · bundled dreamcore 来自 release 而非本机：
 #      resources/bundled-dreamcore/<plat>/manifest.json 的 sourceType 必须是 release、
 #      version 等于本轮钉版；sourceType: local 说明打进去的是本机编译产物。
+#    · 内置技能数：设置→助手与专家→技能市场应为 114 个（3.0.7 及以前是 24 个）。
+#      少于 114 就是 dreamcore 钉版早于 7ff14c1——技能是编译期嵌入的，见 S2 的告警框。
+#      注意：开发机上这里仍会显示 24 左右，因为同名 custom 技能覆盖 builtin，
+#      只有干净安装才能验这条。
 # ⑥ 涉及备份/恢复这类「前端读后端返回值决定要不要弹某个框」的功能，必须走真实点击路径，
 #    不能只用正确参数直接调 API。2026-09-19 的教训：跨安装恢复验证连续多轮都是直接拿
 #    正确密码调 POST /restore，从未走「先 preview → 前端读 manifest.encryption 决定
