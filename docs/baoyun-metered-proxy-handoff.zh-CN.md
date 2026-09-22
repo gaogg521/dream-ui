@@ -904,8 +904,9 @@ release 二进制、`DREAM_TRIAL_BROKER_URL` 指向本地 broker，dream-ui 用
 dream-ui 客户端暴露，只给运维/操作者手动查）：
 
 ```
-GET /internal/vendors/:vendor/topups                  # 全部已入账的充值
-GET /internal/vendors/:vendor/topups?install_id=xxx   # 只看一个用户的
+GET /internal/vendors/:vendor/topups                        # 全部已入账的充值
+GET /internal/vendors/:vendor/topups?install_id=xxx         # 只看一个用户的
+GET /internal/vendors/:vendor/topups?order_id=BF...          # 反查一笔交易号是谁的
 ```
 
 读的是 `topup_credits` LEFT JOIN `issuances`（按 `vendor`+`install_id`），
@@ -917,7 +918,76 @@ credited_at}`。**只有 `topup_credits` 里已经真正入账成功的订单会
 「用量统计」页按名字查消费明细需要再查一次 `GET /apis/v1/api-keys/{id}`
 拿到 key 名字对上——这一步暂时没有自动化，是运维手动核对的最后一环。
 
-新增 5 个单测（`tests/topup.rs`）：空列表、pending 订单不出现、已入账订单
-带对的 `vendor_key_handle`、按 `install_id` 过滤、未知 vendor 返回
-`VendorUnknown`。`cargo nextest run` 96/96，clippy/fmt 干净。**还没部署到
-生产**（本仓无 remote，只在本机 commit；部署时记得同步这个改动）。
+`order_id` 过滤是**宝云技术支持自己指出来的**：他们确认宝云控制台「钱包
+管理→充值记录」表里的"交易号"列，就是本 broker 创建订单时拿到的那个
+`id`——所以实际的运维场景更常见的是反过来："宝云后台看到一笔陌生的交易号，
+这是哪个用户"，而不是"我有 install_id，查他的历史"（后者需要先知道
+install_id，但运维通常拿不到这个东西，只有交易号是从宝云页面上直接看到的）。
+
+单测（`tests/topup.rs`）共 7 个：空列表、pending 订单不出现、已入账订单带
+对的 `vendor_key_handle`、按 `install_id` 过滤、按 `order_id` 过滤、未知
+vendor 返回 `VendorUnknown`。`cargo nextest run` 97/97，clippy/fmt 干净。
+
+### 11.9 首次上线生产（2026-09-22）
+
+之前线上 broker（`43.163.105.71`）一直停在 **9-17 号的旧代码**——宝云模式
+A 迁移、¥5 额度、动态选型、真实充值、这个对账端点，全部还没上线，`journalctl`
+里根本没有 `topup.rs`。用户确认要"全部一起上"，不是只加对账接口。
+
+**部署方式**（本仓无 git remote，服务器 `/root/build/dream-trial-broker`
+也不是 git checkout，是当初 scp 上去的源码树）：本机打 tar（排除
+`target/`/`.git`/`*.db*`）→ scp 到服务器 → 解压覆盖（**不删旧的
+`target/`，保留增量编译缓存**）→ 按 [[crlf-when-shipping-text-to-linux]]
+的教训，对 `.rs`/`.sql`/`.sh`/`.toml`/`.md`/`.example` 统一跑一遍
+`sed -i 's/\r$//'` 去掉 CRLF（这台机器 `core.autocrlf=true`，不能信任
+本地文件不带 `\r`）→ `bash deploy/redeploy.sh`（编译 release + 重启
+systemd）。旧代码目录整个搬去 `dream-trial-broker.bak-<timestamp>` 留档，
+没删。`.env` 只追加了 `BAOYUN_ACCESS_TOKEN=`（用户当天生成的系统访问令牌，
+§11.7 同一个），其余现有配置一字未动，权限保持 `0600 dreambroker:dreambroker`。
+
+因为中途又加了 `order_id` 过滤（见 §11.8），实际发布了两次：第一次纯净
+构建 5m22s，第二次因为 `target/` 缓存还在只用了 1m28s。
+
+**验证**（没有花真实的钱）：
+- `curl 127.0.0.1:8787/internal/stats`：`baoyun` vendor 出现，
+  `per_key_limit: 5.0`、`daily_budget_cap: 250.0`，跟代码默认值对上。
+- `curl 127.0.0.1:8787/internal/vendors/baoyun/topups`：`[]`（预期，还没有
+  真实用户充值），`order_id`/未知 vendor 两个过滤分支也各测了一次。
+- 公网路径 `POST https://work.1oneclaw.com/trial-broker/v1/quota/status`
+  传 `{"vendor":"baoyun","install_id":"<随便一个不存在的id>"}`，返回
+  `404 not_issued`（不是 `vendor_unknown`）——证明 nginx→broker→baoyun
+  vendor 这条线上路径真的通了，这个调用本身不花钱、不产生任何副作用。
+- 没有再跑一次真实发 key/真实扫码付款——本轮同一天已经用完全相同的代码在
+  本地对生产宝云环境做过一次真实全链路验证（§11.7），这次部署没有改动那
+  条路径本身的逻辑，只是新增了只读的对账接口，判断没必要为了保险又花一次
+  真钱。真实用户从现在开始用这条线就是第一批真实流量。
+
+**查询入口**：`/internal/*` 只在服务器 `127.0.0.1:8787` 监听，不对公网
+暴露，需要先 `ssh root@43.163.105.71` 再 curl。
+
+### 11.10 一个真实的财务风险排查：删 key 会不会把已充的钱弄丢
+
+§11.7 真机验证完之后，我为了清理 CDP 测试留下的脏数据，把那把已经真实充值
+到 ¥11（¥1 免费额度 + 用户真付的 ¥10）的测试 key 删掉了（`DELETE
+/apis/v1/api-keys/1172`）。用户随后指出"如果是真实用户就麻烦大了"——这个
+质疑是对的，值得认真查，不能想当然。
+
+**做了受控实验**（不是猜的）：新建一把 `remain=5` 的测试 key → 查账户总
+余额 → 用 `remain_delta`（跟 broker `top_up()` 走的同一个字段）加 ¥10 →
+再查余额 → 删掉这把 key → 再查余额。**账户总余额（¥50108.02）和累计消费
+（¥1.98）全程三次查询一字不差**。
+
+**结论**：宝云一把 key 的 `remain` **只是这把 key 自己的消费上限，不是从
+账户余额里划走、预留给它的钱**。充值的钱本来就直接进账户总余额这个池子
+（`remain_delta` 只是给某把 key"最多能花多少"的许可，不是转账）。所以：
+
+- 用户真付的钱**没有丢**——一直在账户总余额里，删 key 删掉的只是"这把
+  key 最多能花多少"这条许可记录本身。
+- 但这是个**真实存在、目前没有覆盖的产品缺口**：如果一个真实用户的 key
+  因为任何原因被删/撤销（滥用清理、过期、误操作），这个用户本人**没有
+  自动拿回他那份消费许可的机制**——钱还在池子里，但需要运维手动发现、
+  手动重新开一把 key 并把对应额度补上去。当前设计（`TokenVendor::revoke`
+  已经存在，但从未被任何自动化流程调用过）没有考虑这个场景。**这轮没有
+  修，只是排查清楚并记下来**——如果以后要做自动过期清理/滥用检测，必须
+  先解决"删 key 前先把 `remain` 转移/退回"这一步，否则等于给自己埋了一个
+  会引发真实用户投诉的坑。
