@@ -159,6 +159,10 @@ struct KeyDetail {
     remain: f64,
     used: f64,
     unlimited: bool,
+    /// Already present on every real response, just unused until
+    /// `key_alive_models` needed to hand it back to a recovering client.
+    #[serde(default)]
+    model_limits: Vec<String>,
 }
 
 impl From<KeyDetail> for KeyUsage {
@@ -203,6 +207,38 @@ struct TopupOrderResponseBody {
     expires_at: Option<i64>,
     #[serde(default)]
     completed_at: Option<i64>,
+}
+
+/// A page of `GET /topup/orders` — used only by `paid_total`'s recovery
+/// arithmetic, never by the create/get-one paths above.
+#[derive(Debug, Deserialize)]
+struct TopupOrderListResponseBody {
+    data: Vec<TopupOrderResponseBody>,
+    has_more: bool,
+}
+
+/// Empty JSON body for `POST /api-keys/{id}/key` — the endpoint takes no
+/// parameters, but still expects a `{}` body per its own docs example.
+#[derive(Debug, Serialize)]
+struct RevealKeyBody {}
+
+#[derive(Debug, Deserialize)]
+struct RevealKeyResponse {
+    key: String,
+}
+
+/// The "how much has this reference truly paid" arithmetic behind
+/// `paid_total`, kept separate from the HTTP/pagination wrapper so it can be
+/// unit tested against fixture data without a live account. Filters to
+/// `success` itself rather than trusting the `status=success` query param
+/// alone — the same order list is also usable unfiltered, and a caller
+/// passing unfiltered data here must not have it silently double-counted.
+fn sum_successful_topups(orders: &[TopupOrderResponseBody]) -> f64 {
+    orders
+        .iter()
+        .filter(|o| o.status == "success")
+        .map(|o| o.amount)
+        .sum()
 }
 
 impl TryFrom<TopupOrderResponseBody> for TopupOrder {
@@ -479,6 +515,81 @@ impl TokenVendor for BaoyunVendor {
             .await?;
         resp.try_into()
     }
+
+    /// `request()` only distinguishes success/failure; a 404 here is a third,
+    /// expected outcome (the key is genuinely gone), so this talks to reqwest
+    /// directly rather than growing `request()` a third state that every
+    /// other call site would have to keep ignoring.
+    async fn key_alive_models(&self, handle: &str) -> Result<Option<Vec<String>>, VendorError> {
+        let resp = self
+            .http
+            .get(format!(
+                "{}/api-keys/{handle}?currency={CURRENCY}",
+                self.account_api_base
+            ))
+            .bearer_auth(&self.access_token)
+            .send()
+            .await
+            .map_err(|e| VendorError::Request {
+                vendor: ID,
+                message: e.to_string(),
+            })?;
+
+        if resp.status() == reqwest::StatusCode::NOT_FOUND {
+            return Ok(None);
+        }
+
+        let status = resp.status();
+        if !status.is_success() {
+            return Err(VendorError::Upstream {
+                vendor: ID,
+                status: status.as_u16(),
+                body: resp.text().await.unwrap_or_default(),
+            });
+        }
+
+        let detail: KeyDetail = resp.json().await.map_err(|e| VendorError::Request {
+            vendor: ID,
+            message: e.to_string(),
+        })?;
+        Ok(Some(detail.model_limits))
+    }
+
+    async fn reveal_key(&self, handle: &str) -> Result<String, VendorError> {
+        let resp: RevealKeyResponse = self
+            .request(
+                self.http
+                    .post(format!("{}/api-keys/{handle}/key", self.account_api_base))
+                    .json(&RevealKeyBody {}),
+            )
+            .await?;
+        Ok(resp.key)
+    }
+
+    async fn paid_total(&self, reference: &str) -> Result<f64, VendorError> {
+        let mut total = 0.0;
+        let mut page: u32 = 1;
+        loop {
+            let resp: TopupOrderListResponseBody = self
+                .request(
+                    self.http
+                        .get(format!("{}/topup/orders", self.account_api_base))
+                        .query(&[
+                            ("reference", reference),
+                            ("status", "success"),
+                            ("page", &page.to_string()),
+                            ("page_size", "100"),
+                        ]),
+                )
+                .await?;
+            total += sum_successful_topups(&resp.data);
+            if !resp.has_more {
+                break;
+            }
+            page += 1;
+        }
+        Ok(total)
+    }
 }
 
 #[cfg(test)]
@@ -492,6 +603,7 @@ mod tests {
             remain: 4.0,
             used: 6.0,
             unlimited: false,
+            model_limits: vec![],
         }
         .into();
         assert_eq!(usage.limit_usd, Some(10.0));
@@ -509,6 +621,7 @@ mod tests {
             remain: 0.0,
             used: 6.0,
             unlimited: true,
+            model_limits: vec![],
         }
         .into();
         assert_eq!(usage.limit_usd, None);
@@ -523,6 +636,7 @@ mod tests {
                 remain: 5.0,
                 used: 0.0,
                 unlimited: false,
+                model_limits: vec![],
             }
             .into();
             assert!(usage.disabled, "status {status} should read as disabled");
@@ -719,5 +833,44 @@ mod tests {
         }))
         .unwrap();
         assert!(TopupOrder::try_from(body).is_err());
+    }
+
+    fn ord(status: &str, amount: f64) -> TopupOrderResponseBody {
+        TopupOrderResponseBody {
+            id: "x".to_string(),
+            status: status.to_string(),
+            currency: "CNY".to_string(),
+            amount,
+            reference: None,
+            qr_code: None,
+            expires_at: None,
+            completed_at: None,
+        }
+    }
+
+    #[test]
+    fn sum_successful_topups_is_zero_for_an_empty_list() {
+        assert_eq!(sum_successful_topups(&[]), 0.0);
+    }
+
+    #[test]
+    fn sum_successful_topups_only_counts_success_status() {
+        let orders = [
+            ord("success", 10.0),
+            ord("pending", 5.0),
+            ord("failed", 20.0),
+            ord("expired", 1.0),
+            ord("success", 2.5),
+        ];
+        assert_eq!(sum_successful_topups(&orders), 12.5);
+    }
+
+    #[test]
+    fn sum_successful_topups_across_what_would_be_several_pages() {
+        // `paid_total` sums page by page as it paginates; this only checks
+        // the pure arithmetic handles a page-sized batch correctly — the
+        // pagination loop itself isn't exercised without a live account.
+        let page: Vec<TopupOrderResponseBody> = (0..100).map(|_| ord("success", 1.0)).collect();
+        assert_eq!(sum_successful_topups(&page), 100.0);
     }
 }

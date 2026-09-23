@@ -156,15 +156,13 @@ pub async fn issue_trial_key(
         return Err(AppError::Internal("vendor cannot issue capped keys".into()));
     }
 
-    // 1. Dedup by (vendor, install_id).
+    // 1. Dedup by (vendor, install_id) — but a *broken* existing issuance
+    // (the vendor reports the key itself is gone) gets recovered instead of
+    // permanently locking this install out. See `recover_or_reveal`.
     match db::find_active_by_install_id(&state.pool, vendor_id, install_id).await {
-        Ok(Some(_)) => {
-            tracing::info!(
-                vendor = vendor_id,
-                install_id_hash = %hash_prefix(install_id),
-                "dedup rejection: install_id already issued"
-            );
-            return Err(AppError::AlreadyIssued);
+        Ok(Some(existing)) => {
+            return recover_or_reveal(state, vendor.as_ref(), vendor_id, install_id, ip, &existing)
+                .await;
         }
         Ok(None) => {}
         Err(e) => {
@@ -249,6 +247,138 @@ pub async fn issue_trial_key(
     );
 
     // 6. Respond.
+    let client = vendor.client_config();
+    Ok(TrialKeyResponse {
+        key: issued.secret,
+        base_url: client.base_url.to_string(),
+        models: issued.models,
+        platform: client.platform.to_string(),
+        vendor: vendor_id.to_string(),
+        currency: client.currency.to_string(),
+    })
+}
+
+/// Handles a repeat `POST /v1/trial-keys` for an install that already holds
+/// an issuance. Historically this was always a flat 409 — reasonable when
+/// the key genuinely still worked, wrong when it does not: a real key can go
+/// missing on the vendor's side for reasons entirely outside this install's
+/// control (an operator cleanup, vendor-side abuse action, account issue),
+/// and until now that install had no way back in at all.
+///
+/// Vendors that cannot answer "is this key still there" (`key_alive_models`
+/// defaults to `Unsupported` — OpenRouter, today) fall straight through to
+/// the original 409, unchanged. Only a vendor that actively implements
+/// recovery (Baoyun) gets the smarter path.
+async fn recover_or_reveal(
+    state: &AppState,
+    vendor: &dyn TokenVendor,
+    vendor_id: &str,
+    install_id: &str,
+    ip: IpAddr,
+    existing: &Issuance,
+) -> Result<TrialKeyResponse, AppError> {
+    match vendor.key_alive_models(&existing.vendor_key_handle).await {
+        Ok(Some(models)) => {
+            // The key is still there — this install's own local copy of the
+            // plaintext (or provider row) is what went missing. No need to
+            // mint anything new: just hand the same key back.
+            let key = vendor
+                .reveal_key(&existing.vendor_key_handle)
+                .await
+                .map_err(|e| {
+                    log_vendor_error(&e);
+                    AppError::UpstreamError("failed to re-reveal the existing key".into())
+                })?;
+            tracing::info!(
+                vendor = vendor_id,
+                install_id_hash = %hash_prefix(install_id),
+                "repeat claim: key still alive, re-revealed its plaintext"
+            );
+            let client = vendor.client_config();
+            Ok(TrialKeyResponse {
+                key,
+                base_url: client.base_url.to_string(),
+                models,
+                platform: client.platform.to_string(),
+                vendor: vendor_id.to_string(),
+                currency: client.currency.to_string(),
+            })
+        }
+        Ok(None) => recover_deleted_key(state, vendor, vendor_id, install_id, ip, existing).await,
+        Err(VendorError::Unsupported { .. }) => Err(AppError::AlreadyIssued),
+        Err(e) => {
+            log_vendor_error(&e);
+            Err(AppError::UpstreamError(
+                "failed to check the existing key's status".into(),
+            ))
+        }
+    }
+}
+
+/// The vendor confirmed `existing`'s key is genuinely gone. Reissues a fresh
+/// one, crediting back everything this install can *prove* it paid — read
+/// from the vendor's own order history (`paid_total`), not this broker's
+/// local bookkeeping, which is exactly the kind of thing that could be lost
+/// right alongside the key. The old issuance row is kept (disabled, not
+/// deleted): it is still the only local record this install ever held that
+/// vendor key handle.
+async fn recover_deleted_key(
+    state: &AppState,
+    vendor: &dyn TokenVendor,
+    vendor_id: &str,
+    install_id: &str,
+    ip: IpAddr,
+    existing: &Issuance,
+) -> Result<TrialKeyResponse, AppError> {
+    let policy = state.issuance_policy(vendor_id);
+    let reference = crate::topup::reference_for(vendor_id, install_id);
+    let paid_total = vendor.paid_total(&reference).await.map_err(|e| {
+        log_vendor_error(&e);
+        AppError::UpstreamError("failed to read this install's paid history".into())
+    })?;
+
+    let now = Utc::now();
+    let now_ms = now.timestamp_millis();
+    let expires_at = now + ChronoDuration::days(state.config.trial_key_expires_days);
+    let spec = KeySpec {
+        label: format!("onework-trial-{}", short_uuid()),
+        // Current free-grant policy plus everything this install proved it
+        // paid — never less than what a fresh claim would get, and never
+        // silently short-changing a paying user just because their key died.
+        limit_usd: policy.limit_amount + paid_total,
+        reset: policy.reset,
+        expires_at: Some(expires_at.to_rfc3339_opts(SecondsFormat::Secs, true)),
+    };
+
+    let issued = vendor.issue_key(spec).await.map_err(|e| {
+        log_vendor_error(&e);
+        AppError::UpstreamError("failed to issue a replacement upstream key".into())
+    })?;
+
+    // `issuances` is UNIQUE on (vendor, install_id) — there is only ever one
+    // row for this install on this vendor, so recovery re-points it rather
+    // than inserting a second one.
+    db::replace_issuance_key(
+        &state.pool,
+        &existing.id,
+        &issued.handle,
+        now_ms,
+        expires_at.timestamp_millis(),
+    )
+    .await
+    .map_err(|e| {
+        tracing::error!(error = %e, "failed to persist the recovered issuance");
+        AppError::Internal("database error".into())
+    })?;
+
+    tracing::info!(
+        vendor = vendor_id,
+        install_id_hash = %hash_prefix(install_id),
+        ip = %ip,
+        paid_total,
+        "recovered a deleted key by reissuing"
+    );
+
     let client = vendor.client_config();
     Ok(TrialKeyResponse {
         key: issued.secret,

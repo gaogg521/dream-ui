@@ -155,3 +155,30 @@ pub async fn insert_issuance(pool: &SqlitePool, issuance: &Issuance) -> sqlx::Re
 
     Ok(())
 }
+
+/// Re-points an existing issuance at a freshly issued replacement key — used
+/// when the original was confirmed gone on the vendor's side (see
+/// `crate::service::recover_deleted_key`). Updates the row in place rather
+/// than inserting a second one: `issuances` has a `UNIQUE (vendor,
+/// install_id)` constraint, so there can only ever be one row per install
+/// per vendor regardless of `disabled`, live or not.
+pub async fn replace_issuance_key(
+    pool: &SqlitePool,
+    issuance_id: &str,
+    new_vendor_key_handle: &str,
+    issued_at: i64,
+    expires_at: i64,
+) -> sqlx::Result<()> {
+    sqlx::query(
+        "UPDATE issuances SET vendor_key_handle = ?, issued_at = ?, expires_at = ?, disabled = 0 \
+         WHERE id = ?",
+    )
+    .bind(new_vendor_key_handle)
+    .bind(issued_at)
+    .bind(expires_at)
+    .bind(issuance_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}

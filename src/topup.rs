@@ -45,7 +45,10 @@ pub struct TopupOrderResponse {
 
 /// Deterministic from `(vendor, install)`, not stored anywhere separately —
 /// recomputed on every read and compared against what the vendor echoes back.
-fn reference_for(vendor_id: &str, install_id: &str) -> String {
+/// `pub(crate)`: `service.rs`'s key-recovery path needs the exact same
+/// string to look up this install's own paid history, and must not grow a
+/// second copy of this format.
+pub(crate) fn reference_for(vendor_id: &str, install_id: &str) -> String {
     format!("{vendor_id}:{install_id}")
 }
 

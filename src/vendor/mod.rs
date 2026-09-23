@@ -292,4 +292,41 @@ pub trait TokenVendor: Send + Sync {
             operation: "topup_order_get",
         })
     }
+
+    /// Whether `handle` still exists on the vendor's side, and if so, which
+    /// models it is currently whitelisted for. `Ok(None)` means the vendor
+    /// reports it gone (e.g. Baoyun 404) — a real, expected outcome to be
+    /// recovered from, not an error. Defaults to `Unsupported`: a vendor that
+    /// cannot answer this at all (OpenRouter, today) keeps the caller's
+    /// existing "just refuse a repeat claim" behavior rather than being
+    /// silently treated as "key confirmed gone."
+    async fn key_alive_models(&self, _handle: &str) -> Result<Option<Vec<String>>, VendorError> {
+        Err(VendorError::Unsupported {
+            vendor: self.id(),
+            operation: "key_alive_models",
+        })
+    }
+
+    /// Re-reveals the plaintext of a key [`Self::key_alive_models`] just
+    /// confirmed still exists — for when only this broker's local copy of it
+    /// was lost, not the key itself. Same default-refuses shape as
+    /// [`Self::create_topup_order`].
+    async fn reveal_key(&self, _handle: &str) -> Result<String, VendorError> {
+        Err(VendorError::Unsupported {
+            vendor: self.id(),
+            operation: "reveal_key",
+        })
+    }
+
+    /// Sums every `success` real-money top-up ever made under `reference`,
+    /// read straight from the vendor's own order history rather than this
+    /// broker's local bookkeeping (which may itself be the thing that was
+    /// lost). `Ok(0.0)` if there is no such history. Same default-refuses
+    /// shape as [`Self::create_topup_order`].
+    async fn paid_total(&self, _reference: &str) -> Result<f64, VendorError> {
+        Err(VendorError::Unsupported {
+            vendor: self.id(),
+            operation: "paid_total",
+        })
+    }
 }
