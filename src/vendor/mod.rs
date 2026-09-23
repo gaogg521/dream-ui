@@ -184,6 +184,53 @@ impl TopupOrderStatus {
     }
 }
 
+/// One call-level usage record, as the vendor reports it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UsageLogEntry {
+    pub id: String,
+    pub kind: UsageLogKind,
+    /// Unix seconds.
+    pub created_at: i64,
+    pub model: String,
+    /// In the vendor's own currency (CNY for Baoyun).
+    pub amount: f64,
+    pub prompt_tokens: i64,
+    pub completion_tokens: i64,
+    /// Vendor-reported call duration. Named `_ms` on the inference that
+    /// Baoyun's example value (`1234` for one call) is milliseconds, not
+    /// seconds — not confirmed against a live response, since the field's
+    /// unit isn't stated in the docs. Treat as approximate.
+    pub use_time_ms: i64,
+    pub request_id: String,
+    pub is_stream: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UsageLogKind {
+    Charge,
+    Error,
+    Refund,
+}
+
+impl UsageLogKind {
+    pub fn parse(raw: i32) -> Option<Self> {
+        match raw {
+            1 => Some(Self::Charge),
+            2 => Some(Self::Error),
+            3 => Some(Self::Refund),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Charge => "charge",
+            Self::Error => "error",
+            Self::Refund => "refund",
+        }
+    }
+}
+
 /// Everything the desktop client needs to turn an issued key into a working
 /// provider row. Carrying the platform here is what stops the client from
 /// hardcoding one vendor's name.
@@ -327,6 +374,21 @@ pub trait TokenVendor: Send + Sync {
         Err(VendorError::Unsupported {
             vendor: self.id(),
             operation: "paid_total",
+        })
+    }
+
+    /// Every usage-log entry `handle` has on the vendor's side, newest first,
+    /// optionally limited to entries at or after `since_ms`. `Ok(vec![])` if
+    /// there are none — not an error. Same default-refuses shape as
+    /// [`Self::create_topup_order`].
+    async fn usage_logs(
+        &self,
+        _handle: &str,
+        _since_ms: Option<i64>,
+    ) -> Result<Vec<UsageLogEntry>, VendorError> {
+        Err(VendorError::Unsupported {
+            vendor: self.id(),
+            operation: "usage_logs",
         })
     }
 }

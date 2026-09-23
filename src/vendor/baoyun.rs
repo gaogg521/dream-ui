@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     IssuedKey, KeySpec, KeyUsage, ProvisioningMode, ResetPeriod, TokenVendor, TopupOrder,
-    TopupOrderSpec, TopupOrderStatus, VendorClientConfig, VendorError,
+    TopupOrderSpec, TopupOrderStatus, UsageLogEntry, UsageLogKind, VendorClientConfig, VendorError,
 };
 
 pub const ID: &str = "baoyun";
@@ -239,6 +239,74 @@ fn sum_successful_topups(orders: &[TopupOrderResponseBody]) -> f64 {
         .filter(|o| o.status == "success")
         .map(|o| o.amount)
         .sum()
+}
+
+/// One row of `GET /apis/v1/logs` (用量日志). `token_id` is the same opaque
+/// id this broker stores as `Issuance::vendor_key_handle` — the endpoint
+/// itself only filters by `token_name` (exact match), not id, so
+/// `usage_logs` pulls unfiltered pages and matches on `token_id` itself
+/// rather than needing to know a key's vendor-side name.
+#[derive(Debug, Deserialize)]
+struct LogEntry {
+    id: String,
+    #[serde(rename = "type")]
+    log_type: i32,
+    created: i64,
+    model: String,
+    token_id: String,
+    amount: f64,
+    #[serde(default)]
+    prompt_tokens: i64,
+    #[serde(default)]
+    completion_tokens: i64,
+    #[serde(default)]
+    use_time: i64,
+    request_id: String,
+    #[serde(default)]
+    is_stream: bool,
+}
+
+#[derive(Debug, Deserialize)]
+struct LogListResponseBody {
+    data: Vec<LogEntry>,
+    has_more: bool,
+}
+
+impl TryFrom<LogEntry> for UsageLogEntry {
+    type Error = VendorError;
+
+    fn try_from(entry: LogEntry) -> Result<Self, VendorError> {
+        let kind = UsageLogKind::parse(entry.log_type).ok_or_else(|| VendorError::Request {
+            vendor: ID,
+            message: format!("unrecognised usage log type `{}`", entry.log_type),
+        })?;
+        Ok(Self {
+            id: entry.id,
+            kind,
+            created_at: entry.created,
+            model: entry.model,
+            amount: entry.amount,
+            prompt_tokens: entry.prompt_tokens,
+            completion_tokens: entry.completion_tokens,
+            use_time_ms: entry.use_time,
+            request_id: entry.request_id,
+            is_stream: entry.is_stream,
+        })
+    }
+}
+
+/// The "which of these log entries belong to this key" filter behind
+/// `usage_logs`, kept separate from the HTTP/pagination wrapper so it can be
+/// unit tested against fixture data without a live account.
+fn filter_logs_for_handle(
+    entries: Vec<LogEntry>,
+    handle: &str,
+) -> Result<Vec<UsageLogEntry>, VendorError> {
+    entries
+        .into_iter()
+        .filter(|e| e.token_id == handle)
+        .map(UsageLogEntry::try_from)
+        .collect()
 }
 
 impl TryFrom<TopupOrderResponseBody> for TopupOrder {
@@ -590,6 +658,43 @@ impl TokenVendor for BaoyunVendor {
         }
         Ok(total)
     }
+
+    async fn usage_logs(
+        &self,
+        handle: &str,
+        since_ms: Option<i64>,
+    ) -> Result<Vec<UsageLogEntry>, VendorError> {
+        // Bounds how far this pages for one call — 20 pages * 100/page =
+        // 2000 entries, protecting against an unbounded pull against an
+        // account with very high overall log volume.
+        const MAX_PAGES: u32 = 20;
+        // `0` (epoch) when unset — equivalent to no lower bound, and lets
+        // every page use the same query shape rather than conditionally
+        // adding the param.
+        let start_timestamp = since_ms.map(|ms| ms / 1000).unwrap_or(0).to_string();
+        let mut out = Vec::new();
+        let mut page: u32 = 1;
+        loop {
+            let resp: LogListResponseBody = self
+                .request(
+                    self.http
+                        .get(format!("{}/logs", self.account_api_base))
+                        .query(&[
+                            ("currency", CURRENCY),
+                            ("page", &page.to_string()),
+                            ("page_size", "100"),
+                            ("start_timestamp", &start_timestamp),
+                        ]),
+                )
+                .await?;
+            out.extend(filter_logs_for_handle(resp.data, handle)?);
+            if !resp.has_more || page >= MAX_PAGES {
+                break;
+            }
+            page += 1;
+        }
+        Ok(out)
+    }
 }
 
 #[cfg(test)]
@@ -872,5 +977,64 @@ mod tests {
         // pagination loop itself isn't exercised without a live account.
         let page: Vec<TopupOrderResponseBody> = (0..100).map(|_| ord("success", 1.0)).collect();
         assert_eq!(sum_successful_topups(&page), 100.0);
+    }
+
+    fn log(token_id: &str, log_type: i32, amount: f64) -> LogEntry {
+        LogEntry {
+            id: "log-x".to_string(),
+            log_type,
+            created: 1_700_000_000,
+            model: "gpt-5.4".to_string(),
+            token_id: token_id.to_string(),
+            amount,
+            prompt_tokens: 100,
+            completion_tokens: 50,
+            use_time: 1234,
+            request_id: "req-x".to_string(),
+            is_stream: true,
+        }
+    }
+
+    #[test]
+    fn filter_logs_for_handle_is_empty_for_an_empty_list() {
+        assert_eq!(filter_logs_for_handle(vec![], "handle-1").unwrap(), vec![]);
+    }
+
+    #[test]
+    fn filter_logs_for_handle_keeps_only_the_matching_token_id() {
+        let entries = vec![
+            log("handle-1", 1, 0.12),
+            log("handle-2", 1, 0.50),
+            log("handle-1", 2, 0.0),
+        ];
+        let kept = filter_logs_for_handle(entries, "handle-1").unwrap();
+        assert_eq!(kept.len(), 2);
+        assert!(kept.iter().all(|e| e.amount == 0.12 || e.amount == 0.0));
+    }
+
+    #[test]
+    fn filter_logs_for_handle_returns_empty_when_nothing_matches() {
+        let entries = vec![log("handle-2", 1, 0.12)];
+        assert_eq!(filter_logs_for_handle(entries, "handle-1").unwrap(), vec![]);
+    }
+
+    #[test]
+    fn filter_logs_for_handle_maps_the_log_type_to_a_kind() {
+        let entries = vec![log("h", 1, 1.0), log("h", 2, 0.0), log("h", 3, 0.5)];
+        let kept = filter_logs_for_handle(entries, "h").unwrap();
+        assert_eq!(
+            kept.iter().map(|e| e.kind).collect::<Vec<_>>(),
+            vec![
+                UsageLogKind::Charge,
+                UsageLogKind::Error,
+                UsageLogKind::Refund
+            ]
+        );
+    }
+
+    #[test]
+    fn filter_logs_for_handle_rejects_an_unrecognised_log_type() {
+        let entries = vec![log("h", 99, 1.0)];
+        assert!(filter_logs_for_handle(entries, "h").is_err());
     }
 }

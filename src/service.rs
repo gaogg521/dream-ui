@@ -319,9 +319,9 @@ async fn recover_or_reveal(
 /// one, crediting back everything this install can *prove* it paid — read
 /// from the vendor's own order history (`paid_total`), not this broker's
 /// local bookkeeping, which is exactly the kind of thing that could be lost
-/// right alongside the key. The old issuance row is kept (disabled, not
-/// deleted): it is still the only local record this install ever held that
-/// vendor key handle.
+/// right alongside the key. `issuances` is UNIQUE on (vendor, install_id), so
+/// the existing row is updated in place to point at the new handle rather
+/// than kept around disabled — see `db::replace_issuance_key`.
 async fn recover_deleted_key(
     state: &AppState,
     vendor: &dyn TokenVendor,
@@ -340,12 +340,20 @@ async fn recover_deleted_key(
     let now = Utc::now();
     let now_ms = now.timestamp_millis();
     let expires_at = now + ChronoDuration::days(state.config.trial_key_expires_days);
+    // `paid_total` is the raw CNY the user actually paid, straight from the
+    // vendor's order history — it must go through the same resale-markup
+    // conversion as a normal top-up (`crate::topup::credit_once`), or
+    // recovery would silently hand back the platform's margin along with
+    // the principal.
+    let granted_from_paid =
+        crate::topup::granted_for_payment(state.config.topup_price_markup, paid_total);
     let spec = KeySpec {
         label: format!("onework-trial-{}", short_uuid()),
         // Current free-grant policy plus everything this install proved it
-        // paid — never less than what a fresh claim would get, and never
-        // silently short-changing a paying user just because their key died.
-        limit_usd: policy.limit_amount + paid_total,
+        // paid (after markup) — never less than what a fresh claim would
+        // get, and never silently short-changing a paying user just because
+        // their key died.
+        limit_usd: policy.limit_amount + granted_from_paid,
         reset: policy.reset,
         expires_at: Some(expires_at.to_rfc3339_opts(SecondsFormat::Secs, true)),
     };
@@ -376,6 +384,7 @@ async fn recover_deleted_key(
         install_id_hash = %hash_prefix(install_id),
         ip = %ip,
         paid_total,
+        granted_from_paid,
         "recovered a deleted key by reissuing"
     );
 

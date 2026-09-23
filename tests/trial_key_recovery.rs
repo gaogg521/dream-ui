@@ -38,6 +38,10 @@ struct RecoverableVendor {
     paid_total: Mutex<f64>,
     reveal_calls: Mutex<u32>,
     issue_calls: Mutex<u32>,
+    /// The `limit_usd` of the most recent `issue_key` call — lets a test
+    /// assert what recovery actually granted (e.g. that it applied the
+    /// resale markup to `paid_total`, not the raw figure).
+    last_issue_limit_usd: Mutex<Option<f64>>,
 }
 
 impl RecoverableVendor {
@@ -48,6 +52,7 @@ impl RecoverableVendor {
             paid_total: Mutex::new(0.0),
             reveal_calls: Mutex::new(0),
             issue_calls: Mutex::new(0),
+            last_issue_limit_usd: Mutex::new(None),
         }
     }
 
@@ -58,6 +63,7 @@ impl RecoverableVendor {
             paid_total: Mutex::new(paid_total),
             reveal_calls: Mutex::new(0),
             issue_calls: Mutex::new(0),
+            last_issue_limit_usd: Mutex::new(None),
         }
     }
 
@@ -68,6 +74,7 @@ impl RecoverableVendor {
             paid_total: Mutex::new(0.0),
             reveal_calls: Mutex::new(0),
             issue_calls: Mutex::new(0),
+            last_issue_limit_usd: Mutex::new(None),
         }
     }
 }
@@ -93,6 +100,7 @@ impl TokenVendor for RecoverableVendor {
     async fn issue_key(&self, spec: KeySpec) -> Result<IssuedKey, VendorError> {
         // Recovery must always ask for a non-negative cap.
         assert!(spec.limit_usd >= 0.0);
+        *self.last_issue_limit_usd.lock().unwrap() = Some(spec.limit_usd);
         let mut calls = self.issue_calls.lock().unwrap();
         *calls += 1;
         Ok(IssuedKey {
@@ -147,10 +155,15 @@ fn base_config() -> Config {
         listen_addr: "0.0.0.0:8787".to_string(),
         per_ip_rate_limit_per_hour: 5,
         public_base_url: "http://127.0.0.1:8787".to_string(),
+        topup_price_markup: 1.0,
     }
 }
 
 async fn make_state(vendor: RecoverableVendor) -> AppState {
+    make_state_with_config(vendor, base_config()).await
+}
+
+async fn make_state_with_config(vendor: RecoverableVendor, config: Config) -> AppState {
     let pool = db::init_pool("sqlite::memory:")
         .await
         .expect("in-memory db should initialize");
@@ -158,7 +171,7 @@ async fn make_state(vendor: RecoverableVendor) -> AppState {
     vendors.insert(VENDOR_ID, Arc::new(vendor));
     AppState {
         pool,
-        config: Arc::new(base_config()),
+        config: Arc::new(config),
         vendors,
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
@@ -232,6 +245,44 @@ async fn a_repeat_claim_with_a_deleted_key_reissues_and_credits_back_what_was_pa
     assert_ne!(
         rows[0].0, original_handle,
         "recovery must point the row at the newly issued key's handle"
+    );
+}
+
+#[tokio::test]
+async fn recovery_applies_the_resale_markup_to_the_reconstructed_paid_total() {
+    let vendor = Arc::new(RecoverableVendor::gone(12.5));
+    let pool = db::init_pool("sqlite::memory:")
+        .await
+        .expect("in-memory db should initialize");
+    let mut vendors: HashMap<&'static str, Arc<dyn TokenVendor>> = HashMap::new();
+    vendors.insert(VENDOR_ID, vendor.clone());
+    let state = AppState {
+        pool,
+        config: Arc::new(Config {
+            topup_price_markup: 1.15,
+            ..base_config()
+        }),
+        vendors,
+        rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
+        metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
+        search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+    };
+
+    issue_trial_key(&state, VENDOR_ID, "install-markup", ip())
+        .await
+        .expect("first claim should succeed");
+    issue_trial_key(&state, VENDOR_ID, "install-markup", ip())
+        .await
+        .expect("repeat claim on a deleted key should recover by reissuing");
+
+    // policy.limit_amount (5.0, from base_config's trial_key_limit_usd) plus
+    // paid_total (12.5) run through the same 1.15x markup a normal top-up
+    // gets — never the raw paid_total, or recovery would silently hand back
+    // the platform's margin along with the principal.
+    let granted = vendor.last_issue_limit_usd.lock().unwrap().unwrap();
+    assert!(
+        (granted - 15.87).abs() < 0.001,
+        "expected ~15.87 (5.0 + round(12.5/1.15, cents)), got {granted}"
     );
 }
 

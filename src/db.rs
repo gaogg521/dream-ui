@@ -82,13 +82,16 @@ pub async fn count_active_issued_since(
     Ok(count)
 }
 
-/// One credited real-money top-up, joined against `issuances` so an operator
-/// can tell which vendor key the money landed on without a second lookup.
-/// `vendor_key_handle` is `None` only if the issuance was since disabled/
-/// deleted from this table by something other than the normal flow — the
-/// `topup_credits` row itself is never removed once written (see
-/// `crate::topup::credit_once`'s rollback path, which only fires *before* a
-/// row is ever considered credited).
+/// One credited real-money top-up. `vendor_key_handle` is the key that was
+/// actually live *at credit time* (recorded directly on this row by
+/// `crate::topup::credit_once` since migration 0007) — falling back to
+/// whatever `issuances` says *now* only for rows credited before that
+/// migration existed. This distinction matters once key recovery
+/// (`crate::service::recover_deleted_key`) can rotate an install's handle:
+/// without the direct column, every historical order for that install would
+/// silently start pointing at the *new* key, which is wrong for "which key
+/// did this specific payment fund." `None` only if neither source has it
+/// (pre-0007 row whose issuance was since disabled/deleted).
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct TopupCredit {
     pub order_id: String,
@@ -120,7 +123,9 @@ pub async fn list_topup_credits(
     order_id: Option<&str>,
 ) -> sqlx::Result<Vec<TopupCredit>> {
     sqlx::query_as::<_, TopupCredit>(
-        "SELECT tc.order_id, tc.vendor, tc.install_id, i.vendor_key_handle, tc.amount, tc.credited_at
+        "SELECT tc.order_id, tc.vendor, tc.install_id,
+                COALESCE(tc.vendor_key_handle, i.vendor_key_handle) AS vendor_key_handle,
+                tc.amount, tc.credited_at
          FROM topup_credits tc
          LEFT JOIN issuances i ON i.vendor = tc.vendor AND i.install_id = tc.install_id
          WHERE tc.vendor = ?

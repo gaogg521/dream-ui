@@ -48,6 +48,15 @@ pub struct Config {
     /// builds the client's proxy `base_url` from it. Defaults to
     /// `http://<listen_addr>`, which is only right for local dev.
     pub public_base_url: String,
+    /// This platform's resale markup on real-money top-ups: for every
+    /// `topup_price_markup` CNY a user pays, they're granted 1 CNY of real
+    /// vendor spending power — e.g. at the default 1.15, a ¥11.50 payment
+    /// grants ¥10.00 of usage. Applied wherever paid CNY turns into vendor
+    /// `remain` (`crate::topup::granted_for_payment`); never applied to
+    /// `apply_top_up` (an ops-only manual adjustment, not a user payment) or
+    /// to free trial grants (not user-paid). Platform-wide rather than
+    /// per-vendor since it's a pricing policy, not a vendor quirk.
+    pub topup_price_markup: f64,
 }
 
 impl Config {
@@ -92,6 +101,13 @@ impl Config {
             .trim_end_matches('/')
             .to_string();
 
+        let topup_price_markup = parse_env_or("TOPUP_PRICE_MARKUP", 1.15f64)?;
+        // `<=` alone would let NaN through (every comparison against NaN is
+        // false), so it needs its own check — same guard as topup amounts.
+        if topup_price_markup.is_nan() || topup_price_markup <= 0.0 {
+            anyhow::bail!("TOPUP_PRICE_MARKUP must be a positive number, got {topup_price_markup}");
+        }
+
         Ok(Self {
             openrouter_management_key,
             baoyun,
@@ -103,6 +119,7 @@ impl Config {
             listen_addr,
             per_ip_rate_limit_per_hour,
             public_base_url,
+            topup_price_markup,
         })
     }
 }

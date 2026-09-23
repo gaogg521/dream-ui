@@ -25,7 +25,7 @@ use uuid::Uuid;
 use crate::db;
 use crate::error::AppError;
 use crate::service::AppState;
-use crate::vendor::{TokenVendor, TopupOrderSpec, TopupOrderStatus, VendorError};
+use crate::vendor::{TokenVendor, TopupOrderSpec, TopupOrderStatus, UsageLogEntry, VendorError};
 
 #[derive(Debug, Serialize, PartialEq)]
 pub struct TopupOrderResponse {
@@ -52,11 +52,32 @@ pub(crate) fn reference_for(vendor_id: &str, install_id: &str) -> String {
     format!("{vendor_id}:{install_id}")
 }
 
+/// The real vendor spending power `paid_amount` (CNY the user actually paid,
+/// or a vendor-reported historical total) buys after this platform's resale
+/// markup — e.g. at the default 1.15x, a ¥11.50 payment grants ¥10.00 of
+/// real usage; the difference is the platform's margin. Rounded to cents.
+/// `pub(crate)`: every place real money turns into vendor `remain` must go
+/// through this one function, not compute its own ratio — `service.rs`'s
+/// key-recovery path (`recover_deleted_key`) needs the exact same
+/// conversion applied to reconstructed `paid_total`, or recovery would
+/// silently hand back the un-marked-up amount.
+pub(crate) fn granted_for_payment(markup: f64, paid_amount: f64) -> f64 {
+    (paid_amount / markup * 100.0).round() / 100.0
+}
+
 fn map_vendor_error(e: VendorError) -> AppError {
     log_vendor_error(&e);
     match e {
         VendorError::Unsupported { .. } => AppError::TopupUnsupported,
         _ => AppError::UpstreamError("topup vendor call failed".into()),
+    }
+}
+
+fn map_usage_log_vendor_error(e: VendorError) -> AppError {
+    log_vendor_error(&e);
+    match e {
+        VendorError::Unsupported { .. } => AppError::UsageLogsUnsupported,
+        _ => AppError::UpstreamError("usage log vendor call failed".into()),
     }
 }
 
@@ -235,12 +256,13 @@ async fn credit_once(
     amount: f64,
 ) -> Result<(), AppError> {
     let inserted = sqlx::query(
-        "INSERT INTO topup_credits (order_id, vendor, install_id, amount, credited_at) \
-         VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
+        "INSERT INTO topup_credits (order_id, vendor, install_id, vendor_key_handle, amount, credited_at) \
+         VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
     )
     .bind(order_id)
     .bind(vendor_id)
     .bind(install_id)
+    .bind(handle)
     .bind(amount)
     .bind(chrono::Utc::now().timestamp_millis())
     .execute(&state.pool)
@@ -254,7 +276,8 @@ async fn credit_once(
         return Ok(());
     }
 
-    if let Err(e) = vendor.top_up(handle, amount).await {
+    let granted = granted_for_payment(state.config.topup_price_markup, amount);
+    if let Err(e) = vendor.top_up(handle, granted).await {
         log_vendor_error(&e);
         // Undo the reservation so the next poll retries the credit instead
         // of silently reporting `success` with the key never actually
@@ -277,7 +300,13 @@ async fn credit_once(
         ));
     }
 
-    tracing::info!(vendor = vendor_id, order_id, amount, "topup order credited");
+    tracing::info!(
+        vendor = vendor_id,
+        order_id,
+        amount,
+        granted,
+        "topup order credited"
+    );
     Ok(())
 }
 
@@ -337,6 +366,71 @@ pub async fn list_topups(
     Ok(credits.into_iter().map(TopupCreditView::from).collect())
 }
 
+/// One usage-log entry as `/internal/vendors/:vendor/usage/:install_id`
+/// reports it.
+#[derive(Debug, Serialize)]
+pub struct UsageLogView {
+    pub id: String,
+    /// `charge`, `error`, or `refund`.
+    pub kind: String,
+    /// Unix seconds.
+    pub created_at: i64,
+    pub model: String,
+    pub amount: f64,
+    pub prompt_tokens: i64,
+    pub completion_tokens: i64,
+    pub use_time_ms: i64,
+    pub request_id: String,
+    pub is_stream: bool,
+}
+
+impl From<UsageLogEntry> for UsageLogView {
+    fn from(e: UsageLogEntry) -> Self {
+        Self {
+            id: e.id,
+            kind: e.kind.as_str().to_string(),
+            created_at: e.created_at,
+            model: e.model,
+            amount: e.amount,
+            prompt_tokens: e.prompt_tokens,
+            completion_tokens: e.completion_tokens,
+            use_time_ms: e.use_time_ms,
+            request_id: e.request_id,
+            is_stream: e.is_stream,
+        }
+    }
+}
+
+/// This install's real per-call usage history on `vendor_id`, straight from
+/// the vendor's own logs — not anything this broker tracks itself (it never
+/// sees individual calls in mode A; see the module doc). Ops-only, same
+/// trust tier as [`list_topups`]: for "what did this user actually do and
+/// what did it really cost," e.g. reconciling against the granted `remain`
+/// after the resale markup, or just plain support/troubleshooting.
+pub async fn usage_history(
+    state: &AppState,
+    vendor_id: &str,
+    install_id: &str,
+    since_ms: Option<i64>,
+) -> Result<Vec<UsageLogView>, AppError> {
+    let vendor = state
+        .vendors
+        .get(vendor_id)
+        .ok_or(AppError::VendorUnknown)?;
+
+    let issuance = db::find_active_by_install_id(&state.pool, vendor_id, install_id)
+        .await
+        .map_err(db_error("usage history account check"))?
+        .ok_or(AppError::NotIssued)?;
+
+    let logs = vendor
+        .usage_logs(&issuance.vendor_key_handle, since_ms)
+        .await
+        .map_err(map_usage_log_vendor_error)?;
+
+    Ok(logs.into_iter().map(UsageLogView::from).collect())
+}
+
 // --- axum handlers -----------------------------------------------
 
 #[derive(Debug, Deserialize)]
@@ -391,4 +485,37 @@ pub async fn list_topups_handler(
         )
         .await?,
     ))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UsageHistoryQuery {
+    /// Unix ms. Entries at or after this point only; omit for full history.
+    pub since: Option<i64>,
+}
+
+pub async fn usage_history_handler(
+    State(state): State<Arc<AppState>>,
+    Path((vendor, install_id)): Path<(String, String)>,
+    Query(query): Query<UsageHistoryQuery>,
+) -> Result<Json<Vec<UsageLogView>>, AppError> {
+    Ok(Json(
+        usage_history(&state, &vendor, &install_id, query.since).await?,
+    ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn granted_for_payment_applies_the_markup_and_rounds_to_cents() {
+        assert_eq!(granted_for_payment(1.15, 11.5), 10.0);
+        assert_eq!(granted_for_payment(1.15, 10.0), 8.70);
+    }
+
+    #[test]
+    fn granted_for_payment_is_identity_at_markup_one() {
+        assert_eq!(granted_for_payment(1.0, 10.0), 10.0);
+        assert_eq!(granted_for_payment(1.0, 0.0), 0.0);
+    }
 }

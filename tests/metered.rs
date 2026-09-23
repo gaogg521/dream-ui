@@ -125,6 +125,7 @@ fn base_config() -> Config {
         listen_addr: "127.0.0.1:0".to_string(),
         per_ip_rate_limit_per_hour: 1000,
         public_base_url: "http://broker.test".to_string(),
+        topup_price_markup: 1.0,
     }
 }
 

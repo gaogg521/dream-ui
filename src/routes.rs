@@ -61,6 +61,14 @@ pub fn build_router(state: Arc<AppState>) -> Router {
             "/internal/vendors/:vendor/topups",
             get(topup::list_topups_handler),
         )
+        // Ops-only: this install's real per-call usage history, straight
+        // from the vendor's own logs (Baoyun's `GET /apis/v1/logs`) — for
+        // support/reconciliation ("what did this user actually run, what did
+        // it really cost") without needing the vendor's own console at all.
+        .route(
+            "/internal/vendors/:vendor/usage/:install_id",
+            get(topup::usage_history_handler),
+        )
         .with_state(state)
 }
 

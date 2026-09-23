@@ -1105,3 +1105,95 @@ curl "https://ai-api.baoyun.com/apis/v1/topup/orders?reference=baoyun:install_01
 `redeploy.sh` 流程，这次编译缓存还热着，1 分 34 秒编译完成），公网路径无副
 作用 smoke test 过（`quota/status` 查一个不存在的 install 返回 `not_issued`
 不是 `vendor_unknown`，证明新二进制确实在跑）。
+
+### 11.13 充值精确对应历史 key + 用户加价 15% + 按 install_id 查真实用量明细（2026-09-23）
+
+同一天里用户接着问了三件事，都是围绕"充值/用量 → 到底给了用户多少东西、
+花了多少"这条链路：
+
+**1. 充值订单精确对应到当时那把 key**
+
+用户要求"历史订单也要精确对应到当时那把 key，肯定要精确到历史每一笔"。
+排查发现 `/internal/vendors/:vendor/topups`（§11.8）里的 `vendor_key_handle`
+一直是靠实时 `LEFT JOIN issuances` 查出来的——拿到的永远是这个 install
+**当前**的 key，不是这笔订单入账那一刻的 key。§11.12 的 key 找回功能一上线
+就让这个假设站不住了：一旦某个 install 触发过找回，它历史上所有充值订单在
+`/internal/topups` 里都会被错误地关联到找回后的新 key。
+
+**没有**往宝云的 `reference` 字段里塞 key id 来解决——`reference` 现在的
+粒度（`vendor:install_id`）是 §11.12 `paid_total` 精确匹配查询的依赖，塞入
+key id 会让同一个 install 换 key 后的历史订单查不全。正确做法：新迁移
+`0007_topup_credit_vendor_key_handle.sql` 给 `topup_credits` 表加一列
+`vendor_key_handle`，`credit_once` 入账那一刻就把当时的 handle 直接存进这
+一行（不再单纯依赖事后的实时 JOIN），`list_topup_credits` 查询改成
+`COALESCE(tc.vendor_key_handle, i.vendor_key_handle)`——新数据用自己记的，
+迁移前的老数据没有这列信息才 fallback 到 JOIN（优雅降级，不是精确的，但
+也没法回溯）。
+
+**2. 用户充值加价 15%**
+
+用户原话："我作为 token 代售平台，用户的价格要上浮 15%，假如这个模型的
+上下文是 10 元/M，这个其实是我的成本价，我希望用户实际上是 11.5 元/M"。
+
+核实清楚一个关键架构事实（读代码 + 一个 Explore agent 确认，不是猜的）：
+**当前生产在跑的 mode A（issued key）下，broker 完全不计算任何单次模型
+调用的费用**——宝云直接按用户 issued key 的真实用量从它自己的 `remain`
+里扣，broker 只在"充值到账"这一步把钱转换成 `remain` 额度
+（`topup::credit_once` → `vendor.top_up`）。`GET /apis/v1/pricing` 只在
+挑试用模型时用一次（§11.5），从来没有展示给用户、也不参与任何计费。也就是
+说**当前架构里根本没有"用户看到的单价"这个东西可以改**——用户端只看到
+`remain`（剩余额度，一个金额）。
+
+要实现"用户花 11.5 元只买到 10 元的量"这个经济效果，唯一自然、且对所有
+模型统一生效（不用碰任何模型级定价数据）的插入点是**充值到账、真实人民币
+变成 `remain` 额度的那一刻**：打一个统一折扣再记账。新增
+`Config::topup_price_markup`（env `TOPUP_PRICE_MARKUP`，默认 `1.15`）+
+共享函数 `topup::granted_for_payment(markup, paid_amount)`（四舍五入到分），
+在两处应用：
+
+- `credit_once`：调 `vendor.top_up` 前把真实到账金额换成打折后的授予额度；
+  `topup_credits` 表里仍然记录原始 `amount`（真实到账，对账要用真实收款
+  数字），加价只体现在"实际给了多少可用额度"这一步，不污染财务记录。
+- §11.12 `recover_deleted_key`：`paid_total` 是从宝云订单历史查出来的
+  **真实支付金额**，同样要经过这个折扣，否则找回时会把加价的那部分 margin
+  也一起还给用户，等于找回路径悄悄撤销了加价规则。
+- **不加价**的地方：`apply_top_up`（运维手工调整接口，不是用户真实付款
+  路径）、免费试用额度（不是用户付的钱）。
+
+**3. 按 install_id 查询该用户的真实用量明细**
+
+用户追问"能不能根据用户的 key 在宝云那边查询他的使用明细"，并配了宝云
+"用量统计"控制台截图。现场打开宝云开发文档核实（不是猜的）：账户 API 下
+有 `GET /apis/v1/logs`（用量日志）——参数支持 `token_name`（按 Key 名称
+**精确匹配**，宝云控制台"用量统计"页面筛选框用的就是这个）、`model_name`、
+`request_id`、`start_timestamp`/`end_timestamp`、`type`（1消费/2错误/
+3退款）；响应每条记录都带 `token_id`（跟 broker 自己 `issuances.
+vendor_key_handle` 存的是同一路 id）、`model`、真实 `amount`（CNY）、
+`prompt_tokens`/`completion_tokens`/`use_time`/`request_id`。
+
+**接口本身没有按 `token_id` 过滤的参数，只能按 `token_name` 精确匹配**——
+但既然每条记录都自带 `token_id`，broker 完全不需要知道 key 的名字，直接
+分页拉取（最多 20 页/2000 条防止无限拉取）、在内存里按
+`token_id == 这个 install 的 vendor_key_handle` 过滤即可。新增
+`TokenVendor::usage_logs`（第 4 个默认 `Unsupported` 的可选方法，OpenRouter
+不用管）、`BaoyunVendor` 实现 + 纯函数 `filter_logs_for_handle`（单测覆盖）、
+新端点 `GET /internal/vendors/:vendor/usage/:install_id?since=`，跟
+`/internal/topups` 同一信任级别（loopback-only，不额外鉴权）。
+
+顺带确认了一个容易想岔的点：宝云 key 创建时的 `name` 字段（broker 传的是
+`onework-trial-{随机8位uuid}`，见 `service.rs::short_uuid`）跟 `install_id`
+**没有任何关系**——纯随机、broker 自己都没存，宝云控制台"用量统计"/"API
+Key"列表里能看到"每个用户一把独立的 key"，但**光看名字认不出是哪个用户**。
+真正能反查的是 key 的数字 id（`token_id`/`vendor_key_handle`），不是这个
+名字——这也是上面第 3 点用 `token_id` 而不是 `token_name` 做匹配的原因。
+如果以后想要"人眼扫一眼宝云控制台就能认出是哪个用户"，需要把 `name` 换成
+带 `install_id` 信息的可读格式，这是一个真实的取舍（相当于把内部标识暴露
+给第三方厂商的控制台），本轮没有做，留给以后按需决定。
+
+**验证**：新增/扩展单测覆盖 `granted_for_payment`（含四舍五入到分）、
+`filter_logs_for_handle`（含未知 `type` 拒绝）、markup 生效的充值集成测试、
+`vendor_key_handle` 落盘且在触发 §11.12 找回后历史订单不受影响的集成测试、
+`usage_history` 的支持/不支持/无 issuance 三条路径。`cargo nextest run`
+116/116 全绿，clippy/fmt 干净。**真机验证和生产部署尚未进行**——需要真实
+`BAOYUN_ACCESS_TOKEN` 走一遍充值+核对宝云"用量统计"页面数据，下次跟用户
+一起做。

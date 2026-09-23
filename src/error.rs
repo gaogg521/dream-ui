@@ -35,6 +35,10 @@ pub enum AppError {
     /// reasoning as `NotIssued`: the honest answer without confirming the
     /// order exists for someone else. -> 404
     TopupOrderMismatch,
+    /// `/internal/vendors/:vendor/usage/:install_id` named a vendor with no
+    /// usage-log API — the vendor's [`crate::vendor::TokenVendor::usage_logs`]
+    /// refused with `VendorError::Unsupported` (OpenRouter, today). -> 400
+    UsageLogsUnsupported,
 
     // --- mode B (metered proxy) ---
     /// `/v1/metered/*` named a vendor that is not configured. -> 404
@@ -73,6 +77,7 @@ impl AppError {
             AppError::VendorUnknown => StatusCode::NOT_FOUND,
             AppError::TopupUnsupported => StatusCode::BAD_REQUEST,
             AppError::TopupOrderMismatch => StatusCode::NOT_FOUND,
+            AppError::UsageLogsUnsupported => StatusCode::BAD_REQUEST,
             AppError::MeteredVendorUnknown => StatusCode::NOT_FOUND,
             AppError::MeteredAccountUnknown => StatusCode::NOT_FOUND,
             AppError::MeteredPackageUnknown => StatusCode::BAD_REQUEST,
@@ -96,6 +101,7 @@ impl AppError {
             AppError::VendorUnknown => "vendor_unknown",
             AppError::TopupUnsupported => "topup_unsupported",
             AppError::TopupOrderMismatch => "topup_order_mismatch",
+            AppError::UsageLogsUnsupported => "usage_logs_unsupported",
             AppError::MeteredVendorUnknown => "metered_vendor_unknown",
             AppError::MeteredAccountUnknown => "metered_account_unknown",
             AppError::MeteredPackageUnknown => "metered_package_unknown",

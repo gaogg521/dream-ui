@@ -139,6 +139,7 @@ fn base_config() -> Config {
         listen_addr: "0.0.0.0:8787".to_string(),
         per_ip_rate_limit_per_hour: 5,
         public_base_url: "http://127.0.0.1:8787".to_string(),
+        topup_price_markup: 1.0,
     }
 }
 

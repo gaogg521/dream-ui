@@ -13,10 +13,10 @@ use dream_trial_broker::db::{self, Issuance};
 use dream_trial_broker::error::AppError;
 use dream_trial_broker::rate_limit::RateLimiter;
 use dream_trial_broker::service::AppState;
-use dream_trial_broker::topup::{create_topup_order, get_topup_order, list_topups};
+use dream_trial_broker::topup::{create_topup_order, get_topup_order, list_topups, usage_history};
 use dream_trial_broker::vendor::{
     IssuedKey, KeySpec, KeyUsage, ProvisioningMode, ResetPeriod, TokenVendor, TopupOrder,
-    TopupOrderSpec, TopupOrderStatus, VendorClientConfig, VendorError,
+    TopupOrderSpec, TopupOrderStatus, UsageLogEntry, UsageLogKind, VendorClientConfig, VendorError,
 };
 
 const VENDOR_ID: &str = "toppable";
@@ -149,6 +149,7 @@ fn base_config() -> Config {
         listen_addr: "0.0.0.0:8787".to_string(),
         per_ip_rate_limit_per_hour: 5,
         public_base_url: "http://127.0.0.1:8787".to_string(),
+        topup_price_markup: 1.0,
     }
 }
 
@@ -497,4 +498,228 @@ async fn listing_topups_for_an_unknown_vendor_is_404() {
         .await
         .expect_err("unknown vendor must be refused");
     assert!(matches!(err, AppError::VendorUnknown));
+}
+
+// --- resale markup ---------------------------------------------------
+
+/// Builds state identically to `make_state`, except with a custom
+/// `topup_price_markup` instead of `base_config()`'s no-op `1.0` — kept
+/// separate rather than parameterizing `make_state` itself, since only the
+/// markup tests below need it.
+async fn make_state_with_markup(
+    with_issuance_for: Option<&str>,
+    markup: f64,
+) -> (AppState, Arc<ToppableVendor>) {
+    let (state, vendor) = make_state(with_issuance_for).await;
+    let state = AppState {
+        config: Arc::new(Config {
+            topup_price_markup: markup,
+            ..(*state.config).clone()
+        }),
+        ..state
+    };
+    (state, vendor)
+}
+
+#[tokio::test]
+async fn a_successful_order_credits_the_marked_up_amount_not_the_raw_payment() {
+    let (state, vendor) = make_state_with_markup(Some("install-1"), 1.25).await;
+    // `ToppableVendor::create_topup_order`/`get_topup_order` always report a
+    // settled `amount` of 10.0 (see its impl above) regardless of what's
+    // requested here — same as a real vendor, whose reported order amount is
+    // authoritative over whatever the client originally asked to pay.
+    create_topup_order(&state, VENDOR_ID, "install-1", 10.0)
+        .await
+        .unwrap();
+    vendor.set_status(TopupOrderStatus::Success);
+
+    get_topup_order(&state, VENDOR_ID, "install-1", "order-1")
+        .await
+        .expect("poll should succeed and credit");
+
+    assert_eq!(vendor.top_up_call_count(), 1);
+    // The vendor is credited the markup-adjusted amount (10.0 / 1.25 = 8.0)...
+    assert_eq!(
+        vendor.top_up_calls.lock().unwrap()[0],
+        (HANDLE.to_string(), 8.0)
+    );
+    // ...but the reconciliation view still shows what was actually paid, not
+    // the discounted grant — that's the real money that changed hands.
+    let topups = list_topups(&state, VENDOR_ID, None, None).await.unwrap();
+    assert_eq!(topups[0].amount, 10.0);
+}
+
+// --- vendor_key_handle recorded at credit time ------------------------
+
+#[tokio::test]
+async fn a_credited_orders_vendor_key_handle_survives_a_later_key_rotation() {
+    let (state, vendor) = make_state(Some("install-1")).await;
+    create_topup_order(&state, VENDOR_ID, "install-1", 10.0)
+        .await
+        .unwrap();
+    vendor.set_status(TopupOrderStatus::Success);
+    get_topup_order(&state, VENDOR_ID, "install-1", "order-1")
+        .await
+        .expect("poll should credit against the original handle");
+
+    // Simulate the key-recovery flow rotating this install's issuance to a
+    // brand new vendor key handle (see `service::recover_deleted_key`) — look
+    // up the real (randomly generated) issuance id rather than assuming one,
+    // so the UPDATE below actually matches a row instead of silently
+    // affecting zero.
+    let issuance = db::find_active_by_install_id(&state.pool, VENDOR_ID, "install-1")
+        .await
+        .unwrap()
+        .expect("install-1 should still have an active issuance");
+    db::replace_issuance_key(
+        &state.pool,
+        &issuance.id,
+        "rotated-handle",
+        0,
+        9_999_999_999_999,
+    )
+    .await
+    .expect("rotation should persist");
+
+    // Sanity check the rotation actually took effect before asserting the
+    // historical order was unaffected by it.
+    let rotated = db::find_active_by_install_id(&state.pool, VENDOR_ID, "install-1")
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(rotated.vendor_key_handle, "rotated-handle");
+
+    let topups = list_topups(&state, VENDOR_ID, None, None).await.unwrap();
+    assert_eq!(topups.len(), 1);
+    assert_eq!(
+        topups[0].vendor_key_handle.as_deref(),
+        Some(HANDLE),
+        "the historical order must still point at the handle that was live \
+         when it was credited, not the post-rotation one"
+    );
+}
+
+// --- /internal/vendors/:vendor/usage/:install_id -----------------------
+
+/// A vendor that implements `usage_logs` — unlike `ToppableVendor`, which
+/// deliberately doesn't override it, exercising the trait's `Unsupported`
+/// default (what OpenRouter looks like today).
+struct UsageLoggingVendor {
+    entries: Vec<UsageLogEntry>,
+}
+
+#[async_trait]
+impl TokenVendor for UsageLoggingVendor {
+    fn id(&self) -> &'static str {
+        "usage-logging"
+    }
+    fn provisioning_mode(&self) -> ProvisioningMode {
+        ProvisioningMode::IssuedKey
+    }
+    fn client_config(&self) -> VendorClientConfig {
+        VendorClientConfig {
+            platform: "X",
+            base_url: "https://x.example",
+            currency: "CNY",
+        }
+    }
+    async fn issue_key(&self, _spec: KeySpec) -> Result<IssuedKey, VendorError> {
+        unreachable!()
+    }
+    async fn read_usage(&self, _handle: &str) -> Result<KeyUsage, VendorError> {
+        unreachable!()
+    }
+    async fn set_limit(&self, _handle: &str, _limit_usd: f64) -> Result<(), VendorError> {
+        unreachable!()
+    }
+    async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
+        unreachable!()
+    }
+    async fn usage_logs(
+        &self,
+        _handle: &str,
+        _since_ms: Option<i64>,
+    ) -> Result<Vec<UsageLogEntry>, VendorError> {
+        Ok(self.entries.clone())
+    }
+}
+
+fn usage_entry(id: &str, kind: UsageLogKind, amount: f64) -> UsageLogEntry {
+    UsageLogEntry {
+        id: id.to_string(),
+        kind,
+        created_at: 1_700_000_000,
+        model: "gpt-5.4".to_string(),
+        amount,
+        prompt_tokens: 100,
+        completion_tokens: 50,
+        use_time_ms: 1234,
+        request_id: format!("req-{id}"),
+        is_stream: true,
+    }
+}
+
+#[tokio::test]
+async fn a_vendor_without_usage_log_support_reports_unsupported() {
+    let (state, _vendor) = make_state(Some("install-1")).await;
+    let err = usage_history(&state, VENDOR_ID, "install-1", None)
+        .await
+        .expect_err("ToppableVendor never overrides usage_logs");
+    assert!(matches!(err, AppError::UsageLogsUnsupported));
+}
+
+#[tokio::test]
+async fn usage_history_passes_through_the_vendors_log_entries() {
+    let pool = db::init_pool("sqlite::memory:").await.unwrap();
+    db::insert_issuance(
+        &pool,
+        &Issuance {
+            id: "issuance-1".to_string(),
+            vendor: "usage-logging".to_string(),
+            install_id: "install-1".to_string(),
+            ip: "127.0.0.1".to_string(),
+            vendor_key_handle: HANDLE.to_string(),
+            issued_at: 0,
+            expires_at: 9_999_999_999_999,
+            disabled: 0,
+        },
+    )
+    .await
+    .unwrap();
+
+    let mut vendors: HashMap<&'static str, Arc<dyn TokenVendor>> = HashMap::new();
+    vendors.insert(
+        "usage-logging",
+        Arc::new(UsageLoggingVendor {
+            entries: vec![
+                usage_entry("log-1", UsageLogKind::Charge, 0.12),
+                usage_entry("log-2", UsageLogKind::Error, 0.0),
+            ],
+        }),
+    );
+    let state = AppState {
+        pool,
+        config: Arc::new(base_config()),
+        vendors,
+        rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
+        metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
+        search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+    };
+
+    let logs = usage_history(&state, "usage-logging", "install-1", None)
+        .await
+        .expect("a vendor that implements usage_logs should succeed");
+    assert_eq!(logs.len(), 2);
+    assert_eq!(logs[0].id, "log-1");
+    assert_eq!(logs[0].kind, "charge");
+    assert_eq!(logs[1].kind, "error");
+}
+
+#[tokio::test]
+async fn usage_history_for_an_install_with_no_issuance_is_not_issued() {
+    let (state, _vendor) = make_state(None).await;
+    let err = usage_history(&state, VENDOR_ID, "install-none", None)
+        .await
+        .expect_err("no issuance means nothing to look up a handle for");
+    assert!(matches!(err, AppError::NotIssued));
 }
