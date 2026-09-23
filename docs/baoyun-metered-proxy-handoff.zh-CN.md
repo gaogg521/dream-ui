@@ -1042,4 +1042,66 @@ curl "https://ai-api.baoyun.com/apis/v1/topup/orders?reference=baoyun:install_01
 **后续**：不过用户还是把"充值记录页加 `reference` 列"这个需求转给宝云了，
 对方已经排期要做。这个不阻塞任何当前功能（方法一已经能完整对账），纯粹是
 锦上添花——UI 里直接能看，比敲命令行更顺手。等宝云上线了跟用户一起看效果，
-不用现在跟进。
+不用现在跟进。（2026-09-23 更新：宝云已经把这列加上了，用户在「钱包管理→
+充值记录」表里已经能看到 `reference` 这一列，验证过真实数据。）
+
+### 11.12 试用 key 在宝云那边丢了，自动找回（2026-09-23）
+
+§11.10 排查资金安全时留了一个真实缺口没修：如果一个真实用户的 key 因为任何
+原因在宝云那边没了（我们主动删、宝云风控、账户异常……），这个用户本人
+**完全没有自动拿回访问权限的办法**——broker 只会对着一把不存在的 key 报错，
+客户端只会看到"服务商鉴权失败"。用户原话："我们最关键的是要避免后面的用户
+怎么办"。
+
+**关键发现**（今天在生产账户上验证过，不是看文档猜的）：
+
+1. `POST /apis/v1/api-keys/{id}/key`（揭示明文）——只要这把 key 在宝云那边
+   还活着，随时能再要一次明文，**没有时间窗口限制**，唯一限制是"短时间内
+   重复请求会触发限流"。
+2. `GET /apis/v1/topup/orders?reference=...&status=success` 在我们自己本地
+   broker 数据库整个被删掉之后依然能查到完整记录——比本地 `topup_credits`
+   表更耐久，是更靠谱的"这个用户到底充过多少钱"的恢复锚点。
+
+**做法**：把 `POST /v1/trial-keys` 原来"重复申领直接 409 `already_issued`"
+的判断改聪明——先问宝云这把 key 是死是活：
+
+- **还活着**：直接把明文再要一次返回（`TokenVendor::reveal_key`），`remain`
+  完全不受影响，本地 `issuances` 那一行也不用动。
+- **已经不在了**：调宝云自己的充值订单历史（`TokenVendor::paid_total`，按
+  `reference` 精确过滤 `status=success` 并翻页累加）算出这个用户历史上真实
+  充值过多少钱，重新发一把 key，`remain` 设成"当前免费额度政策 + 这笔历史
+  充值总额"——**钱一分不少地还回去**。`issuances` 表在 `(vendor,
+  install_id)` 上有 `UNIQUE` 约束，所以是原地更新那一行的 `vendor_key_handle`
+  （`db::replace_issuance_key`），不是插入新行——第一版想插入新行时被这个
+  约束直接拦下来了，改成原地更新才对。
+- OpenRouter 完全没实现这三个新的 `TokenVendor` 方法（`key_alive_models`/
+  `reveal_key`/`paid_total`），天然走 `Unsupported` → 原来的 `AlreadyIssued`
+  409，**行为完全不变**，不会因为这次改动受到任何影响。
+
+**客户端完全不用改**——dream-core、dream-ui 一行代码都没碰。用户在设置页
+删掉报错的 provider、再点一次"一键体验免费模型"，现成的 `claimTrialModel`
+→ `requestTrialKey` 走的还是原来那条路，broker 自己把"拒绝"换成了"恢复"。
+
+**真机验证**（直接拿今天早些时候真实删掉的那把 key 当活例子，同一天里从
+"制造问题"到"验证修复"闭环了）：
+
+1. 本地起 broker，手动往 sqlite 里插一行还原当时的状态：
+   `install_01a04786-0f25-76b1-9744-3122152b8c04` → 指向已经删除的 handle
+   `1172`。再发一次 `POST /v1/trial-keys`：**拿到新 key `1175`，
+   `remain: 15`**——`¥5`（当前免费额度）+`¥10`（这个用户当年真实充值成功的
+   金额，宝云订单历史里查到的）分毫不差。本地 `issuances` 表确认还是同一行
+   （`id` 没变），只是 `vendor_key_handle` 从 `1172` 换成了 `1175`，没有
+   产生第二行。
+2. 另建一个全新 install 正常发一把 key，不删它，再发一次 `POST
+   /v1/trial-keys`：**两次拿到的是完全同一把明文**，本地 `issuances` 那行
+   全程没变过。
+3. 验证完撤销了这两把测试 key（`1175`/`1176`）。
+
+新增 3 个集成测试（`tests/trial_key_recovery.rs`）：还活着的重复 claim 不
+新建行只揭示明文、已删除的重复 claim 正确把充值总额加回去且原地更新那一行、
+"查状态本身失败"（非 404 的真实故障）不能被悄悄当成"key 没了"去恢复——最后
+这条很关键，一次网络抖动不能触发一次不必要的重新发 key。`cargo nextest run`
+103/103，clippy/fmt 干净。已部署到生产（跟 §11.9 一样的 tar→scp→解压覆盖→
+`redeploy.sh` 流程，这次编译缓存还热着，1 分 34 秒编译完成），公网路径无副
+作用 smoke test 过（`quota/status` 查一个不存在的 install 返回 `not_issued`
+不是 `vendor_unknown`，证明新二进制确实在跑）。
