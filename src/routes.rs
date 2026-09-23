@@ -28,6 +28,11 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         // ordered this way.
         .route("/v1/topup/orders", post(topup::create_topup_order_handler))
         .route("/v1/topup/orders/:id", get(topup::get_topup_order_handler))
+        // Public "paste your key, see your usage" query — identity is
+        // proving possession of the key itself (matched by hash, this
+        // broker never stores the plaintext), not the install. See
+        // topup::usage_by_key.
+        .route("/v1/keys/usage", post(topup::usage_by_key_handler))
         // Mode B (metered proxy). The forwarding catch-all lives under its own
         // `/proxy/` segment so it never collides with these fixed routes.
         .route("/v1/metered/claim", post(metered::claim_handler))

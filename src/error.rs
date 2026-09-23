@@ -39,6 +39,12 @@ pub enum AppError {
     /// usage-log API — the vendor's [`crate::vendor::TokenVendor::usage_logs`]
     /// refused with `VendorError::Unsupported` (OpenRouter, today). -> 400
     UsageLogsUnsupported,
+    /// `POST /v1/keys/usage` — no active issuance's key hash matches the
+    /// pasted key (wrong key, already-rotated key, or a vendor with no
+    /// issuance at all). Deliberately not distinguished from "wrong vendor" —
+    /// there is nothing sensitive to protect by being more specific, this
+    /// endpoint's only input is the key itself. -> 404
+    KeyNotFound,
 
     // --- mode B (metered proxy) ---
     /// `/v1/metered/*` named a vendor that is not configured. -> 404
@@ -78,6 +84,7 @@ impl AppError {
             AppError::TopupUnsupported => StatusCode::BAD_REQUEST,
             AppError::TopupOrderMismatch => StatusCode::NOT_FOUND,
             AppError::UsageLogsUnsupported => StatusCode::BAD_REQUEST,
+            AppError::KeyNotFound => StatusCode::NOT_FOUND,
             AppError::MeteredVendorUnknown => StatusCode::NOT_FOUND,
             AppError::MeteredAccountUnknown => StatusCode::NOT_FOUND,
             AppError::MeteredPackageUnknown => StatusCode::BAD_REQUEST,
@@ -102,6 +109,7 @@ impl AppError {
             AppError::TopupUnsupported => "topup_unsupported",
             AppError::TopupOrderMismatch => "topup_order_mismatch",
             AppError::UsageLogsUnsupported => "usage_logs_unsupported",
+            AppError::KeyNotFound => "key_not_found",
             AppError::MeteredVendorUnknown => "metered_vendor_unknown",
             AppError::MeteredAccountUnknown => "metered_account_unknown",
             AppError::MeteredPackageUnknown => "metered_package_unknown",

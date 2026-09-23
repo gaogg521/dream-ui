@@ -17,14 +17,16 @@
 
 use std::sync::Arc;
 
-use axum::extract::{Path, Query, State};
+use axum::extract::{ConnectInfo, Path, Query, State};
+use axum::http::HeaderMap;
 use axum::Json;
 use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
 use uuid::Uuid;
 
 use crate::db;
 use crate::error::AppError;
-use crate::service::AppState;
+use crate::service::{hash_key, AppState};
 use crate::vendor::{TokenVendor, TopupOrderSpec, TopupOrderStatus, UsageLogEntry, VendorError};
 
 #[derive(Debug, Serialize, PartialEq)]
@@ -431,6 +433,84 @@ pub async fn usage_history(
     Ok(logs.into_iter().map(UsageLogView::from).collect())
 }
 
+/// Response for `POST /v1/keys/usage` — the "paste your key, see your usage"
+/// public query. Bundles the current spend position (same shape
+/// `QuotaStatusResponse` reports) with the same per-call log list
+/// `usage_history` gives an operator, so the one page a user pastes their
+/// key into can show balance and recent activity together.
+#[derive(Debug, Serialize)]
+pub struct KeyUsageQueryResponse {
+    pub vendor: String,
+    pub limit_usd: Option<f64>,
+    pub used_usd: f64,
+    pub remaining_usd: Option<f64>,
+    pub currency: String,
+    pub logs: Vec<UsageLogView>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct KeyUsageQueryRequest {
+    pub vendor: String,
+    pub key: String,
+}
+
+/// Looks up an issuance purely by the plaintext key it was issued — this
+/// broker never stores that plaintext, only its hash
+/// (`crate::service::hash_key`), computed once at issuance and compared
+/// here. Proving possession of the exact key bytes is the same trust level
+/// as being able to use the key for inference directly, so handing back its
+/// own usage is not a privilege escalation — this is why the route is public
+/// rather than `/internal/`. Only matches a currently *active* issuance: a
+/// key rotated away by recovery (`replace_issuance_key`) stops matching its
+/// old hash the moment the new one is written.
+pub async fn usage_by_key(
+    state: &AppState,
+    vendor_id: &str,
+    key: &str,
+    ip: std::net::IpAddr,
+) -> Result<KeyUsageQueryResponse, AppError> {
+    // Public and unauthenticated beyond key possession — same per-IP budget
+    // as `/v1/trial-keys` to blunt scripted abuse, even though the hash
+    // space makes guessing a real key impractical.
+    if !state.rate_limiter.check(ip) {
+        tracing::info!(ip = %ip, "rate limit rejection on key usage query");
+        return Err(AppError::RateLimited);
+    }
+
+    let vendor = state
+        .vendors
+        .get(vendor_id)
+        .ok_or(AppError::VendorUnknown)?;
+
+    let key_hash = hash_key(key);
+    let issuance = db::find_active_by_key_hash(&state.pool, vendor_id, &key_hash)
+        .await
+        .map_err(db_error("usage-by-key lookup"))?
+        .ok_or(AppError::KeyNotFound)?;
+
+    let usage = vendor
+        .read_usage(&issuance.vendor_key_handle)
+        .await
+        .map_err(|e| {
+            log_vendor_error(&e);
+            AppError::UpstreamError("failed to read this key's spend position".into())
+        })?;
+
+    let logs = vendor
+        .usage_logs(&issuance.vendor_key_handle, None)
+        .await
+        .map_err(map_usage_log_vendor_error)?;
+
+    Ok(KeyUsageQueryResponse {
+        vendor: vendor_id.to_string(),
+        limit_usd: usage.limit_usd,
+        used_usd: usage.used_usd,
+        remaining_usd: usage.remaining_usd,
+        currency: usage.currency,
+        logs: logs.into_iter().map(UsageLogView::from).collect(),
+    })
+}
+
 // --- axum handlers -----------------------------------------------
 
 #[derive(Debug, Deserialize)]
@@ -500,6 +580,18 @@ pub async fn usage_history_handler(
 ) -> Result<Json<Vec<UsageLogView>>, AppError> {
     Ok(Json(
         usage_history(&state, &vendor, &install_id, query.since).await?,
+    ))
+}
+
+pub async fn usage_by_key_handler(
+    State(state): State<Arc<AppState>>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
+    Json(payload): Json<KeyUsageQueryRequest>,
+) -> Result<Json<KeyUsageQueryResponse>, AppError> {
+    let ip = crate::routes::extract_client_ip(&headers, addr);
+    Ok(Json(
+        usage_by_key(&state, &payload.vendor, &payload.key, ip).await?,
     ))
 }
 

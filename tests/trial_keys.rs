@@ -501,3 +501,122 @@ async fn top_up_for_an_install_with_no_issuance_is_404() {
         .expect_err("nothing to top up for an install that never claimed a key");
     assert!(matches!(err, AppError::NotIssued));
 }
+
+// --- fresh-issue safety net: no local row, but real payment history -----
+
+const PAID_HISTORY_VENDOR_ID: &str = "paid-history-vendor";
+
+/// A vendor that *does* implement `paid_total` — unlike `MockVendor`, which
+/// deliberately doesn't override it (that's what exercises the trait's
+/// `Unsupported` default for every other test in this file).
+struct PaidHistoryVendor {
+    paid_total: f64,
+    last_spec: Mutex<Option<KeySpec>>,
+}
+
+#[async_trait]
+impl TokenVendor for PaidHistoryVendor {
+    fn id(&self) -> &'static str {
+        PAID_HISTORY_VENDOR_ID
+    }
+    fn provisioning_mode(&self) -> ProvisioningMode {
+        ProvisioningMode::IssuedKey
+    }
+    fn client_config(&self) -> VendorClientConfig {
+        VendorClientConfig {
+            platform: "MockPlatform",
+            base_url: "https://mock.example/v1",
+            currency: "CNY",
+        }
+    }
+    async fn issue_key(&self, spec: KeySpec) -> Result<IssuedKey, VendorError> {
+        *self.last_spec.lock().unwrap() = Some(spec);
+        Ok(IssuedKey {
+            secret: "sk-mock".into(),
+            handle: "mock-handle".into(),
+            models: MODELS.iter().map(|s| s.to_string()).collect(),
+        })
+    }
+    async fn read_usage(&self, _handle: &str) -> Result<KeyUsage, VendorError> {
+        unreachable!()
+    }
+    async fn set_limit(&self, _handle: &str, _limit_usd: f64) -> Result<(), VendorError> {
+        unreachable!()
+    }
+    async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
+        unreachable!()
+    }
+    async fn paid_total(&self, _reference: &str) -> Result<f64, VendorError> {
+        Ok(self.paid_total)
+    }
+}
+
+async fn make_state_with_paid_history_vendor(
+    paid_total: f64,
+    markup: f64,
+) -> (AppState, Arc<PaidHistoryVendor>) {
+    let pool = db::init_pool("sqlite::memory:").await.unwrap();
+    let vendor = Arc::new(PaidHistoryVendor {
+        paid_total,
+        last_spec: Mutex::new(None),
+    });
+    let mut vendors: HashMap<&'static str, Arc<dyn TokenVendor>> = HashMap::new();
+    vendors.insert(PAID_HISTORY_VENDOR_ID, vendor.clone());
+    let state = AppState {
+        pool,
+        config: Arc::new(Config {
+            topup_price_markup: markup,
+            ..base_config()
+        }),
+        vendors,
+        rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
+        metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
+        search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+    };
+    (state, vendor)
+}
+
+#[tokio::test]
+async fn a_fresh_issuance_with_no_local_row_credits_prior_payment_history() {
+    // No issuance row exists for "install-orphaned" — simulates the broker's
+    // own local record having been lost even though the install genuinely
+    // paid before (the real incident this test guards against).
+    let (state, vendor) = make_state_with_paid_history_vendor(10.0, 1.25).await;
+
+    issue_trial_key(
+        &state,
+        PAID_HISTORY_VENDOR_ID,
+        "install-orphaned",
+        ip(127, 0, 0, 30),
+    )
+    .await
+    .expect("issuance should succeed even though this looks like a fresh install");
+
+    let spec = vendor.last_spec.lock().unwrap().clone().unwrap();
+    // policy.limit_amount (1.0, from base_config's trial_key_limit_usd) +
+    // granted_for_payment(1.25, 10.0) == 1.0 + 8.0 == 9.0.
+    assert_eq!(
+        spec.limit_usd, 9.0,
+        "prior payment history must be credited (after markup) even with no local issuance row"
+    );
+}
+
+#[tokio::test]
+async fn a_genuinely_fresh_install_is_unaffected_by_the_paid_total_check() {
+    let (state, vendor) = make_state_with_paid_history_vendor(0.0, 1.25).await;
+
+    issue_trial_key(
+        &state,
+        PAID_HISTORY_VENDOR_ID,
+        "install-truly-new",
+        ip(127, 0, 0, 31),
+    )
+    .await
+    .expect("issuance should succeed");
+
+    let spec = vendor.last_spec.lock().unwrap().clone().unwrap();
+    assert_eq!(
+        spec.limit_usd, 1.0,
+        "zero paid history must leave the grant exactly as before this check existed"
+    );
+}

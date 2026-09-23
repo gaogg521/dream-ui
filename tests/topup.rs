@@ -2,6 +2,7 @@
 //! guard, and the once-only credit.
 
 use std::collections::HashMap;
+use std::net::{IpAddr, Ipv4Addr};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -12,8 +13,10 @@ use dream_trial_broker::config::Config;
 use dream_trial_broker::db::{self, Issuance};
 use dream_trial_broker::error::AppError;
 use dream_trial_broker::rate_limit::RateLimiter;
-use dream_trial_broker::service::AppState;
-use dream_trial_broker::topup::{create_topup_order, get_topup_order, list_topups, usage_history};
+use dream_trial_broker::service::{hash_key, AppState};
+use dream_trial_broker::topup::{
+    create_topup_order, get_topup_order, list_topups, usage_by_key, usage_history,
+};
 use dream_trial_broker::vendor::{
     IssuedKey, KeySpec, KeyUsage, ProvisioningMode, ResetPeriod, TokenVendor, TopupOrder,
     TopupOrderSpec, TopupOrderStatus, UsageLogEntry, UsageLogKind, VendorClientConfig, VendorError,
@@ -173,6 +176,7 @@ async fn make_state(with_issuance_for: Option<&str>) -> (AppState, Arc<ToppableV
                 issued_at: 0,
                 expires_at: 9_999_999_999_999,
                 disabled: 0,
+                key_hash: None,
             },
         )
         .await
@@ -286,6 +290,7 @@ async fn a_vendor_without_topup_support_reports_unsupported() {
             issued_at: 0,
             expires_at: 9_999_999_999_999,
             disabled: 0,
+            key_hash: None,
         },
     )
     .await
@@ -436,6 +441,7 @@ async fn listing_topups_can_be_scoped_to_one_install() {
             issued_at: 0,
             expires_at: 9_999_999_999_999,
             disabled: 0,
+            key_hash: None,
         },
     )
     .await
@@ -577,6 +583,7 @@ async fn a_credited_orders_vendor_key_handle_survives_a_later_key_rotation() {
         "rotated-handle",
         0,
         9_999_999_999_999,
+        "rotated-key-hash",
     )
     .await
     .expect("rotation should persist");
@@ -627,7 +634,14 @@ impl TokenVendor for UsageLoggingVendor {
         unreachable!()
     }
     async fn read_usage(&self, _handle: &str) -> Result<KeyUsage, VendorError> {
-        unreachable!()
+        Ok(KeyUsage {
+            limit_usd: Some(15.0),
+            used_usd: 2.5,
+            remaining_usd: Some(12.5),
+            reset: Some(ResetPeriod::Cumulative),
+            disabled: false,
+            currency: "CNY".to_string(),
+        })
     }
     async fn set_limit(&self, _handle: &str, _limit_usd: f64) -> Result<(), VendorError> {
         unreachable!()
@@ -682,6 +696,7 @@ async fn usage_history_passes_through_the_vendors_log_entries() {
             issued_at: 0,
             expires_at: 9_999_999_999_999,
             disabled: 0,
+            key_hash: None,
         },
     )
     .await
@@ -713,6 +728,114 @@ async fn usage_history_passes_through_the_vendors_log_entries() {
     assert_eq!(logs[0].id, "log-1");
     assert_eq!(logs[0].kind, "charge");
     assert_eq!(logs[1].kind, "error");
+}
+
+fn ip() -> IpAddr {
+    IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))
+}
+
+async fn make_state_with_usage_logging_vendor(key_hash: Option<String>) -> AppState {
+    let pool = db::init_pool("sqlite::memory:").await.unwrap();
+    db::insert_issuance(
+        &pool,
+        &Issuance {
+            id: "issuance-1".to_string(),
+            vendor: "usage-logging".to_string(),
+            install_id: "install-1".to_string(),
+            ip: "127.0.0.1".to_string(),
+            vendor_key_handle: HANDLE.to_string(),
+            issued_at: 0,
+            expires_at: 9_999_999_999_999,
+            disabled: 0,
+            key_hash,
+        },
+    )
+    .await
+    .unwrap();
+
+    let mut vendors: HashMap<&'static str, Arc<dyn TokenVendor>> = HashMap::new();
+    vendors.insert(
+        "usage-logging",
+        Arc::new(UsageLoggingVendor {
+            entries: vec![usage_entry("log-1", UsageLogKind::Charge, 0.12)],
+        }),
+    );
+    AppState {
+        pool,
+        config: Arc::new(base_config()),
+        vendors,
+        rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
+        metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
+        search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+    }
+}
+
+#[tokio::test]
+async fn usage_by_key_matches_an_active_issuance_and_returns_balance_plus_logs() {
+    let state = make_state_with_usage_logging_vendor(Some(hash_key("sk-real-secret"))).await;
+
+    let result = usage_by_key(&state, "usage-logging", "sk-real-secret", ip())
+        .await
+        .expect("the exact key that was issued should match its own hash");
+
+    assert_eq!(result.limit_usd, Some(15.0));
+    assert_eq!(result.used_usd, 2.5);
+    assert_eq!(result.remaining_usd, Some(12.5));
+    assert_eq!(result.currency, "CNY");
+    assert_eq!(result.logs.len(), 1);
+    assert_eq!(result.logs[0].id, "log-1");
+}
+
+#[tokio::test]
+async fn usage_by_key_for_an_unmatched_key_is_key_not_found() {
+    let state = make_state_with_usage_logging_vendor(Some(hash_key("sk-real-secret"))).await;
+
+    let err = usage_by_key(&state, "usage-logging", "sk-a-different-key", ip())
+        .await
+        .expect_err("a key nobody issued must not match anything");
+    assert!(matches!(err, AppError::KeyNotFound));
+}
+
+#[tokio::test]
+async fn usage_by_key_for_an_unconfigured_vendor_is_vendor_unknown() {
+    let state = make_state_with_usage_logging_vendor(Some(hash_key("sk-real-secret"))).await;
+
+    let err = usage_by_key(&state, "not-a-vendor", "sk-real-secret", ip())
+        .await
+        .expect_err("unknown vendor must be refused");
+    assert!(matches!(err, AppError::VendorUnknown));
+}
+
+#[tokio::test]
+async fn usage_by_key_stops_matching_a_hash_after_the_key_is_rotated_away() {
+    let state = make_state_with_usage_logging_vendor(Some(hash_key("sk-old-key"))).await;
+
+    // The old key still matches before any rotation.
+    usage_by_key(&state, "usage-logging", "sk-old-key", ip())
+        .await
+        .expect("the original key should still match before rotation");
+
+    // Simulate key-recovery rotating this issuance onto a brand new key —
+    // `replace_issuance_key` overwrites both the handle and the hash.
+    db::replace_issuance_key(
+        &state.pool,
+        "issuance-1",
+        "rotated-handle",
+        0,
+        9_999_999_999_999,
+        &hash_key("sk-new-key"),
+    )
+    .await
+    .expect("rotation should persist");
+
+    let err = usage_by_key(&state, "usage-logging", "sk-old-key", ip())
+        .await
+        .expect_err("the rotated-away key's hash must no longer match anything");
+    assert!(matches!(err, AppError::KeyNotFound));
+
+    usage_by_key(&state, "usage-logging", "sk-new-key", ip())
+        .await
+        .expect("the new key should match after rotation");
 }
 
 #[tokio::test]

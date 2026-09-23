@@ -207,11 +207,43 @@ pub async fn issue_trial_key(
         return Err(AppError::BudgetExhausted);
     }
 
-    // 4. Mint upstream.
+    // 4. Mint upstream. Even though no local issuance row exists for this
+    // install, it may still have real payment history the broker's own
+    // bookkeeping lost track of (e.g. this exact row disappearing from the
+    // local db is what motivated this check) — ask the vendor's own order
+    // history before minting, same safety net `recover_deleted_key` uses
+    // when an existing-but-dead row is found. `paid_total == 0.0` (the
+    // overwhelming majority of fresh installs) leaves behavior identical to
+    // before this check existed.
+    let reference = crate::topup::reference_for(vendor_id, install_id);
+    let paid_total = match vendor.paid_total(&reference).await {
+        Ok(total) => total,
+        Err(VendorError::Unsupported { .. }) => 0.0,
+        Err(e) => {
+            // Unlike `recover_or_reveal`'s existing-row path (where a failed
+            // check must not be treated as "key confirmed gone"), failing
+            // open here only risks missing a rare recovery-worthy case, not
+            // wrongly discarding a still-good key — so a transient failure
+            // must not block every brand-new install's free trial.
+            log_vendor_error(&e);
+            0.0
+        }
+    };
+    if paid_total > 0.0 {
+        tracing::warn!(
+            vendor = vendor_id,
+            install_id_hash = %hash_prefix(install_id),
+            paid_total,
+            "fresh issuance found prior payment history with no local issuance row — \
+             crediting it back; this usually means the broker's own record was lost"
+        );
+    }
+
     let expires_at = now + ChronoDuration::days(state.config.trial_key_expires_days);
     let spec = KeySpec {
         label: trial_key_label(install_id),
-        limit_usd: policy.limit_amount,
+        limit_usd: policy.limit_amount
+            + crate::topup::granted_for_payment(state.config.topup_price_markup, paid_total),
         reset: policy.reset,
         expires_at: Some(expires_at.to_rfc3339_opts(SecondsFormat::Secs, true)),
     };
@@ -221,7 +253,8 @@ pub async fn issue_trial_key(
         AppError::UpstreamError("failed to issue upstream key".into())
     })?;
 
-    // 5. Persist the issuance (never the plaintext key).
+    // 5. Persist the issuance (never the plaintext key — only its hash, for
+    // `crate::topup::usage_by_key`'s paste-your-key lookup).
     let issuance = Issuance {
         id: Uuid::new_v4().to_string(),
         vendor: vendor_id.to_string(),
@@ -231,6 +264,7 @@ pub async fn issue_trial_key(
         issued_at: now_ms,
         expires_at: expires_at.timestamp_millis(),
         disabled: 0,
+        key_hash: Some(hash_key(&issued.secret)),
     };
 
     db::insert_issuance(&state.pool, &issuance)
@@ -372,6 +406,7 @@ async fn recover_deleted_key(
         &issued.handle,
         now_ms,
         expires_at.timestamp_millis(),
+        &hash_key(&issued.secret),
     )
     .await
     .map_err(|e| {
@@ -502,6 +537,18 @@ fn hash_prefix(s: &str) -> String {
     digest[..4].iter().map(|b| format!("{b:02x}")).collect()
 }
 
+/// Full sha256 hex digest of a plaintext issued key — stored alongside
+/// `Issuance` so the "paste your key, see your usage" query
+/// (`crate::topup::usage_by_key`) can find the matching row without this
+/// broker ever storing the plaintext itself. A vendor's `IssuedKey::secret`
+/// is only ever available in the single `issue_key` call that mints it, so
+/// this must be computed right there and persisted immediately — there is no
+/// way to recover it later.
+pub fn hash_key(secret: &str) -> String {
+    let digest = Sha256::digest(secret.as_bytes());
+    digest.iter().map(|b| format!("{b:02x}")).collect()
+}
+
 /// Baoyun key names are capped at 50 chars (verified against the live
 /// `创建 Key` docs). `install_id` is normally `install_` + a UUID (44 chars),
 /// so `trial-{install_id}` fits at exactly 50 — but this truncates
@@ -550,5 +597,28 @@ mod label_tests {
         let label = trial_key_label(&very_long_install_id);
         assert_eq!(label.chars().count(), 50);
         assert!(label.starts_with("trial-install_"));
+    }
+}
+
+#[cfg(test)]
+mod hash_key_tests {
+    use super::*;
+
+    #[test]
+    fn hash_key_is_deterministic() {
+        assert_eq!(hash_key("sk-abc123"), hash_key("sk-abc123"));
+    }
+
+    #[test]
+    fn hash_key_differs_for_different_keys() {
+        assert_ne!(hash_key("sk-abc123"), hash_key("sk-abc124"));
+    }
+
+    #[test]
+    fn hash_key_never_contains_the_plaintext() {
+        let hash = hash_key("sk-super-secret-value");
+        assert!(!hash.contains("sk-super-secret-value"));
+        // sha256 hex digest is exactly 64 chars.
+        assert_eq!(hash.len(), 64);
     }
 }

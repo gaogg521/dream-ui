@@ -17,6 +17,11 @@ pub struct Issuance {
     pub issued_at: i64,
     pub expires_at: i64,
     pub disabled: i64,
+    /// sha256 hex digest of the plaintext key (`crate::service::hash_key`),
+    /// never the plaintext itself. `None` only for rows issued before
+    /// migration 0008 — they simply aren't queryable by `usage_by_key` until
+    /// naturally replaced (recovery, or a future re-issue).
+    pub key_hash: Option<String>,
 }
 
 /// Opens the pool and runs migrations. A single connection is used
@@ -37,7 +42,7 @@ pub async fn init_pool(database_url: &str) -> anyhow::Result<SqlitePool> {
 }
 
 const COLUMNS: &str =
-    "id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, disabled";
+    "id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, disabled, key_hash";
 
 /// Looks up a non-disabled issuance for this install on this vendor (dedup
 /// check). Scoped per vendor: one device may hold one key per platform.
@@ -52,6 +57,27 @@ pub async fn find_active_by_install_id(
     ))
     .bind(vendor)
     .bind(install_id)
+    .fetch_optional(pool)
+    .await
+}
+
+/// Looks up a non-disabled issuance purely by the hash of the plaintext key
+/// it was issued — the "paste your key, see your usage" public query's only
+/// way in. Only matches `disabled = 0`: once `replace_issuance_key` rotates a
+/// row onto a new key (and a new hash), the old hash naturally stops
+/// matching anything, which is exactly the right behavior for a key that no
+/// longer works.
+pub async fn find_active_by_key_hash(
+    pool: &SqlitePool,
+    vendor: &str,
+    key_hash: &str,
+) -> sqlx::Result<Option<Issuance>> {
+    sqlx::query_as::<_, Issuance>(&format!(
+        "SELECT {COLUMNS} FROM issuances
+         WHERE vendor = ? AND key_hash = ? AND disabled = 0"
+    ))
+    .bind(vendor)
+    .bind(key_hash)
     .fetch_optional(pool)
     .await
 }
@@ -144,8 +170,8 @@ pub async fn list_topup_credits(
 
 pub async fn insert_issuance(pool: &SqlitePool, issuance: &Issuance) -> sqlx::Result<()> {
     sqlx::query(
-        "INSERT INTO issuances (id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, disabled)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO issuances (id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, disabled, key_hash)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&issuance.id)
     .bind(&issuance.vendor)
@@ -155,6 +181,7 @@ pub async fn insert_issuance(pool: &SqlitePool, issuance: &Issuance) -> sqlx::Re
     .bind(issuance.issued_at)
     .bind(issuance.expires_at)
     .bind(issuance.disabled)
+    .bind(&issuance.key_hash)
     .execute(pool)
     .await?;
 
@@ -166,21 +193,25 @@ pub async fn insert_issuance(pool: &SqlitePool, issuance: &Issuance) -> sqlx::Re
 /// `crate::service::recover_deleted_key`). Updates the row in place rather
 /// than inserting a second one: `issuances` has a `UNIQUE (vendor,
 /// install_id)` constraint, so there can only ever be one row per install
-/// per vendor regardless of `disabled`, live or not.
+/// per vendor regardless of `disabled`, live or not. `new_key_hash` moves
+/// with the new key — the old hash is overwritten, so it naturally stops
+/// matching `find_active_by_key_hash` once the row it named is gone.
 pub async fn replace_issuance_key(
     pool: &SqlitePool,
     issuance_id: &str,
     new_vendor_key_handle: &str,
     issued_at: i64,
     expires_at: i64,
+    new_key_hash: &str,
 ) -> sqlx::Result<()> {
     sqlx::query(
-        "UPDATE issuances SET vendor_key_handle = ?, issued_at = ?, expires_at = ?, disabled = 0 \
+        "UPDATE issuances SET vendor_key_handle = ?, issued_at = ?, expires_at = ?, disabled = 0, key_hash = ? \
          WHERE id = ?",
     )
     .bind(new_vendor_key_handle)
     .bind(issued_at)
     .bind(expires_at)
+    .bind(new_key_hash)
     .bind(issuance_id)
     .execute(pool)
     .await?;
