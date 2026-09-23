@@ -307,7 +307,10 @@ async fn issued_keys_carry_the_configured_monthly_spend_cap() {
         ResetPeriod::Monthly,
         "cap must renew monthly, not daily"
     );
-    assert!(spec.label.starts_with("onework-trial-"));
+    assert_eq!(
+        spec.label, "trial-install-cap",
+        "label should be deterministic from install_id, not a random suffix"
+    );
     assert!(
         spec.expires_at.is_some(),
         "keys must always carry an expiry"

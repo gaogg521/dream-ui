@@ -210,7 +210,7 @@ pub async fn issue_trial_key(
     // 4. Mint upstream.
     let expires_at = now + ChronoDuration::days(state.config.trial_key_expires_days);
     let spec = KeySpec {
-        label: format!("onework-trial-{}", short_uuid()),
+        label: trial_key_label(install_id),
         limit_usd: policy.limit_amount,
         reset: policy.reset,
         expires_at: Some(expires_at.to_rfc3339_opts(SecondsFormat::Secs, true)),
@@ -348,7 +348,7 @@ async fn recover_deleted_key(
     let granted_from_paid =
         crate::topup::granted_for_payment(state.config.topup_price_markup, paid_total);
     let spec = KeySpec {
-        label: format!("onework-trial-{}", short_uuid()),
+        label: trial_key_label(install_id),
         // Current free-grant policy plus everything this install proved it
         // paid (after markup) — never less than what a fresh claim would
         // get, and never silently short-changing a paying user just because
@@ -502,6 +502,53 @@ fn hash_prefix(s: &str) -> String {
     digest[..4].iter().map(|b| format!("{b:02x}")).collect()
 }
 
-fn short_uuid() -> String {
-    Uuid::new_v4().simple().to_string()[..8].to_string()
+/// Baoyun key names are capped at 50 chars (verified against the live
+/// `创建 Key` docs). `install_id` is normally `install_` + a UUID (44 chars),
+/// so `trial-{install_id}` fits at exactly 50 — but this truncates
+/// defensively rather than trusting that format holds forever, so a future
+/// longer install_id can never produce an invalid create-key request.
+/// Deliberately deterministic (no random suffix, unlike the old
+/// `onework-trial-{short_uuid}` label): letting a recovered replacement key
+/// reuse the same name is a feature, not a collision — an operator staring
+/// at Baoyun's own console can recognize "same install" across a recovery
+/// even though the key's underlying id changed.
+fn trial_key_label(install_id: &str) -> String {
+    const MAX_LEN: usize = 50;
+    let label = format!("trial-{install_id}");
+    if label.chars().count() > MAX_LEN {
+        label.chars().take(MAX_LEN).collect()
+    } else {
+        label
+    }
+}
+
+#[cfg(test)]
+mod label_tests {
+    use super::*;
+
+    #[test]
+    fn trial_key_label_is_deterministic_from_install_id() {
+        assert_eq!(trial_key_label("install-abc"), "trial-install-abc");
+        // Calling it again for the same install_id must produce the exact
+        // same label — this is what lets a recovered key reuse the name.
+        assert_eq!(trial_key_label("install-abc"), "trial-install-abc");
+    }
+
+    #[test]
+    fn trial_key_label_fits_a_realistic_install_id_with_room_to_spare() {
+        // `install_` + a 36-char UUID = 44 chars; `trial-` + that = 50,
+        // exactly at the cap.
+        let install_id = "install_01a04786-0f25-76b1-9744-3122152b8c04";
+        let label = trial_key_label(install_id);
+        assert_eq!(label, format!("trial-{install_id}"));
+        assert_eq!(label.chars().count(), 50);
+    }
+
+    #[test]
+    fn trial_key_label_truncates_rather_than_exceed_the_cap() {
+        let very_long_install_id = "install_".to_string() + &"x".repeat(100);
+        let label = trial_key_label(&very_long_install_id);
+        assert_eq!(label.chars().count(), 50);
+        assert!(label.starts_with("trial-install_"));
+    }
 }
