@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
+use dream_trial_broker::backfill;
 use dream_trial_broker::config::Config;
 use dream_trial_broker::db;
 use dream_trial_broker::metered::gateway::MockGateway;
@@ -82,6 +83,11 @@ async fn main() -> anyhow::Result<()> {
 
     // Settles async (image / video) call costs that could not be billed inline.
     tokio::spawn(poller::run(Arc::clone(&state)));
+
+    // Fills in `key_hash` for keys minted before migration 0008, so the
+    // paste-your-key usage page can find them. Detached: it talks to the
+    // vendor, and nothing may delay the listener.
+    tokio::spawn(backfill::run(Arc::clone(&state)));
 
     let app = build_router(state);
 

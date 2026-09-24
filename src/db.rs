@@ -218,3 +218,38 @@ pub async fn replace_issuance_key(
 
     Ok(())
 }
+
+/// Active issuances on `vendor` whose `key_hash` was never recorded — rows
+/// created before migration 0008. `crate::backfill` fills these in by asking
+/// the vendor to re-reveal the plaintext; see that module for why they can't
+/// simply be left alone.
+pub async fn list_active_without_key_hash(
+    pool: &SqlitePool,
+    vendor: &str,
+) -> sqlx::Result<Vec<Issuance>> {
+    sqlx::query_as::<_, Issuance>(&format!(
+        "SELECT {COLUMNS} FROM issuances
+         WHERE vendor = ? AND disabled = 0 AND key_hash IS NULL"
+    ))
+    .bind(vendor)
+    .fetch_all(pool)
+    .await
+}
+
+/// Records the hash of an already-issued key, leaving every other column
+/// alone. Only ever used to fill a `NULL` in; a row whose key is replaced
+/// goes through `replace_issuance_key` instead, which moves the handle and
+/// the hash together.
+pub async fn set_key_hash(
+    pool: &SqlitePool,
+    issuance_id: &str,
+    key_hash: &str,
+) -> sqlx::Result<()> {
+    sqlx::query("UPDATE issuances SET key_hash = ? WHERE id = ?")
+        .bind(key_hash)
+        .bind(issuance_id)
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}
