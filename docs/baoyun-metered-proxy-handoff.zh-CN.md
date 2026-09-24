@@ -1334,3 +1334,80 @@ key 被删"这一种情况需要找回，"记录本身就不存在了"也要用�
      （`.env` 没覆盖 `TOPUP_PRICE_MARKUP`，走默认值 1.15）。下次用户真实
      充值时可以顺带核对：到账 `remain` 增量应为支付金额 ÷ 1.15（四舍五入
      到分）。
+
+### 11.15 §11.14 的粘 key 查询改成独立网页，不再是 dream-ui 内嵌弹窗（2026-09-24）
+
+§11.14 上线的 `KeyUsageQueryModal.tsx`（挂在 `TrialQuotaBadge.tsx` 的查询
+图标上，点了在 Electron 渲染进程里弹一个 Arco Modal）用 CDP 连真机 dev
+环境实测时反复打不开——查询图标本身要等 `useTrialQuota` 对**这台设备自己
+的** install_id 有真实 quota 数据才会渲染，而当时这台 dev 机器本地配置的
+宝云 provider 是早年手工从别处复制粘贴的 key，从没真正走过 `POST
+/v1/trial-keys` 认领流程，broker 那边查不到这台机器的 quota，图标干脆不
+渲染；折腾到能点开以后，弹窗又在一次页面重载后整个白屏（`#root` 空、
+`document.body.innerText.length === 0`，React 树整个卸载了，具体诱因没
+深究，`Page.reload()` 后能恢复但状态又要重搭一遍）。用户看到这个过程后
+直接拍板："那个查看账单打开白屏，其实你完全可以做一个独立的网页，点击后
+跳转，部署到我们的生产服务器即可"——不再纠结这条 Electron 内嵌弹窗路径，
+换成 broker 自己发一个静态页面。
+
+**新方案**：
+- `dream-trial-broker` 新增 `src/webui.rs` + `webui/usage.html`：
+  一个自包含的静态 HTML/CSS/JS 页面（无构建步骤、零依赖），`GET /usage`
+  直接 `include_str!` 整页返回。页面内的 JS 用**相对路径** `fetch('v1/
+  keys/usage', ...)` 调用同源的 `POST /v1/keys/usage`——因为页面挂在
+  nginx 的 `/trial-broker/` 前缀下（`proxy_pass http://127.0.0.1:8787/`
+  去掉前缀转发），页面自己的 URL 是 `/trial-broker/usage`，相对路径
+  `v1/keys/usage` 会解析到 `/trial-broker/v1/keys/usage`，同源不用 CORS；
+  写成绝对路径 `/v1/keys/usage` 反而会跳过 `/trial-broker/` 前缀直接打到
+  网站根目录，404——这个坑用一条单测钉死
+  （`webui::tests::hardcodes_the_baoyun_vendor_and_a_relative_fetch_path`，
+  断言页面里出现的是不带前导 `/` 的 fetch 调用）。vendor 硬编码成
+  `'baoyun'`（目前唯一能查用量的 vendor，跟 `TOPUP_CAPABLE_VENDORS`
+  一致），不需要用户额外选。
+- `dream-ui` 侧对应改动：删掉 `KeyUsageQueryModal.tsx`、`ipcBridge.ts`
+  的 `queryKeyUsage` 绑定、`providerApi.ts` 的 `KeyUsageQueryResponse`/
+  `KeyUsageLogEntry` 类型；`TrialQuotaBadge.tsx` 的查询图标改成
+  `openExternalUrl('https://work.1oneclaw.com/trial-broker/usage')`
+  （复用已有的 `@/renderer/utils/platform` helper，跟"关于"页的官网/
+  更新日志链接同一个模式），用系统默认浏览器打开，不再依赖 Electron
+  渲染进程本身。`settings.keyUsageQuery.*` 的 13 语种 i18n 只留
+  `entryTooltip`（图标的 tooltip 文案还在用），其余键（弹窗标题、表头、
+  错误文案等）连带删除——那个静态页面是纯中文，不接入 dream-ui 的 i18n
+  系统。
+- `dream-core` 侧对应改动：删掉专门为那个弹窗搭的 `POST /api/providers/
+  trial-key/usage` 代理路由（`TrialKeyService::query_usage_by_key`）、
+  连带的 `KeyUsageQueryRequest`/`KeyUsageQueryResponse`/`KeyUsageLogEntry`
+  类型定义——新方案里浏览器直接打 broker，不再经过 dream-core 这一跳，
+  这条路由已经没有任何调用方。
+
+**为什么选择"broker 自己发页面"而不是走官网+COS**：这台服务器本来就是
+`https://work.1oneclaw.com/trial-broker/*` 的生产环境（见文档开头的部署
+信息表），加一个 `GET /usage` 路由跟加一个 API 路由是同一套部署流程
+（`tar` 打包→scp 到 `/root/build/dream-trial-broker`→`deploy/redeploy.sh`
+编译重启），不需要另外走官网仓库的静态资源发布流程，也不用操心跨域——
+这就是用户说的"我们的生产服务器"最自然的落点。
+
+**验证**（部署后，生产环境真实调用，不是本地 mock）：
+- `cargo nextest run`（broker）129/129 全绿（新增 1 条 `webui` 模块单测）、
+  `cargo clippy --all-targets -- -D warnings`、`cargo fmt --all -- --check`
+  干净。dream-core `cargo nextest run -p dream-core-system` 382/382（少了
+  一条，因为删掉了专门为这条路由写的测试，符合预期）。dream-ui
+  `bunx tsc --noEmit`/`lint:fix`/`check-i18n.js` 全部干净。
+- 部署：`tar` 打包本地改动（排除 `target/`、`.git/`、`*.db*`）→ ssh 传到
+  `/root/build/dream-trial-broker` → `deploy/redeploy.sh` 编译+重启，
+  2026-09-24 15:15:24 CST 服务重启完成，`Active: active (running)`。
+- `GET https://work.1oneclaw.com/trial-broker/usage` 返回 200，
+  `Content-Type: text/html; charset=utf-8`，页面标题/正文正确。
+- 用内置浏览器工具真实打开这个 URL、粘贴一把刚发放的真实测试 key
+  （¥5 免费额度、从未使用）、点"查询用量"——页面正确显示"总额度 ¥5.00 /
+  已使用 ¥0.00 / 剩余 ¥5.00 / 暂无调用记录"，跟直接 curl 同一个端点拿到
+  的 JSON（`{"limit_usd":5.0,"used_usd":0.0,"remaining_usd":5.0,
+  "currency":"CNY","logs":[]}`）完全对得上——证明了页面到 API 的同源相对
+  路径解析在生产 nginx 前缀下是对的，不是本地凭空想象的路径。
+- 验证完撤销测试用的 key（`DELETE /apis/v1/api-keys/1180`），账户上没留
+  垃圾数据。
+- **不去验证的部分**：没有再去真机点开 dream-ui 里那个查询图标做端到端
+  截图——它现在只是 `openExternalUrl` 一行代码，跟"关于"页里其它外部
+  链接（官网、更新日志）是完全一样的调用方式，那几个链接从没被质疑过是否
+  好用；核心风险点（页面本身对不对、同源路径解不解析得通）已经用真实
+  生产环境验证过了。
