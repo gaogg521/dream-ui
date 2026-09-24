@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>查询用量 · 宝云体验额度</title>
+<style>
+  :root {
+    --arcoblue: #165dff;
+    --arcoblue-light: #e8f3ff;
+    --text-1: #1d2129;
+    --text-2: #4e5969;
+    --text-3: #86909c;
+    --border: #e5e6eb;
+    --bg: #f2f3f5;
+    --card-bg: #ffffff;
+    --danger: #f53f3f;
+    --success: #00b42a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--text-1);
+    padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 28px; }
+  .header h1 { font-size: 22px; font-weight: 600; margin: 0 0 6px; }
+  .header p { font-size: 13px; color: var(--text-3); margin: 0; }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .input-row { display: flex; gap: 10px; }
+  .key-input-box {
+    flex: 1;
+    position: relative;
+  }
+  .key-input-box input {
+    width: 100%;
+    height: 44px;
+    padding: 0 40px 0 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .key-input-box input:focus { border-color: var(--arcoblue); }
+  .toggle-mask {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text-3);
+    user-select: none;
+    font-size: 16px;
+    line-height: 1;
+    padding: 4px;
+  }
+  .toggle-mask:hover { color: var(--text-2); }
+
+  button#queryBtn {
+    height: 44px;
+    padding: 0 22px;
+    border: none;
+    border-radius: 8px;
+    background: var(--arcoblue);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity .15s;
+  }
+  button#queryBtn:disabled { opacity: .55; cursor: not-allowed; }
+  button#queryBtn:not(:disabled):hover { opacity: .9; }
+
+  .hint { font-size: 12px; color: var(--text-3); margin-top: 10px; }
+
+  .state-box { display: none; }
+  .state-box.show { display: block; }
+
+  .error-box {
+    background: #fff1f0;
+    border: 1px solid #ffccc7;
+    color: var(--danger);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .balance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .balance-item {
+    background: var(--arcoblue-light);
+    border-radius: 8px;
+    padding: 14px 10px;
+    text-align: center;
+  }
+  .balance-item .label { font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+  .balance-item .value { font-size: 18px; font-weight: 600; color: var(--arcoblue); }
+  .balance-item.exhausted .value { color: var(--danger); }
+
+  table.logs {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  table.logs th, table.logs td {
+    padding: 9px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  table.logs th { color: var(--text-3); font-weight: 500; }
+  table.logs td.model { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+  .kind-tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+  .kind-charge { background: #e8f3ff; color: var(--arcoblue); }
+  .kind-error { background: #fff1f0; color: var(--danger); }
+  .kind-refund { background: #e8ffea; color: var(--success); }
+
+  .empty-logs { text-align: center; color: var(--text-3); font-size: 13px; padding: 24px 0; }
+  .logs-scroll { max-height: 420px; overflow: auto; }
+
+  .footer-note { text-align: center; font-size: 12px; color: var(--text-3); margin-top: 20px; }
+
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: -2px;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 480px) {
+    .input-row { flex-direction: column; }
+    button#queryBtn { width: 100%; }
+    .balance-grid { grid-template-columns: 1fr 1fr; }
+    table.logs th:nth-child(6), table.logs td:nth-child(6) { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>查询用量</h1>
+      <p>粘贴你的体验 API Key，查看剩余额度与调用记录</p>
+    </div>
+
+    <div class="card">
+      <div class="input-row">
+        <div class="key-input-box">
+          <input id="keyInput" type="password" placeholder="粘贴你的 API Key（sk-...）" autocomplete="off" spellcheck="false" />
+          <span class="toggle-mask" id="toggleMask" title="显示/隐藏">👁</span>
+        </div>
+        <button id="queryBtn">查询用量</button>
+      </div>
+      <div class="hint">你的 Key 不会被保存或用于其他用途，仅用于本次查询。</div>
+    </div>
+
+    <div id="errorBox" class="state-box card">
+      <div class="error-box" id="errorText"></div>
+    </div>
+
+    <div id="resultBox" class="state-box">
+      <div class="card">
+        <div class="balance-grid">
+          <div class="balance-item" id="limitItem">
+            <div class="label">总额度</div>
+            <div class="value" id="limitValue">—</div>
+          </div>
+          <div class="balance-item" id="usedItem">
+            <div class="label">已使用</div>
+            <div class="value" id="usedValue">—</div>
+          </div>
+          <div class="balance-item" id="remainItem">
+            <div class="label">剩余</div>
+            <div class="value" id="remainValue">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="logs-scroll">
+          <table class="logs" id="logsTable">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>模型</th>
+                <th>类型</th>
+                <th>输入/输出 Token</th>
+                <th>费用</th>
+                <th>Request ID</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody"></tbody>
+          </table>
+          <div class="empty-logs" id="emptyLogs" style="display:none;">暂无调用记录</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">One Work · 宝云体验额度查询</div>
+  </div>
+
+<script>
+(function () {
+  var VENDOR = 'baoyun';
+  var keyInput = document.getElementById('keyInput');
+  var toggleMask = document.getElementById('toggleMask');
+  var queryBtn = document.getElementById('queryBtn');
+  var errorBox = document.getElementById('errorBox');
+  var errorText = document.getElementById('errorText');
+  var resultBox = document.getElementById('resultBox');
+
+  toggleMask.addEventListener('click', function () {
+    keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
+  });
+
+  keyInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') runQuery();
+  });
+  queryBtn.addEventListener('click', runQuery);
+
+  var CURRENCY_SYMBOL = { CNY: '¥', USD: '$', EUR: '€', JPY: '¥', GBP: '£' };
+  function fmtMoney(amount, currency) {
+    var symbol = CURRENCY_SYMBOL[currency] || '';
+    var n = (typeof amount === 'number' ? amount : 0).toFixed(2);
+    return symbol ? symbol + n : n + ' ' + currency;
+  }
+
+  var KIND_LABEL = { charge: '扣费', error: '失败', refund: '退款' };
+  var KIND_CLASS = { charge: 'kind-charge', error: 'kind-error', refund: 'kind-refund' };
+
+  function fmtTime(unixSeconds) {
+    var d = new Date(unixSeconds * 1000);
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
+      pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function setLoading(loading) {
+    queryBtn.disabled = loading;
+    queryBtn.innerHTML = loading ? '<span class="spinner"></span>查询中…' : '查询用量';
+  }
+
+  function showError(msg) {
+    resultBox.classList.remove('show');
+    errorText.textContent = msg;
+    errorBox.classList.add('show');
+  }
+
+  function hideStates() {
+    errorBox.classList.remove('show');
+    resultBox.classList.remove('show');
+  }
+
+  function renderResult(data) {
+    hideStates();
+    var limitEl = document.getElementById('limitValue');
+    var usedEl = document.getElementById('usedValue');
+    var remainEl = document.getElementById('remainValue');
+    var remainItem = document.getElementById('remainItem');
+
+    limitEl.textContent = data.limit_usd == null ? '不限' : fmtMoney(data.limit_usd, data.currency);
+    usedEl.textContent = fmtMoney(data.used_usd, data.currency);
+    var exhausted = data.remaining_usd != null && data.remaining_usd <= 0;
+    remainEl.textContent = data.remaining_usd == null ? '—' : fmtMoney(data.remaining_usd, data.currency);
+    remainItem.classList.toggle('exhausted', exhausted);
+
+    var logsBody = document.getElementById('logsBody');
+    var emptyLogs = document.getElementById('emptyLogs');
+    var table = document.getElementById('logsTable');
+    logsBody.innerHTML = '';
+
+    if (!data.logs || data.logs.length === 0) {
+      table.style.display = 'none';
+      emptyLogs.style.display = 'block';
+    } else {
+      table.style.display = '';
+      emptyLogs.style.display = 'none';
+      data.logs.forEach(function (log) {
+        var tr = document.createElement('tr');
+        var kindLabel = KIND_LABEL[log.kind] || log.kind;
+        var kindClass = KIND_CLASS[log.kind] || 'kind-charge';
+        tr.innerHTML =
+          '<td>' + fmtTime(log.created_at) + '</td>' +
+          '<td class="model" title="' + escapeHtml(log.model) + '">' + escapeHtml(log.model) + '</td>' +
+          '<td><span class="kind-tag ' + kindClass + '">' + escapeHtml(kindLabel) + (log.is_stream ? ' · 流式' : '') + '</span></td>' +
+          '<td>' + log.prompt_tokens + ' / ' + log.completion_tokens + '</td>' +
+          '<td>' + fmtMoney(log.amount, data.currency) + '</td>' +
+          '<td title="' + escapeHtml(log.request_id) + '">' + escapeHtml(log.request_id.slice(0, 10)) + '…</td>';
+        logsBody.appendChild(tr);
+      });
+    }
+
+    resultBox.classList.add('show');
+  }
+
+  function runQuery() {
+    var key = keyInput.value.trim();
+    if (!key) {
+      showError('请先粘贴你的 API Key。');
+      return;
+    }
+    setLoading(true);
+    hideStates();
+
+    fetch('v1/keys/usage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vendor: VENDOR, key: key }),
+    })
+      .then(function (res) {
+        return res.json().then(function (body) { return { status: res.status, body: body }; });
+      })
+      .then(function (r) {
+        setLoading(false);
+        if (r.status === 200) {
+          renderResult(r.body);
+          return;
+        }
+        var code = r.body && r.body.error;
+        if (r.status === 404 && code === 'key_not_found') {
+          showError('未找到匹配的有效 Key，请检查是否粘贴完整，或者这把 Key 是否仍然有效。');
+        } else if (r.status === 429) {
+          showError('请求过于频繁，请稍后再试。');
+        } else if (r.status === 400 && code === 'vendor_unknown') {
+          showError('暂不支持查询该服务商的用量。');
+        } else {
+          showError('查询失败，请稍后重试。');
+        }
+      })
+      .catch(function () {
+        setLoading(false);
+        showError('网络请求失败，请检查网络连接后重试。');
+      });
+  }
+})();
+</script>
+</body>
+</html>

@@ -8,3 +8,4 @@ pub mod search;
 pub mod service;
 pub mod topup;
 pub mod vendor;
+pub mod webui;

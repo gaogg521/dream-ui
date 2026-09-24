@@ -33,6 +33,10 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         // broker never stores the plaintext), not the install. See
         // topup::usage_by_key.
         .route("/v1/keys/usage", post(topup::usage_by_key_handler))
+        // The page itself: a single static file that calls the endpoint
+        // above via a same-origin relative fetch, no CORS needed. Public,
+        // shareable, works outside dream-ui too.
+        .route("/usage", get(crate::webui::usage_page))
         // Mode B (metered proxy). The forwarding catch-all lives under its own
         // `/proxy/` segment so it never collides with these fixed routes.
         .route("/v1/metered/claim", post(metered::claim_handler))
