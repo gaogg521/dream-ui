@@ -16,6 +16,16 @@ initSentry();
 import './process/utils/configureConsoleLog';
 import { app, BrowserWindow, ipcMain, nativeImage, powerMonitor, session } from 'electron';
 import fixPath from 'fix-path';
+import { config as loadDotenvConfig } from 'dotenv';
+
+// Dev-only, opt-in local overrides (DREAM_TRIAL_BROKER_URL and similar) from
+// a gitignored `.env` at the repo root — so `bun run dev` doesn't need the
+// var re-exported in every shell session. Never touched in a packaged build:
+// `resolveTrialBrokerUrl` (web-host/backend-launcher.ts) already injects its
+// own production default there, and a stray `.env` in whatever directory a
+// packaged install happens to launch from must not silently override it.
+// Must run before `startBackendOrExit`/`buildSpawnEnv` read `process.env`.
+if (!app.isPackaged) loadDotenvConfig();
 import * as fs from 'fs';
 import * as path from 'path';
 import { resolveBrowserPartition } from '@process/utils/browserPartition';
