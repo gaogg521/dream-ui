@@ -1197,3 +1197,140 @@ Key"列表里能看到"每个用户一把独立的 key"，但**光看名字认�
 116/116 全绿，clippy/fmt 干净。**真机验证和生产部署尚未进行**——需要真实
 `BAOYUN_ACCESS_TOKEN` 走一遍充值+核对宝云"用量统计"页面数据，下次跟用户
 一起做。
+
+> 上面这条"key 名称要不要带上 install_id 留给以后按需决定"——同一天晚些
+> 时候就决定要做了，见 §11.14。
+
+### 11.14 找回功能的一个真实缺口：broker 自己的本地记录丢了；补上安全网 +
+新增"粘 key 查用量"功能（2026-09-23～24）
+
+§11.13 真机验证充值加价/自定义金额功能时，用户拿真实 install_id
+（`install_01a04786-0f25-76b1-9744-3122152b8c04`，就是本文档反复用作示例
+的那个）付了 ¥1，付完发现余额只有 ¥6（¥5 免费额度 + 这笔 ¥1），**昨天真实
+成功付过的 ¥10 不见了**。直接上生产服务器查证据（不是猜的）：
+
+- 宝云自己的订单历史（`GET /apis/v1/topup/orders?reference=...`）三笔都在：
+  昨天 ¥10 成功（`BF1790060213184ZmYPyX`）、今天一笔 ¥10 失败、今天 ¥1 成功
+  ——**钱从来没在宝云那边丢过**。
+- broker 自己本地 `issuances` 表：今天 10:37 部署 §11.13 那批改动重启后，
+  查这个 install_id **一行记录都没有**。11:04 那次 claim，日志打的是
+  `issued trial key`（全新发放路径），不是 `recovered a deleted key`
+  （§11.12 的找回路径）。
+- 结论：broker 本地这条 issuance 记录在今天 10:37 之前的某个时间点丢了
+  （具体哪一步没有更早的日志能佐证，大概率是这几天来回起停本地测试环境时
+  手滑带走的，不重要）——导致这次 claim 被当成全新用户处理，完全没有触发
+  §11.12 的找回逻辑，那 ¥10 就这么被忽略了。**这是找回功能一个没设计到的
+  真实缺口**：它只在 broker 本地还记得"这个 install 曾经有过 key"（即
+  `find_active_by_install_id` 能查到一行）时才会触发找回逻辑，防不住
+  "broker 自己的本地记录先丢了"这种情况。
+
+当场用现成的运维手工充值接口（`apply_top_up`）把 ¥10 补回给用户当前那把
+key（handle 1177），确认 `remain` 变成 ¥16（¥5+¥10+¥1，跟宝云订单记录对
+得上）。这只是治标——真正的修复分两部分：
+
+**1. 安全网：全新发放路径也顺手查一次 `paid_total`**
+
+`issue_trial_key` 第 1 步"按 (vendor, install_id) 查现有记录"原来是
+`Ok(None)` 就直接走正常发放（只给 `policy.limit_amount`）。改成
+`Ok(None)` 分支也调一次 `vendor.paid_total(reference)`——不止"记录存在但
+key 被删"这一种情况需要找回，"记录本身就不存在了"也要用同一个安全网兜底：
+目的都是"这个 install 是否真实付过钱，付过就必须体现在新 key 的额度
+里"，靠不靠 broker 本地那行记录只是实现细节，不该是这层保护生不生效的
+前提。`paid_total` 查询失败（不是 `Unsupported`）时按 0 处理、只记警告，
+不硬失败——跟 §11.12 找回路径"查失败就硬失败"是不同的权衡：那边失败当
+"key 没死"处理的风险是把一把还活着的 key 误判为死掉重发；这里失败当"没
+付过钱"处理的风险只是漏掉一次找回，两者后果不对等，不能用同一套逻辑。
+`paid_total == 0`（绝大多数真正的新用户）时结果跟这次改动前完全一样，
+零回归，只是多了一次账户 API 调用（试用发放本来就低频，一天封顶 ~50 次）。
+
+**2. "粘 key 查用量" —— 用户参考 https://token.gpt-agent.cc/ 提的新功能**
+
+用户在排查这个问题时顺带提了个要求："在充值的按钮旁边加一个查询的页面，
+用户能直接输入 KEY 查询自己在宝云消耗的情况"，参考的是一类"粘 API Key
+查额度/用量/最近调用记录"的独立页面。核实过一个真实技术约束：这类页面
+通常直接拿用户粘进来的明文 key 反查，但我们从创建时起就没存过 key 明文
+（宝云自己也不存，`POST /apis/v1/api-keys` 的响应"明文只在本接口返回
+一次，之后无法从列表或详情读取"）——跟用户确认后走的是"创建时存哈希、
+查询时比对哈希、永远不存明文"这条路，用户确认要做成能真正粘 key 查的
+版本（不是退而求其次改成"自动查本机设备"）。
+
+设计：
+- `issuances` 表加一列 `key_hash`（sha256 hex，新迁移
+  `0008_issuances_key_hash.sql`），在两处"刚拿到明文"的地方（正常发放、
+  §11.12 找回重发）当场算好存下——`IssuedKey.secret` 只在 `issue_key`
+  返回值里出现这一次，过这个调用点就再也拿不到，必须当场处理。
+  `replace_issuance_key`（找回用的那个"原地更新"函数）现在也一并更新
+  `key_hash`：一把被找回换掉的旧 key，它的旧哈希自然查不出任何东西
+  （因为这一行已经被新哈希覆盖），不用额外写"失效"逻辑。
+- 新增**公开**端点 `POST /v1/keys/usage`（body `{vendor, key}`，特意不放
+  在 `/internal/` 下）：按 `sha256(key)` 精确匹配 `issuances.key_hash`
+  （只匹配 `disabled=0` 的活跃记录），查到就返回余额（`read_usage`）+ 最近
+  调用明细（`usage_logs`，跟 §11.13 那个按 install_id 查的接口内部逻辑
+  一样，只是查找方式换成按哈希）。这里公开而不放 `/internal/` 的理由：
+  能算出跟某一行相同的哈希，前提是手里真的攥着那把 key 的明文——这和直接
+  拿这把 key 去调用模型是同一个信任等级，不是权限提升，所以不需要
+  `install_id` 或者别的身份凭证，靠 IP 限流（复用现成的 `rate_limiter`）
+  防刷即可。
+- 顺带趁手把宝云 key 的 `name` 从随机串 `onework-trial-{8位uuid}` 换成
+  确定性的 `trial-{install_id}`（超过宝云 50 字符上限就截断，`创建 Key`
+  文档核实过的真实上限，不是猜的）——这样宝云自己控制台的"用量统计"/
+  "API Key"列表里，人眼直接就能看出这把 key 属于哪个 install，不用再
+  经过我们自己的工具反查。这就是 §11.13 结尾留的那个"以后按需决定"的
+  取舍，这次决定做了。
+- dream-core 新增 `TrialKeyService::query_usage_by_key`（`POST
+  /api/providers/trial-key/usage`，不带 install_id——这条查询的身份就是
+  key 本身）；dream-ui 新增 `KeyUsageQueryModal.tsx`，挂在充值余额标签
+  旁边一个小的查询图标上（`TrialQuotaBadge.tsx`），13 语种 i18n
+  （`settings.keyUsageQuery.*`）全部补齐。
+
+**真机验证**：
+- 手工补偿 ¥10 那笔操作本身就是一次真实验证——`apply_top_up` 返回
+  `remain: 16.0`，跟宝云订单历史加总完全对得上。
+- 安全网 + 粘 key 查询功能：broker 侧新增集成测试覆盖"无本地记录但有真实
+  付款历史"（断言新 key 的额度正确包含打折后的历史金额）、"真正全新用户
+  零回归"、粘 key 查询的匹配/未匹配/vendor 未知/key 被找回后旧哈希失效
+  四条路径，`cargo nextest run` 128/128 全绿，clippy/fmt 干净。
+  dream-core `cargo nextest run -p dream-core-system` 383/383（另有一个
+  跟本次改动完全无关的 pre-existing 失败，`dream-core-api-types` 的
+  `conversation::tests::deserialize_send_message_full`，不是这次改动
+  引入的）。dream-ui `bunx tsc --noEmit`/`lint:fix`/`format`/
+  `check-i18n.js` 全部干净，`vitest run --changed origin/main`
+  2509/2513（1 个跟本次改动完全无关的 pre-existing 失败，mermaid 面板
+  的 pan/zoom 测试）。
+- **生产部署**：这批改动（加价 15%、精确对应历史 key、按 install_id 查用量、
+  key 名称带 install_id、这次的找回缺口安全网、粘 key 查用量新端点）跟
+  §11.13 那批一起走同一套 tar→scp→解压覆盖→`redeploy.sh` 流程部署到生产，
+  2026-09-24 10:16:37 CST 服务重启完成，`Active: active (running)`。
+
+- **生产真机验证**（真实调用，不是本地 mock）：
+  1. `POST /v1/keys/usage` 用一把**迁移前**的老 key（handle 1177）查询——
+     返回 `key_not_found`，符合预期：这把 key 是这次部署前发的，
+     `key_hash` 是 `NULL`，"迁移前的老数据查不到、等下次找回/轮换自然
+     补上"这条设计生效了，不是 bug。
+  2. 现场用一个全新 install_id 真实走一次 `POST /v1/trial-keys`
+     （`install_cdp-verify-0924-test`）发到宝云拿到真 key，再拿这把**新**
+     key 去 `POST /v1/keys/usage` 查询——返回 `{"limit_usd":5.0,
+     "used_usd":0.0,"remaining_usd":5.0,"currency":"CNY","logs":[]}`，
+     跟刚发放的免费额度完全对得上，`key_hash` 存取全链路打通。
+  3. 直接查宝云 `GET /apis/v1/api-keys` 确认这把新 key 的 `name` 字段是
+     `"trial-install_cdp-verify-0924-test"`——`trial-{install_id}` 命名
+     格式在生产真实生效，同一响应里旧 key（1177）还是老的
+     `"onework-trial-b05fca4d"`（没被重新发放过，不会自动改名，符合
+     预期：改名只影响新发放/找回重发的 key）。
+  4. 验证完撤销测试 key（`DELETE /apis/v1/api-keys/1179`）、清掉 broker
+     本地这条测试 `issuances` 行，账户上没留垃圾数据。
+  5. `GET /internal/vendors/baoyun/usage/install_01a04786-...`（§11.13
+     那个按 install_id 查用量的端点）返回真实调用记录，跟今天早些时候
+     从这台机器 dream-ui 实际发起的调用（qwen3.7-flash，13717/250、
+     11000/50 token 等）完全吻合。`GET /internal/vendors/baoyun/topups
+     ?install_id=...` 返回 ¥1 那笔真实充值、`vendor_key_handle` 正确记成
+     "1177"——`vendor_key_handle` 存在 `topup_credits` 表这条改动也验证
+     通过。**注意**：手工补的那 ¥10（`apply_top_up`）不会出现在这个列表
+     里，因为它没走 `create_topup_order`/`get_topup_order` 那条正常订单
+     流程，只在这台 key 的 `remain` 上直接生效——这是设计上的预期行为，
+     不是遗漏。
+  6. **加价 15% 没有用真实新充值单独验证**——会花真钱，这轮没有再让用户
+     付一笔来验证markup 比例，只验证了代码路径（单测）和配置确实生效
+     （`.env` 没覆盖 `TOPUP_PRICE_MARKUP`，走默认值 1.15）。下次用户真实
+     充值时可以顺带核对：到账 `remain` 增量应为支付金额 ÷ 1.15（四舍五入
+     到分）。
