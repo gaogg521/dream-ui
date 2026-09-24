@@ -1411,3 +1411,43 @@ key 被删"这一种情况需要找回，"记录本身就不存在了"也要用�
   链接（官网、更新日志）是完全一样的调用方式，那几个链接从没被质疑过是否
   好用；核心风险点（页面本身对不对、同源路径解不解析得通）已经用真实
   生产环境验证过了。
+
+### 11.16 §11.15 收尾：老 key 查不到是真 bug，不是"优雅降级"（2026-09-24 晚）
+
+§11.14/§11.15 里把"迁移前发的 key（`key_hash IS NULL`）查不到"记成了
+**预期内的优雅降级**——这个判断是错的，用户当场用一张截图证伪了：他把**自己
+正在用的那把 key**（`编辑模型平台` 里配着的那把，handle 1177）粘进查询页，
+页面回"未找到匹配的有效 Key"。
+
+错在哪：试用 key 有效期 90 天、只有触发找回才会被换掉，所以"老数据会自然
+流失"根本不成立——**在 0008 之前认领过的每一个用户，都是永久查不了**。当时
+线上 active 行的实际分布是 baoyun 2 行里 1 行 NULL、openrouter 43 行全 NULL。
+
+修法：broker 自己不存明文，但**厂商能再给一次**——宝云的
+`POST /apis/v1/api-keys/{id}/key`（§11.12 已实测）。新增 `src/backfill.rs`：
+启动时对每个支持 `reveal_key` 的 vendor，把 `key_hash IS NULL` 的活跃行逐个
+揭示明文→算 hash→写回。要点：
+- **detached 启动**（`tokio::spawn`），厂商慢或被限流都不能拖住监听。
+- **每次揭示间隔 2 秒**：宝云对重复揭示有限流，这是没人等的后台活儿，故意跑慢。
+- **不支持揭示的 vendor 整个跳过**（OpenRouter 那 43 行保持 NULL，它本来也不
+  提供查用量）；单个 key 揭示失败只 warn，留给下次启动重试，不影响其余。
+- 已有 hash 的行一次都不碰（有测试钉住，避免无谓消耗厂商限流额度）。
+
+**生产验证**：部署后日志 `key-hash backfill: starting vendor="baoyun" pending=1`
+→ `done filled=1`；用户那把 key 再查，返回 `remaining_usd: 16.0` 加 3 条真实
+qwen3.7-flash 调用记录（跟 §11.14 真机验证里那几笔对得上），不再是
+`key_not_found`。
+
+**同批修的 dream-ui 侧两个问题**（详见 dream-ui 提交 `477737c`）：
+1. **白屏是真 bug，而且是我这次引入的形状**：Arco 的 `Trigger`（`Tooltip`/
+   `Dropdown` 内部都用它）靠 ref 拿 child 的真实 DOM 节点，而 IconPark 图标是
+   普通函数组件、不转发 ref；React 19 删掉了 Arco 依赖的 `findDOMNode` 兜底，
+   于是它拿到 null、在 layout effect 里抛 `Cannot read properties of null
+   (reading 'offsetParent')`，整棵 React 树被卸载 = 白屏。定时任务页那个
+   `<Tooltip><Attention/></Tooltip>` 是同一个形状、同一个雷。修法：包一层
+   `<span>`（或用能转发 ref 的元素）。加了全仓守卫测试
+   `tests/unit/renderer/noBareIconInArcoTrigger.test.ts`。
+2. **UI 重做**：余额从"裸标签 + 旁边一个孤零零的放大镜"改成**一个药丸形菜单
+   按钮**（钱包图标 + 余额 + ▾），点开是「充值 / 查询用量」两项菜单。触发器
+   用普通 `<span>` 而不是 Arco `Button`——Button 自带的背景/边框规则要靠
+   `!important` 去压，而且 span 天然转发 ref，正好是 Trigger 需要的。
