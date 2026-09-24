@@ -1570,7 +1570,7 @@
     "orderFailed": "No se pudo completar la recarga. Inténtalo de nuevo."
   },
   "keyUsageQuery": {
-    "entryTooltip": "Consultar uso por clave"
+    "menuLabel": "Consultar uso"
   },
   "mediaModelUndeclared": "Sin definir —— marca un modelo como Imagen o Vídeo en la página de Modelos",
   "enterpriseKeyMaskedTip": "Las claves emitidas por la empresa aparecen enmascaradas (solo inicio/fin). Guardar sin cambios conserva la clave original; escribir una nueva la sustituye por completo.",

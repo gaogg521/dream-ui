@@ -487,37 +487,41 @@ const ModelModalContent: React.FC = () => {
                       className='[&_.arco-collapse-item-header-title]:flex-1 group'
                       header={
                         <div className='group flex items-center justify-between w-full min-h-32px gap-8px min-w-0'>
-                          <span
-                            className={`text-14px font-500 truncate min-w-0 transition-colors ${isExpanded ? 'text-t-primary' : 'text-2 group-hover:text-1'}`}
-                          >
-                            {platform.name}
-                          </span>
-                          {platform.managed_by === 'enterprise' && (
-                            <Tooltip content={t('settings.enterpriseChannelTip')}>
-                              <Tag color='arcoblue' size='small' className='shrink-0'>
-                                {t('settings.enterpriseChannel')}
-                              </Tag>
-                            </Tooltip>
-                          )}
-                          {platform.key_status === 'unrecoverable' && (
-                            <Tooltip content={t('settings.apiKeyUnrecoverableTip')}>
-                              <Tag
-                                color='red'
-                                size='small'
-                                className='shrink-0 cursor-pointer'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  editModalCtrl.open({ data: platform });
-                                }}
-                              >
-                                {t('settings.apiKeyUnrecoverable')}
-                              </Tag>
-                            </Tooltip>
-                          )}
-                          {(() => {
-                            const trialVendor = trialVendorOfProviderId(platform.id);
-                            return trialVendor ? <TrialQuotaBadge vendor={trialVendor} /> : null;
-                          })()}
+                          {/* Name and its status tags stay together on the left; only the
+                              actions group is pushed to the far right. */}
+                          <div className='flex items-center gap-8px min-w-0 flex-1'>
+                            <span
+                              className={`text-14px font-500 truncate min-w-0 transition-colors ${isExpanded ? 'text-t-primary' : 'text-2 group-hover:text-1'}`}
+                            >
+                              {platform.name}
+                            </span>
+                            {platform.managed_by === 'enterprise' && (
+                              <Tooltip content={t('settings.enterpriseChannelTip')}>
+                                <Tag color='arcoblue' size='small' className='shrink-0'>
+                                  {t('settings.enterpriseChannel')}
+                                </Tag>
+                              </Tooltip>
+                            )}
+                            {platform.key_status === 'unrecoverable' && (
+                              <Tooltip content={t('settings.apiKeyUnrecoverableTip')}>
+                                <Tag
+                                  color='red'
+                                  size='small'
+                                  className='shrink-0 cursor-pointer'
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    editModalCtrl.open({ data: platform });
+                                  }}
+                                >
+                                  {t('settings.apiKeyUnrecoverable')}
+                                </Tag>
+                              </Tooltip>
+                            )}
+                            {(() => {
+                              const trialVendor = trialVendorOfProviderId(platform.id);
+                              return trialVendor ? <TrialQuotaBadge vendor={trialVendor} /> : null;
+                            })()}
+                          </div>
                           <div
                             className='flex items-center gap-8px shrink-0'
                             onClick={(e) => {

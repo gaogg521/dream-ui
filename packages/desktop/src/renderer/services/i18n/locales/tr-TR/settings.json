@@ -1570,7 +1570,7 @@
     "orderFailed": "Yükleme tamamlanamadı. Lütfen tekrar deneyin."
   },
   "keyUsageQuery": {
-    "entryTooltip": "Anahtarla kullanım sorgula"
+    "menuLabel": "Kullanımı sorgula"
   },
   "mediaModelUndeclared": "Ayarlanmadı —— Modeller sayfasında bir modeli Görsel veya Video olarak işaretleyin",
   "enterpriseKeyMaskedTip": "Kurum tarafından dağıtılan anahtarlar maskelenir (yalnızca baş/son). Değiştirmeden kaydederseniz mevcut anahtar korunur; yeni anahtar yazmak tamamen değiştirir.",

@@ -2866,7 +2866,7 @@ export type I18nKey =
   | 'settings.imageInputUnsupported'
   | 'settings.includePrereleaseUpdates'
   | 'settings.installed'
-  | 'settings.keyUsageQuery.entryTooltip'
+  | 'settings.keyUsageQuery.menuLabel'
   | 'settings.language'
   | 'settings.lark.agent'
   | 'settings.lark.agentDesc'

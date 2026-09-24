@@ -1570,7 +1570,7 @@
     "orderFailed": "Aufladen konnte nicht abgeschlossen werden. Bitte erneut versuchen."
   },
   "keyUsageQuery": {
-    "entryTooltip": "Nutzung per Key abfragen"
+    "menuLabel": "Nutzung prüfen"
   },
   "mediaModelUndeclared": "Nicht festgelegt —— markiere ein Modell auf der Modellseite als Bild oder Video",
   "enterpriseKeyMaskedTip": "Verteilte Unternehmensschlüssel sind maskiert (nur Anfang/Ende). Speichern ohne Änderung behält den ursprünglichen Schlüssel; ein neuer Schlüssel ersetzt ihn vollständig.",
