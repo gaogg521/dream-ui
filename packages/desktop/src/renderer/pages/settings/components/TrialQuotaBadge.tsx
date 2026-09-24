@@ -89,9 +89,15 @@ const TrialQuotaBadge: React.FC<{ vendor: TrialVendor }> = ({ vendor }) => {
   // border rules that these have to fight with `!important`, and the pill is
   // simple enough not to need any of them. A span also forwards its ref,
   // which is what Dropdown's Trigger needs (see the doc comment above).
+  //
+  // `rgba(var(--x), 1)`, not `rgb(var(--x))`: Arco stores its palette as
+  // comma-separated channels ("232,243,255"), while UnoCSS compiles the bare
+  // `rgb(...)` form to `rgb(var(--x) / var(--un-bg-opacity))` — space-separated
+  // syntax, which those commas make invalid, so the browser drops the whole
+  // declaration and the element renders unstyled rather than visibly broken.
   const tone = exhausted
-    ? 'bg-[rgb(var(--red-1))] text-[rgb(var(--red-6))] hover:bg-[rgb(var(--red-2))]'
-    : 'bg-[rgb(var(--arcoblue-1))] text-[rgb(var(--arcoblue-6))] hover:bg-[rgb(var(--arcoblue-2))]';
+    ? 'bg-[rgba(var(--red-1),1)] text-[rgba(var(--red-6),1)] hover:bg-[rgba(var(--red-2),1)]'
+    : 'bg-[rgba(var(--arcoblue-1),1)] text-[rgba(var(--arcoblue-6),1)] hover:bg-[rgba(var(--arcoblue-2),1)]';
 
   return (
     // The row header toggles the collapse on click; the menu and the top-up
