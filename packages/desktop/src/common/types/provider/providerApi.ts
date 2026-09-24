@@ -220,41 +220,6 @@ export interface TopupOrderResponse {
   completed_at?: number | null;
 }
 
-/**
- * One usage-log entry, as the broker reports it (mirrors its own
- * `UsageLogView`).
- */
-export interface KeyUsageLogEntry {
-  id: string;
-  /** `charge` | `error` | `refund`. */
-  kind: string;
-  /** Unix seconds. */
-  created_at: number;
-  model: string;
-  /** In the vendor's own currency. */
-  amount: number;
-  prompt_tokens: number;
-  completion_tokens: number;
-  use_time_ms: number;
-  request_id: string;
-  is_stream: boolean;
-}
-
-/**
- * Response for the "paste your key, see your usage" self-service query —
- * the matched key's current spend position plus its recent per-call usage.
- * Identity here is proving possession of the key itself (matched by hash on
- * the broker, which never stores the plaintext), not an install id.
- */
-export interface KeyUsageQueryResponse {
-  vendor: string;
-  limit_usd: number | null;
-  used_usd: number;
-  remaining_usd: number | null;
-  currency: string;
-  logs: KeyUsageLogEntry[];
-}
-
 export interface ProviderHealthCheckResponse {
   provider_id: string;
   platform: string;

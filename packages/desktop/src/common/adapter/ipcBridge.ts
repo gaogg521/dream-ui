@@ -45,7 +45,6 @@ import type {
   CreateProviderRequest,
   FetchModelsAnonymousRequest,
   FetchModelsResponse,
-  KeyUsageQueryResponse,
   MeteredAccessResponse,
   MeteredOrderResponse,
   MeteredQuotaStatusResponse,
@@ -1401,12 +1400,6 @@ export const mode = {
   topupGetOrder: httpGet<TopupOrderResponse, { id: string; vendor: string }>(
     (p) => `/api/providers/topup/orders/${encodeURIComponent(p.id)}?vendor=${encodeURIComponent(p.vendor)}`
   ),
-  /**
-   * "Paste your key, see your usage" — no install id involved, the broker
-   * identifies the key by its own hash. Works for any key on that vendor,
-   * not just this install's own.
-   */
-  queryKeyUsage: httpPost<KeyUsageQueryResponse, { vendor: string; key: string }>('/api/providers/trial-key/usage'),
   detectProtocol: httpPost<ProtocolDetectionResponse, ProtocolDetectionRequest>('/api/providers/detect-protocol'),
   /**
    * Materialize the company's model channels as local providers.

@@ -1570,24 +1570,7 @@
     "orderFailed": "No se pudo completar la recarga. Inténtalo de nuevo."
   },
   "keyUsageQuery": {
-    "title": "Consultar uso",
-    "entryTooltip": "Consultar uso por clave",
-    "inputPlaceholder": "Pega tu clave de API (sk-…)",
-    "queryButton": "Consultar uso",
-    "balanceLabel": "Saldo restante: {{amount}}",
-    "limitLabel": "Límite total: {{amount}}",
-    "recentCalls": "Llamadas recientes",
-    "columnTime": "Hora",
-    "columnModel": "Modelo",
-    "columnType": "Tipo",
-    "columnTokens": "Entrada/Salida",
-    "columnCost": "Coste",
-    "typeCharge": "Cargo",
-    "typeError": "Error",
-    "typeRefund": "Reembolso",
-    "emptyLogs": "Aún no hay llamadas",
-    "notFound": "Ninguna clave activa coincide con la que has pegado",
-    "genericError": "No se pudo completar la consulta. Inténtalo de nuevo."
+    "entryTooltip": "Consultar uso por clave"
   },
   "mediaModelUndeclared": "Sin definir —— marca un modelo como Imagen o Vídeo en la página de Modelos",
   "enterpriseKeyMaskedTip": "Las claves emitidas por la empresa aparecen enmascaradas (solo inicio/fin). Guardar sin cambios conserva la clave original; escribir una nueva la sustituye por completo.",

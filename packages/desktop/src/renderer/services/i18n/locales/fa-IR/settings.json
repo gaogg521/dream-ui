@@ -1570,24 +1570,7 @@
     "orderFailed": "شارژ کامل نشد. لطفاً دوباره تلاش کنید."
   },
   "keyUsageQuery": {
-    "title": "بررسی مصرف",
-    "entryTooltip": "بررسی مصرف با کلید",
-    "inputPlaceholder": "کلید API خود را جای‌گذاری کنید (sk-…)",
-    "queryButton": "بررسی مصرف",
-    "balanceLabel": "باقی‌مانده: {{amount}}",
-    "limitLabel": "سقف کل: {{amount}}",
-    "recentCalls": "تماس‌های اخیر",
-    "columnTime": "زمان",
-    "columnModel": "مدل",
-    "columnType": "نوع",
-    "columnTokens": "ورودی/خروجی",
-    "columnCost": "هزینه",
-    "typeCharge": "برداشت",
-    "typeError": "خطا",
-    "typeRefund": "بازپرداخت",
-    "emptyLogs": "هنوز تماسی ثبت نشده",
-    "notFound": "هیچ کلید فعالی با کلید جای‌گذاری‌شده مطابقت ندارد",
-    "genericError": "بررسی انجام نشد. لطفاً دوباره تلاش کنید."
+    "entryTooltip": "بررسی مصرف با کلید"
   },
   "mediaModelUndeclared": "تنظیم نشده —— در صفحه مدل‌ها یک مدل را به‌عنوان تصویر یا ویدیو مشخص کنید",
   "enterpriseKeyMaskedTip": "کلیدهای توزیع‌شده سازمانی به‌صورت ماسک‌شده نمایش داده می‌شوند (فقط ابتدا/انتها). ذخیره بدون تغییر، کلید اصلی را نگه می‌دارد؛ وارد کردن کلید جدید آن را کاملاً جایگزین می‌کند.",

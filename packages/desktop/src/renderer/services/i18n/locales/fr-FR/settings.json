@@ -1567,24 +1567,7 @@
     "orderFailed": "Impossible de terminer la recharge. Veuillez réessayer."
   },
   "keyUsageQuery": {
-    "title": "Consulter l'utilisation",
-    "entryTooltip": "Consulter l'utilisation par clé",
-    "inputPlaceholder": "Collez votre clé API (sk-…)",
-    "queryButton": "Consulter l'utilisation",
-    "balanceLabel": "Solde restant : {{amount}}",
-    "limitLabel": "Limite totale : {{amount}}",
-    "recentCalls": "Appels récents",
-    "columnTime": "Heure",
-    "columnModel": "Modèle",
-    "columnType": "Type",
-    "columnTokens": "Entrée/Sortie",
-    "columnCost": "Coût",
-    "typeCharge": "Débit",
-    "typeError": "Erreur",
-    "typeRefund": "Remboursement",
-    "emptyLogs": "Aucun appel pour l'instant",
-    "notFound": "Aucune clé active ne correspond à celle que vous avez collée",
-    "genericError": "Impossible de terminer la vérification. Veuillez réessayer."
+    "entryTooltip": "Consulter l'utilisation par clé"
   },
   "mediaModelUndeclared": "Non défini —— déclarez un modèle comme Image ou Vidéo sur la page Modèles",
   "enterpriseKeyMaskedTip": "Les clés émises par l'entreprise sont masquées (début/fin uniquement). Enregistrer sans modification conserve la clé d'origine ; saisir une nouvelle clé la remplace entièrement.",

@@ -2209,24 +2209,7 @@
     "orderFailed": "Couldn't complete the top-up. Please try again."
   },
   "keyUsageQuery": {
-    "title": "Usage lookup",
-    "entryTooltip": "Check usage by key",
-    "inputPlaceholder": "Paste your API key (sk-…)",
-    "queryButton": "Check usage",
-    "balanceLabel": "Remaining: {{amount}}",
-    "limitLabel": "Total limit: {{amount}}",
-    "recentCalls": "Recent calls",
-    "columnTime": "Time",
-    "columnModel": "Model",
-    "columnType": "Type",
-    "columnTokens": "In / Out",
-    "columnCost": "Cost",
-    "typeCharge": "Charge",
-    "typeError": "Error",
-    "typeRefund": "Refund",
-    "emptyLogs": "No calls yet",
-    "notFound": "No active key matches what you pasted",
-    "genericError": "Couldn't complete the lookup. Please try again."
+    "entryTooltip": "Check usage by key"
   },
   "mediaModelUndeclared": "Not set — declare a model as Image or Video on the Models page",
   "enterpriseKeyMaskedTip": "Enterprise-issued keys are masked (head/tail only, for verification). Saving without changes keeps the original key; typing a new one replaces it entirely.",

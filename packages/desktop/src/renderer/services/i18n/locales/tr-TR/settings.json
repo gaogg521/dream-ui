@@ -1570,24 +1570,7 @@
     "orderFailed": "Yükleme tamamlanamadı. Lütfen tekrar deneyin."
   },
   "keyUsageQuery": {
-    "title": "Kullanım sorgula",
-    "entryTooltip": "Anahtarla kullanım sorgula",
-    "inputPlaceholder": "API anahtarınızı yapıştırın (sk-…)",
-    "queryButton": "Kullanımı sorgula",
-    "balanceLabel": "Kalan: {{amount}}",
-    "limitLabel": "Toplam limit: {{amount}}",
-    "recentCalls": "Son çağrılar",
-    "columnTime": "Zaman",
-    "columnModel": "Model",
-    "columnType": "Tür",
-    "columnTokens": "Giriş/Çıkış",
-    "columnCost": "Ücret",
-    "typeCharge": "Ücretlendirme",
-    "typeError": "Hata",
-    "typeRefund": "İade",
-    "emptyLogs": "Henüz çağrı yok",
-    "notFound": "Yapıştırdığınız anahtarla eşleşen aktif bir anahtar bulunamadı",
-    "genericError": "Sorgu tamamlanamadı. Lütfen tekrar deneyin."
+    "entryTooltip": "Anahtarla kullanım sorgula"
   },
   "mediaModelUndeclared": "Ayarlanmadı —— Modeller sayfasında bir modeli Görsel veya Video olarak işaretleyin",
   "enterpriseKeyMaskedTip": "Kurum tarafından dağıtılan anahtarlar maskelenir (yalnızca baş/son). Değiştirmeden kaydederseniz mevcut anahtar korunur; yeni anahtar yazmak tamamen değiştirir.",

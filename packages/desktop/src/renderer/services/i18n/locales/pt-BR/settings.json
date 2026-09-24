@@ -1573,24 +1573,7 @@
     "orderFailed": "Não foi possível concluir a recarga. Tente novamente."
   },
   "keyUsageQuery": {
-    "title": "Consultar uso",
-    "entryTooltip": "Consultar uso pela chave",
-    "inputPlaceholder": "Cole sua chave de API (sk-…)",
-    "queryButton": "Consultar uso",
-    "balanceLabel": "Saldo restante: {{amount}}",
-    "limitLabel": "Limite total: {{amount}}",
-    "recentCalls": "Chamadas recentes",
-    "columnTime": "Hora",
-    "columnModel": "Modelo",
-    "columnType": "Tipo",
-    "columnTokens": "Entrada/Saída",
-    "columnCost": "Custo",
-    "typeCharge": "Cobrança",
-    "typeError": "Erro",
-    "typeRefund": "Reembolso",
-    "emptyLogs": "Ainda não há chamadas",
-    "notFound": "Nenhuma chave ativa corresponde à que você colou",
-    "genericError": "Não foi possível concluir a consulta. Tente novamente."
+    "entryTooltip": "Consultar uso pela chave"
   },
   "mediaModelUndeclared": "Não definido —— declare um modelo como Imagem ou Vídeo na página Modelos",
   "enterpriseKeyMaskedTip": "Chaves emitidas pela empresa aparecem mascaradas (apenas início/fim). Salvar sem alterações mantém a chave original; digitar uma nova a substitui por completo.",
