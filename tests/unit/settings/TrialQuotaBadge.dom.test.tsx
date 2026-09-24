@@ -120,9 +120,7 @@ describe('TrialQuotaBadge', () => {
     });
     flushFrames();
     // A fragment, never a query string: it must not reach the server's logs.
-    expect(openExternalUrl).toHaveBeenCalledWith(
-      'https://work.1oneclaw.com/trial-broker/usage#key=sk-live-key'
-    );
+    expect(openExternalUrl).toHaveBeenCalledWith('https://work.1oneclaw.com/trial-broker/usage#key=sk-live-key');
   });
 
   it('sends only the first key when several are configured for rotation', () => {
@@ -133,9 +131,7 @@ describe('TrialQuotaBadge', () => {
       fireEvent.click(screen.getByTestId('trial-quota-menu-query-usage'));
     });
     flushFrames();
-    expect(openExternalUrl).toHaveBeenCalledWith(
-      'https://work.1oneclaw.com/trial-broker/usage#key=sk-first'
-    );
+    expect(openExternalUrl).toHaveBeenCalledWith('https://work.1oneclaw.com/trial-broker/usage#key=sk-first');
     providers.data = [{ id: 'trial-baoyun', api_key: 'sk-live-key' }];
   });
 
