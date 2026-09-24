@@ -454,7 +454,7 @@ const ModelModalContent: React.FC = () => {
                 href='https://1one.1oneclaw.com'
                 target='_blank'
                 rel='noopener noreferrer'
-                className='text-[rgb(var(--primary-6))] hover:text-[rgb(var(--primary-5))] underline ms-4px'
+                className='text-[rgba(var(--primary-6),1)] hover:text-[rgba(var(--primary-5),1)] underline ms-4px'
               >
                 {t('settings.configGuide')}
               </a>

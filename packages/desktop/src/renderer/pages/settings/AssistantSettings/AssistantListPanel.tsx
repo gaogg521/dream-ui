@@ -95,7 +95,7 @@ const SortableAssistantCard: React.FC<SortableAssistantCardProps> = ({
         <Menu.Item key='delete'>
           <div
             data-testid={`menu-delete-${assistant.id}`}
-            className='flex items-center gap-8px text-[rgb(var(--danger-6))]'
+            className='flex items-center gap-8px text-[rgba(var(--danger-6),1)]'
           >
             <span>{t('common.delete', { defaultValue: 'Delete' })}</span>
           </div>
@@ -284,7 +284,7 @@ const AssistantListPanel: React.FC<AssistantListPanelProps> = ({
         <Tag
           size='small'
           bordered={false}
-          className='!rounded-10px !bg-fill-1 !px-8px !py-1px !text-10px !font-600 !leading-16px !text-[rgb(var(--arcoblue-6))]'
+          className='!rounded-10px !bg-fill-1 !px-8px !py-1px !text-10px !font-600 !leading-16px !text-[rgba(var(--arcoblue-6),1)]'
         >
           {t('settings.assistantSourceCli', { defaultValue: 'CLI' })}
         </Tag>
@@ -295,7 +295,7 @@ const AssistantListPanel: React.FC<AssistantListPanelProps> = ({
       <Tag
         size='small'
         bordered={false}
-        className='!rounded-10px !bg-fill-1 !px-8px !py-1px !text-10px !font-600 !leading-16px !text-[rgb(var(--success-6))]'
+        className='!rounded-10px !bg-fill-1 !px-8px !py-1px !text-10px !font-600 !leading-16px !text-[rgba(var(--success-6),1)]'
       >
         {t('settings.assistantSourceCustom', { defaultValue: 'Custom' })}
       </Tag>

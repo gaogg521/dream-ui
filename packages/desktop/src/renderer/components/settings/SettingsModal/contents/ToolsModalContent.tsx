@@ -45,7 +45,7 @@ const MODEL_ID_SEP = '::';
 const GoToModelSettingsLink: React.FC<{ onClick: () => void; t: TFunction }> = ({ onClick, t }) => (
   <button
     type='button'
-    className='appearance-none border-none bg-transparent p-0 text-[rgb(var(--primary-6))] hover:text-[rgb(var(--primary-5))] underline underline-offset-2 cursor-pointer'
+    className='appearance-none border-none bg-transparent p-0 text-[rgba(var(--primary-6),1)] hover:text-[rgba(var(--primary-5),1)] underline underline-offset-2 cursor-pointer'
     onClick={onClick}
   >
     {t('settings.goToModelSettings')}

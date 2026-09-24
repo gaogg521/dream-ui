@@ -602,16 +602,16 @@ const WebuiModalContent: React.FC = () => {
                 <span
                   className={
                     step.done
-                      ? 'inline-flex items-center justify-center w-16px h-16px rd-50% text-10px font-600 bg-[rgba(var(--success-6),0.12)] text-[rgb(var(--success-6))]'
+                      ? 'inline-flex items-center justify-center w-16px h-16px rd-50% text-10px font-600 bg-[rgba(var(--success-6),0.12)] text-[rgba(var(--success-6),1)]'
                       : 'inline-flex items-center justify-center w-16px h-16px rd-50% text-10px font-600 bg-fill-2 text-t-quaternary'
                   }
                 >
                   {idx + 1}
                 </span>
-                {step.done ? <CheckOne theme='filled' size='12' className='text-[rgb(var(--success-6))]' /> : null}
+                {step.done ? <CheckOne theme='filled' size='12' className='text-[rgba(var(--success-6),1)]' /> : null}
                 <span
                   className={
-                    step.done ? 'text-12px text-[rgb(var(--success-6))] font-500' : 'text-12px text-t-tertiary'
+                    step.done ? 'text-12px text-[rgba(var(--success-6),1)] font-500' : 'text-12px text-t-tertiary'
                   }
                 >
                   {step.label}
@@ -624,7 +624,7 @@ const WebuiModalContent: React.FC = () => {
         {/* Messaging 强引导入口 / Messaging primary entry — disabled, kept for future use
         <div className='rd-12px border border-line bg-2 px-12px py-10px flex items-center justify-between gap-10px'>
             <div className='min-w-0 flex items-center gap-8px'>
-              <Communication theme='outline' size='18' className='text-[rgb(var(--primary-6))] shrink-0' />
+              <Communication theme='outline' size='18' className='text-[rgba(var(--primary-6),1)] shrink-0' />
               <div className='min-w-0'>
                 <div className='text-13px text-t-primary font-500'>{t('settings.webui.featureChannelsTitle')}</div>
                 <div className='text-12px text-t-secondary truncate'>{t('settings.webui.featureChannelsDesc')}</div>
@@ -640,7 +640,7 @@ const WebuiModalContent: React.FC = () => {
         <div className='px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
           {/* WebUI 引导提示 / WebUI hint */}
           <div className='mb-8px rd-10px border border-line bg-fill-1 px-10px py-8px flex items-start gap-6px'>
-            <Earth theme='outline' size='16' className='mt-1px text-[rgb(var(--primary-6))]' />
+            <Earth theme='outline' size='16' className='mt-1px text-[rgba(var(--primary-6),1)]' />
             <div className='text-12px text-t-secondary leading-relaxed'>{t('settings.webui.featureRemoteDesc')}</div>
           </div>
 

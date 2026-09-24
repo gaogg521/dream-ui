@@ -606,7 +606,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
                         }
                       }}
                     >
-                      <Menu.Item key='remove' className='!text-[rgb(var(--danger-6))]'>
+                      <Menu.Item key='remove' className='!text-[rgba(var(--danger-6),1)]'>
                         <span className='flex items-center gap-8px'>
                           <Delete theme='outline' size='14' />
                           {t('conversation.history.removeProject')}

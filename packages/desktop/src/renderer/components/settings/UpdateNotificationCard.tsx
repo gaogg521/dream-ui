@@ -37,9 +37,9 @@ const UpdateNotificationCard: React.FC = () => {
           : 'rgb(var(--primary-6))';
     const miniContent =
       state.status === 'downloaded' ? (
-        <span className='text-30px leading-none text-[rgb(var(--success-6))]'>✓</span>
+        <span className='text-30px leading-none text-[rgba(var(--success-6),1)]'>✓</span>
       ) : state.status === 'error' ? (
-        <span className='text-30px leading-none text-[rgb(var(--danger-6))]'>×</span>
+        <span className='text-30px leading-none text-[rgba(var(--danger-6),1)]'>×</span>
       ) : (
         <span className='text-13px leading-none text-t-primary font-600'>{miniPercent}%</span>
       );
@@ -86,7 +86,7 @@ const UpdateNotificationCard: React.FC = () => {
             {formatUpdateSize(state.progress.transferred, i18n.language)} /{' '}
             {formatUpdateSize(state.progress.total, i18n.language)}
           </span>
-          <span className='text-[rgb(var(--primary-6))] font-500'>{state.progress.speed}</span>
+          <span className='text-[rgba(var(--primary-6),1)] font-500'>{state.progress.speed}</span>
         </div>
       </div>
     );
@@ -137,7 +137,7 @@ const UpdateNotificationCard: React.FC = () => {
       case 'success':
         return <div className='py-16px text-13px text-t-secondary break-all'>{state.downloadPath}</div>;
       case 'error':
-        return <div className='py-16px text-13px text-[rgb(var(--danger-6))]'>{state.errorMsg}</div>;
+        return <div className='py-16px text-13px text-[rgba(var(--danger-6),1)]'>{state.errorMsg}</div>;
       case 'installer-last-failure':
         return (
           <div className='py-6px text-13px text-t-secondary leading-relaxed max-w-360px'>
@@ -327,7 +327,7 @@ const UpdateNotificationCard: React.FC = () => {
               </span>
               <button
                 type='button'
-                className='bg-transparent border-none p-0 cursor-pointer text-[rgb(var(--primary-6))] underline underline-offset-2'
+                className='bg-transparent border-none p-0 cursor-pointer text-[rgba(var(--primary-6),1)] underline underline-offset-2'
                 onClick={actions.openReleasePage}
               >
                 {t('update.viewRelease')}

@@ -957,10 +957,10 @@ const ChannelModalContent: React.FC = () => {
           <div className='flex flex-wrap gap-x-12px gap-y-6px'>
             {channelSetupSteps.map((stepLabel, idx) => (
               <div key={stepLabel} className='inline-flex items-center gap-6px'>
-                <span className='inline-flex items-center justify-center w-16px h-16px rd-50% text-10px font-600 bg-[rgba(var(--primary-6),0.12)] text-[rgb(var(--primary-6))]'>
+                <span className='inline-flex items-center justify-center w-16px h-16px rd-50% text-10px font-600 bg-[rgba(var(--primary-6),0.12)] text-[rgba(var(--primary-6),1)]'>
                   {idx + 1}
                 </span>
-                <CheckOne theme='outline' size='12' className='text-[rgb(var(--primary-6))]' />
+                <CheckOne theme='outline' size='12' className='text-[rgba(var(--primary-6),1)]' />
                 <span className='text-12px text-t-secondary'>{stepLabel}</span>
               </div>
             ))}

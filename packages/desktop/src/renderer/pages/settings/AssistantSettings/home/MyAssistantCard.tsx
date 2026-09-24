@@ -54,7 +54,7 @@ const MyAssistantCard: React.FC<MyAssistantCardProps> = ({
       </Menu.Item>
       {canDelete ? (
         <Menu.Item key='delete'>
-          <span data-testid={`menu-delete-${assistant.id}`} className='text-[rgb(var(--danger-6))]'>
+          <span data-testid={`menu-delete-${assistant.id}`} className='text-[rgba(var(--danger-6),1)]'>
             {t('common.delete', { defaultValue: 'Delete' })}
           </span>
         </Menu.Item>

@@ -172,7 +172,7 @@ const FileVaultSettings: React.FC = () => {
     return (
       <div className='flex flex-col gap-12px'>
         {frozen && (
-          <div className='rd-8px border border-[rgb(var(--warning-6))]/40 bg-[rgb(var(--warning-6))]/10 px-12px py-10px text-13px text-t-primary'>
+          <div className='rd-8px border border-[rgba(var(--warning-6),0.4)] bg-[rgba(var(--warning-6),0.1)] px-12px py-10px text-13px text-t-primary'>
             {t('common.fileVault.frozenNotice', {
               defaultValue: '管理员已冻结此保险箱：暂停上传，已有文件仍可查看、下载和删除。如有疑问请联系管理员。',
             })}
@@ -205,7 +205,7 @@ const FileVaultSettings: React.FC = () => {
           {usagePercent != null && (
             <div className='h-6px w-full overflow-hidden rd-3px bg-fill-2'>
               <div
-                className='h-full rd-3px bg-[rgb(var(--primary-6))]'
+                className='h-full rd-3px bg-[rgba(var(--primary-6),1)]'
                 style={{ width: `${usagePercent}%` }}
                 role='progressbar'
                 aria-valuenow={usagePercent}
@@ -273,14 +273,14 @@ const FileVaultSettings: React.FC = () => {
                 <span className='flex w-110px items-center justify-end gap-10px'>
                   <button
                     type='button'
-                    className='border-none bg-transparent p-0 text-13px text-[rgb(var(--primary-6))] hover:underline'
+                    className='border-none bg-transparent p-0 text-13px text-[rgba(var(--primary-6),1)] hover:underline'
                     onClick={() => void handleDownload(object)}
                   >
                     {t('common.fileVault.download', { defaultValue: '下载' })}
                   </button>
                   <button
                     type='button'
-                    className='border-none bg-transparent p-0 text-13px text-[rgb(var(--danger-6))] hover:underline'
+                    className='border-none bg-transparent p-0 text-13px text-[rgba(var(--danger-6),1)] hover:underline'
                     onClick={() => handleDelete(object)}
                   >
                     {t('common.fileVault.delete', { defaultValue: '删除' })}

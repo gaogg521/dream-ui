@@ -57,7 +57,7 @@ export const FieldLabel: React.FC<{ children: React.ReactNode; required?: boolea
   return (
     <div className='w-86px flex-shrink-0 pt-6px text-13px leading-20px text-t-secondary'>
       <span className='flex items-center gap-6px leading-none'>
-        {required ? <span className='text-[rgb(var(--danger-6))]'>*</span> : null}
+        {required ? <span className='text-[rgba(var(--danger-6),1)]'>*</span> : null}
         {icon ? <span className='inline-flex shrink-0 items-center text-t-tertiary'>{icon}</span> : null}
         <span>{children}</span>
       </span>

@@ -424,7 +424,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
     if (group.records.some((record) => record.status === 'overwritten')) {
       return 'bg-[rgba(var(--warning-6),0.10)] text-warning-6 border-[rgba(var(--warning-6),0.20)]';
     }
-    return 'bg-[rgba(var(--success-6),0.10)] text-[rgb(var(--success-6))] border-[rgba(var(--success-6),0.20)]';
+    return 'bg-[rgba(var(--success-6),0.10)] text-[rgba(var(--success-6),1)] border-[rgba(var(--success-6),0.20)]';
   };
 
   const getFailedImportRepairTitle = (record: SkillImportRecord) => {
@@ -1141,7 +1141,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
               <span className='text-16px md:text-18px text-t-primary font-bold tracking-tight'>
                 {t('settings.autoInjectedSkills')}
               </span>
-              <span className='bg-[rgba(var(--success-6),0.08)] text-[rgb(var(--success-6))] text-12px px-10px py-2px rd-[100px] font-medium ml-4px'>
+              <span className='bg-[rgba(var(--success-6),0.08)] text-[rgba(var(--success-6),1)] text-12px px-10px py-2px rd-[100px] font-medium ml-4px'>
                 {builtinAutoSkills.length}
               </span>
             </div>
@@ -1163,7 +1163,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                   <div className='flex-1 min-w-0 flex flex-col justify-center gap-4px'>
                     <div className='flex items-center gap-10px'>
                       <h3 className='text-14px font-semibold text-t-primary/90 truncate m-0'>{skill.name}</h3>
-                      <span className='bg-[rgba(var(--success-6),0.08)] text-[rgb(var(--success-6))] border border-[rgba(var(--success-6),0.2)] text-10px px-6px py-1px rd-4px font-medium uppercase'>
+                      <span className='bg-[rgba(var(--success-6),0.08)] text-[rgba(var(--success-6),1)] border border-[rgba(var(--success-6),0.2)] text-10px px-6px py-1px rd-4px font-medium uppercase'>
                         {t('settings.autoInjectedSkillsBadge')}
                       </span>
                     </div>

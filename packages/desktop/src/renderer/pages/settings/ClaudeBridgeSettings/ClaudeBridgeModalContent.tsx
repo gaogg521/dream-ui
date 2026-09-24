@@ -110,7 +110,7 @@ const ClaudeBridgeModalContent: React.FC = () => {
 
         <div className='px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
           <div className='mb-8px rd-10px border border-line bg-fill-1 px-10px py-8px flex items-start gap-6px'>
-            <LinkCloud theme='outline' size='16' className='mt-1px text-[rgb(var(--primary-6))]' />
+            <LinkCloud theme='outline' size='16' className='mt-1px text-[rgba(var(--primary-6),1)]' />
             <div className='text-12px text-t-secondary leading-relaxed'>{t('settings.claudeBridge.hint')}</div>
           </div>
 
