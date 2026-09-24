@@ -35,4 +35,20 @@ mod tests {
         assert!(USAGE_PAGE.contains("fetch('v1/keys/usage'"));
         assert!(!USAGE_PAGE.contains("fetch('/v1/keys/usage'"));
     }
+
+    /// The desktop app hands the key over in the URL *fragment* so it never
+    /// reaches the server, and the page must then wipe it so it does not sit
+    /// in the address bar or this history entry — the whole reason a
+    /// fragment was chosen over a query string. Both halves are easy to drop
+    /// in a redesign of this file, and nothing else would notice.
+    #[test]
+    fn the_key_handoff_reads_the_fragment_and_clears_it() {
+        assert!(USAGE_PAGE.contains("window.location.hash"));
+        assert!(USAGE_PAGE.contains("history.replaceState"));
+        // Opening the page a second time only swaps the fragment on the tab
+        // already open — without this the repeat click does nothing at all.
+        assert!(USAGE_PAGE.contains("addEventListener('hashchange'"));
+        // A query-string handoff would be logged by nginx and the broker.
+        assert!(!USAGE_PAGE.contains("location.search).get('key')"));
+    }
 }

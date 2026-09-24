@@ -3,369 +3,405 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>查询用量 · 宝云体验额度</title>
+<title>用量查询 · 宝云体验额度</title>
 <style>
   :root {
-    --arcoblue: #165dff;
-    --arcoblue-light: #e8f3ff;
+    --brand: #165dff;
+    --brand-weak: #e8f3ff;
     --text-1: #1d2129;
     --text-2: #4e5969;
     --text-3: #86909c;
-    --border: #e5e6eb;
-    --bg: #f2f3f5;
-    --card-bg: #ffffff;
+    --line: #e5e6eb;
+    --page: #f7f8fa;
+    --card: #ffffff;
     --danger: #f53f3f;
+    --danger-weak: #ffece8;
     --success: #00b42a;
+    --warning: #ff7d00;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 6px 20px rgba(29, 33, 41, .06);
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --brand: #3c7eff; --brand-weak: #17233a;
+      --text-1: #f6f6f6; --text-2: #c9cdd4; --text-3: #86909c;
+      --line: #2e3238; --page: #17171a; --card: #232324;
+      --danger: #f76965; --danger-weak: #3b1f1f; --success: #27c346;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
+    }
+  }
+
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0;
-    min-height: 100vh;
-    background: var(--bg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--page);
     color: var(--text-1);
-    padding: 32px 16px 64px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding: 40px 16px 72px;
   }
-  .wrap { max-width: 640px; margin: 0 auto; }
-  .header { text-align: center; margin-bottom: 28px; }
-  .header h1 { font-size: 22px; font-weight: 600; margin: 0 0 6px; }
-  .header p { font-size: 13px; color: var(--text-3); margin: 0; }
+  .wrap { max-width: 680px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 26px; }
+  header h1 { font-size: 24px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 8px; }
+  header p { color: var(--text-3); margin: 0; font-size: 13.5px; }
 
   .card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    border: 1px solid var(--border);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
     padding: 20px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
 
-  .input-row { display: flex; gap: 10px; }
-  .key-input-box {
-    flex: 1;
-    position: relative;
-  }
-  .key-input-box input {
-    width: 100%;
-    height: 44px;
-    padding: 0 40px 0 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    font-size: 14px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* --- query form --- */
+  .field { display: flex; gap: 10px; }
+  .key-wrap { position: relative; flex: 1; min-width: 0; }
+  .key-wrap input {
+    width: 100%; height: 46px;
+    padding: 0 42px 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--page);
+    color: var(--text-1);
+    font: 14px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     outline: none;
-    transition: border-color .15s;
+    transition: border-color .15s, box-shadow .15s, background .15s;
   }
-  .key-input-box input:focus { border-color: var(--arcoblue); }
-  .toggle-mask {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: var(--text-3);
-    user-select: none;
-    font-size: 16px;
-    line-height: 1;
-    padding: 4px;
+  .key-wrap input::placeholder { font-family: inherit; color: var(--text-3); }
+  .key-wrap input:focus { border-color: var(--brand); background: var(--card); box-shadow: 0 0 0 3px rgba(22, 93, 255, .1); }
+  .peek {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 32px; height: 32px; border: 0; border-radius: 8px;
+    background: transparent; color: var(--text-3);
+    cursor: pointer; display: grid; place-items: center;
   }
-  .toggle-mask:hover { color: var(--text-2); }
+  .peek:hover { background: var(--page); color: var(--text-2); }
 
-  button#queryBtn {
-    height: 44px;
-    padding: 0 22px;
-    border: none;
-    border-radius: 8px;
-    background: var(--arcoblue);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: opacity .15s;
+  button.primary {
+    height: 46px; padding: 0 22px;
+    border: 0; border-radius: 10px;
+    background: var(--brand); color: #fff;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+    transition: opacity .15s, transform .05s;
   }
-  button#queryBtn:disabled { opacity: .55; cursor: not-allowed; }
-  button#queryBtn:not(:disabled):hover { opacity: .9; }
+  button.primary:hover:not(:disabled) { opacity: .9; }
+  button.primary:active:not(:disabled) { transform: translateY(1px); }
+  button.primary:disabled { opacity: .5; cursor: not-allowed; }
 
-  .hint { font-size: 12px; color: var(--text-3); margin-top: 10px; }
+  .hint { margin: 10px 0 0; font-size: 12.5px; color: var(--text-3); }
 
-  .state-box { display: none; }
-  .state-box.show { display: block; }
+  /* --- states --- */
+  .state { display: none; }
+  .state.show { display: block; }
 
-  .error-box {
-    background: #fff1f0;
-    border: 1px solid #ffccc7;
-    color: var(--danger);
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 13px;
-    line-height: 1.5;
+  .notice {
+    display: flex; gap: 10px; align-items: flex-start;
+    border-radius: 10px; padding: 12px 14px;
+    font-size: 13.5px; line-height: 1.55;
   }
+  .notice.error { background: var(--danger-weak); color: var(--danger); }
+  .notice .dot { flex: none; width: 18px; height: 18px; }
 
-  .balance-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 4px;
-  }
-  .balance-item {
-    background: var(--arcoblue-light);
-    border-radius: 8px;
-    padding: 14px 10px;
-    text-align: center;
-  }
-  .balance-item .label { font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
-  .balance-item .value { font-size: 18px; font-weight: 600; color: var(--arcoblue); }
-  .balance-item.exhausted .value { color: var(--danger); }
+  /* --- balance --- */
+  .balance { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 0; align-items: stretch; }
+  .metric { padding: 4px 16px; border-left: 1px solid var(--line); }
+  .metric:first-child { padding-left: 4px; border-left: 0; }
+  .metric .k { font-size: 12.5px; color: var(--text-3); margin-bottom: 6px; }
+  .metric .v { font-size: 26px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .metric.lead .v { color: var(--brand); }
+  .metric.lead.spent .v { color: var(--danger); }
 
-  table.logs {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12.5px;
-  }
-  table.logs th, table.logs td {
-    padding: 9px 8px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-  table.logs th { color: var(--text-3); font-weight: 500; }
-  table.logs td.model { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
-  .kind-tag {
-    display: inline-block;
-    padding: 1px 7px;
-    border-radius: 4px;
-    font-size: 11px;
-  }
-  .kind-charge { background: #e8f3ff; color: var(--arcoblue); }
-  .kind-error { background: #fff1f0; color: var(--danger); }
-  .kind-refund { background: #e8ffea; color: var(--success); }
+  .meter { height: 6px; border-radius: 3px; background: var(--page); overflow: hidden; margin-top: 16px; }
+  .meter > i { display: block; height: 100%; background: var(--brand); border-radius: 3px; transition: width .4s ease; }
+  .meter.low > i { background: var(--warning); }
+  .meter.spent > i { background: var(--danger); }
 
-  .empty-logs { text-align: center; color: var(--text-3); font-size: 13px; padding: 24px 0; }
-  .logs-scroll { max-height: 420px; overflow: auto; }
+  /* --- logs --- */
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .section-head h2 { font-size: 14px; font-weight: 600; margin: 0; }
+  .section-head span { font-size: 12.5px; color: var(--text-3); }
 
-  .footer-note { text-align: center; font-size: 12px; color: var(--text-3); margin-top: 20px; }
+  .logs { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 10px 10px; text-align: left; white-space: nowrap; }
+  th { font-weight: 500; color: var(--text-3); font-size: 12.5px; border-bottom: 1px solid var(--line); }
+  tbody tr { border-bottom: 1px solid var(--line); }
+  tbody tr:last-child { border-bottom: 0; }
+  td.num { font-variant-numeric: tabular-nums; }
+  td.model { max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
+  td.rid { color: var(--text-3); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 11.5px; line-height: 18px; }
+  .tag.charge { background: var(--brand-weak); color: var(--brand); }
+  .tag.error { background: var(--danger-weak); color: var(--danger); }
+  .tag.refund { background: rgba(0, 180, 42, .12); color: var(--success); }
+
+  .empty { text-align: center; color: var(--text-3); font-size: 13.5px; padding: 30px 0; }
+  .empty .big { font-size: 22px; margin-bottom: 6px; opacity: .5; }
+
+  footer { text-align: center; margin-top: 22px; font-size: 12px; color: var(--text-3); }
 
   .spinner {
-    display: inline-block;
-    width: 14px; height: 14px;
-    border: 2px solid rgba(255,255,255,.4);
-    border-top-color: #fff;
-    border-radius: 50%;
+    width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.45);
+    border-top-color: #fff; border-radius: 50%;
+    display: inline-block; vertical-align: -2px; margin-right: 7px;
     animation: spin .7s linear infinite;
-    vertical-align: -2px;
-    margin-right: 6px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  @media (max-width: 480px) {
-    .input-row { flex-direction: column; }
-    button#queryBtn { width: 100%; }
-    .balance-grid { grid-template-columns: 1fr 1fr; }
-    table.logs th:nth-child(6), table.logs td:nth-child(6) { display: none; }
+  .skeleton { animation: pulse 1.3s ease-in-out infinite; background: var(--line); border-radius: 6px; }
+  @keyframes pulse { 50% { opacity: .45; } }
+
+  @media (max-width: 560px) {
+    body { padding-top: 26px; }
+    .field { flex-direction: column; }
+    button.primary { width: 100%; }
+    .balance { grid-template-columns: 1fr 1fr; row-gap: 16px; }
+    .metric { border-left: 0; padding: 0; }
+    .metric.lead { grid-column: 1 / -1; }
+    th.hide-sm, td.hide-sm { display: none; }
   }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="header">
-      <h1>查询用量</h1>
-      <p>粘贴你的体验 API Key，查看剩余额度与调用记录</p>
-    </div>
+    <header>
+      <h1>用量查询</h1>
+      <p>粘贴体验 API Key，查看剩余额度与每一次调用的花费</p>
+    </header>
 
     <div class="card">
-      <div class="input-row">
-        <div class="key-input-box">
-          <input id="keyInput" type="password" placeholder="粘贴你的 API Key（sk-...）" autocomplete="off" spellcheck="false" />
-          <span class="toggle-mask" id="toggleMask" title="显示/隐藏">👁</span>
+      <div class="field">
+        <div class="key-wrap">
+          <input id="key" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" aria-label="API Key" />
+          <button class="peek" id="peek" type="button" aria-label="显示或隐藏 Key">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/>
+            </svg>
+          </button>
         </div>
-        <button id="queryBtn">查询用量</button>
+        <button class="primary" id="go">查询</button>
       </div>
-      <div class="hint">你的 Key 不会被保存或用于其他用途，仅用于本次查询。</div>
+      <p class="hint">Key 只用于这一次查询，不会被保存或记录。</p>
     </div>
 
-    <div id="errorBox" class="state-box card">
-      <div class="error-box" id="errorText"></div>
+    <div class="state card" id="errorCard">
+      <div class="notice error">
+        <svg class="dot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/>
+        </svg>
+        <span id="errorText"></span>
+      </div>
     </div>
 
-    <div id="resultBox" class="state-box">
+    <div class="state" id="result">
       <div class="card">
-        <div class="balance-grid">
-          <div class="balance-item" id="limitItem">
-            <div class="label">总额度</div>
-            <div class="value" id="limitValue">—</div>
+        <div class="balance">
+          <div class="metric lead" id="remainMetric">
+            <div class="k">剩余额度</div>
+            <div class="v" id="remain">—</div>
           </div>
-          <div class="balance-item" id="usedItem">
-            <div class="label">已使用</div>
-            <div class="value" id="usedValue">—</div>
+          <div class="metric">
+            <div class="k">已使用</div>
+            <div class="v" id="used">—</div>
           </div>
-          <div class="balance-item" id="remainItem">
-            <div class="label">剩余</div>
-            <div class="value" id="remainValue">—</div>
+          <div class="metric">
+            <div class="k">总额度</div>
+            <div class="v" id="limit">—</div>
           </div>
         </div>
+        <div class="meter" id="meter"><i id="meterFill" style="width:0"></i></div>
       </div>
+
       <div class="card">
-        <div class="logs-scroll">
-          <table class="logs" id="logsTable">
+        <div class="section-head">
+          <h2>调用记录</h2>
+          <span id="logCount"></span>
+        </div>
+        <div class="logs">
+          <table id="logTable">
             <thead>
               <tr>
                 <th>时间</th>
                 <th>模型</th>
                 <th>类型</th>
-                <th>输入/输出 Token</th>
-                <th>费用</th>
-                <th>Request ID</th>
+                <th class="hide-sm">输入 / 输出</th>
+                <th>花费</th>
+                <th class="hide-sm">Request ID</th>
               </tr>
             </thead>
-            <tbody id="logsBody"></tbody>
+            <tbody id="logBody"></tbody>
           </table>
-          <div class="empty-logs" id="emptyLogs" style="display:none;">暂无调用记录</div>
+          <div class="empty" id="logEmpty" hidden>
+            <div class="big">·</div>
+            还没有调用记录
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="footer-note">One Work · 宝云体验额度查询</div>
+    <footer>One Work · 宝云体验额度</footer>
   </div>
 
 <script>
 (function () {
   var VENDOR = 'baoyun';
-  var keyInput = document.getElementById('keyInput');
-  var toggleMask = document.getElementById('toggleMask');
-  var queryBtn = document.getElementById('queryBtn');
-  var errorBox = document.getElementById('errorBox');
+  var keyInput = document.getElementById('key');
+  var goBtn = document.getElementById('go');
+  var errorCard = document.getElementById('errorCard');
   var errorText = document.getElementById('errorText');
-  var resultBox = document.getElementById('resultBox');
+  var result = document.getElementById('result');
 
-  toggleMask.addEventListener('click', function () {
+  document.getElementById('peek').addEventListener('click', function () {
     keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
+    keyInput.focus();
   });
+  keyInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') run(); });
+  goBtn.addEventListener('click', run);
 
-  keyInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') runQuery();
-  });
-  queryBtn.addEventListener('click', runQuery);
-
-  var CURRENCY_SYMBOL = { CNY: '¥', USD: '$', EUR: '€', JPY: '¥', GBP: '£' };
-  function fmtMoney(amount, currency) {
-    var symbol = CURRENCY_SYMBOL[currency] || '';
+  var SYMBOL = { CNY: '¥', USD: '$', EUR: '€', JPY: '¥', GBP: '£' };
+  function money(amount, currency) {
+    var s = SYMBOL[currency] || '';
     var n = (typeof amount === 'number' ? amount : 0).toFixed(2);
-    return symbol ? symbol + n : n + ' ' + currency;
+    return s ? s + n : n + ' ' + currency;
   }
+  var KIND = { charge: '扣费', error: '失败', refund: '退款' };
 
-  var KIND_LABEL = { charge: '扣费', error: '失败', refund: '退款' };
-  var KIND_CLASS = { charge: 'kind-charge', error: 'kind-error', refund: 'kind-refund' };
-
-  function fmtTime(unixSeconds) {
+  function when(unixSeconds) {
     var d = new Date(unixSeconds * 1000);
-    function pad(n) { return n < 10 ? '0' + n : '' + n; }
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
-      pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    var p = function (n) { return n < 10 ? '0' + n : '' + n; };
+    var sameYear = d.getFullYear() === new Date().getFullYear();
+    return (sameYear ? '' : d.getFullYear() + '-') +
+      p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
 
-  function escapeHtml(s) {
+  function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
 
-  function setLoading(loading) {
-    queryBtn.disabled = loading;
-    queryBtn.innerHTML = loading ? '<span class="spinner"></span>查询中…' : '查询用量';
+  function loading(on) {
+    goBtn.disabled = on;
+    goBtn.innerHTML = on ? '<span class="spinner"></span>查询中' : '查询';
   }
-
   function showError(msg) {
-    resultBox.classList.remove('show');
+    result.classList.remove('show');
     errorText.textContent = msg;
-    errorBox.classList.add('show');
+    errorCard.classList.add('show');
+  }
+  function clearStates() {
+    errorCard.classList.remove('show');
+    result.classList.remove('show');
   }
 
-  function hideStates() {
-    errorBox.classList.remove('show');
-    resultBox.classList.remove('show');
-  }
+  function render(data) {
+    clearStates();
+    var hasLimit = data.limit_usd != null;
+    var remaining = data.remaining_usd;
+    var spent = remaining != null && remaining <= 0;
 
-  function renderResult(data) {
-    hideStates();
-    var limitEl = document.getElementById('limitValue');
-    var usedEl = document.getElementById('usedValue');
-    var remainEl = document.getElementById('remainValue');
-    var remainItem = document.getElementById('remainItem');
+    document.getElementById('remain').textContent = remaining == null ? '不限' : money(remaining, data.currency);
+    document.getElementById('used').textContent = money(data.used_usd, data.currency);
+    document.getElementById('limit').textContent = hasLimit ? money(data.limit_usd, data.currency) : '不限';
+    document.getElementById('remainMetric').classList.toggle('spent', spent);
 
-    limitEl.textContent = data.limit_usd == null ? '不限' : fmtMoney(data.limit_usd, data.currency);
-    usedEl.textContent = fmtMoney(data.used_usd, data.currency);
-    var exhausted = data.remaining_usd != null && data.remaining_usd <= 0;
-    remainEl.textContent = data.remaining_usd == null ? '—' : fmtMoney(data.remaining_usd, data.currency);
-    remainItem.classList.toggle('exhausted', exhausted);
-
-    var logsBody = document.getElementById('logsBody');
-    var emptyLogs = document.getElementById('emptyLogs');
-    var table = document.getElementById('logsTable');
-    logsBody.innerHTML = '';
-
-    if (!data.logs || data.logs.length === 0) {
-      table.style.display = 'none';
-      emptyLogs.style.display = 'block';
+    var meter = document.getElementById('meter');
+    if (hasLimit && data.limit_usd > 0) {
+      var usedRatio = Math.min(1, Math.max(0, data.used_usd / data.limit_usd));
+      meter.hidden = false;
+      document.getElementById('meterFill').style.width = (usedRatio * 100).toFixed(1) + '%';
+      meter.classList.toggle('low', usedRatio >= 0.8 && !spent);
+      meter.classList.toggle('spent', spent);
     } else {
-      table.style.display = '';
-      emptyLogs.style.display = 'none';
-      data.logs.forEach(function (log) {
+      meter.hidden = true;
+    }
+
+    var logs = data.logs || [];
+    var body = document.getElementById('logBody');
+    var table = document.getElementById('logTable');
+    var empty = document.getElementById('logEmpty');
+    document.getElementById('logCount').textContent = logs.length ? '最近 ' + logs.length + ' 条' : '';
+    body.innerHTML = '';
+    if (!logs.length) {
+      table.hidden = true; empty.hidden = false;
+    } else {
+      table.hidden = false; empty.hidden = true;
+      logs.forEach(function (log) {
+        var kind = KIND[log.kind] || log.kind;
         var tr = document.createElement('tr');
-        var kindLabel = KIND_LABEL[log.kind] || log.kind;
-        var kindClass = KIND_CLASS[log.kind] || 'kind-charge';
         tr.innerHTML =
-          '<td>' + fmtTime(log.created_at) + '</td>' +
-          '<td class="model" title="' + escapeHtml(log.model) + '">' + escapeHtml(log.model) + '</td>' +
-          '<td><span class="kind-tag ' + kindClass + '">' + escapeHtml(kindLabel) + (log.is_stream ? ' · 流式' : '') + '</span></td>' +
-          '<td>' + log.prompt_tokens + ' / ' + log.completion_tokens + '</td>' +
-          '<td>' + fmtMoney(log.amount, data.currency) + '</td>' +
-          '<td title="' + escapeHtml(log.request_id) + '">' + escapeHtml(log.request_id.slice(0, 10)) + '…</td>';
-        logsBody.appendChild(tr);
+          '<td class="num">' + when(log.created_at) + '</td>' +
+          '<td class="model" title="' + esc(log.model) + '">' + esc(log.model) + '</td>' +
+          '<td><span class="tag ' + esc(log.kind) + '">' + esc(kind) + '</span></td>' +
+          '<td class="num hide-sm">' + log.prompt_tokens + ' / ' + log.completion_tokens + '</td>' +
+          '<td class="num">' + money(log.amount, data.currency) + '</td>' +
+          '<td class="rid hide-sm" title="' + esc(log.request_id) + '">' + esc(String(log.request_id).slice(0, 12)) + '…</td>';
+        body.appendChild(tr);
       });
     }
-
-    resultBox.classList.add('show');
+    result.classList.add('show');
   }
 
-  function runQuery() {
+  function run() {
     var key = keyInput.value.trim();
-    if (!key) {
-      showError('请先粘贴你的 API Key。');
-      return;
-    }
-    setLoading(true);
-    hideStates();
+    if (!key) { showError('请先粘贴你的 API Key。'); keyInput.focus(); return; }
+    loading(true);
+    clearStates();
 
+    // Relative, not "/v1/...": this page is served under nginx's
+    // /trial-broker/ prefix, and an absolute path would skip it and 404.
     fetch('v1/keys/usage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ vendor: VENDOR, key: key }),
     })
-      .then(function (res) {
-        return res.json().then(function (body) { return { status: res.status, body: body }; });
-      })
+      .then(function (res) { return res.json().then(function (body) { return { status: res.status, body: body }; }); })
       .then(function (r) {
-        setLoading(false);
-        if (r.status === 200) {
-          renderResult(r.body);
-          return;
-        }
+        loading(false);
+        if (r.status === 200) { render(r.body); return; }
         var code = r.body && r.body.error;
         if (r.status === 404 && code === 'key_not_found') {
-          showError('未找到匹配的有效 Key，请检查是否粘贴完整，或者这把 Key 是否仍然有效。');
+          showError('没有找到这把 Key。请确认粘贴完整，并且它还没有被停用或替换。');
         } else if (r.status === 429) {
-          showError('请求过于频繁，请稍后再试。');
+          showError('查询太频繁了，请过一会儿再试。');
         } else if (r.status === 400 && code === 'vendor_unknown') {
-          showError('暂不支持查询该服务商的用量。');
+          showError('这个服务商暂不支持用量查询。');
         } else {
-          showError('查询失败，请稍后重试。');
+          showError('查询失败了，请稍后重试。');
         }
       })
       .catch(function () {
-        setLoading(false);
-        showError('网络请求失败，请检查网络连接后重试。');
+        loading(false);
+        showError('网络请求失败，请检查网络后重试。');
       });
   }
+
+  // One-click hand-off from the desktop app: it opens this page with the
+  // key in the URL *fragment*, which browsers never send to the server. It
+  // is wiped from the address bar and this history entry immediately, so it
+  // does not linger anywhere a query string would.
+  function consumeHandoff() {
+    var match = /(?:^#|&)key=([^&]+)/.exec(window.location.hash || '');
+    if (!match) return;
+    var key;
+    try { key = decodeURIComponent(match[1]); } catch (e) { return; }
+    keyInput.value = key;
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    run();
+  }
+
+  consumeHandoff();
+  // A browser handed the same page a second time only swaps the fragment and
+  // focuses the existing tab — no reload, so nothing above would run and the
+  // click would look broken. This is what makes the second one work.
+  window.addEventListener('hashchange', consumeHandoff);
 })();
 </script>
 </body>
