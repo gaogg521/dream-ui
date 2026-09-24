@@ -30,6 +30,15 @@ const quota = vi.hoisted(() => ({
   } as unknown,
 }));
 
+const providers = vi.hoisted(() => ({
+  data: [{ id: 'trial-baoyun', api_key: 'sk-live-key' }] as unknown,
+}));
+vi.mock('@renderer/hooks/agent/useModelProviderList', () => ({
+  useProvidersQuery: () => ({ data: providers.data }),
+  PROVIDERS_SWR_KEY: 'providers',
+  fetchProviders: vi.fn(),
+}));
+
 vi.mock('@renderer/hooks/agent/useTrialQuota', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@renderer/hooks/agent/useTrialQuota')>();
   return { ...actual, useTrialQuota: () => ({ data: quota.data }) };
@@ -103,7 +112,35 @@ describe('TrialQuotaBadge', () => {
     expect(screen.getByTestId('trial-quota-menu-top-up')).toBeTruthy();
   });
 
-  it('"check usage" opens the broker usage page in the browser', () => {
+  it('"check usage" hands the key for this install to the page in the URL fragment', () => {
+    render(<TrialQuotaBadge vendor='baoyun' />);
+    openMenu();
+    act(() => {
+      fireEvent.click(screen.getByTestId('trial-quota-menu-query-usage'));
+    });
+    flushFrames();
+    // A fragment, never a query string: it must not reach the server's logs.
+    expect(openExternalUrl).toHaveBeenCalledWith(
+      'https://work.1oneclaw.com/trial-broker/usage#key=sk-live-key'
+    );
+  });
+
+  it('sends only the first key when several are configured for rotation', () => {
+    providers.data = [{ id: 'trial-baoyun', api_key: 'sk-first\nsk-second' }];
+    render(<TrialQuotaBadge vendor='baoyun' />);
+    openMenu();
+    act(() => {
+      fireEvent.click(screen.getByTestId('trial-quota-menu-query-usage'));
+    });
+    flushFrames();
+    expect(openExternalUrl).toHaveBeenCalledWith(
+      'https://work.1oneclaw.com/trial-broker/usage#key=sk-first'
+    );
+    providers.data = [{ id: 'trial-baoyun', api_key: 'sk-live-key' }];
+  });
+
+  it('opens the page plain when no key is on hand, so it can ask for one', () => {
+    providers.data = [];
     render(<TrialQuotaBadge vendor='baoyun' />);
     openMenu();
     act(() => {
@@ -111,6 +148,7 @@ describe('TrialQuotaBadge', () => {
     });
     flushFrames();
     expect(openExternalUrl).toHaveBeenCalledWith('https://work.1oneclaw.com/trial-broker/usage');
+    providers.data = [{ id: 'trial-baoyun', api_key: 'sk-live-key' }];
   });
 
   it('"top up" opens the top-up modal', () => {

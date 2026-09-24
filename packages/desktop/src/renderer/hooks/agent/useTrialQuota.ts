@@ -47,6 +47,16 @@ export function useRefreshTrialQuota() {
   return useCallback((vendor: TrialVendor) => mutate(swrKey(vendor)), [mutate]);
 }
 
+/**
+ * Remaining balance as a plain number in the vendor's own major unit (yuan,
+ * dollars), or `null` when the vendor reports no cap at all. `remainingLabel`
+ * is for display; this is for arithmetic — e.g. previewing what a top-up
+ * would leave the balance at.
+ */
+export function remainingAmount(view: TrialQuotaView): number | null {
+  return view.kind === 'metered' ? view.data.remaining_cents / 100 : view.data.remaining_usd;
+}
+
 /** `remaining` in a trial view, in minor units for metered / major units for issued. */
 export function remainingLabel(view: TrialQuotaView): { text: string; exhausted: boolean } {
   if (view.kind === 'metered') {

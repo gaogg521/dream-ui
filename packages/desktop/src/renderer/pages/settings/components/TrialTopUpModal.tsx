@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import DreamModal from '@renderer/components/base/DreamModal';
 import {
   formatMajorUnits,
+  remainingAmount,
   remainingLabel,
   useRefreshTrialQuota,
   useTrialQuota,
@@ -128,7 +129,14 @@ const TrialTopUpModal: React.FC<{
     [creating, startPolling, t, vendor]
   );
 
-  const currentBalance = quota ? remainingLabel(quota).text : '';
+  const balance = quota ? remainingLabel(quota) : null;
+  const currentBalance = balance?.text ?? '';
+  const amountValid = amount !== null && amount >= MIN_TOPUP_AMOUNT;
+  const currency = order?.currency ?? 'CNY';
+  // Only previewable against a real number — an uncapped vendor has no
+  // "after" to show.
+  const balanceNow = quota ? remainingAmount(quota) : null;
+  const previewAfter = amountValid && balanceNow !== null ? balanceNow + amount : null;
 
   return (
     <DreamModal
@@ -137,21 +145,54 @@ const TrialTopUpModal: React.FC<{
       onCancel={onClose}
       header={{ title: t('settings.trialTopUp.title'), showClose: true }}
       footer={null}
-      style={{ maxWidth: '92vw', width: 420 }}
+      style={{ maxWidth: '92vw', width: 440 }}
     >
-      {currentBalance && stage !== 'done' && (
-        <p className='text-13px text-t-secondary mt-0 mb-16px'>
-          {t('settings.trialTopUp.currentBalance', { amount: currentBalance })}
-        </p>
-      )}
-
       {stage === 'select' && (
-        <div className='flex flex-col gap-16px'>
+        <div className='flex flex-col gap-18px'>
+          {/* Balance leads: the number the amount below is going to change. */}
+          <div className='rd-12px bg-fill-1 px-16px py-14px'>
+            <div className='text-12px text-t-tertiary'>{t('settings.trialTopUp.balanceLabel')}</div>
+            <div className='mt-4px flex items-baseline gap-8px'>
+              <span
+                className={`text-28px font-600 leading-none tracking-tight ${
+                  balance?.exhausted ? 'text-[rgba(var(--danger-6),1)]' : 'text-[rgba(var(--primary-6),1)]'
+                }`}
+              >
+                {balance?.exhausted ? t('settings.meteredQuota.exhausted') : currentBalance || '—'}
+              </span>
+              {previewAfter !== null && (
+                <span className='text-13px text-t-secondary'>
+                  {t('settings.trialTopUp.afterTopUp', { amount: formatMajorUnits(previewAfter, currency) })}
+                </span>
+              )}
+            </div>
+          </div>
+
           <div>
-            <span className='text-13px font-medium text-t-primary'>{t('settings.trialTopUp.selectAmount')}</span>
+            <div className='mb-8px text-13px font-medium text-t-primary'>{t('settings.trialTopUp.selectAmount')}</div>
+            <div className='grid grid-cols-4 gap-8px'>
+              {QUICK_AMOUNTS.map((quick) => {
+                const active = amount === quick;
+                return (
+                  <button
+                    key={quick}
+                    type='button'
+                    onClick={() => setAmount(quick)}
+                    className={`h-44px rd-10px border text-15px font-500 cursor-pointer transition-colors ${
+                      active
+                        ? 'border-[rgba(var(--primary-6),1)] bg-[rgba(var(--primary-6),0.08)] text-[rgba(var(--primary-6),1)]'
+                        : 'border-fill-3 bg-transparent text-t-primary hover:border-[rgba(var(--primary-6),0.5)]'
+                    }`}
+                  >
+                    {t('settings.trialTopUp.amountOption', { amount: quick })}
+                  </button>
+                );
+              })}
+            </div>
+
             <InputNumber
               size='large'
-              className='!mt-8px !w-full'
+              className='!mt-10px !w-full'
               prefix='¥'
               min={MIN_TOPUP_AMOUNT}
               precision={2}
@@ -161,24 +202,10 @@ const TrialTopUpModal: React.FC<{
               onChange={(value) => setAmount(typeof value === 'number' ? value : null)}
             />
             {amount !== null && amount < MIN_TOPUP_AMOUNT && (
-              <p className='text-12px text-red-500 mt-4px mb-0'>
+              <p className='mt-6px mb-0 text-12px text-[rgba(var(--danger-6),1)]'>
                 {t('settings.trialTopUp.amountTooLow', { min: MIN_TOPUP_AMOUNT })}
               </p>
             )}
-          </div>
-
-          <div className='flex flex-wrap gap-8px'>
-            {QUICK_AMOUNTS.map((quick) => (
-              <Button
-                key={quick}
-                size='small'
-                shape='round'
-                type={amount === quick ? 'primary' : 'secondary'}
-                onClick={() => setAmount(quick)}
-              >
-                {t('settings.trialTopUp.amountOption', { amount: quick })}
-              </Button>
-            ))}
           </div>
 
           <Button
@@ -186,40 +213,47 @@ const TrialTopUpModal: React.FC<{
             type='primary'
             size='large'
             loading={creating !== null}
-            disabled={amount === null || amount < MIN_TOPUP_AMOUNT}
+            disabled={!amountValid}
             onClick={() => amount !== null && handleBuy(amount)}
-            className='!h-auto !py-10px'
+            className='!h-44px !rd-10px'
           >
-            {t('settings.trialTopUp.confirmTopUp')}
+            {amountValid
+              ? t('settings.trialTopUp.confirmTopUpAmount', { amount: formatMajorUnits(amount, currency) })
+              : t('settings.trialTopUp.confirmTopUp')}
           </Button>
         </div>
       )}
 
       {stage === 'paying' && order && (
-        <div className='flex flex-col items-center gap-12px py-8px text-center'>
-          <div className='text-14px font-medium text-t-primary'>
-            {t('settings.trialTopUp.payAmount', {
-              amount: formatMajorUnits(order.amount, order.currency),
-            })}
+        <div className='flex flex-col items-center gap-14px py-4px text-center'>
+          <div>
+            <div className='text-12px text-t-tertiary'>{t('settings.trialTopUp.payAmountLabel')}</div>
+            <div className='mt-2px text-30px font-600 leading-none tracking-tight text-t-primary'>
+              {formatMajorUnits(order.amount, order.currency)}
+            </div>
           </div>
+
           {order.qr_code && (
-            <div className='p-8px bg-white rd-8px'>
+            <div className='rd-12px border border-fill-3 bg-white p-12px'>
               <Suspense
                 fallback={
-                  <div className='w-160px h-160px flex items-center justify-center'>
+                  <div className='flex h-180px w-180px items-center justify-center'>
                     <Spin size={20} />
                   </div>
                 }
               >
-                <QRCodeSVGLazy value={order.qr_code} size={160} level='M' />
+                <QRCodeSVGLazy value={order.qr_code} size={180} level='M' />
               </Suspense>
             </div>
           )}
-          <p className='text-12px text-t-secondary m-0'>{t('settings.trialTopUp.scanHint')}</p>
-          <div className='flex items-center gap-8px text-t-secondary text-13px'>
-            <Spin size={14} />
+
+          <p className='m-0 text-13px text-t-secondary'>{t('settings.trialTopUp.scanHint')}</p>
+
+          <div className='flex items-center gap-8px rd-20px bg-fill-1 px-12px py-6px text-12px text-t-secondary'>
+            <Spin size={12} />
             {t('settings.trialTopUp.waitingPayment')}
           </div>
+
           <Button size='small' type='text' onClick={reset}>
             {t('settings.trialTopUp.chooseAnother')}
           </Button>
@@ -227,19 +261,21 @@ const TrialTopUpModal: React.FC<{
       )}
 
       {stage === 'done' && order && (
-        <div className='flex flex-col items-center gap-10px py-12px text-center'>
-          <CheckOne theme='filled' size={28} fill={iconColors.success} />
-          <div className='text-14px font-medium text-t-primary'>
-            {t('settings.trialTopUp.creditedAmount', {
-              amount: formatMajorUnits(order.amount, order.currency),
-            })}
-          </div>
-          {currentBalance && (
-            <div className='text-13px text-t-secondary'>
-              {t('settings.trialTopUp.newBalance', { amount: currentBalance })}
+        <div className='flex flex-col items-center gap-12px py-12px text-center'>
+          <CheckOne theme='filled' size={40} fill={iconColors.success} />
+          <div>
+            <div className='text-16px font-600 text-t-primary'>
+              {t('settings.trialTopUp.creditedAmount', {
+                amount: formatMajorUnits(order.amount, order.currency),
+              })}
             </div>
-          )}
-          <Button type='primary' onClick={onClose}>
+            {currentBalance && (
+              <div className='mt-4px text-13px text-t-secondary'>
+                {t('settings.trialTopUp.newBalance', { amount: currentBalance })}
+              </div>
+            )}
+          </div>
+          <Button long type='primary' className='!h-40px !rd-10px' onClick={onClose}>
             {t('common.close')}
           </Button>
         </div>

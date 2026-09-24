@@ -6,19 +6,35 @@ import { Dropdown, Menu, Tag } from '@arco-design/web-react';
 import { Down, LinkOut, Search, Wallet } from '@icon-park/react';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { isToppableVendor, type TrialVendor } from '@renderer/hooks/agent/useTrialModelClaim';
+import { findTrialProvider, isToppableVendor, type TrialVendor } from '@renderer/hooks/agent/useTrialModelClaim';
+import { useProvidersQuery } from '@renderer/hooks/agent/useModelProviderList';
 import { remainingLabel, useTrialQuota } from '@renderer/hooks/agent/useTrialQuota';
 import { openExternalUrl } from '@/renderer/utils/platform';
 import TrialTopUpModal from './TrialTopUpModal';
 
 /**
- * `dream-trial-broker`'s own "paste your key, see your usage" page — a
- * single static HTML file the broker serves itself (`src/webui.rs`), not
- * part of this app. It calls the broker's public `v1/keys/usage` endpoint
- * same-origin, so it needs no dream-core round-trip and works for anyone
- * with a link, not just inside this app.
+ * `dream-trial-broker`'s own usage page — a single static HTML file the
+ * broker serves itself (`src/webui.rs`), not part of this app. It calls the
+ * broker's public `v1/keys/usage` endpoint same-origin, so it needs no
+ * dream-core round-trip and works for anyone with a link.
  */
 const KEY_USAGE_QUERY_URL = 'https://work.1oneclaw.com/trial-broker/usage';
+
+/**
+ * The page asks for a key because it serves anyone holding one. This app,
+ * though, already has this install's — making the user go find it and paste
+ * it back is busywork, so it is handed over directly.
+ *
+ * In the URL *fragment*, never the query string: browsers do not send a
+ * fragment to the server, so the key stays out of nginx and broker logs. The
+ * page consumes it and immediately clears it from the address bar and that
+ * history entry. Without a key on hand the page opens plain and asks, which
+ * is also what a shared link does.
+ */
+function usageQueryUrl(apiKey: string | undefined): string {
+  const key = apiKey?.split(/[,\n]/)[0]?.trim();
+  return key ? `${KEY_USAGE_QUERY_URL}#key=${encodeURIComponent(key)}` : KEY_USAGE_QUERY_URL;
+}
 
 const MENU_KEY_TOP_UP = 'topUp';
 const MENU_KEY_QUERY_USAGE = 'queryUsage';
@@ -40,6 +56,7 @@ const stopPropagation = (e: React.SyntheticEvent) => e.stopPropagation();
 const TrialQuotaBadge: React.FC<{ vendor: TrialVendor }> = ({ vendor }) => {
   const { t } = useTranslation();
   const { data: view } = useTrialQuota(vendor);
+  const { data: providers } = useProvidersQuery();
   const [topUpOpen, setTopUpOpen] = useState(false);
   const toppable = isToppableVendor(vendor);
 
@@ -65,7 +82,7 @@ const TrialQuotaBadge: React.FC<{ vendor: TrialVendor }> = ({ vendor }) => {
         if (key === MENU_KEY_TOP_UP) {
           setTopUpOpen(true);
         } else if (key === MENU_KEY_QUERY_USAGE) {
-          void openExternalUrl(KEY_USAGE_QUERY_URL);
+          void openExternalUrl(usageQueryUrl(findTrialProvider(providers, vendor)?.api_key));
         }
       }}
     >
