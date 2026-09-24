@@ -4,7 +4,7 @@
 
 import { ipcBridge } from '@/common';
 import type { TopupOrderResponse } from '@/common/types/provider/providerApi';
-import { Button, Message, Spin } from '@arco-design/web-react';
+import { Button, InputNumber, Message, Spin } from '@arco-design/web-react';
 import { CheckOne } from '@icon-park/react';
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,13 +24,17 @@ const QRCodeSVGLazy = React.lazy(async () => {
 });
 
 /**
- * Preset amounts offered for mode A's real-money top-up, in the vendor's own
- * currency (CNY for Baoyun, the only vendor this applies to today). Kept
- * small and fixed rather than a free-text amount input — narrower scope for
- * the first cut; the broker accepts any positive amount if this ever needs
- * to grow into one.
+ * Lowest amount this modal will submit, in the vendor's own currency (CNY
+ * for Baoyun, the only vendor this applies to today). The broker itself
+ * enforces the same floor (`crate::topup::create_topup_order`) — this is
+ * just the client-side half so a bad amount never reaches a network call.
  */
-const AMOUNT_OPTIONS = [10, 20, 50] as const;
+const MIN_TOPUP_AMOUNT = 1;
+
+/** One-tap shortcuts that fill the amount field; the field itself accepts
+ * any value at or above `MIN_TOPUP_AMOUNT`, so these are a convenience, not
+ * a restriction. */
+const QUICK_AMOUNTS = [10, 20, 50, 100] as const;
 
 const POLL_INTERVAL_MS = 3000;
 /** Give up polling after this long; the order may still settle server-side. */
@@ -51,6 +55,7 @@ const TrialTopUpModal: React.FC<{
   const [stage, setStage] = useState<Stage>('select');
   const [order, setOrder] = useState<TopupOrderResponse | null>(null);
   const [creating, setCreating] = useState<number | null>(null);
+  const [amount, setAmount] = useState<number | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const reset = useCallback(() => {
@@ -58,6 +63,7 @@ const TrialTopUpModal: React.FC<{
     setStage('select');
     setOrder(null);
     setCreating(null);
+    setAmount(null);
   }, []);
 
   // Start fresh each time the modal opens.
@@ -101,11 +107,11 @@ const TrialTopUpModal: React.FC<{
   );
 
   const handleBuy = useCallback(
-    async (amount: number) => {
+    async (submitAmount: number) => {
       if (creating) return;
-      setCreating(amount);
+      setCreating(submitAmount);
       try {
-        const created = await ipcBridge.mode.topupCreateOrder.invoke({ vendor, amount });
+        const created = await ipcBridge.mode.topupCreateOrder.invoke({ vendor, amount: submitAmount });
         if (!created) {
           Message.error(t('settings.trialTopUp.orderFailed'));
           return;
@@ -140,21 +146,52 @@ const TrialTopUpModal: React.FC<{
       )}
 
       {stage === 'select' && (
-        <div className='flex flex-col gap-8px'>
-          <span className='text-13px font-medium text-t-primary'>{t('settings.trialTopUp.selectAmount')}</span>
-          {AMOUNT_OPTIONS.map((amount) => (
-            <Button
-              key={amount}
-              long
-              type='outline'
-              loading={creating === amount}
-              disabled={creating !== null && creating !== amount}
-              onClick={() => handleBuy(amount)}
-              className='!h-auto !py-10px'
-            >
-              {t('settings.trialTopUp.amountOption', { amount })}
-            </Button>
-          ))}
+        <div className='flex flex-col gap-16px'>
+          <div>
+            <span className='text-13px font-medium text-t-primary'>{t('settings.trialTopUp.selectAmount')}</span>
+            <InputNumber
+              size='large'
+              className='!mt-8px !w-full'
+              prefix='¥'
+              min={MIN_TOPUP_AMOUNT}
+              precision={2}
+              step={1}
+              placeholder={t('settings.trialTopUp.amountPlaceholder', { min: MIN_TOPUP_AMOUNT })}
+              value={amount ?? undefined}
+              onChange={(value) => setAmount(typeof value === 'number' ? value : null)}
+            />
+            {amount !== null && amount < MIN_TOPUP_AMOUNT && (
+              <p className='text-12px text-red-500 mt-4px mb-0'>
+                {t('settings.trialTopUp.amountTooLow', { min: MIN_TOPUP_AMOUNT })}
+              </p>
+            )}
+          </div>
+
+          <div className='flex flex-wrap gap-8px'>
+            {QUICK_AMOUNTS.map((quick) => (
+              <Button
+                key={quick}
+                size='small'
+                shape='round'
+                type={amount === quick ? 'primary' : 'secondary'}
+                onClick={() => setAmount(quick)}
+              >
+                {t('settings.trialTopUp.amountOption', { amount: quick })}
+              </Button>
+            ))}
+          </div>
+
+          <Button
+            long
+            type='primary'
+            size='large'
+            loading={creating !== null}
+            disabled={amount === null || amount < MIN_TOPUP_AMOUNT}
+            onClick={() => amount !== null && handleBuy(amount)}
+            className='!h-auto !py-10px'
+          >
+            {t('settings.trialTopUp.confirmTopUp')}
+          </Button>
         </div>
       )}
 
