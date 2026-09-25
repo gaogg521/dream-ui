@@ -1516,3 +1516,29 @@ token_id 过滤），且 `UsageLogView` 的 `use_time_ms`、`is_stream` 页面�
 器的信任说明+重新查询/查询其他 Key），粘贴表单整体隐藏、记住勾选框藏掉，且
 **handoff 模式下 saveRecent 被 guard 掉——app 带入的 key 永远不落 localStorage**；
 手动兜底（直接打开/分享链接/查询其他 Key/最近项点击）才露出表单和记住勾选。
+
+### 11.19 付费档模型解锁：充值后 403"该令牌无权访问模型"是真 bug（2026-09-25 晚）
+
+用户实测发现：体验渠道里切到 gpt-6-luna / glm-5.3-flash 直接 403"该令牌无权访问
+模型"。根因是一个产品语义缺口——§11.15 发 key 时 `CreateKeyBody` 带
+`model_limits_enabled: true` + 免费模型白名单（`resolve_trial_models`，即最便宜的
+qwen3.7-flash），这符合"免费用户锁便宜模型"；但 §11.14 的充值路径只 PATCH
+`remain_delta` 加余额，**从不碰白名单**——付了钱的令牌仍是免费档。
+
+修复（先用 scratch key 实测了宝云语义再写码）：
+- `KeySpec.unrestricted_models` + 新 trait 方法 `set_model_limits(handle, unrestricted)`
+  （Baoyun PATCH `model_limits_enabled`，实测部分 body 可行；OpenRouter 按账户
+  门控模型，no-op）。**实测**：受限 scratch key 调 gpt-6-luna 吃 403 → PATCH
+  `model_limits_enabled:false` → 同一调用穿过白名单打到真模型（报的是上游参数错
+  而非权限错）→ 补一发 `max_completion_tokens` 语义确认。 Born-unrestricted 的
+  创建（`model_limits_enabled:false, model_limits:[]`）同样实测可行。
+- 三个结算点全部接线，且**严格在钱入账之后**（先解锁后入账会把付费模型交给
+  未付费余额）：`credit_once` 成功后（best-effort，失败只 warn 不回滚，下次充值
+  或运维操作重试）、`apply_top_up` 运维补偿后、两处补发 KeySpec 按 `paid_total
+  > 0` 直接发无白名单 key。
+- 运维收尾：线上一把已付费令牌（1177 / onework-trial-b05fca4d，¥1 已结算）在
+  修复上线前结算，不会自动触发——按新代码同款 PATCH 手工解锁并验证
+  `model_limits_enabled: false`。
+
+坑：从 .env 取令牌用 `cut -d= -f2` 会把 base64 风格令牌里的 `=` 截掉（f2- 才对），
+症状是网关 401/Invalid API key，而 broker 进程内一切正常——先怀疑自己取错了值。

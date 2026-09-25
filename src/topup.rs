@@ -309,6 +309,23 @@ async fn credit_once(
         granted,
         "topup order credited"
     );
+
+    // Money has settled on this key: lift the free-tier model whitelist so
+    // the paid tier can call the whole catalog (still metered against the
+    // key's balance). Best-effort and strictly AFTER the top_up — a failed
+    // unlock must never roll back settled money, and unlocking before the
+    // credit would hand paid models to an unpaid balance. The next settled
+    // top-up retries, since the whitelist only ever gets re-pinned by
+    // issuing a fresh key.
+    if let Err(e) = vendor.set_model_limits(handle, true).await {
+        tracing::warn!(
+            vendor = vendor_id,
+            order_id,
+            error = %e,
+            "failed to unlock model limits after a settled top-up — the key keeps the \
+             free-tier whitelist until the next settled top-up or an ops adjustment"
+        );
+    }
     Ok(())
 }
 

@@ -246,6 +246,9 @@ pub async fn issue_trial_key(
             + crate::topup::granted_for_payment(state.config.topup_price_markup, paid_total),
         reset: policy.reset,
         expires_at: Some(expires_at.to_rfc3339_opts(SecondsFormat::Secs, true)),
+        // 有真实付费历史的 install 重新发 key 时直接按付费档发——白名单是
+        // 发 key 时烙上去的，靠充值路径解锁对新 key 无意义。
+        unrestricted_models: paid_total > 0.0,
     };
 
     let issued = vendor.issue_key(spec).await.map_err(|e| {
@@ -390,6 +393,7 @@ async fn recover_deleted_key(
         limit_usd: policy.limit_amount + granted_from_paid,
         reset: policy.reset,
         expires_at: Some(expires_at.to_rfc3339_opts(SecondsFormat::Secs, true)),
+        unrestricted_models: paid_total > 0.0,
     };
 
     let issued = vendor.issue_key(spec).await.map_err(|e| {
@@ -511,6 +515,16 @@ pub async fn apply_top_up(
             log_vendor_error(&e);
             AppError::UpstreamError("failed to top up upstream key".into())
         })?;
+
+    // 运维补偿同样代表用户的钱到账：顺带把模型档位解锁，语义与充值结算
+    // 一致。best-effort——补偿的余额不能因为解锁失败而回滚。
+    if let Err(e) = vendor.set_model_limits(&issuance.vendor_key_handle, true).await {
+        tracing::warn!(
+            vendor = vendor_id,
+            error = %e,
+            "failed to unlock model limits after an ops top-up"
+        );
+    }
 
     tracing::info!(
         vendor = vendor_id,

@@ -75,6 +75,12 @@ pub struct KeySpec {
     pub reset: ResetPeriod,
     /// RFC 3339. `None` means the vendor's own default lifetime.
     pub expires_at: Option<String>,
+    /// `true` for keys whose install has paid money: the vendor-side model
+    /// whitelist is dropped and the key may call the account's whole
+    /// catalog (spend still meters against the key's balance). `false` is
+    /// the free tier — Baoyun issues those pinned to the trial models.
+    /// Vendors without token-side model gating ignore this.
+    pub unrestricted_models: bool,
 }
 
 /// A freshly minted key. `secret` is returned exactly once, by the vendor, at
@@ -319,6 +325,15 @@ pub trait TokenVendor: Send + Sync {
     }
 
     async fn revoke(&self, handle: &str) -> Result<(), VendorError>;
+
+    /// Moves a key between the free and paid model tiers on the vendor side:
+    /// `unrestricted = true` drops the token's model whitelist (paid — the
+    /// full catalog becomes callable, still metered against the key's
+    /// balance), `false` re-pins it to the free-tier models. Only meaningful
+    /// for vendors that gate models per token (Baoyun does); callers treat
+    /// this as best-effort — it must run *after* the money settles, never
+    /// before, or a failed payment would leave paid models on a free balance.
+    async fn set_model_limits(&self, handle: &str, unrestricted: bool) -> Result<(), VendorError>;
 
     /// Creates a real-money top-up order. Defaults to `Unsupported` — most
     /// vendors have no such API; a vendor that does (Baoyun's

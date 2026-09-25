@@ -81,6 +81,9 @@ impl TokenVendor for RevealingVendor {
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         unreachable!()
     }
+    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+        Ok(())
+    }
     async fn reveal_key(&self, handle: &str) -> Result<String, VendorError> {
         self.reveal_calls.fetch_add(1, Ordering::SeqCst);
         self.revealed.lock().unwrap().push(handle.to_string());
@@ -124,6 +127,9 @@ impl TokenVendor for PlainVendor {
     }
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         unreachable!()
+    }
+    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+        Ok(())
     }
 }
 

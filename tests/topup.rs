@@ -100,6 +100,9 @@ impl TokenVendor for ToppableVendor {
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         Ok(())
     }
+    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+        Ok(())
+    }
 
     async fn top_up(&self, handle: &str, delta_usd: f64) -> Result<KeyUsage, VendorError> {
         self.top_up_calls
@@ -275,6 +278,9 @@ async fn a_vendor_without_topup_support_reports_unsupported() {
         }
         async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
             unreachable!()
+        }
+        async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+            Ok(())
         }
     }
 
@@ -648,6 +654,9 @@ impl TokenVendor for UsageLoggingVendor {
     }
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         unreachable!()
+    }
+    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+        Ok(())
     }
     async fn usage_logs(
         &self,

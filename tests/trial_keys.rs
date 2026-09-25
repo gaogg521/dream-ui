@@ -125,6 +125,9 @@ impl TokenVendor for MockVendor {
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         Ok(())
     }
+    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+        Ok(())
+    }
 }
 
 fn base_config() -> Config {
@@ -545,6 +548,9 @@ impl TokenVendor for PaidHistoryVendor {
     }
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         unreachable!()
+    }
+    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+        Ok(())
     }
     async fn paid_total(&self, _reference: &str) -> Result<f64, VendorError> {
         Ok(self.paid_total)

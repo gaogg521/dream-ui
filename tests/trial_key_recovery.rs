@@ -121,6 +121,9 @@ impl TokenVendor for RecoverableVendor {
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         unreachable!("recovery does not revoke")
     }
+    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+        Ok(())
+    }
 
     async fn key_alive_models(&self, _handle: &str) -> Result<Option<Vec<String>>, VendorError> {
         if let Some(message) = *self.alive_error.lock().unwrap() {

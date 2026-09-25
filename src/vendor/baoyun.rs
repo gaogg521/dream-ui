@@ -147,6 +147,19 @@ struct PatchRemainDeltaBody {
     remain_delta: f64,
 }
 
+/// Model-tier move on an existing token. Sent with the same PATCH endpoint
+/// that carries [`PatchRemainBody`] — Baoyun's token edit accepts partial
+/// bodies, so a model-tier change never has to touch `remain` (verified
+/// against the live API: `model_limits_enabled: false` alone lifts the
+/// whitelist; the stale `model_limits` list is then ignored).
+#[derive(Debug, Serialize)]
+struct PatchModelsBody {
+    currency: &'static str,
+    model_limits_enabled: bool,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    model_limits: Vec<String>,
+}
+
 #[derive(Debug, Deserialize)]
 struct CreateKeyResponse {
     id: String,
@@ -457,6 +470,10 @@ impl TokenVendor for BaoyunVendor {
         // Whatever model list the client will be told about (env override or
         // the live cheapest-text-model lookup) is also the server-side
         // whitelist — one resolution, so the two can never drift apart.
+        // Paid keys (`unrestricted_models`) are minted without a whitelist:
+        // the whole catalog is callable and spend meters against the key's
+        // balance. The resolution still runs so the client hint list keeps
+        // its free-tier default.
         let trial_models = self.resolve_trial_models().await?;
         let body = CreateKeyBody {
             name: spec.label,
@@ -464,8 +481,12 @@ impl TokenVendor for BaoyunVendor {
             remain: spec.limit_usd,
             unlimited: false,
             expired_time: Some(expired_time),
-            model_limits_enabled: true,
-            model_limits: trial_models.clone(),
+            model_limits_enabled: !spec.unrestricted_models,
+            model_limits: if spec.unrestricted_models {
+                Vec::new()
+            } else {
+                trial_models.clone()
+            },
         };
 
         let resp: CreateKeyResponse = self
@@ -532,6 +553,21 @@ impl TokenVendor for BaoyunVendor {
             )
             .await?;
         Ok(detail.into())
+    }
+
+    async fn set_model_limits(&self, handle: &str, unrestricted: bool) -> Result<(), VendorError> {
+        let _: KeyDetail = self
+            .request(
+                self.http
+                    .patch(format!("{}/api-keys/{handle}", self.account_api_base))
+                    .json(&PatchModelsBody {
+                        currency: CURRENCY,
+                        model_limits_enabled: !unrestricted,
+                        model_limits: Vec::new(),
+                    }),
+            )
+            .await?;
+        Ok(())
     }
 
     async fn revoke(&self, handle: &str) -> Result<(), VendorError> {
@@ -853,6 +889,33 @@ mod tests {
     }
 
     #[test]
+    fn model_tier_patch_serializes_without_the_stale_list_when_unlocking() {
+        // Unlock sends only the flag: verified live, `model_limits_enabled:
+        // false` alone lifts the whitelist and the stale list is ignored.
+        // Re-pinning (future ops use) would carry the list.
+        let unlock = PatchModelsBody {
+            currency: CURRENCY,
+            model_limits_enabled: false,
+            model_limits: vec![],
+        };
+        let json = serde_json::to_value(&unlock).unwrap();
+        assert_eq!(json["model_limits_enabled"], false);
+        assert!(
+            json.get("model_limits").is_none(),
+            "empty list must be omitted: {json}"
+        );
+
+        let pin = PatchModelsBody {
+            currency: CURRENCY,
+            model_limits_enabled: true,
+            model_limits: vec!["qwen3.7-flash".to_string()],
+        };
+        let json = serde_json::to_value(&pin).unwrap();
+        assert_eq!(json["model_limits_enabled"], true);
+        assert_eq!(json["model_limits"], serde_json::json!(["qwen3.7-flash"]));
+    }
+
+    #[test]
     fn issuing_with_a_non_cumulative_reset_is_rejected_by_debug_assert() {
         // Guards the assumption documented on `issue_key`: this vendor is
         // only ever wired up with a cumulative (prepaid) reset policy.
@@ -866,6 +929,7 @@ mod tests {
                 limit_usd: 10.0,
                 reset: ResetPeriod::Monthly,
                 expires_at: None,
+                unrestricted_models: false,
             }))
         });
         assert!(result.is_err(), "expected the debug_assert to panic");
