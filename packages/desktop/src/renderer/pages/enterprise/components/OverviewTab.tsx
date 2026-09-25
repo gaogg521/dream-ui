@@ -278,7 +278,18 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
   }
 
   if (!context) {
-    return null;
+    // 企业模式开着但拿不到上下文（远端服务器不可达/代理空响应）时，渲染
+    // 空白比报错更糟——至少告诉成员去检查连接。（实测：服务器停机后本页
+    // 内容区完全空白，无 spinner 也无提示，长达 75s+。）
+    return (
+      <Alert
+        type='error'
+        title={t('common.enterprise.contextError', { defaultValue: '无法获取企业信息' })}
+        content={t('common.enterprise.contextErrorHint', {
+          defaultValue: '获取企业信息失败，请检查与项目组服务器的连接后重试。',
+        })}
+      />
+    );
   }
 
   if (context.isEnterprise) {

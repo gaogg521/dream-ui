@@ -112,6 +112,10 @@ const EnterpriseDeploymentModeCard: React.FC = () => {
         setConnecting(true);
         try {
           const probe = await probeRemoteEnterpriseServer(normalizedServerUrl);
+          // 探测失败：toast 报错后让弹窗正常关闭。这里绝不能 rethrow——Arco
+          // 对 async onOk 的 rejection 会保持弹窗打开，把「改地址→重试」的
+          // 路堵死（实测：地址填错后确定点不动，只能反复取消）。失败后开关
+          // 不置位，用户改完地址再点开关即可。
           if (probe === 'no-enterprise') {
             Message.error(
               t('common.enterprise.remoteEnterpriseNoModule', {
@@ -119,7 +123,7 @@ const EnterpriseDeploymentModeCard: React.FC = () => {
                   '远端服务器未提供企业 API（/api/one/*）。请确认对方运行的是带企业模块的 One Work，而不是旧版或仅静态 WebUI。',
               })
             );
-            throw new Error('remote enterprise API missing');
+            return;
           }
           if (probe === 'unreachable') {
             Message.error(
@@ -127,7 +131,7 @@ const EnterpriseDeploymentModeCard: React.FC = () => {
                 defaultValue: '无法连接远端服务器，请检查地址、端口与防火墙后重试。',
               })
             );
-            throw new Error('remote enterprise unreachable');
+            return;
           }
           setEnterpriseServerUrl(normalizedServerUrl);
           setEnterpriseModeEnabled(true);
