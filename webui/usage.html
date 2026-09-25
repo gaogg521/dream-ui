@@ -3,10 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>用量查询 · 宝云体验额度</title>
+<meta name="color-scheme" content="light dark" />
+<title>用量查询 · One Work 体验额度</title>
 <style>
   :root {
     --brand: #165dff;
+    --brand-deep: #0e42d2;
     --brand-weak: #e8f3ff;
     --text-1: #1d2129;
     --text-2: #4e5969;
@@ -17,58 +19,93 @@
     --danger: #f53f3f;
     --danger-weak: #ffece8;
     --success: #00b42a;
+    --success-weak: #e8ffea;
     --warning: #ff7d00;
+    --warning-weak: #fff3e8;
+    --purple: #722ed1;
+    --cyan: #14c9c9;
     --radius: 14px;
     --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 6px 20px rgba(29, 33, 41, .06);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --brand: #3c7eff; --brand-weak: #17233a;
+      --brand: #3c7eff; --brand-deep: #165dff; --brand-weak: #17233a;
       --text-1: #f6f6f6; --text-2: #c9cdd4; --text-3: #86909c;
       --line: #2e3238; --page: #17171a; --card: #232324;
-      --danger: #f76965; --danger-weak: #3b1f1f; --success: #27c346;
+      --danger: #f76965; --danger-weak: #3b1f1f; --success: #27c346; --success-weak: #1e3328;
+      --warning: #ff9a2e; --warning-weak: #3b2b1a;
       --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
     }
   }
 
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
+  html { height: 100%; }
   body {
     margin: 0;
+    min-height: 100%;
     background: var(--page);
     color: var(--text-1);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-    padding: 40px 16px 72px;
   }
-  .wrap { max-width: 680px; margin: 0 auto; }
 
-  header { text-align: center; margin-bottom: 26px; }
-  header h1 { font-size: 24px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 8px; }
-  header p { color: var(--text-3); margin: 0; font-size: 13.5px; }
+  .shell {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 32px 20px 56px;
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
 
-  .card {
+  /* ---------- left rail ---------- */
+  .rail {
+    position: sticky;
+    top: 24px;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    padding: 20px;
-    margin-bottom: 14px;
+    padding: 22px 20px 18px;
+    overflow: hidden;
   }
+  .rail::before {
+    content: "";
+    position: absolute; inset: 0 0 auto 0; height: 110px;
+    background: linear-gradient(160deg, rgba(22, 93, 255, .10), rgba(22, 93, 255, 0) 78%);
+    pointer-events: none;
+  }
+  .rail > * { position: relative; }
 
-  /* --- query form --- */
-  .field { display: flex; gap: 10px; }
-  .key-wrap { position: relative; flex: 1; min-width: 0; }
+  .brand-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .logo {
+    width: 34px; height: 34px; border-radius: 9px; flex: none;
+    background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+    display: grid; place-items: center; color: #fff;
+    box-shadow: 0 2px 8px rgba(22, 93, 255, .35);
+  }
+  .brand-name { font-weight: 600; font-size: 15px; letter-spacing: -.01em; }
+  .brand-sub { font-size: 12px; color: var(--text-3); }
+
+  .rail h1 { font-size: 21px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 6px; }
+  .rail .sub { color: var(--text-3); font-size: 13px; margin: 0 0 18px; }
+
+  .key-label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12.5px; font-weight: 500; color: var(--text-2); margin-bottom: 8px;
+  }
+  .key-wrap { position: relative; }
   .key-wrap input {
-    width: 100%; height: 46px;
-    padding: 0 42px 0 14px;
+    width: 100%; height: 44px;
+    padding: 0 42px 0 13px;
     border: 1px solid var(--line);
     border-radius: 10px;
     background: var(--page);
     color: var(--text-1);
-    font: 14px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font: 13px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     outline: none;
     transition: border-color .15s, box-shadow .15s, background .15s;
   }
@@ -83,18 +120,81 @@
   .peek:hover { background: var(--page); color: var(--text-2); }
 
   button.primary {
-    height: 46px; padding: 0 22px;
+    width: 100%; height: 44px; margin-top: 12px;
     border: 0; border-radius: 10px;
     background: var(--brand); color: #fff;
     font-size: 14px; font-weight: 500;
-    cursor: pointer; white-space: nowrap;
+    cursor: pointer;
     transition: opacity .15s, transform .05s;
   }
   button.primary:hover:not(:disabled) { opacity: .9; }
   button.primary:active:not(:disabled) { transform: translateY(1px); }
   button.primary:disabled { opacity: .5; cursor: not-allowed; }
 
-  .hint { margin: 10px 0 0; font-size: 12.5px; color: var(--text-3); }
+  .remember {
+    display: flex; align-items: flex-start; gap: 7px;
+    margin-top: 12px; font-size: 12px; color: var(--text-3);
+    cursor: pointer; user-select: none;
+  }
+  .remember input { margin: 2px 0 0; accent-color: var(--brand); }
+
+  .recent { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 14px; }
+  .recent-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .recent-head span { font-size: 12.5px; font-weight: 500; color: var(--text-2); }
+  .recent-head button {
+    border: 0; background: none; color: var(--text-3); font-size: 12px;
+    cursor: pointer; padding: 2px 4px; border-radius: 6px;
+  }
+  .recent-head button:hover { color: var(--danger); background: var(--danger-weak); }
+  .recent-item {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 8px; cursor: pointer;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px;
+  }
+  .recent-item:hover { background: var(--page); }
+  .recent-item .rk { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .recent-item .rt { color: var(--text-3); font-size: 11px; flex: none; }
+  .recent-item .rx { border: 0; background: none; color: var(--text-3); cursor: pointer; font-size: 13px; padding: 0 2px; border-radius: 4px; }
+  .recent-item .rx:hover { color: var(--danger); }
+
+  .rail .note { margin: 14px 0 0; font-size: 11.5px; color: var(--text-3); line-height: 1.6; }
+  .rail-foot { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--text-3); text-align: center; }
+
+  /* ---------- right content ---------- */
+  .content { min-width: 0; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .card-head h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .muted { font-size: 12px; color: var(--text-3); }
+
+  /* --- intro (before first query) --- */
+  #intro h2 { font-size: 22px; font-weight: 600; letter-spacing: -.01em; margin: 4px 0 8px; }
+  #intro .lead { color: var(--text-2); font-size: 14px; margin: 0 0 20px; max-width: 560px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .step {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 14px; box-shadow: var(--shadow);
+  }
+  .step .ic {
+    width: 30px; height: 30px; border-radius: 8px; margin-bottom: 10px;
+    display: grid; place-items: center; color: #fff;
+  }
+  .step h3 { font-size: 13.5px; font-weight: 600; margin: 0 0 4px; }
+  .step p { font-size: 12.5px; color: var(--text-3); margin: 0; line-height: 1.55; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    font-size: 12px; color: var(--text-2);
+    background: var(--page); border: 1px solid var(--line);
+    border-radius: 20px; padding: 3px 12px;
+  }
 
   /* --- states --- */
   .state { display: none; }
@@ -108,44 +208,142 @@
   .notice.error { background: var(--danger-weak); color: var(--danger); }
   .notice .dot { flex: none; width: 18px; height: 18px; }
 
-  /* --- balance --- */
-  .balance { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 0; align-items: stretch; }
-  .metric { padding: 4px 16px; border-left: 1px solid var(--line); }
-  .metric:first-child { padding-left: 4px; border-left: 0; }
-  .metric .k { font-size: 12.5px; color: var(--text-3); margin-bottom: 6px; }
-  .metric .v { font-size: 26px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-  .metric.lead .v { color: var(--brand); }
-  .metric.lead.spent .v { color: var(--danger); }
-
-  .meter { height: 6px; border-radius: 3px; background: var(--page); overflow: hidden; margin-top: 16px; }
-  .meter > i { display: block; height: 100%; background: var(--brand); border-radius: 3px; transition: width .4s ease; }
+  /* --- status hero --- */
+  .hero { padding: 18px 20px 20px; }
+  .hero--ok      { background: linear-gradient(180deg, var(--success-weak), var(--card) 70%); }
+  .hero--low     { background: linear-gradient(180deg, var(--warning-weak), var(--card) 70%); }
+  .hero--spent   { background: linear-gradient(180deg, var(--danger-weak), var(--card) 70%); }
+  .hero--unlimited { background: linear-gradient(180deg, var(--brand-weak), var(--card) 70%); }
+  .hero-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 2px 12px; font-size: 12.5px; font-weight: 500; }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .pill.ok { background: var(--success-weak); color: var(--success); }
+  .pill.low { background: var(--warning-weak); color: var(--warning); }
+  .pill.spent { background: var(--danger-weak); color: var(--danger); }
+  .pill.unlimited { background: var(--brand-weak); color: var(--brand); }
+  .hero-top .muted { flex: 1; }
+  .btn-ghost {
+    border: 1px solid var(--line); background: var(--card); color: var(--text-2);
+    font-size: 12.5px; border-radius: 8px; padding: 5px 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: border-color .15s, color .15s;
+  }
+  .btn-ghost:hover { border-color: var(--brand); color: var(--brand); }
+  .hero-grid { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .hero-remain .k { font-size: 13px; color: var(--text-3); margin-bottom: 4px; }
+  .hero-remain .v {
+    font-size: 40px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1;
+    font-variant-numeric: tabular-nums; color: var(--text-1);
+  }
+  .hero--spent .hero-remain .v { color: var(--danger); }
+  .hero--ok .hero-remain .v { color: var(--success); }
+  .hero--low .hero-remain .v { color: var(--warning); }
+  .hero-remain .s { font-size: 12.5px; color: var(--text-3); margin-top: 6px; }
+  .meter { flex: 1; min-width: 200px; height: 10px; border-radius: 5px; background: var(--page); border: 1px solid var(--line); overflow: hidden; }
+  .meter > i { display: block; height: 100%; background: var(--brand); border-radius: 5px; transition: width .4s ease; }
   .meter.low > i { background: var(--warning); }
   .meter.spent > i { background: var(--danger); }
 
-  /* --- logs --- */
-  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
-  .section-head h2 { font-size: 14px; font-weight: 600; margin: 0; }
-  .section-head span { font-size: 12.5px; color: var(--text-3); }
+  /* --- stat cards --- */
+  .statgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 14px 16px;
+  }
+  .stat .top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .stat .ic { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; color: #fff; flex: none; }
+  .stat .k { font-size: 12.5px; color: var(--text-2); font-weight: 500; }
+  .stat .v { font-size: 22px; font-weight: 600; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .stat .s { font-size: 11.5px; color: var(--text-3); margin-top: 3px; }
 
+  /* --- charts --- */
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 16px; flex-wrap: wrap; }
+  .tab {
+    border: 0; background: none; color: var(--text-3);
+    font-size: 13px; padding: 8px 14px; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+  }
+  .tab:hover { color: var(--text-1); }
+  .tab.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 500; }
+
+  .chart-body { min-height: 200px; }
+  .chart-empty { text-align: center; color: var(--text-3); font-size: 13px; padding: 60px 0; }
+
+  /* donut */
+  .donut-wrap { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; justify-content: center; padding: 10px 0; }
+  .donut-svg { flex: none; }
+  .donut-center-v { font-size: 17px; font-weight: 600; fill: var(--text-1); }
+  .donut-center-k { font-size: 8.5px; fill: var(--text-3); }
+  .legend { display: grid; gap: 8px; min-width: 220px; flex: 1; max-width: 340px; }
+  .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .legend-row .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .legend-row .lm { color: var(--text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .legend-row .lv { color: var(--text-2); font-variant-numeric: tabular-nums; flex: none; }
+  .legend-row .lp { color: var(--text-3); font-size: 11.5px; width: 48px; text-align: right; flex: none; font-variant-numeric: tabular-nums; }
+
+  /* vertical bars */
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 170px; padding: 4px 2px 0; }
+  .bars .bwrap { flex: 1; min-width: 3px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; border-radius: 3px 3px 0 0; overflow: hidden; position: relative; }
+  .bars .bwrap:hover { opacity: .85; }
+  .bars .b-ok { background: var(--brand); width: 100%; border-radius: 3px 3px 0 0; }
+  .bars .b-fail { background: var(--danger); width: 100%; }
+  .bars-amount .b-ok { background: linear-gradient(180deg, var(--brand), var(--brand-deep)); }
+  .bar-labels { display: flex; gap: 3px; margin-top: 8px; border-top: 1px solid var(--line); padding-top: 6px; }
+  .bar-labels span { flex: 1; min-width: 3px; font-size: 10px; color: var(--text-3); text-align: center; overflow: visible; white-space: nowrap; }
+  .bar-legend { display: flex; gap: 16px; justify-content: flex-end; margin-top: 10px; font-size: 11.5px; color: var(--text-3); }
+  .bar-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+  /* ranking */
+  .rank { display: grid; gap: 12px; padding: 6px 0; }
+  .rank-row { display: grid; grid-template-columns: 26px minmax(80px, 170px) 1fr auto; gap: 10px; align-items: center; }
+  .rank-no { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; text-align: center; }
+  .rank-row:first-child .rank-no { color: var(--warning); font-weight: 600; }
+  .rank-model { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank-bar { height: 8px; border-radius: 4px; background: var(--page); border: 1px solid var(--line); overflow: hidden; }
+  .rank-bar > i { display: block; height: 100%; border-radius: 4px; background: var(--brand); transition: width .4s ease; }
+  .rank-meta { font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* --- logs table --- */
   .logs { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { padding: 10px 10px; text-align: left; white-space: nowrap; }
   th { font-weight: 500; color: var(--text-3); font-size: 12.5px; border-bottom: 1px solid var(--line); }
   tbody tr { border-bottom: 1px solid var(--line); }
+  tbody tr:hover { background: var(--page); }
   tbody tr:last-child { border-bottom: 0; }
   td.num { font-variant-numeric: tabular-nums; }
-  td.model { max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
+  td.model-cell { max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
   td.rid { color: var(--text-3); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+  .dur-sub { display: block; font-size: 10.5px; color: var(--text-3); margin-top: 1px; }
 
   .tag { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 11.5px; line-height: 18px; }
   .tag.charge { background: var(--brand-weak); color: var(--brand); }
   .tag.error { background: var(--danger-weak); color: var(--danger); }
-  .tag.refund { background: rgba(0, 180, 42, .12); color: var(--success); }
+  .tag.refund { background: var(--success-weak); color: var(--success); }
+  .model-tag {
+    display: inline-block; padding: 1px 8px; border-radius: 6px;
+    font-size: 11.5px; line-height: 18px; max-width: 170px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom;
+  }
 
-  .empty { text-align: center; color: var(--text-3); font-size: 13.5px; padding: 30px 0; }
-  .empty .big { font-size: 22px; margin-bottom: 6px; opacity: .5; }
+  .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .tools select {
+    height: 30px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--card); color: var(--text-1); font-size: 12.5px; padding: 0 8px; outline: none;
+  }
+  .tools select:focus { border-color: var(--brand); }
+  .empty { text-align: center; color: var(--text-3); font-size: 13.5px; padding: 34px 0; }
 
-  footer { text-align: center; margin-top: 22px; font-size: 12px; color: var(--text-3); }
+  .pagebar { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin-top: 14px; font-size: 12.5px; color: var(--text-3); flex-wrap: wrap; }
+  .pagebar button {
+    border: 1px solid var(--line); background: var(--card); color: var(--text-2);
+    border-radius: 7px; padding: 4px 12px; font-size: 12.5px; cursor: pointer;
+  }
+  .pagebar button:disabled { opacity: .45; cursor: not-allowed; }
+  .pagebar button:not(:disabled):hover { border-color: var(--brand); color: var(--brand); }
+
+  footer { text-align: center; margin-top: 8px; font-size: 12px; color: var(--text-3); }
 
   .spinner {
     width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.45);
@@ -155,123 +353,242 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .skeleton { animation: pulse 1.3s ease-in-out infinite; background: var(--line); border-radius: 6px; }
-  @keyframes pulse { 50% { opacity: .45; } }
-
+  @media (max-width: 1020px) {
+    .statgrid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 960px) {
+    .shell { grid-template-columns: 1fr; padding-top: 20px; }
+    .rail { position: static; }
+    .steps { grid-template-columns: 1fr; }
+  }
   @media (max-width: 560px) {
-    body { padding-top: 26px; }
-    .field { flex-direction: column; }
-    button.primary { width: 100%; }
-    .balance { grid-template-columns: 1fr 1fr; row-gap: 16px; }
-    .metric { border-left: 0; padding: 0; }
-    .metric.lead { grid-column: 1 / -1; }
+    .hero-remain .v { font-size: 32px; }
     th.hide-sm, td.hide-sm { display: none; }
+    .rank-row { grid-template-columns: 22px 1fr auto; }
+    .rank-row .rank-bar { display: none; }
   }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
+  <div class="shell">
+
+    <!-- ======== 左栏：品牌 + Key 输入 ======== -->
+    <aside class="rail">
+      <div class="brand-row">
+        <div class="logo" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.5 21 7.5v9L12 21.5 3 16.5v-9z"/><path d="M12 12 21 7.5M12 12v9.5M12 12 3 7.5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-name">One Work</div>
+          <div class="brand-sub">体验额度 · 用量查询</div>
+        </div>
+      </div>
+
       <h1>用量查询</h1>
-      <p>粘贴体验 API Key，查看剩余额度与每一次调用的花费</p>
-    </header>
+      <p class="sub">粘贴体验 API Key，查看余额、消耗分布与每一次调用的明细。</p>
 
-    <div class="card">
-      <div class="field">
-        <div class="key-wrap">
-          <input id="key" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" aria-label="API Key" />
-          <button class="peek" id="peek" type="button" aria-label="显示或隐藏 Key">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/>
-            </svg>
-          </button>
-        </div>
-        <button class="primary" id="go">查询</button>
+      <div class="key-label"><span>API Key</span></div>
+      <div class="key-wrap">
+        <input id="key" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" aria-label="API Key" />
+        <button class="peek" id="peek" type="button" aria-label="显示或隐藏 Key">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/>
+          </svg>
+        </button>
       </div>
-      <p class="hint">Key 只用于这一次查询，不会被保存或记录。</p>
-    </div>
+      <button class="primary" id="go">查询额度</button>
 
-    <div class="state card" id="errorCard">
-      <div class="notice error">
-        <svg class="dot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/>
-        </svg>
-        <span id="errorText"></span>
-      </div>
-    </div>
+      <label class="remember">
+        <input type="checkbox" id="remember" />
+        <span>在本机记住这把 Key（只存浏览器 localStorage，不会上传；取消勾选即清除）</span>
+      </label>
 
-    <div class="state" id="result">
-      <div class="card">
-        <div class="balance">
-          <div class="metric lead" id="remainMetric">
-            <div class="k">剩余额度</div>
-            <div class="v" id="remain">—</div>
-          </div>
-          <div class="metric">
-            <div class="k">已使用</div>
-            <div class="v" id="used">—</div>
-          </div>
-          <div class="metric">
-            <div class="k">总额度</div>
-            <div class="v" id="limit">—</div>
-          </div>
-        </div>
-        <div class="meter" id="meter"><i id="meterFill" style="width:0"></i></div>
+      <div class="recent" id="recentBox" hidden>
+        <div class="recent-head"><span>最近查询</span><button id="recentClear" type="button">清空</button></div>
+        <div id="recentList"></div>
       </div>
 
-      <div class="card">
-        <div class="section-head">
-          <h2>调用记录</h2>
-          <span id="logCount"></span>
-        </div>
-        <div class="logs">
-          <table id="logTable">
-            <thead>
-              <tr>
-                <th>时间</th>
-                <th>模型</th>
-                <th>类型</th>
-                <th class="hide-sm">输入 / 输出</th>
-                <th>花费</th>
-                <th class="hide-sm">Request ID</th>
-              </tr>
-            </thead>
-            <tbody id="logBody"></tbody>
-          </table>
-          <div class="empty" id="logEmpty" hidden>
-            <div class="big">·</div>
-            还没有调用记录
+      <p class="note">🔒 Key 仅用于本次查询，默认不被保存或记录。勾选「记住」后只存在你自己的浏览器里。<br>还没有 Key？在 One Work 客户端「设置 → 体验额度」申领。</p>
+
+      <div class="rail-foot">One Work · 宝云体验额度</div>
+    </aside>
+
+    <!-- ======== 右栏：仪表盘 ======== -->
+    <main class="content">
+
+      <!-- 首次进入的空态 -->
+      <section id="intro">
+        <h2>在这里看清你的体验额度</h2>
+        <p class="lead">余额还剩多少、花在了哪个模型、每一次调用用了多久——粘贴 Key 一次，全部展开。</p>
+        <div class="steps">
+          <div class="step">
+            <div class="ic" style="background: var(--brand)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            </div>
+            <h3>① 申领体验 Key</h3>
+            <p>在 One Work 客户端「设置 → 体验额度」一键申领。</p>
+          </div>
+          <div class="step">
+            <div class="ic" style="background: var(--purple)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>
+            </div>
+            <h3>② 正常调用 API</h3>
+            <p>照常使用，额度按调用实时计费，失败调用不扣费。</p>
+          </div>
+          <div class="step">
+            <div class="ic" style="background: var(--cyan)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+            </div>
+            <h3>③ 回来查用量</h3>
+            <p>粘贴 Key，余额、分布、趋势、逐笔明细一次看全。</p>
           </div>
         </div>
-      </div>
-    </div>
+        <div class="chips">
+          <span class="chip">余额实时</span>
+          <span class="chip">模型消耗分布</span>
+          <span class="chip">调用趋势</span>
+          <span class="chip">次数排行</span>
+          <span class="chip">逐笔明细 · 可导出</span>
+        </div>
+      </section>
 
-    <footer>One Work · 宝云体验额度</footer>
+      <!-- 错误 -->
+      <div class="state card" id="errorCard">
+        <div class="notice error">
+          <svg class="dot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/>
+          </svg>
+          <span id="errorText"></span>
+        </div>
+      </div>
+
+      <!-- 查询结果 -->
+      <div class="state" id="result">
+
+        <div class="card hero" id="hero">
+          <div class="hero-top">
+            <span class="pill ok" id="statusPill">额度正常</span>
+            <span class="muted" id="updatedAt"></span>
+            <button class="btn-ghost" id="refresh" type="button">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>
+              刷新
+            </button>
+          </div>
+          <div class="hero-grid">
+            <div class="hero-remain">
+              <div class="k">剩余额度</div>
+              <div class="v" id="remain">—</div>
+              <div class="s" id="remainSub"></div>
+            </div>
+            <div class="meter" id="meter" hidden><i id="meterFill" style="width:0"></i></div>
+          </div>
+        </div>
+
+        <div class="statgrid" id="statCards"></div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>模型数据分析</h2>
+            <span class="muted" id="statsBasis"></span>
+          </div>
+          <div class="tabs" id="chartTabs">
+            <button class="tab active" data-tab="share" type="button">消耗分布</button>
+            <button class="tab" data-tab="trend" type="button">调用趋势</button>
+            <button class="tab" data-tab="dist" type="button">调用次数分布</button>
+            <button class="tab" data-tab="rank" type="button">调用次数排行</button>
+          </div>
+          <div class="chart-body" id="chartBody"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>调用详情</h2>
+            <div class="tools">
+              <select id="kindFilter" aria-label="按类型筛选">
+                <option value="all">全部类型</option>
+                <option value="charge">扣费</option>
+                <option value="error">失败</option>
+                <option value="refund">退款</option>
+              </select>
+              <select id="modelFilter" aria-label="按模型筛选"><option value="all">全部模型</option></select>
+              <button class="btn-ghost" id="exportCsv" type="button">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                导出 CSV
+              </button>
+            </div>
+          </div>
+          <div class="logs">
+            <table id="logTable">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>模型</th>
+                  <th>类型</th>
+                  <th class="hide-sm">用时 <span title="厂商上报的近似耗时，单位未标注，按数据形态自动判读">≈</span></th>
+                  <th class="hide-sm">输入 / 输出</th>
+                  <th>花费</th>
+                  <th class="hide-sm">Request ID</th>
+                </tr>
+              </thead>
+              <tbody id="logBody"></tbody>
+            </table>
+            <div class="empty" id="logEmpty" hidden>还没有调用记录</div>
+          </div>
+          <div class="pagebar" id="pagebar" hidden></div>
+        </div>
+
+      </div>
+
+      <footer>One Work · 宝云体验额度</footer>
+    </main>
   </div>
 
 <script>
 (function () {
   var VENDOR = 'baoyun';
-  var keyInput = document.getElementById('key');
-  var goBtn = document.getElementById('go');
-  var errorCard = document.getElementById('errorCard');
-  var errorText = document.getElementById('errorText');
-  var result = document.getElementById('result');
-
-  document.getElementById('peek').addEventListener('click', function () {
-    keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
-    keyInput.focus();
-  });
-  keyInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') run(); });
-  goBtn.addEventListener('click', run);
-
+  var PAGE_SIZE = 50;
+  var CHART_COLORS = ['#4080ff', '#00b42a', '#ff7d00', '#f53f3f', '#722ed1', '#14c9c9', '#f7ba1e', '#f754a2'];
+  var KIND = { charge: '扣费', error: '失败', refund: '退款' };
   var SYMBOL = { CNY: '¥', USD: '$', EUR: '€', JPY: '¥', GBP: '£' };
+  var LS_KEY = 'ow_usage_recent_keys_v1';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var keyInput = $('key'), goBtn = $('go');
+
+  // ---- state ----
+  var state = {
+    currency: 'CNY',
+    logs: [],
+    unit: 's',            // use_time 的判读单位，见 computeUnit
+    tab: 'share',
+    kindFilter: 'all',
+    modelFilter: 'all',
+    page: 1,
+  };
+
+  // ---- tiny helpers ----
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
   function money(amount, currency) {
     var s = SYMBOL[currency] || '';
     var n = (typeof amount === 'number' ? amount : 0).toFixed(2);
     return s ? s + n : n + ' ' + currency;
   }
-  var KIND = { charge: '扣费', error: '失败', refund: '退款' };
+  function fmtInt(n) {
+    return String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  function fmtCompact(n) {
+    n = n || 0;
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
+    return String(n);
+  }
+  function fmtPct(x) { return (x * 100).toFixed(1) + '%'; }
 
   function when(unixSeconds) {
     var d = new Date(unixSeconds * 1000);
@@ -280,80 +597,392 @@
     return (sameYear ? '' : d.getFullYear() + '-') +
       p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
-
-  function esc(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
+  function nowHMS() {
+    var d = new Date(), p = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
   }
 
-  function loading(on) {
-    goBtn.disabled = on;
-    goBtn.innerHTML = on ? '<span class="spinner"></span>查询中' : '查询';
+  // 厂商日志的 use_time 没标单位（代码里按毫秒命名只是推断）。LLM 调用
+  // 不可能几百毫秒内完成：只要出现过 >400 的值，整批按毫秒判读，否则按秒。
+  function computeUnit(logs) {
+    for (var i = 0; i < logs.length; i++) {
+      if (logs[i].use_time_ms > 400) return 'ms';
+    }
+    return 's';
+  }
+  function fmtDur(ms) {
+    if (!ms || ms <= 0) return '—';
+    if (state.unit === 'ms') {
+      if (ms < 1000) return ms + ' ms';
+      var s = ms / 1000;
+      if (s < 60) return s.toFixed(1) + ' s';
+      return Math.floor(s / 60) + ' m ' + Math.round(s % 60) + ' s';
+    }
+    if (ms < 60) return ms + ' s';
+    var m = Math.floor(ms / 60);
+    return m + ' m ' + (ms % 60) + ' s';
+  }
+
+  // ---- states ----
+  function show(name) {
+    $('intro').hidden = name === 'result' || name === 'error';
+    $('errorCard').classList.toggle('show', name === 'error');
+    $('result').classList.toggle('show', name === 'result');
   }
   function showError(msg) {
-    result.classList.remove('show');
-    errorText.textContent = msg;
-    errorCard.classList.add('show');
+    $('errorText').textContent = msg;
+    show('error');
   }
-  function clearStates() {
-    errorCard.classList.remove('show');
-    result.classList.remove('show');
+  function loading(on) {
+    goBtn.disabled = on;
+    $('refresh').disabled = on;
+    goBtn.innerHTML = on ? '<span class="spinner"></span>查询中' : '查询额度';
   }
 
-  function render(data) {
-    clearStates();
-    var hasLimit = data.limit_usd != null;
-    var remaining = data.remaining_usd;
-    var spent = remaining != null && remaining <= 0;
+  // ---- 聚合 ----
+  function byModel(logs, kinds) {
+    var map = {};
+    logs.forEach(function (l) {
+      if (kinds && kinds.indexOf(l.kind) < 0) return;
+      var m = map[l.model] || (map[l.model] = { model: l.model, calls: 0, spend: 0, tokens: 0, durSum: 0, durN: 0 });
+      m.calls++;
+      if (l.kind === 'charge') m.spend += l.amount;
+      m.tokens += (l.prompt_tokens || 0) + (l.completion_tokens || 0);
+      if (l.use_time_ms > 0) { m.durSum += l.use_time_ms; m.durN++; }
+    });
+    var arr = []; for (var k in map) arr.push(map[k]);
+    return arr;
+  }
 
-    document.getElementById('remain').textContent = remaining == null ? '不限' : money(remaining, data.currency);
-    document.getElementById('used').textContent = money(data.used_usd, data.currency);
-    document.getElementById('limit').textContent = hasLimit ? money(data.limit_usd, data.currency) : '不限';
-    document.getElementById('remainMetric').classList.toggle('spent', spent);
+  function timeBuckets(logs) {
+    if (!logs.length) return null;
+    var min = Infinity, max = -Infinity;
+    logs.forEach(function (l) {
+      if (l.created_at < min) min = l.created_at;
+      if (l.created_at > max) max = l.created_at;
+    });
+    var HOUR = 3600, DAY = 86400;
+    var unit = (max - min) <= 48 * HOUR ? HOUR : DAY;
+    var start = Math.floor(min / unit) * unit;
+    var end = Math.floor(max / unit) * unit;
+    var n = Math.round((end - start) / unit) + 1;
+    if (n > 60) { start = end - 59 * unit; n = 60; }
+    var buckets = [], idx = {};
+    for (var t = start, i = 0; t <= end; t += unit, i++) {
+      buckets.push({ t: t, count: 0, amount: 0, ok: 0, fail: 0 });
+      idx[t] = i;
+    }
+    logs.forEach(function (l) {
+      var k = Math.floor(l.created_at / unit) * unit;
+      var b = buckets[idx[k]];
+      if (!b) return;
+      b.count++;
+      if (l.kind === 'error') b.fail++; else b.ok++;
+      if (l.kind === 'charge') b.amount += l.amount;
+    });
+    return { buckets: buckets, unit: unit };
+  }
+  function bucketLabel(t, unit) {
+    var d = new Date(t * 1000), p = function (n) { return n < 10 ? '0' + n : '' + n; };
+    var day = p(d.getMonth() + 1) + '-' + p(d.getDate());
+    return unit === 3600 ? day + ' ' + p(d.getHours()) + ':00' : day;
+  }
 
-    var meter = document.getElementById('meter');
-    if (hasLimit && data.limit_usd > 0) {
-      var usedRatio = Math.min(1, Math.max(0, data.used_usd / data.limit_usd));
+  // ---- 顶部状态横幅 ----
+  function renderHero(data) {
+    var r = data.remaining_usd;
+    var pill = $('statusPill'), hero = $('hero'), meter = $('meter');
+    var cls, label;
+    if (r == null) { cls = 'unlimited'; label = '不限额度'; }
+    else if (r <= 0) { cls = 'spent'; label = '已耗尽'; }
+    else if (data.limit_usd && data.used_usd / data.limit_usd >= 0.8) { cls = 'low'; label = '额度告急'; }
+    else { cls = 'ok'; label = '额度正常'; }
+
+    pill.className = 'pill ' + cls;
+    pill.textContent = label;
+    hero.className = 'card hero hero--' + cls;
+
+    $('remain').textContent = r == null ? '不限' : money(r, data.currency);
+    $('remainSub').textContent = data.limit_usd != null
+      ? '总额度 ' + money(data.limit_usd, data.currency) + ' · 已使用 ' + fmtPct(data.limit_usd > 0 ? data.used_usd / data.limit_usd : 0)
+      : '累计已使用 ' + money(data.used_usd, data.currency);
+
+    if (data.limit_usd != null && data.limit_usd > 0) {
       meter.hidden = false;
-      document.getElementById('meterFill').style.width = (usedRatio * 100).toFixed(1) + '%';
-      meter.classList.toggle('low', usedRatio >= 0.8 && !spent);
-      meter.classList.toggle('spent', spent);
+      meter.className = 'meter ' + (r <= 0 ? 'spent' : (data.used_usd / data.limit_usd >= 0.8 ? 'low' : ''));
+      $('meterFill').style.width = (Math.min(1, Math.max(0, data.used_usd / data.limit_usd)) * 100).toFixed(1) + '%';
     } else {
       meter.hidden = true;
     }
-
-    var logs = data.logs || [];
-    var body = document.getElementById('logBody');
-    var table = document.getElementById('logTable');
-    var empty = document.getElementById('logEmpty');
-    document.getElementById('logCount').textContent = logs.length ? '最近 ' + logs.length + ' 条' : '';
-    body.innerHTML = '';
-    if (!logs.length) {
-      table.hidden = true; empty.hidden = false;
-    } else {
-      table.hidden = false; empty.hidden = true;
-      logs.forEach(function (log) {
-        var kind = KIND[log.kind] || log.kind;
-        var tr = document.createElement('tr');
-        tr.innerHTML =
-          '<td class="num">' + when(log.created_at) + '</td>' +
-          '<td class="model" title="' + esc(log.model) + '">' + esc(log.model) + '</td>' +
-          '<td><span class="tag ' + esc(log.kind) + '">' + esc(kind) + '</span></td>' +
-          '<td class="num hide-sm">' + log.prompt_tokens + ' / ' + log.completion_tokens + '</td>' +
-          '<td class="num">' + money(log.amount, data.currency) + '</td>' +
-          '<td class="rid hide-sm" title="' + esc(log.request_id) + '">' + esc(String(log.request_id).slice(0, 12)) + '…</td>';
-        body.appendChild(tr);
-      });
-    }
-    result.classList.add('show');
+    $('updatedAt').textContent = '更新于 ' + nowHMS();
   }
 
+  // ---- 四张统计卡 ----
+  var CARD_ICONS = {
+    calls: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>',
+    tokens: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M12 5v14m-3 0h6"/></svg>',
+    spend: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.1-1.3-2-3-2s-3 .9-3 2 1 1.8 3 2.2 3 1.1 3 2.3-1.3 2-3 2-3-.9-3-2"/></svg>',
+    perf: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>'
+  };
+  function statCard(color, icon, k, v, s) {
+    return '<div class="stat"><div class="top"><div class="ic" style="background:' + color + '">' + icon +
+      '</div><span class="k">' + k + '</span></div><div class="v">' + v + '</div><div class="s">' + s + '</div></div>';
+  }
+  function renderStats(logs, data) {
+    var calls = logs.length, charge = 0, err = 0, refund = 0;
+    var tin = 0, tout = 0, durSum = 0, durN = 0, streams = 0;
+    logs.forEach(function (l) {
+      if (l.kind === 'charge') charge++;
+      else if (l.kind === 'error') err++;
+      else if (l.kind === 'refund') refund++;
+      tin += l.prompt_tokens || 0;
+      tout += l.completion_tokens || 0;
+      if (l.use_time_ms > 0) { durSum += l.use_time_ms; durN++; }
+      if (l.is_stream) streams++;
+    });
+    var avgCost = charge > 0 ? data.used_usd / charge : 0;
+    var avgDur = durN > 0 ? fmtDur(durSum / durN) : '—';
+
+    $('statCards').innerHTML =
+      statCard('var(--brand)', CARD_ICONS.calls, '调用次数', fmtInt(calls),
+        '成功 ' + fmtInt(charge) + ' · 失败 ' + fmtInt(err) + (refund ? ' · 退款 ' + fmtInt(refund) : '')) +
+      statCard('var(--purple)', CARD_ICONS.tokens, 'Token 消耗', fmtCompact(tin + tout),
+        '输入 ' + fmtCompact(tin) + ' · 输出 ' + fmtCompact(tout)) +
+      statCard('var(--warning)', CARD_ICONS.spend, '累计花费', money(data.used_usd, data.currency),
+        charge > 0 ? '平均每次 ' + money(avgCost, data.currency) : '暂无成功调用') +
+      statCard('var(--cyan)', CARD_ICONS.perf, '平均用时', avgDur,
+        durN > 0 ? '流式占比 ' + fmtPct(calls ? streams / calls : 0) : '暂无耗时数据');
+  }
+
+  // ---- 图表 ----
+  function chartEmpty(msg) { return '<div class="chart-empty">' + msg + '</div>'; }
+
+  function renderShare(logs, currency) {
+    var models = byModel(logs, ['charge']).filter(function (m) { return m.spend > 0; });
+    if (!models.length) return chartEmpty('还没有产生花费的调用');
+    models.sort(function (a, b) { return b.spend - a.spend; });
+    var total = models.reduce(function (s, m) { return s + m.spend; }, 0);
+
+    var R = 48, C = 2 * Math.PI * R, offset = 0;
+    var segs = models.map(function (m, i) {
+      var frac = m.spend / total, len = frac * C;
+      var seg = '<circle r="' + R + '" cx="60" cy="60" fill="none" stroke="' + CHART_COLORS[i % CHART_COLORS.length] +
+        '" stroke-width="20" stroke-dasharray="' + Math.max(0, len - 0.6) + ' ' + (C - len + 0.6) +
+        '" stroke-dashoffset="' + (-offset) + '"><title>' + esc(m.model) + ' ' + money(m.spend, currency) + '</title></circle>';
+      offset += len;
+      return seg;
+    }).join('');
+    var svg = '<svg class="donut-svg" width="150" height="150" viewBox="0 0 120 120" role="img">' +
+      '<g transform="rotate(-90 60 60)">' + segs + '</g>' +
+      '<text class="donut-center-v" x="60" y="59" text-anchor="middle">' + money(total, currency) + '</text>' +
+      '<text class="donut-center-k" x="60" y="74" text-anchor="middle">窗口内扣费</text></svg>';
+
+    var legend = '<div class="legend">' + models.map(function (m, i) {
+      return '<div class="legend-row"><span class="sw" style="background:' + CHART_COLORS[i % CHART_COLORS.length] + '"></span>' +
+        '<span class="lm" title="' + esc(m.model) + '">' + esc(m.model) + '</span>' +
+        '<span class="lv">' + money(m.spend, currency) + '</span>' +
+        '<span class="lp">' + fmtPct(m.spend / total) + '</span></div>';
+    }).join('') + '</div>';
+
+    return '<div class="donut-wrap">' + svg + legend + '</div>';
+  }
+
+  function bucketCharts(logs, mode) {
+    var tb = timeBuckets(logs);
+    if (!tb || !logs.length) return chartEmpty('还没有调用记录');
+    var bs = tb.buckets;
+    var labelEvery = Math.max(1, Math.ceil(bs.length / 10));
+
+    var labels = '<div class="bar-labels">' + bs.map(function (b, i) {
+      return '<span>' + (i % labelEvery === 0 ? bucketLabel(b.t, tb.unit) : '') + '</span>';
+    }).join('') + '</div>';
+
+    if (mode === 'trend') {
+      var maxA = 0;
+      bs.forEach(function (b) { if (b.amount > maxA) maxA = b.amount; });
+      if (maxA <= 0) return chartEmpty('统计窗口内还没有扣费记录') + labels;
+      var bars = '<div class="bars bars-amount">' + bs.map(function (b) {
+        var h = b.amount > 0 ? Math.max(2, b.amount / maxA * 100) : 0;
+        return '<div class="bwrap" title="' + bucketLabel(b.t, tb.unit) + ' · 花费 ' + money(b.amount, state.currency) + ' · ' + b.count + ' 次调用">' +
+          (h ? '<div class="b-ok" style="height:' + h.toFixed(1) + '%"></div>' : '') + '</div>';
+      }).join('') + '</div>';
+      return bars + labels +
+        '<div class="bar-legend"><span>每个时间桶的扣费金额，悬停看详情</span></div>';
+    }
+    // dist：调用次数堆叠（成功/失败）
+    var maxC = 0;
+    bs.forEach(function (b) { if (b.count > maxC) maxC = b.count; });
+    if (maxC <= 0) return chartEmpty('还没有调用记录') + labels;
+    var bars2 = '<div class="bars">' + bs.map(function (b) {
+      var h = b.count > 0 ? Math.max(2, b.count / maxC * 100) : 0;
+      var failH = b.count > 0 ? (b.fail / b.count * 100).toFixed(1) : '0';
+      return '<div class="bwrap" title="' + bucketLabel(b.t, tb.unit) + ' · ' + b.count + ' 次（失败 ' + b.fail + '）">' +
+        (h ? '<div class="b-ok" style="height:' + (100 - failH).toFixed(1) + '%"></div><div class="b-fail" style="height:' + failH + '%"></div>' : '') +
+        '</div>';
+    }).join('') + '</div>';
+    return bars2 + labels +
+      '<div class="bar-legend"><span><i style="background:var(--brand)"></i>成功</span><span><i style="background:var(--danger)"></i>失败</span></div>';
+  }
+
+  function renderRank(logs) {
+    var models = byModel(logs);
+    if (!models.length) return chartEmpty('还没有调用记录');
+    models.sort(function (a, b) { return b.calls - a.calls; });
+    var max = models[0].calls;
+    var rows = models.slice(0, 10).map(function (m, i) {
+      var avg = m.durN > 0 ? '均 ' + fmtDur(m.durSum / m.durN) : '';
+      return '<div class="rank-row"><span class="rank-no">' + (i + 1) + '</span>' +
+        '<span class="rank-model" title="' + esc(m.model) + '">' + esc(m.model) + '</span>' +
+        '<div class="rank-bar"><i style="width:' + (m.calls / max * 100).toFixed(1) + '%"></i></div>' +
+        '<span class="rank-meta">' + fmtInt(m.calls) + ' 次' + (avg ? ' · ' + avg : '') + '</span></div>';
+    }).join('');
+    return '<div class="rank">' + rows + '</div>';
+  }
+
+  function renderCharts() {
+    var logs = state.logs;
+    var body = $('chartBody');
+    if (!logs.length) { body.innerHTML = chartEmpty('查询成功，但还没有任何调用记录'); return; }
+    if (state.tab === 'share') body.innerHTML = renderShare(logs, state.currency);
+    else if (state.tab === 'trend') body.innerHTML = bucketCharts(logs, 'trend');
+    else if (state.tab === 'dist') body.innerHTML = bucketCharts(logs, 'dist');
+    else body.innerHTML = renderRank(logs);
+  }
+
+  // ---- 明细表 ----
+  var modelColors = {};
+  function modelColor(model) {
+    if (!(model in modelColors)) {
+      var n = 0; for (var i = 0; i < model.length; i++) n = (n * 31 + model.charCodeAt(i)) >>> 0;
+      modelColors[model] = CHART_COLORS[n % CHART_COLORS.length];
+    }
+    return modelColors[model];
+  }
+  function filteredLogs() {
+    return state.logs.filter(function (l) {
+      if (state.kindFilter !== 'all' && l.kind !== state.kindFilter) return false;
+      if (state.modelFilter !== 'all' && l.model !== state.modelFilter) return false;
+      return true;
+    });
+  }
+  function renderTable() {
+    var logs = filteredLogs();
+    var table = $('logTable'), empty = $('logEmpty'), bar = $('pagebar');
+    if (!logs.length) {
+      table.hidden = true; empty.hidden = false; bar.hidden = true;
+      $('logBody').innerHTML = '';
+      return;
+    }
+    table.hidden = false; empty.hidden = true;
+    var totalPages = Math.max(1, Math.ceil(logs.length / PAGE_SIZE));
+    if (state.page > totalPages) state.page = totalPages;
+    var startI = (state.page - 1) * PAGE_SIZE;
+    var slice = logs.slice(startI, startI + PAGE_SIZE);
+
+    var html = '';
+    slice.forEach(function (l) {
+      var kind = KIND[l.kind] || l.kind;
+      var dur = l.use_time_ms > 0
+        ? fmtDur(l.use_time_ms) + (l.is_stream !== undefined ? '<span class="dur-sub">' + (l.is_stream ? '流式' : '非流式') + '</span>' : '')
+        : '—';
+      html += '<tr>' +
+        '<td class="num">' + when(l.created_at) + '</td>' +
+        '<td class="model-cell"><span class="model-tag" style="color:' + modelColor(l.model) + ';background:color-mix(in srgb, ' + modelColor(l.model) + ' 12%, transparent)" title="' + esc(l.model) + '">' + esc(l.model) + '</span></td>' +
+        '<td><span class="tag ' + esc(l.kind) + '">' + esc(kind) + '</span></td>' +
+        '<td class="num hide-sm">' + dur + '</td>' +
+        '<td class="num hide-sm">' + fmtInt(l.prompt_tokens) + ' / ' + fmtInt(l.completion_tokens) + '</td>' +
+        '<td class="num">' + money(l.amount, state.currency) + '</td>' +
+        '<td class="rid hide-sm" title="' + esc(l.request_id) + '">' + esc(String(l.request_id).slice(0, 12)) + '…</td>' +
+        '</tr>';
+    });
+    $('logBody').innerHTML = html;
+
+    bar.hidden = false;
+    bar.innerHTML = '<span>共 ' + fmtInt(logs.length) + ' 条' +
+      (state.logs.length > logs.length ? '（已按筛选过滤）' : '') + '</span>' +
+      '<button id="pgPrev"' + (state.page <= 1 ? ' disabled' : '') + '>上一页</button>' +
+      '<span>第 ' + state.page + ' / ' + totalPages + ' 页</span>' +
+      '<button id="pgNext"' + (state.page >= totalPages ? ' disabled' : '') + '>下一页</button>';
+    $('pgPrev').addEventListener('click', function () { state.page--; renderTable(); });
+    $('pgNext').addEventListener('click', function () { state.page++; renderTable(); });
+  }
+
+  function renderFilters() {
+    var models = [];
+    var seen = {};
+    state.logs.forEach(function (l) {
+      if (!seen[l.model]) { seen[l.model] = true; models.push(l.model); }
+    });
+    var sel = $('modelFilter');
+    sel.innerHTML = '<option value="all">全部模型</option>' + models.map(function (m) {
+      return '<option value="' + esc(m) + '">' + esc(m) + '</option>';
+    }).join('');
+  }
+
+  function exportCsv() {
+    var rows = filteredLogs();
+    if (!rows.length) return;
+    var head = ['时间', '模型', '类型', '输入 tokens', '输出 tokens', '用时', '花费', '方式', 'Request ID'];
+    var lines = [head.join(',')];
+    rows.forEach(function (l) {
+      var dur = l.use_time_ms > 0 ? (state.unit === 'ms' ? l.use_time_ms + 'ms' : l.use_time_ms + 's') : '';
+      lines.push([
+        new Date(l.created_at * 1000).toLocaleString('sv-SE'), // "YYYY-MM-DD HH:mm:ss"
+        '"' + String(l.model).replace(/"/g, '""') + '"',
+        KIND[l.kind] || l.kind,
+        l.prompt_tokens || 0,
+        l.completion_tokens || 0,
+        '"' + dur + '"',
+        l.amount,
+        l.is_stream ? '流式' : '非流式',
+        '"' + String(l.request_id).replace(/"/g, '""') + '"'
+      ].join(','));
+    });
+    var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    var d = new Date(), p = function (n) { return n < 10 ? '0' + n : '' + n; };
+    a.download = 'onework-usage-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
+  // ---- 主渲染 ----
+  function render(data) {
+    show('result');
+    state.currency = data.currency;
+    state.logs = (data.logs || []).slice().sort(function (a, b) { return b.created_at - a.created_at; });
+    state.unit = computeUnit(state.logs);
+    state.page = 1;
+    modelColors = {};
+
+    renderHero(data);
+    renderStats(state.logs, data);
+
+    var basis = $('statsBasis');
+    if (state.logs.length) {
+      var min = Infinity, max = -Infinity;
+      state.logs.forEach(function (l) {
+        if (l.created_at < min) min = l.created_at;
+        if (l.created_at > max) max = l.created_at;
+      });
+      basis.textContent = '基于最近 ' + fmtInt(state.logs.length) + ' 条调用（' + when(min) + ' ~ ' + when(max) + '）';
+    } else {
+      basis.textContent = '还没有调用记录';
+    }
+
+    renderCharts();
+    renderFilters();
+    renderTable();
+  }
+
+  // ---- 查询 ----
   function run() {
     var key = keyInput.value.trim();
     if (!key) { showError('请先粘贴你的 API Key。'); keyInput.focus(); return; }
     loading(true);
-    clearStates();
+    show('intro'); // 清掉旧结果/旧错误，回到干净态
 
     // Relative, not "/v1/...": this page is served under nginx's
     // /trial-broker/ prefix, and an absolute path would skip it and 404.
@@ -365,7 +994,7 @@
       .then(function (res) { return res.json().then(function (body) { return { status: res.status, body: body }; }); })
       .then(function (r) {
         loading(false);
-        if (r.status === 200) { render(r.body); return; }
+        if (r.status === 200) { render(r.body); saveRecent(key); return; }
         var code = r.body && r.body.error;
         if (r.status === 404 && code === 'key_not_found') {
           showError('没有找到这把 Key。请确认粘贴完整，并且它还没有被停用或替换。');
@@ -383,6 +1012,77 @@
       });
   }
 
+  // ---- 最近查询（显式 opt-in，只存本机 localStorage）----
+  function loadRecent() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch (e) { return []; }
+  }
+  function saveRecent(key) {
+    if (!$('remember').checked) return;
+    var list = loadRecent().filter(function (it) { return it.key !== key; });
+    list.unshift({ key: key, t: Date.now() });
+    localStorage.setItem(LS_KEY, JSON.stringify(list.slice(0, 3)));
+    renderRecent();
+  }
+  function relTime(ts) {
+    var s = Math.max(1, Math.floor((Date.now() - ts) / 1000));
+    if (s < 60) return '刚刚';
+    if (s < 3600) return Math.floor(s / 60) + ' 分钟前';
+    if (s < 86400) return Math.floor(s / 3600) + ' 小时前';
+    var d = new Date(ts), p = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function renderRecent() {
+    var list = loadRecent();
+    $('recentBox').hidden = !list.length;
+    $('recentList').innerHTML = list.map(function (it, i) {
+      var tail = it.key.length > 10 ? 'sk-…' + it.key.slice(-4) : it.key;
+      return '<div class="recent-item" data-i="' + i + '" role="button" title="点击重新查询">' +
+        '<span class="rk">' + esc(tail) + '</span><span class="rt">' + relTime(it.t) + '</span>' +
+        '<button class="rx" data-del="' + i + '" aria-label="删除这条记录">×</button></div>';
+    }).join('');
+  }
+  $('recentList').addEventListener('click', function (e) {
+    var del = e.target.getAttribute && e.target.getAttribute('data-del');
+    if (del != null) {
+      var list = loadRecent(); list.splice(Number(del), 1);
+      localStorage.setItem(LS_KEY, JSON.stringify(list));
+      renderRecent();
+      return;
+    }
+    var item = e.target.closest && e.target.closest('.recent-item');
+    if (item) {
+      var it = loadRecent()[Number(item.getAttribute('data-i'))];
+      if (it) { keyInput.value = it.key; run(); }
+    }
+  });
+  $('recentClear').addEventListener('click', function () {
+    localStorage.removeItem(LS_KEY);
+    $('remember').checked = false;
+    renderRecent();
+  });
+  $('remember').addEventListener('change', function (e) {
+    if (!e.target.checked) { localStorage.removeItem(LS_KEY); renderRecent(); }
+  });
+
+  // ---- 事件 ----
+  document.getElementById('peek').addEventListener('click', function () {
+    keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
+    keyInput.focus();
+  });
+  keyInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') run(); });
+  goBtn.addEventListener('click', run);
+  $('refresh').addEventListener('click', run);
+  $('exportCsv').addEventListener('click', exportCsv);
+  $('kindFilter').addEventListener('change', function (e) { state.kindFilter = e.target.value; state.page = 1; renderTable(); });
+  $('modelFilter').addEventListener('change', function (e) { state.modelFilter = e.target.value; state.page = 1; renderTable(); });
+  $('chartTabs').addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('.tab');
+    if (!btn) return;
+    state.tab = btn.getAttribute('data-tab');
+    document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('active', t === btn); });
+    renderCharts();
+  });
+
   // One-click hand-off from the desktop app: it opens this page with the
   // key in the URL *fragment*, which browsers never send to the server. It
   // is wiped from the address bar and this history entry immediately, so it
@@ -396,12 +1096,15 @@
     history.replaceState(null, '', window.location.pathname + window.location.search);
     run();
   }
-
   consumeHandoff();
   // A browser handed the same page a second time only swaps the fragment and
   // focuses the existing tab — no reload, so nothing above would run and the
   // click would look broken. This is what makes the second one work.
   window.addEventListener('hashchange', consumeHandoff);
+
+  // init
+  renderRecent();
+  show('intro');
 })();
 </script>
 </body>
