@@ -138,6 +138,27 @@
   }
   .remember input { margin: 2px 0 0; accent-color: var(--brand); }
 
+  /* handoff 模式：app 一键带入 Key 的主路径，不露粘贴表单 */
+  #handoffBox {
+    background: var(--page);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 13px;
+  }
+  .ho-head { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--success); }
+  .ho-tail {
+    margin-left: auto; font: 11.5px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--text-3); background: var(--card); border: 1px solid var(--line);
+    border-radius: 6px; padding: 3px 7px;
+  }
+  .ho-note { margin: 8px 0 10px; font-size: 11.5px; color: var(--text-3); line-height: 1.6; }
+  .ho-actions { display: flex; align-items: center; gap: 8px; }
+  .ho-link {
+    border: 0; background: none; color: var(--brand); font-size: 12.5px;
+    cursor: pointer; padding: 5px 8px; border-radius: 6px;
+  }
+  .ho-link:hover { background: var(--brand-weak); }
+
   .recent { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 14px; }
   .recent-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
   .recent-head span { font-size: 12.5px; font-weight: 500; color: var(--text-2); }
@@ -387,30 +408,50 @@
       </div>
 
       <h1>用量查询</h1>
-      <p class="sub">粘贴体验 API Key，查看余额、消耗分布与每一次调用的明细。</p>
+      <p class="sub" id="railSub">粘贴体验 API Key，查看余额、消耗分布与每一次调用的明细。</p>
 
-      <div class="key-label"><span>API Key</span></div>
-      <div class="key-wrap">
-        <input id="key" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" aria-label="API Key" />
-        <button class="peek" id="peek" type="button" aria-label="显示或隐藏 Key">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/>
-          </svg>
-        </button>
+      <!-- 从 One Work 客户端一键带入的主路径：不展示粘贴表单 -->
+      <div id="handoffBox" hidden>
+        <div class="ho-head">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <span>已自动带入 Key</span>
+          <code id="hoTail" class="ho-tail"></code>
+        </div>
+        <p class="ho-note">Key 来自 One Work 客户端，经 URL fragment 传入——浏览器不会把它发给服务器，页面已立即从地址栏抹除。</p>
+        <div class="ho-actions">
+          <button class="btn-ghost" id="hoRefresh" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>
+            重新查询
+          </button>
+          <button class="ho-link" id="hoOther" type="button">查询其他 Key</button>
+        </div>
       </div>
-      <button class="primary" id="go">查询额度</button>
 
-      <label class="remember">
-        <input type="checkbox" id="remember" />
-        <span>在本机记住这把 Key（只存浏览器 localStorage，不会上传；取消勾选即清除）</span>
-      </label>
+      <!-- 手动兜底：直接打开 / 分享链接 / 查别的 Key -->
+      <div id="manualBox">
+        <div class="key-label"><span>API Key</span></div>
+        <div class="key-wrap">
+          <input id="key" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" aria-label="API Key" />
+          <button class="peek" id="peek" type="button" aria-label="显示或隐藏 Key">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/>
+            </svg>
+          </button>
+        </div>
+        <button class="primary" id="go">查询额度</button>
+
+        <label class="remember">
+          <input type="checkbox" id="remember" />
+          <span>在本机记住这把 Key（只存浏览器 localStorage，不会上传；取消勾选即清除）</span>
+        </label>
+
+        <p class="note">🔒 Key 仅用于本次查询，默认不被保存或记录。勾选「记住」后只存在你自己的浏览器里。<br>还没有 Key？在 One Work 客户端「设置 → 体验额度」申领。</p>
+      </div>
 
       <div class="recent" id="recentBox" hidden>
         <div class="recent-head"><span>最近查询</span><button id="recentClear" type="button">清空</button></div>
         <div id="recentList"></div>
       </div>
-
-      <p class="note">🔒 Key 仅用于本次查询，默认不被保存或记录。勾选「记住」后只存在你自己的浏览器里。<br>还没有 Key？在 One Work 客户端「设置 → 体验额度」申领。</p>
 
       <div class="rail-foot">One Work · 宝云体验额度</div>
     </aside>
@@ -566,6 +607,7 @@
     kindFilter: 'all',
     modelFilter: 'all',
     page: 1,
+    handoff: false,       // true：key 来自 One Work 客户端的 fragment 带入
   };
 
   // ---- tiny helpers ----
@@ -639,6 +681,17 @@
     goBtn.disabled = on;
     $('refresh').disabled = on;
     goBtn.innerHTML = on ? '<span class="spinner"></span>查询中' : '查询额度';
+  }
+
+  // 左栏双模式：handoff = key 由 One Work 客户端 fragment 带入（主路径，
+  // 不露粘贴表单、不提供「记住」）；manual = 粘贴兜底（直接打开/分享链接）。
+  function setRailMode(mode) {
+    state.handoff = mode === 'handoff';
+    $('handoffBox').hidden = !state.handoff;
+    $('manualBox').hidden = state.handoff;
+    $('railSub').textContent = state.handoff
+      ? '正在查看 One Work 客户端带来的这把 Key。'
+      : '粘贴体验 API Key，查看余额、消耗分布与每一次调用的明细。';
   }
 
   // ---- 聚合 ----
@@ -1026,7 +1079,8 @@
     try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch (e) { return []; }
   }
   function saveRecent(key) {
-    if (!$('remember').checked) return;
+    // handoff 带入的 key 属于「app 自己就有」的场景，永远不落 localStorage
+    if (state.handoff || !$('remember').checked) return;
     var list = loadRecent().filter(function (it) { return it.key !== key; });
     list.unshift({ key: key, t: Date.now() });
     localStorage.setItem(LS_KEY, JSON.stringify(list.slice(0, 3)));
@@ -1061,7 +1115,10 @@
     var item = e.target.closest && e.target.closest('.recent-item');
     if (item) {
       var it = loadRecent()[Number(item.getAttribute('data-i'))];
-      if (it) { keyInput.value = it.key; run(); }
+      if (it) {
+        setRailMode('manual'); // 手动记住的 key 走手动模式，别留在「app 带入」的壳里
+        keyInput.value = it.key; run();
+      }
     }
   });
   $('recentClear').addEventListener('click', function () {
@@ -1078,9 +1135,14 @@
     keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
     keyInput.focus();
   });
-  keyInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') run(); });
-  goBtn.addEventListener('click', run);
+  keyInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { state.handoff = false; run(); } });
+  goBtn.addEventListener('click', function () { state.handoff = false; run(); });
   $('refresh').addEventListener('click', run);
+  $('hoRefresh').addEventListener('click', run);
+  $('hoOther').addEventListener('click', function () {
+    setRailMode('manual'); // 露出粘贴表单，输入框里还留着当前 key，可改可直接重查
+    keyInput.focus();
+  });
   $('exportCsv').addEventListener('click', exportCsv);
   $('kindFilter').addEventListener('change', function (e) { state.kindFilter = e.target.value; state.page = 1; renderTable(); });
   $('modelFilter').addEventListener('change', function (e) { state.modelFilter = e.target.value; state.page = 1; renderTable(); });
@@ -1101,6 +1163,8 @@
     if (!match) return;
     var key;
     try { key = decodeURIComponent(match[1]); } catch (e) { return; }
+    setRailMode('handoff');
+    $('hoTail').textContent = key.length > 10 ? 'sk-…' + key.slice(-4) : key;
     keyInput.value = key;
     history.replaceState(null, '', window.location.pathname + window.location.search);
     run();
