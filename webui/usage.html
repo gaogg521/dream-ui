@@ -631,7 +631,9 @@
   }
   function showError(msg) {
     $('errorText').textContent = msg;
-    show('error');
+    $('errorCard').classList.add('show');
+    // 首查失败：露出首页让用户重试；刷新失败：仪表盘留着，错误卡叠在上面
+    if (!$('result').classList.contains('show')) $('intro').hidden = false;
   }
   function loading(on) {
     goBtn.disabled = on;
@@ -982,7 +984,8 @@
     var key = keyInput.value.trim();
     if (!key) { showError('请先粘贴你的 API Key。'); keyInput.focus(); return; }
     loading(true);
-    show('intro'); // 清掉旧结果/旧错误，回到干净态
+    // 刷新时保留当前仪表盘（只清错误卡），避免每次刷新整页闪回首页
+    $('errorCard').classList.remove('show');
 
     // Relative, not "/v1/...": this page is served under nginx's
     // /trial-broker/ prefix, and an absolute path would skip it and 404.
