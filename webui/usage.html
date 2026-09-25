@@ -915,10 +915,16 @@
     state.logs.forEach(function (l) {
       if (!seen[l.model]) { seen[l.model] = true; models.push(l.model); }
     });
+    // 重建选项后必须同步 state：上一把 key 的筛选模型可能已不在列表里，
+    // 留着会让表格被一个看不见的选项过滤到 0 行。仍在列表里则保留选择。
+    if (state.modelFilter !== 'all' && models.indexOf(state.modelFilter) < 0) {
+      state.modelFilter = 'all';
+    }
     var sel = $('modelFilter');
     sel.innerHTML = '<option value="all">全部模型</option>' + models.map(function (m) {
       return '<option value="' + esc(m) + '">' + esc(m) + '</option>';
     }).join('');
+    sel.value = state.modelFilter;
   }
 
   function exportCsv() {
