@@ -21,7 +21,9 @@ side by side:
   so this is what makes web search work out of the box. Daily allowance per
   device plus a global cap; disabled unless `SEARCH_TAVILY_API_KEY` is set.
 
-The three modes share no code and no tables. Design and status:
+The three modes share no code and no tables. New to this system? Start with
+[`docs/HANDOFF.zh-CN.md`](docs/HANDOFF.zh-CN.md) (current-state snapshot, not
+a chronological log). Full design history and every real-machine verification:
 [`docs/baoyun-metered-proxy-handoff.zh-CN.md`](docs/baoyun-metered-proxy-handoff.zh-CN.md).
 
 This is a fully independent project (its own git repo, its own
