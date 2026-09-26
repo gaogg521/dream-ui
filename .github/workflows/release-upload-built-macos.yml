@@ -55,6 +55,7 @@ jobs:
         run: |
           set -euo pipefail
           mv artifacts/arm64/latest-mac.yml artifacts/arm64/latest-arm64-mac.yml
+          rm -f artifacts/arm64/builder-debug.yml artifacts/x64/builder-debug.yml
           expected=(
             "artifacts/arm64/One-Work-${VERSION}-mac-arm64.dmg"
             "artifacts/arm64/One-Work-${VERSION}-mac-arm64.dmg.blockmap"
