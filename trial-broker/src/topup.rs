@@ -1,0 +1,630 @@
+//! Real-money top-up orders for mode A vendors that support them (Baoyun, so
+//! far — see [`crate::vendor::TokenVendor::create_topup_order`]).
+//!
+//! The flow: create an order (the vendor returns a scan-to-pay QR), the
+//! client polls this service's `GET` until the vendor reports `success`, and
+//! on first observed success this credits the *paying install's own key* via
+//! [`crate::vendor::TokenVendor::top_up`]. That last step is this broker's
+//! job, not the vendor's — Baoyun's own top-up settles into the shared
+//! account balance, with no notion of "this money is for that key". The only
+//! thing tying an order back to an install is `reference`, an opaque string
+//! this broker sets at creation and gets back unchanged on every later read;
+//! [`get_topup_order`] refuses to report (let alone credit) an order whose
+//! reference does not match the install asking about it.
+//!
+//! Core functions take `&AppState` and are HTTP-independent, same convention
+//! as [`crate::service`] and [`crate::metered::service`].
+
+use std::sync::Arc;
+
+use axum::extract::{ConnectInfo, Path, Query, State};
+use axum::http::HeaderMap;
+use axum::Json;
+use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
+use uuid::Uuid;
+
+use crate::db;
+use crate::error::AppError;
+use crate::service::{hash_key, AppState};
+use crate::vendor::{TokenVendor, TopupOrderSpec, TopupOrderStatus, UsageLogEntry, VendorError};
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct TopupOrderResponse {
+    pub id: String,
+    pub vendor: String,
+    /// `pending`, `success`, `failed`, or `expired`.
+    pub status: String,
+    pub currency: String,
+    pub amount: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub qr_code: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub completed_at: Option<i64>,
+}
+
+/// Deterministic from `(vendor, install)`, not stored anywhere separately —
+/// recomputed on every read and compared against what the vendor echoes back.
+/// `pub(crate)`: `service.rs`'s key-recovery path needs the exact same
+/// string to look up this install's own paid history, and must not grow a
+/// second copy of this format.
+pub(crate) fn reference_for(vendor_id: &str, install_id: &str) -> String {
+    format!("{vendor_id}:{install_id}")
+}
+
+/// The real vendor spending power `paid_amount` (CNY the user actually paid,
+/// or a vendor-reported historical total) buys after this platform's resale
+/// markup — e.g. at the default 1.15x, a ¥11.50 payment grants ¥10.00 of
+/// real usage; the difference is the platform's margin. Rounded to cents.
+/// `pub(crate)`: every place real money turns into vendor `remain` must go
+/// through this one function, not compute its own ratio — `service.rs`'s
+/// key-recovery path (`recover_deleted_key`) needs the exact same
+/// conversion applied to reconstructed `paid_total`, or recovery would
+/// silently hand back the un-marked-up amount.
+pub(crate) fn granted_for_payment(markup: f64, paid_amount: f64) -> f64 {
+    (paid_amount / markup * 100.0).round() / 100.0
+}
+
+fn map_vendor_error(e: VendorError) -> AppError {
+    log_vendor_error(&e);
+    match e {
+        VendorError::Unsupported { .. } => AppError::TopupUnsupported,
+        _ => AppError::UpstreamError("topup vendor call failed".into()),
+    }
+}
+
+fn map_usage_log_vendor_error(e: VendorError) -> AppError {
+    log_vendor_error(&e);
+    match e {
+        VendorError::Unsupported { .. } => AppError::UsageLogsUnsupported,
+        _ => AppError::UpstreamError("usage log vendor call failed".into()),
+    }
+}
+
+fn log_vendor_error(error: &VendorError) {
+    match error {
+        VendorError::Upstream {
+            vendor,
+            status,
+            body,
+        } => {
+            tracing::error!(vendor, status, body = %body, "topup vendor call returned an error status");
+        }
+        VendorError::Request { vendor, message } => {
+            tracing::error!(vendor, error = %message, "topup vendor call failed");
+        }
+        VendorError::Unsupported { vendor, operation } => {
+            tracing::error!(
+                vendor,
+                operation,
+                "vendor does not support this top-up operation"
+            );
+        }
+    }
+}
+
+fn db_error(context: &'static str) -> impl Fn(sqlx::Error) -> AppError {
+    move |e| {
+        tracing::error!(error = %e, context, "topup db error");
+        AppError::Internal("database error".into())
+    }
+}
+
+/// Creates a real-money top-up order. The install must already hold an
+/// active key on `vendor_id` — there is nothing to eventually credit
+/// otherwise (same precondition `crate::service::apply_top_up` enforces for
+/// the ops-only atomic top-up).
+pub async fn create_topup_order(
+    state: &AppState,
+    vendor_id: &str,
+    install_id: &str,
+    amount: f64,
+) -> Result<TopupOrderResponse, AppError> {
+    let install_id = install_id.trim();
+    if install_id.is_empty() {
+        return Err(AppError::BadRequest("install_id must not be empty".into()));
+    }
+    // `<=` alone would let NaN through (every comparison against NaN is
+    // false), so it needs its own check.
+    if amount.is_nan() || amount <= 0.0 {
+        return Err(AppError::BadRequest("amount must be positive".into()));
+    }
+
+    let vendor = state
+        .vendors
+        .get(vendor_id)
+        .ok_or(AppError::VendorUnknown)?;
+
+    db::find_active_by_install_id(&state.pool, vendor_id, install_id)
+        .await
+        .map_err(db_error("topup order account check"))?
+        .ok_or(AppError::NotIssued)?;
+
+    let spec = TopupOrderSpec {
+        amount,
+        reference: reference_for(vendor_id, install_id),
+        idempotency_key: Uuid::new_v4().to_string(),
+    };
+
+    let order = vendor
+        .create_topup_order(spec)
+        .await
+        .map_err(map_vendor_error)?;
+
+    tracing::info!(
+        vendor = vendor_id,
+        order_id = %order.id,
+        amount,
+        "topup order created"
+    );
+
+    Ok(TopupOrderResponse {
+        id: order.id,
+        vendor: vendor_id.to_string(),
+        status: order.status.as_str().to_string(),
+        currency: order.currency,
+        amount: order.amount,
+        qr_code: order.qr_code,
+        expires_at: order.expires_at,
+        completed_at: order.completed_at,
+    })
+}
+
+/// Polls one top-up order. On first observation of `success` (checked
+/// against the local `topup_credits` guard, not the vendor — Baoyun has no
+/// "have I told you about this already" flag of its own), credits the
+/// polling install's key by the paid amount.
+pub async fn get_topup_order(
+    state: &AppState,
+    vendor_id: &str,
+    install_id: &str,
+    order_id: &str,
+) -> Result<TopupOrderResponse, AppError> {
+    let install_id = install_id.trim();
+    if install_id.is_empty() {
+        return Err(AppError::BadRequest("install_id must not be empty".into()));
+    }
+
+    let vendor = state
+        .vendors
+        .get(vendor_id)
+        .ok_or(AppError::VendorUnknown)?;
+
+    let issuance = db::find_active_by_install_id(&state.pool, vendor_id, install_id)
+        .await
+        .map_err(db_error("topup order poll account check"))?
+        .ok_or(AppError::NotIssued)?;
+
+    let order = vendor
+        .get_topup_order(order_id)
+        .await
+        .map_err(map_vendor_error)?;
+
+    let expected_reference = reference_for(vendor_id, install_id);
+    if order.reference.as_deref() != Some(expected_reference.as_str()) {
+        // Deliberately not logged with the real reference/order id at `warn`
+        // or above in a way that would help an attacker learn which orders
+        // exist — this is exactly the "not found" a guesser should see.
+        tracing::info!(
+            vendor = vendor_id,
+            order_id,
+            "topup order reference mismatch"
+        );
+        return Err(AppError::TopupOrderMismatch);
+    }
+
+    if order.status == TopupOrderStatus::Success {
+        credit_once(
+            state,
+            vendor.as_ref(),
+            vendor_id,
+            install_id,
+            order_id,
+            &issuance.vendor_key_handle,
+            order.amount,
+        )
+        .await?;
+    }
+
+    Ok(TopupOrderResponse {
+        id: order.id,
+        vendor: vendor_id.to_string(),
+        status: order.status.as_str().to_string(),
+        currency: order.currency,
+        amount: order.amount,
+        qr_code: order.qr_code,
+        expires_at: order.expires_at,
+        completed_at: order.completed_at,
+    })
+}
+
+/// Reserves `order_id` in `topup_credits` (single INSERT, `ON CONFLICT DO
+/// NOTHING`) and, only if this call won that reservation, calls
+/// [`TokenVendor::top_up`]. If the vendor call then fails, the reservation is
+/// rolled back so the *next* poll retries the whole thing rather than
+/// permanently reporting an order as settled that was never actually
+/// credited to the key. Relies on the broker's pool being capped at one
+/// connection (see `crate::db::init_pool`) to serialize concurrent pollers —
+/// the same invariant `crate::metered::store` leans on for its own ledger.
+async fn credit_once(
+    state: &AppState,
+    vendor: &dyn TokenVendor,
+    vendor_id: &str,
+    install_id: &str,
+    order_id: &str,
+    handle: &str,
+    amount: f64,
+) -> Result<(), AppError> {
+    let inserted = sqlx::query(
+        "INSERT INTO topup_credits (order_id, vendor, install_id, vendor_key_handle, amount, credited_at) \
+         VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
+    )
+    .bind(order_id)
+    .bind(vendor_id)
+    .bind(install_id)
+    .bind(handle)
+    .bind(amount)
+    .bind(chrono::Utc::now().timestamp_millis())
+    .execute(&state.pool)
+    .await
+    .map_err(db_error("record topup credit"))?
+    .rows_affected()
+        == 1;
+
+    if !inserted {
+        // Already credited by an earlier poll.
+        return Ok(());
+    }
+
+    let granted = granted_for_payment(state.config.topup_price_markup, amount);
+    if let Err(e) = vendor.top_up(handle, granted).await {
+        log_vendor_error(&e);
+        // Undo the reservation so the next poll retries the credit instead
+        // of silently reporting `success` with the key never actually
+        // topped up. Safe without a transaction: the single-connection pool
+        // means nothing else could have raced this row in between.
+        if let Err(cleanup_err) = sqlx::query("DELETE FROM topup_credits WHERE order_id = ?")
+            .bind(order_id)
+            .execute(&state.pool)
+            .await
+        {
+            tracing::error!(
+                order_id,
+                error = %cleanup_err,
+                "failed to roll back a topup_credits reservation after a failed top_up — \
+                 this order will read as permanently un-creditable until fixed by hand"
+            );
+        }
+        return Err(AppError::UpstreamError(
+            "failed to credit the top-up to the key".into(),
+        ));
+    }
+
+    tracing::info!(
+        vendor = vendor_id,
+        order_id,
+        amount,
+        granted,
+        "topup order credited"
+    );
+
+    // Money has settled on this key: lift the free-tier model whitelist so
+    // the paid tier can call the whole catalog (still metered against the
+    // key's balance). Best-effort and strictly AFTER the top_up — a failed
+    // unlock must never roll back settled money, and unlocking before the
+    // credit would hand paid models to an unpaid balance. The next settled
+    // top-up retries, since the whitelist only ever gets re-pinned by
+    // issuing a fresh key.
+    if let Err(e) = vendor.set_model_limits(handle, true).await {
+        tracing::warn!(
+            vendor = vendor_id,
+            order_id,
+            error = %e,
+            "failed to unlock model limits after a settled top-up — the key keeps the \
+             free-tier whitelist until the next settled top-up or an ops adjustment"
+        );
+    }
+    Ok(())
+}
+
+/// One credited top-up, as `/internal/vendors/:vendor/topups` reports it —
+/// the reconciliation view for "which end user did this real-money payment
+/// belong to," since the vendor's own console shows the payment but not that
+/// (see the handoff doc's §11.7 for why: Baoyun's wallet page has no column
+/// for the `reference` this broker sets).
+#[derive(Debug, Serialize)]
+pub struct TopupCreditView {
+    pub order_id: String,
+    pub install_id: String,
+    /// The vendor's own key id this credit landed on — cross-reference with
+    /// that vendor's own key list/usage console to see the human-readable
+    /// key name and subsequent spend. `None` only if the local issuance
+    /// record is gone.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vendor_key_handle: Option<String>,
+    pub amount: f64,
+    /// Unix ms.
+    pub credited_at: i64,
+}
+
+impl From<db::TopupCredit> for TopupCreditView {
+    fn from(c: db::TopupCredit) -> Self {
+        Self {
+            order_id: c.order_id,
+            install_id: c.install_id,
+            vendor_key_handle: c.vendor_key_handle,
+            amount: c.amount,
+            credited_at: c.credited_at,
+        }
+    }
+}
+
+/// Lists credited real-money top-ups for `vendor_id`, newest first. Ops-only
+/// — same trust tier as `/internal/stats`: reachable, not authenticated
+/// beyond network placement, not advertised to the desktop client.
+///
+/// `order_id` filters to one order — for the "I'm staring at an unfamiliar
+/// row in Baoyun's own wallet console, whose was it" direction (Baoyun
+/// support confirmed their "交易号" column *is* this broker's order id).
+/// `install_id` filters to one user's whole top-up history instead. Either,
+/// both, or neither may be set.
+pub async fn list_topups(
+    state: &AppState,
+    vendor_id: &str,
+    install_id: Option<&str>,
+    order_id: Option<&str>,
+) -> Result<Vec<TopupCreditView>, AppError> {
+    if !state.vendors.contains_key(vendor_id) {
+        return Err(AppError::VendorUnknown);
+    }
+    let credits = db::list_topup_credits(&state.pool, vendor_id, install_id, order_id)
+        .await
+        .map_err(db_error("list topup credits"))?;
+    Ok(credits.into_iter().map(TopupCreditView::from).collect())
+}
+
+/// One usage-log entry as `/internal/vendors/:vendor/usage/:install_id`
+/// reports it.
+#[derive(Debug, Serialize)]
+pub struct UsageLogView {
+    pub id: String,
+    /// `charge`, `error`, or `refund`.
+    pub kind: String,
+    /// Unix seconds.
+    pub created_at: i64,
+    pub model: String,
+    pub amount: f64,
+    pub prompt_tokens: i64,
+    pub completion_tokens: i64,
+    pub use_time_ms: i64,
+    pub request_id: String,
+    pub is_stream: bool,
+}
+
+impl From<UsageLogEntry> for UsageLogView {
+    fn from(e: UsageLogEntry) -> Self {
+        Self {
+            id: e.id,
+            kind: e.kind.as_str().to_string(),
+            created_at: e.created_at,
+            model: e.model,
+            amount: e.amount,
+            prompt_tokens: e.prompt_tokens,
+            completion_tokens: e.completion_tokens,
+            use_time_ms: e.use_time_ms,
+            request_id: e.request_id,
+            is_stream: e.is_stream,
+        }
+    }
+}
+
+/// This install's real per-call usage history on `vendor_id`, straight from
+/// the vendor's own logs — not anything this broker tracks itself (it never
+/// sees individual calls in mode A; see the module doc). Ops-only, same
+/// trust tier as [`list_topups`]: for "what did this user actually do and
+/// what did it really cost," e.g. reconciling against the granted `remain`
+/// after the resale markup, or just plain support/troubleshooting.
+pub async fn usage_history(
+    state: &AppState,
+    vendor_id: &str,
+    install_id: &str,
+    since_ms: Option<i64>,
+) -> Result<Vec<UsageLogView>, AppError> {
+    let vendor = state
+        .vendors
+        .get(vendor_id)
+        .ok_or(AppError::VendorUnknown)?;
+
+    let issuance = db::find_active_by_install_id(&state.pool, vendor_id, install_id)
+        .await
+        .map_err(db_error("usage history account check"))?
+        .ok_or(AppError::NotIssued)?;
+
+    let logs = vendor
+        .usage_logs(&issuance.vendor_key_handle, since_ms)
+        .await
+        .map_err(map_usage_log_vendor_error)?;
+
+    Ok(logs.into_iter().map(UsageLogView::from).collect())
+}
+
+/// Response for `POST /v1/keys/usage` — the "paste your key, see your usage"
+/// public query. Bundles the current spend position (same shape
+/// `QuotaStatusResponse` reports) with the same per-call log list
+/// `usage_history` gives an operator, so the one page a user pastes their
+/// key into can show balance and recent activity together.
+#[derive(Debug, Serialize)]
+pub struct KeyUsageQueryResponse {
+    pub vendor: String,
+    pub limit_usd: Option<f64>,
+    pub used_usd: f64,
+    pub remaining_usd: Option<f64>,
+    pub currency: String,
+    pub logs: Vec<UsageLogView>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct KeyUsageQueryRequest {
+    pub vendor: String,
+    pub key: String,
+}
+
+/// Looks up an issuance purely by the plaintext key it was issued — this
+/// broker never stores that plaintext, only its hash
+/// (`crate::service::hash_key`), computed once at issuance and compared
+/// here. Proving possession of the exact key bytes is the same trust level
+/// as being able to use the key for inference directly, so handing back its
+/// own usage is not a privilege escalation — this is why the route is public
+/// rather than `/internal/`. Only matches a currently *active* issuance: a
+/// key rotated away by recovery (`replace_issuance_key`) stops matching its
+/// old hash the moment the new one is written.
+pub async fn usage_by_key(
+    state: &AppState,
+    vendor_id: &str,
+    key: &str,
+    ip: std::net::IpAddr,
+) -> Result<KeyUsageQueryResponse, AppError> {
+    // Public and unauthenticated beyond key possession — same per-IP budget
+    // as `/v1/trial-keys` to blunt scripted abuse, even though the hash
+    // space makes guessing a real key impractical.
+    if !state.rate_limiter.check(ip) {
+        tracing::info!(ip = %ip, "rate limit rejection on key usage query");
+        return Err(AppError::RateLimited);
+    }
+
+    let vendor = state
+        .vendors
+        .get(vendor_id)
+        .ok_or(AppError::VendorUnknown)?;
+
+    let key_hash = hash_key(key);
+    let issuance = db::find_active_by_key_hash(&state.pool, vendor_id, &key_hash)
+        .await
+        .map_err(db_error("usage-by-key lookup"))?
+        .ok_or(AppError::KeyNotFound)?;
+
+    let usage = vendor
+        .read_usage(&issuance.vendor_key_handle)
+        .await
+        .map_err(|e| {
+            log_vendor_error(&e);
+            AppError::UpstreamError("failed to read this key's spend position".into())
+        })?;
+
+    let logs = vendor
+        .usage_logs(&issuance.vendor_key_handle, None)
+        .await
+        .map_err(map_usage_log_vendor_error)?;
+
+    Ok(KeyUsageQueryResponse {
+        vendor: vendor_id.to_string(),
+        limit_usd: usage.limit_usd,
+        used_usd: usage.used_usd,
+        remaining_usd: usage.remaining_usd,
+        currency: usage.currency,
+        logs: logs.into_iter().map(UsageLogView::from).collect(),
+    })
+}
+
+// --- axum handlers -----------------------------------------------
+
+#[derive(Debug, Deserialize)]
+pub struct CreateTopupOrderRequest {
+    pub vendor: String,
+    pub install_id: String,
+    pub amount: f64,
+}
+
+pub async fn create_topup_order_handler(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<CreateTopupOrderRequest>,
+) -> Result<Json<TopupOrderResponse>, AppError> {
+    Ok(Json(
+        create_topup_order(&state, &payload.vendor, &payload.install_id, payload.amount).await?,
+    ))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GetTopupOrderQuery {
+    pub vendor: String,
+    pub install_id: String,
+}
+
+pub async fn get_topup_order_handler(
+    State(state): State<Arc<AppState>>,
+    Path(order_id): Path<String>,
+    Query(query): Query<GetTopupOrderQuery>,
+) -> Result<Json<TopupOrderResponse>, AppError> {
+    Ok(Json(
+        get_topup_order(&state, &query.vendor, &query.install_id, &order_id).await?,
+    ))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ListTopupsQuery {
+    pub install_id: Option<String>,
+    pub order_id: Option<String>,
+}
+
+pub async fn list_topups_handler(
+    State(state): State<Arc<AppState>>,
+    Path(vendor): Path<String>,
+    Query(query): Query<ListTopupsQuery>,
+) -> Result<Json<Vec<TopupCreditView>>, AppError> {
+    Ok(Json(
+        list_topups(
+            &state,
+            &vendor,
+            query.install_id.as_deref(),
+            query.order_id.as_deref(),
+        )
+        .await?,
+    ))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UsageHistoryQuery {
+    /// Unix ms. Entries at or after this point only; omit for full history.
+    pub since: Option<i64>,
+}
+
+pub async fn usage_history_handler(
+    State(state): State<Arc<AppState>>,
+    Path((vendor, install_id)): Path<(String, String)>,
+    Query(query): Query<UsageHistoryQuery>,
+) -> Result<Json<Vec<UsageLogView>>, AppError> {
+    Ok(Json(
+        usage_history(&state, &vendor, &install_id, query.since).await?,
+    ))
+}
+
+pub async fn usage_by_key_handler(
+    State(state): State<Arc<AppState>>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
+    Json(payload): Json<KeyUsageQueryRequest>,
+) -> Result<Json<KeyUsageQueryResponse>, AppError> {
+    let ip = crate::routes::extract_client_ip(&headers, addr);
+    Ok(Json(
+        usage_by_key(&state, &payload.vendor, &payload.key, ip).await?,
+    ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn granted_for_payment_applies_the_markup_and_rounds_to_cents() {
+        assert_eq!(granted_for_payment(1.15, 11.5), 10.0);
+        assert_eq!(granted_for_payment(1.15, 10.0), 8.70);
+    }
+
+    #[test]
+    fn granted_for_payment_is_identity_at_markup_one() {
+        assert_eq!(granted_for_payment(1.0, 10.0), 10.0);
+        assert_eq!(granted_for_payment(1.0, 0.0), 0.0);
+    }
+}

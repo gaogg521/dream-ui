@@ -1,0 +1,628 @@
+use std::collections::HashMap;
+use std::net::{IpAddr, Ipv4Addr};
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
+
+use async_trait::async_trait;
+
+use dream_trial_broker::config::Config;
+use dream_trial_broker::db;
+use dream_trial_broker::error::AppError;
+use dream_trial_broker::rate_limit::RateLimiter;
+use dream_trial_broker::service::{apply_top_up, issue_trial_key, read_quota_status, AppState};
+use dream_trial_broker::vendor::{
+    IssuedKey, KeySpec, KeyUsage, ProvisioningMode, ResetPeriod, TokenVendor, VendorClientConfig,
+    VendorError,
+};
+
+const MODELS: &[&str] = &["vendor/free", "vendor/paid"];
+const MOCK_VENDOR_ID: &str = "mockvendor";
+
+/// A stand-in vendor: never touches the network, records what it was asked
+/// for, and can be told to fail or to report a particular spend position.
+struct MockVendor {
+    should_fail: bool,
+    mode: ProvisioningMode,
+    /// Last spec handed to `issue_key`, so tests can assert on the cap we
+    /// actually asked the vendor to enforce.
+    last_spec: Mutex<Option<KeySpec>>,
+    usage: Mutex<KeyUsage>,
+}
+
+impl MockVendor {
+    fn new(should_fail: bool) -> Self {
+        Self {
+            should_fail,
+            mode: ProvisioningMode::IssuedKey,
+            last_spec: Mutex::new(None),
+            usage: Mutex::new(KeyUsage {
+                limit_usd: Some(1.0),
+                used_usd: 0.25,
+                remaining_usd: Some(0.75),
+                reset: Some(ResetPeriod::Monthly),
+                disabled: false,
+                currency: "USD".to_string(),
+            }),
+        }
+    }
+
+    fn with_mode(mode: ProvisioningMode) -> Self {
+        Self {
+            mode,
+            ..Self::new(false)
+        }
+    }
+
+    fn last_spec(&self) -> KeySpec {
+        self.last_spec
+            .lock()
+            .unwrap()
+            .clone()
+            .expect("the vendor should have been asked to issue a key")
+    }
+}
+
+#[async_trait]
+impl TokenVendor for MockVendor {
+    fn id(&self) -> &'static str {
+        MOCK_VENDOR_ID
+    }
+
+    fn provisioning_mode(&self) -> ProvisioningMode {
+        self.mode
+    }
+
+    fn client_config(&self) -> VendorClientConfig {
+        VendorClientConfig {
+            platform: "MockPlatform",
+            base_url: "https://mock.example/v1",
+            currency: "USD",
+        }
+    }
+
+    async fn issue_key(&self, spec: KeySpec) -> Result<IssuedKey, VendorError> {
+        *self.last_spec.lock().unwrap() = Some(spec);
+        if self.should_fail {
+            return Err(VendorError::Upstream {
+                vendor: "mockvendor",
+                status: 500,
+                body: "simulated upstream failure".to_string(),
+            });
+        }
+        Ok(IssuedKey {
+            secret: "sk-mock-key".to_string(),
+            handle: "mock-handle".to_string(),
+            models: MODELS.iter().map(|s| s.to_string()).collect(),
+        })
+    }
+
+    async fn read_usage(&self, _handle: &str) -> Result<KeyUsage, VendorError> {
+        if self.should_fail {
+            return Err(VendorError::Request {
+                vendor: "mockvendor",
+                message: "simulated read failure".to_string(),
+            });
+        }
+        Ok(self.usage.lock().unwrap().clone())
+    }
+
+    async fn set_limit(&self, _handle: &str, limit_usd: f64) -> Result<(), VendorError> {
+        if self.should_fail {
+            return Err(VendorError::Request {
+                vendor: "mockvendor",
+                message: "simulated set_limit failure".to_string(),
+            });
+        }
+        // Real enough to exercise the trait's default `top_up` (read_usage +
+        // set_limit) end to end: raising the limit frees up the same amount
+        // to spend, `used` is untouched.
+        let mut usage = self.usage.lock().unwrap();
+        usage.limit_usd = Some(limit_usd);
+        usage.remaining_usd = Some(limit_usd - usage.used_usd);
+        Ok(())
+    }
+
+    async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
+        Ok(())
+    }
+    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+        Ok(())
+    }
+}
+
+fn base_config() -> Config {
+    Config {
+        openrouter_management_key: "test-management-key".to_string(),
+        baoyun: None,
+        database_url: "sqlite::memory:".to_string(),
+        daily_budget_usd_cap: 50.0,
+        trial_key_limit_usd: 1.0,
+        trial_key_limit_reset: ResetPeriod::Monthly,
+        trial_key_expires_days: 90,
+        listen_addr: "0.0.0.0:8787".to_string(),
+        per_ip_rate_limit_per_hour: 5,
+        public_base_url: "http://127.0.0.1:8787".to_string(),
+        topup_price_markup: 1.0,
+    }
+}
+
+async fn make_state(should_fail: bool, daily_budget_usd_cap: f64, rate_limit: u32) -> AppState {
+    let (state, _) = make_state_with(MockVendor::new(should_fail), |config| {
+        config.daily_budget_usd_cap = daily_budget_usd_cap;
+        config.per_ip_rate_limit_per_hour = rate_limit;
+    })
+    .await;
+    state
+}
+
+/// Builds state around a specific vendor, handing it back so the test can
+/// inspect what the service actually asked of it.
+async fn make_state_with(
+    vendor: MockVendor,
+    tweak: impl FnOnce(&mut Config),
+) -> (AppState, Arc<MockVendor>) {
+    let pool = db::init_pool("sqlite::memory:")
+        .await
+        .expect("in-memory db should initialize");
+
+    let mut config = base_config();
+    tweak(&mut config);
+    let rate_limit = config.per_ip_rate_limit_per_hour;
+    let vendor = Arc::new(vendor);
+
+    let mut vendors: HashMap<&'static str, Arc<dyn TokenVendor>> = HashMap::new();
+    let dyn_vendor: Arc<dyn TokenVendor> = vendor.clone();
+    vendors.insert(MOCK_VENDOR_ID, dyn_vendor);
+
+    let state = AppState {
+        pool,
+        config: Arc::new(config),
+        vendors,
+        rate_limiter: Arc::new(RateLimiter::new(rate_limit, Duration::from_secs(3600))),
+        metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
+        search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+    };
+    (state, vendor)
+}
+
+fn ip(a: u8, b: u8, c: u8, d: u8) -> IpAddr {
+    IpAddr::V4(Ipv4Addr::new(a, b, c, d))
+}
+
+#[tokio::test]
+async fn fresh_install_id_succeeds_and_persists_a_row() {
+    let state = make_state(false, 50.0, 5).await;
+
+    let response = issue_trial_key(&state, MOCK_VENDOR_ID, "install-fresh", ip(127, 0, 0, 1))
+        .await
+        .expect("first issuance should succeed");
+
+    assert_eq!(response.key, "sk-mock-key");
+    assert_eq!(response.base_url, "https://mock.example/v1");
+    assert_eq!(response.platform, "MockPlatform");
+    assert_eq!(response.vendor, "mockvendor");
+    assert_eq!(response.models, MODELS);
+
+    let row = db::find_active_by_install_id(&state.pool, "mockvendor", "install-fresh")
+        .await
+        .expect("query should succeed")
+        .expect("row should have been persisted");
+    assert_eq!(row.install_id, "install-fresh");
+    assert_eq!(row.vendor, "mockvendor");
+    // The plaintext key must never be stored at rest — only the vendor's
+    // handle for it.
+    assert_eq!(row.vendor_key_handle, "mock-handle");
+    assert_ne!(row.vendor_key_handle, "sk-mock-key");
+}
+
+/// The client needs to be told which platform to create the provider as.
+/// Without this it has to hardcode one vendor's name, which is exactly what
+/// the abstraction exists to remove.
+#[tokio::test]
+async fn the_response_names_the_platform_so_the_client_need_not_hardcode_it() {
+    let state = make_state(false, 50.0, 5).await;
+    let response = issue_trial_key(&state, MOCK_VENDOR_ID, "install-platform", ip(127, 0, 0, 1))
+        .await
+        .unwrap();
+
+    let vendor = state.vendors.get(MOCK_VENDOR_ID).unwrap();
+    assert_eq!(response.platform, vendor.client_config().platform);
+    assert_eq!(response.base_url, vendor.client_config().base_url);
+}
+
+#[tokio::test]
+async fn duplicate_install_id_returns_409() {
+    let state = make_state(false, 50.0, 5).await;
+    let caller_ip = ip(127, 0, 0, 1);
+
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-dup", caller_ip)
+        .await
+        .expect("first issuance should succeed");
+
+    let err = issue_trial_key(&state, MOCK_VENDOR_ID, "install-dup", caller_ip)
+        .await
+        .expect_err("second issuance for same install_id should fail");
+
+    assert!(matches!(err, AppError::AlreadyIssued));
+    assert_eq!(err.status_code(), axum::http::StatusCode::CONFLICT);
+}
+
+#[tokio::test]
+async fn exceeding_per_ip_rate_limit_returns_429() {
+    let state = make_state(false, 50.0, 2).await;
+    let caller_ip = ip(127, 0, 0, 2);
+
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-rl-1", caller_ip)
+        .await
+        .expect("first request within limit should succeed");
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-rl-2", caller_ip)
+        .await
+        .expect("second request within limit should succeed");
+
+    let err = issue_trial_key(&state, MOCK_VENDOR_ID, "install-rl-3", caller_ip)
+        .await
+        .expect_err("third request should exceed the per-IP rate limit");
+
+    assert!(matches!(err, AppError::RateLimited));
+    assert_eq!(err.status_code(), axum::http::StatusCode::TOO_MANY_REQUESTS);
+}
+
+#[tokio::test]
+async fn daily_budget_cap_returns_503() {
+    // cap = 2.0 USD, per-key limit = 1.0 USD -> the 3rd issuance trips it.
+    let state = make_state(false, 2.0, 100).await;
+    let caller_ip = ip(127, 0, 0, 3);
+
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-budget-1", caller_ip)
+        .await
+        .expect("first issuance should succeed");
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-budget-2", caller_ip)
+        .await
+        .expect("second issuance should succeed");
+
+    let err = issue_trial_key(&state, MOCK_VENDOR_ID, "install-budget-3", caller_ip)
+        .await
+        .expect_err("third issuance should trip the daily circuit breaker");
+
+    assert!(matches!(err, AppError::BudgetExhausted));
+    assert_eq!(
+        err.status_code(),
+        axum::http::StatusCode::SERVICE_UNAVAILABLE
+    );
+}
+
+/// The spend cap is the whole safety story of this service, and it is a plain
+/// value handed to a third party — nothing else in the system would notice if
+/// it silently became daily (30x the intended monthly commitment per user) or
+/// went missing entirely. So assert on the exact spec we send.
+#[tokio::test]
+async fn issued_keys_carry_the_configured_monthly_spend_cap() {
+    let (state, vendor) = make_state_with(MockVendor::new(false), |_| {}).await;
+
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-cap", ip(127, 0, 0, 9))
+        .await
+        .expect("issuance should succeed");
+
+    let spec = vendor.last_spec();
+    assert_eq!(spec.limit_usd, 1.0, "per-key spend cap");
+    assert_eq!(
+        spec.reset,
+        ResetPeriod::Monthly,
+        "cap must renew monthly, not daily"
+    );
+    assert_eq!(
+        spec.label, "trial-install-cap",
+        "label should be deterministic from install_id, not a random suffix"
+    );
+    assert!(
+        spec.expires_at.is_some(),
+        "keys must always carry an expiry"
+    );
+}
+
+#[tokio::test]
+async fn limit_reset_is_configurable_for_deployments_that_want_daily() {
+    let (state, vendor) = make_state_with(MockVendor::new(false), |config| {
+        config.trial_key_limit_reset = ResetPeriod::Daily;
+    })
+    .await;
+
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-daily", ip(127, 0, 0, 10))
+        .await
+        .expect("issuance should succeed");
+
+    assert_eq!(vendor.last_spec().reset, ResetPeriod::Daily);
+}
+
+/// A vendor that cannot cap a key must be refused *before* anything is spent.
+/// Issuing an uncapped key would be worse than issuing none at all.
+#[tokio::test]
+async fn a_vendor_that_cannot_cap_a_key_is_refused_before_issuing() {
+    let (state, vendor) = make_state_with(
+        MockVendor::with_mode(ProvisioningMode::MeteredProxy),
+        |_| {},
+    )
+    .await;
+
+    let err = issue_trial_key(
+        &state,
+        MOCK_VENDOR_ID,
+        "install-uncappable",
+        ip(127, 0, 0, 11),
+    )
+    .await
+    .expect_err("a vendor without capped keys must not be used to issue one");
+
+    assert!(matches!(err, AppError::Internal(_)));
+    assert!(
+        vendor.last_spec.lock().unwrap().is_none(),
+        "the vendor must not be called at all"
+    );
+}
+
+#[tokio::test]
+async fn vendor_failure_surfaces_as_502_without_persisting() {
+    let state = make_state(true, 50.0, 5).await;
+    let caller_ip = ip(127, 0, 0, 4);
+
+    let err = issue_trial_key(&state, MOCK_VENDOR_ID, "install-upstream-fail", caller_ip)
+        .await
+        .expect_err("simulated vendor failure should surface as an error");
+
+    assert!(matches!(err, AppError::UpstreamError(_)));
+    assert_eq!(err.status_code(), axum::http::StatusCode::BAD_GATEWAY);
+
+    let row = db::find_active_by_install_id(&state.pool, "mockvendor", "install-upstream-fail")
+        .await
+        .expect("query should succeed");
+    assert!(
+        row.is_none(),
+        "no row should be persisted on upstream failure"
+    );
+}
+
+#[tokio::test]
+async fn quota_status_reports_the_vendors_spend_position() {
+    let state = make_state(false, 50.0, 5).await;
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-quota", ip(127, 0, 0, 5))
+        .await
+        .expect("issuance should succeed");
+
+    let status = read_quota_status(&state, MOCK_VENDOR_ID, "install-quota")
+        .await
+        .expect("quota should be readable for an issued install");
+
+    assert_eq!(status.vendor, "mockvendor");
+    assert_eq!(status.limit_usd, Some(1.0));
+    assert_eq!(status.used_usd, 0.25);
+    assert_eq!(status.remaining_usd, Some(0.75));
+    assert_eq!(status.reset.as_deref(), Some("monthly"));
+    assert_eq!(status.currency, "USD");
+    assert!(!status.exhausted);
+}
+
+#[tokio::test]
+async fn quota_status_reports_exhaustion_once_nothing_remains() {
+    let (state, vendor) = make_state_with(MockVendor::new(false), |_| {}).await;
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-spent", ip(127, 0, 0, 6))
+        .await
+        .unwrap();
+
+    *vendor.usage.lock().unwrap() = KeyUsage {
+        limit_usd: Some(1.0),
+        used_usd: 1.0,
+        remaining_usd: Some(0.0),
+        reset: Some(ResetPeriod::Monthly),
+        disabled: false,
+        currency: "USD".to_string(),
+    };
+
+    let status = read_quota_status(&state, MOCK_VENDOR_ID, "install-spent")
+        .await
+        .unwrap();
+    assert!(status.exhausted);
+    assert_eq!(status.remaining_usd, Some(0.0));
+}
+
+/// Asking about an install that never claimed a key is a 404, not an error —
+/// it is the honest answer, and the client uses it to know there is nothing
+/// to show rather than that something broke.
+#[tokio::test]
+async fn quota_status_for_an_unknown_install_is_404() {
+    let state = make_state(false, 50.0, 5).await;
+
+    let err = read_quota_status(&state, MOCK_VENDOR_ID, "install-never-claimed")
+        .await
+        .expect_err("an install with no key has no quota to report");
+
+    assert!(matches!(err, AppError::NotIssued));
+    assert_eq!(err.status_code(), axum::http::StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn quota_status_rejects_an_empty_install_id() {
+    let state = make_state(false, 50.0, 5).await;
+    let err = read_quota_status(&state, MOCK_VENDOR_ID, "   ")
+        .await
+        .expect_err("empty id is a bad request");
+    assert!(matches!(err, AppError::BadRequest(_)));
+}
+
+/// Naming a vendor this broker has no `TokenVendor` for must fail before
+/// touching the database or any upstream call — not panic, not fall back to
+/// whichever vendor happens to be configured.
+#[tokio::test]
+async fn issuing_for_an_unconfigured_vendor_is_404() {
+    let state = make_state(false, 50.0, 5).await;
+
+    let err = issue_trial_key(&state, "not-a-real-vendor", "install-x", ip(127, 0, 0, 20))
+        .await
+        .expect_err("an unconfigured vendor must be refused");
+    assert!(matches!(err, AppError::VendorUnknown));
+    assert_eq!(err.status_code(), axum::http::StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn quota_status_for_an_unconfigured_vendor_is_404() {
+    let state = make_state(false, 50.0, 5).await;
+
+    let err = read_quota_status(&state, "not-a-real-vendor", "install-x")
+        .await
+        .expect_err("an unconfigured vendor must be refused");
+    assert!(matches!(err, AppError::VendorUnknown));
+}
+
+/// The top-up path this broker will eventually call from a payment webhook.
+/// `MockVendor` has no atomic delta of its own, so this exercises the trait's
+/// default (`read_usage` + `set_limit`) implementation end to end.
+#[tokio::test]
+async fn top_up_raises_the_limit_by_the_given_delta() {
+    let (state, _vendor) = make_state_with(MockVendor::new(false), |_| {}).await;
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-topup", ip(127, 0, 0, 21))
+        .await
+        .expect("issuance should succeed");
+
+    // Starting position: limit 1.0, used 0.25, remaining 0.75 (see
+    // `MockVendor::new`). A +2.0 top-up should raise the limit to 3.0 and
+    // free up 2.0 more to spend, leaving `used` untouched.
+    let status = apply_top_up(&state, MOCK_VENDOR_ID, "install-topup", 2.0)
+        .await
+        .expect("top-up should succeed");
+
+    assert_eq!(status.limit_usd, Some(3.0));
+    assert_eq!(status.used_usd, 0.25);
+    assert_eq!(status.remaining_usd, Some(2.75));
+    assert!(!status.exhausted);
+}
+
+#[tokio::test]
+async fn top_up_for_an_install_with_no_issuance_is_404() {
+    let state = make_state(false, 50.0, 5).await;
+
+    let err = apply_top_up(&state, MOCK_VENDOR_ID, "install-never-claimed", 5.0)
+        .await
+        .expect_err("nothing to top up for an install that never claimed a key");
+    assert!(matches!(err, AppError::NotIssued));
+}
+
+// --- fresh-issue safety net: no local row, but real payment history -----
+
+const PAID_HISTORY_VENDOR_ID: &str = "paid-history-vendor";
+
+/// A vendor that *does* implement `paid_total` — unlike `MockVendor`, which
+/// deliberately doesn't override it (that's what exercises the trait's
+/// `Unsupported` default for every other test in this file).
+struct PaidHistoryVendor {
+    paid_total: f64,
+    last_spec: Mutex<Option<KeySpec>>,
+}
+
+#[async_trait]
+impl TokenVendor for PaidHistoryVendor {
+    fn id(&self) -> &'static str {
+        PAID_HISTORY_VENDOR_ID
+    }
+    fn provisioning_mode(&self) -> ProvisioningMode {
+        ProvisioningMode::IssuedKey
+    }
+    fn client_config(&self) -> VendorClientConfig {
+        VendorClientConfig {
+            platform: "MockPlatform",
+            base_url: "https://mock.example/v1",
+            currency: "CNY",
+        }
+    }
+    async fn issue_key(&self, spec: KeySpec) -> Result<IssuedKey, VendorError> {
+        *self.last_spec.lock().unwrap() = Some(spec);
+        Ok(IssuedKey {
+            secret: "sk-mock".into(),
+            handle: "mock-handle".into(),
+            models: MODELS.iter().map(|s| s.to_string()).collect(),
+        })
+    }
+    async fn read_usage(&self, _handle: &str) -> Result<KeyUsage, VendorError> {
+        unreachable!()
+    }
+    async fn set_limit(&self, _handle: &str, _limit_usd: f64) -> Result<(), VendorError> {
+        unreachable!()
+    }
+    async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
+        unreachable!()
+    }
+    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+        Ok(())
+    }
+    async fn paid_total(&self, _reference: &str) -> Result<f64, VendorError> {
+        Ok(self.paid_total)
+    }
+}
+
+async fn make_state_with_paid_history_vendor(
+    paid_total: f64,
+    markup: f64,
+) -> (AppState, Arc<PaidHistoryVendor>) {
+    let pool = db::init_pool("sqlite::memory:").await.unwrap();
+    let vendor = Arc::new(PaidHistoryVendor {
+        paid_total,
+        last_spec: Mutex::new(None),
+    });
+    let mut vendors: HashMap<&'static str, Arc<dyn TokenVendor>> = HashMap::new();
+    vendors.insert(PAID_HISTORY_VENDOR_ID, vendor.clone());
+    let state = AppState {
+        pool,
+        config: Arc::new(Config {
+            topup_price_markup: markup,
+            ..base_config()
+        }),
+        vendors,
+        rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
+        metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
+        search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+    };
+    (state, vendor)
+}
+
+#[tokio::test]
+async fn a_fresh_issuance_with_no_local_row_credits_prior_payment_history() {
+    // No issuance row exists for "install-orphaned" — simulates the broker's
+    // own local record having been lost even though the install genuinely
+    // paid before (the real incident this test guards against).
+    let (state, vendor) = make_state_with_paid_history_vendor(10.0, 1.25).await;
+
+    issue_trial_key(
+        &state,
+        PAID_HISTORY_VENDOR_ID,
+        "install-orphaned",
+        ip(127, 0, 0, 30),
+    )
+    .await
+    .expect("issuance should succeed even though this looks like a fresh install");
+
+    let spec = vendor.last_spec.lock().unwrap().clone().unwrap();
+    // policy.limit_amount (1.0, from base_config's trial_key_limit_usd) +
+    // granted_for_payment(1.25, 10.0) == 1.0 + 8.0 == 9.0.
+    assert_eq!(
+        spec.limit_usd, 9.0,
+        "prior payment history must be credited (after markup) even with no local issuance row"
+    );
+}
+
+#[tokio::test]
+async fn a_genuinely_fresh_install_is_unaffected_by_the_paid_total_check() {
+    let (state, vendor) = make_state_with_paid_history_vendor(0.0, 1.25).await;
+
+    issue_trial_key(
+        &state,
+        PAID_HISTORY_VENDOR_ID,
+        "install-truly-new",
+        ip(127, 0, 0, 31),
+    )
+    .await
+    .expect("issuance should succeed");
+
+    let spec = vendor.last_spec.lock().unwrap().clone().unwrap();
+    assert_eq!(
+        spec.limit_usd, 1.0,
+        "zero paid history must leave the grant exactly as before this check existed"
+    );
+}
