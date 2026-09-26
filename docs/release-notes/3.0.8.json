@@ -1,0 +1,24 @@
+{
+  "version": "3.0.8",
+  "date": "2026-09-26",
+  "zh": [
+    {
+      "t": "单机版",
+      "d": "这一版把会话协作、内置能力与用量服务串成了完整体验，并补齐了影响稳定性与账号安全的关键修复。\n\n【新增】\n· 跨会话协作：在消息中用 @@ 把内容投递到另一个会话，可选择目标会话并看到投递状态；会话也可以点对点分享给成员，由对方导入为独立副本后继续工作\n· 内置技能市场从 24 项扩展到 115 项；新增页面阅读器，浏览器工具现在能真正注入到会话中使用\n· 鲍云试用与充值闭环：试用模型从实时目录选择，可自助充值、查看余额和模型用量；用量页升级为完整仪表盘，并支持从应用一键带入密钥\n\n【优化改进】\n· 付费后自动解除试用模型限制；充值订单、密钥归属和用量查询可追溯，异常丢失的试用密钥可安全找回\n· 浏览器读取当前页面减少一次往返，跨会话投递以卡片展示，设置页的充值与余额入口更清晰\n\n【修复】\n· 修复浏览器 MCP 连接后仍无法在对话中调用、CDP 附加时序不稳定等问题\n· 修复记住的登录密码以明文保存、试用额度色彩失效导致界面不可见、多个已选技能互相重叠等问题"
+    },
+    {
+      "t": "企业版",
+      "d": "企业身份、目录同步、组织权限与成员协作能力在本版完成可用闭环。\n\n【新增】\n· 支持标准 SAML 服务提供方登录、OIDC ID Token 的 JWKS 签名验证，以及 SCIM 2.0 用户和群组入站同步\n· 新增按范围分配的企业管理员角色与相应管理界面；成员可点对点分享会话并导入副本，跨会话 @@ 协作可通过企业中继同步\n\n【优化改进】\n· 平台与运维角色门禁按职责收敛；团队停止后会清理积压的空闲通知并重新同步，避免协作队列长期阻塞\n· 企业侧的协作中继、集成同步和充值订单转发得到完善，管理员可更可靠地追踪组织内协作与服务状态\n\n【修复】\n· 修复两个会使成员加入流程走入死路的边界条件，以及每个队友回合都重复发送空闲通知的问题\n· 本地保存的 MCP 传输配置和 OAuth Token 现加密保护；SCIM 离职处理和企业构建门禁的稳定性得到修复"
+    }
+  ],
+  "en": [
+    {
+      "t": "Personal edition",
+      "d": "This release connects conversation collaboration, built-in capabilities, and usage services into a complete experience, while addressing important reliability and account-safety issues.\n\n[New]\n· Cross-session collaboration: use @@ in a message to deliver it to another conversation, choose the destination, and see delivery status. Conversations can also be shared directly with a member, who imports an independent copy and continues working\n· The built-in Skills Hub grows from 24 to 115 skills. A page reader is included, and browser tools can now actually be injected into a conversation\n· A complete Baoyun trial and top-up flow: trial models are chosen from the live catalog, you can top up and check your balance, and the usage page is now a full dashboard with one-click key handoff from the app\n\n[Improved]\n· Paid accounts automatically unlock the trial-model restriction. Top-up orders, key attribution, and usage lookup are traceable, and a missing trial key can be recovered safely\n· Reading the current browser page takes one fewer round trip, cross-session deliveries are shown as cards, and the balance and top-up entry points are clearer\n\n[Fixed]\n· Fixed browser MCP connections that could still not be used in a conversation, plus unreliable CDP attach timing\n· Fixed remembered passwords being stored in plaintext, invisible trial-balance UI caused by broken colour classes, and overlapping selected skills"
+    },
+    {
+      "t": "Enterprise edition",
+      "d": "Enterprise identity, directory sync, organization permissions, and member collaboration reach a usable end-to-end state in this release.\n\n[New]\n· Standard SAML service-provider sign-in, JWKS signature validation for OIDC ID tokens, and inbound SCIM 2.0 user and group provisioning are now supported\n· Added scoped enterprise administrator roles and their management UI. Members can share a conversation directly and import a copy, while @@ collaboration can synchronize through the enterprise relay\n\n[Improved]\n· Platform and DevOps role guards are narrowed to their responsibilities. Stopping a team clears its queued idle notices and re-syncs it, preventing a collaboration queue from remaining blocked\n· The enterprise collaboration relay, integration sync, and top-up-order relay are more complete so administrators can track organization collaboration and service state more reliably\n\n[Fixed]\n· Fixed two edge cases that could lead a member join flow to a dead end, and idle notices that were sent repeatedly for every teammate turn\n· Locally persisted MCP transport configuration and OAuth tokens are now encrypted; SCIM offboarding and enterprise build-gate reliability are also corrected"
+    }
+  ]
+}
