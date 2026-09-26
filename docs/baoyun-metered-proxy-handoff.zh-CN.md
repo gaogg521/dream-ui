@@ -1542,3 +1542,18 @@ qwen3.7-flash），这符合"免费用户锁便宜模型"；但 §11.14 的充�
 
 坑：从 .env 取令牌用 `cut -d= -f2` 会把 base64 风格令牌里的 `=` 截掉（f2- 才对），
 症状是网关 401/Invalid API key，而 broker 进程内一切正常——先怀疑自己取错了值。
+
+### 11.20 收尾：品牌 logo、企业加入 UI 修复、模型解锁语义入交接文档（2026-09-26）
+
+- **logo 替换**（`aae2e72`）：usage 页品牌位与 favicon 换成 One Work 猫标
+  （素材 `D:\dream\image\5.png`，抠掉烙死的棋盘格背景 + 裁掉生成水印 +
+  128px 内嵌 data URI，成品 `image/5-128.png`）。第八节"暂无专属 logo"的
+  陈述就此过时——那是 09-02 的历史记录，保留不改。
+- **dream-ui 企业加入流程两个死胡同修复**（`4171d5d`，已推 origin/main）：
+  加入确认弹窗探测失败后卡死（Arco async onOk rejection 语义）+ 项目组页
+  服务器不可达时纯空白。详见 dream-ui
+  `docs/guides/session-2026-09-26-enterprise-join-flow-fixes.zh-CN.md`，
+  其中把 429 限流"白屏"、后台入口"点了没反应"、mcp_servers"残留"三项
+  复确认后判为设计如此，勿再当 bug 修。
+- **HANDOFF 模型解锁语义**：§3 的首次申领/充值两步补上了
+  `unrestricted_models` 与充值解锁的说明（见该文件 09-26 标注）。

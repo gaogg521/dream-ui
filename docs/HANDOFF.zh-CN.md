@@ -77,6 +77,10 @@ key 都查得到用量，见 §5。
    → **顺手问一次 vendor 的充值历史**（`paid_total`，防止 broker 本地记录
    丢了但用户其实充过钱，journal §11.14）→ 铸造新 key（同时算好
    `key_hash` 存进这条 issuance）→ 返回明文给客户端。
+   **模型档位**（09-26，journal §11.19）：铸造的 key 默认钉死免费模型
+   白名单（宝云侧 `model_limits_enabled` + `resolve_trial_models`）；
+   若 `paid_total > 0`（这个 install 付过钱）则 `unrestricted_models=true`
+   直接发无白名单 key——付费档解锁在签发时就地生效。
 2. **正常使用**：客户端直接拿这把 key 打 vendor，broker 完全不参与，也
    不知道具体花了多少（Mode A 的本质）。
 3. **key 在 vendor 那边没了**（被删/风控/账户异常）：客户端再次申领同一个
@@ -87,7 +91,9 @@ key 都查得到用量，见 §5。
    拿二维码 → 用户扫码付给 vendor → 3s 轮询 `GET /v1/topup/orders/:id` →
    `success` 时 `topup::credit_once` 用 `ON CONFLICT DO NOTHING` 保证只
    入账一次，`granted_for_payment(1.15, 实付金额)` 打折后调
-   `vendor.top_up`。
+   `vendor.top_up`。**入账成功后随即解锁该令牌的模型白名单**
+   （`set_model_limits(handle, true)`，best-effort——免费档到此升付费档，
+   失败不回滚已入账的钱，下次充值或运维操作重试；journal §11.19）。
 5. **查用量**：点击余额药丸菜单里的"查询用量" → `openExternalUrl` 直接
    跳系统浏览器到 `https://work.1oneclaw.com/trial-broker/usage#key=<明文key>`
    （fragment，浏览器不发给服务器）→ 页面自己的 JS 读 fragment、立刻
