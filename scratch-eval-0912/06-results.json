@@ -1,0 +1,82 @@
+[
+  {
+    "step": "ntf-modal",
+    "text": "发送站内消息 发送方式 全员广播 定向通知 全员广播会送达当前及未来的全部成员；定向通知只送达所选成员。 分类 标题 正文 取消发送"
+  },
+  {
+    "step": "ntf-send",
+    "toast": "请填写标题和正文",
+    "inHistory": false
+  },
+  {
+    "step": "key-create",
+    "toast": ""
+  },
+  {
+    "step": "key-secret-shown-once",
+    "secret": "(未见明文)"
+  },
+  {
+    "step": "billing-cap",
+    "error": "未找到上限输入"
+  },
+  {
+    "step": "license-fatal",
+    "err": "TimeoutError: locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('textarea').first()\u001b[22m\n"
+  },
+  {
+    "step": "fv-upload",
+    "toast": "已上传",
+    "listed": true
+  },
+  {
+    "step": "fv-delete",
+    "confirmed": true,
+    "toast": "",
+    "gone": false
+  },
+  {
+    "step": "backup-export",
+    "download": {
+      "file": "one-work-enterprise-backup-2026-09-12T03-53-47.json"
+    },
+    "response": {
+      "url": "http://localhost:25810/api/one/admin/backup/export",
+      "status": 200,
+      "ct": "application/json"
+    }
+  },
+  {
+    "step": "directory-sync",
+    "toast": "no enabled Feishu provider with an app secret is configured"
+  },
+  {
+    "step": "sso-empty-save",
+    "toast": "已保存"
+  },
+  {
+    "step": "kb-modal",
+    "text": "新建文档 标题 可见性 全部成员 内容 保存会替换全部内容并对整篇文档重建索引。 取消保存并建立索引"
+  },
+  {
+    "step": "kb-save",
+    "toast": "保存失败：Bad request: RAG embedding endpoint not configured",
+    "listed": false
+  },
+  {
+    "step": "mem-create",
+    "toast": "已保存",
+    "listed": true
+  },
+  {
+    "step": "mem-delete",
+    "confirmed": true,
+    "toast": "已保存",
+    "gone": true
+  },
+  {
+    "step": "users-self-remove-guard",
+    "found": 1,
+    "disabled": false
+  }
+]

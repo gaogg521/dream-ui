@@ -1,0 +1,266 @@
+[
+  {
+    "text": "成员",
+    "from": "/",
+    "to": "/users",
+    "issues": []
+  },
+  {
+    "text": "管理员",
+    "from": "/users",
+    "to": "/administrators",
+    "issues": []
+  },
+  {
+    "text": "邀请码",
+    "from": "/administrators",
+    "to": "/invites",
+    "issues": []
+  },
+  {
+    "text": "组织架构",
+    "from": "/invites",
+    "to": "/org-tree",
+    "issues": ["内容过少(60)"]
+  },
+  {
+    "text": "场景管理",
+    "from": "/org-tree",
+    "to": "/scenes",
+    "issues": []
+  },
+  {
+    "text": "资源授权",
+    "from": "/scenes",
+    "to": "/resource-grants",
+    "issues": []
+  },
+  {
+    "text": "模型与通道",
+    "from": "/resource-grants",
+    "to": "/model-channels",
+    "issues": ["内容过少(64)"]
+  },
+  {
+    "text": "资源注册表",
+    "from": "/model-channels",
+    "to": "/resource-registry",
+    "issues": []
+  },
+  {
+    "text": "配置项",
+    "from": "/resource-registry",
+    "to": "/config-vault",
+    "issues": ["内容过少(73)"]
+  },
+  {
+    "text": "内容市场",
+    "from": "/config-vault",
+    "to": "/market-sources",
+    "issues": []
+  },
+  {
+    "text": "API 资产",
+    "from": "/market-sources",
+    "to": "/api-assets",
+    "issues": []
+  },
+  {
+    "text": "分类与标签",
+    "from": "/api-assets",
+    "to": "/content-governance",
+    "issues": []
+  },
+  {
+    "text": "知识库",
+    "from": "/content-governance",
+    "to": "/knowledge-bases",
+    "issues": []
+  },
+  {
+    "text": "记忆系统",
+    "from": "/knowledge-bases",
+    "to": "/memory",
+    "issues": []
+  },
+  {
+    "text": "运行时节点",
+    "from": "/memory",
+    "to": "/runtime",
+    "issues": []
+  },
+  {
+    "text": "智能体会话",
+    "from": "/runtime",
+    "to": "/agent-sessions",
+    "issues": []
+  },
+  {
+    "text": "LLM Trace",
+    "from": "/agent-sessions",
+    "to": "/llm-trace",
+    "issues": []
+  },
+  {
+    "text": "用量总览",
+    "from": "/llm-trace",
+    "to": "/reports/overview",
+    "issues": []
+  },
+  {
+    "text": "通道与模型",
+    "from": "/reports/overview",
+    "to": "/reports/channel-model",
+    "issues": []
+  },
+  {
+    "text": "用户分析",
+    "from": "/reports/channel-model",
+    "to": "/reports/user-analysis",
+    "issues": []
+  },
+  {
+    "text": "审批与安全",
+    "from": "/reports/user-analysis",
+    "to": "/reports/approval-security",
+    "issues": []
+  },
+  {
+    "text": "企业报表",
+    "from": "/reports/approval-security",
+    "to": "/enterprise-report",
+    "issues": []
+  },
+  {
+    "text": "安全策略",
+    "from": "/enterprise-report",
+    "to": "/security-policy",
+    "issues": []
+  },
+  {
+    "text": "审批中心",
+    "from": "/security-policy",
+    "to": "/approvals",
+    "issues": []
+  },
+  {
+    "text": "审计日志",
+    "from": "/approvals",
+    "to": "/audit",
+    "issues": []
+  },
+  {
+    "text": "智能体审计",
+    "from": "/audit",
+    "to": "/agent-audit",
+    "issues": []
+  },
+  {
+    "text": "内容检查",
+    "from": "/agent-audit",
+    "to": "/content-inspection",
+    "issues": []
+  },
+  {
+    "text": "媒体台账",
+    "from": "/content-inspection",
+    "to": "/media-ledger",
+    "issues": []
+  },
+  {
+    "text": "个人文件仓库",
+    "from": "/media-ledger",
+    "to": "/file-vault",
+    "issues": []
+  },
+  {
+    "text": "企业管理后台",
+    "from": "/file-vault",
+    "to": "/company",
+    "issues": []
+  },
+  {
+    "text": "SSO 设置",
+    "from": "/company",
+    "to": "/sso",
+    "issues": []
+  },
+  {
+    "text": "目录同步",
+    "from": "/sso",
+    "to": "/directory",
+    "issues": []
+  },
+  {
+    "text": "订阅与 License",
+    "from": "/directory",
+    "to": "/billing",
+    "issues": []
+  },
+  {
+    "text": "License 详情",
+    "from": "/billing",
+    "to": "/license",
+    "issues": []
+  },
+  {
+    "text": "IM 管道",
+    "from": "/license",
+    "to": "/im-channels",
+    "issues": []
+  },
+  {
+    "text": "开放集成",
+    "from": "/im-channels",
+    "to": "/api-keys",
+    "issues": []
+  },
+  {
+    "text": "站内消息",
+    "from": "/api-keys",
+    "to": "/notifications",
+    "issues": []
+  },
+  {
+    "text": "备份与恢复",
+    "from": "/notifications",
+    "to": "/backup",
+    "issues": []
+  },
+  {
+    "quickCard": "邀请成员",
+    "from": "",
+    "to": "/invites",
+    "moved": true
+  },
+  {
+    "quickCard": "配置模型渠道",
+    "from": "",
+    "to": "/model-channels",
+    "moved": true
+  },
+  {
+    "quickCard": "设置安全策略",
+    "from": "",
+    "to": "/security-policy",
+    "moved": true
+  },
+  {
+    "quickCard": "激活 License",
+    "from": "",
+    "to": "/billing",
+    "moved": true
+  },
+  {
+    "quickCard": "资源授权",
+    "from": "",
+    "to": "/resource-grants",
+    "moved": true
+  },
+  {
+    "quickCard": "审计日志",
+    "from": "",
+    "to": "/audit",
+    "moved": true
+  }
+]

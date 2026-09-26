@@ -1,0 +1,28 @@
+[
+  {
+    "step": "login-initial",
+    "url": "http://localhost:25810/admin/change-password"
+  },
+  {
+    "step": "change-password",
+    "url": "http://localhost:25810/admin/login",
+    "pwFields": 3
+  },
+  {
+    "step": "relogin-new",
+    "url": "http://localhost:25810/admin"
+  },
+  {
+    "label": "home",
+    "path": "/",
+    "title": "One Work 企业管理后台",
+    "textLen": 486,
+    "textHead": "默认企业 免费档 One Work 企业管理后台 1 成员 0 组织架构 0 运行时节点 0 模型与通道 快速开始 邀请成员 生成邀请码，让同事加入项目组 配置模型渠道 接入公司统一的模型 API，成员开箱即用 配置企业登录 接入飞书 / 钉钉 / 企业微信 / OIDC / LDAP 单点登录 内容市场 添加官方或企业自有来源，一键同步技能 设置安全策略 按宽松 / 标准 / 严格档位统一管控风险 激活 License 输入厂商签发的授权码，解锁完整功能 进阶配置 接入企业知识 建知识库、上传文档、跑向量索引 记忆系统 三级记忆集合与提炼任务授权 资源授权 按成员/部门×技能/MCP/员工授权 智能体节点 查看在线运行时节点与心跳 审批授权 配置审批流与待办处理 审计日志 查看操作审计与导出 企业管理小助手 按提示完成企业初始化 已完成 1 / 6 17% 已创建企业组织 已完成 已邀请团队成员 待处理 已配置模型渠道 待处理 添加内容市场来源 待处理 已配置企业登录（SSO） 待处理 已激活 License 待处理 尚未激活 License，当前为免费档",
+    "spinning": false,
+    "tables": 0,
+    "toasts": [],
+    "bad": [],
+    "console": [],
+    "pageErrors": []
+  }
+]

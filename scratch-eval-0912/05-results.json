@@ -1,0 +1,59 @@
+[
+  {
+    "step": "sp-before",
+    "tier": "宽松"
+  },
+  {
+    "step": "sp-fatal",
+    "err": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"保存\")').first()\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"arco-btn arco-btn-pri"
+  },
+  {
+    "step": "runtime-switch-on",
+    "before": "false",
+    "after": "true",
+    "toast": ""
+  },
+  {
+    "step": "runtime-switch-off",
+    "after": "false",
+    "toast": ""
+  },
+  {
+    "step": "dlp-modal",
+    "text": "新增内容规则 名称 匹配方式 关键词 内容 不区分大小写的子串匹配。客户名、项目代号这类用它就够了。 命中后 仅记录 新规则默认「仅记录」。还没看清真实命中率就开始拦截，误报会把人推去用浏览器粘贴，比原本要防的泄漏更糟。 作用范围 全公司 启用 取消确定"
+  },
+  {
+    "step": "dlp-save",
+    "toast": "名称和内容都必须填写",
+    "visible": false
+  },
+  {
+    "step": "dlp-delete",
+    "noDelete": true,
+    "buttons": ["简体中文", "admin", "新增规则", "取消", "确定"]
+  },
+  {
+    "step": "appr-submit",
+    "toast": "已提交",
+    "pending": true
+  },
+  {
+    "step": "appr-approve",
+    "toast": ""
+  },
+  {
+    "step": "appr-cleanup",
+    "note": "已办记录无删除入口（审计留痕属预期）"
+  },
+  {
+    "step": "media-toggle-on",
+    "before": "false",
+    "after": "true",
+    "toast": "已保存"
+  },
+  {
+    "step": "media-toggle-off",
+    "after": "false",
+    "toast": "已保存"
+  }
+]

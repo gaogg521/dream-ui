@@ -1,0 +1,119 @@
+[
+  {
+    "0": {
+      "text": "渠道名称",
+      "hasInput": false,
+      "hasTextarea": false,
+      "inputType": "",
+      "ph": ""
+    },
+    "1": {
+      "text": "模型平台",
+      "hasInput": false,
+      "hasTextarea": false,
+      "inputType": "",
+      "ph": ""
+    },
+    "2": {
+      "text": "上游地址",
+      "hasInput": false,
+      "hasTextarea": false,
+      "inputType": "",
+      "ph": ""
+    },
+    "3": {
+      "text": "API Key",
+      "hasInput": false,
+      "hasTextarea": false,
+      "inputType": "",
+      "ph": ""
+    },
+    "4": {
+      "text": "可用模型",
+      "hasInput": false,
+      "hasTextarea": false,
+      "inputType": "",
+      "ph": ""
+    },
+    "5": {
+      "text": "作用范围",
+      "hasInput": false,
+      "hasTextarea": false,
+      "inputType": "",
+      "ph": ""
+    },
+    "6": {
+      "text": "启用",
+      "hasInput": false,
+      "hasTextarea": false,
+      "inputType": "",
+      "ph": ""
+    },
+    "step": "mc-labels"
+  },
+  {
+    "step": "mc-fill-name",
+    "ok": false
+  },
+  {
+    "step": "mc-fill-url",
+    "ok": true
+  },
+  {
+    "step": "mc-fill-key",
+    "ok": true
+  },
+  {
+    "step": "mc-save",
+    "toast": "请填写渠道名称和上游地址",
+    "visible": false
+  },
+  {
+    "step": "mc-save-retry",
+    "note": "modal 仍开着，dump 当前报错"
+  },
+  {
+    "step": "mc-delete",
+    "rowButtons": []
+  },
+  {
+    "step": "cv-labels"
+  },
+  {
+    "step": "cv-fill-name",
+    "ok": false
+  },
+  {
+    "step": "cv-fill-key",
+    "ok": false
+  },
+  {
+    "step": "cv-fill-value",
+    "ok": false
+  },
+  {
+    "step": "cv-save",
+    "toast": "请填写配置集名称",
+    "visible": false
+  },
+  {
+    "step": "cv-delete",
+    "rowButtons": ["简体中文", "admin", "新建配置集", "新建配置集", "取消", "保存"]
+  },
+  {
+    "step": "cg-labels"
+  },
+  {
+    "step": "cg-fill-name",
+    "ok": false
+  },
+  {
+    "step": "cg-cat-create",
+    "toast": "名称不能为空",
+    "visible": false
+  },
+  {
+    "step": "cg-fatal",
+    "err": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"添加\")').last()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"arco-btn arco-btn-secondary arco-btn-size-default arco-btn-sh"
+  }
+]
