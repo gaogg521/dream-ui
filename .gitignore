@@ -259,3 +259,7 @@ resources/screens/
 # Build artifacts from other workflows — never commit.
 out-pkg/
 out-pkg2/
+
+# 本地评测 scratch 目录（历史产物，勿入库）
+scratch-eval-0912/
+scratch-verify-0913/
