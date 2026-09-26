@@ -1,0 +1,124 @@
+name: Upload Existing macOS Build To COS
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version without v prefix
+        required: true
+      arm_run_id:
+        description: Successful macOS arm64 workflow run ID
+        required: true
+      x64_run_id:
+        description: Successful macOS x64 workflow run ID
+        required: true
+      commit_short:
+        description: Seven-character source commit used in artifact names
+        required: true
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.RELEASE_TEMP_308_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.RELEASE_TEMP_308_AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.RELEASE_TEMP_308_AWS_SESSION_TOKEN }}
+      AWS_DEFAULT_REGION: ap-shanghai
+      COS_ENDPOINT: https://cos.ap-shanghai.myqcloud.com
+      COS_BUCKET: s3://1onework-1251001122
+    steps:
+      - name: Download Apple Silicon artifact
+        uses: actions/download-artifact@v7
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.arm_run_id }}
+          name: macos-build-arm64-${{ inputs.commit_short }}
+          path: artifacts/arm64
+
+      - name: Download Intel artifact
+        uses: actions/download-artifact@v7
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.x64_run_id }}
+          name: macos-build-x64-${{ inputs.commit_short }}
+          path: artifacts/x64
+
+      - name: Validate exact artifacts and updater hashes
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          mv artifacts/arm64/latest-mac.yml artifacts/arm64/latest-arm64-mac.yml
+          expected=(
+            "artifacts/arm64/One-Work-${VERSION}-mac-arm64.dmg"
+            "artifacts/arm64/One-Work-${VERSION}-mac-arm64.dmg.blockmap"
+            "artifacts/arm64/One-Work-${VERSION}-mac-arm64.zip"
+            "artifacts/arm64/One-Work-${VERSION}-mac-arm64.zip.blockmap"
+            "artifacts/arm64/latest-arm64-mac.yml"
+            "artifacts/x64/One-Work-${VERSION}-mac-x64.dmg"
+            "artifacts/x64/One-Work-${VERSION}-mac-x64.dmg.blockmap"
+            "artifacts/x64/One-Work-${VERSION}-mac-x64.zip"
+            "artifacts/x64/One-Work-${VERSION}-mac-x64.zip.blockmap"
+            "artifacts/x64/latest-mac.yml"
+          )
+          for file in "${expected[@]}"; do test -s "$file" || { echo "Missing $file"; exit 1; }; done
+          test "$(find artifacts -type f | wc -l | tr -d ' ')" = "10"
+          VERSION="$VERSION" node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const crypto = require('crypto');
+          for (const [dir, manifest] of [['artifacts/arm64', 'latest-arm64-mac.yml'], ['artifacts/x64', 'latest-mac.yml']]) {
+            const text = fs.readFileSync(path.join(dir, manifest), 'utf8');
+            if (!text.includes(`version: ${process.env.VERSION}`)) throw new Error(`${manifest}: version mismatch`);
+            const entries = [...text.matchAll(/-\s+url:\s*(\S+)\n\s+sha512:\s*(\S+)\n\s+size:\s*(\d+)/g)];
+            if (entries.length !== 2) throw new Error(`${manifest}: expected dmg and zip entries`);
+            for (const [, name, expectedHash, expectedSize] of entries) {
+              const file = path.join(dir, name);
+              const bytes = fs.readFileSync(file);
+              const actualHash = crypto.createHash('sha512').update(bytes).digest('base64');
+              if (actualHash !== expectedHash || String(bytes.length) !== expectedSize) throw new Error(`${name}: manifest mismatch`);
+              console.log(`verified ${name} ${bytes.length}`);
+            }
+          }
+          NODE
+
+      - name: Upload versioned macOS assets and root manifests
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          aws configure set default.s3.addressing_style virtual
+          aws configure set default.s3.multipart_threshold 5GB
+          aws s3 cp artifacts/arm64/ "${COS_BUCKET}/releases/${VERSION}/" --recursive --endpoint-url "$COS_ENDPOINT" --acl public-read
+          aws s3 cp artifacts/x64/ "${COS_BUCKET}/releases/${VERSION}/" --recursive --endpoint-url "$COS_ENDPOINT" --acl public-read
+          aws s3 cp artifacts/arm64/latest-arm64-mac.yml "${COS_BUCKET}/releases/latest-arm64-mac.yml" --endpoint-url "$COS_ENDPOINT" --acl public-read --content-type text/yaml --cache-control 'public, max-age=60'
+          aws s3 cp artifacts/x64/latest-mac.yml "${COS_BUCKET}/releases/latest-mac.yml" --endpoint-url "$COS_ENDPOINT" --acl public-read --content-type text/yaml --cache-control 'public, max-age=60'
+
+      - name: Verify public COS objects
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          base=https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases
+          for file in \
+            "${VERSION}/One-Work-${VERSION}-mac-arm64.dmg" \
+            "${VERSION}/One-Work-${VERSION}-mac-arm64.dmg.blockmap" \
+            "${VERSION}/One-Work-${VERSION}-mac-arm64.zip" \
+            "${VERSION}/One-Work-${VERSION}-mac-arm64.zip.blockmap" \
+            "${VERSION}/latest-arm64-mac.yml" \
+            "${VERSION}/One-Work-${VERSION}-mac-x64.dmg" \
+            "${VERSION}/One-Work-${VERSION}-mac-x64.dmg.blockmap" \
+            "${VERSION}/One-Work-${VERSION}-mac-x64.zip" \
+            "${VERSION}/One-Work-${VERSION}-mac-x64.zip.blockmap" \
+            "${VERSION}/latest-mac.yml" \
+            latest-arm64-mac.yml latest-mac.yml; do
+            test "$(curl -fsS -o /dev/null -w '%{http_code}' "$base/$file")" = 200
+          done
+          test "$(curl -fsS "$base/latest-arm64-mac.yml" | awk '/^version:/{print $2; exit}')" = "$VERSION"
+          test "$(curl -fsS "$base/latest-mac.yml" | awk '/^version:/{print $2; exit}')" = "$VERSION"
