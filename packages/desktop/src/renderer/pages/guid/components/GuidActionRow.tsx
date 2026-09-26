@@ -42,6 +42,7 @@ import {
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import GuidExpertPickerGrid from './GuidExpertPickerGrid';
+import SelectedSkillCluster from './SelectedSkillCluster';
 import { resolveExtensionAssetUrl } from '@/renderer/utils/platform';
 import styles from '../index.module.css';
 
@@ -902,40 +903,10 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
         </div>
         {mediaControlNode}
         {selectedSkillChips.length > 0 && (
-          <span className='inline-flex min-w-0 shrink items-center gap-4px'>
-            {selectedSkillChips.map((skill) => (
-              <span
-                key={skill.name}
-                className='inline-flex max-w-140px shrink items-center gap-4px rounded-999px py-2px pl-4px pr-6px'
-                style={{ background: 'var(--color-fill-2)' }}
-                data-testid={`guid-selected-skill-chip-${skill.name}`}
-                title={skill.display_name ? `${skill.display_name} (${skill.name})` : skill.name}
-              >
-                {skill.icon_file ? (
-                  <img
-                    src={resolveExtensionAssetUrl(`/api/skills/${encodeURIComponent(skill.name)}/icon`)}
-                    alt=''
-                    className='h-16px w-16px rounded-999px object-cover'
-                  />
-                ) : (
-                  <Lightning theme='filled' size='12' fill={iconColors.primary} style={{ lineHeight: 0 }} />
-                )}
-                <span className='max-w-100px truncate text-12px text-t-primary'>
-                  {skill.display_name || skill.name}
-                </span>
-                <span
-                  className='inline-flex h-14px w-14px shrink-0 cursor-pointer items-center justify-center rounded-999px hover:bg-fill-3'
-                  data-testid={`guid-remove-skill-${skill.name}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleSkill(skill.name, skill.isAuto);
-                  }}
-                >
-                  <Close theme='outline' size={10} fill={iconColors.secondary} />
-                </span>
-              </span>
-            ))}
-          </span>
+          <SelectedSkillCluster
+            skills={selectedSkillChips}
+            onRemove={(skill) => onToggleSkill(skill.name, skill.isAuto)}
+          />
         )}
         {selectedPersona && (
           <div

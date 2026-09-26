@@ -1,0 +1,140 @@
+/* Several selected skills share one fixed-size summary control, so the action
+   row remains legible at narrow widths without overlapping their icons. */
+
+.cluster {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 2px 8px 2px 4px;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-fill-2);
+  cursor: pointer;
+  color: inherit;
+  line-height: 1;
+}
+
+.cluster:hover,
+.cluster:focus-visible {
+  background: var(--color-fill-3);
+}
+
+.cluster:focus-visible {
+  outline: 2px solid rgb(var(--primary-6));
+  outline-offset: 1px;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-2);
+  border-radius: 6px;
+  background: var(--color-fill-1);
+  flex-shrink: 0;
+}
+
+.icon img,
+.icon > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-2);
+  background: var(--color-fill-3);
+}
+
+.label {
+  min-width: 0;
+  max-width: 108px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--color-text-1);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 196px;
+  max-width: 280px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.row:hover {
+  background: var(--color-fill-2);
+}
+
+.rowIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--color-fill-3);
+}
+
+.rowIcon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rowName {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--color-text-1);
+}
+
+.remove {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+}
+
+.remove:hover {
+  background: var(--color-fill-3);
+}

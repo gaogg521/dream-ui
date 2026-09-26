@@ -59,8 +59,12 @@ vi.mock('@arco-design/web-react', () => {
     Dropdown: ({ droplist }: { droplist?: React.ReactNode }) => (
       <div data-testid='droplist'>{droplist as React.ReactNode}</div>
     ),
-    Button: ({ children, icon }: { children?: React.ReactNode; icon?: React.ReactNode }) => (
-      <button>
+    Button: ({
+      children,
+      icon,
+      ...props
+    }: React.ButtonHTMLAttributes<HTMLButtonElement> & { icon?: React.ReactNode }) => (
+      <button {...props}>
         {icon as React.ReactNode}
         {children}
       </button>
@@ -71,7 +75,12 @@ vi.mock('@arco-design/web-react', () => {
         {children}
       </span>
     ),
-    Popover: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    Popover: ({ children, content }: { children: React.ReactNode; content?: React.ReactNode }) => (
+      <div data-testid='skill-popover'>
+        {content as React.ReactNode}
+        {children}
+      </div>
+    ),
   };
 });
 
@@ -194,6 +203,20 @@ describe('skills submenu presentation', () => {
 
     // Unselected skills get no chip.
     expect(container.querySelector('[data-testid="guid-selected-skill-chip-wacli"]')).toBeNull();
+  });
+
+  it('combines several selected skills into one non-overlapping summary control', () => {
+    const { container } = render(
+      <GuidActionRow {...baseProps} enabledSkills={['fund-analysis', 'wacli', 'admin-console-guide']} />
+    );
+
+    expect(container.querySelector('[data-testid="guid-selected-skill-cluster"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="guid-selected-skill-cluster"]')?.textContent).toContain('3');
+    expect(container.querySelectorAll('[data-testid="guid-selected-skill-summary-icon"]')).toHaveLength(1);
+    // Named rows live in the popover list so each skill can still be removed.
+    expect(container.querySelector('[data-testid="guid-selected-skill-chip-fund-analysis"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="guid-remove-skill-wacli"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="guid-selected-skill-list"]')).toBeTruthy();
   });
 
   it('badges only team-distributed skills, not builtin or custom ones', () => {
