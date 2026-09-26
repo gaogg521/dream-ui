@@ -15,11 +15,11 @@
 三个独立仓库合作，让 dream-ui 桌面客户端的新用户不用自己申请 API Key 也能
 免费试用一次模型：
 
-| 仓库 | 角色 | git remote |
-| --- | --- | --- |
+| 仓库                   | 角色                                                   | git remote                                             |
+| ---------------------- | ------------------------------------------------------ | ------------------------------------------------------ |
 | **dream-trial-broker** | Rust/Axum 独立服务，唯一持有真实上游 vendor 凭据的地方 | **没有 remote**，只在这台机器上，靠 tar+scp 部署（§6） |
-| **dream-core** | 桌面客户端的本地后端，转发 IPC 请求到 broker | GitHub `gaogg521/dream-core`，走正常 PR/main 流程 |
-| **dream-ui** | Electron 渲染层 UI | GitHub `gaogg521/dream-ui`，走正常 PR/main 流程 |
+| **dream-core**         | 桌面客户端的本地后端，转发 IPC 请求到 broker           | GitHub `gaogg521/dream-core`，走正常 PR/main 流程      |
+| **dream-ui**           | Electron 渲染层 UI                                     | GitHub `gaogg521/dream-ui`，走正常 PR/main 流程        |
 
 dream-core/dream-ui 从不直接持有 vendor 的凭据或密钥——所有真实调用都是
 `dream-core → https://work.1oneclaw.com/trial-broker → vendor`。
@@ -42,17 +42,17 @@ dream-core/dream-ui 从不直接持有 vendor 的凭据或密钥——所有真�
 
 ### 2.2 路由面（`src/routes.rs`，只列 Mode A 相关）
 
-| 路由 | 谁调 | 作用 |
-| --- | --- | --- |
-| `POST /v1/trial-keys` | dream-core | 首次申领；重复申领会走"活着就返明文/死了就找回"分支，不是简单 409（journal §11.12） |
-| `POST /v1/quota/status` | dream-core | 查这个 install 当前 key 的余额 |
-| `POST /v1/topup/orders` | dream-core | 创建真实充值订单（拿二维码） |
-| `GET /v1/topup/orders/:id` | dream-core | 轮询订单状态，`success` 时原子入账（按 15% 加价折算） |
-| `POST /v1/keys/usage` | **`/usage` 页面自己**，不经过 dream-core/dream-ui | 粘 key 查用量——按 `sha256(key)` 精确匹配 `issuances.key_hash`，找不到就是 404 |
-| `GET /usage` | 浏览器直接访问 | 独立静态页面（`webui/usage.html`，`include_str!` 编进二进制），dream-ui 只是 `openExternalUrl` 跳过去，**不是** IPC/嵌入式弹窗 |
-| `GET /internal/vendors/:vendor/topups` | 运维手工查 | 对账：install → 当时那把 key 的充值记录 |
-| `GET /internal/vendors/:vendor/usage/:install_id` | 运维手工查 | 这个用户在 vendor 那边的真实调用明细（`GET /apis/v1/logs` 透传） |
-| `POST /internal/vendors/:vendor/trial-keys/:install_id/topup` | 运维手工调 | 不加价的人工补偿接口（今天补用户 ¥10 用的就是这个） |
+| 路由                                                          | 谁调                                              | 作用                                                                                                                           |
+| ------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /v1/trial-keys`                                         | dream-core                                        | 首次申领；重复申领会走"活着就返明文/死了就找回"分支，不是简单 409（journal §11.12）                                            |
+| `POST /v1/quota/status`                                       | dream-core                                        | 查这个 install 当前 key 的余额                                                                                                 |
+| `POST /v1/topup/orders`                                       | dream-core                                        | 创建真实充值订单（拿二维码）                                                                                                   |
+| `GET /v1/topup/orders/:id`                                    | dream-core                                        | 轮询订单状态，`success` 时原子入账（按 15% 加价折算）                                                                          |
+| `POST /v1/keys/usage`                                         | **`/usage` 页面自己**，不经过 dream-core/dream-ui | 粘 key 查用量——按 `sha256(key)` 精确匹配 `issuances.key_hash`，找不到就是 404                                                  |
+| `GET /usage`                                                  | 浏览器直接访问                                    | 独立静态页面（`webui/usage.html`，`include_str!` 编进二进制），dream-ui 只是 `openExternalUrl` 跳过去，**不是** IPC/嵌入式弹窗 |
+| `GET /internal/vendors/:vendor/topups`                        | 运维手工查                                        | 对账：install → 当时那把 key 的充值记录                                                                                        |
+| `GET /internal/vendors/:vendor/usage/:install_id`             | 运维手工查                                        | 这个用户在 vendor 那边的真实调用明细（`GET /apis/v1/logs` 透传）                                                               |
+| `POST /internal/vendors/:vendor/trial-keys/:install_id/topup` | 运维手工调                                        | 不加价的人工补偿接口（今天补用户 ¥10 用的就是这个）                                                                            |
 
 `/internal/*` 只受"只监听 127.0.0.1:8787、nginx 不转发"这层网络位置保护，
 没有额外鉴权。
@@ -118,10 +118,10 @@ key 都查得到用量，见 §5。
 - 当前二进制：`2026-09-24 22:37` 装的，`systemctl is-active` = `active`。
 - `key_hash` 回填覆盖率（现场 SQL 查的）：
 
-  | vendor | 活跃 issuance 数 | 有 key_hash | 说明 |
-  | --- | --- | --- | --- |
-  | baoyun | 2 | 2（100%） | 启动回填任务 + 之后新发的 key 都会自动补 |
-  | openrouter | 43 | 0（0%） | **按设计**——OpenRouter 不支持 `reveal_key`，回填任务对它天生跳过；这些用户永远查不了用量，除非以后 OpenRouter 一侧也接了 |
+  | vendor     | 活跃 issuance 数 | 有 key_hash | 说明                                                                                                                     |
+  | ---------- | ---------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------ |
+  | baoyun     | 2                | 2（100%）   | 启动回填任务 + 之后新发的 key 都会自动补                                                                                 |
+  | openrouter | 43               | 0（0%）     | **按设计**——OpenRouter 不支持 `reveal_key`，回填任务对它天生跳过；这些用户永远查不了用量，除非以后 OpenRouter 一侧也接了 |
 
 - `TOPUP_PRICE_MARKUP` **没有写进生产 `.env`**，所以吃的是代码里的编译期
   默认值 `1.15`（`config.rs:104`）——效果是对的，但如果以后有人改了代码
@@ -143,14 +143,14 @@ key 都查得到用量，见 §5。
 
 ## 6. 已知的坑（分布在多轮踩过，压缩列一遍）
 
-| 坑 | 一句话 |
-| --- | --- |
-| Arco `Trigger`（Tooltip/Dropdown）直接包 IconPark 图标 | React 19 删了 `findDOMNode`，图标不转发 ref，白屏；vitest 默认测不出来，要 fake timers |
-| UnoCSS `[rgb(var(--arco变量))]` | Arco 调色板是逗号分隔通道，UnoCSS 编出空格语法，声明被浏览器静默丢弃；判据只能是 computed style，不是看 class 名或生成的 CSS |
-| 密钥类的东西传给网页 | 用 URL fragment（`#key=`），不能用 query string（会进 nginx/broker 日志）；fragment-only 导航不触发文档重载，必须监听 `hashchange` |
-| "老数据优雅降级"这个说法本身就该被怀疑 | 写这几个字之前先算它多久会被自然更新；试用 key 活 90 天且只有主动找回才换新，等于是"永久损坏"不是"降级" |
-| 本地记录丢失 ≠ 记录压根不存在 | 只处理"key 存在但被标记死"的恢复分支，防不住"broker 自己的 issuance 行先丢了"这种情况；两者都要查一次 vendor 的付款历史兜底 |
-| 送文本到这台 Linux 服务器前 | `git archive`、Python `write_text` 都会偷偷转 CRLF，验证行尾再传 |
+| 坑                                                     | 一句话                                                                                                                             |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Arco `Trigger`（Tooltip/Dropdown）直接包 IconPark 图标 | React 19 删了 `findDOMNode`，图标不转发 ref，白屏；vitest 默认测不出来，要 fake timers                                             |
+| UnoCSS `[rgb(var(--arco变量))]`                        | Arco 调色板是逗号分隔通道，UnoCSS 编出空格语法，声明被浏览器静默丢弃；判据只能是 computed style，不是看 class 名或生成的 CSS       |
+| 密钥类的东西传给网页                                   | 用 URL fragment（`#key=`），不能用 query string（会进 nginx/broker 日志）；fragment-only 导航不触发文档重载，必须监听 `hashchange` |
+| "老数据优雅降级"这个说法本身就该被怀疑                 | 写这几个字之前先算它多久会被自然更新；试用 key 活 90 天且只有主动找回才换新，等于是"永久损坏"不是"降级"                            |
+| 本地记录丢失 ≠ 记录压根不存在                          | 只处理"key 存在但被标记死"的恢复分支，防不住"broker 自己的 issuance 行先丢了"这种情况；两者都要查一次 vendor 的付款历史兜底        |
+| 送文本到这台 Linux 服务器前                            | `git archive`、Python `write_text` 都会偷偷转 CRLF，验证行尾再传                                                                   |
 
 ## 7. 未完成 / 待办
 

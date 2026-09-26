@@ -58,11 +58,11 @@
 - 发票：企业客户累计充值满 1000 元可申请，3-5 个工作日开具。
 - **速率限制是账户等级的，不是按 Key 的**（`认证与安全`页表格）：
 
-  | 账户等级 | 请求/分钟 | Tokens/天 |
-  | --- | --- | --- |
-  | 免费试用 | 20 | 100,000 |
-  | 付费版 | 100 | 10,000,000 |
-  | 企业版 | 自定义 | 自定义 |
+  | 账户等级 | 请求/分钟 | Tokens/天  |
+  | -------- | --------- | ---------- |
+  | 免费试用 | 20        | 100,000    |
+  | 付费版   | 100       | 10,000,000 |
+  | 企业版   | 自定义    | 自定义     |
 
   **这是个隐藏瓶颈**：如果 broker 用一个宝云账户的一把 master key 代理所有 dream 用户
   的流量，全体用户共用这一份速率限制。100 次/分钟对单个开发者够用，但对"所有 dream 桌面
@@ -125,15 +125,15 @@
 
 ### 3.2 现状代码基线（供实现时对照，来自 2026-09-02 的代码调研）
 
-| 位置 | 现状 |
-| --- | --- |
-| `src/vendor/mod.rs:148-172` | `TokenVendor` trait，`ProvisioningMode::{IssuedKey, MeteredProxy}`（`mod.rs:18-34`）已声明，`MeteredProxy` 分支从未实现 |
-| `src/vendor/openrouter.rs` | 唯一 vendor 实现，350 行，含单测；其 HTTP client 结构（`reqwest::Client` + `bearer_auth` + 统一错误映射）可作为"管理面"客户端模板，但**转发/流式代理完全没有先例** |
-| `src/service.rs:88-94` | `issue_trial_key` 对非 `IssuedKey` 的 vendor **直接拒绝**，说明当前 service 层是模式 A 专用的，模式 B 不应该塞进这个函数 |
-| `migrations/0002_multi_vendor.sql` | `issuances` 表，`UNIQUE(vendor, install_id)`，记的是"签发的 key handle"，**不是消费账本**，模式 B 不能复用这张表 |
-| `src/routes.rs` | 目前只有 3 条路由，全部是模式 A 形状（`POST /v1/trial-keys`、`POST /v1/quota/status` 等） |
-| `src/main.rs:26-31` | 单 vendor 硬编码构造 `Arc<dyn TokenVendor>`，注释已经写明"多 vendor 时改成按配置查表" |
-| 全仓库 grep `stream\|SSE` | **零命中**（除文档注释）——流式 HTTP 转发是这次要从零写的最大新增子系统 |
+| 位置                               | 现状                                                                                                                                                               |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/vendor/mod.rs:148-172`        | `TokenVendor` trait，`ProvisioningMode::{IssuedKey, MeteredProxy}`（`mod.rs:18-34`）已声明，`MeteredProxy` 分支从未实现                                            |
+| `src/vendor/openrouter.rs`         | 唯一 vendor 实现，350 行，含单测；其 HTTP client 结构（`reqwest::Client` + `bearer_auth` + 统一错误映射）可作为"管理面"客户端模板，但**转发/流式代理完全没有先例** |
+| `src/service.rs:88-94`             | `issue_trial_key` 对非 `IssuedKey` 的 vendor **直接拒绝**，说明当前 service 层是模式 A 专用的，模式 B 不应该塞进这个函数                                           |
+| `migrations/0002_multi_vendor.sql` | `issuances` 表，`UNIQUE(vendor, install_id)`，记的是"签发的 key handle"，**不是消费账本**，模式 B 不能复用这张表                                                   |
+| `src/routes.rs`                    | 目前只有 3 条路由，全部是模式 A 形状（`POST /v1/trial-keys`、`POST /v1/quota/status` 等）                                                                          |
+| `src/main.rs:26-31`                | 单 vendor 硬编码构造 `Arc<dyn TokenVendor>`，注释已经写明"多 vendor 时改成按配置查表"                                                                              |
+| 全仓库 grep `stream\|SSE`          | **零命中**（除文档注释）——流式 HTTP 转发是这次要从零写的最大新增子系统                                                                                             |
 
 ### 3.3 数据模型（新增表，与 `issuances` 完全独立）
 
@@ -223,7 +223,7 @@ pub trait PaymentGateway: Send + Sync {
 ### 3.5 请求生命周期
 
 1. **Claim**（一次性）：`POST /v1/metered/claim {vendor, install_id}` → 按 `(vendor,
-   install_id)` upsert `metered_accounts`（首次发 `free_grant_cents`，重复 claim 幂等、
+install_id)` upsert `metered_accounts`（首次发 `free_grant_cents`，重复 claim 幂等、
    不重复发放）→ 生成 device_token（明文只返回这一次，落库存 hash，跟现有"只存 hash"
    的安全惯例一致）→ 返回 `{base_url: "<broker>/v1/metered/baoyun", device_token, models}`。
 2. **代理调用**：`ANY /v1/metered/{vendor}/*path`，客户端拿 device_token 当 Bearer。
@@ -264,14 +264,14 @@ pub trait PaymentGateway: Send + Sync {
 
 ### 3.7 broker 新增 API 面（汇总）
 
-| Method & Path | 用途 |
-| --- | --- |
-| `POST /v1/metered/claim` | 首次领取（发免费额度 + device_token） |
-| `ANY /v1/metered/{vendor}/*path` | 推理流量转发（含流式） |
-| `POST /v1/metered/quota/status` | 查本地账本余额 |
-| `POST /v1/metered/orders` | 创建套餐订单，拿支付二维码 |
-| `GET /v1/metered/orders/{id}` | 轮询订单状态 |
-| `POST /v1/metered/orders/webhook/{gateway}` | 支付网关回调 |
+| Method & Path                               | 用途                                  |
+| ------------------------------------------- | ------------------------------------- |
+| `POST /v1/metered/claim`                    | 首次领取（发免费额度 + device_token） |
+| `ANY /v1/metered/{vendor}/*path`            | 推理流量转发（含流式）                |
+| `POST /v1/metered/quota/status`             | 查本地账本余额                        |
+| `POST /v1/metered/orders`                   | 创建套餐订单，拿支付二维码            |
+| `GET /v1/metered/orders/{id}`               | 轮询订单状态                          |
+| `POST /v1/metered/orders/webhook/{gateway}` | 支付网关回调                          |
 
 ## 四、dream-core 改动面
 
@@ -285,7 +285,7 @@ pub trait PaymentGateway: Send + Sync {
   两者共享 install_id 的读取逻辑，但不合并成一个 service——避免为了"复用"把两种本质不同
   的流程（发 key vs 代理凭证）耦合在一起。
 - **Provider 落地**：`CreateProviderRequest` 本身是通用行（`platform/base_url/api_key/
-  models`），确认可以直接拿 `MeteredAccessResponse` 建一个 `platform: 'custom'` 的
+models`），确认可以直接拿 `MeteredAccessResponse` 建一个 `platform: 'custom'` 的
   provider，`base_url`=broker 代理地址，`api_key`=device_token——**不需要在 dream-core
   后端新增"宝云"这个平台的编译期概念**。
 - **错误分类**：现状"两条独立分类路径"仍然成立——`protocol/send_error.rs` 的
@@ -364,17 +364,17 @@ pub trait PaymentGateway: Send + Sync {
 
 ### 9.1 已落地的文件
 
-| 文件 | 内容 |
-| --- | --- |
+| 文件                                | 内容                                                                                                                                            |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `migrations/0003_metered_proxy.sql` | `metered_accounts` / `metered_ledger_events` / `metered_orders` / `metered_pending_costs` 四张表 + consume/purchase 幂等的 partial unique index |
-| `src/metered/mod.rs` | `MeteredVendorConfig` / `Package` / `CostResolver` / `PaymentGateway` / `MeteredRuntime` + `now_ms`/`sha256_hex`/`new_device_token` |
-| `src/metered/store.rs` | 账本读写（claim upsert、`apply_consume` 幂等、订单、pending 队列），RMW 全走事务 |
-| `src/metered/baoyun.rs` | `BAOYUN` 常量、`config_from_env`、`RemoteCostResolver`（`GET /v1/billing/cost`） |
-| `src/metered/gateway.rs` | `MockGateway`（带 shared secret 校验） |
-| `src/metered/proxy.rs` | `ANY /v1/metered/proxy/{vendor}/*path` 流式转发 + 事后计费 |
-| `src/metered/poller.rs` | 异步费用后台轮询（`poll_once` 已导出供测试） |
-| `src/metered/service.rs` | claim / quota / orders / webhook 的 HTTP-independent 流程 + axum handler |
-| `tests/metered.rs` | 7 个集成测试，真 router + stand-in 上游 + scripted resolver |
+| `src/metered/mod.rs`                | `MeteredVendorConfig` / `Package` / `CostResolver` / `PaymentGateway` / `MeteredRuntime` + `now_ms`/`sha256_hex`/`new_device_token`             |
+| `src/metered/store.rs`              | 账本读写（claim upsert、`apply_consume` 幂等、订单、pending 队列），RMW 全走事务                                                                |
+| `src/metered/baoyun.rs`             | `BAOYUN` 常量、`config_from_env`、`RemoteCostResolver`（`GET /v1/billing/cost`）                                                                |
+| `src/metered/gateway.rs`            | `MockGateway`（带 shared secret 校验）                                                                                                          |
+| `src/metered/proxy.rs`              | `ANY /v1/metered/proxy/{vendor}/*path` 流式转发 + 事后计费                                                                                      |
+| `src/metered/poller.rs`             | 异步费用后台轮询（`poll_once` 已导出供测试）                                                                                                    |
+| `src/metered/service.rs`            | claim / quota / orders / webhook 的 HTTP-independent 流程 + axum handler                                                                        |
+| `tests/metered.rs`                  | 7 个集成测试，真 router + stand-in 上游 + scripted resolver                                                                                     |
 
 ### 9.2 与原设计的偏差（实现时的决定，都写进代码注释了）
 
@@ -420,7 +420,7 @@ pub trait PaymentGateway: Send + Sync {
   `ClaimResponse` / `QuotaResponse` / `OrderResponse` 对齐。
 - **新路由**（dream-core 对前端的面）：`POST /api/providers/metered/claim {vendor}`、
   `GET /api/providers/metered/quota?vendor=`、`POST /api/providers/metered/orders
-  {vendor, package_id}`、`GET /api/providers/metered/orders/{id}`。
+{vendor, package_id}`、`GET /api/providers/metered/orders/{id}`。
 - **错误分类**：broker 结构化 402 的 `code`/`error` `quota_exhausted` 已加进
   dream-core 的 `looks_like_spent_allowance`，两条分类路径（`protocol::send_error` 文本、
   `manager::dream_engine::error` 状态码）都映射到 `UserLlmProviderQuotaExhausted`；
@@ -484,6 +484,7 @@ CTA → 充值弹窗 → 套餐 → 下单 → mock webhook → 轮询到 paid �
 - dream-ui 的 `MeteredTopUpModal`（下单→轮询订单状态→到账刷新）
 
 trait 三个方法：
+
 ```rust
 fn id(&self) -> &'static str;                          // 返回 "baofu"
 async fn precreate(&self, order: OrderView<'_>)        // 向宝付下单，返回给客户端的付款信息
@@ -623,11 +624,12 @@ URL/字段名还没拿到，下面只是确认了的架构约束，不能直接�
 ### 11.2 三端改了什么（已完成、已测试、已提交）
 
 **`dream-trial-broker`**（commit 在本仓 `master`，仓库无 remote，只在本机）：
+
 - 新增 `src/vendor/baoyun.rs`：`BaoyunVendor` 实现 `TokenVendor`（`issue_key`/
   `read_usage`/`set_limit`/`revoke`，外加 trait 新增的 `top_up` 原子实现，用
   `remain_delta`）。
 - `AppState.vendor`（单个）→ `AppState.vendors: HashMap<vendor_id, Arc<dyn
-  TokenVendor>>`，OpenRouter 必配、宝云按 `BAOYUN_ACCESS_TOKEN` 是否存在 opt-in。
+TokenVendor>>`，OpenRouter 必配、宝云按 `BAOYUN_ACCESS_TOKEN` 是否存在 opt-in。
 - 每日熔断按 vendor 分开算（原来全局一个 `daily_budget_usd_cap`，混不同币种是错的）。
 - 新增 `POST /internal/vendors/{vendor}/trial-keys/{install_id}/topup`——运维/未来
   支付 webhook 用的原子充值端点，跟 `/internal/stats` 同一信任层级（不对外、不需要
@@ -641,6 +643,7 @@ URL/字段名还没拿到，下面只是确认了的架构约束，不能直接�
 - 67/67 单测过，clippy 干净。
 
 **`dream-core`**（commit + push 到 `origin/main`）：
+
 - `TrialKeyClaimRequest{vendor}` / `TrialQuotaQuery{vendor}`（新类型，照抄已有的
   `MeteredClaimRequest`/`MeteredQuotaQuery`）。
 - `TrialKeyResponse`/`TrialQuotaStatusResponse` 加 `currency`（默认 `"USD"`，兼容
@@ -650,6 +653,7 @@ URL/字段名还没拿到，下面只是确认了的架构约束，不能直接�
 - 955/955 `dream-core-system` 测试过，clippy 干净。
 
 **`dream-ui`**（commit 到 `main`，push 中）：
+
 - `METERED_TRIAL_VENDORS` 从 `['baoyun']` 改成 `[]`——`isMeteredTrialVendor`/
   `claimMeteredAccount`/`MeteredTopUpModal`/`MeteredTopUpCta` 全部保留、
   `claimMeteredAccount` 单独导出保持单测覆盖，只是现在没有 vendor 会走到那条分支。
@@ -797,7 +801,7 @@ mode B 需要 broker 自己算账、自己触发充值。现在宝云是 mode A�
 
 - `dream-core-api-types`：新增 `TopupOrderCreateRequest{vendor, amount}`、
   `TopupOrderQuery{vendor}`、`TopupOrderResponse{id, vendor, status,
-  currency, amount, qr_code?, expires_at?, completed_at?}`。
+currency, amount, qr_code?, expires_at?, completed_at?}`。
 - 新文件 `crates/dream-core-system/src/topup.rs`：`TopupService`，结构和
   错误映射原样照抄 `MeteredAccessService`（`create_order`/`get_order`，
   `parse_broker_json` 同一套状态码分流，新增 `topup_unsupported` →
@@ -949,6 +953,7 @@ systemd）。旧代码目录整个搬去 `dream-trial-broker.bak-<timestamp>` �
 构建 5m22s，第二次因为 `target/` 缓存还在只用了 1m28s。
 
 **验证**（没有花真实的钱）：
+
 - `curl 127.0.0.1:8787/internal/stats`：`baoyun` vendor 出现，
   `per_key_limit: 5.0`、`daily_budget_cap: 250.0`，跟代码默认值对上。
 - `curl 127.0.0.1:8787/internal/vendors/baoyun/topups`：`[]`（预期，还没有
@@ -1027,10 +1032,10 @@ curl "https://ai-api.baoyun.com/apis/v1/topup/orders?reference=baoyun:install_01
 
 **跟 §11.8 的对账端点分工**：
 
-| 场景 | 用哪个 |
-|---|---|
-| 拿交易号查是谁充的 | 直接 `GET .../topup/orders/{id}`（我们的 `get_topup_order` 本来就在用这个） |
-| 拿 install_id 查某用户全部充值历史 | `GET .../topup/orders?reference=baoyun:{install_id}` |
+| 场景                                      | 用哪个                                                                                        |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 拿交易号查是谁充的                        | 直接 `GET .../topup/orders/{id}`（我们的 `get_topup_order` 本来就在用这个）                   |
+| 拿 install_id 查某用户全部充值历史        | `GET .../topup/orders?reference=baoyun:{install_id}`                                          |
 | 想知道钱最后落在宝云哪把 key（数字 id）上 | 只能查 §11.8 我们自己那个端点——宝云订单层面根本不知道"key"这个概念，充值从来不跟具体 key 绑定 |
 
 **结论**：§11.8 那条"必须加对账端点"的判断依然成立（`vendor_key_handle`
@@ -1071,7 +1076,7 @@ curl "https://ai-api.baoyun.com/apis/v1/topup/orders?reference=baoyun:install_01
   `reference` 精确过滤 `status=success` 并翻页累加）算出这个用户历史上真实
   充值过多少钱，重新发一把 key，`remain` 设成"当前免费额度政策 + 这笔历史
   充值总额"——**钱一分不少地还回去**。`issuances` 表在 `(vendor,
-  install_id)` 上有 `UNIQUE` 约束，所以是原地更新那一行的 `vendor_key_handle`
+install_id)` 上有 `UNIQUE` 约束，所以是原地更新那一行的 `vendor_key_handle`
   （`db::replace_issuance_key`），不是插入新行——第一版想插入新行时被这个
   约束直接拦下来了，改成原地更新才对。
 - OpenRouter 完全没实现这三个新的 `TokenVendor` 方法（`key_alive_models`/
@@ -1093,7 +1098,7 @@ curl "https://ai-api.baoyun.com/apis/v1/topup/orders?reference=baoyun:install_01
    （`id` 没变），只是 `vendor_key_handle` 从 `1172` 换成了 `1175`，没有
    产生第二行。
 2. 另建一个全新 install 正常发一把 key，不删它，再发一次 `POST
-   /v1/trial-keys`：**两次拿到的是完全同一把明文**，本地 `issuances` 那行
+/v1/trial-keys`：**两次拿到的是完全同一把明文**，本地 `issuances` 那行
    全程没变过。
 3. 验证完撤销了这两把测试 key（`1175`/`1176`）。
 
@@ -1202,6 +1207,7 @@ Key"列表里能看到"每个用户一把独立的 key"，但**光看名字认�
 > 时候就决定要做了，见 §11.14。
 
 ### 11.14 找回功能的一个真实缺口：broker 自己的本地记录丢了；补上安全网 +
+
 新增"粘 key 查用量"功能（2026-09-23～24）
 
 §11.13 真机验证充值加价/自定义金额功能时，用户拿真实 install_id
@@ -1255,6 +1261,7 @@ key 被删"这一种情况需要找回，"记录本身就不存在了"也要用�
 版本（不是退而求其次改成"自动查本机设备"）。
 
 设计：
+
 - `issuances` 表加一列 `key_hash`（sha256 hex，新迁移
   `0008_issuances_key_hash.sql`），在两处"刚拿到明文"的地方（正常发放、
   §11.12 找回重发）当场算好存下——`IssuedKey.secret` 只在 `issue_key`
@@ -1278,12 +1285,13 @@ key 被删"这一种情况需要找回，"记录本身就不存在了"也要用�
   经过我们自己的工具反查。这就是 §11.13 结尾留的那个"以后按需决定"的
   取舍，这次决定做了。
 - dream-core 新增 `TrialKeyService::query_usage_by_key`（`POST
-  /api/providers/trial-key/usage`，不带 install_id——这条查询的身份就是
+/api/providers/trial-key/usage`，不带 install_id——这条查询的身份就是
   key 本身）；dream-ui 新增 `KeyUsageQueryModal.tsx`，挂在充值余额标签
   旁边一个小的查询图标上（`TrialQuotaBadge.tsx`），13 语种 i18n
   （`settings.keyUsageQuery.*`）全部补齐。
 
 **真机验证**：
+
 - 手工补偿 ¥10 那笔操作本身就是一次真实验证——`apply_top_up` 返回
   `remain: 16.0`，跟宝云订单历史加总完全对得上。
 - 安全网 + 粘 key 查询功能：broker 侧新增集成测试覆盖"无本地记录但有真实
@@ -1310,7 +1318,7 @@ key 被删"这一种情况需要找回，"记录本身就不存在了"也要用�
   2. 现场用一个全新 install_id 真实走一次 `POST /v1/trial-keys`
      （`install_cdp-verify-0924-test`）发到宝云拿到真 key，再拿这把**新**
      key 去 `POST /v1/keys/usage` 查询——返回 `{"limit_usd":5.0,
-     "used_usd":0.0,"remaining_usd":5.0,"currency":"CNY","logs":[]}`，
+"used_usd":0.0,"remaining_usd":5.0,"currency":"CNY","logs":[]}`，
      跟刚发放的免费额度完全对得上，`key_hash` 存取全链路打通。
   3. 直接查宝云 `GET /apis/v1/api-keys` 确认这把新 key 的 `name` 字段是
      `"trial-install_cdp-verify-0924-test"`——`trial-{install_id}` 命名
@@ -1323,7 +1331,7 @@ key 被删"这一种情况需要找回，"记录本身就不存在了"也要用�
      那个按 install_id 查用量的端点）返回真实调用记录，跟今天早些时候
      从这台机器 dream-ui 实际发起的调用（qwen3.7-flash，13717/250、
      11000/50 token 等）完全吻合。`GET /internal/vendors/baoyun/topups
-     ?install_id=...` 返回 ¥1 那笔真实充值、`vendor_key_handle` 正确记成
+?install_id=...` 返回 ¥1 那笔真实充值、`vendor_key_handle` 正确记成
      "1177"——`vendor_key_handle` 存在 `topup_credits` 表这条改动也验证
      通过。**注意**：手工补的那 ¥10（`apply_top_up`）不会出现在这个列表
      里，因为它没走 `create_topup_order`/`get_topup_order` 那条正常订单
@@ -1351,10 +1359,11 @@ key 被删"这一种情况需要找回，"记录本身就不存在了"也要用�
 换成 broker 自己发一个静态页面。
 
 **新方案**：
+
 - `dream-trial-broker` 新增 `src/webui.rs` + `webui/usage.html`：
   一个自包含的静态 HTML/CSS/JS 页面（无构建步骤、零依赖），`GET /usage`
   直接 `include_str!` 整页返回。页面内的 JS 用**相对路径** `fetch('v1/
-  keys/usage', ...)` 调用同源的 `POST /v1/keys/usage`——因为页面挂在
+keys/usage', ...)` 调用同源的 `POST /v1/keys/usage`——因为页面挂在
   nginx 的 `/trial-broker/` 前缀下（`proxy_pass http://127.0.0.1:8787/`
   去掉前缀转发），页面自己的 URL 是 `/trial-broker/usage`，相对路径
   `v1/keys/usage` 会解析到 `/trial-broker/v1/keys/usage`，同源不用 CORS；
@@ -1375,7 +1384,7 @@ key 被删"这一种情况需要找回，"记录本身就不存在了"也要用�
   错误文案等）连带删除——那个静态页面是纯中文，不接入 dream-ui 的 i18n
   系统。
 - `dream-core` 侧对应改动：删掉专门为那个弹窗搭的 `POST /api/providers/
-  trial-key/usage` 代理路由（`TrialKeyService::query_usage_by_key`）、
+trial-key/usage` 代理路由（`TrialKeyService::query_usage_by_key`）、
   连带的 `KeyUsageQueryRequest`/`KeyUsageQueryResponse`/`KeyUsageLogEntry`
   类型定义——新方案里浏览器直接打 broker，不再经过 dream-core 这一跳，
   这条路由已经没有任何调用方。
@@ -1388,6 +1397,7 @@ key 被删"这一种情况需要找回，"记录本身就不存在了"也要用�
 这就是用户说的"我们的生产服务器"最自然的落点。
 
 **验证**（部署后，生产环境真实调用，不是本地 mock）：
+
 - `cargo nextest run`（broker）129/129 全绿（新增 1 条 `webui` 模块单测）、
   `cargo clippy --all-targets -- -D warnings`、`cargo fmt --all -- --check`
   干净。dream-core `cargo nextest run -p dream-core-system` 382/382（少了
@@ -1402,7 +1412,7 @@ key 被删"这一种情况需要找回，"记录本身就不存在了"也要用�
   （¥5 免费额度、从未使用）、点"查询用量"——页面正确显示"总额度 ¥5.00 /
   已使用 ¥0.00 / 剩余 ¥5.00 / 暂无调用记录"，跟直接 curl 同一个端点拿到
   的 JSON（`{"limit_usd":5.0,"used_usd":0.0,"remaining_usd":5.0,
-  "currency":"CNY","logs":[]}`）完全对得上——证明了页面到 API 的同源相对
+"currency":"CNY","logs":[]}`）完全对得上——证明了页面到 API 的同源相对
   路径解析在生产 nginx 前缀下是对的，不是本地凭空想象的路径。
 - 验证完撤销测试用的 key（`DELETE /apis/v1/api-keys/1180`），账户上没留
   垃圾数据。
@@ -1427,6 +1437,7 @@ key 被删"这一种情况需要找回，"记录本身就不存在了"也要用�
 `POST /apis/v1/api-keys/{id}/key`（§11.12 已实测）。新增 `src/backfill.rs`：
 启动时对每个支持 `reveal_key` 的 vendor，把 `key_hash IS NULL` 的活跃行逐个
 揭示明文→算 hash→写回。要点：
+
 - **detached 启动**（`tokio::spawn`），厂商慢或被限流都不能拖住监听。
 - **每次揭示间隔 2 秒**：宝云对重复揭示有限流，这是没人等的后台活儿，故意跑慢。
 - **不支持揭示的 vendor 整个跳过**（OpenRouter 那 43 行保持 NULL，它本来也不
@@ -1439,11 +1450,12 @@ qwen3.7-flash 调用记录（跟 §11.14 真机验证里那几笔对得上），
 `key_not_found`。
 
 **同批修的 dream-ui 侧两个问题**（详见 dream-ui 提交 `477737c`）：
+
 1. **白屏是真 bug，而且是我这次引入的形状**：Arco 的 `Trigger`（`Tooltip`/
    `Dropdown` 内部都用它）靠 ref 拿 child 的真实 DOM 节点，而 IconPark 图标是
    普通函数组件、不转发 ref；React 19 删掉了 Arco 依赖的 `findDOMNode` 兜底，
    于是它拿到 null、在 layout effect 里抛 `Cannot read properties of null
-   (reading 'offsetParent')`，整棵 React 树被卸载 = 白屏。定时任务页那个
+(reading 'offsetParent')`，整棵 React 树被卸载 = 白屏。定时任务页那个
    `<Tooltip><Attention/></Tooltip>` 是同一个形状、同一个雷。修法：包一层
    `<span>`（或用能转发 ref 的元素）。加了全仓守卫测试
    `tests/unit/renderer/noBareIconInArcoTrigger.test.ts`。
@@ -1460,6 +1472,7 @@ qwen3.7-flash 调用记录（跟 §11.14 真机验证里那几笔对得上），
 **1. 粘 key 这件事本身就是多余的**。真实流程是：打开「编辑模型平台」→ 把 key
 复制出来 → 粘进网页。可 **app 手里本来就有这把 key**。现在 dream-ui 直接把它
 交给页面，用的是 **URL fragment**（`#key=...`）而不是 query string：
+
 - fragment **浏览器不会发给服务器**，所以不会进 nginx / broker 的访问日志；
 - 页面读完立刻 `history.replaceState` 抹掉，地址栏和这条历史记录里都不留；
 - 多把 key 轮询时只送第一把；没有 key 就原样打开让页面自己问（分享链接也是这个
@@ -1504,6 +1517,7 @@ token_id 过滤），且 `UsageLogView` 的 `use_time_ms`、`is_stream` 页面�
   "不留痕"的承诺。
 
 **回归（真浏览器 82 项黑盒断言）揪出两个真问题**：
+
 1. `renderFilters` 重建模型下拉框但不重置 `state.modelFilter`——换数据后 select
    视觉回到"全部模型"，state 却仍按已消失的旧模型过滤，表格静默 0 行、CSV 静默
    为空。修复：模型仍在则保留选择，否则重置并同步 UI（`5aea815`）。
@@ -1526,6 +1540,7 @@ qwen3.7-flash），这符合"免费用户锁便宜模型"；但 §11.14 的充�
 `remain_delta` 加余额，**从不碰白名单**——付了钱的令牌仍是免费档。
 
 修复（先用 scratch key 实测了宝云语义再写码）：
+
 - `KeySpec.unrestricted_models` + 新 trait 方法 `set_model_limits(handle, unrestricted)`
   （Baoyun PATCH `model_limits_enabled`，实测部分 body 可行；OpenRouter 按账户
   门控模型，no-op）。**实测**：受限 scratch key 调 gpt-6-luna 吃 403 → PATCH

@@ -6,16 +6,16 @@ services on the target box (`operone`) are deployed.
 
 ## Current production deployment (2026-08-28)
 
-| | |
-|---|---|
-| Host | `43.163.105.71` (Rocky Linux 10, Tencent Cloud) |
-| Service user | `dreambroker` (system, nologin) |
-| App dir | `/opt/dream-trial-broker/` — `bin/`, `data/` (SQLite), `.env` (0600) |
-| Listen | `127.0.0.1:8787` (loopback only; not firewalled because not public) |
-| Public URL | `https://work.1oneclaw.com/trial-broker` (nginx location in `/etc/nginx/conf.d/1onework-www.conf`) |
-| `/internal/stats` | returns 404 publicly; reachable only on `127.0.0.1:8787` |
-| systemd unit | `/etc/systemd/system/dream-trial-broker.service` (copy of `deploy/systemd/`) |
-| Source checkout | `/root/build/dream-trial-broker` (+ rustup toolchain, for rebuilds) |
+|                   |                                                                                                    |
+| ----------------- | -------------------------------------------------------------------------------------------------- |
+| Host              | `43.163.105.71` (Rocky Linux 10, Tencent Cloud)                                                    |
+| Service user      | `dreambroker` (system, nologin)                                                                    |
+| App dir           | `/opt/dream-trial-broker/` — `bin/`, `data/` (SQLite), `.env` (0600)                               |
+| Listen            | `127.0.0.1:8787` (loopback only; not firewalled because not public)                                |
+| Public URL        | `https://work.1oneclaw.com/trial-broker` (nginx location in `/etc/nginx/conf.d/1onework-www.conf`) |
+| `/internal/stats` | returns 404 publicly; reachable only on `127.0.0.1:8787`                                           |
+| systemd unit      | `/etc/systemd/system/dream-trial-broker.service` (copy of `deploy/systemd/`)                       |
+| Source checkout   | `/root/build/dream-trial-broker` (+ rustup toolchain, for rebuilds)                                |
 
 `DREAM_TRIAL_BROKER_URL` for dreamcore: **`https://work.1oneclaw.com/trial-broker`**
 (dream-ui `packages/web-host` injects this as the default).
@@ -23,6 +23,7 @@ services on the target box (`operone`) are deployed.
 ## First-time install
 
 1. **Build.** Server has no Rust by default:
+
    ```bash
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
    source $HOME/.cargo/env
@@ -31,6 +32,7 @@ services on the target box (`operone`) are deployed.
    ```
 
 2. **Install.** As root:
+
    ```bash
    useradd --system --no-create-home --shell /usr/sbin/nologin dreambroker
    mkdir -p /opt/dream-trial-broker/{bin,data}
@@ -56,9 +58,11 @@ services on the target box (`operone`) are deployed.
 
 3. **Expose via nginx.** Paste `deploy/nginx/trial-broker.location.conf` inside the
    `server { }` block of an already-TLS'd public host, then:
+
    ```bash
    nginx -t && systemctl reload nginx
    ```
+
    The `X-Real-IP` header the snippet sets (from nginx's own `$remote_addr`,
    not from anything the client sends) is what the broker's per-IP rate
    limiter reads (`src/routes.rs::extract_client_ip`). The broker does not
@@ -108,10 +112,10 @@ The key is the whole point of this mode: it stays here because dream-ui is a
 public repository and an Electron `asar` is readable, so a key shipped in the
 app is a key published to everyone. Rotating it is an `.env` edit; rotating a
 bundled one would have been a release.
-   Clean up test keys afterwards: list with
-   `GET https://openrouter.ai/api/v1/keys` (Bearer = management key), then
-   `DELETE https://openrouter.ai/api/v1/keys/{hash}` for each `onework-trial-*`,
-   and `rm /opt/dream-trial-broker/data/trial-broker.db*` + restart.
+Clean up test keys afterwards: list with
+`GET https://openrouter.ai/api/v1/keys` (Bearer = management key), then
+`DELETE https://openrouter.ai/api/v1/keys/{hash}` for each `onework-trial-*`,
+and `rm /opt/dream-trial-broker/data/trial-broker.db*` + restart.
 
 ## Updating
 
