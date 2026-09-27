@@ -5,7 +5,7 @@
 import { ipcBridge } from '@/common';
 import type { TopupOrderResponse } from '@/common/types/provider/providerApi';
 import { Button, InputNumber, Message, Spin } from '@arco-design/web-react';
-import { CheckOne } from '@icon-park/react';
+import { CheckOne, Wallet } from '@icon-park/react';
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import DreamModal from '@renderer/components/base/DreamModal';
@@ -160,11 +160,17 @@ const TrialTopUpModal: React.FC<{
       style={{ maxWidth: '92vw', width: 440 }}
     >
       {stage === 'select' && (
-        <div className='flex flex-col gap-18px'>
+        <div className='flex flex-col gap-20px pb-2px'>
           {/* Balance leads: the number the amount below is going to change. */}
-          <div className='rd-12px bg-fill-1 px-16px py-14px'>
-            <div className='text-12px text-t-tertiary'>{t('settings.trialTopUp.balanceLabel')}</div>
-            <div className='mt-4px flex items-baseline gap-8px'>
+          <div className='relative overflow-hidden rd-16px border border-[rgba(var(--primary-6),0.13)] bg-[linear-gradient(135deg,rgba(var(--primary-6),0.11),rgba(var(--primary-6),0.025)_58%,transparent)] px-18px py-16px'>
+            <div className='absolute -right-10px -top-12px h-70px w-70px rounded-full bg-[rgba(var(--primary-6),0.08)]' />
+            <div className='relative flex items-center justify-between'>
+              <div className='text-12px font-500 tracking-wide text-t-secondary'>{t('settings.trialTopUp.balanceLabel')}</div>
+              <span className='flex h-28px w-28px items-center justify-center rd-9px bg-[rgba(var(--primary-6),0.12)] text-[rgba(var(--primary-6),1)]'>
+                <Wallet theme='outline' size={16} fill='currentColor' />
+              </span>
+            </div>
+            <div className='relative mt-7px flex items-baseline gap-8px'>
               <span
                 className={`text-28px font-600 leading-none tracking-tight ${
                   balance?.exhausted ? 'text-[rgba(var(--danger-6),1)]' : 'text-[rgba(var(--primary-6),1)]'
@@ -181,7 +187,7 @@ const TrialTopUpModal: React.FC<{
               )}
             </div>
             {hasSplitBalance && (
-              <div className='mt-10px flex flex-col gap-4px border-t border-fill-3 pt-10px'>
+              <div className='relative mt-12px flex flex-col gap-6px border-t border-[rgba(var(--primary-6),0.13)] pt-11px'>
                 {grantRemaining !== null && (
                   <div
                     className='flex items-center justify-between text-12px text-t-secondary'
@@ -213,8 +219,8 @@ const TrialTopUpModal: React.FC<{
           </div>
 
           <div>
-            <div className='mb-8px text-13px font-medium text-t-primary'>{t('settings.trialTopUp.selectAmount')}</div>
-            <div className='grid grid-cols-4 gap-8px'>
+            <div className='mb-10px text-14px font-600 text-t-primary'>{t('settings.trialTopUp.selectAmount')}</div>
+            <div className='grid grid-cols-4 gap-10px'>
               {QUICK_AMOUNTS.map((quick) => {
                 const active = amount === quick;
                 return (
@@ -222,10 +228,10 @@ const TrialTopUpModal: React.FC<{
                     key={quick}
                     type='button'
                     onClick={() => setAmount(quick)}
-                    className={`h-44px rd-10px border text-15px font-500 cursor-pointer transition-colors ${
+                    className={`h-48px rd-12px border text-15px font-600 cursor-pointer transition-all duration-150 ${
                       active
-                        ? 'border-[rgba(var(--primary-6),1)] bg-[rgba(var(--primary-6),0.08)] text-[rgba(var(--primary-6),1)]'
-                        : 'border-fill-3 bg-transparent text-t-primary hover:border-[rgba(var(--primary-6),0.5)]'
+                        ? 'border-[rgba(var(--primary-6),1)] bg-[rgba(var(--primary-6),0.11)] text-[rgba(var(--primary-6),1)] shadow-[0_5px_14px_rgba(var(--primary-6),0.15)]'
+                        : 'border-fill-3 bg-fill-1 text-t-primary hover:border-[rgba(var(--primary-6),0.5)] hover:bg-[rgba(var(--primary-6),0.04)]'
                     }`}
                   >
                     {t('settings.trialTopUp.amountOption', { amount: quick })}
@@ -236,7 +242,7 @@ const TrialTopUpModal: React.FC<{
 
             <InputNumber
               size='large'
-              className='!mt-10px !w-full'
+              className='!mt-12px !w-full'
               prefix='¥'
               min={MIN_TOPUP_AMOUNT}
               precision={2}
@@ -259,7 +265,7 @@ const TrialTopUpModal: React.FC<{
             loading={creating !== null}
             disabled={!amountValid}
             onClick={() => amount !== null && handleBuy(amount)}
-            className='!h-44px !rd-10px'
+            className='!h-48px !rd-12px !font-600 shadow-[0_8px_18px_rgba(var(--primary-6),0.18)]'
           >
             {amountValid
               ? t('settings.trialTopUp.confirmTopUpAmount', { amount: formatMajorUnits(amount, currency) })
