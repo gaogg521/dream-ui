@@ -18,7 +18,7 @@ on:
 
 permissions:
   actions: read
-  contents: read
+  contents: write
 
 jobs:
   upload:
@@ -92,78 +92,23 @@ jobs:
           }
           NODE
 
-      - name: Upload versioned macOS assets and root manifests
+      - name: Stage macOS assets on a temporary draft release
         env:
           VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          aws configure set default.s3.addressing_style virtual
+          transfer_tag="transfer-${VERSION}-${{ inputs.commit_short }}"
+          gh release create "$transfer_tag" --repo "$GITHUB_REPOSITORY" --draft \
+            --target "${{ inputs.commit_short }}" --title "Temporary transfer ${VERSION} ${{ inputs.commit_short }}"
+          gh release upload "$transfer_tag" --repo "$GITHUB_REPOSITORY" \
+            artifacts/arm64/* artifacts/x64/*
 
-          multipart_upload() {
-            local file="$1"
-            local key="releases/${VERSION}/$(basename "$file")"
-            local parts_dir
-            parts_dir="$(mktemp -d)"
-            split -b 32m -d -a 3 "$file" "$parts_dir/part-"
-
-            local upload_id
-            upload_id="$(aws s3api create-multipart-upload \
-              --bucket "$COS_BUCKET_NAME" --key "$key" --acl public-read \
-              --endpoint-url "$COS_ENDPOINT" --query UploadId --output text)"
-            local completed='[]'
-            local part_number=1
-            trap 'aws s3api abort-multipart-upload --bucket "$COS_BUCKET_NAME" --key "$key" --upload-id "$upload_id" --endpoint-url "$COS_ENDPOINT" >/dev/null 2>&1 || true' RETURN
-            for part in "$parts_dir"/part-*; do
-              local etag
-              etag="$(aws s3api upload-part \
-                --bucket "$COS_BUCKET_NAME" --key "$key" --upload-id "$upload_id" \
-                --part-number "$part_number" --body "$part" --endpoint-url "$COS_ENDPOINT" \
-                --query ETag --output text)"
-              completed="$(jq --argjson n "$part_number" --arg e "$etag" '. + [{PartNumber:$n,ETag:$e}]' <<<"$completed")"
-              echo "uploaded $(basename "$file") part $part_number"
-              part_number=$((part_number + 1))
-            done
-            jq -n --argjson parts "$completed" '{Parts:$parts}' > "$parts_dir/complete.json"
-            aws s3api complete-multipart-upload \
-              --bucket "$COS_BUCKET_NAME" --key "$key" --upload-id "$upload_id" \
-              --multipart-upload "file://$parts_dir/complete.json" --endpoint-url "$COS_ENDPOINT" >/dev/null
-            trap - RETURN
-            rm -rf "$parts_dir"
-            echo "completed $(basename "$file")"
-          }
-
-          # Small metadata and blockmaps can use ordinary PUT. Large dmg/zip
-          # files use explicit 32 MiB multipart chunks so one slow connection
-          # retries only one chunk instead of losing an entire 450 MiB upload.
-          aws s3 cp artifacts/arm64/ "${COS_BUCKET}/releases/${VERSION}/" --recursive \
-            --exclude '*.dmg' --exclude '*.zip' --endpoint-url "$COS_ENDPOINT" --acl public-read
-          aws s3 cp artifacts/x64/ "${COS_BUCKET}/releases/${VERSION}/" --recursive \
-            --exclude '*.dmg' --exclude '*.zip' --endpoint-url "$COS_ENDPOINT" --acl public-read
-          for file in artifacts/arm64/*.dmg artifacts/arm64/*.zip artifacts/x64/*.dmg artifacts/x64/*.zip; do
-            multipart_upload "$file"
-          done
-          aws s3 cp artifacts/arm64/latest-arm64-mac.yml "${COS_BUCKET}/releases/latest-arm64-mac.yml" --endpoint-url "$COS_ENDPOINT" --acl public-read --content-type text/yaml --cache-control 'public, max-age=60'
-          aws s3 cp artifacts/x64/latest-mac.yml "${COS_BUCKET}/releases/latest-mac.yml" --endpoint-url "$COS_ENDPOINT" --acl public-read --content-type text/yaml --cache-control 'public, max-age=60'
-
-      - name: Verify public COS objects
+      - name: Verify temporary draft release assets
         env:
           VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          base=https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases
-          for file in \
-            "${VERSION}/One-Work-${VERSION}-mac-arm64.dmg" \
-            "${VERSION}/One-Work-${VERSION}-mac-arm64.dmg.blockmap" \
-            "${VERSION}/One-Work-${VERSION}-mac-arm64.zip" \
-            "${VERSION}/One-Work-${VERSION}-mac-arm64.zip.blockmap" \
-            "${VERSION}/latest-arm64-mac.yml" \
-            "${VERSION}/One-Work-${VERSION}-mac-x64.dmg" \
-            "${VERSION}/One-Work-${VERSION}-mac-x64.dmg.blockmap" \
-            "${VERSION}/One-Work-${VERSION}-mac-x64.zip" \
-            "${VERSION}/One-Work-${VERSION}-mac-x64.zip.blockmap" \
-            "${VERSION}/latest-mac.yml" \
-            latest-arm64-mac.yml latest-mac.yml; do
-            test "$(curl -fsS -o /dev/null -w '%{http_code}' "$base/$file")" = 200
-          done
-          test "$(curl -fsS "$base/latest-arm64-mac.yml" | awk '/^version:/{print $2; exit}')" = "$VERSION"
-          test "$(curl -fsS "$base/latest-mac.yml" | awk '/^version:/{print $2; exit}')" = "$VERSION"
+          transfer_tag="transfer-${VERSION}-${{ inputs.commit_short }}"
+          test "$(gh release view "$transfer_tag" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets | length')" = 10
