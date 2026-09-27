@@ -100,7 +100,7 @@ jobs:
           set -euo pipefail
           transfer_tag="transfer-${VERSION}-${{ inputs.commit_short }}"
           gh release create "$transfer_tag" --repo "$GITHUB_REPOSITORY" --draft \
-            --target "${{ inputs.commit_short }}" --title "Temporary transfer ${VERSION} ${{ inputs.commit_short }}"
+            --target main --title "Temporary transfer ${VERSION} ${{ inputs.commit_short }}"
           gh release upload "$transfer_tag" --repo "$GITHUB_REPOSITORY" \
             artifacts/arm64/* artifacts/x64/*
 
