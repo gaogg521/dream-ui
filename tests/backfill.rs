@@ -153,6 +153,7 @@ fn base_config() -> Config {
         trial_key_expires_days: 90,
         per_ip_rate_limit_per_hour: 1000,
         topup_price_markup: 1.0,
+        topup_enabled: true,
         public_base_url: "http://127.0.0.1:8787".to_string(),
     }
 }

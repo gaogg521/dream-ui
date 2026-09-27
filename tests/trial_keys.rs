@@ -147,6 +147,7 @@ fn base_config() -> Config {
         per_ip_rate_limit_per_hour: 5,
         public_base_url: "http://127.0.0.1:8787".to_string(),
         topup_price_markup: 1.0,
+        topup_enabled: true,
     }
 }
 
@@ -580,6 +581,7 @@ async fn make_state_with_paid_history_vendor(
         pool,
         config: Arc::new(Config {
             topup_price_markup: markup,
+            topup_enabled: true,
             ..base_config()
         }),
         vendors,

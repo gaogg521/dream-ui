@@ -104,6 +104,7 @@ fn base_config() -> Config {
         per_ip_rate_limit_per_hour: 1000,
         public_base_url: "http://broker.test".to_string(),
         topup_price_markup: 1.0,
+        topup_enabled: true,
     }
 }
 

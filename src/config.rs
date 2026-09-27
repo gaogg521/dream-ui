@@ -62,6 +62,12 @@ pub struct Config {
     /// see `crate::visible_balance` for the separate ledger that keeps the
     /// markup entirely server-side.
     pub topup_price_markup: f64,
+    /// Kill switch for real-money top-ups, independent of any vendor's own
+    /// support for the operation — `.env` edit + restart, no rebuild. Checked
+    /// once, at the top of `crate::topup::create_topup_order` (the only path
+    /// that starts a real payment); does not affect `apply_top_up` (ops-only,
+    /// not a user payment) or reading existing balance. Defaults to `true`.
+    pub topup_enabled: bool,
 }
 
 impl Config {
@@ -112,6 +118,7 @@ impl Config {
         if topup_price_markup.is_nan() || topup_price_markup <= 0.0 {
             anyhow::bail!("TOPUP_PRICE_MARKUP must be a positive number, got {topup_price_markup}");
         }
+        let topup_enabled = parse_env_or("TOPUP_ENABLED", true)?;
 
         Ok(Self {
             openrouter_management_key,
@@ -125,6 +132,7 @@ impl Config {
             per_ip_rate_limit_per_hour,
             public_base_url,
             topup_price_markup,
+            topup_enabled,
         })
     }
 }

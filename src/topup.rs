@@ -126,6 +126,10 @@ pub async fn create_topup_order(
     install_id: &str,
     amount: f64,
 ) -> Result<TopupOrderResponse, AppError> {
+    if !state.config.topup_enabled {
+        return Err(AppError::TopupUnsupported);
+    }
+
     let install_id = install_id.trim();
     if install_id.is_empty() {
         return Err(AppError::BadRequest("install_id must not be empty".into()));

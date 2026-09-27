@@ -160,6 +160,7 @@ fn base_config() -> Config {
         per_ip_rate_limit_per_hour: 5,
         public_base_url: "http://127.0.0.1:8787".to_string(),
         topup_price_markup: 1.0,
+        topup_enabled: true,
     }
 }
 
@@ -228,6 +229,22 @@ async fn creating_an_order_rejects_a_non_positive_amount() {
         .await
         .expect_err("zero amount should be rejected");
     assert!(matches!(err, AppError::BadRequest(_)));
+}
+
+#[tokio::test]
+async fn creating_an_order_is_refused_while_the_kill_switch_is_off() {
+    let (state, _vendor) = make_state(Some("install-1")).await;
+    let state = AppState {
+        config: Arc::new(Config {
+            topup_enabled: false,
+            ..(*state.config).clone()
+        }),
+        ..state
+    };
+    let err = create_topup_order(&state, VENDOR_ID, "install-1", 10.0)
+        .await
+        .expect_err("TOPUP_ENABLED=false must refuse before touching the vendor or the DB");
+    assert!(matches!(err, AppError::TopupUnsupported));
 }
 
 #[tokio::test]
@@ -552,6 +569,7 @@ async fn make_state_with_markup(
     let state = AppState {
         config: Arc::new(Config {
             topup_price_markup: markup,
+            topup_enabled: true,
             ..(*state.config).clone()
         }),
         ..state
