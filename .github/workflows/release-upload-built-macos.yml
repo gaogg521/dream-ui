@@ -30,6 +30,9 @@ jobs:
       AWS_DEFAULT_REGION: ap-shanghai
       COS_ENDPOINT: https://cos.ap-shanghai.myqcloud.com
       COS_BUCKET: s3://1onework-1251001122
+      COS_BUCKET_NAME: 1onework-1251001122
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
     steps:
       - name: Download Apple Silicon artifact
         uses: actions/download-artifact@v7
@@ -95,9 +98,50 @@ jobs:
         run: |
           set -euo pipefail
           aws configure set default.s3.addressing_style virtual
-          aws configure set default.s3.multipart_threshold 5GB
-          aws s3 cp artifacts/arm64/ "${COS_BUCKET}/releases/${VERSION}/" --recursive --endpoint-url "$COS_ENDPOINT" --acl public-read
-          aws s3 cp artifacts/x64/ "${COS_BUCKET}/releases/${VERSION}/" --recursive --endpoint-url "$COS_ENDPOINT" --acl public-read
+
+          multipart_upload() {
+            local file="$1"
+            local key="releases/${VERSION}/$(basename "$file")"
+            local parts_dir
+            parts_dir="$(mktemp -d)"
+            split -b 32m -d -a 3 "$file" "$parts_dir/part-"
+
+            local upload_id
+            upload_id="$(aws s3api create-multipart-upload \
+              --bucket "$COS_BUCKET_NAME" --key "$key" --acl public-read \
+              --endpoint-url "$COS_ENDPOINT" --query UploadId --output text)"
+            local completed='[]'
+            local part_number=1
+            trap 'aws s3api abort-multipart-upload --bucket "$COS_BUCKET_NAME" --key "$key" --upload-id "$upload_id" --endpoint-url "$COS_ENDPOINT" >/dev/null 2>&1 || true' RETURN
+            for part in "$parts_dir"/part-*; do
+              local etag
+              etag="$(aws s3api upload-part \
+                --bucket "$COS_BUCKET_NAME" --key "$key" --upload-id "$upload_id" \
+                --part-number "$part_number" --body "$part" --endpoint-url "$COS_ENDPOINT" \
+                --query ETag --output text)"
+              completed="$(jq --argjson n "$part_number" --arg e "$etag" '. + [{PartNumber:$n,ETag:$e}]' <<<"$completed")"
+              echo "uploaded $(basename "$file") part $part_number"
+              part_number=$((part_number + 1))
+            done
+            jq -n --argjson parts "$completed" '{Parts:$parts}' > "$parts_dir/complete.json"
+            aws s3api complete-multipart-upload \
+              --bucket "$COS_BUCKET_NAME" --key "$key" --upload-id "$upload_id" \
+              --multipart-upload "file://$parts_dir/complete.json" --endpoint-url "$COS_ENDPOINT" >/dev/null
+            trap - RETURN
+            rm -rf "$parts_dir"
+            echo "completed $(basename "$file")"
+          }
+
+          # Small metadata and blockmaps can use ordinary PUT. Large dmg/zip
+          # files use explicit 32 MiB multipart chunks so one slow connection
+          # retries only one chunk instead of losing an entire 450 MiB upload.
+          aws s3 cp artifacts/arm64/ "${COS_BUCKET}/releases/${VERSION}/" --recursive \
+            --exclude '*.dmg' --exclude '*.zip' --endpoint-url "$COS_ENDPOINT" --acl public-read
+          aws s3 cp artifacts/x64/ "${COS_BUCKET}/releases/${VERSION}/" --recursive \
+            --exclude '*.dmg' --exclude '*.zip' --endpoint-url "$COS_ENDPOINT" --acl public-read
+          for file in artifacts/arm64/*.dmg artifacts/arm64/*.zip artifacts/x64/*.dmg artifacts/x64/*.zip; do
+            multipart_upload "$file"
+          done
           aws s3 cp artifacts/arm64/latest-arm64-mac.yml "${COS_BUCKET}/releases/latest-arm64-mac.yml" --endpoint-url "$COS_ENDPOINT" --acl public-read --content-type text/yaml --cache-control 'public, max-age=60'
           aws s3 cp artifacts/x64/latest-mac.yml "${COS_BUCKET}/releases/latest-mac.yml" --endpoint-url "$COS_ENDPOINT" --acl public-read --content-type text/yaml --cache-control 'public, max-age=60'
 
