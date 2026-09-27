@@ -1557,6 +1557,8 @@
   "trialTopUp": {
     "title": "チャージ",
     "balanceLabel": "現在の残高",
+    "grantBalanceLabel": "無料残高",
+    "paidBalanceLabel": "チャージ残高",
     "afterTopUp": "チャージ後 {{amount}}",
     "currentBalance": "現在の残高：{{amount}}",
     "selectAmount": "金額を選択",

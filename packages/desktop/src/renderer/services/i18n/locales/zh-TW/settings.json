@@ -2142,6 +2142,8 @@
   "trialTopUp": {
     "title": "儲值",
     "balanceLabel": "目前餘額",
+    "grantBalanceLabel": "贈送餘額",
+    "paidBalanceLabel": "儲值餘額",
     "afterTopUp": "儲值後 {{amount}}",
     "currentBalance": "目前餘額：{{amount}}",
     "selectAmount": "選擇金額",

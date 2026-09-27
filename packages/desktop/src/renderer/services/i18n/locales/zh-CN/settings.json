@@ -2195,6 +2195,8 @@
   "trialTopUp": {
     "title": "充值",
     "balanceLabel": "当前余额",
+    "grantBalanceLabel": "赠送余额",
+    "paidBalanceLabel": "充值余额",
     "afterTopUp": "充值后 {{amount}}",
     "currentBalance": "当前余额：{{amount}}",
     "selectAmount": "选择金额",

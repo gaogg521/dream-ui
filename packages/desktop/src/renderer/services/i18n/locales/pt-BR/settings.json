@@ -1558,6 +1558,8 @@
   "trialTopUp": {
     "title": "Recarregar",
     "balanceLabel": "Saldo atual",
+    "grantBalanceLabel": "Saldo gratuito",
+    "paidBalanceLabel": "Saldo recarregado",
     "afterTopUp": "{{amount}} após a recarga",
     "currentBalance": "Saldo atual: {{amount}}",
     "selectAmount": "Escolha um valor",

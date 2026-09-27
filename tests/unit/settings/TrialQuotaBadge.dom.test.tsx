@@ -26,7 +26,19 @@ const quota = vi.hoisted(() => ({
   data: {
     kind: 'issued' as const,
     vendor: 'baoyun' as const,
-    data: { remaining_usd: 16, exhausted: false, currency: 'CNY' },
+    data: {
+      vendor: 'baoyun',
+      limit_usd: 16,
+      used_usd: 0,
+      remaining_usd: 16,
+      grant_limit_usd: 5,
+      grant_remaining_usd: 5,
+      paid_limit_usd: 11,
+      paid_remaining_usd: 11,
+      reset: null,
+      exhausted: false,
+      currency: 'CNY',
+    },
   } as unknown,
 }));
 
@@ -110,6 +122,16 @@ describe('TrialQuotaBadge', () => {
     render(<TrialQuotaBadge vendor='baoyun' />);
     openMenu();
     expect(screen.getByTestId('trial-quota-menu-top-up')).toBeTruthy();
+  });
+
+  it('shows the grant and paid balances broken out separately in the menu', () => {
+    render(<TrialQuotaBadge vendor='baoyun' />);
+    openMenu();
+    const breakdown = screen.getByTestId('trial-quota-balance-breakdown');
+    expect(breakdown.textContent).toContain('settings.trialTopUp.grantBalanceLabel');
+    expect(breakdown.textContent).toContain('¥5.00');
+    expect(breakdown.textContent).toContain('settings.trialTopUp.paidBalanceLabel');
+    expect(breakdown.textContent).toContain('¥11.00');
   });
 
   it('"check usage" hands the key for this install to the page in the URL fragment', () => {

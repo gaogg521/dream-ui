@@ -2194,6 +2194,8 @@
   "trialTopUp": {
     "title": "Top up",
     "balanceLabel": "Current balance",
+    "grantBalanceLabel": "Free balance",
+    "paidBalanceLabel": "Paid balance",
     "afterTopUp": "{{amount}} after top-up",
     "currentBalance": "Current balance: {{amount}}",
     "selectAmount": "Choose an amount",

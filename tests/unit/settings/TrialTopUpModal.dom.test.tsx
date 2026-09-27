@@ -3,14 +3,14 @@
  * Copyright 2026 One Work
  * SPDX-License-Identifier: Apache-2.0
  *
- * Regression test for a real production bug: the "after top-up" preview
- * added the raw amount the user was about to pay straight onto the current
- * balance, ignoring the platform's resale markup entirely. A user with a
- * ¥5 free balance who paid ¥1 saw a "充值后 ¥6.00" preview but the broker
- * only ever credits `paidAmount / markup` — the real balance afterward was
- * ¥5.87 (confirmed live against the vendor's own account API while
- * diagnosing this). This pins the preview to the same math the backend
- * actually applies, via `grantedForPayment`.
+ * The broker now keeps the free-grant pool and the paid pool separate and
+ * markup-free on the wire (`crate::visible_balance`) — a top-up preview is
+ * just `paidRemaining + amount`, no client-side markup math. This pins that
+ * behavior and the grant/paid split display, and stands in for the old
+ * `grantedForPayment` regression test (removed once the split shipped: see
+ * dream-trial-broker's session doc for the production bug that motivated
+ * all of this — a ¥1 payment on a ¥5 balance showing a preview the backend
+ * could not actually deliver).
  */
 
 import React from 'react';
@@ -29,9 +29,19 @@ const quota = vi.hoisted(() => ({
   data: {
     kind: 'issued' as const,
     vendor: 'baoyun' as const,
-    // The exact production shape at the time this was reported: ¥5
-    // remaining, 1.15x markup.
-    data: { remaining_usd: 5, exhausted: false, currency: 'CNY', topup_price_markup: 1.15 },
+    data: {
+      vendor: 'baoyun',
+      limit_usd: 5,
+      used_usd: 0,
+      remaining_usd: 5,
+      grant_limit_usd: 5,
+      grant_remaining_usd: 5,
+      paid_limit_usd: 0,
+      paid_remaining_usd: 0,
+      reset: null,
+      exhausted: false,
+      currency: 'CNY',
+    },
   } as unknown,
 }));
 
@@ -50,7 +60,7 @@ vi.mock('@/common', () => ({
 
 // DreamModal needs a ThemeProvider ancestor for its own chrome (header
 // close button, sizing); none of that is what this test is about, so a
-// bare pass-through keeps the test focused on TrialTopUpModal's own math.
+// bare pass-through keeps the test focused on TrialTopUpModal's own logic.
 vi.mock('@renderer/components/base/DreamModal', () => ({
   default: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? <div>{children}</div> : null,
@@ -63,25 +73,60 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe('TrialTopUpModal preview', () => {
-  it('shows what a top-up will actually credit, not the raw paid amount', () => {
+describe('TrialTopUpModal balance split', () => {
+  it('shows the grant and paid balances as two separate rows', () => {
     render(<TrialTopUpModal visible vendor='baoyun' onClose={vi.fn()} />);
-
-    // Pick the ¥10 quick amount.
-    fireEvent.click(screen.getByText('settings.trialTopUp.amountOption:10'));
-
-    // 5 (current) + grantedForPayment(1.15, 10) = 5 + 8.70 = ¥13.70 — never
-    // the naive 5 + 10 = ¥15.00 the bug produced.
-    expect(screen.getByText('settings.trialTopUp.afterTopUp:¥13.70')).toBeTruthy();
-    expect(screen.queryByText('settings.trialTopUp.afterTopUp:¥15.00')).toBeNull();
+    expect(screen.getByTestId('grant-balance-row').textContent).toContain('¥5.00');
+    expect(screen.getByTestId('paid-balance-row').textContent).toContain('¥0.00');
   });
 
-  it('reproduces the exact reported case: ¥5 balance, ¥1 paid, ¥5.87 after', () => {
+  it('previews a top-up as a plain addition to the paid row — no markup math on the client', () => {
+    render(<TrialTopUpModal visible vendor='baoyun' onClose={vi.fn()} />);
+
+    fireEvent.click(screen.getByText('settings.trialTopUp.amountOption:10'));
+
+    // ¥0 paid balance + ¥10 paid, at face value — the exact naive addition
+    // that used to be wrong when the broker's response still carried the
+    // markup ratio. Now the broker has already done the conversion
+    // server-side, so this IS the correct number.
+    expect(screen.getByTestId('paid-balance-row').textContent).toContain('¥10.00');
+    // The grant row is never touched by a payment.
+    expect(screen.getByTestId('grant-balance-row').textContent).toContain('¥5.00');
+  });
+
+  it('reproduces the exact reported case: ¥0 paid balance, ¥1 paid, ¥1.00 after — not a discounted ¥0.87', () => {
     render(<TrialTopUpModal visible vendor='baoyun' onClose={vi.fn()} />);
 
     const input = screen.getByPlaceholderText('settings.trialTopUp.amountPlaceholder:1');
     fireEvent.change(input, { target: { value: '1' } });
 
-    expect(screen.getByText('settings.trialTopUp.afterTopUp:¥5.87')).toBeTruthy();
+    expect(screen.getByTestId('paid-balance-row').textContent).toContain('¥1.00');
+  });
+
+  it('falls back to a single combined preview when the broker has no grant/paid split to report', () => {
+    quota.data = {
+      kind: 'issued',
+      vendor: 'baoyun',
+      data: {
+        vendor: 'baoyun',
+        limit_usd: 5,
+        used_usd: 0,
+        remaining_usd: 5,
+        grant_limit_usd: null,
+        grant_remaining_usd: null,
+        paid_limit_usd: null,
+        paid_remaining_usd: null,
+        reset: null,
+        exhausted: false,
+        currency: 'CNY',
+      },
+    };
+    render(<TrialTopUpModal visible vendor='baoyun' onClose={vi.fn()} />);
+
+    fireEvent.click(screen.getByText('settings.trialTopUp.amountOption:10'));
+
+    expect(screen.getByText('settings.trialTopUp.afterTopUp:¥15.00')).toBeTruthy();
+    expect(screen.queryByTestId('grant-balance-row')).toBeNull();
+    expect(screen.queryByTestId('paid-balance-row')).toBeNull();
   });
 });

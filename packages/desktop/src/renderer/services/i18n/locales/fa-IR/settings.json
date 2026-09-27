@@ -1555,6 +1555,8 @@
   "trialTopUp": {
     "title": "شارژ",
     "balanceLabel": "موجودی فعلی",
+    "grantBalanceLabel": "موجودی رایگان",
+    "paidBalanceLabel": "موجودی شارژ‌شده",
     "afterTopUp": "پس از شارژ {{amount}}",
     "currentBalance": "موجودی فعلی: {{amount}}",
     "selectAmount": "یک مبلغ انتخاب کنید",

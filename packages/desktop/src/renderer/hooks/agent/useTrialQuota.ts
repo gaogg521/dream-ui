@@ -58,21 +58,23 @@ export function remainingAmount(view: TrialQuotaView): number | null {
 }
 
 /**
- * The real vendor spending power `paidAmount` (what the user is about to
- * pay, or just paid) buys, after this platform's resale markup — mirrors
- * the broker's `granted_for_payment` (dream-trial-broker `src/topup.rs`)
- * exactly, including the round-to-cents behavior. `markup` comes from
- * `TrialQuotaStatusResponse.topup_price_markup`; `undefined`/`null` (an old
- * broker, or a vendor that never sets it) falls back to 1 — no markup —
- * rather than showing a preview the actual credit cannot match.
- *
- * Every place a top-up amount is turned into "what this leaves the balance
- * at" or "what just got credited" must go through this, not add the raw
- * paid amount directly — see `TrialTopUpModal.tsx`.
+ * The free-grant pool's remaining balance, or `null` when this view is
+ * `metered` (mode B never had a separate grant pool) or the vendor reports
+ * no cap. The broker already does the work of keeping this markup-free and
+ * separate from the paid pool (`crate::visible_balance`) — this is purely a
+ * typed accessor, not a calculation.
  */
-export function grantedForPayment(markup: number | null | undefined, paidAmount: number): number {
-  const rate = markup && markup > 0 ? markup : 1;
-  return Math.round((paidAmount / rate) * 100) / 100;
+export function grantRemainingAmount(view: TrialQuotaView): number | null {
+  return view.kind === 'issued' ? view.data.grant_remaining_usd : null;
+}
+
+/**
+ * The paid pool's remaining balance — everything this install has topped up,
+ * minus what's been spent from it (grant is always spent first). `null`
+ * under the same conditions as {@link grantRemainingAmount}.
+ */
+export function paidRemainingAmount(view: TrialQuotaView): number | null {
+  return view.kind === 'issued' ? view.data.paid_remaining_usd : null;
 }
 
 /** `remaining` in a trial view, in minor units for metered / major units for issued. */

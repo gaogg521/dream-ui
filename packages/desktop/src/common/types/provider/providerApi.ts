@@ -138,19 +138,23 @@ export interface TrialQuotaStatusResponse {
   limit_usd: number | null;
   used_usd: number;
   remaining_usd: number | null;
+  /**
+   * The free-grant pool this install was given, broken out separately from
+   * `paid_*` — the broker spends the grant pool first, at 1:1, before ever
+   * touching the paid pool (where its resale markup lives, and which never
+   * reaches this response either way). `null` only when the vendor has no
+   * cap concept at all, same condition as `limit_usd` being `null`.
+   */
+  grant_limit_usd: number | null;
+  grant_remaining_usd: number | null;
+  /** Everything this install has ever paid, at face value (never marked up). */
+  paid_limit_usd: number | null;
+  paid_remaining_usd: number | null;
   /** How the allowance renews: `monthly`, `daily`, or `cumulative` (never). */
   reset: string | null;
   exhausted: boolean;
   /** ISO 4217 code the amounts above are denominated in. See `TrialKeyResponse.currency`. */
   currency?: string;
-  /**
-   * The resale markup applied wherever a real-money top-up turns into vendor
-   * spending power. A top-up preview must run the amount the user is about
-   * to pay through `grantedForPayment` (useTrialQuota.ts) before adding it
-   * to `remaining_usd` — the user never sees this number itself, only its
-   * effect on the totals shown.
-   */
-  topup_price_markup?: number | null;
 }
 
 /**

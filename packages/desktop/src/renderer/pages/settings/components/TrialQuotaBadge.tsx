@@ -8,7 +8,13 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { findTrialProvider, isToppableVendor, type TrialVendor } from '@renderer/hooks/agent/useTrialModelClaim';
 import { useProvidersQuery } from '@renderer/hooks/agent/useModelProviderList';
-import { remainingLabel, useTrialQuota } from '@renderer/hooks/agent/useTrialQuota';
+import {
+  formatMajorUnits,
+  grantRemainingAmount,
+  paidRemainingAmount,
+  remainingLabel,
+  useTrialQuota,
+} from '@renderer/hooks/agent/useTrialQuota';
 import { openExternalUrl } from '@/renderer/utils/platform';
 import TrialTopUpModal from './TrialTopUpModal';
 
@@ -76,6 +82,12 @@ const TrialQuotaBadge: React.FC<{ vendor: TrialVendor }> = ({ vendor }) => {
     );
   }
 
+  // `null` for `metered` (mode B never had a grant/paid split) or a vendor
+  // with no cap concept — the menu just skips the detail block then.
+  const grantRemaining = grantRemainingAmount(view);
+  const paidRemaining = paidRemainingAmount(view);
+  const currency = view.kind === 'issued' ? (view.data.currency ?? 'CNY') : view.data.currency;
+
   const menu = (
     <Menu
       onClickMenuItem={(key) => {
@@ -86,6 +98,26 @@ const TrialQuotaBadge: React.FC<{ vendor: TrialVendor }> = ({ vendor }) => {
         }
       }}
     >
+      {(grantRemaining !== null || paidRemaining !== null) && (
+        <div
+          className='flex flex-col gap-4px border-b border-fill-3 px-12px py-8px'
+          onClick={stopPropagation}
+          data-testid='trial-quota-balance-breakdown'
+        >
+          {grantRemaining !== null && (
+            <div className='flex items-center justify-between text-12px text-t-secondary'>
+              <span>{t('settings.trialTopUp.grantBalanceLabel')}</span>
+              <span className='font-500 text-t-primary'>{formatMajorUnits(grantRemaining, currency)}</span>
+            </div>
+          )}
+          {paidRemaining !== null && (
+            <div className='flex items-center justify-between text-12px text-t-secondary'>
+              <span>{t('settings.trialTopUp.paidBalanceLabel')}</span>
+              <span className='font-500 text-t-primary'>{formatMajorUnits(paidRemaining, currency)}</span>
+            </div>
+          )}
+        </div>
+      )}
       <Menu.Item key={MENU_KEY_TOP_UP}>
         <div className='flex items-center gap-8px' data-testid='trial-quota-menu-top-up'>
           <Wallet theme='outline' size={14} fill='currentColor' />

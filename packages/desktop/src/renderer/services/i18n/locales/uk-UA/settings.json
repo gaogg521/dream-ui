@@ -1570,6 +1570,8 @@
   "trialTopUp": {
     "title": "Поповнити",
     "balanceLabel": "Поточний баланс",
+    "grantBalanceLabel": "Безкоштовний баланс",
+    "paidBalanceLabel": "Поповнений баланс",
     "afterTopUp": "{{amount}} після поповнення",
     "currentBalance": "Поточний баланс: {{amount}}",
     "selectAmount": "Виберіть суму",

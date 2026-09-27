@@ -1569,6 +1569,8 @@
   "trialTopUp": {
     "title": "Пополнить",
     "balanceLabel": "Текущий баланс",
+    "grantBalanceLabel": "Бесплатный баланс",
+    "paidBalanceLabel": "Пополненный баланс",
     "afterTopUp": "{{amount}} после пополнения",
     "currentBalance": "Текущий баланс: {{amount}}",
     "selectAmount": "Выберите сумму",

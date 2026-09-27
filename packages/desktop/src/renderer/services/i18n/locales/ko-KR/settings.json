@@ -1557,6 +1557,8 @@
   "trialTopUp": {
     "title": "충전",
     "balanceLabel": "현재 잔액",
+    "grantBalanceLabel": "무료 잔액",
+    "paidBalanceLabel": "충전 잔액",
     "afterTopUp": "충전 후 {{amount}}",
     "currentBalance": "현재 잔액: {{amount}}",
     "selectAmount": "금액 선택",

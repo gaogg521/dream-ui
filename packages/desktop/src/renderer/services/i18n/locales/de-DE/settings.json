@@ -1555,6 +1555,8 @@
   "trialTopUp": {
     "title": "Aufladen",
     "balanceLabel": "Aktuelles Guthaben",
+    "grantBalanceLabel": "Kostenloses Guthaben",
+    "paidBalanceLabel": "Aufgeladenes Guthaben",
     "afterTopUp": "{{amount}} nach Aufladung",
     "currentBalance": "Aktuelles Guthaben: {{amount}}",
     "selectAmount": "Betrag wählen",

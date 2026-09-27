@@ -11,7 +11,8 @@ import { useTranslation } from 'react-i18next';
 import DreamModal from '@renderer/components/base/DreamModal';
 import {
   formatMajorUnits,
-  grantedForPayment,
+  grantRemainingAmount,
+  paidRemainingAmount,
   remainingAmount,
   remainingLabel,
   useRefreshTrialQuota,
@@ -137,11 +138,17 @@ const TrialTopUpModal: React.FC<{
   // Only previewable against a real number — an uncapped vendor has no
   // "after" to show.
   const balanceNow = quota ? remainingAmount(quota) : null;
-  // Mode B (metered) never carries a markup — its ledger is a direct CNY
-  // balance with no resale conversion — so only `issued` (mode A, the only
-  // kind this modal is ever shown for) needs to read it.
-  const topupMarkup = quota?.kind === 'issued' ? quota.data.topup_price_markup : undefined;
-  const previewAfter = amountValid && balanceNow !== null ? balanceNow + grantedForPayment(topupMarkup, amount) : null;
+  // The broker already keeps the free-grant pool and the paid pool separate
+  // and markup-free on the wire (see crate::visible_balance) — a top-up
+  // simply adds the paid amount to `paidRemaining` at face value, no client-
+  // side conversion needed. `null` on both only for a vendor with no cap
+  // concept (or an old broker predating the split); the modal falls back to
+  // a single combined preview in that case.
+  const grantRemaining = quota ? grantRemainingAmount(quota) : null;
+  const paidRemaining = quota ? paidRemainingAmount(quota) : null;
+  const hasSplitBalance = grantRemaining !== null || paidRemaining !== null;
+  const previewPaidAfter = amountValid && paidRemaining !== null ? paidRemaining + amount : null;
+  const previewCombinedAfter = !hasSplitBalance && amountValid && balanceNow !== null ? balanceNow + amount : null;
 
   return (
     <DreamModal
@@ -165,12 +172,44 @@ const TrialTopUpModal: React.FC<{
               >
                 {balance?.exhausted ? t('settings.meteredQuota.exhausted') : currentBalance || '—'}
               </span>
-              {previewAfter !== null && (
+              {/* A broker too old to report the grant/paid split has no per-
+                  pool preview to show — fall back to one combined number. */}
+              {previewCombinedAfter !== null && (
                 <span className='text-13px text-t-secondary'>
-                  {t('settings.trialTopUp.afterTopUp', { amount: formatMajorUnits(previewAfter, currency) })}
+                  {t('settings.trialTopUp.afterTopUp', { amount: formatMajorUnits(previewCombinedAfter, currency) })}
                 </span>
               )}
             </div>
+            {hasSplitBalance && (
+              <div className='mt-10px flex flex-col gap-4px border-t border-fill-3 pt-10px'>
+                {grantRemaining !== null && (
+                  <div
+                    className='flex items-center justify-between text-12px text-t-secondary'
+                    data-testid='grant-balance-row'
+                  >
+                    <span>{t('settings.trialTopUp.grantBalanceLabel')}</span>
+                    <span>{formatMajorUnits(grantRemaining, currency)}</span>
+                  </div>
+                )}
+                {paidRemaining !== null && (
+                  <div
+                    className='flex items-center justify-between text-12px text-t-secondary'
+                    data-testid='paid-balance-row'
+                  >
+                    <span>{t('settings.trialTopUp.paidBalanceLabel')}</span>
+                    <span>
+                      {formatMajorUnits(paidRemaining, currency)}
+                      {previewPaidAfter !== null && (
+                        <span className='text-[rgba(var(--primary-6),1)]'>
+                          {' → '}
+                          {formatMajorUnits(previewPaidAfter, currency)}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
@@ -271,10 +310,7 @@ const TrialTopUpModal: React.FC<{
           <div>
             <div className='text-16px font-600 text-t-primary'>
               {t('settings.trialTopUp.creditedAmount', {
-                // `order.amount` is what was paid, not what landed — see
-                // `grantedForPayment`. Showing the paid amount here would
-                // repeat the exact mismatch this fixes in the preview above.
-                amount: formatMajorUnits(grantedForPayment(topupMarkup, order.amount), order.currency),
+                amount: formatMajorUnits(order.amount, order.currency),
               })}
             </div>
             {currentBalance && (

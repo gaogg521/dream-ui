@@ -1555,6 +1555,8 @@
   "trialTopUp": {
     "title": "Yükle",
     "balanceLabel": "Mevcut bakiye",
+    "grantBalanceLabel": "Ücretsiz bakiye",
+    "paidBalanceLabel": "Yüklenen bakiye",
     "afterTopUp": "Yükleme sonrası {{amount}}",
     "currentBalance": "Mevcut bakiye: {{amount}}",
     "selectAmount": "Bir tutar seçin",
