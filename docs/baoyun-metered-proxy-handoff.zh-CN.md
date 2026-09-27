@@ -1557,3 +1557,33 @@ qwen3.7-flash），这符合"免费用户锁便宜模型"；但 §11.14 的充�
   复确认后判为设计如此，勿再当 bug 修。
 - **HANDOFF 模型解锁语义**：§3 的首次申领/充值两步补上了
   `unrestricted_models` 与充值解锁的说明（见该文件 09-26 标注）。
+
+### 11.21 充值弹窗预览撒谎：数字对但前端没用（2026-09-27）
+
+用户报"默认领了 ¥5、充值 ¥1，怎么看到 ¥5.87"，配了张真实截图。现场 SSH 上生产
+核对（不是猜的）：`sqlite3` 查出这就是 install_01a0e177-... 那把 key（handle
+1190），拿它去问宝云真实账户 API，`remain: 5.87`——跟截图分毫不差。**后端加价
+15% 逻辑本身完全正确**（`granted_for_payment(1.15, 1.0) = 0.87`，¥5+¥0.87=¥5.87），
+这是 §11.13 当初就拍板要的效果，不是 bug。
+
+真正的 bug 在 `TrialTopUpModal.tsx`：`previewAfter = balanceNow + amount`，**弹窗
+从来不知道有加价这回事**——选 ¥1 就直接显示"充值后 ¥6.00"，付完却只到账 ¥5.87，
+"已到账"提示也犯了同一个错（读的是 `order.amount`，即付款金额，不是实际到账
+金额）。用户确认了产品要求：**加价对用户必须无感**——不加"含手续费"之类的说明
+文案，只是让预览/到账两处数字变得准确、跟最终结果一致。
+
+修法：`QuotaStatusResponse`/`TrialQuotaStatusResponse`（broker→dream-core→
+dream-ui 三层镜像，跟本文档反复出现的模式一样）新增只读字段
+`topup_price_markup`，随现有的 quota 接口一起下发（零新增接口）；dream-ui 加
+`grantedForPayment()`（原样照抄 `crate::topup::granted_for_payment` 的除法+
+四舍五入到分逻辑），弹窗的"充值后"预览和"已到账"提示都改用它，字段缺失
+（老 broker）时退化成 markup=1（无加价），不会显示一个交付不了的数字。
+
+⚠️ **broker 这次改动本身零风险**（只是给已有响应多加一个只读字段），但要让
+生产用户真的看到修复，broker 必须重新部署，**dream-core/dream-ui 那半边还要
+等下次打包发版**——纯前端字段，改完不重新打包对已装用户没有任何效果。
+
+测试：broker `quota_status_reports_the_vendors_spend_position` 补了对新字段
+的断言；dream-ui 新增 `useTrialQuota.test.ts`（`grantedForPayment` 纯函数，
+含精确复现这次真实故障的用例）+ `TrialTopUpModal.dom.test.tsx`（组件级回归，
+断言预览文本是"充值后 ¥13.70"而不是错误的"¥15.00"）。

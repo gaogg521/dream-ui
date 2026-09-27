@@ -48,6 +48,15 @@ pub struct QuotaStatusResponse {
     pub exhausted: bool,
     /// ISO 4217 code the amount fields above are denominated in.
     pub currency: String,
+    /// The resale markup applied wherever this install's real-money top-ups
+    /// turn into vendor spending power (`crate::topup::granted_for_payment`).
+    /// Callers building a top-up preview (e.g. dream-ui's `TrialTopUpModal`)
+    /// must divide the amount the user is about to pay by this before adding
+    /// it to `remaining_usd` — a naive `remaining + paid` overstates the
+    /// result by exactly this ratio and shows the user a number the top-up
+    /// will not actually deliver. `None` only for a broker build that
+    /// predates this field.
+    pub topup_price_markup: Option<f64>,
 }
 
 /// How generously this broker issues a trial key on one vendor: the cap
@@ -483,6 +492,7 @@ pub async fn read_quota_status(
         reset: usage.reset.map(|r| r.as_str().to_string()),
         exhausted: usage.is_exhausted(),
         currency: usage.currency,
+        topup_price_markup: Some(state.config.topup_price_markup),
     })
 }
 
@@ -541,6 +551,7 @@ pub async fn apply_top_up(
         reset: usage.reset.map(|r| r.as_str().to_string()),
         exhausted: usage.is_exhausted(),
         currency: usage.currency,
+        topup_price_markup: Some(state.config.topup_price_markup),
     })
 }
 

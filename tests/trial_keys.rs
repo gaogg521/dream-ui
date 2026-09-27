@@ -399,6 +399,10 @@ async fn quota_status_reports_the_vendors_spend_position() {
     assert_eq!(status.reset.as_deref(), Some("monthly"));
     assert_eq!(status.currency, "USD");
     assert!(!status.exhausted);
+    // Callers building a top-up preview (dream-ui's TrialTopUpModal) need
+    // this to compute what a payment will actually grant — a naive
+    // `remaining + paid` overstates the result once the markup is not 1.0.
+    assert_eq!(status.topup_price_markup, Some(1.0));
 }
 
 #[tokio::test]
