@@ -227,7 +227,11 @@ impl TokenVendor for OpenRouterVendor {
 
     // OpenRouter gates models per *account*, not per key — nothing to move
     // when an install crosses the paid tier.
-    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+    async fn set_model_limits(
+        &self,
+        _handle: &str,
+        _unrestricted: bool,
+    ) -> Result<(), VendorError> {
         Ok(())
     }
 

@@ -11,7 +11,9 @@ use crate::config::Config;
 use crate::db::{self, Issuance};
 use crate::error::AppError;
 use crate::rate_limit::RateLimiter;
-use crate::vendor::{baoyun, KeySpec, ProvisioningMode, ResetPeriod, TokenVendor, VendorError};
+use crate::vendor::{
+    baoyun, KeySpec, KeyUsage, ProvisioningMode, ResetPeriod, TokenVendor, VendorError,
+};
 
 #[derive(Debug, Deserialize)]
 pub struct TrialKeyRequest {
@@ -37,26 +39,33 @@ pub struct TrialKeyResponse {
 }
 
 /// A key's spend position, for the client's quota display.
+///
+/// `limit_usd`/`used_usd`/`remaining_usd` are the combined **visible**
+/// balance (`crate::visible_balance`) — grant plus paid, added together for
+/// callers that just want a total. `grant_*`/`paid_*` break that total down
+/// into the free-grant pool and the paid pool so a client can show them
+/// separately (they spend in that order: grant first, at 1:1, then paid,
+/// which is where the markup lives). None of these fields ever reveal the
+/// resale markup ratio itself — the client is not meant to, and cannot,
+/// compute it.
 #[derive(Debug, Serialize, PartialEq)]
 pub struct QuotaStatusResponse {
     pub vendor: String,
     pub limit_usd: Option<f64>,
     pub used_usd: f64,
     pub remaining_usd: Option<f64>,
+    /// Total free grant this install was ever given. `None` only when the
+    /// vendor has no cap concept at all (see `visible_balance::reconcile_usage`).
+    pub grant_limit_usd: Option<f64>,
+    pub grant_remaining_usd: Option<f64>,
+    /// Everything this install has ever paid, at face value.
+    pub paid_limit_usd: Option<f64>,
+    pub paid_remaining_usd: Option<f64>,
     /// `monthly`, `daily`, or `cumulative`.
     pub reset: Option<String>,
     pub exhausted: bool,
     /// ISO 4217 code the amount fields above are denominated in.
     pub currency: String,
-    /// The resale markup applied wherever this install's real-money top-ups
-    /// turn into vendor spending power (`crate::topup::granted_for_payment`).
-    /// Callers building a top-up preview (e.g. dream-ui's `TrialTopUpModal`)
-    /// must divide the amount the user is about to pay by this before adding
-    /// it to `remaining_usd` — a naive `remaining + paid` overstates the
-    /// result by exactly this ratio and shows the user a number the top-up
-    /// will not actually deliver. `None` only for a broker build that
-    /// predates this field.
-    pub topup_price_markup: Option<f64>,
 }
 
 /// How generously this broker issues a trial key on one vendor: the cap
@@ -259,11 +268,26 @@ pub async fn issue_trial_key(
         // 发 key 时烙上去的，靠充值路径解锁对新 key 无意义。
         unrestricted_models: paid_total > 0.0,
     };
+    // A fresh key has used=0, so the real vendor remain it starts at is
+    // exactly what was just handed to `issue_key` as its limit — no extra
+    // vendor round trip needed to seed the visible-balance anchor.
+    let vendor_remain_at_issue = spec.limit_usd;
 
     let issued = vendor.issue_key(spec).await.map_err(|e| {
         log_vendor_error(&e);
         AppError::UpstreamError("failed to issue upstream key".into())
     })?;
+
+    // The user must never see the resale markup: `policy.limit_amount` (free
+    // grant) and `paid_total` (proven real payments) are both face-value
+    // here, unlike `spec.limit_usd` above which is what actually landed on
+    // the vendor's side. See `crate::visible_balance`.
+    let visible = crate::visible_balance::init_visible_balance(
+        policy.limit_amount,
+        paid_total,
+        state.config.topup_price_markup,
+        vendor_remain_at_issue,
+    );
 
     // 5. Persist the issuance (never the plaintext key — only its hash, for
     // `crate::topup::usage_by_key`'s paste-your-key lookup).
@@ -277,6 +301,12 @@ pub async fn issue_trial_key(
         expires_at: expires_at.timestamp_millis(),
         disabled: 0,
         key_hash: Some(hash_key(&issued.secret)),
+        grant_limit_cny: Some(visible.grant_limit_cny),
+        grant_balance_cny: Some(visible.grant_balance_cny),
+        paid_limit_cny: Some(visible.paid_limit_cny),
+        paid_balance_cny: Some(visible.paid_balance_cny),
+        paid_real_remain_cny: Some(visible.paid_real_remain_cny),
+        last_synced_vendor_remain: Some(visible.last_synced_vendor_remain),
     };
 
     db::insert_issuance(&state.pool, &issuance)
@@ -404,11 +434,27 @@ async fn recover_deleted_key(
         expires_at: Some(expires_at.to_rfc3339_opts(SecondsFormat::Secs, true)),
         unrestricted_models: paid_total > 0.0,
     };
+    // Same reasoning as the fresh-issuance path: a new key starts at
+    // used=0, so its real vendor remain is exactly the limit just handed
+    // to it.
+    let vendor_remain_at_issue = spec.limit_usd;
 
     let issued = vendor.issue_key(spec).await.map_err(|e| {
         log_vendor_error(&e);
         AppError::UpstreamError("failed to issue a replacement upstream key".into())
     })?;
+
+    // A fresh ledger for the fresh key — face-value free grant + proven
+    // payments, never the marked-up `granted_from_paid`. The old ledger
+    // tracked a key that no longer exists; this is what a brand-new
+    // issuance would compute anyway, so recovery does not need to preserve
+    // anything from it.
+    let visible = crate::visible_balance::init_visible_balance(
+        policy.limit_amount,
+        paid_total,
+        state.config.topup_price_markup,
+        vendor_remain_at_issue,
+    );
 
     // `issuances` is UNIQUE on (vendor, install_id) — there is only ever one
     // row for this install on this vendor, so recovery re-points it rather
@@ -420,6 +466,7 @@ async fn recover_deleted_key(
         now_ms,
         expires_at.timestamp_millis(),
         &hash_key(&issued.secret),
+        &visible,
     )
     .await
     .map_err(|e| {
@@ -484,16 +531,147 @@ pub async fn read_quota_status(
             AppError::UpstreamError("failed to read upstream usage".into())
         })?;
 
+    let reconciled = reconcile_visible_balance(&state.pool, &issuance, &usage).await?;
+    let fields = visible_response_fields(reconciled, &usage);
+
     Ok(QuotaStatusResponse {
         vendor: vendor_id.to_string(),
-        limit_usd: usage.limit_usd,
-        used_usd: usage.used_usd,
-        remaining_usd: usage.remaining_usd,
+        limit_usd: fields.limit_usd,
+        used_usd: fields.used_usd,
+        remaining_usd: fields.remaining_usd,
+        grant_limit_usd: fields.grant_limit_usd,
+        grant_remaining_usd: fields.grant_remaining_usd,
+        paid_limit_usd: fields.paid_limit_usd,
+        paid_remaining_usd: fields.paid_remaining_usd,
         reset: usage.reset.map(|r| r.as_str().to_string()),
         exhausted: usage.is_exhausted(),
         currency: usage.currency,
-        topup_price_markup: Some(state.config.topup_price_markup),
     })
+}
+
+/// Reconciles `issuance`'s visible-balance ledger (`crate::visible_balance`)
+/// against the vendor's just-observed live usage and persists the result.
+/// `pub(crate)`: `crate::topup` (both `credit_once` and `usage_by_key`, the
+/// public "paste your key" query) needs the exact same reconciliation, not
+/// a second copy of it.
+///
+/// Returns `None` when the vendor has no cap concept at all
+/// (`visible_balance::reconcile_usage` returns `None`) — callers should
+/// fall back to `vendor_usage`'s raw fields unchanged in that case, since
+/// this ledger does not apply to that vendor. Otherwise returns the
+/// reconciled (and already-persisted) state, so a caller that needs to
+/// apply a credit right after (`apply_paid_credit`) has it without a
+/// second DB round trip.
+pub(crate) async fn reconcile_visible_balance(
+    pool: &SqlitePool,
+    issuance: &Issuance,
+    vendor_usage: &KeyUsage,
+) -> Result<Option<crate::visible_balance::VisibleBalanceState>, AppError> {
+    let current = match (
+        issuance.grant_limit_cny,
+        issuance.grant_balance_cny,
+        issuance.paid_limit_cny,
+        issuance.paid_balance_cny,
+        issuance.paid_real_remain_cny,
+        issuance.last_synced_vendor_remain,
+    ) {
+        (
+            Some(grant_limit),
+            Some(grant_balance),
+            Some(paid_limit),
+            Some(paid_balance),
+            Some(paid_real),
+            Some(anchor),
+        ) => Some(crate::visible_balance::VisibleBalanceState {
+            grant_limit_cny: grant_limit,
+            grant_balance_cny: grant_balance,
+            paid_limit_cny: paid_limit,
+            paid_balance_cny: paid_balance,
+            paid_real_remain_cny: paid_real,
+            last_synced_vendor_remain: anchor,
+        }),
+        _ => None,
+    };
+
+    let Some(state) = crate::visible_balance::reconcile_usage(
+        current,
+        vendor_usage.limit_usd,
+        vendor_usage.remaining_usd,
+    ) else {
+        return Ok(None);
+    };
+
+    db::set_visible_balance(pool, &issuance.id, &state)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "failed to persist visible-balance reconciliation");
+            AppError::Internal("database error".into())
+        })?;
+    Ok(Some(state))
+}
+
+/// The amount fields `QuotaStatusResponse`/`crate::topup::KeyUsageQueryResponse`
+/// want, computed from either a reconciled visible-balance state or — when
+/// there is none (a vendor with no cap concept) — the vendor's raw usage
+/// unchanged (every `grant_*`/`paid_*` field is then `None`, since there is
+/// no split to report).
+///
+/// When the vendor reports this key exhausted, every remaining field is
+/// clamped to exactly zero regardless of what the ledger still shows.
+/// Without this, a user would see a nonzero "remaining" — proportional to
+/// the markup, so ¥90+ on a ¥1000 top-up, not just pocket change — while
+/// every call fails with "out of quota". The persisted ledger (`issuances`)
+/// is never touched here; only what this response shows is clamped, so the
+/// real numbers stay available for reconciliation.
+pub(crate) struct VisibleResponseFields {
+    pub limit_usd: Option<f64>,
+    pub used_usd: f64,
+    pub remaining_usd: Option<f64>,
+    pub grant_limit_usd: Option<f64>,
+    pub grant_remaining_usd: Option<f64>,
+    pub paid_limit_usd: Option<f64>,
+    pub paid_remaining_usd: Option<f64>,
+}
+
+pub(crate) fn visible_response_fields(
+    reconciled: Option<crate::visible_balance::VisibleBalanceState>,
+    vendor_usage: &KeyUsage,
+) -> VisibleResponseFields {
+    match reconciled {
+        Some(state) => {
+            let exhausted = vendor_usage.is_exhausted();
+            let grant_remaining = if exhausted {
+                0.0
+            } else {
+                state.grant_balance_cny
+            };
+            let paid_remaining = if exhausted {
+                0.0
+            } else {
+                state.paid_balance_cny
+            };
+            let limit = state.grant_limit_cny + state.paid_limit_cny;
+            let remaining = grant_remaining + paid_remaining;
+            VisibleResponseFields {
+                limit_usd: Some(limit),
+                used_usd: limit - remaining,
+                remaining_usd: Some(remaining),
+                grant_limit_usd: Some(state.grant_limit_cny),
+                grant_remaining_usd: Some(grant_remaining),
+                paid_limit_usd: Some(state.paid_limit_cny),
+                paid_remaining_usd: Some(paid_remaining),
+            }
+        }
+        None => VisibleResponseFields {
+            limit_usd: vendor_usage.limit_usd,
+            used_usd: vendor_usage.used_usd,
+            remaining_usd: vendor_usage.remaining_usd,
+            grant_limit_usd: None,
+            grant_remaining_usd: None,
+            paid_limit_usd: None,
+            paid_remaining_usd: None,
+        },
+    }
 }
 
 /// Applies a top-up to this install's key on `vendor_id` and returns the
@@ -518,6 +696,20 @@ pub async fn apply_top_up(
         })?
         .ok_or(AppError::NotIssued)?;
 
+    // Read the pre-top-up usage first so any ordinary spending that
+    // happened since the last reconcile gets folded in (grant first, at
+    // 1:1) *before* this known-size credit is applied — otherwise that
+    // usage would silently vanish into the credit instead of being tracked
+    // as usage.
+    let usage_before = vendor
+        .read_usage(&issuance.vendor_key_handle)
+        .await
+        .map_err(|e| {
+            log_vendor_error(&e);
+            AppError::UpstreamError("failed to read upstream usage before top-up".into())
+        })?;
+    let reconciled = reconcile_visible_balance(&state.pool, &issuance, &usage_before).await?;
+
     let usage = vendor
         .top_up(&issuance.vendor_key_handle, delta_amount)
         .await
@@ -526,9 +718,41 @@ pub async fn apply_top_up(
             AppError::UpstreamError("failed to top up upstream key".into())
         })?;
 
+    // Ops top-ups are never marked up — always have been (this endpoint has
+    // no notion of "what the user paid" to convert from, it just takes a
+    // real amount). So the paid pool grows by exactly `delta_amount` on
+    // both the visible and real sides — the grant pool is never touched by
+    // money changing hands.
+    let reconciled_after = match reconciled {
+        Some(state_before) => {
+            let credited = crate::visible_balance::apply_paid_credit(
+                state_before,
+                delta_amount,
+                delta_amount,
+                usage
+                    .remaining_usd
+                    .unwrap_or(state_before.last_synced_vendor_remain),
+            );
+            db::set_visible_balance(&state.pool, &issuance.id, &credited)
+                .await
+                .map_err(|e| {
+                    tracing::error!(error = %e, "failed to persist visible-balance credit");
+                    AppError::Internal("database error".into())
+                })?;
+            Some(credited)
+        }
+        // `None` only for a vendor with no cap concept at all — `top_up`
+        // cannot apply to it in the first place.
+        None => None,
+    };
+    let fields = visible_response_fields(reconciled_after, &usage);
+
     // 运维补偿同样代表用户的钱到账：顺带把模型档位解锁，语义与充值结算
     // 一致。best-effort——补偿的余额不能因为解锁失败而回滚。
-    if let Err(e) = vendor.set_model_limits(&issuance.vendor_key_handle, true).await {
+    if let Err(e) = vendor
+        .set_model_limits(&issuance.vendor_key_handle, true)
+        .await
+    {
         tracing::warn!(
             vendor = vendor_id,
             error = %e,
@@ -545,13 +769,16 @@ pub async fn apply_top_up(
 
     Ok(QuotaStatusResponse {
         vendor: vendor_id.to_string(),
-        limit_usd: usage.limit_usd,
-        used_usd: usage.used_usd,
-        remaining_usd: usage.remaining_usd,
+        limit_usd: fields.limit_usd,
+        used_usd: fields.used_usd,
+        remaining_usd: fields.remaining_usd,
+        grant_limit_usd: fields.grant_limit_usd,
+        grant_remaining_usd: fields.grant_remaining_usd,
+        paid_limit_usd: fields.paid_limit_usd,
+        paid_remaining_usd: fields.paid_remaining_usd,
         reset: usage.reset.map(|r| r.as_str().to_string()),
         exhausted: usage.is_exhausted(),
         currency: usage.currency,
-        topup_price_markup: Some(state.config.topup_price_markup),
     })
 }
 

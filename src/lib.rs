@@ -9,4 +9,5 @@ pub mod search;
 pub mod service;
 pub mod topup;
 pub mod vendor;
+pub mod visible_balance;
 pub mod webui;

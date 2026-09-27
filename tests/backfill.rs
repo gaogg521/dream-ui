@@ -81,7 +81,11 @@ impl TokenVendor for RevealingVendor {
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         unreachable!()
     }
-    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+    async fn set_model_limits(
+        &self,
+        _handle: &str,
+        _unrestricted: bool,
+    ) -> Result<(), VendorError> {
         Ok(())
     }
     async fn reveal_key(&self, handle: &str) -> Result<String, VendorError> {
@@ -128,7 +132,11 @@ impl TokenVendor for PlainVendor {
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         unreachable!()
     }
-    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+    async fn set_model_limits(
+        &self,
+        _handle: &str,
+        _unrestricted: bool,
+    ) -> Result<(), VendorError> {
         Ok(())
     }
 }
@@ -162,6 +170,15 @@ async fn insert(pool: &sqlx::SqlitePool, id: &str, vendor: &str, handle: &str, h
             expires_at: 9_999_999_999_999,
             disabled: 0,
             key_hash: hash.map(str::to_string),
+            // None everywhere: these rows simulate pre-migration-0009 data,
+            // same as they already simulate pre-0008 (key_hash) rows — the
+            // backfill tests here are about key_hash, not visible balance.
+            grant_limit_cny: None,
+            grant_balance_cny: None,
+            paid_limit_cny: None,
+            paid_balance_cny: None,
+            paid_real_remain_cny: None,
+            last_synced_vendor_remain: None,
         },
     )
     .await

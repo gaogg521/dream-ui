@@ -56,13 +56,17 @@ pub(crate) fn reference_for(vendor_id: &str, install_id: &str) -> String {
 
 /// The real vendor spending power `paid_amount` (CNY the user actually paid,
 /// or a vendor-reported historical total) buys after this platform's resale
-/// markup — e.g. at the default 1.15x, a ¥11.50 payment grants ¥10.00 of
+/// markup — e.g. at the default 1.10x, a ¥11.00 payment grants ¥10.00 of
 /// real usage; the difference is the platform's margin. Rounded to cents.
 /// `pub(crate)`: every place real money turns into vendor `remain` must go
 /// through this one function, not compute its own ratio — `service.rs`'s
 /// key-recovery path (`recover_deleted_key`) needs the exact same
 /// conversion applied to reconstructed `paid_total`, or recovery would
 /// silently hand back the un-marked-up amount.
+///
+/// The result of this function is a vendor-side, real-money quantity and
+/// must never reach a response the client sees — see `crate::visible_balance`
+/// for what the user is shown instead.
 pub(crate) fn granted_for_payment(markup: f64, paid_amount: f64) -> f64 {
     (paid_amount / markup * 100.0).round() / 100.0
 }
@@ -222,7 +226,7 @@ pub async fn get_topup_order(
             vendor_id,
             install_id,
             order_id,
-            &issuance.vendor_key_handle,
+            &issuance,
             order.amount,
         )
         .await?;
@@ -254,9 +258,10 @@ async fn credit_once(
     vendor_id: &str,
     install_id: &str,
     order_id: &str,
-    handle: &str,
+    issuance: &db::Issuance,
     amount: f64,
 ) -> Result<(), AppError> {
+    let handle = issuance.vendor_key_handle.as_str();
     let inserted = sqlx::query(
         "INSERT INTO topup_credits (order_id, vendor, install_id, vendor_key_handle, amount, credited_at) \
          VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
@@ -278,28 +283,64 @@ async fn credit_once(
         return Ok(());
     }
 
-    let granted = granted_for_payment(state.config.topup_price_markup, amount);
-    if let Err(e) = vendor.top_up(handle, granted).await {
+    // Reconcile any ordinary usage that happened since the last touch
+    // *before* applying this known-size credit — same reasoning as
+    // `service::apply_top_up`. The user must never see the markup ratio
+    // (see `crate::visible_balance`), so this failing must not silently
+    // fall back to showing the marked-up amount; it fails the whole credit,
+    // same as any other step here, and the next poll retries.
+    let usage_before = vendor.read_usage(handle).await.map_err(|e| {
         log_vendor_error(&e);
-        // Undo the reservation so the next poll retries the credit instead
-        // of silently reporting `success` with the key never actually
-        // topped up. Safe without a transaction: the single-connection pool
-        // means nothing else could have raced this row in between.
-        if let Err(cleanup_err) = sqlx::query("DELETE FROM topup_credits WHERE order_id = ?")
-            .bind(order_id)
-            .execute(&state.pool)
-            .await
-        {
-            tracing::error!(
-                order_id,
-                error = %cleanup_err,
-                "failed to roll back a topup_credits reservation after a failed top_up — \
-                 this order will read as permanently un-creditable until fixed by hand"
-            );
+        AppError::UpstreamError("failed to read upstream usage before crediting top-up".into())
+    })?;
+    let reconciled =
+        crate::service::reconcile_visible_balance(&state.pool, issuance, &usage_before).await?;
+
+    let granted = granted_for_payment(state.config.topup_price_markup, amount);
+    let usage_after = match vendor.top_up(handle, granted).await {
+        Ok(usage) => usage,
+        Err(e) => {
+            log_vendor_error(&e);
+            // Undo the reservation so the next poll retries the credit instead
+            // of silently reporting `success` with the key never actually
+            // topped up. Safe without a transaction: the single-connection pool
+            // means nothing else could have raced this row in between.
+            if let Err(cleanup_err) = sqlx::query("DELETE FROM topup_credits WHERE order_id = ?")
+                .bind(order_id)
+                .execute(&state.pool)
+                .await
+            {
+                tracing::error!(
+                    order_id,
+                    error = %cleanup_err,
+                    "failed to roll back a topup_credits reservation after a failed top_up — \
+                     this order will read as permanently un-creditable until fixed by hand"
+                );
+            }
+            return Err(AppError::UpstreamError(
+                "failed to credit the top-up to the key".into(),
+            ));
         }
-        return Err(AppError::UpstreamError(
-            "failed to credit the top-up to the key".into(),
-        ));
+    };
+
+    // The paid pool grows by `amount` — what the user actually paid, face
+    // value, never the marked-up `granted` that landed on the vendor's real
+    // remain. The grant pool is never touched by a payment. `reconciled` is
+    // `None` only for a vendor with no cap concept, which cannot reach
+    // `create_topup_order`/`credit_once` in the first place, so this is
+    // always `Some` here in practice.
+    if let Some(state_before) = reconciled {
+        let credited = crate::visible_balance::apply_paid_credit(
+            state_before,
+            amount,
+            granted,
+            usage_after
+                .remaining_usd
+                .unwrap_or(state_before.last_synced_vendor_remain),
+        );
+        db::set_visible_balance(&state.pool, &issuance.id, &credited)
+            .await
+            .map_err(db_error("persist visible-balance credit"))?;
     }
 
     tracing::info!(
@@ -461,6 +502,13 @@ pub struct KeyUsageQueryResponse {
     pub limit_usd: Option<f64>,
     pub used_usd: f64,
     pub remaining_usd: Option<f64>,
+    /// See `crate::service::QuotaStatusResponse` for what these four fields
+    /// mean — same split, same reasoning (grant spent first, at 1:1, before
+    /// the paid pool where the markup lives).
+    pub grant_limit_usd: Option<f64>,
+    pub grant_remaining_usd: Option<f64>,
+    pub paid_limit_usd: Option<f64>,
+    pub paid_remaining_usd: Option<f64>,
     pub currency: String,
     pub logs: Vec<UsageLogView>,
 }
@@ -513,6 +561,14 @@ pub async fn usage_by_key(
             AppError::UpstreamError("failed to read this key's spend position".into())
         })?;
 
+    // Same reconciliation as `/v1/quota/status` — this public page must
+    // show the same numbers the app does, or a user comparing the two would
+    // notice the discrepancy and start asking questions the markup must
+    // stay invisible from (see `crate::visible_balance`).
+    let reconciled =
+        crate::service::reconcile_visible_balance(&state.pool, &issuance, &usage).await?;
+    let fields = crate::service::visible_response_fields(reconciled, &usage);
+
     let logs = vendor
         .usage_logs(&issuance.vendor_key_handle, None)
         .await
@@ -520,9 +576,13 @@ pub async fn usage_by_key(
 
     Ok(KeyUsageQueryResponse {
         vendor: vendor_id.to_string(),
-        limit_usd: usage.limit_usd,
-        used_usd: usage.used_usd,
-        remaining_usd: usage.remaining_usd,
+        limit_usd: fields.limit_usd,
+        used_usd: fields.used_usd,
+        remaining_usd: fields.remaining_usd,
+        grant_limit_usd: fields.grant_limit_usd,
+        grant_remaining_usd: fields.grant_remaining_usd,
+        paid_limit_usd: fields.paid_limit_usd,
+        paid_remaining_usd: fields.paid_remaining_usd,
         currency: usage.currency,
         logs: logs.into_iter().map(UsageLogView::from).collect(),
     })
@@ -618,8 +678,8 @@ mod tests {
 
     #[test]
     fn granted_for_payment_applies_the_markup_and_rounds_to_cents() {
-        assert_eq!(granted_for_payment(1.15, 11.5), 10.0);
-        assert_eq!(granted_for_payment(1.15, 10.0), 8.70);
+        assert_eq!(granted_for_payment(1.10, 11.0), 10.0);
+        assert_eq!(granted_for_payment(1.10, 10.0), 9.09);
     }
 
     #[test]

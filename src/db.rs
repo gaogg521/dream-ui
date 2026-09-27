@@ -22,6 +22,24 @@ pub struct Issuance {
     /// migration 0008 — they simply aren't queryable by `usage_by_key` until
     /// naturally replaced (recovery, or a future re-issue).
     pub key_hash: Option<String>,
+    /// The six columns backing `crate::visible_balance` — what this install
+    /// is shown it has, separate from the vendor's real (marked-up) spend
+    /// cap, and split into a free-grant pool and a paid pool so consumption
+    /// can spend the grant first, at 1:1, before the markup ratio ever
+    /// applies to anything. `None` only for rows issued before migration
+    /// 0009; see `visible_balance::reconcile_usage` for how those get
+    /// lazily initialized on first access rather than reconstructed.
+    pub grant_limit_cny: Option<f64>,
+    pub grant_balance_cny: Option<f64>,
+    pub paid_limit_cny: Option<f64>,
+    pub paid_balance_cny: Option<f64>,
+    /// Shadow ledger: the paid pool's real remain on the vendor's side
+    /// (never shown to the user) — the anchor `reconcile_usage` measures
+    /// against to keep the paid pool's visible balance precisely in sync.
+    pub paid_real_remain_cny: Option<f64>,
+    /// The vendor's total real remain (grant + paid) as of the last time
+    /// this ledger was touched.
+    pub last_synced_vendor_remain: Option<f64>,
 }
 
 /// Opens the pool and runs migrations. A single connection is used
@@ -41,8 +59,9 @@ pub async fn init_pool(database_url: &str) -> anyhow::Result<SqlitePool> {
     Ok(pool)
 }
 
-const COLUMNS: &str =
-    "id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, disabled, key_hash";
+const COLUMNS: &str = "id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, \
+     disabled, key_hash, grant_limit_cny, grant_balance_cny, paid_limit_cny, paid_balance_cny, \
+     paid_real_remain_cny, last_synced_vendor_remain";
 
 /// Looks up a non-disabled issuance for this install on this vendor (dedup
 /// check). Scoped per vendor: one device may hold one key per platform.
@@ -170,8 +189,9 @@ pub async fn list_topup_credits(
 
 pub async fn insert_issuance(pool: &SqlitePool, issuance: &Issuance) -> sqlx::Result<()> {
     sqlx::query(
-        "INSERT INTO issuances (id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, disabled, key_hash)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO issuances (id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, disabled, key_hash, \
+         grant_limit_cny, grant_balance_cny, paid_limit_cny, paid_balance_cny, paid_real_remain_cny, last_synced_vendor_remain)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&issuance.id)
     .bind(&issuance.vendor)
@@ -182,6 +202,12 @@ pub async fn insert_issuance(pool: &SqlitePool, issuance: &Issuance) -> sqlx::Re
     .bind(issuance.expires_at)
     .bind(issuance.disabled)
     .bind(&issuance.key_hash)
+    .bind(issuance.grant_limit_cny)
+    .bind(issuance.grant_balance_cny)
+    .bind(issuance.paid_limit_cny)
+    .bind(issuance.paid_balance_cny)
+    .bind(issuance.paid_real_remain_cny)
+    .bind(issuance.last_synced_vendor_remain)
     .execute(pool)
     .await?;
 
@@ -196,6 +222,11 @@ pub async fn insert_issuance(pool: &SqlitePool, issuance: &Issuance) -> sqlx::Re
 /// per vendor regardless of `disabled`, live or not. `new_key_hash` moves
 /// with the new key — the old hash is overwritten, so it naturally stops
 /// matching `find_active_by_key_hash` once the row it named is gone.
+/// `ledger`: recovery mints a brand-new key with its own fresh ledger
+/// (`crate::visible_balance::init_visible_balance`) — the old ledger is
+/// meaningless once the key it was tracking is gone, and re-arriving at the
+/// same starting point (free grant + everything this install can prove it
+/// paid) is exactly what a fresh issuance would compute anyway.
 pub async fn replace_issuance_key(
     pool: &SqlitePool,
     issuance_id: &str,
@@ -203,15 +234,24 @@ pub async fn replace_issuance_key(
     issued_at: i64,
     expires_at: i64,
     new_key_hash: &str,
+    ledger: &crate::visible_balance::VisibleBalanceState,
 ) -> sqlx::Result<()> {
     sqlx::query(
-        "UPDATE issuances SET vendor_key_handle = ?, issued_at = ?, expires_at = ?, disabled = 0, key_hash = ? \
+        "UPDATE issuances SET vendor_key_handle = ?, issued_at = ?, expires_at = ?, disabled = 0, key_hash = ?, \
+         grant_limit_cny = ?, grant_balance_cny = ?, paid_limit_cny = ?, paid_balance_cny = ?, \
+         paid_real_remain_cny = ?, last_synced_vendor_remain = ? \
          WHERE id = ?",
     )
     .bind(new_vendor_key_handle)
     .bind(issued_at)
     .bind(expires_at)
     .bind(new_key_hash)
+    .bind(ledger.grant_limit_cny)
+    .bind(ledger.grant_balance_cny)
+    .bind(ledger.paid_limit_cny)
+    .bind(ledger.paid_balance_cny)
+    .bind(ledger.paid_real_remain_cny)
+    .bind(ledger.last_synced_vendor_remain)
     .bind(issuance_id)
     .execute(pool)
     .await?;
@@ -250,6 +290,32 @@ pub async fn set_key_hash(
         .bind(issuance_id)
         .execute(pool)
         .await?;
+
+    Ok(())
+}
+
+/// Persists the current `crate::visible_balance::VisibleBalanceState` for
+/// one issuance — every place that ledger changes (a query that reconciles
+/// ordinary usage, a payment, an ops adjustment) writes back through this,
+/// leaving every other column alone. Same shape as `set_key_hash`.
+pub async fn set_visible_balance(
+    pool: &SqlitePool,
+    issuance_id: &str,
+    ledger: &crate::visible_balance::VisibleBalanceState,
+) -> sqlx::Result<()> {
+    sqlx::query(
+        "UPDATE issuances SET grant_limit_cny = ?, grant_balance_cny = ?, paid_limit_cny = ?, \
+         paid_balance_cny = ?, paid_real_remain_cny = ?, last_synced_vendor_remain = ? WHERE id = ?",
+    )
+    .bind(ledger.grant_limit_cny)
+    .bind(ledger.grant_balance_cny)
+    .bind(ledger.paid_limit_cny)
+    .bind(ledger.paid_balance_cny)
+    .bind(ledger.paid_real_remain_cny)
+    .bind(ledger.last_synced_vendor_remain)
+    .bind(issuance_id)
+    .execute(pool)
+    .await?;
 
     Ok(())
 }

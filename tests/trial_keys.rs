@@ -125,7 +125,11 @@ impl TokenVendor for MockVendor {
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         Ok(())
     }
-    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+    async fn set_model_limits(
+        &self,
+        _handle: &str,
+        _unrestricted: bool,
+    ) -> Result<(), VendorError> {
         Ok(())
     }
 }
@@ -399,10 +403,6 @@ async fn quota_status_reports_the_vendors_spend_position() {
     assert_eq!(status.reset.as_deref(), Some("monthly"));
     assert_eq!(status.currency, "USD");
     assert!(!status.exhausted);
-    // Callers building a top-up preview (dream-ui's TrialTopUpModal) need
-    // this to compute what a payment will actually grant — a naive
-    // `remaining + paid` overstates the result once the markup is not 1.0.
-    assert_eq!(status.topup_price_markup, Some(1.0));
 }
 
 #[tokio::test]
@@ -553,7 +553,11 @@ impl TokenVendor for PaidHistoryVendor {
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         unreachable!()
     }
-    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+    async fn set_model_limits(
+        &self,
+        _handle: &str,
+        _unrestricted: bool,
+    ) -> Result<(), VendorError> {
         Ok(())
     }
     async fn paid_total(&self, _reference: &str) -> Result<f64, VendorError> {
@@ -609,6 +613,20 @@ async fn a_fresh_issuance_with_no_local_row_credits_prior_payment_history() {
         spec.limit_usd, 9.0,
         "prior payment history must be credited (after markup) even with no local issuance row"
     );
+
+    // The user must never see that markup: what's shown is the FACE VALUE
+    // free grant (1.0) and the proven payment (10.0) — separately — never
+    // the marked-up 9.0 that actually landed on the vendor's real remain.
+    // See `crate::visible_balance`.
+    let issuance =
+        db::find_active_by_install_id(&state.pool, PAID_HISTORY_VENDOR_ID, "install-orphaned")
+            .await
+            .unwrap()
+            .expect("the fresh issuance should have persisted");
+    assert_eq!(issuance.grant_limit_cny, Some(1.0));
+    assert_eq!(issuance.grant_balance_cny, Some(1.0));
+    assert_eq!(issuance.paid_limit_cny, Some(10.0));
+    assert_eq!(issuance.paid_balance_cny, Some(10.0));
 }
 
 #[tokio::test]
@@ -629,4 +647,77 @@ async fn a_genuinely_fresh_install_is_unaffected_by_the_paid_total_check() {
         spec.limit_usd, 1.0,
         "zero paid history must leave the grant exactly as before this check existed"
     );
+}
+
+// --- visible balance: hides the resale markup from the user -------------
+
+#[tokio::test]
+async fn a_pre_migration_issuance_lazily_initializes_its_visible_balance_on_first_query() {
+    let (state, vendor) =
+        make_state_with(MockVendor::new(false), |c| c.topup_price_markup = 1.25).await;
+    // Seed an issuance directly, simulating a row that predates migration
+    // 0009 — all three visible-balance columns are NULL, same as any real
+    // pre-migration row would be.
+    db::insert_issuance(
+        &state.pool,
+        &db::Issuance {
+            id: "pre-migration-issuance".to_string(),
+            vendor: MOCK_VENDOR_ID.to_string(),
+            install_id: "install-legacy".to_string(),
+            ip: "127.0.0.1".to_string(),
+            vendor_key_handle: "mock-handle".to_string(),
+            issued_at: 0,
+            expires_at: 9_999_999_999_999,
+            disabled: 0,
+            key_hash: None,
+            grant_limit_cny: None,
+            grant_balance_cny: None,
+            paid_limit_cny: None,
+            paid_balance_cny: None,
+            paid_real_remain_cny: None,
+            last_synced_vendor_remain: None,
+        },
+    )
+    .await
+    .unwrap();
+
+    // First query: no ledger to reconstruct from, so it adopts the vendor's
+    // current live values as the starting point (MockVendor::new()'s
+    // limit=1.0, remaining=0.75) rather than trying to backfill what it
+    // "should" have been — see `visible_balance::reconcile_usage`.
+    let first = read_quota_status(&state, MOCK_VENDOR_ID, "install-legacy")
+        .await
+        .unwrap();
+    assert_eq!(first.limit_usd, Some(1.0));
+    assert_eq!(first.remaining_usd, Some(0.75));
+
+    let issuance = db::find_active_by_install_id(&state.pool, MOCK_VENDOR_ID, "install-legacy")
+        .await
+        .unwrap()
+        .expect("the seeded issuance should still be there");
+    // No history to split between grant and paid, so everything currently
+    // on the vendor's side is attributed to the grant pool — see
+    // `visible_balance::reconcile_usage`'s `None` branch.
+    assert_eq!(issuance.grant_limit_cny, Some(1.0));
+    assert_eq!(issuance.grant_balance_cny, Some(0.75));
+    assert_eq!(issuance.paid_limit_cny, Some(0.0));
+    assert_eq!(issuance.paid_balance_cny, Some(0.0));
+    assert_eq!(issuance.last_synced_vendor_remain, Some(0.75));
+
+    // Simulate ¥0.20 of real usage happening entirely outside this broker's
+    // knowledge (mode A never sees individual calls — see topup.rs's module
+    // doc) by moving the vendor's own reported position directly.
+    {
+        let mut usage = vendor.usage.lock().unwrap();
+        usage.used_usd += 0.20;
+        usage.remaining_usd = usage.remaining_usd.map(|r| r - 0.20);
+    }
+
+    let after_usage = read_quota_status(&state, MOCK_VENDOR_ID, "install-legacy")
+        .await
+        .unwrap();
+    // 1:1, never marked up — even with a 1.25x markup configured, ordinary
+    // usage is never marked up a second time. Only a payment turning into
+    // vendor spending power goes through the markup.
+    assert_eq!(after_usage.remaining_usd, Some(0.55));
 }

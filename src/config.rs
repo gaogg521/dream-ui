@@ -50,12 +50,17 @@ pub struct Config {
     pub public_base_url: String,
     /// This platform's resale markup on real-money top-ups: for every
     /// `topup_price_markup` CNY a user pays, they're granted 1 CNY of real
-    /// vendor spending power — e.g. at the default 1.15, a ¥11.50 payment
-    /// grants ¥10.00 of usage. Applied wherever paid CNY turns into vendor
-    /// `remain` (`crate::topup::granted_for_payment`); never applied to
-    /// `apply_top_up` (an ops-only manual adjustment, not a user payment) or
-    /// to free trial grants (not user-paid). Platform-wide rather than
-    /// per-vendor since it's a pricing policy, not a vendor quirk.
+    /// vendor spending power — e.g. at the default 1.10 (10% margin), a
+    /// ¥11.00 payment grants ¥10.00 of real vendor spend. Applied only where
+    /// paid CNY turns into vendor `remain` (`crate::topup::granted_for_payment`);
+    /// never applied to `apply_top_up` (an ops-only manual adjustment, not a
+    /// user payment) or to free trial grants (not user-paid). Platform-wide
+    /// rather than per-vendor since it's a pricing policy, not a vendor
+    /// quirk.
+    ///
+    /// The user is never shown this ratio, or any number derived from it —
+    /// see `crate::visible_balance` for the separate ledger that keeps the
+    /// markup entirely server-side.
     pub topup_price_markup: f64,
 }
 
@@ -101,7 +106,7 @@ impl Config {
             .trim_end_matches('/')
             .to_string();
 
-        let topup_price_markup = parse_env_or("TOPUP_PRICE_MARKUP", 1.15f64)?;
+        let topup_price_markup = parse_env_or("TOPUP_PRICE_MARKUP", 1.10f64)?;
         // `<=` alone would let NaN through (every comparison against NaN is
         // false), so it needs its own check — same guard as topup amounts.
         if topup_price_markup.is_nan() || topup_price_markup <= 0.0 {

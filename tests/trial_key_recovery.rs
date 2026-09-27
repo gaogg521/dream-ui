@@ -121,7 +121,11 @@ impl TokenVendor for RecoverableVendor {
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         unreachable!("recovery does not revoke")
     }
-    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+    async fn set_model_limits(
+        &self,
+        _handle: &str,
+        _unrestricted: bool,
+    ) -> Result<(), VendorError> {
         Ok(())
     }
 
@@ -287,6 +291,19 @@ async fn recovery_applies_the_resale_markup_to_the_reconstructed_paid_total() {
         (granted - 15.87).abs() < 0.001,
         "expected ~15.87 (5.0 + round(12.5/1.15, cents)), got {granted}"
     );
+
+    // The user must never see that markup: what recovery shows them is the
+    // FACE VALUE free grant (5.0) and what they actually paid (12.5) —
+    // separately — never the marked-up 15.87 that landed on the vendor's
+    // real remain. See `crate::visible_balance`.
+    let issuance = db::find_active_by_install_id(&state.pool, VENDOR_ID, "install-markup")
+        .await
+        .unwrap()
+        .expect("the recovered issuance should still be on file");
+    assert_eq!(issuance.grant_limit_cny, Some(5.0));
+    assert_eq!(issuance.grant_balance_cny, Some(5.0));
+    assert_eq!(issuance.paid_limit_cny, Some(12.5));
+    assert_eq!(issuance.paid_balance_cny, Some(12.5));
 }
 
 #[tokio::test]

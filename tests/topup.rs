@@ -13,7 +13,7 @@ use dream_trial_broker::config::Config;
 use dream_trial_broker::db::{self, Issuance};
 use dream_trial_broker::error::AppError;
 use dream_trial_broker::rate_limit::RateLimiter;
-use dream_trial_broker::service::{hash_key, AppState};
+use dream_trial_broker::service::{hash_key, read_quota_status, AppState};
 use dream_trial_broker::topup::{
     create_topup_order, get_topup_order, list_topups, usage_by_key, usage_history,
 };
@@ -100,7 +100,11 @@ impl TokenVendor for ToppableVendor {
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         Ok(())
     }
-    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+    async fn set_model_limits(
+        &self,
+        _handle: &str,
+        _unrestricted: bool,
+    ) -> Result<(), VendorError> {
         Ok(())
     }
 
@@ -180,6 +184,12 @@ async fn make_state(with_issuance_for: Option<&str>) -> (AppState, Arc<ToppableV
                 expires_at: 9_999_999_999_999,
                 disabled: 0,
                 key_hash: None,
+                grant_limit_cny: None,
+                grant_balance_cny: None,
+                paid_limit_cny: None,
+                paid_balance_cny: None,
+                paid_real_remain_cny: None,
+                last_synced_vendor_remain: None,
             },
         )
         .await
@@ -279,7 +289,11 @@ async fn a_vendor_without_topup_support_reports_unsupported() {
         async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
             unreachable!()
         }
-        async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+        async fn set_model_limits(
+            &self,
+            _handle: &str,
+            _unrestricted: bool,
+        ) -> Result<(), VendorError> {
             Ok(())
         }
     }
@@ -297,6 +311,12 @@ async fn a_vendor_without_topup_support_reports_unsupported() {
             expires_at: 9_999_999_999_999,
             disabled: 0,
             key_hash: None,
+            grant_limit_cny: None,
+            grant_balance_cny: None,
+            paid_limit_cny: None,
+            paid_balance_cny: None,
+            paid_real_remain_cny: None,
+            last_synced_vendor_remain: None,
         },
     )
     .await
@@ -448,6 +468,12 @@ async fn listing_topups_can_be_scoped_to_one_install() {
             expires_at: 9_999_999_999_999,
             disabled: 0,
             key_hash: None,
+            grant_limit_cny: None,
+            grant_balance_cny: None,
+            paid_limit_cny: None,
+            paid_balance_cny: None,
+            paid_real_remain_cny: None,
+            last_synced_vendor_remain: None,
         },
     )
     .await
@@ -559,6 +585,21 @@ async fn a_successful_order_credits_the_marked_up_amount_not_the_raw_payment() {
     // the discounted grant — that's the real money that changed hands.
     let topups = list_topups(&state, VENDOR_ID, None, None).await.unwrap();
     assert_eq!(topups[0].amount, 10.0);
+
+    // And the user-facing quota must never show the markup either: the paid
+    // pool grows by the FULL ¥10 paid (face value), not the ¥8 that
+    // actually landed on the vendor's real remain. The grant pool (this
+    // issuance had no history, so ToppableVendor's fixed stub
+    // limit=10.0/remaining=10.0 was all attributed to grant on first touch)
+    // is untouched by the payment — the two pools are reported separately.
+    let quota = read_quota_status(&state, VENDOR_ID, "install-1")
+        .await
+        .unwrap();
+    assert_eq!(quota.grant_remaining_usd, Some(10.0));
+    assert_eq!(quota.paid_remaining_usd, Some(10.0));
+    assert_eq!(quota.paid_limit_usd, Some(10.0));
+    assert_eq!(quota.remaining_usd, Some(20.0));
+    assert_eq!(quota.limit_usd, Some(20.0));
 }
 
 // --- vendor_key_handle recorded at credit time ------------------------
@@ -590,6 +631,14 @@ async fn a_credited_orders_vendor_key_handle_survives_a_later_key_rotation() {
         0,
         9_999_999_999_999,
         "rotated-key-hash",
+        &dream_trial_broker::visible_balance::VisibleBalanceState {
+            grant_limit_cny: 0.0,
+            grant_balance_cny: 0.0,
+            paid_limit_cny: 0.0,
+            paid_balance_cny: 0.0,
+            paid_real_remain_cny: 0.0,
+            last_synced_vendor_remain: 0.0,
+        },
     )
     .await
     .expect("rotation should persist");
@@ -655,7 +704,11 @@ impl TokenVendor for UsageLoggingVendor {
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
         unreachable!()
     }
-    async fn set_model_limits(&self, _handle: &str, _unrestricted: bool) -> Result<(), VendorError> {
+    async fn set_model_limits(
+        &self,
+        _handle: &str,
+        _unrestricted: bool,
+    ) -> Result<(), VendorError> {
         Ok(())
     }
     async fn usage_logs(
@@ -706,6 +759,12 @@ async fn usage_history_passes_through_the_vendors_log_entries() {
             expires_at: 9_999_999_999_999,
             disabled: 0,
             key_hash: None,
+            grant_limit_cny: None,
+            grant_balance_cny: None,
+            paid_limit_cny: None,
+            paid_balance_cny: None,
+            paid_real_remain_cny: None,
+            last_synced_vendor_remain: None,
         },
     )
     .await
@@ -757,6 +816,12 @@ async fn make_state_with_usage_logging_vendor(key_hash: Option<String>) -> AppSt
             expires_at: 9_999_999_999_999,
             disabled: 0,
             key_hash,
+            grant_limit_cny: None,
+            grant_balance_cny: None,
+            paid_limit_cny: None,
+            paid_balance_cny: None,
+            paid_real_remain_cny: None,
+            last_synced_vendor_remain: None,
         },
     )
     .await
@@ -833,6 +898,14 @@ async fn usage_by_key_stops_matching_a_hash_after_the_key_is_rotated_away() {
         0,
         9_999_999_999_999,
         &hash_key("sk-new-key"),
+        &dream_trial_broker::visible_balance::VisibleBalanceState {
+            grant_limit_cny: 0.0,
+            grant_balance_cny: 0.0,
+            paid_limit_cny: 0.0,
+            paid_balance_cny: 0.0,
+            paid_real_remain_cny: 0.0,
+            last_synced_vendor_remain: 0.0,
+        },
     )
     .await
     .expect("rotation should persist");
