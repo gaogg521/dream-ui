@@ -57,6 +57,24 @@ export function remainingAmount(view: TrialQuotaView): number | null {
   return view.kind === 'metered' ? view.data.remaining_cents / 100 : view.data.remaining_usd;
 }
 
+/**
+ * The real vendor spending power `paidAmount` (what the user is about to
+ * pay, or just paid) buys, after this platform's resale markup — mirrors
+ * the broker's `granted_for_payment` (dream-trial-broker `src/topup.rs`)
+ * exactly, including the round-to-cents behavior. `markup` comes from
+ * `TrialQuotaStatusResponse.topup_price_markup`; `undefined`/`null` (an old
+ * broker, or a vendor that never sets it) falls back to 1 — no markup —
+ * rather than showing a preview the actual credit cannot match.
+ *
+ * Every place a top-up amount is turned into "what this leaves the balance
+ * at" or "what just got credited" must go through this, not add the raw
+ * paid amount directly — see `TrialTopUpModal.tsx`.
+ */
+export function grantedForPayment(markup: number | null | undefined, paidAmount: number): number {
+  const rate = markup && markup > 0 ? markup : 1;
+  return Math.round((paidAmount / rate) * 100) / 100;
+}
+
 /** `remaining` in a trial view, in minor units for metered / major units for issued. */
 export function remainingLabel(view: TrialQuotaView): { text: string; exhausted: boolean } {
   if (view.kind === 'metered') {

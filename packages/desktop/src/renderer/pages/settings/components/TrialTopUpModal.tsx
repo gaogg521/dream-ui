@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import DreamModal from '@renderer/components/base/DreamModal';
 import {
   formatMajorUnits,
+  grantedForPayment,
   remainingAmount,
   remainingLabel,
   useRefreshTrialQuota,
@@ -136,7 +137,11 @@ const TrialTopUpModal: React.FC<{
   // Only previewable against a real number — an uncapped vendor has no
   // "after" to show.
   const balanceNow = quota ? remainingAmount(quota) : null;
-  const previewAfter = amountValid && balanceNow !== null ? balanceNow + amount : null;
+  // Mode B (metered) never carries a markup — its ledger is a direct CNY
+  // balance with no resale conversion — so only `issued` (mode A, the only
+  // kind this modal is ever shown for) needs to read it.
+  const topupMarkup = quota?.kind === 'issued' ? quota.data.topup_price_markup : undefined;
+  const previewAfter = amountValid && balanceNow !== null ? balanceNow + grantedForPayment(topupMarkup, amount) : null;
 
   return (
     <DreamModal
@@ -266,7 +271,10 @@ const TrialTopUpModal: React.FC<{
           <div>
             <div className='text-16px font-600 text-t-primary'>
               {t('settings.trialTopUp.creditedAmount', {
-                amount: formatMajorUnits(order.amount, order.currency),
+                // `order.amount` is what was paid, not what landed — see
+                // `grantedForPayment`. Showing the paid amount here would
+                // repeat the exact mismatch this fixes in the preview above.
+                amount: formatMajorUnits(grantedForPayment(topupMarkup, order.amount), order.currency),
               })}
             </div>
             {currentBalance && (

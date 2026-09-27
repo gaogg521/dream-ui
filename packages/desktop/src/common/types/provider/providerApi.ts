@@ -143,6 +143,14 @@ export interface TrialQuotaStatusResponse {
   exhausted: boolean;
   /** ISO 4217 code the amounts above are denominated in. See `TrialKeyResponse.currency`. */
   currency?: string;
+  /**
+   * The resale markup applied wherever a real-money top-up turns into vendor
+   * spending power. A top-up preview must run the amount the user is about
+   * to pay through `grantedForPayment` (useTrialQuota.ts) before adding it
+   * to `remaining_usd` — the user never sees this number itself, only its
+   * effect on the totals shown.
+   */
+  topup_price_markup?: number | null;
 }
 
 /**
