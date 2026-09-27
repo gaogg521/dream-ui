@@ -17,7 +17,7 @@
 
 | 仓库 | 角色 | git remote |
 | --- | --- | --- |
-| **dream-trial-broker** | Rust/Axum 独立服务，唯一持有真实上游 vendor 凭据的地方 | **没有 remote**，只在这台机器上，靠 tar+scp 部署（§6） |
+| **dream-trial-broker** | Rust/Axum 独立服务，唯一持有真实上游 vendor 凭据的地方 | GitHub `gaogg521/dream-ui` 仓库下的**独立分支** `dream-trial-broker`（为控制仓库数量，故意不单开仓库；不合并进 `dream-ui` 的 `main`，两条历史互不相干）。**部署仍然是 tar+scp**，git remote 只是备份提交历史用，不是部署路径（§6） |
 | **dream-core** | 桌面客户端的本地后端，转发 IPC 请求到 broker | GitHub `gaogg521/dream-core`，走正常 PR/main 流程 |
 | **dream-ui** | Electron 渲染层 UI | GitHub `gaogg521/dream-ui`，走正常 PR/main 流程 |
 
@@ -171,8 +171,11 @@ key 都查得到用量，见 §5。
    里没有，下次打包才生效。broker 侧的对应改动（新增 `topup_price_markup`
    只读字段）本身零风险，可以随时单独重新部署，但**光部署 broker 不够**
    ——dream-core/dream-ui 不重新打包，用户还是看着旧的错误预览。
-4. **dream-trial-broker 没有 git remote**——考虑要不要建一个，否则这几十
-   个提交只存在这台机器的磁盘上。
+4. ~~dream-trial-broker 没有 git remote~~ **已解决**（2026-09-27）：为控制
+   仓库数量，用户选择不单独开仓库，而是把完整历史（56 个提交）推到了
+   `dream-ui` 仓库的独立分支 `dream-trial-broker`（不影响 dream-ui 的
+   `main`）。`master` 分支已设为跟踪 `dream-ui/dream-trial-broker`，日常
+   `git push`/`git pull` 照常用。
 5. **43 条 OpenRouter issuance 永远查不了用量**——设计如此（§5），但如果
    以后想给这批用户开查询入口，得先想清楚"没有明文可揭示"这个硬约束
    怎么绕。
