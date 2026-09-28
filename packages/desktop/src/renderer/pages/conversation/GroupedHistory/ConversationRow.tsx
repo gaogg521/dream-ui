@@ -146,7 +146,11 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
     // takes priority — it's frequently a different model than the chat model
     // (a text conversation with one image turn shouldn't claim its chat model
     // made that image).
-    const modelLabel = latestMedia?.model || (conversation.type === 'dream' ? conversation.model.use_model : '');
+    // Some pre-model-selection Dream conversations have no persisted `model`
+    // object. They must remain readable in the session center instead of
+    // unmounting the entire history view while rendering this optional column.
+    const modelLabel =
+      latestMedia?.model || (conversation.type === 'dream' ? (conversation.model?.use_model ?? '') : '');
     return { dateLabel, modelLabel, modeKind: resolveModeKind(latestMedia) };
   }, [detailed, conversation, i18n?.language, latestMedia]);
 

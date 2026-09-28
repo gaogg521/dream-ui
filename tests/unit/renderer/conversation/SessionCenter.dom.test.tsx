@@ -364,6 +364,15 @@ describe('SessionCenter "对话模式" column data source', () => {
     expect(within(row).queryByText('gpt-4o')).not.toBeInTheDocument();
   });
 
+  it('keeps a legacy Dream conversation without a persisted model readable', () => {
+    setHistory([makeConversation({ id: 'legacy-no-model', name: 'Legacy model-less conversation', model: undefined })]);
+
+    render(<SessionCenter />);
+
+    expect(screen.getByText('Legacy model-less conversation')).toBeInTheDocument();
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
   it('falls back to the workspace when an agent-invoked job carries no conversation id', () => {
     setHistory([
       makeConversation({ id: 'in-workspace', name: 'Agent drew here', extra: { workspace: 'D:\\ws\\Alpha\\' } }),
