@@ -84,6 +84,9 @@ vi.mock('@/common', () => ({
     shell: {
       openFolderWith: { invoke: vi.fn(() => Promise.resolve()) },
     },
+    mode: {
+      listProviders: { invoke: vi.fn(() => Promise.resolve([])) },
+    },
   },
 }));
 
