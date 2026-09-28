@@ -45,6 +45,7 @@
 .optionRow {
   display: flex !important;
   width: 100%;
+  min-height: 44px;
   box-sizing: border-box;
   margin: 0;
   align-items: flex-start;
@@ -108,4 +109,10 @@
   margin-top: 16px;
   align-items: center;
   gap: 8px;
+}
+
+/* A question decides whether a turn can proceed. Keep both actions at the
+ * platform touch-target minimum even though the desktop card remains compact. */
+.actions :global(.arco-btn) {
+  min-height: 44px;
 }

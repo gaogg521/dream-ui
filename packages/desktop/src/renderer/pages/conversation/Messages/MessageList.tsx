@@ -13,7 +13,7 @@ import { getChatSurfaceWidthClass } from '@/renderer/pages/conversation/utils/ch
 import { iconColors } from '@/renderer/styles/colors';
 import { CHAT_MESSAGE_JUMP_EVENT, type ChatMessageJumpDetail } from '@/renderer/utils/chat/chatMinimapEvents';
 import { collectAiCopyRows, type TurnCopyItem } from '@/renderer/utils/chat/turnCopy';
-import { Image } from '@arco-design/web-react';
+import { Button, Image } from '@arco-design/web-react';
 import { Down } from '@icon-park/react';
 import MessageAcpPermission from '@renderer/pages/conversation/Messages/acp/MessageAcpPermission';
 import MessageQuestion from './MessageQuestion';
@@ -807,15 +807,21 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
           {/* Gradient mask */}
           <div className='absolute bottom-0 start-0 end-0 h-100px pointer-events-none' />
           {/* Scroll button */}
-          <div className='absolute bottom-20px left-50% transform -translate-x-50% z-100'>
-            <div
-              className='flex items-center justify-center w-40px h-40px rd-full bg-base shadow-lg cursor-pointer hover:bg-1 transition-all hover:scale-110 border-1 border-solid border-3'
+          <div
+            className='absolute left-50% transform -translate-x-50% z-100'
+            style={{ bottom: 'max(16px, env(safe-area-inset-bottom, 0px))' }}
+          >
+            <Button
+              aria-label={t('messages.scrollToBottom')}
+              shape='circle'
+              type='secondary'
+              className='!flex !items-center !justify-center !w-44px !h-44px shadow-lg hover:scale-110 border-1 border-solid border-3'
               onClick={handleScrollButtonClick}
               title={t('messages.scrollToBottom')}
-              style={{ lineHeight: 0 }}
+              style={{ lineHeight: 0, minWidth: '44px' }}
             >
               <Down theme='filled' size='20' fill={iconColors.secondary} style={{ display: 'block' }} />
-            </div>
+            </Button>
           </div>
         </>
       )}

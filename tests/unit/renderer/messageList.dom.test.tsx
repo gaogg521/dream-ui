@@ -36,6 +36,9 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('@arco-design/web-react', () => ({
+  Button: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+    <button {...props}>{children}</button>
+  ),
   Image: {
     PreviewGroup: ({ children }: PropsWithChildren) => <>{children}</>,
   },
@@ -50,6 +53,8 @@ vi.mock('@/renderer/pages/team/hooks/TeamPermissionContext', () => ({
 }));
 
 let mockIsProcessing = false;
+let mockShowScrollButton = false;
+const mockScrollToBottom = vi.fn();
 vi.mock('@/renderer/pages/conversation/runtime/useConversationRuntimeView', () => ({
   useConversationRuntimeView: () => ({ isProcessing: mockIsProcessing }),
 }));
@@ -65,8 +70,8 @@ vi.mock('@/renderer/pages/conversation/Messages/useAutoScroll', () => ({
     handleScroll: () => {},
     handleWheel: () => {},
     handlePointerDown: () => {},
-    showScrollButton: false,
-    scrollToBottom: () => {},
+    showScrollButton: mockShowScrollButton,
+    scrollToBottom: mockScrollToBottom,
     scrollElementIntoView: () => {},
     hideScrollButton: () => {},
   }),
@@ -253,6 +258,8 @@ function ReplaceMessagesButton({ messages }: { messages: TMessage[] }): JSX.Elem
 describe('MessageList', () => {
   beforeEach(() => {
     mockIsProcessing = false;
+    mockShowScrollButton = false;
+    mockScrollToBottom.mockReset();
     parseDiffMock.mockReset();
     parseDiffMock.mockReturnValue({
       file_name: 'file.ts',
@@ -275,6 +282,20 @@ describe('MessageList', () => {
     const messageRow = screen.getByTestId('message-text-left');
     expect(messageRow.className).toContain('m-t-10px');
     expect(messageRow.className).not.toContain('pt-10px');
+  });
+
+  it('renders a touch-sized, labelled jump-to-latest button when the reader is above the latest turn', () => {
+    mockShowScrollButton = true;
+    render(<MessageList />, {
+      wrapper: ({ children }) => <Wrapper>{children}</Wrapper>,
+    });
+
+    const button = screen.getByRole('button', { name: 'messages.scrollToBottom' });
+    expect(button).toHaveStyle({ minWidth: '44px' });
+
+    fireEvent.click(button);
+
+    expect(mockScrollToBottom).toHaveBeenCalledWith('smooth');
   });
 
   it('uses container-responsive fluid width for standalone message rows', () => {

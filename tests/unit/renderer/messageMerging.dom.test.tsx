@@ -32,6 +32,11 @@ vi.mock('@/common', () => ({
         on: vi.fn().mockReturnValue(() => {}),
       },
     },
+    realtime: {
+      reconnected: {
+        on: vi.fn().mockReturnValue(() => {}),
+      },
+    },
     database: {
       getConversationMessages: {
         invoke: vi.fn(),
@@ -278,6 +283,56 @@ describe('message merging', () => {
     expect(invoke).toHaveBeenCalledWith({
       conversation_id: CONVERSATION_ID,
       limit: 50,
+      content_mode: 'compact',
+    });
+  });
+
+  it('backfills persisted messages missed while the realtime connection was away', async () => {
+    const invoke = vi.mocked(ipcBridge.database.getConversationMessages.invoke);
+    invoke
+      .mockResolvedValueOnce({
+        items: [createTextMessage('m2', 'already loaded')],
+        oldest_cursor: 'c2',
+        newest_cursor: 'c2',
+        has_more_before: false,
+        has_more_after: false,
+      })
+      .mockResolvedValueOnce({
+        items: [createTextMessage('m3', 'persisted while offline')],
+        oldest_cursor: 'c3',
+        newest_cursor: 'c3',
+        has_more_before: true,
+        has_more_after: false,
+      });
+
+    let emitReconnect: (() => void) | undefined;
+    vi.mocked(ipcBridge.realtime.reconnected.on).mockImplementation((cb: () => void) => {
+      emitReconnect = cb;
+      return () => {};
+    });
+
+    function useCacheAndListHarness() {
+      useMessageLstCache(CONVERSATION_ID);
+      return { messages: useMessageList() };
+    }
+
+    const { result } = renderHook(() => useCacheAndListHarness(), { wrapper: CacheWrapper });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    act(() => {
+      emitReconnect?.();
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(result.current.messages.map((message) => message.msg_id)).toEqual(['m2', 'm3']);
+    expect(invoke).toHaveBeenLastCalledWith({
+      conversation_id: CONVERSATION_ID,
+      limit: 50,
+      after: 'c2',
       content_mode: 'compact',
     });
   });

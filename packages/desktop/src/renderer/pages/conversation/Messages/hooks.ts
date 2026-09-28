@@ -20,6 +20,7 @@ import {
   loadConversationAnchorWindow,
   loadConversationMessagePage,
   loadLatestConversationMessages,
+  loadNewerConversationMessagesPaged,
 } from '@/renderer/utils/chat/messagePagination';
 
 const [useMessageList, MessageListProvider, useUpdateMessageList] = createContext([] as TMessage[]);
@@ -829,6 +830,31 @@ export function prependHistoryMessages(currentList: TMessage[], messages: TMessa
   return uniqueHistory.length ? foldSupersededTips([...uniqueHistory, ...currentList]) : currentList;
 }
 
+/**
+ * Merge a page fetched with an `after` cursor without moving the reader back
+ * through the conversation. Existing live rows keep their position; persisted
+ * replacements upgrade them in place and genuinely new rows join at the end.
+ */
+export function appendNewerHistoryMessages(currentList: TMessage[], messages: TMessage[]): TMessage[] {
+  if (!messages.length) return currentList;
+  if (!currentList.length) return foldSupersededTips(messages);
+
+  const incomingById = new Map(messages.map((message) => [message.id, message]));
+  const incomingByKey = new Map(messages.map((message) => [getMessageMergeKey(message), message]));
+  const currentIds = new Set(currentList.map((message) => message.id));
+  const currentKeys = new Set(currentList.map(getMessageMergeKey));
+
+  const reconciledCurrent = currentList.map((message) => {
+    const persisted = incomingById.get(message.id) ?? incomingByKey.get(getMessageMergeKey(message));
+    return persisted ? preferPersistedOrLiveMessage(persisted, message) : message;
+  });
+  const newMessages = messages.filter(
+    (message) => !currentIds.has(message.id) && !currentKeys.has(getMessageMergeKey(message))
+  );
+
+  return newMessages.length ? foldSupersededTips([...reconciledCurrent, ...newMessages]) : reconciledCurrent;
+}
+
 export const usePrependHistoryPage = () => {
   const update = useUpdateMessageList();
   return useCallback(
@@ -930,6 +956,7 @@ export const useMessageLstCache = (key: string) => {
   const update = useUpdateMessageList();
   const list = useMessageList();
   const setLoading = useUpdateMessageListLoading();
+  const pagination = useMessagePaginationState();
   const setPagination = useUpdateMessagePaginationState();
   // Mirrors the current list into a ref so the turnCompleted handler below
   // can inspect it synchronously without re-subscribing to the WS event on
@@ -978,6 +1005,40 @@ export const useMessageLstCache = (key: string) => {
       cancelled = true;
     };
   }, [key, loadMessages, setLoading, setPagination]);
+
+  const reconcileAfterReconnect = useCallback(async () => {
+    // The initial hydrate may still be in flight when the socket reconnects.
+    // A full latest-page load is then the only reliable baseline.
+    if (!pagination.newestCursor) {
+      await loadMessages();
+      return;
+    }
+
+    const page = await loadNewerConversationMessagesPaged(key, pagination.newestCursor, {
+      limit: DEFAULT_MESSAGE_PAGE_LIMIT,
+      contentMode: 'compact',
+    });
+    if (page.items.length) {
+      update((currentList) => appendNewerHistoryMessages(currentList, page.items.map(normalizeDbMessage)));
+    }
+    setPagination((current) => ({
+      ...current,
+      // Do not replace the oldest cursor: the user may already have paged back
+      // through history, and reconnecting must preserve that window.
+      newestCursor: page.newest_cursor ?? current.newestCursor,
+      hasMoreAfter: page.has_more_after,
+    }));
+  }, [key, loadMessages, pagination.newestCursor, setPagination, update]);
+
+  useEffect(() => {
+    if (!key) return;
+
+    return ipcBridge.realtime.reconnected.on(() => {
+      void reconcileAfterReconnect().catch((error) => {
+        console.error('[useMessageLstCache] Failed to reconcile messages after reconnect:', error);
+      });
+    });
+  }, [key, reconcileAfterReconnect]);
 
   useEffect(() => {
     if (!key) {

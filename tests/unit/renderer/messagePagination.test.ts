@@ -10,6 +10,7 @@ import {
   loadAllConversationMessagesPaged,
   loadConversationAnchorWindow,
   loadLatestConversationMessages,
+  loadNewerConversationMessagesPaged,
 } from '@/renderer/utils/chat/messagePagination';
 
 vi.mock('@/common', () => ({
@@ -98,5 +99,54 @@ describe('message pagination helpers', () => {
       anchor_message_id: 'target',
       content_mode: 'compact',
     });
+  });
+
+  it('loads every newer page after a reconnect cursor', async () => {
+    invoke
+      .mockResolvedValueOnce({
+        items: [{ id: 'm3' }, { id: 'm4' }],
+        oldest_cursor: 'c3',
+        newest_cursor: 'c4',
+        has_more_before: true,
+        has_more_after: true,
+      })
+      .mockResolvedValueOnce({
+        items: [{ id: 'm5' }],
+        oldest_cursor: 'c5',
+        newest_cursor: 'c5',
+        has_more_before: true,
+        has_more_after: false,
+      });
+
+    const page = await loadNewerConversationMessagesPaged('conversation-1', 'c2', { limit: 2 });
+
+    expect(page.items.map((message) => message.id)).toEqual(['m3', 'm4', 'm5']);
+    expect(invoke).toHaveBeenNthCalledWith(1, {
+      conversation_id: 'conversation-1',
+      limit: 2,
+      after: 'c2',
+      content_mode: 'compact',
+    });
+    expect(invoke).toHaveBeenNthCalledWith(2, {
+      conversation_id: 'conversation-1',
+      limit: 2,
+      after: 'c4',
+      content_mode: 'compact',
+    });
+  });
+
+  it('stops when a malformed newer page repeats its cursor', async () => {
+    invoke.mockResolvedValue({
+      items: [],
+      oldest_cursor: 'c2',
+      newest_cursor: 'c2',
+      has_more_before: true,
+      has_more_after: true,
+    });
+
+    const page = await loadNewerConversationMessagesPaged('conversation-1', 'c2');
+
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(page.has_more_after).toBe(true);
   });
 });
