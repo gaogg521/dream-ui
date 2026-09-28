@@ -679,6 +679,8 @@
   "speechToTextSourceOpenAI": "OpenAI (رسمی)",
   "speechToTextSourceDeepgram": "Deepgram (رسمی)",
   "speechToTextSourceCustom": "سفارشی (سازگار با OpenAI)",
+  "speechToTextSourceModelSettings": "مدل صوتی از تنظیمات مدل",
+  "speechToTextNoConfiguredModel": "هیچ مدل صوتی فعالی در تنظیمات مدل وجود ندارد.",
   "speechToTextLanguageAuto": "تشخیص خودکار",
   "speechToTextBaseUrlPlaceholder": "https://your-host/v1",
   "speechToTextBaseUrlInvalid": "یک URL معتبر http(s) وارد کنید",

@@ -26,6 +26,8 @@ export type DeepgramSpeechToTextConfig = {
 export type SpeechToTextConfig = {
   autoSend?: boolean;
   enabled: boolean;
+  /** Existing model-channel ID to resolve on the backend, without copying its secret here. */
+  modelProviderId?: string;
   provider: SpeechToTextProvider;
   deepgram?: DeepgramSpeechToTextConfig;
   openai?: OpenAISpeechToTextConfig;

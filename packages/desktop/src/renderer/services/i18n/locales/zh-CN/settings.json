@@ -1263,6 +1263,8 @@
   "speechToTextSourceOpenAI": "OpenAI（官方）",
   "speechToTextSourceDeepgram": "Deepgram（官方）",
   "speechToTextSourceCustom": "自定义（OpenAI 兼容）",
+  "speechToTextSourceModelSettings": "模型设置中的语音模型",
+  "speechToTextNoConfiguredModel": "模型设置中没有已启用的语音模型，请先将模型标记为“语音模型”。",
   "speechToTextLanguageAuto": "自动检测",
   "speechToTextBaseUrlPlaceholder": "https://your-host/v1",
   "speechToTextBaseUrlInvalid": "请输入有效的 http(s) 地址",

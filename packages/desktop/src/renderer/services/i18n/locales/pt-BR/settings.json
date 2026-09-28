@@ -679,6 +679,8 @@
   "speechToTextSourceOpenAI": "OpenAI (Oficial)",
   "speechToTextSourceDeepgram": "Deepgram (Oficial)",
   "speechToTextSourceCustom": "Personalizado (compatível com OpenAI)",
+  "speechToTextSourceModelSettings": "Modelo de voz nas configurações de modelo",
+  "speechToTextNoConfiguredModel": "Não há modelos de áudio ativados nas configurações de modelo.",
   "speechToTextLanguageAuto": "Detecção automática",
   "speechToTextBaseUrlPlaceholder": "https://your-host/v1",
   "speechToTextBaseUrlInvalid": "Insira uma URL http(s) válida",

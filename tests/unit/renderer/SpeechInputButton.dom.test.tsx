@@ -9,13 +9,19 @@ import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  getClientBusinessSetting: vi.fn(() => Promise.resolve({ enabled: true })),
+  navigate: vi.fn(),
   startRecording: vi.fn(() => Promise.resolve()),
   stopRecording: vi.fn(),
   status: 'idle' as 'idle' | 'recording' | 'transcribing',
 }));
 
 vi.mock('@/renderer/services/clientBusinessSettings', () => ({
-  getClientBusinessSetting: vi.fn(() => Promise.resolve({ enabled: true })),
+  getClientBusinessSetting: mocks.getClientBusinessSetting,
+}));
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mocks.navigate,
 }));
 
 vi.mock('@/renderer/services/SpeechToTextService', () => ({
@@ -62,6 +68,7 @@ import SpeechInputButton from '@/renderer/components/chat/SpeechInputButton';
 describe('SpeechInputButton', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getClientBusinessSetting.mockResolvedValue({ enabled: true });
     mocks.status = 'idle';
   });
 
@@ -117,5 +124,17 @@ describe('SpeechInputButton', () => {
     expect(button).toBeDisabled();
     expect(container.querySelector('.speech-input-feedback')).toBeNull();
     expect(screen.queryByTestId('speech-tooltip')).toBeNull();
+  });
+
+  it('keeps the microphone visible before configuration and opens speech settings', async () => {
+    mocks.getClientBusinessSetting.mockResolvedValue({ enabled: false });
+
+    render(<SpeechInputButton onTranscript={vi.fn()} />);
+    const button = await screen.findByRole('button');
+
+    expect(button).toHaveAttribute('aria-label', 'conversation.chat.speech.notConfigured');
+    fireEvent.click(button);
+    expect(mocks.navigate).toHaveBeenCalledWith('/settings/system');
+    expect(mocks.startRecording).not.toHaveBeenCalled();
   });
 });

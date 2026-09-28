@@ -39,6 +39,15 @@ describe('deriveSpeechSource', () => {
     expect(deriveSpeechSource(config)).toBe('custom');
   });
 
+  it('returns model settings when a configured provider ID is stored', () => {
+    const config = normalizeSpeechToTextConfig({
+      enabled: true,
+      modelProviderId: 'openrouter',
+      provider: 'openai',
+    });
+    expect(deriveSpeechSource(config)).toBe('modelSettings');
+  });
+
   it('treats whitespace-only base_url as official openai', () => {
     const config = normalizeSpeechToTextConfig({
       enabled: true,
@@ -65,6 +74,7 @@ describe('applySpeechSource', () => {
   it('switching to deepgram only changes provider and keeps openai sub-config', () => {
     const next = applySpeechSource(customConfig, 'deepgram');
     expect(next.provider).toBe('deepgram');
+    expect(next.modelProviderId).toBeUndefined();
     expect(next.openai?.base_url).toBe('https://my-host/v1');
   });
 

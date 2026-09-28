@@ -12,7 +12,16 @@ import type { SpeechToTextConfig } from '@/common/types/provider/speech';
 const configStore: { value?: SpeechToTextConfig } = {};
 const speechSettingsMocks = vi.hoisted(() => ({
   getClientBusinessSetting: vi.fn(),
+  listProviders: vi.fn(() => Promise.resolve([])),
   setClientBusinessSetting: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('@/common', () => ({
+  ipcBridge: {
+    mode: {
+      listProviders: { invoke: speechSettingsMocks.listProviders },
+    },
+  },
 }));
 
 vi.mock('@/renderer/services/clientBusinessSettings', () => ({
@@ -31,6 +40,7 @@ describe('VoiceInputSection', () => {
   beforeEach(() => {
     configStore.value = undefined;
     speechSettingsMocks.getClientBusinessSetting.mockResolvedValue(undefined);
+    speechSettingsMocks.listProviders.mockResolvedValue([]);
     speechSettingsMocks.setClientBusinessSetting.mockResolvedValue(undefined);
     // jsdom does not implement matchMedia; arco-design's responsive Grid needs it
     Object.defineProperty(window, 'matchMedia', {
@@ -99,6 +109,45 @@ describe('VoiceInputSection', () => {
     await waitFor(() => expect(screen.getByText('settings.speechToTextBaseUrl')).toBeTruthy());
     // ...and stay, even though the stored config (empty base_url) derives to official openai.
     await waitFor(() => expect(screen.getByText('settings.speechToTextBaseUrl')).toBeTruthy());
+  });
+
+  it('can select an enabled audio model from Model Settings without copying its credentials', async () => {
+    configStore.value = {
+      enabled: true,
+      provider: 'openai',
+      openai: { api_key: '', base_url: '', model: 'gpt-4o-transcribe', language: '' },
+    };
+    speechSettingsMocks.getClientBusinessSetting.mockResolvedValue(configStore.value);
+    speechSettingsMocks.listProviders.mockResolvedValue([
+      {
+        id: 'openrouter',
+        name: 'OpenRouter',
+        enabled: true,
+        models: ['qwen/qwen3-asr-0.6b'],
+        model_enabled: { 'qwen/qwen3-asr-0.6b': true },
+        model_settings: { 'qwen/qwen3-asr-0.6b': { model_kind: 'audio' } },
+      },
+    ]);
+    render(<VoiceInputSection />);
+    await waitFor(() => expect(screen.getByText('settings.speechToTextSource')).toBeTruthy());
+
+    fireEvent.click(document.querySelector('.arco-select') as Element);
+    fireEvent.click(await screen.findByText('settings.speechToTextSourceModelSettings'));
+
+    await waitFor(() => expect(screen.getByText('settings.speechToTextModel')).toBeTruthy());
+    const selects = document.querySelectorAll('.arco-select');
+    fireEvent.click(selects[1] as Element);
+    fireEvent.click(await screen.findByText('OpenRouter · qwen/qwen3-asr-0.6b'));
+
+    await waitFor(() => {
+      expect(speechSettingsMocks.setClientBusinessSetting).toHaveBeenLastCalledWith(
+        'tools.speechToText',
+        expect.objectContaining({
+          modelProviderId: 'openrouter',
+          openai: expect.objectContaining({ api_key: '', base_url: '', model: 'qwen/qwen3-asr-0.6b' }),
+        })
+      );
+    });
   });
 
   it('official openai mode shows streaming badge for gpt-4o-transcribe and batch badge for whisper-1', async () => {

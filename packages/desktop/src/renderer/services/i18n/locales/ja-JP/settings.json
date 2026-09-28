@@ -679,6 +679,8 @@
   "speechToTextSourceOpenAI": "OpenAI（公式）",
   "speechToTextSourceDeepgram": "Deepgram（公式）",
   "speechToTextSourceCustom": "カスタム（OpenAI 互換）",
+  "speechToTextSourceModelSettings": "モデル設定の音声モデル",
+  "speechToTextNoConfiguredModel": "モデル設定に有効な音声モデルがありません。",
   "speechToTextLanguageAuto": "自動検出",
   "speechToTextBaseUrlPlaceholder": "https://your-host/v1",
   "speechToTextBaseUrlInvalid": "有効な http(s) URL を入力してください",

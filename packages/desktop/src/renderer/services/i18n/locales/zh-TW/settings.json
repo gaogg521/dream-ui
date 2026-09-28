@@ -1261,6 +1261,8 @@
   "speechToTextSourceOpenAI": "OpenAI（官方）",
   "speechToTextSourceDeepgram": "Deepgram（官方）",
   "speechToTextSourceCustom": "自訂（OpenAI 相容）",
+  "speechToTextSourceModelSettings": "模型設定中的語音模型",
+  "speechToTextNoConfiguredModel": "模型設定中沒有已啟用的語音模型，請先將模型標示為「語音模型」。",
   "speechToTextLanguageAuto": "自動偵測",
   "speechToTextBaseUrlPlaceholder": "https://your-host/v1",
   "speechToTextBaseUrlInvalid": "請輸入有效的 http(s) 位址",

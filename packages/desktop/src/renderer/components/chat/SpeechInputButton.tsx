@@ -5,6 +5,7 @@
 import { Message, Button, Tooltip } from '@arco-design/web-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { SPEECH_TO_TEXT_CONFIG_CHANGED_EVENT } from '@/renderer/services/SpeechToTextService';
 import { getClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
 import {
@@ -74,6 +75,7 @@ const isSpeechShortcut = (event: KeyboardEvent) =>
 
 const SpeechInputButton: React.FC<SpeechInputButtonProps> = ({ onLiveTranscript, onTranscript }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const controlRef = useRef<HTMLDivElement | null>(null);
   const ownerIdRef = useRef(Symbol('speech-input'));
@@ -192,6 +194,14 @@ const SpeechInputButton: React.FC<SpeechInputButtonProps> = ({ onLiveTranscript,
   }, [availability, isConfigLoaded, isSpeechToTextEnabled, startRecording, stopRecording]);
 
   const handleClick = () => {
+    // Keep the microphone discoverable even before a provider is configured.
+    // Previously this component returned null in that state, leaving WebUI and
+    // mobile users no visible route to the feature they needed to enable.
+    if (!isSpeechToTextEnabled) {
+      navigate('/settings/system');
+      return;
+    }
+
     if (availability === 'unsupported') {
       Message.warning(t(getAvailabilityMessageKey(availability)));
       return;
@@ -219,13 +229,15 @@ const SpeechInputButton: React.FC<SpeechInputButtonProps> = ({ onLiveTranscript,
     void transcribeFile(file);
   };
 
-  if (!isConfigLoaded || !isSpeechToTextEnabled) {
+  if (!isConfigLoaded) {
     return null;
   }
 
-  const tooltipKey = getTooltipKey(availability, isRecording, isProcessing);
+  const tooltipKey = !isSpeechToTextEnabled
+    ? 'conversation.chat.speech.notConfigured'
+    : getTooltipKey(availability, isRecording, isProcessing);
   const ariaLabel =
-    availability === 'record' && !isRecording && !isProcessing
+    isSpeechToTextEnabled && availability === 'record' && !isRecording && !isProcessing
       ? t('conversation.chat.speech.recordTooltipWithShortcut')
       : t(tooltipKey);
   const icon = isRecording ? <SpeechStopIcon /> : isProcessing ? <SpeechLoaderIcon /> : <SpeechMicIcon />;

@@ -6,7 +6,7 @@ import type { SpeechToTextConfig } from '@/common/types/provider/speech';
 export { DEEPGRAM_SPEECH_MODEL_PRESETS, OPENAI_SPEECH_MODEL_PRESETS } from '@renderer/services/speech/speechModels';
 
 /** UI-level service source. 'custom' is stored as provider:'openai' + non-empty base_url. */
-export type SpeechSource = 'openai' | 'deepgram' | 'custom';
+export type SpeechSource = 'openai' | 'deepgram' | 'custom' | 'modelSettings';
 
 /** Language autonyms are intentionally not translated. Empty value = auto detect. */
 export const SPEECH_LANGUAGE_OPTIONS: Array<{ value: string; label?: string }> = [
@@ -89,6 +89,9 @@ export const normalizeSpeechToTextConfig = (config?: Partial<SpeechToTextConfig>
 });
 
 export const deriveSpeechSource = (config: SpeechToTextConfig): SpeechSource => {
+  if (config.modelProviderId?.trim()) {
+    return 'modelSettings';
+  }
   if (config.provider === 'deepgram') {
     return 'deepgram';
   }
@@ -106,18 +109,20 @@ export const applySpeechSource = (
   rememberedCustomBaseUrl = ''
 ): SpeechToTextConfig => {
   if (source === 'deepgram') {
-    return { ...config, provider: 'deepgram' };
+    return { ...config, modelProviderId: undefined, provider: 'deepgram' };
   }
   if (source === 'custom') {
     const currentBaseUrl = config.openai?.base_url?.trim() ? config.openai.base_url : rememberedCustomBaseUrl;
     return {
       ...config,
+      modelProviderId: undefined,
       provider: 'openai',
       openai: { ...DEFAULT_SPEECH_TO_TEXT_CONFIG.openai, ...config.openai, base_url: currentBaseUrl },
     };
   }
   return {
     ...config,
+    modelProviderId: undefined,
     provider: 'openai',
     openai: { ...DEFAULT_SPEECH_TO_TEXT_CONFIG.openai, ...config.openai, base_url: '' },
   };

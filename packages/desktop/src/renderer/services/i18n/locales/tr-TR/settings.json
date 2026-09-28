@@ -679,6 +679,8 @@
   "speechToTextSourceOpenAI": "OpenAI (Resmî)",
   "speechToTextSourceDeepgram": "Deepgram (Resmî)",
   "speechToTextSourceCustom": "Özel (OpenAI uyumlu)",
+  "speechToTextSourceModelSettings": "Model Ayarlarından ses modeli",
+  "speechToTextNoConfiguredModel": "Model Ayarlarında etkin ses modeli yok.",
   "speechToTextLanguageAuto": "Otomatik algıla",
   "speechToTextBaseUrlPlaceholder": "https://your-host/v1",
   "speechToTextBaseUrlInvalid": "Geçerli bir http(s) URL girin",

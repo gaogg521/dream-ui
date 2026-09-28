@@ -679,6 +679,8 @@
   "speechToTextSourceOpenAI": "OpenAI(공식)",
   "speechToTextSourceDeepgram": "Deepgram(공식)",
   "speechToTextSourceCustom": "사용자 지정(OpenAI 호환)",
+  "speechToTextSourceModelSettings": "모델 설정의 음성 모델",
+  "speechToTextNoConfiguredModel": "모델 설정에 활성화된 오디오 모델이 없습니다.",
   "speechToTextLanguageAuto": "자동 감지",
   "speechToTextBaseUrlPlaceholder": "https://your-host/v1",
   "speechToTextBaseUrlInvalid": "유효한 http(s) URL을 입력하세요",
