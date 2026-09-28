@@ -958,6 +958,12 @@ export const useMessageLstCache = (key: string) => {
   const setLoading = useUpdateMessageListLoading();
   const pagination = useMessagePaginationState();
   const setPagination = useUpdateMessagePaginationState();
+  // A history row can be tapped again before its previous page finishes over a
+  // mobile network. Keep the currently rendered conversation synchronously so
+  // a late response for the old row cannot replace the new conversation's
+  // message list (the old effect cleanup only guarded the loading flag).
+  const activeConversationKeyRef = useRef(key);
+  activeConversationKeyRef.current = key;
   // Mirrors the current list into a ref so the turnCompleted handler below
   // can inspect it synchronously without re-subscribing to the WS event on
   // every list change (useState's functional updater runs asynchronously,
@@ -973,6 +979,9 @@ export const useMessageLstCache = (key: string) => {
     });
     const messages = result?.items?.map(normalizeDbMessage);
     if (messages && Array.isArray(messages)) {
+      if (activeConversationKeyRef.current !== key) {
+        return [];
+      }
       update((currentList) => mergeLoadedPageWithCurrent(key, messages, currentList));
       setPagination({
         oldestCursor: result.oldest_cursor ?? undefined,

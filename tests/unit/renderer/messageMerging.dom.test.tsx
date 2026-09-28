@@ -287,6 +287,52 @@ describe('message merging', () => {
     });
   });
 
+  it('does not let a slow previously selected history row overwrite the current conversation', async () => {
+    const invoke = vi.mocked(ipcBridge.database.getConversationMessages.invoke);
+    let resolveFirst: ((value: any) => void) | undefined;
+    let resolveSecond: ((value: any) => void) | undefined;
+    invoke.mockImplementation(({ conversation_id }) =>
+      new Promise((resolve) => {
+        if (conversation_id === 'conversation-first') resolveFirst = resolve;
+        else resolveSecond = resolve;
+      }) as any
+    );
+
+    function useCacheAndListHarness(conversationId: string) {
+      useMessageLstCache(conversationId);
+      return { messages: useMessageList() };
+    }
+
+    const { result, rerender } = renderHook(({ conversationId }) => useCacheAndListHarness(conversationId), {
+      initialProps: { conversationId: 'conversation-first' },
+      wrapper: CacheWrapper,
+    });
+    rerender({ conversationId: 'conversation-second' });
+
+    await act(async () => {
+      resolveSecond?.({
+        items: [{ ...createTextMessage('second', 'newer selection'), conversation_id: 'conversation-second' }],
+        oldest_cursor: 'second',
+        newest_cursor: 'second',
+        has_more_before: false,
+        has_more_after: false,
+      });
+      await Promise.resolve();
+    });
+    await act(async () => {
+      resolveFirst?.({
+        items: [{ ...createTextMessage('first', 'stale selection'), conversation_id: 'conversation-first' }],
+        oldest_cursor: 'first',
+        newest_cursor: 'first',
+        has_more_before: false,
+        has_more_after: false,
+      });
+      await Promise.resolve();
+    });
+
+    expect(result.current.messages.map((message) => message.conversation_id)).toEqual(['conversation-second']);
+  });
+
   it('backfills persisted messages missed while the realtime connection was away', async () => {
     const invoke = vi.mocked(ipcBridge.database.getConversationMessages.invoke);
     invoke
