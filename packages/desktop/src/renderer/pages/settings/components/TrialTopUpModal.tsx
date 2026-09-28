@@ -165,7 +165,9 @@ const TrialTopUpModal: React.FC<{
           <div className='relative overflow-hidden rd-16px border border-[rgba(var(--primary-6),0.13)] bg-[linear-gradient(135deg,rgba(var(--primary-6),0.11),rgba(var(--primary-6),0.025)_58%,transparent)] px-18px py-16px'>
             <div className='absolute -right-10px -top-12px h-70px w-70px rounded-full bg-[rgba(var(--primary-6),0.08)]' />
             <div className='relative flex items-center justify-between'>
-              <div className='text-12px font-500 tracking-wide text-t-secondary'>{t('settings.trialTopUp.balanceLabel')}</div>
+              <div className='text-12px font-500 tracking-wide text-t-secondary'>
+                {t('settings.trialTopUp.balanceLabel')}
+              </div>
               <span className='flex h-28px w-28px items-center justify-center rd-9px bg-[rgba(var(--primary-6),0.12)] text-[rgba(var(--primary-6),1)]'>
                 <Wallet theme='outline' size={16} fill='currentColor' />
               </span>

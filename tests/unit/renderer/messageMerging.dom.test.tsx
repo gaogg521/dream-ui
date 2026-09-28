@@ -291,11 +291,12 @@ describe('message merging', () => {
     const invoke = vi.mocked(ipcBridge.database.getConversationMessages.invoke);
     let resolveFirst: ((value: any) => void) | undefined;
     let resolveSecond: ((value: any) => void) | undefined;
-    invoke.mockImplementation(({ conversation_id }) =>
-      new Promise((resolve) => {
-        if (conversation_id === 'conversation-first') resolveFirst = resolve;
-        else resolveSecond = resolve;
-      }) as any
+    invoke.mockImplementation(
+      ({ conversation_id }) =>
+        new Promise((resolve) => {
+          if (conversation_id === 'conversation-first') resolveFirst = resolve;
+          else resolveSecond = resolve;
+        }) as any
     );
 
     function useCacheAndListHarness(conversationId: string) {
