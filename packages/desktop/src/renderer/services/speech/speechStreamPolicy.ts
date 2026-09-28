@@ -3,7 +3,7 @@
  */
 
 import type { SpeechToTextConfig } from '@/common/types/provider/speech';
-import { DEEPGRAM_SPEECH_MODEL_PRESETS, OPENAI_SPEECH_MODEL_PRESETS } from './speechModels';
+import { OPENAI_SPEECH_MODEL_PRESETS } from './speechModels';
 
 export type StreamCapability = 'supported' | 'unsupported' | 'unknown';
 
@@ -20,25 +20,26 @@ const STORAGE_KEY = 'one.sttStreamUnsupported';
  * This is a per-option helper used for UI badges. `getStreamCapability` delegates
  * to this function so both share the same logic.
  *
- * @param source - 'openai' (official endpoint), 'deepgram', or 'custom' (openai
- *   with a non-empty base_url).
+ * @param source - 'openai' (official endpoint), 'custom' (openai with a
+ *   non-empty base_url), or 'hosted' (the broker-backed default).
  * @param model  - The model identifier string.
  *
  * Rules:
  * - custom → always 'unknown' (custom endpoint behaviour varies; must probe)
- * - deepgram preset model → 'supported'; non-preset → 'unknown'
+ * - hosted → always 'unsupported' (mode D has no realtime protocol; the
+ *   backend rejects a streaming attempt with STT_STREAM_UNSUPPORTED)
  * - openai official:
  *   - 'whisper-1' → 'unsupported' (file-only API)
  *   - other OPENAI preset → 'supported'
  *   - non-preset model → 'unknown'
  */
-export const getModelStreamCapability = (source: 'openai' | 'deepgram' | 'custom', model: string): StreamCapability => {
+export const getModelStreamCapability = (source: 'openai' | 'custom' | 'hosted', model: string): StreamCapability => {
   if (source === 'custom') {
     return 'unknown';
   }
 
-  if (source === 'deepgram') {
-    return DEEPGRAM_SPEECH_MODEL_PRESETS.includes(model) ? 'supported' : 'unknown';
+  if (source === 'hosted') {
+    return 'unsupported';
   }
 
   // openai official endpoint
@@ -56,8 +57,7 @@ export const getModelStreamCapability = (source: 'openai' | 'deepgram' | 'custom
  * WebSocket endpoint (`/api/stt/stream`).
  *
  * Rules:
- * - deepgram preset model → supported; non-preset → unknown (may be a custom
- *   model that supports streaming; probe at runtime)
+ * - hosted → unsupported (mode D has no realtime protocol)
  * - openai official (empty / whitespace base_url):
  *   - 'whisper-1' → unsupported (file-only API)
  *   - other OPENAI preset → supported
@@ -65,8 +65,8 @@ export const getModelStreamCapability = (source: 'openai' | 'deepgram' | 'custom
  * - openai with a custom base_url → unknown (custom endpoint behaviour varies)
  */
 export const getStreamCapability = (config: SpeechToTextConfig): StreamCapability => {
-  if (config.provider === 'deepgram') {
-    return getModelStreamCapability('deepgram', config.deepgram?.model ?? '');
+  if (config.provider === 'hosted') {
+    return 'unsupported';
   }
 
   // openai provider
@@ -80,12 +80,8 @@ export const getStreamCapability = (config: SpeechToTextConfig): StreamCapabilit
 // ---------------------------------------------------------------------------
 
 /** Derive a stable string key for the active provider sub-config. */
-const streamMemoryEntry = (config: SpeechToTextConfig): string => {
-  if (config.provider === 'deepgram') {
-    return `deepgram||${config.deepgram?.model ?? ''}`;
-  }
-  return `openai|${config.openai?.base_url ?? ''}|${config.openai?.model ?? ''}`;
-};
+const streamMemoryEntry = (config: SpeechToTextConfig): string =>
+  `openai|${config.openai?.base_url ?? ''}|${config.openai?.model ?? ''}`;
 
 const readMemory = (): string[] => {
   try {

@@ -224,11 +224,7 @@ const mapSpeechInputError = (error: unknown): SpeechInputErrorCode => {
 
   const message = error instanceof Error ? error.message : String(error);
 
-  if (
-    message.includes('STT_OPENAI_NOT_CONFIGURED') ||
-    message.includes('STT_DEEPGRAM_NOT_CONFIGURED') ||
-    message.includes('STT_DISABLED')
-  ) {
+  if (message.includes('STT_OPENAI_NOT_CONFIGURED') || message.includes('STT_DISABLED')) {
     return 'not-configured';
   }
   if (message.includes('STT_FILE_TOO_LARGE')) {

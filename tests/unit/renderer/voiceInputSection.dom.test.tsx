@@ -58,13 +58,25 @@ describe('VoiceInputSection', () => {
     });
   });
 
-  it('renders only the enable switch when disabled', async () => {
+  it('renders only the enable switch when explicitly disabled', async () => {
+    configStore.value = { enabled: false, provider: 'hosted' };
+    speechSettingsMocks.getClientBusinessSetting.mockResolvedValue(configStore.value);
     render(<VoiceInputSection />);
     await waitFor(() => expect(screen.getByText('settings.speechToText')).toBeTruthy());
     expect(screen.queryByText('settings.speechToTextSource')).toBeNull();
   });
 
-  it('official openai mode hides base_url field', async () => {
+  it('a user who has never touched this panel gets the hosted default, already enabled', async () => {
+    // getClientBusinessSetting resolves undefined (nothing stored) — the beforeEach default.
+    render(<VoiceInputSection />);
+    await waitFor(() => expect(screen.getByText('settings.speechToTextSource')).toBeTruthy());
+    expect(screen.getByText('settings.speechToTextSourceHosted')).toBeTruthy();
+    // Hosted needs no fields: nothing to fill in for the mic to work.
+    expect(screen.queryByText('settings.speechToTextBaseUrl')).toBeNull();
+    expect(screen.queryByText('settings.speechToTextApiKey')).toBeNull();
+  });
+
+  it('a config with provider openai and no base_url (from a retired official preset) now shows as hosted', async () => {
     configStore.value = {
       enabled: true,
       provider: 'openai',
@@ -73,8 +85,8 @@ describe('VoiceInputSection', () => {
     speechSettingsMocks.getClientBusinessSetting.mockResolvedValue(configStore.value);
     render(<VoiceInputSection />);
     await waitFor(() => expect(screen.getByText('settings.speechToTextSource')).toBeTruthy());
+    expect(screen.getByText('settings.speechToTextSourceHosted')).toBeTruthy();
     expect(screen.queryByText('settings.speechToTextBaseUrl')).toBeNull();
-    expect(screen.getByText('settings.speechToTextApiKey')).toBeTruthy();
   });
 
   it('custom mode (openai + base_url) shows base_url field', async () => {
@@ -107,7 +119,7 @@ describe('VoiceInputSection', () => {
 
     // The base_url field must appear...
     await waitFor(() => expect(screen.getByText('settings.speechToTextBaseUrl')).toBeTruthy());
-    // ...and stay, even though the stored config (empty base_url) derives to official openai.
+    // ...and stay, even though the stored config (empty base_url) derives to the hosted default.
     await waitFor(() => expect(screen.getByText('settings.speechToTextBaseUrl')).toBeTruthy());
   });
 
@@ -150,11 +162,11 @@ describe('VoiceInputSection', () => {
     });
   });
 
-  it('official openai mode shows streaming badge for gpt-4o-transcribe and batch badge for whisper-1', async () => {
+  it("custom mode never shows a streaming/batch badge, since a custom endpoint's capability is unknown", async () => {
     configStore.value = {
       enabled: true,
       provider: 'openai',
-      openai: { api_key: 'k', base_url: '', model: 'gpt-4o-transcribe', language: '' },
+      openai: { api_key: 'k', base_url: 'https://my-host/v1', model: 'gpt-4o-transcribe', language: '' },
     };
     speechSettingsMocks.getClientBusinessSetting.mockResolvedValue(configStore.value);
     render(<VoiceInputSection />);
@@ -162,23 +174,23 @@ describe('VoiceInputSection', () => {
 
     // Open the model Select (second .arco-select on the page — first is the source select).
     const selects = document.querySelectorAll('.arco-select');
-    // source select is first; model select is second
     expect(selects.length).toBeGreaterThanOrEqual(2);
     fireEvent.click(selects[1] as Element);
 
-    // gpt-4o-transcribe option should carry the streaming badge (multiple elements ok — arco renders
-    // options in hidden + visible lists)
-    await waitFor(() => expect(screen.getAllByText('settings.speechToTextStreamingBadge').length).toBeGreaterThan(0));
-
-    // whisper-1 option should carry the batch badge
-    expect(screen.getAllByText('settings.speechToTextWholeBadge').length).toBeGreaterThan(0);
+    // Custom source is always 'unknown' capability (we can't statically know a
+    // self-hosted endpoint's streaming support), so neither badge should render
+    // for gpt-4o-transcribe or whisper-1, even though those model names carry
+    // real supported/unsupported capability on the official OpenAI endpoint.
+    await waitFor(() => expect(screen.getAllByText('gpt-4o-transcribe').length).toBeGreaterThan(0));
+    expect(screen.queryByText('settings.speechToTextStreamingBadge')).toBeNull();
+    expect(screen.queryByText('settings.speechToTextWholeBadge')).toBeNull();
   });
 
   it('migrates a stored ambiguous zh language to Simplified Chinese on load', async () => {
     configStore.value = {
       enabled: true,
       provider: 'openai',
-      openai: { api_key: 'k', base_url: '', model: 'whisper-1', language: 'zh' },
+      openai: { api_key: 'k', base_url: 'https://my-host/v1', model: 'whisper-1', language: 'zh' },
     };
     speechSettingsMocks.getClientBusinessSetting.mockResolvedValue(configStore.value);
     render(<VoiceInputSection />);
@@ -187,26 +199,11 @@ describe('VoiceInputSection', () => {
     await waitFor(() => expect(screen.getByText('中文（简体）')).toBeTruthy());
   });
 
-  it('deepgram mode hides the batch-only/always-on formatting switches', async () => {
-    configStore.value = {
-      enabled: true,
-      provider: 'deepgram',
-      deepgram: {
-        api_key: 'k',
-        model: 'nova-3',
-        language: '',
-        detectLanguage: true,
-        punctuate: true,
-        smartFormat: true,
-      },
-    };
+  it('hosted mode hides the language selector (nothing to configure)', async () => {
+    configStore.value = { enabled: true, provider: 'hosted' };
     speechSettingsMocks.getClientBusinessSetting.mockResolvedValue(configStore.value);
     render(<VoiceInputSection />);
-    await waitFor(() => expect(screen.getByText('settings.speechToTextLanguage')).toBeTruthy());
-    expect(screen.queryByText('settings.speechToTextBaseUrl')).toBeNull();
-    // Stored values stay honored by the backend; only the toggles are gone.
-    expect(screen.queryByText('settings.speechToTextDetectLanguage')).toBeNull();
-    expect(screen.queryByText('settings.speechToTextPunctuate')).toBeNull();
-    expect(screen.queryByText('settings.speechToTextSmartFormat')).toBeNull();
+    await waitFor(() => expect(screen.getByText('settings.speechToTextSource')).toBeTruthy());
+    expect(screen.queryByText('settings.speechToTextLanguage')).toBeNull();
   });
 });

@@ -30,10 +30,9 @@ const openaiCustom = (model: string): SpeechToTextConfig => ({
   openai: { api_key: 'k', base_url: 'https://my-proxy/v1', model },
 });
 
-const deepgramConfig = (model: string): SpeechToTextConfig => ({
+const hostedConfig = (): SpeechToTextConfig => ({
   enabled: true,
-  provider: 'deepgram',
-  deepgram: { api_key: 'k', model },
+  provider: 'hosted',
 });
 
 // ---------------------------------------------------------------------------
@@ -51,17 +50,9 @@ describe('getModelStreamCapability', () => {
     });
   });
 
-  describe('deepgram source', () => {
-    it('nova-3 (preset) → supported', () => {
-      expect(getModelStreamCapability('deepgram', 'nova-3')).toBe('supported');
-    });
-
-    it('nova-2 (preset) → supported', () => {
-      expect(getModelStreamCapability('deepgram', 'nova-2')).toBe('supported');
-    });
-
-    it('non-preset model → unknown', () => {
-      expect(getModelStreamCapability('deepgram', 'my-deepgram-model')).toBe('unknown');
+  describe('hosted source', () => {
+    it('any model → unsupported (mode D has no realtime protocol)', () => {
+      expect(getModelStreamCapability('hosted', 'aliyun')).toBe('unsupported');
     });
   });
 
@@ -89,17 +80,9 @@ describe('getModelStreamCapability', () => {
 // ---------------------------------------------------------------------------
 
 describe('getStreamCapability', () => {
-  describe('deepgram provider', () => {
-    it('nova-3 (preset) → supported', () => {
-      expect(getStreamCapability(deepgramConfig('nova-3'))).toBe('supported');
-    });
-
-    it('nova-2 (preset) → supported', () => {
-      expect(getStreamCapability(deepgramConfig('nova-2'))).toBe('supported');
-    });
-
-    it('custom-model (non-preset) → unknown', () => {
-      expect(getStreamCapability(deepgramConfig('custom-model'))).toBe('unknown');
+  describe('hosted provider', () => {
+    it('always unsupported (mode D has no realtime protocol)', () => {
+      expect(getStreamCapability(hostedConfig())).toBe('unsupported');
     });
   });
 
@@ -170,9 +153,9 @@ describe('shouldTryStreaming', () => {
     expect(shouldTryStreaming(openaiOfficial('gpt-4o-mini-transcribe'))).toBe(true);
   });
 
-  it('memory for config-A does not affect config-B (different provider)', () => {
+  it('memory for config-A does not affect a hosted config (unsupported regardless)', () => {
     rememberStreamUnsupported(openaiOfficial('gpt-4o-transcribe'));
-    expect(shouldTryStreaming(deepgramConfig('nova-3'))).toBe(true);
+    expect(shouldTryStreaming(hostedConfig())).toBe(false);
   });
 
   it('clearStreamMemory removes all entries → true again', () => {

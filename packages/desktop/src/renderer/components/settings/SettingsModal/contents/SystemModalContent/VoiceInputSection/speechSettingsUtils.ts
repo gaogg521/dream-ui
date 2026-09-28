@@ -3,10 +3,20 @@
  */
 
 import type { SpeechToTextConfig } from '@/common/types/provider/speech';
-export { DEEPGRAM_SPEECH_MODEL_PRESETS, OPENAI_SPEECH_MODEL_PRESETS } from '@renderer/services/speech/speechModels';
+export { OPENAI_SPEECH_MODEL_PRESETS } from '@renderer/services/speech/speechModels';
+export {
+  DEFAULT_SPEECH_TO_TEXT_CONFIG,
+  normalizeSpeechToTextConfig,
+} from '@renderer/services/speech/speechConfigDefaults';
+import { DEFAULT_SPEECH_TO_TEXT_CONFIG } from '@renderer/services/speech/speechConfigDefaults';
 
-/** UI-level service source. 'custom' is stored as provider:'openai' + non-empty base_url. */
-export type SpeechSource = 'openai' | 'deepgram' | 'custom' | 'modelSettings';
+/**
+ * UI-level service source. 'custom' is stored as provider:'openai' with a
+ * non-empty base_url. 'hosted' is the broker-backed default (mode D) — no
+ * sub-config, works with no setup, and is what a user who has never touched
+ * this panel gets (see `DEFAULT_SPEECH_TO_TEXT_CONFIG`).
+ */
+export type SpeechSource = 'custom' | 'modelSettings' | 'hosted';
 
 /** Language autonyms are intentionally not translated. Empty value = auto detect. */
 export const SPEECH_LANGUAGE_OPTIONS: Array<{ value: string; label?: string }> = [
@@ -38,79 +48,39 @@ export const getAutoTranscriptionPrompt = (language: string): string | undefined
   AUTO_TRANSCRIPTION_PROMPTS[language];
 
 /**
- * Phase 1 stored the ambiguous 'zh' language: migrate it to 'zh-CN' for both
- * provider sub-configs (and inject the matching OpenAI script prompt).
+ * Phase 1 stored the ambiguous 'zh' language: migrate it to 'zh-CN' (and
+ * inject the matching OpenAI script prompt).
  */
 export const migrateSpeechLanguage = (config: SpeechToTextConfig): SpeechToTextConfig => {
-  let next = config;
-  if (next.openai?.language === 'zh') {
-    next = {
-      ...next,
-      openai: { ...next.openai, language: 'zh-CN', prompt: getAutoTranscriptionPrompt('zh-CN') },
+  if (config.openai?.language === 'zh') {
+    return {
+      ...config,
+      openai: { ...config.openai, language: 'zh-CN', prompt: getAutoTranscriptionPrompt('zh-CN') },
     };
   }
-  if (next.deepgram?.language === 'zh') {
-    next = { ...next, deepgram: { ...next.deepgram, language: 'zh-CN' } };
-  }
-  return next;
+  return config;
 };
-
-export const DEFAULT_SPEECH_TO_TEXT_CONFIG: SpeechToTextConfig = {
-  enabled: false,
-  provider: 'openai',
-  openai: {
-    api_key: '',
-    base_url: '',
-    language: '',
-    model: 'gpt-4o-transcribe',
-  },
-  deepgram: {
-    api_key: '',
-    base_url: '',
-    detectLanguage: true,
-    language: '',
-    model: 'nova-3',
-    punctuate: true,
-    smartFormat: true,
-  },
-};
-
-export const normalizeSpeechToTextConfig = (config?: Partial<SpeechToTextConfig>): SpeechToTextConfig => ({
-  ...DEFAULT_SPEECH_TO_TEXT_CONFIG,
-  ...config,
-  openai: {
-    ...DEFAULT_SPEECH_TO_TEXT_CONFIG.openai,
-    ...config?.openai,
-  },
-  deepgram: {
-    ...DEFAULT_SPEECH_TO_TEXT_CONFIG.deepgram,
-    ...config?.deepgram,
-  },
-});
 
 export const deriveSpeechSource = (config: SpeechToTextConfig): SpeechSource => {
   if (config.modelProviderId?.trim()) {
     return 'modelSettings';
   }
-  if (config.provider === 'deepgram') {
-    return 'deepgram';
+  if (config.provider === 'hosted') {
+    return 'hosted';
   }
-  return config.openai?.base_url?.trim() ? 'custom' : 'openai';
+  return config.openai?.base_url?.trim() ? 'custom' : 'hosted';
 };
 
 /**
  * Apply a UI source choice onto the stored config shape.
  * `rememberedCustomBaseUrl` restores the last custom URL within the session
- * after the user toggles official -> custom.
+ * after the user toggles hosted -> custom.
  */
 export const applySpeechSource = (
   config: SpeechToTextConfig,
   source: SpeechSource,
   rememberedCustomBaseUrl = ''
 ): SpeechToTextConfig => {
-  if (source === 'deepgram') {
-    return { ...config, modelProviderId: undefined, provider: 'deepgram' };
-  }
   if (source === 'custom') {
     const currentBaseUrl = config.openai?.base_url?.trim() ? config.openai.base_url : rememberedCustomBaseUrl;
     return {
@@ -120,10 +90,13 @@ export const applySpeechSource = (
       openai: { ...DEFAULT_SPEECH_TO_TEXT_CONFIG.openai, ...config.openai, base_url: currentBaseUrl },
     };
   }
+  if (source === 'modelSettings') {
+    return { ...config, provider: 'openai' };
+  }
   return {
     ...config,
     modelProviderId: undefined,
-    provider: 'openai',
+    provider: 'hosted',
     openai: { ...DEFAULT_SPEECH_TO_TEXT_CONFIG.openai, ...config.openai, base_url: '' },
   };
 };

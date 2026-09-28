@@ -14,7 +14,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import SpeechTestPanel from './SpeechTestPanel';
 import {
-  DEEPGRAM_SPEECH_MODEL_PRESETS,
   DEFAULT_SPEECH_TO_TEXT_CONFIG,
   OPENAI_SPEECH_MODEL_PRESETS,
   SPEECH_LANGUAGE_OPTIONS,
@@ -29,7 +28,6 @@ import {
 } from './speechSettingsUtils';
 
 type OpenAIField = keyof NonNullable<SpeechToTextConfig['openai']>;
-type DeepgramField = keyof NonNullable<SpeechToTextConfig['deepgram']>;
 
 const FieldLabel: React.FC<{ labelKey: string; requirement: 'required' | 'optional' }> = ({
   labelKey,
@@ -50,9 +48,9 @@ const VoiceInputSection: React.FC = () => {
   const { t } = useTranslation();
   const [config, setConfig] = useState<SpeechToTextConfig>(DEFAULT_SPEECH_TO_TEXT_CONFIG);
   // Source is UI state, only initialized from the stored config. A purely
-  // derived source would snap "custom" back to "openai" while base_url is
+  // derived source would snap "custom" back to "hosted" while base_url is
   // still empty, making custom mode unreachable for fresh users.
-  const [source, setSource] = useState<SpeechSource>('openai');
+  const [source, setSource] = useState<SpeechSource>('hosted');
   const [configuredProviders, setConfiguredProviders] = useState<IProvider[]>([]);
   const lastCustomBaseUrlRef = useRef('');
 
@@ -138,26 +136,13 @@ const VoiceInputSection: React.FC = () => {
     [updateConfig]
   );
 
-  const handleDeepgramChange = useCallback(
-    (field: DeepgramField, value: string | boolean) => {
-      updateConfig(
-        (current) =>
-          ({
-            ...current,
-            deepgram: { ...DEFAULT_SPEECH_TO_TEXT_CONFIG.deepgram, ...current.deepgram, [field]: value },
-          }) as SpeechToTextConfig
-      );
-    },
-    [updateConfig]
-  );
-
-  const isDeepgram = source === 'deepgram';
   const isCustom = source === 'custom';
   const isModelSettings = source === 'modelSettings';
-  const activeLanguage = (isDeepgram ? config.deepgram?.language : config.openai?.language) ?? '';
-  const activeModel = (isDeepgram ? config.deepgram?.model : config.openai?.model) ?? '';
-  const activeApiKey = (isDeepgram ? config.deepgram?.api_key : config.openai?.api_key) ?? '';
-  const modelPresets = isDeepgram ? DEEPGRAM_SPEECH_MODEL_PRESETS : OPENAI_SPEECH_MODEL_PRESETS;
+  const isHosted = source === 'hosted';
+  const activeLanguage = config.openai?.language ?? '';
+  const activeModel = config.openai?.model ?? '';
+  const activeApiKey = config.openai?.api_key ?? '';
+  const modelPresets = OPENAI_SPEECH_MODEL_PRESETS;
   const customBaseUrl = config.openai?.base_url ?? '';
   const isBaseUrlInvalid = isCustom && customBaseUrl.trim() !== '' && !isValidHttpUrl(customBaseUrl);
   const configuredSpeechModels = configuredProviders.flatMap((provider) =>
@@ -173,13 +158,9 @@ const VoiceInputSection: React.FC = () => {
 
   const handleModelChange = useCallback(
     (value: string) => {
-      if (isDeepgram) {
-        handleDeepgramChange('model', value);
-      } else {
-        handleOpenAIChange('model', value);
-      }
+      handleOpenAIChange('model', value);
     },
-    [handleDeepgramChange, handleOpenAIChange, isDeepgram]
+    [handleOpenAIChange]
   );
 
   const handleConfiguredModelChange = useCallback(
@@ -205,10 +186,6 @@ const VoiceInputSection: React.FC = () => {
 
   const handleLanguageChange = useCallback(
     (value: string) => {
-      if (isDeepgram) {
-        handleDeepgramChange('language', value);
-        return;
-      }
       // Whisper-family `zh` is script-ambiguous: pair the language with a
       // same-script prompt (undefined clears it for non-Chinese languages).
       updateConfig(
@@ -224,18 +201,14 @@ const VoiceInputSection: React.FC = () => {
           }) as SpeechToTextConfig
       );
     },
-    [handleDeepgramChange, isDeepgram, updateConfig]
+    [updateConfig]
   );
 
   const handleApiKeyChange = useCallback(
     (value: string) => {
-      if (isDeepgram) {
-        handleDeepgramChange('api_key', value);
-      } else {
-        handleOpenAIChange('api_key', value);
-      }
+      handleOpenAIChange('api_key', value);
     },
-    [handleDeepgramChange, handleOpenAIChange, isDeepgram]
+    [handleOpenAIChange]
   );
 
   return (
@@ -258,14 +231,17 @@ const VoiceInputSection: React.FC = () => {
           <Form layout='horizontal' labelAlign='left' className='space-y-12px'>
             <Form.Item label={t('settings.speechToTextSource')}>
               <DreamSelect value={source} onChange={handleSourceChange}>
-                <DreamSelect.Option value='openai'>{t('settings.speechToTextSourceOpenAI')}</DreamSelect.Option>
-                <DreamSelect.Option value='deepgram'>{t('settings.speechToTextSourceDeepgram')}</DreamSelect.Option>
+                <DreamSelect.Option value='hosted'>{t('settings.speechToTextSourceHosted')}</DreamSelect.Option>
                 <DreamSelect.Option value='custom'>{t('settings.speechToTextSourceCustom')}</DreamSelect.Option>
                 <DreamSelect.Option value='modelSettings'>
                   {t('settings.speechToTextSourceModelSettings')}
                 </DreamSelect.Option>
               </DreamSelect>
             </Form.Item>
+
+            {isHosted && (
+              <div className='text-13px text-t-secondary'>{t('settings.speechToTextSourceHostedDescription')}</div>
+            )}
 
             {isModelSettings && (
               <Form.Item label={t('settings.speechToTextModel')}>
@@ -286,7 +262,7 @@ const VoiceInputSection: React.FC = () => {
               </Form.Item>
             )}
 
-            {!isModelSettings && isCustom && (
+            {isCustom && (
               <Form.Item
                 label={<FieldLabel labelKey='settings.speechToTextBaseUrl' requirement='required' />}
                 validateStatus={isBaseUrlInvalid ? 'error' : undefined}
@@ -300,17 +276,13 @@ const VoiceInputSection: React.FC = () => {
               </Form.Item>
             )}
 
-            {!isModelSettings && (
-              <Form.Item
-                label={
-                  <FieldLabel labelKey='settings.speechToTextApiKey' requirement={isCustom ? 'optional' : 'required'} />
-                }
-              >
+            {isCustom && (
+              <Form.Item label={<FieldLabel labelKey='settings.speechToTextApiKey' requirement='optional' />}>
                 <Input.Password value={activeApiKey} visibilityToggle onChange={handleApiKeyChange} />
               </Form.Item>
             )}
 
-            {!isModelSettings && (
+            {isCustom && (
               <Form.Item label={t('settings.speechToTextModel')}>
                 <DreamSelect
                   value={activeModel || undefined}
@@ -323,7 +295,7 @@ const VoiceInputSection: React.FC = () => {
                   placeholder={t('settings.speechToTextModelPlaceholder')}
                 >
                   {buildModelOptions(modelPresets, activeModel).map((model) => {
-                    const capability = getModelStreamCapability(source, model);
+                    const capability = getModelStreamCapability('custom', model);
                     const badgeText =
                       capability === 'supported'
                         ? t('settings.speechToTextStreamingBadge')
@@ -341,15 +313,17 @@ const VoiceInputSection: React.FC = () => {
               </Form.Item>
             )}
 
-            <Form.Item label={t('settings.speechToTextLanguage')}>
-              <DreamSelect value={activeLanguage} onChange={handleLanguageChange}>
-                {SPEECH_LANGUAGE_OPTIONS.map((option) => (
-                  <DreamSelect.Option key={option.value || 'auto'} value={option.value}>
-                    {option.label ?? t('settings.speechToTextLanguageAuto')}
-                  </DreamSelect.Option>
-                ))}
-              </DreamSelect>
-            </Form.Item>
+            {!isHosted && (
+              <Form.Item label={t('settings.speechToTextLanguage')}>
+                <DreamSelect value={activeLanguage} onChange={handleLanguageChange}>
+                  {SPEECH_LANGUAGE_OPTIONS.map((option) => (
+                    <DreamSelect.Option key={option.value || 'auto'} value={option.value}>
+                      {option.label ?? t('settings.speechToTextLanguageAuto')}
+                    </DreamSelect.Option>
+                  ))}
+                </DreamSelect>
+              </Form.Item>
+            )}
           </Form>
           <SpeechTestPanel config={config} source={source} />
         </>

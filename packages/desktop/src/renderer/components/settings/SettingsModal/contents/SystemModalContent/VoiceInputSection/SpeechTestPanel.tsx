@@ -63,16 +63,11 @@ const SpeechTestPanel: React.FC<SpeechTestPanelProps> = ({ config, source }) => 
     if (source === 'modelSettings') {
       return config.modelProviderId ? null : t('settings.speechToTextNoConfiguredModel');
     }
-    if (source === 'custom') {
-      if (!isValidHttpUrl(config.openai?.base_url ?? '')) {
-        return t('settings.speechToTextBaseUrlInvalid');
-      }
-      return null;
+    if (source === 'custom' && !isValidHttpUrl(config.openai?.base_url ?? '')) {
+      return t('settings.speechToTextBaseUrlInvalid');
     }
-    const apiKey = source === 'deepgram' ? config.deepgram?.api_key : config.openai?.api_key;
-    if (!apiKey?.trim()) {
-      return t('settings.speechToTextTestMissingKey');
-    }
+    // 'custom' with a valid URL, or 'hosted' (nothing to fill in): nothing to
+    // validate — the API key is optional for a custom endpoint.
     return null;
   }, [config, source, t]);
 

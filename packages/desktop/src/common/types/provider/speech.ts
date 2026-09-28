@@ -2,7 +2,12 @@
  * Copyright 2026 One Work
  */
 
-export type SpeechToTextProvider = 'openai' | 'deepgram';
+/**
+ * 'hosted' is the broker-backed default (mode D): the backend resolves this
+ * install's id and forwards the audio itself, so no sub-config is needed —
+ * see `crates/dream-core-shell/src/stt_hosted.rs`.
+ */
+export type SpeechToTextProvider = 'openai' | 'hosted';
 
 export type OpenAISpeechToTextConfig = {
   api_key: string;
@@ -13,23 +18,12 @@ export type OpenAISpeechToTextConfig = {
   temperature?: number;
 };
 
-export type DeepgramSpeechToTextConfig = {
-  api_key: string;
-  base_url?: string;
-  detectLanguage?: boolean;
-  language?: string;
-  model: string;
-  punctuate?: boolean;
-  smartFormat?: boolean;
-};
-
 export type SpeechToTextConfig = {
   autoSend?: boolean;
   enabled: boolean;
   /** Existing model-channel ID to resolve on the backend, without copying its secret here. */
   modelProviderId?: string;
   provider: SpeechToTextProvider;
-  deepgram?: DeepgramSpeechToTextConfig;
   openai?: OpenAISpeechToTextConfig;
 };
 

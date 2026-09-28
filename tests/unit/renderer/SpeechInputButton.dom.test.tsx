@@ -137,4 +137,17 @@ describe('SpeechInputButton', () => {
     expect(mocks.navigate).toHaveBeenCalledWith('/settings/system');
     expect(mocks.startRecording).not.toHaveBeenCalled();
   });
+
+  it('a user who has never touched speech settings can record with zero configuration', async () => {
+    // Nothing stored at all — not `{enabled: false}`, genuinely undefined.
+    mocks.getClientBusinessSetting.mockResolvedValue(undefined);
+
+    render(<SpeechInputButton onTranscript={vi.fn()} />);
+    const button = await screen.findByRole('button');
+
+    expect(button).not.toHaveAttribute('aria-label', 'conversation.chat.speech.notConfigured');
+    fireEvent.click(button);
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(mocks.startRecording).toHaveBeenCalledTimes(1);
+  });
 });

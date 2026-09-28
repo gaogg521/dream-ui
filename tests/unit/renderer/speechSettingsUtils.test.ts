@@ -6,7 +6,6 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-  DEEPGRAM_SPEECH_MODEL_PRESETS,
   DEFAULT_SPEECH_TO_TEXT_CONFIG,
   OPENAI_SPEECH_MODEL_PRESETS,
   SPEECH_LANGUAGE_OPTIONS,
@@ -20,14 +19,14 @@ import {
 } from '@renderer/components/settings/SettingsModal/contents/SystemModalContent/VoiceInputSection/speechSettingsUtils';
 
 describe('deriveSpeechSource', () => {
-  it('returns deepgram when provider is deepgram', () => {
-    const config = normalizeSpeechToTextConfig({ enabled: true, provider: 'deepgram' });
-    expect(deriveSpeechSource(config)).toBe('deepgram');
+  it('returns hosted when provider is hosted', () => {
+    const config = normalizeSpeechToTextConfig({ enabled: true, provider: 'hosted' });
+    expect(deriveSpeechSource(config)).toBe('hosted');
   });
 
-  it('returns openai for openai provider without base_url', () => {
+  it('defaults to hosted for openai provider without base_url', () => {
     const config = normalizeSpeechToTextConfig({ enabled: true, provider: 'openai' });
-    expect(deriveSpeechSource(config)).toBe('openai');
+    expect(deriveSpeechSource(config)).toBe('hosted');
   });
 
   it('returns custom for openai provider with non-empty base_url', () => {
@@ -48,13 +47,13 @@ describe('deriveSpeechSource', () => {
     expect(deriveSpeechSource(config)).toBe('modelSettings');
   });
 
-  it('treats whitespace-only base_url as official openai', () => {
+  it('treats whitespace-only base_url as hosted', () => {
     const config = normalizeSpeechToTextConfig({
       enabled: true,
       provider: 'openai',
       openai: { api_key: 'k', base_url: '  ', model: 'whisper-1' },
     });
-    expect(deriveSpeechSource(config)).toBe('openai');
+    expect(deriveSpeechSource(config)).toBe('hosted');
   });
 });
 
@@ -65,22 +64,22 @@ describe('applySpeechSource', () => {
     openai: { api_key: 'k', base_url: 'https://my-host/v1', model: 'my-model' },
   });
 
-  it('switching to official openai clears base_url', () => {
-    const next = applySpeechSource(customConfig, 'openai');
-    expect(next.provider).toBe('openai');
+  it('switching to hosted clears base_url and the modelProviderId', () => {
+    const next = applySpeechSource(customConfig, 'hosted');
+    expect(next.provider).toBe('hosted');
+    expect(next.modelProviderId).toBeUndefined();
     expect(next.openai?.base_url).toBe('');
   });
 
-  it('switching to deepgram only changes provider and keeps openai sub-config', () => {
-    const next = applySpeechSource(customConfig, 'deepgram');
-    expect(next.provider).toBe('deepgram');
-    expect(next.modelProviderId).toBeUndefined();
+  it('switching to modelSettings only changes provider and keeps openai sub-config', () => {
+    const next = applySpeechSource(customConfig, 'modelSettings');
+    expect(next.provider).toBe('openai');
     expect(next.openai?.base_url).toBe('https://my-host/v1');
   });
 
   it('switching to custom restores remembered base_url when current one is empty', () => {
-    const official = applySpeechSource(customConfig, 'openai');
-    const next = applySpeechSource(official, 'custom', 'https://my-host/v1');
+    const hosted = applySpeechSource(customConfig, 'hosted');
+    const next = applySpeechSource(hosted, 'custom', 'https://my-host/v1');
     expect(deriveSpeechSource(next)).toBe('custom');
     expect(next.openai?.base_url).toBe('https://my-host/v1');
   });
@@ -98,13 +97,9 @@ describe('model presets', () => {
     expect(OPENAI_SPEECH_MODEL_PRESETS).not.toContain('gpt-realtime-whisper');
   });
 
-  it('deepgram presets contain nova models', () => {
-    expect(DEEPGRAM_SPEECH_MODEL_PRESETS).toEqual(['nova-3', 'nova-2']);
-  });
-
-  it('defaults use the recommended models', () => {
-    expect(DEFAULT_SPEECH_TO_TEXT_CONFIG.openai?.model).toBe('gpt-4o-transcribe');
-    expect(DEFAULT_SPEECH_TO_TEXT_CONFIG.deepgram?.model).toBe('nova-3');
+  it('defaults use the hosted broker-backed provider with zero setup', () => {
+    expect(DEFAULT_SPEECH_TO_TEXT_CONFIG.enabled).toBe(true);
+    expect(DEFAULT_SPEECH_TO_TEXT_CONFIG.provider).toBe('hosted');
   });
 });
 
@@ -177,29 +172,6 @@ describe('migrateSpeechLanguage', () => {
     expect(migrated.openai?.prompt).toBe('以下是普通话的句子。');
   });
 
-  it('migrates stored deepgram zh to zh-CN without a prompt', () => {
-    const config = normalizeSpeechToTextConfig({
-      enabled: true,
-      provider: 'deepgram',
-      deepgram: { api_key: 'k', language: 'zh', model: 'nova-3' },
-    });
-    const migrated = migrateSpeechLanguage(config);
-    expect(migrated.deepgram?.language).toBe('zh-CN');
-    expect(migrated.openai?.language).toBe('');
-  });
-
-  it('migrates both sub-configs when both stored zh', () => {
-    const config = normalizeSpeechToTextConfig({
-      enabled: true,
-      provider: 'openai',
-      openai: { api_key: 'k', language: 'zh', model: 'whisper-1' },
-      deepgram: { api_key: 'k', language: 'zh', model: 'nova-3' },
-    });
-    const migrated = migrateSpeechLanguage(config);
-    expect(migrated.openai?.language).toBe('zh-CN');
-    expect(migrated.deepgram?.language).toBe('zh-CN');
-  });
-
   it('leaves non-zh languages and existing prompts untouched', () => {
     const config = normalizeSpeechToTextConfig({
       enabled: true,
@@ -214,11 +186,11 @@ describe('migrateSpeechLanguage', () => {
 });
 
 describe('normalizeSpeechToTextConfig', () => {
-  it('fills defaults for missing sub-configs', () => {
+  it('fills the hosted default for a completely missing config', () => {
     const config = normalizeSpeechToTextConfig(undefined);
-    expect(config.enabled).toBe(false);
+    expect(config.enabled).toBe(true);
+    expect(config.provider).toBe('hosted');
     expect(config.openai?.model).toBe('gpt-4o-transcribe');
-    expect(config.deepgram?.punctuate).toBe(true);
   });
 
   it('preserves stored values over defaults', () => {

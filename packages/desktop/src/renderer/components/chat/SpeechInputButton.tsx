@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { SPEECH_TO_TEXT_CONFIG_CHANGED_EVENT } from '@/renderer/services/SpeechToTextService';
 import { getClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
+import { normalizeSpeechToTextConfig } from '@/renderer/services/speech/speechConfigDefaults';
 import {
   getSpeechInputErrorMessageKey,
   useSpeechInput,
@@ -118,7 +119,9 @@ const SpeechInputButton: React.FC<SpeechInputButtonProps> = ({ onLiveTranscript,
         if (cancelled) {
           return;
         }
-        setIsSpeechToTextEnabled(Boolean(config?.enabled));
+        // A user who has never touched speech settings has no stored config
+        // at all — that is the hosted-by-default case, not "disabled".
+        setIsSpeechToTextEnabled(normalizeSpeechToTextConfig(config).enabled);
       } catch {
         if (cancelled) {
           return;
