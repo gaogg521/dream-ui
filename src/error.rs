@@ -68,6 +68,15 @@ pub enum AppError {
     SearchQuotaExhausted,
     /// Every install together has spent the day's cap. -> 503
     SearchBudgetExhausted,
+
+    // --- mode D (hosted default STT) ---
+    /// This broker has no STT key configured, so `/v1/stt` cannot run. Same
+    /// 503-vs-404 reasoning as `SearchUnavailable`. -> 503
+    SttUnavailable,
+    /// This install has used its whole allowance for the UTC day. -> 429
+    SttQuotaExhausted,
+    /// Every install together has spent the day's cap. -> 503
+    SttBudgetExhausted,
 }
 
 impl AppError {
@@ -93,6 +102,9 @@ impl AppError {
             AppError::SearchUnavailable => StatusCode::SERVICE_UNAVAILABLE,
             AppError::SearchQuotaExhausted => StatusCode::TOO_MANY_REQUESTS,
             AppError::SearchBudgetExhausted => StatusCode::SERVICE_UNAVAILABLE,
+            AppError::SttUnavailable => StatusCode::SERVICE_UNAVAILABLE,
+            AppError::SttQuotaExhausted => StatusCode::TOO_MANY_REQUESTS,
+            AppError::SttBudgetExhausted => StatusCode::SERVICE_UNAVAILABLE,
         }
     }
 
@@ -118,6 +130,9 @@ impl AppError {
             AppError::SearchUnavailable => "search_unavailable",
             AppError::SearchQuotaExhausted => "search_quota_exhausted",
             AppError::SearchBudgetExhausted => "search_budget_exhausted",
+            AppError::SttUnavailable => "stt_unavailable",
+            AppError::SttQuotaExhausted => "stt_quota_exhausted",
+            AppError::SttBudgetExhausted => "stt_budget_exhausted",
         }
     }
 }

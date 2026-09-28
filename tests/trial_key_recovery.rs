@@ -184,6 +184,7 @@ async fn make_state_with_config(vendor: RecoverableVendor, config: Config) -> Ap
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+        stt: Arc::new(dream_trial_broker::stt::SttRuntime::disabled()),
     }
 }
 
@@ -275,6 +276,7 @@ async fn recovery_applies_the_resale_markup_to_the_reconstructed_paid_total() {
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+        stt: Arc::new(dream_trial_broker::stt::SttRuntime::disabled()),
     };
 
     issue_trial_key(&state, VENDOR_ID, "install-markup", ip())

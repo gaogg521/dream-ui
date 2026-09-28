@@ -51,6 +51,8 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         // Mode C (hosted search). No vendor segment: one provider, chosen by
         // the broker, so the client never names it.
         .route("/v1/search", post(crate::search::service::search_handler))
+        // Mode D (hosted default STT). Same shape as mode C.
+        .route("/v1/stt", post(crate::stt::service::stt_handler))
         .route("/internal/stats", get(stats))
         // Ops-only: apply a top-up to a mode A key. No client (dream-ui) calls
         // this yet — there is no end-user payment collection wired up for
@@ -192,10 +194,19 @@ async fn stats(State(state): State<Arc<AppState>>) -> Result<Json<serde_json::Va
         })
         .collect();
 
+    let today = now.format("%Y-%m-%d").to_string();
+    let stt_used_today = crate::stt::store::used_today_global(&state.pool, &today)
+        .await
+        .unwrap_or(0);
+
     Ok(Json(json!({
         "vendors": vendor_stats,
         "search_month": month,
         "search_providers": search_providers,
+        "stt_day": today,
+        "stt_used_today": stt_used_today,
+        "stt_global_daily_limit": state.stt.limits.global_daily_limit,
+        "stt_providers": state.stt.provider_ids(),
     })))
 }
 

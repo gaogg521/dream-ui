@@ -12,6 +12,7 @@ use dream_trial_broker::rate_limit::RateLimiter;
 use dream_trial_broker::routes::build_router;
 use dream_trial_broker::search;
 use dream_trial_broker::service::AppState;
+use dream_trial_broker::stt;
 use dream_trial_broker::vendor::baoyun::BaoyunVendor;
 use dream_trial_broker::vendor::openrouter::OpenRouterVendor;
 use dream_trial_broker::vendor::TokenVendor;
@@ -63,6 +64,15 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
+    // Mode D. Same opt-in convention as mode C: no key, no hosted STT.
+    let stt = Arc::new(stt::SttRuntime::from_env(&reqwest::Client::new())?);
+    if stt.enabled() {
+        tracing::info!(
+            providers = stt.provider_ids().join(","),
+            "hosted stt enabled"
+        );
+    }
+
     let state = Arc::new(AppState {
         pool,
         config: Arc::new(config),
@@ -70,6 +80,7 @@ async fn main() -> anyhow::Result<()> {
         rate_limiter,
         metered,
         search,
+        stt,
     });
 
     tracing::info!(
@@ -78,6 +89,8 @@ async fn main() -> anyhow::Result<()> {
         metered_vendors = state.metered.configs.len(),
         hosted_search = state.search.enabled(),
         search_providers = state.search.provider_ids().join(","),
+        hosted_stt = state.stt.enabled(),
+        stt_providers = state.stt.provider_ids().join(","),
         "starting dream-trial-broker"
     );
 

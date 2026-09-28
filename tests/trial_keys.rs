@@ -186,6 +186,7 @@ async fn make_state_with(
         rate_limiter: Arc::new(RateLimiter::new(rate_limit, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+        stt: Arc::new(dream_trial_broker::stt::SttRuntime::disabled()),
     };
     (state, vendor)
 }
@@ -588,6 +589,7 @@ async fn make_state_with_paid_history_vendor(
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+        stt: Arc::new(dream_trial_broker::stt::SttRuntime::disabled()),
     };
     (state, vendor)
 }

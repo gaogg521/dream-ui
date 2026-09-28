@@ -175,6 +175,7 @@ async fn harness_chain(limits: SearchLimits, chain: ScriptedChain) -> Harness {
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(SearchRuntime::new(limits, providers)),
+        stt: Arc::new(dream_trial_broker::stt::SttRuntime::disabled()),
     });
 
     Harness { state, upstreams }

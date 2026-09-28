@@ -198,6 +198,7 @@ fn state_with(pool: sqlx::SqlitePool, vendors: Vec<Arc<dyn TokenVendor>>) -> Arc
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+        stt: Arc::new(dream_trial_broker::stt::SttRuntime::disabled()),
     })
 }
 

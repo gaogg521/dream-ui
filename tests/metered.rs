@@ -181,6 +181,7 @@ async fn harness(
         metered,
         // Mode C is off for these tests: it shares nothing with mode B.
         search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+        stt: Arc::new(dream_trial_broker::stt::SttRuntime::disabled()),
     });
 
     Harness { state, resolver }

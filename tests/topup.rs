@@ -209,6 +209,7 @@ async fn make_state(with_issuance_for: Option<&str>) -> (AppState, Arc<ToppableV
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+        stt: Arc::new(dream_trial_broker::stt::SttRuntime::disabled()),
     };
     (state, vendor)
 }
@@ -348,6 +349,7 @@ async fn a_vendor_without_topup_support_reports_unsupported() {
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+        stt: Arc::new(dream_trial_broker::stt::SttRuntime::disabled()),
     };
 
     let err = create_topup_order(&state, "no-topup", "install-1", 10.0)
@@ -805,6 +807,7 @@ async fn usage_history_passes_through_the_vendors_log_entries() {
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+        stt: Arc::new(dream_trial_broker::stt::SttRuntime::disabled()),
     };
 
     let logs = usage_history(&state, "usage-logging", "install-1", None)
@@ -859,6 +862,7 @@ async fn make_state_with_usage_logging_vendor(key_hash: Option<String>) -> AppSt
         rate_limiter: Arc::new(RateLimiter::new(1000, Duration::from_secs(3600))),
         metered: Arc::new(dream_trial_broker::metered::MeteredRuntime::disabled()),
         search: Arc::new(dream_trial_broker::search::SearchRuntime::disabled()),
+        stt: Arc::new(dream_trial_broker::stt::SttRuntime::disabled()),
     }
 }
 

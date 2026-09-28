@@ -7,6 +7,7 @@ pub mod rate_limit;
 pub mod routes;
 pub mod search;
 pub mod service;
+pub mod stt;
 pub mod topup;
 pub mod vendor;
 pub mod visible_balance;

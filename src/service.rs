@@ -98,6 +98,9 @@ pub struct AppState {
     /// Mode C. Also independent: its own key, its own table, its own limiter.
     /// Disabled when no search key is configured.
     pub search: Arc<crate::search::SearchRuntime>,
+    /// Mode D. Also independent: its own key, its own table, its own limiter.
+    /// Disabled when no STT key is configured.
+    pub stt: Arc<crate::stt::SttRuntime>,
 }
 
 impl AppState {
