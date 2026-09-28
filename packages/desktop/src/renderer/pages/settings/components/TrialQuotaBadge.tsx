@@ -100,20 +100,26 @@ const TrialQuotaBadge: React.FC<{ vendor: TrialVendor }> = ({ vendor }) => {
     >
       {(grantRemaining !== null || paidRemaining !== null) && (
         <div
-          className='flex flex-col gap-4px border-b border-fill-3 px-12px py-8px'
+          className='mx-8px my-8px flex flex-col gap-7px rd-10px border border-fill-3 bg-fill-2 px-10px py-9px shadow-sm'
           onClick={stopPropagation}
           data-testid='trial-quota-balance-breakdown'
         >
           {grantRemaining !== null && (
-            <div className='flex items-center justify-between text-12px text-t-secondary'>
-              <span>{t('settings.trialTopUp.grantBalanceLabel')}</span>
-              <span className='font-500 text-t-primary'>{formatMajorUnits(grantRemaining, currency)}</span>
+            <div className='flex items-center justify-between gap-12px text-12px'>
+              <span className='flex items-center gap-6px text-t-secondary'>
+                <i className='h-6px w-6px rd-full bg-[rgba(var(--success-6),1)]' />
+                {t('settings.trialTopUp.grantBalanceLabel')}
+              </span>
+              <span className='font-600 tabular-nums text-t-primary'>{formatMajorUnits(grantRemaining, currency)}</span>
             </div>
           )}
           {paidRemaining !== null && (
-            <div className='flex items-center justify-between text-12px text-t-secondary'>
-              <span>{t('settings.trialTopUp.paidBalanceLabel')}</span>
-              <span className='font-500 text-t-primary'>{formatMajorUnits(paidRemaining, currency)}</span>
+            <div className='flex items-center justify-between gap-12px text-12px'>
+              <span className='flex items-center gap-6px text-t-secondary'>
+                <i className='h-6px w-6px rd-full bg-[rgba(var(--primary-6),1)]' />
+                {t('settings.trialTopUp.paidBalanceLabel')}
+              </span>
+              <span className='font-600 tabular-nums text-t-primary'>{formatMajorUnits(paidRemaining, currency)}</span>
             </div>
           )}
         </div>
@@ -145,8 +151,8 @@ const TrialQuotaBadge: React.FC<{ vendor: TrialVendor }> = ({ vendor }) => {
   // syntax, which those commas make invalid, so the browser drops the whole
   // declaration and the element renders unstyled rather than visibly broken.
   const tone = exhausted
-    ? 'bg-[rgba(var(--red-1),1)] text-[rgba(var(--red-6),1)] hover:bg-[rgba(var(--red-2),1)]'
-    : 'bg-[rgba(var(--arcoblue-1),1)] text-[rgba(var(--arcoblue-6),1)] hover:bg-[rgba(var(--arcoblue-2),1)]';
+    ? 'border border-[rgba(var(--red-6),0.32)] bg-[rgba(var(--red-6),0.16)] text-t-primary hover:bg-[rgba(var(--red-6),0.24)]'
+    : 'border border-[rgba(var(--primary-6),0.32)] bg-[rgba(var(--primary-6),0.16)] text-t-primary hover:bg-[rgba(var(--primary-6),0.24)]';
 
   return (
     // The row header toggles the collapse on click; the menu and the top-up
