@@ -54,7 +54,7 @@ export function useRefreshTrialQuota() {
  * would leave the balance at.
  */
 export function remainingAmount(view: TrialQuotaView): number | null {
-  return view.kind === 'metered' ? view.data.remaining_cents / 100 : view.data.remaining_usd;
+  return view.kind === 'metered' ? view.data.remaining_cents / 100 : (view.data.remaining_usd ?? null);
 }
 
 /**
@@ -65,7 +65,7 @@ export function remainingAmount(view: TrialQuotaView): number | null {
  * typed accessor, not a calculation.
  */
 export function grantRemainingAmount(view: TrialQuotaView): number | null {
-  return view.kind === 'issued' ? view.data.grant_remaining_usd : null;
+  return view.kind === 'issued' ? (view.data.grant_remaining_usd ?? null) : null;
 }
 
 /**
@@ -74,7 +74,7 @@ export function grantRemainingAmount(view: TrialQuotaView): number | null {
  * under the same conditions as {@link grantRemainingAmount}.
  */
 export function paidRemainingAmount(view: TrialQuotaView): number | null {
-  return view.kind === 'issued' ? view.data.paid_remaining_usd : null;
+  return view.kind === 'issued' ? (view.data.paid_remaining_usd ?? null) : null;
 }
 
 /** `remaining` in a trial view, in minor units for metered / major units for issued. */
@@ -84,7 +84,10 @@ export function remainingLabel(view: TrialQuotaView): { text: string; exhausted:
     return { text: formatMinorUnits(remaining_cents, currency), exhausted: view.data.exhausted };
   }
   const { remaining_usd, exhausted, currency } = view.data;
-  if (remaining_usd === null) return { text: '', exhausted };
+  // Older brokers omit this field rather than serializing JSON null. Treat
+  // both forms as "no displayed quota"; otherwise the settings page crashes
+  // trying to call `toFixed` on undefined before the model list can render.
+  if (typeof remaining_usd !== 'number') return { text: '', exhausted };
   // `currency` is optional only for a broker predating multi-vendor mode A,
   // whose one vendor (OpenRouter) was always USD.
   const symbol = CURRENCY_SYMBOL[currency ?? 'USD'];
@@ -109,6 +112,7 @@ export function formatMinorUnits(cents: number, currency: string): string {
  * carry `amount` this way, not minor-unit cents.
  */
 export function formatMajorUnits(amount: number, currency: string): string {
+  if (!Number.isFinite(amount)) return '';
   const major = amount.toFixed(2);
   const symbol = CURRENCY_SYMBOL[currency];
   return symbol ? `${symbol}${major}` : `${major} ${currency}`;

@@ -37,6 +37,10 @@ describe('formatMajorUnits', () => {
   it('falls back to a code suffix for an unknown currency', () => {
     expect(formatMajorUnits(12.34, 'XXX')).toBe('12.34 XXX');
   });
+
+  it('does not throw when an older broker omits an optional amount', () => {
+    expect(formatMajorUnits(undefined as unknown as number, 'CNY')).toBe('');
+  });
 });
 
 describe('remainingLabel', () => {
@@ -95,6 +99,15 @@ describe('remainingLabel', () => {
       data: { vendor: 'openrouter', limit_usd: null, used_usd: 3, remaining_usd: null, reset: null, exhausted: false },
     };
     expect(remainingLabel(uncapped)).toEqual({ text: '', exhausted: false });
+  });
+
+  it('treats an omitted legacy remaining balance as no displayable quota', () => {
+    const legacyView = {
+      kind: 'issued',
+      vendor: 'baoyun',
+      data: { vendor: 'baoyun', limit_usd: 10, used_usd: 2, reset: null, exhausted: false, currency: 'CNY' },
+    } as unknown as TrialQuotaView;
+    expect(remainingLabel(legacyView)).toEqual({ text: '', exhausted: false });
   });
 
   // Baoyun is issued (mode A) too, but CNY-denominated — must render `¥`,

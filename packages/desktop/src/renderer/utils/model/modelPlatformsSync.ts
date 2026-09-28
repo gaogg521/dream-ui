@@ -101,6 +101,10 @@ export async function syncModelPlatformsFromBackend(): Promise<void> {
       .filter((preset): preset is PlatformConfig => preset !== null);
     mergeModelPlatformPresets(MODEL_PLATFORMS, mapped);
   } catch (error) {
+    // Authentication is intentionally unavailable while the login page is
+    // showing. Leave the sync retryable so a successful WebUI login can load
+    // the server's presets in the same tab instead of requiring a reload.
+    syncStarted = false;
     console.debug('[modelPlatformsSync] backend fetch failed, keeping the built-in preset list', error);
   }
 }

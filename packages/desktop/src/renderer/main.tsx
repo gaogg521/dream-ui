@@ -51,7 +51,7 @@ import './components/workspace/registerWebFsPicker';
 import type { PropsWithChildren } from 'react';
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { SWRConfig } from 'swr';
+import { SWRConfig, useSWRConfig } from 'swr';
 import type { TFunction } from 'i18next';
 
 // Context providers
@@ -103,6 +103,7 @@ import { bootstrapRendererConfig } from '@renderer/services/bootstrapRenderer';
 import { prefetchAssistantsList } from '@renderer/services/prefetchAssistantsList';
 import { syncModelPlatformsFromBackend } from '@renderer/utils/model/modelPlatformsSync';
 import { useAutoAcceptInferredModelKinds } from '@renderer/hooks/agent/useAutoAcceptInferredModelKinds';
+import { PROVIDERS_SWR_KEY } from '@renderer/hooks/agent/useModelProviderList';
 
 // Components and utilities
 import BackendStartingView from './components/layout/BackendStartingView';
@@ -352,31 +353,49 @@ const Config: React.FC<PropsWithChildren> = ({ children }) => {
 };
 
 const Main = () => {
-  const { ready } = useAuth();
+  const { ready, status } = useAuth();
+  const { mutate } = useSWRConfig();
   const { t } = useTranslation();
   const [configReady, setConfigReady] = useState(false);
+  const isAuthenticated = status === 'authenticated';
 
   useEffect(() => {
     if (!ready) return;
-    void bootstrapRendererConfig().finally(() => setConfigReady(true));
-  }, [ready]);
+    // The initial browser boot deliberately reaches the login page without a
+    // session. Do not freeze configuration fetched during that unauthenticated
+    // pass: after login the previous code kept its 401 result (including the
+    // Provider SWR error) for the rest of the tab lifetime, which made saved
+    // models look as if they had been deleted until a full reload.
+    if (!isAuthenticated) {
+      setConfigReady(true);
+      return;
+    }
+
+    setConfigReady(false);
+    void Promise.all([
+      bootstrapRendererConfig(),
+      // Revalidate an already-mounted picker as well as the normal post-login
+      // first mount. This is a no-op when no picker has subscribed yet.
+      mutate(PROVIDERS_SWR_KEY),
+    ]).finally(() => setConfigReady(true));
+  }, [isAuthenticated, mutate, ready]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !isAuthenticated) return;
     void repairAllCronJobTimeZonesOnce();
-  }, [ready]);
+  }, [isAuthenticated, ready]);
 
   useEffect(() => {
-    if (!ready || !configReady) return;
+    if (!ready || !isAuthenticated || !configReady) return;
     prefetchAssistantsList();
-  }, [ready, configReady]);
+  }, [isAuthenticated, ready, configReady]);
 
   useEffect(() => {
-    if (!ready || !configReady) return;
+    if (!ready || !isAuthenticated || !configReady) return;
     void syncModelPlatformsFromBackend();
-  }, [ready, configReady]);
+  }, [isAuthenticated, ready, configReady]);
 
-  useAutoAcceptInferredModelKinds(ready && configReady);
+  useAutoAcceptInferredModelKinds(ready && isAuthenticated && configReady);
 
   if (!ready || !configReady) {
     return (
