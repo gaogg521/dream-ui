@@ -199,8 +199,11 @@ curl -X POST https://work.1oneclaw.com/trial-broker/v1/stt \
   - `stt_stream_e2e.rs`）和 1 个跟本次改动无关的预存失败（品牌图标路径断言还停在改名前的值，
     `dream-core-db/src/repository/sqlite_agent_metadata.rs`，顺手修了）；第二轮全绿。
 
-**dream-ui**：`tsc --noEmit`、`oxlint`（改动文件范围内无新增 warning）、`oxfmt` 全过；vitest 详见
-本文档写入时 CLAUDE.md 更新记录（如果这轮还没来得及跑，接手人必须先跑一遍再当作"完成"）。
+**dream-ui**：`tsc --noEmit`、`oxlint`（改动文件范围内无新增 warning）、`oxfmt` 全过；vitest 已在
+交接会话（2026-09-29，全新 clone）补跑：三个语音测试文件
+（`speechModels.test.ts`、`speechSettingsUtils.test.ts`、`speechSilenceDetection.test.ts`）
+共 41 个用例全过，无 unhandled errors；`node scripts/check-i18n.js` 通过（仅有的 warning 都在
+`SessionDeliveryBlock.tsx`/`DigitalEmployeeDetailModal.tsx` 等无关文件的动态 key 上）。
 
 ## 9. 自定义来源：从用户填的端点拉取模型列表
 
