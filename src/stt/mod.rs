@@ -34,7 +34,22 @@ pub const ALIYUN_ID: &str = "aliyun";
 /// `STT_ALIYUN_BASE_URL` in case the workspace changes.
 const ALIYUN_DEFAULT_BASE_URL: &str =
     "https://ws-73nl3nntstqnhh1k.cn-beijing.maas.aliyuncs.com/api/v1";
-const ALIYUN_DEFAULT_MODEL: &str = "qwen3-asr-flash";
+
+/// Primary: the current ASR generation (2026-07, 30 languages, the seven
+/// Chinese dialect families).
+const ALIYUN_DEFAULT_MODEL: &str = "qwen-audio-3.0-asr-flash";
+
+/// Fallback, and the reason the chain has two entries at all.
+///
+/// `qwen-audio-3.0-asr-flash` answers a clip with no speech in it with
+/// `400` and an empty body — the same response it gives a malformed
+/// request, so the broker cannot tell "the user said nothing" from "we
+/// built the request wrong" (both verified against the live endpoint).
+/// `qwen3-asr-flash` answers the same clip `200` with an empty `content`
+/// array, which is a clean empty transcript. Retrying there turns a silent
+/// recording back into the quiet no-op it used to be, for every client
+/// including the shipped ones that cannot detect silence locally.
+const ALIYUN_FALLBACK_MODEL: &str = "qwen3-asr-flash";
 
 const DEFAULT_DAILY_LIMIT_PER_INSTALL: i64 = 20;
 const DEFAULT_GLOBAL_DAILY_LIMIT: i64 = 2_000;
@@ -80,12 +95,32 @@ pub fn limits_from_env() -> anyhow::Result<SttLimits> {
 /// valid deployment — mode D is simply off — not an error.
 pub fn providers_from_env(http: &reqwest::Client) -> Vec<Box<dyn Upstream>> {
     let mut providers: Vec<Box<dyn Upstream>> = Vec::new();
-    if let Some(key) = secret("STT_ALIYUN_API_KEY") {
+    let Some(key) = secret("STT_ALIYUN_API_KEY") else {
+        return providers;
+    };
+    let base_url = endpoint("STT_ALIYUN_BASE_URL", ALIYUN_DEFAULT_BASE_URL);
+
+    let primary = secret("STT_ALIYUN_MODEL").unwrap_or_else(|| ALIYUN_DEFAULT_MODEL.to_string());
+    providers.push(Box::new(AliyunUpstream::new(
+        http.clone(),
+        key.clone(),
+        base_url.clone(),
+        primary.clone(),
+        AliyunProtocol::for_model(&primary),
+    )));
+
+    // Skipped when the operator has already pinned the fallback as primary,
+    // so a `STT_ALIYUN_MODEL=qwen3-asr-flash` rollback does not call the same
+    // model twice on every failure.
+    let fallback =
+        secret("STT_ALIYUN_FALLBACK_MODEL").unwrap_or_else(|| ALIYUN_FALLBACK_MODEL.to_string());
+    if fallback != primary {
         providers.push(Box::new(AliyunUpstream::new(
             http.clone(),
             key,
-            endpoint("STT_ALIYUN_BASE_URL", ALIYUN_DEFAULT_BASE_URL),
-            secret("STT_ALIYUN_MODEL").unwrap_or_else(|| ALIYUN_DEFAULT_MODEL.to_string()),
+            base_url,
+            fallback.clone(),
+            AliyunProtocol::for_model(&fallback),
         )));
     }
     providers
@@ -202,21 +237,92 @@ pub trait Upstream: Send + Sync {
 /// `multimodal-generation` endpoint instead, with the audio given as a
 /// `data:` URI inside a chat message — verified end to end against the real
 /// API with both silence (empty `content`) and real speech (exact text back).
+/// The two incompatible request/response shapes DashScope serves ASR under.
+///
+/// Both live at `/services/aigc/multimodal-generation/generation`, and
+/// sending one model the other's shape fails — `qwen-audio-3.0-asr-flash`
+/// rejects `{"audio": …}` with an empty-bodied 400. Verified against the
+/// live endpoint for both models, with the audio inlined as a `data:` URI
+/// (raw base64 with no `data:` prefix is rejected).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AliyunProtocol {
+    /// `qwen3-asr-*`: `{"audio": "data:…"}`, transcript at
+    /// `output.choices[0].message.content[0].text`.
+    Qwen3Asr,
+    /// `qwen-audio-3.x-asr-*`: `{"type":"input_audio","input_audio":{"data":"data:…"}}`,
+    /// a required `parameters` object, transcript at `sentence.text`.
+    QwenAudio3,
+}
+
+impl AliyunProtocol {
+    /// Model families are named, not enumerated: a new dated snapshot
+    /// (`qwen-audio-3.0-asr-flash-2026-07-30`) has to keep working without a
+    /// code change, and `STT_ALIYUN_MODEL` can name one this build never saw.
+    pub fn for_model(model: &str) -> Self {
+        if model.starts_with("qwen-audio-") {
+            Self::QwenAudio3
+        } else {
+            Self::Qwen3Asr
+        }
+    }
+}
+
 pub struct AliyunUpstream {
     http: reqwest::Client,
     api_key: String,
     base_url: String,
     model: String,
+    protocol: AliyunProtocol,
 }
 
 impl AliyunUpstream {
-    pub fn new(http: reqwest::Client, api_key: String, base_url: String, model: String) -> Self {
+    pub fn new(
+        http: reqwest::Client,
+        api_key: String,
+        base_url: String,
+        model: String,
+        protocol: AliyunProtocol,
+    ) -> Self {
         Self {
             http,
             api_key,
             base_url,
             model,
+            protocol,
         }
+    }
+
+    fn request_body(&self, data_uri: String) -> serde_json::Value {
+        match self.protocol {
+            AliyunProtocol::Qwen3Asr => serde_json::json!({
+                "model": self.model,
+                "input": { "messages": [ { "role": "user", "content": [ { "audio": data_uri } ] } ] }
+            }),
+            // `parameters` is required — omitting it is an empty-bodied 400.
+            // The values are not validated against the clip (a wav declared
+            // as mp3 still transcribed), so they are a fixed, honest-enough
+            // declaration rather than a guess derived from the MIME type.
+            AliyunProtocol::QwenAudio3 => serde_json::json!({
+                "model": self.model,
+                "input": { "messages": [ { "role": "user", "content": [
+                    { "type": "input_audio", "input_audio": { "data": data_uri } }
+                ] } ] },
+                "parameters": { "format": "wav", "sample_rate": "16000" }
+            }),
+        }
+    }
+
+    fn extract_transcript(&self, payload: &serde_json::Value) -> String {
+        let pointer = match self.protocol {
+            AliyunProtocol::Qwen3Asr => "/output/choices/0/message/content/0/text",
+            AliyunProtocol::QwenAudio3 => "/sentence/text",
+        };
+        payload
+            .pointer(pointer)
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .trim()
+            .to_string()
     }
 }
 
@@ -236,15 +342,7 @@ impl Upstream for AliyunUpstream {
             "{}/services/aigc/multimodal-generation/generation",
             self.base_url.trim_end_matches('/')
         );
-        let data_uri = format!("data:{mime_type};base64,{audio_base64}");
-        let body = serde_json::json!({
-            "model": self.model,
-            "input": {
-                "messages": [
-                    { "role": "user", "content": [ { "audio": data_uri } ] }
-                ]
-            }
-        });
+        let body = self.request_body(format!("data:{mime_type};base64,{audio_base64}"));
 
         let response = self
             .http
@@ -274,44 +372,80 @@ impl Upstream for AliyunUpstream {
             UpstreamFailure::Malformed(format!("non-JSON body: {head}"))
         })?;
 
-        // An empty `content` array is how the model answers silence — a
-        // legitimate empty transcript, not a malformed response.
-        let transcript = payload
-            .pointer("/output/choices/0/message/content/0/text")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .trim()
-            .to_string();
-        Ok(transcript)
+        // A missing transcript is a legitimate empty answer, not a malformed
+        // response: `qwen3-asr-*` reports silence as an empty `content` array.
+        Ok(self.extract_transcript(&payload))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    /// Mirrors the exact body shape verified against a live 200 (see
-    /// `AliyunUpstream::transcribe`'s doc comment): the audio rides as a
-    /// `data:` URI inside a single chat message.
+    use super::*;
+
+    fn upstream(model: &str) -> AliyunUpstream {
+        AliyunUpstream::new(
+            reqwest::Client::new(),
+            "key".into(),
+            "https://example.invalid/api/v1".into(),
+            model.to_string(),
+            AliyunProtocol::for_model(model),
+        )
+    }
+
+    /// The families are matched by name so a dated snapshot, or a model this
+    /// build has never heard of, still picks a shape instead of failing.
     #[test]
-    fn request_shape_matches_the_live_verified_call() {
-        let data_uri = format!("data:{};base64,{}", "audio/wav", "AAAA");
-        let body = serde_json::json!({
-            "model": "qwen3-asr-flash",
-            "input": {
-                "messages": [
-                    { "role": "user", "content": [ { "audio": data_uri } ] }
-                ]
-            }
-        });
+    fn protocol_is_chosen_by_model_family() {
+        assert_eq!(
+            AliyunProtocol::for_model("qwen-audio-3.0-asr-flash"),
+            AliyunProtocol::QwenAudio3
+        );
+        assert_eq!(
+            AliyunProtocol::for_model("qwen-audio-3.1-asr-flash"),
+            AliyunProtocol::QwenAudio3
+        );
+        assert_eq!(
+            AliyunProtocol::for_model("qwen3-asr-flash"),
+            AliyunProtocol::Qwen3Asr
+        );
+        assert_eq!(
+            AliyunProtocol::for_model("qwen3-asr-flash-2026-02-10"),
+            AliyunProtocol::Qwen3Asr
+        );
+    }
+
+    /// Mirrors the body shape verified against a live 200: the audio rides as
+    /// a `data:` URI inside a single chat message.
+    #[test]
+    fn qwen3_request_shape_matches_the_live_verified_call() {
+        let body = upstream("qwen3-asr-flash").request_body("data:audio/wav;base64,AAAA".into());
         assert_eq!(body["model"], "qwen3-asr-flash");
+        assert_eq!(body["input"]["messages"][0]["role"], "user");
         assert_eq!(
             body["input"]["messages"][0]["content"][0]["audio"],
             "data:audio/wav;base64,AAAA"
         );
-        assert_eq!(body["input"]["messages"][0]["role"], "user");
+        assert!(body.get("parameters").is_none());
+    }
+
+    /// The other family needs the OpenAI-style `input_audio` item AND a
+    /// `parameters` object — omitting the latter is an empty-bodied 400.
+    #[test]
+    fn qwen_audio_request_shape_carries_input_audio_and_required_parameters() {
+        let body =
+            upstream("qwen-audio-3.0-asr-flash").request_body("data:audio/webm;base64,AAAA".into());
+        assert_eq!(body["model"], "qwen-audio-3.0-asr-flash");
+        let item = &body["input"]["messages"][0]["content"][0];
+        assert_eq!(item["type"], "input_audio");
+        assert_eq!(item["input_audio"]["data"], "data:audio/webm;base64,AAAA");
+        assert_eq!(body["parameters"]["format"], "wav");
+        assert_eq!(body["parameters"]["sample_rate"], "16000");
+        // The old shape must not leak in: this model rejects a bare `audio`.
+        assert!(item.get("audio").is_none());
     }
 
     #[test]
-    fn extracts_transcript_from_a_live_shaped_response() {
+    fn extracts_transcript_from_a_live_shaped_qwen3_response() {
         let payload = serde_json::json!({
             "output": { "choices": [ { "finish_reason": "stop", "message": {
                 "content": [ { "text": "Hello, this is a test." } ],
@@ -320,18 +454,36 @@ mod tests {
             "usage": { "audio_tokens": 102 },
             "request_id": "x"
         });
-        let text = payload
-            .pointer("/output/choices/0/message/content/0/text")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .trim()
-            .to_string();
-        assert_eq!(text, "Hello, this is a test.");
+        assert_eq!(
+            upstream("qwen3-asr-flash").extract_transcript(&payload),
+            "Hello, this is a test."
+        );
+    }
+
+    /// Captured from a live call: this family answers at `sentence.text`,
+    /// nowhere near the other one's `output.choices`.
+    #[test]
+    fn extracts_transcript_from_a_live_shaped_qwen_audio_response() {
+        let payload = serde_json::json!({
+            "sentence": {
+                "sentence_id": 1,
+                "begin_time": 160,
+                "end_time": 1698,
+                "text": "欢迎使用阿里云。",
+                "sentence_end": true,
+                "words": [ { "text": "欢迎" } ]
+            }
+        });
+        assert_eq!(
+            upstream("qwen-audio-3.0-asr-flash").extract_transcript(&payload),
+            "欢迎使用阿里云。"
+        );
     }
 
     /// Captured from a live call against a silent clip: `content` comes back
-    /// as an empty array with no `text` field at all, not a null/empty
-    /// string. Must resolve to an empty transcript, not an error.
+    /// as an empty array with no `text` field at all. Must resolve to an
+    /// empty transcript, not an error — this is the behaviour the fallback
+    /// model exists to preserve.
     #[test]
     fn empty_content_array_is_an_empty_transcript_not_an_error() {
         let payload = serde_json::json!({
@@ -340,12 +492,17 @@ mod tests {
                 "role": "assistant"
             } } ] }
         });
-        let text = payload
-            .pointer("/output/choices/0/message/content/0/text")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .trim()
-            .to_string();
-        assert_eq!(text, "");
+        assert_eq!(upstream("qwen3-asr-flash").extract_transcript(&payload), "");
+    }
+
+    /// Reading one family's response with the other's pointer must yield an
+    /// empty transcript rather than panicking or inventing text.
+    #[test]
+    fn a_response_in_the_other_familys_shape_yields_no_transcript() {
+        let qwen_audio = serde_json::json!({ "sentence": { "text": "hi" } });
+        assert_eq!(
+            upstream("qwen3-asr-flash").extract_transcript(&qwen_audio),
+            ""
+        );
     }
 }
