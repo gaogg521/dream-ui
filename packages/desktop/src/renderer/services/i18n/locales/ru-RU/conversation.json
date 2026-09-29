@@ -913,6 +913,12 @@
   },
   "mediaIntentSwitchedImage": "Переключено на генерацию изображений. Отправьте ещё раз, чтобы создать.",
   "mediaIntentSwitchedVideo": "Переключено на генерацию видео. Отправьте ещё раз, чтобы создать.",
+  "mediaIntentConfirmTitle": "Создать изображение или видео?",
+  "mediaIntentConfirmImage": "Похоже, это запрос на изображение. Переключиться на генерацию изображений?",
+  "mediaIntentConfirmVideo": "Похоже, это запрос на видео. Переключиться на генерацию видео?",
+  "mediaIntentConfirmSwitchImage": "Создать изображение",
+  "mediaIntentConfirmSwitchVideo": "Создать видео",
+  "mediaIntentKeepChat": "Продолжить чат",
   "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",

@@ -895,6 +895,12 @@
   },
   "mediaIntentSwitchedImage": "به حالت ساخت تصویر تغییر کرد. برای ساخت دوباره ارسال کنید.",
   "mediaIntentSwitchedVideo": "به حالت ساخت ویدیو تغییر کرد. برای ساخت دوباره ارسال کنید.",
+  "mediaIntentConfirmTitle": "تصویر یا ویدیو تولید شود؟",
+  "mediaIntentConfirmImage": "این پیام شبیه درخواست تصویر است. به تولید تصویر تغییر دهیم؟",
+  "mediaIntentConfirmVideo": "این پیام شبیه درخواست ویدیو است. به تولید ویدیو تغییر دهیم؟",
+  "mediaIntentConfirmSwitchImage": "تولید تصویر",
+  "mediaIntentConfirmSwitchVideo": "تولید ویدیو",
+  "mediaIntentKeepChat": "ادامه گفتگو",
   "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",

@@ -911,6 +911,12 @@
   },
   "mediaIntentSwitchedImage": "Switched to image generation. Press send again to generate.",
   "mediaIntentSwitchedVideo": "Switched to video generation. Press send again to generate.",
+  "mediaIntentConfirmTitle": "Create an image or video?",
+  "mediaIntentConfirmImage": "This message looks like an image request. Switch to image generation?",
+  "mediaIntentConfirmVideo": "This message looks like a video request. Switch to video generation?",
+  "mediaIntentConfirmSwitchImage": "Generate image",
+  "mediaIntentConfirmSwitchVideo": "Generate video",
+  "mediaIntentKeepChat": "Keep chatting",
   "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",

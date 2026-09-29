@@ -895,6 +895,12 @@
   },
   "mediaIntentSwitchedImage": "이미지 생성 모드로 전환했습니다. 다시 보내면 생성합니다.",
   "mediaIntentSwitchedVideo": "동영상 생성 모드로 전환했습니다. 다시 보내면 생성합니다.",
+  "mediaIntentConfirmTitle": "이미지 또는 동영상을 생성할까요?",
+  "mediaIntentConfirmImage": "이 메시지는 이미지 생성 요청으로 보입니다. 이미지 생성으로 전환할까요?",
+  "mediaIntentConfirmVideo": "이 메시지는 동영상 생성 요청으로 보입니다. 동영상 생성으로 전환할까요?",
+  "mediaIntentConfirmSwitchImage": "이미지 생성",
+  "mediaIntentConfirmSwitchVideo": "동영상 생성",
+  "mediaIntentKeepChat": "텍스트 채팅 계속",
   "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",

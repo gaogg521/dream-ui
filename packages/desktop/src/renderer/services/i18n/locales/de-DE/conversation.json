@@ -896,6 +896,12 @@
   },
   "mediaIntentSwitchedImage": "Zur Bildgenerierung gewechselt. Erneut senden, um zu generieren.",
   "mediaIntentSwitchedVideo": "Zur Videogenerierung gewechselt. Erneut senden, um zu generieren.",
+  "mediaIntentConfirmTitle": "Bild oder Video erstellen?",
+  "mediaIntentConfirmImage": "Diese Nachricht wirkt wie eine Bildanfrage. Zur Bildgenerierung wechseln?",
+  "mediaIntentConfirmVideo": "Diese Nachricht wirkt wie eine Videoanfrage. Zur Videogenerierung wechseln?",
+  "mediaIntentConfirmSwitchImage": "Bild erstellen",
+  "mediaIntentConfirmSwitchVideo": "Video erstellen",
+  "mediaIntentKeepChat": "Weiter chatten",
   "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",

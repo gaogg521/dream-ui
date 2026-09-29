@@ -8,6 +8,7 @@ import { modelKindLabelOf } from '@/common/utils/modelCapabilities';
 import { detectMediaIntent } from '@/common/media/detectMediaIntent';
 import MediaModeControl from '@/renderer/components/media/MediaModeControl';
 import { useMediaComposer } from '@/renderer/hooks/media/useMediaComposer';
+import { useMediaIntentConfirmation } from '@/renderer/hooks/media/useMediaIntentConfirmation';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import AgentModeSelector from '@/renderer/components/agent/AgentModeSelector';
 import ContextUsageIndicator from '@/renderer/components/agent/ContextUsageIndicator';
@@ -166,6 +167,7 @@ const DreamEngineSendBox: React.FC<{
       status: 'loaded',
     }));
   const { t, i18n } = useTranslation();
+  const confirmMediaIntent = useMediaIntentConfirmation();
   const { agents: managedAgents } = useManagedAgents();
   // 'dream' is this send box's own backend; the catalog is what turns it into
   // the product name the rest of the UI uses.
@@ -489,9 +491,10 @@ const DreamEngineSendBox: React.FC<{
     if (mediaComposer.mode === 'off') {
       const intent = detectMediaIntent(message);
       if (intent && mediaComposer.hasModelFor(intent)) {
-        mediaComposer.changeMode(intent);
-        Message.info(
-          t(intent === 'video' ? 'conversation.mediaIntentSwitchedVideo' : 'conversation.mediaIntentSwitchedImage')
+        confirmMediaIntent(
+          intent,
+          (mode) => mediaComposer.hasModelFor(mode),
+          (mode) => mediaComposer.changeMode(mode)
         );
         return false;
       }

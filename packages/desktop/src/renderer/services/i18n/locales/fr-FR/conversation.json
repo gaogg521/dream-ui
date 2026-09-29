@@ -895,6 +895,12 @@
   },
   "mediaIntentSwitchedImage": "Passé en génération d'images. Renvoyez pour générer.",
   "mediaIntentSwitchedVideo": "Passé en génération de vidéos. Renvoyez pour générer.",
+  "mediaIntentConfirmTitle": "Créer une image ou une vidéo ?",
+  "mediaIntentConfirmImage": "Ce message semble demander une image. Passer à la génération d'images ?",
+  "mediaIntentConfirmVideo": "Ce message semble demander une vidéo. Passer à la génération de vidéos ?",
+  "mediaIntentConfirmSwitchImage": "Créer une image",
+  "mediaIntentConfirmSwitchVideo": "Créer une vidéo",
+  "mediaIntentKeepChat": "Continuer à discuter",
   "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",

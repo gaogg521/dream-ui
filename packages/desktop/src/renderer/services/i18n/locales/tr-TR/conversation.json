@@ -897,6 +897,12 @@
   },
   "mediaIntentSwitchedImage": "Görsel üretimine geçildi. Oluşturmak için tekrar gönderin.",
   "mediaIntentSwitchedVideo": "Video üretimine geçildi. Oluşturmak için tekrar gönderin.",
+  "mediaIntentConfirmTitle": "Görsel mi video mu oluşturulsun?",
+  "mediaIntentConfirmImage": "Bu mesaj bir görsel isteği gibi görünüyor. Görsel üretimine geçilsin mi?",
+  "mediaIntentConfirmVideo": "Bu mesaj bir video isteği gibi görünüyor. Video üretimine geçilsin mi?",
+  "mediaIntentConfirmSwitchImage": "Görsel oluştur",
+  "mediaIntentConfirmSwitchVideo": "Video oluştur",
+  "mediaIntentKeepChat": "Sohbete devam et",
   "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",

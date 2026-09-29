@@ -911,6 +911,12 @@
   },
   "mediaIntentSwitchedImage": "已切换到图片生成模式，再次发送即可生成。",
   "mediaIntentSwitchedVideo": "已切换到视频生成模式，再次发送即可生成。",
+  "mediaIntentConfirmTitle": "要生成图片还是视频？",
+  "mediaIntentConfirmImage": "这条消息看起来是在请求生成图片。要切换到图片生成吗？",
+  "mediaIntentConfirmVideo": "这条消息看起来是在请求生成视频。要切换到视频生成吗？",
+  "mediaIntentConfirmSwitchImage": "生成图片",
+  "mediaIntentConfirmSwitchVideo": "生成视频",
+  "mediaIntentKeepChat": "继续文字聊天",
   "sessionDelivery": {
     "replyRequested": "要求收件会话回信",
     "pickSession": "输入 @@ 可选择其他会话（插入 @@conv:<id>）",

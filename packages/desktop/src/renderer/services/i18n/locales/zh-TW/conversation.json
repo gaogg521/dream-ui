@@ -897,6 +897,12 @@
   },
   "mediaIntentSwitchedImage": "已切換到圖片生成模式，再次傳送即可生成。",
   "mediaIntentSwitchedVideo": "已切換到影片生成模式，再次傳送即可生成。",
+  "mediaIntentConfirmTitle": "要生成圖片還是影片？",
+  "mediaIntentConfirmImage": "這則訊息看起來是在請求生成圖片。要切換到圖片生成嗎？",
+  "mediaIntentConfirmVideo": "這則訊息看起來是在請求生成影片。要切換到影片生成嗎？",
+  "mediaIntentConfirmSwitchImage": "生成圖片",
+  "mediaIntentConfirmSwitchVideo": "生成影片",
+  "mediaIntentKeepChat": "繼續文字聊天",
   "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",

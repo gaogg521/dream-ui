@@ -895,6 +895,12 @@
   },
   "mediaIntentSwitchedImage": "画像生成モードに切り替えました。もう一度送信すると生成します。",
   "mediaIntentSwitchedVideo": "動画生成モードに切り替えました。もう一度送信すると生成します。",
+  "mediaIntentConfirmTitle": "画像または動画を生成しますか？",
+  "mediaIntentConfirmImage": "このメッセージは画像の生成依頼のようです。画像生成に切り替えますか？",
+  "mediaIntentConfirmVideo": "このメッセージは動画の生成依頼のようです。動画生成に切り替えますか？",
+  "mediaIntentConfirmSwitchImage": "画像を生成",
+  "mediaIntentConfirmSwitchVideo": "動画を生成",
+  "mediaIntentKeepChat": "テキスト会話を続ける",
   "sessionDelivery": {
     "replyRequested": "Request reply from recipient session",
     "pickSession": "Type @@ to pick another session (inserts @@conv:<id>)",

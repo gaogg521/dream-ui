@@ -9,6 +9,7 @@ import ModelKindTag from '@/renderer/components/settings/ModelKindTag';
 import { detectMediaIntent } from '@/common/media/detectMediaIntent';
 import MediaModeControl from '@/renderer/components/media/MediaModeControl';
 import { useMediaComposer } from '@/renderer/hooks/media/useMediaComposer';
+import { useMediaIntentConfirmation } from '@/renderer/hooks/media/useMediaIntentConfirmation';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import ContextUsageIndicator from '@/renderer/components/agent/ContextUsageIndicator';
 import EnterpriseSceneContext from '@/renderer/components/enterprise/EnterpriseSceneContext';
@@ -146,6 +147,7 @@ const AcpSendBox: React.FC<{
     context_limit,
   } = messageState;
   const { t } = useTranslation();
+  const confirmMediaIntent = useMediaIntentConfirmation();
   const teamPermission = useTeamPermission();
   // In team mode, all agents show the permission mode selector (members don't propagate)
   const showModeSelector = true;
@@ -474,9 +476,10 @@ Please check your local CLI tool authentication status`,
     if (mediaComposer.mode === 'off') {
       const intent = detectMediaIntent(message);
       if (intent && mediaComposer.hasModelFor(intent)) {
-        mediaComposer.changeMode(intent);
-        Message.info(
-          t(intent === 'video' ? 'conversation.mediaIntentSwitchedVideo' : 'conversation.mediaIntentSwitchedImage')
+        confirmMediaIntent(
+          intent,
+          (mode) => mediaComposer.hasModelFor(mode),
+          (mode) => mediaComposer.changeMode(mode)
         );
         return false;
       }
