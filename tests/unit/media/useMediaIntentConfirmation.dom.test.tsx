@@ -76,4 +76,19 @@ describe('useMediaIntentConfirmation', () => {
     expect(onConfirm).toHaveBeenCalledWith('video');
     expect(messageInfo).toHaveBeenCalledWith('conversation.mediaIntentSwitchedVideo');
   });
+
+  it('allows an image-looking prompt to be deliberately routed to video', () => {
+    const onConfirm = vi.fn();
+    const { result } = renderHook(() => useMediaIntentConfirmation());
+
+    act(() => result.current('image', () => true, onConfirm));
+    const options = modalConfirm.mock.calls[0]?.[0] as ConfirmationOptions;
+    const buttons = Children.toArray(options.footer.props.children) as ReactElement[];
+    const generateVideo = buttons[2]?.props.onClick;
+
+    expect(generateVideo).toBeTypeOf('function');
+    act(() => (generateVideo as () => void)());
+
+    expect(onConfirm).toHaveBeenCalledWith('video');
+  });
 });
