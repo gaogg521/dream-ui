@@ -152,7 +152,31 @@ curl -X POST https://work.1oneclaw.com/trial-broker/v1/stt \
 **dream-ui**：`tsc --noEmit`、`oxlint`（改动文件范围内无新增 warning）、`oxfmt` 全过；vitest 详见
 本文档写入时 CLAUDE.md 更新记录（如果这轮还没来得及跑，接手人必须先跑一遍再当作"完成"）。
 
-## 8. 已知限制 / 后续可做
+## 8. 自定义来源：从用户填的端点拉取模型列表
+
+"自定义（OpenAI 兼容）"原来只给三个 OpenAI 预设 + 手输。现在填好 Base URL 后可以点「拉取模型」，
+复用已有的 `POST /api/providers/fetch-models`（匿名、建渠道前就能调；`platform: 'openai'` 走
+dreamcore 的 OpenAI 兼容 fetcher，它按字面往 base_url 后面接 `/models`，正好匹配这个字段要求的
+`https://host/v1` 写法）。
+
+**列表只是便利，不是承诺**——这点必须在 UI 上说清楚，实测依据如下：
+
+| 实测项                                          | 结果                                                                                                                                                                     |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET {阿里云兼容端点}/v1/models`                | 200，261 个模型，标准 OpenAI 形状 `{id, object, created, owned_by}`——**只有 id，没有模态**                                                                               |
+| 阿里云自有富接口 `GET /api/v1/models`           | 200，518 个，带 `name`/`description`/`features`；但 `features` 是 function-calling/cache 这类能力，**`qwen-audio-3.1-asr-flash` 的 features 是 `[]`，TTS 模型也是 `[]`** |
+| `POST {阿里云兼容端点}/v1/audio/transcriptions` | **404**——公共 `dashscope.aliyuncs.com/compatible-mode/v1` 和工作区专属 `ws-xxx.../compatible-mode/v1` **两个都是 404**                                                   |
+
+也就是说：**阿里云能列出 6 个 ASR 模型，但一个都不能通过 OpenAI 兼容路径调用**——它根本没实现转写
+接口，这正是内置（mode D）不得不走 DashScope 私有 `multimodal-generation` 的原因。所以这个功能对
+阿里云用户是"列得出、用不了"，UI 上那句"能否用于转写以「保存并测试」为准"不是免责套话，是实测结论。
+阿里云的正解是**用内置（默认）**。
+
+名字启发式 `looksLikeTranscriptionModel`（`renderer/services/speech/speechModels.ts`）**刻意比
+媒体目录的 `audio` hint 窄**：后者把 `tts`/`voice`/`realtime` 也算 audio，对"这是不是音频模型"是对的，
+对转写选择器是错的——把一个 TTS 模型推荐给转写，只是多绕一圈再失败。它只做**排序**，不隐藏任何模型。
+
+## 9. 已知限制 / 后续可做
 
 - Mode D 只做了整段批量转写（`/api/stt`），**没有实时流式**——`stt_stream_provider.rs` 对
   `Hosted` 直接返回 `STT_STREAM_UNSUPPORTED`，前端已有的"流式失败自动退化到整段"逻辑会接住，

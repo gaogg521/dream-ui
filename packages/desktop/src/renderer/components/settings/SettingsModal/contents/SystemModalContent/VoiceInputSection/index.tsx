@@ -8,8 +8,8 @@ import { ipcBridge } from '@/common';
 import DreamSelect from '@/renderer/components/base/DreamSelect';
 import { SPEECH_TO_TEXT_CONFIG_CHANGED_EVENT } from '@/renderer/services/SpeechToTextService';
 import { getClientBusinessSetting, setClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
-import { getModelStreamCapability } from '@/renderer/services/speech/speechStreamPolicy';
-import { Divider, Form, Input, Switch } from '@arco-design/web-react';
+import { sortModelsForTranscription } from '@/renderer/services/speech/speechModels';
+import { Button, Divider, Form, Input, Switch } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import SpeechTestPanel from './SpeechTestPanel';
@@ -54,6 +54,11 @@ const VoiceInputSection: React.FC = () => {
   const [source, setSource] = useState<SpeechSource>('hosted');
   const [configuredProviders, setConfiguredProviders] = useState<IProvider[]>([]);
   const lastCustomBaseUrlRef = useRef('');
+  // `null` = never fetched. An empty array is a real answer (the endpoint
+  // listed nothing) and must render differently from "not asked yet".
+  const [fetchedModels, setFetchedModels] = useState<string[] | null>(null);
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const [fetchModelsError, setFetchModelsError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -212,6 +217,56 @@ const VoiceInputSection: React.FC = () => {
     [handleOpenAIChange]
   );
 
+  /**
+   * Ask the endpoint the user typed what models it serves.
+   *
+   * Reuses the provider form's anonymous `fetch-models` (no provider row
+   * needed); `platform: 'openai'` selects dreamcore's OpenAI-compatible
+   * fetcher, which appends `/models` to the base URL as written — the same
+   * `https://host/v1` shape this field already asks for.
+   *
+   * The list is a convenience, never a promise: `/v1/models` returns bare ids
+   * with no modality, so a served model may not be a transcription model, and
+   * an endpoint can list ASR models while not implementing
+   * `/audio/transcriptions` at all (Aliyun's compatible-mode does exactly
+   * that — it answers 404). Hence "保存并测试" stays the only real proof.
+   */
+  const handleFetchModels = useCallback(async () => {
+    const baseUrl = customBaseUrl.trim();
+    if (!isValidHttpUrl(baseUrl)) {
+      setFetchModelsError(t('settings.speechToTextBaseUrlInvalid'));
+      return;
+    }
+    setIsFetchingModels(true);
+    setFetchModelsError(null);
+    try {
+      const response = await ipcBridge.mode.fetchModelList.invoke({
+        platform: 'openai',
+        base_url: baseUrl,
+        api_key: activeApiKey,
+      });
+      const ids = (response?.models ?? []).map((model) => (typeof model === 'string' ? model : model.id));
+      setFetchedModels(sortModelsForTranscription(ids));
+    } catch (error) {
+      setFetchedModels(null);
+      setFetchModelsError(
+        `${t('settings.speechToTextFetchModelsFailed')}: ${error instanceof Error ? error.message : String(error)}`
+      );
+    } finally {
+      setIsFetchingModels(false);
+    }
+  }, [activeApiKey, customBaseUrl, t]);
+
+  // A fetched list belongs to the endpoint it came from; once the user edits
+  // the URL or the key it is stale, so drop it rather than offer models the
+  // new endpoint may not serve.
+  useEffect(() => {
+    setFetchedModels(null);
+    setFetchModelsError(null);
+  }, [customBaseUrl, activeApiKey]);
+
+  const modelOptions = fetchedModels ?? modelPresets;
+
   return (
     <div className='px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px border border-2'>
       <div className='flex items-center justify-between gap-12px mb-8px'>
@@ -285,32 +340,39 @@ const VoiceInputSection: React.FC = () => {
 
             {isCustom && (
               <Form.Item label={t('settings.speechToTextModel')}>
-                <DreamSelect
-                  value={activeModel || undefined}
-                  onChange={handleModelChange}
-                  // Presets are convenience defaults, not an allowlist. Providers
-                  // add and retire transcription models independently, so every
-                  // source must let the user enter its current model identifier.
-                  allowCreate
-                  showSearch
-                  placeholder={t('settings.speechToTextModelPlaceholder')}
-                >
-                  {buildModelOptions(modelPresets, activeModel).map((model) => {
-                    const capability = getModelStreamCapability('custom', model);
-                    const badgeText =
-                      capability === 'supported'
-                        ? t('settings.speechToTextStreamingBadge')
-                        : capability === 'unsupported'
-                          ? t('settings.speechToTextWholeBadge')
-                          : null;
-                    return (
+                <div className='flex items-center gap-8px'>
+                  <DreamSelect
+                    className='flex-1'
+                    value={activeModel || undefined}
+                    onChange={handleModelChange}
+                    // Presets are convenience defaults, not an allowlist. Providers
+                    // add and retire transcription models independently, so every
+                    // source must let the user enter its current model identifier.
+                    allowCreate
+                    showSearch
+                    placeholder={t('settings.speechToTextModelPlaceholder')}
+                  >
+                    {buildModelOptions(modelOptions, activeModel).map((model) => (
                       <DreamSelect.Option key={model} value={model}>
                         {model}
-                        {badgeText !== null && <span className='text-12px text-t-tertiary ms-8px'>{badgeText}</span>}
                       </DreamSelect.Option>
-                    );
-                  })}
-                </DreamSelect>
+                    ))}
+                  </DreamSelect>
+                  <Button
+                    size='small'
+                    loading={isFetchingModels}
+                    disabled={!isValidHttpUrl(customBaseUrl)}
+                    onClick={() => void handleFetchModels()}
+                  >
+                    {t('settings.speechToTextFetchModels')}
+                  </Button>
+                </div>
+                {fetchModelsError !== null && <div className='mt-6px text-12px text-danger-6'>{fetchModelsError}</div>}
+                {fetchedModels !== null && fetchModelsError === null && (
+                  <div className='mt-6px text-12px text-t-tertiary'>
+                    {t('settings.speechToTextFetchModelsHint', { count: fetchedModels.length })}
+                  </div>
+                )}
               </Form.Item>
             )}
 

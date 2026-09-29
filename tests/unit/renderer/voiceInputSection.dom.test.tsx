@@ -14,12 +14,14 @@ const speechSettingsMocks = vi.hoisted(() => ({
   getClientBusinessSetting: vi.fn(),
   listProviders: vi.fn(() => Promise.resolve([])),
   setClientBusinessSetting: vi.fn(() => Promise.resolve()),
+  fetchModelList: vi.fn(() => Promise.resolve({ models: [] })),
 }));
 
 vi.mock('@/common', () => ({
   ipcBridge: {
     mode: {
       listProviders: { invoke: speechSettingsMocks.listProviders },
+      fetchModelList: { invoke: speechSettingsMocks.fetchModelList },
     },
   },
 }));
@@ -42,6 +44,7 @@ describe('VoiceInputSection', () => {
     speechSettingsMocks.getClientBusinessSetting.mockResolvedValue(undefined);
     speechSettingsMocks.listProviders.mockResolvedValue([]);
     speechSettingsMocks.setClientBusinessSetting.mockResolvedValue(undefined);
+    speechSettingsMocks.fetchModelList.mockResolvedValue({ models: [] });
     // jsdom does not implement matchMedia; arco-design's responsive Grid needs it
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
@@ -181,6 +184,59 @@ describe('VoiceInputSection', () => {
         })
       );
     });
+  });
+
+  const renderCustomSource = async (overrides: Partial<NonNullable<SpeechToTextConfig['openai']>> = {}) => {
+    configStore.value = {
+      enabled: true,
+      provider: 'openai',
+      openai: { api_key: 'k', base_url: 'https://my-host/v1', model: 'gpt-4o-transcribe', language: '', ...overrides },
+    };
+    speechSettingsMocks.getClientBusinessSetting.mockResolvedValue(configStore.value);
+    render(<VoiceInputSection />);
+    await waitFor(() => expect(screen.getByText('settings.speechToTextSource')).toBeTruthy());
+  };
+
+  it('fetches the model list from the endpoint the user typed', async () => {
+    speechSettingsMocks.fetchModelList.mockResolvedValue({
+      models: ['qwen3.8-max', 'qwen3-asr-flash', { id: 'whisper-1', name: 'Whisper' }],
+    });
+    await renderCustomSource();
+
+    fireEvent.click(screen.getByText('settings.speechToTextFetchModels'));
+
+    await waitFor(() => expect(speechSettingsMocks.fetchModelList).toHaveBeenCalledTimes(1));
+    expect(speechSettingsMocks.fetchModelList).toHaveBeenCalledWith({
+      platform: 'openai',
+      base_url: 'https://my-host/v1',
+      api_key: 'k',
+    });
+
+    // The caveat must stay on screen: a served model is not a promise that it
+    // transcribes (Aliyun lists ASR models and answers 404 on the endpoint).
+    await waitFor(() => expect(screen.getByText(/speechToTextFetchModelsHint/)).toBeTruthy());
+
+    // Fetched models replace the presets, likely transcription models first.
+    const selects = document.querySelectorAll('.arco-select');
+    fireEvent.click(selects[1] as Element);
+    await waitFor(() => expect(screen.getAllByText('qwen3-asr-flash').length).toBeGreaterThan(0));
+    expect(screen.getAllByText('qwen3.8-max').length).toBeGreaterThan(0);
+  });
+
+  it('surfaces a fetch failure instead of silently keeping the presets', async () => {
+    speechSettingsMocks.fetchModelList.mockRejectedValue(new Error('404 Not Found'));
+    await renderCustomSource();
+
+    fireEvent.click(screen.getByText('settings.speechToTextFetchModels'));
+
+    await waitFor(() => expect(screen.getByText(/speechToTextFetchModelsFailed.*404 Not Found/)).toBeTruthy());
+    expect(screen.queryByText(/speechToTextFetchModelsHint/)).toBeNull();
+  });
+
+  it('cannot fetch before a valid base_url is entered', async () => {
+    await renderCustomSource({ base_url: 'not-a-url' });
+    const button = screen.getByText('settings.speechToTextFetchModels').closest('button');
+    expect(button?.disabled).toBe(true);
   });
 
   it("custom mode never shows a streaming/batch badge, since a custom endpoint's capability is unknown", async () => {
