@@ -135,7 +135,7 @@ describe('start frame', () => {
     expect(sock.sentText).toHaveLength(0);
     sock.open();
     expect(sock.sentText[0]).toBe(
-      '{"type":"start","format":"pcm16","sampleRate":24000,"channels":1,"languageHint":"zh"}'
+      '{"type":"start","format":"pcm16","sampleRate":16000,"channels":1,"languageHint":"zh"}'
     );
     expect(sock.sentAll[0]).toBe(sock.sentText[0]);
   });
@@ -145,12 +145,12 @@ describe('start frame', () => {
     startSpeechStream({ callbacks, createSocket });
     const sock1 = lastSocket();
     sock1.open();
-    expect(sock1.sentText[0]).toBe('{"type":"start","format":"pcm16","sampleRate":24000,"channels":1}');
+    expect(sock1.sentText[0]).toBe('{"type":"start","format":"pcm16","sampleRate":16000,"channels":1}');
 
     startSpeechStream({ languageHint: '', callbacks: makeCallbacks(), createSocket });
     const sock2 = lastSocket();
     sock2.open();
-    expect(sock2.sentText[0]).toBe('{"type":"start","format":"pcm16","sampleRate":24000,"channels":1}');
+    expect(sock2.sentText[0]).toBe('{"type":"start","format":"pcm16","sampleRate":16000,"channels":1}');
   });
 });
 

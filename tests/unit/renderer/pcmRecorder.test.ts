@@ -14,9 +14,9 @@ import {
 } from '@renderer/services/speech/pcmRecorder';
 
 describe('constants', () => {
-  it('exposes the 24kHz streaming rate and 200ms chunk size', () => {
-    expect(STREAM_SAMPLE_RATE).toBe(24000);
-    expect(STREAM_CHUNK_SAMPLES).toBe(4800);
+  it('exposes the 16kHz streaming rate and 100ms chunk size', () => {
+    expect(STREAM_SAMPLE_RATE).toBe(16000);
+    expect(STREAM_CHUNK_SAMPLES).toBe(1600);
   });
 });
 

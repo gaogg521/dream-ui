@@ -6,17 +6,17 @@
  * PCM capture recorder for streaming speech-to-text.
  *
  * Captures raw microphone audio via an AudioWorklet, converts it to 16-bit
- * PCM at 24kHz mono (the format required by the streaming `/api/stt/stream`
+ * PCM at 16kHz mono (the low-latency format used by the hosted streaming ASR
  * endpoint), and emits fixed-size chunks while recording. Also provides a WAV
  * encoder so the accumulated PCM can be replayed through the whole-blob
  * `/api/stt` fallback when streaming fails mid-session.
  */
 
-/** Sample rate (Hz) required by the streaming transcription endpoint. */
-export const STREAM_SAMPLE_RATE = 24000;
+/** Sample rate (Hz) for hosted near-field streaming transcription. */
+export const STREAM_SAMPLE_RATE = 16000;
 
-/** Samples per emitted chunk at STREAM_SAMPLE_RATE (200ms). */
-export const STREAM_CHUNK_SAMPLES = 4800;
+/** Samples per emitted chunk at STREAM_SAMPLE_RATE (100ms). */
+export const STREAM_CHUNK_SAMPLES = 1600;
 
 // ---------------------------------------------------------------------------
 // Pure helpers
@@ -131,9 +131,9 @@ registerProcessor('${PROCESSOR_NAME}', PcmCaptureProcessor);
 `;
 
 /**
- * Start capturing microphone audio as PCM16 24kHz mono.
+ * Start capturing microphone audio as PCM16 16kHz mono.
  *
- * Emits `onChunk` with STREAM_CHUNK_SAMPLES-sized (200ms) little-endian PCM16
+ * Emits `onChunk` with STREAM_CHUNK_SAMPLES-sized (100ms) little-endian PCM16
  * chunks while recording. `stop()` flushes the remaining tail and resolves
  * with the full accumulated PCM, suitable for `encodeWavPcm16` fallback.
  */
@@ -143,7 +143,7 @@ export const createPcmRecorder = async (options: {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   const releaseMic = () => stream.getTracks().forEach((track) => track.stop());
 
-  // Request 24kHz directly; Chromium honors it, but some platforms ignore the
+  // Request 16kHz directly; Chromium honors it, but some platforms ignore the
   // hint, so the actual context.sampleRate is checked below.
   let context: AudioContext;
   try {
@@ -173,7 +173,7 @@ export const createPcmRecorder = async (options: {
 
   const contextRate = context.sampleRate;
   const needsResample = contextRate !== STREAM_SAMPLE_RATE;
-  // Input samples (at context rate) needed to produce one 200ms output chunk.
+  // Input samples (at context rate) needed to produce one 100ms output chunk.
   const chunkInputSamples = Math.max(1, Math.round((STREAM_CHUNK_SAMPLES * contextRate) / STREAM_SAMPLE_RATE));
 
   const source = context.createMediaStreamSource(stream);
