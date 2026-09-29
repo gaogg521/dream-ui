@@ -168,13 +168,7 @@ async fn stream_socket(
         }
     };
     let task_id = uuid::Uuid::new_v4().simple().to_string();
-    let mut parameters = serde_json::json!({ "format": "pcm", "sample_rate": sample_rate });
-    if let Some(language) = language_hint
-        .map(|value| value.trim().to_owned())
-        .filter(|value| !value.is_empty())
-    {
-        parameters["language_hints"] = serde_json::json!([language]);
-    }
+    let parameters = streaming_parameters(sample_rate, language_hint.as_deref());
     let start = serde_json::json!({
         "header": { "action": "run-task", "task_id": task_id, "streaming": "duplex" },
         "payload": { "task_group": "audio", "task": "asr", "function": "recognition", "model": ALIYUN_STREAMING_MODEL, "parameters": parameters, "input": {} }
@@ -240,6 +234,28 @@ async fn stream_socket(
             }
         }
     }
+}
+
+/// Parameters tuned for an interactive, close-microphone voice input.
+///
+/// `qwen-audio-3.1-asr-flash-streaming` otherwise defaults to the far-field
+/// meeting VAD. That is a reasonable default for a room microphone but delays
+/// segmentation after a short chat utterance. Keep semantic punctuation off
+/// (the vendor default): VAD is the lower-latency mode for this interaction.
+fn streaming_parameters(sample_rate: u32, language_hint: Option<&str>) -> serde_json::Value {
+    let mut parameters = serde_json::json!({
+        "format": "pcm",
+        "sample_rate": sample_rate,
+        "vad_model": "near_meeting_16k",
+        "max_sentence_silence": 500,
+    });
+    if let Some(language) = language_hint
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        parameters["language_hints"] = serde_json::json!([language]);
+    }
+    parameters
 }
 
 async fn send_app_error(socket: &mut WebSocket, error: AppError) {
@@ -348,5 +364,15 @@ mod tests {
         assert!(
             matches!(handle_upstream_text(r#"{"header":{"event":"result-generated"},"payload":{"output":{"sentence":{"text":"hello","sentence_end":true}}}}"#), UpstreamEvent::Final(text) if text == "hello")
         );
+    }
+
+    #[test]
+    fn uses_near_field_low_latency_vad_for_interactive_streams() {
+        let parameters = streaming_parameters(16_000, Some(" zh "));
+        assert_eq!(parameters["format"], "pcm");
+        assert_eq!(parameters["sample_rate"], 16_000);
+        assert_eq!(parameters["vad_model"], "near_meeting_16k");
+        assert_eq!(parameters["max_sentence_silence"], 500);
+        assert_eq!(parameters["language_hints"], serde_json::json!(["zh"]));
     }
 }
