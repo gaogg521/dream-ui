@@ -53,6 +53,10 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/v1/search", post(crate::search::service::search_handler))
         // Mode D (hosted default STT). Same shape as mode C.
         .route("/v1/stt", post(crate::stt::service::stt_handler))
+        .route(
+            "/v1/stt/stream",
+            get(crate::stt::stream::stt_stream_handler),
+        )
         .route("/internal/stats", get(stats))
         // Ops-only: apply a top-up to a mode A key. No client (dream-ui) calls
         // this yet — there is no end-user payment collection wired up for

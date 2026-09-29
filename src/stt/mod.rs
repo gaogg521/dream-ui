@@ -21,6 +21,7 @@
 
 pub mod service;
 pub mod store;
+pub mod stream;
 
 use std::env;
 use std::time::Duration;
@@ -63,6 +64,11 @@ const DEFAULT_RATE_LIMIT_PER_HOUR: u32 = 30;
 pub const MAX_AUDIO_BYTES: usize = 8 * 1024 * 1024;
 
 const UPSTREAM_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// The realtime protocol uses a distinct DashScope WebSocket model. Kept
+/// separate from the HTTP model because their request/response protocols are
+/// incompatible, while the broker still owns the credential for both.
+pub const ALIYUN_STREAMING_MODEL: &str = "qwen-audio-3.1-asr-flash-streaming";
 
 #[derive(Clone, Debug)]
 pub struct SttLimits {

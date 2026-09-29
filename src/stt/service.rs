@@ -28,7 +28,7 @@ pub struct SttRequest {
     pub language: Option<String>,
 }
 
-#[derive(Debug, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct SttQuotaView {
     pub used_today: i64,
     pub daily_limit: i64,
@@ -62,12 +62,6 @@ pub async fn run_stt_transcribe(
     ip: IpAddr,
     request: &SttRequest,
 ) -> Result<SttResponse, AppError> {
-    let providers = &state.stt.providers;
-    if providers.is_empty() {
-        return Err(AppError::SttUnavailable);
-    }
-    let limits = &state.stt.limits;
-
     let install_id = request.install_id.trim();
     if install_id.is_empty() {
         return Err(AppError::BadRequest("install_id must not be empty".into()));
@@ -83,42 +77,9 @@ pub async fn run_stt_transcribe(
         )));
     }
 
-    if !state.stt.rate_limiter.check(ip) {
-        return Err(AppError::RateLimited);
-    }
-
-    let day = today();
-    prune_stale_days(state, &day).await;
-
-    // The spend cap comes first: once the day is spent, a device that has not
-    // touched its own allowance still must not be able to add to the bill.
-    let global_used = store::used_today_global(&state.pool, &day)
-        .await
-        .map_err(db_error("stt global usage"))?;
-    if global_used >= limits.global_daily_limit {
-        tracing::warn!(
-            global_used,
-            cap = limits.global_daily_limit,
-            "hosted stt daily cap reached"
-        );
-        return Err(AppError::SttBudgetExhausted);
-    }
-
-    // Reserve before calling out, so two requests arriving together cannot
-    // both read the same pre-limit count and both be let through.
-    let used = store::reserve(&state.pool, install_id, &day)
-        .await
-        .map_err(db_error("stt reserve"))?;
-    if used > limits.daily_limit_per_install {
-        refund(&state.pool, install_id, &day).await;
-        return Err(AppError::SttQuotaExhausted);
-    }
-
-    let quota = SttQuotaView {
-        used_today: used,
-        daily_limit: limits.daily_limit_per_install,
-        remaining: (limits.daily_limit_per_install - used).max(0),
-    };
+    let reservation = reserve_stt_slot(state, ip, install_id).await?;
+    let providers = &state.stt.providers;
+    let quota = reservation.quota.clone();
 
     // Codec parameters (";codecs=opus") ride in the client's mimeType for its
     // own MediaRecorder bookkeeping; the vendor's data: URI wants the bare
@@ -144,7 +105,7 @@ pub async fn run_stt_transcribe(
             Ok(text) => {
                 tracing::info!(
                     provider = provider.id(),
-                    used,
+                    used = reservation.used,
                     chars = text.chars().count(),
                     "hosted stt served"
                 );
@@ -169,12 +130,69 @@ pub async fn run_stt_transcribe(
     // user spent: without the refund an outage would quietly eat every
     // device's allowance and keep reading as "quota exhausted" long after it
     // ended.
-    refund(&state.pool, install_id, &day).await;
+    refund(&state.pool, install_id, &reservation.day).await;
     tracing::error!("hosted stt exhausted every provider");
     Err(AppError::UpstreamError("stt upstream failed".into()))
 }
 
-async fn refund(pool: &sqlx::SqlitePool, install_id: &str, day: &str) {
+/// A consumed request slot. Streaming takes the same quota path as an HTTP
+/// clip so opening a long-lived WebSocket cannot bypass daily limits.
+#[derive(Debug, Clone)]
+pub(crate) struct SttReservation {
+    pub(crate) day: String,
+    pub(crate) used: i64,
+    pub(crate) quota: SttQuotaView,
+}
+
+pub(crate) async fn reserve_stt_slot(
+    state: &AppState,
+    ip: IpAddr,
+    install_id: &str,
+) -> Result<SttReservation, AppError> {
+    if state.stt.providers.is_empty() {
+        return Err(AppError::SttUnavailable);
+    }
+    if install_id.trim().is_empty() {
+        return Err(AppError::BadRequest("install_id must not be empty".into()));
+    }
+    if !state.stt.rate_limiter.check(ip) {
+        return Err(AppError::RateLimited);
+    }
+
+    let limits = &state.stt.limits;
+    let day = today();
+    prune_stale_days(state, &day).await;
+    let global_used = store::used_today_global(&state.pool, &day)
+        .await
+        .map_err(db_error("stt global usage"))?;
+    if global_used >= limits.global_daily_limit {
+        tracing::warn!(
+            global_used,
+            cap = limits.global_daily_limit,
+            "hosted stt daily cap reached"
+        );
+        return Err(AppError::SttBudgetExhausted);
+    }
+
+    let used = store::reserve(&state.pool, install_id, &day)
+        .await
+        .map_err(db_error("stt reserve"))?;
+    if used > limits.daily_limit_per_install {
+        refund(&state.pool, install_id, &day).await;
+        return Err(AppError::SttQuotaExhausted);
+    }
+    Ok(SttReservation {
+        day,
+        used,
+        quota: SttQuotaView {
+            used_today: used,
+            daily_limit: limits.daily_limit_per_install,
+            remaining: (limits.daily_limit_per_install - used).max(0),
+        },
+    })
+}
+
+pub(crate) async fn refund(pool: &sqlx::SqlitePool, install_id: &str, day: &str) {
     if let Err(error) = store::release(pool, install_id, day).await {
         tracing::error!(error = %error, "failed to release a reserved stt slot");
     }
