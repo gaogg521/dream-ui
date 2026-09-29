@@ -77,6 +77,35 @@ const SPEECH_WAVEFORM_MIN_LEVEL = 0.015;
 const SPEECH_WAVEFORM_MAX_LEVEL = 1;
 const SPEECH_VISUALIZER_INTERVAL_MS = 80;
 
+/**
+ * Loudest RMS a recording must reach before it is worth sending.
+ *
+ * The hosted default's current model answers a clip with no speech in it
+ * with an error rather than an empty transcript, so an accidental tap on the
+ * microphone would surface as a failure. Catching it here keeps that the
+ * quiet no-op it has always been, and saves a pointless upload.
+ *
+ * Deliberately far below speech: normal talking peaks well above 0.05 even
+ * on a distant microphone, while a muted or unplugged input measures around
+ * 0.001. Anything that slips past this still transcribes normally — the
+ * broker retries a rejected clip on a model that reports silence cleanly —
+ * so the cost of being too permissive here is one wasted round trip, and the
+ * cost of being too strict is a swallowed sentence.
+ */
+const SPEECH_SILENCE_PEAK_RMS = 0.005;
+
+/**
+ * Was this recording quiet enough that sending it is pointless?
+ *
+ * `null` means the analyser never produced a reading — no microphone level
+ * was ever measured — which is not the same as having measured one and heard
+ * nothing. Only the latter may skip the upload; an unmeasured recording is
+ * always sent, because refusing to send audio we never listened to would
+ * drop real speech whenever the analyser fails to start.
+ */
+export const isSilentRecording = (peakRms: number | null): boolean =>
+  peakRms !== null && peakRms < SPEECH_SILENCE_PEAK_RMS;
+
 const createInitialWaveformLevels = (): number[] =>
   Array.from({ length: SPEECH_WAVEFORM_SAMPLE_COUNT }, (_, index) => ((index + 1) % 6 === 0 ? 0.04 : 0.015));
 
@@ -258,6 +287,7 @@ export const useSpeechInput = ({ onLiveTranscript, onTranscript }: UseSpeechInpu
   const analyserRef = useRef<AnalyserNode | null>(null);
   const mediaSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const analyserDataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  const peakRmsRef = useRef<number | null>(null);
   const onTranscriptRef = useLatestRef(onTranscript);
   const onLiveTranscriptRef = useLatestRef(onLiveTranscript);
   const streamSessionRef = useRef<StreamingSession | null>(null);
@@ -358,6 +388,10 @@ export const useSpeechInput = ({ onLiveTranscript, onTranscript }: UseSpeechInpu
         }
 
         const rms = Math.sqrt(sum / analyserData.length);
+        // `null` means the analyser never produced a reading, which is not
+        // the same as "read it and heard nothing" — only the latter may skip
+        // the upload.
+        peakRmsRef.current = Math.max(peakRmsRef.current ?? 0, rms);
         const scaledLevel = clampWaveformLevel(rms * 5.6);
         setRecordingLevels((previous) => createNextWaveformLevels(previous, scaledLevel));
       }, SPEECH_VISUALIZER_INTERVAL_MS);
@@ -672,13 +706,22 @@ export const useSpeechInput = ({ onLiveTranscript, onTranscript }: UseSpeechInpu
         const audioBlob = new Blob(chunksRef.current, {
           type: recorder.mimeType || mimeType || 'audio/webm',
         });
+        const peakRms = peakRmsRef.current;
         cleanupRecorder();
+        if (isSilentRecording(peakRms)) {
+          setErrorCode('empty-transcript');
+          setErrorMessage(null);
+          setStatus('error');
+          resetSpeechVisualizer();
+          return;
+        }
         void transcribeBlob(audioBlob);
       };
 
       setErrorCode(null);
       setErrorMessage(null);
       setStatus('recording');
+      peakRmsRef.current = null;
       recorder.start();
     } catch (error) {
       cleanupRecorder();
