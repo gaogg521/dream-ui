@@ -18,6 +18,12 @@ vi.mock('@arco-design/web-react', () => ({
   Message: { info: messageInfo },
 }));
 
+vi.mock('@icon-park/react', () => ({
+  Message: 'svg',
+  Picture: 'svg',
+  VideoTwo: 'svg',
+}));
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -26,8 +32,15 @@ const { useMediaIntentConfirmation } = await import('@/renderer/hooks/media/useM
 
 type ConfirmationOptions = {
   title: string;
-  content: string;
+  content: ReactNode;
   footer: ReactElement<{ children: ReactNode }>;
+  onCancel: () => void;
+};
+
+const contentMessage = (content: ReactNode): string => {
+  const contentNode = content as ReactElement<{ children: ReactNode }>;
+  const blocks = Children.toArray(contentNode.props.children) as ReactElement[];
+  return (blocks[1] as ReactElement<{ children: string }>).props.children;
 };
 
 afterEach(() => {
@@ -35,53 +48,58 @@ afterEach(() => {
 });
 
 describe('useMediaIntentConfirmation', () => {
-  it('keeps the text model unchanged until the user confirms an image switch', () => {
-    const onConfirm = vi.fn();
+  it('sends through the text model when the user keeps chatting', async () => {
     const { result } = renderHook(() => useMediaIntentConfirmation());
+    let selection: Promise<string> = Promise.resolve('');
 
-    act(() => result.current('image', () => true, onConfirm));
+    act(() => {
+      selection = result.current('image', () => true);
+    });
 
     expect(modalConfirm).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'conversation.mediaIntentConfirmTitle',
-        content: 'conversation.mediaIntentConfirmImage',
       })
     );
     const options = modalConfirm.mock.calls[0]?.[0] as ConfirmationOptions;
+    expect(contentMessage(options.content)).toBe('conversation.mediaIntentConfirmImage');
     const buttons = Children.toArray(options.footer.props.children) as ReactElement[];
     expect(buttons).toHaveLength(3);
 
     const keepChat = buttons[0]?.props.onClick;
     expect(keepChat).toBeTypeOf('function');
     act(() => (keepChat as () => void)());
-    // Opening, dismissing, or choosing to keep chatting has no mode change.
-    expect(onConfirm).not.toHaveBeenCalled();
+    await expect(selection).resolves.toBe('chat');
     expect(modalClose).toHaveBeenCalledOnce();
   });
 
-  it('switches to the requested video mode only from the explicit confirmation', () => {
-    const onConfirm = vi.fn();
+  it('returns video only from the explicit video choice', async () => {
     const { result } = renderHook(() => useMediaIntentConfirmation());
+    let selection: Promise<string> = Promise.resolve('');
 
-    act(() => result.current('video', (mode) => mode === 'video', onConfirm));
+    act(() => {
+      selection = result.current('video', (mode) => mode === 'video');
+    });
     const options = modalConfirm.mock.calls[0]?.[0] as ConfirmationOptions;
     const buttons = Children.toArray(options.footer.props.children) as ReactElement[];
 
-    expect(options.content).toBe('conversation.mediaIntentConfirmVideo');
+    expect(contentMessage(options.content)).toBe('conversation.mediaIntentConfirmVideo');
     expect(buttons).toHaveLength(2);
     const generateVideo = buttons[1]?.props.onClick;
     expect(generateVideo).toBeTypeOf('function');
     act(() => (generateVideo as () => void)());
 
-    expect(onConfirm).toHaveBeenCalledWith('video');
+    await expect(selection).resolves.toBe('video');
     expect(messageInfo).toHaveBeenCalledWith('conversation.mediaIntentSwitchedVideo');
   });
 
-  it('allows an image-looking prompt to be deliberately routed to video', () => {
-    const onConfirm = vi.fn();
+  it('allows an image-looking prompt to be deliberately routed to video', async () => {
     const { result } = renderHook(() => useMediaIntentConfirmation());
+    let selection: Promise<string> = Promise.resolve('');
 
-    act(() => result.current('image', () => true, onConfirm));
+    act(() => {
+      selection = result.current('image', () => true);
+    });
     const options = modalConfirm.mock.calls[0]?.[0] as ConfirmationOptions;
     const buttons = Children.toArray(options.footer.props.children) as ReactElement[];
     const generateVideo = buttons[2]?.props.onClick;
@@ -89,6 +107,20 @@ describe('useMediaIntentConfirmation', () => {
     expect(generateVideo).toBeTypeOf('function');
     act(() => (generateVideo as () => void)());
 
-    expect(onConfirm).toHaveBeenCalledWith('video');
+    await expect(selection).resolves.toBe('video');
+  });
+
+  it('treats closing the dialog as continuing the text conversation', async () => {
+    const { result } = renderHook(() => useMediaIntentConfirmation());
+    let selection: Promise<string> = Promise.resolve('');
+
+    act(() => {
+      selection = result.current('image', () => true);
+    });
+    const options = modalConfirm.mock.calls[0]?.[0] as ConfirmationOptions;
+
+    act(() => options.onCancel());
+
+    await expect(selection).resolves.toBe('chat');
   });
 });

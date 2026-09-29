@@ -476,12 +476,11 @@ Please check your local CLI tool authentication status`,
     if (mediaComposer.mode === 'off') {
       const intent = detectMediaIntent(message);
       if (intent && mediaComposer.hasModelFor(intent)) {
-        confirmMediaIntent(
-          intent,
-          (mode) => mediaComposer.hasModelFor(mode),
-          (mode) => mediaComposer.changeMode(mode)
-        );
-        return false;
+        const selectedMode = await confirmMediaIntent(intent, (mode) => mediaComposer.hasModelFor(mode));
+        if (selectedMode !== 'chat') {
+          mediaComposer.changeMode(selectedMode);
+          return false;
+        }
       }
     }
 
