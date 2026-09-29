@@ -128,7 +128,57 @@ custom，而后端看 `provider=="deepgram"` 判成 hosted——**两边又错�
 用户恰恰落在第二个上。这和记忆里 `local-record-loss-bypasses-recovery-branch`（"记录存在但坏"≠"记录压根
 不存在"）是同一个陷阱的镜像。
 
-## 7. 已完成验证
+## 7. 换模型：qwen3-asr-flash → qwen-audio-3.0-asr-flash（两条协议 + 静音兜底）
+
+用户要求换用更新的 `qwen-audio-3.0-asr-flash`（2026-07 发布，30 语种，汉语七大方言体系）。
+**这不是换个字符串**，实测差异如下（全部对着线上端点验过）：
+
+|                              | `qwen3-asr-flash`（原）                     | `qwen-audio-3.0-asr-flash`（现）                              |
+| ---------------------------- | ------------------------------------------- | ------------------------------------------------------------- |
+| content 项                   | `{"audio": "data:…"}`                       | `{"type":"input_audio","input_audio":{"data":"data:…"}}`      |
+| `parameters`                 | 不需要                                      | **必填**，省掉就是空体 400（值不校验，wav 报成 mp3 照样转对） |
+| 响应取值                     | `output.choices[0].message.content[0].text` | `sentence.text`                                               |
+| webm/opus（浏览器录音）      | ✅                                          | ✅                                                            |
+| 裸 base64（无 `data:` 前缀） | —                                           | ❌ 400，必须是 `data:` URI                                    |
+| `X-DashScope-SSE: disable`   | —                                           | 不需要                                                        |
+| **静音**                     | **200 + 空 `content`（干净空转写）**        | **400 + 空响应体**                                            |
+
+最后一行是唯一的真问题。`400 + {}` 这个响应**和"请求写错了"完全一样**（实测：缺 `parameters`
+也是 `400 + {}`），所以 broker 无法区分"用户没说话"和"我们把请求构造错了"——把它当空转写吞掉，
+就会静默吃掉真实的集成 bug。
+
+**解法是给 provider chain 加第二个条目**（`src/stt/mod.rs`，chain 循环本来就是为这个留的）：
+主模型 `qwen-audio-3.0-asr-flash`，失败回退 `qwen3-asr-flash`。后者对静音本来就返回优雅的空结果，
+于是静音又变回了安静的空转写——**而且存量客户端也被兜住**，它们不会因为我们改了前端就获得静音检测。
+协议按模型名前缀选（`qwen-audio-` → 新协议，其余 → 旧协议），所以 `STT_ALIYUN_MODEL` 指到一个
+本构建没见过的新快照也能工作。
+
+前端同时加了静音检测（`useSpeechInput.ts::isSilentRecording`）：录音时波形本来就在算 RMS，留下峰值，
+整段低于阈值就根本不上传，直接走已有的"未识别到内容"提示。阈值 0.005 刻意远低于人声——**漏判的代价
+是一次多余往返（broker 会兜住），误判的代价是吞掉用户一句话**。
+
+线上验证（日志为证）：
+
+```text
+hosted stt served  provider="aliyun" chars=76   ← 真实语音，主模型直接成功
+upstream rejected  status=400 body={}           ← 静音，主模型给出有歧义的空体 400
+hosted stt served  provider="aliyun" chars=0    ← 兜底模型接住，干净的空转写
+```
+
+⚠️ 静音走兜底会多约 9 秒。已更新的客户端有前端检测、不会发这个请求；存量客户端是"慢但正确"。
+
+**顺带纠正两个我在调研中先说错、后被实测推翻的结论**（留在这里是因为下一个人很可能重蹈）：
+
+1. "阿里云富接口没有模态信息"——**错**。我只看了 `features`（那是 function-calling/cache 这类能力）
+   就下结论，实际上同一条记录里有 `capabilities: ["ASR"]` 和
+   `inference_metadata.{request_modality,response_modality}`，是精确的机器可读信号。
+   但注意：**这是阿里云私有 `/api/v1/models` 才有的**，OpenAI 兼容的 `/v1/models` 确实只有 id。
+2. "qwen3-asr-flash 快要下线"——**要下线的是带日期的快照**（`qwen3-asr-flash-2026-02-10`、
+   `-2025-09-08`，均 2026-10-10 下线），**不带日期的稳定别名没有下线安排**。判据是模型列表里的
+   `inference_offline_info` 字段（518 个模型里 163 个有值，所以 null 是真的"没安排"而不是"没这个字段"）。
+   ⚠️ 10-10 之后别名会滚到哪个快照由阿里云决定，行为可能变，那之后应手动验一次。
+
+## 8. 已完成验证
 
 **dream-trial-broker**（生产环境）：
 
@@ -152,7 +202,7 @@ curl -X POST https://work.1oneclaw.com/trial-broker/v1/stt \
 **dream-ui**：`tsc --noEmit`、`oxlint`（改动文件范围内无新增 warning）、`oxfmt` 全过；vitest 详见
 本文档写入时 CLAUDE.md 更新记录（如果这轮还没来得及跑，接手人必须先跑一遍再当作"完成"）。
 
-## 8. 自定义来源：从用户填的端点拉取模型列表
+## 9. 自定义来源：从用户填的端点拉取模型列表
 
 "自定义（OpenAI 兼容）"原来只给三个 OpenAI 预设 + 手输。现在填好 Base URL 后可以点「拉取模型」，
 复用已有的 `POST /api/providers/fetch-models`（匿名、建渠道前就能调；`platform: 'openai'` 走
@@ -176,7 +226,7 @@ dreamcore 的 OpenAI 兼容 fetcher，它按字面往 base_url 后面接 `/model
 媒体目录的 `audio` hint 窄**：后者把 `tts`/`voice`/`realtime` 也算 audio，对"这是不是音频模型"是对的，
 对转写选择器是错的——把一个 TTS 模型推荐给转写，只是多绕一圈再失败。它只做**排序**，不隐藏任何模型。
 
-## 9. 已知限制 / 后续可做
+## 10. 已知限制 / 后续可做
 
 - Mode D 只做了整段批量转写（`/api/stt`），**没有实时流式**——`stt_stream_provider.rs` 对
   `Hosted` 直接返回 `STT_STREAM_UNSUPPORTED`，前端已有的"流式失败自动退化到整段"逻辑会接住，
