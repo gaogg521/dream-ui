@@ -22,6 +22,7 @@ import {
   deriveSpeechSource,
   getAutoTranscriptionPrompt,
   isValidHttpUrl,
+  migrateLegacySpeechSource,
   migrateSpeechLanguage,
   normalizeSpeechToTextConfig,
   type SpeechSource,
@@ -63,7 +64,7 @@ const VoiceInputSection: React.FC = () => {
         if (cancelled) {
           return;
         }
-        const normalized = migrateSpeechLanguage(normalizeSpeechToTextConfig(stored));
+        const normalized = migrateLegacySpeechSource(migrateSpeechLanguage(normalizeSpeechToTextConfig(stored)));
         setConfig(normalized);
         setSource(deriveSpeechSource(normalized));
         if (deriveSpeechSource(normalized) === 'custom') {

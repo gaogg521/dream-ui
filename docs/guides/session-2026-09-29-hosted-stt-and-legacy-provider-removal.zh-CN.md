@@ -73,7 +73,62 @@ API Key 标成"可选"（自建的 OpenAI 兼容服务很多不需要鉴权）�
 两边必须一致：后端"没配置=用内置"、前端"没配置=显示已启用+内置"，只改一边会出现"设置里显示
 已启用，点麦克风却提示未配置"或反过来的不一致。
 
-## 6. 已完成验证
+## 6. 上线后当场翻车：存量配置（本轮最重要的一节）
+
+上面第 5 节做完、真机验证也过了之后，用户一打开就报错：**设置页语音转文字开关是绿的、来源显示
+"内置（默认）"，点麦克风却弹"语音转文字尚未配置"**。
+
+查后端日志（`D:\logs\<年>\<月>\<日>\*.dreamcore.log`）看到的真相：
+
+```text
+client_preference_read key=tools.speechToText found=true
+http response POST /api/stt status=400 latency_ms=0
+```
+
+`found=true` + 0 毫秒 = 根本没走到转写，是 `load_stt_config` 阶段就判负。直接读那台机器上实际存的值：
+
+```json
+{
+  "enabled": true,
+  "provider": "openai",
+  "openai": { "api_key": "", "base_url": "", "language": "", "model": "gpt-4o-transcribe" }
+}
+```
+
+**根因**：第 5 节只让前后端对齐了"**压根没有记录**"这一种情况，漏了"**记录存在、但它指向的来源已经
+被我删掉了**"。而这恰恰是绝大多数存量用户的状态——语音设置面板从 v3.0.0 就随正式版发布，
+**旧版默认配置写的就是 `{enabled:false, provider:'openai', base_url:'', api_key:''}`，用户只要把总开关
+拨一下，这条记录就落盘了**。于是：
+
+- 前端 `deriveSpeechSource` 的兜底是"不是 hosted、base_url 又是空 → 当 hosted 显示"，所以 UI 一切正常；
+- 后端 `load_stt_config` 看到键存在，跳过零配置分支，把 `provider:"openai"` 按字面当官方 OpenAI 端点，
+  空 Key → `STT_OPENAI_NOT_CONFIGURED`(400) → 前端映射成 `not-configured` → 那个 toast。
+
+Deepgram 用户更隐蔽：枚举变体删了又没留 `serde(alias)`，`provider:"deepgram"` 直接反序列化失败，
+落进 malformed 分支变成 `{enabled:false}` → `STT_DISABLED` → **同一个 toast，不同根因**。
+
+**修法（两侧同时改，缺一侧就又不一致）**：
+
+- 后端 `is_legacy_unusable_config`（`dream-core-shell/src/routes.rs`）：键存在但它命名的来源本构建已无法提供
+  （`provider:"deepgram"`，或 `provider:"openai"` 且 base_url、api_key 双空），等同于"没配置" → 走 hosted。
+  **刻意不含**"空 base_url + 真实 api_key"：那个用户的官方 OpenAI 转写现在还能用，把他悄悄挪到共享的
+  托管额度上才是回归。带 `modelProviderId` 的同样不动。
+- 前端 `migrateLegacySpeechSource`（`speechSettingsUtils.ts`）：加载时做同样的替换，**并且把"带真实 Key 的
+  官方 OpenAI"迁成指向 `https://api.openai.com/v1` 的自定义端点**——否则删掉官方来源后，那把 Key 在 UI 里
+  再也看不见、改不了（`deriveSpeechSource` 也同步改成"有 Key 就算 custom"）。
+
+⚠️ 前端这个迁移里有一个我自己第一版写错、复查才抓到的坑：**判断顺序不能先看 openai 子配置**。老 UI 的
+OpenAI 和 Deepgram 是两套独立子配置，切来源时都保留，所以"用 Deepgram、但以前试过自定义 OpenAI 地址"
+的用户身上 `provider:'deepgram'` 和一个非空 `openai.base_url` 会同时存在。先看 base_url 就会把他判成
+custom，而后端看 `provider=="deepgram"` 判成 hosted——**两边又错开了，等于把刚修的 bug 换了个入口重新
+制造一遍**。正确顺序是：先判 provider 是不是本构建还认识的来源，再看子配置。
+
+**可复用的判据**：任何"没配置就给个默认值"的逻辑，都要分别回答两个问题——「**记录不存在**时怎么办」和
+「**记录存在但已经不合法**时怎么办」。只答第一个，第二个就会静默绕过整条兜底路径；而线上绝大多数存量
+用户恰恰落在第二个上。这和记忆里 `local-record-loss-bypasses-recovery-branch`（"记录存在但坏"≠"记录压根
+不存在"）是同一个陷阱的镜像。
+
+## 7. 已完成验证
 
 **dream-trial-broker**（生产环境）：
 
@@ -97,7 +152,7 @@ curl -X POST https://work.1oneclaw.com/trial-broker/v1/stt \
 **dream-ui**：`tsc --noEmit`、`oxlint`（改动文件范围内无新增 warning）、`oxfmt` 全过；vitest 详见
 本文档写入时 CLAUDE.md 更新记录（如果这轮还没来得及跑，接手人必须先跑一遍再当作"完成"）。
 
-## 7. 已知限制 / 后续可做
+## 8. 已知限制 / 后续可做
 
 - Mode D 只做了整段批量转写（`/api/stt`），**没有实时流式**——`stt_stream_provider.rs` 对
   `Hosted` 直接返回 `STT_STREAM_UNSUPPORTED`，前端已有的"流式失败自动退化到整段"逻辑会接住，

@@ -76,17 +76,38 @@ describe('VoiceInputSection', () => {
     expect(screen.queryByText('settings.speechToTextApiKey')).toBeNull();
   });
 
-  it('a config with provider openai and no base_url (from a retired official preset) now shows as hosted', async () => {
+  // The shape every shipped 3.0.x install persisted the moment the master
+  // switch was flipped: the retired official-OpenAI preset with nothing filled
+  // in. It must read as the hosted default, which is what the backend now
+  // resolves it to.
+  it('an abandoned official-OpenAI config (no key, no base_url) shows as hosted', async () => {
     configStore.value = {
       enabled: true,
       provider: 'openai',
-      openai: { api_key: 'k', base_url: '', model: 'gpt-4o-transcribe', language: '' },
+      openai: { api_key: '', base_url: '', model: 'gpt-4o-transcribe', language: '' },
     };
     speechSettingsMocks.getClientBusinessSetting.mockResolvedValue(configStore.value);
     render(<VoiceInputSection />);
     await waitFor(() => expect(screen.getByText('settings.speechToTextSource')).toBeTruthy());
     expect(screen.getByText('settings.speechToTextSourceHosted')).toBeTruthy();
     expect(screen.queryByText('settings.speechToTextBaseUrl')).toBeNull();
+  });
+
+  // Same retired preset, but the user had actually pasted a key: that still
+  // transcribes against api.openai.com, so it must stay visible and editable
+  // rather than being silently relabelled as the hosted default.
+  it('a retired official-OpenAI config with a real key shows as custom, with the official URL filled in', async () => {
+    configStore.value = {
+      enabled: true,
+      provider: 'openai',
+      openai: { api_key: 'sk-real', base_url: '', model: 'gpt-4o-transcribe', language: '' },
+    };
+    speechSettingsMocks.getClientBusinessSetting.mockResolvedValue(configStore.value);
+    render(<VoiceInputSection />);
+    await waitFor(() => expect(screen.getByText('settings.speechToTextSource')).toBeTruthy());
+    expect(screen.getByText('settings.speechToTextSourceCustom')).toBeTruthy();
+    expect(screen.getByText('settings.speechToTextBaseUrl')).toBeTruthy();
+    expect(document.querySelector<HTMLInputElement>('input[value="https://api.openai.com/v1"]')).toBeTruthy();
   });
 
   it('custom mode (openai + base_url) shows base_url field', async () => {

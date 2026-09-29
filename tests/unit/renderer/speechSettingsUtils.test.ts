@@ -7,6 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_SPEECH_TO_TEXT_CONFIG,
+  OFFICIAL_OPENAI_BASE_URL,
   OPENAI_SPEECH_MODEL_PRESETS,
   SPEECH_LANGUAGE_OPTIONS,
   applySpeechSource,
@@ -14,6 +15,7 @@ import {
   deriveSpeechSource,
   getAutoTranscriptionPrompt,
   isValidHttpUrl,
+  migrateLegacySpeechSource,
   migrateSpeechLanguage,
   normalizeSpeechToTextConfig,
 } from '@renderer/components/settings/SettingsModal/contents/SystemModalContent/VoiceInputSection/speechSettingsUtils';
@@ -51,9 +53,97 @@ describe('deriveSpeechSource', () => {
     const config = normalizeSpeechToTextConfig({
       enabled: true,
       provider: 'openai',
-      openai: { api_key: 'k', base_url: '  ', model: 'whisper-1' },
+      openai: { api_key: '', base_url: '  ', model: 'whisper-1' },
     });
     expect(deriveSpeechSource(config)).toBe('hosted');
+  });
+
+  // The removed "OpenAI (official)" source still transcribes against
+  // api.openai.com with the stored key. Showing it as the hosted default would
+  // hide a credential with nowhere left in the UI to see or edit it.
+  it('returns custom for a stored key with no base_url, not hosted', () => {
+    const config = normalizeSpeechToTextConfig({
+      enabled: true,
+      provider: 'openai',
+      openai: { api_key: 'sk-real', base_url: '', model: 'gpt-4o-transcribe' },
+    });
+    expect(deriveSpeechSource(config)).toBe('custom');
+  });
+});
+
+describe('migrateLegacySpeechSource', () => {
+  // Exactly what a shipped 3.0.x install persisted the moment the user flipped
+  // the speech master switch. Left alone it reads as hosted in the panel while
+  // the backend sends it to api.openai.com with no key.
+  it('rewrites the abandoned official-OpenAI default to the hosted provider', () => {
+    const config = normalizeSpeechToTextConfig({
+      enabled: true,
+      provider: 'openai',
+      openai: { api_key: '', base_url: '', language: '', model: 'gpt-4o-transcribe' },
+    });
+    const migrated = migrateLegacySpeechSource(config);
+    expect(migrated.provider).toBe('hosted');
+    expect(deriveSpeechSource(migrated)).toBe('hosted');
+  });
+
+  it('keeps a working official-OpenAI key by pointing it at the official URL', () => {
+    const config = normalizeSpeechToTextConfig({
+      enabled: true,
+      provider: 'openai',
+      openai: { api_key: 'sk-real', base_url: '', model: 'gpt-4o-transcribe' },
+    });
+    const migrated = migrateLegacySpeechSource(config);
+    expect(migrated.openai?.api_key).toBe('sk-real');
+    expect(migrated.openai?.base_url).toBe(OFFICIAL_OPENAI_BASE_URL);
+    expect(deriveSpeechSource(migrated)).toBe('custom');
+  });
+
+  it('leaves a custom endpoint, a model-settings channel and a hosted config untouched', () => {
+    const custom = normalizeSpeechToTextConfig({
+      enabled: true,
+      provider: 'openai',
+      openai: { api_key: '', base_url: 'https://my-host/v1', model: 'whisper-1' },
+    });
+    const modelSettings = normalizeSpeechToTextConfig({
+      enabled: true,
+      provider: 'openai',
+      modelProviderId: 'openrouter',
+      openai: { api_key: '', base_url: '', model: 'qwen/qwen3-asr-0.6b' },
+    });
+    const hosted = normalizeSpeechToTextConfig({ enabled: true, provider: 'hosted' });
+
+    expect(migrateLegacySpeechSource(custom)).toBe(custom);
+    expect(migrateLegacySpeechSource(modelSettings)).toBe(modelSettings);
+    expect(migrateLegacySpeechSource(hosted)).toBe(hosted);
+  });
+
+  // The two old sources kept separate sub-configs, so a Deepgram user who had
+  // previously tried a custom OpenAI endpoint still carries that base_url. The
+  // backend resolves `provider: 'deepgram'` to hosted regardless of it; reading
+  // it as "custom" here would put the panel and the backend back out of sync.
+  it('sends a removed provider to hosted even when a stale openai base_url is stored', () => {
+    const config = normalizeSpeechToTextConfig({
+      enabled: true,
+      provider: 'deepgram' as never,
+      openai: { api_key: '', base_url: 'https://old-host/v1', model: 'whisper-1' },
+    });
+    const migrated = migrateLegacySpeechSource(config);
+    expect(migrated.provider).toBe('hosted');
+    expect(deriveSpeechSource(migrated)).toBe('hosted');
+  });
+
+  it('sends a removed provider with no openai sub-config to hosted', () => {
+    const config = normalizeSpeechToTextConfig({ enabled: true, provider: 'deepgram' as never });
+    expect(migrateLegacySpeechSource(config).provider).toBe('hosted');
+  });
+
+  it('does not re-enable a feature the user switched off', () => {
+    const config = normalizeSpeechToTextConfig({
+      enabled: false,
+      provider: 'openai',
+      openai: { api_key: '', base_url: '', model: 'gpt-4o-transcribe' },
+    });
+    expect(migrateLegacySpeechSource(config).enabled).toBe(false);
   });
 });
 
