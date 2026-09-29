@@ -51,8 +51,8 @@ describe('getModelStreamCapability', () => {
   });
 
   describe('hosted source', () => {
-    it('any model → unsupported (mode D has no realtime protocol)', () => {
-      expect(getModelStreamCapability('hosted', 'aliyun')).toBe('unsupported');
+    it('any model → supported (mode D proxies realtime ASR)', () => {
+      expect(getModelStreamCapability('hosted', 'aliyun')).toBe('supported');
     });
   });
 
@@ -81,8 +81,8 @@ describe('getModelStreamCapability', () => {
 
 describe('getStreamCapability', () => {
   describe('hosted provider', () => {
-    it('always unsupported (mode D has no realtime protocol)', () => {
-      expect(getStreamCapability(hostedConfig())).toBe('unsupported');
+    it('supports the broker-backed realtime path', () => {
+      expect(getStreamCapability(hostedConfig())).toBe('supported');
     });
   });
 
@@ -153,9 +153,9 @@ describe('shouldTryStreaming', () => {
     expect(shouldTryStreaming(openaiOfficial('gpt-4o-mini-transcribe'))).toBe(true);
   });
 
-  it('memory for config-A does not affect a hosted config (unsupported regardless)', () => {
+  it('memory for config-A does not affect a hosted config', () => {
     rememberStreamUnsupported(openaiOfficial('gpt-4o-transcribe'));
-    expect(shouldTryStreaming(hostedConfig())).toBe(false);
+    expect(shouldTryStreaming(hostedConfig())).toBe(true);
   });
 
   it('clearStreamMemory removes all entries → true again', () => {

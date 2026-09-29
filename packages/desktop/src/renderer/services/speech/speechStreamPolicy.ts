@@ -26,8 +26,7 @@ const STORAGE_KEY = 'one.sttStreamUnsupported';
  *
  * Rules:
  * - custom → always 'unknown' (custom endpoint behaviour varies; must probe)
- * - hosted → always 'unsupported' (mode D has no realtime protocol; the
- *   backend rejects a streaming attempt with STT_STREAM_UNSUPPORTED)
+ * - hosted → 'supported' (the broker relays PCM to the managed realtime ASR)
  * - openai official:
  *   - 'whisper-1' → 'unsupported' (file-only API)
  *   - other OPENAI preset → 'supported'
@@ -39,7 +38,7 @@ export const getModelStreamCapability = (source: 'openai' | 'custom' | 'hosted',
   }
 
   if (source === 'hosted') {
-    return 'unsupported';
+    return 'supported';
   }
 
   // openai official endpoint
@@ -57,7 +56,7 @@ export const getModelStreamCapability = (source: 'openai' | 'custom' | 'hosted',
  * WebSocket endpoint (`/api/stt/stream`).
  *
  * Rules:
- * - hosted → unsupported (mode D has no realtime protocol)
+ * - hosted → supported (mode D proxies the realtime protocol)
  * - openai official (empty / whitespace base_url):
  *   - 'whisper-1' → unsupported (file-only API)
  *   - other OPENAI preset → supported
@@ -66,7 +65,7 @@ export const getModelStreamCapability = (source: 'openai' | 'custom' | 'hosted',
  */
 export const getStreamCapability = (config: SpeechToTextConfig): StreamCapability => {
   if (config.provider === 'hosted') {
-    return 'unsupported';
+    return 'supported';
   }
 
   // openai provider
@@ -81,7 +80,9 @@ export const getStreamCapability = (config: SpeechToTextConfig): StreamCapabilit
 
 /** Derive a stable string key for the active provider sub-config. */
 const streamMemoryEntry = (config: SpeechToTextConfig): string =>
-  `openai|${config.openai?.base_url ?? ''}|${config.openai?.model ?? ''}`;
+  config.provider === 'hosted'
+    ? 'hosted|aliyun-realtime'
+    : `openai|${config.openai?.base_url ?? ''}|${config.openai?.model ?? ''}`;
 
 const readMemory = (): string[] => {
   try {
