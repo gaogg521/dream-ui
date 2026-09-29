@@ -33,20 +33,20 @@ function iconParkPlugin() {
       if (!id.endsWith('.tsx') || id.includes('node_modules')) return null;
       if (!source.includes('@icon-park/react')) return null;
       const transformedSource = source.replace(
-        /import\s+\{\s+([a-zA-Z, ]*)\s+\}\s+from\s+['"]@icon-park\/react['"](;?)/g,
-        function (str, match) {
-          if (!match) return str;
-          const components: { imported: string; local: string }[] = match.split(',').map((raw: string) => {
-            const [imported, local] = raw.trim().split(/\s+as\s+/);
-            return { imported, local: local ?? imported };
-          });
-          const importComponent = str.replace(
-            match,
-            components.map(({ imported, local }) => `${imported} as _${local}`).join(', ')
-          );
-          const hoc = `import IconParkHOC from '@renderer/components/IconParkHOC';
-          ${components.map(({ local }) => `const ${local} = IconParkHOC(_${local})`).join(';\n')}`;
-          return importComponent + ';' + hoc;
+        /import\s*\{([^}]*)\}\s*from\s*['"]@icon-park\/react['"];?/g,
+        function (str: string, group: string) {
+          const components: { imported: string; local: string }[] = group
+            .split(',')
+            .map((raw: string) => raw.trim())
+            .filter((raw: string) => raw.length > 0)
+            .map((raw: string) => {
+              const [imported, local] = raw.split(/\s+as\s+/);
+              return { imported, local: local ?? imported };
+            });
+          if (components.length === 0) return str;
+          const namedImports = components.map(({ imported, local }) => `${imported} as _${local}`).join(', ');
+          const hocDecls = components.map(({ local }) => `const ${local} = IconParkHOC(_${local})`).join(';\n');
+          return `import { ${namedImports} } from '@icon-park/react';\nimport IconParkHOC from '@renderer/components/IconParkHOC';\n${hocDecls};`;
         }
       );
       if (transformedSource !== source) return { code: transformedSource, map: null } as { code: string; map: null };
