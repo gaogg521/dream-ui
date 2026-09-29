@@ -35,9 +35,10 @@ pub const ALIYUN_ID: &str = "aliyun";
 const ALIYUN_DEFAULT_BASE_URL: &str =
     "https://ws-73nl3nntstqnhh1k.cn-beijing.maas.aliyuncs.com/api/v1";
 
-/// Primary: the current ASR generation (2026-07, 30 languages, the seven
-/// Chinese dialect families).
-const ALIYUN_DEFAULT_MODEL: &str = "qwen-audio-3.0-asr-flash";
+/// Primary: the current short-audio ASR generation. It keeps the 3.x
+/// `input_audio` protocol while adding native text polishing and speaker
+/// diarization support when those options are needed later.
+const ALIYUN_DEFAULT_MODEL: &str = "qwen-audio-3.1-asr-flash";
 
 /// Fallback, and the reason the chain has two entries at all.
 ///
@@ -292,23 +293,38 @@ impl AliyunUpstream {
         }
     }
 
-    fn request_body(&self, data_uri: String) -> serde_json::Value {
+    fn request_body(&self, data_uri: String, audio_format: &str) -> serde_json::Value {
         match self.protocol {
             AliyunProtocol::Qwen3Asr => serde_json::json!({
                 "model": self.model,
                 "input": { "messages": [ { "role": "user", "content": [ { "audio": data_uri } ] } ] }
             }),
             // `parameters` is required — omitting it is an empty-bodied 400.
-            // The values are not validated against the clip (a wav declared
-            // as mp3 still transcribed), so they are a fixed, honest-enough
-            // declaration rather than a guess derived from the MIME type.
+            // Declare the actual container rather than claiming every browser
+            // WebM/Opus recording is a WAV. The API can infer a sample rate,
+            // so do not send an invented fixed value for a browser clip.
             AliyunProtocol::QwenAudio3 => serde_json::json!({
                 "model": self.model,
                 "input": { "messages": [ { "role": "user", "content": [
                     { "type": "input_audio", "input_audio": { "data": data_uri } }
                 ] } ] },
-                "parameters": { "format": "wav", "sample_rate": "16000" }
+                "parameters": { "format": audio_format }
             }),
+        }
+    }
+
+    fn audio_format(mime_type: &str) -> &str {
+        match mime_type.to_ascii_lowercase().as_str() {
+            "audio/webm" | "video/webm" => "webm",
+            "audio/ogg" => "ogg",
+            "audio/opus" => "opus",
+            "audio/mpeg" | "audio/mp3" => "mp3",
+            "audio/wav" | "audio/wave" | "audio/x-wav" => "wav",
+            "audio/mp4" | "audio/x-m4a" => "m4a",
+            // A conservative compatibility default for an unknown client
+            // container. First-party clients always send one of the mappings
+            // above after codec parameters have been stripped.
+            _ => "wav",
         }
     }
 
@@ -342,12 +358,16 @@ impl Upstream for AliyunUpstream {
             "{}/services/aigc/multimodal-generation/generation",
             self.base_url.trim_end_matches('/')
         );
-        let body = self.request_body(format!("data:{mime_type};base64,{audio_base64}"));
+        let body = self.request_body(
+            format!("data:{mime_type};base64,{audio_base64}"),
+            Self::audio_format(mime_type),
+        );
 
         let response = self
             .http
             .post(&url)
             .bearer_auth(&self.api_key)
+            .header("X-DashScope-SSE", "disable")
             .json(&body)
             .timeout(UPSTREAM_TIMEOUT)
             .send()
@@ -418,7 +438,8 @@ mod tests {
     /// a `data:` URI inside a single chat message.
     #[test]
     fn qwen3_request_shape_matches_the_live_verified_call() {
-        let body = upstream("qwen3-asr-flash").request_body("data:audio/wav;base64,AAAA".into());
+        let body =
+            upstream("qwen3-asr-flash").request_body("data:audio/wav;base64,AAAA".into(), "wav");
         assert_eq!(body["model"], "qwen3-asr-flash");
         assert_eq!(body["input"]["messages"][0]["role"], "user");
         assert_eq!(
@@ -432,16 +453,24 @@ mod tests {
     /// `parameters` object — omitting the latter is an empty-bodied 400.
     #[test]
     fn qwen_audio_request_shape_carries_input_audio_and_required_parameters() {
-        let body =
-            upstream("qwen-audio-3.0-asr-flash").request_body("data:audio/webm;base64,AAAA".into());
-        assert_eq!(body["model"], "qwen-audio-3.0-asr-flash");
+        let body = upstream("qwen-audio-3.1-asr-flash")
+            .request_body("data:audio/webm;base64,AAAA".into(), "webm");
+        assert_eq!(body["model"], "qwen-audio-3.1-asr-flash");
         let item = &body["input"]["messages"][0]["content"][0];
         assert_eq!(item["type"], "input_audio");
         assert_eq!(item["input_audio"]["data"], "data:audio/webm;base64,AAAA");
-        assert_eq!(body["parameters"]["format"], "wav");
-        assert_eq!(body["parameters"]["sample_rate"], "16000");
+        assert_eq!(body["parameters"]["format"], "webm");
+        assert!(body["parameters"].get("sample_rate").is_none());
         // The old shape must not leak in: this model rejects a bare `audio`.
         assert!(item.get("audio").is_none());
+    }
+
+    #[test]
+    fn audio_format_matches_browser_and_common_uploaded_containers() {
+        assert_eq!(AliyunUpstream::audio_format("audio/webm"), "webm");
+        assert_eq!(AliyunUpstream::audio_format("audio/opus"), "opus");
+        assert_eq!(AliyunUpstream::audio_format("audio/wav"), "wav");
+        assert_eq!(AliyunUpstream::audio_format("audio/mpeg"), "mp3");
     }
 
     #[test]
