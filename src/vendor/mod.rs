@@ -380,6 +380,23 @@ pub trait TokenVendor: Send + Sync {
         })
     }
 
+    /// Replaces a live key whose plaintext can no longer be retrieved.  This
+    /// is deliberately separate from [`Self::issue_key`]: callers only use it
+    /// after the provider confirmed the old key exists, and an implementation
+    /// must revoke that old key after the replacement is safely created so one
+    /// allowance cannot be spent twice.  OpenRouter is currently the relevant
+    /// case: it shows a secret only at creation time and cannot re-reveal it.
+    async fn rotate_unrevealable_key(
+        &self,
+        _handle: &str,
+        _spec: KeySpec,
+    ) -> Result<IssuedKey, VendorError> {
+        Err(VendorError::Unsupported {
+            vendor: self.id(),
+            operation: "rotate_unrevealable_key",
+        })
+    }
+
     /// Sums every `success` real-money top-up ever made under `reference`,
     /// read straight from the vendor's own order history rather than this
     /// broker's local bookkeeping (which may itself be the thing that was

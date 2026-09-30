@@ -178,7 +178,9 @@ async fn make_state(with_issuance_for: Option<&str>) -> (AppState, Arc<ToppableV
             &Issuance {
                 id: Uuid::new_v4().to_string(),
                 vendor: VENDOR_ID.to_string(),
+                baoyun_account: None,
                 install_id: install_id.to_string(),
+                device_fingerprint: None,
                 ip: "127.0.0.1".to_string(),
                 vendor_key_handle: HANDLE.to_string(),
                 issued_at: 0,
@@ -322,7 +324,9 @@ async fn a_vendor_without_topup_support_reports_unsupported() {
         &Issuance {
             id: Uuid::new_v4().to_string(),
             vendor: "no-topup".to_string(),
+            baoyun_account: None,
             install_id: "install-1".to_string(),
+            device_fingerprint: None,
             ip: "127.0.0.1".to_string(),
             vendor_key_handle: HANDLE.to_string(),
             issued_at: 0,
@@ -480,7 +484,9 @@ async fn listing_topups_can_be_scoped_to_one_install() {
         &Issuance {
             id: Uuid::new_v4().to_string(),
             vendor: VENDOR_ID.to_string(),
+            baoyun_account: None,
             install_id: "install-2".to_string(),
+            device_fingerprint: None,
             ip: "127.0.0.1".to_string(),
             vendor_key_handle: "other-handle".to_string(),
             issued_at: 0,
@@ -772,7 +778,9 @@ async fn usage_history_passes_through_the_vendors_log_entries() {
         &Issuance {
             id: "issuance-1".to_string(),
             vendor: "usage-logging".to_string(),
+            baoyun_account: None,
             install_id: "install-1".to_string(),
+            device_fingerprint: None,
             ip: "127.0.0.1".to_string(),
             vendor_key_handle: HANDLE.to_string(),
             issued_at: 0,
@@ -830,7 +838,9 @@ async fn make_state_with_usage_logging_vendor(key_hash: Option<String>) -> AppSt
         &Issuance {
             id: "issuance-1".to_string(),
             vendor: "usage-logging".to_string(),
+            baoyun_account: None,
             install_id: "install-1".to_string(),
+            device_fingerprint: None,
             ip: "127.0.0.1".to_string(),
             vendor_key_handle: HANDLE.to_string(),
             issued_at: 0,

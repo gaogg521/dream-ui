@@ -43,6 +43,24 @@ async fn main() -> anyhow::Result<()> {
         let baoyun_vendor: Arc<dyn TokenVendor> =
             Arc::new(BaoyunVendor::new(baoyun_config.access_token.clone()));
         vendors.insert(baoyun_vendor.id(), baoyun_vendor);
+        if let Some(legacy_access_token) = &baoyun_config.legacy_access_token {
+            let legacy_vendor: Arc<dyn TokenVendor> =
+                Arc::new(BaoyunVendor::new(legacy_access_token.clone()));
+            // Not a public vendor id: `AppState::vendor_for_issuance` selects
+            // it solely for historical `baoyun_account IS NULL` rows.
+            vendors.insert("baoyun-legacy", legacy_vendor);
+        }
+
+        if baoyun_config.issuer_account != "legacy"
+            && db::count_active_legacy_baoyun_issuances(&pool).await? > 0
+            && baoyun_config.legacy_access_token.is_none()
+        {
+            anyhow::bail!(
+                "BAOYUN_ISSUER_ACCOUNT is `{}` but active legacy Baoyun keys exist; \
+                 set BAOYUN_LEGACY_ACCESS_TOKEN before cutover",
+                baoyun_config.issuer_account
+            );
+        }
         tracing::info!("mode A vendor enabled: baoyun");
     }
 

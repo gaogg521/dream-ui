@@ -10,6 +10,15 @@ pub struct BaoyunAccountConfig {
     /// System access token from Baoyun's console (a different credential
     /// from any `sk-` key — see `crate::vendor::baoyun`). Never logged.
     pub access_token: String,
+    /// Logical issuer label recorded on new Baoyun issuance rows.  The
+    /// public API continues to call the vendor `baoyun`; this distinguishes
+    /// the reseller member that owns a key from the historical parent
+    /// account that may still own older keys.
+    pub issuer_account: String,
+    /// Parent-account token used only for historical rows whose
+    /// `baoyun_account` is NULL.  It must be supplied during the one-time
+    /// switch to `onework` while any such rows remain active.
+    pub legacy_access_token: Option<String>,
     /// Free trial grant, in CNY. Baoyun's `remain` never renews on its own,
     /// so this is a one-time balance, not a monthly allowance.
     pub trial_key_limit_cny: f64,
@@ -48,19 +57,10 @@ pub struct Config {
     /// builds the client's proxy `base_url` from it. Defaults to
     /// `http://<listen_addr>`, which is only right for local dev.
     pub public_base_url: String,
-    /// This platform's resale markup on real-money top-ups: for every
-    /// `topup_price_markup` CNY a user pays, they're granted 1 CNY of real
-    /// vendor spending power — e.g. at the default 1.10 (10% margin), a
-    /// ¥11.00 payment grants ¥10.00 of real vendor spend. Applied only where
-    /// paid CNY turns into vendor `remain` (`crate::topup::granted_for_payment`);
-    /// never applied to `apply_top_up` (an ops-only manual adjustment, not a
-    /// user payment) or to free trial grants (not user-paid). Platform-wide
-    /// rather than per-vendor since it's a pricing policy, not a vendor
-    /// quirk.
-    ///
-    /// The user is never shown this ratio, or any number derived from it —
-    /// see `crate::visible_balance` for the separate ledger that keeps the
-    /// markup entirely server-side.
+    /// Legacy resale markup.  New `onework` keys use the default 1.0: Baoyun
+    /// reseller pricing is the only customer price.  The setting remains for
+    /// historical parent-account issuances so their already-purchased credit
+    /// can still be reconciled faithfully.
     pub topup_price_markup: f64,
     /// Kill switch for real-money top-ups, independent of any vendor's own
     /// support for the operation — `.env` edit + restart, no rebuild. Checked
@@ -82,6 +82,13 @@ impl Config {
         let baoyun = match env::var("BAOYUN_ACCESS_TOKEN") {
             Ok(access_token) if !access_token.trim().is_empty() => Some(BaoyunAccountConfig {
                 access_token,
+                issuer_account: env::var("BAOYUN_ISSUER_ACCOUNT")
+                    .unwrap_or_else(|_| "legacy".to_string()),
+                legacy_access_token: match env::var("BAOYUN_LEGACY_ACCESS_TOKEN") {
+                    Ok(token) if !token.trim().is_empty() => Some(token),
+                    Ok(_) => anyhow::bail!("BAOYUN_LEGACY_ACCESS_TOKEN is set but empty"),
+                    Err(_) => None,
+                },
                 trial_key_limit_cny: parse_env_or("BAOYUN_TRIAL_KEY_LIMIT_CNY", 5.0)?,
                 // Kept at 50 new trial users/day (matches the OpenRouter cap's
                 // stated policy) — halved alongside the ¥10 -> ¥5 grant so the
@@ -112,7 +119,9 @@ impl Config {
             .trim_end_matches('/')
             .to_string();
 
-        let topup_price_markup = parse_env_or("TOPUP_PRICE_MARKUP", 1.10f64)?;
+        // 1:1 is now the production default: the Baoyun reseller member's
+        // configured price is the only end-user discount/markup layer.
+        let topup_price_markup = parse_env_or("TOPUP_PRICE_MARKUP", 1.0f64)?;
         // `<=` alone would let NaN through (every comparison against NaN is
         // false), so it needs its own check — same guard as topup amounts.
         if topup_price_markup.is_nan() || topup_price_markup <= 0.0 {

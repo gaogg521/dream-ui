@@ -9,7 +9,13 @@ pub struct Issuance {
     pub id: String,
     /// Which upstream platform minted this key (`TokenVendor::id`).
     pub vendor: String,
+    /// Baoyun reseller account that minted this key. `None` means the
+    /// historical parent account; non-Baoyun rows always keep this `None`.
+    pub baoyun_account: Option<String>,
     pub install_id: String,
+    /// SHA-256 of a namespaced OS machine identifier, supplied only by newer
+    /// desktop cores. The raw hardware/OS identifier never reaches this DB.
+    pub device_fingerprint: Option<String>,
     pub ip: String,
     /// The vendor's own opaque identifier for the key. Not the key itself —
     /// the plaintext is returned once, at creation, and never stored.
@@ -59,9 +65,10 @@ pub async fn init_pool(database_url: &str) -> anyhow::Result<SqlitePool> {
     Ok(pool)
 }
 
-const COLUMNS: &str = "id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, \
+const COLUMNS: &str =
+    "id, vendor, install_id, device_fingerprint, ip, vendor_key_handle, issued_at, expires_at, \
      disabled, key_hash, grant_limit_cny, grant_balance_cny, paid_limit_cny, paid_balance_cny, \
-     paid_real_remain_cny, last_synced_vendor_remain";
+     paid_real_remain_cny, last_synced_vendor_remain, baoyun_account";
 
 /// Looks up a non-disabled issuance for this install on this vendor (dedup
 /// check). Scoped per vendor: one device may hold one key per platform.
@@ -76,6 +83,24 @@ pub async fn find_active_by_install_id(
     ))
     .bind(vendor)
     .bind(install_id)
+    .fetch_optional(pool)
+    .await
+}
+
+/// Finds an issuance by the privacy-preserving stable machine fingerprint.
+/// Used only as a fallback after the normal install-id lookup, so old clients
+/// remain fully compatible and new clients can recover after local data loss.
+pub async fn find_active_by_device_fingerprint(
+    pool: &SqlitePool,
+    vendor: &str,
+    device_fingerprint: &str,
+) -> sqlx::Result<Option<Issuance>> {
+    sqlx::query_as::<_, Issuance>(&format!(
+        "SELECT {COLUMNS} FROM issuances
+         WHERE vendor = ? AND device_fingerprint = ? AND disabled = 0"
+    ))
+    .bind(vendor)
+    .bind(device_fingerprint)
     .fetch_optional(pool)
     .await
 }
@@ -124,6 +149,20 @@ pub async fn count_active_issued_since(
     .fetch_one(pool)
     .await?;
 
+    Ok(count)
+}
+
+/// Active Baoyun rows minted before the reseller-member cutover.  These
+/// rows deliberately keep `baoyun_account = NULL` so no migration ever
+/// rewrites their ownership; startup uses this count to require the parent
+/// account token when a deployment switches new issuance to `onework`.
+pub async fn count_active_legacy_baoyun_issuances(pool: &SqlitePool) -> sqlx::Result<i64> {
+    let (count,): (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM issuances
+         WHERE vendor = 'baoyun' AND baoyun_account IS NULL AND disabled = 0",
+    )
+    .fetch_one(pool)
+    .await?;
     Ok(count)
 }
 
@@ -189,13 +228,15 @@ pub async fn list_topup_credits(
 
 pub async fn insert_issuance(pool: &SqlitePool, issuance: &Issuance) -> sqlx::Result<()> {
     sqlx::query(
-        "INSERT INTO issuances (id, vendor, install_id, ip, vendor_key_handle, issued_at, expires_at, disabled, key_hash, \
+        "INSERT INTO issuances (id, vendor, baoyun_account, install_id, device_fingerprint, ip, vendor_key_handle, issued_at, expires_at, disabled, key_hash, \
          grant_limit_cny, grant_balance_cny, paid_limit_cny, paid_balance_cny, paid_real_remain_cny, last_synced_vendor_remain)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&issuance.id)
     .bind(&issuance.vendor)
+    .bind(&issuance.baoyun_account)
     .bind(&issuance.install_id)
+    .bind(&issuance.device_fingerprint)
     .bind(&issuance.ip)
     .bind(&issuance.vendor_key_handle)
     .bind(issuance.issued_at)

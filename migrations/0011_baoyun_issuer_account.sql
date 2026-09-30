@@ -1,0 +1,11 @@
+-- `vendor` remains the stable public protocol identifier (`baoyun`).
+--
+-- The account that actually minted a key is a separate concern: existing
+-- rows were issued from the original reseller account and must continue to
+-- be read/revealed/topped-up with that account's system token after new
+-- issuances move to the `onework` reseller member.
+--
+-- NULL deliberately means "legacy parent account".  SQLite adds this column
+-- as NULL for every historical row, so the migration never rewrites a user's
+-- existing key or balance.
+ALTER TABLE issuances ADD COLUMN baoyun_account TEXT;

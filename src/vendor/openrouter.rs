@@ -257,6 +257,43 @@ impl TokenVendor for OpenRouterVendor {
             })
         }
     }
+
+    async fn key_alive_models(&self, handle: &str) -> Result<Option<Vec<String>>, VendorError> {
+        match self.read_usage(handle).await {
+            Ok(_) => Ok(Some(
+                TRIAL_MODELS
+                    .iter()
+                    .map(|model| (*model).to_string())
+                    .collect(),
+            )),
+            Err(VendorError::Upstream { status: 404, .. }) => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
+
+    async fn rotate_unrevealable_key(
+        &self,
+        handle: &str,
+        spec: KeySpec,
+    ) -> Result<IssuedKey, VendorError> {
+        // The new key is made before the old one is revoked. If minting fails,
+        // the user keeps the old working key; if revocation fails, immediately
+        // revoke the new key and report failure rather than leave two spendable
+        // allowances alive.
+        let replacement = self.issue_key(spec).await?;
+        if let Err(error) = self.revoke(handle).await {
+            if let Err(cleanup_error) = self.revoke(&replacement.handle).await {
+                tracing::error!(
+                    old_handle = handle,
+                    new_handle = %replacement.handle,
+                    error = %cleanup_error,
+                    "failed to clean up replacement OpenRouter key after old-key revocation failed"
+                );
+            }
+            return Err(error);
+        }
+        Ok(replacement)
+    }
 }
 
 #[cfg(test)]

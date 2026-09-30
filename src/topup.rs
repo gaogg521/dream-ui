@@ -139,16 +139,17 @@ pub async fn create_topup_order(
     if amount.is_nan() || amount <= 0.0 {
         return Err(AppError::BadRequest("amount must be positive".into()));
     }
+    if state.public_vendor(vendor_id).is_none() {
+        return Err(AppError::VendorUnknown);
+    }
 
-    let vendor = state
-        .vendors
-        .get(vendor_id)
-        .ok_or(AppError::VendorUnknown)?;
-
-    db::find_active_by_install_id(&state.pool, vendor_id, install_id)
+    let issuance = db::find_active_by_install_id(&state.pool, vendor_id, install_id)
         .await
         .map_err(db_error("topup order account check"))?
         .ok_or(AppError::NotIssued)?;
+    let vendor = state
+        .vendor_for_issuance(&issuance)
+        .ok_or(AppError::VendorUnknown)?;
 
     let spec = TopupOrderSpec {
         amount,
@@ -194,16 +195,17 @@ pub async fn get_topup_order(
     if install_id.is_empty() {
         return Err(AppError::BadRequest("install_id must not be empty".into()));
     }
-
-    let vendor = state
-        .vendors
-        .get(vendor_id)
-        .ok_or(AppError::VendorUnknown)?;
+    if state.public_vendor(vendor_id).is_none() {
+        return Err(AppError::VendorUnknown);
+    }
 
     let issuance = db::find_active_by_install_id(&state.pool, vendor_id, install_id)
         .await
         .map_err(db_error("topup order poll account check"))?
         .ok_or(AppError::NotIssued)?;
+    let vendor = state
+        .vendor_for_issuance(&issuance)
+        .ok_or(AppError::VendorUnknown)?;
 
     let order = vendor
         .get_topup_order(order_id)
@@ -300,7 +302,7 @@ async fn credit_once(
     let reconciled =
         crate::service::reconcile_visible_balance(&state.pool, issuance, &usage_before).await?;
 
-    let granted = granted_for_payment(state.config.topup_price_markup, amount);
+    let granted = granted_for_payment(state.markup_for_issuance(issuance), amount);
     let usage_after = match vendor.top_up(handle, granted).await {
         Ok(usage) => usage,
         Err(e) => {
@@ -421,7 +423,7 @@ pub async fn list_topups(
     install_id: Option<&str>,
     order_id: Option<&str>,
 ) -> Result<Vec<TopupCreditView>, AppError> {
-    if !state.vendors.contains_key(vendor_id) {
+    if state.public_vendor(vendor_id).is_none() {
         return Err(AppError::VendorUnknown);
     }
     let credits = db::list_topup_credits(&state.pool, vendor_id, install_id, order_id)
@@ -477,15 +479,16 @@ pub async fn usage_history(
     install_id: &str,
     since_ms: Option<i64>,
 ) -> Result<Vec<UsageLogView>, AppError> {
-    let vendor = state
-        .vendors
-        .get(vendor_id)
-        .ok_or(AppError::VendorUnknown)?;
-
+    if state.public_vendor(vendor_id).is_none() {
+        return Err(AppError::VendorUnknown);
+    }
     let issuance = db::find_active_by_install_id(&state.pool, vendor_id, install_id)
         .await
         .map_err(db_error("usage history account check"))?
         .ok_or(AppError::NotIssued)?;
+    let vendor = state
+        .vendor_for_issuance(&issuance)
+        .ok_or(AppError::VendorUnknown)?;
 
     let logs = vendor
         .usage_logs(&issuance.vendor_key_handle, since_ms)
@@ -545,17 +548,18 @@ pub async fn usage_by_key(
         tracing::info!(ip = %ip, "rate limit rejection on key usage query");
         return Err(AppError::RateLimited);
     }
-
-    let vendor = state
-        .vendors
-        .get(vendor_id)
-        .ok_or(AppError::VendorUnknown)?;
+    if state.public_vendor(vendor_id).is_none() {
+        return Err(AppError::VendorUnknown);
+    }
 
     let key_hash = hash_key(key);
     let issuance = db::find_active_by_key_hash(&state.pool, vendor_id, &key_hash)
         .await
         .map_err(db_error("usage-by-key lookup"))?
         .ok_or(AppError::KeyNotFound)?;
+    let vendor = state
+        .vendor_for_issuance(&issuance)
+        .ok_or(AppError::VendorUnknown)?;
 
     let usage = vendor
         .read_usage(&issuance.vendor_key_handle)

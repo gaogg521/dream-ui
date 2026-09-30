@@ -13,7 +13,7 @@ use crate::error::AppError;
 use crate::metered::proxy::proxy_handler;
 use crate::metered::service as metered;
 use crate::service::{
-    apply_top_up, issue_trial_key, read_quota_status, AppState, QuotaStatusResponse,
+    apply_top_up, issue_trial_key_with_device, read_quota_status, AppState, QuotaStatusResponse,
     TrialKeyRequest, TrialKeyResponse,
 };
 use crate::topup;
@@ -94,7 +94,14 @@ async fn create_trial_key(
     Json(payload): Json<TrialKeyRequest>,
 ) -> Result<Json<TrialKeyResponse>, AppError> {
     let ip = extract_client_ip(&headers, addr);
-    let response = issue_trial_key(&state, &payload.vendor, &payload.install_id, ip).await?;
+    let response = issue_trial_key_with_device(
+        &state,
+        &payload.vendor,
+        &payload.install_id,
+        payload.device_fingerprint.as_deref(),
+        ip,
+    )
+    .await?;
     Ok(Json(response))
 }
 
@@ -149,7 +156,11 @@ async fn stats(State(state): State<Arc<AppState>>) -> Result<Json<serde_json::Va
     // vendor's per-key limit for as long as it lives, so naming it "daily
     // spend" would badly understate the commitment under a renewing reset.
     let mut vendor_stats = Vec::with_capacity(state.vendors.len());
-    for vendor_id in state.vendors.keys() {
+    for vendor_id in state
+        .vendors
+        .keys()
+        .filter(|vendor_id| **vendor_id != "baoyun-legacy")
+    {
         let issued_today = db::count_active_issued_since(
             &state.pool,
             vendor_id,

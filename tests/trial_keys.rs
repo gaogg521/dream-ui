@@ -9,7 +9,9 @@ use dream_trial_broker::config::Config;
 use dream_trial_broker::db;
 use dream_trial_broker::error::AppError;
 use dream_trial_broker::rate_limit::RateLimiter;
-use dream_trial_broker::service::{apply_top_up, issue_trial_key, read_quota_status, AppState};
+use dream_trial_broker::service::{
+    apply_top_up, issue_trial_key, issue_trial_key_with_device, read_quota_status, AppState,
+};
 use dream_trial_broker::vendor::{
     IssuedKey, KeySpec, KeyUsage, ProvisioningMode, ResetPeriod, TokenVendor, VendorClientConfig,
     VendorError,
@@ -23,10 +25,12 @@ const MOCK_VENDOR_ID: &str = "mockvendor";
 struct MockVendor {
     should_fail: bool,
     mode: ProvisioningMode,
+    recoverable_without_reveal: bool,
     /// Last spec handed to `issue_key`, so tests can assert on the cap we
     /// actually asked the vendor to enforce.
     last_spec: Mutex<Option<KeySpec>>,
     usage: Mutex<KeyUsage>,
+    revoked: Mutex<Vec<String>>,
 }
 
 impl MockVendor {
@@ -34,6 +38,7 @@ impl MockVendor {
         Self {
             should_fail,
             mode: ProvisioningMode::IssuedKey,
+            recoverable_without_reveal: false,
             last_spec: Mutex::new(None),
             usage: Mutex::new(KeyUsage {
                 limit_usd: Some(1.0),
@@ -43,6 +48,14 @@ impl MockVendor {
                 disabled: false,
                 currency: "USD".to_string(),
             }),
+            revoked: Mutex::new(Vec::new()),
+        }
+    }
+
+    fn recoverable_without_reveal() -> Self {
+        Self {
+            recoverable_without_reveal: true,
+            ..Self::new(false)
         }
     }
 
@@ -123,6 +136,7 @@ impl TokenVendor for MockVendor {
     }
 
     async fn revoke(&self, _handle: &str) -> Result<(), VendorError> {
+        self.revoked.lock().unwrap().push(_handle.to_string());
         Ok(())
     }
     async fn set_model_limits(
@@ -131,6 +145,46 @@ impl TokenVendor for MockVendor {
         _unrestricted: bool,
     ) -> Result<(), VendorError> {
         Ok(())
+    }
+
+    async fn key_alive_models(&self, _handle: &str) -> Result<Option<Vec<String>>, VendorError> {
+        if self.recoverable_without_reveal {
+            Ok(Some(
+                MODELS.iter().map(|model| (*model).to_string()).collect(),
+            ))
+        } else {
+            Err(VendorError::Unsupported {
+                vendor: MOCK_VENDOR_ID,
+                operation: "key_alive_models",
+            })
+        }
+    }
+
+    async fn reveal_key(&self, _handle: &str) -> Result<String, VendorError> {
+        Err(VendorError::Unsupported {
+            vendor: MOCK_VENDOR_ID,
+            operation: "reveal_key",
+        })
+    }
+
+    async fn rotate_unrevealable_key(
+        &self,
+        handle: &str,
+        spec: KeySpec,
+    ) -> Result<IssuedKey, VendorError> {
+        if !self.recoverable_without_reveal {
+            return Err(VendorError::Unsupported {
+                vendor: MOCK_VENDOR_ID,
+                operation: "rotate_unrevealable_key",
+            });
+        }
+        self.revoked.lock().unwrap().push(handle.to_string());
+        *self.last_spec.lock().unwrap() = Some(spec);
+        Ok(IssuedKey {
+            secret: "sk-mock-replacement".to_string(),
+            handle: "mock-replacement-handle".to_string(),
+            models: MODELS.iter().map(|s| s.to_string()).collect(),
+        })
     }
 }
 
@@ -251,6 +305,78 @@ async fn duplicate_install_id_returns_409() {
 
     assert!(matches!(err, AppError::AlreadyIssued));
     assert_eq!(err.status_code(), axum::http::StatusCode::CONFLICT);
+}
+
+#[tokio::test]
+async fn cleared_app_data_recovers_the_original_install_by_device_fingerprint() {
+    let (state, _) = make_state_with(MockVendor::recoverable_without_reveal(), |_| {}).await;
+    let caller_ip = ip(127, 0, 0, 1);
+
+    issue_trial_key_with_device(
+        &state,
+        MOCK_VENDOR_ID,
+        "install-before-reset",
+        Some("sha256-device-fingerprint"),
+        caller_ip,
+    )
+    .await
+    .expect("first device claim should succeed");
+
+    let recovered = issue_trial_key_with_device(
+        &state,
+        MOCK_VENDOR_ID,
+        "install-after-reset",
+        Some("sha256-device-fingerprint"),
+        caller_ip,
+    )
+    .await
+    .expect("device fingerprint should recover the original entitlement");
+    assert_eq!(recovered.install_id, "install-before-reset");
+
+    let row = db::find_active_by_device_fingerprint(
+        &state.pool,
+        MOCK_VENDOR_ID,
+        "sha256-device-fingerprint",
+    )
+    .await
+    .unwrap()
+    .expect("device fingerprint must map to the original issuance");
+    assert_eq!(row.install_id, "install-before-reset");
+}
+
+#[tokio::test]
+async fn a_locally_deleted_provider_rotates_an_unrevealable_key_without_resetting_credit() {
+    let (state, vendor) = make_state_with(MockVendor::recoverable_without_reveal(), |_| {}).await;
+    let caller_ip = ip(127, 0, 0, 1);
+
+    issue_trial_key(&state, MOCK_VENDOR_ID, "install-recover", caller_ip)
+        .await
+        .expect("first issuance should succeed");
+    vendor.usage.lock().unwrap().remaining_usd = Some(0.75);
+
+    let recovered = issue_trial_key(&state, MOCK_VENDOR_ID, "install-recover", caller_ip)
+        .await
+        .expect("a vendor that cannot re-reveal should rotate safely");
+
+    assert_eq!(recovered.key, "sk-mock-replacement");
+    let spec = vendor.last_spec();
+    assert_eq!(spec.limit_usd, 0.75, "must preserve only unspent credit");
+    assert_eq!(
+        spec.reset,
+        ResetPeriod::Cumulative,
+        "must not restart a renewing allowance"
+    );
+    assert_eq!(
+        vendor.revoked.lock().unwrap().as_slice(),
+        ["mock-handle"],
+        "the old key must be revoked when a replacement is returned"
+    );
+    let row = db::find_active_by_install_id(&state.pool, MOCK_VENDOR_ID, "install-recover")
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(row.vendor_key_handle, "mock-replacement-handle");
+    assert_eq!(row.grant_balance_cny, Some(0.75));
 }
 
 #[tokio::test]
@@ -667,7 +793,9 @@ async fn a_pre_migration_issuance_lazily_initializes_its_visible_balance_on_firs
         &db::Issuance {
             id: "pre-migration-issuance".to_string(),
             vendor: MOCK_VENDOR_ID.to_string(),
+            baoyun_account: None,
             install_id: "install-legacy".to_string(),
+            device_fingerprint: None,
             ip: "127.0.0.1".to_string(),
             vendor_key_handle: "mock-handle".to_string(),
             issued_at: 0,

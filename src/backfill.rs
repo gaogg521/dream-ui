@@ -33,11 +33,17 @@ use crate::vendor::VendorError;
 const DELAY_BETWEEN_REVEALS: Duration = Duration::from_secs(2);
 
 pub async fn run(state: Arc<AppState>) {
-    for (vendor_id, vendor) in state.vendors.iter() {
+    let vendor_ids: Vec<_> = state
+        .vendors
+        .keys()
+        .copied()
+        .filter(|id| *id != "baoyun-legacy")
+        .collect();
+    for vendor_id in vendor_ids {
         let rows = match db::list_active_without_key_hash(&state.pool, vendor_id).await {
             Ok(rows) => rows,
             Err(e) => {
-                tracing::error!(error = %e, vendor = *vendor_id, "key-hash backfill: db read failed");
+                tracing::error!(error = %e, vendor = vendor_id, "key-hash backfill: db read failed");
                 continue;
             }
         };
@@ -46,18 +52,26 @@ pub async fn run(state: Arc<AppState>) {
         }
 
         tracing::info!(
-            vendor = *vendor_id,
+            vendor = vendor_id,
             pending = rows.len(),
             "key-hash backfill: starting"
         );
 
         let mut filled = 0usize;
         for row in rows {
+            let Some(vendor) = state.vendor_for_issuance(&row) else {
+                tracing::warn!(
+                    vendor = vendor_id,
+                    handle = %row.vendor_key_handle,
+                    "key-hash backfill: no configured credential owns this issuance"
+                );
+                continue;
+            };
             match vendor.reveal_key(&row.vendor_key_handle).await {
                 Ok(secret) => {
                     if let Err(e) = db::set_key_hash(&state.pool, &row.id, &hash_key(&secret)).await
                     {
-                        tracing::error!(error = %e, vendor = *vendor_id, "key-hash backfill: db write failed");
+                        tracing::error!(error = %e, vendor = vendor_id, "key-hash backfill: db write failed");
                     } else {
                         filled += 1;
                     }
@@ -67,7 +81,7 @@ pub async fn run(state: Arc<AppState>) {
                 // a time.
                 Err(VendorError::Unsupported { .. }) => {
                     tracing::debug!(
-                        vendor = *vendor_id,
+                        vendor = vendor_id,
                         "key-hash backfill: vendor cannot reveal keys, skipping"
                     );
                     break;
@@ -77,7 +91,7 @@ pub async fn run(state: Arc<AppState>) {
                     // whatever is left is retried on the next restart.
                     tracing::warn!(
                         error = %e,
-                        vendor = *vendor_id,
+                        vendor = vendor_id,
                         handle = %row.vendor_key_handle,
                         "key-hash backfill: reveal failed, leaving it for next startup"
                     );
@@ -86,6 +100,6 @@ pub async fn run(state: Arc<AppState>) {
             tokio::time::sleep(DELAY_BETWEEN_REVEALS).await;
         }
 
-        tracing::info!(vendor = *vendor_id, filled, "key-hash backfill: done");
+        tracing::info!(vendor = vendor_id, filled, "key-hash backfill: done");
     }
 }

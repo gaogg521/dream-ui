@@ -19,6 +19,8 @@ use crate::vendor::{
 pub struct TrialKeyRequest {
     pub install_id: String,
     pub vendor: String,
+    #[serde(default)]
+    pub device_fingerprint: Option<String>,
 }
 
 #[derive(Debug, Serialize, PartialEq)]
@@ -36,6 +38,11 @@ pub struct TrialKeyResponse {
     /// `/v1/quota/status`. Not itself an amount field here, but sent from the
     /// same call site that will report one.
     pub currency: String,
+    /// The already-existing installation identity when a stable machine
+    /// fingerprint recovered an entitlement after local app data was cleared.
+    /// New cores persist it locally so all later quota/top-up calls keep using
+    /// the original payment reference. Older cores ignore this additive field.
+    pub install_id: String,
 }
 
 /// A key's spend position, for the client's quota display.
@@ -104,6 +111,15 @@ pub struct AppState {
 }
 
 impl AppState {
+    /// Resolves only public protocol vendors. `baoyun-legacy` is an internal
+    /// credential alias used to keep pre-cutover rows alive; a client must
+    /// never be able to name it and receive a new parent-account key.
+    pub(crate) fn public_vendor(&self, vendor_id: &str) -> Option<&Arc<dyn TokenVendor>> {
+        (vendor_id != "baoyun-legacy")
+            .then(|| self.vendors.get(vendor_id))
+            .flatten()
+    }
+
     /// Baoyun gets its own dedicated, opt-in config block (see `Config`);
     /// every other vendor id falls back to the general `trial_key_limit_*` /
     /// `daily_budget_usd_cap` fields. That fallback is deliberately not
@@ -126,6 +142,48 @@ impl AppState {
             limit_amount: self.config.trial_key_limit_usd,
             reset: self.config.trial_key_limit_reset,
             daily_budget_cap: self.config.daily_budget_usd_cap,
+        }
+    }
+
+    /// Chooses the credential that owns an already-issued key.  `baoyun` is
+    /// the public protocol/vendor identifier; it is intentionally not used
+    /// as the reseller-account identity.
+    pub(crate) fn vendor_for_issuance(&self, issuance: &Issuance) -> Option<&Arc<dyn TokenVendor>> {
+        if issuance.vendor == baoyun::ID && issuance.baoyun_account.is_none() {
+            // Before the reseller cutover every Baoyun row was minted by the
+            // parent account.  During a normal pre-cutover deployment no
+            // separate legacy credential exists, so the primary token is
+            // still the correct fallback.
+            return self
+                .vendors
+                .get("baoyun-legacy")
+                .or_else(|| self.vendors.get(baoyun::ID));
+        }
+        self.vendors.get(issuance.vendor.as_str())
+    }
+
+    /// New `onework` reseller keys have no broker-owned markup.  Historical
+    /// parent-account rows retain their original accounting policy so an old
+    /// purchase is never silently reinterpreted after the cutover.
+    pub(crate) fn markup_for_issuance(&self, issuance: &Issuance) -> f64 {
+        if issuance.vendor == baoyun::ID && issuance.baoyun_account.is_some() {
+            1.0
+        } else {
+            self.config.topup_price_markup
+        }
+    }
+
+    pub(crate) fn markup_for_new_issuance(&self, vendor_id: &str) -> f64 {
+        if vendor_id == baoyun::ID
+            && self
+                .config
+                .baoyun
+                .as_ref()
+                .is_some_and(|config| config.issuer_account != "legacy")
+        {
+            1.0
+        } else {
+            self.config.topup_price_markup
         }
     }
 }
@@ -157,13 +215,71 @@ pub async fn issue_trial_key(
     install_id: &str,
     ip: IpAddr,
 ) -> Result<TrialKeyResponse, AppError> {
+    issue_trial_key_with_device(state, vendor_id, install_id, None, ip).await
+}
+
+/// Same issuance flow with an optional stable machine fingerprint supplied by
+/// newer desktop cores. Kept separate so internal callers and older tests use
+/// the original install-id-only API unchanged.
+pub async fn issue_trial_key_with_device(
+    state: &AppState,
+    vendor_id: &str,
+    install_id: &str,
+    device_fingerprint: Option<&str>,
+    ip: IpAddr,
+) -> Result<TrialKeyResponse, AppError> {
     if install_id.trim().is_empty() {
         return Err(AppError::BadRequest("install_id must not be empty".into()));
     }
 
+    // 1. Dedup by (vendor, install_id) — but a *broken* existing issuance
+    // (the vendor reports the key itself is gone) gets recovered instead of
+    // permanently locking this install out. See `recover_or_reveal`.
+    let device_fingerprint = device_fingerprint.filter(|value| !value.trim().is_empty());
+    let existing = match db::find_active_by_install_id(&state.pool, vendor_id, install_id).await {
+        Ok(existing) => existing,
+        Err(e) => {
+            tracing::error!(error = %e, "db error during install-id dedup check");
+            return Err(AppError::Internal("database error".into()));
+        }
+    };
+    let existing = match existing {
+        Some(existing) => Some(existing),
+        None => match device_fingerprint {
+            Some(fingerprint) => {
+                match db::find_active_by_device_fingerprint(&state.pool, vendor_id, fingerprint)
+                    .await
+                {
+                    Ok(existing) => existing,
+                    Err(e) => {
+                        tracing::error!(error = %e, "db error during device-fingerprint dedup check");
+                        return Err(AppError::Internal("database error".into()));
+                    }
+                }
+            }
+            None => None,
+        },
+    };
+    match existing {
+        Some(existing) => {
+            let vendor = state
+                .vendor_for_issuance(&existing)
+                .ok_or(AppError::VendorUnknown)?;
+            return recover_or_reveal(
+                state,
+                vendor.as_ref(),
+                vendor_id,
+                &existing.install_id,
+                ip,
+                &existing,
+            )
+            .await;
+        }
+        None => {}
+    }
+
     let vendor = state
-        .vendors
-        .get(vendor_id)
+        .public_vendor(vendor_id)
         .ok_or(AppError::VendorUnknown)?;
     let policy = state.issuance_policy(vendor_id);
 
@@ -175,21 +291,6 @@ pub async fn issue_trial_key(
             "configured vendor cannot issue capped keys"
         );
         return Err(AppError::Internal("vendor cannot issue capped keys".into()));
-    }
-
-    // 1. Dedup by (vendor, install_id) — but a *broken* existing issuance
-    // (the vendor reports the key itself is gone) gets recovered instead of
-    // permanently locking this install out. See `recover_or_reveal`.
-    match db::find_active_by_install_id(&state.pool, vendor_id, install_id).await {
-        Ok(Some(existing)) => {
-            return recover_or_reveal(state, vendor.as_ref(), vendor_id, install_id, ip, &existing)
-                .await;
-        }
-        Ok(None) => {}
-        Err(e) => {
-            tracing::error!(error = %e, "db error during dedup check");
-            return Err(AppError::Internal("database error".into()));
-        }
     }
 
     // 2. Per-IP rate limit.
@@ -264,7 +365,10 @@ pub async fn issue_trial_key(
     let spec = KeySpec {
         label: trial_key_label(install_id),
         limit_usd: policy.limit_amount
-            + crate::topup::granted_for_payment(state.config.topup_price_markup, paid_total),
+            + crate::topup::granted_for_payment(
+                state.markup_for_new_issuance(vendor_id),
+                paid_total,
+            ),
         reset: policy.reset,
         expires_at: Some(expires_at.to_rfc3339_opts(SecondsFormat::Secs, true)),
         // 有真实付费历史的 install 重新发 key 时直接按付费档发——白名单是
@@ -285,31 +389,52 @@ pub async fn issue_trial_key(
     // grant) and `paid_total` (proven real payments) are both face-value
     // here, unlike `spec.limit_usd` above which is what actually landed on
     // the vendor's side. See `crate::visible_balance`.
-    let visible = crate::visible_balance::init_visible_balance(
-        policy.limit_amount,
-        paid_total,
-        state.config.topup_price_markup,
-        vendor_remain_at_issue,
-    );
+    // `onework` is priced directly by Baoyun's reseller member discount, so
+    // its Key's upstream `remain` is already the user-visible truth.  Keep
+    // the old visible/real split only for historical parent-account rows.
+    let visible = (vendor_id != baoyun::ID
+        || state
+            .config
+            .baoyun
+            .as_ref()
+            .is_some_and(|config| config.issuer_account == "legacy"))
+    .then(|| {
+        crate::visible_balance::init_visible_balance(
+            policy.limit_amount,
+            paid_total,
+            state.markup_for_new_issuance(vendor_id),
+            vendor_remain_at_issue,
+        )
+    });
 
     // 5. Persist the issuance (never the plaintext key — only its hash, for
     // `crate::topup::usage_by_key`'s paste-your-key lookup).
     let issuance = Issuance {
         id: Uuid::new_v4().to_string(),
         vendor: vendor_id.to_string(),
+        baoyun_account: (vendor_id == baoyun::ID).then(|| {
+            state
+                .config
+                .baoyun
+                .as_ref()
+                .expect("configured Baoyun vendor has config")
+                .issuer_account
+                .clone()
+        }),
         install_id: install_id.to_string(),
+        device_fingerprint: device_fingerprint.map(str::to_owned),
         ip: ip.to_string(),
         vendor_key_handle: issued.handle,
         issued_at: now_ms,
         expires_at: expires_at.timestamp_millis(),
         disabled: 0,
         key_hash: Some(hash_key(&issued.secret)),
-        grant_limit_cny: Some(visible.grant_limit_cny),
-        grant_balance_cny: Some(visible.grant_balance_cny),
-        paid_limit_cny: Some(visible.paid_limit_cny),
-        paid_balance_cny: Some(visible.paid_balance_cny),
-        paid_real_remain_cny: Some(visible.paid_real_remain_cny),
-        last_synced_vendor_remain: Some(visible.last_synced_vendor_remain),
+        grant_limit_cny: visible.map(|balance| balance.grant_limit_cny),
+        grant_balance_cny: visible.map(|balance| balance.grant_balance_cny),
+        paid_limit_cny: visible.map(|balance| balance.paid_limit_cny),
+        paid_balance_cny: visible.map(|balance| balance.paid_balance_cny),
+        paid_real_remain_cny: visible.map(|balance| balance.paid_real_remain_cny),
+        last_synced_vendor_remain: visible.map(|balance| balance.last_synced_vendor_remain),
     };
 
     db::insert_issuance(&state.pool, &issuance)
@@ -334,6 +459,7 @@ pub async fn issue_trial_key(
         platform: client.platform.to_string(),
         vendor: vendor_id.to_string(),
         currency: client.currency.to_string(),
+        install_id: install_id.to_string(),
     })
 }
 
@@ -361,13 +487,21 @@ async fn recover_or_reveal(
             // The key is still there — this install's own local copy of the
             // plaintext (or provider row) is what went missing. No need to
             // mint anything new: just hand the same key back.
-            let key = vendor
-                .reveal_key(&existing.vendor_key_handle)
-                .await
-                .map_err(|e| {
-                    log_vendor_error(&e);
-                    AppError::UpstreamError("failed to re-reveal the existing key".into())
-                })?;
+            let key = match vendor.reveal_key(&existing.vendor_key_handle).await {
+                Ok(key) => key,
+                Err(VendorError::Unsupported { .. }) => {
+                    return rotate_unrevealable_key(
+                        state, vendor, vendor_id, install_id, ip, existing, models,
+                    )
+                    .await;
+                }
+                Err(error) => {
+                    log_vendor_error(&error);
+                    return Err(AppError::UpstreamError(
+                        "failed to re-reveal the existing key".into(),
+                    ));
+                }
+            };
             tracing::info!(
                 vendor = vendor_id,
                 install_id_hash = %hash_prefix(install_id),
@@ -381,6 +515,7 @@ async fn recover_or_reveal(
                 platform: client.platform.to_string(),
                 vendor: vendor_id.to_string(),
                 currency: client.currency.to_string(),
+                install_id: existing.install_id.clone(),
             })
         }
         Ok(None) => recover_deleted_key(state, vendor, vendor_id, install_id, ip, existing).await,
@@ -392,6 +527,104 @@ async fn recover_or_reveal(
             ))
         }
     }
+}
+
+/// Recovery for vendors which can prove a key is alive but cannot show its
+/// old plaintext again. The replacement receives only what remained on the
+/// old key, retains the original expiry, and the vendor implementation must
+/// revoke the old key after safely minting the replacement. This makes a
+/// locally deleted provider recoverable without turning recovery into a new
+/// trial or a way to duplicate a paid allowance.
+async fn rotate_unrevealable_key(
+    state: &AppState,
+    vendor: &dyn TokenVendor,
+    vendor_id: &str,
+    install_id: &str,
+    ip: IpAddr,
+    existing: &Issuance,
+    models: Vec<String>,
+) -> Result<TrialKeyResponse, AppError> {
+    let usage = vendor
+        .read_usage(&existing.vendor_key_handle)
+        .await
+        .map_err(|error| {
+            log_vendor_error(&error);
+            AppError::UpstreamError("failed to read the existing key before recovery".into())
+        })?;
+    let remaining = usage.remaining_usd.ok_or_else(|| {
+        AppError::UpstreamError("cannot safely recover an uncapped existing key".into())
+    })?;
+    if usage.disabled || remaining <= 0.0 {
+        return Err(AppError::AlreadyIssued);
+    }
+
+    let expires_at = chrono::DateTime::from_timestamp_millis(existing.expires_at)
+        .ok_or_else(|| AppError::Internal("stored issuance expiry is invalid".into()))?;
+    let replacement = vendor
+        .rotate_unrevealable_key(
+            &existing.vendor_key_handle,
+            KeySpec {
+                label: trial_key_label(install_id),
+                limit_usd: remaining,
+                // Remaining credit is prepaid. A fresh recurring period would
+                // inflate it, so replacement is always a cumulative cap.
+                reset: ResetPeriod::Cumulative,
+                expires_at: Some(expires_at.to_rfc3339_opts(SecondsFormat::Secs, true)),
+                unrestricted_models: false,
+            },
+        )
+        .await
+        .map_err(|error| {
+            log_vendor_error(&error);
+            AppError::UpstreamError("failed to rotate the existing key for recovery".into())
+        })?;
+
+    let replacement_usage = KeyUsage {
+        limit_usd: Some(remaining),
+        used_usd: 0.0,
+        remaining_usd: Some(remaining),
+        reset: Some(ResetPeriod::Cumulative),
+        disabled: false,
+        currency: usage.currency,
+    };
+    let ledger = crate::visible_balance::init_visible_balance(
+        remaining,
+        0.0,
+        1.0,
+        replacement_usage.remaining_usd.unwrap_or(0.0),
+    );
+    db::replace_issuance_key(
+        &state.pool,
+        &existing.id,
+        &replacement.handle,
+        chrono::Utc::now().timestamp_millis(),
+        existing.expires_at,
+        &hash_key(&replacement.secret),
+        &ledger,
+    )
+    .await
+    .map_err(|error| {
+        tracing::error!(error = %error, "failed to persist rotated recovery key");
+        AppError::Internal("database error".into())
+    })?;
+
+    tracing::info!(
+        vendor = vendor_id,
+        install_id_hash = %hash_prefix(install_id),
+        ip = %ip,
+        remaining,
+        "recovered local provider by rotating unrevealable key"
+    );
+    let client = vendor.client_config();
+    Ok(TrialKeyResponse {
+        key: replacement.secret,
+        base_url: client.base_url.to_string(),
+        models,
+        platform: client.platform.to_string(),
+        vendor: vendor_id.to_string(),
+        currency: client.currency.to_string(),
+        install_id: existing.install_id.clone(),
+    })
 }
 
 /// The vendor confirmed `existing`'s key is genuinely gone. Reissues a fresh
@@ -425,7 +658,7 @@ async fn recover_deleted_key(
     // recovery would silently hand back the platform's margin along with
     // the principal.
     let granted_from_paid =
-        crate::topup::granted_for_payment(state.config.topup_price_markup, paid_total);
+        crate::topup::granted_for_payment(state.markup_for_issuance(existing), paid_total);
     let spec = KeySpec {
         label: trial_key_label(install_id),
         // Current free-grant policy plus everything this install proved it
@@ -455,7 +688,7 @@ async fn recover_deleted_key(
     let visible = crate::visible_balance::init_visible_balance(
         policy.limit_amount,
         paid_total,
-        state.config.topup_price_markup,
+        state.markup_for_issuance(existing),
         vendor_remain_at_issue,
     );
 
@@ -494,6 +727,7 @@ async fn recover_deleted_key(
         platform: client.platform.to_string(),
         vendor: vendor_id.to_string(),
         currency: client.currency.to_string(),
+        install_id: existing.install_id.clone(),
     })
 }
 
@@ -510,11 +744,9 @@ pub async fn read_quota_status(
     if install_id.trim().is_empty() {
         return Err(AppError::BadRequest("install_id must not be empty".into()));
     }
-
-    let vendor = state
-        .vendors
-        .get(vendor_id)
-        .ok_or(AppError::VendorUnknown)?;
+    if state.public_vendor(vendor_id).is_none() {
+        return Err(AppError::VendorUnknown);
+    }
 
     let issuance = db::find_active_by_install_id(&state.pool, vendor_id, install_id)
         .await
@@ -525,6 +757,10 @@ pub async fn read_quota_status(
         // Not an error state worth its own code: the caller asked about a key
         // this service never issued. 404 says exactly that.
         .ok_or(AppError::NotIssued)?;
+
+    let vendor = state
+        .vendor_for_issuance(&issuance)
+        .ok_or(AppError::VendorUnknown)?;
 
     let usage = vendor
         .read_usage(&issuance.vendor_key_handle)
@@ -570,6 +806,11 @@ pub(crate) async fn reconcile_visible_balance(
     issuance: &Issuance,
     vendor_usage: &KeyUsage,
 ) -> Result<Option<crate::visible_balance::VisibleBalanceState>, AppError> {
+    // A reseller-member Key is 1:1: its upstream balance is exactly what the
+    // user bought.  Do not build a second local shadow ledger for it.
+    if issuance.vendor == baoyun::ID && issuance.baoyun_account.is_some() {
+        return Ok(None);
+    }
     let current = match (
         issuance.grant_limit_cny,
         issuance.grant_balance_cny,
@@ -686,11 +927,9 @@ pub async fn apply_top_up(
     install_id: &str,
     delta_amount: f64,
 ) -> Result<QuotaStatusResponse, AppError> {
-    let vendor = state
-        .vendors
-        .get(vendor_id)
-        .ok_or(AppError::VendorUnknown)?;
-
+    if state.public_vendor(vendor_id).is_none() {
+        return Err(AppError::VendorUnknown);
+    }
     let issuance = db::find_active_by_install_id(&state.pool, vendor_id, install_id)
         .await
         .map_err(|e| {
@@ -698,6 +937,10 @@ pub async fn apply_top_up(
             AppError::Internal("database error".into())
         })?
         .ok_or(AppError::NotIssued)?;
+
+    let vendor = state
+        .vendor_for_issuance(&issuance)
+        .ok_or(AppError::VendorUnknown)?;
 
     // Read the pre-top-up usage first so any ordinary spending that
     // happened since the last reconcile gets folded in (grant first, at
@@ -790,6 +1033,92 @@ pub async fn apply_top_up(
 fn hash_prefix(s: &str) -> String {
     let digest = Sha256::digest(s.as_bytes());
     digest[..4].iter().map(|b| format!("{b:02x}")).collect()
+}
+
+#[cfg(test)]
+mod reseller_account_tests {
+    use std::collections::HashMap;
+    use std::sync::Arc;
+    use std::time::Duration;
+
+    use super::*;
+    use crate::config::BaoyunAccountConfig;
+    use crate::metered::MeteredRuntime;
+    use crate::search::SearchRuntime;
+    use crate::stt::SttRuntime;
+    use crate::vendor::baoyun::BaoyunVendor;
+
+    fn issuance(account: Option<&str>) -> Issuance {
+        Issuance {
+            id: "test".into(),
+            vendor: baoyun::ID.into(),
+            baoyun_account: account.map(str::to_string),
+            install_id: "install".into(),
+            device_fingerprint: None,
+            ip: "127.0.0.1".into(),
+            vendor_key_handle: "key".into(),
+            issued_at: 0,
+            expires_at: i64::MAX,
+            disabled: 0,
+            key_hash: None,
+            grant_limit_cny: None,
+            grant_balance_cny: None,
+            paid_limit_cny: None,
+            paid_balance_cny: None,
+            paid_real_remain_cny: None,
+            last_synced_vendor_remain: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn reseller_cutover_keeps_legacy_keys_on_the_parent_credential() {
+        let child: Arc<dyn TokenVendor> = Arc::new(BaoyunVendor::new("child".into()));
+        let parent: Arc<dyn TokenVendor> = Arc::new(BaoyunVendor::new("parent".into()));
+        let mut vendors = HashMap::new();
+        vendors.insert(baoyun::ID, Arc::clone(&child));
+        vendors.insert("baoyun-legacy", Arc::clone(&parent));
+        let state = AppState {
+            pool: crate::db::init_pool("sqlite::memory:").await.unwrap(),
+            config: Arc::new(Config {
+                openrouter_management_key: "unused".into(),
+                baoyun: Some(BaoyunAccountConfig {
+                    access_token: "child".into(),
+                    issuer_account: "onework".into(),
+                    legacy_access_token: Some("parent".into()),
+                    trial_key_limit_cny: 5.0,
+                    daily_budget_cny_cap: 250.0,
+                }),
+                database_url: "sqlite::memory:".into(),
+                daily_budget_usd_cap: 50.0,
+                trial_key_limit_usd: 1.0,
+                trial_key_limit_reset: ResetPeriod::Monthly,
+                trial_key_expires_days: 90,
+                listen_addr: "127.0.0.1:0".into(),
+                per_ip_rate_limit_per_hour: 5,
+                public_base_url: "http://127.0.0.1".into(),
+                topup_price_markup: 1.10,
+                topup_enabled: true,
+            }),
+            vendors,
+            rate_limiter: Arc::new(RateLimiter::new(5, Duration::from_secs(60))),
+            metered: Arc::new(MeteredRuntime::disabled()),
+            search: Arc::new(SearchRuntime::disabled()),
+            stt: Arc::new(SttRuntime::disabled()),
+        };
+
+        let legacy = issuance(None);
+        let onework = issuance(Some("onework"));
+        assert!(Arc::ptr_eq(
+            state.vendor_for_issuance(&legacy).unwrap(),
+            &parent
+        ));
+        assert!(Arc::ptr_eq(
+            state.vendor_for_issuance(&onework).unwrap(),
+            &child
+        ));
+        assert_eq!(state.markup_for_issuance(&legacy), 1.10);
+        assert_eq!(state.markup_for_issuance(&onework), 1.0);
+    }
 }
 
 /// Full sha256 hex digest of a plaintext issued key — stored alongside

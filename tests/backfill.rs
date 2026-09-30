@@ -164,7 +164,9 @@ async fn insert(pool: &sqlx::SqlitePool, id: &str, vendor: &str, handle: &str, h
         &Issuance {
             id: id.to_string(),
             vendor: vendor.to_string(),
+            baoyun_account: None,
             install_id: format!("install-for-{id}"),
+            device_fingerprint: None,
             ip: "127.0.0.1".to_string(),
             vendor_key_handle: handle.to_string(),
             issued_at: 0,

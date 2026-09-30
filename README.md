@@ -5,9 +5,10 @@ allowance on an upstream LLM platform. It runs two independent billing models
 side by side:
 
 - **Mode A — issued key** (`/v1/trial-keys`, `/v1/quota/status`): holds the
-  company's OpenRouter Management Key and mints a brand-new capped-spend
-  sub-key. The broker is out of the inference path — the caller talks to
-  OpenRouter directly.
+  vendor's management/system credential and mints a brand-new capped-spend
+  key. The broker is out of the inference path — the caller talks directly
+  to the selected vendor. Baoyun keys issued after the reseller cutover belong
+  to the `onework` member; see [`docs/baoyun-reseller-cutover.zh-CN.md`](docs/baoyun-reseller-cutover.zh-CN.md).
 - **Mode B — metered proxy** (`/v1/metered/*`): for a vendor that cannot cap a
   key (e.g. Baoyun). The broker forwards inference under one master key,
   streams the response back, and bills each call against a local CNY ledger,
@@ -64,6 +65,10 @@ migrates a local SQLite file at `DATABASE_URL` (default
 | `LISTEN_ADDR` | no | `0.0.0.0:8787` | HTTP bind address. |
 | `PER_IP_RATE_LIMIT_PER_HOUR` | no | `5` | In-memory sliding-window cap per caller IP. |
 | `PUBLIC_BASE_URL` | no | `http://<LISTEN_ADDR>` | The broker's own external base URL, used to build mode B's client proxy URL. Set in production. |
+| `BAOYUN_ACCESS_TOKEN` | no | — | Baoyun system access token for newly issued keys. During the reseller cutover this is the `onework` member token, never an `sk-` key. |
+| `BAOYUN_ISSUER_ACCOUNT` | no | `legacy` | Set to `onework` when new Baoyun keys must belong to that reseller member. |
+| `BAOYUN_LEGACY_ACCESS_TOKEN` | conditional | — | Original parent-account system token. Required while active rows from before the `onework` cutover remain. |
+| `TOPUP_PRICE_MARKUP` | no | `1.0` | New `onework` Key top-ups are always 1:1; this legacy setting only preserves historical parent-account accounting. |
 | `BAOYUN_MASTER_API_KEY` | no | — | Secret. Enables the mode B `baoyun` vendor when set; mode B is off otherwise. |
 | `BAOYUN_BASE_URL` | no | `https://ai-api.baoyun.com` | Baoyun upstream origin. |
 | `BAOYUN_FREE_GRANT_CENTS` | no | `1000` | One-time free grant, CNY cents (`1000` = ¥10.00). |

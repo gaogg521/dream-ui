@@ -51,4 +51,16 @@ mod tests {
         // A query-string handoff would be logged by nginx and the broker.
         assert!(!USAGE_PAGE.contains("location.search).get('key')"));
     }
+
+    /// A failed lookup for a different pasted key must not leave the last
+    /// successful key's balance visible below the error card. Keeping the
+    /// current dashboard during a refresh is useful; keeping another key's
+    /// dashboard is misleading.
+    #[test]
+    fn changing_keys_clears_the_previous_dashboard_before_querying() {
+        assert!(USAGE_PAGE.contains("activeKey: null"));
+        assert!(USAGE_PAGE.contains("key !== state.activeKey"));
+        assert!(USAGE_PAGE.contains("$('result').classList.remove('show')"));
+        assert!(USAGE_PAGE.contains("state.activeKey = key"));
+    }
 }

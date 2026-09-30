@@ -600,6 +600,7 @@
     modelFilter: 'all',
     page: 1,
     handoff: false,       // true：key 来自 One Work 客户端的 fragment 带入
+    activeKey: null,      // 仅同一把已验证 Key 的刷新可以保留旧仪表盘
   };
 
   // ---- tiny helpers ----
@@ -1034,8 +1035,14 @@
   function run() {
     var key = keyInput.value.trim();
     if (!key) { showError('请先粘贴你的 API Key。'); keyInput.focus(); return; }
+    // 手动换一把 Key 时，不能让上一把的余额留在新的错误下方。只有刷新
+    // 同一把已验证 Key 时才保留仪表盘，避免网络请求期间整页闪回首页。
+    if (key !== state.activeKey) {
+      $('result').classList.remove('show');
+      $('intro').hidden = false;
+    }
     loading(true);
-    // 刷新时保留当前仪表盘（只清错误卡），避免每次刷新整页闪回首页
+    // 换 Key 已在上方清掉结果；同 Key 刷新只清错误卡。
     $('errorCard').classList.remove('show');
 
     // Relative, not "/v1/...": this page is served under nginx's
@@ -1048,7 +1055,7 @@
       .then(function (res) { return res.json().then(function (body) { return { status: res.status, body: body }; }); })
       .then(function (r) {
         loading(false);
-        if (r.status === 200) { render(r.body); saveRecent(key); return; }
+        if (r.status === 200) { state.activeKey = key; render(r.body); saveRecent(key); return; }
         var code = r.body && r.body.error;
         if (r.status === 404 && code === 'key_not_found') {
           showError('没有找到这把 Key。请确认粘贴完整，并且它还没有被停用或替换。');

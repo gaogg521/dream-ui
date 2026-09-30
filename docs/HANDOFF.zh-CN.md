@@ -1,5 +1,7 @@
 # 交接文档：dream-trial-broker 试用/充值/查询体系
 
+> **2026-09-30 分销切换已上线：** 新 Baoyun Key 由宝云下级成员 `onework` 签发并按其成员折扣计价；用户充值为 1:1，不再走 OneWork 自身加价/影子账本。历史主账号 Key 保持原账户和原账本。部署变量、回滚边界和验收步骤见 [`baoyun-reseller-cutover.zh-CN.md`](baoyun-reseller-cutover.zh-CN.md)；本文中所有“15% 加价”历史说明不得用于新 Key。
+
 > **给谁看**：任何第一次接手这个系统的 AI 或人类，不用先读完 §十一 那 17 段
 > 历史记录也能干活。这份文档只写"现在是什么样"，**不是**按时间顺序的施工日志——
 > 那份日志在 [`baoyun-metered-proxy-handoff.zh-CN.md`](baoyun-metered-proxy-handoff.zh-CN.md)，
