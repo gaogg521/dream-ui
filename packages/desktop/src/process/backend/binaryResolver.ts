@@ -166,7 +166,7 @@ function resolveBundledBinary(
       const candidate = join(runtimeDir, name);
       // Diagnostics follow the primary name in the current-name bundle dir
       // (the standard location); legacy-name fallback attempts are noise.
-      if (name === primaryName && currentName) {
+      if (name === primaryName && currentName && !diagnostics.checkedBundledPath) {
         diagnostics.resourcesPath = join(bundledDir, '..');
         diagnostics.checkedBundledPath = candidate;
         diagnostics.bundledDirExists = existsSync(bundledDir);

@@ -119,6 +119,20 @@ describe('resolveBinaryPath', () => {
     expect(resolveBinaryPath()).toBe(resolved);
   });
 
+  it('prefers the installed bundled core over a source-checkout bundle', () => {
+    const resourcesPath = '/installed/resources';
+    const runtimeKey = `${process.platform}-${process.arch}`;
+    const binaryName = process.platform === 'win32' ? 'dreamcore.exe' : 'dreamcore';
+    const installedBinary = join(resourcesPath, 'bundled-dreamcore', runtimeKey, binaryName);
+    const sourceBinary = join(process.cwd(), 'resources', 'bundled-dreamcore', runtimeKey, binaryName);
+
+    setResourcesPath(resourcesPath);
+    vi.mocked(existsSync).mockImplementation((path) => path === installedBinary || path === sourceBinary);
+
+    expect(resolveBinaryPath()).toBe(installedBinary);
+    expect(execSync).not.toHaveBeenCalled();
+  });
+
   it('attaches bundled path diagnostics when dreamcore cannot be resolved', () => {
     const resourcesPath = '/app/resources';
     // The resolver reports the resources dir as `join(bundledDir, '..')`, so on
