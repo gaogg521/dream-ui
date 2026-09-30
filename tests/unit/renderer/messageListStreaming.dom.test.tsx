@@ -41,7 +41,9 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('@arco-design/web-react', () => ({
-  Button: ({ children, ...props }: PropsWithChildren<Record<string, unknown>>) => <button {...props}>{children}</button>,
+  Button: ({ children, ...props }: PropsWithChildren<Record<string, unknown>>) => (
+    <button {...props}>{children}</button>
+  ),
   Image: {
     PreviewGroup: ({ children }: PropsWithChildren) => <>{children}</>,
   },
