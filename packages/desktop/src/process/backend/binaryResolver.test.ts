@@ -79,4 +79,17 @@ describe('resolveBinaryPath', () => {
       });
     }
   });
+
+  it('prefers an installed bundled core over a source-checkout bundle', () => {
+    const resourcesPath = '/installed/resources';
+    const runtimeKey = `${process.platform}-${process.arch}`;
+    const binaryName = process.platform === 'win32' ? 'dreamcore.exe' : 'dreamcore';
+    const installed = join(resourcesPath, 'bundled-dreamcore', runtimeKey, binaryName);
+
+    setResourcesPath(resourcesPath);
+    vi.mocked(existsSync).mockImplementation((path) => path === installed);
+
+    expect(resolveBinaryPath()).toBe(installed);
+    expect(execSync).not.toHaveBeenCalled();
+  });
 });

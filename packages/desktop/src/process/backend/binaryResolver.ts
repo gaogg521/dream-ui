@@ -128,10 +128,11 @@ function envOverridePath(diagnostics: BackendBinaryResolveDiagnostics): string |
 /**
  * Resolve bundled binary. Search order:
  *  1. DREAM_BACKEND_BUNDLED_DIR (explicit override)
- *  2. {cwd}/resources/bundled-dreamcore (dev — backend-rebuild output; the
+ *  2. process.resourcesPath/bundled-dreamcore (the installed application's
+ *     own resources; this must win even when it is launched from a source
+ *     checkout)
+ *  3. {cwd}/resources/bundled-dreamcore (dev — backend-rebuild output; the
  *     legacy bundled-aioncore dir is still honored)
- *  3. process.resourcesPath/bundled-dreamcore (packaged app; in dev this is
- *     node_modules/electron/dist/resources and is often stale)
  */
 function resolveBundledBinary(
   runtimeKey: string,
@@ -145,8 +146,8 @@ function resolveBundledBinary(
   const envBundledDir = process.env.DREAM_BACKEND_BUNDLED_DIR?.trim();
   if (envBundledDir) bundleDirs.push({ dir: envBundledDir, currentName: true });
   for (const root of [
-    join(process.cwd(), 'resources'),
     (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath,
+    join(process.cwd(), 'resources'),
   ]) {
     if (!root) continue;
     for (const dirName of BUNDLED_DIR_NAMES) {
