@@ -1,0 +1,24 @@
+{
+  "version": "3.0.9",
+  "date": "2026-09-30",
+  "zh": [
+    {
+      "t": "单机版",
+      "d": "本版完善宝云分销接入、额度恢复与充值体验，并带来语音识别、会话连续性和媒体意图交互改进。\n\n【新增】\n· 【宝云分销】新领取的宝云模型 Key 由 One Work 分销商账户签发并应用会员折扣；历史 Key 保持原渠道可用\n· 【语音识别】接入托管实时语音识别，支持已配置音频模型；静音录音不再发送空请求\n\n【优化改进】\n· 【宝云额度】清除本地应用数据后，同一设备会恢复原安装身份、已领模型和已充值权益；开发环境与正式安装包保持彼此独立\n· 【充值】额度耗尽时明确提示并可直接进入充值；宝云 Key 的余额状态会先刷新，避免把其他自定义 Key 的额度错误当作可充值额度\n· 【会话】移动端历史、重连后的消息连续性和登录后的模型刷新更稳定；取消图片或视频模式选择会继续发送原文本\n\n【修复】\n· 【宝云安全】充值订单仍须由宝云侧确认、绑定原安装身份且每个订单仅能入账一次；修复删除 OpenRouter/宝云模型后无法安全恢复的问题\n· 修复语音配置迁移、构建图标导入、深色模式充值卡片和多技能选择的界面细节"
+    },
+    {
+      "t": "企业版",
+      "d": "企业部署同步获得宝云分销额度恢复、可验证充值链路、托管语音识别和更稳定的会话连续性。管理员可继续按既有账户与权限模型管理成员，历史模型渠道不受本次分销切换影响。"
+    }
+  ],
+  "en": [
+    {
+      "t": "Personal edition",
+      "d": "This release completes the Baoyun reseller integration, entitlement recovery, and top-up experience, with improvements to speech recognition, conversation continuity, and media-intent interaction.\n\n[New]\n· [Baoyun reseller] Newly claimed Baoyun model keys are issued through the One Work reseller account with member discounts; existing keys remain available on their original channel\n· [Speech recognition] Hosted realtime speech recognition and configured audio models are supported; silent recordings no longer send empty requests\n\n[Improved]\n· [Baoyun balance] Clearing local app data on the same device restores the prior installation identity, claimed models, and paid entitlement; development and packaged installations remain separate\n· [Top-up] Exhausted balance now gives a clear path to recharge, after a fresh Baoyun-key balance check\n· [Conversation] Mobile history, reconnect continuity, and post-login model refresh are more reliable; cancelling image/video mode sends the original text\n\n[Fixed]\n· [Baoyun security] Top-up still requires vendor confirmation, is bound to the original installation, and credits each order once; safely recover deleted OpenRouter or Baoyun trial models\n· Fixed speech configuration migration, icon build transforms, dark top-up card contrast, and multi-skill UI details"
+    },
+    {
+      "t": "Enterprise edition",
+      "d": "Enterprise deployments receive the same Baoyun reseller entitlement recovery, verifiable top-up flow, hosted speech recognition, and improved conversation continuity. Existing account and permission management remains unchanged, and legacy model channels are compatible with the reseller cutover."
+    }
+  ]
+}
