@@ -12,7 +12,7 @@ import MarkdownView from '@renderer/components/Markdown';
 import ButlerDiagnoseButton from '@renderer/components/base/ButlerDiagnoseButton';
 import FeedbackButton from '@renderer/components/base/FeedbackButton';
 import CollapsibleContent from '@renderer/components/chat/CollapsibleContent';
-import MeteredTopUpCta from './MeteredTopUpCta';
+import TrialTopUpCta from './TrialTopUpCta';
 import { iconColors } from '@/renderer/styles/colors';
 
 // One entry per `IMessageTips['type']`. `info` was missing, and the render
@@ -165,7 +165,7 @@ const MessageTips: React.FC<{ message: IMessageTips }> = ({ message }) => {
               )}
               {errorCode === 'USER_LLM_PROVIDER_QUOTA_EXHAUSTED' && (
                 <div className='mt-2px'>
-                  <MeteredTopUpCta />
+                  <TrialTopUpCta />
                 </div>
               )}
               {detailParts.length > 0 && (

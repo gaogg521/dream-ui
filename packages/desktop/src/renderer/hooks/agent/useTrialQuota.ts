@@ -11,8 +11,10 @@ import { isMeteredTrialVendor, type TrialVendor } from './useTrialModelClaim';
 /**
  * A trial vendor's spend position, tagged by which billing model it is.
  *
- *  - `issued` — mode A (OpenRouter): USD against a broker-set cap.
- *  - `metered` — mode B (Baoyun): the broker's local CNY-cents ledger.
+ *  - `issued` — mode A (OpenRouter or Baoyun): the vendor key's own capped
+ *    balance, read through the broker account API.
+ *  - `metered` — mode B: a broker-local CNY-cents ledger retained for a
+ *    future vendor that cannot issue capped keys.
  */
 export type TrialQuotaView =
   | { kind: 'issued'; vendor: TrialVendor; data: TrialQuotaStatusResponse }
