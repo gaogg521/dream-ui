@@ -7,6 +7,11 @@
 > **代码溯源**：本仓库 2026-08-23 由一次性快照建立（不含 `.git` 历史），来源是拆分三仓之前
 > 的旧桌面端仓库。中转用的临时目录已经废弃，**不要再去找它**；这里就是唯一的真相。
 
+> **⚠️ 出安装包前必读 [desktop-release-runbook.zh-CN.md](./docs/guides/desktop-release-runbook.zh-CN.md)**：
+> 安装包里的 dreamcore 是**下载**的 `dreamcoreVersion` 固定版本，不是 dev 里本地编的那个——dream-core 的改动
+> 要先发版、再改 pin 才进得了包。打包脚本开头的预检（`scripts/preflight-package.js`）会拦住 pin 落后、
+> Release 缺平台产物、本地有未推送改动这几种情况。
+
 > **⚠️ dev/打包测试前必读**：dev 模式的 userData 目录名是 `dream-ui-Dev` / `dream-ui-Dev-2`
 > （`getDevAppName()`）。历史上它跟旧仓库同名，导致 dream-core 的新迁移把旧仓库那边跑了
 > 数月的真实测试数据往前推了版本、打不开——改名之后天然隔离，但**任何改动都不要把这两个

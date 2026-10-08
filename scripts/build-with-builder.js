@@ -910,6 +910,26 @@ if (skipNative) console.log('⚡ --skip-native: Will skip native module rebuildi
 if (packOnly) console.log('⚡ --pack-only: Will skip electron-builder distributable creation');
 if (forceBuild) console.log('⚡ --force: Force full rebuild');
 
+// 0. Refuse to package an installer that silently lacks committed work (stale
+// dreamcore pin, release missing this platform's binary, unpushed code).
+// Runs first so a doomed build fails in seconds, not after the Vite build.
+if (!packOnly) {
+  const preflight = spawnSync(
+    process.execPath,
+    [
+      path.resolve(__dirname, 'preflight-package.js'),
+      '--platform',
+      process.platform,
+      '--arch',
+      (multiArch ? archArgs : [targetArch]).join(','),
+    ],
+    { stdio: 'inherit', env: process.env }
+  );
+  if (preflight.status !== 0) {
+    process.exit(preflight.status || 1);
+  }
+}
+
 const packageJsonPath = path.resolve(__dirname, '../package.json');
 let restorePackageVersionOverride = () => {};
 let buildFailed = false;

@@ -393,6 +393,19 @@ jobs:
           MSVS_VERSION: 2022
           GYP_MSVS_VERSION: 2022
 
+      # Its own step on purpose: the Windows build step below swallows failures
+      # so other platforms can continue, which would hide a stale dreamcore pin.
+      # See docs/guides/desktop-release-runbook.zh-CN.md.
+      - name: Packaging pre-flight
+        shell: bash
+        run: |
+          node scripts/preflight-package.js --arch "${{ matrix.arch }}"
+          # Passed once with a token; the build scripts need not re-query GitHub anonymously.
+          echo "DREAM_SKIP_PREFLIGHT=1" >> "$GITHUB_ENV"
+        env:
+          DREAM_BACKEND_RUN_ID: ${{ inputs.dreamcore_run_id }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+
       - name: Prepare dreamcore binary
         shell: bash
         run: node scripts/prepareDreamcore.js

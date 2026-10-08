@@ -191,6 +191,15 @@ When opening a PR, fill in the PR body using [.github/pull_request_template.md](
 
 **NEVER add AI signatures** (Co-Authored-By, Generated with, etc.).
 
+## Packaging an installer
+
+**Read [docs/guides/desktop-release-runbook.zh-CN.md](docs/guides/desktop-release-runbook.zh-CN.md) before building a release package.**
+The installer does not contain the dreamcore you run in dev: it downloads the dream-core release pinned by
+`package.json` `dreamcoreVersion`. Backend work on dream-core `main` reaches users only after a dream-core
+release (merge the release-please PR, then dispatch the Release workflow — tags do not trigger it) and a pin
+bump here. `scripts/build-with-builder.js` runs `scripts/preflight-package.js` first and aborts when the pin
+is behind `main`, the release lacks this platform's binary, or this checkout has unpushed work.
+
 ## Skills Index
 
 | Skill            | Purpose                                                                     | Triggers                                                                                               |

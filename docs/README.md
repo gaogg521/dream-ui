@@ -13,6 +13,7 @@ Documentation is organized by reader intent, not by document type.
 
 ## Quick pointers
 
+- **出桌面安装包前必读：dreamcore 是按 pin 下载的、发版顺序、打包预检查什么、踩过的坑**? [`guides/desktop-release-runbook.zh-CN.md`](guides/desktop-release-runbook.zh-CN.md).
 - **2026-10-08：AI 提问改为输入框上方弹窗（dream 引擎新增 AskUserQuestion 工具）+ 聊天记录导出 MD / 侧边栏打包 ZIP + 系统提示「先干活、少打断」**? [`guides/session-2026-10-08-ask-dialog-chat-export-act-first.zh-CN.md`](guides/session-2026-10-08-ask-dialog-chat-export-act-first.zh-CN.md).
 - **2026-09-09：安装包瘦身 + 安装速度（装机 −39%、安装包 −26%；差分更新；`useZip` 实测否决）**? [`guides/session-2026-09-09-package-size-and-install-speed.zh-CN.md`](guides/session-2026-09-09-package-size-and-install-speed.zh-CN.md).
 - **多媒体生成（图片/视频）架构设计（Form A/B/C 三形态适配 + 异步任务引擎 + 能力目录，五阶段路线图，待评审）**? [`specs/media-generation/architecture.zh-CN.md`](specs/media-generation/architecture.zh-CN.md).

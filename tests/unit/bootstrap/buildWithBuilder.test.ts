@@ -350,6 +350,9 @@ childProcess.execSync = function mockedExecSync(command) {
         encoding: 'utf8',
         env: {
           ...process.env,
+          // The release pre-flight queries GitHub about the real pin; this test
+          // is about the packaging flow, so keep it offline and deterministic.
+          DREAM_SKIP_PREFLIGHT: '1',
           DREAM_PREPARE_CALLS_FILE: callsPath,
           NODE_OPTIONS: [process.env.NODE_OPTIONS, `--require=${hookPath}`].filter(Boolean).join(' '),
         },
