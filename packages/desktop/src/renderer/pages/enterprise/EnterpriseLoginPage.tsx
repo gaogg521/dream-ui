@@ -150,7 +150,7 @@ const EnterpriseLoginPage: React.FC = () => {
     if (!normalized) {
       Message.warning(
         t('settings.webui.deployServerUrlInvalid', {
-          defaultValue: '请输入有效的服务器地址，例如 192.168.1.10:25809',
+          defaultValue: '请输入有效的服务器地址，例如 https://ai.example.com 或 192.168.1.10:25809',
         })
       );
       return;
@@ -256,7 +256,7 @@ const EnterpriseLoginPage: React.FC = () => {
           onChange={setUrl}
           data={serverUrlHistory}
           placeholder={t('settings.webui.deployServerUrlPlaceholder', {
-            defaultValue: '例如 192.168.1.10:25809',
+            defaultValue: '例如 https://ai.example.com 或 192.168.1.10:25809',
           })}
           style={{ flex: 1 }}
         />
@@ -266,7 +266,7 @@ const EnterpriseLoginPage: React.FC = () => {
       </div>
       <div className='text-11px text-t-tertiary mt-8px'>
         {t('settings.webui.deployServerUrlHint', {
-          defaultValue: '请填写含端口的完整地址（服务端端口可在服务器 WebUI 设置中查看）',
+          defaultValue: '填写管理员提供的企业服务器地址：用域名部署的填 https:// 开头的域名，局域网服务器填 IP 加端口',
         })}
       </div>
       <Alert
