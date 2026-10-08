@@ -50,9 +50,9 @@
     "batchDeleteSuccess_other": "{{count}} tópicos excluídos",
     "batchNoSelection": "Por favor, selecione os tópicos primeiro",
     "export": "Exportar",
-    "exportDialogTitle": "Exportar Tópicos",
-    "exportDialogSingleDescription": "Exporte os registros de conversas do tópico atual (JSON + Markdown) e arquivos do projeto em um pacote ZIP.",
-    "exportDialogBatchDescription": "Exporte os registros de conversas (JSON + Markdown) dos {{count}} tópicos selecionados e os arquivos do projeto para um pacote ZIP.",
+    "exportDialogTitle": "Exportar conversas",
+    "exportDialogSingleDescription": "Exporta o histórico desta conversa como arquivo Markdown em um pacote ZIP.",
+    "exportDialogBatchDescription": "Exporta o histórico de {{count}} conversas como arquivos Markdown em um único ZIP.",
     "exportTargetFolder": "Exportar Para a Pasta",
     "exportSelectFolder": "Por favor, selecione uma pasta de exportação",
     "exportDialogHint": "A seleção de pasta segue a mesma interação da troca do projeto.",
@@ -86,7 +86,9 @@
     "forkedFrom": "Bifurcada de “{{name}}”",
     "forkedConversation": "Conversa bifurcada",
     "viewAllTooltip": "Ver tudo na Central de Sessões",
-    "shareToSession": "Compartilhar na minha conversa"
+    "shareToSession": "Compartilhar na minha conversa",
+    "exportSelected": "Exportar selecionadas",
+    "exportAll": "Exportar todas"
   },
   "historySearch": {
     "tooltip": "Pesquisar mensagens",

@@ -46,6 +46,7 @@ import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
 import { useCompositionInput } from '@renderer/hooks/chat/useCompositionInput';
 import { useConversationExport } from '@renderer/hooks/file/useConversationExport';
+import QuestionDialog from '@renderer/pages/conversation/Messages/question/QuestionDialog';
 import { useDragUpload } from '@renderer/hooks/file/useDragUpload';
 import { useLatestRef } from '@renderer/hooks/ui/useLatestRef';
 import { usePasteService } from '@renderer/hooks/file/usePasteService';
@@ -1762,6 +1763,7 @@ const SendBox: React.FC<{
 
   return (
     <div className={`relative ${className ?? ''}`.trim()}>
+      <QuestionDialog />
       {topRightOverlay && (
         // Zero-height overlay: absolutely positioned inside the box's own
         // root, so it never reflows the box or a preceding ThoughtDisplay

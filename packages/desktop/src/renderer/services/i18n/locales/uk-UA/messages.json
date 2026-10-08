@@ -100,5 +100,23 @@
   "requestDetails": "Деталі запиту:",
   "delivery": {
     "pending": "Непрочитано"
-  }
+  },
+  "askDialogTitle": "Потрібна ваша відповідь",
+  "askProgress": "Питання {{current}}/{{total}}",
+  "askMinimize": "Відповісти пізніше",
+  "askPrevious": "Назад",
+  "askNext": "Далі",
+  "askAnswerAllHint": "Є питання без відповіді",
+  "askWaiting": "Очікуємо вашу відповідь (питань: {{count}})",
+  "askReopen": "Відповісти",
+  "askPendingInline": "Дайте відповідь у вікні над полем введення",
+  "askExpired": "Це питання більше не актуальне",
+  "askSubmitFailed": "Не вдалося надіслати відповідь. Спробуйте ще раз.",
+  "askAnswerSeparator": ", ",
+  "export.untitled": "Без назви",
+  "export.messageCountLabel": "Повідомлень",
+  "export.headerTooltip": "Експорт чату в Markdown",
+  "export.markdownSaved": "Чат експортовано",
+  "export.markdownDownloaded": "Чат завантажено",
+  "export.showInFolder": "Показати в теці"
 }

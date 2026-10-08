@@ -94,5 +94,23 @@
   "requestDetails": "Détails de la demande :",
   "delivery": {
     "pending": "Non lu"
-  }
+  },
+  "askDialogTitle": "Votre réponse est nécessaire",
+  "askProgress": "Question {{current}}/{{total}}",
+  "askMinimize": "Répondre plus tard",
+  "askPrevious": "Précédent",
+  "askNext": "Suivant",
+  "askAnswerAllHint": "Certaines questions sont sans réponse",
+  "askWaiting": "En attente de votre réponse ({{count}} questions)",
+  "askReopen": "Répondre",
+  "askPendingInline": "Répondez dans la fenêtre au-dessus de la zone de saisie",
+  "askExpired": "Cette question n'est plus active",
+  "askSubmitFailed": "Impossible d'envoyer votre réponse. Réessayez.",
+  "askAnswerSeparator": ", ",
+  "export.untitled": "Conversation sans titre",
+  "export.messageCountLabel": "Messages",
+  "export.headerTooltip": "Exporter la conversation en Markdown",
+  "export.markdownSaved": "Conversation exportée",
+  "export.markdownDownloaded": "Conversation téléchargée",
+  "export.showInFolder": "Afficher dans le dossier"
 }

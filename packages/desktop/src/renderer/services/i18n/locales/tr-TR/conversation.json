@@ -54,9 +54,9 @@
     "batchDeleteSuccess_other": "{{count}} topics deleted",
     "batchNoSelection": "Please select topics first",
     "export": "Export",
-    "exportDialogTitle": "Export Topics",
-    "exportDialogSingleDescription": "Export current topic conversation records (JSON + Markdown) and project files into a ZIP package.",
-    "exportDialogBatchDescription": "Export {{count}} selected topics' conversation records (JSON + Markdown) and project files into one ZIP package.",
+    "exportDialogTitle": "Sohbet Kayıtlarını Dışa Aktar",
+    "exportDialogSingleDescription": "Bu sohbetin kaydı Markdown dosyası olarak ZIP paketine aktarılır.",
+    "exportDialogBatchDescription": "{{count}} sohbetin kayıtları Markdown dosyaları olarak tek bir ZIP paketine aktarılır.",
     "exportTargetFolder": "Export To Folder",
     "exportSelectFolder": "Please select an export folder",
     "exportDialogHint": "Folder selection follows the same interaction as changing the project.",
@@ -86,7 +86,9 @@
     "forkedFrom": "“{{name}}” konuşmasından çatallandı",
     "forkedConversation": "Çatallanmış konuşma",
     "viewAllTooltip": "Oturum Merkezi'nde tümünü görüntüle",
-    "shareToSession": "Sohbetime paylaş"
+    "shareToSession": "Sohbetime paylaş",
+    "exportSelected": "Seçilenleri dışa aktar",
+    "exportAll": "Tümünü dışa aktar"
   },
   "historySearch": {
     "tooltip": "Mesajları ara",

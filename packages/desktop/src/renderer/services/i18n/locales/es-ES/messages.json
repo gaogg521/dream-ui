@@ -94,5 +94,23 @@
   "requestDetails": "Detalles de la solicitud:",
   "delivery": {
     "pending": "No leído"
-  }
+  },
+  "askDialogTitle": "Necesitamos tu respuesta",
+  "askProgress": "Pregunta {{current}}/{{total}}",
+  "askMinimize": "Responder más tarde",
+  "askPrevious": "Anterior",
+  "askNext": "Siguiente",
+  "askAnswerAllHint": "Aún hay preguntas sin responder",
+  "askWaiting": "Esperando tu respuesta ({{count}} preguntas)",
+  "askReopen": "Responder",
+  "askPendingInline": "Responde en el cuadro sobre el campo de entrada",
+  "askExpired": "Esta pregunta ya no está activa",
+  "askSubmitFailed": "No se pudo enviar tu respuesta. Inténtalo de nuevo.",
+  "askAnswerSeparator": ", ",
+  "export.untitled": "Conversación sin título",
+  "export.messageCountLabel": "Mensajes",
+  "export.headerTooltip": "Exportar chat como Markdown",
+  "export.markdownSaved": "Chat exportado",
+  "export.markdownDownloaded": "Chat descargado",
+  "export.showInFolder": "Mostrar en la carpeta"
 }

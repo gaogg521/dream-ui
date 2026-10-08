@@ -9,18 +9,19 @@ import { isElectronDesktop } from '@/renderer/utils/platform';
 import { Message } from '@arco-design/web-react';
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatTimestamp, joinFilePath, sanitizeFileName } from '@/renderer/utils/chat/conversationExport';
+import {
+  buildConversationMarkdownTranscript,
+  buildMarkdownTranscriptLabels,
+  formatTimestamp,
+  joinFilePath,
+  sanitizeFileName,
+} from '@/renderer/utils/chat/conversationExport';
 import { loadAllConversationMessagesPaged } from '@/renderer/utils/chat/messagePagination';
 
 import type { ExportTask, ExportZipFile } from '../types';
-import {
-  appendWorkspaceFilesToZip,
-  buildConversationJson,
-  buildConversationMarkdown,
-  buildTopicFolderName,
-  EXPORT_IO_TIMEOUT_MS,
-  withTimeout,
-} from '../utils/exportHelpers';
+import { buildTranscriptEntryName, EXPORT_IO_TIMEOUT_MS, withTimeout } from '../utils/exportHelpers';
+
+const EXPORT_FETCH_CONCURRENCY = 4;
 
 const parentDirectoryOf = (filePath: string): string | undefined => {
   const index = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
@@ -155,50 +156,17 @@ export const useExport = ({
     }
   }, []);
 
-  const fetchConversationWorkspaceTree = useCallback(async (conversation: TChatConversation) => {
-    const workspace = conversation.extra?.workspace;
-    if (!workspace) {
-      return undefined;
-    }
-
-    try {
-      const trees = await withTimeout(
-        ipcBridge.conversation.getWorkspace.invoke({
-          conversation_id: conversation.id,
-          workspace,
-          path: workspace,
-        }),
-        EXPORT_IO_TIMEOUT_MS,
-        `getWorkspace:${conversation.id}`
-      );
-      return trees?.[0];
-    } catch (error) {
-      console.warn('[WorkspaceGroupedHistory] Failed to read workspace for export:', conversation.id, error);
-      return undefined;
-    }
-  }, []);
-
-  const buildConversationExportFiles = useCallback(
-    async (conversation: TChatConversation, topicFolderName: string): Promise<ExportZipFile[]> => {
-      const [messages, workspaceTree] = await Promise.all([
-        fetchConversationMessages(conversation.id),
-        fetchConversationWorkspaceTree(conversation),
-      ]);
-      const files: ExportZipFile[] = [
-        {
-          name: `${topicFolderName}/conversation/conversation.json`,
-          content: buildConversationJson(conversation, messages),
-        },
-        {
-          name: `${topicFolderName}/conversation/conversation.md`,
-          content: buildConversationMarkdown(conversation, messages),
-        },
-      ];
-
-      appendWorkspaceFilesToZip(files, workspaceTree, topicFolderName);
-      return files;
+  // Chat records only: the workspace is the user's project, not the
+  // conversation, and can be arbitrarily large (dependencies, build output).
+  const buildConversationExportFile = useCallback(
+    async (conversation: TChatConversation): Promise<ExportZipFile> => {
+      const messages = await fetchConversationMessages(conversation.id);
+      return {
+        name: buildTranscriptEntryName(conversation),
+        content: buildConversationMarkdownTranscript(conversation, messages, buildMarkdownTranscriptLabels(t)),
+      };
     },
-    [fetchConversationMessages, fetchConversationWorkspaceTree]
+    [fetchConversationMessages, t]
   );
 
   const runCreateZip = useCallback(
@@ -236,6 +204,18 @@ export const useExport = ({
     });
   }, [openExportModal, selectedConversationIds, t]);
 
+  // Packs every conversation in the history, independent of the selection.
+  const handleExportAll = useCallback(() => {
+    if (conversations.length === 0) {
+      Message.warning(t('conversation.history.batchNoSelection'));
+      return;
+    }
+    void openExportModal({
+      mode: 'batch',
+      conversation_ids: conversations.map((conversation) => conversation.id),
+    });
+  }, [conversations, openExportModal, t]);
+
   const handleConfirmExport = useCallback(async () => {
     if (!exportTask) return;
 
@@ -264,8 +244,7 @@ export const useExport = ({
         const zipFileName = `${shortTopicName}-${formatTimestamp()}`;
         const exportPath = await createUniqueFilePath(directory, zipFileName, 'zip');
         throwIfCanceled();
-        const topicFolderName = buildTopicFolderName(conversation);
-        const files = await buildConversationExportFiles(conversation, topicFolderName);
+        const files = [await buildConversationExportFile(conversation)];
         throwIfCanceled();
         const success = await runCreateZip(exportPath, files, request_id);
         throwIfCanceled();
@@ -290,19 +269,18 @@ export const useExport = ({
         return;
       }
 
+      // "Export all" can mean hundreds of conversations: fetch a few at a time
+      // instead of firing every paged history request at the backend at once.
       const files: ExportZipFile[] = [];
-      const topicFilesList = await Promise.all(
-        selectedConversations.map(async (conversation) => {
-          throwIfCanceled();
-          const topicFiles = await buildConversationExportFiles(conversation, buildTopicFolderName(conversation));
-          throwIfCanceled();
-          return topicFiles;
-        })
-      );
-      topicFilesList.forEach((topicFiles) => {
-        files.push(...topicFiles);
-      });
-      const exportPath = await createUniqueFilePath(directory, `batch-export-${formatTimestamp()}`, 'zip');
+      for (let start = 0; start < selectedConversations.length; start += EXPORT_FETCH_CONCURRENCY) {
+        throwIfCanceled();
+        const chunk = selectedConversations.slice(start, start + EXPORT_FETCH_CONCURRENCY);
+        // Sequential on purpose: each chunk is bounded parallelism.
+        // oxlint-disable-next-line no-await-in-loop
+        files.push(...(await Promise.all(chunk.map((conversation) => buildConversationExportFile(conversation)))));
+      }
+      throwIfCanceled();
+      const exportPath = await createUniqueFilePath(directory, `chat-records-${formatTimestamp()}`, 'zip');
       throwIfCanceled();
       const success = await runCreateZip(exportPath, files, request_id);
       throwIfCanceled();
@@ -331,7 +309,7 @@ export const useExport = ({
       exportCanceledRef.current = false;
     }
   }, [
-    buildConversationExportFiles,
+    buildConversationExportFile,
     conversations,
     createUniqueFilePath,
     exportTargetPath,
@@ -354,6 +332,7 @@ export const useExport = ({
     handleSelectExportFolder,
     handleExportConversation,
     handleBatchExport,
+    handleExportAll,
     handleConfirmExport,
   };
 };

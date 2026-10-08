@@ -50,9 +50,9 @@
     "batchDeleteSuccess_other": "已删除 {{count}} 个话题",
     "batchNoSelection": "请先选择话题",
     "export": "导出",
-    "exportDialogTitle": "导出话题",
-    "exportDialogSingleDescription": "将导出当前话题的会话记录（JSON + Markdown）及项目文件，并打包为 ZIP。",
-    "exportDialogBatchDescription": "将导出已选 {{count}} 个话题的会话记录（JSON + Markdown）及项目文件，并打包为 ZIP。",
+    "exportDialogTitle": "导出聊天记录",
+    "exportDialogSingleDescription": "将这个会话的聊天记录导出为 Markdown 文件，并打包为 ZIP。",
+    "exportDialogBatchDescription": "将 {{count}} 个会话的聊天记录分别导出为 Markdown 文件，并打包为一个 ZIP。",
     "exportTargetFolder": "导出到文件夹",
     "exportSelectFolder": "请选择导出文件夹",
     "exportDialogHint": "目录选择与\"更换项目\"一致；确认后开始导出。",
@@ -87,7 +87,9 @@
     "forkedConversation": "分叉会话",
     "viewAllTooltip": "在会话中心查看全部",
     "shareToOrg": "分享到企业",
-    "shareToSession": "分享到我的会话"
+    "shareToSession": "分享到我的会话",
+    "exportSelected": "导出所选",
+    "exportAll": "导出全部"
   },
   "historySearch": {
     "tooltip": "检索会话",

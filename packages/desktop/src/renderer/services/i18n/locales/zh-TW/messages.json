@@ -94,5 +94,23 @@
   "requestDetails": "請求內容：",
   "delivery": {
     "pending": "未讀"
-  }
+  },
+  "askDialogTitle": "需要你確認",
+  "askProgress": "問題 {{current}}/{{total}}",
+  "askMinimize": "稍後回答",
+  "askPrevious": "上一題",
+  "askNext": "下一題",
+  "askAnswerAllHint": "還有問題未回答",
+  "askWaiting": "AI 在等你回答 {{count}} 個問題",
+  "askReopen": "去回答",
+  "askPendingInline": "等待你在輸入框上方的彈窗中作答",
+  "askExpired": "這個問題已失效",
+  "askSubmitFailed": "回答送出失敗，請重試",
+  "askAnswerSeparator": "、",
+  "export.untitled": "未命名對話",
+  "export.messageCountLabel": "訊息數",
+  "export.headerTooltip": "匯出聊天記錄（Markdown）",
+  "export.markdownSaved": "聊天記錄已匯出",
+  "export.markdownDownloaded": "聊天記錄已下載",
+  "export.showInFolder": "在資料夾中顯示"
 }

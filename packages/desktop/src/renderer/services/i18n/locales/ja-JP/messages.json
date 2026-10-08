@@ -94,5 +94,23 @@
   "requestDetails": "リクエスト内容:",
   "delivery": {
     "pending": "未読"
-  }
+  },
+  "askDialogTitle": "確認が必要です",
+  "askProgress": "質問 {{current}}/{{total}}",
+  "askMinimize": "後で回答",
+  "askPrevious": "前へ",
+  "askNext": "次へ",
+  "askAnswerAllHint": "未回答の質問があります",
+  "askWaiting": "AI が {{count}} 件の質問への回答を待っています",
+  "askReopen": "回答する",
+  "askPendingInline": "入力欄の上のダイアログで回答してください",
+  "askExpired": "この質問は無効になりました",
+  "askSubmitFailed": "回答を送信できませんでした。もう一度お試しください",
+  "askAnswerSeparator": "、",
+  "export.untitled": "無題の会話",
+  "export.messageCountLabel": "メッセージ数",
+  "export.headerTooltip": "チャット履歴を Markdown で書き出す",
+  "export.markdownSaved": "チャット履歴を書き出しました",
+  "export.markdownDownloaded": "チャット履歴をダウンロードしました",
+  "export.showInFolder": "フォルダーで表示"
 }

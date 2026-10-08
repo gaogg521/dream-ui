@@ -50,9 +50,9 @@
     "batchDeleteSuccess_other": "{{count}} topics deleted",
     "batchNoSelection": "Please select topics first",
     "export": "Export",
-    "exportDialogTitle": "Export Topics",
-    "exportDialogSingleDescription": "Export current topic conversation records (JSON + Markdown) and project files into a ZIP package.",
-    "exportDialogBatchDescription": "Export {{count}} selected topics' conversation records (JSON + Markdown) and project files into one ZIP package.",
+    "exportDialogTitle": "Export Chat Records",
+    "exportDialogSingleDescription": "Export this conversation's chat record as a Markdown file in a ZIP package.",
+    "exportDialogBatchDescription": "Export the chat records of {{count}} conversations as Markdown files in one ZIP package.",
     "exportTargetFolder": "Export To Folder",
     "exportSelectFolder": "Please select an export folder",
     "exportDialogHint": "Folder selection follows the same interaction as changing the project.",
@@ -87,7 +87,9 @@
     "forkedConversation": "Forked conversation",
     "viewAllTooltip": "View all in Session Center",
     "shareToOrg": "Share to company",
-    "shareToSession": "Share to my conversation"
+    "shareToSession": "Share to my conversation",
+    "exportSelected": "Export selected",
+    "exportAll": "Export all"
   },
   "historySearch": {
     "tooltip": "Search messages",

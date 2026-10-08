@@ -54,9 +54,9 @@
     "batchDeleteSuccess_many": "Видалено {{count}} тем",
     "batchNoSelection": "Спочатку виберіть теми",
     "export": "Експортувати",
-    "exportDialogTitle": "Експорт тем",
-    "exportDialogSingleDescription": "Експортувати записи поточної теми (JSON + Markdown) та файли проєкту в ZIP-архів.",
-    "exportDialogBatchDescription": "Експортувати записи {{count}} вибраних тем (JSON + Markdown) та файли проєкту в один ZIP-архів.",
+    "exportDialogTitle": "Експорт чатів",
+    "exportDialogSingleDescription": "Чат буде експортовано в Markdown-файл у ZIP-архіві.",
+    "exportDialogBatchDescription": "Чати ({{count}}) буде експортовано в Markdown-файли в одному ZIP-архіві.",
     "exportTargetFolder": "Експортувати до папки",
     "exportSelectFolder": "Будь ласка, виберіть папку для експорту",
     "exportDialogHint": "Вибір папки працює так само, як і при зміні проєкту.",
@@ -92,7 +92,9 @@
     "forkedFrom": "Відгалуження від «{{name}}»",
     "forkedConversation": "Відгалужена розмова",
     "viewAllTooltip": "Переглянути все в Центрі сесій",
-    "shareToSession": "Поділитися в мій чат"
+    "shareToSession": "Поділитися в мій чат",
+    "exportSelected": "Експорт вибраних",
+    "exportAll": "Експорт усіх"
   },
   "historySearch": {
     "tooltip": "Пошук повідомлень",

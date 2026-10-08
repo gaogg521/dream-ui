@@ -7,6 +7,7 @@ import type { IConversationMcpStatus, IProvider, TChatConversation, TProviderWit
 import { uuid } from '@/common/utils';
 import addChatIcon from '@/renderer/assets/icons/add-chat.svg';
 import { CronJobManager } from '@/renderer/pages/cron';
+import ConversationExportButton from './ConversationExportButton';
 import { resolveCronJobId } from '@/renderer/pages/cron/cronUtils';
 import { classifyConfigSetError, useAcpConfigOptions } from '@/renderer/hooks/agent/useAcpConfigOptions';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
@@ -215,6 +216,7 @@ const DreamEngineConversationPanel: React.FC<{
             conversation_id={conversation.id}
           />
         )}
+        {!isMobile && <ConversationExportButton conversation={conversation} />}
       </div>
     ),
     workspaceEnabled,
@@ -392,6 +394,11 @@ const ChatConversation: React.FC<{
         </div>
       )}
       {modelSelector && <div className='shrink-0'>{modelSelector}</div>}
+      {conversation && !isMobile && (
+        <div className='shrink-0'>
+          <ConversationExportButton conversation={conversation} />
+        </div>
+      )}
       {conversation && conversation.type === 'acp' && !isMobile && !isLegacyReadOnlyConversation && (
         <div className='shrink-0'>
           <AcpRuntimeRestartButton

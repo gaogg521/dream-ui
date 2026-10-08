@@ -128,3 +128,95 @@ export const normalizeExportFileName = (input: string): string => {
 export const resolveExportBaseDirectory = (workspace?: string, desktopPath?: string): string => {
   return workspace?.trim() || desktopPath?.trim() || '';
 };
+
+export type MarkdownTranscriptLabels = {
+  untitled: string;
+  exportedAt: string;
+  messageCount: string;
+  noMessages: string;
+} & Record<MessageRole, string>;
+
+const formatMarkdownTime = (time: number): string => {
+  const date = new Date(time);
+  return `${date.getFullYear()}-${padTimestampPart(date.getMonth() + 1)}-${padTimestampPart(date.getDate())} ${padTimestampPart(date.getHours())}:${padTimestampPart(date.getMinutes())}`;
+};
+
+const isTranscriptMessage = (message: TMessage): boolean =>
+  message.type === 'text' && !message.hidden && readMessageContent(message).trim().length > 0;
+
+/** Speaker of a transcript block: teammates keep their own name. */
+const getSpeakerLabel = (message: TMessage, labels: MarkdownTranscriptLabels): string => {
+  const senderName = message.type === 'text' ? message.content.senderName : undefined;
+  return senderName?.trim() || labels[getMessageRoleKey(message)];
+};
+
+/**
+ * Render a conversation as a readable Markdown chat record.
+ *
+ * Only the user/assistant text is kept — tool calls, thinking and status tips
+ * are working noise, not the conversation. Consecutive pieces from the same
+ * speaker (an answer split around tool calls) are merged under one heading.
+ * Assistant text is already Markdown, so it is written as-is, not fenced.
+ */
+export const buildConversationMarkdownTranscript = (
+  conversation: TChatConversation,
+  messages: TMessage[],
+  labels: MarkdownTranscriptLabels,
+  exportedAt = Date.now()
+): string => {
+  const transcript = messages.filter(isTranscriptMessage);
+  const lines: string[] = [];
+  lines.push(`# ${conversation.name?.trim() || labels.untitled}`);
+  lines.push('');
+  lines.push(
+    `> ${labels.exportedAt}: ${formatMarkdownTime(exportedAt)} · ${labels.messageCount}: ${transcript.length}`
+  );
+  lines.push('');
+
+  if (transcript.length === 0) {
+    lines.push(labels.noMessages);
+    lines.push('');
+    return lines.join('\n');
+  }
+
+  let previousSpeaker: string | null = null;
+  transcript.forEach((message) => {
+    const speaker = getSpeakerLabel(message, labels);
+    const body = readMessageContent(message).trim();
+    if (speaker === previousSpeaker) {
+      lines.push(body);
+      lines.push('');
+      return;
+    }
+    previousSpeaker = speaker;
+    lines.push('---');
+    lines.push('');
+    const time = message.created_at;
+    lines.push(time ? `## ${speaker} · ${formatMarkdownTime(time)}` : `## ${speaker}`);
+    lines.push('');
+    lines.push(body);
+    lines.push('');
+  });
+
+  return lines.join('\n');
+};
+
+/** `2026-10-08-<conversation name>.md`, safe on every desktop file system. */
+export const buildMarkdownExportFileName = (conversation: TChatConversation, time = Date.now()): string => {
+  const name =
+    sanitizeFileName(conversation.name || 'conversation')
+      .slice(0, 60)
+      .trim() || 'conversation';
+  return `${formatDefaultExportFileDate(time)}-${name}.md`;
+};
+
+/** Labels for {@link buildConversationMarkdownTranscript} from the active locale. */
+export const buildMarkdownTranscriptLabels = (t: (key: string) => string): MarkdownTranscriptLabels => ({
+  untitled: t('messages.export.untitled'),
+  exportedAt: t('messages.export.exportedAtLabel'),
+  messageCount: t('messages.export.messageCountLabel'),
+  noMessages: t('messages.export.noMessages'),
+  user: t('messages.export.userLabel'),
+  assistant: t('messages.export.assistantLabel'),
+  system: t('messages.export.systemLabel'),
+});

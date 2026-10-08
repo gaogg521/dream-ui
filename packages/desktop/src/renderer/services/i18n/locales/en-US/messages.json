@@ -94,5 +94,23 @@
   "requestDetails": "Request details:",
   "delivery": {
     "pending": "Delivering"
-  }
+  },
+  "askDialogTitle": "Your input needed",
+  "askProgress": "Question {{current}}/{{total}}",
+  "askMinimize": "Answer later",
+  "askPrevious": "Previous",
+  "askNext": "Next",
+  "askAnswerAllHint": "Some questions are still unanswered",
+  "askWaiting": "Waiting for your answer ({{count}} questions)",
+  "askReopen": "Answer",
+  "askPendingInline": "Waiting for your answer in the dialog above the input box",
+  "askExpired": "This question is no longer active",
+  "askSubmitFailed": "Couldn't send your answer. Please try again.",
+  "askAnswerSeparator": ", ",
+  "export.untitled": "Untitled conversation",
+  "export.messageCountLabel": "Messages",
+  "export.headerTooltip": "Export chat as Markdown",
+  "export.markdownSaved": "Chat exported",
+  "export.markdownDownloaded": "Chat downloaded",
+  "export.showInFolder": "Show in folder"
 }

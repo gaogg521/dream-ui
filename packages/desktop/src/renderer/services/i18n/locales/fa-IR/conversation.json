@@ -50,9 +50,9 @@
     "batchDeleteSuccess_other": "{{count}} موضوع حذف شد",
     "batchNoSelection": "لطفاً ابتدا موضوعات را انتخاب کنید",
     "export": "خروجی",
-    "exportDialogTitle": "خروجی موضوعات",
-    "exportDialogSingleDescription": "سابقه مکالمه موضوع فعلی (JSON + Markdown) و فایل‌های پروژه را در یک بسته ZIP خروجی بگیرید.",
-    "exportDialogBatchDescription": "سابقه مکالمه {{count}} موضوع انتخاب‌شده (JSON + Markdown) و فایل‌های پروژه را در یک بسته ZIP خروجی بگیرید.",
+    "exportDialogTitle": "خروجی گرفتن از گفتگوها",
+    "exportDialogSingleDescription": "سابقه این گفتگو به‌صورت فایل Markdown در یک بسته ZIP خروجی گرفته می‌شود.",
+    "exportDialogBatchDescription": "سابقه {{count}} گفتگو به‌صورت فایل‌های Markdown در یک بسته ZIP خروجی گرفته می‌شود.",
     "exportTargetFolder": "خروجی به پوشه",
     "exportSelectFolder": "لطفاً یک پوشه خروجی انتخاب کنید",
     "exportDialogHint": "انتخاب پوشه مانند تعویض پروژه است.",
@@ -86,7 +86,9 @@
     "forkedFrom": "انشعاب از «{{name}}»",
     "forkedConversation": "گفتگوی منشعب",
     "viewAllTooltip": "مشاهده همه در مرکز نشست‌ها",
-    "shareToSession": "هم‌رسانی در گفتگوی من"
+    "shareToSession": "هم‌رسانی در گفتگوی من",
+    "exportSelected": "خروجی موارد انتخاب‌شده",
+    "exportAll": "خروجی همه"
   },
   "historySearch": {
     "tooltip": "جستجوی پیام‌ها",

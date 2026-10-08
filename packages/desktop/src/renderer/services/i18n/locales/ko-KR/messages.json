@@ -94,5 +94,23 @@
   "requestDetails": "요청 내용:",
   "delivery": {
     "pending": "읽지 않음"
-  }
+  },
+  "askDialogTitle": "확인이 필요해요",
+  "askProgress": "질문 {{current}}/{{total}}",
+  "askMinimize": "나중에 답하기",
+  "askPrevious": "이전",
+  "askNext": "다음",
+  "askAnswerAllHint": "아직 답하지 않은 질문이 있어요",
+  "askWaiting": "AI가 질문 {{count}}개에 대한 답을 기다리고 있어요",
+  "askReopen": "답하기",
+  "askPendingInline": "입력창 위 대화상자에서 답해 주세요",
+  "askExpired": "더 이상 유효하지 않은 질문이에요",
+  "askSubmitFailed": "답변을 보내지 못했어요. 다시 시도해 주세요",
+  "askAnswerSeparator": ", ",
+  "export.untitled": "제목 없는 대화",
+  "export.messageCountLabel": "메시지 수",
+  "export.headerTooltip": "대화 기록을 Markdown으로 내보내기",
+  "export.markdownSaved": "대화 기록을 내보냈어요",
+  "export.markdownDownloaded": "대화 기록을 다운로드했어요",
+  "export.showInFolder": "폴더에서 보기"
 }

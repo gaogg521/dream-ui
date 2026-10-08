@@ -2,47 +2,16 @@
  * Copyright 2026 One Work
  */
 
-import type { TMessage } from '@/common/chat/chatLib';
-import type { IDirOrFile } from '@/common/adapter/ipcBridge';
 import type { TChatConversation } from '@/common/config/storage';
 import { resolveConversationBackend } from '@/renderer/pages/conversation/utils/conversationAssistantIdentity';
-import { getMessageRoleKey, readMessageContent, sanitizeFileName } from '@/renderer/utils/chat/conversationExport';
-
-import type { ExportZipFile } from '../types';
+import { sanitizeFileName } from '@/renderer/utils/chat/conversationExport';
 
 export const EXPORT_IO_TIMEOUT_MS = 15000;
 
-export const normalizeZipPath = (value: string): string => value.replace(/\\/g, '/').replace(/^\/+/, '');
-
-export const buildTopicFolderName = (conversation: TChatConversation): string => {
+/** Zip entry for one conversation's Markdown chat record; the id suffix keeps same-named topics apart. */
+export const buildTranscriptEntryName = (conversation: TChatConversation): string => {
   const safeName = sanitizeFileName(conversation.name || conversation.id);
-  return `${safeName}__${conversation.id}`;
-};
-
-export const appendWorkspaceFilesToZip = (
-  files: ExportZipFile[],
-  root: IDirOrFile | undefined,
-  prefix: string
-): void => {
-  if (!root?.children || root.children.length === 0) {
-    return;
-  }
-
-  const walk = (node: IDirOrFile) => {
-    if (node.isFile) {
-      const relativePath = normalizeZipPath(node.relativePath || node.name);
-      if (relativePath) {
-        files.push({
-          name: `${prefix}/workspace/${relativePath}`,
-          sourcePath: node.fullPath,
-        });
-      }
-      return;
-    }
-    node.children?.forEach((child) => walk(child));
-  };
-
-  root.children.forEach((child) => walk(child));
+  return `${safeName}__${conversation.id.slice(0, 8)}.md`;
 };
 
 export const getBackendKeyFromConversation = (conversation: TChatConversation): string | undefined => {
@@ -63,51 +32,4 @@ export const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, lab
       clearTimeout(timer);
     }
   }
-};
-
-const getMarkdownMessageRoleLabel = (message: TMessage): string => {
-  switch (getMessageRoleKey(message)) {
-    case 'user':
-      return 'User';
-    case 'assistant':
-      return 'Assistant';
-    case 'system':
-      return 'System';
-  }
-};
-
-export const buildConversationMarkdown = (conversation: TChatConversation, messages: TMessage[]): string => {
-  const lines: string[] = [];
-  lines.push(`# ${conversation.name || 'Conversation'}`);
-  lines.push('');
-  lines.push(`- Conversation ID: ${conversation.id}`);
-  lines.push(`- Exported At: ${new Date().toISOString()}`);
-  lines.push(`- Type: ${conversation.type}`);
-  lines.push('');
-  lines.push('## Messages');
-  lines.push('');
-
-  messages.forEach((message, index) => {
-    lines.push(`### ${index + 1}. ${getMarkdownMessageRoleLabel(message)} (${message.type})`);
-    lines.push('');
-    lines.push('```text');
-    lines.push(readMessageContent(message));
-    lines.push('```');
-    lines.push('');
-  });
-
-  return lines.join('\n');
-};
-
-export const buildConversationJson = (conversation: TChatConversation, messages: TMessage[]): string => {
-  return JSON.stringify(
-    {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      conversation,
-      messages,
-    },
-    null,
-    2
-  );
 };

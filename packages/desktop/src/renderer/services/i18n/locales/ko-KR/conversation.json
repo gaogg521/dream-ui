@@ -54,9 +54,9 @@
     "batchDeleteSuccess_other": "{{count}} topics deleted",
     "batchNoSelection": "Please select topics first",
     "export": "Export",
-    "exportDialogTitle": "Export Topics",
-    "exportDialogSingleDescription": "Export current topic conversation records (JSON + Markdown) and project files into a ZIP package.",
-    "exportDialogBatchDescription": "Export {{count}} selected topics' conversation records (JSON + Markdown) and project files into one ZIP package.",
+    "exportDialogTitle": "대화 기록 내보내기",
+    "exportDialogSingleDescription": "이 대화 기록을 Markdown 파일로 ZIP에 담아 내보냅니다.",
+    "exportDialogBatchDescription": "대화 {{count}}개의 기록을 각각 Markdown 파일로 만들어 하나의 ZIP으로 내보냅니다.",
     "exportTargetFolder": "Export To Folder",
     "exportSelectFolder": "Please select an export folder",
     "exportDialogHint": "Folder selection follows the same interaction as changing the project.",
@@ -86,7 +86,9 @@
     "forkedFrom": "“{{name}}”에서 분기됨",
     "forkedConversation": "분기된 대화",
     "viewAllTooltip": "세션 센터에서 모두 보기",
-    "shareToSession": "내 대화에 공유"
+    "shareToSession": "내 대화에 공유",
+    "exportSelected": "선택 항목 내보내기",
+    "exportAll": "모두 내보내기"
   },
   "historySearch": {
     "tooltip": "메시지 검색",

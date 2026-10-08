@@ -94,5 +94,23 @@
   "requestDetails": "جزئیات درخواست:",
   "delivery": {
     "pending": "خوانده‌نشده"
-  }
+  },
+  "askDialogTitle": "به پاسخ شما نیاز است",
+  "askProgress": "سؤال {{current}}/{{total}}",
+  "askMinimize": "بعداً پاسخ می‌دهم",
+  "askPrevious": "قبلی",
+  "askNext": "بعدی",
+  "askAnswerAllHint": "هنوز به برخی سؤال‌ها پاسخ نداده‌اید",
+  "askWaiting": "در انتظار پاسخ شما ({{count}} سؤال)",
+  "askReopen": "پاسخ دادن",
+  "askPendingInline": "در کادر بالای ورودی پاسخ دهید",
+  "askExpired": "این سؤال دیگر فعال نیست",
+  "askSubmitFailed": "ارسال پاسخ ناموفق بود. دوباره تلاش کنید.",
+  "askAnswerSeparator": "، ",
+  "export.untitled": "گفتگوی بدون عنوان",
+  "export.messageCountLabel": "تعداد پیام‌ها",
+  "export.headerTooltip": "خروجی گرفتن از گفتگو به Markdown",
+  "export.markdownSaved": "گفتگو خروجی گرفته شد",
+  "export.markdownDownloaded": "گفتگو دانلود شد",
+  "export.showInFolder": "نمایش در پوشه"
 }

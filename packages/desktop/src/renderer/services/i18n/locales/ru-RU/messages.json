@@ -98,5 +98,23 @@
   "requestDetails": "Детали запроса:",
   "delivery": {
     "pending": "Непрочитано"
-  }
+  },
+  "askDialogTitle": "Нужен ваш ответ",
+  "askProgress": "Вопрос {{current}}/{{total}}",
+  "askMinimize": "Ответить позже",
+  "askPrevious": "Назад",
+  "askNext": "Далее",
+  "askAnswerAllHint": "Есть вопросы без ответа",
+  "askWaiting": "Ожидается ваш ответ (вопросов: {{count}})",
+  "askReopen": "Ответить",
+  "askPendingInline": "Ответьте в окне над полем ввода",
+  "askExpired": "Этот вопрос больше не актуален",
+  "askSubmitFailed": "Не удалось отправить ответ. Попробуйте ещё раз.",
+  "askAnswerSeparator": ", ",
+  "export.untitled": "Без названия",
+  "export.messageCountLabel": "Сообщений",
+  "export.headerTooltip": "Экспорт чата в Markdown",
+  "export.markdownSaved": "Чат экспортирован",
+  "export.markdownDownloaded": "Чат скачан",
+  "export.showInFolder": "Показать в папке"
 }

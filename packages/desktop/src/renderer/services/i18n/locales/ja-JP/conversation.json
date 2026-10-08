@@ -54,9 +54,9 @@
     "batchDeleteSuccess_other": "{{count}} topics deleted",
     "batchNoSelection": "Please select topics first",
     "export": "Export",
-    "exportDialogTitle": "Export Topics",
-    "exportDialogSingleDescription": "Export current topic conversation records (JSON + Markdown) and project files into a ZIP package.",
-    "exportDialogBatchDescription": "Export {{count}} selected topics' conversation records (JSON + Markdown) and project files into one ZIP package.",
+    "exportDialogTitle": "チャット履歴の書き出し",
+    "exportDialogSingleDescription": "この会話のチャット履歴を Markdown ファイルとして ZIP にまとめて書き出します。",
+    "exportDialogBatchDescription": "{{count}} 件の会話のチャット履歴をそれぞれ Markdown ファイルにして、1 つの ZIP にまとめます。",
     "exportTargetFolder": "Export To Folder",
     "exportSelectFolder": "Please select an export folder",
     "exportDialogHint": "Folder selection follows the same interaction as changing the project.",
@@ -86,7 +86,9 @@
     "forkedFrom": "「{{name}}」から分岐",
     "forkedConversation": "分岐した会話",
     "viewAllTooltip": "セッションセンターですべて表示",
-    "shareToSession": "自分の会話へ共有"
+    "shareToSession": "自分の会話へ共有",
+    "exportSelected": "選択を書き出す",
+    "exportAll": "すべて書き出す"
   },
   "historySearch": {
     "tooltip": "メッセージを検索",

@@ -50,9 +50,9 @@
     "batchDeleteSuccess_other": "{{count}} Themen gelöscht",
     "batchNoSelection": "Bitte zuerst Themen auswählen",
     "export": "Exportieren",
-    "exportDialogTitle": "Themen exportieren",
-    "exportDialogSingleDescription": "Aktuellen Themen-Gesprächsverlauf (JSON + Markdown) und Arbeitsbereichsdateien in ein ZIP-Paket exportieren.",
-    "exportDialogBatchDescription": "{{count}} ausgewählte Themen als Gesprächsverlauf (JSON + Markdown) und Arbeitsbereichsdateien in ein ZIP-Paket exportieren.",
+    "exportDialogTitle": "Chatverläufe exportieren",
+    "exportDialogSingleDescription": "Exportiert den Verlauf dieser Unterhaltung als Markdown-Datei in einem ZIP-Paket.",
+    "exportDialogBatchDescription": "Exportiert die Verläufe von {{count}} Unterhaltungen als Markdown-Dateien in einem ZIP-Paket.",
     "exportTargetFolder": "In Ordner exportieren",
     "exportSelectFolder": "Bitte Export-Ordner auswählen",
     "exportDialogHint": "Die Ordnerauswahl folgt dem gleichen Ablauf wie bei der Arbeitsbereichsmigration.",
@@ -86,7 +86,9 @@
     "forkedFrom": "Verzweigt von „{{name}}“",
     "forkedConversation": "Verzweigte Unterhaltung",
     "viewAllTooltip": "Alle im Sitzungscenter anzeigen",
-    "shareToSession": "In meine Unterhaltung teilen"
+    "shareToSession": "In meine Unterhaltung teilen",
+    "exportSelected": "Auswahl exportieren",
+    "exportAll": "Alle exportieren"
   },
   "historySearch": {
     "tooltip": "Nachrichten durchsuchen",

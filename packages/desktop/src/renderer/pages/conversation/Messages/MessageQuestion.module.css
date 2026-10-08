@@ -104,15 +104,27 @@
   width: calc(100% - 24px);
 }
 
-.actions {
+/* Transcript card: the chosen answer under its question. */
+.answer {
+  padding: 6px 10px;
+  border-inline-start: 3px solid rgb(var(--primary-6));
+  border-radius: 4px;
+  background: var(--color-fill-1);
+  color: var(--color-text-1);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.pending {
   display: flex;
-  margin-top: 16px;
   align-items: center;
   gap: 8px;
 }
 
-/* A question decides whether a turn can proceed. Keep both actions at the
- * platform touch-target minimum even though the desktop card remains compact. */
-.actions :global(.arco-btn) {
-  min-height: 44px;
+.pendingText {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--color-text-2);
+  font-size: 13px;
 }

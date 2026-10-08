@@ -190,9 +190,9 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     closeExportModal,
     handleSelectExportDirectoryFromModal,
     handleSelectExportFolder,
-    // handleExportConversation / handleBatchExport are intentionally not
-    // destructured: their UI entries are disabled (kanban #14). The useExport
-    // hook and its underlying logic stay intact for a future re-enable.
+    handleExportConversation,
+    handleBatchExport,
+    handleExportAll,
     handleConfirmExport,
   } = useExport({
     conversations,
@@ -245,6 +245,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       onDelete: handleDeleteClick,
       onTogglePin: handleTogglePin,
       onToggleManualUnread: handleToggleManualUnread,
+      onExport: handleExportConversation,
       getJobStatus,
       resolveConversationName,
       // Only offer sharing to somebody who has an organization to share with.
@@ -278,6 +279,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       handleDeleteClick,
       handleTogglePin,
       handleToggleManualUnread,
+      handleExportConversation,
       getJobStatus,
       resolveConversationName,
       isEnterpriseMember,
@@ -538,6 +540,24 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
                   onClick={handleBatchDelete}
                 >
                   {t('conversation.history.batchDelete')}
+                </Button>
+                <Button
+                  className='!w-full !justify-center !min-w-0 !h-30px !px-8px !text-12px whitespace-nowrap'
+                  size='mini'
+                  type='secondary'
+                  disabled={selectedCount === 0}
+                  onClick={handleBatchExport}
+                >
+                  {t('conversation.history.exportSelected')}
+                </Button>
+                <Button
+                  className='!w-full !justify-center !min-w-0 !h-30px !px-8px !text-12px whitespace-nowrap'
+                  size='mini'
+                  type='secondary'
+                  disabled={conversations.length === 0}
+                  onClick={handleExportAll}
+                >
+                  {t('conversation.history.exportAll')}
                 </Button>
               </div>
             </div>

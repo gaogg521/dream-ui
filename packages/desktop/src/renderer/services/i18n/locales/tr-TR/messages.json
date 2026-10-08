@@ -94,5 +94,23 @@
   "requestDetails": "İstek ayrıntıları:",
   "delivery": {
     "pending": "Okunmadı"
-  }
+  },
+  "askDialogTitle": "Onayınız gerekiyor",
+  "askProgress": "Soru {{current}}/{{total}}",
+  "askMinimize": "Sonra yanıtla",
+  "askPrevious": "Önceki",
+  "askNext": "Sonraki",
+  "askAnswerAllHint": "Yanıtlanmamış sorular var",
+  "askWaiting": "Yanıtınız bekleniyor ({{count}} soru)",
+  "askReopen": "Yanıtla",
+  "askPendingInline": "Giriş kutusunun üstündeki pencerede yanıtınız bekleniyor",
+  "askExpired": "Bu soru artık geçerli değil",
+  "askSubmitFailed": "Yanıtınız gönderilemedi. Lütfen tekrar deneyin.",
+  "askAnswerSeparator": ", ",
+  "export.untitled": "Adsız sohbet",
+  "export.messageCountLabel": "Mesaj sayısı",
+  "export.headerTooltip": "Sohbeti Markdown olarak dışa aktar",
+  "export.markdownSaved": "Sohbet dışa aktarıldı",
+  "export.markdownDownloaded": "Sohbet indirildi",
+  "export.showInFolder": "Klasörde göster"
 }
