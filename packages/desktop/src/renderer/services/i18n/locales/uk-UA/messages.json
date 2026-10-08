@@ -118,5 +118,6 @@
   "export.headerTooltip": "Експорт чату в Markdown",
   "export.markdownSaved": "Чат експортовано",
   "export.markdownDownloaded": "Чат завантажено",
-  "export.showInFolder": "Показати в теці"
+  "export.showInFolder": "Показати в теці",
+  "export.answeredQuestionsLabel": "Відповіді на питання"
 }

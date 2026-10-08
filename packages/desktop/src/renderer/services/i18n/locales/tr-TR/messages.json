@@ -112,5 +112,6 @@
   "export.headerTooltip": "Sohbeti Markdown olarak dışa aktar",
   "export.markdownSaved": "Sohbet dışa aktarıldı",
   "export.markdownDownloaded": "Sohbet indirildi",
-  "export.showInFolder": "Klasörde göster"
+  "export.showInFolder": "Klasörde göster",
+  "export.answeredQuestionsLabel": "Sorulara yanıt"
 }

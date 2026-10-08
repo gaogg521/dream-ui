@@ -6,6 +6,7 @@ import { ipcBridge } from '@/common';
 import type { IConfirmation, IMessageAsk, IMessagePermission, TMessage } from '@/common/chat/chatLib';
 import { useEffect } from 'react';
 import { useUpdateMessageList } from './hooks';
+import { isAskAnsweredHere } from './question/askSettlementStore';
 
 export const pendingConfirmationMsgId = (confirmationId: string) => `confirmation:${confirmationId}`;
 
@@ -55,6 +56,9 @@ export function hasPermissionMessageForCallId(list: TMessage[], callId: string):
 export function removePermissionMessage(list: TMessage[], target: { id?: string; call_id?: string }): TMessage[] {
   return list.filter((message) => {
     if (message.type === 'ask') {
+      // Answered in this window: keep the card as the transcript record of
+      // what the user chose. The removal only means "no longer pending".
+      if (isAskAnsweredHere(message.content.request_id)) return true;
       // A recovered ask is keyed by request_id (== call_id == confirmation id).
       if (target.id && message.content.request_id === target.id) return false;
       if (target.call_id && message.content.request_id === target.call_id) return false;

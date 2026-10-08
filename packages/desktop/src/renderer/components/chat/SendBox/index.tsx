@@ -1763,7 +1763,7 @@ const SendBox: React.FC<{
 
   return (
     <div className={`relative ${className ?? ''}`.trim()}>
-      <QuestionDialog />
+      <QuestionDialog turnActive={Boolean(loading)} />
       {topRightOverlay && (
         // Zero-height overlay: absolutely positioned inside the box's own
         // root, so it never reflows the box or a preceding ThoughtDisplay

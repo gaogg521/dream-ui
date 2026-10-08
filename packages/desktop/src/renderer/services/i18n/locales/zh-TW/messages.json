@@ -112,5 +112,6 @@
   "export.headerTooltip": "匯出聊天記錄（Markdown）",
   "export.markdownSaved": "聊天記錄已匯出",
   "export.markdownDownloaded": "聊天記錄已下載",
-  "export.showInFolder": "在資料夾中顯示"
+  "export.showInFolder": "在資料夾中顯示",
+  "export.answeredQuestionsLabel": "回答提問"
 }

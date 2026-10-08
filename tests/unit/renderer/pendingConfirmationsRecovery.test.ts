@@ -5,6 +5,11 @@ import {
   hasPermissionMessageForCallId,
   removePermissionMessage,
 } from '@/renderer/pages/conversation/Messages/usePendingConfirmationsRecovery';
+import {
+  resetAskStoreForTests,
+  setAskSubmitting,
+  settleAsk,
+} from '@/renderer/pages/conversation/Messages/question/askSettlementStore';
 
 const confirmation: IConfirmation<string> = {
   id: 'tool-1',
@@ -42,5 +47,38 @@ describe('pending confirmations recovery', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].type).toBe('text');
+  });
+  it('drops a pending question card but keeps one this window already answered', () => {
+    resetAskStoreForTests();
+    const askCard = (requestId: string) =>
+      ({
+        id: `ask-${requestId}`,
+        type: 'ask',
+        conversation_id: 'conv-1',
+        content: { session_id: 'conv-1', request_id: requestId, questions: [] },
+      }) as TMessage;
+    settleAsk('answered-here', { status: 'answered', answers: [] });
+
+    const list = [askCard('answered-here'), askCard('answered-elsewhere')];
+    const afterFirst = removePermissionMessage(list, { id: 'answered-here', call_id: 'answered-here' });
+    const afterSecond = removePermissionMessage(afterFirst, {
+      id: 'answered-elsewhere',
+      call_id: 'answered-elsewhere',
+    });
+
+    // The answered card is the transcript record of the user's choice.
+    expect(afterSecond.map((message) => message.id)).toEqual(['ask-answered-here']);
+  });
+  it('keeps a card whose answer is still in flight (removal is broadcast before the reply)', () => {
+    resetAskStoreForTests();
+    const card = {
+      id: 'ask-inflight',
+      type: 'ask',
+      conversation_id: 'conv-1',
+      content: { session_id: 'conv-1', request_id: 'inflight', questions: [] },
+    } as TMessage;
+    setAskSubmitting('inflight', true);
+
+    expect(removePermissionMessage([card], { id: 'inflight', call_id: 'inflight' })).toHaveLength(1);
   });
 });

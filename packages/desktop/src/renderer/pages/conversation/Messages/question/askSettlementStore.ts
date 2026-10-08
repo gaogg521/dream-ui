@@ -23,6 +23,9 @@ export type AskSettlement =
  */
 const settlements = new Map<string, AskSettlement>();
 const minimized = new Set<string>();
+/** Answers sent but not yet acknowledged. The backend broadcasts the card's
+ *  removal while the request is still in flight, i.e. before settleAsk runs. */
+const submitting = new Set<string>();
 const listeners = new Set<() => void>();
 let version = 0;
 
@@ -48,6 +51,16 @@ export const settleAsk = (requestId: string, settlement: AskSettlement): void =>
 
 export const getAskSettlement = (requestId: string): AskSettlement | undefined => settlements.get(requestId);
 
+export const setAskSubmitting = (requestId: string, value: boolean): void => {
+  if (value) submitting.add(requestId);
+  else submitting.delete(requestId);
+};
+
+/** Whether this window answered (or is answering) the question, so its card
+ *  stays as the transcript record instead of being dropped as "no longer pending". */
+export const isAskAnsweredHere = (requestId: string): boolean =>
+  settlements.has(requestId) || submitting.has(requestId);
+
 /** Collapse the dialog to a pill so the user can read the conversation first. */
 export const setAskMinimized = (requestId: string, value: boolean): void => {
   if (value === minimized.has(requestId)) return;
@@ -65,5 +78,6 @@ export const useAskStoreVersion = (): number => useSyncExternalStore(subscribe, 
 export const resetAskStoreForTests = (): void => {
   settlements.clear();
   minimized.clear();
+  submitting.clear();
   notify();
 };

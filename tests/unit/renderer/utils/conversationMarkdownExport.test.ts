@@ -10,6 +10,7 @@ import type { TChatConversation } from '@/common/config/storage';
 import {
   buildConversationMarkdownTranscript,
   buildMarkdownExportFileName,
+  parseAskUserAnswers,
   type MarkdownTranscriptLabels,
 } from '@/renderer/utils/chat/conversationExport';
 
@@ -18,6 +19,7 @@ const labels: MarkdownTranscriptLabels = {
   exportedAt: 'Exported at',
   messageCount: 'Messages',
   noMessages: 'No messages',
+  answeredQuestions: 'Answered questions',
   user: 'User',
   assistant: 'Assistant',
   system: 'System',
@@ -69,6 +71,60 @@ describe('buildConversationMarkdownTranscript', () => {
     const markdown = buildConversationMarkdownTranscript({ ...conversation, name: '' }, [], labels);
     expect(markdown).toContain('# Untitled');
     expect(markdown).toContain('No messages');
+  });
+});
+
+describe('question dialog answers in the transcript', () => {
+  // Verbatim shape of dream-engine's AskUserQuestion result (ask_user_tool.rs format_answers).
+  const output = [
+    'The user answered your questions:',
+    '- 测试风格走哪条路线？',
+    '  Answer: 混合模式',
+    '- 变现方式？',
+    '  Answer: (no answer; use your best judgment)',
+    '- 平台？',
+    '  Answer: Web, 小程序',
+    'Proceed with the task using these answers.',
+  ].join('\n');
+
+  it('parses answered questions and skips unanswered ones', () => {
+    expect(parseAskUserAnswers(output)).toEqual([
+      { question: '测试风格走哪条路线？', answer: '混合模式' },
+      { question: '平台？', answer: 'Web, 小程序' },
+    ]);
+  });
+
+  it('records the answers as a user block between the assistant replies', () => {
+    const askCall = {
+      id: 'ask',
+      type: 'tool_call',
+      conversation_id: 'conv-1',
+      created_at: at(9, 7),
+      content: { call_id: 'c1', name: 'AskUserQuestion', args: {}, output },
+    } as unknown as TMessage;
+    const declined = {
+      ...askCall,
+      id: 'declined',
+      content: { ...(askCall.content as object), output: 'The user dismissed the questions without answering.' },
+    } as TMessage;
+
+    const markdown = buildConversationMarkdownTranscript(
+      conversation,
+      [
+        text('1', 'left', 'Two questions first.', at(9, 6)),
+        askCall,
+        declined,
+        text('2', 'left', 'Writing it.', at(9, 8)),
+      ],
+      labels,
+      at(10, 0)
+    );
+
+    expect(markdown).toContain('## User · Answered questions · 2026-10-08 09:07\n\n**测试风格走哪条路线？**\n混合模式');
+    expect(markdown).toContain('**平台？**\nWeb, 小程序');
+    expect(markdown).not.toContain('use your best judgment');
+    expect(markdown).not.toContain('dismissed');
+    expect(markdown).toContain('Messages: 3');
   });
 });
 

@@ -112,5 +112,6 @@
   "export.headerTooltip": "Chat als Markdown exportieren",
   "export.markdownSaved": "Chat exportiert",
   "export.markdownDownloaded": "Chat heruntergeladen",
-  "export.showInFolder": "Im Ordner anzeigen"
+  "export.showInFolder": "Im Ordner anzeigen",
+  "export.answeredQuestionsLabel": "Antworten auf Fragen"
 }

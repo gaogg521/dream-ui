@@ -112,5 +112,6 @@
   "export.headerTooltip": "Exporter la conversation en Markdown",
   "export.markdownSaved": "Conversation exportée",
   "export.markdownDownloaded": "Conversation téléchargée",
-  "export.showInFolder": "Afficher dans le dossier"
+  "export.showInFolder": "Afficher dans le dossier",
+  "export.answeredQuestionsLabel": "Réponses aux questions"
 }

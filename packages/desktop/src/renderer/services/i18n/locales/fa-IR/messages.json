@@ -112,5 +112,6 @@
   "export.headerTooltip": "خروجی گرفتن از گفتگو به Markdown",
   "export.markdownSaved": "گفتگو خروجی گرفته شد",
   "export.markdownDownloaded": "گفتگو دانلود شد",
-  "export.showInFolder": "نمایش در پوشه"
+  "export.showInFolder": "نمایش در پوشه",
+  "export.answeredQuestionsLabel": "پاسخ به سؤال‌ها"
 }

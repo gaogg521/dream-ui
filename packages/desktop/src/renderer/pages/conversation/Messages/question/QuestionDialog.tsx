@@ -13,6 +13,7 @@ import {
   getAskSettlement,
   isAskMinimized,
   setAskMinimized,
+  settleAsk,
   useAskStoreVersion,
   type AskAnswer,
 } from './askSettlementStore';
@@ -253,12 +254,29 @@ const QuestionForm: React.FC<{ message: IMessageAsk }> = ({ message }) => {
 /**
  * Pops the newest unanswered question card (AskUserQuestion) up as a dialog
  * above the composer. Mounted inside the send box, so every chat platform
- * gets it; renders nothing when no question is waiting.
+ * gets it; renders nothing when no question is waiting. `turnActive` is the
+ * send box's running state, used to retire questions the turn left behind.
  */
-const QuestionDialog: React.FC = () => {
+const QuestionDialog: React.FC<{ turnActive?: boolean }> = ({ turnActive = false }) => {
   const { t } = useTranslation();
   const list = useMessageList();
   const storeVersion = useAskStoreVersion();
+  const wasActive = useRef(turnActive);
+
+  // A question only waits while its turn runs: the engine drops it when the
+  // turn ends (Stop, error). Retire unanswered cards on that transition instead
+  // of leaving a dialog whose answer the backend would reject.
+  useEffect(() => {
+    if (wasActive.current && !turnActive) {
+      (list ?? []).forEach((message) => {
+        if (message.type !== 'ask') return;
+        const requestId = requestIdOf(message);
+        if (!getAskSettlement(requestId)) settleAsk(requestId, { status: 'expired' });
+      });
+    }
+    wasActive.current = turnActive;
+  }, [turnActive, list]);
+
   // storeVersion is a dependency on purpose: answering changes the result
   // without changing the message list.
   const pending = useMemo(() => findPendingAsk(list ?? []), [list, storeVersion]);

@@ -4,7 +4,7 @@
 
 import { conversation } from '@/common/adapter/ipcBridge';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
-import { settleAsk, type AskAnswer } from './askSettlementStore';
+import { setAskSubmitting, settleAsk, type AskAnswer } from './askSettlementStore';
 
 export type AskSubmitResult = 'ok' | 'expired' | 'failed';
 
@@ -20,6 +20,7 @@ export async function submitAsk(
   requestId: string,
   payload: { answers: AskAnswer[] } | { decline: true }
 ): Promise<AskSubmitResult> {
+  setAskSubmitting(requestId, true);
   try {
     await conversation.answerAsk.invoke({ conversation_id: conversationId, request_id: requestId, ...payload });
     settleAsk(
@@ -34,5 +35,7 @@ export async function submitAsk(
     }
     console.error('[submitAsk] failed to deliver the answer:', error);
     return 'failed';
+  } finally {
+    setAskSubmitting(requestId, false);
   }
 }

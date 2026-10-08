@@ -176,6 +176,32 @@ describe('QuestionDialog', () => {
     expect(screen.getByTestId('question-dialog')).toBeInTheDocument();
   });
 
+  it('retires an unanswered question when its turn stops', () => {
+    const list = [twoQuestions()];
+    const { rerender } = render(
+      <MessageListProvider value={list}>
+        <QuestionDialog turnActive />
+      </MessageListProvider>
+    );
+    expect(screen.getByTestId('question-dialog')).toBeInTheDocument();
+
+    rerender(
+      <MessageListProvider value={list}>
+        <QuestionDialog turnActive={false} />
+      </MessageListProvider>
+    );
+
+    expect(getAskSettlement('req-1')?.status).toBe('expired');
+    expect(screen.queryByTestId('question-dialog')).toBeNull();
+    expect(answerAskInvoke).not.toHaveBeenCalled();
+  });
+
+  it('does not retire a question that was never seen running (e.g. reload before hydration)', () => {
+    renderWith([twoQuestions()]);
+    expect(getAskSettlement('req-1')).toBeUndefined();
+    expect(screen.getByTestId('question-dialog')).toBeInTheDocument();
+  });
+
   it('shows nothing when no question is waiting', () => {
     renderWith([]);
     expect(screen.queryByTestId('question-dialog')).toBeNull();

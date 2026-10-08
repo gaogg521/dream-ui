@@ -112,5 +112,6 @@
   "export.headerTooltip": "チャット履歴を Markdown で書き出す",
   "export.markdownSaved": "チャット履歴を書き出しました",
   "export.markdownDownloaded": "チャット履歴をダウンロードしました",
-  "export.showInFolder": "フォルダーで表示"
+  "export.showInFolder": "フォルダーで表示",
+  "export.answeredQuestionsLabel": "質問への回答"
 }

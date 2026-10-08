@@ -134,6 +134,7 @@ export type MarkdownTranscriptLabels = {
   exportedAt: string;
   messageCount: string;
   noMessages: string;
+  answeredQuestions: string;
 } & Record<MessageRole, string>;
 
 const formatMarkdownTime = (time: number): string => {
@@ -141,11 +142,36 @@ const formatMarkdownTime = (time: number): string => {
   return `${date.getFullYear()}-${padTimestampPart(date.getMonth() + 1)}-${padTimestampPart(date.getDate())} ${padTimestampPart(date.getHours())}:${padTimestampPart(date.getMinutes())}`;
 };
 
-const isTranscriptMessage = (message: TMessage): boolean =>
-  message.type === 'text' && !message.hidden && readMessageContent(message).trim().length > 0;
+const ASK_USER_TOOL_NAME = 'AskUserQuestion';
+/** One answered question in dream-engine's AskUserQuestion tool result
+ *  (`- <question>` then `  Answer: <labels>`; see ask_user_tool.rs format_answers). */
+const ASK_ANSWER_PATTERN = /^- (.+)\n {2}Answer: (.+)$/gm;
+const UNANSWERED_MARKER = '(no answer';
+
+/** The user's answers recorded in an AskUserQuestion tool result, in order. */
+export const parseAskUserAnswers = (output: string): Array<{ question: string; answer: string }> =>
+  Array.from(output.matchAll(ASK_ANSWER_PATTERN))
+    .map((match) => ({ question: match[1].trim(), answer: match[2].trim() }))
+    .filter((entry) => entry.answer && !entry.answer.startsWith(UNANSWERED_MARKER));
+
+/** Markdown body for the answers the user gave in the question dialog, or '' if none. */
+const readAskAnswers = (message: TMessage): string => {
+  if (message.type !== 'tool_call') return '';
+  const content = message.content as { name?: string; output?: unknown };
+  if (content.name !== ASK_USER_TOOL_NAME || typeof content.output !== 'string') return '';
+  return parseAskUserAnswers(content.output)
+    .map(({ question, answer }) => `**${question}**\n${answer}`)
+    .join('\n\n');
+};
+
+const readTranscriptBody = (message: TMessage): string =>
+  message.type === 'text' ? readMessageContent(message).trim() : readAskAnswers(message);
+
+const isTranscriptMessage = (message: TMessage): boolean => !message.hidden && readTranscriptBody(message).length > 0;
 
 /** Speaker of a transcript block: teammates keep their own name. */
 const getSpeakerLabel = (message: TMessage, labels: MarkdownTranscriptLabels): string => {
+  if (message.type === 'tool_call') return `${labels.user} · ${labels.answeredQuestions}`;
   const senderName = message.type === 'text' ? message.content.senderName : undefined;
   return senderName?.trim() || labels[getMessageRoleKey(message)];
 };
@@ -154,7 +180,9 @@ const getSpeakerLabel = (message: TMessage, labels: MarkdownTranscriptLabels): s
  * Render a conversation as a readable Markdown chat record.
  *
  * Only the user/assistant text is kept — tool calls, thinking and status tips
- * are working noise, not the conversation. Consecutive pieces from the same
+ * are working noise, not the conversation — plus the answers the user gave in
+ * the question dialog, which are part of the conversation even though they
+ * travel as a tool result. Consecutive pieces from the same
  * speaker (an answer split around tool calls) are merged under one heading.
  * Assistant text is already Markdown, so it is written as-is, not fenced.
  */
@@ -182,7 +210,7 @@ export const buildConversationMarkdownTranscript = (
   let previousSpeaker: string | null = null;
   transcript.forEach((message) => {
     const speaker = getSpeakerLabel(message, labels);
-    const body = readMessageContent(message).trim();
+    const body = readTranscriptBody(message);
     if (speaker === previousSpeaker) {
       lines.push(body);
       lines.push('');
@@ -216,6 +244,7 @@ export const buildMarkdownTranscriptLabels = (t: (key: string) => string): Markd
   exportedAt: t('messages.export.exportedAtLabel'),
   messageCount: t('messages.export.messageCountLabel'),
   noMessages: t('messages.export.noMessages'),
+  answeredQuestions: t('messages.export.answeredQuestionsLabel'),
   user: t('messages.export.userLabel'),
   assistant: t('messages.export.assistantLabel'),
   system: t('messages.export.systemLabel'),
