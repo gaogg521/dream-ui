@@ -36,6 +36,7 @@ import { isLegacyReadOnlyConversationType } from '../utils/conversationRuntime';
 import { resolveConversationBackend } from '../utils/conversationAssistantIdentity';
 import LegacyReadOnlyConversation from '../platforms/legacy/LegacyReadOnlyConversation';
 import { useActiveLease } from '../hooks/useActiveLease';
+import { useConversationHistoryContextSafe } from '@/renderer/hooks/context/ConversationHistoryContext';
 // import SkillRuleGenerator from './components/SkillRuleGenerator'; // Temporarily hidden
 
 const configErrorMessageKey = (error: unknown) => {
@@ -166,9 +167,12 @@ const DreamEngineConversationPanel: React.FC<{
     [conversation.id, runtimeView]
   );
 
+  const conversationHistory = useConversationHistoryContextSafe();
   const modelSelection = useDreamEngineModelSelection({
     initialModel: conversation.model,
     onSelectModel,
+    conversationId: conversation.id,
+    recentConversations: conversationHistory?.conversations,
   });
   // Project conversations get the Layout-level Explorer column (stage3 FULL);
   // ChatLayout's own right sider is only for no-project (legacy tree), so it does

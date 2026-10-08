@@ -88,3 +88,26 @@ dream-engine 系统提示新增 `# Doing tasks` 一节（`context.rs` 的 `WORKI
 - **后端（提问弹窗依赖它）**：必须用新的 dreamcore。dev 下 `cargo build -p dream-core-app --release` 后
   `DREAM_BACKEND_LOCAL_PATH=..\dream-core\target\release\dreamcore.exe node scripts/prepareDreamcore.js`；
   打包版要等 dreamcore 出新版本并在 dream-ui 里 bump pin。旧 dreamcore + 新前端：导出功能正常，模型拿不到提问工具（行为同以前）。
+
+## 6. 追加（同日用户反馈）
+
+### 6.1 结尾建议放开
+
+用户判断：任务做完后在结尾给一两条优化/后续建议是有价值的，不该一刀切。规则改为「先交付、后建议」：
+做完之后可以附一句简短、可选的建议（允许是个小问句），但**不得成为前提**——用户要求的事不能留着等用户选。
+仍然禁止的是：没做完就停下来问、中途汇报问要不要继续。（`dream-engine` `context.rs` 的 `WORKING_STYLE_GUIDANCE`）
+
+### 6.2 历史会话「该会话使用的模型已被删除」
+
+2026-07-15 那次只把 `PROVIDER_NOT_FOUND` 的报错改友好了，用户仍然要自己去重新选模型——这一步只有一个显然的答案，提示本身就是多余的。
+现在打开 dream 会话时（`useDreamEngineModelSelection`），只要服务商列表**已加载**且会话保存的模型失效（服务商被删，或服务商里已没有这个模型名），就静默改绑并写回会话，按顺序挑：
+
+1. 其他服务商里**同名**的模型（删掉服务商又重新加的情况）；
+2. **最近使用的 dream 会话**的模型（即用户当前在用的）；
+3. 首页同款默认：第一个可对话的模型（不会选到图片/视频模型）。
+
+刻意不处理：用户只是把某个模型「关掉」（`model_enabled=false`）——那是偏好，不是坏掉的绑定。纯函数在 `platforms/dreamEngine/staleModelFallback.ts`。
+
+真机：把测试会话改绑到不存在的服务商 `a75eef56` / `deepseek-v4.1-flash`（截图同款）→ 从首页点进去，标题栏直接显示 `qwen3.7-flash`、库里的绑定已更新 → 发「你有什么技能啊」正常回复，无报错卡片。
+
+未覆盖：定时任务、渠道（飞书/企微）等不经过会话页面的入口，绑定失效时仍会报错（后端不知道「当前模型」是哪个，那是前端状态）。
