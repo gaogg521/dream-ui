@@ -5,7 +5,6 @@ import {
   MAX_ENTERPRISE_SERVER_URL_HISTORY,
   normalizeEnterpriseServerUrl,
   normalizeEnterpriseServerUrlHistory,
-  normalizeWebuiDeploymentRole,
   resolveDeploymentRole,
 } from '@/common/config/webuiEnterpriseConfig';
 
@@ -26,23 +25,16 @@ describe('webuiEnterpriseConfig', () => {
     });
   });
 
-  describe('normalizeWebuiDeploymentRole', () => {
-    it('only accepts explicit server', () => {
-      expect(normalizeWebuiDeploymentRole('server')).toBe('server');
-      expect(normalizeWebuiDeploymentRole('client')).toBe('client');
-      expect(normalizeWebuiDeploymentRole(undefined)).toBe('client');
-      expect(normalizeWebuiDeploymentRole('invalid')).toBe('client');
-    });
-  });
-
   describe('resolveDeploymentRole', () => {
     it('defaults to client when pref is unset, even if local enterprise exists', () => {
       expect(resolveDeploymentRole(undefined)).toBe(DEFAULT_WEBUI_DEPLOYMENT_ROLE);
       expect(resolveDeploymentRole(null)).toBe('client');
     });
 
-    it('respects explicit server or client', () => {
-      expect(resolveDeploymentRole('server')).toBe('server');
+    it('reads a leftover `server` as client — this build cannot host', () => {
+      // A config written before hosting moved to the enterprise edition must
+      // not strand the user in a role the UI no longer offers a way out of.
+      expect(resolveDeploymentRole('server')).toBe('client');
       expect(resolveDeploymentRole('client')).toBe('client');
     });
   });

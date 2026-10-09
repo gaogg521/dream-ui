@@ -31,7 +31,8 @@ import {
 import { DEPLOYMENT_ROLE_CHANGED_EVENT, normalizeEnterpriseServerUrl } from '@/common/config/webuiEnterpriseConfig';
 import { ORG_CONTEXT_CHANGED_EVENT, useOrgContext } from './hooks/useOrgContext';
 import { persistDeploymentServerUrl, useDeploymentRole } from '@renderer/hooks/enterprise/useDeploymentRole';
-import { probeRemoteEnterpriseServer } from '@renderer/pages/settings/components/EnterpriseDeploymentModeCard';
+import { describeConnectFailure, readLocalClientInfo } from '@renderer/pages/settings/components/EnterpriseServerCard';
+import { probeRemoteEnterpriseServer, resolveEnterpriseServer } from '@renderer/utils/enterprise/probeEnterpriseServer';
 import EnterpriseLoginChannelPanel from './components/EnterpriseLoginChannelPanel';
 import '@renderer/pages/login/LoginPage.css';
 
@@ -149,32 +150,29 @@ const EnterpriseLoginPage: React.FC = () => {
     const normalized = normalizeEnterpriseServerUrl(url);
     if (!normalized) {
       Message.warning(
-        t('settings.webui.deployServerUrlInvalid', {
-          defaultValue: '请输入有效的服务器地址，例如 https://ai.example.com 或 192.168.1.10:25809',
+        t('common.enterprise.serverUrlInvalid', {
+          defaultValue: '请输入有效的地址，例如 http://192.168.1.10 或 https://ai.example.com',
         })
       );
       return;
     }
     setConnecting(true);
     try {
-      await persistDeploymentServerUrl(normalized);
-      const probe = await probeRemoteEnterpriseServer(normalized);
-      if (probe === 'no-enterprise') {
-        Message.error(
-          t('common.enterprise.remoteEnterpriseNoModule', {
-            defaultValue:
-              '远端服务器未提供企业 API（/api/one/*）。请确认对方运行的是带企业模块的 One Work，而不是旧版或仅静态 WebUI。',
-          })
-        );
+      const result = await resolveEnterpriseServer(normalized, await readLocalClientInfo());
+      if (!result.ok) {
+        Message.error(describeConnectFailure(result, t));
         return;
       }
-      if (probe === 'unreachable') {
-        Message.error(
-          t('common.enterprise.remoteEnterpriseUnreachable', {
-            defaultValue: '无法连接远端服务器，请检查地址、端口与防火墙后重试。',
+      await persistDeploymentServerUrl(result.url);
+      setUrl(result.url);
+      if (result.adjustedFrom) {
+        Message.info(
+          t('common.enterprise.serverAdjusted', {
+            typed: result.adjustedFrom,
+            url: result.url,
+            defaultValue: '{{typed}} 不是企业服务器入口，已自动改用 {{url}}。',
           })
         );
-        return;
       }
       setEnterpriseModeEnabled(true);
       window.dispatchEvent(new CustomEvent(DEPLOYMENT_ROLE_CHANGED_EVENT));
@@ -248,15 +246,15 @@ const EnterpriseLoginPage: React.FC = () => {
         </div>
       ) : null}
       <div className='text-13px text-t-secondary mb-8px'>
-        {t('settings.webui.deployServerUrlLabel', { defaultValue: '项目组服务器地址' })}
+        {t('common.enterprise.serverUrlLabel', { defaultValue: '企业服务器地址' })}
       </div>
       <div className='flex gap-8px'>
         <AutoComplete
           value={url}
           onChange={setUrl}
           data={serverUrlHistory}
-          placeholder={t('settings.webui.deployServerUrlPlaceholder', {
-            defaultValue: '例如 https://ai.example.com 或 192.168.1.10:25809',
+          placeholder={t('common.enterprise.serverUrlPlaceholder', {
+            defaultValue: '例如 http://192.168.1.10 或 https://ai.example.com',
           })}
           style={{ flex: 1 }}
         />
@@ -265,8 +263,9 @@ const EnterpriseLoginPage: React.FC = () => {
         </Button>
       </div>
       <div className='text-11px text-t-tertiary mt-8px'>
-        {t('settings.webui.deployServerUrlHint', {
-          defaultValue: '填写管理员提供的企业服务器地址：用域名部署的填 https:// 开头的域名，局域网服务器填 IP 加端口',
+        {t('common.enterprise.serverUrlHint', {
+          defaultValue:
+            '填写管理员提供的企业版访问地址，也就是浏览器打开企业管理后台用的地址。一般不带端口；不要填 25808、25809 这类内部端口。',
         })}
       </div>
       <Alert

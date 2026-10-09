@@ -63,19 +63,12 @@ const roleLabelKey: Record<string, { key: string; fallback: string }> = {
 const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized, onChanged }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const {
-    isClient: isDeploymentClient,
-    isServer: isDeploymentServer,
-    loading: deploymentLoading,
-  } = useDeploymentRole();
+  const { isClient: isDeploymentClient, loading: deploymentLoading } = useDeploymentRole();
   const hideLocalAdmin = !deploymentLoading && isDeploymentClient;
   // Role decides the action: a client joins an existing enterprise; a server
   // hosts (creates) one. Never show both — that confused users into thinking
   // a server could also "join" itself.
   const showJoinEnterprise = !deploymentLoading && isDeploymentClient;
-  // Only reachable from a pre-split config (or `markDeploymentAsServer`);
-  // there is no longer any way to enter this state from the UI.
-  const showLegacyServerNotice = !deploymentLoading && isDeploymentServer;
   const [inviteCode, setInviteCode] = useState('');
   const [joining, setJoining] = useState(false);
   const [exitVisible, setExitVisible] = useState(false);
@@ -416,22 +409,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
             })}
           </div>
         </div>
-      )}
-      {/* Creating an enterprise locally is gone: hosting lives in the separate
-          enterprise edition, and `/api/one/org/create` answers 501 in this
-          build. The form used to be shown to anyone whose deployment role
-          said `server`, which now only happens for configs left over from
-          before the split — so they get an explanation instead of a button
-          that cannot work. Joining a remote project group by invite code is
-          unaffected and stays above. */}
-      {showLegacyServerNotice && (
-        <Alert
-          type='info'
-          content={t('common.enterprise.hostingMovedToEnterpriseEdition', {
-            defaultValue:
-              '本机记录的部署角色是「服务器」，但个人版不提供项目组托管能力（该能力已随企业版拆分独立）。请在「设置 → 企业身份」将本机切回客户端，并连接由企业版服务端托管的项目组。',
-          })}
-        />
       )}
     </div>
   );

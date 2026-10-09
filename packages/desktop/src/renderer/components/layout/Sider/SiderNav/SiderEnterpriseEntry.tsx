@@ -8,8 +8,6 @@ import { Tooltip } from '@arco-design/web-react';
 import { BuildingOne } from '@icon-park/react';
 import classNames from 'classnames';
 import { isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
-import { useDeploymentRole } from '@renderer/hooks/enterprise/useDeploymentRole';
-import { useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import type { SiderTooltipProps } from '@renderer/utils/ui/siderTooltip';
 
 interface SiderEnterpriseEntryProps {
@@ -29,26 +27,16 @@ const SiderEnterpriseEntry: React.FC<SiderEnterpriseEntryProps> = ({
 }) => {
   const { t } = useTranslation();
   const label = t('common.enterprise.title', { defaultValue: '企业' });
-  // Deployment-mode badge, always visible so the user knows at a glance whether
-  // this instance is a client (connected to a remote enterprise server), the
-  // server (this machine hosts the enterprise), or standalone (personal).
-  const { context } = useOrgContext();
-  const { role: deploymentRole } = useDeploymentRole();
-  const mode: 'client' | 'server' | 'standalone' = isEnterpriseModeEnabled()
-    ? 'client'
-    : deploymentRole === 'client'
-      ? 'client'
-      : context?.isEnterprise
-        ? 'server'
-        : 'standalone';
+  // Connection badge: whether this install is connected to an enterprise
+  // server. (It used to also say 服务端 when this machine hosted the
+  // enterprise — hosting moved to the separate enterprise edition.)
+  const mode: 'client' | 'standalone' = isEnterpriseModeEnabled() ? 'client' : 'standalone';
   const modeLabel = {
-    client: t('common.enterprise.modeClient', { defaultValue: '客户端' }),
-    server: t('common.enterprise.modeServer', { defaultValue: '服务端' }),
+    client: t('common.enterprise.remoteEnabledShort', { defaultValue: '已连接' }),
     standalone: t('common.enterprise.modeStandalone', { defaultValue: '单机版' }),
   }[mode];
   const modeColor = {
-    client: 'rgb(var(--primary-6))',
-    server: 'rgb(var(--success-6))',
+    client: 'rgb(var(--success-6))',
     standalone: 'var(--color-text-3)',
   }[mode];
   const tooltipContent = `${label} · ${modeLabel}`;

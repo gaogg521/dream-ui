@@ -84,10 +84,10 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
   const isRemoteConnected = isEnterpriseModeEnabled();
   const editionLine = hideLocalAdmin
     ? !isRemoteConnected
-      ? t('settings.workspaceIdentity.editionClientDisconnected', { defaultValue: '客户端 · 未连接' })
+      ? t('settings.workspaceIdentity.editionClientDisconnected', { defaultValue: '个人版 · 未连接企业' })
       : unauthorized || !remoteSession
-        ? t('settings.workspaceIdentity.editionClientNeedLogin', { defaultValue: '客户端 · 未登录' })
-        : t('settings.workspaceIdentity.editionClient', { defaultValue: '客户端 · 连接远端' })
+        ? t('settings.workspaceIdentity.editionClientNeedLogin', { defaultValue: '已连接企业 · 未登录' })
+        : t('settings.workspaceIdentity.editionClient', { defaultValue: '已连接企业' })
     : context?.isEnterprise
       ? t('settings.workspaceIdentity.editionProjectGroup', { defaultValue: '项目组' })
       : remoteSession

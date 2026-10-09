@@ -39,14 +39,12 @@ vi.mock('@/common', async () => {
 vi.mock('@renderer/hooks/enterprise/useDeploymentRole', () => ({
   useDeploymentRole: () => ({
     loading: false,
-    role: 'server',
+    role: 'client',
     serverUrl: '',
     normalizedServerUrl: null,
-    isClient: false,
-    isServer: true,
+    isClient: true,
     refresh: vi.fn(),
   }),
-  markDeploymentAsServer: vi.fn(),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -56,9 +54,8 @@ vi.mock('react-i18next', () => ({
 }));
 
 describe('OverviewTab — local hosting retired', () => {
-  // A machine whose stored deployment role still says `server`. There is no
-  // longer any UI that can put it there — only a config written before the
-  // enterprise edition was split out, or `markDeploymentAsServer`.
+  // A personal install outside any project group. Its stored deployment role
+  // may still say `server` from an old build; it is read as client now.
   const legacyServerContext: OrgContext = {
     tenantId: 'default',
     tenantName: null,
@@ -81,16 +78,16 @@ describe('OverviewTab — local hosting retired', () => {
    * edition does not compile the governance crates that host a project
    * group. Offering it produced a failure that explained none of that.
    */
-  it('offers no local create path, and explains where hosting went', async () => {
+  it('offers no local create path', async () => {
     render(
       <MemoryRouter>
         <OverviewTab context={legacyServerContext} error={null} unauthorized={false} onChanged={vi.fn()} />
       </MemoryRouter>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/个人版不提供项目组托管能力/)).toBeInTheDocument();
-    });
+    // Joining by invite code is the one path a client has.
+    await waitFor(() => expect(screen.getAllByPlaceholderText('邀请码').length).toBeGreaterThan(0));
+    expect(screen.queryByText(/个人版不提供项目组托管能力/)).toBeNull();
 
     expect(screen.queryByPlaceholderText('企业名称')).toBeNull();
     expect(screen.queryByRole('button', { name: '创建' })).toBeNull();

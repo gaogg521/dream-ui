@@ -355,7 +355,22 @@
     "loginChannelNeedsServer": "尚未连接企业服务器，本机没有企业 SSO 配置。请先回到第一步填写并连接项目组服务器地址，再用 {{method}} 登录。",
     "loginChannelsNeedServerHint": "企业 SSO 登录方式来自你所连接的企业服务器。当前尚未连接，因此下方仅「本地账户」可用——请回到第一步填写并连接项目组服务器地址。",
     "loginChannelsNoneConfiguredHint": "已连接企业服务器，但管理员尚未在企业管理后台启用任何 SSO 登录方式。可先用「本地账户」登录。",
-    "wizardEditingContext": "当前已连接：{{url}}。只有新地址连接成功后才会切换，取消不会改动现有连接。"
+    "wizardEditingContext": "当前已连接：{{url}}。只有新地址连接成功后才会切换，取消不会改动现有连接。",
+    "serverCardTitle": "企业服务器",
+    "serverNotConnected": "未连接",
+    "serverCardDesc": "公司部署了 One Work 企业版时，连接后由企业服务器提供成员身份、项目组、企业登录与团队资源；本机的会话、助手和个人数据始终留在本地。没有企业服务器无需设置。",
+    "serverConnectedTo": "已连接：{{url}}",
+    "serverChange": "更换服务器",
+    "serverDisconnect": "断开连接",
+    "serverConnect": "连接",
+    "serverUrlLabel": "企业服务器地址",
+    "serverUrlPlaceholder": "例如 http://192.168.1.10 或 https://ai.example.com",
+    "serverUrlHint": "填写管理员提供的企业版访问地址，也就是浏览器打开企业管理后台用的地址。一般不带端口；不要填 25808、25809 这类内部端口。",
+    "serverUrlInvalid": "请输入有效的地址，例如 http://192.168.1.10 或 https://ai.example.com",
+    "serverAdjusted": "{{typed}} 不是企业服务器入口，已自动改用 {{url}}。",
+    "serverErrSelf": "{{url}} 是本机 One Work 客户端自己的地址，不是企业服务器。请填写管理员提供的企业版访问地址（浏览器打开企业管理后台用的那个）。",
+    "serverErrNoEnterprise": "{{url}} 能访问，但不是企业服务器（没有企业接口）。常见原因：填成了某台 One Work 客户端（包括本机）的地址，或对方还没部署企业版。",
+    "serverErrUnreachable": "连接不上 {{url}}。请确认地址与管理员给的一致、对方服务器已启动、两台电脑网络互通；企业版通常不需要填写端口。"
   },
   "superAssistant": {
     "title": "超级助手",

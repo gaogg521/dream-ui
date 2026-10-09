@@ -2,22 +2,31 @@
  * Copyright 2026 One Work
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import EnterpriseIdentityCard from '@/renderer/pages/enterprise/components/EnterpriseIdentityCard';
 import RemoteServerSection from '@/renderer/pages/enterprise/components/RemoteServerSection';
-import { useDeploymentRole } from '@renderer/hooks/enterprise/useDeploymentRole';
+import { getEnterpriseSession, isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
+import { DEPLOYMENT_ROLE_CHANGED_EVENT } from '@/common/config/webuiEnterpriseConfig';
 import { isElectronDesktop } from '@renderer/utils/platform';
-import EnterpriseDeploymentModeCard from './components/EnterpriseDeploymentModeCard';
+import EnterpriseServerCard from './components/EnterpriseServerCard';
 import SettingsPageWrapper from './components/SettingsPageWrapper';
 
 const EnterpriseIdentitySettings: React.FC = () => {
   const { t } = useTranslation();
-  const { isClient: isDeploymentClient, loading: deploymentLoading } = useDeploymentRole();
-  // The remote connection carries the enterprise SSO login, so it belongs to
-  // the identity page rather than the project-group page. Client mode only —
-  // a server hosts its own data and has nothing to connect to.
-  const showRemoteSection = isElectronDesktop() && !deploymentLoading && isDeploymentClient;
+  const [connected, setConnected] = useState(isEnterpriseModeEnabled());
+  const [hasSession, setHasSession] = useState(() => Boolean(getEnterpriseSession()));
+  useEffect(() => {
+    const sync = (): void => {
+      setConnected(isEnterpriseModeEnabled());
+      setHasSession(Boolean(getEnterpriseSession()));
+    };
+    window.addEventListener(DEPLOYMENT_ROLE_CHANGED_EVENT, sync);
+    return () => window.removeEventListener(DEPLOYMENT_ROLE_CHANGED_EVENT, sync);
+  }, []);
+  // Login and identity only mean something once a server is connected; before
+  // that the page is just the connect card, not three cards of "未启用".
+  const showRemoteSection = isElectronDesktop() && connected;
 
   return (
     <SettingsPageWrapper contentClassName='max-w-960px'>
@@ -33,9 +42,11 @@ const EnterpriseIdentitySettings: React.FC = () => {
               different settings pages — the address on 远程连接, the login
               here — so someone who filled in an address had no visible next
               step and the SSO buttons stayed grey with no explanation. */}
-          <EnterpriseDeploymentModeCard />
+          <EnterpriseServerCard />
           {showRemoteSection && <RemoteServerSection />}
-          <EnterpriseIdentityCard />
+          {/* Identity comes from a sign-in; before one there is only an error
+              ("无法获取企业身份信息") to show. */}
+          {connected && hasSession && <EnterpriseIdentityCard />}
         </div>
       </div>
     </SettingsPageWrapper>

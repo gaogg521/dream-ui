@@ -2127,8 +2127,8 @@
     "editionPersonal": "Personal · Not signed in",
     "editionProjectGroup": "Project group",
     "departmentLine": "Department: {{department}}",
-    "editionClient": "Client · Connected",
-    "editionClientDisconnected": "Client · Not connected",
+    "editionClient": "Enterprise · Connected",
+    "editionClientDisconnected": "Personal · No enterprise",
     "ssoAuthed": "Signed in via company SSO",
     "ssoCompanyLine": "Company SSO: {{company}}",
     "projectGroupLine": "Project group: {{name}}",
@@ -2137,7 +2137,8 @@
     "personalWorkspace": "Personal workspace",
     "factIdentity": "Signed in",
     "factCompany": "Company",
-    "factDepartment": "Dept."
+    "factDepartment": "Dept.",
+    "editionClientNeedLogin": "Enterprise · Not signed in"
   },
   "codexBridge.title": "Codex Bridge",
   "codexBridge.description": "Let the external Codex CLI use one of your own configured models instead of its default OpenAI/ChatGPT account, by routing its requests through this app's local compatibility bridge.",

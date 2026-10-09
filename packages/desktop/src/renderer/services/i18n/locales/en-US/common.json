@@ -355,7 +355,22 @@
     "loginChannelNeedsServer": "No enterprise server is connected, so this machine has no enterprise SSO configuration. Go back to step one, enter the project-group server address and connect, then sign in with {{method}}.",
     "loginChannelsNeedServerHint": "Enterprise SSO methods come from the enterprise server you connect to. Nothing is connected yet, so only \"Local account\" is available below — go back to step one and connect the project-group server address.",
     "loginChannelsNoneConfiguredHint": "Connected to the enterprise server, but an administrator has not enabled any SSO method in the admin console yet. You can sign in with \"Local account\" for now.",
-    "wizardEditingContext": "Currently connected to {{url}}. The switch happens only after the new address connects successfully; cancelling leaves the existing connection untouched."
+    "wizardEditingContext": "Currently connected to {{url}}. The switch happens only after the new address connects successfully; cancelling leaves the existing connection untouched.",
+    "serverCardTitle": "Enterprise server",
+    "serverNotConnected": "Not connected",
+    "serverCardDesc": "If your company runs One Work Enterprise, connecting lets its server provide your member identity, project groups, enterprise sign-in and team resources. Your conversations, assistants and personal data always stay on this machine. Without an enterprise server there is nothing to set up here.",
+    "serverConnectedTo": "Connected: {{url}}",
+    "serverChange": "Change server",
+    "serverDisconnect": "Disconnect",
+    "serverConnect": "Connect",
+    "serverUrlLabel": "Enterprise server address",
+    "serverUrlPlaceholder": "e.g. http://192.168.1.10 or https://ai.example.com",
+    "serverUrlHint": "Use the address your admin gave you — the one you open the enterprise admin console with in a browser. It usually has no port; don't enter internal ports such as 25808 or 25809.",
+    "serverUrlInvalid": "Enter a valid address, e.g. http://192.168.1.10 or https://ai.example.com",
+    "serverAdjusted": "{{typed}} is not the enterprise server entry point; connected to {{url}} instead.",
+    "serverErrSelf": "{{url}} is this machine's own One Work client, not an enterprise server. Enter the enterprise address your admin gave you (the one used to open the admin console in a browser).",
+    "serverErrNoEnterprise": "{{url}} answers but is not an enterprise server (no enterprise API). Usually this is the address of a One Work client — possibly this machine — or the enterprise edition is not deployed there yet.",
+    "serverErrUnreachable": "Can't reach {{url}}. Check that the address matches what your admin gave you, the server is running, and both machines can reach each other. The enterprise edition usually needs no port."
   },
   "superAssistant": {
     "title": "Super Assistant",

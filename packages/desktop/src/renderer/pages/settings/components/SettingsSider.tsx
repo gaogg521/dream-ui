@@ -23,6 +23,7 @@ import {
 } from '@icon-park/react';
 import { useCompanyIdentity } from '@/renderer/pages/enterprise/hooks/useCompanyIdentity';
 import { isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
+import { DEPLOYMENT_ROLE_CHANGED_EVENT } from '@/common/config/webuiEnterpriseConfig';
 import { openAdminConsole } from '@/renderer/utils/enterprise/enterpriseBrowserLogin';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -137,10 +138,22 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
   // sub-admin promoted in the console, say) is the worse failure — they
   // cannot even find the door.
   const { company, isCompanyAdmin } = useCompanyIdentity();
-  const showCompany = (Boolean(company) && isCompanyAdmin) || isEnterpriseModeEnabled();
+  // Connecting without a remembered login does not reload the app, so the
+  // rows that depend on it must re-read the flag when it changes.
+  const [enterpriseConnected, setEnterpriseConnected] = useState(isEnterpriseModeEnabled());
+  useEffect(() => {
+    const sync = (): void => setEnterpriseConnected(isEnterpriseModeEnabled());
+    window.addEventListener(DEPLOYMENT_ROLE_CHANGED_EVENT, sync);
+    return () => window.removeEventListener(DEPLOYMENT_ROLE_CHANGED_EVENT, sync);
+  }, []);
+  const showCompany = (Boolean(company) && isCompanyAdmin) || enterpriseConnected;
   // The personal file vault is server-scoped (§4.3) — no enterprise server, no
   // vault, so the row only exists once enterprise mode is on.
-  const showFileVault = isEnterpriseModeEnabled();
+  const showFileVault = enterpriseConnected;
+  // Project groups exist only on an enterprise server. A personal install has
+  // nothing to show there, so the row appears once a server is connected;
+  // 企业身份 stays as the place to connect.
+  const showProjectGroup = enterpriseConnected;
 
   const extensionTabs = useExtensionSettingsTabs();
   const { resolveExtTabName } = useExtI18n();
@@ -250,6 +263,7 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
     const result: SiderItem[] = BUILTIN_TAB_IDS.filter(
       (id) =>
         (id !== 'company' || showCompany) &&
+        (id !== 'enterprise' || showProjectGroup) &&
         (id !== 'fileVault' || showFileVault) &&
         // Same condition as the vault: the rows are server-scoped, so the tab
         // only means anything once there is a company to ask.
@@ -334,7 +348,16 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
     }
 
     return { menus: result, groupHeaderAt: headerAt };
-  }, [t, isDesktop, extensionTabs, resolveExtTabName, showCompany, showFileVault, openAdminConsoleInBrowser]);
+  }, [
+    t,
+    isDesktop,
+    extensionTabs,
+    resolveExtTabName,
+    showCompany,
+    showFileVault,
+    showProjectGroup,
+    openAdminConsoleInBrowser,
+  ]);
 
   // Scroll affordance: the sider is long enough to clip entries, but the global
   // scrollbar thumb is transparent until hovered, so nothing tells the user more

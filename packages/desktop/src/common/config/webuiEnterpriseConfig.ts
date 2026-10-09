@@ -1,9 +1,14 @@
 /**
- * Enterprise deployment role — one server per LAN, others are clients.
+ * Enterprise connection settings stored in client preferences
+ * (`configService` / `/api/settings/client`).
  *
- * Stored in client preferences (`configService` / `/api/settings/client`).
- * When role is `client`, this machine must not expose local enterprise admin
- * entry points; SSO and admin live on the remote server.
+ * `webui.deploymentRole` is a leftover from when the enterprise server shipped
+ * inside the desktop bundle and one machine per LAN played "server". Hosting
+ * now lives in the separate enterprise edition, so every desktop install is a
+ * client; a stored `server` is read as `client` (the personal build cannot
+ * host — its local `/api/one/org/*` answers 501), which also releases anyone
+ * still carrying that value from an old build. The key and type stay so old
+ * preference files keep parsing.
  */
 
 export type WebuiDeploymentRole = 'server' | 'client';
@@ -20,24 +25,12 @@ export const WEBUI_ENTERPRISE_SERVER_URL_HISTORY_KEY = 'webui.enterpriseServerUr
 /** Upper bound on remembered addresses; older entries fall off the end. */
 export const MAX_ENTERPRISE_SERVER_URL_HISTORY = 8;
 
-/** Default to client until the user creates an enterprise on this machine. */
 export const DEFAULT_WEBUI_DEPLOYMENT_ROLE: WebuiDeploymentRole = 'client';
 
 export const DEPLOYMENT_ROLE_CHANGED_EVENT = 'one-deployment-role-changed';
 
-export function normalizeWebuiDeploymentRole(value: unknown): WebuiDeploymentRole {
-  return value === 'server' ? 'server' : 'client';
-}
-
-/**
- * Resolve deployment role when the stored pref is missing.
- * Always defaults to client — same LAN should have one server; everyone else
- * is a client until they explicitly choose server or create an enterprise here.
- */
-export function resolveDeploymentRole(stored: unknown): WebuiDeploymentRole {
-  if (stored === 'server' || stored === 'client') {
-    return stored;
-  }
+/** Always `client` — see the module comment for why a stored `server` is ignored. */
+export function resolveDeploymentRole(_stored: unknown): WebuiDeploymentRole {
   return DEFAULT_WEBUI_DEPLOYMENT_ROLE;
 }
 

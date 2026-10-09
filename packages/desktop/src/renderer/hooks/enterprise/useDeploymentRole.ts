@@ -1,14 +1,11 @@
 /**
- * Reads/writes enterprise deployment role (server vs client) from client prefs.
+ * Reads/writes the enterprise server address from client prefs. The role is
+ * always client now (see `webuiEnterpriseConfig.ts`); `role` / `isClient`
+ * stay in the result so existing callers keep compiling.
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import {
-  clearEnterpriseRemotePointer,
-  getEnterpriseServerUrl,
-  setEnterpriseServerUrl,
-  setEnterpriseSession,
-} from '@/common/adapter/enterpriseMode';
+import { getEnterpriseServerUrl, setEnterpriseServerUrl, setEnterpriseSession } from '@/common/adapter/enterpriseMode';
 import { ORG_CONTEXT_CHANGED_EVENT } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import { configService } from '@/common/config/configService';
 import {
@@ -32,7 +29,6 @@ export type UseDeploymentRoleResult = {
   /** Previously saved server addresses, most recent first. */
   serverUrlHistory: string[];
   isClient: boolean;
-  isServer: boolean;
   refresh: () => Promise<void>;
 };
 
@@ -42,8 +38,7 @@ function readStoredServerUrl(): string {
 }
 
 /**
- * Point (or unpoint) the enterprise remote at `url` for the given role. Server
- * mode hosts its own data, so it never keeps a remote pointer.
+ * Point the enterprise remote at `url`.
  *
  * When the *effective* client-mode URL actually changes (not merely re-saved),
  * the stored SSO session is cleared too. A session token is a JWT signed by
@@ -56,21 +51,18 @@ function readStoredServerUrl(): string {
  * "保存地址" again) must NOT force a re-login, so this only fires on a real
  * change, compared against what was already stored.
  */
-function applyRemotePointer(role: WebuiDeploymentRole, url: string): void {
+function applyRemotePointer(url: string): void {
   const normalized = normalizeEnterpriseServerUrl(url);
   let identityChanged = false;
-  if (role === 'client' && normalized) {
+  if (normalized) {
     if (getEnterpriseServerUrl() !== normalized) {
       setEnterpriseSession(null);
       identityChanged = true;
     }
     setEnterpriseServerUrl(normalized);
-  } else if (role === 'server') {
-    clearEnterpriseRemotePointer();
-    identityChanged = true;
   }
   if (identityChanged) {
-    // Leaving client mode (or re-pointing it at a different server) changes
+    // Re-pointing at a different server changes
     // what "my org" means, and everything derived from the org context must
     // re-derive: the team-resource sync's leaving purge (C0-1's channel
     // clearing rides it too) keys on that context flipping to
@@ -91,27 +83,11 @@ async function writeServerUrl(url: string): Promise<void> {
   );
 }
 
-/**
- * Switch the deployment role WITHOUT touching the saved server address.
- *
- * Flipping to server used to persist an empty address, so a user who switched
- * client → server (or created a project group locally) silently lost the LAN
- * address they had typed and had to look it up again to switch back. The role
- * and the address are independent settings: server mode simply ignores the
- * address (and drops the live remote pointer) instead of erasing it.
- */
-export async function persistDeploymentRole(role: WebuiDeploymentRole): Promise<void> {
-  await configService.whenReady();
-  await configService.set(WEBUI_DEPLOYMENT_ROLE_KEY, role);
-  applyRemotePointer(role, readStoredServerUrl());
-  window.dispatchEvent(new CustomEvent(DEPLOYMENT_ROLE_CHANGED_EVENT));
-}
-
-/** Save the client-mode server address and remember it in the history. */
+/** Save the server address and remember it in the history. */
 export async function persistDeploymentServerUrl(url: string): Promise<void> {
   await configService.whenReady();
   await writeServerUrl(url);
-  applyRemotePointer(resolveDeploymentRole(configService.get(WEBUI_DEPLOYMENT_ROLE_KEY)), url);
+  applyRemotePointer(url);
   window.dispatchEvent(new CustomEvent(DEPLOYMENT_ROLE_CHANGED_EVENT));
 }
 
@@ -120,10 +96,6 @@ export async function clearDeploymentServerUrlHistory(): Promise<void> {
   await configService.whenReady();
   await configService.set(WEBUI_ENTERPRISE_SERVER_URL_HISTORY_KEY, []);
   window.dispatchEvent(new CustomEvent(DEPLOYMENT_ROLE_CHANGED_EVENT));
-}
-
-export async function markDeploymentAsServer(): Promise<void> {
-  await persistDeploymentRole('server');
 }
 
 async function readDeploymentConfig(): Promise<{ role: WebuiDeploymentRole; url: string; history: string[] }> {
@@ -176,7 +148,6 @@ export function useDeploymentRole(): UseDeploymentRoleResult {
     normalizedServerUrl,
     serverUrlHistory,
     isClient: role === 'client',
-    isServer: role === 'server',
     refresh,
   };
 }

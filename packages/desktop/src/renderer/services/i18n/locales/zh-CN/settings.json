@@ -2128,8 +2128,8 @@
     "editionPersonal": "个人版 · 未登录",
     "editionProjectGroup": "项目组",
     "departmentLine": "部门：{{department}}",
-    "editionClient": "客户端 · 连接远端",
-    "editionClientDisconnected": "客户端 · 未连接",
+    "editionClient": "已连接企业",
+    "editionClientDisconnected": "个人版 · 未连接企业",
     "ssoAuthed": "已通过企业 SSO 登录",
     "ssoCompanyLine": "企业 SSO：{{company}}",
     "projectGroupLine": "项目组：{{name}}",
@@ -2138,7 +2138,8 @@
     "personalWorkspace": "个人工作区",
     "factIdentity": "身份",
     "factCompany": "企业",
-    "factDepartment": "部门"
+    "factDepartment": "部门",
+    "editionClientNeedLogin": "已连接企业 · 未登录"
   },
   "codexBridge.title": "Codex 桥接",
   "codexBridge.description": "让外部 Codex CLI 使用你自己配置的模型，而不是它默认的 OpenAI/ChatGPT 账号——请求会通过本应用的本地兼容桥接转发。",

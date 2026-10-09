@@ -73,20 +73,6 @@ describe('deployment role changes announce the new org context', () => {
     vi.clearAllMocks();
   });
 
-  it('fires when the machine leaves client mode for server mode', async () => {
-    enterpriseServerUrl.value = 'http://192.168.1.10:25809';
-    store.set(WEBUI_ENTERPRISE_SERVER_URL_KEY, 'http://192.168.1.10:25809');
-    const { persistDeploymentRole } = await import('@renderer/hooks/enterprise/useDeploymentRole');
-    const events = recordEvents();
-
-    await persistDeploymentRole('server');
-
-    expect(clearEnterpriseRemotePointer).toHaveBeenCalledTimes(1);
-    expect(events.org).toBe(1);
-    expect(events.role).toBe(1);
-    events.stop();
-  });
-
   it('fires when the client is re-pointed at a different server, and clears the session', async () => {
     enterpriseServerUrl.value = 'http://192.168.1.10:25809';
     store.set(WEBUI_DEPLOYMENT_ROLE_KEY, 'client');
