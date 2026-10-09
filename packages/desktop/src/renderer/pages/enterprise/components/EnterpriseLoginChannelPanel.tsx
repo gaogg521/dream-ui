@@ -170,7 +170,7 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
         Message.warning(
           t('common.enterprise.loginChannelServerUnreachable', {
             defaultValue:
-              '无法连接项目组服务器（{{url}}），请检查第 1 步填写的服务器地址。地址连通后才能拿到企业的 SSO 登录配置。',
+              '无法连接企业服务器（{{url}}），请检查第 1 步填写的服务器地址。地址连通后才能拿到企业的 SSO 登录配置。',
             url: remoteOrigin ?? '',
           })
         );
@@ -180,7 +180,7 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
         Message.warning(
           t('common.enterprise.loginChannelNeedsServer', {
             defaultValue:
-              '尚未连接企业服务器，本机没有企业 SSO 配置。请先回到第一步填写并连接项目组服务器地址，再用 {{method}} 登录。',
+              '尚未连接企业服务器，本机没有企业 SSO 配置。请先回到第一步填写并连接企业服务器地址，再用 {{method}} 登录。',
             method: channelLabel(item),
           })
         );
@@ -292,13 +292,13 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
           {unavailableReason === 'server_unreachable'
             ? t('common.enterprise.loginChannelsUnreachableHint', {
                 defaultValue:
-                  '无法连接项目组服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能拿到企业的 SSO 登录配置。',
+                  '无法连接企业服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能拿到企业的 SSO 登录配置。',
                 url: remoteOrigin ?? '',
               })
             : unavailableReason === 'not_connected'
               ? t('common.enterprise.loginChannelsNeedServerHint', {
                   defaultValue:
-                    '企业 SSO 登录方式来自你所连接的企业服务器。当前尚未连接，因此下方仅「本地账户」可用——请回到第一步填写并连接项目组服务器地址。',
+                    '企业 SSO 登录方式来自你所连接的企业服务器。当前尚未连接，因此下方仅「本地账户」可用——请回到第一步填写并连接企业服务器地址。',
                 })
               : t('common.enterprise.loginChannelsNoneConfiguredHint', {
                   defaultValue:

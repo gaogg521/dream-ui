@@ -130,7 +130,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
       Message.warning(
         t('common.enterprise.joinPrerequisitesHint', {
           defaultValue:
-            '用邀请码加入项目组需要：① 连接项目组服务器（「企业身份」页），② 登录该服务器上的企业账号。当前还未连接服务器。',
+            '用邀请码加入项目组需要：① 连接企业服务器（「企业身份」页），② 登录该服务器上的企业账号。当前还未连接服务器。',
         })
       );
       return;
@@ -138,7 +138,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
     if (!getEnterpriseSession()) {
       Message.warning(
         t('common.enterprise.joinNeedsLoginOnlyHint', {
-          defaultValue: '已连接项目组服务器，还需先登录企业账号再加入。',
+          defaultValue: '已连接企业服务器，还需先登录企业账号再加入。',
         })
       );
       return;
@@ -227,7 +227,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
             title={t('common.enterprise.notLoggedInTitle', { defaultValue: '已连接企业服务器，尚未登录' })}
             content={t('common.enterprise.notLoggedInHint', {
               defaultValue:
-                '本机已连接远端项目组服务器，但还没有在该服务器上登录。请先登录企业账号，登录后即可用邀请码加入项目组。',
+                '本机已连接企业服务器，但还没有在该服务器上登录。请先登录企业账号，登录后即可用邀请码加入项目组。',
             })}
           />
           <div className='mb-16px'>
@@ -264,7 +264,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
         type='error'
         title={t('common.enterprise.contextError', { defaultValue: '无法获取企业信息' })}
         content={t('common.enterprise.contextErrorHint', {
-          defaultValue: '获取企业信息失败，请检查与项目组服务器的连接后重试。',
+          defaultValue: '获取企业信息失败，请检查与企业服务器的连接后重试。',
         })}
       />
     );
@@ -279,7 +279,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
         type='error'
         title={t('common.enterprise.contextError', { defaultValue: '无法获取企业信息' })}
         content={t('common.enterprise.contextErrorHint', {
-          defaultValue: '获取企业信息失败，请检查与项目组服务器的连接后重试。',
+          defaultValue: '获取企业信息失败，请检查与企业服务器的连接后重试。',
         })}
       />
     );
@@ -379,7 +379,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
               className='mb-12px'
               content={t('common.enterprise.joinPrerequisitesHint', {
                 defaultValue:
-                  '用邀请码加入项目组需要：① 连接项目组服务器（「企业身份」页），② 登录该服务器上的企业账号。当前还未连接服务器。',
+                  '用邀请码加入项目组需要：① 连接企业服务器（「企业身份」页），② 登录该服务器上的企业账号。当前还未连接服务器。',
               })}
             />
           )}
@@ -388,7 +388,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
               type='warning'
               className='mb-12px'
               content={t('common.enterprise.joinNeedsLoginOnlyHint', {
-                defaultValue: '已连接项目组服务器，还需先登录企业账号再加入。',
+                defaultValue: '已连接企业服务器，还需先登录企业账号再加入。',
               })}
             />
           )}

@@ -1,6 +1,6 @@
 {
   "tabEnterprise": "Enterprise memory",
-  "entHint": "Enterprise memory comes from the project group server and may be recalled into conversations automatically (see the switch below). You can delete items you wrote, and items in your personal collections.",
+  "entHint": "Enterprise memory comes from the enterprise server and may be recalled into conversations automatically (see the switch below). You can delete items you wrote, and items in your personal collections.",
   "entRecallLabel": "Recall my enterprise memory into conversations",
   "entLoadFailed": "Failed to load enterprise memory",
   "entSaveFailed": "Failed to save preference",

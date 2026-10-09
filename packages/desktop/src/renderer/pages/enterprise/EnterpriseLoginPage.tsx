@@ -422,7 +422,7 @@ const EnterpriseLoginPage: React.FC = () => {
                 type='warning'
                 className='mb-12px'
                 content={t('common.enterprise.wizardLoginNeedsConnect', {
-                  defaultValue: '请先完成第一步，连接项目组服务器。',
+                  defaultValue: '请先完成第一步，连接企业服务器。',
                 })}
               />
             )}
@@ -465,7 +465,7 @@ const EnterpriseLoginPage: React.FC = () => {
                     className='mb-12px'
                     content={t('common.enterprise.wizardJoinUnreachableHint', {
                       defaultValue:
-                        '无法连接项目组服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能加入项目组。',
+                        '无法连接企业服务器（{{url}}）。请回到第一步检查服务器地址——地址连通后才能加入项目组。',
                       url: getEnterpriseServerUrl() ?? '',
                     })}
                   />
@@ -495,7 +495,7 @@ const EnterpriseLoginPage: React.FC = () => {
                     type='warning'
                     className='mt-12px'
                     content={t('common.enterprise.joinNeedsLoginOnlyHint', {
-                      defaultValue: '已连接项目组服务器，还需先登录企业账号再加入。',
+                      defaultValue: '已连接企业服务器，还需先登录企业账号再加入。',
                     })}
                   />
                 )}

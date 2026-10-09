@@ -100,7 +100,7 @@ describe('EnterpriseLoginChannelPanel first-frame recovery', () => {
       expect(screen.queryByText('未配置')).not.toBeInTheDocument();
     });
     expect(screen.queryByText('不可用')).not.toBeInTheDocument();
-    expect(screen.queryByText(/无法连接项目组服务器|尚未连接企业服务器/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/无法连接企业服务器|尚未连接企业服务器/)).not.toBeInTheDocument();
   });
 
   it('keeps badge and click routing consistent when a channel is genuinely unconfigured', async () => {

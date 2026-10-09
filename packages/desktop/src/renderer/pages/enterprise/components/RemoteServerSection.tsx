@@ -6,7 +6,7 @@
  * only enterprise GOVERNANCE (org / admin / sso / devops) is fetched from the
  * remote server with the Bearer token. The server ADDRESS *and* the connect
  * button live in the "企业服务器" card above this section — including the
- *「连接远端项目组服务器」title, which deliberately appears here NOWHERE (it
+ *「连接企业服务器」title, which deliberately appears here NOWHERE (it
  * used to render twice on this page with a second switch, one state, two
  * controls). This section owns the SSO login / logout lifecycle, an identity
  * concern; it reads the connect state to decide what to show, it does not own
@@ -164,7 +164,7 @@ const RemoteServerSection: React.FC = () => {
     <div className='border border-2 bg-2 rd-8px p-16px mb-16px'>
       <div className='flex items-center gap-8px mb-8px'>
         {/* No heading here on purpose: this section sits directly below the
-            deployment card, which owns the「连接远端项目组服务器」title AND the
+            deployment card, which owns the「连接企业服务器」title AND the
             connect switch. Repeating either rendered two switches/titles for
             one state on one page (E1). The tag is the section's status line. */}
         {session ? (
@@ -193,7 +193,7 @@ const RemoteServerSection: React.FC = () => {
               session, else org/context 401s. Here NEITHER step is done. */}
           {t('common.enterprise.joinPrerequisitesHint', {
             defaultValue:
-              '用邀请码加入项目组需要：① 连接项目组服务器（「企业身份」页），② 登录该服务器上的企业账号。当前还未连接服务器。',
+              '用邀请码加入项目组需要：① 连接企业服务器（「企业身份」页），② 登录该服务器上的企业账号。当前还未连接服务器。',
           })}
         </div>
       )}
@@ -201,7 +201,7 @@ const RemoteServerSection: React.FC = () => {
         <div className='text-t-tertiary text-12px mb-12px'>
           {/* Connected but no session yet: name the ONE missing step. */}
           {t('common.enterprise.joinNeedsLoginOnlyHint', {
-            defaultValue: '已连接项目组服务器，还需先登录企业账号再加入。',
+            defaultValue: '已连接企业服务器，还需先登录企业账号再加入。',
           })}
         </div>
       )}
