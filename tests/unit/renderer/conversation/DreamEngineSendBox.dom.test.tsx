@@ -502,9 +502,12 @@ describe('DreamEngineSendBox', () => {
 
   describe('send now on a queued message', () => {
     const queuedItem = { id: 'q1', input: 'queued draft', files: [], created_at: 1 };
-    const getOnSendNow = () =>
-      (commandQueuePanelPropsSpy.mock.calls.at(-1)?.[0] as { onSendNow: (item: typeof queuedItem) => Promise<void> })
-        .onSendNow;
+    const getOnSendNow = () => {
+      const props = commandQueuePanelPropsSpy.mock.calls.at(-1)?.[0] as {
+        onSendNow: (item: typeof queuedItem) => Promise<void>;
+      };
+      return props.onSendNow;
+    };
 
     it('hands it to the running turn instead of stopping the reply', async () => {
       runtimeViewIsProcessingRef.current = true;
