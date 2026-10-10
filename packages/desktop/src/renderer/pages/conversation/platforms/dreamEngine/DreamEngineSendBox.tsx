@@ -196,6 +196,10 @@ const DreamEngineSendBox: React.FC<{
   });
   const runtimeView = useConversationRuntimeView(conversation_id);
   const { markSendStarted, markSendAccepted, markSendFailed } = runtimeView;
+  // The engine folds a message sent mid-reply into the running turn, so a
+  // busy agent no longer blocks sending. Team members keep the old gate: their
+  // messages go through the team mailbox, not this conversation's turn.
+  const supportsMidturnDelivery = !teamRuntime && runtimeView.supportsMidturnDelivery;
 
   const { atPath, uploadFile, setAtPath, setUploadFile, content, setContent } = useSendBoxDraft(conversation_id);
 
@@ -468,12 +472,13 @@ const DreamEngineSendBox: React.FC<{
     void processInitialMessage();
   }, [conversation_id, current_model?.use_model, executeCommand]);
 
-  // dream backends never support mid-turn delivery: while the agent is
-  // replying, sending is hard-blocked with a toast instead of implicitly
-  // enqueuing. The only way to queue a message while busy is the explicit
+  // While the agent is replying, a message is delivered into the running turn
+  // when the backend supports it (the engine reads it before its next step).
+  // Otherwise sending is hard-blocked with a toast instead of implicitly
+  // enqueuing; the only way to queue a message while busy is then the explicit
   // "add to queue" entry (handleAddToQueue below).
   const onSendHandler = async (message: string): Promise<void | false> => {
-    if (isBusy) {
+    if (!supportsMidturnDelivery && isBusy) {
       Message.warning(
         t('conversation.commandQueue.midturnBlocked', {
           defaultValue:
@@ -849,6 +854,22 @@ const DreamEngineSendBox: React.FC<{
   const effectiveHandleStop = teamRuntime?.onStop ?? handleStop;
   const handleSendNowQueued = useCallback(
     async (item: ConversationCommandQueueItem) => {
+      if (supportsMidturnDelivery) {
+        // Delivered straight into the running turn — no stop/restart. Remove
+        // the item first so the queue's auto-drain can never pick it up at the
+        // same time (same reasoning as AcpSendBox).
+        remove(item.id);
+        try {
+          await executeCommand({ input: item.input, files: item.files });
+        } catch {
+          // executeCommand already surfaced the failure; put the draft back at
+          // the front instead of dropping what the user wrote.
+          const restored = enqueue({ input: item.input, files: item.files });
+          if (restored) prioritize(restored.id);
+        }
+        return;
+      }
+
       // Stop the current reply (best-effort), then promote the chosen command
       // to the front of the queue in auto mode.  The drain effect will fire it
       // once the execution gate shows canExecute — avoiding the 409 race that
@@ -857,7 +878,7 @@ const DreamEngineSendBox: React.FC<{
       await effectiveHandleStop();
       prioritize(item.id);
     },
-    [effectiveHandleStop, prioritize]
+    [effectiveHandleStop, enqueue, executeCommand, prioritize, remove, supportsMidturnDelivery]
   );
   const sendBoxWidthClass = getChatSurfaceWidthClass();
 
@@ -903,9 +924,9 @@ const DreamEngineSendBox: React.FC<{
         // Media mode does not use the chat model, so a missing one must not
         // lock the input — the media model is chosen separately.
         disabled={mediaComposer.mode === 'off' && !current_model?.use_model}
-        sendDisabled={mediaComposer.mode === 'off' && isBusy}
+        sendDisabled={mediaComposer.mode === 'off' && !supportsMidturnDelivery && isBusy}
         sendDisabledTooltip={
-          mediaComposer.mode === 'off' && isBusy
+          mediaComposer.mode === 'off' && !supportsMidturnDelivery && isBusy
             ? t('conversation.commandQueue.midturnBlockedSendHint', {
                 defaultValue:
                   'The current agent is still working and cannot receive another message yet. Add it to Draft box instead.',

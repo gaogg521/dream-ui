@@ -22,6 +22,7 @@ const {
   draftMutateMock,
   draftContentRef,
   runtimeViewIsProcessingRef,
+  runtimeViewSupportsMidturnRef,
   setWaitingResponseMock,
 } = vi.hoisted(() => ({
   ensureConversationRuntimeMock: vi.fn().mockResolvedValue({ recovered: false, config_options: [], runtime: null }),
@@ -38,6 +39,7 @@ const {
   draftMutateMock: vi.fn(),
   draftContentRef: { current: '' },
   runtimeViewIsProcessingRef: { current: false },
+  runtimeViewSupportsMidturnRef: { current: false },
   setWaitingResponseMock: vi.fn(),
 }));
 
@@ -195,6 +197,9 @@ vi.mock('@/renderer/pages/conversation/runtime/useConversationRuntimeView', () =
     get isProcessing() {
       return runtimeViewIsProcessingRef.current;
     },
+    get supportsMidturnDelivery() {
+      return runtimeViewSupportsMidturnRef.current;
+    },
     state: 'idle',
     markSendStarted: markSendStartedMock,
     markSendAccepted: markSendAcceptedMock,
@@ -296,6 +301,7 @@ describe('DreamEngineSendBox', () => {
     useTeamPermissionMock.mockReturnValue(null);
     draftContentRef.current = '';
     runtimeViewIsProcessingRef.current = false;
+    runtimeViewSupportsMidturnRef.current = false;
   });
 
   it('does not warm up team session when draft content changes', async () => {
@@ -496,6 +502,51 @@ describe('DreamEngineSendBox', () => {
       expect(Message.warning).toHaveBeenCalledWith(
         'This agent is still working, so the message can’t be sent directly. Save it to Draft box and send it later.'
       );
+    });
+
+    it('sends straight into the running turn when the backend supports mid-turn delivery', async () => {
+      runtimeViewIsProcessingRef.current = true;
+      runtimeViewSupportsMidturnRef.current = true;
+      draftContentRef.current = 'also update the docs';
+
+      render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
+      await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
+
+      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { sendDisabled?: boolean };
+      expect(props.sendDisabled).toBe(false);
+
+      await act(async () => {
+        screen.getByRole('button', { name: 'send' }).click();
+      });
+
+      await waitFor(() => {
+        expect(sendMessageInvokeMock).toHaveBeenCalledTimes(1);
+      });
+      expect(enqueueMock).not.toHaveBeenCalled();
+      expect(Message.warning).not.toHaveBeenCalled();
+    });
+
+    it('keeps the busy gate for team members even when the backend supports mid-turn delivery', async () => {
+      runtimeViewIsProcessingRef.current = true;
+      runtimeViewSupportsMidturnRef.current = true;
+      draftContentRef.current = 'hello team';
+
+      render(
+        <DreamEngineSendBox
+          conversation_id='conv-1'
+          modelSelection={modelSelection}
+          teamRuntime={
+            {
+              loading: true,
+              startedAtMs: null,
+              runtimeGate: { hydrated: true, canSendMessage: false, isProcessing: true },
+            } as unknown as TeamSendBoxRuntime
+          }
+        />
+      );
+
+      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { sendDisabled?: boolean };
+      expect(props.sendDisabled).toBe(true);
     });
 
     it('sends normally while idle', async () => {
