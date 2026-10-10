@@ -128,3 +128,26 @@ input count=1` → 一个回复里答了丢包率和 391，回答出现在插话
 - dream-ui 改动跟下一个安装包走。
 - 后端（中途投递 + 插话说明）要 **dreamcore 发版 + bump `dreamcoreVersion`**；在旧 dreamcore 上：
   1ONE CLI 报不支持中途投递 → 「立即发送」走「先停再发」，排队/自动发出照常可用。
+
+## 6. 追加：设置开关 + 团队作战
+
+用户反馈：「中途插话和排队默认不能并存，默认立即插话，也可以选排队、手动点立即发送，做成设置开关；团队作战也要这样，方便及时干预。」
+
+- **设置 → 系统 →「回复中发送消息」**（`chat.sendWhileBusy`：`interject` 默认 / `queue`）。
+  - 立即插话：回复中按回车直接送进当前回合，占位提示「补充说明，消息会立即送达」。
+  - 排队：进输入框上方的排队行（§3），本轮结束自动发出，「↑ 立即发送」= 插话。
+  - 对方不支持中途接收（如 antigravity、旧版 dreamcore）时无论设置都排队。
+  - 发送框用 `useConfig` 订阅；设置页沿用该页 `useState + configService.get/set` 的写法
+    （该页单测 mock 的 configService 没有 `subscribe`）。
+- **团队作战**（dream-core `b9bdcc8`）：`POST /api/teams/{id}/messages` 与 `/agents/{slot}/messages`
+  新增可选 `interject`（默认 false，旧调用方不变）。为 true 且目标正在跑回合时，经
+  `AgentTurnExecutionPort::deliver_into_running_turn`（默认实现返回 false）→
+  `ConversationService::deliver_into_active_turn`（不落消息行，团队自己投影气泡）送进成员的当前回合，
+  内容按唤醒消息的格式包装（`- From \`user\` [message]: …`）。送达后照常写邮箱留痕但**立即标记已读**，
+下一次唤醒不会重复投递；回执带 `delivered_midturn: true`。送不进去（空闲、后端不支持、有待确认卡片、
+回合刚好结束）时此前什么都没写，走原来的邮箱排队；斜杠命令永远不插话。
+前端团队发送一律带 `interject: true`，何时发送由发送框（按上面的设置）决定。
+- 真机：团队「测试」里对成员「游戏开发」发 ping 任务后插话 13×17 → 日志依次出现
+  `team user message delivered into the running turn` → `upper-layer message delivered into the active turn`
+  → `DreamEngine mid-turn message queued for the running turn`，回复里 ping 结果后接着答了额外计算。
+  单会话下默认模式直接插话（无排队行）、切到排队后进排队行且本轮结束自动发出，均已验证。
