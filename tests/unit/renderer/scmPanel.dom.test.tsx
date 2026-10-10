@@ -545,16 +545,40 @@ describe('ScmPanel filename colour (dark-mode legibility)', () => {
   // scheme rendered the name dark-on-dark. jsdom loads no CSS, so this asserts the
   // CLASS the component applies (the layer jsdom can see); that the token paints
   // correctly in both themes is verified in scmBadgeCss.test.ts + a real-browser probe.
-  it('gives an ordinary filename the primary-text token, not an inherited colour', async () => {
+  // Coloured by the kind of change, like VS Code's change list, so added / changed
+  // / deleted read from the name and not only from the one-letter badge.
+  it('colours each filename by its change, always with an explicit token', async () => {
     installPort({
       repositories: [repo()],
-      firstFrames: { 'scm:pe1': status('scm:pe1', 1, [resource('a.ts', { state: 'modified' })]) },
+      firstFrames: {
+        'scm:pe1': status('scm:pe1', 1, [
+          resource('added.ts', { state: 'created' }),
+          resource('changed.ts', { state: 'modified' }),
+          resource('gone.ts', { state: 'deleted' }),
+        ]),
+      },
     });
     render(<ScmPanel projectId='p1' />);
 
-    const name = await screen.findByText('a.ts');
-    expect(name.className).toContain('text-t-primary');
-    expect(name.className).not.toContain('text-danger');
+    expect((await screen.findByText('added.ts')).className).toContain('text-success');
+    expect(screen.getByText('changed.ts').className).toContain('text-warning');
+    const gone = screen.getByText('gone.ts');
+    expect(gone.className).toContain('text-danger');
+    expect(gone.className).toContain('line-through');
+  });
+
+  it('shows the full change name when hovering the badge', async () => {
+    installPort({
+      repositories: [repo()],
+      firstFrames: { 'scm:pe1': status('scm:pe1', 1, [resource('added.ts', { state: 'created' })]) },
+    });
+    render(<ScmPanel projectId='p1' />);
+
+    await screen.findByText('added.ts');
+    expect(screen.getByLabelText('conversation.explorer.scm.state.created')).toHaveAttribute(
+      'title',
+      'conversation.explorer.scm.state.created'
+    );
   });
 
   it('keeps a conflicted filename on the danger token (not primary)', async () => {

@@ -98,6 +98,22 @@ const BADGE_CLASS: Record<StateKeySuffix, string> = {
   unknown: 'text-t-tertiary',
 };
 
+/**
+ * Filename colour, so the kind of change reads from the name itself and not only
+ * from a one-letter badge — the same convention as VS Code's change list. Same
+ * hues as {@link BADGE_CLASS}; `conflicted` keeps the danger colour it always had
+ * (its chip badge is what sets it apart from `deleted`), and an unknown state
+ * stays plain primary text rather than borrowing a meaning it may not have.
+ */
+const NAME_CLASS: Record<StateKeySuffix, string> = {
+  created: 'text-success',
+  modified: 'text-warning',
+  deleted: 'text-danger',
+  renamed: 'text-success',
+  conflicted: 'text-danger',
+  unknown: 'text-t-primary',
+};
+
 export type ScmResourceRowProps = {
   resource: ScmResource;
   selected: boolean;
@@ -239,19 +255,20 @@ export const ScmResourceRow: React.FC<ScmResourceRowProps> = ({
     >
       <span
         aria-label={t(`conversation.explorer.scm.state.${suffix}`)}
+        title={t(`conversation.explorer.scm.state.${suffix}`)}
         className={`flex-shrink-0 w-14px text-center text-12px font-medium ${BADGE_CLASS[suffix]}`}
       >
         {t(`conversation.explorer.scm.badge.${suffix}`)}
       </span>
-      {/* Filename must carry an explicit primary-text token, not inherit. With no
-          colour class it inherited a value that does not follow the theme, so in dark
-          mode the name resolved dark-on-dark and blurred into the background (real-
-          browser check: inherited stayed rgb(0,0,0) under dark, while text-t-primary
-          resolves to #fff). conflicted/failed keep danger; everything else is primary. */}
+      {/* Filename must carry an explicit colour token, not inherit. With no colour
+          class it inherited a value that does not follow the theme, so in dark mode the
+          name resolved dark-on-dark and blurred into the background (real-browser
+          check: inherited stayed rgb(0,0,0) under dark). Coloured by state
+          (NAME_CLASS); a failed action keeps danger. */}
       <span
         dir='ltr'
         className={`overflow-hidden text-ellipsis whitespace-nowrap text-13px ${
-          kind === 'conflicted' || failed ? 'text-danger' : 'text-t-primary'
+          failed ? 'text-danger' : NAME_CLASS[suffix]
         } ${resource.state === 'deleted' ? 'line-through' : ''}`}
       >
         {label}
