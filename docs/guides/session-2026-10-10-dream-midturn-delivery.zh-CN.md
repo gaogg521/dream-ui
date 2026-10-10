@@ -151,3 +151,33 @@ input count=1` → 一个回复里答了丢包率和 391，回答出现在插话
   `team user message delivered into the running turn` → `upper-layer message delivered into the active turn`
   → `DreamEngine mid-turn message queued for the running turn`，回复里 ping 结果后接着答了额外计算。
   单会话下默认模式直接插话（无排队行）、切到排队后进排队行且本轮结束自动发出，均已验证。
+
+## 7. 追加：「变更」面板（源代码管理）
+
+用户问「变更」面板有啥用——它是 git 源代码管理面板（同 VS Code），但多数会话的工作区是自动建的
+`dream-temp-*` 普通目录，永远显示「该文件夹未纳入版本控制」。用户选了方案 B（保留并提供初始化）：
+
+- **初始化版本控制**（dream-core `1627082`，dream-ui `7d68065`）：空状态加说明 + 按钮；后端新增
+  `scm/init`（git2 实现，不依赖用户装 git）：`git init` + 把当前文件提交为起点快照
+  （用户没配 git 身份时署名 One Work），之后面板只列出 AI 后来的改动。已是仓库则原样不动；
+  多根项目必须传 `pe_id`。完成后推 `repositoriesChanged`，前端把 reply 当同一帧 delta 应用，两者幂等。
+- **技能链接排除**：会话目录里 `.dream/skills/<名>` 等是指向全局技能库的 **junction**。初始化时把所有
+  链接、以及「只含链接的目录」写进仓库自己的 `.git/info/exclude`（不在用户目录里新建 `.gitignore`）。
+  否则会把整个技能库扫进快照，技能更新也会显示成改动。
+- **技能服务不再补 `.gitignore`**（dream-core `549b020`）：它原本发现工作区在 git 仓库里就往
+  `.gitignore` 追加 `/.dream/skills/`——初始化后的下一轮因此冒出一个「AI 新增了 .gitignore」。
+  现在 `info/exclude` 里已有同一条规则时视为已覆盖。
+- **按状态上色**（dream-ui `ad14b46`）：文件名随徽标同色——新增绿、修改橙、删除红+删除线，悬停徽标显示全称。
+- **一轮结束自动刷新**（dream-ui `e202b10`）：后端 scm 只监听 `.git` 元数据，不监听工作区文件，AI 写的
+  文件不会自己推送状态；之前只有窗口重新获得焦点才刷新（我第一次验证时「自动出现」其实是 CDP 点击触发的
+  焦点刷新，第二次不碰界面就复现了「没有变更」）。现在会话每轮结束刷新一次。
+- 真机：新会话 → AI 建 keep.md/old.md → 初始化 → AI 追加 keep.md、删 old.md、建 new.md →
+  面板显示 M/D/A 三色，磁盘 `git status` 一致、无 `.gitignore`；再让 AI 建 extra.md，不碰面板自动出现。
+
+## 8. 追加：「连企业后 Agent 图标没了」——构建假象，不是产品问题
+
+用户在 dev 里看到 Agents 页图标全挂。排查结论：**与企业无关**——图标地址由 `resolveBackendAssetUrl`
+拼到 `getLocalBaseUrl()`，永远是本机 dreamcore；个人版下同样全挂。根因是我换进 dev 的**本地 debug 版
+dreamcore**：debug 构建的 rust-embed 不把文件嵌入，运行时去编译时记录的源码路径读，而共享 `target/` 复用的
+`dream-core-assets` 来自已删除的 `D:\dream\wt-core-sec` 工作树 → 全部 404。**正式版 v0.1.80 隔离起服实测 200**。
+已修：dream-core `39f7337` 打开 rust-embed `debug-embed`，debug 构建也嵌入。
