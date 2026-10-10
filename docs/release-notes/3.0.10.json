@@ -1,0 +1,24 @@
+{
+  "version": "3.0.10",
+  "date": "2026-10-10",
+  "zh": [
+    {
+      "t": "单机版",
+      "d": "本版让 dream 引擎真正做到「边干边听」：回复进行中也能随时补充消息，引擎在下一步就把它并进当前任务；遇到需要你拍板的地方，会弹出选项卡片让你直接选，而不是把 A/B/C 写进正文后停下。内置模型依旧开箱即用，无需注册、无需粘贴 Key。\n\n【新增】\n· 【回复中途插话】1ONE CLI 回复时可以继续发消息补充信息，消息直接并入正在进行的任务，不必等它说完或先停止\n· 【排队发送】回复中发出的消息排在输入框上方，发送前可随时编辑、删除或点「↑ 立即发送」；取代原来的草稿箱\n· 【发送方式开关】设置中可选「立即插话」（默认）或「排队，回合结束后自动发送」\n· 【团队作战】成员正在工作时也能直接发消息干预，消息即时送达该成员当前的任务\n· 【AI 提问卡片】模型需要你做选择时，在输入框上方弹出选项卡片，点选即可继续\n· 【聊天记录导出】标题栏可将当前会话导出为 Markdown；侧边栏支持导出所选或全部会话（ZIP，每个会话一个 .md）\n· 【变更面板】未纳入版本控制的文件夹可一键「初始化版本控制」；新增、修改、删除的文件用不同颜色区分；每轮对话结束自动刷新改动列表\n· 【项目文件夹】通过「添加文件夹到项目」挂上的文件夹，现在会一并告知 AI，问「项目里有什么」时不再只看工作目录\n\n【优化改进】\n· 【先做再问】引擎会先推断意图把事情做完，不再在回答末尾列一串「接下来要不要……」的菜单\n· 【会话目录】新建临时会话的目录由 7 层压到 2 层：工作目录\\conversations\\日期\\会话；已有会话路径不变\n· 【企业连接】设置 → 企业身份改为一张「企业服务器」连接卡片，保存即探测并启用，地址栏给出域名示例\n\n【修复】\n· 修复所用模型被删除后，历史会话无法继续对话\n· 修复消息的「投递中」标记偶尔一直不消失\n· 修复更换工作目录或升级后，部分旧会话因临时目录不存在而打不开\n· 修复非当天创建的临时会话不会挂载所选技能"
+    },
+    {
+      "t": "企业版",
+      "d": "企业部署完成一轮外部安全测试整改，并补齐员工编排、计费归属和管理员操作的多处细节。\n\n【新增】\n· 【数字员工】支持在线编写员工，市场同步改为并行；员工绑定按当前资源权限执行\n· 【在线更新】企业服务端支持签名校验的在线更新\n· 【模型渠道】管理员可用已保存的凭据直接探测渠道是否可用\n· 【审计员】审计员可按授权范围只读查看，普通成员不再看到套餐明细\n\n【优化改进】\n· 【安全】跨域请求不再携带凭据；SSO 密钥加密存储；OAuth 与 SAML 回调绑定发起登录的浏览器\n· 【账号】初始管理员密码不再写入日志，密码强度规则加强\n· 【桌面客户端】统一称为「企业服务器」，连接方式简化为一张卡片\n\n【修复】\n· 修复开启强制 MFA 后所有管理员被锁在外面\n· 修复管理员新建的成员未加入所在企业，以及历史成员用量未正确归属\n· 修复项目组可重名、上传的 DreamEngine 员工包未绑定企业渠道、对象存储连接失败无明确原因\n· 修复知识库重建排序报错与 MFA 管理列表字段格式"
+    }
+  ],
+  "en": [
+    {
+      "t": "Personal edition",
+      "d": "The dream engine now listens while it works: you can add to a request mid-reply and the engine folds it into the task at its next step. When it needs your call, it shows a choice card instead of writing options into the reply and stopping. Built-in models still work out of the box, no sign-up and no API key needed.\n\n[New]\n· [Interject mid-reply] Keep sending messages while 1ONE CLI replies; they join the task in progress instead of waiting or forcing a stop\n· [Queued messages] Messages sent during a reply line up above the composer, where you can edit, delete or send one now; replaces the draft box\n· [Send setting] Choose between interjecting immediately (default) or queueing until the turn ends\n· [Team mode] Message a busy teammate directly; it reaches the task they are working on\n· [Question cards] When the model needs a decision, a choice card appears above the composer\n· [Chat export] Export the current chat as Markdown from the title bar; export selected or all chats as a ZIP from the sidebar\n· [Changes panel] Put an untracked folder under version control in one click; added, modified and deleted files are colour-coded; the list refreshes after every turn\n· [Project folders] Folders added with \"Add folder to project\" are now made known to the agent\n\n[Improved]\n· [Act first] The engine infers intent and finishes the job instead of ending with a menu of follow-up options\n· [Chat folders] New temporary chats live two levels deep (conversations\\date\\chat) instead of seven; existing chats keep their paths\n· [Enterprise connection] Settings > Enterprise identity is now a single enterprise-server card that saves, probes and connects in one step\n\n[Fixed]\n· Chats whose model was deleted can be continued again\n· The \"delivering\" mark on a message no longer sticks\n· Older chats open again after the work directory changed or an upgrade moved their temporary folder\n· Temporary chats created on an earlier day now get their selected skills linked"
+    },
+    {
+      "t": "Enterprise edition",
+      "d": "Enterprise deployments complete a round of fixes from an external security test, along with improvements to digital employees, usage attribution and admin operations.\n\n[New]\n· [Digital employees] Author employees online with parallel market sync; employee bindings run with current resource permissions\n· [Online updates] The enterprise server supports signed online updates\n· [Model channels] Admins can probe a channel with its stored credential\n· [Auditors] Auditors get scoped read-only access; ordinary members no longer see plan details\n\n[Improved]\n· [Security] No credentialed cross-origin requests; SSO secrets encrypted at rest; OAuth and SAML callbacks bound to the initiating browser\n· [Accounts] The initial admin password stays out of logs, with stronger password rules\n· [Desktop client] Consistently called the enterprise server, with a single connection card\n\n[Fixed]\n· Mandatory MFA no longer locks every admin out\n· Admin-created members join their company, and backfilled members' usage is attributed correctly\n· Duplicate project-group names are rejected, uploaded DreamEngine packs bind to a company channel, and storage connection failures are named\n· Fixed the knowledge-base rebuild ordering error and the MFA admin list field format"
+    }
+  ]
+}
