@@ -8,6 +8,7 @@ import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Message } from '@arco-design/web-react';
+import { ipcBridge } from '@/common';
 
 import type { ScmRepository, ScmResource, ScmStatus } from '@/renderer/pages/conversation/SourceControl/scmModel';
 import type { ScmPort } from '@/renderer/pages/conversation/SourceControl/scmStore';
@@ -536,6 +537,43 @@ describe('ScmPanel multi-repo (top list + click to switch, D2丙)', () => {
     expect(screen.queryByText('aion')).not.toBeInTheDocument(); // bare label hidden when pe_name exists
     expect(screen.getByText('shared-lib')).toBeInTheDocument(); // missing pe_name → fallback to label
     expect(screen.getByText('empty-name-repo')).toBeInTheDocument(); // empty-string pe_name → fallback to label
+  });
+});
+
+describe('ScmPanel turn-end refresh', () => {
+  // The backend watches only git's metadata, so files an agent writes push no new
+  // status by themselves; the panel re-reads when a turn ends instead.
+  it('re-reads the repository status when a conversation turn completes', async () => {
+    let onTurnCompleted: (() => void) | undefined;
+    const turnSpy = vi
+      .spyOn(ipcBridge.conversation.turnCompleted, 'on')
+      .mockImplementation((cb: (payload: never) => void) => {
+        onTurnCompleted = () => cb(undefined as never);
+        return () => {};
+      });
+    const statusCalls: string[] = [];
+    configureScmStore({
+      listRepositories: async () => ({ repositories: [repo()] }),
+      subscribe: async () => ({ statuses: [status('scm:pe1', 1, [])] }),
+      unsubscribe: () => {},
+      status: async (id) => {
+        statusCalls.push(id);
+        return status(id, 2, [resource('written-by-agent.md', { state: 'created' })]);
+      },
+      diff: async () => ({}),
+      act: async () => ({}),
+      init: async () => ({ repositories: [] }),
+    });
+    render(<ScmPanel projectId='p1' />);
+    await screen.findByText('conversation.explorer.scm.noChanges');
+
+    await act(async () => {
+      onTurnCompleted?.();
+    });
+
+    expect(await screen.findByText('written-by-agent.md')).toBeInTheDocument();
+    expect(statusCalls).toEqual(['scm:pe1']);
+    turnSpy.mockRestore();
   });
 });
 

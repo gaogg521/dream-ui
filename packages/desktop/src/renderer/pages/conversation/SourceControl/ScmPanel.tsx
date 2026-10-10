@@ -26,6 +26,7 @@
  */
 
 import { Button, Message, Tooltip } from '@arco-design/web-react';
+import { ipcBridge } from '@/common';
 import {
   BranchTwo,
   FolderCode,
@@ -110,6 +111,13 @@ export const ScmPanel: React.FC<ScmPanelProps> = ({ projectId }) => {
       window.removeEventListener('focus', onFocus);
     };
   }, []);
+
+  // Turn-end refresh. The backend watches only git's own metadata, so the files
+  // an agent writes do not push a new status by themselves; without this the
+  // list stayed on "no changes" after the agent had plainly edited, deleted and
+  // created files, until the window happened to regain focus. A finished turn is
+  // exactly when there is something new to show.
+  useEffect(() => ipcBridge.conversation.turnCompleted.on(() => void refreshAllRepos()), []);
 
   // The repo whose changes the body shows. A stale or absent `selectedRepoId`
   // (default on open, or after the selected repo was removed) resolves to the first
