@@ -156,13 +156,17 @@ const TeamChatView: React.FC<TeamChatViewProps> = ({
   const teamSendMessage = useCallback<TeamSendOverride>(
     async ({ input, files }) => {
       if (!team_id) throw new Error('Missing team id for team send');
+      // A user message reaches a teammate that is mid-turn right away, so the
+      // user can steer it. The send box decides when to send — it holds the
+      // message in its own queue when the user prefers that — and the backend
+      // falls back to the mailbox queue when the turn cannot take it.
       if (isLeader) {
-        const ack = await ipcBridge.team.sendMessage.invoke({ team_id, input, files });
+        const ack = await ipcBridge.team.sendMessage.invoke({ team_id, input, files, interject: true });
         onTeamRunAck?.(ack);
         return;
       }
       if (!slot_id) throw new Error('Missing slot id for team agent send');
-      const ack = await ipcBridge.team.sendMessageToAgent.invoke({ team_id, slot_id, input, files });
+      const ack = await ipcBridge.team.sendMessageToAgent.invoke({ team_id, slot_id, input, files, interject: true });
       onTeamRunAck?.(ack);
     },
     [isLeader, onTeamRunAck, slot_id, team_id]

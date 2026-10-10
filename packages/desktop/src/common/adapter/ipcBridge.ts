@@ -2841,6 +2841,7 @@ export const team = {
     (p) => ({
       content: p.input,
       files: p.files,
+      interject: p.interject ?? false,
     })
   ),
   sendMessageToAgent: httpPost<ITeamRunAck, ISendTeamAgentMessageParams>(
@@ -2848,6 +2849,7 @@ export const team = {
     (p) => ({
       content: p.input,
       files: p.files,
+      interject: p.interject ?? false,
     })
   ),
   interruptAgent: httpPost<ITeamInterruptAgentResponse, IInterruptTeamAgentParams>(

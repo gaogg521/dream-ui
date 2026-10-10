@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Message } from '@arco-design/web-react';
 import { BackendHttpError } from '@/common/adapter/httpBridge';
 import DreamEngineSendBox from '@/renderer/pages/conversation/platforms/dreamEngine/DreamEngineSendBox';
@@ -47,6 +47,11 @@ const {
   runtimeViewIsProcessingRef: { current: false },
   runtimeViewSupportsMidturnRef: { current: false },
   setWaitingResponseMock: vi.fn(),
+}));
+
+const sendWhileBusyRef = vi.hoisted(() => ({ current: undefined as 'interject' | 'queue' | undefined }));
+vi.mock('@/renderer/hooks/config/useConfig', () => ({
+  useConfig: () => [sendWhileBusyRef.current, vi.fn()],
 }));
 
 vi.mock('@/common', () => ({
@@ -519,38 +524,64 @@ describe('DreamEngineSendBox', () => {
   });
 
   describe('sending while the agent is replying', () => {
-    // A message sent mid-reply is queued above the composer — still editable —
-    // and goes out when the turn ends; "Send now" on the queued row is what
-    // interjects into the running turn.
-    it.each([true, false])('queues the message instead of sending it (mid-turn support: %s)', async (supports) => {
+    const clickSend = async () => {
+      await act(async () => {
+        screen.getByRole('button', { name: 'send' }).click();
+      });
+    };
+
+    afterEach(() => {
+      sendWhileBusyRef.current = undefined;
+    });
+
+    it('interjects by default when the engine can take it', async () => {
+      runtimeViewIsProcessingRef.current = true;
+      runtimeViewSupportsMidturnRef.current = true;
+
+      render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
+      await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
+      await clickSend();
+
+      await waitFor(() => expect(sendMessageInvokeMock).toHaveBeenCalledTimes(1));
+      expect(enqueueMock).not.toHaveBeenCalled();
+      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { placeholder?: string };
+      expect(props.placeholder).toBe('Add something — it reaches the agent right away');
+    });
+
+    it.each([
+      ['the user chose to queue', 'queue' as const, true],
+      ['the backend cannot take it', undefined, false],
+    ])('queues when %s', async (_label, setting, supports) => {
       runtimeViewIsProcessingRef.current = true;
       runtimeViewSupportsMidturnRef.current = supports;
+      sendWhileBusyRef.current = setting;
       draftContentRef.current = 'hello world';
 
       render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
       await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { sendDisabled?: boolean };
-      expect(props.sendDisabled).toBeFalsy();
-
-      await act(async () => {
-        screen.getByRole('button', { name: 'send' }).click();
-      });
+      await clickSend();
 
       expect(enqueueMock).toHaveBeenCalledWith({ input: 'Hello', files: [] });
       expect(sendMessageInvokeMock).not.toHaveBeenCalled();
       expect(clearFilesMock).toHaveBeenCalled();
       expect(Message.warning).not.toHaveBeenCalled();
+      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { placeholder?: string; onAddToDraft?: () => void };
+      expect(props.placeholder).toBe('Keep typing to queue a follow-up');
+      expect(props.onAddToDraft).toBeUndefined();
     });
 
-    it('queues for team members too, rather than refusing', async () => {
+    // Team mode steers a busy teammate the same way: the send goes out at once
+    // and the team routes it into the member's running turn.
+    it('interjects for a team member by sending through the team', async () => {
       runtimeViewIsProcessingRef.current = true;
       runtimeViewSupportsMidturnRef.current = true;
+      const teamSendMessage = vi.fn().mockResolvedValue(undefined);
 
       render(
         <DreamEngineSendBox
           conversation_id='conv-1'
           modelSelection={modelSelection}
+          teamSendMessage={teamSendMessage}
           teamRuntime={
             {
               loading: true,
@@ -560,28 +591,10 @@ describe('DreamEngineSendBox', () => {
           }
         />
       );
+      await clickSend();
 
-      await act(async () => {
-        screen.getByRole('button', { name: 'send' }).click();
-      });
-
-      expect(enqueueMock).toHaveBeenCalledWith({ input: 'Hello', files: [] });
-      expect(sendMessageInvokeMock).not.toHaveBeenCalled();
-    });
-
-    it('offers no separate draft-box entry and says the next message will queue', async () => {
-      runtimeViewIsProcessingRef.current = true;
-      draftContentRef.current = 'hello world';
-
-      render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
-      await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as {
-        onAddToDraft?: () => void;
-        placeholder?: string;
-      };
-      expect(props.onAddToDraft).toBeUndefined();
-      expect(props.placeholder).toBe('Keep typing to queue a follow-up');
+      await waitFor(() => expect(teamSendMessage).toHaveBeenCalledWith({ input: 'Hello', files: [] }));
+      expect(enqueueMock).not.toHaveBeenCalled();
     });
 
     it('sends normally while idle', async () => {
@@ -589,10 +602,7 @@ describe('DreamEngineSendBox', () => {
 
       render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
       await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
-
-      await act(async () => {
-        screen.getByRole('button', { name: 'send' }).click();
-      });
+      await clickSend();
 
       await waitFor(() => {
         expect(sendMessageInvokeMock).toHaveBeenCalledTimes(1);

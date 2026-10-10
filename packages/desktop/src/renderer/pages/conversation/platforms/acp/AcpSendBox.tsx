@@ -45,6 +45,7 @@ import {
 } from '@/renderer/pages/conversation/platforms/useConversationCommandQueue';
 import { usePreviewContext } from '@/renderer/pages/conversation/Preview';
 import { useConversationRuntimeView } from '@/renderer/pages/conversation/runtime/useConversationRuntimeView';
+import { useConfig } from '@/renderer/hooks/config/useConfig';
 import { getConversationRuntimeWorkspaceErrorMessage } from '@/renderer/pages/conversation/utils/conversationCreateError';
 import { getChatSurfaceWidthClass } from '@/renderer/pages/conversation/utils/chatSurfaceWidth';
 import { useTeamPermission } from '@/renderer/pages/team/hooks/TeamPermissionContext';
@@ -268,6 +269,10 @@ const AcpSendBox: React.FC<{
   const addOrUpdateMessageRef = useLatestRef(addOrUpdateMessage);
   const runtimeView = useConversationRuntimeView(conversation_id);
   const { markSendStarted, markSendAccepted, markSendFailed, supportsMidturnDelivery } = runtimeView;
+  const [sendWhileBusy] = useConfig('chat.sendWhileBusy');
+  // Sending mid-reply interjects unless the user chose to queue (settings), or
+  // this agent cannot take a message mid-turn.
+  const interjectNow = sendWhileBusy !== 'queue' && supportsMidturnDelivery;
 
   // Shared file handling logic
   const { handleFilesAdded, clearFiles } = useSendBoxFiles({
@@ -513,14 +518,16 @@ Please check your local CLI tool authentication status`,
       return;
     }
 
-    // While the agent is replying, a sent message is queued above the composer,
-    // where it can still be edited, reordered or removed. Queued messages go out
-    // one per finished turn; "Send now" on one delivers it into the running
-    // turn when the agent supports that, or stops the reply first when it does
-    // not (handleSendNowQueued).
+    // While the agent is replying, a sent message either interjects into the
+    // running turn (the default) or, when the user prefers it or the agent
+    // cannot take it, is queued above the composer where it can still be
+    // edited, reordered or removed. Queued messages go out one per finished
+    // turn; "Send now" on one delivers it into the running turn when the agent
+    // supports that, or stops the reply first when it does not
+    // (handleSendNowQueued).
     clearFiles();
     emitter.emit('acp.selected.file.clear');
-    if (isBusy) {
+    if (isBusy && !interjectNow) {
       enqueue({ input: message, files: allFiles });
       return;
     }
@@ -887,9 +894,13 @@ Please check your local CLI tool authentication status`,
                     : 'conversation.mediaModeImageHint'
               )
             : isBusy
-              ? t('conversation.commandQueue.queuedPlaceholder', {
-                  defaultValue: 'Keep typing to queue a follow-up',
-                })
+              ? interjectNow
+                ? t('conversation.commandQueue.interjectPlaceholder', {
+                    defaultValue: 'Add something — it reaches the agent right away',
+                  })
+                : t('conversation.commandQueue.queuedPlaceholder', {
+                    defaultValue: 'Keep typing to queue a follow-up',
+                  })
               : t('acp.sendbox.placeholder', {
                   backend: agent_name || backend,
                   defaultValue: `Send message to {{backend}}...`,

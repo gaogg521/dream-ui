@@ -79,6 +79,9 @@ export type ISendTeamMessageParams = {
   /** Source-tagged file refs; the backend resolves each to an absolute path and
    *  injects it into the message. See {@link ChatFileRef}. */
   files?: ChatFileRef[];
+  /** Hand the message to the target's running turn when it has one and can
+   *  take it; the backend queues it otherwise. */
+  interject?: boolean;
 };
 
 export type ISendTeamAgentMessageParams = ISendTeamMessageParams & {
@@ -125,6 +128,8 @@ export type ITeamRunAck = {
   enqueue_status: TeamMessageEnqueueStatus;
   message_id: string;
   run: ITeamRunEvent;
+  /** The message went into the target's running turn instead of its queue. */
+  delivered_midturn?: boolean;
 };
 
 export type ITeamInterruptAgentResponse = {

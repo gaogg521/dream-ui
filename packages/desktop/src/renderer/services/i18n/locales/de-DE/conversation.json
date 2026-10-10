@@ -530,6 +530,7 @@
     "queueTooLarge": "Warteschlangendaten sind zu groß zum sicheren Speichern. Entferne zuerst einige Befehle.",
     "sendNow": "Jetzt senden",
     "queuedPlaceholder": "Weitertippen, um eine Folgenachricht einzureihen",
+    "interjectPlaceholder": "Ergänze etwas – es erreicht den Agenten sofort",
     "modeToggle": "Sendemodus umschalten",
     "help": "Hilfe",
     "helpIntro": "Nachrichten, die du während der KI-Antwort sendest, warten hier.",

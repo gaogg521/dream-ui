@@ -5,7 +5,7 @@
  */
 
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import { BackendHttpError } from '@/common/adapter/httpBridge';
 import AcpSendBox from '@/renderer/pages/conversation/platforms/acp/AcpSendBox';
@@ -76,6 +76,11 @@ const {
   draftContentRef: { current: '' },
   messageWarningMock: vi.fn(),
   stopInvokeMock: vi.fn().mockResolvedValue(undefined),
+}));
+
+const sendWhileBusyRef = vi.hoisted(() => ({ current: undefined as 'interject' | 'queue' | undefined }));
+vi.mock('@/renderer/hooks/config/useConfig', () => ({
+  useConfig: () => [sendWhileBusyRef.current, vi.fn()],
 }));
 
 vi.mock('@/common', () => ({
@@ -747,48 +752,69 @@ describe('AcpSendBox', () => {
           messageState={makeMessageState()}
         />
       );
-
-    // A message sent mid-reply is queued above the composer — still editable —
-    // and goes out when the turn ends; "Send now" on the queued row is what
-    // interjects. Same for agents that can take mid-turn input and those that
-    // cannot: the difference only shows up in what "Send now" does.
-    it.each([
-      ['claude', true],
-      ['antigravity', false],
-    ])('queues the message instead of sending it (%s)', async (backend, supportsMidturn) => {
+    const busy = (supportsMidturn: boolean) => {
       runtimeViewMock.supportsMidturnDelivery = supportsMidturn;
       runtimeViewMock.isProcessing = true;
       runtimeViewMock.canSendMessage = true;
       draftContentRef.current = 'hello world';
-
-      renderBox(backend);
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { sendDisabled?: boolean };
-      expect(props.sendDisabled).toBeFalsy();
-
+    };
+    const clickSend = async () => {
       await act(async () => {
         screen.getByRole('button', { name: 'send' }).click();
       });
+    };
+
+    afterEach(() => {
+      sendWhileBusyRef.current = undefined;
+    });
+
+    // Default: a message sent mid-reply goes straight into the running turn.
+    it('interjects by default when the agent can take it', async () => {
+      busy(true);
+      sendMessageInvokeMock.mockResolvedValue({ turn_id: 'turn-1', runtime: null, msg_id: 'msg-1' });
+
+      renderBox('claude');
+      await clickSend();
+
+      await waitFor(() => expect(sendMessageInvokeMock).toHaveBeenCalledTimes(1));
+      expect(enqueueMock).not.toHaveBeenCalled();
+      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { placeholder?: string };
+      expect(props.placeholder).toBe('Add something — it reaches the agent right away');
+    });
+
+    // Queued messages wait above the composer, still editable, and go out when
+    // the turn ends; "Send now" on the queued row is what interjects.
+    it('queues instead when the user chose to queue', async () => {
+      busy(true);
+      sendWhileBusyRef.current = 'queue';
+
+      renderBox('claude');
+      await clickSend();
 
       expect(enqueueMock).toHaveBeenCalledWith({ input: 'Hello', files: [] });
       expect(sendMessageInvokeMock).not.toHaveBeenCalled();
       expect(clearFilesMock).toHaveBeenCalled();
+      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { placeholder?: string };
+      expect(props.placeholder).toBe('Keep typing to queue a follow-up');
+    });
+
+    it('queues for an agent that cannot take a message mid-turn, whatever the setting', async () => {
+      busy(false);
+
+      renderBox('antigravity');
+      await clickSend();
+
+      expect(enqueueMock).toHaveBeenCalledWith({ input: 'Hello', files: [] });
+      expect(sendMessageInvokeMock).not.toHaveBeenCalled();
       expect(messageWarningMock).not.toHaveBeenCalled();
     });
 
-    it('offers no separate draft-box entry and says the next message will queue', () => {
-      runtimeViewMock.supportsMidturnDelivery = true;
-      runtimeViewMock.isProcessing = true;
-      draftContentRef.current = 'hello world';
-
+    it('offers no separate draft-box entry', () => {
+      busy(true);
       renderBox('claude');
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as {
-        onAddToDraft?: () => void;
-        placeholder?: string;
-      };
+      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { onAddToDraft?: () => void; sendDisabled?: boolean };
       expect(props.onAddToDraft).toBeUndefined();
-      expect(props.placeholder).toBe('Keep typing to queue a follow-up');
+      expect(props.sendDisabled).toBeFalsy();
     });
 
     it('sends normally while idle', async () => {
@@ -798,10 +824,7 @@ describe('AcpSendBox', () => {
       sendMessageInvokeMock.mockResolvedValue({ turn_id: 'turn-1', runtime: null, msg_id: 'msg-1' });
 
       renderBox('antigravity');
-
-      await act(async () => {
-        screen.getByRole('button', { name: 'send' }).click();
-      });
+      await clickSend();
 
       await waitFor(() => {
         expect(sendMessageInvokeMock).toHaveBeenCalledTimes(1);

@@ -17,7 +17,7 @@ import {
 } from '@/renderer/utils/file/previewPayload';
 import { notifyManualRestartRequired } from '@/renderer/utils/appRestart';
 import { isElectronDesktop } from '@/renderer/utils/platform';
-import { Alert, Collapse, Form, InputNumber, Message, Modal, Switch } from '@arco-design/web-react';
+import { Alert, Collapse, Form, InputNumber, Message, Modal, Select, Switch } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
@@ -74,6 +74,9 @@ const SystemModalContent: React.FC = () => {
   const previewLimitDraftRef = useRef<string>(String(DEFAULT_TEXT_PREVIEW_LIMIT_MB));
   const [saveUploadToWorkspace, setSaveUploadToWorkspace] = useState(false);
   const [crossSessionDelivery, setCrossSessionDelivery] = useState(true);
+  const [sendWhileBusy, setSendWhileBusy] = useState<'interject' | 'queue'>(
+    () => configService.get('chat.sendWhileBusy') ?? 'interject'
+  );
 
   useEffect(() => {
     if (!isDesktop) {
@@ -249,6 +252,18 @@ const SystemModalContent: React.FC = () => {
         });
     },
     [startOnBoot, t]
+  );
+
+  const handleSendWhileBusyChange = useCallback(
+    (value: 'interject' | 'queue') => {
+      const previous = sendWhileBusy;
+      setSendWhileBusy(value);
+      configService.set('chat.sendWhileBusy', value).catch(() => {
+        setSendWhileBusy(previous);
+        configService.setLocal('chat.sendWhileBusy', previous);
+      });
+    },
+    [sendWhileBusy]
   );
 
   const handleNotificationEnabledChange = useCallback((checked: boolean) => {
@@ -441,6 +456,22 @@ const SystemModalContent: React.FC = () => {
       key: 'saveUploadToWorkspace',
       label: t('settings.saveUploadToWorkspace'),
       component: <Switch checked={saveUploadToWorkspace} onChange={handleSaveUploadToWorkspaceChange} />,
+    },
+    {
+      key: 'sendWhileBusy',
+      label: t('settings.sendWhileBusy'),
+      description: t('settings.sendWhileBusyDesc'),
+      component: (
+        <Select
+          value={sendWhileBusy}
+          onChange={handleSendWhileBusyChange}
+          style={{ width: 200 }}
+          options={[
+            { label: t('settings.sendWhileBusyInterject'), value: 'interject' },
+            { label: t('settings.sendWhileBusyQueue'), value: 'queue' },
+          ]}
+        />
+      ),
     },
     {
       key: 'crossSessionDelivery',

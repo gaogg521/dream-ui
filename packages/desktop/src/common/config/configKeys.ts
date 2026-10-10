@@ -37,6 +37,13 @@ export type ConfigKeyMap = {
   'upload.saveToWorkspace': boolean | undefined;
   'system.closeToTray': boolean | undefined;
   'system.notificationEnabled': boolean | undefined;
+  /**
+   * What a message sent while the agent is replying does: `interject` hands it
+   * to the running turn right away (agents that cannot take that queue it
+   * instead); `queue` holds it above the composer until the turn ends or the
+   * user clicks Send now. Unset means `interject`.
+   */
+  'chat.sendWhileBusy': 'interject' | 'queue' | undefined;
   'system.cronNotificationEnabled': boolean | undefined;
   'system.keepAwake': boolean | undefined;
   'skillsMarket.enabled': boolean | undefined;

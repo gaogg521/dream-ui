@@ -43,6 +43,7 @@ import {
   type ConversationCommandQueueItem,
 } from '@/renderer/pages/conversation/platforms/useConversationCommandQueue';
 import { useConversationRuntimeView } from '@/renderer/pages/conversation/runtime/useConversationRuntimeView';
+import { useConfig } from '@/renderer/hooks/config/useConfig';
 import { getConversationRuntimeWorkspaceErrorMessage } from '@/renderer/pages/conversation/utils/conversationCreateError';
 import { getChatSurfaceWidthClass } from '@/renderer/pages/conversation/utils/chatSurfaceWidth';
 import { ensureConversationRuntime } from '@/renderer/pages/conversation/utils/ensureConversationRuntime';
@@ -196,10 +197,14 @@ const DreamEngineSendBox: React.FC<{
   });
   const runtimeView = useConversationRuntimeView(conversation_id);
   const { markSendStarted, markSendAccepted, markSendFailed } = runtimeView;
-  // The engine folds a message sent mid-reply into the running turn, so a
-  // busy agent no longer blocks sending. Team members keep the old gate: their
-  // messages go through the team mailbox, not this conversation's turn.
-  const supportsMidturnDelivery = !teamRuntime && runtimeView.supportsMidturnDelivery;
+  // The engine folds a message sent mid-reply into the running turn. Team
+  // members get the same: their send asks the team to interject, and the team
+  // routes it into the member's running turn.
+  const supportsMidturnDelivery = runtimeView.supportsMidturnDelivery;
+  const [sendWhileBusy] = useConfig('chat.sendWhileBusy');
+  // Sending mid-reply interjects unless the user chose to queue (settings), or
+  // this agent cannot take a message mid-turn.
+  const interjectNow = sendWhileBusy !== 'queue' && supportsMidturnDelivery;
 
   const { atPath, uploadFile, setAtPath, setUploadFile, content, setContent } = useSendBoxDraft(conversation_id);
 
@@ -469,12 +474,13 @@ const DreamEngineSendBox: React.FC<{
     void processInitialMessage();
   }, [conversation_id, current_model?.use_model, executeCommand]);
 
-  // While the agent is replying, a sent message is queued above the composer,
-  // where it can still be edited, reordered or removed. Queued messages go out
-  // one per finished turn; "Send now" on one hands it to the running turn
-  // instead (handleSendNowQueued).
+  // While the agent is replying, a sent message either interjects into the
+  // running turn (the default) or, when the user prefers it or the agent
+  // cannot take it, is queued above the composer where it can still be edited,
+  // reordered or removed. Queued messages go out one per finished turn; "Send
+  // now" on one interjects it (handleSendNowQueued).
   const onSendHandler = async (message: string): Promise<void | false> => {
-    if (isBusy && mediaComposer.mode === 'off') {
+    if (isBusy && mediaComposer.mode === 'off' && !interjectNow) {
       enqueue({ input: message, files: collectChatFileRefs(uploadFile, atPath) });
       clearFiles();
       emitter.emit('dream.selected.file.clear');
@@ -913,9 +919,13 @@ const DreamEngineSendBox: React.FC<{
                     : 'conversation.mediaModeImageHint'
               )
             : isBusy
-              ? t('conversation.commandQueue.queuedPlaceholder', {
-                  defaultValue: 'Keep typing to queue a follow-up',
-                })
+              ? interjectNow
+                ? t('conversation.commandQueue.interjectPlaceholder', {
+                    defaultValue: 'Add something — it reaches the agent right away',
+                  })
+                : t('conversation.commandQueue.queuedPlaceholder', {
+                    defaultValue: 'Keep typing to queue a follow-up',
+                  })
               : current_model?.use_model
                 ? t('acp.sendbox.placeholder', {
                     // Never hardcode a product name here: the branded label lives

@@ -530,6 +530,7 @@
     "queueTooLarge": "佇列資料過大，無法安全快取，請先移除部分排隊指令。",
     "sendNow": "立即發送",
     "queuedPlaceholder": "繼續輸入以排隊後續訊息",
+    "interjectPlaceholder": "補充說明，訊息會立即送達",
     "modeToggle": "切換發送模式",
     "help": "使用說明",
     "helpIntro": "AI 回覆期間你發送的訊息會先存到這裡。",

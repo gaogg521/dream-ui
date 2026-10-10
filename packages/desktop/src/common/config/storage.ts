@@ -56,6 +56,8 @@ export interface IConfigStorageRefer {
   'system.closeToTray'?: boolean;
   // 任务完成时显示系统通知 / Show system notification when task completes
   'system.notificationEnabled'?: boolean;
+  // 回复中发送消息：立即插话或先排队 / Message sent mid-reply: interject now or queue it
+  'chat.sendWhileBusy'?: 'interject' | 'queue';
   // 定时任务完成时显示系统通知 / Show system notification when scheduled task completes
   'system.cronNotificationEnabled'?: boolean;
   // 阻止系统休眠以保证定时任务执行 / Prevent system sleep to ensure scheduled tasks run

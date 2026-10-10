@@ -530,6 +530,7 @@
     "queueTooLarge": "Los datos de la cola son demasiado grandes para persistir de forma segura. Quita algunos comandos primero.",
     "sendNow": "Enviar ahora",
     "queuedPlaceholder": "Sigue escribiendo para poner en cola el siguiente mensaje",
+    "interjectPlaceholder": "Añade algo: llega al agente de inmediato",
     "modeToggle": "Cambiar modo de envío",
     "help": "Ayuda",
     "helpIntro": "Los mensajes que envías mientras la IA responde esperan aquí.",

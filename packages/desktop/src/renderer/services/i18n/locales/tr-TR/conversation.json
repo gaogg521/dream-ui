@@ -514,6 +514,7 @@
     "queueTooLarge": "Kuyruk verisi güvenli şekilde saklanamayacak kadar büyük. Önce bazı komutları kaldırın.",
     "sendNow": "Şimdi gönder",
     "queuedPlaceholder": "Sıradaki mesajı eklemek için yazmaya devam edin",
+    "interjectPlaceholder": "Ekleme yapın; ajana hemen ulaşır",
     "modeToggle": "Gönderim modunu değiştir",
     "help": "Yardım",
     "helpIntro": "Yapay zeka yanıt verirken gönderdiğin mesajlar burada bekler.",
