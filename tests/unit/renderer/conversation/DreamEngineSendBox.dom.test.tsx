@@ -24,7 +24,13 @@ const {
   runtimeViewIsProcessingRef,
   runtimeViewSupportsMidturnRef,
   setWaitingResponseMock,
+  commandQueuePanelPropsSpy,
+  removeMock,
+  prioritizeMock,
 } = vi.hoisted(() => ({
+  commandQueuePanelPropsSpy: vi.fn(),
+  removeMock: vi.fn(),
+  prioritizeMock: vi.fn(),
   ensureConversationRuntimeMock: vi.fn().mockResolvedValue({ recovered: false, config_options: [], runtime: null }),
   sendMessageInvokeMock: vi.fn().mockResolvedValue(undefined),
   translateMock: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key,
@@ -69,6 +75,7 @@ vi.mock('@/renderer/components/chat/SendBox', () => ({
     topRightOverlay,
     onAddToDraft,
     addToDraftDisabled,
+    placeholder,
   }: {
     onSend: (message: string) => Promise<void>;
     onChange?: (value: string) => void;
@@ -81,8 +88,9 @@ vi.mock('@/renderer/components/chat/SendBox', () => ({
     topRightOverlay?: React.ReactNode;
     onAddToDraft?: () => void;
     addToDraftDisabled?: boolean;
+    placeholder?: string;
   }) => {
-    sendBoxPropsSpy({ active, onFocused, disabled, sendDisabled, onAddToDraft, addToDraftDisabled });
+    sendBoxPropsSpy({ active, onFocused, disabled, sendDisabled, onAddToDraft, addToDraftDisabled, placeholder });
     return (
       <div>
         {rightTools}
@@ -108,7 +116,12 @@ vi.mock('@/renderer/components/chat/SendBox', () => ({
 }));
 
 vi.mock('@/renderer/components/agent/AgentModeSelector', () => ({ default: () => null }));
-vi.mock('@/renderer/components/chat/CommandQueuePanel', () => ({ default: () => null }));
+vi.mock('@/renderer/components/chat/CommandQueuePanel', () => ({
+  default: (props: { onSendNow: (item: unknown) => void }) => {
+    commandQueuePanelPropsSpy(props);
+    return null;
+  },
+}));
 vi.mock('@/renderer/components/chat/MobileActionSheet', () => ({
   default: () => null,
   useAttachEntry: () => ({ entries: [], hiddenFileInput: null }),
@@ -180,7 +193,8 @@ vi.mock('@/renderer/pages/conversation/platforms/useConversationCommandQueue', (
     isInteractionLocked: false,
     hasPendingCommands: false,
     enqueue: enqueueMock,
-    remove: vi.fn(),
+    remove: removeMock,
+    prioritize: prioritizeMock,
     clear: vi.fn(),
     reorder: vi.fn(),
     pause: vi.fn(),
@@ -481,55 +495,57 @@ describe('DreamEngineSendBox', () => {
     expect(onFocus).toHaveBeenCalledTimes(1);
   });
 
-  describe('mid-turn interjection controls', () => {
-    it('disables the send button and blocks Enter with a toast while replying, without implicitly enqueuing', async () => {
+  describe('send now on a queued message', () => {
+    const queuedItem = { id: 'q1', input: 'queued draft', files: [], created_at: 1 };
+    const getOnSendNow = () =>
+      (commandQueuePanelPropsSpy.mock.calls.at(-1)?.[0] as { onSendNow: (item: typeof queuedItem) => Promise<void> })
+        .onSendNow;
+
+    it('hands it to the running turn instead of stopping the reply', async () => {
       runtimeViewIsProcessingRef.current = true;
+      runtimeViewSupportsMidturnRef.current = true;
+
+      render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
+      await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
+
+      await act(async () => {
+        await getOnSendNow()(queuedItem);
+      });
+
+      expect(removeMock).toHaveBeenCalledWith('q1');
+      expect(sendMessageInvokeMock).toHaveBeenCalledWith(expect.objectContaining({ input: 'queued draft', files: [] }));
+      expect(prioritizeMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('sending while the agent is replying', () => {
+    // A message sent mid-reply is queued above the composer — still editable —
+    // and goes out when the turn ends; "Send now" on the queued row is what
+    // interjects into the running turn.
+    it.each([true, false])('queues the message instead of sending it (mid-turn support: %s)', async (supports) => {
+      runtimeViewIsProcessingRef.current = true;
+      runtimeViewSupportsMidturnRef.current = supports;
       draftContentRef.current = 'hello world';
 
       render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
       await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
 
       const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { sendDisabled?: boolean };
-      expect(props.sendDisabled).toBe(true);
+      expect(props.sendDisabled).toBeFalsy();
 
       await act(async () => {
         screen.getByRole('button', { name: 'send' }).click();
       });
 
+      expect(enqueueMock).toHaveBeenCalledWith({ input: 'Hello', files: [] });
       expect(sendMessageInvokeMock).not.toHaveBeenCalled();
-      expect(enqueueMock).not.toHaveBeenCalled();
-      expect(clearFilesMock).not.toHaveBeenCalled();
-      expect(Message.warning).toHaveBeenCalledWith(
-        'This agent is still working, so the message can’t be sent directly. Save it to Draft box and send it later.'
-      );
-    });
-
-    it('sends straight into the running turn when the backend supports mid-turn delivery', async () => {
-      runtimeViewIsProcessingRef.current = true;
-      runtimeViewSupportsMidturnRef.current = true;
-      draftContentRef.current = 'also update the docs';
-
-      render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
-      await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { sendDisabled?: boolean };
-      expect(props.sendDisabled).toBe(false);
-
-      await act(async () => {
-        screen.getByRole('button', { name: 'send' }).click();
-      });
-
-      await waitFor(() => {
-        expect(sendMessageInvokeMock).toHaveBeenCalledTimes(1);
-      });
-      expect(enqueueMock).not.toHaveBeenCalled();
+      expect(clearFilesMock).toHaveBeenCalled();
       expect(Message.warning).not.toHaveBeenCalled();
     });
 
-    it('keeps the busy gate for team members even when the backend supports mid-turn delivery', async () => {
+    it('queues for team members too, rather than refusing', async () => {
       runtimeViewIsProcessingRef.current = true;
       runtimeViewSupportsMidturnRef.current = true;
-      draftContentRef.current = 'hello team';
 
       render(
         <DreamEngineSendBox
@@ -545,8 +561,27 @@ describe('DreamEngineSendBox', () => {
         />
       );
 
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { sendDisabled?: boolean };
-      expect(props.sendDisabled).toBe(true);
+      await act(async () => {
+        screen.getByRole('button', { name: 'send' }).click();
+      });
+
+      expect(enqueueMock).toHaveBeenCalledWith({ input: 'Hello', files: [] });
+      expect(sendMessageInvokeMock).not.toHaveBeenCalled();
+    });
+
+    it('offers no separate draft-box entry and says the next message will queue', async () => {
+      runtimeViewIsProcessingRef.current = true;
+      draftContentRef.current = 'hello world';
+
+      render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
+      await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
+
+      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as {
+        onAddToDraft?: () => void;
+        placeholder?: string;
+      };
+      expect(props.onAddToDraft).toBeUndefined();
+      expect(props.placeholder).toBe('Keep typing to queue a follow-up');
     });
 
     it('sends normally while idle', async () => {
@@ -554,9 +589,6 @@ describe('DreamEngineSendBox', () => {
 
       render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
       await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { sendDisabled?: boolean };
-      expect(props.sendDisabled).toBe(false);
 
       await act(async () => {
         screen.getByRole('button', { name: 'send' }).click();
@@ -567,54 +599,6 @@ describe('DreamEngineSendBox', () => {
       });
       expect(enqueueMock).not.toHaveBeenCalled();
       expect(Message.warning).not.toHaveBeenCalled();
-    });
-
-    it('shows the add-to-draft-box entry with a non-empty draft while replying, and clicking it enqueues without executing', async () => {
-      runtimeViewIsProcessingRef.current = true;
-      draftContentRef.current = 'hello world';
-
-      render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
-      await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { onAddToDraft?: () => void };
-      expect(props.onAddToDraft).toBeDefined();
-      await act(async () => {
-        props.onAddToDraft?.();
-      });
-
-      expect(enqueueMock).toHaveBeenCalledWith({ input: 'hello world', files: [] });
-      expect(sendMessageInvokeMock).not.toHaveBeenCalled();
-      expect(clearFilesMock).toHaveBeenCalled();
-      const updater = draftMutateMock.mock.calls.at(-1)?.[0] as (prev: { content: string }) => { content: string };
-      expect(updater({ content: 'hello world' })).toEqual(expect.objectContaining({ content: '' }));
-    });
-
-    it('shows the add-to-draft-box option while idle, as long as the draft is non-empty', async () => {
-      // Visibility is keyed only to the draft, not to the agent's busy state —
-      // clicking while idle is semantically fine (the queue's own mode governs).
-      runtimeViewIsProcessingRef.current = false;
-      draftContentRef.current = 'hello world';
-
-      render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
-      await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { onAddToDraft?: () => void };
-      expect(props.onAddToDraft).toBeDefined();
-    });
-
-    it('disables the Draft box action with an empty draft, even while replying', async () => {
-      runtimeViewIsProcessingRef.current = true;
-      draftContentRef.current = '';
-
-      render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
-      await waitFor(() => expect(ensureConversationRuntimeMock).toHaveBeenCalledWith('conv-1'));
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as {
-        onAddToDraft?: () => void;
-        addToDraftDisabled?: boolean;
-      };
-      expect(props.onAddToDraft).toBeDefined();
-      expect(props.addToDraftDisabled).toBe(true);
     });
   });
 });

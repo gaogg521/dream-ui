@@ -106,6 +106,7 @@ vi.mock('@/renderer/components/chat/SendBox', () => ({
     sendDisabled,
     onAddToDraft,
     addToDraftDisabled,
+    placeholder,
   }: {
     onSend: (message: string) => Promise<void>;
     onChange?: (value: string) => void;
@@ -118,8 +119,9 @@ vi.mock('@/renderer/components/chat/SendBox', () => ({
     sendDisabled?: boolean;
     onAddToDraft?: () => void;
     addToDraftDisabled?: boolean;
+    placeholder?: string;
   }) => {
-    sendBoxPropsSpy({ active, onFocused, disabled, sendDisabled, onAddToDraft, addToDraftDisabled });
+    sendBoxPropsSpy({ active, onFocused, disabled, sendDisabled, onAddToDraft, addToDraftDisabled, placeholder });
     return (
       <div>
         {rightTools}
@@ -735,125 +737,67 @@ describe('AcpSendBox', () => {
     expect(useConversationCommandQueueSpy).toHaveBeenCalledWith(expect.objectContaining({ enabled: true }));
   });
 
-  describe('mid-turn interjection controls', () => {
-    it('shows the add-to-draft-box entry for a supporting agent with a non-empty draft, and clicking it enqueues without executing', async () => {
-      runtimeViewMock.supportsMidturnDelivery = true;
+  describe('sending while the agent is replying', () => {
+    const renderBox = (backend: string) =>
+      render(
+        <AcpSendBox
+          conversation_id='conv-1'
+          backend={backend}
+          workspacePath='/tmp/workspace'
+          messageState={makeMessageState()}
+        />
+      );
+
+    // A message sent mid-reply is queued above the composer — still editable —
+    // and goes out when the turn ends; "Send now" on the queued row is what
+    // interjects. Same for agents that can take mid-turn input and those that
+    // cannot: the difference only shows up in what "Send now" does.
+    it.each([
+      ['claude', true],
+      ['antigravity', false],
+    ])('queues the message instead of sending it (%s)', async (backend, supportsMidturn) => {
+      runtimeViewMock.supportsMidturnDelivery = supportsMidturn;
       runtimeViewMock.isProcessing = true;
       runtimeViewMock.canSendMessage = true;
       draftContentRef.current = 'hello world';
 
-      render(
-        <AcpSendBox
-          conversation_id='conv-1'
-          backend='claude'
-          workspacePath='/tmp/workspace'
-          messageState={makeMessageState()}
-        />
-      );
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { onAddToDraft?: () => void };
-      expect(props.onAddToDraft).toBeDefined();
-      await act(async () => {
-        props.onAddToDraft?.();
-      });
-
-      expect(enqueueMock).toHaveBeenCalledWith({ input: 'hello world', files: [] });
-      expect(sendMessageInvokeMock).not.toHaveBeenCalled();
-      expect(clearFilesMock).toHaveBeenCalled();
-      // setContent('') clears the draft the same way a send would.
-      const updater = draftMutateMock.mock.calls.at(-1)?.[0] as (prev: { content: string }) => { content: string };
-      expect(updater({ content: 'hello world' })).toEqual(expect.objectContaining({ content: '' }));
-    });
-
-    it('shows the add-to-draft-box option for a supporting agent that is idle, as long as the draft is non-empty', async () => {
-      // Visibility is keyed only to the draft, not to the agent's busy state —
-      // clicking while idle is semantically fine (the queue's own mode governs).
-      runtimeViewMock.supportsMidturnDelivery = true;
-      runtimeViewMock.isProcessing = false;
-      draftContentRef.current = 'hello world';
-
-      render(
-        <AcpSendBox
-          conversation_id='conv-1'
-          backend='claude'
-          workspacePath='/tmp/workspace'
-          messageState={makeMessageState()}
-        />
-      );
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { onAddToDraft?: () => void };
-      expect(props.onAddToDraft).toBeDefined();
-    });
-
-    it('disables the Draft box action for a supporting agent with an empty draft, even while replying', () => {
-      runtimeViewMock.supportsMidturnDelivery = true;
-      runtimeViewMock.isProcessing = true;
-      draftContentRef.current = '';
-
-      render(
-        <AcpSendBox
-          conversation_id='conv-1'
-          backend='claude'
-          workspacePath='/tmp/workspace'
-          messageState={makeMessageState()}
-        />
-      );
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as {
-        onAddToDraft?: () => void;
-        addToDraftDisabled?: boolean;
-      };
-      expect(props.onAddToDraft).toBeDefined();
-      expect(props.addToDraftDisabled).toBe(true);
-    });
-
-    it('disables the send button and blocks Enter with a toast for a non-supporting agent while replying, without implicitly enqueuing', async () => {
-      runtimeViewMock.supportsMidturnDelivery = false;
-      runtimeViewMock.isProcessing = true;
-      runtimeViewMock.canSendMessage = true;
-      draftContentRef.current = 'hello world';
-
-      render(
-        <AcpSendBox
-          conversation_id='conv-1'
-          backend='antigravity'
-          workspacePath='/tmp/workspace'
-          messageState={makeMessageState()}
-        />
-      );
+      renderBox(backend);
 
       const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { sendDisabled?: boolean };
-      expect(props.sendDisabled).toBe(true);
+      expect(props.sendDisabled).toBeFalsy();
 
       await act(async () => {
         screen.getByRole('button', { name: 'send' }).click();
       });
 
+      expect(enqueueMock).toHaveBeenCalledWith({ input: 'Hello', files: [] });
       expect(sendMessageInvokeMock).not.toHaveBeenCalled();
-      expect(enqueueMock).not.toHaveBeenCalled();
-      expect(clearFilesMock).not.toHaveBeenCalled();
-      expect(messageWarningMock).toHaveBeenCalledWith(
-        'This agent is still working, so the message can’t be sent directly. Save it to Draft box and send it later.'
-      );
+      expect(clearFilesMock).toHaveBeenCalled();
+      expect(messageWarningMock).not.toHaveBeenCalled();
     });
 
-    it('sends normally for a non-supporting agent while idle', async () => {
+    it('offers no separate draft-box entry and says the next message will queue', () => {
+      runtimeViewMock.supportsMidturnDelivery = true;
+      runtimeViewMock.isProcessing = true;
+      draftContentRef.current = 'hello world';
+
+      renderBox('claude');
+
+      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as {
+        onAddToDraft?: () => void;
+        placeholder?: string;
+      };
+      expect(props.onAddToDraft).toBeUndefined();
+      expect(props.placeholder).toBe('Keep typing to queue a follow-up');
+    });
+
+    it('sends normally while idle', async () => {
       runtimeViewMock.supportsMidturnDelivery = false;
       runtimeViewMock.isProcessing = false;
       runtimeViewMock.canSendMessage = true;
       sendMessageInvokeMock.mockResolvedValue({ turn_id: 'turn-1', runtime: null, msg_id: 'msg-1' });
 
-      render(
-        <AcpSendBox
-          conversation_id='conv-1'
-          backend='antigravity'
-          workspacePath='/tmp/workspace'
-          messageState={makeMessageState()}
-        />
-      );
-
-      const props = sendBoxPropsSpy.mock.calls.at(-1)?.[0] as { sendDisabled?: boolean };
-      expect(props.sendDisabled).toBe(false);
+      renderBox('antigravity');
 
       await act(async () => {
         screen.getByRole('button', { name: 'send' }).click();

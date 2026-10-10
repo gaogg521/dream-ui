@@ -419,15 +419,12 @@ const DreamEngineSendBox: React.FC<{
 
   const {
     items: queuedCommands,
-    mode: queueMode,
     isInteractionLocked: isQueueInteractionLocked,
     enqueue,
     remove,
     prioritize,
     sendNow,
-    clear,
     reorder,
-    toggleMode,
     lockInteraction,
     unlockInteraction,
     resetActiveExecution,
@@ -472,20 +469,16 @@ const DreamEngineSendBox: React.FC<{
     void processInitialMessage();
   }, [conversation_id, current_model?.use_model, executeCommand]);
 
-  // While the agent is replying, a message is delivered into the running turn
-  // when the backend supports it (the engine reads it before its next step).
-  // Otherwise sending is hard-blocked with a toast instead of implicitly
-  // enqueuing; the only way to queue a message while busy is then the explicit
-  // "add to queue" entry (handleAddToQueue below).
+  // While the agent is replying, a sent message is queued above the composer,
+  // where it can still be edited, reordered or removed. Queued messages go out
+  // one per finished turn; "Send now" on one hands it to the running turn
+  // instead (handleSendNowQueued).
   const onSendHandler = async (message: string): Promise<void | false> => {
-    if (!supportsMidturnDelivery && isBusy) {
-      Message.warning(
-        t('conversation.commandQueue.midturnBlocked', {
-          defaultValue:
-            'This agent is still working, so the message can’t be sent directly. Save it to Draft box and send it later.',
-        })
-      );
-      return false;
+    if (isBusy && mediaComposer.mode === 'off') {
+      enqueue({ input: message, files: collectChatFileRefs(uploadFile, atPath) });
+      clearFiles();
+      emitter.emit('dream.selected.file.clear');
+      return;
     }
 
     // The mode is off but the message asks for a picture or a video, and a
@@ -553,21 +546,6 @@ const DreamEngineSendBox: React.FC<{
       setInterrupting(false);
     }
   };
-
-  // Explicit "add to queue" entry — visibility is keyed only to the user's
-  // own input (non-empty draft), never to the agent's busy/replying state:
-  // tying it to that racy, async signal made the entry appear/disappear
-  // unpredictably. Clicking while idle is semantically fine — the queue's own
-  // mode governs (auto drains immediately, manual holds). Clears the draft
-  // the same way a send would.
-  const canQueueCurrentDraft = content.trim().length > 0;
-  const handleAddToQueue = useCallback(() => {
-    const filesToSend = collectChatFileRefs(uploadFile, atPath);
-    enqueue({ input: content, files: filesToSend });
-    setContent('');
-    clearFiles();
-    emitter.emit('dream.selected.file.clear');
-  }, [atPath, clearFiles, content, enqueue, setContent, uploadFile]);
 
   const handleEditQueuedCommand = useCallback(
     (item: ConversationCommandQueueItem) => {
@@ -886,17 +864,14 @@ const DreamEngineSendBox: React.FC<{
     <div className={`${sendBoxWidthClass} flex flex-col mt-auto mb-16px`}>
       <CommandQueuePanel
         items={queuedCommands}
-        mode={queueMode}
         isMobile={isMobile}
         interactionLocked={isQueueInteractionLocked}
         onInteractionLock={lockInteraction}
         onInteractionUnlock={unlockInteraction}
         onEdit={handleEditQueuedCommand}
         onSendNow={handleSendNowQueued}
-        onToggleMode={toggleMode}
         onReorder={reorder}
         onRemove={remove}
-        onClear={clear}
       />
       <ThoughtDisplay
         thought={thought}
@@ -924,15 +899,6 @@ const DreamEngineSendBox: React.FC<{
         // Media mode does not use the chat model, so a missing one must not
         // lock the input — the media model is chosen separately.
         disabled={mediaComposer.mode === 'off' && !current_model?.use_model}
-        sendDisabled={mediaComposer.mode === 'off' && !supportsMidturnDelivery && isBusy}
-        sendDisabledTooltip={
-          mediaComposer.mode === 'off' && !supportsMidturnDelivery && isBusy
-            ? t('conversation.commandQueue.midturnBlockedSendHint', {
-                defaultValue:
-                  'The current agent is still working and cannot receive another message yet. Add it to Draft box instead.',
-              })
-            : undefined
-        }
         placeholder={
           // Same reasoning as the ACP send box: in media mode the input does
           // not send a message, so it must not look like it does.
@@ -946,16 +912,20 @@ const DreamEngineSendBox: React.FC<{
                     ? 'conversation.mediaModeImageHintRef'
                     : 'conversation.mediaModeImageHint'
               )
-            : current_model?.use_model
-              ? t('acp.sendbox.placeholder', {
-                  // Never hardcode a product name here: the branded label lives
-                  // on the managed-agent catalog row (migration 019 sets the
-                  // dream entry to "1ONE CLI"). The literal that used to sit
-                  // in this fallback is why the box read "DreamCLI".
-                  backend: agent_name || brandedBackend || t('conversation.chat.thisAgent'),
-                  defaultValue: `Send message to {{backend}}...`,
+            : isBusy
+              ? t('conversation.commandQueue.queuedPlaceholder', {
+                  defaultValue: 'Keep typing to queue a follow-up',
                 })
-              : t('conversation.chat.noModelSelected')
+              : current_model?.use_model
+                ? t('acp.sendbox.placeholder', {
+                    // Never hardcode a product name here: the branded label lives
+                    // on the managed-agent catalog row (migration 019 sets the
+                    // dream entry to "1ONE CLI"). The literal that used to sit
+                    // in this fallback is why the box read "DreamCLI".
+                    backend: agent_name || brandedBackend || t('conversation.chat.thisAgent'),
+                    defaultValue: `Send message to {{backend}}...`,
+                  })
+                : t('conversation.chat.noModelSelected')
         }
         hideChatHint={mediaComposer.mode !== 'off'}
         onStop={effectiveHandleStop}
@@ -1051,15 +1021,6 @@ const DreamEngineSendBox: React.FC<{
         onSend={onSendHandler}
         slash_commands={slash_commands}
         onSlashBuiltinCommand={onSlashBuiltinCommand}
-        onAddToDraft={handleAddToQueue}
-        addToDraftDisabled={!canQueueCurrentDraft}
-        addToDraftTooltip={
-          isBusy
-            ? t('conversation.commandQueue.addToQueueBusyHint', {
-                defaultValue: 'Save to Draft box and send it later.',
-              })
-            : t('conversation.commandQueue.addToQueue', { defaultValue: 'Save to Draft box' })
-        }
         allowSendWhileLoading
         sendButtonPrefix={
           <>

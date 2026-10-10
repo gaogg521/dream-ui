@@ -184,10 +184,7 @@ describe('useConversationCommandQueue drain', () => {
       onExecute,
     });
 
-    act(() => {
-      result.current.toggleMode();
-    });
-    await waitFor(() => expect(result.current.mode).toBe('auto'));
+    expect(result.current.mode).toBe('auto');
 
     act(() => {
       result.current.enqueue({ input: 'queued follow-up', files: [] });
@@ -229,10 +226,8 @@ describe('useConversationCommandQueue drain', () => {
     await waitFor(() => expect(onExecute).toHaveBeenCalledTimes(1));
     expect(onExecute).toHaveBeenCalledWith(expect.objectContaining({ input: 'legacy persisted follow-up' }));
     await waitFor(() =>
-      expect(JSON.parse(sessionStorage.getItem(storageKey('conv-legacy')) ?? '{}')).toMatchObject({
-        items: [],
-        mode: 'auto',
-      })
+      // Drained back to the default state, which is not kept in storage.
+      expect(sessionStorage.getItem(storageKey('conv-legacy'))).toBeNull()
     );
   });
 
@@ -269,10 +264,7 @@ describe('useConversationCommandQueue drain', () => {
       onExecute,
     });
 
-    act(() => {
-      result.current.toggleMode();
-    });
-    await waitFor(() => expect(result.current.mode).toBe('auto'));
+    expect(result.current.mode).toBe('auto');
 
     act(() => {
       result.current.enqueue({ input: 'queued after switch', files: [] });
@@ -297,7 +289,11 @@ describe('useConversationCommandQueue drain', () => {
       onExecute,
     });
 
-    expect(result.current.mode).toBe('manual');
+    // Manual is no longer the default; it is only reachable explicitly.
+    act(() => {
+      result.current.toggleMode();
+    });
+    await waitFor(() => expect(result.current.mode).toBe('manual'));
 
     act(() => {
       result.current.enqueue({ input: 'send only when requested', files: [] });
@@ -351,10 +347,7 @@ describe('useConversationCommandQueue drain', () => {
       onExecute,
     });
 
-    act(() => {
-      result.current.toggleMode();
-    });
-    await waitFor(() => expect(result.current.mode).toBe('auto'));
+    expect(result.current.mode).toBe('auto');
 
     act(() => {
       result.current.enqueue({ input: 'first queued command', files: [] });
@@ -369,10 +362,8 @@ describe('useConversationCommandQueue drain', () => {
     expect(onExecute).toHaveBeenNthCalledWith(1, expect.objectContaining({ input: 'first queued command' }));
     expect(onExecute).toHaveBeenNthCalledWith(2, expect.objectContaining({ input: 'second queued command' }));
     await waitFor(() =>
-      expect(JSON.parse(sessionStorage.getItem(storageKey('conv-background-many')) ?? '{}')).toMatchObject({
-        items: [],
-        mode: 'auto',
-      })
+      // Drained back to the default state, which is not kept in storage.
+      expect(sessionStorage.getItem(storageKey('conv-background-many'))).toBeNull()
     );
   });
 
@@ -384,10 +375,7 @@ describe('useConversationCommandQueue drain', () => {
       onExecute,
     });
 
-    act(() => {
-      result.current.toggleMode();
-    });
-    await waitFor(() => expect(result.current.mode).toBe('auto'));
+    expect(result.current.mode).toBe('auto');
 
     act(() => {
       result.current.enqueue({ input: 'retry me later', files: [] });
@@ -413,10 +401,7 @@ describe('useConversationCommandQueue drain', () => {
       onExecute,
     });
 
-    act(() => {
-      result.current.toggleMode();
-    });
-    await waitFor(() => expect(result.current.mode).toBe('auto'));
+    expect(result.current.mode).toBe('auto');
 
     act(() => {
       result.current.enqueue({ input: 'queued while busy', files: [] });
@@ -453,10 +438,7 @@ describe('useConversationCommandQueue drain', () => {
     });
     rerenderQueueRef.current = rerender;
 
-    act(() => {
-      result.current.toggleMode();
-    });
-    await waitFor(() => expect(result.current.mode).toBe('auto'));
+    expect(result.current.mode).toBe('auto');
 
     act(() => {
       result.current.enqueue({ input: 'retry after already observed blocked gate', files: [] });
@@ -487,10 +469,7 @@ describe('useConversationCommandQueue drain', () => {
       { initialProps: { gate: processingGate, execute: firstExecute }, wrapper }
     );
 
-    act(() => {
-      result.current.toggleMode();
-    });
-    await waitFor(() => expect(result.current.mode).toBe('auto'));
+    expect(result.current.mode).toBe('auto');
 
     act(() => {
       result.current.enqueue({ input: 'send once', files: [] });
@@ -515,10 +494,7 @@ describe('useConversationCommandQueue drain', () => {
       onExecute,
     });
 
-    act(() => {
-      result.current.toggleMode();
-    });
-    await waitFor(() => expect(result.current.mode).toBe('auto'));
+    expect(result.current.mode).toBe('auto');
 
     act(() => {
       result.current.enqueue({ input: 'queued while runtime closes', files: [] });
@@ -545,10 +521,7 @@ describe('useConversationCommandQueue drain', () => {
       onExecute,
     });
 
-    act(() => {
-      result.current.toggleMode();
-    });
-    await waitFor(() => expect(result.current.mode).toBe('auto'));
+    expect(result.current.mode).toBe('auto');
 
     act(() => {
       result.current.enqueue({ input: 'retry after turn completion', files: [] });
@@ -572,10 +545,8 @@ describe('useConversationCommandQueue drain', () => {
 
     await waitFor(() => expect(onExecute).toHaveBeenCalledTimes(2));
     await waitFor(() =>
-      expect(JSON.parse(sessionStorage.getItem(storageKey('conv-background-busy')) ?? '{}')).toMatchObject({
-        items: [],
-        mode: 'auto',
-      })
+      // Drained back to the default state, which is not kept in storage.
+      expect(sessionStorage.getItem(storageKey('conv-background-busy'))).toBeNull()
     );
   });
 });

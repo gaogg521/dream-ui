@@ -529,6 +529,7 @@
     "tooManyFiles": "Hay demasiados archivos adjuntos en este comando en cola.",
     "queueTooLarge": "Los datos de la cola son demasiado grandes para persistir de forma segura. Quita algunos comandos primero.",
     "sendNow": "Enviar ahora",
+    "queuedPlaceholder": "Sigue escribiendo para poner en cola el siguiente mensaje",
     "modeToggle": "Cambiar modo de envío",
     "help": "Ayuda",
     "helpIntro": "Los mensajes que envías mientras la IA responde esperan aquí.",

@@ -77,12 +77,15 @@ const logCommandQueue = (conversation_id: string, event: string, payload: Record
     .catch(() => {});
 };
 
-const normalizeQueueMode = (mode: unknown): ConversationCommandQueueMode => (mode === 'auto' ? 'auto' : 'manual');
+// Queued messages go out on their own, one per finished turn — the way other
+// agents treat a message typed while they are busy. Manual mode survives only
+// as an explicit choice; the composer no longer offers a toggle for it.
+const normalizeQueueMode = (mode: unknown): ConversationCommandQueueMode => (mode === 'manual' ? 'manual' : 'auto');
 
 const createDefaultQueueState = (): ConversationCommandQueueState => ({
   items: [],
   isPaused: false,
-  mode: 'manual',
+  mode: 'auto',
 });
 
 const queueStore = new Map<string, ConversationCommandQueueState>();
@@ -276,7 +279,7 @@ const removePersistedQueueState = (conversation_id: string): void => {
 const persistQueueState = (conversation_id: string, state: ConversationCommandQueueState): void => {
   const normalized = normalizeQueueState(state);
 
-  if (normalized.items.length === 0 && !normalized.isPaused && normalized.mode === 'manual') {
+  if (normalized.items.length === 0 && !normalized.isPaused && normalized.mode === 'auto') {
     removePersistedQueueState(conversation_id);
     return;
   }

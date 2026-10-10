@@ -528,6 +528,7 @@
     "tooManyFiles": "Trop de fichiers sont joints à cette commande en file.",
     "queueTooLarge": "Les données de la file sont trop volumineuses pour être sauvegardées en toute sécurité. Retirez d'abord quelques commandes.",
     "sendNow": "Envoyer maintenant",
+    "queuedPlaceholder": "Continuez à écrire pour mettre le message suivant en file d’attente",
     "modeToggle": "Basculer le mode d'envoi",
     "help": "Aide",
     "helpIntro": "Les messages que vous envoyez pendant que l'IA répond sont attendus ici.",

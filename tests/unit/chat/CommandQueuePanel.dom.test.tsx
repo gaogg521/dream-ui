@@ -16,8 +16,6 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-const confirmMock = vi.fn();
-
 vi.mock('@arco-design/web-react', () => {
   const Button = ({
     children,
@@ -48,13 +46,11 @@ vi.mock('@arco-design/web-react', () => {
     Ellipsis: ({ children, ...props }: React.PropsWithChildren) => <span {...props}>{children}</span>,
   };
   const Tooltip = ({ children }: React.PropsWithChildren) => <>{children}</>;
-  const Modal = {
-    confirm: (config: { onOk?: () => void }) => confirmMock(config),
-  };
-  return { Button, Dropdown, Menu, Modal, Tooltip, Typography };
+  return { Button, Dropdown, Menu, Tooltip, Typography };
 });
 
 vi.mock('@icon-park/react', () => ({
+  ArrowUp: () => <span data-testid='arrow-up-icon' />,
   CornerDownRight: () => <span data-testid='corner-down-right-icon' />,
   Delete: () => <span data-testid='delete-icon' />,
   Drag: () => <span data-testid='drag-icon' />,
@@ -75,16 +71,13 @@ const item: ConversationCommandQueueItem = {
 const renderPanel = (overrides: Partial<React.ComponentProps<typeof CommandQueuePanel>> = {}) => {
   const props: React.ComponentProps<typeof CommandQueuePanel> = {
     items: [item],
-    mode: 'auto',
     interactionLocked: false,
     onInteractionLock: vi.fn(),
     onInteractionUnlock: vi.fn(),
     onEdit: vi.fn(),
     onSendNow: vi.fn(),
-    onToggleMode: vi.fn(),
     onReorder: vi.fn(),
     onRemove: vi.fn(),
-    onClear: vi.fn(),
     ...overrides,
   };
 
@@ -116,24 +109,25 @@ describe('CommandQueuePanel', () => {
     expect(onRemove).toHaveBeenCalledExactlyOnceWith('queued-1');
   });
 
-  it('shows the current mode and toggles it', () => {
-    const onToggleMode = vi.fn();
-    renderPanel({ mode: 'auto', onToggleMode });
-
-    const toggle = screen.getByRole('button', { name: 'Toggle send mode' });
-    expect(toggle).toHaveTextContent('Auto');
-    fireEvent.click(toggle);
-    expect(onToggleMode).toHaveBeenCalledTimes(1);
-  });
-
-  it('renders the manual label when in manual mode', () => {
-    renderPanel({ mode: 'manual' });
-    expect(screen.getByRole('button', { name: 'Toggle send mode' })).toHaveTextContent('Manual');
-  });
-
-  it('does not render a separate help button (help lives on the mode toggle)', () => {
+  // Queued messages sit directly above the composer, one row each, the way
+  // other agents show them: no title, counter, send-mode toggle or menu.
+  it('renders only the queued rows, without a draft-box header or mode toggle', () => {
     renderPanel();
-    expect(screen.queryByRole('button', { name: 'Help' })).not.toBeInTheDocument();
+
+    expect(screen.getByText('queued follow-up')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Toggle send mode' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Draft box')).not.toBeInTheDocument();
+  });
+
+  it('labels send-now in the row instead of hiding it behind an icon', () => {
+    renderPanel();
+    expect(screen.getByRole('button', { name: 'Send now' })).toHaveTextContent('Send now');
+  });
+
+  it('renders nothing when the queue is empty', () => {
+    renderPanel({ items: [] });
+    expect(document.querySelector('[data-command-queue="true"]')).toBeNull();
   });
 
   it('keeps long draft boxes internally scrollable instead of growing forever', () => {
@@ -150,21 +144,5 @@ describe('CommandQueuePanel', () => {
     expect(list).not.toBeNull();
     expect(list).toHaveStyle({ maxHeight: 'min(36vh, 320px)' });
     expect(list).toHaveClass('overflow-y-auto');
-  });
-
-  it('clears the draft box through a confirm dialog', () => {
-    confirmMock.mockReset();
-    const onClear = vi.fn();
-    renderPanel({ onClear });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Clear draft box' }));
-    // Clearing must go through a confirm step, not fire immediately.
-    expect(onClear).not.toHaveBeenCalled();
-    expect(confirmMock).toHaveBeenCalledTimes(1);
-
-    // Simulate the user confirming.
-    const config = confirmMock.mock.calls[0][0] as { onOk?: () => void };
-    config.onOk?.();
-    expect(onClear).toHaveBeenCalledTimes(1);
   });
 });

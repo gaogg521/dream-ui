@@ -1040,6 +1040,7 @@ export type I18nKey =
   | 'conversation.commandQueue.pausedAfterFailure'
   | 'conversation.commandQueue.queueFull'
   | 'conversation.commandQueue.queueTooLarge'
+  | 'conversation.commandQueue.queuedPlaceholder'
   | 'conversation.commandQueue.remove'
   | 'conversation.commandQueue.reorder'
   | 'conversation.commandQueue.saveEdit'

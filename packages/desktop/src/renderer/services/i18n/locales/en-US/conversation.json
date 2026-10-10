@@ -533,6 +533,7 @@
     "tooManyFiles": "Too many files are attached to this queued command.",
     "queueTooLarge": "Queue data is too large to persist safely. Remove some queued commands first.",
     "sendNow": "Send now",
+    "queuedPlaceholder": "Keep typing to queue a follow-up",
     "modeToggle": "Toggle send mode",
     "help": "Help",
     "helpIntro": "Messages you send while the AI is replying wait here.",

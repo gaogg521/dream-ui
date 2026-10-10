@@ -534,6 +534,7 @@
     "tooManyFiles": "Muitos arquivos anexados a este comando na fila.",
     "queueTooLarge": "Os dados na fila são muito grandes para serem persistidos com segurança. Remova alguns comandos na fila primeiro.",
     "sendNow": "Enviar agora",
+    "queuedPlaceholder": "Continue digitando para enfileirar a próxima mensagem",
     "modeToggle": "Alternar modo de envio",
     "help": "Ajuda",
     "helpIntro": "As mensagens enviadas enquanto a IA responde ficam aqui.",

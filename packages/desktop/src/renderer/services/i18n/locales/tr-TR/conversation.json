@@ -513,6 +513,7 @@
     "tooManyFiles": "Bu kuyruk komutuna çok fazla dosya eklendi.",
     "queueTooLarge": "Kuyruk verisi güvenli şekilde saklanamayacak kadar büyük. Önce bazı komutları kaldırın.",
     "sendNow": "Şimdi gönder",
+    "queuedPlaceholder": "Sıradaki mesajı eklemek için yazmaya devam edin",
     "modeToggle": "Gönderim modunu değiştir",
     "help": "Yardım",
     "helpIntro": "Yapay zeka yanıt verirken gönderdiğin mesajlar burada bekler.",

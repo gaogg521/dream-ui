@@ -533,6 +533,7 @@
     "tooManyFiles": "这条排队指令附加的文件过多。",
     "queueTooLarge": "队列数据过大，无法安全缓存，请先移除部分排队指令。",
     "sendNow": "立即发送",
+    "queuedPlaceholder": "继续输入以排队后续消息",
     "modeToggle": "切换发送模式",
     "help": "使用说明",
     "helpIntro": "AI 回复期间你发送的消息会先存到这里。",

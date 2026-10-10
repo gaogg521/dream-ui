@@ -95,46 +95,48 @@ describe('useConversationCommandQueue mode & send-now', () => {
     sessionStorage.clear();
   });
 
-  it('defaults to manual mode', () => {
-    const { result } = renderQueue({ conversation_id: 'conv-manual-default', runtimeGate: processingGate });
-    expect(result.current.mode).toBe('manual');
+  // Queued messages go out one per finished turn unless someone opts out —
+  // the composer no longer offers a manual/auto toggle.
+  it('defaults to auto mode', () => {
+    const { result } = renderQueue({ conversation_id: 'conv-auto-default', runtimeGate: processingGate });
+    expect(result.current.mode).toBe('auto');
   });
 
-  it('toggles between manual and auto', async () => {
+  it('toggles between auto and manual', async () => {
     const { result } = renderQueue({ conversation_id: 'conv-toggle', runtimeGate: processingGate });
 
     act(() => {
       result.current.toggleMode();
     });
-    await waitFor(() => expect(result.current.mode).toBe('auto'));
+    await waitFor(() => expect(result.current.mode).toBe('manual'));
 
     act(() => {
       result.current.toggleMode();
     });
-    await waitFor(() => expect(result.current.mode).toBe('manual'));
+    await waitFor(() => expect(result.current.mode).toBe('auto'));
   });
 
-  it('persists auto mode per conversation after switching away and back', async () => {
+  it('persists manual mode per conversation after switching away and back', async () => {
     const first = renderQueue({ conversation_id: 'conv-mode-a', runtimeGate: processingGate });
 
-    expect(first.result.current.mode).toBe('manual');
+    expect(first.result.current.mode).toBe('auto');
     act(() => {
       first.result.current.toggleMode();
     });
-    await waitFor(() => expect(first.result.current.mode).toBe('auto'));
+    await waitFor(() => expect(first.result.current.mode).toBe('manual'));
     expect(JSON.parse(sessionStorage.getItem(storageKey('conv-mode-a')) ?? '{}')).toMatchObject({
-      mode: 'auto',
+      mode: 'manual',
       items: [],
     });
 
     first.unmount();
 
     const second = renderQueue({ conversation_id: 'conv-mode-b', runtimeGate: processingGate });
-    expect(second.result.current.mode).toBe('manual');
+    expect(second.result.current.mode).toBe('auto');
     second.unmount();
 
     const restored = renderQueue({ conversation_id: 'conv-mode-a', runtimeGate: processingGate });
-    await waitFor(() => expect(restored.result.current.mode).toBe('auto'));
+    await waitFor(() => expect(restored.result.current.mode).toBe('manual'));
   });
 
   it('does NOT auto-send queued commands while in manual mode', async () => {
@@ -145,7 +147,10 @@ describe('useConversationCommandQueue mode & send-now', () => {
       onExecute,
     });
 
-    expect(result.current.mode).toBe('manual');
+    act(() => {
+      result.current.toggleMode();
+    });
+    await waitFor(() => expect(result.current.mode).toBe('manual'));
 
     act(() => {
       result.current.enqueue({ input: 'stay queued', files: [] });
@@ -167,7 +172,10 @@ describe('useConversationCommandQueue mode & send-now', () => {
       onExecute,
     });
 
-    expect(result.current.mode).toBe('manual');
+    act(() => {
+      result.current.toggleMode();
+    });
+    await waitFor(() => expect(result.current.mode).toBe('manual'));
 
     act(() => {
       result.current.enqueue({ input: 'queued follow-up', files: [] });
@@ -192,8 +200,11 @@ describe('useConversationCommandQueue mode & send-now', () => {
       onExecute,
     });
 
-    // Manual mode is the default, so nothing drains on its own — isolates sendNow behavior.
-    expect(result.current.mode).toBe('manual');
+    // Manual mode so nothing drains on its own — isolates sendNow behavior.
+    act(() => {
+      result.current.toggleMode();
+    });
+    await waitFor(() => expect(result.current.mode).toBe('manual'));
 
     act(() => {
       result.current.enqueue({ input: 'first', files: [] });

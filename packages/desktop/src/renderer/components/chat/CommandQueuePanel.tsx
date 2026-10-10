@@ -1,7 +1,4 @@
-import type {
-  ConversationCommandQueueItem,
-  ConversationCommandQueueMode,
-} from '@/renderer/pages/conversation/platforms/useConversationCommandQueue';
+import type { ConversationCommandQueueItem } from '@/renderer/pages/conversation/platforms/useConversationCommandQueue';
 import { restrictToVerticalAxis } from '@/renderer/utils/ui/dndModifiers';
 import {
   type Modifier,
@@ -14,31 +11,12 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Button, Dropdown, Menu, Modal, Tooltip, Typography } from '@arco-design/web-react';
-import { CornerDownRight, Delete, Drag, Edit, MoreOne, SendOne, SortTwo } from '@icon-park/react';
+import { Button, Typography } from '@arco-design/web-react';
+import { ArrowUp, Delete, Drag, Edit } from '@icon-park/react';
 import React, { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const getCommandPreview = (input: string): string => input.replace(/\s+/g, ' ').trim();
-
-const DraftBoxActionIcon: React.FC<{ size?: number; color?: string }> = ({ size = 16, color = 'currentColor' }) => (
-  <svg width={size} height={size} viewBox='0 0 24 24' fill='none' aria-hidden='true'>
-    <path
-      d='M7 4.5h10l2 7.5v5.2A2.8 2.8 0 0 1 16.2 20H7.8A2.8 2.8 0 0 1 5 17.2V12l2-7.5Z'
-      stroke={color}
-      strokeWidth='2'
-      strokeLinejoin='round'
-    />
-    <path d='M5.4 12h4l1.4 2h2.4l1.4-2h4' stroke={color} strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
-    <path
-      d='M12 5.5v6.2m0 0 2.5-2.5M12 11.7 9.5 9.2'
-      stroke={color}
-      strokeWidth='2'
-      strokeLinecap='round'
-      strokeLinejoin='round'
-    />
-  </svg>
-);
 
 const createRestrictToQueueContainerModifier = (
   queueContainerRef: React.RefObject<HTMLDivElement | null>
@@ -63,7 +41,6 @@ const createRestrictToQueueContainerModifier = (
 
 type CommandQueuePanelProps = {
   items: ConversationCommandQueueItem[];
-  mode: ConversationCommandQueueMode;
   interactionLocked: boolean;
   isMobile?: boolean;
   onInteractionLock: () => void;
@@ -71,10 +48,8 @@ type CommandQueuePanelProps = {
   onUpdate?: (commandId: string, input: string) => boolean;
   onEdit?: (item: ConversationCommandQueueItem) => void;
   onSendNow: (item: ConversationCommandQueueItem) => void;
-  onToggleMode: () => void;
   onReorder: (activeCommandId: string, overCommandId: string) => void;
   onRemove: (commandId: string) => void;
-  onClear: () => void;
 };
 
 type RenderActionIconButtonArgs = {
@@ -195,7 +170,7 @@ const QueueItemCard: React.FC<QueueItemCardProps> = ({
       }}
     >
       <div className='flex items-center gap-6px min-w-0 flex-1 relative ps-8px'>
-        <div className='flex items-center gap-5px w-18px shrink-0 relative'>
+        <div className='flex items-center w-10px shrink-0 relative'>
           <button
             {...restDragHandleButtonProps}
             ref={dragHandleRef}
@@ -212,7 +187,7 @@ const QueueItemCard: React.FC<QueueItemCardProps> = ({
                   : 'cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
             }`}
             style={{
-              left: '-15px',
+              left: '-6px',
               top: '50%',
               transform: 'translateY(-50%)',
               color: 'var(--color-text-3)',
@@ -225,19 +200,9 @@ const QueueItemCard: React.FC<QueueItemCardProps> = ({
           >
             <Drag theme='outline' size='12' strokeWidth={2.5} />
           </button>
-          <span
-            aria-hidden='true'
-            data-queue-arrow='true'
-            className='inline-flex h-16px w-16px items-center justify-center shrink-0'
-            style={{
-              color: 'var(--color-text-3)',
-            }}
-          >
-            <CornerDownRight theme='outline' size='12' strokeWidth={2.3} />
-          </span>
         </div>
         <div className='min-w-0 flex-1 flex items-center gap-6px'>
-          <Typography.Ellipsis rows={1} showTooltip className='min-w-0 flex-1 text-11px leading-16px text-t-secondary'>
+          <Typography.Ellipsis rows={1} showTooltip className='min-w-0 flex-1 text-13px leading-20px text-t-primary'>
             {preview}
           </Typography.Ellipsis>
           {fileCountLabel ? (
@@ -253,13 +218,20 @@ const QueueItemCard: React.FC<QueueItemCardProps> = ({
           ) : null}
         </div>
       </div>
-      <div className='flex items-center gap-0.5 shrink-0 h-24px overflow-hidden'>
-        {renderQueueActionIconButton({
-          ariaLabel: t('conversation.commandQueue.sendNow', { defaultValue: 'Send now' }),
-          onClick: () => onSendNow(item),
-          icon: <SendOne theme='outline' size='14' strokeWidth={2.5} />,
-          accent: true,
-        })}
+      <div className='flex items-center gap-2px shrink-0 h-24px overflow-hidden'>
+        <Button
+          size='mini'
+          type='secondary'
+          shape='round'
+          className='h-24px px-8px me-2px'
+          aria-label={t('conversation.commandQueue.sendNow', { defaultValue: 'Send now' })}
+          onClick={() => onSendNow(item)}
+        >
+          <span className='inline-flex items-center gap-3px text-12px'>
+            <ArrowUp theme='outline' size='12' strokeWidth={3} />
+            {t('conversation.commandQueue.sendNow', { defaultValue: 'Send now' })}
+          </span>
+        </Button>
         {renderQueueActionIconButton({
           ariaLabel: t('conversation.commandQueue.edit', { defaultValue: 'Edit' }),
           onClick: () => onEdit?.(item),
@@ -342,17 +314,14 @@ const SortableQueueItem: React.FC<SortableQueueItemProps> = ({
 
 const CommandQueuePanel: React.FC<CommandQueuePanelProps> = ({
   items,
-  mode,
   interactionLocked,
   isMobile = false,
   onInteractionLock,
   onInteractionUnlock,
   onEdit,
   onSendNow,
-  onToggleMode,
   onReorder,
   onRemove,
-  onClear,
 }) => {
   const { t } = useTranslation();
   const queueContainerRef = useRef<HTMLDivElement | null>(null);
@@ -403,145 +372,21 @@ const CommandQueuePanel: React.FC<CommandQueuePanelProps> = ({
     []
   );
 
-  const title = t('conversation.commandQueue.title', { defaultValue: 'Draft box' });
-  const modeLabel =
-    mode === 'auto'
-      ? t('conversation.commandQueue.mode.auto', { defaultValue: 'Auto send' })
-      : t('conversation.commandQueue.mode.manual', { defaultValue: 'Manual send' });
-
-  const helpContent = (
-    <div className='flex flex-col gap-6px max-w-260px text-12px leading-18px'>
-      <span>
-        {t('conversation.commandQueue.helpIntro', {
-          defaultValue: 'Messages you send while the AI is replying wait here.',
-        })}
-      </span>
-      <span>
-        <b>{t('conversation.commandQueue.mode.auto', { defaultValue: 'Auto send' })}</b>
-        {t('conversation.commandQueue.helpAuto', {
-          defaultValue: ': sent automatically one by one after each reply finishes.',
-        })}
-      </span>
-      <span>
-        <b>{t('conversation.commandQueue.mode.manual', { defaultValue: 'Manual send' })}</b>
-        {t('conversation.commandQueue.helpManual', {
-          defaultValue: ': kept here without sending; use Send now on each.',
-        })}
-      </span>
-    </div>
-  );
-
-  const handleClear = () => {
-    Modal.confirm({
-      title: t('conversation.commandQueue.clearConfirmTitle', { defaultValue: 'Clear the send draft box?' }),
-      content: t('conversation.commandQueue.clearConfirmContent', {
-        defaultValue: 'All pending messages will be removed. This cannot be undone.',
-      }),
-      okButtonProps: { status: 'danger' },
-      okText: t('conversation.commandQueue.clear', { defaultValue: 'Clear draft box' }),
-      onOk: onClear,
-    });
-  };
-
   if (items.length === 0) {
     return null;
   }
 
-  const moreMenu = (
-    <Menu>
-      {isMobile ? (
-        <Menu.Item
-          key='help'
-          style={{
-            maxWidth: 260,
-            whiteSpace: 'normal',
-            height: 'auto',
-            lineHeight: '18px',
-            paddingTop: 8,
-            paddingBottom: 8,
-          }}
-        >
-          {helpContent}
-        </Menu.Item>
-      ) : null}
-      <Menu.Item key='clear' onClick={handleClear} style={{ color: 'rgb(var(--danger-6))' }}>
-        {t('conversation.commandQueue.clear', { defaultValue: 'Clear draft box' })}
-      </Menu.Item>
-    </Menu>
-  );
-
   return (
     <div className='relative z-1 mb--12px px-8px pt-8px pb-12px'>
       <div
-        aria-label={title}
+        aria-label={t('conversation.commandQueue.title', { defaultValue: 'Queued messages' })}
+        data-command-queue='true'
         className='overflow-hidden rd-t-18px border b-solid'
         style={{
           borderColor: 'color-mix(in srgb, var(--color-border-2) 56%, transparent)',
           background: 'color-mix(in srgb, var(--color-fill-1) 84%, var(--color-bg-1))',
         }}
       >
-        <div className='flex items-center justify-between gap-8px px-12px pt-8px pb-4px'>
-          <div className='flex items-center gap-6px min-w-0 leading-none'>
-            {isMobile ? (
-              <Tooltip content={title} position='top'>
-                <span className='inline-flex items-center justify-center text-t-tertiary' aria-label={title}>
-                  <DraftBoxActionIcon size={16} />
-                </span>
-              </Tooltip>
-            ) : (
-              <span className='inline-flex items-center gap-5px text-12px font-600 text-t-secondary whitespace-nowrap leading-none'>
-                <DraftBoxActionIcon size={15} />
-                {title}
-              </span>
-            )}
-            <span
-              className='inline-flex items-center justify-center rd-999px px-6px h-16px text-10px leading-none font-600'
-              style={{ background: 'var(--color-fill-3)', color: 'var(--color-text-2)' }}
-            >
-              {items.length}
-            </span>
-          </div>
-          <div className='flex items-center gap-4px shrink-0'>
-            {/* The mode toggle doubles as the help affordance: hovering it shows what
-                Auto vs Manual mean, so no separate "?" button is needed. */}
-            <Tooltip content={helpContent} position='top'>
-              <Button
-                size='mini'
-                type='text'
-                shape='round'
-                className='h-24px px-9px'
-                aria-label={t('conversation.commandQueue.modeToggle', { defaultValue: 'Toggle send mode' })}
-                onClick={onToggleMode}
-                style={{
-                  background: mode === 'auto' ? 'rgb(var(--primary-1))' : 'var(--color-fill-2)',
-                  color: mode === 'auto' ? 'rgb(var(--primary-6))' : 'var(--color-text-2)',
-                  fontWeight: 600,
-                }}
-              >
-                <span className='inline-flex items-center gap-4px text-11px'>
-                  {modeLabel}
-                  <SortTwo theme='outline' size='12' strokeWidth={3} style={{ opacity: 0.7 }} />
-                </span>
-              </Button>
-            </Tooltip>
-            <Dropdown trigger='click' droplist={moreMenu} position='br'>
-              <Button
-                size='mini'
-                type='text'
-                shape='circle'
-                className='w-22px h-22px min-w-22px p-0 opacity-72 hover:opacity-100 flex items-center justify-center'
-                aria-label={t('conversation.commandQueue.moreActions', { defaultValue: 'More actions' })}
-              >
-                <span
-                  className='inline-flex items-center justify-center leading-none'
-                  style={{ color: 'var(--color-text-3)', fontSize: 0 }}
-                >
-                  <MoreOne theme='outline' size='15' strokeWidth={2.5} />
-                </span>
-              </Button>
-            </Dropdown>
-          </div>
-        </div>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}

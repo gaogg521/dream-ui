@@ -442,15 +442,12 @@ Please check your local CLI tool authentication status`,
 
   const {
     items: queuedCommands,
-    mode: queueMode,
     isInteractionLocked: isQueueInteractionLocked,
     enqueue,
     remove,
     prioritize,
     sendNow,
-    clear,
     reorder,
-    toggleMode,
     lockInteraction,
     unlockInteraction,
     resetActiveExecution,
@@ -516,24 +513,17 @@ Please check your local CLI tool authentication status`,
       return;
     }
 
-    // Supporting agents (mid-turn delivery) send immediately, busy or not.
-    // Non-supporting agents can no longer send while the agent is replying —
-    // that path is hard-blocked with a toast; the only way to queue a message
-    // while busy is the explicit "add to queue" entry (handleAddToQueue below).
-    // Blocked here means nothing was sent, so the draft (text and attached
-    // files alike) must survive untouched for the user to act on.
-    if (!supportsMidturnDelivery && isBusy) {
-      Message.warning(
-        t('conversation.commandQueue.midturnBlocked', {
-          defaultValue:
-            'This agent is still working, so the message can’t be sent directly. Save it to Draft box and send it later.',
-        })
-      );
-      return false;
-    }
-
+    // While the agent is replying, a sent message is queued above the composer,
+    // where it can still be edited, reordered or removed. Queued messages go out
+    // one per finished turn; "Send now" on one delivers it into the running
+    // turn when the agent supports that, or stops the reply first when it does
+    // not (handleSendNowQueued).
     clearFiles();
     emitter.emit('acp.selected.file.clear');
+    if (isBusy) {
+      enqueue({ input: message, files: allFiles });
+      return;
+    }
     await executeCommand({ input: message, files: allFiles });
   };
 
@@ -552,22 +542,6 @@ Please check your local CLI tool authentication status`,
       setInterrupting(false);
     }
   };
-
-  // Explicit "add to queue" entry — visibility is keyed only to the user's
-  // own input (non-empty draft), never to the agent's busy/replying state:
-  // tying it to that racy, async signal made the entry appear/disappear
-  // unpredictably. Clicking while idle is semantically fine — the queue's own
-  // mode governs (auto drains immediately, manual holds). Shown for both
-  // supporting and non-supporting backends. Clears the draft the same way a
-  // send would.
-  const canQueueCurrentDraft = content.trim().length > 0;
-  const handleAddToQueue = useCallback(() => {
-    const allFiles = collectChatFileRefs(uploadFile, atPath);
-    enqueue({ input: content, files: allFiles });
-    setContent('');
-    clearFiles();
-    emitter.emit('acp.selected.file.clear');
-  }, [atPath, clearFiles, content, enqueue, setContent, uploadFile]);
 
   const handleEditQueuedCommand = useCallback(
     (item: ConversationCommandQueueItem) => {
@@ -868,17 +842,14 @@ Please check your local CLI tool authentication status`,
     <div className={`${sendBoxWidthClass} flex flex-col mt-auto mb-16px`}>
       <CommandQueuePanel
         items={queuedCommands}
-        mode={queueMode}
         isMobile={isMobile}
         interactionLocked={isQueueInteractionLocked}
         onInteractionLock={lockInteraction}
         onInteractionUnlock={unlockInteraction}
         onEdit={handleEditQueuedCommand}
         onSendNow={handleSendNowQueued}
-        onToggleMode={toggleMode}
         onReorder={reorder}
         onRemove={remove}
-        onClear={clear}
       />
       <ThoughtDisplay
         running={teamRuntime?.loading ?? (aiProcessing && !hasThinkingMessage)}
@@ -915,21 +886,16 @@ Please check your local CLI tool authentication status`,
                     ? 'conversation.mediaModeImageHintRef'
                     : 'conversation.mediaModeImageHint'
               )
-            : t('acp.sendbox.placeholder', {
-                backend: agent_name || backend,
-                defaultValue: `Send message to {{backend}}...`,
-              })
+            : isBusy
+              ? t('conversation.commandQueue.queuedPlaceholder', {
+                  defaultValue: 'Keep typing to queue a follow-up',
+                })
+              : t('acp.sendbox.placeholder', {
+                  backend: agent_name || backend,
+                  defaultValue: `Send message to {{backend}}...`,
+                })
         }
         hideChatHint={mediaComposer.mode !== 'off'}
-        sendDisabled={mediaComposer.mode === 'off' && !supportsMidturnDelivery && isBusy}
-        sendDisabledTooltip={
-          mediaComposer.mode === 'off' && !supportsMidturnDelivery && isBusy
-            ? t('conversation.commandQueue.midturnBlockedSendHint', {
-                defaultValue:
-                  'The current agent is still working and cannot receive another message yet. Add it to Draft box instead.',
-              })
-            : undefined
-        }
         onStop={effectiveHandleStop}
         className='z-10'
         onFilesAdded={handleFilesAdded}
@@ -1044,15 +1010,6 @@ Please check your local CLI tool authentication status`,
             )}
             {tokenUsage ? <ContextUsageIndicator tokenUsage={tokenUsage} context_limit={context_limit} /> : undefined}
           </>
-        }
-        onAddToDraft={handleAddToQueue}
-        addToDraftDisabled={!canQueueCurrentDraft}
-        addToDraftTooltip={
-          isBusy
-            ? t('conversation.commandQueue.addToQueueBusyHint', {
-                defaultValue: 'Save to Draft box and send it later.',
-              })
-            : t('conversation.commandQueue.addToQueue', { defaultValue: 'Save to Draft box' })
         }
       ></SendBox>
       {isMobile && (
