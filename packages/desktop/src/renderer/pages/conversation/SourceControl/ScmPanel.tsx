@@ -25,7 +25,7 @@
  * section drops in as a third with no framework change (see `ScmSectionStack`).
  */
 
-import { Button, Tooltip } from '@arco-design/web-react';
+import { Button, Message, Tooltip } from '@arco-design/web-react';
 import {
   BranchTwo,
   FolderCode,
@@ -37,7 +37,7 @@ import {
   Undo,
   ViewList,
 } from '@icon-park/react';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { usePreviewContext } from '../Preview';
@@ -52,7 +52,7 @@ import {
   type ScmResource,
 } from './scmModel';
 import { groupRepositories, type ScmRepoGroup } from './scmRepoTree';
-import { fetchScmDiff, openScmProject, refreshAllRepos, setSelectedRepo, useScm } from './scmStore';
+import { fetchScmDiff, initScmRepository, openScmProject, refreshAllRepos, setSelectedRepo, useScm } from './scmStore';
 import { initScmRuntime } from './scmTransport';
 import {
   clearSectionHeight,
@@ -138,9 +138,10 @@ export const ScmPanel: React.FC<ScmPanelProps> = ({ projectId }) => {
   if (view.loadState === 'error') {
     return <PanelNotice text={t('conversation.explorer.scm.loadFailed')} />;
   }
-  // No pe root of this project is a repository → say so, do not fabricate a repo.
+  // No pe root of this project is a repository → say so, do not fabricate a repo,
+  // and offer to start tracking it.
   if (view.repositories.length === 0 || !selectedRepo) {
-    return <PanelNotice text={t('conversation.explorer.scm.notARepository')} />;
+    return <NotARepositoryNotice />;
   }
 
   const multiRepo = view.repositories.length > 1;
@@ -745,6 +746,38 @@ const ActionReportExtras: React.FC<{
           {t('conversation.explorer.scm.actions.retry')}
         </Button>
       )}
+    </div>
+  );
+};
+
+/**
+ * Empty state for a folder that is not under version control. Most conversation
+ * folders start out like this, so instead of a dead end it offers to start
+ * tracking: the files there now become the starting point and everything the
+ * agent changes afterwards lists here, with a diff and an undo.
+ */
+const NotARepositoryNotice: React.FC = () => {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const onInit = async (): Promise<void> => {
+    setBusy(true);
+    try {
+      await initScmRepository();
+    } catch (e) {
+      Message.error(t('conversation.explorer.scm.initFailed', { reason: e instanceof Error ? e.message : String(e) }));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className='h-full flex flex-col items-center justify-center gap-10px px-16px text-center'>
+      <div className='text-t-secondary text-13px'>{t('conversation.explorer.scm.notARepository')}</div>
+      <div className='text-t-tertiary text-12px leading-18px max-w-260px'>
+        {t('conversation.explorer.scm.initHint')}
+      </div>
+      <Button type='primary' size='small' loading={busy} onClick={() => void onInit()}>
+        {t('conversation.explorer.scm.initAction')}
+      </Button>
     </div>
   );
 };

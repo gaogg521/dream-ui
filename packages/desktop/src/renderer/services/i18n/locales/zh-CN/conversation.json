@@ -713,6 +713,9 @@
     },
     "scm": {
       "notARepository": "该文件夹未纳入版本控制",
+      "initAction": "初始化版本控制",
+      "initHint": "把当前文件记为起点，之后 AI 改了哪些文件都会显示在这里，可以看差异、一键撤销。",
+      "initFailed": "初始化版本控制失败：{{reason}}",
       "noChanges": "没有变更",
       "loading": "正在加载变更…",
       "loadFailed": "无法加载变更",

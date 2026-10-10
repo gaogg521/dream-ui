@@ -72,6 +72,8 @@ export type ScmPort = {
   diff: (params: { repository: string; file: ScmFileRef; from: ContentRef; to: ContentRef }) => Promise<ScmDiffResult>;
   /** One of `scm/stage` | `scm/unstage` | `scm/discard`, chosen by `action`. */
   act: (action: ScmActionKind, params: { repository: string; files: ScmFileRef[] }) => Promise<ScmActionResult>;
+  /** `scm/init`: put the project's folder under version control. */
+  init: (projectId: string) => Promise<{ repositories: ScmRepository[] }>;
 };
 
 export type ScmLoadState = 'idle' | 'loading' | 'ready' | 'error';
@@ -382,6 +384,20 @@ export const openScmProject = async (id: string): Promise<void> => {
     error = e instanceof Error ? e.message : String(e);
     commit();
   }
+};
+
+/**
+ * Put the open project's folder under version control, its current files
+ * recorded as the starting point. The reply carries the new repository; the
+ * backend also pushes `repositoriesChanged`, and applying the reply as that same
+ * delta makes the two interchangeable — whichever lands first wins, the other
+ * is a no-op. Rejects so the caller can say why it did not work.
+ */
+export const initScmRepository = async (): Promise<void> => {
+  const id = projectId;
+  if (!port || id === null) throw new Error('scm not ready');
+  const result = await port.init(id);
+  applyRepositoriesChanged({ project_id: id, added: result.repositories ?? [], removed: [], changed: [] });
 };
 
 /** Tell the backend to release every declared repo and forget the declarations. */

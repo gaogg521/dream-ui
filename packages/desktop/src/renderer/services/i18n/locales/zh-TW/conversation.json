@@ -709,6 +709,9 @@
     },
     "scm": {
       "notARepository": "該資料夾未納入版本控制",
+      "initAction": "初始化版本控制",
+      "initHint": "把目前的檔案記為起點，之後 AI 改了哪些檔案都會顯示在這裡，可以看差異、一鍵復原。",
+      "initFailed": "初始化版本控制失敗：{{reason}}",
       "noChanges": "沒有變更",
       "loading": "正在載入變更…",
       "loadFailed": "無法載入變更",

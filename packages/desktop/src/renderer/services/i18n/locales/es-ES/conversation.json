@@ -709,6 +709,9 @@
     },
     "scm": {
       "notARepository": "Esta carpeta no está bajo control de versiones",
+      "initAction": "Iniciar control de versiones",
+      "initHint": "Guarda los archivos actuales como punto de partida. Todo lo que la IA cambie después aparecerá aquí, con diferencias y deshacer en un clic.",
+      "initFailed": "No se pudo iniciar el control de versiones: {{reason}}",
       "noChanges": "Sin cambios",
       "loading": "Cargando cambios…",
       "loadFailed": "No se pudieron cargar los cambios",

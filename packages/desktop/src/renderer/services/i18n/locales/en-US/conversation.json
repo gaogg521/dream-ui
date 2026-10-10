@@ -713,6 +713,9 @@
     },
     "scm": {
       "notARepository": "Not a version-controlled folder",
+      "initAction": "Put under version control",
+      "initHint": "Records the files here as a starting point. Everything the AI changes afterwards shows up here, with a diff and one-click undo.",
+      "initFailed": "Could not put the folder under version control: {{reason}}",
       "noChanges": "No changes",
       "loading": "Loading changes…",
       "loadFailed": "Couldn't load changes",

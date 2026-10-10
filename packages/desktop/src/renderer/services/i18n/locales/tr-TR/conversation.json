@@ -710,6 +710,9 @@
     },
     "scm": {
       "notARepository": "Bu klasör sürüm denetiminde değil",
+      "initAction": "Sürüm denetimini başlat",
+      "initHint": "Buradaki dosyaları başlangıç noktası olarak kaydeder. Yapay zekânın sonradan değiştirdiği her şey burada, farkıyla ve tek tıkla geri alma seçeneğiyle görünür.",
+      "initFailed": "Klasör sürüm denetimine alınamadı: {{reason}}",
       "noChanges": "Değişiklik yok",
       "loading": "Değişiklikler yükleniyor…",
       "loadFailed": "Değişiklikler yüklenemedi",

@@ -7,6 +7,7 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Message } from '@arco-design/web-react';
 
 import type { ScmRepository, ScmResource, ScmStatus } from '@/renderer/pages/conversation/SourceControl/scmModel';
 import type { ScmPort } from '@/renderer/pages/conversation/SourceControl/scmStore';
@@ -72,6 +73,7 @@ const status = (repoId: string, seq: number, resources: ScmResource[], over: Par
 
 type PortSetup = {
   repositories?: ScmRepository[];
+  init?: () => Promise<{ repositories: ScmRepository[] }>;
   firstFrames?: Record<string, ScmStatus>;
   diff?: () => Promise<{ patch?: string; binary?: boolean; truncated?: boolean }>;
 };
@@ -90,6 +92,7 @@ const installPort = (setup: PortSetup): void => {
       diffCalls.push(params);
       return setup.diff ? setup.diff() : { patch: 'unified patch text' };
     },
+    init: async () => (setup.init ? setup.init() : { repositories: [] }),
   };
   configureScmStore(port);
 };
@@ -117,6 +120,38 @@ describe('ScmPanel empty / failure states', () => {
     expect(await screen.findByText('conversation.explorer.scm.notARepository')).toBeInTheDocument();
   });
 
+  // Most conversation folders start out untracked; the empty state offers to
+  // start tracking instead of being a dead end.
+  it('puts the folder under version control from the empty state', async () => {
+    const init = vi.fn(async () => ({ repositories: [repo()] }));
+    installPort({ repositories: [], init, firstFrames: { [repo().repo_id]: status(repo().repo_id, 1, []) } });
+    render(<ScmPanel projectId='p1' />);
+
+    fireEvent.click(await screen.findByText('conversation.explorer.scm.initAction'));
+
+    expect(await screen.findByText('conversation.explorer.scm.noChanges')).toBeInTheDocument();
+    expect(init).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('conversation.explorer.scm.notARepository')).not.toBeInTheDocument();
+  });
+
+  it('stays on the empty state and says why when initializing fails', async () => {
+    const messageErrorMock = vi.spyOn(Message, 'error').mockImplementation(() => undefined as never);
+    installPort({
+      repositories: [],
+      init: async () => {
+        throw new Error('disk is read-only');
+      },
+    });
+    render(<ScmPanel projectId='p1' />);
+
+    fireEvent.click(await screen.findByText('conversation.explorer.scm.initAction'));
+
+    await waitFor(() =>
+      expect(messageErrorMock).toHaveBeenCalledWith('conversation.explorer.scm.initFailed:disk is read-only')
+    );
+    expect(screen.getByText('conversation.explorer.scm.notARepository')).toBeInTheDocument();
+  });
+
   it('shows a load failure instead of an empty list when listRepositories rejects', async () => {
     configureScmStore({
       listRepositories: async () => {
@@ -126,6 +161,7 @@ describe('ScmPanel empty / failure states', () => {
       unsubscribe: () => {},
       status: async () => status('x', 1, []),
       diff: async () => ({}),
+      init: async () => ({ repositories: [] }),
     });
     render(<ScmPanel projectId='p1' />);
 

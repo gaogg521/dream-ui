@@ -28,12 +28,13 @@ import {
   beginScmAction,
   clearScmActionReport,
   closeScmProject,
-  finishScmAction,
-  getLastScmAction,
   configureScmStore,
   fetchScmDiff,
+  finishScmAction,
+  getLastScmAction,
   getScmInternalsForTest,
   getScmSnapshot,
+  initScmRepository,
   onScmReconnect,
   openScmProject,
   refreshAllRepos,
@@ -84,6 +85,8 @@ type Harness = {
   actCalls: Array<{ action: ScmActionKind; params: { repository: string; files: ScmFileRef[] } }>;
   /** Repos returned by `listRepositories`. */
   setRepos: (repos: ScmRepository[]) => void;
+  /** Repos returned by `scm/init`. */
+  setInitRepos: (repos: ScmRepository[]) => void;
   /** First frames returned by `scm/subscribe`, keyed by repo_id. */
   setFirstFrames: (frames: Record<string, ScmStatus>) => void;
   /** Frame returned by an explicit `scm/status` pull, keyed by repo_id. */
@@ -106,6 +109,7 @@ type Harness = {
 
 function makeHarness(): Harness {
   let repos: ScmRepository[] = [];
+  let initRepos: ScmRepository[] = [];
   let firstFrames: Record<string, ScmStatus> = {};
   let pullFrames: Record<string, ScmStatus> = {};
   let listError: string | null = null;
@@ -153,9 +157,13 @@ function makeHarness(): Harness {
         h.diffCalls.push(params);
         return { patch: 'diff --git a b' } satisfies ScmDiffResult;
       },
+      init: async () => ({ repositories: initRepos }),
     },
     setRepos: (next) => {
       repos = next;
+    },
+    setInitRepos: (next) => {
+      initRepos = next;
     },
     setFirstFrames: (next) => {
       firstFrames = next;
@@ -197,6 +205,37 @@ beforeEach(() => {
 
 afterEach(() => {
   resetScmStoreForTest();
+});
+
+describe('initScmRepository', () => {
+  it('adds the new repository and subscribes to it', async () => {
+    h.setRepos([]);
+    await openScmProject('p1');
+    h.setInitRepos([repo()]);
+
+    await initScmRepository();
+
+    expect(getScmSnapshot().repositories.map((r) => r.repo_id)).toEqual(['scm:pe1']);
+    expect(h.subscribeCalls).toEqual([['scm:pe1']]);
+  });
+
+  // The backend also pushes repositoriesChanged for the same repository; the
+  // reply and the push must not double-list or double-subscribe it.
+  it('is idempotent with the repositoriesChanged push for the same repository', async () => {
+    h.setRepos([]);
+    await openScmProject('p1');
+    h.setInitRepos([repo()]);
+    applyScmNotification('scm/repositoriesChanged', { project_id: 'p1', added: [repo()], removed: [], changed: [] });
+
+    await initScmRepository();
+
+    expect(getScmSnapshot().repositories).toHaveLength(1);
+    expect(h.subscribeCalls).toEqual([['scm:pe1']]);
+  });
+
+  it('rejects when no project is open', async () => {
+    await expect(initScmRepository()).rejects.toThrow();
+  });
 });
 
 describe('openScmProject', () => {

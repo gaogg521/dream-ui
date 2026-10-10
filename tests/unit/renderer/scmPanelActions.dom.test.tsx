@@ -99,6 +99,7 @@ const install = (setup: Setup): void => {
     unsubscribe: () => {},
     status: async () => status(repository.repo_id, 1, setup.resources ?? []),
     diff: async () => ({ patch: 'p' }),
+    init: async () => ({ repositories: [] }),
     act: async (action, params) => {
       actCalls.push({ action, files: params.files });
       if (setup.rejectTransport !== undefined) {

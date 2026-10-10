@@ -714,6 +714,9 @@
     },
     "scm": {
       "notARepository": "Esta pasta não está sob controle de versão",
+      "initAction": "Iniciar controle de versão",
+      "initHint": "Registra os arquivos atuais como ponto de partida. Tudo o que a IA alterar depois aparece aqui, com diferenças e desfazer em um clique.",
+      "initFailed": "Não foi possível iniciar o controle de versão: {{reason}}",
       "noChanges": "Nenhuma alteração",
       "loading": "Carregando alterações…",
       "loadFailed": "Não foi possível carregar as alterações",

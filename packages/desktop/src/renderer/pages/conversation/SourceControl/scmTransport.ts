@@ -76,6 +76,8 @@ export function initScmRuntime(): MonitorClient {
     // One method per action — the wire has no "action" parameter, and that is what
     // makes a failure attributable to a side without a per-failure flag.
     act: async (action, params) => (await scm.request(ACTION_METHOD[action], params)) as ScmActionResult,
+    init: async (projectId) =>
+      (await scm.request('scm/init', { project_id: projectId })) as { repositories: ScmRepository[] },
   });
 
   return scm;

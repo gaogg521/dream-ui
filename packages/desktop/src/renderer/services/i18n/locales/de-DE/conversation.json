@@ -709,6 +709,9 @@
     },
     "scm": {
       "notARepository": "Dieser Ordner steht nicht unter Versionskontrolle",
+      "initAction": "Versionskontrolle starten",
+      "initHint": "Hält die aktuellen Dateien als Ausgangspunkt fest. Alles, was die KI danach ändert, erscheint hier – mit Diff und Rückgängig per Klick.",
+      "initFailed": "Versionskontrolle konnte nicht gestartet werden: {{reason}}",
       "noChanges": "Keine Änderungen",
       "loading": "Änderungen werden geladen…",
       "loadFailed": "Änderungen konnten nicht geladen werden",

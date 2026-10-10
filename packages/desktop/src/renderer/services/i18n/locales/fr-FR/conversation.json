@@ -708,6 +708,9 @@
     },
     "scm": {
       "notARepository": "Ce dossier n'est pas sous gestion de version",
+      "initAction": "Démarrer le suivi des versions",
+      "initHint": "Enregistre les fichiers actuels comme point de départ. Tout ce que l’IA modifiera ensuite apparaîtra ici, avec les différences et une annulation en un clic.",
+      "initFailed": "Impossible de démarrer le suivi des versions : {{reason}}",
       "noChanges": "Aucune modification",
       "loading": "Chargement des modifications…",
       "loadFailed": "Impossible de charger les modifications",
