@@ -25,7 +25,10 @@ vi.mock('@/renderer/pages/conversation/explorer/monitorTransport', () => ({
 // Mock the HTTP control-plane fetch.
 const projectGet = vi.fn<(p: { project_id: string }) => Promise<ProjectDetailDto>>();
 vi.mock('@/common', () => ({
-  ipcBridge: { project: { get: { invoke: (p: { project_id: string }) => projectGet(p) } } },
+  ipcBridge: {
+    project: { get: { invoke: (p: { project_id: string }) => projectGet(p) } },
+    conversation: { turnCompleted: { on: () => () => {} } },
+  },
 }));
 
 import { ExplorerContainer } from '@/renderer/pages/conversation/explorer/ExplorerContainer';

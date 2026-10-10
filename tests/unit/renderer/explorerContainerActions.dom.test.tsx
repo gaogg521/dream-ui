@@ -110,6 +110,7 @@ const readContent = vi.fn();
 const getContentMetadata = vi.fn();
 vi.mock('@/common', () => ({
   ipcBridge: {
+    conversation: { turnCompleted: { on: () => () => {} } },
     project: {
       get: { invoke: (p: { project_id: string }) => projectGet(p) },
       attachFolder: { invoke: (p: unknown) => attachFolder(p) },
