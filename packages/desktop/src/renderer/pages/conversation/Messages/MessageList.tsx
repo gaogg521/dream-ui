@@ -334,6 +334,10 @@ const MessageItem: React.FC<{
     prev.message.content === next.message.content &&
     prev.message.position === next.message.position &&
     prev.message.type === next.message.type &&
+    // A mid-turn message's "delivering" badge is flipped by its own
+    // statusChanged event; skipping status here left it stuck whenever that
+    // event landed in a later render than the message itself.
+    prev.message.status === next.message.status &&
     prev.highlighted === next.highlighted &&
     prev.rowWidthClass === next.rowWidthClass &&
     prev.showCopyRow === next.showCopyRow &&
