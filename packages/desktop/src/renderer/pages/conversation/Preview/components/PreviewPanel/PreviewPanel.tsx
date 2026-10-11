@@ -3,7 +3,12 @@
  */
 
 import { ipcBridge } from '@/common';
-import { downloadFileFromPath, downloadFileFromRef, downloadTextContent } from '@/renderer/utils/file/download';
+import {
+  protectedDownloadBytes,
+  protectedDownloadFromPath,
+  protectedDownloadFromRef,
+  protectedDownloadText,
+} from '@/renderer/utils/enterprise/secureExport/protectedDownload';
 import { formatFileSize } from '@/renderer/services/FileService';
 import { CONTENT_FREE_TYPES, formatSizeAboveLimit } from '@/renderer/utils/file/previewPayload';
 import { classifyPreviewError, previewErrorToI18nKey } from '@/renderer/utils/previewError';
@@ -718,7 +723,7 @@ const PreviewPanel: React.FC = () => {
 
       if (metadata?.file_path) {
         // All files with a disk path (binary, image, zip, etc.) — unified path
-        await downloadFileFromPath(metadata.file_path, rawFileName, metadata.workspace);
+        await protectedDownloadFromPath(metadata.file_path, rawFileName, 'preview_download', metadata.workspace);
         return;
       }
 
@@ -727,7 +732,7 @@ const PreviewPanel: React.FC = () => {
       if (CONTENT_FREE_TYPES.has(content_type)) {
         const fileRef = isOpenableFileRef(metadata?.fileRef) ? metadata.fileRef : undefined;
         if (fileRef) {
-          await downloadFileFromRef(fileRef, rawFileName);
+          await protectedDownloadFromRef(fileRef, rawFileName, 'preview_download');
           return;
         }
         messageApi.error(t('messages.downloadFailed', { defaultValue: 'Failed to download' }));
@@ -747,14 +752,12 @@ const PreviewPanel: React.FC = () => {
         const normalizedExt = ext.toLowerCase();
         const hasSameExt = rawFileName.toLowerCase().endsWith(`.${normalizedExt}`);
         const file_name = hasSameExt ? rawFileName : `${rawFileName}.${ext}`;
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = file_name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        await protectedDownloadBytes(
+          new Uint8Array(await blob.arrayBuffer()),
+          file_name,
+          blob.type || 'application/octet-stream',
+          'preview_download'
+        );
         return;
       }
 
@@ -787,7 +790,7 @@ const PreviewPanel: React.FC = () => {
       const normalizedExt = ext.toLowerCase();
       const hasSameExt = rawFileName.toLowerCase().endsWith(`.${normalizedExt}`);
       const file_name = hasSameExt ? rawFileName : `${rawFileName}.${ext}`;
-      downloadTextContent(content, file_name, mimeType);
+      await protectedDownloadText(content, file_name, mimeType, 'preview_download');
     } catch (error) {
       console.error('[PreviewPanel] Failed to download file:', error);
       messageApi.error(t('messages.downloadFailed', { defaultValue: 'Failed to download' }));

@@ -41,6 +41,7 @@ import { isElectronDesktop } from '@renderer/utils/platform';
 import brandLogo from '@renderer/assets/logos/brand/app.png';
 import { IS_DISCONTINUED_BUILD } from '@/renderer/utils/discontinuedBuild';
 import UpdateMigrationDialog from '@/renderer/components/settings/UpdateMigrationDialog';
+import SecurePackageHost from '@/renderer/components/enterprise/SecurePackageHost';
 import '@renderer/styles/layout.css';
 
 const SidebarIcon: React.FC<{ size?: number; strokeWidth?: number }> = ({ size = 18, strokeWidth = 4 }) => (
@@ -583,6 +584,7 @@ const Layout: React.FC<{
               >
                 <Outlet />
                 {directorySelectionContextHolder}
+                <SecurePackageHost />
                 <PwaPullToRefresh />
                 <Suspense fallback={null}>
                   <UpdateModal />

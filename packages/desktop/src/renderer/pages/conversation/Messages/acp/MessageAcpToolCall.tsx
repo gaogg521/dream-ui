@@ -10,7 +10,7 @@ import GeneratedMediaView from '@/renderer/components/media/GeneratedMediaView';
 import { parseGeneratedMediaAssets } from '@/common/media/mediaResultText';
 import { useDiffPreviewHandlers } from '@/renderer/hooks/file/useDiffPreviewHandlers';
 import { parseDiff } from '@/renderer/utils/file/diffUtils';
-import { downloadFileFromPath } from '@/renderer/utils/file/download';
+import { protectedDownloadFromPath } from '@/renderer/utils/enterprise/secureExport/protectedDownload';
 import { Button, Card, Message, Tag, Tooltip } from '@arco-design/web-react';
 import { Download } from '@icon-park/react';
 import { createTwoFilesPatch } from 'diff';
@@ -128,7 +128,7 @@ const MessageAcpToolCall: React.FC<{ message: IMessageAcpToolCall }> = ({ messag
   const handleDownloadImage = useCallback(
     async (path: string) => {
       try {
-        await downloadFileFromPath(path, getAcpImageFileName(path));
+        await protectedDownloadFromPath(path, getAcpImageFileName(path), 'tool_download');
         messageApi.success(t('acp.image.download_success'));
       } catch (error) {
         console.error('[MessageAcpToolCall] Failed to download image:', error);

@@ -12,6 +12,7 @@ import { initWebuiBridge } from './webuiBridge';
 import { initThemeBridge } from './themeBridge';
 import { initMemoryBridge } from './memoryBridge';
 import { initCredentialBridge } from './credentialBridge';
+import { initSecureExportBridge } from './secureExportBridge';
 
 export type BridgeDependencies = Record<string, never>;
 
@@ -26,6 +27,7 @@ export function initAllBridges(_deps: BridgeDependencies = {}): void {
   initThemeBridge();
   initMemoryBridge();
   initCredentialBridge();
+  initSecureExportBridge();
 }
 
 export {
@@ -39,6 +41,7 @@ export {
   initWebuiBridge,
   initMemoryBridge,
   initCredentialBridge,
+  initSecureExportBridge,
 };
 export { registerWindowMaximizeListeners } from './windowControlsBridge';
 export const disposeAllTeamSessions = (): Promise<void> => Promise.resolve();

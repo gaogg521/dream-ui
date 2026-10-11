@@ -3142,7 +3142,9 @@ export const oneBilling = {
    * not contain, so it has to travel down like the rest of the policy. Every
    * other field here is already the admin console's business.
    */
-  myPlan: httpGet<{ allowedModels?: string[] }, void>('/api/one/billing/plan'),
+  myPlan: httpGet<{ allowedModels?: string[]; entitlements?: { feature: string; allowed: boolean }[] }, void>(
+    '/api/one/billing/plan'
+  ),
   // The vendor-signed license backing the plan; null when never activated.
 };
 
@@ -3411,6 +3413,9 @@ export const onePlatform = {
       messageRedactEnabled?: boolean;
       /** Carried down to the local backend's send gate; see `syncSendPolicy`. */
       sendRateLimitPerMinute?: number | null;
+      /** Enforced by this client's export gateway (`secureExport/gateway.ts`). */
+      exportWatermarkEnabled?: boolean;
+      exportEncryptionMode?: 'optional' | 'default' | 'required';
     },
     void
   >('/api/one/platform/my-security-policy'),
@@ -3494,4 +3499,96 @@ export const onePlatform = {
     invoke: (id: string) => httpDownloadBinary(`/api/one/vault/files/${encodeURIComponent(id)}`),
   },
   deleteVaultFile: httpDelete<void, { id: string }>((p) => `/api/one/vault/files/${encodeURIComponent(p.id)}`),
+
+  // Export protection (watermark + encrypted packages). Governance-routed:
+  // seeds, package keys and the export record live on the company server.
+  /** This machine's watermark signing seed; the server reuses it until it nears expiry. */
+  secureExportSeed: httpPost<{ seedId: string; seedKey: string; expiresAt: number }, void>(
+    '/api/one/platform/secure-export/watermark-seed',
+    () => ({})
+  ),
+  reportExportEvents: httpPost<{ accepted: number }, { events: SecureExportEventInput[] }>(
+    '/api/one/platform/secure-export/events'
+  ),
+  createSecurePackage: httpPost<SecurePackage, CreateSecurePackageInput>('/api/one/platform/secure-export/packages'),
+  openSecurePackage: httpPost<{ dek: string; package: SecurePackage }, { packageId: string }>(
+    (p) => `/api/one/platform/secure-export/packages/${encodeURIComponent(p.packageId)}/open`,
+    () => ({})
+  ),
+  mySecurePackages: httpGet<SecurePackage[], void>('/api/one/platform/secure-export/packages'),
+  mySecurePackageOpens: httpGet<SecurePackageOpen[], { packageId: string }>(
+    (p) => `/api/one/platform/secure-export/packages/${encodeURIComponent(p.packageId)}/opens`
+  ),
+  revokeMySecurePackage: httpPost<SecurePackage, { packageId: string }>(
+    (p) => `/api/one/platform/secure-export/packages/${encodeURIComponent(p.packageId)}/revoke`,
+    () => ({})
+  ),
+};
+
+/** One export as reported to the company server — names and sizes, never content. */
+export type SecureExportEventInput = {
+  eventId: string;
+  kind: string;
+  encrypted: boolean;
+  packageId?: string;
+  seedId?: string;
+  fileNames: string[];
+  totalBytes: number;
+  contentSha256?: string;
+  clientTs: number;
+};
+
+export type CreateSecurePackageInput = {
+  packageId: string;
+  /** Base64 of the 32-byte data key. */
+  dek: string;
+  recipientScope: 'enterprise' | 'tenant' | 'users';
+  recipientUserIds: string[];
+  expiresAt?: number | null;
+  fileNames: string[];
+  totalBytes: number;
+  contentSha256?: string;
+  seedId?: string;
+};
+
+export type SecurePackage = {
+  id: string;
+  ownerUserId: string;
+  ownerName: string;
+  tenantId: string;
+  recipientScope: string;
+  recipientUserIds: string[];
+  fileNames: string[];
+  totalBytes: number;
+  createdAt: number;
+  expiresAt?: number | null;
+  revokedAt?: number | null;
+  revokedBy?: string | null;
+  openCount: number;
+  status: 'active' | 'revoked' | 'expired';
+};
+
+export type SecurePackageOpen = {
+  id: string;
+  userId: string;
+  userName: string;
+  machineId?: string | null;
+  result: 'granted' | 'denied';
+  reason?: string | null;
+  createdAt: number;
+};
+
+/**
+ * Main-process file I/O for export protection. The local backend's fs
+ * endpoints are text-only, and an encrypted package is binary.
+ */
+export const secureExport = {
+  /** Write base64 bytes to an absolute path the user chose. */
+  writeBinary: bridge.buildProvider<boolean, { path: string; base64: string }>('secure-export.write-binary'),
+  /** Read a file as base64; `null` when missing or over the size limit. */
+  readBinary: bridge.buildProvider<string | null, { path: string }>('secure-export.read-binary'),
+  /** `.owenc` paths the OS asked this app to open (double-click, Open With) that the UI has not taken yet. */
+  takePendingOpens: bridge.buildProvider<string[], void>('secure-export.take-pending-opens'),
+  /** Fired when the OS hands a `.owenc` file to the running app. */
+  openRequested: bridge.buildEmitter<{ path: string }>('secure-export.open-requested'),
 };

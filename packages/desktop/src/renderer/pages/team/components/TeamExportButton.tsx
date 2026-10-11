@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TTeam } from '@/common/types/team/teamTypes';
 import { formatTimestamp, sanitizeFileName } from '@/renderer/utils/chat/conversationExport';
-import { downloadTextContent } from '@/renderer/utils/file/download';
+import { protectedDownloadText } from '@/renderer/utils/enterprise/secureExport/protectedDownload';
 import { useTeamTabs } from '../hooks/TeamTabsContext';
 import {
   collectTeamTranscript,
@@ -93,7 +93,8 @@ const TeamExportButton: React.FC<Props> = ({ team }) => {
 
       const html = renderTeamTranscriptHtml(transcript, labels);
       const fileName = `${sanitizeFileName(team.name)}-${formatTimestamp(exportedAt)}.html`;
-      downloadTextContent(html, fileName, 'text/html;charset=utf-8');
+      const outcome = await protectedDownloadText(html, fileName, 'text/html;charset=utf-8', 'team');
+      if (outcome !== 'done') return;
       Message.success(
         t('team.export.success', {
           defaultValue: 'Exported {{total}} messages ({{size}}).',

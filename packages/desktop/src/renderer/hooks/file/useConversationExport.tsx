@@ -15,6 +15,12 @@ import {
   resolveExportBaseDirectory,
 } from '@/renderer/utils/chat/conversationExport';
 import { copyText } from '@/renderer/utils/ui/clipboard';
+import {
+  isPlainCopyAllowed,
+  prepareExport,
+  recordClipboardCopy,
+  writeEncryptedPackage,
+} from '@/renderer/utils/enterprise/secureExport/gateway';
 import React, {
   useCallback,
   useMemo,
@@ -171,7 +177,15 @@ export function useConversationExport(options: UseConversationExportOptions): Us
         closeExportFlow();
         return;
       }
+      // A company that requires encrypted export has no plaintext way out,
+      // and "copy the whole transcript" is one.
+      if (!(await isPlainCopyAllowed())) {
+        messageApi.error?.(t('messages.secureExport.copyBlocked'));
+        closeExportFlow();
+        return;
+      }
       await copyText(transcript);
+      void recordClipboardCopy(transcript.length);
       messageApi.success?.(t('messages.export.copySuccess'));
       closeExportFlow();
     } catch (error) {
@@ -193,17 +207,35 @@ export function useConversationExport(options: UseConversationExportOptions): Us
       }
 
       const normalizedFileName = normalizeExportFileName(filename);
-      const targetPath = joinFilePath(baseDirectoryRef.current, normalizedFileName);
-      const success = await ipcBridge.fs.writeFile.invoke({
-        path: targetPath,
-        data: transcript,
-        workspace: baseDirectoryRef.current,
+      const decision = await prepareExport({
+        kind: 'conversation_command',
+        files: [{ name: normalizedFileName, text: transcript }],
+        suggestedName: normalizedFileName,
+        t: (key, values) => String(t(key as never, values as never)),
       });
+      if (decision.mode === 'cancelled') return;
+      if (decision.mode === 'blocked') {
+        messageApi.error?.(decision.message);
+        return;
+      }
+      const targetPath = joinFilePath(
+        baseDirectoryRef.current,
+        decision.mode === 'encrypted' ? decision.fileName : normalizedFileName
+      );
+      const success =
+        decision.mode === 'encrypted'
+          ? await writeEncryptedPackage(targetPath, decision.bytes)
+          : await ipcBridge.fs.writeFile.invoke({
+              path: targetPath,
+              data: decision.files[0].text ?? transcript,
+              workspace: baseDirectoryRef.current,
+            });
 
       if (!success) {
         messageApi.error?.(t('messages.export.saveFailed'));
         return;
       }
+      decision.report();
 
       messageApi.success?.({
         content: (

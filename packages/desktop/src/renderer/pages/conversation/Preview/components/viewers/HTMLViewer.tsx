@@ -6,6 +6,8 @@ import { Message } from '@arco-design/web-react';
 import MonacoEditor from '@monaco-editor/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { protectedDownloadText } from '@/renderer/utils/enterprise/secureExport/protectedDownload';
+import { recordClipboardCopy } from '@/renderer/utils/enterprise/secureExport/gateway';
 
 interface HTMLPreviewProps {
   content: string;
@@ -269,7 +271,7 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, file_path, hideToolb
    */
   const handleCopyHTML = useCallback(
     (html: string) => {
-      void navigator.clipboard.writeText(html);
+      void navigator.clipboard.writeText(html).then(() => recordClipboardCopy(html.length));
       messageApi.success(t('preview.html.copySuccess'));
       setContextMenu(null);
     },
@@ -280,15 +282,12 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, file_path, hideToolb
    * 下载 HTML
    */
   const handleDownload = () => {
-    const blob = new Blob([htmlCode], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${file_path?.split('/').pop() || 'document'}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    void protectedDownloadText(
+      htmlCode,
+      `${file_path?.split('/').pop() || 'document'}.html`,
+      'text/html;charset=utf-8',
+      'preview_download'
+    );
   };
 
   /**

@@ -9,7 +9,7 @@ import { getAcpImageFileName } from '@/common/chat/acpToolCallOutput';
 import type { NormalizedToolCall, NormalizedToolStatus, ToolMessage } from '@/common/chat/normalizeToolCall';
 import { normalizeToolMessages, hasRunningToolMessages } from '@/common/chat/normalizeToolCall';
 import LocalImageView from '@/renderer/components/media/LocalImageView';
-import { downloadFileFromPath } from '@/renderer/utils/file/download';
+import { protectedDownloadFromPath } from '@/renderer/utils/enterprise/secureExport/protectedDownload';
 import './MessageToolGroupSummary.css';
 
 const statusToBadge = (status: NormalizedToolStatus): BadgeProps['status'] => {
@@ -40,7 +40,7 @@ const ToolItemDetail: React.FC<{ item: NormalizedToolCall }> = ({ item }) => {
   const handleDownloadImage = useCallback(
     async (path: string) => {
       try {
-        await downloadFileFromPath(path, getAcpImageFileName(path));
+        await protectedDownloadFromPath(path, getAcpImageFileName(path), 'tool_download');
         messageApi.success(t('acp.image.download_success'));
       } catch (error) {
         console.error('[MessageToolGroupSummary] Failed to download image:', error);

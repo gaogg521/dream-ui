@@ -20,6 +20,7 @@ import { loadAllConversationMessagesPaged } from '@/renderer/utils/chat/messageP
 
 import type { ExportTask, ExportZipFile } from '../types';
 import { buildTranscriptEntryName, EXPORT_IO_TIMEOUT_MS, withTimeout } from '../utils/exportHelpers';
+import { prepareExport, writeEncryptedPackage } from '@/renderer/utils/enterprise/secureExport/gateway';
 
 const EXPORT_FETCH_CONCURRENCY = 4;
 
@@ -64,7 +65,7 @@ export const useExport = ({
   }, []);
 
   const createUniqueFilePath = useCallback(
-    async (directory: string, file_nameWithoutExt: string, ext: 'json' | 'md' | 'zip') => {
+    async (directory: string, file_nameWithoutExt: string, ext: 'json' | 'md' | 'zip' | 'owenc') => {
       const safeBaseName = sanitizeFileName(file_nameWithoutExt);
       const findCandidate = async (index: number): Promise<string> => {
         const suffix = index === 0 ? '' : `-${Date.now()}-${index}`;
@@ -186,6 +187,47 @@ export const useExport = ({
     []
   );
 
+  /**
+   * Write the export, through the company's export protection when there is
+   * one: a plain zip (Markdown watermarked when the policy says so), or one
+   * encrypted `.owenc` package holding the same files.
+   */
+  const writeProtectedExport = useCallback(
+    async (
+      directory: string,
+      baseName: string,
+      files: ExportZipFile[],
+      request_id: string
+    ): Promise<boolean | null> => {
+      const decision = await prepareExport({
+        kind: 'history_batch',
+        files: files.map((file) => ({ name: file.name, text: file.content ?? '' })),
+        suggestedName: `${baseName}.zip`,
+        t: (key, values) => String(t(key as never, values as never)),
+      });
+      if (decision.mode === 'cancelled') return null;
+      if (decision.mode === 'blocked') {
+        Message.error({ content: decision.message, duration: 6000 });
+        return null;
+      }
+      let ok: boolean;
+      if (decision.mode === 'encrypted') {
+        const exportPath = await createUniqueFilePath(directory, baseName, 'owenc');
+        ok = await writeEncryptedPackage(exportPath, decision.bytes);
+      } else {
+        const exportPath = await createUniqueFilePath(directory, baseName, 'zip');
+        ok = await runCreateZip(
+          exportPath,
+          decision.files.map((file) => ({ name: file.name, content: file.text ?? '' })),
+          request_id
+        );
+      }
+      if (ok) decision.report();
+      return ok;
+    },
+    [createUniqueFilePath, runCreateZip, t]
+  );
+
   const handleExportConversation = useCallback(
     (conversation: TChatConversation) => {
       void openExportModal({ mode: 'single', conversation });
@@ -242,12 +284,12 @@ export const useExport = ({
         const conversation = exportTask.conversation;
         const shortTopicName = sanitizeFileName(conversation.name || conversation.id).slice(0, 40) || 'topic';
         const zipFileName = `${shortTopicName}-${formatTimestamp()}`;
-        const exportPath = await createUniqueFilePath(directory, zipFileName, 'zip');
         throwIfCanceled();
         const files = [await buildConversationExportFile(conversation)];
         throwIfCanceled();
-        const success = await runCreateZip(exportPath, files, request_id);
+        const success = await writeProtectedExport(directory, zipFileName, files, request_id);
         throwIfCanceled();
+        if (success === null) return;
 
         if (success) {
           Message.success(t('conversation.history.exportSuccess'));
@@ -280,10 +322,9 @@ export const useExport = ({
         files.push(...(await Promise.all(chunk.map((conversation) => buildConversationExportFile(conversation)))));
       }
       throwIfCanceled();
-      const exportPath = await createUniqueFilePath(directory, `chat-records-${formatTimestamp()}`, 'zip');
+      const success = await writeProtectedExport(directory, `chat-records-${formatTimestamp()}`, files, request_id);
       throwIfCanceled();
-      const success = await runCreateZip(exportPath, files, request_id);
-      throwIfCanceled();
+      if (success === null) return;
 
       if (success) {
         Message.success(t('conversation.history.exportSuccess'));
@@ -311,11 +352,10 @@ export const useExport = ({
   }, [
     buildConversationExportFile,
     conversations,
-    createUniqueFilePath,
     exportTargetPath,
     exportTask,
     onBatchModeChange,
-    runCreateZip,
+    writeProtectedExport,
     t,
     setSelectedConversationIds,
   ]);

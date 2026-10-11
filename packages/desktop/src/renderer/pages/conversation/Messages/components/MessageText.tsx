@@ -14,6 +14,7 @@ import classNames from 'classnames';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { copyText } from '@/renderer/utils/ui/clipboard';
+import { recordClipboardCopy } from '@/renderer/utils/enterprise/secureExport/gateway';
 import CollapsibleContent from '@renderer/components/chat/CollapsibleContent';
 import FilePreview from '@renderer/components/media/FilePreview';
 import HorizontalFileList from '@renderer/components/media/HorizontalFileList';
@@ -255,6 +256,7 @@ const MessageText: React.FC<{
     const textToCopy = turnTexts?.length ? buildTurnClipboardText(turnTexts) : fileList + baseText;
     copyText(textToCopy)
       .then(() => {
+        void recordClipboardCopy(textToCopy.length);
         setShowCopyAlert(true);
         setTimeout(() => setShowCopyAlert(false), 2000);
       })

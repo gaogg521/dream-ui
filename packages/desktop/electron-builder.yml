@@ -22,6 +22,17 @@ protocols:
       - dream
       - aionui
 
+# Encrypted outbound packages (enterprise export protection). Double-clicking
+# one hands its path to the running app (`second-instance` / macOS
+# `open-file`), which asks the company server for the key — see
+# process/bridge/secureExportBridge.ts.
+fileAssociations:
+  - ext: owenc
+    name: One Work Encrypted File
+    description: One Work encrypted file
+    role: Viewer
+    mimeType: application/x-onework-encrypted
+
 asar:
   smartUnpack: true
 

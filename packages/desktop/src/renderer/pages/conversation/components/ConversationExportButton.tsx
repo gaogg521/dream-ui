@@ -12,7 +12,11 @@ import {
   joinFilePath,
 } from '@/renderer/utils/chat/conversationExport';
 import { loadAllConversationMessagesPaged } from '@/renderer/utils/chat/messagePagination';
-import { downloadTextContent } from '@/renderer/utils/file/download';
+import {
+  downloadDecision,
+  prepareExport,
+  writeEncryptedPackage,
+} from '@/renderer/utils/enterprise/secureExport/gateway';
 import { Button, Message, Tooltip } from '@arco-design/web-react';
 import { Download } from '@icon-park/react';
 import React, { useCallback, useState } from 'react';
@@ -39,30 +43,50 @@ const ConversationExportButton: React.FC<{ conversation: TChatConversation }> = 
       const markdown = buildConversationMarkdownTranscript(conversation, messages, buildMarkdownTranscriptLabels(t));
       const fileName = buildMarkdownExportFileName(conversation);
 
+      const decision = await prepareExport({
+        kind: 'conversation_markdown',
+        files: [{ name: fileName, text: markdown }],
+        suggestedName: fileName,
+        t: (key, values) => String(t(key as never, values as never)),
+      });
+      if (decision.mode === 'cancelled') return;
+      if (decision.mode === 'blocked') {
+        Message.error({ content: decision.message, duration: 6000 });
+        return;
+      }
+
       if (!isNativeDialogAvailable()) {
-        downloadTextContent(markdown, fileName, 'text/markdown;charset=utf-8');
+        downloadDecision(decision, 'text/markdown;charset=utf-8');
         Message.success(t('messages.export.markdownDownloaded'));
         return;
       }
 
+      const encrypted = decision.mode === 'encrypted';
+      const targetName = encrypted ? decision.fileName : fileName;
       const baseDirectory =
         conversation.extra?.workspace?.trim() ||
         (await ipcBridge.application.getPath.invoke({ name: 'desktop' }).catch(() => ''));
       const target = await ipcBridge.dialog.showSave.invoke({
-        defaultPath: baseDirectory ? joinFilePath(baseDirectory, fileName) : fileName,
-        filters: [{ name: 'Markdown', extensions: ['md'] }],
+        defaultPath: baseDirectory ? joinFilePath(baseDirectory, targetName) : targetName,
+        filters: encrypted
+          ? [{ name: t('messages.secureExport.fileTypeName'), extensions: ['owenc'] }]
+          : [{ name: 'Markdown', extensions: ['md'] }],
       });
       if (!target) return;
 
-      const saved = await ipcBridge.fs.writeFile.invoke({
-        path: target,
-        data: markdown,
-        workspace: parentDirectoryOf(target),
-      });
+      const saved =
+        decision.mode === 'encrypted'
+          ? await writeEncryptedPackage(target, decision.bytes)
+          : await ipcBridge.fs.writeFile.invoke({
+              path: target,
+              data: decision.files[0].text ?? markdown,
+              workspace: parentDirectoryOf(target),
+            });
       if (!saved) {
         Message.error(t('messages.export.saveFailed'));
         return;
       }
+      decision.report();
       Message.success({
         content: (
           <div className='flex items-center gap-8px'>

@@ -24,6 +24,7 @@ import { ToolConfirmationOutcome } from '@renderer/utils/common';
 import { ImagePreviewContext } from '../MessageList';
 import { COLLAPSE_CONFIG, TEXT_CONFIG } from '../constants';
 import type { ImageGenerationResult, WriteFileResult } from '../types';
+import { protectedDownloadBytes } from '@/renderer/utils/enterprise/secureExport/protectedDownload';
 
 const CODE_STYLE = { marginTop: 4, marginBottom: 4 };
 
@@ -332,15 +333,13 @@ const ImageDisplay: React.FC<{
       const blob = await getImageBlob();
       const file_name = relativePath?.split(/[\\/]/).pop() || 'image.png';
 
-      // 创建下载链接 Create download link
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = file_name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const outcome = await protectedDownloadBytes(
+        new Uint8Array(await blob.arrayBuffer()),
+        file_name,
+        blob.type || 'application/octet-stream',
+        'tool_download'
+      );
+      if (outcome !== 'done') return;
 
       messageApi.success(t('messages.downloadSuccess', { defaultValue: 'Download successful' }));
     } catch (error) {

@@ -14,6 +14,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { vs, vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import SelectionToolbar from '../renderers/SelectionToolbar';
 import { useTranslation } from 'react-i18next';
+import { protectedDownloadText } from '@/renderer/utils/enterprise/secureExport/protectedDownload';
 
 interface DiffPreviewProps {
   content: string; // Diff content
@@ -97,15 +98,7 @@ const DiffPreview: React.FC<DiffPreviewProps> = ({
   }, [diffHtmlContent, viewMode]);
 
   const handleDownload = () => {
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `diff-${Date.now()}.diff`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    void protectedDownloadText(content, `diff-${Date.now()}.diff`, 'text/plain;charset=utf-8', 'preview_download');
   };
 
   const handleViewModeChange = (mode: 'source' | 'preview') => {

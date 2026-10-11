@@ -6,6 +6,7 @@ import { ipcBridge } from '@/common';
 import { httpRequest } from '@/common/adapter/httpBridge';
 import { dialog, isNativeDialogAvailable } from '@/common/adapter/ipcBridge';
 import { Alert, Button, Checkbox, Message, Modal } from '@arco-design/web-react';
+import { recordOutboundExport } from '@/renderer/utils/enterprise/secureExport/gateway';
 import { FolderOpen } from '@icon-park/react';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -172,6 +173,9 @@ const BackupSection: React.FC = () => {
         // have to go hunting for afterwards.
         setLastArchive(result.path);
         setPrompt(null);
+        // A company with export protection keeps a record of every archive
+        // that left (always passphrase-encrypted, so there is nothing to gate).
+        void recordOutboundExport('backup', [result.path.split(/[\\/]/).pop() ?? result.path], result.archiveBytes);
         Message.success({
           content: t('settings.backup.exportSuccess', { size: formatBytes(result.archiveBytes) }),
           // A long export outlives the default toast: someone who waited minutes

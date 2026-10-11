@@ -69,6 +69,11 @@ import {
   PROTOCOL_SCHEME,
 } from './process/utils/deepLink';
 import {
+  enqueueSecurePackageOpen,
+  findSecurePackageArg,
+  isSecurePackagePath,
+} from './process/bridge/secureExportBridge';
+import {
   attachDownloadHandler,
   bindMainWindowReferences,
   showAndFocusMainWindow,
@@ -107,6 +112,8 @@ registerMediaProtocolScheme();
 const isE2ETestMode = process.env.DREAM_E2E_TEST === '1';
 const skipSingleInstanceLock = isE2ETestMode || process.env.DREAM_MULTI_INSTANCE === '1';
 const deepLinkFromArgv = process.argv.find((arg) => isDeepLinkUrl(arg));
+/** A `.owenc` file the OS launched this process to open (double-click / Open With). */
+const securePackageFromArgv = findSecurePackageArg(process.argv);
 /** Profile-lock result — gates backend startup (a lock-losing instance must
  * not spawn a competing dreamcore over the same data directory). */
 let gotTheLock = true;
@@ -142,7 +149,7 @@ function requestDeepLinkBusLock(): boolean {
   const busDir = path.join(app.getPath('appData'), `one-deeplink-bus-${PROTOCOL_SCHEME}`);
   app.setPath('userData', busDir);
   try {
-    return app.requestSingleInstanceLock({ deepLinkUrl: deepLinkFromArgv });
+    return app.requestSingleInstanceLock({ deepLinkUrl: deepLinkFromArgv, securePackagePath: securePackageFromArgv });
   } finally {
     app.setPath('userData', realUserData);
   }
@@ -162,6 +169,11 @@ const onSecondInstance = (
   console.log('[OneWork] second-instance: deep link', deepLinkUrl ? 'received' : 'absent');
   if (deepLinkUrl) {
     handleDeepLinkUrl(deepLinkUrl);
+  }
+  const securePackagePath =
+    (additionalData as { securePackagePath?: string } | undefined)?.securePackagePath || findSecurePackageArg(argv);
+  if (securePackagePath) {
+    enqueueSecurePackageOpen(securePackagePath);
   }
   // Focus existing window or recreate one if needed.
   if (isWebUIMode || isResetPasswordMode) {
@@ -208,7 +220,7 @@ if (useDeepLinkBus) {
     // launch that found the bus free — in which case it IS the app now and
     // its argv deep link flows through the normal pendingDeepLinkUrl path.
     app.on('second-instance', onSecondInstance);
-  } else if (deepLinkFromArgv) {
+  } else if (deepLinkFromArgv || securePackageFromArgv) {
     // The URL was delivered to the bus holder via additionalData — nothing
     // left to do here. Quit instead of booting a second app that would drop
     // the token into its own (bare-env) profile.
@@ -217,7 +229,12 @@ if (useDeepLinkBus) {
   }
   // Bus busy + no protocol URL: a deliberate second dev instance. It boots
   // without the handler — deep links belong to the bus holder.
-} else if (!(gotTheLock = app.requestSingleInstanceLock({ deepLinkUrl: deepLinkFromArgv }))) {
+} else if (
+  !(gotTheLock = app.requestSingleInstanceLock({
+    deepLinkUrl: deepLinkFromArgv,
+    securePackagePath: securePackageFromArgv,
+  }))
+) {
   console.warn('[OneWork] Another instance is already running; current process will exit.');
   app.quit();
 } else {
@@ -1303,6 +1320,25 @@ for (const scheme of ACCEPTED_PROTOCOL_SCHEMES) {
     app.setAsDefaultProtocolClient(scheme);
   }
 }
+
+// A package this process was launched with. Harmless if the process is about
+// to quit (lock lost): the queue dies with it, and the running instance got
+// the path through `second-instance`.
+if (securePackageFromArgv) {
+  enqueueSecurePackageOpen(securePackageFromArgv);
+}
+
+// macOS delivers "Open With" / double-click on a `.owenc` file here, before or
+// after `ready`.
+app.on('open-file', (event, filePath) => {
+  if (!isSecurePackagePath(filePath)) return;
+  event.preventDefault();
+  enqueueSecurePackageOpen(filePath);
+  if (isWebUIMode || isResetPasswordMode || !app.isReady()) {
+    return;
+  }
+  showOrCreateMainWindow({ mainWindow, createWindow });
+});
 
 // macOS: handle dream:// URLs via the open-url event
 app.on('open-url', (event, url) => {
