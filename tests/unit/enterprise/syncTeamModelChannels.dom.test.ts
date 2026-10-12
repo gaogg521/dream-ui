@@ -105,10 +105,13 @@ beforeEach(() => {
   hooks.syncTeamSkills.mockResolvedValue({ written: [], removed: [], kept: 0 });
   hooks.syncTeamMcp.mockResolvedValue({ written: [], removed: [], kept: 0 });
   hooks.clearEnterpriseUpstream.mockResolvedValue(undefined);
+  // The stored-token probe: by default the proxy accepts whatever it is shown.
+  vi.stubGlobal('fetch', vi.fn(async () => new Response('{"data":[]}', { status: 200 })));
 });
 
 afterEach(() => {
   vi.clearAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe('syncTeamModelChannels', () => {
@@ -264,6 +267,58 @@ describe('channel tokens across repeated syncs', () => {
     hooks.listModelChannels.mockResolvedValue([channel(CACHE_ID, 'corp-gateway')]);
     await syncTeamModelChannels();
     expect(hooks.issueChannelToken).toHaveBeenCalledTimes(2);
+  });
+});
+
+/**
+ * Issuing is rotation wherever it happens — the member's other computer, a
+ * reinstall — so the copy this machine stores can be dead. Measured on a real
+ * client: listed channel, entitled member, working fresh token, and a stored
+ * one the proxy refused forever because nothing ever replaced it.
+ */
+describe('a stored token the proxy no longer accepts', () => {
+  const rejected = () =>
+    new Response('{"error":{"message":"not authorized for this model channel","type":"invalid_request_error"}}', {
+      status: 401,
+    });
+
+  it('is replaced by a freshly issued one', async () => {
+    const id = 'ochan_stale_a';
+    hooks.listModelChannels.mockResolvedValue([channel(id, 'corp-gateway')]);
+    hooks.listProviders.mockResolvedValue([{ id: `prov_chan_${id}`, api_key: 'onech-rotated-elsewhere' }]);
+    const probe = vi.fn(async () => rejected());
+    vi.stubGlobal('fetch', probe);
+
+    await syncTeamModelChannels();
+
+    expect(probe).toHaveBeenCalledWith(`https://one.corp.example/api/one/model-proxy/${id}/models`, {
+      headers: { authorization: 'Bearer onech-rotated-elsewhere' },
+    });
+    expect(hooks.issueChannelToken).toHaveBeenCalledWith({ id });
+    expect(hooks.syncModelChannels.mock.calls.at(-1)?.[0].channels[0].token).toBe(`onech-${id}`);
+  });
+
+  it('is kept when the proxy cannot be reached — that is not a verdict on the token', async () => {
+    const id = 'ochan_stale_b';
+    hooks.listModelChannels.mockResolvedValue([channel(id, 'corp-gateway')]);
+    hooks.listProviders.mockResolvedValue([{ id: `prov_chan_${id}`, api_key: 'onech-still-good' }]);
+    vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))));
+
+    await syncTeamModelChannels();
+
+    expect(hooks.issueChannelToken).not.toHaveBeenCalled();
+    expect(hooks.syncModelChannels.mock.calls.at(-1)?.[0].channels[0].token).toBe('onech-still-good');
+  });
+
+  it('is kept when a 401 comes from somewhere other than the proxy itself', async () => {
+    const id = 'ochan_stale_c';
+    hooks.listModelChannels.mockResolvedValue([channel(id, 'corp-gateway')]);
+    hooks.listProviders.mockResolvedValue([{ id: `prov_chan_${id}`, api_key: 'onech-still-good' }]);
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"upstream invalid api key"}', { status: 401 })));
+
+    await syncTeamModelChannels();
+
+    expect(hooks.issueChannelToken).not.toHaveBeenCalled();
   });
 });
 

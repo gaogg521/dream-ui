@@ -223,7 +223,7 @@
     "mySkills": "我的技能"
   },
   "superAssistant": {
-    "title": "超級助手",
+    "title": "數位員工",
     "rag": {
       "hybridBadge": "混合檢索（語意 + 關鍵字）",
       "searchPlaceholderHybrid": "檢索知識庫 —— 可用語意描述，也可直接搜錯誤碼、編號等精確詞",
@@ -260,7 +260,22 @@
       "scopeTeam": "指定專案群組",
       "visibilityAdmin": "僅管理員",
       "visibilityAll": "所有成員"
-    }
+    },
+    "companyTag": "企業",
+    "boundSkillsCount": "技能 {{count}}",
+    "boundToolsCount": "工具 {{count}}",
+    "boundCount": "{{count}} 個",
+    "startChat": "開始對話",
+    "startChatFailed": "無法開始對話",
+    "employeeUnavailable": "此數位員工已無法使用，可能已被管理員收回授權",
+    "homeEmployeesHint": "公司為你配置的數位員工 —— 已帶好技能、工具與模型，選一位直接說你要做什麼。",
+    "teamManagedHint": "由管理員在企業後台統一設定，本機無法修改。",
+    "tabKnowledge": "知識庫",
+    "fieldBoundSkills": "綁定技能",
+    "fieldBoundTools": "綁定工具",
+    "starterPromptsTitle": "可以這樣讓它做",
+    "openConversation": "開啟對話",
+    "chatSession": "對話"
   },
   "language": {
     "switchTooltip": "切換語言"

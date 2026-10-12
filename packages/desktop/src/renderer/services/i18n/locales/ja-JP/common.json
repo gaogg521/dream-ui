@@ -223,7 +223,7 @@
     "mySkills": "マイスキル"
   },
   "superAssistant": {
-    "title": "スーパーアシスタント",
+    "title": "デジタル社員",
     "rag": {
       "hybridBadge": "ハイブリッド検索（意味 + キーワード）",
       "searchPlaceholderHybrid": "ナレッジベースを検索 —— 意味でも、エラーコードや ID などの完全一致でも",
@@ -248,7 +248,22 @@
     "noExpertOption": "エキスパートを指定しない（バックエンドのみ）",
     "backendRequired": "実行バックエンドを選択してください",
     "teamDistributed": "チーム · 自動",
-    "teamDeleteDisabledTip": "この AI 社員は組織から配布されています。ここでは削除できません。管理者が権限を取り消すと自動的に消えます。"
+    "teamDeleteDisabledTip": "この AI 社員は組織から配布されています。ここでは削除できません。管理者が権限を取り消すと自動的に消えます。",
+    "companyTag": "企業",
+    "boundSkillsCount": "スキル {{count}}",
+    "boundToolsCount": "ツール {{count}}",
+    "boundCount": "{{count}} 件",
+    "startChat": "会話を始める",
+    "startChatFailed": "会話を開始できませんでした",
+    "employeeUnavailable": "このデジタル社員は利用できなくなりました。管理者が権限を取り消した可能性があります。",
+    "homeEmployeesHint": "会社が用意したデジタル社員です。スキル・ツール・モデルは設定済み。選んで、やりたいことを伝えてください。",
+    "teamManagedHint": "管理者が企業コンソールで設定しています。ここでは変更できません。",
+    "tabKnowledge": "ナレッジベース",
+    "fieldBoundSkills": "紐づけスキル",
+    "fieldBoundTools": "紐づけツール",
+    "starterPromptsTitle": "こんな依頼ができます",
+    "openConversation": "会話を開く",
+    "chatSession": "会話"
   },
   "language": {
     "switchTooltip": "言語を切り替え"

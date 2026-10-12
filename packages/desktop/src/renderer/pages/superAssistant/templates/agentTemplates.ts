@@ -195,6 +195,10 @@ export function getTemplateInstructions(template: AgentTemplate, language: strin
   return template.instructionsI18n[language] ?? template.instructionsI18n['en-US'];
 }
 
+export function getTemplateExamplePrompts(template: AgentTemplate, language: string): string[] {
+  return template.examplePromptsI18n?.[language] ?? template.examplePromptsI18n?.['en-US'] ?? [];
+}
+
 export function getTemplateName(template: AgentTemplate, language: string): string {
   return template.nameI18n[language] ?? template.nameI18n['en-US'];
 }

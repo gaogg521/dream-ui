@@ -373,7 +373,7 @@
     "serverErrUnreachable": "Can't reach {{url}}. Check that the address matches what your admin gave you, the server is running, and both machines can reach each other. The enterprise edition usually needs no port."
   },
   "superAssistant": {
-    "title": "Super Assistant",
+    "title": "Digital Employees",
     "agentsEmpty": "No digital employees yet — create one to get started.",
     "templatesTitle": "Create from Template",
     "agentsListTitle": "My Digital Employees",
@@ -594,7 +594,22 @@
     "noExpertOption": "No expert (use the backend only)",
     "backendRequired": "Please choose a runtime backend",
     "teamDistributed": "Team · Auto",
-    "teamDeleteDisabledTip": "This digital employee is distributed by your organization. It cannot be deleted here — it disappears on its own once an administrator revokes access."
+    "teamDeleteDisabledTip": "This digital employee is distributed by your organization. It cannot be deleted here — it disappears on its own once an administrator revokes access.",
+    "companyTag": "Company",
+    "boundSkillsCount": "Skills {{count}}",
+    "boundToolsCount": "Tools {{count}}",
+    "boundCount": "{{count}} bound",
+    "startChat": "Start chat",
+    "startChatFailed": "Could not start the chat",
+    "employeeUnavailable": "This digital employee is no longer available. Your administrator may have revoked access.",
+    "homeEmployeesHint": "Digital employees set up by your company, with their skills, tools and model ready. Pick one and say what you need.",
+    "teamManagedHint": "Configured by your administrator in the company console; it cannot be changed here.",
+    "tabKnowledge": "Knowledge base",
+    "fieldBoundSkills": "Bound skills",
+    "fieldBoundTools": "Bound tools",
+    "starterPromptsTitle": "Try asking",
+    "openConversation": "Open conversation",
+    "chatSession": "Chat"
   },
   "language": {
     "switchTooltip": "Switch language"

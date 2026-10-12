@@ -2949,6 +2949,11 @@ export const personalAgent = {
   runNow: httpPostLocal<{ runId: string; conversationId: string }, { agentId: string }>(
     (p) => `/api/one/employee/agents/${p.agentId}/run`
   ),
+  // Opens a conversation bound to the employee (persona + bound resources)
+  // without sending anything; the member's first message is the task.
+  startChat: httpPostLocal<{ runId: string; conversationId: string }, { agentId: string }>(
+    (p) => `/api/one/employee/agents/${p.agentId}/chat`
+  ),
   runTeam: httpPostLocal<{ runId: string; conversationId: string }, { agentId: string } & RunTeamParams>(
     (p) => `/api/one/employee/agents/${p.agentId}/run-team`,
     (p) => ({ teamId: p.teamId, slotId: p.slotId })

@@ -1,14 +1,15 @@
 /**
- * Agents tab — list personal digital employees with run/schedule actions.
+ * Agents tab — the employees this member can use, each opened by chat.
  *
- * Simplified from the 1one reference: drops team-agent groups and issue
- * assignment, keeps only the personal-agent cards backed by the
- * one-employee crate.
+ * Company-distributed employees are read-only here: the console owns their
+ * definition and the team sync rewrites the local copy, so only the actions
+ * that do not change the definition (chat, details) are offered. A member's
+ * own employees additionally get schedule / manage / delete.
  */
 
 import React, { useMemo } from 'react';
-import { Button, Card, Empty, Popconfirm, Tag, Tooltip } from '@arco-design/web-react';
-import { Delete, Edit, FileText, PlayOne, Plus, Time } from '@icon-park/react';
+import { Button, Card, Empty, Popconfirm, Tag } from '@arco-design/web-react';
+import { Communication, Delete, Edit, FileText, Plus, Time } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { resolveLocaleKey } from '@/common/utils';
 import { useManagedAgentRuntimeCatalog } from '@renderer/hooks/agent/useManagedAgents';
@@ -26,11 +27,12 @@ export type AgentCardRef = {
 
 type AgentsTabProps = {
   agents: DigitalEmployeeWithRuns[];
+  startingChatId?: string | null;
+  onStartChat?: (agent: AgentCardRef) => void;
   onCreateAgent?: () => void;
   onCreateFromTemplate?: (templateId: string) => Promise<void>;
   creatingFromTemplate?: boolean;
   onManageAgent?: (agent: AgentCardRef) => void;
-  onRunAgentNow?: (agent: AgentCardRef) => void;
   onScheduleAgent?: (agent: AgentCardRef) => void;
   onViewDigitalEmployeeDetail?: (agent: AgentCardRef) => void;
   onDeleteAgent?: (agent: AgentCardRef) => Promise<void>;
@@ -53,11 +55,12 @@ const RUN_STATUS_COLOR: Record<string, string> = {
 
 const AgentsTab: React.FC<AgentsTabProps> = ({
   agents,
+  startingChatId,
+  onStartChat,
   onCreateAgent,
   onCreateFromTemplate,
   creatingFromTemplate,
   onManageAgent,
-  onRunAgentNow,
   onScheduleAgent,
   onViewDigitalEmployeeDetail,
   onDeleteAgent,
@@ -70,7 +73,11 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
   const managedAgentRuntimeCatalog = useManagedAgentRuntimeCatalog();
   const { presetAssistants } = useConversationAssistants();
 
-  const cards = useMemo(() => agents, [agents]);
+  // Company employees first: they are what the member was handed.
+  const cards = useMemo(
+    () => [...agents].sort((a, b) => Number(isTeamDistributed(b)) - Number(isTeamDistributed(a))),
+    [agents]
+  );
 
   if (cards.length === 0 && !templates.length) {
     return (
@@ -126,7 +133,8 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
                 agentName: agent.name,
                 agentType: agent.agentType,
               };
-              const latestRun = agent.latestRun;
+              // A chat binding has no outcome to report; the card shows the last real run.
+              const latestRun = agent.recentRuns.find((run) => run.triggerSource !== 'chat');
               const expertName = resolveEmployeeExpertName(agent, presetAssistants, localeKey);
               return (
                 <Card key={agent.id} size='small'>
@@ -183,46 +191,42 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
                     </div>
                   ) : null}
                   <div className='mt-12px flex flex-wrap gap-8px'>
-                    <Button size='small' type='primary' icon={<PlayOne />} onClick={() => onRunAgentNow?.(ref)}>
-                      {t('common.superAssistant.runNow', { defaultValue: '立即运行' })}
-                    </Button>
-                    <Button size='small' icon={<Time />} onClick={() => onScheduleAgent?.(ref)}>
-                      {t('common.superAssistant.schedule', { defaultValue: '定时' })}
+                    <Button
+                      size='small'
+                      type='primary'
+                      icon={<Communication />}
+                      loading={startingChatId === agent.id}
+                      onClick={() => onStartChat?.(ref)}
+                    >
+                      {t('common.superAssistant.startChat')}
                     </Button>
                     <Button size='small' icon={<FileText />} onClick={() => onViewDigitalEmployeeDetail?.(ref)}>
                       {t('common.superAssistant.detail', { defaultValue: '详情' })}
                     </Button>
-                    <Button size='small' icon={<Edit />} onClick={() => onManageAgent?.(ref)}>
-                      {t('common.superAssistant.manage', { defaultValue: '管理' })}
-                    </Button>
-                    {isTeamDistributed(agent) ? (
-                      // Deleting one of these is not a thing the member can do:
-                      // `syncTeamAgents` reconciles the company's list every
-                      // five minutes and writes the row straight back. Say so
-                      // instead of accepting the click and undoing it later.
-                      <Tooltip
-                        content={t('common.superAssistant.teamDeleteDisabledTip', {
-                          defaultValue:
-                            '企业下发的数字员工由管理员统一管理，无法在本地删除；管理员收回授权后会自动消失。',
-                        })}
-                      >
-                        <Button size='small' icon={<Delete />} disabled>
-                          {t('common.superAssistant.delete', { defaultValue: '删除' })}
+                    {isTeamDistributed(agent) ? null : (
+                      <>
+                        <Button size='small' icon={<Time />} onClick={() => onScheduleAgent?.(ref)}>
+                          {t('common.superAssistant.schedule', { defaultValue: '定时' })}
                         </Button>
-                      </Tooltip>
-                    ) : (
-                      <Popconfirm
-                        title={t('common.superAssistant.deleteConfirm', {
-                          defaultValue: '确定删除该数字员工？',
-                        })}
-                        onOk={() => onDeleteAgent?.(ref)}
-                      >
-                        <Button size='small' icon={<Delete />} status='danger'>
-                          {t('common.superAssistant.delete', { defaultValue: '删除' })}
+                        <Button size='small' icon={<Edit />} onClick={() => onManageAgent?.(ref)}>
+                          {t('common.superAssistant.manage', { defaultValue: '管理' })}
                         </Button>
-                      </Popconfirm>
+                        <Popconfirm
+                          title={t('common.superAssistant.deleteConfirm', {
+                            defaultValue: '确定删除该数字员工？',
+                          })}
+                          onOk={() => onDeleteAgent?.(ref)}
+                        >
+                          <Button size='small' icon={<Delete />} status='danger'>
+                            {t('common.superAssistant.delete', { defaultValue: '删除' })}
+                          </Button>
+                        </Popconfirm>
+                      </>
                     )}
                   </div>
+                  {isTeamDistributed(agent) ? (
+                    <div className='mt-8px text-12px text-t-tertiary'>{t('common.superAssistant.teamManagedHint')}</div>
+                  ) : null}
                 </Card>
               );
             })}

@@ -373,7 +373,7 @@
     "serverErrUnreachable": "连接不上 {{url}}。请确认地址与管理员给的一致、对方服务器已启动、两台电脑网络互通；企业版通常不需要填写端口。"
   },
   "superAssistant": {
-    "title": "超级助手",
+    "title": "数字员工",
     "agentsEmpty": "还没有数字员工，先创建一个。",
     "templatesTitle": "从模板创建",
     "agentsListTitle": "我的数字员工",
@@ -594,7 +594,22 @@
     "noExpertOption": "不指定专家（仅用运行后端）",
     "backendRequired": "请选择运行后端",
     "teamDistributed": "团队 · 自动",
-    "teamDeleteDisabledTip": "企业下发的数字员工由管理员统一管理，无法在本地删除；管理员收回授权后会自动消失。"
+    "teamDeleteDisabledTip": "企业下发的数字员工由管理员统一管理，无法在本地删除；管理员收回授权后会自动消失。",
+    "companyTag": "企业",
+    "boundSkillsCount": "技能 {{count}}",
+    "boundToolsCount": "工具 {{count}}",
+    "boundCount": "{{count}} 个",
+    "startChat": "开始对话",
+    "startChatFailed": "无法开始对话",
+    "employeeUnavailable": "该数字员工已不可用，可能已被管理员收回授权",
+    "homeEmployeesHint": "公司为你配置的数字员工 —— 已带好技能、工具与模型，选一位直接说你要做什么。",
+    "teamManagedHint": "由管理员在企业后台统一配置，本地不可修改。",
+    "tabKnowledge": "知识库",
+    "fieldBoundSkills": "绑定技能",
+    "fieldBoundTools": "绑定工具",
+    "starterPromptsTitle": "可以这样让它做",
+    "openConversation": "打开会话",
+    "chatSession": "对话"
   },
   "language": {
     "switchTooltip": "切换语言"

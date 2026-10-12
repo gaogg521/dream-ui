@@ -223,7 +223,7 @@
     "mySkills": "Minhas habilidades"
   },
   "superAssistant": {
-    "title": "Superassistente",
+    "title": "Funcionários digitais",
     "rag": {
       "hybridBadge": "Busca híbrida (semântica + palavras-chave)",
       "searchPlaceholderHybrid": "Pesquise a base de conhecimento — por significado ou por termos exatos, códigos de erro, IDs…",
@@ -248,7 +248,22 @@
     "noExpertOption": "Sem especialista (apenas o backend)",
     "backendRequired": "Selecione um backend de execução",
     "teamDistributed": "Equipe · Automático",
-    "teamDeleteDisabledTip": "Este funcionário digital é distribuído pela sua organização. Não pode ser excluído aqui — ele desaparece sozinho quando um administrador revoga o acesso."
+    "teamDeleteDisabledTip": "Este funcionário digital é distribuído pela sua organização. Não pode ser excluído aqui — ele desaparece sozinho quando um administrador revoga o acesso.",
+    "companyTag": "Empresa",
+    "boundSkillsCount": "Habilidades {{count}}",
+    "boundToolsCount": "Ferramentas {{count}}",
+    "boundCount": "{{count}} vinculados",
+    "startChat": "Iniciar conversa",
+    "startChatFailed": "Não foi possível iniciar a conversa",
+    "employeeUnavailable": "Este funcionário digital não está mais disponível. O administrador pode ter revogado o acesso.",
+    "homeEmployeesHint": "Funcionários digitais configurados pela sua empresa, com habilidades, ferramentas e modelo prontos. Escolha um e diga o que precisa.",
+    "teamManagedHint": "Configurado pelo administrador no console da empresa; não pode ser alterado aqui.",
+    "tabKnowledge": "Base de conhecimento",
+    "fieldBoundSkills": "Habilidades vinculadas",
+    "fieldBoundTools": "Ferramentas vinculadas",
+    "starterPromptsTitle": "Experimente pedir",
+    "openConversation": "Abrir conversa",
+    "chatSession": "Conversa"
   },
   "language": {
     "switchTooltip": "Mudar idioma"

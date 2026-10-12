@@ -21,7 +21,8 @@ export type DigitalEmployeeRunRecord = {
   status: DigitalEmployeeRunStatus;
   summary?: string | null;
   error?: string | null;
-  triggerSource: 'manual' | 'cron';
+  /** `chat`: a conversation the member opened with the employee — a binding settled at creation, not a run. */
+  triggerSource: 'manual' | 'cron' | 'breakdown' | 'chat';
   startedAt: number;
   finishedAt?: number | null;
 };
@@ -41,7 +42,12 @@ export type PersonalAgentAutomationConfig = {
   preferredModelId?: string;
   /** @deprecated Never written. Use the first-class `model` field instead. */
   providerModelKey?: string;
+  /** Task a scheduled run performs. Not the persona — see `persona`. */
   instructions?: string;
+  /** Who the employee is (system instructions). Injected by the backend at run time. */
+  persona?: string;
+  /** Example tasks the admin wrote; each one opens a chat with that message. */
+  starterPrompts?: string[];
   /** Enterprise-governed PNG identity; team sync preserves this field. */
   avatarUrl?: string;
   [key: string]: unknown;

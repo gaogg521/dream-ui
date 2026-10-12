@@ -223,7 +223,7 @@
     "mySkills": "Mes compétences"
   },
   "superAssistant": {
-    "title": "Super Assistant",
+    "title": "Employés numériques",
     "rag": {
       "hybridBadge": "Recherche hybride (sémantique + mots-clés)",
       "searchPlaceholderHybrid": "Rechercher dans la base — par le sens ou par termes exacts, codes d'erreur, identifiants…",
@@ -248,7 +248,22 @@
     "noExpertOption": "Aucun expert (backend seul)",
     "backendRequired": "Veuillez choisir un backend d'exécution",
     "teamDistributed": "Équipe · Auto",
-    "teamDeleteDisabledTip": "Cet employé numérique est distribué par votre organisation. Il ne peut pas être supprimé ici : il disparaît de lui-même dès qu'un administrateur retire l'accès."
+    "teamDeleteDisabledTip": "Cet employé numérique est distribué par votre organisation. Il ne peut pas être supprimé ici : il disparaît de lui-même dès qu'un administrateur retire l'accès.",
+    "companyTag": "Entreprise",
+    "boundSkillsCount": "Compétences {{count}}",
+    "boundToolsCount": "Outils {{count}}",
+    "boundCount": "{{count}} associés",
+    "startChat": "Démarrer la discussion",
+    "startChatFailed": "Impossible de démarrer la discussion",
+    "employeeUnavailable": "Cet employé numérique n'est plus disponible. Votre administrateur a peut-être révoqué l'accès.",
+    "homeEmployeesHint": "Des employés numériques configurés par votre entreprise, avec compétences, outils et modèle prêts. Choisissez-en un et dites ce dont vous avez besoin.",
+    "teamManagedHint": "Configuré par votre administrateur dans la console de l'entreprise ; non modifiable ici.",
+    "tabKnowledge": "Base de connaissances",
+    "fieldBoundSkills": "Compétences associées",
+    "fieldBoundTools": "Outils associés",
+    "starterPromptsTitle": "Essayez de demander",
+    "openConversation": "Ouvrir la conversation",
+    "chatSession": "Discussion"
   },
   "language": {
     "switchTooltip": "Changer de langue"

@@ -223,7 +223,7 @@
     "mySkills": "Yeteneklerim"
   },
   "superAssistant": {
-    "title": "Süper Asistan",
+    "title": "Dijital Çalışanlar",
     "rag": {
       "hybridBadge": "Hibrit arama (anlam + anahtar kelime)",
       "searchPlaceholderHybrid": "Bilgi tabanında ara — anlamla ya da hata kodu, kimlik gibi tam terimlerle…",
@@ -248,7 +248,22 @@
     "noExpertOption": "Uzman seçilmedi (yalnızca arka uç)",
     "backendRequired": "Bir çalışma arka ucu seçin",
     "teamDistributed": "Takım · Otomatik",
-    "teamDeleteDisabledTip": "Bu dijital çalışan kurumunuz tarafından dağıtılır. Buradan silinemez; bir yönetici erişimi kaldırdığında kendiliğinden kaybolur."
+    "teamDeleteDisabledTip": "Bu dijital çalışan kurumunuz tarafından dağıtılır. Buradan silinemez; bir yönetici erişimi kaldırdığında kendiliğinden kaybolur.",
+    "companyTag": "Şirket",
+    "boundSkillsCount": "Beceri {{count}}",
+    "boundToolsCount": "Araç {{count}}",
+    "boundCount": "{{count}} adet",
+    "startChat": "Sohbet başlat",
+    "startChatFailed": "Sohbet başlatılamadı",
+    "employeeUnavailable": "Bu dijital çalışan artık kullanılamıyor. Yöneticiniz erişimi kaldırmış olabilir.",
+    "homeEmployeesHint": "Şirketinizin hazırladığı dijital çalışanlar; becerileri, araçları ve modeli hazır. Birini seçin ve ne istediğinizi söyleyin.",
+    "teamManagedHint": "Yöneticiniz tarafından şirket konsolunda yapılandırılır; burada değiştirilemez.",
+    "tabKnowledge": "Bilgi tabanı",
+    "fieldBoundSkills": "Bağlı beceriler",
+    "fieldBoundTools": "Bağlı araçlar",
+    "starterPromptsTitle": "Şunu deneyin",
+    "openConversation": "Sohbeti aç",
+    "chatSession": "Sohbet"
   },
   "language": {
     "switchTooltip": "Dili değiştir"

@@ -223,14 +223,43 @@ async function storedChannelToken(channelId: string): Promise<string | null> {
   }
 }
 
-async function channelToken(channelId: string): Promise<string> {
-  const cached = mintedChannelTokens.get(channelId);
-  if (cached) return cached;
+/**
+ * The company proxy's own refusal of a token — as opposed to the upstream
+ * vendor refusing, or the proxy being unreachable. Only this answer means
+ * "the token this machine holds is dead"; anything else keeps it.
+ */
+const PROXY_TOKEN_REJECTED = 'not authorized for this model channel';
 
-  const stored = await storedChannelToken(channelId);
-  if (stored) {
-    mintedChannelTokens.set(channelId, stored);
-    return stored;
+/**
+ * Whether the company proxy refuses `token` outright.
+ *
+ * A stored token is not proof of a working one. Issuing is rotation, and it
+ * happens anywhere the same member asks for one — their other computer, a
+ * reinstall, a script — after which the copy on this machine is dead. Reusing
+ * it forever (what the "do not rotate" rule above did on its own) left every
+ * conversation on that channel failing `401 not authorized for this model
+ * channel` with nothing the member could do about it. Measured on a real
+ * client: the channel was listed, the member entitled, a fresh token worked,
+ * and the stored one never would again.
+ *
+ * `/models` is the cheapest call the proxy authenticates. Unreachable, or any
+ * other answer, is not a verdict on the token.
+ */
+async function rejectedByProxy(proxyBaseUrl: string, token: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${proxyBaseUrl}/models`, { headers: { authorization: `Bearer ${token}` } });
+    if (response.status !== 401) return false;
+    return (await response.text()).includes(PROXY_TOKEN_REJECTED);
+  } catch {
+    return false;
+  }
+}
+
+async function channelToken(channelId: string, proxyBaseUrl: string): Promise<string> {
+  const held = mintedChannelTokens.get(channelId) ?? (await storedChannelToken(channelId));
+  if (held && !(await rejectedByProxy(proxyBaseUrl, held))) {
+    mintedChannelTokens.set(channelId, held);
+    return held;
   }
 
   const issued = await ipcBridge.oneDevops.issueChannelToken.invoke({ id: channelId });
@@ -263,12 +292,13 @@ export async function syncTeamModelChannels(): Promise<TeamSkillSyncResult | nul
   const resolved = await Promise.all(
     enabled.map(async (channel) => {
       try {
-        const token = await channelToken(channel.id);
+        const baseUrl = `${serverUrl}/api/one/model-proxy/${channel.id}`;
+        const token = await channelToken(channel.id, baseUrl);
         return {
           channelId: channel.id,
           name: channel.name,
           platform: channel.platform,
-          baseUrl: `${serverUrl}/api/one/model-proxy/${channel.id}`,
+          baseUrl,
           token,
           models: parseJsonOr<string[]>(channel.models, []),
           modelSettings: parseJsonOr<unknown>(channel.modelSettings, undefined),

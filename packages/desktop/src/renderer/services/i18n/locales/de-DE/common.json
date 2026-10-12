@@ -223,7 +223,7 @@
     "mySkills": "Meine Fähigkeiten"
   },
   "superAssistant": {
-    "title": "Super-Assistent",
+    "title": "Digitale Mitarbeiter",
     "rag": {
       "hybridBadge": "Hybride Suche (semantisch + Stichwort)",
       "searchPlaceholderHybrid": "Wissensdatenbank durchsuchen — sinngemäß oder mit exakten Begriffen, Fehlercodes, IDs …",
@@ -248,7 +248,22 @@
     "noExpertOption": "Kein Experte (nur Backend)",
     "backendRequired": "Bitte ein Ausführungs-Backend wählen",
     "teamDistributed": "Team · Automatisch",
-    "teamDeleteDisabledTip": "Dieser digitale Mitarbeiter wird von Ihrer Organisation bereitgestellt. Er lässt sich hier nicht löschen und verschwindet von selbst, sobald eine Administratorin den Zugriff entzieht."
+    "teamDeleteDisabledTip": "Dieser digitale Mitarbeiter wird von Ihrer Organisation bereitgestellt. Er lässt sich hier nicht löschen und verschwindet von selbst, sobald eine Administratorin den Zugriff entzieht.",
+    "companyTag": "Firma",
+    "boundSkillsCount": "Skills {{count}}",
+    "boundToolsCount": "Tools {{count}}",
+    "boundCount": "{{count}} verknüpft",
+    "startChat": "Chat starten",
+    "startChatFailed": "Chat konnte nicht gestartet werden",
+    "employeeUnavailable": "Dieser digitale Mitarbeiter ist nicht mehr verfügbar. Möglicherweise hat Ihr Administrator den Zugriff entzogen.",
+    "homeEmployeesHint": "Von Ihrer Firma eingerichtete digitale Mitarbeiter – Skills, Tools und Modell sind bereit. Wählen Sie einen aus und sagen Sie, was Sie brauchen.",
+    "teamManagedHint": "Wird von Ihrem Administrator in der Firmenkonsole konfiguriert und kann hier nicht geändert werden.",
+    "tabKnowledge": "Wissensdatenbank",
+    "fieldBoundSkills": "Verknüpfte Skills",
+    "fieldBoundTools": "Verknüpfte Tools",
+    "starterPromptsTitle": "Probieren Sie",
+    "openConversation": "Unterhaltung öffnen",
+    "chatSession": "Chat"
   },
   "language": {
     "switchTooltip": "Sprache wechseln"

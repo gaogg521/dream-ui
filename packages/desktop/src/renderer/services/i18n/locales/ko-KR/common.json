@@ -223,7 +223,7 @@
     "mySkills": "내 스킬"
   },
   "superAssistant": {
-    "title": "슈퍼 어시스턴트",
+    "title": "디지털 직원",
     "rag": {
       "hybridBadge": "하이브리드 검색 (의미 + 키워드)",
       "searchPlaceholderHybrid": "지식베이스 검색 —— 의미로도, 오류 코드·ID 같은 정확한 용어로도",
@@ -248,7 +248,22 @@
     "noExpertOption": "전문가 지정 안 함(백엔드만 사용)",
     "backendRequired": "실행 백엔드를 선택하세요",
     "teamDistributed": "팀 · 자동",
-    "teamDeleteDisabledTip": "조직에서 배포한 디지털 직원입니다. 여기서는 삭제할 수 없으며, 관리자가 권한을 회수하면 자동으로 사라집니다."
+    "teamDeleteDisabledTip": "조직에서 배포한 디지털 직원입니다. 여기서는 삭제할 수 없으며, 관리자가 권한을 회수하면 자동으로 사라집니다.",
+    "companyTag": "회사",
+    "boundSkillsCount": "스킬 {{count}}",
+    "boundToolsCount": "도구 {{count}}",
+    "boundCount": "{{count}}개",
+    "startChat": "대화 시작",
+    "startChatFailed": "대화를 시작할 수 없습니다",
+    "employeeUnavailable": "이 디지털 직원은 더 이상 사용할 수 없습니다. 관리자가 권한을 회수했을 수 있습니다.",
+    "homeEmployeesHint": "회사가 구성한 디지털 직원입니다. 스킬·도구·모델이 준비되어 있으니 하나를 골라 필요한 일을 말해 보세요.",
+    "teamManagedHint": "관리자가 회사 콘솔에서 구성하며 여기서는 변경할 수 없습니다.",
+    "tabKnowledge": "지식 베이스",
+    "fieldBoundSkills": "연결된 스킬",
+    "fieldBoundTools": "연결된 도구",
+    "starterPromptsTitle": "이렇게 요청해 보세요",
+    "openConversation": "대화 열기",
+    "chatSession": "대화"
   },
   "language": {
     "switchTooltip": "언어 전환"

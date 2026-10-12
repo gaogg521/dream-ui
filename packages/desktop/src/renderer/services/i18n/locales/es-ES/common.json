@@ -223,7 +223,7 @@
     "mySkills": "Mis habilidades"
   },
   "superAssistant": {
-    "title": "Superasistente",
+    "title": "Empleados digitales",
     "rag": {
       "hybridBadge": "Búsqueda híbrida (semántica + palabras clave)",
       "searchPlaceholderHybrid": "Busca en la base de conocimiento — por significado o por términos exactos, códigos de error, IDs…",
@@ -248,7 +248,22 @@
     "noExpertOption": "Sin experto (solo el backend)",
     "backendRequired": "Selecciona un backend de ejecución",
     "teamDistributed": "Equipo · Automático",
-    "teamDeleteDisabledTip": "Este empleado digital lo distribuye tu organización. No se puede eliminar aquí: desaparece solo cuando un administrador revoca el acceso."
+    "teamDeleteDisabledTip": "Este empleado digital lo distribuye tu organización. No se puede eliminar aquí: desaparece solo cuando un administrador revoca el acceso.",
+    "companyTag": "Empresa",
+    "boundSkillsCount": "Habilidades {{count}}",
+    "boundToolsCount": "Herramientas {{count}}",
+    "boundCount": "{{count}} vinculados",
+    "startChat": "Iniciar chat",
+    "startChatFailed": "No se pudo iniciar el chat",
+    "employeeUnavailable": "Este empleado digital ya no está disponible. Es posible que el administrador haya revocado el acceso.",
+    "homeEmployeesHint": "Empleados digitales configurados por tu empresa, con habilidades, herramientas y modelo listos. Elige uno y di lo que necesitas.",
+    "teamManagedHint": "Lo configura el administrador en la consola de la empresa; no se puede cambiar aquí.",
+    "tabKnowledge": "Base de conocimiento",
+    "fieldBoundSkills": "Habilidades vinculadas",
+    "fieldBoundTools": "Herramientas vinculadas",
+    "starterPromptsTitle": "Prueba a pedir",
+    "openConversation": "Abrir conversación",
+    "chatSession": "Chat"
   },
   "language": {
     "switchTooltip": "Cambiar idioma"

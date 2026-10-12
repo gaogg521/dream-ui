@@ -21,6 +21,7 @@ import { useMediaComposer } from '@/renderer/hooks/media/useMediaComposer';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import GuidAuthorTip from './components/GuidAuthorTip';
 import GuidInputCard from './components/GuidInputCard';
+import EnterpriseEmployeeGrid from '@/renderer/components/enterprise/EnterpriseEmployeeGrid';
 import EnterpriseSceneGrid from '@/renderer/components/enterprise/EnterpriseSceneGrid';
 import GuidModelSelector from './components/GuidModelSelector';
 import TrialModelBanner from './components/TrialModelBanner';
@@ -830,6 +831,8 @@ const GuidPage: React.FC = () => {
             onSelectWorkspace={(dir) => guidInput.setDir(dir)}
             onClearWorkspace={() => guidInput.setDir('')}
           />
+
+          <EnterpriseEmployeeGrid />
 
           <EnterpriseSceneGrid />
 
