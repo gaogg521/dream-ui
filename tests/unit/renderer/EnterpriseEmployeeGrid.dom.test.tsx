@@ -74,7 +74,9 @@ describe('EnterpriseEmployeeGrid', () => {
   it('a starter prompt opens a chat that sends it; the button opens an empty one', async () => {
     renderGrid();
     fireEvent.click(await screen.findByText('起草本周周报'));
-    await waitFor(() => expect(hooks.startEmployeeChat).toHaveBeenCalledWith('pa_team', hooks.navigate, '起草本周周报'));
+    await waitFor(() =>
+      expect(hooks.startEmployeeChat).toHaveBeenCalledWith('pa_team', hooks.navigate, '起草本周周报')
+    );
 
     fireEvent.click(screen.getByText('common.superAssistant.startChat'));
     await waitFor(() => expect(hooks.startEmployeeChat).toHaveBeenLastCalledWith('pa_team', hooks.navigate, undefined));

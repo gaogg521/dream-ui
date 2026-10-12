@@ -32,7 +32,7 @@ describe('startEmployeeChat', () => {
 
   it('opens the bound conversation and queues the first message for whichever send box mounts', async () => {
     const navigate = vi.fn();
-    await expect(startEmployeeChat('pa_1', navigate, '  Draft this week\'s report ')).resolves.toBe('conv_1');
+    await expect(startEmployeeChat('pa_1', navigate, "  Draft this week's report ")).resolves.toBe('conv_1');
 
     expect(startChatMock).toHaveBeenCalledWith({ agentId: 'pa_1' });
     const queued = JSON.stringify({ input: "Draft this week's report" });

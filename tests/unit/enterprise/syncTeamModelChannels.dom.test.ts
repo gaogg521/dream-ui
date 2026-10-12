@@ -106,7 +106,10 @@ beforeEach(() => {
   hooks.syncTeamMcp.mockResolvedValue({ written: [], removed: [], kept: 0 });
   hooks.clearEnterpriseUpstream.mockResolvedValue(undefined);
   // The stored-token probe: by default the proxy accepts whatever it is shown.
-  vi.stubGlobal('fetch', vi.fn(async () => new Response('{"data":[]}', { status: 200 })));
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => new Response('{"data":[]}', { status: 200 }))
+  );
 });
 
 afterEach(() => {
@@ -302,7 +305,10 @@ describe('a stored token the proxy no longer accepts', () => {
     const id = 'ochan_stale_b';
     hooks.listModelChannels.mockResolvedValue([channel(id, 'corp-gateway')]);
     hooks.listProviders.mockResolvedValue([{ id: `prov_chan_${id}`, api_key: 'onech-still-good' }]);
-    vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Promise.reject(new TypeError('Failed to fetch')))
+    );
 
     await syncTeamModelChannels();
 
@@ -314,7 +320,10 @@ describe('a stored token the proxy no longer accepts', () => {
     const id = 'ochan_stale_c';
     hooks.listModelChannels.mockResolvedValue([channel(id, 'corp-gateway')]);
     hooks.listProviders.mockResolvedValue([{ id: `prov_chan_${id}`, api_key: 'onech-still-good' }]);
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"upstream invalid api key"}', { status: 401 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{"error":"upstream invalid api key"}', { status: 401 }))
+    );
 
     await syncTeamModelChannels();
 
