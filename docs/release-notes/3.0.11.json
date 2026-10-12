@@ -1,0 +1,24 @@
+{
+  "version": "3.0.11",
+  "date": "2026-10-11",
+  "zh": [
+    {
+      "t": "单机版",
+      "d": "本版主要打磨消息渠道：在飞书、钉钉里通过机器人使用 dream 引擎时，卡片按钮真正可用，重新生成直接更新原消息，同一会话的消息按顺序处理。内置模型依旧开箱即用，无需注册、无需粘贴 Key。\n\n【优化改进】\n· 【飞书卡片】点击「重新生成」会在原消息上更新，执行中显示中文状态并暂时收起按钮，完成后恢复；不再每点一次多出一条新消息\n· 【消息顺序】同一会话里连续发来的消息按顺序逐条处理，不再并发抢跑\n\n【修复】\n· 修复飞书卡片按钮点了没有反应（适配飞书新版回调格式）\n· 修复飞书分包回调未完整确认，导致平台重复投递\n· 修复客户端重启后，已处理过的飞书事件可能被再次执行\n· 修复钉钉卡片嵌套参数解析与回执"
+    },
+    {
+      "t": "企业版",
+      "d": "本版桌面端接上企业版 1.0.3 的「导出保护」：从 One Work 导出的文档带上看不见的来源标记，并可按公司策略加密成只有公司成员能打开的包。需要企业服务器升级到 1.0.3 及以上。\n\n【新增】\n· 【导出水印】导出的 Markdown 文件末尾附带不可见的来源标记，记录导出人和时间；管理员可在后台核验一份文件是否出自本公司、由谁导出、内容是否被改过\n· 【加密导出】导出时可选择加密为 .owenc 包，只有公司授权的成员能在 One Work 里打开；可指定全公司、项目组或具体成员可见，并可设有效期\n· 【加密包查看】双击 .owenc 文件即在 One Work 中打开预览；内容只留在窗口里，不会解密落盘，复制全文会记入审计\n· 【导出策略】管理员可设为可选、默认加密或强制加密；强制加密时普通导出与复制原文会被拦下\n· 【审计与撤销】导出、复制、打包、打开都记入审计；管理员可随时撤销已发出的加密包\n\n【修复】\n· 修复钉钉扫码登录回调与组织绑定校验，企业微信错误码解析与应用就绪判断\n\n个人版的导出行为不变，仍是普通明文文件。"
+    }
+  ],
+  "en": [
+    {
+      "t": "Personal edition",
+      "d": "This release polishes messaging channels: when you use the dream engine through a Feishu or DingTalk bot, card buttons now work, regenerating updates the original message, and messages in one chat are handled in order. Built-in models still work out of the box, no sign-up and no API key needed.\n\n[Improved]\n· [Feishu cards] Regenerate now updates the original message, showing a status while it runs and hiding the buttons until it finishes, instead of adding a new message per click\n· [Message order] Messages arriving in the same chat are processed one at a time, in order\n\n[Fixed]\n· Feishu card buttons did nothing (now handles Feishu's current callback format)\n· Fragmented Feishu callbacks were not fully acknowledged, so the platform re-delivered them\n· Feishu events already handled could run again after the client restarted\n· DingTalk nested card parameters and acknowledgements"
+    },
+    {
+      "t": "Enterprise edition",
+      "d": "The desktop client now supports export protection from enterprise 1.0.3: documents exported from One Work carry an invisible origin mark and, depending on company policy, can be encrypted so that only company members can open them. Requires the enterprise server at 1.0.3 or later.\n\n[New]\n· [Export watermark] Exported Markdown carries an invisible mark recording who exported it and when; admins can check whether a file came from the company, who exported it and whether it was altered\n· [Encrypted export] Exports can be sealed into an .owenc package that only authorised members can open in One Work, scoped to the whole company, a project group or named members, with an optional expiry\n· [Package viewer] Double-click an .owenc file to preview it in One Work; the content stays in the window and is never written out decrypted, and copying it all is audited\n· [Export policy] Admins choose optional, encrypted by default, or encryption required; when required, plain export and copying the source are blocked\n· [Audit and revoke] Exports, copies, packaging and opens are audited; admins can revoke a package at any time\n\n[Fixed]\n· DingTalk sign-in callback and organisation binding checks; WeCom error-code parsing and app readiness check\n\nExports in the personal edition are unchanged and remain plain files."
+    }
+  ]
+}

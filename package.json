@@ -1,6 +1,6 @@
 {
   "name": "1one-claudecode",
-  "version": "3.0.10",
+  "version": "3.0.11",
   "private": true,
   "description": "One Work — Visual control center for Claude Code native capabilities.",
   "keywords": [],
@@ -263,7 +263,7 @@
   "engines": {
     "node": ">=22 <25"
   },
-  "dreamcoreVersion": "v0.1.82",
+  "dreamcoreVersion": "v0.1.83",
   "electronRebuild": {
     "electronVersion": "^39.8.10"
   },
