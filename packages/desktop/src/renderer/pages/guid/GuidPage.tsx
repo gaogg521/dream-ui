@@ -21,9 +21,9 @@ import { useMediaComposer } from '@/renderer/hooks/media/useMediaComposer';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import GuidAuthorTip from './components/GuidAuthorTip';
 import GuidInputCard from './components/GuidInputCard';
-import EnterpriseSceneGrid from '@/renderer/components/enterprise/EnterpriseSceneGrid';
-import { startSceneConversation } from '@/renderer/components/enterprise/sceneChat';
-import type { MyScene } from '@/common/types/platform/enterpriseTypes';
+import SceneGrid from '@/renderer/components/scenes/SceneGrid';
+import { startSceneConversation } from '@/renderer/utils/scenes/sceneChat';
+import type { SceneItem } from '@/renderer/utils/scenes/sceneItem';
 import { emitter } from '@/renderer/utils/emitter';
 import GuidModelSelector from './components/GuidModelSelector';
 import TrialModelBanner from './components/TrialModelBanner';
@@ -802,7 +802,7 @@ const GuidPage: React.FC = () => {
   // skills; the member types the task there, as with a company employee.
   const sceneModel = modelSelection.current_model;
   const handleOpenScene = useCallback(
-    async (scene: MyScene) => {
+    async (scene: SceneItem) => {
       if (!sceneModel) {
         Message.warning(t('conversation.noModelConfigured'));
         return;
@@ -822,6 +822,11 @@ const GuidPage: React.FC = () => {
     },
     [navigate, sceneModel, t]
   );
+
+  // Making a scene happens on the scenes tab, which opens its editor for `new`.
+  const handleCreateScene = useCallback(() => {
+    void navigate('/settings/super-assistant?tab=scenes&new=1');
+  }, [navigate]);
 
   return (
     <ConfigProvider getPopupContainer={() => guidContainerRef.current || document.body}>
@@ -862,7 +867,7 @@ const GuidPage: React.FC = () => {
             onClearWorkspace={() => guidInput.setDir('')}
           />
 
-          <EnterpriseSceneGrid onOpenScene={handleOpenScene} />
+          <SceneGrid onOpenScene={handleOpenScene} onCreateScene={handleCreateScene} />
 
           {selectedAssistantPrompts.length > 0 ? (
             <div className='mt-40px w-full animate-fade-in ps-20px'>

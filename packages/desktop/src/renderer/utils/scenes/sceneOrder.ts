@@ -43,17 +43,21 @@ export function saveSceneOrder(scope: SceneOrderScope, order: string[]): void {
  * since — go after the ordered ones in the server's order; ids in the order
  * that no longer exist are ignored.
  */
-export function applySceneOrder<T extends { id: string }>(scenes: T[], order: string[]): T[] {
-  const byId = new Map(scenes.map((scene) => [scene.id, scene]));
+export function applySceneOrder<T>(
+  scenes: T[],
+  order: string[],
+  keyOf: (scene: T) => string = (scene) => (scene as { id: string }).id
+): T[] {
+  const byKey = new Map(scenes.map((scene) => [keyOf(scene), scene]));
   const ordered: T[] = [];
-  for (const id of order) {
-    const scene = byId.get(id);
+  for (const key of order) {
+    const scene = byKey.get(key);
     if (scene) {
       ordered.push(scene);
-      byId.delete(id);
+      byKey.delete(key);
     }
   }
-  return [...ordered, ...scenes.filter((scene) => byId.has(scene.id))];
+  return [...ordered, ...scenes.filter((scene) => byKey.has(keyOf(scene)))];
 }
 
 /** The order after dragging `activeId` onto `overId`'s place. Unknown ids change nothing. */

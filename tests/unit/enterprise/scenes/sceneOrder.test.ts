@@ -12,7 +12,7 @@ import {
   moveScene,
   saveSceneOrder,
   type SceneOrderScope,
-} from '@/renderer/components/enterprise/sceneOrder';
+} from '@/renderer/utils/scenes/sceneOrder';
 
 const scope = (patch: Partial<SceneOrderScope> = {}): SceneOrderScope => ({
   server: 'https://one.corp',

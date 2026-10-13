@@ -6,8 +6,8 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { loadDisabledScenes, saveDisabledScenes, setSceneEnabled } from '@/renderer/components/enterprise/sceneEnabled';
-import type { SceneOrderScope } from '@/renderer/components/enterprise/sceneOrder';
+import { loadDisabledScenes, saveDisabledScenes, setSceneEnabled } from '@/renderer/utils/scenes/sceneEnabled';
+import type { SceneOrderScope } from '@/renderer/utils/scenes/sceneOrder';
 
 const scope = (patch: Partial<SceneOrderScope> = {}): SceneOrderScope => ({
   server: 'https://one.corp',

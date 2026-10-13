@@ -4,18 +4,32 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SWRConfig } from 'swr';
 
-const hooks = vi.hoisted(() => ({ myScenes: vi.fn(), userId: 'member-1' }));
+const hooks = vi.hoisted(() => ({
+  myScenes: vi.fn(),
+  userId: 'member-1',
+  company: true,
+  personal: undefined as unknown,
+}));
 
 vi.mock('@/common', () => ({
   ipcBridge: { onePlatform: { myScenes: { invoke: hooks.myScenes } } },
 }));
 vi.mock('@/common/adapter/enterpriseMode', () => ({
-  isEnterpriseRemoteActive: () => true,
-  getEnterpriseServerUrl: () => 'https://enterprise.test',
-  getEnterpriseSession: () => ({ userId: hooks.userId }),
+  isEnterpriseRemoteActive: () => hooks.company,
+  getEnterpriseServerUrl: () => (hooks.company ? 'https://enterprise.test' : null),
+  getEnterpriseSession: () => (hooks.company ? { userId: hooks.userId } : null),
+}));
+vi.mock('@/common/config/storage', () => ({
+  ConfigStorage: {
+    get: async () => hooks.personal,
+    set: async (_key: string, value: unknown) => {
+      hooks.personal = value;
+      return value;
+    },
+  },
 }));
 vi.mock('@/renderer/pages/enterprise/hooks/useOrgContext', () => ({
-  useOrgContext: () => ({ context: { isEnterprise: true, tenantId: 'tenant-1' } }),
+  useOrgContext: () => ({ context: hooks.company ? { isEnterprise: true, tenantId: 'tenant-1' } : null }),
 }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -23,8 +37,10 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-import EnterpriseSceneGrid from '@/renderer/components/enterprise/EnterpriseSceneGrid';
+import SceneGrid from '@/renderer/components/scenes/SceneGrid';
+import type { SceneItem } from '@/renderer/utils/scenes/sceneItem';
 import type { MyScene } from '@/common/types/platform/enterpriseTypes';
+import { newPersonalScene } from '@/renderer/utils/scenes/personalScenes';
 
 const scene = (id: string, name: string): MyScene => ({
   id,
@@ -43,28 +59,33 @@ const SCENES = [scene('s1', '办公'), scene('s2', 'IT运维'), scene('s3', '网
 const ORDER_KEY = 'one-enterprise:scene-order:https://enterprise.test|tenant-1|member-1';
 const OFF_KEY = 'one-enterprise:scene-off:https://enterprise.test|tenant-1|member-1';
 
-const renderGrid = (onOpenScene?: (s: MyScene) => void | Promise<void>) =>
+const renderGrid = (onOpenScene?: (item: SceneItem) => void | Promise<void>, onCreateScene?: () => void) =>
   render(
     <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
-      <EnterpriseSceneGrid onOpenScene={onOpenScene} />
+      <SceneGrid onOpenScene={onOpenScene} onCreateScene={onCreateScene} />
     </SWRConfig>
   );
 
 const names = () => [...document.querySelectorAll<HTMLElement>('[data-scene-name]')].map((el) => el.dataset.sceneName);
 
-describe('EnterpriseSceneGrid opening a scene', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    hooks.userId = 'member-1';
-    hooks.myScenes.mockReset().mockResolvedValue(SCENES);
-  });
+const reset = () => {
+  localStorage.clear();
+  hooks.userId = 'member-1';
+  hooks.company = true;
+  hooks.personal = undefined;
+  hooks.myScenes.mockReset().mockResolvedValue(SCENES);
+};
+
+describe('SceneGrid opening a scene', () => {
+  beforeEach(reset);
 
   it('opens the clicked scene', async () => {
     const open = vi.fn();
     renderGrid(open);
     fireEvent.click(await screen.findByText('IT运维'));
     expect(open).toHaveBeenCalledTimes(1);
-    expect(open.mock.calls[0][0]).toMatchObject({ id: 's2', name: 'IT运维' });
+    expect(open.mock.calls[0][0]).toMatchObject({ key: 's2', name: 'IT运维', source: 'company' });
+    expect(open.mock.calls[0][0].company).toMatchObject({ id: 's2' });
   });
 
   it('opens from the keyboard too', async () => {
@@ -104,12 +125,8 @@ describe('EnterpriseSceneGrid opening a scene', () => {
   });
 });
 
-describe('EnterpriseSceneGrid order', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    hooks.userId = 'member-1';
-    hooks.myScenes.mockReset().mockResolvedValue(SCENES);
-  });
+describe('SceneGrid order', () => {
+  beforeEach(reset);
 
   it('follows the order the member saved', async () => {
     localStorage.setItem(ORDER_KEY, JSON.stringify(['s3', 's1']));
@@ -133,12 +150,8 @@ describe('EnterpriseSceneGrid order', () => {
   });
 });
 
-describe('EnterpriseSceneGrid scenes the member switched off', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    hooks.userId = 'member-1';
-    hooks.myScenes.mockReset().mockResolvedValue(SCENES);
-  });
+describe('SceneGrid scenes the member switched off', () => {
+  beforeEach(reset);
 
   it('leaves them out of the home page and keeps the rest in order', async () => {
     localStorage.setItem(OFF_KEY, JSON.stringify(['s2']));
@@ -160,5 +173,75 @@ describe('EnterpriseSceneGrid scenes the member switched off', () => {
     renderGrid(vi.fn());
     await screen.findByText('办公');
     expect(names()).toEqual(['办公', 'IT运维', '网络安全']);
+  });
+});
+
+describe('SceneGrid with the person own scenes', () => {
+  beforeEach(reset);
+
+  it('shows company scenes and personal scenes together, personal ones marked as the person own', async () => {
+    hooks.personal = [newPersonalScene({ name: '我的官网' })];
+    renderGrid(vi.fn());
+    await screen.findByText('我的官网');
+    expect(names()).toEqual(['办公', 'IT运维', '网络安全', '我的官网']);
+    const mine = screen.getByText('我的官网').closest('[data-scene-name]') as HTMLElement;
+    expect(mine.dataset.sceneSource).toBe('mine');
+    // Only company scenes carry the company badge.
+    expect(screen.getAllByText('common.scenes.sourceCompany')).toHaveLength(3);
+  });
+
+  it('opens a personal scene with the scene as it was made', async () => {
+    const mine = newPersonalScene({ name: '我的官网', prompt: 'p' });
+    hooks.personal = [mine];
+    const open = vi.fn();
+    renderGrid(open);
+    fireEvent.click(await screen.findByText('我的官网'));
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(open.mock.calls[0][0]).toMatchObject({ key: `mine:${mine.id}`, source: 'mine' });
+    expect(open.mock.calls[0][0].mine).toMatchObject({ id: mine.id, prompt: 'p' });
+  });
+
+  it('puts a personal scene where the member dragged it, among company scenes', async () => {
+    const mine = newPersonalScene({ name: '我的官网' });
+    hooks.personal = [mine];
+    localStorage.setItem(ORDER_KEY, JSON.stringify([`mine:${mine.id}`, 's2']));
+    renderGrid(vi.fn());
+    await screen.findByText('我的官网');
+    expect(names()).toEqual(['我的官网', 'IT运维', '办公', '网络安全']);
+  });
+
+  it('works with no company at all: a stand-alone install sees its own scenes and can make more', async () => {
+    hooks.company = false;
+    hooks.personal = [newPersonalScene({ name: '周报' })];
+    const create = vi.fn();
+    renderGrid(vi.fn(), create);
+    await screen.findByText('周报');
+    expect(names()).toEqual(['周报']);
+    expect(hooks.myScenes).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId('scene-create'));
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it('invites a person with no scenes to make one, instead of staying silent', async () => {
+    hooks.company = false;
+    const create = vi.fn();
+    renderGrid(vi.fn(), create);
+    expect(await screen.findByText('common.scenes.emptyCreate')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('scene-create'));
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers no way to make a scene when the page did not give it one', async () => {
+    renderGrid(vi.fn());
+    await screen.findByText('办公');
+    expect(screen.queryByTestId('scene-create')).not.toBeInTheDocument();
+  });
+
+  it('still shows the person own scenes when the company cannot be reached', async () => {
+    hooks.personal = [newPersonalScene({ name: '我的官网' })];
+    hooks.myScenes.mockReset().mockRejectedValue(new Error('unreachable'));
+    renderGrid(vi.fn());
+    expect(await screen.findByText('我的官网')).toBeInTheDocument();
+    expect(names()).toEqual(['我的官网']);
   });
 });

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SWRConfig } from 'swr';
 
 const hooks = vi.hoisted(() => ({ myScenes: vi.fn(), userId: 'member-1' }));
+const store = vi.hoisted(() => ({ personal: undefined as unknown }));
 
 vi.mock('@/common', () => ({
   ipcBridge: { onePlatform: { myScenes: { invoke: hooks.myScenes } } },
@@ -13,6 +14,15 @@ vi.mock('@/common/adapter/enterpriseMode', () => ({
   isEnterpriseRemoteActive: () => true,
   getEnterpriseServerUrl: () => 'https://enterprise.test',
   getEnterpriseSession: () => ({ userId: hooks.userId }),
+}));
+vi.mock('@/common/config/storage', () => ({
+  ConfigStorage: {
+    get: async () => store.personal,
+    set: async (_key: string, value: unknown) => {
+      store.personal = value;
+      return value;
+    },
+  },
 }));
 vi.mock('@/renderer/pages/enterprise/hooks/useOrgContext', () => ({
   useOrgContext: () => ({ context: { isEnterprise: true, tenantId: 'tenant-1' } }),
@@ -37,6 +47,7 @@ const renderSceneContext = () =>
 
 describe('EnterpriseSceneContext', () => {
   beforeEach(() => {
+    store.personal = undefined;
     hooks.myScenes.mockReset().mockResolvedValue([
       {
         id: 'scene-office',
@@ -71,7 +82,7 @@ describe('EnterpriseSceneContext', () => {
   });
 });
 
-import EnterpriseSceneGrid from '@/renderer/components/enterprise/EnterpriseSceneGrid';
+import EnterpriseSceneGrid from '@/renderer/components/scenes/SceneGrid';
 
 describe('EnterpriseSceneGrid refresh', () => {
   it('replaces the empty guidance with a newly granted scene on refresh', async () => {
@@ -86,10 +97,10 @@ describe('EnterpriseSceneGrid refresh', () => {
         <EnterpriseSceneGrid />
       </SWRConfig>
     );
-    expect(await screen.findByText('common.scenes.empty')).toBeInTheDocument();
+    expect(await screen.findByText('common.scenes.emptyCreate')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'common.refresh' }));
     expect(await screen.findByText('Newly granted scene')).toBeInTheDocument();
-    expect(screen.queryByText('common.scenes.empty')).not.toBeInTheDocument();
+    expect(screen.queryByText('common.scenes.emptyCreate')).not.toBeInTheDocument();
   });
 });
 
@@ -150,7 +161,7 @@ describe('EnterpriseSceneGrid authorization boundaries', () => {
       </SWRConfig>
     );
     fireEvent.click(await screen.findByRole('button', { name: 'common.retry' }));
-    expect(await screen.findByText('common.scenes.empty')).toBeInTheDocument();
+    expect(await screen.findByText('common.scenes.emptyCreate')).toBeInTheDocument();
   });
 
   it('does not reuse another member scene cache in the same project group', async () => {
@@ -172,7 +183,7 @@ describe('EnterpriseSceneGrid authorization boundaries', () => {
     hooks.userId = 'member-b';
     mounted.rerender(view());
     expect(screen.queryByText('Member A scene')).not.toBeInTheDocument();
-    expect(await screen.findByText('common.scenes.empty')).toBeInTheDocument();
+    expect(await screen.findByText('common.scenes.emptyCreate')).toBeInTheDocument();
     hooks.userId = 'member-1';
   });
 });

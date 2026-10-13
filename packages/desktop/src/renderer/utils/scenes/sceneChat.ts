@@ -1,0 +1,119 @@
+/**
+ * Copyright 2026 One Work
+ */
+
+/**
+ * Opening a conversation from a scene, whoever made it.
+ *
+ * Clicking a scene on the home page should land the person in a conversation
+ * that already has what the scene carries — not leave them on a page that only
+ * describes it. The conversation is a plain dream conversation whose extra
+ * carries the scene's standing rules (role, working method, hard rules, see
+ * `sceneProtocol`) and its skills as the initial skill set, which are the same
+ * inputs the home composer already sends.
+ *
+ * A company scene names its skills by company registry id; on a member's
+ * machine only the team sync's local copies exist, so each id is resolved to the
+ * local one it was materialized as. A personal scene names local skills
+ * directly, and may limit the conversation to some MCP servers. Anything that
+ * is not there (not synced yet, since uninstalled) is left out rather than
+ * failing the click.
+ */
+
+import { ipcBridge } from '@/common';
+import type { TProviderWithModel } from '@/common/config/storage';
+import type { MyScene } from '@/common/types/platform/enterpriseTypes';
+import type { PersonalScene } from '@/common/types/platform/sceneTypes';
+import { buildSceneRules } from './sceneProtocol';
+import type { SceneItem } from './sceneItem';
+
+/** The slice of `ipcBridge.fs.listAvailableSkills` rows this needs. */
+export type LocalSkill = { name: string; location: string; source?: string };
+
+/** The conversation-create payload for a scene (media-style dream conversation). */
+export type SceneConversationRequest = {
+  type: 'dream';
+  name: string;
+  model: TProviderWithModel;
+  extra: {
+    workspace: string;
+    custom_workspace: false;
+    /** The scene's standing rules: role, working method, hard rules, acceptance. */
+    preset_rules: string;
+    /** Local skill names the conversation starts with. */
+    enabled_skills: string[];
+    /** Local MCP server ids the conversation is limited to; absent means "whatever is enabled". */
+    selected_mcp_server_ids?: string[];
+    /** Which scene this was opened from; display and diagnostics only. */
+    scene_id: string;
+  };
+};
+
+/** `[A-Za-z0-9_-]` is all the team sync keeps of a registry id in a directory name. */
+const sanitizeRegistryId = (id: string): string => id.replace(/[^A-Za-z0-9_-]/g, '');
+
+/** Local skill names for the scene's explicitly granted skills, in the scene's order. */
+export function resolveSceneSkillNames(scene: Pick<MyScene, 'skillIds'>, skills: LocalSkill[]): string[] {
+  const names: string[] = [];
+  for (const registryId of scene.skillIds ?? []) {
+    const segment = sanitizeRegistryId(registryId);
+    if (!segment) continue;
+    const local = skills.find((skill) => skill.source === 'team' && skill.location.split(/[\\/]/).includes(segment));
+    if (local && !names.includes(local.name)) names.push(local.name);
+  }
+  return names;
+}
+
+/** The skills a personal scene still has: the ones it names that exist on this machine, in its order. */
+export function resolvePersonalSkillNames(scene: Pick<PersonalScene, 'skillNames'>, skills: LocalSkill[]): string[] {
+  const available = new Set(skills.map((skill) => skill.name));
+  return scene.skillNames.filter((name) => available.has(name));
+}
+
+export function buildSceneConversationRequest(params: {
+  item: SceneItem;
+  skills: LocalSkill[];
+  model: TProviderWithModel;
+}): SceneConversationRequest {
+  const { item, skills, model } = params;
+  const company = item.company;
+  const mine = item.mine;
+  const rules = buildSceneRules(
+    company
+      ? {
+          name: company.name,
+          description: company.description,
+          prompt: company.prompt,
+          jobFunctions: company.jobFunctions,
+          intent: company.intent,
+        }
+      : { name: item.name, description: item.description, prompt: mine?.prompt, intent: mine?.intent }
+  );
+  const extra: SceneConversationRequest['extra'] = {
+    workspace: '',
+    custom_workspace: false,
+    preset_rules: rules,
+    enabled_skills: company
+      ? resolveSceneSkillNames(company, skills)
+      : mine
+        ? resolvePersonalSkillNames(mine, skills)
+        : [],
+    scene_id: item.key,
+  };
+  if (mine && mine.mcpServerIds.length > 0) extra.selected_mcp_server_ids = mine.mcpServerIds;
+  return { type: 'dream', name: item.name, model, extra };
+}
+
+/** Create the scene's conversation and return its id, or `null` when the backend declined. */
+export async function startSceneConversation(item: SceneItem, model: TProviderWithModel): Promise<string | null> {
+  const skills = await ipcBridge.fs.listAvailableSkills
+    .invoke()
+    .then((rows) => rows.map(({ name, location, source }): LocalSkill => ({ name, location, source })))
+    // A scene whose skills cannot be read still opens: the rules and the
+    // connectors the team sync loads everywhere do not depend on them.
+    .catch((): LocalSkill[] => []);
+  const conversation = await ipcBridge.conversation.create.invoke(
+    buildSceneConversationRequest({ item, skills, model })
+  );
+  return conversation?.id ?? null;
+}

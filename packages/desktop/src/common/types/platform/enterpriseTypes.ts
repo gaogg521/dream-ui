@@ -27,6 +27,8 @@ export type MyScene = {
   jobFunctions: string[];
   /** What a conversation opened from this scene should know; null when the admin wrote none. */
   prompt?: string | null;
+  /** How to turn a rough request into a real one (see `SceneIntent`); absent on older servers. */
+  intent?: import('./sceneTypes').SceneIntent | null;
   builtIn: boolean;
   resources: MySceneResourceSummary[];
   /** Registry ids of the skills the scene grants explicitly (the `*` wildcard is `resources[].includesAll`). */

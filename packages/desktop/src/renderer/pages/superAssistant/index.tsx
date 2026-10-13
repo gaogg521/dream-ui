@@ -1,13 +1,14 @@
 /**
- * Digital employees page — the roster of employees this member can use, plus
- * the knowledge base they draw on.
+ * Digital employees and scenes page — the roster of employees this member can
+ * use, the scenes they can start work from (their own and, when a company is
+ * connected, the company's), and the knowledge base they draw on.
  *
  * Open one with "start chat" and say what you need; the backend binds the
  * conversation to the employee so its persona and resources load. This page is
  * also where a member reads what an employee carries, schedules it (company
  * employees included — that choice is the member's own and the team sync
  * leaves it alone), and builds personal ones. It is deliberately not on the
- * home page: the home page's room goes to the enterprise scenes. The former collaboration kanban (issues, dispatch,
+ * home page: the home page's room goes to the scenes. The former collaboration kanban (issues, dispatch,
  * milestones, pipelines, test plans) is gone: dispatch never wrote its result
  * back, so the board showed work that went nowhere, and multi-agent
  * collaboration lives in team mode. The skills / MCP / scenes views it carried
@@ -174,11 +175,9 @@ const SuperAssistantPage: React.FC = () => {
                 onDeleteAgent={handleDelete}
               />
             </Tabs.TabPane>
-            {context?.isEnterprise ? (
-              <Tabs.TabPane key={TabKey.SCENES} title={t('common.scenes.tabTitle')}>
-                <ScenesTab />
-              </Tabs.TabPane>
-            ) : null}
+            <Tabs.TabPane key={TabKey.SCENES} title={t('common.scenes.tabTitle')}>
+              <ScenesTab />
+            </Tabs.TabPane>
             <Tabs.TabPane key={TabKey.KNOWLEDGE} title={t('common.superAssistant.tabKnowledge')}>
               <RagSection readOnly={knowledgeReadOnly} />
             </Tabs.TabPane>
