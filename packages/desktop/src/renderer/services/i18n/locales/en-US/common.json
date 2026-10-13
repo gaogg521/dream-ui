@@ -587,7 +587,10 @@
       "searchPlaceholderHybrid": "Search the knowledge base — meaning or exact terms, error codes, IDs...",
       "agentToolHint": "Assistants can now search this knowledge base themselves during a conversation, via the built-in search_team_knowledge tool. Each member only ever retrieves documents they are allowed to see.",
       "similarityBadge": "sim {{value}}",
-      "similarityTooltip": "Semantic similarity. Results are ordered by the fused semantic + keyword rank, so this number may not decrease down the list."
+      "similarityTooltip": "Semantic similarity. Results are ordered by the fused semantic + keyword rank, so this number may not decrease down the list.",
+      "onlyMe": "Only me",
+      "managedByCompany": "Managed by your company admin",
+      "editTitle": "Edit document: {{title}}"
     },
     "modelRequired": "Please select a model for this employee",
     "expertInstallFailed": "Failed to add the expert",

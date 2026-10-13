@@ -10,7 +10,7 @@ import ThemedLogo from '@/renderer/components/agent/ThemedLogo';
 import { Down, Robot } from '@icon-park/react';
 import { ipcBridge } from '@/common';
 import { resolveLocaleKey } from '@/common/utils';
-import type { ICreateCronJobParams, ICronJob, ICronJobUpdateParams } from '@/common/adapter/ipcBridge';
+import type { ICreateCronJobParams, ICronJob, ICronJobUpdateParams, ICronPushTarget } from '@/common/adapter/ipcBridge';
 import { useConversationAssistants } from '@renderer/pages/conversation/hooks/useConversationAssistants';
 import dayjs from 'dayjs';
 import type { TChatConversation, TProviderWithModel } from '@/common/config/storage';
@@ -25,15 +25,28 @@ import { getConversationCreateErrorMessage } from '@renderer/pages/conversation/
 import { resolveAssistantAvatar } from '@renderer/utils/model/assistantAvatar';
 import { resolveAssistantName } from '@renderer/utils/model/assistantDisplay';
 import { resolveCronAgentConfig } from './resolveCronAgentConfig';
+import PushTargetField from './PushTargetField';
 import { assistantRuntimeKey, isDreamEngineAssistant } from '@/common/types/agent/assistantTypes';
+import type { AutomationSchedule } from '../templates/automationTemplates';
 
 const FormItem = Form.Item;
 const TextArea = Input.TextArea;
 const Option = Select.Option;
 
+/** What a template fills the new-task form with; every part stays editable. */
+export type CreateTaskSeed = {
+  name: string;
+  prompt: string;
+  schedule: AutomationSchedule;
+};
+
 interface CreateTaskDialogProps {
   visible: boolean;
   onClose: () => void;
+  /** Called after a task was created (not after an edit). */
+  onCreated?: () => void;
+  /** Start a new task from a template instead of an empty form. */
+  seed?: CreateTaskSeed | null;
   /** When provided, the dialog operates in edit mode */
   editJob?: ICronJob;
   conversation_id?: string;
@@ -207,6 +220,32 @@ function parseCronExpr(expr: string): { frequency: FrequencyType; time: string; 
   return { frequency: 'custom', time: '09:00', weekday: 'MON' };
 }
 
+/** The form's starting schedule for a template (or a blank form without one). */
+function seedSchedule(schedule: AutomationSchedule | undefined): {
+  frequency: FrequencyType;
+  time: string;
+  weekday: string;
+  custom: CustomScheduleState;
+} {
+  const base = { time: '09:00', weekday: 'MON', custom: createDefaultCustomSchedule() };
+  if (!schedule) return { frequency: 'manual', ...base };
+  switch (schedule.frequency) {
+    case 'daily':
+    case 'weekdays':
+      return { ...base, frequency: schedule.frequency, time: schedule.time };
+    case 'weekly':
+      return { ...base, frequency: 'weekly', time: schedule.time, weekday: schedule.weekday };
+    case 'monthly':
+      return {
+        ...base,
+        frequency: 'custom',
+        custom: { ...base.custom, mode: 'monthly', time: schedule.time, monthDay: schedule.monthDay },
+      };
+    default:
+      return { frequency: 'manual', ...base };
+  }
+}
+
 /**
  * Infer the assistant selection key from an ICronJob's agent_config.
  *
@@ -232,6 +271,8 @@ function resolveTeamIdFromExtra(extra: TChatConversation['extra'] | undefined): 
 const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   visible,
   onClose,
+  onCreated,
+  seed,
   editJob,
   conversation_id: _conversation_id,
   conversation_title,
@@ -251,6 +292,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const isEditMode = !!editJob;
   const [execution_mode, setExecutionMode] = useState<ExecutionMode>('new_conversation');
   const [queueEnabled, setQueueEnabled] = useState(false);
+  const [pushTarget, setPushTarget] = useState<ICronPushTarget | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [teamOwnershipStatus, setTeamOwnershipStatus] = useState<'checking' | 'team' | 'standalone'>('standalone');
 
@@ -275,6 +317,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setCustomSchedule(parsed.frequency === 'custom' ? parseCustomSchedule(cronExpr) : createDefaultCustomSchedule());
       setExecutionMode(editJob.target.execution_mode || 'existing');
       setQueueEnabled(editJob.state.queue_enabled);
+      setPushTarget(editJob.push_target ?? null);
       setSelectedAssistantId(agentKey);
       setAdvancedOpen(
         Boolean(
@@ -295,12 +338,15 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setWorkspace(editJob.metadata.agent_config?.workspace);
     } else {
       form.resetFields();
-      setFrequency('manual');
-      setTime('09:00');
-      setWeekday('MON');
-      setCustomSchedule(createDefaultCustomSchedule());
+      const start = seedSchedule(seed?.schedule);
+      setFrequency(start.frequency);
+      setTime(start.time);
+      setWeekday(start.weekday);
+      setCustomSchedule(start.custom);
+      if (seed) form.setFieldsValue({ name: seed.name, prompt: seed.prompt });
       setExecutionMode('new_conversation');
       setQueueEnabled(false);
+      setPushTarget(null);
       setAdvancedOpen(false);
       setModelId(undefined);
       setConfigOptions(undefined);
@@ -308,7 +354,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setSelectedAssistantId(undefined);
       setTeamOwnershipStatus('standalone');
     }
-  }, [visible, editJob, form]);
+  }, [visible, editJob, form, seed]);
 
   useEffect(() => {
     if (!visible || !editJob?.metadata.conversation_id) {
@@ -575,6 +621,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             max_retries: editJob!.state.max_retries,
             queue_enabled: queueEnabled,
           },
+          push_target: pushTarget,
         };
 
         await ipcBridge.cron.updateJob.invoke({
@@ -594,9 +641,11 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           execution_mode: resolvedExecutionMode,
           queue_enabled: queueEnabled,
           agent_config,
+          ...(pushTarget ? { push_target: pushTarget } : {}),
         };
         await ipcBridge.cron.addJob.invoke(params);
         Message.success(t('cron.page.createSuccess'));
+        onCreated?.();
       }
 
       onClose();
@@ -732,6 +781,8 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           >
             <TextArea placeholder={t('cron.page.form.promptPlaceholder')} autoSize={{ minRows: 3, maxRows: 8 }} />
           </FormItem>
+
+          <PushTargetField value={pushTarget} onChange={setPushTarget} />
 
           <div className='mb-20px flex items-start justify-between gap-16px rounded-12px border border-solid border-[var(--color-border-2)] px-14px py-12px'>
             <div className='min-w-0'>

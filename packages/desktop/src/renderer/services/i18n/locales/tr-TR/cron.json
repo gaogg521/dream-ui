@@ -124,7 +124,16 @@
       "dreamEngineModelRequired": "1ONE CLI için bir model seçin",
       "noProvider": "Kullanılabilir model yok",
       "assistantLockedExistingConversation": "Aynı konuşma görevleri özgün yürütme asistanını korumalıdır. Başka bir asistan kullanmak için yeni bir görev oluşturun.",
-      "teamTaskExecutionModeLockedReason": "Team zamanlanmış görevleri ait oldukları Team konuşmasında çalışmaya devam etmelidir, bu nedenle yürütme modu değiştirilemez."
+      "teamTaskExecutionModeLockedReason": "Team zamanlanmış görevleri ait oldukları Team konuşmasında çalışmaya devam etmelidir, bu nedenle yürütme modu değiştirilemez.",
+      "push": {
+        "title": "Sonucu botuma gönder",
+        "hint": "Her çalıştırma bittiğinde sonucu bağladığınız bota (WeCom, Lark, DingTalk, Telegram…) gönderir; bilgisayarınızın başında olmasanız da görürsünüz.",
+        "placeholder": "Bir bot ve sohbet seçin",
+        "gone": "Kayıtlı bot veya sohbet artık yok; başka birini seçin",
+        "noBot": "Henüz bağlı bir bot yok. Ayarlar → Kanallar’dan bir bot bağlayıp tekrar gelin.",
+        "noChat": "Bot bağlı ancak henüz sohbet yok: uygulamadan ona bir mesaj gönderin, burada görünecektir.",
+        "goSettings": "Ayarları aç"
+      }
     },
     "freq": {
       "manual": "Manuel",
@@ -156,7 +165,8 @@
       "preview": "Oluşturulan Cron"
     },
     "searchPlaceholder": "Görev ara...",
-    "noSearchResults": "Eşleşen zamanlanmış görev yok."
+    "noSearchResults": "Eşleşen zamanlanmış görev yok.",
+    "fromTemplate": "Şablondan ekle"
   },
   "trigger": {
     "runScheduledTask": "Zamanlanmış görev çalıştır: {{name}}"
@@ -176,5 +186,30 @@
     "conversationNotFound": "Konuşma bulunamadı",
     "scheduledTimePassed": "Zamanlanmış saat geçti",
     "conversationBusy": "Konuşma meşgul, {{count}} denemeden sonra atlandı"
+  },
+  "templates": {
+    "title": "Şablondan ekle",
+    "hint": "Bir şablon seçin. Doldurduğu ad, istem ve zaman değiştirilebilir; oluşturulunca planlandığı gibi kendiliğinden çalışır.",
+    "category": {
+      "work": "İş",
+      "learning": "Öğrenme",
+      "life": "Günlük yaşam"
+    },
+    "when": {
+      "daily": "Her gün {{time}}",
+      "weekdays": "İş günleri {{time}}",
+      "weekly": "Her {{day}} {{time}}",
+      "monthly": "Her ayın {{day}}. günü {{time}}",
+      "manual": "Elle çalıştır"
+    },
+    "weekday": {
+      "MON": "Pazartesi",
+      "TUE": "Salı",
+      "WED": "Çarşamba",
+      "THU": "Perşembe",
+      "FRI": "Cuma",
+      "SAT": "Cumartesi",
+      "SUN": "Pazar"
+    }
   }
 }

@@ -114,7 +114,16 @@
       "assistantRequired": "Please select an assistant",
       "assistantPlaceholder": "Select the assistant to execute this task",
       "assistantLockedExistingConversation": "Ongoing conversation tasks must keep their original assistant. Create a new task to use another assistant.",
-      "teamTaskExecutionModeLockedReason": "Team scheduled tasks must keep running in the owning team conversation, so the execution mode cannot be changed."
+      "teamTaskExecutionModeLockedReason": "Team scheduled tasks must keep running in the owning team conversation, so the execution mode cannot be changed.",
+      "push": {
+        "title": "Enviar el resultado a mi bot",
+        "hint": "Al terminar cada ejecución, el resultado se envía a un bot que hayas conectado (WeCom, Lark, DingTalk, Telegram…) para verlo sin estar en el ordenador.",
+        "placeholder": "Elige un bot y un chat",
+        "gone": "El bot o el chat guardados ya no están disponibles; elige otro",
+        "noBot": "Aún no hay ningún bot conectado. Conecta uno en Ajustes → Canales y vuelve.",
+        "noChat": "El bot está conectado pero aún no tiene chats: envíale un mensaje desde la app y aparecerá aquí.",
+        "goSettings": "Abrir ajustes"
+      }
     },
     "freq": {
       "manual": "Manual",
@@ -148,7 +157,8 @@
       "preview": "Cron generado"
     },
     "searchPlaceholder": "Buscar tareas...",
-    "noSearchResults": "No hay tareas programadas coincidentes."
+    "noSearchResults": "No hay tareas programadas coincidentes.",
+    "fromTemplate": "Añadir desde plantilla"
   },
   "trigger": {
     "runScheduledTask": "Ejecutar tarea programada: {{name}}"
@@ -168,5 +178,30 @@
     "conversationNotFound": "Conversación no encontrada",
     "scheduledTimePassed": "La hora programada ya pasó",
     "conversationBusy": "Conversación ocupada después de {{count}} reintentos"
+  },
+  "templates": {
+    "title": "Añadir desde plantilla",
+    "hint": "Elige una plantilla. El nombre, el prompt y el horario se pueden cambiar; una vez creada se ejecuta sola.",
+    "category": {
+      "work": "Trabajo",
+      "learning": "Aprendizaje",
+      "life": "Vida diaria"
+    },
+    "when": {
+      "daily": "Cada día {{time}}",
+      "weekdays": "Días laborables {{time}}",
+      "weekly": "Cada {{day}} {{time}}",
+      "monthly": "Cada mes el día {{day}} a las {{time}}",
+      "manual": "Ejecutar a mano"
+    },
+    "weekday": {
+      "MON": "lunes",
+      "TUE": "martes",
+      "WED": "miércoles",
+      "THU": "jueves",
+      "FRI": "viernes",
+      "SAT": "sábado",
+      "SUN": "domingo"
+    }
   }
 }

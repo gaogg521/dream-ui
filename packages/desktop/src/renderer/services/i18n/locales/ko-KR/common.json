@@ -229,7 +229,10 @@
       "searchPlaceholderHybrid": "지식베이스 검색 —— 의미로도, 오류 코드·ID 같은 정확한 용어로도",
       "agentToolHint": "어시스턴트가 대화 중 내장 search_team_knowledge 도구로 이 지식베이스를 직접 검색할 수 있습니다. 각 멤버는 열람 권한이 있는 문서만 조회합니다.",
       "similarityBadge": "유사도 {{value}}",
-      "similarityTooltip": "의미 유사도입니다. 결과는 의미 + 키워드 융합 순위로 정렬되므로 이 값이 아래로 갈수록 작아지지 않을 수 있습니다."
+      "similarityTooltip": "의미 유사도입니다. 결과는 의미 + 키워드 융합 순위로 정렬되므로 이 값이 아래로 갈수록 작아지지 않을 수 있습니다.",
+      "onlyMe": "나만 보기",
+      "managedByCompany": "회사 관리자가 관리",
+      "editTitle": "문서 편집: {{title}}"
     },
     "fieldExpert": "전문가",
     "fieldBackend": "실행 백엔드",

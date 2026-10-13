@@ -111,7 +111,16 @@
       "dreamEngineModelRequired": "Veuillez sélectionner un modèle pour 1ONE CLI",
       "noProvider": "Aucun modèle disponible",
       "assistantLockedExistingConversation": "Les tâches de conversation en cours doivent conserver leur assistant d'origine. Créez une nouvelle tâche pour utiliser un autre assistant.",
-      "teamTaskExecutionModeLockedReason": "Les tâches planifiées par l'équipe doivent continuer à s'exécuter dans la conversation de l'équipe propriétaire, le mode d'exécution ne peut donc pas être modifié."
+      "teamTaskExecutionModeLockedReason": "Les tâches planifiées par l'équipe doivent continuer à s'exécuter dans la conversation de l'équipe propriétaire, le mode d'exécution ne peut donc pas être modifié.",
+      "push": {
+        "title": "Envoyer le résultat à mon bot",
+        "hint": "À la fin de chaque exécution, le résultat est envoyé à un bot que vous avez connecté (WeCom, Lark, DingTalk, Telegram…), pour le voir sans être devant votre ordinateur.",
+        "placeholder": "Choisissez un bot et une discussion",
+        "gone": "Le bot ou la discussion enregistrés ne sont plus disponibles — choisissez-en un autre",
+        "noBot": "Aucun bot connecté. Connectez-en un dans Paramètres → Canaux, puis revenez.",
+        "noChat": "Le bot est connecté mais n’a pas encore de discussion : envoyez-lui un message depuis l’application, il apparaîtra ici.",
+        "goSettings": "Ouvrir les paramètres"
+      }
     },
     "freq": {
       "manual": "Manuel",
@@ -143,7 +152,8 @@
       "preview": "Cron généré"
     },
     "searchPlaceholder": "Rechercher des tâches...",
-    "noSearchResults": "Aucune tâche planifiée correspondante."
+    "noSearchResults": "Aucune tâche planifiée correspondante.",
+    "fromTemplate": "Ajouter depuis un modèle"
   },
   "trigger": {
     "runScheduledTask": "Exécuter la tâche planifiée : {{name}}"
@@ -163,5 +173,30 @@
     "conversationNotFound": "Conversation introuvable",
     "scheduledTimePassed": "L'heure planifiée est dépassée",
     "conversationBusy": "Conversation occupée après {{count}} tentatives"
+  },
+  "templates": {
+    "title": "Ajouter depuis un modèle",
+    "hint": "Choisissez un modèle. Le nom, le prompt et l'horaire sont modifiables ; une fois créé, il s'exécute tout seul.",
+    "category": {
+      "work": "Travail",
+      "learning": "Apprentissage",
+      "life": "Vie quotidienne"
+    },
+    "when": {
+      "daily": "Chaque jour {{time}}",
+      "weekdays": "Jours ouvrés {{time}}",
+      "weekly": "Chaque {{day}} {{time}}",
+      "monthly": "Chaque mois le {{day}} à {{time}}",
+      "manual": "Exécution manuelle"
+    },
+    "weekday": {
+      "MON": "lundi",
+      "TUE": "mardi",
+      "WED": "mercredi",
+      "THU": "jeudi",
+      "FRI": "vendredi",
+      "SAT": "samedi",
+      "SUN": "dimanche"
+    }
   }
 }

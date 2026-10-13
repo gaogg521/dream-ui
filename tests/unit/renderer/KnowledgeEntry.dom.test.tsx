@@ -6,12 +6,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const hooks = vi.hoisted(() => ({ context: null as unknown, ragProps: vi.fn() }));
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
-vi.mock('@/renderer/pages/enterprise/hooks/useOrgContext', () => ({
-  useOrgContext: () => ({ context: hooks.context }),
-  isOrgAdminRole: (role: string | null | undefined) => role === 'admin' || role === 'owner',
-}));
 vi.mock('@/renderer/pages/superAssistant/registries/RagSection', () => ({
-  default: (props: { readOnly?: boolean }) => {
+  default: (props: Record<string, never>) => {
     hooks.ragProps(props);
     return <div data-testid='rag-section' />;
   },
@@ -49,20 +45,10 @@ describe('SiderKnowledgeEntry', () => {
 describe('KnowledgePage', () => {
   beforeEach(() => hooks.ragProps.mockClear());
 
-  it('lets a person manage the knowledge base when there is no company', () => {
-    hooks.context = null;
+  it('shows the knowledge section; what a member may change is decided inside it', () => {
+    hooks.context = { isEnterprise: true, role: 'member' };
     render(<KnowledgePage />);
     expect(screen.getByTestId('rag-section')).toBeInTheDocument();
-    expect(hooks.ragProps).toHaveBeenLastCalledWith({ readOnly: false });
-  });
-
-  it('is read-only for a company member, and writable for a company administrator', () => {
-    hooks.context = { isEnterprise: true, role: 'member' };
-    const { unmount } = render(<KnowledgePage />);
-    expect(hooks.ragProps).toHaveBeenLastCalledWith({ readOnly: true });
-    unmount();
-    hooks.context = { isEnterprise: true, role: 'admin' };
-    render(<KnowledgePage />);
-    expect(hooks.ragProps).toHaveBeenLastCalledWith({ readOnly: false });
+    expect(hooks.ragProps).toHaveBeenLastCalledWith({});
   });
 });

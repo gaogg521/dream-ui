@@ -229,7 +229,10 @@
       "searchPlaceholderHybrid": "Bilgi tabanında ara — anlamla ya da hata kodu, kimlik gibi tam terimlerle…",
       "agentToolHint": "Asistanlar artık sohbet sırasında bu bilgi tabanını yerleşik search_team_knowledge aracıyla kendileri arayabilir. Her üye yalnızca görmeye yetkili olduğu belgeleri getirir.",
       "similarityBadge": "benz. {{value}}",
-      "similarityTooltip": "Anlamsal benzerlik. Sonuçlar anlam + anahtar kelime birleşik sırasına göre dizilir, bu yüzden bu sayı aşağı doğru azalmayabilir."
+      "similarityTooltip": "Anlamsal benzerlik. Sonuçlar anlam + anahtar kelime birleşik sırasına göre dizilir, bu yüzden bu sayı aşağı doğru azalmayabilir.",
+      "onlyMe": "Yalnızca ben",
+      "managedByCompany": "Şirket yöneticisi tarafından yönetilir",
+      "editTitle": "Belgeyi düzenle: {{title}}"
     },
     "fieldExpert": "Uzman",
     "fieldBackend": "Çalışma arka ucu",

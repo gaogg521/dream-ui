@@ -53,6 +53,15 @@ export interface IChannelUser {
   session_id?: string;
 }
 
+/** A bot of the person's that a scheduled run's result can be pushed to, with the chats it can address. */
+export interface IChannelPushTarget {
+  pluginId: string;
+  type: string;
+  name: string;
+  connected: boolean;
+  chats: Array<{ chatId: string; displayName?: string }>;
+}
+
 export interface IChannelSession {
   id: string;
   user_id: string;

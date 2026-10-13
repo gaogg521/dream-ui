@@ -115,7 +115,16 @@
       "noProvider": "暂无可用模型",
       "assistantLockedExistingConversation": "持续会话任务必须保留原执行助手。如需更换助手，请新建任务。",
       "teamTaskExecutionModeLockedReason": "Team 自动化必须在所属 Team 会话中持续执行，因此不能修改执行模式。",
-      "dreamEngineNoProvider": "需先配置 Dream 引擎的模型渠道"
+      "dreamEngineNoProvider": "需先配置 Dream 引擎的模型渠道",
+      "push": {
+        "title": "推送到我的机器人",
+        "hint": "每次运行结束后，把结果发到你已连接的机器人（企业微信、飞书、钉钉、Telegram 等），不用回到电脑前也能看到。",
+        "placeholder": "选择机器人和会话",
+        "gone": "已保存的机器人或会话已不可用，请重新选择",
+        "noBot": "还没有连接机器人。先在「设置 → 渠道」里连接一个，再回来选择。",
+        "noChat": "机器人已连接，但还没有会话：先在机器人里给它发一条消息，这里就能选到了。",
+        "goSettings": "去连接"
+      }
     },
     "freq": {
       "manual": "手动触发",
@@ -145,7 +154,8 @@
       "weekdays": "星期",
       "monthDay": "每月日期",
       "preview": "生成的 Cron"
-    }
+    },
+    "fromTemplate": "从模板添加"
   },
   "trigger": {
     "runScheduledTask": "执行自动化：{{name}}"
@@ -165,5 +175,30 @@
     "conversationNotFound": "未找到会话",
     "scheduledTimePassed": "定时时间已过",
     "conversationBusy": "会话繁忙，在 {{count}} 次尝试后跳过"
+  },
+  "templates": {
+    "title": "从模板添加",
+    "hint": "选一个模板，填好的名称、提示词和时间都可以改；创建后按计划自动运行。",
+    "category": {
+      "work": "工作",
+      "learning": "学习",
+      "life": "生活"
+    },
+    "when": {
+      "daily": "每天 {{time}}",
+      "weekdays": "工作日 {{time}}",
+      "weekly": "每{{day}} {{time}}",
+      "monthly": "每月 {{day}} 日 {{time}}",
+      "manual": "手动运行"
+    },
+    "weekday": {
+      "MON": "周一",
+      "TUE": "周二",
+      "WED": "周三",
+      "THU": "周四",
+      "FRI": "周五",
+      "SAT": "周六",
+      "SUN": "周日"
+    }
   }
 }

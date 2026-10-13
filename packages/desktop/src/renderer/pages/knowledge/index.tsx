@@ -7,19 +7,16 @@
  * stays, since an employee's page is also where a person thinks about what it
  * can draw on. Both show the same section.
  *
- * On a company server members only read: the documents are the company's, and
- * managing them is for administrators.
+ * On a company server a member adds, edits and deletes their own documents;
+ * the ones an administrator distributed are read-only to them.
  */
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { isOrgAdminRole, useOrgContext } from '../enterprise/hooks/useOrgContext';
 import RagSection from '../superAssistant/registries/RagSection';
 
 const KnowledgePage: React.FC = () => {
   const { t } = useTranslation();
-  const { context } = useOrgContext();
-  const readOnly = Boolean(context?.isEnterprise) && !isOrgAdminRole(context?.role);
 
   return (
     <div className='flex h-full flex-col' data-testid='knowledge-page'>
@@ -27,7 +24,7 @@ const KnowledgePage: React.FC = () => {
         {t('common.superAssistant.tabKnowledge')}
       </div>
       <div className='flex-1 overflow-auto p-16px'>
-        <RagSection readOnly={readOnly} />
+        <RagSection />
       </div>
     </div>
   );

@@ -111,7 +111,16 @@
       "teamTaskExecutionModeLockedReason": "Geplante Team-Aufgaben müssen im zugehörigen Team-Gespräch weiterlaufen, deshalb kann der Ausführungsmodus nicht geändert werden.",
       "assistant": "Assistant",
       "assistantRequired": "Please select an assistant",
-      "assistantPlaceholder": "Select the assistant to execute this task"
+      "assistantPlaceholder": "Select the assistant to execute this task",
+      "push": {
+        "title": "Ergebnis an meinen Bot senden",
+        "hint": "Nach jedem Lauf wird das Ergebnis an einen verbundenen Bot (WeCom, Lark, DingTalk, Telegram …) gesendet, sodass Sie es auch ohne Rechner sehen.",
+        "placeholder": "Bot und Chat wählen",
+        "gone": "Der gespeicherte Bot oder Chat ist nicht mehr verfügbar – bitte neu wählen",
+        "noBot": "Noch kein Bot verbunden. Verbinden Sie unter Einstellungen → Kanäle einen und kommen Sie zurück.",
+        "noChat": "Der Bot ist verbunden, hat aber noch keine Chats: Senden Sie ihm aus der App eine Nachricht, dann erscheint er hier.",
+        "goSettings": "Einstellungen öffnen"
+      }
     },
     "freq": {
       "manual": "Manuell",
@@ -143,7 +152,8 @@
       "preview": "Generierter Cron-Ausdruck"
     },
     "searchPlaceholder": "Aufgaben suchen...",
-    "noSearchResults": "Keine passenden geplanten Aufgaben."
+    "noSearchResults": "Keine passenden geplanten Aufgaben.",
+    "fromTemplate": "Aus Vorlage hinzufügen"
   },
   "trigger": {
     "runScheduledTask": "Geplante Aufgabe ausführen: {{name}}"
@@ -163,5 +173,30 @@
     "conversationNotFound": "Gespräch nicht gefunden",
     "scheduledTimePassed": "Geplante Zeit ist abgelaufen",
     "conversationBusy": "Gespräch nach {{count}} Versuchen noch beschäftigt"
+  },
+  "templates": {
+    "title": "Aus Vorlage hinzufügen",
+    "hint": "Vorlage wählen. Name, Prompt und Zeitplan lassen sich ändern; nach dem Anlegen läuft sie von selbst.",
+    "category": {
+      "work": "Arbeit",
+      "learning": "Lernen",
+      "life": "Alltag"
+    },
+    "when": {
+      "daily": "Täglich {{time}}",
+      "weekdays": "Werktags {{time}}",
+      "weekly": "Jeden {{day}} {{time}}",
+      "monthly": "Monatlich am {{day}}. um {{time}}",
+      "manual": "Manuell ausführen"
+    },
+    "weekday": {
+      "MON": "Montag",
+      "TUE": "Dienstag",
+      "WED": "Mittwoch",
+      "THU": "Donnerstag",
+      "FRI": "Freitag",
+      "SAT": "Samstag",
+      "SUN": "Sonntag"
+    }
   }
 }

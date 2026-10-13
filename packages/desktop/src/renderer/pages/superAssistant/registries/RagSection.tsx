@@ -10,6 +10,8 @@ import { Button, Card, Form, Input, Message, Modal, Popconfirm, Table, Tag } fro
 import { useTranslation } from 'react-i18next';
 import { ipcBridge } from '@/common';
 import { friendlyEnterpriseError } from '@renderer/utils/enterprise/friendlyEnterpriseError';
+import CompanyBadge from '@renderer/components/enterprise/CompanyBadge';
+import { isOrgAdminRole, useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import { RAG_DOCUMENT_EXTENSIONS } from '@/common/config/constants';
 import type {
   RagConfig,
@@ -29,10 +31,22 @@ const STATUS_COLORS: Record<string, string> = {
   error: 'red',
 };
 
-type RagSectionProps = { readOnly?: boolean };
+/**
+ * Documents a member makes themselves are stored with this scope: private to
+ * them, and theirs to edit and delete. Everything else on a company server was
+ * distributed by an administrator and only an administrator changes it.
+ */
+const PERSONAL_SCOPE = 'personal';
 
-const RagSection: React.FC<RagSectionProps> = ({ readOnly = false }) => {
+const RagSection: React.FC = () => {
   const { t } = useTranslation();
+  const { context } = useOrgContext();
+  const isEnterprise = Boolean(context?.isEnterprise);
+  // A company member manages their own documents but not the company's: no
+  // embedding-endpoint settings, no visibility choices, no changes to what an
+  // administrator distributed.
+  const memberMode = isEnterprise && !isOrgAdminRole(context?.role);
+  const canChange = (record: RagDocumentEntry): boolean => !memberMode || record.scope === PERSONAL_SCOPE;
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RagDocumentEntry[]>([]);
   const [config, setConfig] = useState<RagConfig | null>(null);
@@ -50,6 +64,11 @@ const RagSection: React.FC<RagSectionProps> = ({ readOnly = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [hits, setHits] = useState<RagSearchHit[] | null>(null);
+
+  const [editTarget, setEditTarget] = useState<RagDocumentEntry | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const [importingFiles, setImportingFiles] = useState(false);
   const [urlModalVisible, setUrlModalVisible] = useState(false);
@@ -133,7 +152,11 @@ const RagSection: React.FC<RagSectionProps> = ({ readOnly = false }) => {
     }
     setSavingDoc(true);
     try {
-      const doc = await ipcBridge.oneDevops.registerRagDocument.invoke({ title: values.title, ...aclPayload(values) });
+      const doc = await ipcBridge.oneDevops.registerRagDocument.invoke({
+        title: values.title,
+        // A member's document is always private; the server decides, so no ACL is sent.
+        ...(memberMode ? {} : aclPayload(values)),
+      });
       if (doc?.id && values.content?.trim()) {
         await ipcBridge.oneDevops.setRagContent.invoke({ id: doc.id, content: values.content });
       }
@@ -257,6 +280,49 @@ const RagSection: React.FC<RagSectionProps> = ({ readOnly = false }) => {
     }
   };
 
+  const openEdit = async (record: RagDocumentEntry) => {
+    setEditTarget(record);
+    setEditContent('');
+    setEditLoading(true);
+    try {
+      setEditContent((await ipcBridge.oneDevops.getRagContent.invoke({ id: record.id })) ?? '');
+    } catch (error) {
+      Message.error(
+        t('common.superAssistant.registries.loadFailed', { defaultValue: '加载失败' }) +
+          ': ' +
+          friendlyEnterpriseError(error, t)
+      );
+      setEditTarget(null);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  /** Save the new text, then re-embed it so retrieval sees the edit. */
+  const handleSaveEdit = async () => {
+    if (!editTarget) {
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      await ipcBridge.oneDevops.setRagContent.invoke({ id: editTarget.id, content: editContent });
+      if (config?.baseUrl && config?.model && editContent.trim()) {
+        await ipcBridge.oneDevops.processRagDocument.invoke({ id: editTarget.id });
+      }
+      Message.success(t('common.superAssistant.registries.saved', { defaultValue: '已保存' }));
+      setEditTarget(null);
+      await refresh();
+    } catch (error) {
+      Message.error(
+        t('common.superAssistant.registries.saveFailed', { defaultValue: '保存失败' }) +
+          ': ' +
+          friendlyEnterpriseError(error, t)
+      );
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const handleProcess = async (id: string) => {
     setProcessingId(id);
     try {
@@ -316,7 +382,12 @@ const RagSection: React.FC<RagSectionProps> = ({ readOnly = false }) => {
   const columns = [
     {
       title: t('common.superAssistant.registries.colTitle', { defaultValue: '标题' }),
-      render: (_: unknown, record: RagDocumentEntry) => record.title,
+      render: (_: unknown, record: RagDocumentEntry) => (
+        <span className='inline-flex items-center gap-6px'>
+          {record.title}
+          {isEnterprise && record.scope !== PERSONAL_SCOPE ? <CompanyBadge /> : null}
+        </span>
+      ),
     },
     {
       title: t('common.superAssistant.registries.colStatus', { defaultValue: '状态' }),
@@ -332,37 +403,47 @@ const RagSection: React.FC<RagSectionProps> = ({ readOnly = false }) => {
     },
     {
       title: t('common.superAssistant.registries.colVisibility', { defaultValue: '可见范围' }),
-      render: (_: unknown, record: RagDocumentEntry) => (
-        <ResourceAclCell scope={record.scope} teamId={record.teamId} visibility={record.visibility} tenants={tenants} />
-      ),
+      render: (_: unknown, record: RagDocumentEntry) =>
+        record.scope === PERSONAL_SCOPE ? (
+          <Tag size='small'>{t('common.superAssistant.rag.onlyMe')}</Tag>
+        ) : (
+          <ResourceAclCell
+            scope={record.scope}
+            teamId={record.teamId}
+            visibility={record.visibility}
+            tenants={tenants}
+          />
+        ),
     },
-    ...(readOnly
-      ? []
-      : [
-          {
-            title: t('common.superAssistant.registries.colActions', { defaultValue: '操作' }),
-            render: (_: unknown, record: RagDocumentEntry) => (
-              <div className='flex gap-6px'>
-                <Button
-                  size='small'
-                  type='primary'
-                  loading={processingId === record.id}
-                  onClick={() => void handleProcess(record.id)}
-                >
-                  {t('common.superAssistant.rag.process', { defaultValue: '处理' })}
-                </Button>
-                <Popconfirm
-                  title={t('common.superAssistant.registries.deleteConfirm', { defaultValue: '确认删除？' })}
-                  onOk={() => void handleDelete(record.id)}
-                >
-                  <Button size='small' status='danger'>
-                    {t('common.delete', { defaultValue: '删除' })}
-                  </Button>
-                </Popconfirm>
-              </div>
-            ),
-          },
-        ]),
+    {
+      title: t('common.superAssistant.registries.colActions', { defaultValue: '操作' }),
+      render: (_: unknown, record: RagDocumentEntry) =>
+        canChange(record) ? (
+          <div className='flex gap-6px'>
+            <Button size='small' onClick={() => void openEdit(record)}>
+              {t('common.edit', { defaultValue: '编辑' })}
+            </Button>
+            <Button
+              size='small'
+              type='primary'
+              loading={processingId === record.id}
+              onClick={() => void handleProcess(record.id)}
+            >
+              {t('common.superAssistant.rag.process', { defaultValue: '处理' })}
+            </Button>
+            <Popconfirm
+              title={t('common.superAssistant.registries.deleteConfirm', { defaultValue: '确认删除？' })}
+              onOk={() => void handleDelete(record.id)}
+            >
+              <Button size='small' status='danger'>
+                {t('common.delete', { defaultValue: '删除' })}
+              </Button>
+            </Popconfirm>
+          </div>
+        ) : (
+          <span className='text-12px text-t-tertiary'>{t('common.superAssistant.rag.managedByCompany')}</span>
+        ),
+    },
   ];
 
   const configured = Boolean(config?.baseUrl && config?.model);
@@ -371,22 +452,22 @@ const RagSection: React.FC<RagSectionProps> = ({ readOnly = false }) => {
     <Card
       title={t('common.superAssistant.registries.ragTitle', { defaultValue: '知识库文档' })}
       extra={
-        !readOnly && (
-          <div className='flex gap-6px'>
+        <div className='flex gap-6px'>
+          {!memberMode && (
             <Button size='small' onClick={openConfig}>
               {t('common.superAssistant.rag.configButton', { defaultValue: '嵌入配置' })}
             </Button>
-            <Button size='small' loading={importingFiles} onClick={() => void handleImportFiles()}>
-              {t('common.superAssistant.rag.importFilesButton', { defaultValue: '从文件导入' })}
-            </Button>
-            <Button size='small' onClick={openUrlImport}>
-              {t('common.superAssistant.rag.importUrlButton', { defaultValue: '从网页导入' })}
-            </Button>
-            <Button type='primary' size='small' onClick={openRegister}>
-              {t('common.superAssistant.registries.addRag', { defaultValue: '注册文档' })}
-            </Button>
-          </div>
-        )
+          )}
+          <Button size='small' loading={importingFiles} onClick={() => void handleImportFiles()}>
+            {t('common.superAssistant.rag.importFilesButton', { defaultValue: '从文件导入' })}
+          </Button>
+          <Button size='small' onClick={openUrlImport}>
+            {t('common.superAssistant.rag.importUrlButton', { defaultValue: '从网页导入' })}
+          </Button>
+          <Button type='primary' size='small' onClick={openRegister}>
+            {t('common.superAssistant.registries.addRag', { defaultValue: '注册文档' })}
+          </Button>
+        </div>
       }
     >
       <div className='mb-8px flex flex-wrap items-center gap-8px text-12px'>
@@ -520,8 +601,25 @@ const RagSection: React.FC<RagSectionProps> = ({ readOnly = false }) => {
           >
             <Input.TextArea rows={6} />
           </Form.Item>
-          <ResourceAclFields tenants={tenants} />
+          {!memberMode && <ResourceAclFields tenants={tenants} />}
         </Form>
+      </Modal>
+
+      <Modal
+        title={t('common.superAssistant.rag.editTitle', { title: editTarget?.title ?? '' })}
+        visible={editTarget !== null}
+        onCancel={() => setEditTarget(null)}
+        onOk={() => void handleSaveEdit()}
+        confirmLoading={savingEdit}
+        okButtonProps={{ disabled: editLoading }}
+      >
+        <Input.TextArea
+          rows={10}
+          value={editContent}
+          disabled={editLoading}
+          onChange={setEditContent}
+          data-testid='rag-edit-content'
+        />
       </Modal>
 
       <Modal

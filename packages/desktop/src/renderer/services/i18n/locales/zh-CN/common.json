@@ -587,7 +587,10 @@
       "searchPlaceholderHybrid": "检索知识库 —— 可用语义描述，也可直接搜错误码、编号等精确词",
       "agentToolHint": "助手现在可以在对话中通过内置的 search_team_knowledge 工具自行检索本知识库；每位成员只会检索到自己有权查看的文档。",
       "similarityBadge": "语义 {{value}}",
-      "similarityTooltip": "语义相似度。结果按「语义 + 关键词」融合排序，因此这个数字不一定随列表递减。"
+      "similarityTooltip": "语义相似度。结果按「语义 + 关键词」融合排序，因此这个数字不一定随列表递减。",
+      "onlyMe": "仅自己可见",
+      "managedByCompany": "由企业管理员维护",
+      "editTitle": "编辑文档：{{title}}"
     },
     "modelRequired": "请为该员工选择一个模型",
     "expertInstallFailed": "添加专家失败",

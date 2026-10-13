@@ -229,7 +229,10 @@
       "searchPlaceholderHybrid": "ナレッジベースを検索 —— 意味でも、エラーコードや ID などの完全一致でも",
       "agentToolHint": "アシスタントは会話中に組み込みの search_team_knowledge ツールでこのナレッジベースを自ら検索できます。各メンバーは閲覧権限のある文書のみを取得します。",
       "similarityBadge": "類似度 {{value}}",
-      "similarityTooltip": "意味的類似度。結果は意味 + キーワードの統合ランクで並ぶため、この数値は下に行くほど小さくなるとは限りません。"
+      "similarityTooltip": "意味的類似度。結果は意味 + キーワードの統合ランクで並ぶため、この数値は下に行くほど小さくなるとは限りません。",
+      "onlyMe": "自分のみ",
+      "managedByCompany": "企業の管理者が管理",
+      "editTitle": "ドキュメントを編集：{{title}}"
     },
     "fieldExpert": "エキスパート",
     "fieldBackend": "実行バックエンド",

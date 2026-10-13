@@ -145,6 +145,13 @@ const ScheduledTasksPage: React.FC = () => {
                   chatLabel={t('cron.page.createViaChat')}
                   onManual={handleCreateManually}
                   manualLabel={t('cron.page.createManually')}
+                  extraActions={[
+                    {
+                      key: 'from-template',
+                      label: t('cron.page.fromTemplate'),
+                      onClick: () => void navigate('/scheduled/templates'),
+                    },
+                  ]}
                 />
               </>
             }

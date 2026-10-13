@@ -15,7 +15,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Message, Modal } from '@arco-design/web-react';
+import { Button, Message, Modal } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { ipcBridge } from '@/common';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
@@ -232,16 +232,17 @@ const FileVaultSettings: React.FC = () => {
               event.target.value = '';
             }}
           />
-          <button
-            type='button'
-            className='rd-6px border border-2 px-12px py-5px text-13px text-t-primary transition-colors hover:bg-fill-3 disabled:cursor-not-allowed disabled:opacity-50'
-            disabled={frozen || uploading}
+          <Button
+            type='primary'
+            size='small'
+            disabled={frozen}
+            loading={uploading}
             onClick={() => fileInputRef.current?.click()}
           >
             {uploading
               ? t('common.fileVault.uploading', { defaultValue: '上传中…' })
               : t('common.fileVault.upload', { defaultValue: '上传文件' })}
-          </button>
+          </Button>
         </div>
 
         {/* File list */}
@@ -271,20 +272,12 @@ const FileVaultSettings: React.FC = () => {
                   {new Date(object.createdAt).toLocaleString()}
                 </span>
                 <span className='flex w-110px items-center justify-end gap-10px'>
-                  <button
-                    type='button'
-                    className='border-none bg-transparent p-0 text-13px text-[rgba(var(--primary-6),1)] hover:underline'
-                    onClick={() => void handleDownload(object)}
-                  >
+                  <Button type='text' size='mini' onClick={() => void handleDownload(object)}>
                     {t('common.fileVault.download', { defaultValue: '下载' })}
-                  </button>
-                  <button
-                    type='button'
-                    className='border-none bg-transparent p-0 text-13px text-[rgba(var(--danger-6),1)] hover:underline'
-                    onClick={() => handleDelete(object)}
-                  >
+                  </Button>
+                  <Button type='text' size='mini' status='danger' onClick={() => handleDelete(object)}>
                     {t('common.fileVault.delete', { defaultValue: '删除' })}
-                  </button>
+                  </Button>
                 </span>
               </div>
             ))}

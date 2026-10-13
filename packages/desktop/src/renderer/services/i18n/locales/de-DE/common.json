@@ -229,7 +229,10 @@
       "searchPlaceholderHybrid": "Wissensdatenbank durchsuchen — sinngemäß oder mit exakten Begriffen, Fehlercodes, IDs …",
       "agentToolHint": "Assistenten können diese Wissensdatenbank jetzt im Gespräch selbst durchsuchen — über das eingebaute Werkzeug search_team_knowledge. Jedes Mitglied erhält nur Dokumente, die es sehen darf.",
       "similarityBadge": "Ähnl. {{value}}",
-      "similarityTooltip": "Semantische Ähnlichkeit. Die Reihenfolge ergibt sich aus dem kombinierten Rang von Semantik und Stichwort, daher muss dieser Wert nach unten hin nicht fallen."
+      "similarityTooltip": "Semantische Ähnlichkeit. Die Reihenfolge ergibt sich aus dem kombinierten Rang von Semantik und Stichwort, daher muss dieser Wert nach unten hin nicht fallen.",
+      "onlyMe": "Nur ich",
+      "managedByCompany": "Vom Firmenadministrator verwaltet",
+      "editTitle": "Dokument bearbeiten: {{title}}"
     },
     "fieldExpert": "Experte",
     "fieldBackend": "Ausführungs-Backend",

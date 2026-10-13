@@ -111,7 +111,16 @@
       "dreamEngineModelRequired": "Por favor, selecione um modelo para a CLI do Aion",
       "noProvider": "Nenhum modelo disponível",
       "assistantLockedExistingConversation": "Tarefas de conversa em andamento devem manter o assistente original. Crie uma nova tarefa para usar outro assistente.",
-      "teamTaskExecutionModeLockedReason": "Tarefas agendadas de Team devem continuar executando na conversa de Team proprietária, por isso o modo de execução não pode ser alterado."
+      "teamTaskExecutionModeLockedReason": "Tarefas agendadas de Team devem continuar executando na conversa de Team proprietária, por isso o modo de execução não pode ser alterado.",
+      "push": {
+        "title": "Enviar o resultado ao meu bot",
+        "hint": "Ao fim de cada execução, o resultado é enviado a um bot que você conectou (WeCom, Lark, DingTalk, Telegram…) para você vê-lo sem estar no computador.",
+        "placeholder": "Escolha um bot e uma conversa",
+        "gone": "O bot ou a conversa salvos não estão mais disponíveis — escolha outro",
+        "noBot": "Nenhum bot conectado ainda. Conecte um em Configurações → Canais e volte.",
+        "noChat": "O bot está conectado, mas ainda não há conversas: envie uma mensagem a ele pelo app e ela aparecerá aqui.",
+        "goSettings": "Abrir configurações"
+      }
     },
     "freq": {
       "manual": "Manual",
@@ -143,7 +152,8 @@
       "preview": "Cron gerado"
     },
     "searchPlaceholder": "Pesquisar tarefas...",
-    "noSearchResults": "Nenhuma tarefa agendada correspondente."
+    "noSearchResults": "Nenhuma tarefa agendada correspondente.",
+    "fromTemplate": "Adicionar de um modelo"
   },
   "trigger": {
     "runScheduledTask": "Executar tarefa agendada: {{name}}"
@@ -163,5 +173,30 @@
     "conversationNotFound": "Conversa não encontrada",
     "scheduledTimePassed": "O tempo agendado já passou",
     "conversationBusy": "Conversa ocupada após {{count}} tentativas"
+  },
+  "templates": {
+    "title": "Adicionar de um modelo",
+    "hint": "Escolha um modelo. Nome, prompt e horário preenchidos podem ser alterados; depois de criado, roda sozinho conforme o agendamento.",
+    "category": {
+      "work": "Trabalho",
+      "learning": "Aprendizado",
+      "life": "Dia a dia"
+    },
+    "when": {
+      "daily": "Todo dia {{time}}",
+      "weekdays": "Dias úteis {{time}}",
+      "weekly": "Toda {{day}} {{time}}",
+      "monthly": "Todo dia {{day}} do mês às {{time}}",
+      "manual": "Executar manualmente"
+    },
+    "weekday": {
+      "MON": "segunda",
+      "TUE": "terça",
+      "WED": "quarta",
+      "THU": "quinta",
+      "FRI": "sexta",
+      "SAT": "sábado",
+      "SUN": "domingo"
+    }
   }
 }

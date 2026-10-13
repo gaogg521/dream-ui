@@ -18,7 +18,7 @@ const CompanyBadge: React.FC<{ className?: string }> = ({ className }) => {
     <span
       title={t('common.enterprise.distributedHint')}
       data-testid='company-badge'
-      className={`inline-flex shrink-0 items-center rd-4px bg-[rgba(var(--primary-6),0.12)] px-5px text-10px leading-16px font-500 text-[rgba(var(--primary-6),1)] ${className ?? ''}`}
+      className={`inline-flex shrink-0 items-center rd-4px bg-[rgba(var(--success-6),0.14)] px-5px text-10px leading-16px font-500 text-[rgba(var(--success-6),1)] ${className ?? ''}`}
     >
       {t('common.enterprise.distributedBadge')}
     </span>

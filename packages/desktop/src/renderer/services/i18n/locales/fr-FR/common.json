@@ -229,7 +229,10 @@
       "searchPlaceholderHybrid": "Rechercher dans la base — par le sens ou par termes exacts, codes d'erreur, identifiants…",
       "agentToolHint": "Les assistants peuvent désormais interroger eux-mêmes cette base de connaissances en cours de conversation, via l'outil intégré search_team_knowledge. Chaque membre ne récupère que les documents qu'il est autorisé à voir.",
       "similarityBadge": "sim. {{value}}",
-      "similarityTooltip": "Similarité sémantique. Les résultats sont classés par rang fusionné sémantique + mots-clés ; cette valeur ne décroît donc pas forcément vers le bas."
+      "similarityTooltip": "Similarité sémantique. Les résultats sont classés par rang fusionné sémantique + mots-clés ; cette valeur ne décroît donc pas forcément vers le bas.",
+      "onlyMe": "Moi uniquement",
+      "managedByCompany": "Géré par l'administrateur de l'entreprise",
+      "editTitle": "Modifier le document : {{title}}"
     },
     "fieldExpert": "Expert",
     "fieldBackend": "Backend d'exécution",

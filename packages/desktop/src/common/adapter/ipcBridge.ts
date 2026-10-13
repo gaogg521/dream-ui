@@ -2142,6 +2142,8 @@ export const cron = {
       conversation_title: p.updates.metadata?.conversation_title,
       max_retries: p.updates.state?.max_retries,
       queue_enabled: p.updates.state?.queue_enabled,
+      // undefined keeps the target, null clears it.
+      push_target: p.updates.push_target,
     })
   ),
   removeJob: httpDelete<void, { job_id: string }>((p) => `/api/cron/jobs/${p.job_id}`),
@@ -2172,6 +2174,12 @@ export type ICronSchedule =
   | { kind: 'every'; everyMs: number; description: string }
   | { kind: 'cron'; expr: string; tz?: string; description: string };
 
+/** The chat bot (and chat) a finished run is pushed to. */
+export interface ICronPushTarget {
+  plugin_id: string;
+  chat_id: string;
+}
+
 export interface ICronJob {
   id: string;
   name: string;
@@ -2201,6 +2209,7 @@ export interface ICronJob {
     max_retries: number;
     queue_enabled: boolean;
   };
+  push_target?: ICronPushTarget;
 }
 
 export interface ICronAgentConfigRead {
@@ -2245,9 +2254,12 @@ export interface ICreateCronJobParams {
   execution_mode?: 'existing' | 'new_conversation';
   queue_enabled?: boolean;
   agent_config?: ICronAgentConfigWrite;
+  push_target?: ICronPushTarget;
 }
 
 export interface ICronJobUpdateParams {
+  /** `null` clears the push target, absent keeps it. */
+  push_target?: ICronPushTarget | null;
   name?: string;
   description?: string;
   enabled?: boolean;
@@ -2610,6 +2622,7 @@ import type {
   IChannelPairingRequest,
   IChannelPlatformSettings,
   IChannelPluginStatus,
+  IChannelPushTarget,
   IChannelSession,
   IChannelUser,
 } from '@/common/types/channel/channel';
@@ -2675,6 +2688,26 @@ function toChannelSession(raw: RawSession): IChannelSession {
 export const channel = {
   getPluginStatus: withResponseMap(httpGet<RawPluginStatus[], void>('/api/channel/plugins'), (raw) =>
     raw.map(toPluginStatus)
+  ),
+  getPushTargets: withResponseMap(
+    httpGet<
+      Array<{
+        plugin_id: string;
+        type: string;
+        name: string;
+        connected: boolean;
+        chats: Array<{ chat_id: string; display_name?: string }>;
+      }>,
+      void
+    >('/api/channel/push-targets'),
+    (raw): IChannelPushTarget[] =>
+      raw.map((target) => ({
+        pluginId: target.plugin_id,
+        type: target.type,
+        name: target.name,
+        connected: target.connected,
+        chats: target.chats.map((chat) => ({ chatId: chat.chat_id, displayName: chat.display_name })),
+      }))
   ),
   enablePlugin: httpPost<void, { plugin_id: string; config: Record<string, unknown> }>('/api/channel/plugins/enable'),
   disablePlugin: httpPost<void, { plugin_id: string }>('/api/channel/plugins/disable'),
@@ -3261,6 +3294,7 @@ export const oneDevops = {
   listRagDocuments: httpGet<RagDocumentEntry[], void>('/api/one/devops/rag/documents'),
   registerRagDocument: httpPost<RagDocumentEntry, RegisterRagDocumentInput>('/api/one/devops/rag/documents'),
   deleteRagDocument: httpDelete<void, { id: string }>((p) => `/api/one/devops/rag/documents/${p.id}`),
+  getRagContent: httpGet<string, { id: string }>((p) => `/api/one/devops/rag/documents/${p.id}/content`),
   setRagContent: httpPut<void, { id: string; content: string }>(
     (p) => `/api/one/devops/rag/documents/${p.id}/content`,
     (p) => ({ content: p.content })

@@ -229,7 +229,10 @@
       "searchPlaceholderHybrid": "檢索知識庫 —— 可用語意描述，也可直接搜錯誤碼、編號等精確詞",
       "agentToolHint": "助理現在可以在對話中透過內建的 search_team_knowledge 工具自行檢索本知識庫；每位成員只會檢索到自己有權查看的文件。",
       "similarityBadge": "語意 {{value}}",
-      "similarityTooltip": "語意相似度。結果依「語意 + 關鍵字」融合排序，因此這個數字不一定隨列表遞減。"
+      "similarityTooltip": "語意相似度。結果依「語意 + 關鍵字」融合排序，因此這個數字不一定隨列表遞減。",
+      "onlyMe": "僅自己可見",
+      "managedByCompany": "由企業管理員維護",
+      "editTitle": "編輯文件：{{title}}"
     },
     "fieldExpert": "專家",
     "fieldBackend": "執行後端",

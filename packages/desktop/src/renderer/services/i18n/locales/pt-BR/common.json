@@ -229,7 +229,10 @@
       "searchPlaceholderHybrid": "Pesquise a base de conhecimento — por significado ou por termos exatos, códigos de erro, IDs…",
       "agentToolHint": "Os assistentes agora podem pesquisar esta base de conhecimento sozinhos durante a conversa, pela ferramenta integrada search_team_knowledge. Cada membro só recupera os documentos que tem permissão para ver.",
       "similarityBadge": "sim. {{value}}",
-      "similarityTooltip": "Similaridade semântica. Os resultados são ordenados pelo ranking combinado de semântica + palavras-chave, então este número pode não decrescer para baixo."
+      "similarityTooltip": "Similaridade semântica. Os resultados são ordenados pelo ranking combinado de semântica + palavras-chave, então este número pode não decrescer para baixo.",
+      "onlyMe": "Só eu",
+      "managedByCompany": "Gerenciado pelo administrador da empresa",
+      "editTitle": "Editar documento: {{title}}"
     },
     "fieldExpert": "Especialista",
     "fieldBackend": "Backend de execução",

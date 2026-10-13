@@ -124,7 +124,16 @@
       "dreamEngineModelRequired": "1ONE CLI のモデルを選択してください",
       "noProvider": "利用可能なモデルがありません",
       "assistantLockedExistingConversation": "同じ会話で実行するタスクは元のアシスタントを維持する必要があります。別のアシスタントを使うには新しいタスクを作成してください。",
-      "teamTaskExecutionModeLockedReason": "Team のスケジュールタスクは所属する Team 会話で継続実行する必要があるため、実行モードは変更できません。"
+      "teamTaskExecutionModeLockedReason": "Team のスケジュールタスクは所属する Team 会話で継続実行する必要があるため、実行モードは変更できません。",
+      "push": {
+        "title": "結果を自分のボットに送る",
+        "hint": "実行のたびに、接続済みのボット（企業WeChat・Lark・DingTalk・Telegram など）へ結果を送ります。パソコンの前にいなくても確認できます。",
+        "placeholder": "ボットとチャットを選択",
+        "gone": "保存済みのボットまたはチャットは利用できません。選び直してください",
+        "noBot": "まだボットが接続されていません。「設定 → チャネル」で接続してから選んでください。",
+        "noChat": "ボットは接続済みですが、チャットがまだありません。アプリからボットにメッセージを送ると、ここに表示されます。",
+        "goSettings": "設定を開く"
+      }
     },
     "freq": {
       "manual": "手動",
@@ -156,7 +165,8 @@
       "preview": "生成された Cron"
     },
     "searchPlaceholder": "タスクを検索...",
-    "noSearchResults": "一致するスケジュール済みタスクはありません。"
+    "noSearchResults": "一致するスケジュール済みタスクはありません。",
+    "fromTemplate": "テンプレートから追加"
   },
   "trigger": {
     "runScheduledTask": "スケジュールタスクを実行：{{name}}"
@@ -176,5 +186,30 @@
     "conversationNotFound": "会話が見つかりません",
     "scheduledTimePassed": "予定時刻が過ぎました",
     "conversationBusy": "会話がビジーです。{{count}} 回の試行後にスキップしました"
+  },
+  "templates": {
+    "title": "テンプレートから追加",
+    "hint": "テンプレートを選んでください。入力済みの名前・プロンプト・時間はすべて変更でき、作成後は予定どおり自動で実行されます。",
+    "category": {
+      "work": "仕事",
+      "learning": "学習",
+      "life": "生活"
+    },
+    "when": {
+      "daily": "毎日 {{time}}",
+      "weekdays": "平日 {{time}}",
+      "weekly": "毎週{{day}} {{time}}",
+      "monthly": "毎月 {{day}} 日 {{time}}",
+      "manual": "手動で実行"
+    },
+    "weekday": {
+      "MON": "月曜",
+      "TUE": "火曜",
+      "WED": "水曜",
+      "THU": "木曜",
+      "FRI": "金曜",
+      "SAT": "土曜",
+      "SUN": "日曜"
+    }
   }
 }

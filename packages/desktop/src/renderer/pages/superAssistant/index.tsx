@@ -22,7 +22,6 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ipcBridge } from '@/common';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
-import { isOrgAdminRole, useOrgContext } from '../enterprise/hooks/useOrgContext';
 import { useDigitalEmployees } from './hooks/useDigitalEmployees';
 import {
   AGENT_TEMPLATES,
@@ -67,10 +66,8 @@ const SuperAssistantPage: React.FC = () => {
   useEffect(() => {
     if (tabParam) setActiveTab(resolveInitialTab(tabParam));
   }, [tabParam]);
-  const { context } = useOrgContext();
   // The knowledge base is org-scoped inside an enterprise; only an admin may
   // change it there. A personal user manages their own outright.
-  const knowledgeReadOnly = Boolean(context?.isEnterprise) && !isOrgAdminRole(context?.role);
 
   const { loading, agents, refresh } = useDigitalEmployees(true);
 
@@ -173,7 +170,7 @@ const SuperAssistantPage: React.FC = () => {
               <ScenesTab />
             </Tabs.TabPane>
             <Tabs.TabPane key={TabKey.KNOWLEDGE} title={t('common.superAssistant.tabKnowledge')}>
-              <RagSection readOnly={knowledgeReadOnly} />
+              <RagSection />
             </Tabs.TabPane>
           </Tabs>
         </Spin>

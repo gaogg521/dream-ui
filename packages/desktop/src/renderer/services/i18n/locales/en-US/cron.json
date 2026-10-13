@@ -114,7 +114,16 @@
       "noProvider": "No available models",
       "assistantLockedExistingConversation": "Ongoing conversation tasks must keep their original assistant. Create a new task to use another assistant.",
       "teamTaskExecutionModeLockedReason": "Team automations must keep running in the owning team conversation, so the execution mode cannot be changed.",
-      "dreamEngineNoProvider": "Add a Dream Engine model provider first"
+      "dreamEngineNoProvider": "Add a Dream Engine model provider first",
+      "push": {
+        "title": "Push the result to my bot",
+        "hint": "When each run finishes, send the result to a bot you have connected (WeCom, Lark, DingTalk, Telegram…) so you see it without being at your computer.",
+        "placeholder": "Choose a bot and chat",
+        "gone": "The saved bot or chat is no longer available — choose another",
+        "noBot": "No bot is connected yet. Connect one in Settings → Channels, then come back.",
+        "noChat": "The bot is connected but has no chats yet: send it a message from the app, then it will appear here.",
+        "goSettings": "Open settings"
+      }
     },
     "freq": {
       "manual": "Manual",
@@ -144,7 +153,8 @@
       "weekdays": "Weekdays",
       "monthDay": "Day of month",
       "preview": "Generated Cron"
-    }
+    },
+    "fromTemplate": "Add from template"
   },
   "trigger": {
     "runScheduledTask": "Run automation: {{name}}"
@@ -164,5 +174,30 @@
     "conversationNotFound": "Conversation not found",
     "scheduledTimePassed": "Scheduled time has passed",
     "conversationBusy": "Conversation busy after {{count}} retries"
+  },
+  "templates": {
+    "title": "Add from template",
+    "hint": "Pick a template. The name, prompt and schedule it fills in can all be changed; once created it runs on its own.",
+    "category": {
+      "work": "Work",
+      "learning": "Learning",
+      "life": "Daily life"
+    },
+    "when": {
+      "daily": "Every day {{time}}",
+      "weekdays": "Workdays {{time}}",
+      "weekly": "Every {{day}} {{time}}",
+      "monthly": "Monthly on day {{day}} at {{time}}",
+      "manual": "Run by hand"
+    },
+    "weekday": {
+      "MON": "Monday",
+      "TUE": "Tuesday",
+      "WED": "Wednesday",
+      "THU": "Thursday",
+      "FRI": "Friday",
+      "SAT": "Saturday",
+      "SUN": "Sunday"
+    }
   }
 }

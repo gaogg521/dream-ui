@@ -32,6 +32,7 @@ const LoginPage = React.lazy(() => import('@renderer/pages/login'));
 const ComponentsShowcase = React.lazy(() => import('@renderer/pages/TestShowcase'));
 const ScheduledTasksPage = React.lazy(() => import('@renderer/pages/cron/ScheduledTasksPage'));
 const TaskDetailPage = React.lazy(() => import('@renderer/pages/cron/ScheduledTasksPage/TaskDetailPage'));
+const AutomationTemplatesPage = React.lazy(() => import('@renderer/pages/cron/TemplatesPage'));
 const TeamIndex = React.lazy(loadTeamIndex);
 const SuperAssistant = React.lazy(() => import('@renderer/pages/superAssistant'));
 const EnterpriseLoginPage = React.lazy(() => import('@renderer/pages/enterprise/EnterpriseLoginPage'));
@@ -170,6 +171,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/settings' element={<Navigate to='/settings/model' replace />} />
           <Route path='/test/components' element={withRouteFallback(ComponentsShowcase)} />
           <Route path='/scheduled' element={withRouteFallback(ScheduledTasksPage)} />
+          <Route path='/scheduled/templates' element={withRouteFallback(AutomationTemplatesPage)} />
           <Route path='/scheduled/:job_id' element={withRouteFallback(TaskDetailPage)} />
           {/* Super Assistant / My Skills / Memory now live under Settings (low-usage
               tools, moved out of the main sider into a dedicated Settings group).
