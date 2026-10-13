@@ -142,11 +142,15 @@ const EnterpriseSceneGrid: React.FC<EnterpriseSceneGridProps> = ({ onOpenScene }
     active
       ? ['enterprise-conversation-scenes', getEnterpriseServerUrl(), getEnterpriseSession()?.userId, tenantId]
       : null,
-    () => ipcBridge.onePlatform.myScenes.invoke(),
+    async () => {
+      // A server (or bridge) that answers with anything but a list is treated as no scenes.
+      const list = await ipcBridge.onePlatform.myScenes.invoke();
+      return Array.isArray(list) ? list : [];
+    },
     { revalidateOnFocus: true, refreshInterval: 30000, shouldRetryOnError: false }
   );
 
-  const ordered = useMemo(() => applySceneOrder(scenes ?? [], order), [scenes, order]);
+  const ordered = useMemo(() => applySceneOrder(Array.isArray(scenes) ? scenes : [], order), [scenes, order]);
 
   if (!active) return null;
   if (!scenes)
