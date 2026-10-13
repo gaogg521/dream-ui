@@ -72,7 +72,8 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
   const isMobile = layout?.isMobile ?? false;
   const { compositionHandlers, isComposing } = useCompositionInput();
   const inputRef = useRef<RefTextAreaType | null>(null);
-  const textareaAutoSize = isMobile ? { minRows: 2, maxRows: 8 } : { minRows: 2, maxRows: 20 };
+  // Taller at rest on desktop: the home composer is the page's main target, and two rows read as an afterthought.
+  const textareaAutoSize = isMobile ? { minRows: 2, maxRows: 8 } : { minRows: 4, maxRows: 20 };
 
   useEffect(() => {
     if (!focusRequestKey || isMobile) return;
