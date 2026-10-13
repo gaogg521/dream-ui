@@ -263,7 +263,7 @@
   "engines": {
     "node": ">=22 <25"
   },
-  "dreamcoreVersion": "v0.1.85",
+  "dreamcoreVersion": "v0.1.86",
   "electronRebuild": {
     "electronVersion": "^39.8.10"
   },
