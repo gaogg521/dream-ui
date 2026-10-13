@@ -357,7 +357,13 @@
       "mcpPlaceholder": "制限なし",
       "preview": "AI に渡される全ルールを見る",
       "previewHint": "会話の開始時に AI が読む内容そのもので、上の設定から自動生成されます。"
-    }
+    },
+    "tryOpening": "こう切り出してみましょう：",
+    "import": "インポート",
+    "export": "エクスポート",
+    "importDone": "{{count}} 件のシーンをインポートしました",
+    "importInvalid": "シーンのエクスポートファイルではありません",
+    "importEmpty": "ファイルにインポートできるシーンがありません"
   },
   "fileVault": {
     "title": "ファイルボールト",

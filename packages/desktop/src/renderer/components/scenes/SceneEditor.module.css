@@ -1,0 +1,22 @@
+/*
+ * The editor's fields sit on the drawer's own background, and in the dark theme
+ * Arco's default fill makes an empty input nearly invisible. Give every field a
+ * visible edge so a person can see where to type.
+ */
+.fields :global(.arco-input-inner-wrapper),
+.fields :global(.arco-textarea-wrapper),
+.fields :global(.arco-select-view) {
+  border: 1px solid var(--color-border-3);
+}
+
+.fields :global(.arco-input-inner-wrapper:hover),
+.fields :global(.arco-textarea-wrapper:hover),
+.fields :global(.arco-select-view:hover) {
+  border-color: var(--color-border-4);
+}
+
+.fields :global(.arco-input-inner-wrapper-focus),
+.fields :global(.arco-textarea-wrapper-focus),
+.fields :global(.arco-select-view-focus) {
+  border-color: rgb(var(--primary-6));
+}

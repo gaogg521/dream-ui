@@ -710,7 +710,13 @@
       "mcpPlaceholder": "No limit",
       "preview": "See the full rules the AI will be told",
       "previewHint": "This is exactly what the AI reads when the conversation starts, generated from the settings above."
-    }
+    },
+    "tryOpening": "Try opening with:",
+    "import": "Import",
+    "export": "Export",
+    "importDone": "Imported {{count}} scenes",
+    "importInvalid": "That is not an exported scenes file",
+    "importEmpty": "There are no scenes to import in that file"
   },
   "fileVault": {
     "title": "File Vault",

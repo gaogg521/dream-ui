@@ -30,8 +30,8 @@ type AgentsTabProps = {
   startingChatId?: string | null;
   onStartChat?: (agent: AgentCardRef) => void;
   onCreateAgent?: () => void;
-  onCreateFromTemplate?: (templateId: string) => Promise<void>;
-  creatingFromTemplate?: boolean;
+  /** Open the create form filled in from a template; nothing is created until the person confirms it. */
+  onPickTemplate?: (templateId: string) => void;
   onManageAgent?: (agent: AgentCardRef) => void;
   onScheduleAgent?: (agent: AgentCardRef) => void;
   onViewDigitalEmployeeDetail?: (agent: AgentCardRef) => void;
@@ -58,8 +58,7 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
   startingChatId,
   onStartChat,
   onCreateAgent,
-  onCreateFromTemplate,
-  creatingFromTemplate,
+  onPickTemplate,
   onManageAgent,
   onScheduleAgent,
   onViewDigitalEmployeeDetail,
@@ -98,8 +97,7 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
               <button
                 key={tpl.id}
                 type='button'
-                disabled={creatingFromTemplate}
-                onClick={() => onCreateFromTemplate?.(tpl.id)}
+                onClick={() => onPickTemplate?.(tpl.id)}
                 className='flex flex-col items-start gap-4px rounded-6px border border-2 bg-2 p-12px text-left transition hover:border-primary'
               >
                 <span className='text-24px'>{tpl.avatar}</span>

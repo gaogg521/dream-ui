@@ -102,13 +102,12 @@ describe('buildSceneRules', () => {
     expect(text).toContain('A prototype.');
   });
 
-  it('keeps hard rules and deliverables even when the method is off', () => {
+  it('applies the questions, hard rules and hand-over only to a scene that asks first', () => {
     const text = buildSceneRules({
       name: 'x',
       prompt: 'p',
-      intent: intent({ discovery: false, constraints: 'Never X.' }),
+      intent: intent({ discovery: false, questions: ['Q?'], constraints: 'Never X.', deliverables: 'A prototype.' }),
     });
-    expect(text).toContain('Never X.');
-    expect(text).not.toContain('understand first');
+    expect(text).toBe('p');
   });
 });

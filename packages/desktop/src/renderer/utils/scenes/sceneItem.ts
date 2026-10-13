@@ -45,7 +45,7 @@ export function companySceneItem(scene: MyScene): SceneItem {
     description: scene.description ?? '',
     imageSrc: sceneAvatarSrc(scene),
     resources: scene.resources.map(({ resourceType, count, includesAll }) => ({ resourceType, count, includesAll })),
-    starters: scene.intent?.starters ?? [],
+    starters: scene.intent?.discovery ? scene.intent.starters : [],
     company: scene,
   };
 }
@@ -65,7 +65,7 @@ export function personalSceneItem(scene: PersonalScene): SceneItem {
     description: scene.description,
     icon: scene.icon,
     resources,
-    starters: scene.intent.starters,
+    starters: scene.intent.discovery ? scene.intent.starters : [],
     mine: scene,
   };
 }

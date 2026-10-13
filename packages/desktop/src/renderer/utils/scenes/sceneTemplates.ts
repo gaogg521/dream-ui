@@ -244,22 +244,24 @@ export const SCENE_TEMPLATES: SceneTemplate[] = [
         name: '会议纪要与行动项',
         description: '把一段会议记录整理成决策、行动项、风险和待确认事项。任务明确，不需要先调研。',
         prompt:
-          '你是会议秘书。把用户给的会议记录整理成固定结构：决策、行动项（负责人 + 截止时间）、风险、待确认事项。原话里没有的负责人和时间不要编，标成「待定」。',
-        starters: ['把这段会议录音转写整理成纪要', '从这份记录里提取行动项'],
+          '你是会议秘书。把用户给的会议记录整理成一页纪要，固定结构：决策 / 行动项（负责人 + 截止时间）/ 风险 / 待确认事项。\n' +
+          '规则：不添加记录里没有的内容；原话里没有的负责人和时间不要编，标成「待定」；不确定的写「待确认」。',
+        starters: [],
         questions: [],
-        constraints: '不添加记录里没有的内容；不确定的写「待确认」。',
-        deliverables: '一页纪要：决策 / 行动项 / 风险 / 待确认。',
+        constraints: '',
+        deliverables: '',
       },
       'en-US': {
         name: 'Meeting minutes and action items',
         description:
           'Turn meeting notes into decisions, action items, risks and open points. The task is clear, so it does not ask first.',
         prompt:
-          'You are the meeting secretary. Turn the notes the user gives you into a fixed structure: decisions, action items (owner + due date), risks, open points. Do not invent owners or dates that are not in the notes; mark them "TBD".',
-        starters: ['Turn this meeting transcript into minutes', 'Pull the action items out of these notes'],
+          'You are the meeting secretary. Turn the notes the user gives you into a one-page summary with a fixed structure: decisions / action items (owner + due date) / risks / open points.\n' +
+          'Rules: add nothing that is not in the notes; do not invent owners or dates, mark them "TBD"; mark anything uncertain as "to confirm".',
+        starters: [],
         questions: [],
-        constraints: 'Add nothing that is not in the notes; mark anything uncertain as "to confirm".',
-        deliverables: 'A one-page summary: decisions / action items / risks / open points.',
+        constraints: '',
+        deliverables: '',
       },
     },
   },

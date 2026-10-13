@@ -357,7 +357,13 @@
       "mcpPlaceholder": "Aucune limite",
       "preview": "Voir les règles complètes données à l'IA",
       "previewHint": "C'est exactement ce que l'IA lit au début de la conversation, généré à partir des réglages ci-dessus."
-    }
+    },
+    "tryOpening": "Essayez de commencer par :",
+    "import": "Importer",
+    "export": "Exporter",
+    "importDone": "{{count}} scénarios importés",
+    "importInvalid": "Ce n'est pas un fichier de scénarios exporté",
+    "importEmpty": "Aucun scénario à importer dans ce fichier"
   },
   "fileVault": {
     "title": "Coffre de fichiers",

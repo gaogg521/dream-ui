@@ -357,7 +357,13 @@
       "mcpPlaceholder": "Sınır yok",
       "preview": "Yapay zekâya söylenecek tüm kuralları gör",
       "previewHint": "Sohbet başlarken yapay zekânın okuduğu tam metindir; yukarıdaki ayarlardan üretilir."
-    }
+    },
+    "tryOpening": "Şöyle başlayabilirsiniz:",
+    "import": "İçe aktar",
+    "export": "Dışa aktar",
+    "importDone": "{{count}} senaryo içe aktarıldı",
+    "importInvalid": "Bu, dışa aktarılmış bir senaryo dosyası değil",
+    "importEmpty": "Dosyada içe aktarılacak senaryo yok"
   },
   "fileVault": {
     "title": "Dosya Kasası",

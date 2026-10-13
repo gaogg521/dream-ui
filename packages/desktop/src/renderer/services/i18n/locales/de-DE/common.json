@@ -357,7 +357,13 @@
       "mcpPlaceholder": "Keine Beschränkung",
       "preview": "Vollständige Regeln für die KI ansehen",
       "previewHint": "Genau das liest die KI zu Gesprächsbeginn, erzeugt aus den Einstellungen oben."
-    }
+    },
+    "tryOpening": "Zum Beispiel so einsteigen:",
+    "import": "Importieren",
+    "export": "Exportieren",
+    "importDone": "{{count}} Szenarien importiert",
+    "importInvalid": "Das ist keine exportierte Szenario-Datei",
+    "importEmpty": "In der Datei gibt es keine Szenarien zum Importieren"
   },
   "fileVault": {
     "title": "Datei-Tresor",

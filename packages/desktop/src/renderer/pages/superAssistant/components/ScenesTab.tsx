@@ -12,14 +12,15 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Empty, Message, Modal, Popconfirm, Spin, Switch, Tag } from '@arco-design/web-react';
-import { Copy, Delete, Edit, Plus } from '@icon-park/react';
+import { Button, Empty, Message, Modal, Popconfirm, Spin, Switch, Tag, Upload } from '@arco-design/web-react';
+import { Copy, Delete, Download, Edit, Plus, Upload as UploadIcon } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import SceneEditor from '@/renderer/components/scenes/SceneEditor';
 import { useScenes } from '@/renderer/components/scenes/useScenes';
 import type { PersonalScene } from '@/common/types/platform/sceneTypes';
 import { newPersonalScene } from '@/renderer/utils/scenes/personalScenes';
+import { parseScenesFile, serializeScenes } from '@/renderer/utils/scenes/sceneTransfer';
 import type { SceneItem } from '@/renderer/utils/scenes/sceneItem';
 import {
   SCENE_TEMPLATES,
@@ -90,8 +91,18 @@ const SceneRow: React.FC<{
 const ScenesTab: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { companyActive, loaded, all, enabled, setEnabled, isEnabled, savePersonal, deletePersonal, error } =
-    useScenes();
+  const {
+    companyActive,
+    loaded,
+    all,
+    enabled,
+    setEnabled,
+    isEnabled,
+    savePersonal,
+    savePersonalMany,
+    deletePersonal,
+    error,
+  } = useScenes();
   const [picking, setPicking] = useState(false);
   const [editor, setEditor] = useState<EditorState>(null);
 
@@ -164,6 +175,38 @@ const ScenesTab: React.FC = () => {
     }
   };
 
+  const handleExport = () => {
+    const blob = new Blob([serializeScenes(mine.flatMap((item) => (item.mine ? [item.mine] : [])))], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'one-work-scenes.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Adds the scenes in a file as new ones; nothing existing is touched.
+  const handleImport = async (file: File) => {
+    const parsed = parseScenesFile(await file.text());
+    if (!parsed) {
+      Message.error(t('common.scenes.importInvalid'));
+      return;
+    }
+    if (parsed.scenes.length === 0) {
+      Message.warning(t('common.scenes.importEmpty'));
+      return;
+    }
+    try {
+      await savePersonalMany(parsed.scenes);
+      Message.success(t('common.scenes.importDone', { count: parsed.scenes.length }));
+    } catch (importError) {
+      console.error('[ScenesTab] Failed to import scenes:', importError);
+      Message.error(t('common.scenes.saveFailed'));
+    }
+  };
+
   if (!loaded) return error ? <Empty description={t('common.error')} /> : <Spin className='w-full py-40px' />;
 
   return (
@@ -183,7 +226,33 @@ const ScenesTab: React.FC = () => {
       </div>
 
       <section className='flex flex-col gap-8px'>
-        <div className='text-13px font-600'>{t('common.scenes.mine')}</div>
+        <div className='flex items-center justify-between gap-8px'>
+          <div className='text-13px font-600'>{t('common.scenes.mine')}</div>
+          <div className='flex items-center gap-4px'>
+            <Upload
+              accept='.json,application/json'
+              showUploadList={false}
+              beforeUpload={(file) => {
+                void handleImport(file);
+                return false;
+              }}
+            >
+              <Button type='text' size='small' icon={<UploadIcon size={14} />} data-testid='scene-import'>
+                {t('common.scenes.import')}
+              </Button>
+            </Upload>
+            <Button
+              type='text'
+              size='small'
+              icon={<Download size={14} />}
+              disabled={mine.length === 0}
+              onClick={handleExport}
+              data-testid='scene-export'
+            >
+              {t('common.scenes.export')}
+            </Button>
+          </div>
+        </div>
         {mine.length === 0 ? (
           <div className='rounded-6px border border-dashed border-2 p-16px text-12px text-t-tertiary'>
             {t('common.scenes.emptyMine')}

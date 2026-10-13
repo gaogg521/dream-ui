@@ -5,12 +5,12 @@
 /**
  * The standing rules a scene gives its conversation.
  *
- * Three layers, all optional except the first: who the assistant is in this
- * scene (the written prompt, or a line generated from the scene's own fields);
- * the working method (requirements round before building) when the scene asks
- * for it; and the hard rules and acceptance the scene fixes. They are plain
- * text so they ride the existing `preset_rules` channel, which every backend
- * already honours.
+ * Who the assistant is in this scene (the written prompt, or a line generated
+ * from the scene's own fields) always comes first. When the scene asks first,
+ * the working method (requirements round before building) follows, together
+ * with the questions the scene always needs answered, its hard rules and its
+ * hand-over. It is plain text so it rides the existing `preset_rules` channel,
+ * which every backend already honours.
  *
  * The method is the point of the feature. A request like "make me a website" is
  * an entry point, not a specification. An assistant that starts from it
@@ -75,17 +75,20 @@ export function buildDiscoveryRules(questions: string[]): string {
 
 /** Everything the conversation should be told about the scene, as one block of standing rules. */
 export function buildSceneRules(input: SceneRulesInput): string {
-  const parts = [buildRoleRules(input)];
+  const role = buildRoleRules(input);
   const intent = input.intent;
-  if (intent?.discovery) parts.push(buildDiscoveryRules(intent.questions));
+  // The questions, hard rules and hand-over belong to the ask-first mode: a
+  // scene that does not ask first is just its role (any rules go in the prompt).
+  if (!intent?.discovery) return role;
 
-  const constraints = intent?.constraints.trim();
+  const parts = [role, buildDiscoveryRules(intent.questions)];
+  const constraints = intent.constraints.trim();
   if (constraints) {
     parts.push(
       `## Hard rules for this scene\nThese apply at every step and are never traded away for speed:\n${constraints}`
     );
   }
-  const deliverables = intent?.deliverables.trim();
+  const deliverables = intent.deliverables.trim();
   if (deliverables) parts.push(`## What to hand over, and how it is accepted\n${deliverables}`);
   return parts.join('\n\n');
 }

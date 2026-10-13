@@ -73,7 +73,17 @@ describe('scene templates', () => {
     expect(rules).toContain('Who is the site for?');
   });
 
-  it('a quick, well-defined scene does not ask first', () => {
-    expect(getSceneTemplate('meeting')?.discovery).toBe(false);
+  it('a quick, well-defined scene does not ask first, and keeps its rules in the prompt', () => {
+    const meeting = getSceneTemplate('meeting');
+    expect(meeting?.discovery).toBe(false);
+    for (const language of ['zh-CN', 'en-US'] as const) {
+      const text = meeting?.text[language];
+      // The questions, hard rules and hand-over belong to the ask-first mode, so none are left dangling here.
+      expect(text?.questions).toEqual([]);
+      expect(text?.constraints).toBe('');
+      expect(text?.deliverables).toBe('');
+      expect(text?.starters).toEqual([]);
+    }
+    expect(meeting?.text['en-US'].prompt).toContain('Rules:');
   });
 });

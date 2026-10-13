@@ -23,6 +23,7 @@ import { Delete, Plus } from '@icon-park/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
+import styles from './SceneEditor.module.css';
 
 type SceneEditorProps = {
   visible: boolean;
@@ -162,7 +163,7 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ visible, mode, scene, onCance
         </div>
       }
     >
-      <div className='flex flex-col gap-18px' data-testid='scene-editor'>
+      <div className={`flex flex-col gap-18px ${styles.fields}`} data-testid='scene-editor'>
         <Field label={t('common.scenes.editor.icon')}>
           <div className='flex flex-wrap gap-6px'>
             {SCENE_ICONS.map((icon) => (
@@ -227,49 +228,53 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ visible, mode, scene, onCance
           </div>
         </div>
 
-        <Field label={t('common.scenes.editor.questions')} hint={t('common.scenes.editor.questionsHint')}>
-          <LineList
-            testId='scene-questions'
-            items={draft.intent.questions}
-            max={SCENE_LIMITS.questions}
-            maxLength={SCENE_LIMITS.question}
-            placeholder={t('common.scenes.editor.questionPlaceholder')}
-            addLabel={t('common.scenes.editor.questionsAdd')}
-            onChange={(questions) => setIntent({ questions })}
-          />
-        </Field>
+        {draft.intent.discovery ? (
+          <div className='flex flex-col gap-18px' data-testid='scene-discovery-fields'>
+            <Field label={t('common.scenes.editor.questions')} hint={t('common.scenes.editor.questionsHint')}>
+              <LineList
+                testId='scene-questions'
+                items={draft.intent.questions}
+                max={SCENE_LIMITS.questions}
+                maxLength={SCENE_LIMITS.question}
+                placeholder={t('common.scenes.editor.questionPlaceholder')}
+                addLabel={t('common.scenes.editor.questionsAdd')}
+                onChange={(questions) => setIntent({ questions })}
+              />
+            </Field>
 
-        <Field label={t('common.scenes.editor.starters')} hint={t('common.scenes.editor.startersHint')}>
-          <LineList
-            testId='scene-starters'
-            items={draft.intent.starters}
-            max={SCENE_LIMITS.starters}
-            maxLength={SCENE_LIMITS.starter}
-            placeholder={t('common.scenes.editor.starterPlaceholder')}
-            addLabel={t('common.scenes.editor.startersAdd')}
-            onChange={(starters) => setIntent({ starters })}
-          />
-        </Field>
+            <Field label={t('common.scenes.editor.starters')} hint={t('common.scenes.editor.startersHint')}>
+              <LineList
+                testId='scene-starters'
+                items={draft.intent.starters}
+                max={SCENE_LIMITS.starters}
+                maxLength={SCENE_LIMITS.starter}
+                placeholder={t('common.scenes.editor.starterPlaceholder')}
+                addLabel={t('common.scenes.editor.startersAdd')}
+                onChange={(starters) => setIntent({ starters })}
+              />
+            </Field>
 
-        <Field label={t('common.scenes.editor.constraints')} hint={t('common.scenes.editor.constraintsHint')}>
-          <Input.TextArea
-            value={draft.intent.constraints}
-            maxLength={SCENE_LIMITS.constraints}
-            autoSize={{ minRows: 2, maxRows: 8 }}
-            placeholder={t('common.scenes.editor.constraintsPlaceholder')}
-            onChange={(constraints) => setIntent({ constraints })}
-          />
-        </Field>
+            <Field label={t('common.scenes.editor.constraints')} hint={t('common.scenes.editor.constraintsHint')}>
+              <Input.TextArea
+                value={draft.intent.constraints}
+                maxLength={SCENE_LIMITS.constraints}
+                autoSize={{ minRows: 2, maxRows: 8 }}
+                placeholder={t('common.scenes.editor.constraintsPlaceholder')}
+                onChange={(constraints) => setIntent({ constraints })}
+              />
+            </Field>
 
-        <Field label={t('common.scenes.editor.deliverables')} hint={t('common.scenes.editor.deliverablesHint')}>
-          <Input.TextArea
-            value={draft.intent.deliverables}
-            maxLength={SCENE_LIMITS.deliverables}
-            autoSize={{ minRows: 2, maxRows: 8 }}
-            placeholder={t('common.scenes.editor.deliverablesPlaceholder')}
-            onChange={(deliverables) => setIntent({ deliverables })}
-          />
-        </Field>
+            <Field label={t('common.scenes.editor.deliverables')} hint={t('common.scenes.editor.deliverablesHint')}>
+              <Input.TextArea
+                value={draft.intent.deliverables}
+                maxLength={SCENE_LIMITS.deliverables}
+                autoSize={{ minRows: 2, maxRows: 8 }}
+                placeholder={t('common.scenes.editor.deliverablesPlaceholder')}
+                onChange={(deliverables) => setIntent({ deliverables })}
+              />
+            </Field>
+          </div>
+        ) : null}
 
         <Field label={t('common.scenes.editor.skills')} hint={t('common.scenes.editor.skillsHint')}>
           <Select

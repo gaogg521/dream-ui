@@ -369,7 +369,13 @@
       "mcpPlaceholder": "不限制",
       "preview": "查看將告訴 AI 的完整規則",
       "previewHint": "這就是對話開始時 AI 讀到的內容，由上面的設定自動產生。"
-    }
+    },
+    "tryOpening": "試試這樣開口：",
+    "import": "匯入",
+    "export": "匯出",
+    "importDone": "已匯入 {{count}} 個場景",
+    "importInvalid": "這不是場景匯出檔案",
+    "importEmpty": "檔案裡沒有可匯入的場景"
   },
   "fileVault": {
     "title": "檔案保險箱",

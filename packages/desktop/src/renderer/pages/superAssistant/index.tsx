@@ -26,6 +26,7 @@ import { isOrgAdminRole, useOrgContext } from '../enterprise/hooks/useOrgContext
 import { useDigitalEmployees } from './hooks/useDigitalEmployees';
 import {
   AGENT_TEMPLATES,
+  getTemplateDescription,
   getTemplateExamplePrompts,
   getTemplateInstructions,
   getTemplateName,
@@ -33,7 +34,7 @@ import {
 import AgentsTab, { type AgentCardRef } from './components/AgentsTab';
 import RagSection from './registries/RagSection';
 import ScenesTab from './components/ScenesTab';
-import CreateAgentModal from './components/CreateAgentModal';
+import CreateAgentModal, { type CreateAgentSeed } from './components/CreateAgentModal';
 import ManageAgentModal from './components/ManageAgentModal';
 import ScheduleAgentModal from './components/ScheduleAgentModal';
 import DigitalEmployeeDetailModal from './components/DigitalEmployeeDetailModal';
@@ -72,7 +73,7 @@ const SuperAssistantPage: React.FC = () => {
   const [manageTarget, setManageTarget] = useState<AgentCardRef | null>(null);
   const [scheduleTarget, setScheduleTarget] = useState<AgentCardRef | null>(null);
   const [detailTarget, setDetailTarget] = useState<AgentCardRef | null>(null);
-  const [creatingFromTemplate, setCreatingFromTemplate] = useState(false);
+  const [createSeed, setCreateSeed] = useState<CreateAgentSeed | null>(null);
   const [startingChat, setStartingChat] = useState<string | null>(null);
 
   const manageAgentRow = useMemo(
@@ -119,35 +120,24 @@ const SuperAssistantPage: React.FC = () => {
     [refresh, t]
   );
 
-  const handleCreateFromTemplate = useCallback(
-    async (templateId: string) => {
+  // A template fills the create form in; the person edits it and picks the
+  // model and backend before anything is created. (Creating straight from the
+  // card skipped the binding, and an employee without one fails its first run.)
+  const handlePickTemplate = useCallback(
+    (templateId: string) => {
       const template = AGENT_TEMPLATES.find((tpl) => tpl.id === templateId);
       if (!template) {
         return;
       }
-      setCreatingFromTemplate(true);
-      try {
-        const instructions = getTemplateInstructions(template, language);
-        const name = getTemplateName(template, language);
-        const agentType = template.agentKey ?? 'claude';
-        const starterPrompts = getTemplateExamplePrompts(template, language);
-        await ipcBridge.personalAgent.create.invoke({
-          name,
-          agentType,
-          automationConfig: {
-            ...(instructions ? { instructions } : {}),
-            ...(starterPrompts.length > 0 ? { starterPrompts } : {}),
-          },
-        });
-        Message.success(t('common.superAssistant.createSuccess', { defaultValue: '创建成功' }));
-        void refresh();
-      } catch (error) {
-        Message.error(t('common.superAssistant.createFailed', { defaultValue: '创建失败' }) + ': ' + String(error));
-      } finally {
-        setCreatingFromTemplate(false);
-      }
+      setCreateSeed({
+        name: getTemplateName(template, language),
+        description: getTemplateDescription(template, language),
+        instructions: getTemplateInstructions(template, language),
+        starterPrompts: getTemplateExamplePrompts(template, language),
+      });
+      setCreateModalVisible(true);
     },
-    [language, refresh, t]
+    [language]
   );
 
   return (
@@ -167,8 +157,7 @@ const SuperAssistantPage: React.FC = () => {
                 startingChatId={startingChat}
                 onStartChat={(ref) => void handleStartChat(ref.agentId)}
                 onCreateAgent={() => setCreateModalVisible(true)}
-                onCreateFromTemplate={handleCreateFromTemplate}
-                creatingFromTemplate={creatingFromTemplate}
+                onPickTemplate={handlePickTemplate}
                 onManageAgent={(ref) => setManageTarget(ref)}
                 onScheduleAgent={(ref) => setScheduleTarget(ref)}
                 onViewDigitalEmployeeDetail={(ref) => setDetailTarget(ref)}
@@ -187,7 +176,11 @@ const SuperAssistantPage: React.FC = () => {
 
       <CreateAgentModal
         visible={createModalVisible}
-        onClose={() => setCreateModalVisible(false)}
+        seed={createSeed}
+        onClose={() => {
+          setCreateModalVisible(false);
+          setCreateSeed(null);
+        }}
         onCreated={() => void refresh()}
       />
       <ManageAgentModal

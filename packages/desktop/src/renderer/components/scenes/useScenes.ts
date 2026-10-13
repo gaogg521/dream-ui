@@ -114,6 +114,17 @@ export function useScenes() {
     [personalScenes, refreshPersonal]
   );
 
+  /** Add or replace several personal scenes with one write, so none overwrites another. */
+  const savePersonalMany = useCallback(
+    async (scenes: PersonalScene[]) => {
+      let next = personalScenes ?? (await loadPersonalScenes());
+      for (const scene of scenes) next = upsertPersonalScene(next, scene);
+      await savePersonalScenes(next);
+      await refreshPersonal(next, { revalidate: false });
+    },
+    [personalScenes, refreshPersonal]
+  );
+
   const deletePersonal = useCallback(
     async (id: string) => {
       const next = removePersonalScene(personalScenes ?? (await loadPersonalScenes()), id);
@@ -140,6 +151,7 @@ export function useScenes() {
     isEnabled: (key: string) => !disabledKeys.includes(key),
     personalScenes: personalList,
     savePersonal,
+    savePersonalMany,
     deletePersonal,
     refreshCompany,
     isValidating,

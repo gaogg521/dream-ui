@@ -357,7 +357,13 @@
       "mcpPlaceholder": "Sem limite",
       "preview": "Ver as regras completas enviadas à IA",
       "previewHint": "É exatamente o que a IA lê no início da conversa, gerado pelas configurações acima."
-    }
+    },
+    "tryOpening": "Experimente começar com:",
+    "import": "Importar",
+    "export": "Exportar",
+    "importDone": "{{count}} cenários importados",
+    "importInvalid": "Este não é um arquivo de cenários exportado",
+    "importEmpty": "Não há cenários para importar nesse arquivo"
   },
   "fileVault": {
     "title": "Cofre de arquivos",

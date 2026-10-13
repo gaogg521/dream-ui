@@ -710,7 +710,13 @@
       "mcpPlaceholder": "不限制",
       "preview": "查看将告诉 AI 的完整规则",
       "previewHint": "这就是对话开始时 AI 读到的内容，由上面的设置自动生成。"
-    }
+    },
+    "tryOpening": "试试这样开口：",
+    "import": "导入",
+    "export": "导出",
+    "importDone": "已导入 {{count}} 个场景",
+    "importInvalid": "这不是场景导出文件",
+    "importEmpty": "文件里没有可导入的场景"
   },
   "fileVault": {
     "title": "文件保险箱",

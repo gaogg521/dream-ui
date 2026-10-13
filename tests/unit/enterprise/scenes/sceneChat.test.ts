@@ -15,8 +15,18 @@ vi.mock('@/common', () => ({
   },
 }));
 
+vi.mock('@/renderer/hooks/mcp/catalog', () => ({
+  ensureBackendMcpCatalog: vi.fn(async () => ({
+    allServers: [
+      { id: 'row_1', name: 'Business', original_json: '{"teamRegistryId":"omcp_1"}' },
+      { id: 'row_2', name: 'Mine', original_json: '{"mcpServers":{}}' },
+    ],
+  })),
+}));
+
 import {
   buildSceneConversationRequest,
+  resolveSceneMcpServerIds,
   resolvePersonalSkillNames,
   resolveSceneSkillNames,
   startSceneConversation,
@@ -83,7 +93,62 @@ describe('resolvePersonalSkillNames', () => {
   });
 });
 
+describe('resolveSceneMcpServerIds', () => {
+  const servers = [
+    { id: 'row_1', original_json: '{"teamRegistryId":"omcp_1"}' },
+    { id: 'row_2', original_json: '{"mcpServers":{}}' },
+    { id: 'row_3', original_json: 'not json' },
+    { id: 'row_4' },
+    { id: 'row_5', original_json: '{"teamRegistryId":"omcp_2"}' },
+  ];
+
+  it('maps registry ids to the local rows the team sync tagged with them', () => {
+    expect(resolveSceneMcpServerIds({ mcpIds: ['omcp_1', 'omcp_2'] }, servers)).toEqual(['row_1', 'row_5']);
+  });
+
+  it('skips connectors that have not synced, and rows that are not team rows', () => {
+    expect(resolveSceneMcpServerIds({ mcpIds: ['omcp_missing'] }, servers)).toEqual([]);
+    expect(resolveSceneMcpServerIds({ mcpIds: [] }, servers)).toEqual([]);
+    expect(resolveSceneMcpServerIds({}, servers)).toEqual([]);
+  });
+});
+
 describe('buildSceneConversationRequest', () => {
+  it('a company scene that grants connectors limits the conversation to the ones that have synced', () => {
+    const item = companySceneItem(scene({ mcpIds: ['omcp_1'] }));
+    const request = buildSceneConversationRequest({
+      item,
+      skills,
+      model,
+      mcpServers: [{ id: 'row_1', original_json: '{"teamRegistryId":"omcp_1"}' }],
+    });
+    expect(request.extra.selected_mcp_server_ids).toEqual(['row_1']);
+  });
+
+  it('but never leaves the conversation with no tools: none synced yet means no limit', () => {
+    const item = companySceneItem(scene({ mcpIds: ['omcp_1'] }));
+    expect(
+      buildSceneConversationRequest({ item, skills, model, mcpServers: [] }).extra.selected_mcp_server_ids
+    ).toBeUndefined();
+  });
+
+  it('carries the example openers, for scenes that ask first, so the conversation can offer them', () => {
+    const asks = companySceneItem(
+      scene({
+        intent: { discovery: true, starters: ['Make me a website'], questions: [], constraints: '', deliverables: '' },
+      })
+    );
+    expect(buildSceneConversationRequest({ item: asks, skills, model }).extra.scene_starters).toEqual([
+      'Make me a website',
+    ]);
+    const quiet = companySceneItem(
+      scene({
+        intent: { discovery: false, starters: ['Make me a website'], questions: [], constraints: '', deliverables: '' },
+      })
+    );
+    expect(buildSceneConversationRequest({ item: quiet, skills, model }).extra.scene_starters).toBeUndefined();
+  });
+
   it('a company scene carries its prompt as standing rules and the resolved skills as the starting set', () => {
     const item = companySceneItem(scene({ prompt: '你是发布经理。', skillIds: ['oskill_a1'] }));
     const request = buildSceneConversationRequest({ item, skills, model });
@@ -149,6 +214,12 @@ describe('startSceneConversation', () => {
   beforeEach(() => {
     hooks.listAvailableSkills.mockReset().mockResolvedValue(skills);
     hooks.create.mockReset().mockResolvedValue({ id: 'conv_9' });
+  });
+
+  it('limits a company scene to its synced connectors when it opens', async () => {
+    const item = companySceneItem(scene({ mcpIds: ['omcp_1'] }));
+    await startSceneConversation(item, model);
+    expect(hooks.create.mock.calls[0][0].extra.selected_mcp_server_ids).toEqual(['row_1']);
   });
 
   it('creates the conversation and returns its id', async () => {

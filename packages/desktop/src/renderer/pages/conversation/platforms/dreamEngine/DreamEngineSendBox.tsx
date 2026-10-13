@@ -13,6 +13,7 @@ import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import AgentModeSelector from '@/renderer/components/agent/AgentModeSelector';
 import ContextUsageIndicator from '@/renderer/components/agent/ContextUsageIndicator';
 import EnterpriseSceneContext from '@/renderer/components/enterprise/EnterpriseSceneContext';
+import SceneStarters from '@/renderer/components/scenes/SceneStarters';
 import ModelKindTag from '@/renderer/components/settings/ModelKindTag';
 import CommandQueuePanel from '@/renderer/components/chat/CommandQueuePanel';
 import { resolveExtensionAssetUrl } from '@/renderer/utils/platform';
@@ -985,7 +986,12 @@ const DreamEngineSendBox: React.FC<{
             />
           </div>
         }
-        contextFooter={<EnterpriseSceneContext compact />}
+        contextFooter={
+          <>
+            <SceneStarters conversationId={conversation_id} hasInput={content.length > 0} />
+            <EnterpriseSceneContext compact />
+          </>
+        }
         prefix={
           <>
             {uploadFile.length > 0 && (

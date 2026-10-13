@@ -357,7 +357,13 @@
       "mcpPlaceholder": "Sin límite",
       "preview": "Ver las reglas completas que recibirá la IA",
       "previewHint": "Es exactamente lo que lee la IA al empezar la conversación, generado a partir de los ajustes de arriba."
-    }
+    },
+    "tryOpening": "Prueba a empezar con:",
+    "import": "Importar",
+    "export": "Exportar",
+    "importDone": "Se importaron {{count}} escenarios",
+    "importInvalid": "Ese no es un archivo de escenarios exportado",
+    "importEmpty": "No hay escenarios para importar en ese archivo"
   },
   "fileVault": {
     "title": "Caja fuerte de archivos",

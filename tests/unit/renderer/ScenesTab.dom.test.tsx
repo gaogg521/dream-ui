@@ -39,6 +39,11 @@ vi.mock('@/renderer/pages/enterprise/hooks/useOrgContext', () => ({
 vi.mock('@/renderer/hooks/mcp', () => ({
   useMcpServers: () => ({ mcpServers: [{ id: 'mcp_1', name: 'Docs server', builtin: false }] }),
 }));
+vi.mock('@arco-design/web-react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@arco-design/web-react')>();
+  // Arco's toast renders through an API React 19 removed; the toast is not what is tested.
+  return { ...actual, Message: { ...actual.Message, success: vi.fn(), error: vi.fn(), warning: vi.fn() } };
+});
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, options?: Record<string, unknown>) =>
@@ -262,6 +267,87 @@ describe('ScenesTab', () => {
     it('opens straight on the choice of a start when the home page sent the person here to make one', async () => {
       renderTab('/?new=1');
       expect(await screen.findByTestId('scene-templates')).toBeInTheDocument();
+    });
+  });
+
+  describe('the ask-first options', () => {
+    const openBlank = async () => {
+      renderTab();
+      await screen.findByText('办公');
+      fireEvent.click(screen.getByTestId('scene-new'));
+      fireEvent.click(await screen.findByText('common.scenes.blank'));
+      await screen.findByTestId('scene-editor');
+    };
+
+    it('show only while the switch is on: questions, example openers, hard rules and hand-over', async () => {
+      await openBlank();
+      expect(screen.getByTestId('scene-discovery-fields')).toBeInTheDocument();
+      expect(screen.getByTestId('scene-questions')).toBeInTheDocument();
+      expect(screen.getByTestId('scene-starters')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('switch', { name: 'common.scenes.editor.discovery' }));
+      await waitFor(() => expect(screen.queryByTestId('scene-discovery-fields')).not.toBeInTheDocument());
+      expect(screen.queryByTestId('scene-questions')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('scene-starters')).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText('common.scenes.editor.constraintsPlaceholder')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('switch', { name: 'common.scenes.editor.discovery' }));
+      expect(await screen.findByTestId('scene-discovery-fields')).toBeInTheDocument();
+    });
+
+    it('keep what was typed when the switch is flipped off and on again', async () => {
+      await openBlank();
+      fireEvent.click(within(screen.getByTestId('scene-questions')).getByRole('button'));
+      fireEvent.change(within(screen.getByTestId('scene-questions')).getByRole('textbox'), {
+        target: { value: 'Who maintains it?' },
+      });
+      const toggle = screen.getByRole('switch', { name: 'common.scenes.editor.discovery' });
+      fireEvent.click(toggle);
+      fireEvent.click(toggle);
+      const box = within(await screen.findByTestId('scene-questions')).getByRole('textbox') as HTMLInputElement;
+      expect(box.value).toBe('Who maintains it?');
+    });
+  });
+
+  describe('moving scenes between machines', () => {
+    beforeEach(() => {
+      Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() });
+    });
+
+    it('exports only the person own scenes, and only when there are some', async () => {
+      renderTab();
+      await screen.findByText('办公');
+      expect(screen.getByTestId('scene-export')).toBeDisabled();
+    });
+
+    it('exports them as a file', async () => {
+      hooks.personal = [newPersonalScene({ name: '我的官网' })];
+      renderTab();
+      await screen.findByText('我的官网');
+      const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+      fireEvent.click(screen.getByTestId('scene-export'));
+      expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
+      const blob = (URL.createObjectURL as unknown as { mock: { calls: Blob[][] } }).mock.calls[0][0];
+      expect(blob.type).toBe('application/json');
+      expect(click).toHaveBeenCalledTimes(1);
+      click.mockRestore();
+    });
+
+    it('imports the scenes in a file as new ones, all of them, next to the ones already there', async () => {
+      hooks.personal = [newPersonalScene({ name: '已有' })];
+      renderTab();
+      await screen.findByText('已有');
+      const content = JSON.stringify({
+        format: 'one-work-scenes',
+        version: 1,
+        scenes: [newPersonalScene({ name: '导入一' }), newPersonalScene({ name: '导入二' })],
+      });
+      const file = new File([content], 'scenes.json', { type: 'application/json' });
+      // jsdom's File has no `text()`; the browser's does.
+      Object.defineProperty(file, 'text', { value: async () => content });
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      fireEvent.change(input, { target: { files: [file] } });
+      await waitFor(() => expect(saved().map((item) => item.name)).toEqual(['已有', '导入一', '导入二']));
     });
   });
 

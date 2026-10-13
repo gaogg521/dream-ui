@@ -17,13 +17,23 @@ import type { CreatePersonalAgentInput } from '@/common/types/employee/employeeT
 import { useEmployeeAgentBinding } from '../hooks/useEmployeeAgentBinding';
 import EmployeeBindingFields from './EmployeeBindingFields';
 
+/** What a template fills the form with; every part stays editable before the employee is created. */
+export type CreateAgentSeed = {
+  name: string;
+  description?: string;
+  instructions?: string;
+  starterPrompts?: string[];
+};
+
 type CreateAgentModalProps = {
   visible: boolean;
   onClose: () => void;
   onCreated: () => void;
+  /** Start from a template instead of an empty form. */
+  seed?: CreateAgentSeed | null;
 };
 
-const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ visible, onClose, onCreated }) => {
+const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ visible, onClose, onCreated, seed }) => {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -34,13 +44,13 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ visible, onClose, o
 
   useEffect(() => {
     if (visible) {
-      setName('');
-      setDescription('');
-      setInstructions('');
+      setName(seed?.name ?? '');
+      setDescription(seed?.description ?? '');
+      setInstructions(seed?.instructions ?? '');
       setSubmitting(false);
       reset();
     }
-  }, [visible, reset]);
+  }, [visible, reset, seed]);
 
   const handleSubmit = async () => {
     const trimmedName = name.trim();
@@ -64,7 +74,10 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ visible, onClose, o
         name: trimmedName,
         description: description.trim() || undefined,
         ...bound,
-        automationConfig: instructions.trim() ? { instructions: instructions.trim() } : {},
+        automationConfig: {
+          ...(instructions.trim() ? { instructions: instructions.trim() } : {}),
+          ...(seed?.starterPrompts?.length ? { starterPrompts: seed.starterPrompts } : {}),
+        },
       };
       await ipcBridge.personalAgent.create.invoke(payload);
       Message.success(t('common.superAssistant.createSuccess', { defaultValue: '创建成功' }));

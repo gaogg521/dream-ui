@@ -21,6 +21,7 @@
  */
 
 import { ipcBridge } from '@/common';
+import { ensureBackendMcpCatalog } from '@/renderer/hooks/mcp/catalog';
 import type { TProviderWithModel } from '@/common/config/storage';
 import type { MyScene } from '@/common/types/platform/enterpriseTypes';
 import type { PersonalScene } from '@/common/types/platform/sceneTypes';
@@ -46,8 +47,13 @@ export type SceneConversationRequest = {
     selected_mcp_server_ids?: string[];
     /** Which scene this was opened from; display and diagnostics only. */
     scene_id: string;
+    /** The scene's example openers, offered as chips until the conversation begins. */
+    scene_starters?: string[];
   };
 };
+
+/** The slice of a local MCP server row this needs. */
+export type LocalMcpServer = { id: string; original_json?: string };
 
 /** `[A-Za-z0-9_-]` is all the team sync keeps of a registry id in a directory name. */
 const sanitizeRegistryId = (id: string): string => id.replace(/[^A-Za-z0-9_-]/g, '');
@@ -64,6 +70,26 @@ export function resolveSceneSkillNames(scene: Pick<MyScene, 'skillIds'>, skills:
   return names;
 }
 
+/**
+ * Local MCP server ids for the connectors a company scene grants explicitly. The
+ * team sync materializes each as a local row tagged with its registry id
+ * (`teamRegistryId` in the row's JSON); ones that have not synced are left out.
+ */
+export function resolveSceneMcpServerIds(scene: Pick<MyScene, 'mcpIds'>, servers: LocalMcpServer[]): string[] {
+  const wanted = new Set(scene.mcpIds ?? []);
+  if (wanted.size === 0) return [];
+  const ids: string[] = [];
+  for (const server of servers) {
+    try {
+      const registryId = (JSON.parse(server.original_json ?? '{}') as { teamRegistryId?: unknown }).teamRegistryId;
+      if (typeof registryId === 'string' && wanted.has(registryId) && !ids.includes(server.id)) ids.push(server.id);
+    } catch {
+      // A row whose JSON cannot be read is not a team row.
+    }
+  }
+  return ids;
+}
+
 /** The skills a personal scene still has: the ones it names that exist on this machine, in its order. */
 export function resolvePersonalSkillNames(scene: Pick<PersonalScene, 'skillNames'>, skills: LocalSkill[]): string[] {
   const available = new Set(skills.map((skill) => skill.name));
@@ -73,9 +99,11 @@ export function resolvePersonalSkillNames(scene: Pick<PersonalScene, 'skillNames
 export function buildSceneConversationRequest(params: {
   item: SceneItem;
   skills: LocalSkill[];
+  /** Local MCP rows, to resolve a company scene's connectors; without them such a scene limits nothing. */
+  mcpServers?: LocalMcpServer[];
   model: TProviderWithModel;
 }): SceneConversationRequest {
-  const { item, skills, model } = params;
+  const { item, skills, mcpServers = [], model } = params;
   const company = item.company;
   const mine = item.mine;
   const rules = buildSceneRules(
@@ -101,6 +129,14 @@ export function buildSceneConversationRequest(params: {
     scene_id: item.key,
   };
   if (mine && mine.mcpServerIds.length > 0) extra.selected_mcp_server_ids = mine.mcpServerIds;
+  // A company scene that grants connectors limits the conversation to those that
+  // are here; if none have synced yet it limits nothing rather than leaving the
+  // conversation with no tools at all.
+  if (company) {
+    const resolved = resolveSceneMcpServerIds(company, mcpServers);
+    if (resolved.length > 0) extra.selected_mcp_server_ids = resolved;
+  }
+  if (item.starters.length > 0) extra.scene_starters = item.starters;
   return { type: 'dream', name: item.name, model, extra };
 }
 
@@ -112,8 +148,14 @@ export async function startSceneConversation(item: SceneItem, model: TProviderWi
     // A scene whose skills cannot be read still opens: the rules and the
     // connectors the team sync loads everywhere do not depend on them.
     .catch((): LocalSkill[] => []);
+  // Only a company scene with explicit connectors needs the local MCP rows.
+  const mcpServers = item.company?.mcpIds?.length
+    ? await ensureBackendMcpCatalog()
+        .then(({ allServers }) => allServers.map(({ id, original_json }): LocalMcpServer => ({ id, original_json })))
+        .catch((): LocalMcpServer[] => [])
+    : [];
   const conversation = await ipcBridge.conversation.create.invoke(
-    buildSceneConversationRequest({ item, skills, model })
+    buildSceneConversationRequest({ item, skills, mcpServers, model })
   );
   return conversation?.id ?? null;
 }
