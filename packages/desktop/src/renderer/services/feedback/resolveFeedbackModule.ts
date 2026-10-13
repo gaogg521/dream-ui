@@ -48,6 +48,7 @@ const ROUTE_MODULE_MAP: ReadonlyArray<readonly [prefix: string, tag: FeedbackMod
   // undefined.
   ['/mcp', 'mcp-tools'],
   ['/sessions', 'search-history'],
+  ['/knowledge', 'other'],
   ['/super-assistant', 'other'],
   ['/skills', 'skills-plugin'],
   ['/memory', 'conversation-session'],

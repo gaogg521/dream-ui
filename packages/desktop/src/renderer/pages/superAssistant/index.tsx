@@ -16,7 +16,7 @@
  * scene grid); the knowledge base stays because no other page manages it.
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Message, Spin, Tabs } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -62,6 +62,11 @@ const SuperAssistantPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabKey>(() => resolveInitialTab(searchParams.get('tab')));
+  // A link with ?tab= switches the tab even when this page is already open.
+  const tabParam = searchParams.get('tab');
+  useEffect(() => {
+    if (tabParam) setActiveTab(resolveInitialTab(tabParam));
+  }, [tabParam]);
   const { context } = useOrgContext();
   // The knowledge base is org-scoped inside an enterprise; only an admin may
   // change it there. A personal user manages their own outright.

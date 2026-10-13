@@ -37,6 +37,7 @@ const SuperAssistant = React.lazy(() => import('@renderer/pages/superAssistant')
 const EnterpriseLoginPage = React.lazy(() => import('@renderer/pages/enterprise/EnterpriseLoginPage'));
 const MemoryPage = React.lazy(() => import('@renderer/pages/memory'));
 const SessionCenter = React.lazy(() => import('@renderer/pages/SessionCenter'));
+const KnowledgePage = React.lazy(() => import('@renderer/pages/knowledge'));
 const SkillsSettings = React.lazy(loadSkillsSettings);
 const SkillDetailPage = React.lazy(() => import('@renderer/pages/settings/skillsHub/SkillDetailPage'));
 const McpPage = React.lazy(loadMcpPage);
@@ -186,6 +187,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/enterprise/login' element={withRouteFallback(EnterpriseLoginPage)} />
           <Route path='/enterprise' element={<Navigate to='/settings/enterprise' replace />} />
           <Route path='/sessions' element={withRouteFallback(SessionCenter)} />
+          <Route path='/knowledge' element={withRouteFallback(KnowledgePage)} />
           {/* MCP services moved from a top-level sidebar entry into Settings → AI core. */}
           <Route path='/settings/mcp' element={withRouteFallback(McpPage)} />
           <Route path='/mcp' element={<Navigate to='/settings/mcp' replace />} />

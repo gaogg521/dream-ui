@@ -8,7 +8,13 @@ import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { blurActiveElement } from '@renderer/utils/ui/focus';
 import { useThemeContext } from '@renderer/hooks/context/ThemeContext';
 import type { OneThemePreset } from '@renderer/utils/theme/applyOneThemePreset';
-import { SiderToolbar, SiderSearchEntry, SiderScheduledEntry, SiderAssistantEntry } from './SiderNav';
+import {
+  SiderToolbar,
+  SiderSearchEntry,
+  SiderScheduledEntry,
+  SiderAssistantEntry,
+  SiderKnowledgeEntry,
+} from './SiderNav';
 import SiderFooter from './SiderFooter';
 import WorkspaceIdentityEntry from '../WorkspaceIdentityEntry';
 import TeamSiderSection from './TeamSiderSection';
@@ -83,6 +89,19 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
     // keeps the preview open when switching between conversations of the same
     // scope and closes it only when the scope (today = workspace) actually changes.
     setIsBatchMode(false);
+  };
+
+  const handleKnowledgeClick = () => {
+    cleanupSiderTooltips();
+    blurActiveElement();
+    closePreview();
+    setIsBatchMode(false);
+    Promise.resolve(navigate('/knowledge')).catch((error) => {
+      console.error('Navigation failed:', error);
+    });
+    if (onSessionClick) {
+      onSessionClick();
+    }
   };
 
   const handleScheduledClick = () => {
@@ -234,6 +253,13 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
               collapsed={collapsed}
               siderTooltipProps={siderTooltipProps}
               onClick={handleScheduledClick}
+            />
+            <SiderKnowledgeEntry
+              isMobile={isMobile}
+              isActive={pathname.startsWith('/knowledge')}
+              collapsed={collapsed}
+              siderTooltipProps={siderTooltipProps}
+              onClick={handleKnowledgeClick}
             />
             <div className={classNames('flex-1 min-h-0 flex flex-col overflow-hidden', siderStyles.scrollArea)}>
               <Suspense fallback={null}>
