@@ -66,8 +66,31 @@
   background: var(--color-bg-2);
   transition: border-color 0.18s;
 }
+.card {
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+}
 .card:hover {
   border-color: rgb(var(--primary-4));
+}
+.card:focus-visible {
+  outline: 2px solid rgb(var(--primary-6));
+  outline-offset: 1px;
+}
+.card[aria-disabled='true'] {
+  cursor: default;
+}
+.dragging {
+  position: relative;
+  z-index: 2;
+  cursor: grabbing;
+  border-color: rgb(var(--primary-6));
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-text-1) 18%, transparent);
+}
+.opening {
+  opacity: 0.6;
+  cursor: progress;
 }
 .avatar {
   width: 32px;

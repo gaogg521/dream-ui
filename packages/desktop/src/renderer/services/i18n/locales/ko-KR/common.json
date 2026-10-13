@@ -295,7 +295,9 @@
       "knowledge": "지식",
       "employee": "디지털 직원"
     },
-    "showAll": "모두 보기({{count}})"
+    "showAll": "모두 보기({{count}})",
+    "gridHint": "장면을 클릭하면 프롬프트와 스킬이 적용된 대화를 시작합니다. 카드를 끌어 순서를 바꿀 수 있습니다",
+    "openFailed": "이 장면의 대화를 열 수 없습니다"
   },
   "fileVault": {
     "title": "파일 볼트",

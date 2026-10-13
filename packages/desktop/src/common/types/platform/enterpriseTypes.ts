@@ -25,8 +25,14 @@ export type MyScene = {
   description?: string | null;
   avatarRef?: string | null;
   jobFunctions: string[];
+  /** What a conversation opened from this scene should know; null when the admin wrote none. */
+  prompt?: string | null;
   builtIn: boolean;
   resources: MySceneResourceSummary[];
+  /** Registry ids of the skills the scene grants explicitly (the `*` wildcard is `resources[].includesAll`). */
+  skillIds?: string[];
+  /** Registry ids of the MCP connectors the scene grants explicitly. */
+  mcpIds?: string[];
   createdAt: number;
   updatedAt: number;
 };

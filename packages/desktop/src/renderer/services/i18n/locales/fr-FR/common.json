@@ -295,7 +295,9 @@
       "knowledge": "Connaissances",
       "employee": "Employés numériques"
     },
-    "showAll": "Tout afficher ({{count}})"
+    "showAll": "Tout afficher ({{count}})",
+    "gridHint": "Cliquez sur un scénario pour démarrer une conversation avec son prompt et ses compétences ; faites glisser les cartes pour les réordonner",
+    "openFailed": "Impossible d'ouvrir une conversation pour ce scénario"
   },
   "fileVault": {
     "title": "Coffre de fichiers",

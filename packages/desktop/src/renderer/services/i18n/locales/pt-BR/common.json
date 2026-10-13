@@ -295,7 +295,9 @@
       "knowledge": "Conhecimento",
       "employee": "Funcionários digitais"
     },
-    "showAll": "Mostrar todos ({{count}})"
+    "showAll": "Mostrar todos ({{count}})",
+    "gridHint": "Clique em um cenário para iniciar uma conversa com seu prompt e habilidades; arraste os cartões para reordenar",
+    "openFailed": "Não foi possível abrir uma conversa para este cenário"
   },
   "fileVault": {
     "title": "Cofre de arquivos",

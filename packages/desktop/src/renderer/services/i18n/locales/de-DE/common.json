@@ -295,7 +295,9 @@
       "knowledge": "Wissen",
       "employee": "Digitale Mitarbeiter"
     },
-    "showAll": "Alle anzeigen ({{count}})"
+    "showAll": "Alle anzeigen ({{count}})",
+    "gridHint": "Auf ein Szenario klicken, um ein Gespräch mit Prompt und Skills zu starten; Karten ziehen, um sie neu anzuordnen",
+    "openFailed": "Für dieses Szenario konnte kein Gespräch geöffnet werden"
   },
   "fileVault": {
     "title": "Datei-Tresor",

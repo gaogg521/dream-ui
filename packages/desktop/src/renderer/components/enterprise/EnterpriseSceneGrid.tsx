@@ -7,13 +7,14 @@
  *
  * A scene is a role plus a resource package an admin granted, and the home page
  * only needs to say which ones the member carries — so each is a one-line card
- * (avatar, name, how many skills and tools it hands over), four to a row, with
- * the first four shown and the rest behind "show all". The description and job
- * functions are one hover away rather than taking a card's worth of height each.
+ * (avatar, name, how many skills and tools it hands over), with the first four
+ * shown and the rest behind "show all". The description and job functions are
+ * one hover away rather than taking a card's worth of height each.
  *
- * Read-only by design — a scene is granted by an admin in the console, not
- * picked here, so the cards state what the account already carries rather than
- * offering an action that would 403.
+ * A card is something to click: it opens a conversation that already has the
+ * scene's prompt and skills (see `sceneChat`). Which scenes a member has is the
+ * company's call, but which one comes first is theirs, so the cards can be
+ * dragged into the order they like (see `sceneOrder`).
  */
 
 import { ipcBridge } from '@/common';
@@ -24,8 +25,11 @@ import {
 } from '@/common/adapter/enterpriseMode';
 import type { MyScene, MySceneResourceSummary } from '@/common/types/platform/enterpriseTypes';
 import { useOrgContext } from '@/renderer/pages/enterprise/hooks/useOrgContext';
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@arco-design/web-react';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Application, Refresh } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
@@ -36,6 +40,7 @@ import mediaAvatar from '@/renderer/assets/scenes/media-ops.png';
 import marketingAvatar from '@/renderer/assets/scenes/marketing.png';
 
 import styles from './EnterpriseHome.module.css';
+import { applySceneOrder, loadSceneOrder, moveScene, saveSceneOrder } from './sceneOrder';
 
 const BUILTIN_AVATARS: Record<string, string> = {
   办公: officeAvatar,
@@ -48,8 +53,14 @@ const BUILTIN_AVATARS: Record<string, string> = {
 /** Scenes shown before "show all". One row at the home page's usual width. */
 const COLLAPSED_SCENE_COUNT = 4;
 
-const SceneCard: React.FC<{ scene: MyScene }> = ({ scene }) => {
+/** Pixels a press must travel before it is a drag; less than that is a click. */
+const DRAG_ACTIVATION_DISTANCE = 8;
+
+type SceneCardProps = { scene: MyScene; opening: boolean; disabled: boolean; onOpen: (scene: MyScene) => void };
+
+const SceneCard: React.FC<SceneCardProps> = ({ scene, opening, disabled, onOpen }) => {
   const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: scene.id });
   const resourceValue = (summary: MySceneResourceSummary): string =>
     summary.includesAll ? t('common.scenes.resourceAll', { defaultValue: '全部' }) : String(summary.count);
   const tooltip = [scene.name, scene.description, scene.jobFunctions.join(' · ')]
@@ -57,7 +68,28 @@ const SceneCard: React.FC<{ scene: MyScene }> = ({ scene }) => {
     .join(String.fromCharCode(10));
 
   return (
-    <div className={styles.card} data-scene-name={scene.name} title={tooltip}>
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      role='button'
+      tabIndex={0}
+      aria-busy={opening}
+      aria-disabled={disabled}
+      className={[styles.card, isDragging ? styles.dragging : '', opening ? styles.opening : ''].join(' ')}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      data-scene-name={scene.name}
+      title={tooltip}
+      onClick={() => {
+        if (!disabled && !isDragging) onOpen(scene);
+      }}
+      onKeyDown={(event) => {
+        if ((event.key === 'Enter' || event.key === ' ') && !disabled) {
+          event.preventDefault();
+          onOpen(scene);
+        }
+      }}
+    >
       <img src={scene.avatarRef || BUILTIN_AVATARS[scene.name] || officeAvatar} alt='' className={styles.avatar} />
       <div className={styles.cardBody}>
         <span className={styles.name}>{scene.name}</span>
@@ -80,12 +112,27 @@ const SceneCard: React.FC<{ scene: MyScene }> = ({ scene }) => {
   );
 };
 
-const EnterpriseSceneGrid: React.FC = () => {
+type EnterpriseSceneGridProps = {
+  /** Open a conversation from the scene. Resolve when it has been opened (or has failed). */
+  onOpenScene?: (scene: MyScene) => void | Promise<void>;
+};
+
+const EnterpriseSceneGrid: React.FC<EnterpriseSceneGridProps> = ({ onOpenScene }) => {
   const { t } = useTranslation();
   const { context } = useOrgContext();
   const [expanded, setExpanded] = useState(false);
+  const [openingId, setOpeningId] = useState<string | null>(null);
   const active = Boolean(context?.isEnterprise && isEnterpriseRemoteActive());
   const tenantId = context?.tenantId ?? '';
+  const server = getEnterpriseServerUrl();
+  const userId = getEnterpriseSession()?.userId ?? null;
+  const orderScope = useMemo(() => ({ server, tenantId, userId }), [server, tenantId, userId]);
+  const [order, setOrder] = useState<string[]>(() => loadSceneOrder(orderScope));
+  // Another member, project group or server on this machine has its own order.
+  useEffect(() => setOrder(loadSceneOrder(orderScope)), [orderScope]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } })
+  );
   const {
     data: scenes,
     mutate,
@@ -98,6 +145,8 @@ const EnterpriseSceneGrid: React.FC = () => {
     () => ipcBridge.onePlatform.myScenes.invoke(),
     { revalidateOnFocus: true, refreshInterval: 30000, shouldRetryOnError: false }
   );
+
+  const ordered = useMemo(() => applySceneOrder(scenes ?? [], order), [scenes, order]);
 
   if (!active) return null;
   if (!scenes)
@@ -132,18 +181,39 @@ const EnterpriseSceneGrid: React.FC = () => {
       </div>
     );
 
-  const visible = expanded ? scenes : scenes.slice(0, COLLAPSED_SCENE_COUNT);
-  const hiddenCount = scenes.length - COLLAPSED_SCENE_COUNT;
+  const visible = expanded ? ordered : ordered.slice(0, COLLAPSED_SCENE_COUNT);
+  const hiddenCount = ordered.length - COLLAPSED_SCENE_COUNT;
+
+  const handleOpen = async (scene: MyScene) => {
+    if (openingId || !onOpenScene) return;
+    setOpeningId(scene.id);
+    try {
+      await onOpenScene(scene);
+    } finally {
+      setOpeningId(null);
+    }
+  };
+
+  const handleDragEnd = ({ active: dragged, over }: DragEndEvent) => {
+    if (!over) return;
+    // Reorder within the full list, so a scene dragged to the front of the
+    // visible four also leads once the rest are shown.
+    const next = moveScene(
+      ordered.map((scene) => scene.id),
+      String(dragged.id),
+      String(over.id)
+    );
+    setOrder(next);
+    saveSceneOrder(orderScope, next);
+  };
 
   return (
     <div className={styles.section} data-testid='enterprise-scene-grid'>
       <div className={styles.heading}>
         <div className={styles.headingCopy}>
           <h2 className={styles.title}>{t('common.scenes.title', { defaultValue: '工作场景' })}</h2>
-          <span className={styles.hint} title={t('common.scenes.conversationHint')}>
-            {t('common.scenes.conversationHint', {
-              defaultValue: '以下场景的职能与资源包已叠加到当前账号，在所有会话中自动生效。',
-            })}
+          <span className={styles.hint} title={t('common.scenes.gridHint')}>
+            {t('common.scenes.gridHint')}
           </span>
         </div>
         <div className={styles.headingActions}>
@@ -159,15 +229,25 @@ const EnterpriseSceneGrid: React.FC = () => {
           </Button>
         </div>
       </div>
-      <div className={styles.grid}>
-        {visible.map((scene) => (
-          <SceneCard key={scene.id} scene={scene} />
-        ))}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={visible.map((scene) => scene.id)} strategy={rectSortingStrategy}>
+          <div className={styles.grid}>
+            {visible.map((scene) => (
+              <SceneCard
+                key={scene.id}
+                scene={scene}
+                opening={openingId === scene.id}
+                disabled={Boolean(openingId) || !onOpenScene}
+                onOpen={(target) => void handleOpen(target)}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
       {hiddenCount > 0 && (
         <div className={styles.more}>
           <Button type='text' size='small' onClick={() => setExpanded((open) => !open)}>
-            {expanded ? t('common.collapse') : t('common.scenes.showAll', { count: scenes.length })}
+            {expanded ? t('common.collapse') : t('common.scenes.showAll', { count: ordered.length })}
           </Button>
         </div>
       )}

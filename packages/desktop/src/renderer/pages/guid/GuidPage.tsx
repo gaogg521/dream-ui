@@ -22,6 +22,9 @@ import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import GuidAuthorTip from './components/GuidAuthorTip';
 import GuidInputCard from './components/GuidInputCard';
 import EnterpriseSceneGrid from '@/renderer/components/enterprise/EnterpriseSceneGrid';
+import { startSceneConversation } from '@/renderer/components/enterprise/sceneChat';
+import type { MyScene } from '@/common/types/platform/enterpriseTypes';
+import { emitter } from '@/renderer/utils/emitter';
 import GuidModelSelector from './components/GuidModelSelector';
 import TrialModelBanner from './components/TrialModelBanner';
 import { useGuidAssistantSelection } from './hooks/useGuidAssistantSelection';
@@ -39,7 +42,7 @@ import { useOpenFileSelector } from '@/renderer/hooks/file/useOpenFileSelector';
 import { appendSpeechTranscript } from '@/renderer/hooks/system/useSpeechInput';
 import { useLiveTranscriptInsertion } from '@/renderer/hooks/system/useLiveTranscriptInsertion';
 import { ArrowRightUp } from '@icon-park/react';
-import { Button, ConfigProvider } from '@arco-design/web-react';
+import { Button, ConfigProvider, Message } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -792,6 +795,31 @@ const GuidPage: React.FC = () => {
     />
   ) : null;
 
+  // A scene opens straight into a conversation that carries its prompt and
+  // skills; the member types the task there, as with a company employee.
+  const sceneModel = modelSelection.current_model;
+  const handleOpenScene = useCallback(
+    async (scene: MyScene) => {
+      if (!sceneModel) {
+        Message.warning(t('conversation.noModelConfigured'));
+        return;
+      }
+      try {
+        const conversationId = await startSceneConversation(scene, sceneModel);
+        if (!conversationId) {
+          Message.error(t('common.scenes.openFailed'));
+          return;
+        }
+        emitter.emit('chat.history.refresh');
+        await navigate(`/conversation/${conversationId}`);
+      } catch (error) {
+        console.error('[GuidPage] Failed to open a scene conversation:', error);
+        Message.error(t('common.scenes.openFailed'));
+      }
+    },
+    [navigate, sceneModel, t]
+  );
+
   return (
     <ConfigProvider getPopupContainer={() => guidContainerRef.current || document.body}>
       <div ref={guidContainerRef} className={styles.guidContainer}>
@@ -831,7 +859,7 @@ const GuidPage: React.FC = () => {
             onClearWorkspace={() => guidInput.setDir('')}
           />
 
-          <EnterpriseSceneGrid />
+          <EnterpriseSceneGrid onOpenScene={handleOpenScene} />
 
           {selectedAssistantPrompts.length > 0 ? (
             <div className='mt-18px w-full animate-fade-in ps-20px'>

@@ -295,7 +295,9 @@
       "knowledge": "Conocimiento",
       "employee": "Empleados digitales"
     },
-    "showAll": "Mostrar todos ({{count}})"
+    "showAll": "Mostrar todos ({{count}})",
+    "gridHint": "Haz clic en un escenario para iniciar una conversación con su prompt y habilidades; arrastra las tarjetas para reordenar",
+    "openFailed": "No se pudo abrir una conversación para este escenario"
   },
   "fileVault": {
     "title": "Caja fuerte de archivos",

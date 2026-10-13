@@ -295,7 +295,9 @@
       "knowledge": "Bilgi",
       "employee": "Dijital çalışanlar"
     },
-    "showAll": "Tümünü göster ({{count}})"
+    "showAll": "Tümünü göster ({{count}})",
+    "gridHint": "İstemi ve becerileriyle sohbet başlatmak için bir senaryoya tıklayın; sıralamak için kartları sürükleyin",
+    "openFailed": "Bu senaryo için sohbet açılamadı"
   },
   "fileVault": {
     "title": "Dosya Kasası",

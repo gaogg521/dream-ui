@@ -307,7 +307,9 @@
       "knowledge": "知識庫",
       "employee": "數位員工"
     },
-    "showAll": "展開全部（{{count}}）"
+    "showAll": "展開全部（{{count}}）",
+    "gridHint": "點擊場景直接開始對話（已帶上提示詞與技能），拖動卡片可調整順序",
+    "openFailed": "無法開啟該場景的對話"
   },
   "fileVault": {
     "title": "檔案保險箱",
