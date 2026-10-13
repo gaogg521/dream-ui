@@ -4,12 +4,16 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SWRConfig } from 'swr';
 
-const hooks = vi.hoisted(() => ({ myScenes: vi.fn() }));
+const hooks = vi.hoisted(() => ({ myScenes: vi.fn(), userId: 'member-1' }));
 
 vi.mock('@/common', () => ({
   ipcBridge: { onePlatform: { myScenes: { invoke: hooks.myScenes } } },
 }));
-vi.mock('@/common/adapter/enterpriseMode', () => ({ isEnterpriseRemoteActive: () => true }));
+vi.mock('@/common/adapter/enterpriseMode', () => ({
+  isEnterpriseRemoteActive: () => true,
+  getEnterpriseServerUrl: () => 'https://enterprise.test',
+  getEnterpriseSession: () => ({ userId: hooks.userId }),
+}));
 vi.mock('@/renderer/pages/enterprise/hooks/useOrgContext', () => ({
   useOrgContext: () => ({ context: { isEnterprise: true, tenantId: 'tenant-1' } }),
 }));
@@ -64,5 +68,111 @@ describe('EnterpriseSceneContext', () => {
     hooks.myScenes.mockResolvedValue([]);
     renderSceneContext();
     expect(await screen.findByTestId('enterprise-scene-context')).toHaveTextContent('企业场景 · 未加入');
+  });
+});
+
+import EnterpriseSceneGrid from '@/renderer/components/enterprise/EnterpriseSceneGrid';
+
+describe('EnterpriseSceneGrid refresh', () => {
+  it('replaces the empty guidance with a newly granted scene on refresh', async () => {
+    hooks.myScenes
+      .mockReset()
+      .mockResolvedValueOnce([])
+      .mockResolvedValue([
+        { id: 'new-scene', name: 'Newly granted scene', jobFunctions: [], resources: [], builtIn: false },
+      ]);
+    render(
+      <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+        <EnterpriseSceneGrid />
+      </SWRConfig>
+    );
+    expect(await screen.findByText('common.scenes.empty')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'common.refresh' }));
+    expect(await screen.findByText('Newly granted scene')).toBeInTheDocument();
+    expect(screen.queryByText('common.scenes.empty')).not.toBeInTheDocument();
+  });
+});
+
+describe('EnterpriseSceneGrid density', () => {
+  const scenes = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `scene-${i + 1}`,
+      name: `Scene ${i + 1}`,
+      description: `Description ${i + 1}`,
+      jobFunctions: ['Ops'],
+      builtIn: false,
+      resources: [{ resourceType: 'skill', count: i + 1, includesAll: false }],
+    }));
+  const renderGrid = () =>
+    render(
+      <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+        <EnterpriseSceneGrid />
+      </SWRConfig>
+    );
+
+  it('shows four scenes, and the rest only after "show all"', async () => {
+    hooks.myScenes.mockReset().mockResolvedValue(scenes(6));
+    renderGrid();
+    expect(await screen.findByText('Scene 1')).toBeInTheDocument();
+    expect(screen.getByText('Scene 4')).toBeInTheDocument();
+    expect(screen.queryByText('Scene 5')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'common.scenes.showAll' }));
+    expect(await screen.findByText('Scene 6')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'common.collapse' }));
+    await waitFor(() => expect(screen.queryByText('Scene 5')).not.toBeInTheDocument());
+  });
+
+  it('offers no "show all" when everything already fits', async () => {
+    hooks.myScenes.mockReset().mockResolvedValue(scenes(4));
+    renderGrid();
+    expect(await screen.findByText('Scene 4')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'common.scenes.showAll' })).not.toBeInTheDocument();
+  });
+
+  it('keeps the description and job functions one hover away, not on the card', async () => {
+    hooks.myScenes.mockReset().mockResolvedValue(scenes(1));
+    renderGrid();
+    const card = (await screen.findByText('Scene 1')).closest('[data-scene-name]') as HTMLElement;
+    expect(card.title).toContain('Description 1');
+    expect(card.title).toContain('Ops');
+    expect(screen.queryByText('Description 1')).not.toBeInTheDocument();
+  });
+});
+
+describe('EnterpriseSceneGrid authorization boundaries', () => {
+  it('offers retry instead of claiming no grants when the request fails', async () => {
+    hooks.myScenes.mockReset().mockRejectedValueOnce(new Error('unavailable')).mockResolvedValue([]);
+    render(
+      <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+        <EnterpriseSceneGrid />
+      </SWRConfig>
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'common.retry' }));
+    expect(await screen.findByText('common.scenes.empty')).toBeInTheDocument();
+  });
+
+  it('does not reuse another member scene cache in the same project group', async () => {
+    hooks.userId = 'member-a';
+    hooks.myScenes
+      .mockReset()
+      .mockResolvedValueOnce([
+        { id: 'private-scene', name: 'Member A scene', jobFunctions: [], resources: [], builtIn: false },
+      ])
+      .mockResolvedValue([]);
+    const cache = new Map();
+    const view = () => (
+      <SWRConfig value={{ provider: () => cache }}>
+        <EnterpriseSceneGrid />
+      </SWRConfig>
+    );
+    const mounted = render(view());
+    expect(await screen.findByText('Member A scene')).toBeInTheDocument();
+    hooks.userId = 'member-b';
+    mounted.rerender(view());
+    expect(screen.queryByText('Member A scene')).not.toBeInTheDocument();
+    expect(await screen.findByText('common.scenes.empty')).toBeInTheDocument();
+    hooks.userId = 'member-1';
   });
 });

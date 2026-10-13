@@ -275,7 +275,11 @@
     "fieldBoundTools": "綁定工具",
     "starterPromptsTitle": "可以這樣讓它做",
     "openConversation": "開啟對話",
-    "chatSession": "對話"
+    "chatSession": "對話",
+    "fieldScheduleTask": "定時任務",
+    "scheduleTaskPlaceholder": "每次到點讓它做什麼，例如：彙總本週發布風險並列出待辦",
+    "scheduleTaskOptionalHint": "留空則使用該員工的執行指令",
+    "scheduleTaskRequired": "請填寫定時任務：公司員工沒有執行指令，沒有任務就不知道該做什麼"
   },
   "language": {
     "switchTooltip": "切換語言"
@@ -302,7 +306,8 @@
       "model_channel": "模型渠道",
       "knowledge": "知識庫",
       "employee": "數位員工"
-    }
+    },
+    "showAll": "展開全部（{{count}}）"
   },
   "fileVault": {
     "title": "檔案保險箱",

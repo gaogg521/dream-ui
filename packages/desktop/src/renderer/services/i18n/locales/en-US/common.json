@@ -609,7 +609,11 @@
     "fieldBoundTools": "Bound tools",
     "starterPromptsTitle": "Try asking",
     "openConversation": "Open conversation",
-    "chatSession": "Chat"
+    "chatSession": "Chat",
+    "fieldScheduleTask": "Scheduled task",
+    "scheduleTaskPlaceholder": "What it should do each time, e.g. summarise this week's release risks and list follow-ups",
+    "scheduleTaskOptionalHint": "Leave empty to use this employee's run instructions",
+    "scheduleTaskRequired": "Enter the scheduled task: a company employee has no run instructions, so without one it has nothing to do"
   },
   "language": {
     "switchTooltip": "Switch language"
@@ -643,7 +647,8 @@
       "model_channel": "Model channels",
       "knowledge": "Knowledge",
       "employee": "Digital employees"
-    }
+    },
+    "showAll": "Show all ({{count}})"
   },
   "fileVault": {
     "title": "File Vault",

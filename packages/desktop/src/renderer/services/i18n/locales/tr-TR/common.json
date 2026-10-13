@@ -263,7 +263,11 @@
     "fieldBoundTools": "Bağlı araçlar",
     "starterPromptsTitle": "Şunu deneyin",
     "openConversation": "Sohbeti aç",
-    "chatSession": "Sohbet"
+    "chatSession": "Sohbet",
+    "fieldScheduleTask": "Zamanlanmış görev",
+    "scheduleTaskPlaceholder": "Her seferinde ne yapması gerektiği, örn. bu haftaki sürüm risklerini özetle ve yapılacakları listele",
+    "scheduleTaskOptionalHint": "Boş bırakırsanız bu çalışanın çalıştırma talimatı kullanılır",
+    "scheduleTaskRequired": "Zamanlanmış görevi girin: şirket çalışanının çalıştırma talimatı yoktur, görev olmadan yapacak bir şeyi olmaz"
   },
   "language": {
     "switchTooltip": "Dili değiştir"
@@ -290,7 +294,8 @@
       "model_channel": "Model kanalları",
       "knowledge": "Bilgi",
       "employee": "Dijital çalışanlar"
-    }
+    },
+    "showAll": "Tümünü göster ({{count}})"
   },
   "fileVault": {
     "title": "Dosya Kasası",

@@ -103,6 +103,8 @@ export type PersonalAgent = {
   schedule?: CronScheduleDto | null;
   scheduleEnabled: boolean;
   nextRunAt?: number | null;
+  /** The task a scheduled run performs; kept apart from `automationConfig`, which the team sync rewrites. */
+  scheduleTask?: string | null;
   /** 'private' (owner-only) or 'shared' (usable by same-tenant members). */
   visibility: 'private' | 'shared';
   /** 'self_built' | 'catalog' | 'team' (P1-3 sync) | 'market' (reserved). Backend
@@ -159,6 +161,8 @@ export type UpdatePersonalAgentInput = PersonalAgentBinding & {
 export type SetScheduleInput = {
   schedule?: CronScheduleDto;
   enabled?: boolean;
+  /** What each scheduled run asks the employee to do; written wholesale with the schedule. */
+  task?: string;
 };
 
 export type RunNowResult = {

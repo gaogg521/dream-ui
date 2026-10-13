@@ -263,7 +263,11 @@
     "fieldBoundTools": "Ferramentas vinculadas",
     "starterPromptsTitle": "Experimente pedir",
     "openConversation": "Abrir conversa",
-    "chatSession": "Conversa"
+    "chatSession": "Conversa",
+    "fieldScheduleTask": "Tarefa agendada",
+    "scheduleTaskPlaceholder": "O que fazer a cada execução, ex.: resumir os riscos de lançamento da semana e listar pendências",
+    "scheduleTaskOptionalHint": "Deixe em branco para usar as instruções de execução deste funcionário",
+    "scheduleTaskRequired": "Informe a tarefa agendada: um funcionário da empresa não tem instruções de execução, sem tarefa não há o que fazer"
   },
   "language": {
     "switchTooltip": "Mudar idioma"
@@ -290,7 +294,8 @@
       "model_channel": "Canais de modelo",
       "knowledge": "Conhecimento",
       "employee": "Funcionários digitais"
-    }
+    },
+    "showAll": "Mostrar todos ({{count}})"
   },
   "fileVault": {
     "title": "Cofre de arquivos",

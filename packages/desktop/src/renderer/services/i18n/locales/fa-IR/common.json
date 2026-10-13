@@ -263,7 +263,11 @@
     "fieldBoundTools": "ابزارهای متصل",
     "starterPromptsTitle": "این‌ها را امتحان کنید",
     "openConversation": "باز کردن گفتگو",
-    "chatSession": "گفتگو"
+    "chatSession": "گفتگو",
+    "fieldScheduleTask": "وظیفه زمان‌بندی‌شده",
+    "scheduleTaskPlaceholder": "در هر بار اجرا چه کاری انجام دهد، مثلاً خلاصه ریسک‌های انتشار این هفته و فهرست پیگیری‌ها",
+    "scheduleTaskOptionalHint": "خالی بگذارید تا از دستورهای اجرای این کارمند استفاده شود",
+    "scheduleTaskRequired": "وظیفه زمان‌بندی‌شده را وارد کنید: کارمند شرکت دستور اجرا ندارد و بدون وظیفه کاری برای انجام ندارد"
   },
   "language": {
     "switchTooltip": "تغییر زبان"
@@ -290,7 +294,8 @@
       "model_channel": "کانال‌های مدل",
       "knowledge": "دانش",
       "employee": "کارکنان دیجیتال"
-    }
+    },
+    "showAll": "نمایش همه ({{count}})"
   },
   "fileVault": {
     "title": "گاوصندوق فایل",

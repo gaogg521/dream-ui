@@ -265,7 +265,11 @@
     "fieldBoundTools": "Привязанные инструменты",
     "starterPromptsTitle": "Попробуйте попросить",
     "openConversation": "Открыть беседу",
-    "chatSession": "Чат"
+    "chatSession": "Чат",
+    "fieldScheduleTask": "Задача по расписанию",
+    "scheduleTaskPlaceholder": "Что делать при каждом запуске, например: свести риски релиза за неделю и перечислить задачи",
+    "scheduleTaskOptionalHint": "Если оставить пустым, используются инструкции запуска сотрудника",
+    "scheduleTaskRequired": "Укажите задачу: у корпоративного сотрудника нет инструкций запуска, без задачи ему нечего делать"
   },
   "language": {
     "switchTooltip": "Сменить язык"
@@ -292,7 +296,8 @@
       "model_channel": "Модельные каналы",
       "knowledge": "Знания",
       "employee": "Цифровые сотрудники"
-    }
+    },
+    "showAll": "Показать все ({{count}})"
   },
   "fileVault": {
     "title": "Файловое хранилище",

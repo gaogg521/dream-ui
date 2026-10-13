@@ -263,7 +263,11 @@
     "fieldBoundTools": "연결된 도구",
     "starterPromptsTitle": "이렇게 요청해 보세요",
     "openConversation": "대화 열기",
-    "chatSession": "대화"
+    "chatSession": "대화",
+    "fieldScheduleTask": "예약 작업",
+    "scheduleTaskPlaceholder": "매번 수행할 작업. 예: 이번 주 릴리스 위험을 요약하고 후속 조치를 나열",
+    "scheduleTaskOptionalHint": "비워 두면 이 직원의 실행 지침을 사용합니다",
+    "scheduleTaskRequired": "예약 작업을 입력하세요. 회사 직원에게는 실행 지침이 없어 작업이 없으면 할 일이 없습니다"
   },
   "language": {
     "switchTooltip": "언어 전환"
@@ -290,7 +294,8 @@
       "model_channel": "모델 채널",
       "knowledge": "지식",
       "employee": "디지털 직원"
-    }
+    },
+    "showAll": "모두 보기({{count}})"
   },
   "fileVault": {
     "title": "파일 볼트",

@@ -2,10 +2,12 @@
  * Digital employees page — the roster of employees this member can use, plus
  * the knowledge base they draw on.
  *
- * The everyday entry to an employee is the home page grid
- * (`EnterpriseEmployeeGrid`): pick one, say what you need. This page is where
- * a member reads what an employee carries, schedules their own employees, and
- * builds personal ones. The former collaboration kanban (issues, dispatch,
+ * Open one with "start chat" and say what you need; the backend binds the
+ * conversation to the employee so its persona and resources load. This page is
+ * also where a member reads what an employee carries, schedules it (company
+ * employees included — that choice is the member's own and the team sync
+ * leaves it alone), and builds personal ones. It is deliberately not on the
+ * home page: the home page's room goes to the enterprise scenes. The former collaboration kanban (issues, dispatch,
  * milestones, pipelines, test plans) is gone: dispatch never wrote its result
  * back, so the board showed work that went nowhere, and multi-agent
  * collaboration lives in team mode. The skills / MCP / scenes views it carried

@@ -609,7 +609,11 @@
     "fieldBoundTools": "绑定工具",
     "starterPromptsTitle": "可以这样让它做",
     "openConversation": "打开会话",
-    "chatSession": "对话"
+    "chatSession": "对话",
+    "fieldScheduleTask": "定时任务",
+    "scheduleTaskPlaceholder": "每次到点让它做什么，例如：汇总本周发布风险并列出待办",
+    "scheduleTaskOptionalHint": "留空则使用该员工的运行指令",
+    "scheduleTaskRequired": "请填写定时任务：公司员工没有运行指令，没有任务就不知道该做什么"
   },
   "language": {
     "switchTooltip": "切换语言"
@@ -643,7 +647,8 @@
       "model_channel": "模型渠道",
       "knowledge": "知识库",
       "employee": "数字员工"
-    }
+    },
+    "showAll": "展开全部（{{count}}）"
   },
   "fileVault": {
     "title": "文件保险箱",

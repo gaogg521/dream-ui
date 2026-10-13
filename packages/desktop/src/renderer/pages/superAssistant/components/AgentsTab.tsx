@@ -203,11 +203,13 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
                     <Button size='small' icon={<FileText />} onClick={() => onViewDigitalEmployeeDetail?.(ref)}>
                       {t('common.superAssistant.detail', { defaultValue: '详情' })}
                     </Button>
+                    {/* Scheduling is the member's own choice and the team sync leaves it
+                        alone, so company employees get it too. */}
+                    <Button size='small' icon={<Time />} onClick={() => onScheduleAgent?.(ref)}>
+                      {t('common.superAssistant.schedule', { defaultValue: '定时' })}
+                    </Button>
                     {isTeamDistributed(agent) ? null : (
                       <>
-                        <Button size='small' icon={<Time />} onClick={() => onScheduleAgent?.(ref)}>
-                          {t('common.superAssistant.schedule', { defaultValue: '定时' })}
-                        </Button>
                         <Button size='small' icon={<Edit />} onClick={() => onManageAgent?.(ref)}>
                           {t('common.superAssistant.manage', { defaultValue: '管理' })}
                         </Button>

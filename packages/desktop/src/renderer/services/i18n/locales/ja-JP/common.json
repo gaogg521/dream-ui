@@ -263,7 +263,11 @@
     "fieldBoundTools": "紐づけツール",
     "starterPromptsTitle": "こんな依頼ができます",
     "openConversation": "会話を開く",
-    "chatSession": "会話"
+    "chatSession": "会話",
+    "fieldScheduleTask": "定期タスク",
+    "scheduleTaskPlaceholder": "毎回やってほしいこと。例：今週のリリースリスクをまとめ、対応事項を挙げる",
+    "scheduleTaskOptionalHint": "空欄の場合はこの社員の実行指示を使います",
+    "scheduleTaskRequired": "定期タスクを入力してください。会社の社員には実行指示がないため、タスクがないと何もできません"
   },
   "language": {
     "switchTooltip": "言語を切り替え"
@@ -290,7 +294,8 @@
       "model_channel": "モデルチャネル",
       "knowledge": "ナレッジ",
       "employee": "デジタル社員"
-    }
+    },
+    "showAll": "すべて表示（{{count}}）"
   },
   "fileVault": {
     "title": "ファイルボールト",

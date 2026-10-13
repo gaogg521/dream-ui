@@ -1,0 +1,177 @@
+/* Enterprise scenes under the home composer: small cards, four to a row. */
+.section {
+  width: 100%;
+  margin-top: 18px;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.headingCopy {
+  display: flex;
+  align-items: baseline;
+  flex: 1;
+  min-width: 0;
+  gap: 10px;
+}
+.title {
+  flex-shrink: 0;
+  margin: 0;
+  color: var(--color-text-1);
+  font-size: 14px;
+  font-weight: 600;
+}
+.hint {
+  min-width: 0;
+  color: var(--color-text-3);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.count {
+  flex-shrink: 0;
+  color: rgb(var(--primary-6));
+  background: var(--color-primary-light-1);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 12px;
+}
+.headingActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+/* The home column is about 770px wide, and 176px is the narrowest a card can
+   be before its resource line starts to clip, so the row holds four there and
+   falls back to three, two and one as the window narrows. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 176px), 1fr));
+  gap: 10px;
+}
+.card {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+  border: 1px solid var(--color-border-2);
+  border-radius: 12px;
+  padding: 9px 12px;
+  background: var(--color-bg-2);
+  transition: border-color 0.18s;
+}
+.card:hover {
+  border-color: rgb(var(--primary-4));
+}
+.avatar {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  object-fit: cover;
+  background: var(--color-fill-1);
+}
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+}
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--color-text-1);
+}
+.resources {
+  display: flex;
+  min-width: 0;
+  gap: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-text-3);
+}
+.resource {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+.resourceValue {
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+.more {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-2);
+  border-radius: 12px;
+  background: var(--color-bg-2);
+}
+
+.compactEmpty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 10px 2px;
+  width: 100%;
+  min-width: 0;
+}
+.compactCopy {
+  display: flex;
+  align-items: baseline;
+  flex: 1;
+  min-width: 0;
+  gap: 12px;
+}
+.compactTitle {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+.compactHint {
+  min-width: 0;
+  font-size: 12px;
+  color: var(--color-text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .section {
+    margin-top: 14px;
+  }
+  .hint {
+    display: none;
+  }
+  .compactCopy {
+    display: block;
+  }
+  .compactHint {
+    display: block;
+    margin-top: 3px;
+  }
+}

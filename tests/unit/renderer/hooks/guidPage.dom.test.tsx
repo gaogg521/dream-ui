@@ -138,9 +138,6 @@ vi.mock('react-router-dom', () => ({
   useLocation: () => locationMock,
 }));
 
-// The employee grid has its own test; here it would only need another ipc mock.
-vi.mock('@/renderer/components/enterprise/EnterpriseEmployeeGrid', () => ({ default: () => null }));
-
 vi.mock('@/common', () => ({
   ipcBridge: {
     fs: {

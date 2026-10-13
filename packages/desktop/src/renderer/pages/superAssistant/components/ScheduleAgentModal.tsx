@@ -36,14 +36,21 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
   const [cronExpr, setCronExpr] = useState('0 9 * * *');
   const [tz, setTz] = useState('Asia/Shanghai');
   const [enabled, setEnabled] = useState(true);
+  const [task, setTask] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // A company employee keeps its identity in `persona` and has no run
+  // instructions, so for it the task is the only thing a scheduled run has.
+  const taskRequired = agent?.origin === 'team';
 
   useEffect(() => {
     if (!visible || !agent) {
       return;
     }
     setSubmitting(false);
-    setEnabled(agent.scheduleEnabled);
+    // A schedule being created is meant to run; only an existing one carries a
+    // switch position worth keeping (a never-scheduled employee reads `false`).
+    setEnabled(agent.schedule ? agent.scheduleEnabled : true);
+    setTask(agent.scheduleTask ?? '');
     if (!agent.schedule) {
       setKind('none');
       setEveryMinutes('1');
@@ -68,6 +75,10 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
     if (!agent) {
       return;
     }
+    if (kind !== 'none' && taskRequired && !task.trim()) {
+      Message.warning(t('common.superAssistant.scheduleTaskRequired'));
+      return;
+    }
     setSubmitting(true);
     try {
       let schedule: CronScheduleDto | undefined;
@@ -85,7 +96,12 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
       }
       await ipcBridge.personalAgent.setSchedule.invoke({
         agentId: agent.id,
-        schedule: { schedule, enabled: kind === 'none' ? false : enabled },
+        schedule: {
+          schedule,
+          enabled: kind === 'none' ? false : enabled,
+          // Clearing the schedule clears its task with it.
+          task: kind === 'none' ? undefined : task.trim() || undefined,
+        },
       });
       Message.success(t('common.superAssistant.scheduleSaved', { defaultValue: '调度已保存' }));
       onSaved();
@@ -149,6 +165,20 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
               </div>
             </div>
           </>
+        ) : null}
+        {kind !== 'none' ? (
+          <Form.Item
+            label={t('common.superAssistant.fieldScheduleTask')}
+            extra={taskRequired ? undefined : t('common.superAssistant.scheduleTaskOptionalHint')}
+            required={taskRequired}
+          >
+            <Input.TextArea
+              value={task}
+              onChange={setTask}
+              rows={3}
+              placeholder={t('common.superAssistant.scheduleTaskPlaceholder')}
+            />
+          </Form.Item>
         ) : null}
         {kind !== 'none' ? (
           <Form.Item label={t('common.superAssistant.fieldEnabled', { defaultValue: '启用' })}>

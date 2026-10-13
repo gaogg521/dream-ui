@@ -263,7 +263,11 @@
     "fieldBoundTools": "Outils associés",
     "starterPromptsTitle": "Essayez de demander",
     "openConversation": "Ouvrir la conversation",
-    "chatSession": "Discussion"
+    "chatSession": "Discussion",
+    "fieldScheduleTask": "Tâche planifiée",
+    "scheduleTaskPlaceholder": "Ce qu'il doit faire à chaque exécution, p. ex. résumer les risques de livraison de la semaine et lister les suites",
+    "scheduleTaskOptionalHint": "Laissez vide pour utiliser les instructions d'exécution de cet employé",
+    "scheduleTaskRequired": "Saisissez la tâche planifiée : un employé de l'entreprise n'a pas d'instructions d'exécution, sans tâche il n'a rien à faire"
   },
   "language": {
     "switchTooltip": "Changer de langue"
@@ -290,7 +294,8 @@
       "model_channel": "Canaux de modèles",
       "knowledge": "Connaissances",
       "employee": "Employés numériques"
-    }
+    },
+    "showAll": "Tout afficher ({{count}})"
   },
   "fileVault": {
     "title": "Coffre de fichiers",

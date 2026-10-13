@@ -263,7 +263,11 @@
     "fieldBoundTools": "Herramientas vinculadas",
     "starterPromptsTitle": "Prueba a pedir",
     "openConversation": "Abrir conversación",
-    "chatSession": "Chat"
+    "chatSession": "Chat",
+    "fieldScheduleTask": "Tarea programada",
+    "scheduleTaskPlaceholder": "Qué debe hacer cada vez, p. ej.: resumir los riesgos de lanzamiento de la semana y listar pendientes",
+    "scheduleTaskOptionalHint": "Déjalo vacío para usar las instrucciones de ejecución de este empleado",
+    "scheduleTaskRequired": "Indica la tarea programada: un empleado de la empresa no tiene instrucciones de ejecución, sin tarea no tiene qué hacer"
   },
   "language": {
     "switchTooltip": "Cambiar idioma"
@@ -290,7 +294,8 @@
       "model_channel": "Canales de modelo",
       "knowledge": "Conocimiento",
       "employee": "Empleados digitales"
-    }
+    },
+    "showAll": "Mostrar todos ({{count}})"
   },
   "fileVault": {
     "title": "Caja fuerte de archivos",

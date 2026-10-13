@@ -3,13 +3,13 @@
  */
 
 /**
- * Enterprise scenes, as a standing card grid under the Guid composer.
+ * Enterprise scenes, as a compact strip of small cards under the Guid composer.
  *
- * Replaces the footnote pill + upward-opening dropdown this used to be: the
- * panel was anchored to a trigger sitting on the composer's bottom edge, so
- * "open above the trigger" meant "cover the textarea the user was about to
- * type in". The grid borrows the assistant-picker's visual language and lives
- * in the flow below the card, where it can never occlude anything.
+ * A scene is a role plus a resource package an admin granted, and the home page
+ * only needs to say which ones the member carries — so each is a one-line card
+ * (avatar, name, how many skills and tools it hands over), four to a row, with
+ * the first four shown and the rest behind "show all". The description and job
+ * functions are one hover away rather than taking a card's worth of height each.
  *
  * Read-only by design — a scene is granted by an admin in the console, not
  * picked here, so the cards state what the account already carries rather than
@@ -17,11 +17,16 @@
  */
 
 import { ipcBridge } from '@/common';
-import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
+import {
+  getEnterpriseServerUrl,
+  getEnterpriseSession,
+  isEnterpriseRemoteActive,
+} from '@/common/adapter/enterpriseMode';
 import type { MyScene, MySceneResourceSummary } from '@/common/types/platform/enterpriseTypes';
 import { useOrgContext } from '@/renderer/pages/enterprise/hooks/useOrgContext';
-import { Tag } from '@arco-design/web-react';
-import React from 'react';
+import { Button } from '@arco-design/web-react';
+import React, { useState } from 'react';
+import { Application, Refresh } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
 import officeAvatar from '@/renderer/assets/scenes/office.png';
@@ -29,6 +34,8 @@ import itOpsAvatar from '@/renderer/assets/scenes/it-ops.png';
 import securityAvatar from '@/renderer/assets/scenes/cybersecurity.png';
 import mediaAvatar from '@/renderer/assets/scenes/media-ops.png';
 import marketingAvatar from '@/renderer/assets/scenes/marketing.png';
+
+import styles from './EnterpriseHome.module.css';
 
 const BUILTIN_AVATARS: Record<string, string> = {
   办公: officeAvatar,
@@ -38,74 +45,36 @@ const BUILTIN_AVATARS: Record<string, string> = {
   市场营销: marketingAvatar,
 };
 
+/** Scenes shown before "show all". One row at the home page's usual width. */
+const COLLAPSED_SCENE_COUNT = 4;
+
 const SceneCard: React.FC<{ scene: MyScene }> = ({ scene }) => {
   const { t } = useTranslation();
-  /**
-   * Just the amount. The resource *type* is rendered separately in a muted
-   * tone so the eye can scan the numbers down a column — "技能 全部 / 工具 3"
-   * reads faster than four identically-weighted pills.
-   */
   const resourceValue = (summary: MySceneResourceSummary): string =>
     summary.includesAll ? t('common.scenes.resourceAll', { defaultValue: '全部' }) : String(summary.count);
+  const tooltip = [scene.name, scene.description, scene.jobFunctions.join(' · ')]
+    .filter(Boolean)
+    .join(String.fromCharCode(10));
 
   return (
-    <div
-      className='group min-w-0 flex flex-col gap-10px rd-14px border border-3 bg-1 p-14px
-                 transition-all duration-150 hover:-translate-y-2px hover:border-primary hover:shadow-lg'
-      data-scene-name={scene.name}
-    >
-      {/* Identity row: the avatar carries the card, so it is sized like a
-          subject rather than a bullet. */}
-      <div className='flex min-w-0 items-start gap-10px'>
-        <img
-          src={scene.avatarRef || BUILTIN_AVATARS[scene.name] || officeAvatar}
-          alt=''
-          className='h-40px w-40px shrink-0 rd-12px border border-3 object-cover transition-colors
-                     group-hover:border-primary'
-        />
-        <div className='min-w-0 flex-1'>
-          <div className='flex min-w-0 items-center gap-6px'>
-            <span className='truncate text-14px font-600 leading-20px text-t-primary'>{scene.name}</span>
-            {scene.builtIn && (
-              <Tag size='small' color='arcoblue'>
-                {t('common.scenes.builtinTag', { defaultValue: '内置' })}
-              </Tag>
-            )}
-          </div>
-          {scene.description ? (
-            <div className='mt-2px line-clamp-2 text-12px leading-17px text-t-tertiary' title={scene.description}>
-              {scene.description}
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-      {/* The two facts a member actually needs, separated rather than stacked
-          as one undifferentiated run of tags: what this scene makes them, and
-          what it hands them. */}
-      {scene.jobFunctions.length > 0 && (
-        <div className='min-w-0 truncate text-12px text-t-secondary' title={scene.jobFunctions.join(' · ')}>
-          {scene.jobFunctions.join(' · ')}
-        </div>
-      )}
-
-      <div className='mt-auto border-t border-3 pt-9px'>
-        {scene.resources.length > 0 ? (
-          <div className='flex flex-wrap gap-x-12px gap-y-5px'>
-            {scene.resources.map((summary) => (
-              <span key={summary.resourceType} className='inline-flex items-baseline gap-4px text-12px'>
-                <span className='text-t-tertiary'>
+    <div className={styles.card} data-scene-name={scene.name} title={tooltip}>
+      <img src={scene.avatarRef || BUILTIN_AVATARS[scene.name] || officeAvatar} alt='' className={styles.avatar} />
+      <div className={styles.cardBody}>
+        <span className={styles.name}>{scene.name}</span>
+        <div className={styles.resources}>
+          {scene.resources.length > 0 ? (
+            scene.resources.map((summary) => (
+              <span key={summary.resourceType} className={styles.resource}>
+                <span>
                   {t(`common.scenes.resourceType.${summary.resourceType}`, { defaultValue: summary.resourceType })}
                 </span>
-                <span className='font-600 text-t-primary'>{resourceValue(summary)}</span>
+                <span className={styles.resourceValue}>{resourceValue(summary)}</span>
               </span>
-            ))}
-          </div>
-        ) : (
-          <span className='text-12px text-t-tertiary'>
-            {t('common.scenes.noResources', { defaultValue: '该场景暂未配置授权包' })}
-          </span>
-        )}
+            ))
+          ) : (
+            <span>{t('common.scenes.noResources', { defaultValue: '该场景暂未配置授权包' })}</span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -114,32 +83,92 @@ const SceneCard: React.FC<{ scene: MyScene }> = ({ scene }) => {
 const EnterpriseSceneGrid: React.FC = () => {
   const { t } = useTranslation();
   const { context } = useOrgContext();
+  const [expanded, setExpanded] = useState(false);
   const active = Boolean(context?.isEnterprise && isEnterpriseRemoteActive());
   const tenantId = context?.tenantId ?? '';
-  const { data: scenes } = useSWR<MyScene[]>(
-    active ? ['enterprise-conversation-scenes', tenantId] : null,
+  const {
+    data: scenes,
+    mutate,
+    isValidating,
+    error,
+  } = useSWR<MyScene[]>(
+    active
+      ? ['enterprise-conversation-scenes', getEnterpriseServerUrl(), getEnterpriseSession()?.userId, tenantId]
+      : null,
     () => ipcBridge.onePlatform.myScenes.invoke(),
-    { revalidateOnFocus: false, shouldRetryOnError: false }
+    { revalidateOnFocus: true, refreshInterval: 30000, shouldRetryOnError: false }
   );
 
-  if (!active || !scenes) return null;
+  if (!active) return null;
+  if (!scenes)
+    return error ? (
+      <div className={styles.empty} role='status'>
+        <span>{t('common.error')}</span>
+        <Button onClick={() => void mutate()} loading={isValidating}>
+          {t('common.retry')}
+        </Button>
+      </div>
+    ) : null;
+
+  if (scenes.length === 0)
+    return (
+      <div className={styles.compactEmpty} data-testid='enterprise-scene-grid'>
+        <Application size={18} className='shrink-0 text-t-tertiary' />
+        <div className={styles.compactCopy}>
+          <span className={styles.compactTitle}>{t('common.scenes.title')}</span>
+          <span className={styles.compactHint} title={t('common.scenes.empty')}>
+            {t('common.scenes.empty')}
+          </span>
+        </div>
+        <Button
+          type='text'
+          size='small'
+          loading={isValidating}
+          icon={<Refresh size={14} />}
+          onClick={() => void mutate()}
+        >
+          {t('common.refresh')}
+        </Button>
+      </div>
+    );
+
+  const visible = expanded ? scenes : scenes.slice(0, COLLAPSED_SCENE_COUNT);
+  const hiddenCount = scenes.length - COLLAPSED_SCENE_COUNT;
 
   return (
-    <div className='mt-18px w-full animate-fade-in' data-testid='enterprise-scene-grid'>
-      <div className='mb-9px text-center text-12.5px text-t-tertiary'>
-        {scenes.length > 0
-          ? t('common.scenes.conversationHint', {
+    <div className={styles.section} data-testid='enterprise-scene-grid'>
+      <div className={styles.heading}>
+        <div className={styles.headingCopy}>
+          <h2 className={styles.title}>{t('common.scenes.title', { defaultValue: '工作场景' })}</h2>
+          <span className={styles.hint} title={t('common.scenes.conversationHint')}>
+            {t('common.scenes.conversationHint', {
               defaultValue: '以下场景的职能与资源包已叠加到当前账号，在所有会话中自动生效。',
-            })
-          : t('common.scenes.empty', {
-              defaultValue: '尚未加入任何场景。管理员可在控制台把你加入场景，一次获得整包协作资源。',
             })}
+          </span>
+        </div>
+        <div className={styles.headingActions}>
+          <span className={styles.count}>{scenes.length}</span>
+          <Button
+            type='text'
+            size='small'
+            loading={isValidating}
+            icon={<Refresh size={14} />}
+            onClick={() => void mutate()}
+          >
+            {t('common.refresh')}
+          </Button>
+        </div>
       </div>
-      {scenes.length > 0 && (
-        <div className='grid grid-cols-1 gap-10px sm:grid-cols-2 lg:grid-cols-3'>
-          {scenes.map((scene) => (
-            <SceneCard key={scene.id} scene={scene} />
-          ))}
+      <div className={styles.grid}>
+        {visible.map((scene) => (
+          <SceneCard key={scene.id} scene={scene} />
+        ))}
+      </div>
+      {hiddenCount > 0 && (
+        <div className={styles.more}>
+          <Button type='text' size='small' onClick={() => setExpanded((open) => !open)}>
+            {expanded ? t('common.collapse') : t('common.scenes.showAll', { count: scenes.length })}
+          </Button>
         </div>
       )}
     </div>

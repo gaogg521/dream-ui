@@ -263,7 +263,11 @@
     "fieldBoundTools": "Verknüpfte Tools",
     "starterPromptsTitle": "Probieren Sie",
     "openConversation": "Unterhaltung öffnen",
-    "chatSession": "Chat"
+    "chatSession": "Chat",
+    "fieldScheduleTask": "Geplante Aufgabe",
+    "scheduleTaskPlaceholder": "Was bei jedem Lauf zu tun ist, z. B. Release-Risiken der Woche zusammenfassen und Folgeaufgaben auflisten",
+    "scheduleTaskOptionalHint": "Leer lassen, um die Ausführungsanweisung dieses Mitarbeiters zu verwenden",
+    "scheduleTaskRequired": "Geplante Aufgabe eingeben: Ein Firmenmitarbeiter hat keine Ausführungsanweisung, ohne Aufgabe gibt es nichts zu tun"
   },
   "language": {
     "switchTooltip": "Sprache wechseln"
@@ -290,7 +294,8 @@
       "model_channel": "Modellkanäle",
       "knowledge": "Wissen",
       "employee": "Digitale Mitarbeiter"
-    }
+    },
+    "showAll": "Alle anzeigen ({{count}})"
   },
   "fileVault": {
     "title": "Datei-Tresor",
