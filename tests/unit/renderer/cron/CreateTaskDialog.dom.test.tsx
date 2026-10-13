@@ -42,6 +42,8 @@ vi.mock('@/common', () => ({
     conversation: {
       get: { invoke: vi.fn() },
     },
+    // The push-to-bot picker lists the person's bots when the form opens.
+    channel: { getPushTargets: { invoke: vi.fn(async () => []) } },
   },
 }));
 

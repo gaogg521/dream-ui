@@ -15,7 +15,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useInRouterContext, useNavigate } from 'react-router-dom';
 import { Button, Select, Switch } from '@arco-design/web-react';
 import { ipcBridge } from '@/common';
 import type { ICronPushTarget } from '@/common/adapter/ipcBridge';
@@ -40,9 +40,20 @@ export function buildPushOptions(targets: IChannelPushTarget[]): PushOption[] {
   );
 }
 
-const PushTargetField: React.FC<PushTargetFieldProps> = ({ value, onChange }) => {
+/** Opens the channel settings. Rendered only inside a router (the form is also mounted without one in isolation). */
+const GoToSettingsButton: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  return (
+    <Button size='mini' type='outline' onClick={() => void navigate('/settings/webui')}>
+      {t('cron.page.form.push.goSettings')}
+    </Button>
+  );
+};
+
+const PushTargetField: React.FC<PushTargetFieldProps> = ({ value, onChange }) => {
+  const { t } = useTranslation();
+  const inRouter = useInRouterContext();
   const [targets, setTargets] = useState<IChannelPushTarget[] | null>(null);
   const [enabled, setEnabled] = useState(value !== null);
 
@@ -120,9 +131,7 @@ const PushTargetField: React.FC<PushTargetFieldProps> = ({ value, onChange }) =>
           ) : (
             <div className='flex items-center justify-between gap-12px rounded-8px bg-fill-2 px-12px py-10px text-12px leading-18px text-t-secondary'>
               <span>{t(targets.length === 0 ? 'cron.page.form.push.noBot' : 'cron.page.form.push.noChat')}</span>
-              <Button size='mini' type='outline' onClick={() => void navigate('/settings/webui')}>
-                {t('cron.page.form.push.goSettings')}
-              </Button>
+              {inRouter ? <GoToSettingsButton /> : null}
             </div>
           )}
         </div>

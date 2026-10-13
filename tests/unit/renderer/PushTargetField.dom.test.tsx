@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ targets: [] as unknown[], navigate: vi.fn() }));
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
-vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate }));
+vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate, useInRouterContext: () => true }));
 vi.mock('@/common', () => ({
   ipcBridge: { channel: { getPushTargets: { invoke: vi.fn(async () => mocks.targets) } } },
 }));

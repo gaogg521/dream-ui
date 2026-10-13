@@ -14,11 +14,11 @@
 
 场景 = 入口。三层：
 
-| 层 | 内容 | 注入方式 |
-| --- | --- | --- |
-| 角色 | 提示词（没写就用名称/描述/职能生成一句） | `extra.preset_rules` |
-| 工作方法 | `intent.discovery` 开：先复述、再调研、再写需求简报、确认后才动手 | 同上，追加一段协议 |
-| 硬约束 / 交付 | `intent.constraints`（含「不做清单」）、`intent.deliverables` | 同上 |
+| 层            | 内容                                                              | 注入方式             |
+| ------------- | ----------------------------------------------------------------- | -------------------- |
+| 角色          | 提示词（没写就用名称/描述/职能生成一句）                          | `extra.preset_rules` |
+| 工作方法      | `intent.discovery` 开：先复述、再调研、再写需求简报、确认后才动手 | 同上，追加一段协议   |
+| 硬约束 / 交付 | `intent.constraints`（含「不做清单」）、`intent.deliverables`     | 同上                 |
 
 资源：技能走 `extra.enabled_skills`；个人场景可限定 MCP（`extra.selected_mcp_server_ids`，不选=沿用已启用的）。
 

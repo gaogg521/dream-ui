@@ -6,10 +6,11 @@ import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Empty, Message, Spin, Switch, Tooltip } from '@arco-design/web-react';
+import { Button, Empty, Message, Popconfirm, Spin, Switch, Tooltip } from '@arco-design/web-react';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { useAllCronJobs } from '@renderer/pages/cron/useCronJobs';
 import { formatSchedule, formatNextRun } from '@renderer/pages/cron/cronUtils';
+import { ipcBridge } from '@/common';
 import { systemSettings, type ICronJob } from '@/common/adapter/ipcBridge';
 import { configService } from '@/common/config/configService';
 import { useConversationAssistants } from '@renderer/pages/conversation/hooks/useConversationAssistants';
@@ -21,7 +22,7 @@ import ThemedLogo from '@/renderer/components/agent/ThemedLogo';
 import TalkToButlerButton from '@/renderer/components/base/TalkToButlerButton';
 import { DreamSearchInput } from '@/renderer/components/base';
 import SettingsPageHeader from '@/renderer/pages/settings/components/SettingsPageHeader';
-import { Attention, Robot } from '@icon-park/react';
+import { Attention, Delete, Robot, Write } from '@icon-park/react';
 
 const ScheduledTasksPage: React.FC = () => {
   const layout = useLayoutContext();
@@ -32,6 +33,7 @@ const ScheduledTasksPage: React.FC = () => {
   const { presetAssistants } = useConversationAssistants();
   const logos = useAgentLogos();
   const [createDialogVisible, setCreateDialogVisible] = useState(false);
+  const [editingJob, setEditingJob] = useState<ICronJob | null>(null);
   const [keepAwake, setKeepAwake] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -50,6 +52,18 @@ const ScheduledTasksPage: React.FC = () => {
       Message.error(String(err));
     }
   }, []);
+
+  const handleDeleteJob = useCallback(
+    async (job: ICronJob) => {
+      try {
+        await ipcBridge.cron.removeJob.invoke({ job_id: job.id });
+        Message.success(t('cron.deleteSuccess'));
+      } catch (err) {
+        Message.error(String(err));
+      }
+    },
+    [t]
+  );
 
   const handleGoToDetail = useCallback(
     (job: ICronJob) => {
@@ -282,6 +296,26 @@ const ScheduledTasksPage: React.FC = () => {
                       {!isManualOnly && (
                         <Switch size='small' checked={job.enabled} onChange={() => handleToggleEnabled(job)} />
                       )}
+                      <Tooltip content={t('cron.page.editTask')}>
+                        <Button
+                          size='mini'
+                          type='text'
+                          aria-label={t('cron.page.editTask')}
+                          data-testid={`cron-row-edit-${job.id}`}
+                          icon={<Write theme='outline' size={16} fill='currentColor' />}
+                          onClick={() => setEditingJob(job)}
+                        />
+                      </Tooltip>
+                      <Popconfirm title={t('cron.confirmDeleteWithConversations')} onOk={() => handleDeleteJob(job)}>
+                        <Button
+                          size='mini'
+                          type='text'
+                          status='danger'
+                          aria-label={t('common.delete')}
+                          data-testid={`cron-row-delete-${job.id}`}
+                          icon={<Delete theme='outline' size={16} fill='currentColor' />}
+                        />
+                      </Popconfirm>
                     </div>
                   </div>
                 );
@@ -292,6 +326,11 @@ const ScheduledTasksPage: React.FC = () => {
       </div>
 
       <CreateTaskDialog visible={createDialogVisible} onClose={() => setCreateDialogVisible(false)} />
+      <CreateTaskDialog
+        visible={editingJob !== null}
+        editJob={editingJob ?? undefined}
+        onClose={() => setEditingJob(null)}
+      />
     </div>
   );
 };
