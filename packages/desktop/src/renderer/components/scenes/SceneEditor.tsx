@@ -65,7 +65,7 @@ const LineList: React.FC<{
     ))}
     {items.length < max && (
       <div>
-        <Button type='text' size='small' icon={<Plus size={14} />} onClick={() => onChange([...items, ''])}>
+        <Button type='secondary' size='small' icon={<Plus size={14} />} onClick={() => onChange([...items, ''])}>
           {addLabel}
         </Button>
       </div>
