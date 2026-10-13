@@ -370,7 +370,9 @@
     "serverAdjusted": "{{typed}} is not the enterprise server entry point; connected to {{url}} instead.",
     "serverErrSelf": "{{url}} is this machine's own One Work client, not an enterprise server. Enter the enterprise address your admin gave you (the one used to open the admin console in a browser).",
     "serverErrNoEnterprise": "{{url}} answers but is not an enterprise server (no enterprise API). Usually this is the address of a One Work client — possibly this machine — or the enterprise edition is not deployed there yet.",
-    "serverErrUnreachable": "Can't reach {{url}}. Check that the address matches what your admin gave you, the server is running, and both machines can reach each other. The enterprise edition usually needs no port."
+    "serverErrUnreachable": "Can't reach {{url}}. Check that the address matches what your admin gave you, the server is running, and both machines can reach each other. The enterprise edition usually needs no port.",
+    "distributedBadge": "Company",
+    "distributedHint": "Handed out by your company administrator. It updates with the company sync and cannot be edited here."
   },
   "superAssistant": {
     "title": "Digital employees and scenes",
@@ -610,10 +612,10 @@
     "starterPromptsTitle": "Try asking",
     "openConversation": "Open conversation",
     "chatSession": "Chat",
-    "fieldScheduleTask": "Scheduled task",
+    "fieldScheduleTask": "Automation",
     "scheduleTaskPlaceholder": "What it should do each time, e.g. summarise this week's release risks and list follow-ups",
     "scheduleTaskOptionalHint": "Leave empty to use this employee's run instructions",
-    "scheduleTaskRequired": "Enter the scheduled task: a company employee has no run instructions, so without one it has nothing to do"
+    "scheduleTaskRequired": "Enter the automation: a company employee has no run instructions, so without one it has nothing to do"
   },
   "language": {
     "switchTooltip": "Switch language"
@@ -716,7 +718,15 @@
     "export": "Export",
     "importDone": "Imported {{count}} scenes",
     "importInvalid": "That is not an exported scenes file",
-    "importEmpty": "There are no scenes to import in that file"
+    "importEmpty": "There are no scenes to import in that file",
+    "greeting": {
+      "hello": "Hello, this is \"{{name}}\".",
+      "skills": "Skills I bring",
+      "tools": "Tools I can use",
+      "more": "{{count}} more",
+      "asksFirst": "Just say what you want to do. I will first ask about who it is for, how things are today and the scope, write a requirements brief, and only build once you confirm.",
+      "direct": "Just tell me what you need done."
+    }
   },
   "fileVault": {
     "title": "File Vault",

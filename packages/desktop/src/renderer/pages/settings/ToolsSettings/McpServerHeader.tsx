@@ -7,6 +7,8 @@ import type { McpOAuthStatus } from '@/renderer/hooks/mcp/useMcpOAuth';
 import FeedbackButton from '@/renderer/components/base/FeedbackButton';
 import { iconColors } from '@/renderer/styles/colors';
 import { formatDateTime } from '@/renderer/services/i18n/format';
+import CompanyBadge from '@/renderer/components/enterprise/CompanyBadge';
+import { isCompanyMcpServer } from '@/renderer/utils/enterprise/companyMcp';
 
 interface McpServerHeaderProps {
   server: IMcpServer;
@@ -169,6 +171,7 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
     <div className='flex items-center justify-between group'>
       <div className='flex items-center gap-2'>
         <span>{server.name}</span>
+        {isCompanyMcpServer(server) ? <CompanyBadge /> : null}
         {statusPopoverContent ? (
           <Popover content={statusPopoverContent} trigger='hover' position='top'>
             <span className='flex items-center cursor-default'>{statusIcon}</span>

@@ -1,5 +1,5 @@
 {
-  "scheduledTasks": "예약 작업",
+  "scheduledTasks": "자동화",
   "taskCount": "{{count}}개 작업",
   "schedule": "일정",
   "nextRun": "다음 실행",
@@ -28,11 +28,11 @@
   "pauseSuccess": "작업이 일시 중지되었습니다",
   "resumeSuccess": "작업이 재개되었습니다",
   "message.badge": "Scheduled",
-  "allScheduledTasks": "모든 예약 작업",
-  "noTasks": "예약 작업 없음",
+  "allScheduledTasks": "모든 자동화",
+  "noTasks": "자동화 없음",
   "runNowSuccess": "작업 실행이 트리거되었습니다",
   "detail": {
-    "backToAll": "모든 예약 작업",
+    "backToAll": "모든 자동화",
     "runNow": "지금 실행",
     "description": "설명",
     "agent": "어시스턴트",

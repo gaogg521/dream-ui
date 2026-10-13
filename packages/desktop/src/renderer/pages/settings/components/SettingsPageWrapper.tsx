@@ -12,6 +12,7 @@ import { useExtensionSettingsTabs } from '@/renderer/hooks/system/useExtensionSe
 import {
   Brain,
   Communication,
+  Components,
   Earth,
   CheckOne,
   FileCabinet,
@@ -66,6 +67,12 @@ export function getBuiltinSettingsNavItems(isDesktop: boolean, t: TranslateFn): 
       label: t('common.sider.mySkills', { defaultValue: '我的技能' }),
       icon: <Lightning theme='outline' size='16' />,
       path: 'skills',
+    },
+    mcp: {
+      id: 'mcp',
+      label: t('common.sider.mcpServices', { defaultValue: 'MCP 服务' }),
+      icon: <Components theme='outline' size='16' />,
+      path: 'mcp',
     },
     memory: {
       id: 'memory',

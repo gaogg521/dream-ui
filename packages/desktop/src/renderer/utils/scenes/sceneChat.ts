@@ -49,11 +49,31 @@ export type SceneConversationRequest = {
     scene_id: string;
     /** The scene's example openers, offered as chips until the conversation begins. */
     scene_starters?: string[];
+    /** What the empty conversation shows (see `SceneGreeting`). */
+    scene_greeting?: SceneGreeting;
   };
 };
 
 /** The slice of a local MCP server row this needs. */
-export type LocalMcpServer = { id: string; original_json?: string };
+export type LocalMcpServer = { id: string; name?: string; original_json?: string };
+
+/**
+ * What the conversation shows before anything is said: which scene this is, what
+ * came with it, and how it will work. Written onto the conversation when it is
+ * opened (`extra.scene_greeting`) and read back by `SceneGreeting`.
+ */
+export type SceneGreeting = {
+  name: string;
+  description: string;
+  /** An emoji for a personal scene; company scenes show the generic mark. */
+  icon?: string;
+  /** Skills the scene started the conversation with. */
+  skills: string[];
+  /** MCP tools the conversation was limited to by name; empty when it was not limited. */
+  tools: string[];
+  /** Whether the scene asks before it builds. */
+  asksFirst: boolean;
+};
 
 /** `[A-Za-z0-9_-]` is all the team sync keeps of a registry id in a directory name. */
 const sanitizeRegistryId = (id: string): string => id.replace(/[^A-Za-z0-9_-]/g, '');
@@ -137,6 +157,17 @@ export function buildSceneConversationRequest(params: {
     if (resolved.length > 0) extra.selected_mcp_server_ids = resolved;
   }
   if (item.starters.length > 0) extra.scene_starters = item.starters;
+  extra.scene_greeting = {
+    name: item.name,
+    description: item.description,
+    ...(item.icon ? { icon: item.icon } : {}),
+    skills: extra.enabled_skills,
+    tools: (extra.selected_mcp_server_ids ?? []).flatMap((id) => {
+      const name = mcpServers.find((server) => server.id === id)?.name;
+      return name ? [name] : [];
+    }),
+    asksFirst: Boolean(company ? company.intent?.discovery : mine?.intent.discovery),
+  };
   return { type: 'dream', name: item.name, model, extra };
 }
 
@@ -148,10 +179,14 @@ export async function startSceneConversation(item: SceneItem, model: TProviderWi
     // A scene whose skills cannot be read still opens: the rules and the
     // connectors the team sync loads everywhere do not depend on them.
     .catch((): LocalSkill[] => []);
-  // Only a company scene with explicit connectors needs the local MCP rows.
-  const mcpServers = item.company?.mcpIds?.length
+  // The local MCP rows are needed to resolve a company scene's connectors, and to name the
+  // servers a personal scene limits the conversation to.
+  const needsServers = Boolean(item.company?.mcpIds?.length || item.mine?.mcpServerIds.length);
+  const mcpServers = needsServers
     ? await ensureBackendMcpCatalog()
-        .then(({ allServers }) => allServers.map(({ id, original_json }): LocalMcpServer => ({ id, original_json })))
+        .then(({ allServers }) =>
+          allServers.map(({ id, name, original_json }): LocalMcpServer => ({ id, name, original_json }))
+        )
         .catch((): LocalMcpServer[] => [])
     : [];
   const conversation = await ipcBridge.conversation.create.invoke(

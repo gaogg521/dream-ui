@@ -13,6 +13,7 @@ import { buildSkillImportNotice, getSkillImportErrorMessage } from './skillImpor
 import SkillUsedByStack, { getAssistantsUsingSkill } from './skillsHub/SkillUsedByStack';
 import { SKILLS_ROUTES } from './skillsHub/skillsRoutes';
 import { BUILTIN_CATEGORY_ORDER, skillPillKey, useBuiltinSkillDisplay } from './skillsHub/skillCorpus';
+import CompanyBadge from '@/renderer/components/enterprise/CompanyBadge';
 
 // Skill 信息类型 / Skill info type
 interface SkillInfo {
@@ -961,13 +962,16 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                                 product ships and the user installed, and the
                                 label said the opposite. Source stays available
                                 as a pill filter. */}
-                            {skillPillKey(skill).startsWith('cat:') ? (
-                              <span className='mt-4px inline-block max-w-full truncate rounded-5px bg-fill-2 px-6px py-1px text-11px leading-[16px] text-t-tertiary'>
-                                {t(`settings.skillsHub.builtinCategory.${skillPillKey(skill).slice(4)}`, {
-                                  defaultValue: '',
-                                })}
-                              </span>
-                            ) : null}
+                            <div className='mt-4px flex min-w-0 items-center gap-4px'>
+                              {skill.source === 'team' ? <CompanyBadge /> : null}
+                              {skillPillKey(skill).startsWith('cat:') ? (
+                                <span className='inline-block max-w-full truncate rounded-5px bg-fill-2 px-6px py-1px text-11px leading-[16px] text-t-tertiary'>
+                                  {t(`settings.skillsHub.builtinCategory.${skillPillKey(skill).slice(4)}`, {
+                                    defaultValue: '',
+                                  })}
+                                </span>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
 

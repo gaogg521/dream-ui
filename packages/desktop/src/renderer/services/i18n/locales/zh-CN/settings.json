@@ -227,7 +227,7 @@
         "desc": "提供基于5栏白板方法论的结构化产品创意迭代流程，从现实世界到问题推进，强制思维演化；适用于新产品构思、复杂问题拆解、假设验证式创新探索"
       },
       "cron": {
-        "title": "定时任务",
+        "title": "自动化",
         "desc": "创建和管理按计划自动执行的任务。"
       },
       "delivery-no-pseudoblock": {
@@ -758,14 +758,14 @@
   "assistantSectionDisabled": "已禁用",
   "assistantTabMine": "我的助手",
   "assistantTabOfficial": "官方助手",
-  "assistantHomeLead": "助手是配好技能和工具、能直接上岗的 AI 专家。这里有你本机的 CLI、你亲手调教的助手，还有一批官方专家。启用后，它们就会出现在你的对话、开团和定时任务里，随时待命。",
-  "assistantHomeLeadShort": "配好技能和工具、能直接上岗的 AI 专家。启用后即可用于对话、开团和定时任务。",
+  "assistantHomeLead": "助手是配好技能和工具、能直接上岗的 AI 专家。这里有你本机的 CLI、你亲手调教的助手，还有一批官方专家。启用后，它们就会出现在你的对话、开团和自动化里，随时待命。",
+  "assistantHomeLeadShort": "配好技能和工具、能直接上岗的 AI 专家。启用后即可用于对话、开团和自动化。",
   "assistantReorderHintShort": "拖拽排序",
   "assistantReorderSearchDisabled": "清除搜索后即可调整顺序。",
   "myAssistantsHintShort": "由本机 CLI 自动生成、你自己创建或从官方复制的助手。",
   "assistantRuntimeLabel": "Agent:",
   "assistantGoChat": "去对话",
-  "assistantReorderHint": "拖拽可调整顺序，它决定你挑选助手时（首页、开团、定时任务等）列表里的展示先后。",
+  "assistantReorderHint": "拖拽可调整顺序，它决定你挑选助手时（首页、开团、自动化等）列表里的展示先后。",
   "assistantGroupCli": "CLI 助手",
   "assistantGroupCreated": "自定义助手",
   "myAssistantsEmpty": "你的助手列表还是空的。去「官方助手」启用一个专家，或让 One Work 识别你本机的 CLI 工具。",
@@ -773,10 +773,10 @@
   "customEmptyBody": "可以通过对话来创建一个，或从官方助手复制一个。",
   "customEmptyCreate": "通过对话创建",
   "customEmptyBrowseOfficial": "逛逛官方助手",
-  "officialAssistantsHint": "官方助手由 One Work 持续维护、随版本更新能力。启用后即可在你的对话、开团和定时任务里使用；若想调整成专属于你的版本，可将它复制为我的助手。",
+  "officialAssistantsHint": "官方助手由 One Work 持续维护、随版本更新能力。启用后即可在你的对话、开团和自动化里使用；若想调整成专属于你的版本，可将它复制为我的助手。",
   "officialAssistantsHintShort": "One Work 内置的官方助手，由官方持续维护、随版本更新；可复制为「我的助手」后自由修改。",
   "reorderCoachTitle": "拖拽调整顺序",
-  "reorderCoachBody": "把你常用的助手拖到前面——这个顺序决定你挑选助手时（首页、开团、定时任务等）列表里的展示先后。",
+  "reorderCoachBody": "把你常用的助手拖到前面——这个顺序决定你挑选助手时（首页、开团、自动化等）列表里的展示先后。",
   "assistantFilter": {
     "all": "全部",
     "enabled": "已启用",
@@ -939,7 +939,7 @@
     "bodyTurnCompletedNamed": "「{{name}}」已完成本轮回复"
   },
   "notification": "通知",
-  "cronNotificationEnabled": "定时任务完成通知",
+  "cronNotificationEnabled": "自动化完成通知",
   "promptTimeout": "LLM 请求超时时间（秒）",
   "groupAiCore": "AI 核心",
   "groupApp": "应用与连接",
@@ -1464,7 +1464,7 @@
   "bugReportModuleMcp": "MCP 与工具",
   "bugReportModuleChannel": "渠道接入",
   "bugReportModuleChat": "对话与会话",
-  "bugReportModuleScheduledTask": "定时任务",
+  "bugReportModuleScheduledTask": "自动化",
   "bugReportModuleLlmConfig": "模型与认证",
   "bugReportModuleAssistant": "助手与预设",
   "bugReportModulePermission": "Agent 检测与连接",
@@ -1475,7 +1475,7 @@
   "bugReportModuleMcpDescription": "适用于 MCP 服务器配置、OAuth 登录、工具同步、工具缺失或调用失败等问题。",
   "bugReportModuleChannelDescription": "适用于 Telegram、Slack、飞书等渠道插件的配置、配对、授权或消息收发异常。",
   "bugReportModuleChatDescription": "适用于消息发送、Agent 回复、上下文处理、命令队列或对话过程中的异常。",
-  "bugReportModuleScheduledTaskDescription": "适用于定时任务的创建、编辑、触发、提醒或执行结果异常等问题。",
+  "bugReportModuleScheduledTaskDescription": "适用于自动化的创建、编辑、触发、提醒或执行结果异常等问题。",
   "bugReportModuleLlmConfigDescription": "适用于模型供应商、API Key、登录认证、额度限制、配额或模型选择异常。",
   "bugReportModuleAssistantDescription": "适用于助手卡片、助手预设、默认助手切换或助手行为配置异常。",
   "bugReportModulePermissionDescription": "适用于本地或远程 Agent 未识别、状态异常、连接握手失败或可用性检测异常。",
@@ -3492,7 +3492,7 @@
       "attachments": "可能很大",
       "providers": "模型服务商、桥接与 MCP 服务器",
       "skills": "已安装和自建的技能",
-      "appSettings": "含定时任务"
+      "appSettings": "含自动化"
     },
     "credentialWarning": "包含模型配置的备份里有可直接使用的 API 密钥，请妥善保管该文件。",
     "exportButton": "创建备份",

@@ -1,7 +1,7 @@
 {
   "welcome": {
     "title": "相信自己，万一成功了呢？",
-    "placeholder": "发消息、上传文件、打开文件夹、创建定时任务，或输入 / 唤起命令...",
+    "placeholder": "发消息、上传文件、打开文件夹、创建自动化，或输入 / 唤起命令...",
     "linkFolder": "打开文件夹",
     "newConversation": "新会话",
     "selectModel": "选择模型",
@@ -30,7 +30,7 @@
     "saveName": "保存",
     "cancelEdit": "取消",
     "rename": "重命名",
-    "createCronTask": "创建定时任务",
+    "createCronTask": "创建自动化",
     "renameTitle": "重命名对话",
     "renamePlaceholder": "请输入新名称",
     "renameSuccess": "重命名成功",

@@ -370,7 +370,9 @@
     "serverAdjusted": "{{typed}} 不是企业服务器入口，已自动改用 {{url}}。",
     "serverErrSelf": "{{url}} 是本机 One Work 客户端自己的地址，不是企业服务器。请填写管理员提供的企业版访问地址（浏览器打开企业管理后台用的那个）。",
     "serverErrNoEnterprise": "{{url}} 能访问，但不是企业服务器（没有企业接口）。常见原因：填成了某台 One Work 客户端（包括本机）的地址，或对方还没部署企业版。",
-    "serverErrUnreachable": "连接不上 {{url}}。请确认地址与管理员给的一致、对方服务器已启动、两台电脑网络互通；企业版通常不需要填写端口。"
+    "serverErrUnreachable": "连接不上 {{url}}。请确认地址与管理员给的一致、对方服务器已启动、两台电脑网络互通；企业版通常不需要填写端口。",
+    "distributedBadge": "企业下发",
+    "distributedHint": "由企业管理员下发，内容随企业同步更新，本机不能直接修改"
   },
   "superAssistant": {
     "title": "数字员工与场景",
@@ -610,10 +612,10 @@
     "starterPromptsTitle": "可以这样让它做",
     "openConversation": "打开会话",
     "chatSession": "对话",
-    "fieldScheduleTask": "定时任务",
+    "fieldScheduleTask": "自动化",
     "scheduleTaskPlaceholder": "每次到点让它做什么，例如：汇总本周发布风险并列出待办",
     "scheduleTaskOptionalHint": "留空则使用该员工的运行指令",
-    "scheduleTaskRequired": "请填写定时任务：公司员工没有运行指令，没有任务就不知道该做什么"
+    "scheduleTaskRequired": "请填写自动化：公司员工没有运行指令，没有任务就不知道该做什么"
   },
   "language": {
     "switchTooltip": "切换语言"
@@ -716,7 +718,15 @@
     "export": "导出",
     "importDone": "已导入 {{count}} 个场景",
     "importInvalid": "这不是场景导出文件",
-    "importEmpty": "文件里没有可导入的场景"
+    "importEmpty": "文件里没有可导入的场景",
+    "greeting": {
+      "hello": "你好，这里是「{{name}}」。",
+      "skills": "我带来的技能",
+      "tools": "可用的工具",
+      "more": "另有 {{count}} 个",
+      "asksFirst": "说一句你想做什么就行——我会先问清对象、现状和范围，写出需求简报，等你确认后再动手。",
+      "direct": "直接告诉我要做什么就行。"
+    }
   },
   "fileVault": {
     "title": "文件保险箱",

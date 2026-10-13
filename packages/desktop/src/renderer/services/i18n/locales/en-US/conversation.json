@@ -1,7 +1,7 @@
 {
   "welcome": {
     "title": "Believe in yourself — what if it actually works out?",
-    "placeholder": "Send a message, upload files, open a folder, create a scheduled task, or type / for commands...",
+    "placeholder": "Send a message, upload files, open a folder, create an automation, or type / for commands...",
     "linkFolder": "Open Folder",
     "newConversation": "New Chat",
     "selectModel": "Select Model",
@@ -30,7 +30,7 @@
     "saveName": "Save",
     "cancelEdit": "Cancel",
     "rename": "Rename",
-    "createCronTask": "Create scheduled task",
+    "createCronTask": "Create automation",
     "renameTitle": "Rename Chat",
     "renamePlaceholder": "Please enter a new name",
     "renameSuccess": "Renamed successfully",

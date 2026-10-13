@@ -132,6 +132,54 @@ describe('buildSceneConversationRequest', () => {
     ).toBeUndefined();
   });
 
+  it('writes a greeting onto the conversation: which scene, what came with it, and how it will work', () => {
+    const company = companySceneItem(
+      scene({
+        description: '负责发版排期',
+        skillIds: ['oskill_a1'],
+        mcpIds: ['omcp_1'],
+        intent: { discovery: true, starters: [], questions: [], constraints: '', deliverables: '' },
+      })
+    );
+    const greeting = buildSceneConversationRequest({
+      item: company,
+      skills,
+      model,
+      mcpServers: [{ id: 'row_1', name: 'Business MCP', original_json: '{"teamRegistryId":"omcp_1"}' }],
+    }).extra.scene_greeting;
+    expect(greeting).toEqual({
+      name: '发布管理',
+      description: '负责发版排期',
+      skills: ['release-signoff'],
+      tools: ['Business MCP'],
+      asksFirst: true,
+    });
+  });
+
+  it('a personal scene greets with its emoji, its skills and the servers it is limited to, by name', () => {
+    const mine = newPersonalScene({
+      name: '官网',
+      icon: '🌐',
+      skillNames: ['weekly-report'],
+      mcpServerIds: ['mcp_1', 'mcp_gone'],
+      intent: { discovery: false, starters: [], questions: [], constraints: '', deliverables: '' },
+    });
+    const greeting = buildSceneConversationRequest({
+      item: personalSceneItem(mine),
+      skills,
+      model,
+      mcpServers: [{ id: 'mcp_1', name: 'Docs server' }],
+    }).extra.scene_greeting;
+    expect(greeting).toMatchObject({ icon: '🌐', skills: ['weekly-report'], tools: ['Docs server'], asksFirst: false });
+  });
+
+  it('does not claim a tool limit that was not applied', () => {
+    const item = companySceneItem(scene({ mcpIds: ['omcp_1'] }));
+    expect(buildSceneConversationRequest({ item, skills, model, mcpServers: [] }).extra.scene_greeting?.tools).toEqual(
+      []
+    );
+  });
+
   it('carries the example openers, for scenes that ask first, so the conversation can offer them', () => {
     const asks = companySceneItem(
       scene({

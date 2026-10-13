@@ -1,5 +1,5 @@
 {
-  "scheduledTasks": "Geplante Aufgaben",
+  "scheduledTasks": "Automatisierungen",
   "taskCount": "{{count}} Aufgabe(n)",
   "schedule": "Zeitplan",
   "nextRun": "Nächste Ausführung",
@@ -27,11 +27,11 @@
   "pauseSuccess": "Aufgabe pausiert",
   "resumeSuccess": "Aufgabe fortgesetzt",
   "message.badge": "Geplant",
-  "allScheduledTasks": "Alle geplanten Aufgaben",
-  "noTasks": "Keine geplanten Aufgaben",
+  "allScheduledTasks": "Alle Automatisierungen",
+  "noTasks": "Keine Automatisierungen",
   "runNowSuccess": "Aufgabenausführung ausgelöst",
   "detail": {
-    "backToAll": "Alle geplanten Aufgaben",
+    "backToAll": "Alle Automatisierungen",
     "runNow": "Jetzt ausführen",
     "description": "Beschreibung",
     "agent": "Agent",

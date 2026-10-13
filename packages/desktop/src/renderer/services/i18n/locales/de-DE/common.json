@@ -363,7 +363,15 @@
     "export": "Exportieren",
     "importDone": "{{count}} Szenarien importiert",
     "importInvalid": "Das ist keine exportierte Szenario-Datei",
-    "importEmpty": "In der Datei gibt es keine Szenarien zum Importieren"
+    "importEmpty": "In der Datei gibt es keine Szenarien zum Importieren",
+    "greeting": {
+      "hello": "Hallo, hier ist „{{name}}“.",
+      "skills": "Mitgebrachte Skills",
+      "tools": "Verfügbare Werkzeuge",
+      "more": "{{count}} weitere",
+      "asksFirst": "Sagen Sie einfach, was Sie vorhaben. Ich frage zuerst nach Zielgruppe, Ist-Zustand und Umfang, schreibe eine Anforderungsübersicht und baue erst nach Ihrer Bestätigung.",
+      "direct": "Sagen Sie mir einfach, was zu tun ist."
+    }
   },
   "fileVault": {
     "title": "Datei-Tresor",
@@ -447,5 +455,9 @@
       "tenant": "Projektgruppe",
       "enterprise": "Gesamtes Unternehmen"
     }
+  },
+  "enterprise": {
+    "distributedBadge": "Vom Unternehmen",
+    "distributedHint": "Vom Unternehmensadministrator verteilt. Wird mit der Firmensynchronisierung aktualisiert und lässt sich hier nicht bearbeiten."
   }
 }

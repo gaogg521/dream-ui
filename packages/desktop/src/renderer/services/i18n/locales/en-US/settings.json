@@ -196,7 +196,7 @@
       },
       "btpanel": {
         "title": "baota Panel & MCP",
-        "desc": "Drives baota Panel: sites, files, databases, Docker, scheduled tasks and server environment, plus status checks and troubleshooting."
+        "desc": "Drives baota Panel: sites, files, databases, Docker, automations and server environment, plus status checks and troubleshooting."
       },
       "build-job-profile": {
         "title": "Job Profile Builder",
@@ -227,7 +227,7 @@
         "desc": "A five-column whiteboard method that forces an idea forward from the real world to a stated problem — for new products and hypothesis-led exploration."
       },
       "cron": {
-        "title": "Scheduled Tasks",
+        "title": "Automations",
         "desc": "Create and manage tasks that run on a schedule."
       },
       "delivery-no-pseudoblock": {
@@ -758,14 +758,14 @@
   "assistantSectionDisabled": "Disabled",
   "assistantTabMine": "My Assistants",
   "assistantTabOfficial": "Official",
-  "assistantHomeLead": "Assistants are ready-to-work AI experts, preloaded with skills and tools. Here are your local CLIs, the assistants you tailor yourself, and a set of official experts. Once enabled, they show up in your chats, teams, and scheduled tasks — ready when you need them.",
-  "assistantHomeLeadShort": "Ready-to-work AI experts, preloaded with skills and tools. Enable them to use in chats, teams, and scheduled tasks.",
+  "assistantHomeLead": "Assistants are ready-to-work AI experts, preloaded with skills and tools. Here are your local CLIs, the assistants you tailor yourself, and a set of official experts. Once enabled, they show up in your chats, teams, and automations — ready when you need them.",
+  "assistantHomeLeadShort": "Ready-to-work AI experts, preloaded with skills and tools. Enable them to use in chats, teams, and automations.",
   "assistantReorderHintShort": "Drag to reorder",
   "assistantReorderSearchDisabled": "Clear search to reorder.",
   "myAssistantsHintShort": "Assistants auto-generated from your local CLIs, plus ones you created or duplicated from official.",
   "assistantRuntimeLabel": "Agent:",
   "assistantGoChat": "Chat",
-  "assistantReorderHint": "Drag to reorder — this decides the display order wherever you pick an assistant (home, teams, scheduled tasks, …).",
+  "assistantReorderHint": "Drag to reorder — this decides the display order wherever you pick an assistant (home, teams, automations, …).",
   "assistantGroupCli": "CLI Assistants",
   "assistantGroupCreated": "Custom Assistants",
   "myAssistantsEmpty": "No assistants here yet. Enable an official assistant, or connect a local CLI tool.",
@@ -776,7 +776,7 @@
   "officialAssistantsHint": "Official assistants are maintained by One Work and updated with each release. Enable one to use it in your lists; to tailor your own version, duplicate it as your assistant.",
   "officialAssistantsHintShort": "Official assistants built into One Work, maintained and updated with each release; duplicate as \"My Assistant\" to customize freely.",
   "reorderCoachTitle": "Drag to reorder",
-  "reorderCoachBody": "Drag your favorite assistants to the top — this order decides how they appear wherever you pick an assistant (home, teams, scheduled tasks).",
+  "reorderCoachBody": "Drag your favorite assistants to the top — this order decides how they appear wherever you pick an assistant (home, teams, automations).",
   "assistantFilter": {
     "all": "All",
     "enabled": "Enabled",
@@ -939,7 +939,7 @@
     "bodyTurnCompletedNamed": "\"{{name}}\" has finished responding"
   },
   "notification": "Notifications",
-  "cronNotificationEnabled": "Scheduled Task Completion",
+  "cronNotificationEnabled": "Automation Completion",
   "promptTimeout": "LLM Prompt Timeout (s)",
   "groupAiCore": "AI Core",
   "groupApp": "Apps & Connections",
@@ -1464,7 +1464,7 @@
   "bugReportModuleMcp": "MCP & Tools",
   "bugReportModuleChannel": "Channel Integrations",
   "bugReportModuleChat": "Conversation & Sessions",
-  "bugReportModuleScheduledTask": "Scheduled Tasks",
+  "bugReportModuleScheduledTask": "Automations",
   "bugReportModuleLlmConfig": "Models & Authentication",
   "bugReportModuleAssistant": "Assistants & Presets",
   "bugReportModulePermission": "Agent Detection & Connection",
@@ -1475,7 +1475,7 @@
   "bugReportModuleMcpDescription": "For issues with MCP server config, OAuth login, tool sync, missing tools, or tool invocation failures.",
   "bugReportModuleChannelDescription": "For issues with Telegram, Slack, Lark and other channel plugins, including config, pairing, authorization, or message delivery.",
   "bugReportModuleChatDescription": "For issues while sending messages, receiving agent replies, handling context, using the command queue, or other in-chat behavior.",
-  "bugReportModuleScheduledTaskDescription": "For issues with creating, editing, triggering, reminding, or executing scheduled tasks.",
+  "bugReportModuleScheduledTaskDescription": "For issues with creating, editing, triggering, reminding, or executing automations.",
   "bugReportModuleLlmConfigDescription": "For issues with model providers, API keys, login and authentication, rate limits, quotas, or model selection.",
   "bugReportModuleAssistantDescription": "For issues with assistant cards, presets, switching defaults, or assistant behavior settings.",
   "bugReportModulePermissionDescription": "For issues where local or remote agents are not detected, unavailable, unhealthy, or fail to connect or complete a handshake.",

@@ -7,6 +7,7 @@ import {
   Brain,
   BuildingOne,
   Communication,
+  Components,
   Computer,
   Earth,
   CheckOne,
@@ -43,6 +44,7 @@ export const BUILTIN_TAB_IDS = [
   'agent',
   'model',
   'skills',
+  'mcp',
   'memory',
   // Apps & connections
   'superAssistant',
@@ -65,16 +67,15 @@ export const BUILTIN_TAB_IDS = [
  * When an extension anchors to one of these, it is redirected to the new host.
  * This keeps older extensions working without requiring them to update.
  *
- * `tools` is deliberately absent: MCP tools live on the top-level `/mcp` page,
- * which has no settings-sider row to anchor against. Extensions anchored to it
- * fall through to the "unanchored → before system" path, and
- * `navigateToSettingsTab('tools')` still resolves via the router's
- * `/settings/tools → /mcp` redirect.
+ * `tools` resolves to the MCP row: MCP services live at `/settings/mcp` (they
+ * used to be a top-level page), and `navigateToSettingsTab('tools')` still lands
+ * there through the router's `/settings/tools → /settings/mcp` redirect.
  */
 export const LEGACY_ANCHOR_REMAP: Record<string, string> = {
   'skills-hub': 'skills',
   capabilities: 'skills',
   display: 'appearance',
+  tools: 'mcp',
 };
 
 /**
@@ -88,7 +89,7 @@ export const LEGACY_ANCHOR_REMAP: Record<string, string> = {
  * visually.
  */
 const SETTINGS_GROUPS: ReadonlyArray<{ headerKey: string; members: readonly string[] }> = [
-  { headerKey: 'settings.groupAiCore', members: ['agent', 'model', 'skills', 'memory'] },
+  { headerKey: 'settings.groupAiCore', members: ['agent', 'model', 'skills', 'mcp', 'memory'] },
   { headerKey: 'settings.groupApp', members: ['superAssistant', 'webui', 'codexBridge', 'claudeBridge'] },
   { headerKey: 'settings.groupEnterprise', members: ['company', 'enterprise', 'enterpriseIdentity', 'fileVault'] },
   { headerKey: 'settings.groupAbout', members: ['system', 'about'] },
@@ -195,6 +196,12 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
         label: t('common.sider.mySkills', { defaultValue: '我的技能' }),
         icon: <Lightning />,
         path: 'skills',
+      },
+      mcp: {
+        id: 'mcp',
+        label: t('common.sider.mcpServices', { defaultValue: 'MCP 服务' }),
+        icon: <Components />,
+        path: 'mcp',
       },
       memory: {
         id: 'memory',

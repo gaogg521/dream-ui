@@ -23,6 +23,7 @@ const ROUTE_MODULE_MAP: ReadonlyArray<readonly [prefix: string, tag: FeedbackMod
   ['/settings/model', 'model-auth'],
   ['/settings/skills', 'skills-plugin'],
   ['/settings/tools', 'mcp-tools'],
+  ['/settings/mcp', 'mcp-tools'],
   // Super Assistant / Memory, previously top-level pages, now live under
   // Settings as a dedicated low-usage "Tools" group. Same tags their old
   // top-level routes used, before those became redirect-only.

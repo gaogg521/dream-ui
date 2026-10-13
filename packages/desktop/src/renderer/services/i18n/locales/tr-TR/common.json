@@ -363,7 +363,15 @@
     "export": "Dışa aktar",
     "importDone": "{{count}} senaryo içe aktarıldı",
     "importInvalid": "Bu, dışa aktarılmış bir senaryo dosyası değil",
-    "importEmpty": "Dosyada içe aktarılacak senaryo yok"
+    "importEmpty": "Dosyada içe aktarılacak senaryo yok",
+    "greeting": {
+      "hello": "Merhaba, burası \"{{name}}\".",
+      "skills": "Getirdiğim beceriler",
+      "tools": "Kullanabildiğim araçlar",
+      "more": "{{count}} tane daha",
+      "asksFirst": "Ne yapmak istediğinizi söylemeniz yeterli. Önce kitle, mevcut durum ve kapsamı soracak, gereksinim özetini yazacak ve siz onayladıktan sonra üretmeye başlayacağım.",
+      "direct": "Ne yapmam gerektiğini söylemeniz yeterli."
+    }
   },
   "fileVault": {
     "title": "Dosya Kasası",
@@ -447,5 +455,9 @@
       "tenant": "Proje grubu",
       "enterprise": "Tüm şirket"
     }
+  },
+  "enterprise": {
+    "distributedBadge": "Şirket",
+    "distributedHint": "Şirket yöneticisi tarafından dağıtıldı. Şirket eşitlemesiyle güncellenir ve burada düzenlenemez."
   }
 }

@@ -1,5 +1,5 @@
 {
-  "scheduledTasks": "کارهای زمان‌بندی‌شده",
+  "scheduledTasks": "خودکارسازی‌ها",
   "taskCount": "{{count}} کار",
   "schedule": "زمان‌بندی",
   "nextRun": "اجرای بعدی",
@@ -27,11 +27,11 @@
   "pauseSuccess": "کار متوقف شد",
   "resumeSuccess": "کار از سر گرفته شد",
   "message.badge": "زمان‌بندی‌شده",
-  "allScheduledTasks": "همه کارهای زمان‌بندی‌شده",
-  "noTasks": "کار زمان‌بندی‌شده‌ای وجود ندارد",
+  "allScheduledTasks": "همهٔ خودکارسازی‌ها",
+  "noTasks": "خودکارسازی‌ای وجود ندارد",
   "runNowSuccess": "اجرای کار فعال شد",
   "detail": {
-    "backToAll": "همه کارهای زمان‌بندی‌شده",
+    "backToAll": "همهٔ خودکارسازی‌ها",
     "runNow": "اجرا اکنون",
     "description": "توضیحات",
     "agent": "ایجنت",

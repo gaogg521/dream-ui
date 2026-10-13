@@ -29,6 +29,8 @@ import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conve
 import { getConversationCreateErrorMessage } from '@/renderer/pages/conversation/utils/conversationCreateError';
 import GoogleModelSelector from '../platforms/gemini/GoogleModelSelector';
 import DreamEngineChat from '../platforms/dreamEngine/DreamEngineChat';
+import SceneGreeting from '@/renderer/components/scenes/SceneGreeting';
+import type { SceneGreeting as SceneGreetingData } from '@/renderer/utils/scenes/sceneChat';
 import DreamEngineModelSelector from '../platforms/dreamEngine/DreamEngineModelSelector';
 import { useDreamEngineModelSelection } from '../platforms/dreamEngine/useDreamEngineModelSelection';
 import { useConversationRuntimeView } from '../runtime/useConversationRuntimeView';
@@ -239,6 +241,9 @@ const DreamEngineConversationPanel: React.FC<{
     presetAssistant: presetAssistantInfo ? { ...presetAssistantInfo, id: dreamEngineAssistantId } : undefined,
   };
 
+  // A conversation opened from a scene says so before anything is said.
+  const sceneGreeting = (conversation.extra as { scene_greeting?: SceneGreetingData } | undefined)?.scene_greeting;
+
   return (
     <ChatLayout {...chatLayoutProps} conversation_id={conversation.id}>
       <DreamEngineChat
@@ -247,6 +252,7 @@ const DreamEngineConversationPanel: React.FC<{
         modelSelection={modelSelection}
         session_mode={conversation.extra?.session_mode}
         cron_job_id={cronJobId}
+        emptySlot={sceneGreeting ? <SceneGreeting greeting={sceneGreeting} /> : undefined}
         loadedSkills={(conversation.extra as { skills?: string[] } | undefined)?.skills}
         loadedMcpServers={(conversation.extra as { mcp_servers?: string[] } | undefined)?.mcp_servers}
         loadedMcpStatuses={

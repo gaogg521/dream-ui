@@ -1,5 +1,5 @@
 {
-  "scheduledTasks": "Tâches planifiées",
+  "scheduledTasks": "Automatisations",
   "taskCount": "{{count}} tâche(s)",
   "schedule": "Planification",
   "nextRun": "Prochaine exécution",
@@ -27,11 +27,11 @@
   "pauseSuccess": "Tâche mise en pause",
   "resumeSuccess": "Tâche reprise",
   "message.badge": "Planifié",
-  "allScheduledTasks": "Toutes les tâches planifiées",
-  "noTasks": "Aucune tâche planifiée",
+  "allScheduledTasks": "Toutes les automatisations",
+  "noTasks": "Aucune automatisation",
   "runNowSuccess": "Exécution de la tâche déclenchée",
   "detail": {
-    "backToAll": "Toutes les tâches planifiées",
+    "backToAll": "Toutes les automatisations",
     "runNow": "Exécuter maintenant",
     "description": "Description",
     "agent": "Agent",

@@ -1,5 +1,5 @@
 {
-  "scheduledTasks": "Scheduled Tasks",
+  "scheduledTasks": "Otomasyonlar",
   "taskCount": "{{count}} task(s)",
   "schedule": "Schedule",
   "nextRun": "Next run",
@@ -40,11 +40,11 @@
   "drawer.save": "Save",
   "drawer.saveSuccess": "Saved successfully",
   "message.badge": "Scheduled",
-  "allScheduledTasks": "Tüm zamanlanmış görevler",
-  "noTasks": "Zamanlanmış görev yok",
+  "allScheduledTasks": "Tüm otomasyonlar",
+  "noTasks": "Otomasyon yok",
   "runNowSuccess": "Görev çalıştırma tetiklendi",
   "detail": {
-    "backToAll": "Tüm zamanlanmış görevler",
+    "backToAll": "Tüm otomasyonlar",
     "runNow": "Şimdi çalıştır",
     "description": "Açıklama",
     "agent": "Asistan",

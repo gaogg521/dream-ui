@@ -363,7 +363,15 @@
     "export": "Exporter",
     "importDone": "{{count}} scénarios importés",
     "importInvalid": "Ce n'est pas un fichier de scénarios exporté",
-    "importEmpty": "Aucun scénario à importer dans ce fichier"
+    "importEmpty": "Aucun scénario à importer dans ce fichier",
+    "greeting": {
+      "hello": "Bonjour, voici « {{name}} ».",
+      "skills": "Compétences à disposition",
+      "tools": "Outils disponibles",
+      "more": "{{count}} de plus",
+      "asksFirst": "Dites simplement ce que vous voulez faire. Je commence par m'informer sur le public, la situation actuelle et le périmètre, je rédige un résumé des exigences et ne construis qu'après votre confirmation.",
+      "direct": "Dites-moi simplement ce qu'il faut faire."
+    }
   },
   "fileVault": {
     "title": "Coffre de fichiers",
@@ -447,5 +455,9 @@
       "tenant": "Groupe de projet",
       "enterprise": "Toute l’entreprise"
     }
+  },
+  "enterprise": {
+    "distributedBadge": "De l'entreprise",
+    "distributedHint": "Distribué par l'administrateur de l'entreprise. Mis à jour avec la synchronisation, non modifiable ici."
   }
 }

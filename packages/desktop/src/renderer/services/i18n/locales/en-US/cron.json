@@ -1,5 +1,5 @@
 {
-  "scheduledTasks": "Scheduled Tasks",
+  "scheduledTasks": "Automations",
   "taskCount": "{{count}} task(s)",
   "schedule": "Schedule",
   "nextRun": "Next run",
@@ -13,8 +13,8 @@
     "paused": "Paused",
     "error": "Error",
     "unread": "New execution",
-    "unconfigured": "No scheduled task",
-    "defaultPrompt": "Every day at 10am, search for the latest AI news, summarize and output an insight report. (Please use the /cron skill to create a scheduled task in One Work.)"
+    "unconfigured": "No automation",
+    "defaultPrompt": "Every day at 10am, search for the latest AI news, summarize and output an insight report. (Please use the /cron skill to create an automation in One Work.)"
   },
   "actions": {
     "goTo": "View Chat",
@@ -22,16 +22,16 @@
     "resume": "Resume",
     "delete": "Delete"
   },
-  "confirmDeleteWithConversations": "Are you sure you want to delete this scheduled task? All conversations from this task will also be deleted.",
+  "confirmDeleteWithConversations": "Are you sure you want to delete this automation? All conversations from this task will also be deleted.",
   "deleteSuccess": "Task deleted",
   "pauseSuccess": "Task paused",
   "resumeSuccess": "Task resumed",
   "message.badge": "Scheduled",
-  "allScheduledTasks": "All Scheduled Tasks",
-  "noTasks": "No scheduled tasks",
+  "allScheduledTasks": "All Automations",
+  "noTasks": "No automations",
   "runNowSuccess": "Task execution triggered",
   "detail": {
-    "backToAll": "All scheduled tasks",
+    "backToAll": "All automations",
     "runNow": "Run now",
     "description": "Description",
     "agent": "Assistant",
@@ -46,8 +46,8 @@
   },
   "notification": {
     "taskComplete": "Task Complete",
-    "scheduledTask": "Scheduled Task",
-    "scheduledTaskComplete": "{{title}} - Scheduled task complete",
+    "scheduledTask": "Automation",
+    "scheduledTaskComplete": "{{title}} - Automation complete",
     "taskDone": "Task done"
   },
   "page": {
@@ -55,16 +55,16 @@
     "createViaChat": "Create via chat",
     "createManually": "Create manually",
     "description": "Run tasks on a schedule. You can also ask One Work in any conversation to create one for you.",
-    "awakeBanner": "Scheduled tasks only run while your computer is awake.",
+    "awakeBanner": "Automations only run while your computer is awake.",
     "keepAwake": "Keep awake",
     "keepAwakeTooltip": "When enabled, One Work will prevent your computer from going to sleep",
     "searchPlaceholder": "Search tasks...",
-    "noSearchResults": "No matching scheduled tasks.",
-    "createTask": "Create Scheduled Task",
-    "editTask": "Edit Scheduled Task",
+    "noSearchResults": "No matching automations.",
+    "createTask": "Create Automation",
+    "editTask": "Edit Automation",
     "createSuccess": "Task created successfully",
     "updateSuccess": "Task updated successfully",
-    "scheduleHint": "Scheduled tasks use a randomized delay of several minutes for server performance.",
+    "scheduleHint": "Automations use a randomized delay of several minutes for server performance.",
     "customCronWarning": "This task has a custom schedule that can't be edited here. Changing the frequency will replace it.",
     "weekday": {
       "monday": "Monday",
@@ -113,7 +113,7 @@
       "dreamEngineModelRequired": "Please select a model for 1ONE CLI",
       "noProvider": "No available models",
       "assistantLockedExistingConversation": "Ongoing conversation tasks must keep their original assistant. Create a new task to use another assistant.",
-      "teamTaskExecutionModeLockedReason": "Team scheduled tasks must keep running in the owning team conversation, so the execution mode cannot be changed.",
+      "teamTaskExecutionModeLockedReason": "Team automations must keep running in the owning team conversation, so the execution mode cannot be changed.",
       "dreamEngineNoProvider": "Add a Dream Engine model provider first"
     },
     "freq": {
@@ -147,7 +147,7 @@
     }
   },
   "trigger": {
-    "runScheduledTask": "Run scheduled task: {{name}}"
+    "runScheduledTask": "Run automation: {{name}}"
   },
   "skill": {
     "turnIntoSkill": "Turn this task into a skill",
@@ -158,8 +158,8 @@
     "saveFailed": "Failed to save skill"
   },
   "error": {
-    "alreadyExists": "This conversation already has a scheduled task \"{{name}}\" (ID: {{id}}). Please update the existing task instead of creating a new one.",
-    "missedJob": "⏰ Scheduled task \"{{name}}\" was not executed during system sleep.\nScheduled time: {{time}}\nThe timer has been restarted and will run at the next scheduled time.",
+    "alreadyExists": "This conversation already has an automation \"{{name}}\" (ID: {{id}}). Please update the existing task instead of creating a new one.",
+    "missedJob": "⏰ Automation \"{{name}}\" was not executed during system sleep.\nScheduled time: {{time}}\nThe timer has been restarted and will run at the next scheduled time.",
     "jobNotFound": "Task not found: {{id}}",
     "conversationNotFound": "Conversation not found",
     "scheduledTimePassed": "Scheduled time has passed",

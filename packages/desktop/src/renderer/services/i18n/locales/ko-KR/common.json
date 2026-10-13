@@ -363,7 +363,15 @@
     "export": "내보내기",
     "importDone": "장면 {{count}}개를 가져왔습니다",
     "importInvalid": "장면 내보내기 파일이 아닙니다",
-    "importEmpty": "파일에 가져올 장면이 없습니다"
+    "importEmpty": "파일에 가져올 장면이 없습니다",
+    "greeting": {
+      "hello": "안녕하세요, 「{{name}}」입니다.",
+      "skills": "제가 가져온 스킬",
+      "tools": "사용할 수 있는 도구",
+      "more": "외 {{count}}개",
+      "asksFirst": "하고 싶은 일을 한마디만 해 주세요. 먼저 대상·현황·범위를 묻고 요구사항을 정리한 뒤, 확인해 주시면 만들기 시작합니다.",
+      "direct": "필요한 일을 바로 말씀해 주세요."
+    }
   },
   "fileVault": {
     "title": "파일 볼트",
@@ -447,5 +455,9 @@
       "tenant": "프로젝트 그룹",
       "enterprise": "전사"
     }
+  },
+  "enterprise": {
+    "distributedBadge": "회사 배포",
+    "distributedHint": "회사 관리자가 배포한 항목입니다. 회사 동기화로 업데이트되며 이 기기에서는 수정할 수 없습니다."
   }
 }

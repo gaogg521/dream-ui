@@ -1,5 +1,5 @@
 {
-  "scheduledTasks": "スケジュールタスク",
+  "scheduledTasks": "オートメーション",
   "taskCount": "{{count}} 件のタスク",
   "schedule": "スケジュール",
   "nextRun": "次回実行",
@@ -40,11 +40,11 @@
   "drawer.save": "Save",
   "drawer.saveSuccess": "Saved successfully",
   "message.badge": "Scheduled",
-  "allScheduledTasks": "すべてのスケジュールタスク",
-  "noTasks": "スケジュールタスクがありません",
+  "allScheduledTasks": "すべてのオートメーション",
+  "noTasks": "オートメーションがありません",
   "runNowSuccess": "タスクの実行をトリガーしました",
   "detail": {
-    "backToAll": "すべてのスケジュールタスク",
+    "backToAll": "すべてのオートメーション",
     "runNow": "今すぐ実行",
     "description": "説明",
     "agent": "アシスタント",

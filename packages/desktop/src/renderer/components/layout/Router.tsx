@@ -144,7 +144,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/settings/agent/:id/repair' element={withRouteFallback(AgentRepairPage)} />
           {/* Legacy routes. The "Capabilities" page merged Skills Hub + MCP tools
               behind one sider entry; both halves now have their own homes
-              (`/settings/skills` and the top-level `/mcp`), so the merged page is
+              (`/settings/skills` and `/settings/mcp`), so the merged page is
               gone and its routes redirect to the surviving pages. */}
           <Route path='/settings/capabilities' element={<Navigate to='/settings/skills' replace />} />
           <Route
@@ -153,7 +153,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           />
           <Route path='/settings/capabilities/skills/detail/:skillName' element={<SkillDetailRedirect />} />
           <Route path='/settings/skills-hub' element={<Navigate to='/settings/skills' replace />} />
-          <Route path='/settings/tools' element={<Navigate to='/mcp' replace />} />
+          <Route path='/settings/tools' element={<Navigate to='/settings/mcp' replace />} />
           <Route path='/settings/appearance' element={withRouteFallback(AppearanceSettings)} />
           <Route path='/settings/display' element={<Navigate to='/settings/appearance' replace />} />
           <Route path='/settings/webui' element={withRouteFallback(WebuiSettings)} />
@@ -186,7 +186,9 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/enterprise/login' element={withRouteFallback(EnterpriseLoginPage)} />
           <Route path='/enterprise' element={<Navigate to='/settings/enterprise' replace />} />
           <Route path='/sessions' element={withRouteFallback(SessionCenter)} />
-          <Route path='/mcp' element={withRouteFallback(McpPage)} />
+          {/* MCP services moved from a top-level sidebar entry into Settings → AI core. */}
+          <Route path='/settings/mcp' element={withRouteFallback(McpPage)} />
+          <Route path='/mcp' element={<Navigate to='/settings/mcp' replace />} />
         </Route>
         <Route path='*' element={<Navigate to={status === 'authenticated' ? '/guid' : '/login'} replace />} />
       </Routes>

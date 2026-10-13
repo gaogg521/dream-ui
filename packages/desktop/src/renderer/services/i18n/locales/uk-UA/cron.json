@@ -1,5 +1,5 @@
 {
-  "scheduledTasks": "Заплановані завдання",
+  "scheduledTasks": "Автоматизації",
   "taskCount": "Завдань: {{count}}",
   "schedule": "Розклад",
   "nextRun": "Наступний запуск",
@@ -27,11 +27,11 @@
   "pauseSuccess": "Завдання призупинено",
   "resumeSuccess": "Завдання відновлено",
   "message.badge": "Заплановано",
-  "allScheduledTasks": "Усі заплановані завдання",
-  "noTasks": "Немає запланованих завдань",
+  "allScheduledTasks": "Усі автоматизації",
+  "noTasks": "Немає автоматизацій",
   "runNowSuccess": "Виконання завдання запущено",
   "detail": {
-    "backToAll": "Усі заплановані завдання",
+    "backToAll": "Усі автоматизації",
     "runNow": "Запустити зараз",
     "description": "Опис",
     "agent": "Асистент",

@@ -363,7 +363,15 @@
     "export": "Exportar",
     "importDone": "Se importaron {{count}} escenarios",
     "importInvalid": "Ese no es un archivo de escenarios exportado",
-    "importEmpty": "No hay escenarios para importar en ese archivo"
+    "importEmpty": "No hay escenarios para importar en ese archivo",
+    "greeting": {
+      "hello": "Hola, esto es «{{name}}».",
+      "skills": "Habilidades que traigo",
+      "tools": "Herramientas disponibles",
+      "more": "{{count}} más",
+      "asksFirst": "Solo dime qué quieres hacer. Primero preguntaré por el público, la situación actual y el alcance, redactaré un resumen de requisitos y solo construiré cuando lo confirmes.",
+      "direct": "Solo dime qué necesitas."
+    }
   },
   "fileVault": {
     "title": "Caja fuerte de archivos",
@@ -447,5 +455,9 @@
       "tenant": "Grupo",
       "enterprise": "Toda la empresa"
     }
+  },
+  "enterprise": {
+    "distributedBadge": "De la empresa",
+    "distributedHint": "Distribuido por el administrador de la empresa. Se actualiza con la sincronización y no se puede editar aquí."
   }
 }
