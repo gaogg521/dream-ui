@@ -297,7 +297,12 @@
     },
     "showAll": "Mostrar todos ({{count}})",
     "gridHint": "Haz clic en un escenario para iniciar una conversación con su prompt y habilidades; arrastra las tarjetas para reordenar",
-    "openFailed": "No se pudo abrir una conversación para este escenario"
+    "openFailed": "No se pudo abrir una conversación para este escenario",
+    "tabTitle": "Escenarios",
+    "tabHint": "Todos los escenarios que tu empresa te ha asignado. Un escenario desactivado desaparece de la página de inicio hasta que lo actives de nuevo; la concesión de la empresa no cambia.",
+    "enabledCount": "{{enabled}} de {{total}} activados",
+    "allOff": "Todos los escenarios están desactivados. Actívalos en Empleados digitales → Escenarios",
+    "tabNotEnterprise": "Conéctate al servidor de tu empresa para ver aquí los escenarios que te asigna"
   },
   "fileVault": {
     "title": "Caja fuerte de archivos",

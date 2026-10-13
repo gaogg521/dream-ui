@@ -17,38 +17,18 @@
  * dragged into the order they like (see `sceneOrder`).
  */
 
-import { ipcBridge } from '@/common';
-import {
-  getEnterpriseServerUrl,
-  getEnterpriseSession,
-  isEnterpriseRemoteActive,
-} from '@/common/adapter/enterpriseMode';
 import type { MyScene, MySceneResourceSummary } from '@/common/types/platform/enterpriseTypes';
-import { useOrgContext } from '@/renderer/pages/enterprise/hooks/useOrgContext';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@arco-design/web-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Application, Refresh } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
-import useSWR from 'swr';
-import officeAvatar from '@/renderer/assets/scenes/office.png';
-import itOpsAvatar from '@/renderer/assets/scenes/it-ops.png';
-import securityAvatar from '@/renderer/assets/scenes/cybersecurity.png';
-import mediaAvatar from '@/renderer/assets/scenes/media-ops.png';
-import marketingAvatar from '@/renderer/assets/scenes/marketing.png';
-
 import styles from './EnterpriseHome.module.css';
-import { applySceneOrder, loadSceneOrder, moveScene, saveSceneOrder } from './sceneOrder';
-
-const BUILTIN_AVATARS: Record<string, string> = {
-  办公: officeAvatar,
-  IT运维: itOpsAvatar,
-  网络安全: securityAvatar,
-  新媒体运营: mediaAvatar,
-  市场营销: marketingAvatar,
-};
+import { sceneAvatarSrc } from './sceneAvatar';
+import { moveScene } from './sceneOrder';
+import { useEnterpriseScenes } from './useEnterpriseScenes';
 
 /** Scenes shown before "show all". One row at the home page's usual width. */
 const COLLAPSED_SCENE_COUNT = 4;
@@ -90,7 +70,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, opening, disabled, onOpen 
         }
       }}
     >
-      <img src={scene.avatarRef || BUILTIN_AVATARS[scene.name] || officeAvatar} alt='' className={styles.avatar} />
+      <img src={sceneAvatarSrc(scene)} alt='' className={styles.avatar} />
       <div className={styles.cardBody}>
         <span className={styles.name}>{scene.name}</span>
         <div className={styles.resources}>
@@ -119,41 +99,16 @@ type EnterpriseSceneGridProps = {
 
 const EnterpriseSceneGrid: React.FC<EnterpriseSceneGridProps> = ({ onOpenScene }) => {
   const { t } = useTranslation();
-  const { context } = useOrgContext();
   const [expanded, setExpanded] = useState(false);
   const [openingId, setOpeningId] = useState<string | null>(null);
-  const active = Boolean(context?.isEnterprise && isEnterpriseRemoteActive());
-  const tenantId = context?.tenantId ?? '';
-  const server = getEnterpriseServerUrl();
-  const userId = getEnterpriseSession()?.userId ?? null;
-  const orderScope = useMemo(() => ({ server, tenantId, userId }), [server, tenantId, userId]);
-  const [order, setOrder] = useState<string[]>(() => loadSceneOrder(orderScope));
-  // Another member, project group or server on this machine has its own order.
-  useEffect(() => setOrder(loadSceneOrder(orderScope)), [orderScope]);
+  const { active, loaded, all, enabled: ordered, setOrder, mutate, isValidating, error } = useEnterpriseScenes();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } })
   );
-  const {
-    data: scenes,
-    mutate,
-    isValidating,
-    error,
-  } = useSWR<MyScene[]>(
-    active
-      ? ['enterprise-conversation-scenes', getEnterpriseServerUrl(), getEnterpriseSession()?.userId, tenantId]
-      : null,
-    async () => {
-      // A server (or bridge) that answers with anything but a list is treated as no scenes.
-      const list = await ipcBridge.onePlatform.myScenes.invoke();
-      return Array.isArray(list) ? list : [];
-    },
-    { revalidateOnFocus: true, refreshInterval: 30000, shouldRetryOnError: false }
-  );
-
-  const ordered = useMemo(() => applySceneOrder(Array.isArray(scenes) ? scenes : [], order), [scenes, order]);
 
   if (!active) return null;
-  if (!scenes)
+  const emptyHint = all.length > 0 ? t('common.scenes.allOff') : t('common.scenes.empty');
+  if (!loaded)
     return error ? (
       <div className={styles.empty} role='status'>
         <span>{t('common.error')}</span>
@@ -163,14 +118,14 @@ const EnterpriseSceneGrid: React.FC<EnterpriseSceneGridProps> = ({ onOpenScene }
       </div>
     ) : null;
 
-  if (scenes.length === 0)
+  if (ordered.length === 0)
     return (
       <div className={styles.compactEmpty} data-testid='enterprise-scene-grid'>
         <Application size={18} className='shrink-0 text-t-tertiary' />
         <div className={styles.compactCopy}>
           <span className={styles.compactTitle}>{t('common.scenes.title')}</span>
-          <span className={styles.compactHint} title={t('common.scenes.empty')}>
-            {t('common.scenes.empty')}
+          <span className={styles.compactHint} title={emptyHint}>
+            {emptyHint}
           </span>
         </div>
         <Button
@@ -202,13 +157,13 @@ const EnterpriseSceneGrid: React.FC<EnterpriseSceneGridProps> = ({ onOpenScene }
     if (!over) return;
     // Reorder within the full list, so a scene dragged to the front of the
     // visible four also leads once the rest are shown.
-    const next = moveScene(
-      ordered.map((scene) => scene.id),
-      String(dragged.id),
-      String(over.id)
+    setOrder(
+      moveScene(
+        all.map((scene) => scene.id),
+        String(dragged.id),
+        String(over.id)
+      )
     );
-    setOrder(next);
-    saveSceneOrder(orderScope, next);
   };
 
   return (
@@ -221,7 +176,7 @@ const EnterpriseSceneGrid: React.FC<EnterpriseSceneGridProps> = ({ onOpenScene }
           </span>
         </div>
         <div className={styles.headingActions}>
-          <span className={styles.count}>{scenes.length}</span>
+          <span className={styles.count}>{ordered.length}</span>
           <Button
             type='text'
             size='small'

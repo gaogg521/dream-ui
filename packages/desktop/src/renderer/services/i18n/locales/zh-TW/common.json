@@ -309,7 +309,12 @@
     },
     "showAll": "展開全部（{{count}}）",
     "gridHint": "點擊場景直接開始對話（已帶上提示詞與技能），拖動卡片可調整順序",
-    "openFailed": "無法開啟該場景的對話"
+    "openFailed": "無法開啟該場景的對話",
+    "tabTitle": "場景",
+    "tabHint": "企業分配給你的全部場景。關閉後不會出現在首頁，隨時可以重新開啟；公司的授權不受影響。",
+    "enabledCount": "已開啟 {{enabled}} / {{total}}",
+    "allOff": "你已關閉全部場景，可在「數位員工 → 場景」重新開啟",
+    "tabNotEnterprise": "連接企業伺服器後，這裡會顯示企業分配給你的場景"
   },
   "fileVault": {
     "title": "檔案保險箱",

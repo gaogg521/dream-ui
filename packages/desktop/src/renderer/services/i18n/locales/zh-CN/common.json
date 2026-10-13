@@ -650,7 +650,12 @@
     },
     "showAll": "展开全部（{{count}}）",
     "gridHint": "点击场景直接开始对话（已带上提示词与技能），拖动卡片可调整顺序",
-    "openFailed": "无法打开该场景的对话"
+    "openFailed": "无法打开该场景的对话",
+    "tabTitle": "场景",
+    "tabHint": "企业分配给你的全部场景。关闭后不会出现在首页，随时可以重新开启；公司的授权不受影响。",
+    "enabledCount": "已开启 {{enabled}} / {{total}}",
+    "allOff": "你已关闭全部场景，可在「数字员工 → 场景」重新开启",
+    "tabNotEnterprise": "连接企业服务器后，这里会显示企业分配给你的场景"
   },
   "fileVault": {
     "title": "文件保险箱",

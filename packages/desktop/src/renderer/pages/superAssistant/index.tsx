@@ -31,6 +31,7 @@ import {
 } from './templates/agentTemplates';
 import AgentsTab, { type AgentCardRef } from './components/AgentsTab';
 import RagSection from './registries/RagSection';
+import ScenesTab from './components/ScenesTab';
 import CreateAgentModal from './components/CreateAgentModal';
 import ManageAgentModal from './components/ManageAgentModal';
 import ScheduleAgentModal from './components/ScheduleAgentModal';
@@ -40,6 +41,7 @@ import { startEmployeeChat } from './utils/startEmployeeChat';
 
 const TabKey = {
   AGENTS: 'agents',
+  SCENES: 'scenes',
   KNOWLEDGE: 'knowledge',
 } as const;
 
@@ -48,6 +50,7 @@ type TabKey = (typeof TabKey)[keyof typeof TabKey];
 /** Links into the former tabs keep landing somewhere sensible. */
 function resolveInitialTab(param: string | null): TabKey {
   if (param === TabKey.KNOWLEDGE || param === 'registries') return TabKey.KNOWLEDGE;
+  if (param === TabKey.SCENES) return TabKey.SCENES;
   return TabKey.AGENTS;
 }
 
@@ -171,6 +174,11 @@ const SuperAssistantPage: React.FC = () => {
                 onDeleteAgent={handleDelete}
               />
             </Tabs.TabPane>
+            {context?.isEnterprise ? (
+              <Tabs.TabPane key={TabKey.SCENES} title={t('common.scenes.tabTitle')}>
+                <ScenesTab />
+              </Tabs.TabPane>
+            ) : null}
             <Tabs.TabPane key={TabKey.KNOWLEDGE} title={t('common.superAssistant.tabKnowledge')}>
               <RagSection readOnly={knowledgeReadOnly} />
             </Tabs.TabPane>

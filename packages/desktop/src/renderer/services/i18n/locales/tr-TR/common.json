@@ -297,7 +297,12 @@
     },
     "showAll": "Tümünü göster ({{count}})",
     "gridHint": "İstemi ve becerileriyle sohbet başlatmak için bir senaryoya tıklayın; sıralamak için kartları sürükleyin",
-    "openFailed": "Bu senaryo için sohbet açılamadı"
+    "openFailed": "Bu senaryo için sohbet açılamadı",
+    "tabTitle": "Senaryolar",
+    "tabHint": "Şirketinizin size verdiği tüm senaryolar. Kapattığınız senaryo yeniden açana kadar ana sayfadan kalkar; şirketin yetkilendirmesi etkilenmez.",
+    "enabledCount": "{{total}} senaryodan {{enabled}} açık",
+    "allOff": "Tüm senaryolar kapalı. Dijital çalışanlar → Senaryolar bölümünden yeniden açabilirsiniz",
+    "tabNotEnterprise": "Şirket sunucusuna bağlandığınızda size verilen senaryolar burada görünür"
   },
   "fileVault": {
     "title": "Dosya Kasası",

@@ -60,6 +60,9 @@ type GuidNavigationState = {
   [key: string]: unknown;
 };
 
+/** Example prompts shown under the composer. */
+const MAX_EXAMPLE_PROMPTS = 4;
+
 const GuidPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -862,12 +865,16 @@ const GuidPage: React.FC = () => {
           <EnterpriseSceneGrid onOpenScene={handleOpenScene} />
 
           {selectedAssistantPrompts.length > 0 ? (
-            <div className='mt-18px w-full animate-fade-in ps-20px'>
-              <div className={`${styles.assistantPromptHint} mb-10px text-start`}>
+            <div className='mt-40px w-full animate-fade-in ps-20px'>
+              <div className={`${styles.assistantPromptHint} mb-6px text-start`}>
                 {t('guid.promptExamplesHint', { defaultValue: 'Try these example prompts:' })}
               </div>
-              <div className='flex flex-col gap-9px'>
-                {selectedAssistantPrompts.map((prompt, index) => (
+              {/* Two to a row (one when the column is narrow): four prompts take two rows, not four. */}
+              <div
+                className='grid gap-x-16px gap-y-4px'
+                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))' }}
+              >
+                {selectedAssistantPrompts.slice(0, MAX_EXAMPLE_PROMPTS).map((prompt, index) => (
                   <Button
                     key={`${index}-${prompt}`}
                     type='text'

@@ -297,7 +297,12 @@
     },
     "showAll": "Tout afficher ({{count}})",
     "gridHint": "Cliquez sur un scénario pour démarrer une conversation avec son prompt et ses compétences ; faites glisser les cartes pour les réordonner",
-    "openFailed": "Impossible d'ouvrir une conversation pour ce scénario"
+    "openFailed": "Impossible d'ouvrir une conversation pour ce scénario",
+    "tabTitle": "Scénarios",
+    "tabHint": "Tous les scénarios que votre entreprise vous a attribués. Un scénario désactivé quitte la page d'accueil jusqu'à ce que vous le réactiviez ; l'autorisation de l'entreprise n'est pas modifiée.",
+    "enabledCount": "{{enabled}} sur {{total}} activés",
+    "allOff": "Tous les scénarios sont désactivés. Réactivez-les dans Employés numériques → Scénarios",
+    "tabNotEnterprise": "Connectez-vous au serveur de votre entreprise pour voir ici les scénarios qui vous sont attribués"
   },
   "fileVault": {
     "title": "Coffre de fichiers",

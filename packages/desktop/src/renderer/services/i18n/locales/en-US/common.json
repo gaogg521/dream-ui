@@ -650,7 +650,12 @@
     },
     "showAll": "Show all ({{count}})",
     "gridHint": "Click a scene to start a conversation with its prompt and skills; drag cards to reorder",
-    "openFailed": "Could not open a conversation for this scene"
+    "openFailed": "Could not open a conversation for this scene",
+    "tabTitle": "Scenes",
+    "tabHint": "Every scene your company has given you. A scene you switch off leaves the home page until you switch it back on; the company's grant is not affected.",
+    "enabledCount": "{{enabled}} of {{total}} on",
+    "allOff": "All scenes are switched off. Turn them back on under Digital employees → Scenes",
+    "tabNotEnterprise": "Connect to your company server to see the scenes it gives you here"
   },
   "fileVault": {
     "title": "File Vault",

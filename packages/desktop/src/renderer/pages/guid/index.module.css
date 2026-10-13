@@ -503,7 +503,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px;
+  /* Room under the content for the pinned author tip, so they never overlap. */
+  padding: 10px 10px 64px;
   position: relative;
 }
 

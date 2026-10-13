@@ -297,7 +297,12 @@
     },
     "showAll": "Mostrar todos ({{count}})",
     "gridHint": "Clique em um cenário para iniciar uma conversa com seu prompt e habilidades; arraste os cartões para reordenar",
-    "openFailed": "Não foi possível abrir uma conversa para este cenário"
+    "openFailed": "Não foi possível abrir uma conversa para este cenário",
+    "tabTitle": "Cenários",
+    "tabHint": "Todos os cenários que a empresa atribuiu a você. Um cenário desativado sai da página inicial até você ativá-lo de novo; a concessão da empresa não é afetada.",
+    "enabledCount": "{{enabled}} de {{total}} ativados",
+    "allOff": "Todos os cenários estão desativados. Reative em Funcionários digitais → Cenários",
+    "tabNotEnterprise": "Conecte-se ao servidor da empresa para ver aqui os cenários atribuídos a você"
   },
   "fileVault": {
     "title": "Cofre de arquivos",

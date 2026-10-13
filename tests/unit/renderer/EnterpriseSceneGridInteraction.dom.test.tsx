@@ -41,6 +41,7 @@ const scene = (id: string, name: string): MyScene => ({
 
 const SCENES = [scene('s1', '办公'), scene('s2', 'IT运维'), scene('s3', '网络安全')];
 const ORDER_KEY = 'one-enterprise:scene-order:https://enterprise.test|tenant-1|member-1';
+const OFF_KEY = 'one-enterprise:scene-off:https://enterprise.test|tenant-1|member-1';
 
 const renderGrid = (onOpenScene?: (s: MyScene) => void | Promise<void>) =>
   render(
@@ -125,6 +126,36 @@ describe('EnterpriseSceneGrid order', () => {
 
   it("never applies another member's saved order", async () => {
     localStorage.setItem(ORDER_KEY, JSON.stringify(['s3', 's1']));
+    hooks.userId = 'member-2';
+    renderGrid(vi.fn());
+    await screen.findByText('办公');
+    expect(names()).toEqual(['办公', 'IT运维', '网络安全']);
+  });
+});
+
+describe('EnterpriseSceneGrid scenes the member switched off', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    hooks.userId = 'member-1';
+    hooks.myScenes.mockReset().mockResolvedValue(SCENES);
+  });
+
+  it('leaves them out of the home page and keeps the rest in order', async () => {
+    localStorage.setItem(OFF_KEY, JSON.stringify(['s2']));
+    renderGrid(vi.fn());
+    await screen.findByText('办公');
+    expect(names()).toEqual(['办公', '网络安全']);
+  });
+
+  it('says so, rather than claiming there are no scenes, when every scene is off', async () => {
+    localStorage.setItem(OFF_KEY, JSON.stringify(['s1', 's2', 's3']));
+    renderGrid(vi.fn());
+    expect(await screen.findByText('common.scenes.allOff')).toBeInTheDocument();
+    expect(names()).toEqual([]);
+  });
+
+  it('never applies another member switches', async () => {
+    localStorage.setItem(OFF_KEY, JSON.stringify(['s2']));
     hooks.userId = 'member-2';
     renderGrid(vi.fn());
     await screen.findByText('办公');

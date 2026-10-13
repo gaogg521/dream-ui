@@ -297,7 +297,12 @@
     },
     "showAll": "Alle anzeigen ({{count}})",
     "gridHint": "Auf ein Szenario klicken, um ein Gespräch mit Prompt und Skills zu starten; Karten ziehen, um sie neu anzuordnen",
-    "openFailed": "Für dieses Szenario konnte kein Gespräch geöffnet werden"
+    "openFailed": "Für dieses Szenario konnte kein Gespräch geöffnet werden",
+    "tabTitle": "Szenarien",
+    "tabHint": "Alle Szenarien, die Ihr Unternehmen Ihnen zugewiesen hat. Ein ausgeschaltetes Szenario verschwindet von der Startseite, bis Sie es wieder einschalten; die Freigabe des Unternehmens bleibt unberührt.",
+    "enabledCount": "{{enabled}} von {{total}} an",
+    "allOff": "Alle Szenarien sind ausgeschaltet. Unter Digitale Mitarbeiter → Szenarien wieder einschalten",
+    "tabNotEnterprise": "Mit dem Firmenserver verbinden, um hier die zugewiesenen Szenarien zu sehen"
   },
   "fileVault": {
     "title": "Datei-Tresor",
