@@ -525,7 +525,7 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
           </div>
 
           {error ? (
-            <div className='px-12px py-8px bg-red-50 dark:bg-red-900/20 rd-8px text-13px text-red-500 b-1px b-solid b-red-200 dark:b-red-800'>
+            <div className='px-12px py-8px bg-[rgba(var(--danger-6),0.1)] rd-8px text-13px text-red-500 b-1px b-solid b-[rgba(var(--danger-6),0.4)]'>
               {error}
             </div>
           ) : null}

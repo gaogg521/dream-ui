@@ -660,7 +660,7 @@ const LarkConfigForm: React.FC<LarkConfigFormProps> = ({ pluginStatus, modelSele
       {/* Connection Status - show when bot is enabled */}
       {pluginStatus?.enabled && authorizedUsers.length === 0 && (
         <div
-          className={`rd-12px p-16px border ${pluginStatus?.connected ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : pluginStatus?.error ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'}`}
+          className={`rd-12px p-16px border ${pluginStatus?.connected ? 'bg-[rgba(var(--success-6),0.1)] border-[rgba(var(--success-6),0.4)]' : pluginStatus?.error ? 'bg-[rgba(var(--danger-6),0.1)] border-[rgba(var(--danger-6),0.4)]' : 'bg-[rgba(var(--warning-6),0.1)] border-[rgba(var(--warning-6),0.4)]'}`}
         >
           <SectionHeader
             title={t('settings.lark.connectionStatus', 'Connection Status')}

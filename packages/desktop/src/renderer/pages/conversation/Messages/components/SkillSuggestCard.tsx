@@ -69,7 +69,7 @@ const SkillSuggestCard: React.FC<SkillSuggestCardProps> = ({
     >
       <div className='flex items-center gap-6px mb-8px'>
         <Lightning theme='filled' size={16} fill={iconColors.warning} />
-        <span className='font-500 text-14px'>{t('cron.skill.turnIntoSkill')}</span>
+        <span className='font-500 text-14px text-[rgba(var(--success-6),1)]'>{t('cron.skill.turnIntoSkill')}</span>
       </div>
       <div className='text-t-primary text-13px mb-4px'>{suggestion.name}</div>
       <div className='text-t-secondary text-12px mb-8px'>{suggestion.description}</div>
