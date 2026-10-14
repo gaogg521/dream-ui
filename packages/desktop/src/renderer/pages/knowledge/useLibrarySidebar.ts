@@ -22,7 +22,7 @@ export function useLibrarySidebar(names: string[]) {
     360,
     Math.max(
       250,
-      ...names.map((name) => [...name].reduce((total, ch) => total + (/[^\x00-\x7F]/.test(ch) ? 14 : 7), 64))
+      ...names.map((name) => [...name].reduce((total, ch) => total + ((ch.codePointAt(0) ?? 0) > 127 ? 14 : 7), 64))
     )
   );
   const compact = container < 760;
