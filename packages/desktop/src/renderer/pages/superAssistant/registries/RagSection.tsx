@@ -5,7 +5,7 @@
  * endpoint (D1 decision).
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
   Card,
@@ -118,6 +118,13 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   const [editTarget, setEditTarget] = useState<RagDocumentEntry | null>(null);
   const [reading, setReading] = useState(true);
   const [editContent, setEditContent] = useState('');
+  const originalContent = useRef('');
+  const [discardConfirm, setDiscardConfirm] = useState(false);
+  const closeDocument = () => {
+    if (editTarget && editContent !== originalContent.current) {
+      setDiscardConfirm(true);
+    } else setEditTarget(null);
+  };
   const [editLoading, setEditLoading] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -358,9 +365,12 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     setReading(Boolean(renderLibrary));
     setEditTarget(record);
     setEditContent('');
+    originalContent.current = '';
     setEditLoading(true);
     try {
-      setEditContent((await ipcBridge.oneDevops.getRagContent.invoke({ id: record.id })) ?? '');
+      const content = (await ipcBridge.oneDevops.getRagContent.invoke({ id: record.id })) ?? '';
+      originalContent.current = content;
+      setEditContent(content);
     } catch (error) {
       Message.error(
         t('common.superAssistant.registries.loadFailed', { defaultValue: '加载失败' }) +
@@ -835,18 +845,16 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
             : t('common.superAssistant.rag.editTitle', { title: editTarget?.title ?? '' })
         }
         visible={editTarget !== null}
+        unmountOnExit
         className={renderLibrary ? libraryStyles.documentModal : undefined}
         wrapClassName={renderLibrary ? libraryStyles.documentWrap : undefined}
         alignCenter={renderLibrary ? false : undefined}
-        onCancel={() => setEditTarget(null)}
+        onCancel={closeDocument}
+        okText={t('common.save')}
         onOk={() => void handleSaveEdit()}
         confirmLoading={savingEdit}
         okButtonProps={{ disabled: reading || editLoading || !editTarget || !canChange(editTarget) }}
-        footer={
-          renderLibrary && reading ? (
-            <Button onClick={() => setEditTarget(null)}>{t('common.close')}</Button>
-          ) : undefined
-        }
+        footer={renderLibrary && reading ? <Button onClick={closeDocument}>{t('common.close')}</Button> : undefined}
       >
         {renderLibrary ? (
           <div className='mx-auto max-w-960px px-24px py-12px'>
@@ -921,6 +929,20 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
             <Input placeholder='https://…' />
           </Form.Item>
         </Form>
+      </Modal>
+      <Modal
+        visible={discardConfirm}
+        unmountOnExit
+        title={t('common.knowledgeLibrary.unsavedTitle')}
+        okText={t('common.knowledgeLibrary.discard')}
+        cancelText={t('common.knowledgeLibrary.continueEditing')}
+        onCancel={() => setDiscardConfirm(false)}
+        onOk={() => {
+          setDiscardConfirm(false);
+          setEditTarget(null);
+        }}
+      >
+        {t('common.knowledgeLibrary.unsavedDescription')}
       </Modal>
     </>
   );

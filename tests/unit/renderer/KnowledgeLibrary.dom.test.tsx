@@ -3,7 +3,8 @@ import React from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import KnowledgeLibrary from '@/renderer/pages/knowledge/KnowledgeLibrary';
-import type { RagDocumentEntry } from '@/common/types/devops/devopsTypes';
+import type { RagDocumentEntry, RagLibraryEntry } from '@/common/types/devops/devopsTypes';
+import type { RagLibraryProps } from '@/renderer/pages/superAssistant/registries/RagSection';
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key.split('.').at(-1), i18n: { language: 'en-US' } }),
 }));
@@ -22,7 +23,7 @@ const row = (id: string, scope: string, status = 'ready'): RagDocumentEntry => (
   createdBy: 'owner',
   createdAt: 1,
 });
-const setup = (isEnterprise = true) => {
+const setup = (isEnterprise = true, overrides: Partial<RagLibraryProps> = {}) => {
   const onOpen = vi.fn();
   render(
     <KnowledgeLibrary
@@ -41,12 +42,35 @@ const setup = (isEnterprise = true) => {
       settings={null}
       search={<div>semantic search</div>}
       columns={[]}
+      {...overrides}
     />
   );
   return { onOpen };
 };
 describe('Knowledge library browsing', () => {
   beforeEach(() => localStorage.clear());
+  it('shows child folders instead of an empty document table in a parent directory', () => {
+    const parent: RagLibraryEntry = {
+      id: 'parent',
+      name: 'Team space',
+      description: '',
+      createdBy: 'owner',
+      createdAt: 1,
+      updatedAt: 1,
+      scope: 'org',
+      kind: 'space',
+    };
+    const onLibraryChange = vi.fn();
+    setup(true, {
+      rows: [],
+      libraryId: parent.id,
+      onLibraryChange,
+      libraries: [parent, { ...parent, id: 'child', name: 'Runbooks', parentId: parent.id, kind: 'folder' }],
+    });
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Runbooks' }).at(-1)!);
+    expect(onLibraryChange).toHaveBeenCalledWith('child');
+  });
   it('filters the document list to personal documents', () => {
     setup();
     fireEvent.click(screen.getByRole('tab', { name: 'personal' }));

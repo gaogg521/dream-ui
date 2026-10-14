@@ -511,6 +511,13 @@
     "cellLabel": "Row {{row}}, column {{column}}",
     "addRow": "Add row",
     "addColumn": "Add column",
-    "csvSourceHint": "This table is large or needs CSV format correction. Showing source text."
+    "csvSourceHint": "This table is large or needs CSV format correction. Showing source text.",
+    "resizeSidebar": "Drag to resize the directory; double-click to fit. Arrow keys adjust width, Home resets.",
+    "expandSidebar": "Show directory",
+    "collapseSidebar": "Hide directory",
+    "unsavedTitle": "Unsaved changes",
+    "unsavedDescription": "Closing will discard your changes. Continue editing or discard them?",
+    "discard": "Discard changes",
+    "continueEditing": "Continue editing"
   }
 }

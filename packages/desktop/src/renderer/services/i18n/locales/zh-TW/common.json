@@ -526,6 +526,13 @@
     "cellLabel": "Row {{row}}, column {{column}}",
     "addRow": "Add row",
     "addColumn": "Add column",
-    "csvSourceHint": "This table is large or needs CSV format correction. Showing source text."
+    "csvSourceHint": "This table is large or needs CSV format correction. Showing source text.",
+    "resizeSidebar": "拖拽调整目录宽度，双击自动适配；方向键调整，Home 恢复",
+    "expandSidebar": "展开目录",
+    "collapseSidebar": "收起目录",
+    "unsavedTitle": "有尚未保存的修改",
+    "unsavedDescription": "关闭后，本次修改将丢失。要继续编辑还是放弃修改？",
+    "discard": "放弃修改",
+    "continueEditing": "继续编辑"
   }
 }

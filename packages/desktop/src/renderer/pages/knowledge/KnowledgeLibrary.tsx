@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import type { RagLibraryProps } from '../superAssistant/registries/RagSection';
 import type { RagDocumentEntry } from '@/common/types/devops/devopsTypes';
 import styles from './KnowledgeLibrary.module.css';
+import { useLibrarySidebar } from './useLibrarySidebar';
 
 type View = 'recent' | 'search' | 'personal' | 'team';
 
@@ -54,6 +55,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const label = (key: string) => t(`common.knowledgeLibrary.${key}`);
+  const sidebar = useLibrarySidebar(libraries.map((item) => item.name));
   const [view, setView] = useState<View>('recent');
   const [tab, setTab] = useState('all');
   const [query, setQuery] = useState('');
@@ -70,6 +72,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   const libraryPersonal = (id?: string) => libraries.find((item) => item.id === id)?.scope === 'personal';
   const personal = (row: RagDocumentEntry) => !isEnterprise || row.scope === 'personal';
   const open = (row: RagDocumentEntry) => {
+    sidebar.navigate();
     setVisits((previous) => ({ ...previous, [row.id]: Date.now() }));
     onOpen(row);
   };
@@ -168,10 +171,11 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                 className={libraryId === library.id ? styles.active : ''}
                 icon={library.kind === 'folder' ? <FolderClose /> : <BookOpen />}
                 onClick={() => {
+                  sidebar.navigate();
                   onLibraryChange(library.id);
                   setView(personalScope ? 'personal' : 'team');
                 }}
-                title={library.description}
+                title={library.name}
               >
                 {library.name}
               </Button>
@@ -205,6 +209,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
         <Button
           type='text'
           className={styles.document}
+          title={row.title}
           icon={<FileText className={styles.fileIcon} />}
           onClick={() => open(row)}
         >
@@ -231,6 +236,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
     {
       title: t('common.superAssistant.registries.colActions'),
       width: 65,
+      fixed: 'right' as const,
       render: (_: unknown, row: RagDocumentEntry) => (
         <Dropdown
           trigger='click'
@@ -243,8 +249,11 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
     },
   ];
   return (
-    <div className={styles.library}>
+    <div className={styles.library} ref={sidebar.ref} {...sidebar.layout}>
       <aside className={styles.sidebar}>
+        <Button className={styles.drawerClose} type='text' onClick={sidebar.toggle}>
+          {label('collapseSidebar')}
+        </Button>
         <h2>{label('title')}</h2>
         <nav>
           {nav('search', <Search />)}
@@ -323,7 +332,21 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           <span>{t('common.knowledgeLibrary.documentCount', { count: rows.length })}</span>
         </div>
       </aside>
+      <div
+        className={styles.resizeHandle}
+        {...sidebar.separator}
+        aria-label={label('resizeSidebar')}
+        title={label('resizeSidebar')}
+      />
       <main className={styles.main}>
+        <Button
+          type='text'
+          className={styles.sidebarToggle}
+          onClick={sidebar.toggle}
+          aria-expanded={!sidebar.collapsed}
+        >
+          <BookOpen /> {label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}
+        </Button>
         <header className={styles.header}>
           <div>
             <BookOpen className={styles.headerIcon} />
@@ -361,28 +384,51 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           className={styles.titleSearch}
         />
         {view === 'search' && <section className={styles.searchPanel}>{search}</section>}
-        <Table
-          rowKey='id'
-          loading={loading}
-          columns={tableColumns}
-          data={data}
-          border={false}
-          pagination={{ pageSize: 8, hideOnSinglePage: true }}
-          scroll={{ x: 700 }}
-          noDataElement={
-            <div className={styles.empty}>
-              <FolderOpen size={36} />
-              <p>{label('empty')}</p>
-              <Button
-                onClick={() => onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)}
-                loading={importing}
-                disabled={readOnlyLibrary}
-              >
-                {label('import')}
+        {libraryId && (
+          <nav className={styles.breadcrumbs} aria-label={label('location')}>
+            {[...pathIds].reverse().map((id) => (
+              <Button key={id} type='text' onClick={() => onLibraryChange(id)}>
+                {libraries.find((item) => item.id === id)?.name}
               </Button>
-            </div>
-          }
-        />
+            ))}
+          </nav>
+        )}
+        <div className={styles.folderCards}>
+          {libraries
+            .filter((item) => item.parentId === libraryId && Boolean(libraryId))
+            .map((item) => (
+              <Button key={item.id} type='text' title={item.name} onClick={() => onLibraryChange(item.id)}>
+                <FolderClose /> {item.name}
+              </Button>
+            ))}
+        </div>
+        {(data.length > 0 ||
+          loading ||
+          query ||
+          !libraries.some((item) => Boolean(libraryId) && item.parentId === libraryId)) && (
+          <Table
+            rowKey='id'
+            loading={loading}
+            columns={tableColumns}
+            data={data}
+            border={false}
+            pagination={{ pageSize: 8, hideOnSinglePage: true }}
+            scroll={{ x: 700 }}
+            noDataElement={
+              <div className={styles.empty}>
+                <FolderOpen size={36} />
+                <p>{label('empty')}</p>
+                <Button
+                  onClick={() => onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)}
+                  loading={importing}
+                  disabled={readOnlyLibrary}
+                >
+                  {label('import')}
+                </Button>
+              </div>
+            }
+          />
+        )}
         {guides && (
           <section className={styles.guides}>
             <div className={styles.guideHeading}>

@@ -374,3 +374,151 @@
   border-inline-start: 1px solid var(--color-border-2);
   margin-inline-start: 12px;
 }
+
+/* The directory shares available space with the reader, and can be resized. */
+.library {
+  position: relative;
+  min-width: 0;
+  container-type: inline-size;
+}
+.library .sidebar {
+  box-sizing: border-box;
+  width: var(--library-sidebar-width);
+  flex: 0 0 var(--library-sidebar-width);
+  min-width: 0;
+  overflow-y: auto;
+}
+.library .tree {
+  max-height: none;
+  overflow: visible;
+  flex-shrink: 0;
+}
+.library .sidebar :global(.arco-btn) {
+  min-width: 0;
+}
+.resizeHandle {
+  width: 6px;
+  flex: 0 0 6px;
+  cursor: col-resize;
+  touch-action: none;
+  position: relative;
+  z-index: 3;
+  outline: none;
+}
+.resizeHandle::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--color-border-2);
+}
+.resizeHandle:hover::after,
+.resizeHandle:focus-visible::after {
+  background: rgb(var(--primary-6));
+}
+.sidebarToggle {
+  margin-bottom: 12px;
+  color: var(--color-text-3) !important;
+}
+.library[data-collapsed='true'] .sidebar,
+.library[data-collapsed='true'] .resizeHandle {
+  display: none;
+}
+.library[data-compact='true'] {
+  flex-direction: row;
+}
+.library[data-compact='true'] .main {
+  flex: 1;
+  min-width: 0;
+}
+.library[data-compact='true'] .sidebar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 5;
+  box-shadow: 8px 0 24px rgb(0 0 0 / 12%);
+  border-right: 1px solid var(--color-border-2);
+}
+.library[data-compact='true'] .resizeHandle {
+  display: none;
+}
+.library[data-compact='true'] .sectionTitle {
+  display: flex;
+}
+.library[data-compact='true'] .tree {
+  display: flex;
+}
+.library[data-compact='true'] .sidebar nav {
+  flex-direction: column;
+}
+@container (max-width: 850px) {
+  .header {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .featureCards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.drawerClose {
+  display: none;
+}
+.library[data-compact='true'] .drawerClose {
+  display: block;
+  margin-left: auto;
+}
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 4px;
+}
+.breadcrumbs > button:not(:last-child)::after {
+  content: '/';
+  margin-left: 10px;
+  color: var(--color-text-3);
+}
+.folderCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.folderCards:empty {
+  display: none;
+}
+.folderCards:not(:empty) {
+  margin-bottom: 18px;
+}
+.library .folderCards > :global(.arco-btn) {
+  min-height: 48px;
+  height: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--color-border-2);
+  border-radius: 10px;
+  text-align: left;
+  color: var(--color-text-1);
+  padding: 12px;
+}
+
+.header > div:last-child {
+  flex-wrap: wrap;
+}
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--color-bg-popup);
+  border: 1px solid var(--color-border-2);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 10%);
+}
