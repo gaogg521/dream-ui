@@ -18,7 +18,7 @@
     "connectionError": "連接錯誤",
     "notConfigured": "{{agent}} 尚未配置",
     "authRequired": "使用此 Agent 需要先完成認證或配置 API Key。",
-    "findingAlternatives": "正在查找可用的替代方案...",
+    "findingAlternatives": "正在查詢可用的替代方案...",
     "checkingAgent": "正在檢查 {{agent}}...",
     "alternativesFound": "找到 {{count}} 個可用的替代方案",
     "autoSwitching": "正在自動切換到最佳可用 Agent...",

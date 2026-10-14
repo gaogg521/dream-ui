@@ -360,6 +360,10 @@
       "PROVIDER_NOT_FOUND": {
         "title": "該對話使用的模型已被刪除",
         "body": "這條歷史對話原本使用的模型設定已被刪除或替換。請在傳送前重新選擇一個目前可用的模型。"
+      },
+      "USER_AGENT_TOOL_CALL_LOOP": {
+        "title": "Agent 連續多次工具呼叫失敗",
+        "body": "Agent 反覆以無效引數呼叫工具，已自動停止以避免死迴圈。請重試本條訊息；若持續出現，請更換模型或反饋問題。"
       }
     }
   },
@@ -808,7 +812,14 @@
   "sessionCenter": {
     "title": "會話中心",
     "searchPlaceholder": "搜尋會話...",
-    "emptySearch": "未找到符合的會話"
+    "emptySearch": "未找到符合的會話",
+    "colTitle": "標題",
+    "colMode": "模式",
+    "colModel": "模型",
+    "colUpdatedAt": "更新時間",
+    "modeChat": "對話",
+    "modeImage": "圖片生成",
+    "modeVideo": "影片生成"
   },
   "mediaImageUnavailable": "圖片無法顯示，檔案可能已被移動或刪除",
   "mediaVideoUnavailable": "影片無法播放，檔案可能已被移動或刪除",
@@ -957,5 +968,8 @@
     "imported": "已匯入為我的會話",
     "importFailed": "匯入失敗",
     "importAsCopy": "匯入為我的會話副本（可繼續對話）"
+  },
+  "officePreview": {
+    "fileWatchUnavailable": "檔案實時監聽不可用——系統的檔案監聽控制代碼（inotify）可能已耗盡，新 Office 檔案的自動預覽已停用。請提高 fs.inotify.max_user_instances，或關閉佔用大量檔案監聽的程式。"
   }
 }

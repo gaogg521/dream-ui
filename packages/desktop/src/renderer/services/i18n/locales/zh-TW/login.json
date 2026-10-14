@@ -22,5 +22,20 @@
     "networkError": "連線失敗，請稍後再試",
     "serverError": "伺服器發生錯誤，請稍後再試",
     "unknown": "登入失敗，請稍後再試"
+  },
+  "methods": {
+    "feishu": "飛書帳號",
+    "dingtalk": "釘釘",
+    "wecom": "企業微信",
+    "oidc": "企業帳號 (OIDC)",
+    "ldap": "LDAP 域控",
+    "local": "本地帳戶"
+  },
+  "ssoDivider": "或使用企業帳號登入",
+  "ldap": {
+    "button": "LDAP 域帳號",
+    "usernamePlaceholder": "域帳號（如 zhangsan 或 user@corp.com）",
+    "passwordPlaceholder": "域密碼",
+    "submit": "LDAP 登入"
   }
 }

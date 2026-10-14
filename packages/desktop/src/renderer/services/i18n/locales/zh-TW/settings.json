@@ -522,7 +522,7 @@
       },
       "self-media-distribution": {
         "title": "自媒體一鍵分發系統",
-        "desc": "可以實現多自媒體平臺的多賬號內容一鍵分發系統，支援抖音、影片號、快手等主流平臺"
+        "desc": "可以實現多自媒體平臺的多帳號內容一鍵分發系統，支援抖音、影片號、快手等主流平臺"
       },
       "seo-content-optimizer": {
         "title": "SEO內容最佳化",
@@ -646,7 +646,7 @@
       },
       "wechatpay-basic-payment": {
         "title": "微信支付基礎支付",
-        "desc": "微信支付基礎支付解決方案，涵蓋支付、退款賬單、分賬、商戶進件、開戶意願確認，提供選型/程式碼示例/業務速查/質量評估/排障五大能力"
+        "desc": "微信支付基礎支付解決方案，涵蓋支付、退款帳單、分帳、商戶進件、開戶意願確認，提供選型/程式碼示例/業務速查/質量評估/排障五大能力"
       },
       "wecom-unified": {
         "title": "企業微信套件",
@@ -706,7 +706,9 @@
     },
     "useSkill": "使用此技能",
     "useSkillToast": "正在為「{{name}}」新開一個會話",
-    "editSkill": "編輯此技能"
+    "editSkill": "編輯此技能",
+    "team": "團隊",
+    "teamAuto": "團隊 · 自動"
   },
   "authMethod": "驗證",
   "geminiApiKey": "Gemini API 金鑰",
@@ -963,7 +965,7 @@
   "trialModelErrorBudgetExhausted": "今日體驗額度已用完，請明天再來",
   "trialModelErrorUnavailable": "體驗功能暫不可用",
   "trialModelErrorGeneric": "領取失敗，請稍後重試",
-  "modelPlatform": "模型平台",
+  "modelPlatform": "模型平臺",
   "modelProvider": "模型供應商",
   "platformName": "平台名稱",
   "modelName": "模型名稱",
@@ -1093,7 +1095,7 @@
   "webui.portDesc": "WebUI 服務監聽連接埠",
   "webui.allowRemote": "允許區域網路存取",
   "webui.allowRemoteDesc": "同一 WiFi/區域網路內的裝置可透過本機 IP 直接存取",
-  "webui.viewGuide": "查看方式",
+  "webui.viewGuide": "檢視方式",
   "webui.accessInfo": "存取網址",
   "webui.localUrl": "本機網址",
   "webui.networkUrl": "網路網址",
@@ -1283,7 +1285,7 @@
   "speechToTextTestUploadHint": "麥克風不可用——請選擇音訊檔案進行測試",
   "speechToTextStreamingBadge": "即時",
   "speechToTextWholeBadge": "整段",
-  "mcp": "MCP 集成",
+  "mcp": "MCP 整合",
   "imageGenerationModel": "圖像模型",
   "mediaModelAutoPlaceholder": "未選擇 · 預設使用 {{model}}",
   "imageGenSupportedTooltipTitle": "目前已支援的圖像模型：",
@@ -1469,7 +1471,7 @@
   "bugReportModuleSession": "搜尋與歷史",
   "bugReportModuleWorkspace": "專案、檔案與預覽",
   "bugReportModuleSkillsDescription": "適用於 Skills 市場、內建或外部 Skills、插件安裝啟用、載入失敗或執行異常等問題。",
-  "bugReportModuleWebuiDescription": "適用於 WebUI 啟動失敗、遠端訪問、二維碼登入、帳號密碼修改或瀏覽器端異常等問題。",
+  "bugReportModuleWebuiDescription": "適用於 WebUI 啟動失敗、遠端存取、二維碼登入、帳號密碼修改或瀏覽器端異常等問題。",
   "bugReportModuleMcpDescription": "適用於 MCP 伺服器設定、OAuth 登入、工具同步、工具缺失或呼叫失敗等問題。",
   "bugReportModuleChannelDescription": "適用於 Telegram、Slack、飛書等渠道插件的設定、配對、授權或訊息收發異常。",
   "bugReportModuleChatDescription": "適用於訊息發送、Agent 回覆、上下文處理、命令佇列或對話過程中的異常。",
@@ -2113,7 +2115,30 @@
     "factIdentity": "身分",
     "factCompany": "企業",
     "factDepartment": "部門",
-    "openSettings": "專案組設定"
+    "openSettings": "專案組設定",
+    "guestName": "訪客",
+    "guestTitle": "訪客模式",
+    "guestDesc": "當前為單機個人版，可直接使用會話與工作區。加入專案組後可使用協作能力。",
+    "guestJoinEnterprise": "登入 / 加入專案組",
+    "joinProjectGroup": "加入專案組",
+    "noProjectGroupLine": "尚未加入專案組",
+    "editionSsoNoGroup": "已登入 · 未加入專案組",
+    "editionCompanyAdmin": "企業管理員 · 未加入專案組",
+    "guestDescCompanyAdmin": "你是本機「{{company}}」的企業管理員，可在設定 → 企業管理後台中管理成員與設定。加入專案組後可使用協作能力。",
+    "guestAdminLogin": "WebUI 管理員登入",
+    "memberDesc": "已加入專案組，可使用專案組下發的技能與工具。",
+    "openConsole": "進入專案組管理後台",
+    "editionPersonal": "個人版 · 未登入",
+    "editionProjectGroup": "專案組",
+    "departmentLine": "部門：{{department}}",
+    "editionClient": "已連線企業",
+    "editionClientDisconnected": "個人版 · 未連線企業",
+    "ssoAuthed": "已透過企業 SSO 登入",
+    "ssoCompanyLine": "企業 SSO：{{company}}",
+    "projectGroupLine": "專案組：{{name}}",
+    "myGroupsTitle": "我的專案組",
+    "switchDone": "已切換專案組",
+    "editionClientNeedLogin": "已連線企業 · 未登入"
   },
   "enterpriseChannel": "企業下發",
   "enterpriseChannelTip": "這條模型渠道由公司統一設定，憑證保存在公司伺服器上，本機無法修改或刪除。",
@@ -2174,7 +2199,7 @@
     "menuLabel": "查詢用量"
   },
   "mediaModelUndeclared": "尚未設定 —— 在「模型」頁把某個模型標為圖片或影片類型",
-  "enterpriseKeyMaskedTip": "企業下發的 Key 已脫敏顯示（僅保留首尾便於核對）。未修改則儲存時保留原 Key；輸入新 Key 將整體替換。",
+  "enterpriseKeyMaskedTip": "此模型通道由企業統一管理，目前僅供檢視。修改位址、金鑰或模型請至企業管理後台。",
   "enterpriseMachineBlockedNotice": "這台裝置已被組織管理員封鎖，本機的團隊資源已清空。",
   "webui.deployRoleServerUnavailable": "「本機作為伺服器」需要部署企業版伺服端，個人版不提供專案群組託管能力。",
   "marketplaceCategory": {
@@ -2195,12 +2220,12 @@
   "marketplacePersona": {
     "AccessibilityAuditor": {
       "name": "無障礙審計師",
-      "desc": "按WCAG標準審計介面可訪問性，確保每個使用者都能使用產品",
+      "desc": "按WCAG標準審計介面可存取性，確保每個使用者都能使用產品",
       "nickname": "無礙礙"
     },
     "AccountsPayableAgent": {
-      "name": "應付賬款代理",
-      "desc": "自動化處理應付賬款流程，確保付款準確及時",
+      "name": "應付帳款代理",
+      "desc": "自動化處理應付帳款流程，確保付款準確及時",
       "nickname": "付清清"
     },
     "AdCreativeStrategist": {
@@ -2531,7 +2556,7 @@
     },
     "EnterpriseAccountStrategist": {
       "name": "大客戶策略師",
-      "desc": "精通大客戶經營和賬戶擴充套件策略，將客戶發展為長期戰略伙伴",
+      "desc": "精通大客戶經營和帳戶擴充套件策略，將客戶發展為長期戰略伙伴",
       "nickname": "拓客客"
     },
     "EnterpriseLegalTeam": {
@@ -2574,8 +2599,8 @@
     },
     "FinanceAccountingExpert": {
       "name": "財務會計專家",
-      "desc": "財務會計工具集：月末結賬、日記賬分錄、賬戶核對、財務報表生成、差異分析和 SOX 審計支援",
-      "nickname": "記賬賬"
+      "desc": "財務會計工具集：月末結帳、日記帳分錄、帳戶核對、財務報表生成、差異分析和 SOX 審計支援",
+      "nickname": "記帳帳"
     },
     "FinanceDataExpert": {
       "name": "金融資料檢索專家",
@@ -2590,11 +2615,11 @@
     "FinancialTracker": {
       "name": "財務追蹤師",
       "desc": "精準追蹤專案和業務的財務資料，確保每筆收支清晰透明",
-      "nickname": "賬清清"
+      "nickname": "帳清清"
     },
     "FinopsExpert": {
       "name": "騰訊雲FinOps專家",
-      "desc": "雲成本治理專家。擅長賬單分析、閒置資源識別、計費模式最佳化與成本分攤，驅動降本增效決策。",
+      "desc": "雲成本治理專家。擅長帳單分析、閒置資源識別、計費模式最佳化與成本分攤，驅動降本增效決策。",
       "nickname": "CloudQ"
     },
     "FortuneConsultant": {
@@ -2633,8 +2658,8 @@
       "nickname": "分支通"
     },
     "GlReconciler": {
-      "name": "總賬對賬師",
-      "desc": "基金後臺日終與月末對賬專員,在總賬與子賬之間找出差異、追溯到源交易、歸類 timing/reclass/FX 等原因並出具可籤核清單。",
+      "name": "總帳對帳師",
+      "desc": "基金後台日終與月末對帳專員,在總帳與子帳之間找出差異、追溯到源交易、歸類 timing/reclass/FX 等原因並出具可籤核清單。",
       "nickname": "錢對齊"
     },
     "GodotGameScriptEngineer": {
@@ -2854,7 +2879,7 @@
     },
     "MermaidDiagramExpert": {
       "name": "圖表設計與渲染專家",
-      "desc": "將自然語言轉化為專業級Mermaid圖表，支援6種圖表型別、15種主題配色，秒級渲染出版級SVG與ASCII視覺化",
+      "desc": "將自然語言轉化為專業級Mermaid圖表，支援6種圖表類型、15種主題配色，秒級渲染出版級SVG與ASCII視覺化",
       "nickname": "繪靈"
     },
     "Migraq": {
@@ -2887,8 +2912,8 @@
       "nickname": "速構構"
     },
     "MonthEndCloser": {
-      "name": "月末結賬會計",
-      "desc": "財務負責人的月末關賬搭檔,按清單跑應計、滾動表、差異說明,把關賬包整理好交給 controller 籤核。",
+      "name": "月末結帳會計",
+      "desc": "財務負責人的月末關帳搭檔,按清單跑應計、滾動表、差異說明,把關帳包整理好交給 controller 籤核。",
       "nickname": "關月結"
     },
     "MultiCloudExpert": {
@@ -2922,7 +2947,7 @@
     "PaidMediaAuditor": {
       "name": "付費媒體審計師",
       "desc": "深度審計廣告投放資料和預算分配，找出被浪費的廣告費",
-      "nickname": "查賬賬"
+      "nickname": "查帳帳"
     },
     "PerformanceTestingExpert": {
       "name": "效能測試專家",
@@ -3153,7 +3178,7 @@
     },
     "StatementAuditor": {
       "name": "LP 報表稽核師",
-      "desc": "LP 資本賬戶報表最後把關人,按基金 NAV 反算每條專案、對齊分配與管理費,發差前形成籤核建議與異常清單。",
+      "desc": "LP 資本帳戶報表最後把關人,按基金 NAV 反算每條專案、對齊分配與管理費,發差前形成籤核建議與異常清單。",
       "nickname": "審細明"
     },
     "StockPartnerTeam": {
@@ -3187,7 +3212,7 @@
     },
     "TaxComplianceTeam": {
       "name": "財稅合規專家團",
-      "desc": "覆蓋票據處理、記賬核算、報表編制、稅務申報、合規審計五大環節的企業財稅合規全鏈路管理專家團"
+      "desc": "覆蓋票據處理、記帳核算、報表編制、稅務申報、合規審計五大環節的企業財稅合規全鏈路管理專家團"
     },
     "TechnicalArtist": {
       "name": "技術美術",
@@ -3464,5 +3489,35 @@
     "passphraseTooShort": "至少 {{min}} 個字元。",
     "passphraseMismatch": "兩次輸入不一致。",
     "passphraseNoRecovery": "這個密碼無法找回。遺失後備份將永遠無法開啟。"
-  }
+  },
+  "assistantListLoading": "正在載入助手…",
+  "closeToTrayDesc": "點選視窗關閉按鈕時隱藏到系統托盤，應用繼續在後台執行。雙擊托盤圖示或右鍵「顯示 One Work」可重新開啟；要完全退出請用托盤選單「退出」。",
+  "apiKeyUnrecoverable": "金鑰失效",
+  "apiKeyUnrecoverableTip": "該供應商的 API Key 無法解密（加密金鑰已變更），需要重新錄入。點選此處重新填寫。",
+  "webui.deployModeTitle": "專案組部署模式",
+  "webui.deployModeDesc": "同一區域網內應只有一臺作為伺服器，其餘均為客戶端連線到它。預設本機為客戶端；建立專案組後本機自動成為伺服器，託管專案組資料。",
+  "webui.deployRoleServer": "本機作為伺服器",
+  "webui.deployRoleClient": "本機作為客戶端",
+  "webui.deployServerUrlLabel": "企業伺服器地址",
+  "webui.deployServerUrlPlaceholder": "例如 https://ai.example.com 或 192.168.1.10:25809",
+  "webui.deployServerUrlHint": "填寫管理員提供的企業伺服器地址：用域名部署的填 https:// 開頭的域名，區域網伺服器填 IP 加埠",
+  "webui.deployServerUrlInvalid": "請輸入有效的伺服器地址，例如 https://ai.example.com 或 192.168.1.10:25809",
+  "webui.deployServerHint": "本機作為企業伺服器，區域網內其他客戶端可連線到本機地址。",
+  "webui.deployClientHint": "客戶端模式下，企業 SSO 與後台管理均在遠端伺服器瀏覽器完成，本機不顯示專案組管理後台入口。",
+  "webui.deploySave": "儲存",
+  "webui.deploySaveAddress": "儲存地址",
+  "webui.deploySaved": "已儲存部署模式",
+  "webui.deploySaveFailed": "儲存失敗",
+  "webui.deployServerUrlHistoryLabel": "歷史地址",
+  "webui.deployServerUrlHistoryClear": "清空",
+  "webui.deployServerUrlHistoryClearTitle": "清空地址歷史記錄？",
+  "webui.deployServerUrlHistoryClearDesc": "僅清除歷史記錄列表，當前已儲存的伺服器地址不受影響。",
+  "webui.promoteConfirmTitle": "切換為伺服器？",
+  "webui.promoteConfirmDesc": "本機將作為企業伺服器託管專案組資料，並斷開與遠端伺服器的連線。已填寫的伺服器地址會保留在歷史記錄中，切回客戶端時可直接選用。",
+  "webui.demoteConfirmTitle": "切換為客戶端？",
+  "webui.demoteConfirmDesc": "本機當前託管專案組資料。切換為客戶端後，請在「專案組」頁退出專案組，並改用遠端伺服器地址登入。",
+  "webui.switchToServerBlockedTitle": "暫時無法切換為伺服器",
+  "webui.switchToServerBlockedDesc": "您當前的模式是客戶端，且已加入專案組。如需切換為伺服器，請先在「專案組」頁退出當前加入的專案組。",
+  "webui.deployServerAddressLabel": "其他客戶端請填寫地址：{{url}}",
+  "webui.deployServerAddressUnavailable": "尚未開啟可供區域網存取的 WebUI，其他客戶端暫時無法連線。請先在設定 → WebUI 中啟用並允許遠端存取。"
 }
