@@ -30,6 +30,7 @@ vi.mock('@/common', () => ({
     oneDevops: {
       listRagLibraries: { invoke: vi.fn(async () => [{ id: 'shared-lib', name: 'Shared library' }]) },
       registerRagDocument: { invoke: mocks.register },
+      setRagContent: { invoke: vi.fn(async () => undefined) },
       listRagDocuments: { invoke: vi.fn(async () => mocks.docs) },
       getRagConfig: { invoke: vi.fn(async () => ({ baseUrl: '', model: '' })) },
     },
@@ -121,12 +122,16 @@ describe('RagSection for company members', () => {
     );
     fireEvent.click(screen.getByText('Select library'));
     fireEvent.click(screen.getByText('Create document'));
-    fireEvent.change(document.querySelector('#title_input')!, { target: { value: 'Shared runbook' } });
-    fireEvent.click(document.querySelector('.arco-modal-footer .arco-btn-primary')!);
-    await waitFor(() =>
-      expect(mocks.register).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Shared runbook', libraryId: 'shared-lib' })
-      )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('common.superAssistant.registries.colTitle'), {
+      target: { value: 'Shared runbook' },
+    });
+    await waitFor(
+      () =>
+        expect(mocks.register).toHaveBeenCalledWith(
+          expect.objectContaining({ title: 'Shared runbook', libraryId: 'shared-lib' })
+        ),
+      { timeout: 3000 }
     );
   });
 });
