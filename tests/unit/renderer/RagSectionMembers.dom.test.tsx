@@ -116,6 +116,7 @@ describe('RagSection for company members', () => {
           <>
             <button onClick={() => props.onLibraryChange('shared-lib')}>Select library</button>
             <button onClick={props.onCreate}>Create document</button>
+            {props.documentView}
           </>
         )}
       />
