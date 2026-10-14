@@ -92,6 +92,33 @@ describe('httpBridge', () => {
     vi.unstubAllGlobals();
   });
 
+  describe('cookie-authenticated enterprise writes', () => {
+    it('attaches the CSRF cookie to same-origin WebUI mutations', async () => {
+      vi.stubGlobal('window', {});
+      vi.stubGlobal('document', { cookie: 'dream-csrf-token=test-token' });
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ data: null }), { headers: { 'content-type': 'application/json' } })
+        );
+      vi.stubGlobal('fetch', fetchMock);
+      await httpPost('/api/one/devops/rag/documents').invoke();
+      expect(fetchMock.mock.calls[0][1].headers['x-csrf-token']).toBe('test-token');
+    });
+    it('does not forward the cookie to the Electron backend origin', async () => {
+      vi.stubGlobal('window', { __backendPort: 23456 });
+      vi.stubGlobal('document', { cookie: 'dream-csrf-token=private-token' });
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ data: null }), { headers: { 'content-type': 'application/json' } })
+        );
+      vi.stubGlobal('fetch', fetchMock);
+      await httpPost('/api/one/devops/rag/documents').invoke();
+      expect(fetchMock.mock.calls[0][1].headers['x-csrf-token']).toBeUndefined();
+    });
+  });
+
   describe('getBaseUrl', () => {
     it('returns fallback URL in node environment with no globalThis.__backendPort', () => {
       const result = getBaseUrl();

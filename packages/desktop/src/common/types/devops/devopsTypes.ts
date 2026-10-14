@@ -105,11 +105,13 @@ export type UpsertMcpRegistryInput = ResourceAclInput & {
 };
 
 /** POST body registering a RAG document (metadata only; no update endpoint). */
-export type RegisterRagDocumentInput = ResourceAclInput & {
+export type RegisterRagDocumentInput = Omit<ResourceAclInput, 'scope'> & {
+  scope?: ResourceScope | 'personal';
   title: string;
   filePath?: string;
   fileSize?: number;
   mimeType?: string;
+  libraryId?: string;
 };
 
 export type RagConfig = {
@@ -265,6 +267,19 @@ export type RagDocumentEntry = {
   visibility: string;
   createdBy: string;
   createdAt: number;
+  libraryId?: string;
+};
+
+export type RagLibraryEntry = {
+  id: string;
+  name: string;
+  description: string;
+  createdBy: string;
+  createdAt: number;
+  updatedAt: number;
+  parentId?: string | null;
+  kind?: 'space' | 'folder';
+  scope?: 'org' | 'personal';
 };
 
 // -- test plans / test cases (A4) ----------------------------------------

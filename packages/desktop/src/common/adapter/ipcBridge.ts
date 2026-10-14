@@ -3102,6 +3102,7 @@ import type {
   PipelineRun,
   RagConfig,
   RagDocumentEntry,
+  RagLibraryEntry,
   RagSearchHit,
   RegisterRagDocumentInput,
   RequirementComment,
@@ -3292,7 +3293,26 @@ export const oneDevops = {
   ),
   reportDlpEvents: httpPost<number, { events: DlpFindingInput[] }>('/api/one/devops/dlp/events', (p) => p),
   listRagDocuments: httpGet<RagDocumentEntry[], void>('/api/one/devops/rag/documents'),
+  listRagLibraries: httpGet<RagLibraryEntry[], void>('/api/one/devops/rag/libraries'),
+  upsertRagLibrary: httpPost<
+    RagLibraryEntry,
+    {
+      id?: string;
+      name: string;
+      description?: string;
+      parentId?: string;
+      kind?: 'space' | 'folder';
+      scope?: 'org' | 'personal';
+    }
+  >('/api/one/devops/rag/libraries'),
+  deleteRagLibrary: httpDelete<void, { id: string }>(
+    (p) => `/api/one/devops/rag/libraries/${encodeURIComponent(p.id)}`
+  ),
   registerRagDocument: httpPost<RagDocumentEntry, RegisterRagDocumentInput>('/api/one/devops/rag/documents'),
+  updateRagDocumentLocation: httpPatch<void, { id: string; title: string; libraryId?: string }>(
+    (p) => `/api/one/devops/rag/documents/${encodeURIComponent(p.id)}`,
+    (p) => ({ title: p.title, libraryId: p.libraryId })
+  ),
   deleteRagDocument: httpDelete<void, { id: string }>((p) => `/api/one/devops/rag/documents/${p.id}`),
   getRagContent: httpGet<string, { id: string }>((p) => `/api/one/devops/rag/documents/${p.id}/content`),
   setRagContent: httpPut<void, { id: string; content: string }>(

@@ -49,6 +49,6 @@ describe('KnowledgePage', () => {
     hooks.context = { isEnterprise: true, role: 'member' };
     render(<KnowledgePage />);
     expect(screen.getByTestId('rag-section')).toBeInTheDocument();
-    expect(hooks.ragProps).toHaveBeenLastCalledWith({});
+    expect(hooks.ragProps).toHaveBeenLastCalledWith({ renderLibrary: expect.any(Function) });
   });
 });

@@ -56,6 +56,18 @@ export function isWebUiBrowserMode(): boolean {
   return typeof window !== 'undefined' && typeof document !== 'undefined' && !(window as Window).__backendPort;
 }
 
+/** Cookie-authenticated browser writes must satisfy the enterprise double-submit check. */
+function browserCsrfHeaders(method: string, remote: boolean): Record<string, string> {
+  if (remote || !isWebUiBrowserMode() || !['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) return {};
+  const token = document.cookie?.match(/(?:^|;\s*)dream-csrf-token=([^;]*)/)?.[1];
+  if (!token) return {};
+  try {
+    return { 'x-csrf-token': decodeURIComponent(token) };
+  } catch {
+    return {};
+  }
+}
+
 /**
  * Enterprise GOVERNANCE surfaces that live on the server even for a desktop
  * client: org context/membership, admin (users/invites/audit/SSO), the
@@ -360,6 +372,8 @@ export async function httpRequest<T>(
     }
   }
 
+  Object.assign(headers, browserCsrfHeaders(method, remote));
+
   if (options?.headers) {
     Object.assign(headers, options.headers);
   }
@@ -541,7 +555,7 @@ export async function httpUploadMultipart<T>(
 ): Promise<T> {
   const remote = routesToRemote(path, options);
   const url = `${resolveRequestBaseUrl(path, options)}${path}`;
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = browserCsrfHeaders('POST', remote);
   if (remote) {
     const session = getEnterpriseSession();
     if (session) {

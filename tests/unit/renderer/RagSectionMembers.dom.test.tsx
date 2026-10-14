@@ -1,12 +1,18 @@
 /** @vitest-environment jsdom */
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   context: null as unknown,
   docs: [] as unknown[],
+  register: vi.fn(async () => ({ id: 'new-doc' })),
 }));
+
+vi.mock('@arco-design/web-react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@arco-design/web-react')>();
+  return { ...actual, Message: { ...actual.Message, success: vi.fn(), error: vi.fn(), warning: vi.fn() } };
+});
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -22,6 +28,8 @@ vi.mock('@renderer/pages/enterprise/hooks/useOrgContext', () => ({
 vi.mock('@/common', () => ({
   ipcBridge: {
     oneDevops: {
+      listRagLibraries: { invoke: vi.fn(async () => [{ id: 'shared-lib', name: 'Shared library' }]) },
+      registerRagDocument: { invoke: mocks.register },
       listRagDocuments: { invoke: vi.fn(async () => mocks.docs) },
       getRagConfig: { invoke: vi.fn(async () => ({ baseUrl: '', model: '' })) },
     },
@@ -50,6 +58,17 @@ const doc = (id: string, title: string, scope: string) => ({
 
 describe('RagSection for company members', () => {
   beforeEach(() => {
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: vi.fn(() => ({
+        matches: false,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    });
+    mocks.register.mockClear();
     mocks.docs = [doc('d1', 'Company handbook', 'org'), doc('d2', 'My notes', 'personal')];
   });
 
@@ -87,5 +106,27 @@ describe('RagSection for company members', () => {
 
     expect(screen.queryByTestId('company-badge')).not.toBeInTheDocument();
     expect(screen.getAllByText('common.edit')).toHaveLength(2);
+  });
+  it('registers desktop documents in the selected enterprise library', async () => {
+    mocks.context = { isEnterprise: true, role: 'org_admin' };
+    render(
+      <RagSection
+        renderLibrary={(props) => (
+          <>
+            <button onClick={() => props.onLibraryChange('shared-lib')}>Select library</button>
+            <button onClick={props.onCreate}>Create document</button>
+          </>
+        )}
+      />
+    );
+    fireEvent.click(screen.getByText('Select library'));
+    fireEvent.click(screen.getByText('Create document'));
+    fireEvent.change(document.querySelector('#title_input')!, { target: { value: 'Shared runbook' } });
+    fireEvent.click(document.querySelector('.arco-modal-footer .arco-btn-primary')!);
+    await waitFor(() =>
+      expect(mocks.register).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Shared runbook', libraryId: 'shared-lib' })
+      )
+    );
   });
 });
