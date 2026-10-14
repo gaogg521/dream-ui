@@ -36,6 +36,8 @@ const readVisits = (): Record<string, number> => {
 
 const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   isEnterprise = true,
+  documentView,
+  activeDocument,
   libraries,
   libraryId,
   onLibraryChange,
@@ -145,6 +147,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
       .map((row) => (
         <Button
           key={row.id}
+          aria-current={activeDocument?.id === row.id ? 'page' : undefined}
           type='text'
           icon={<FileText className={styles.fileIcon} />}
           onClick={() => open(row)}
@@ -154,7 +157,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
         </Button>
       ));
   const pathIds = new Set<string>();
-  let cursor = libraryId;
+  let cursor = activeDocument?.libraryId ?? libraryId;
   while (cursor && !pathIds.has(cursor)) {
     pathIds.add(cursor);
     cursor = libraries.find((item) => item.id === cursor)?.parentId ?? undefined;
@@ -189,6 +192,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                     .map((row) => (
                       <Button
                         key={row.id}
+                        aria-current={activeDocument?.id === row.id ? 'page' : undefined}
                         type='text'
                         icon={<FileText className={styles.fileIcon} />}
                         onClick={() => open(row)}
@@ -290,6 +294,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
             .map((row) => (
               <Button
                 key={row.id}
+                aria-current={activeDocument?.id === row.id ? 'page' : undefined}
                 type='text'
                 icon={<FileText className={styles.fileIcon} />}
                 onClick={() => open(row)}
@@ -338,165 +343,184 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
         aria-label={label('resizeSidebar')}
         title={label('resizeSidebar')}
       />
-      <main className={styles.main}>
-        <Button
-          type='text'
-          className={styles.sidebarToggle}
-          onClick={sidebar.toggle}
-          aria-expanded={!sidebar.collapsed}
-        >
-          <BookOpen /> {label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}
-        </Button>
-        <header className={styles.header}>
-          <div>
-            <BookOpen className={styles.headerIcon} />
-            <h1>{libraries.find((library) => library.id === libraryId)?.name ?? label(view)}</h1>
-          </div>
-          <Dropdown droplist={menu} trigger='click'>
-            <Button icon={<Add />} loading={importing}>
-              {label('new')}
+      <main className={`${styles.main} ${documentView ? styles.documentMain : ''}`}>
+        {documentView ? (
+          <>
+            <Button
+              type='text'
+              className={styles.documentSidebarToggle}
+              onClick={sidebar.toggle}
+              aria-label={label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}
+              aria-expanded={!sidebar.collapsed}
+            >
+              <BookOpen />
             </Button>
-          </Dropdown>
-        </header>
-        <div className={styles.toolbar}>
-          {view === 'recent' ? (
-            <Tabs activeTab={tab} onChange={setTab} type='rounded'>
-              <Tabs.TabPane key='all' title={label('recentVisits')} />
-              <Tabs.TabPane key='personal' title={label('personal')} />
-              <Tabs.TabPane key='team' title={label('team')} />
-            </Tabs>
-          ) : (
-            <span className={styles.subtitle}>{label('browseHint')}</span>
-          )}
-          <Select
-            value={kind}
-            onChange={setKind}
-            className={styles.filter}
-            options={['all', 'ready', 'pending', 'error'].map((value) => ({ value, label: label(value) }))}
-          />
-        </div>
-        <Input
-          allowClear
-          prefix={<Search />}
-          value={query}
-          onChange={setQuery}
-          placeholder={label('filterPlaceholder')}
-          className={styles.titleSearch}
-        />
-        {view === 'search' && <section className={styles.searchPanel}>{search}</section>}
-        {libraryId && (
-          <nav className={styles.breadcrumbs} aria-label={label('location')}>
-            {[...pathIds].reverse().map((id) => (
-              <Button key={id} type='text' onClick={() => onLibraryChange(id)}>
-                {libraries.find((item) => item.id === id)?.name}
-              </Button>
-            ))}
-          </nav>
-        )}
-        <div className={styles.folderCards}>
-          {libraries
-            .filter((item) => item.parentId === libraryId && Boolean(libraryId))
-            .map((item) => (
-              <Button key={item.id} type='text' title={item.name} onClick={() => onLibraryChange(item.id)}>
-                <FolderClose /> {item.name}
-              </Button>
-            ))}
-        </div>
-        {(data.length > 0 ||
-          loading ||
-          query ||
-          !libraries.some((item) => Boolean(libraryId) && item.parentId === libraryId)) && (
-          <Table
-            rowKey='id'
-            loading={loading}
-            columns={tableColumns}
-            data={data}
-            border={false}
-            pagination={{ pageSize: 8, hideOnSinglePage: true }}
-            scroll={{ x: 700 }}
-            noDataElement={
-              <div className={styles.empty}>
-                <FolderOpen size={36} />
-                <p>{label('empty')}</p>
-                <Button
-                  onClick={() => onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)}
-                  loading={importing}
-                  disabled={readOnlyLibrary}
-                >
-                  {label('import')}
-                </Button>
+            {documentView}
+          </>
+        ) : (
+          <>
+            <Button
+              type='text'
+              className={styles.sidebarToggle}
+              onClick={sidebar.toggle}
+              aria-expanded={!sidebar.collapsed}
+            >
+              <BookOpen /> {label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}
+            </Button>
+            <header className={styles.header}>
+              <div>
+                <BookOpen className={styles.headerIcon} />
+                <h1>{libraries.find((library) => library.id === libraryId)?.name ?? label(view)}</h1>
               </div>
-            }
-          />
-        )}
-        {guides && (
-          <section className={styles.guides}>
-            <div className={styles.guideHeading}>
-              <span>
-                <BookOpen /> {label('learn')}
-              </span>
-              <Button type='text' onClick={() => setGuides(false)}>
-                {label('dismiss')}
-              </Button>
-            </div>
-            <div className={styles.featureCards}>
-              <Button
-                type='text'
-                onClick={() => onCreate('markdown', view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)}
-                disabled={readOnlyLibrary}
-              >
-                <div>
-                  <h3>{label('startTitle')}</h3>
-                  <p>{label('startDescription')}</p>
-                </div>
-                <FileText size={44} />
-              </Button>
-              <Button type='text' onClick={() => setView('search')}>
-                <div>
-                  <h3>{label('searchTitle')}</h3>
-                  <p>{label('searchDescription')}</p>
-                </div>
-                <Search size={44} />
-              </Button>
-            </div>
-            <div className={styles.guideHeading}>
-              <span>{label('possibilities')}</span>
-            </div>
-            <div className={styles.smallCards}>
-              {[
-                {
-                  title: 'import',
-                  description: 'importDescription',
-                  icon: <Upload />,
-                  action: () => onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise),
-                },
-                {
-                  title: 'addLink',
-                  description: 'linkDescription',
-                  icon: <LinkOne />,
-                  action: () => onLink(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise),
-                },
-                { title: 'team', description: 'teamDescription', icon: <People />, action: () => setView('team') },
-              ].map((card) => (
-                <Button
-                  key={card.title}
-                  type='text'
-                  onClick={card.action}
-                  disabled={readOnlyLibrary && card.title !== 'team'}
-                >
-                  <span className={styles.cardIcon}>{card.icon}</span>
-                  <h3>{label(card.title)}</h3>
-                  <p>{label(card.description)}</p>
-                  <ArrowRight />
+              <Dropdown droplist={menu} trigger='click'>
+                <Button icon={<Add />} loading={importing}>
+                  {label('new')}
                 </Button>
-              ))}
+              </Dropdown>
+            </header>
+            <div className={styles.toolbar}>
+              {view === 'recent' ? (
+                <Tabs activeTab={tab} onChange={setTab} type='rounded'>
+                  <Tabs.TabPane key='all' title={label('recentVisits')} />
+                  <Tabs.TabPane key='personal' title={label('personal')} />
+                  <Tabs.TabPane key='team' title={label('team')} />
+                </Tabs>
+              ) : (
+                <span className={styles.subtitle}>{label('browseHint')}</span>
+              )}
+              <Select
+                value={kind}
+                onChange={setKind}
+                className={styles.filter}
+                options={['all', 'ready', 'pending', 'error'].map((value) => ({ value, label: label(value) }))}
+              />
             </div>
-          </section>
+            <Input
+              allowClear
+              prefix={<Search />}
+              value={query}
+              onChange={setQuery}
+              placeholder={label('filterPlaceholder')}
+              className={styles.titleSearch}
+            />
+            {view === 'search' && <section className={styles.searchPanel}>{search}</section>}
+            {libraryId && (
+              <nav className={styles.breadcrumbs} aria-label={label('location')}>
+                {[...pathIds].reverse().map((id) => (
+                  <Button key={id} type='text' onClick={() => onLibraryChange(id)}>
+                    {libraries.find((item) => item.id === id)?.name}
+                  </Button>
+                ))}
+              </nav>
+            )}
+            <div className={styles.folderCards}>
+              {libraries
+                .filter((item) => item.parentId === libraryId && Boolean(libraryId))
+                .map((item) => (
+                  <Button key={item.id} type='text' title={item.name} onClick={() => onLibraryChange(item.id)}>
+                    <FolderClose /> {item.name}
+                  </Button>
+                ))}
+            </div>
+            {(data.length > 0 ||
+              loading ||
+              query ||
+              !libraries.some((item) => Boolean(libraryId) && item.parentId === libraryId)) && (
+              <Table
+                rowKey='id'
+                loading={loading}
+                columns={tableColumns}
+                data={data}
+                border={false}
+                pagination={{ pageSize: 8, hideOnSinglePage: true }}
+                scroll={{ x: 700 }}
+                noDataElement={
+                  <div className={styles.empty}>
+                    <FolderOpen size={36} />
+                    <p>{label('empty')}</p>
+                    <Button
+                      onClick={() => onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)}
+                      loading={importing}
+                      disabled={readOnlyLibrary}
+                    >
+                      {label('import')}
+                    </Button>
+                  </div>
+                }
+              />
+            )}
+            {guides && (
+              <section className={styles.guides}>
+                <div className={styles.guideHeading}>
+                  <span>
+                    <BookOpen /> {label('learn')}
+                  </span>
+                  <Button type='text' onClick={() => setGuides(false)}>
+                    {label('dismiss')}
+                  </Button>
+                </div>
+                <div className={styles.featureCards}>
+                  <Button
+                    type='text'
+                    onClick={() =>
+                      onCreate('markdown', view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)
+                    }
+                    disabled={readOnlyLibrary}
+                  >
+                    <div>
+                      <h3>{label('startTitle')}</h3>
+                      <p>{label('startDescription')}</p>
+                    </div>
+                    <FileText size={44} />
+                  </Button>
+                  <Button type='text' onClick={() => setView('search')}>
+                    <div>
+                      <h3>{label('searchTitle')}</h3>
+                      <p>{label('searchDescription')}</p>
+                    </div>
+                    <Search size={44} />
+                  </Button>
+                </div>
+                <div className={styles.guideHeading}>
+                  <span>{label('possibilities')}</span>
+                </div>
+                <div className={styles.smallCards}>
+                  {[
+                    {
+                      title: 'import',
+                      description: 'importDescription',
+                      icon: <Upload />,
+                      action: () => onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise),
+                    },
+                    {
+                      title: 'addLink',
+                      description: 'linkDescription',
+                      icon: <LinkOne />,
+                      action: () => onLink(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise),
+                    },
+                    { title: 'team', description: 'teamDescription', icon: <People />, action: () => setView('team') },
+                  ].map((card) => (
+                    <Button
+                      key={card.title}
+                      type='text'
+                      onClick={card.action}
+                      disabled={readOnlyLibrary && card.title !== 'team'}
+                    >
+                      <span className={styles.cardIcon}>{card.icon}</span>
+                      <h3>{label(card.title)}</h3>
+                      <p>{label(card.description)}</p>
+                      <ArrowRight />
+                    </Button>
+                  ))}
+                </div>
+              </section>
+            )}
+            <footer className={styles.footer}>
+              {settings}
+              <span>{t('common.superAssistant.rag.agentToolHint')}</span>
+            </footer>
+          </>
         )}
-        <footer className={styles.footer}>
-          {settings}
-          <span>{t('common.superAssistant.rag.agentToolHint')}</span>
-        </footer>
       </main>
     </div>
   );

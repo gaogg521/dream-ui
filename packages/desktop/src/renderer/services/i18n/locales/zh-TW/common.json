@@ -533,6 +533,8 @@
     "unsavedTitle": "有尚未保存的修改",
     "unsavedDescription": "关闭后，本次修改将丢失。要继续编辑还是放弃修改？",
     "discard": "放弃修改",
-    "continueEditing": "继续编辑"
+    "continueEditing": "继续编辑",
+    "backToLibrary": "返回资料库",
+    "documentContent": "文档正文"
   }
 }

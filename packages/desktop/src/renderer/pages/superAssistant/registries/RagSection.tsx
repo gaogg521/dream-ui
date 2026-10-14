@@ -37,6 +37,7 @@ import type {
   ResourceScope,
   ResourceVisibility,
 } from '@/common/types/devops/devopsTypes';
+import LibraryDocument from '../../knowledge/LibraryDocument';
 import { aclInitialValues, aclPayload, ResourceAclCell, ResourceAclFields, useAllTenants } from './ResourceAcl';
 
 /** Strip the extension for a sensible default document title. */
@@ -56,6 +57,8 @@ const STATUS_COLORS: Record<string, string> = {
 const PERSONAL_SCOPE = 'personal';
 
 export type RagLibraryProps = {
+  documentView?: React.ReactNode;
+  activeDocument?: RagDocumentEntry | null;
   isEnterprise?: boolean;
   rows: RagDocumentEntry[];
   libraries: RagLibraryEntry[];
@@ -120,11 +123,21 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   const [editContent, setEditContent] = useState('');
   const originalContent = useRef('');
   const [discardConfirm, setDiscardConfirm] = useState(false);
-  const closeDocument = () => {
+  const pendingNavigation = useRef<() => void>(() => {});
+  const editRequest = useRef(0);
+  const navigateDocument = (action: () => void) => {
+    if (savingEdit) return;
+    const run = () => {
+      editRequest.current += 1;
+      setEditLoading(false);
+      action();
+    };
     if (editTarget && editContent !== originalContent.current) {
+      pendingNavigation.current = run;
       setDiscardConfirm(true);
-    } else setEditTarget(null);
+    } else run();
   };
+  const closeDocument = () => navigateDocument(() => setEditTarget(null));
   const [editLoading, setEditLoading] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -362,6 +375,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   };
 
   const openEdit = async (record: RagDocumentEntry) => {
+    const request = ++editRequest.current;
     setReading(Boolean(renderLibrary));
     setEditTarget(record);
     setEditContent('');
@@ -369,9 +383,11 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     setEditLoading(true);
     try {
       const content = (await ipcBridge.oneDevops.getRagContent.invoke({ id: record.id })) ?? '';
+      if (request !== editRequest.current) return;
       originalContent.current = content;
       setEditContent(content);
     } catch (error) {
+      if (request !== editRequest.current) return;
       Message.error(
         t('common.superAssistant.registries.loadFailed', { defaultValue: '加载失败' }) +
           ': ' +
@@ -379,7 +395,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
       );
       setEditTarget(null);
     } finally {
-      setEditLoading(false);
+      if (request === editRequest.current) setEditLoading(false);
     }
   };
 
@@ -395,7 +411,9 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
         await ipcBridge.oneDevops.processRagDocument.invoke({ id: editTarget.id });
       }
       Message.success(t('common.superAssistant.registries.saved', { defaultValue: '已保存' }));
-      setEditTarget(null);
+      originalContent.current = editContent;
+      if (renderLibrary) setReading(true);
+      else setEditTarget(null);
       await refresh();
     } catch (error) {
       Message.error(
@@ -594,9 +612,30 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
       {renderLibrary ? (
         renderLibrary({
           isEnterprise,
+          activeDocument: editTarget,
+          documentView: editTarget ? (
+            <LibraryDocument
+              title={editTarget.title}
+              location={libraries.find((item) => item.id === editTarget.libraryId)?.name}
+              content={editContent}
+              mimeType={editTarget.mimeType}
+              reading={reading}
+              canEdit={canChange(editTarget)}
+              loading={editLoading}
+              saving={savingEdit}
+              onReading={setReading}
+              onChange={setEditContent}
+              onBack={closeDocument}
+              onSave={() => void handleSaveEdit()}
+            />
+          ) : undefined,
           libraries,
           libraryId,
-          onLibraryChange: setLibraryId,
+          onLibraryChange: (id) =>
+            navigateDocument(() => {
+              setEditTarget(null);
+              setLibraryId(id);
+            }),
           onCreateFolder: (personal) => {
             setFolderScope(personal ? 'personal' : 'org');
             setLibraryName('');
@@ -618,7 +657,10 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
           onCreate: openRegister,
           onImport: (personal) => void handleImportFiles(personal),
           onLink: openUrlImport,
-          onOpen: (record) => void openEdit(record),
+          onOpen: (record) =>
+            navigateDocument(() => {
+              void openEdit(record);
+            }),
           settings: !memberMode ? (
             <Button size='small' onClick={openConfig}>
               {t('common.superAssistant.rag.configButton')}
@@ -844,7 +886,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
             ? editTarget?.title
             : t('common.superAssistant.rag.editTitle', { title: editTarget?.title ?? '' })
         }
-        visible={editTarget !== null}
+        visible={!renderLibrary && editTarget !== null}
         unmountOnExit
         className={renderLibrary ? libraryStyles.documentModal : undefined}
         wrapClassName={renderLibrary ? libraryStyles.documentWrap : undefined}
@@ -939,7 +981,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
         onCancel={() => setDiscardConfirm(false)}
         onOk={() => {
           setDiscardConfirm(false);
-          setEditTarget(null);
+          pendingNavigation.current();
         }}
       >
         {t('common.knowledgeLibrary.unsavedDescription')}

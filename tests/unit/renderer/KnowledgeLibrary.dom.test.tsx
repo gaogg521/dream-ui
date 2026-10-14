@@ -49,6 +49,13 @@ const setup = (isEnterprise = true, overrides: Partial<RagLibraryProps> = {}) =>
 };
 describe('Knowledge library browsing', () => {
   beforeEach(() => localStorage.clear());
+  it('keeps the directory navigation beside the inline document instead of the list', () => {
+    setup(true, { documentView: <section>Inline reader</section>, activeDocument: row('Team handbook', 'org') });
+    expect(screen.getByText('Inline reader')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'recent' })).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
   it('shows child folders instead of an empty document table in a parent directory', () => {
     const parent: RagLibraryEntry = {
       id: 'parent',
