@@ -406,6 +406,12 @@ export function initApplicationBridge(): void {
     return results;
   });
 
+  ipcBridge.application.readRagSourceFile.provider(async ({ filePath }) => {
+    const size = (await fs.stat(filePath)).size;
+    if (size > 100 * 1024 * 1024) throw new Error('File exceeds 100 MiB');
+    return { name: path.basename(filePath), base64: (await fs.readFile(filePath)).toString('base64') };
+  });
+
   ipcBridge.application.extractRagDocumentUrl.provider(async ({ url }) => extractTextFromUrl(url));
 
   ipcBridge.application.readTextFiles.provider(async ({ filePaths }) => {

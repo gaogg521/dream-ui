@@ -739,6 +739,7 @@ export const application = {
   extractRagDocumentFiles: bridge.buildProvider<IExtractRagFileResult[], { filePaths: string[] }>(
     'app.extract-rag-document-files'
   ),
+  readRagSourceFile: bridge.buildProvider<{ name: string; base64: string }, { filePath: string }>('app.read-rag-source-file'),
   extractRagDocumentUrl: bridge.buildProvider<IExtractedDocument, { url: string }>('app.extract-rag-document-url'),
   // Persona-import modal: pick paths via dialog.showOpen, then read each
   // file's raw text content (no extraction/transformation — frontmatter must

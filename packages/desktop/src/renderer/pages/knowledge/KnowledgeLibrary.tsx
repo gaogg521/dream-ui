@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import type { RagLibraryProps } from '../superAssistant/registries/RagSection';
 import type { RagDocumentEntry } from '@/common/types/devops/devopsTypes';
 import styles from './KnowledgeLibrary.module.css';
+import LibraryGuide, { type GuideId } from './guides/LibraryGuide';
 import { useLibrarySidebar } from './useLibrarySidebar';
 
 type View = 'recent' | 'search' | 'personal' | 'team';
@@ -37,11 +38,11 @@ const readVisits = (): Record<string, number> => {
 
 const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   isEnterprise = true,
-  documentView,
+  documentView: suppliedDocumentView,
   activeDocument,
   libraries,
   libraryId,
-  onLibraryChange,
+  onLibraryChange: selectLibrary,
   onCreateLibrary,
   onCreateFolder,
   rows,
@@ -59,6 +60,16 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   const { t, i18n } = useTranslation();
   const label = (key: string) => t(`common.knowledgeLibrary.${key}`);
   const sidebar = useLibrarySidebar(libraries.map((item) => item.name));
+  const [guide, setGuide] = useState<GuideId | null>(null);
+  const onLibraryChange = (id?: string) => {
+    setGuide(null);
+    selectLibrary(id);
+  };
+  useEffect(() => {
+    setGuide(null);
+  }, [libraryId, suppliedDocumentView]);
+  const documentView =
+    suppliedDocumentView || (guide ? <LibraryGuide id={guide} onClose={() => setGuide(null)} /> : undefined);
   const [view, setView] = useState<View>('recent');
   const [tab, setTab] = useState('all');
   const [query, setQuery] = useState('');
@@ -361,6 +372,16 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
             </div>
           </>
         )}
+        {!suppliedDocumentView && (
+          <nav className={styles.guideNav} aria-label={label('learn')}>
+            <Button type='text' onClick={() => setGuide('quickstart')}>
+              <BookOpen /> {label('quickstartGuide')}
+            </Button>
+            <Button type='text' onClick={() => setGuide('usage')}>
+              <BookOpen /> {label('usageGuide')}
+            </Button>
+          </nav>
+        )}
         <div className={styles.sidebarFooter}>
           <BookOpen />
           <span>{t('common.knowledgeLibrary.documentCount', { count: rows.length })}</span>
@@ -491,23 +512,17 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                   </Button>
                 </div>
                 <div className={styles.featureCards}>
-                  <Button
-                    type='text'
-                    onClick={() =>
-                      onCreate('markdown', view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)
-                    }
-                    disabled={readOnlyLibrary}
-                  >
+                  <Button type='text' onClick={() => setGuide('quickstart')}>
                     <div>
-                      <h3>{label('startTitle')}</h3>
-                      <p>{label('startDescription')}</p>
+                      <h3>{label('quickstartGuide')}</h3>
+                      <p>{label('quickstartGuideDescription')}</p>
                     </div>
                     <FileText size={44} />
                   </Button>
-                  <Button type='text' onClick={() => setView('search')}>
+                  <Button type='text' onClick={() => setGuide('usage')}>
                     <div>
-                      <h3>{label('searchTitle')}</h3>
-                      <p>{label('searchDescription')}</p>
+                      <h3>{label('usageGuide')}</h3>
+                      <p>{label('usageGuideDescription')}</p>
                     </div>
                     <Search size={44} />
                   </Button>

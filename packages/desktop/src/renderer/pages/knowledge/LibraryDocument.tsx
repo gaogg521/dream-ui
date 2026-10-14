@@ -4,12 +4,13 @@ import Image from '@tiptap/extension-image';
 import { Markdown } from '@tiptap/markdown';
 import { TableKit } from '@tiptap/extension-table';
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Input, Message, Dropdown, Menu, Upload } from '@arco-design/web-react';
+import { Alert, Button, Input, Message, Dropdown, Menu, Upload } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import CsvDocument from './CsvDocument';
 import styles from './KnowledgeLibrary.module.css';
+import OriginalFileViewer from './original/OriginalFileViewer';
 
 export function RichDocumentEditor({
   value,
@@ -168,6 +169,10 @@ export function RichDocumentEditor({
 }
 
 type Props = {
+  documentId?: string;
+  sourcePath?: string | null;
+  loadOriginal?: () => Promise<Blob>;
+  uploadOriginal?: (file: File) => Promise<{ filePath: string | null; mimeType: string | null }>;
   title: string;
   onTitleChange?: (value: string) => void;
   location?: string;
@@ -184,6 +189,16 @@ type Props = {
 };
 
 export default function LibraryDocument(props: Props) {
+  const [source, setSource] = useState<{ filePath: string | null; mimeType: string | null } | null>(null);
+  const [uploadingSource, setUploadingSource] = useState(false);
+  const sourcePath = source?.filePath ?? props.sourcePath;
+  const sourceMime = source?.mimeType ?? props.mimeType ?? '';
+  const original = Boolean(
+    props.documentId &&
+    props.loadOriginal &&
+    sourcePath?.startsWith('rag-source:') &&
+    !['text/markdown', 'text/csv', 'text/plain'].includes(sourceMime)
+  );
   const pageRef = useRef<HTMLElement>(null);
   const [autoStatus, setAutoStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const submitted = useRef(JSON.stringify([props.title, props.content]));
@@ -224,6 +239,7 @@ export default function LibraryDocument(props: Props) {
     const snapshot = JSON.stringify([props.title, props.content]);
     if (
       props.reading ||
+      original ||
       !props.canEdit ||
       props.loading ||
       props.saving ||
@@ -236,7 +252,7 @@ export default function LibraryDocument(props: Props) {
       void persist();
     }, 1200);
     return () => clearTimeout(timer);
-  }, [props.title, props.content, props.reading, props.canEdit, props.loading, props.saving, autoStatus]);
+  }, [props.title, props.content, props.reading, props.canEdit, props.loading, props.saving, autoStatus, original]);
 
   useEffect(() => {
     let parent = pageRef.current?.parentElement;
@@ -269,14 +285,38 @@ export default function LibraryDocument(props: Props) {
           <span title={props.location}>{props.location}</span>
         </div>
         <div className={styles.documentCommands}>
-          {props.canEdit && (
+          {props.canEdit && !original && (
             <span className={styles.editorHint} role='status'>
               {t(
                 `common.knowledgeLibrary.${autoStatus === 'error' ? 'saveFailed' : props.saving || autoStatus === 'saving' || JSON.stringify([props.title, props.content]) !== savedSnapshot ? 'saving' : !props.content.trim() ? 'autoSave' : 'autoSaved'}`
               )}
             </span>
           )}
-          {!props.onTitleChange && (
+          {props.documentId && props.uploadOriginal && props.canEdit && (
+            <Upload
+              showUploadList={false}
+              beforeUpload={(file) => {
+                if (file.size > 100 * 1024 * 1024) {
+                  Message.error(t('common.knowledgeLibrary.originalTooLarge'));
+                  return false;
+                }
+                setUploadingSource(true);
+                void props.uploadOriginal!(file)
+                  .then((metadata) => {
+                    setSource(metadata);
+                    props.onReading(true);
+                  })
+                  .catch(() => Message.error(t('common.knowledgeLibrary.originalUploadFailed')))
+                  .finally(() => setUploadingSource(false));
+                return false;
+              }}
+            >
+              <Button loading={uploadingSource}>
+                {t(`common.knowledgeLibrary.${original ? 'replaceOriginal' : 'attachOriginal'}`)}
+              </Button>
+            </Upload>
+          )}
+          {!props.onTitleChange && !original && (
             <>
               <Button
                 type={props.reading ? 'secondary' : 'text'}
@@ -302,7 +342,7 @@ export default function LibraryDocument(props: Props) {
               )}
             </>
           )}
-          {!props.reading && props.canEdit && (
+          {!props.reading && props.canEdit && !original && (
             <Button
               type='primary'
               onClick={() => {
@@ -316,56 +356,70 @@ export default function LibraryDocument(props: Props) {
           )}
         </div>
       </header>
-      <div className={styles.documentCanvas}>
-        {props.loading ? (
-          <div className={styles.documentPaper}>{t('common.loading')}</div>
-        ) : props.reading ? (
-          html ? (
-            <iframe title={props.title} sandbox='' srcDoc={props.content} className={styles.htmlPreview} />
-          ) : (
-            <article className={styles.documentPaper}>
-              {csv ? (
-                <CsvDocument value={props.content} readOnly />
-              ) : (
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  urlTransform={(url) =>
-                    /^(https?:|mailto:|#|\/|data:image\/(png|jpeg|gif|webp);base64,)/i.test(url) ? url : ''
-                  }
-                >
-                  {props.content}
-                </ReactMarkdown>
-              )}
-            </article>
-          )
+      <div className={original ? styles.originalCanvas : styles.documentCanvas}>
+        {original ? (
+          <OriginalFileViewer
+            id={`${props.documentId}:${sourcePath}`}
+            title={props.title}
+            mime={sourceMime}
+            load={props.loadOriginal!}
+          />
         ) : (
-          <div className={styles.documentPaper}>
-            {props.onTitleChange && (
-              <Input
-                className={styles.documentTitle}
-                aria-label={t('common.superAssistant.registries.colTitle')}
-                value={props.title}
-                onChange={props.onTitleChange}
-                placeholder={t('common.knowledgeLibrary.untitled')}
-              />
+          <>
+            {props.documentId && !props.mimeType && !/\.(md|csv|html?)$/i.test(props.title) && (
+              <Alert type='info' content={t('common.knowledgeLibrary.originalNotRetained')} />
             )}
-            {csv ? (
-              <CsvDocument value={props.content} onChange={props.onChange} />
+            {props.loading ? (
+              <div className={styles.documentPaper}>{t('common.loading')}</div>
+            ) : props.reading ? (
+              html ? (
+                <iframe title={props.title} sandbox='' srcDoc={props.content} className={styles.htmlPreview} />
+              ) : (
+                <article className={styles.documentPaper}>
+                  {csv ? (
+                    <CsvDocument value={props.content} readOnly />
+                  ) : (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      urlTransform={(url) =>
+                        /^(https?:|mailto:|#|\/|data:image\/(png|jpeg|gif|webp);base64,)/i.test(url) ? url : ''
+                      }
+                    >
+                      {props.content}
+                    </ReactMarkdown>
+                  )}
+                </article>
+              )
             ) : (
-              <>
-                {html ? (
-                  <Input.TextArea
-                    aria-label={t('common.knowledgeLibrary.documentContent')}
-                    value={props.content}
-                    onChange={props.onChange}
-                    className={styles.documentEditor}
+              <div className={styles.documentPaper}>
+                {props.onTitleChange && (
+                  <Input
+                    className={styles.documentTitle}
+                    aria-label={t('common.superAssistant.registries.colTitle')}
+                    value={props.title}
+                    onChange={props.onTitleChange}
+                    placeholder={t('common.knowledgeLibrary.untitled')}
                   />
-                ) : (
-                  <RichDocumentEditor value={props.content} onChange={props.onChange} />
                 )}
-              </>
+                {csv ? (
+                  <CsvDocument value={props.content} onChange={props.onChange} />
+                ) : (
+                  <>
+                    {html ? (
+                      <Input.TextArea
+                        aria-label={t('common.knowledgeLibrary.documentContent')}
+                        value={props.content}
+                        onChange={props.onChange}
+                        className={styles.documentEditor}
+                      />
+                    ) : (
+                      <RichDocumentEditor value={props.content} onChange={props.onChange} />
+                    )}
+                  </>
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </section>

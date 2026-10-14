@@ -32,3 +32,14 @@
 - Windows 原生窗口自动化初始化失败，因此桌面所有按钮逐项点击、图片文件粘贴与拖放、断网恢复、企业默认模型部署还未完成全量验收。
 
 实现入口：LibraryDocument.tsx、RagSection.tsx、documentTextExtraction.ts；对应后端为 dream-domain-devops 的 embedding.rs、routes.rs、service.rs。
+
+
+## 原文件阅读与内置学习指南（2026-10-14 补充）
+
+原文件与检索正文分开保存。新增原文件上传/下载接口 `/api/one/devops/rag/documents/{id}/source`，沿用文档读写权限；文件存放在数据目录下的 `knowledge-sources`，不暴露本机路径。单个原文件上限 100 MiB，支持单段 Range 请求。
+
+个人端导入保留原文件，阅读页依据文件类型显示 PDF、图片、音视频或隔离 HTML；不支持的格式提供原文件下载。旧的纯提取文本资料可补充原文件。PDF 阅读已在个人 WebUI 实测原始页面、缩略图、页码和缩放；企业后端本轮接口尚需更新后再做原文件联动验收。Office/设计文件在线编辑尚未实现。
+
+个人端和企业端内置两篇原创教程：《一分钟上手资料库》《资料库使用指南》。首页卡片和目录中的学习入口均可页内打开，正文提供中文和英文。教程不自动创建用户文档，不占用个人资料列表和搜索结果。
+
+完整差距与实测边界见 `docs/knowledge-library-product-gaps.zh-CN.md`。自动保存不等于版本历史，静态 HTML 预览不等于数据工作台。
