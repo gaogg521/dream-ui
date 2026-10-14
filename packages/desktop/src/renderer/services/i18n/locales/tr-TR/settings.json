@@ -124,7 +124,591 @@
     "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
     "useSkill": "Kullan",
     "useSkillToast": "\"{{name}}\" etkinken yeni bir sohbet başlatılıyor",
-    "editSkill": "Düzenle"
+    "editSkill": "Düzenle",
+    "team": "Ekip",
+    "teamAuto": "Ekip · Otomatik",
+    "detailEditViaChat": "Sohbet ile düzenle",
+    "builtinSkill": {
+      "12306": {
+        "title": "China Railway 12306",
+        "desc": "China Railway 12306'dan tren saatleri, koltuk durumu ve istasyon bilgileri."
+      },
+      "12306-train-assistant": {
+        "title": "12306 Rezervasyon Asistanı",
+        "desc": "China Railway biletlerini arayın ve rezerve edin: uygunluk, duraklar, aktarmalar, bekleme listeleri, oturum açma, siparişler ve ödeme bağlantıları."
+      },
+      "a-stock-data": {
+        "title": "A Hisse Veri Araç Seti",
+        "desc": "Uçtan uca A hisse verileri: fiyatlar, araştırma raporları, sıcak konu ve northbound sinyalleri, marjin işlemleri ve blok işlemler."
+      },
+      "ai-comic-drama-shot-maker": {
+        "title": "Çizgi Roman Dram Sahne Oluşturucu",
+        "desc": "Bir çizgi roman karesini, karakter sayfasını veya donmuş bir hikâye anını dinamik tek bir animasyonlu sahneye dönüştürür."
+      },
+      "ai-short-drama-script": {
+        "title": "Yapay Zekâ Kısa Dizi Senaryosu",
+        "desc": "Uçtan uca kısa dizi senaryosu: tam senaryolar, tekil bölümler, dizi ve bölüm taslakları, yeniden yazımlar ve senaryo teşhisi."
+      },
+      "ai-song-cover-studio": {
+        "title": "Yapay Zekâ Şarkı Cover Stüdyosu",
+        "desc": "Bir kaydı yeniden yorumlanmış bir cover'a veya referans parçaya dayalı bir yeniden düzenlemeye dönüştürür."
+      },
+      "ai-storyboard-generator": {
+        "title": "Storyboard Oluşturucu",
+        "desc": "Bir senaryoyu, sahneyi veya reklam brifini pratik bir çekim listesiyle yapılandırılmış bir storyboard'a dönüştürür."
+      },
+      "ai-video-image-music-studio": {
+        "title": "Yapay Zekâ Yaratım Stüdyosu",
+        "desc": "Video, görsel, müzik ve seslendirme tek bir bağlantılı akışta, görsel düzenlemeyle birlikte."
+      },
+      "analyze-recruitment-trends": {
+        "title": "İşe Alım Trend Analizi",
+        "desc": "Pazar, rakip ve işe alım materyallerini talep değişimleri ve yetenek akışı sinyalleri için okur; kaynaklar, varsayımlar ve önerilen eylemler sunar."
+      },
+      "android-apk-builder": {
+        "title": "Android APK Oluşturucu (aapt2'siz)",
+        "desc": "aapt2 veya tam Android SDK olmayan bir makinede yalnızca JDK + d8 + jarsigner ile yüklenebilir bir APK oluşturur."
+      },
+      "android-native-dev": {
+        "title": "Yerel Android Geliştirme",
+        "desc": "Android uygulama geliştirme ve arayüz tasarımı: Material Design 3, Kotlin, Jetpack Compose ve platform gelenekleri."
+      },
+      "apple-design": {
+        "title": "Apple Akıcı Arayüz Tasarımı",
+        "desc": "Apple'ın akıcı etkileşim yönergelerine göre tasarım incelemesi: hareket odaklı arayüz, yay animasyonu, momentum, malzemeler, derinlik ve azaltılmış hareket."
+      },
+      "ardot-skillhub": {
+        "title": "Ardot Pano Düzenleyici",
+        "desc": "Mevcut Ardot çalışma alanlarını teslim edilebilir bir vitrinde düzenler — durum karşılaştırmaları, inceleme panoları, akış gezintileri, rol ve cihaz matrisleri."
+      },
+      "assist-payroll-approval": {
+        "title": "Bordro Onay Asistanı",
+        "desc": "Bordro sonuçlarını, istisna listelerini, bütçe karşılaştırmalarını ve onay kurallarını sapma kanıtları ve risk kademeleriyle bir özete dönüştürür."
+      },
+      "autocad-drawing": {
+        "title": "AutoCAD Çizimi",
+        "desc": "CAD çizimlerini çizer, düzenler ve optimize eder ya da onlardan veri çıkarır — makine, mimari, elektrik, tesisat, HVAC, çelik ve proses diyagramları."
+      },
+      "bid-pipeline": {
+        "title": "İhale İçerik Hattı",
+        "desc": "İhale ilanlarını WeChat, Toutiao, Xiaohongshu ve kısa video için yayımlanabilir gönderilere dönüştürür; kapak, görsel ve uyumluluk kontrolü ile birlikte."
+      },
+      "bilibili-script": {
+        "title": "Bilibili Uzun Video Senaryosu",
+        "desc": "Açılış kancası, bölüm yapısı ve danmaku'ya uygun ritimleri olan Bilibili tarzı uzun video senaryoları."
+      },
+      "btpanel": {
+        "title": "baota Paneli ve MCP",
+        "desc": "baota Paneli'ni yönetir: siteler, dosyalar, veritabanları, Docker, otomasyonlar ve sunucu ortamı; ayrıca durum kontrolleri ve sorun giderme."
+      },
+      "build-job-profile": {
+        "title": "İş Profili Oluşturucu",
+        "desc": "İşe alım ihtiyaçlarını, iş hedeflerini ve iş belgelerini incelenebilir bir profile dönüştürür: sorumluluklar, yetkinlik çıtası, kademeli gereksinimler ve eleme kanıtları."
+      },
+      "chinese-poetry": {
+        "title": "Klasik Çin Edebiyatı",
+        "desc": "Klasik Çin şiirini ve metinlerini — yazar, başlık veya temaya göre — bulur ve yorumlar; dize tamamlama ve kaynak izleme ile."
+      },
+      "ci-cd-and-automation": {
+        "title": "CI/CD ve Otomasyon",
+        "desc": "İş hattı tasarımı, derleme ve sürüm otomasyonu ve dağıtımı tekrarlanabilir tutan kontroller."
+      },
+      "cn-ecommerce-search": {
+        "title": "Çin E-ticaret Araması",
+        "desc": "Başlıca Çin pazar yerlerinde ürün araması; ilanlar ve fiyatlar yan yana."
+      },
+      "comfyui-ops": {
+        "title": "ComfyUI Dağıtımı ve İşletimi",
+        "desc": "ComfyUI'yi doğrudan bu makinede kurar, sorunlarını giderir ve işletir."
+      },
+      "content-factory": {
+        "title": "İçerik Fabrikası",
+        "desc": "Çok ajanlı içerik üretimi: tek bir kaynak içerik, kanallar genelinde birçok biçime dönüşür."
+      },
+      "creative-brainstorming-board": {
+        "title": "Ürün Beyin Fırtınası Panosu",
+        "desc": "Bir fikri gerçek dünyadan net bir problem tanımına taşıyan beş sütunlu bir beyaz tahta yöntemi — yeni ürünler ve hipotez odaklı keşif için."
+      },
+      "cron": {
+        "title": "Otomasyonlar",
+        "desc": "Bir zamanlamaya göre çalışan görevler oluşturun ve yönetin."
+      },
+      "delivery-no-pseudoblock": {
+        "title": "Teslim Öncesi Öz Kontrol",
+        "desc": "Kullanıcıya herhangi bir şey ulaşmadan önce — nihai özet, sonuç, durum raporu — çalışan davranışsal bir kapı; yalnızca iddia etmek yerine gerçekten yüklenir ve yürütülür."
+      },
+      "design-first": {
+        "title": "Beyin Fırtınası, Önce Tasarım",
+        "desc": "Tek satır kod yazılmadan önce tasarımı netleştirir; böylece yapım üzerinde uzlaşılmış bir biçimle başlar."
+      },
+      "dingtalk-unified": {
+        "title": "DingTalk Suite",
+        "desc": "Resmî DingTalk Workspace CLI: mesajlar, grup sohbetleri, kişiler, takvim, yapılacaklar, onaylar, devam kaydı, günlükler, yapay zekâ tabloları ve belgeler."
+      },
+      "douyin-video-fetch": {
+        "title": "Douyin Video Çekme",
+        "desc": "Sonraki analiz için Douyin videolarını ve meta verilerini toplar."
+      },
+      "drawio": {
+        "title": "Draw.io Diyagramları",
+        "desc": "Yerel, düzenlenebilir Draw.io diyagramları oluşturur ve dışa aktarır."
+      },
+      "element-ui-guide": {
+        "title": "Element UI Başvurusu",
+        "desc": "Element UI (Vue 2) bileşen başvurusu ve kod üretimi — props, olaylar, yöntemler ve slot'lar ya da çalışan bir bileşen."
+      },
+      "expense-merger": {
+        "title": "Masraf Faturası Birleştirici",
+        "desc": "Bir klasördeki OFD ve PDF faturalarını tek bir PDF'de birleştirir; şehir, masraf kategorisi ve ağırlama ayrıntılarını özetleyen bir kapak sayfasıyla."
+      },
+      "flight-trip-advisor": {
+        "title": "Uçuş Seyahat Danışmanı",
+        "desc": "Belirli bir tarih ve güzergâh için iki uçtaki hava durumu, gecikme riski, ne giyileceği ve havalimanı yer notları."
+      },
+      "fore-vip-geo-optimizer": {
+        "title": "GEO Optimize Edici",
+        "desc": "Üretken motorlarda atıf payı için beş adımlı iş hattı: yapay zekâ motorlarını gerçek kullanıcı sorularıyla arar, yanıtları toplar ve boşlukları giderir."
+      },
+      "fore-vip-oss": {
+        "title": "Nesne Depolama Kurulumu",
+        "desc": "Nesne depolamayı açıklar, ardından bir sağlayıcının seçimi ve yapılandırılmasında yol gösterir — Alibaba OSS, Tencent COS, AWS S3, Huawei OBS, MinIO ve diğerleri."
+      },
+      "fortune-master": {
+        "title": "Çin Metafiziği Başvurusu",
+        "desc": "Bazi, Zi Wei Dou Shu, Qi Men Dun Jia, Liu Yao, Mei Hua, tarot ve astroloji haritaları. Yalnızca eğlence amaçlıdır."
+      },
+      "frontend-design": {
+        "title": "Frontend Tasarımı",
+        "desc": "Web için arayüz tasarımı: yerleşim, görsel hiyerarşi ve bir yapımın izleyebileceği bileşen kelime dağarcığı."
+      },
+      "frontend-dev": {
+        "title": "Frontend Geliştirme",
+        "desc": "Web arayüzleri oluşturma — bileşenler, durum, stil ve altındaki tarayıcı davranışı."
+      },
+      "fund-analysis": {
+        "title": "Fon Analizi",
+        "desc": "Bir fonun portföyünü, performansını ve risk profilini okur ve rakamları bağlam içine yerleştirir."
+      },
+      "github": {
+        "title": "GitHub",
+        "desc": "GitHub'ı `gh` CLI ile yönetir: issue'lar, pull request'ler, workflow çalıştırmaları ve ham API çağrıları."
+      },
+      "gog": {
+        "title": "Google Workspace",
+        "desc": "Komut satırından Google Workspace: Gmail, Takvim, Drive, Kişiler, E-Tablolar ve Dokümanlar."
+      },
+      "gongwen-format": {
+        "title": "Resmî Belge Biçimlendirme",
+        "desc": "Bir Word veya Markdown belgesini Çin'in resmî belge standartlarına (GB/T 9704-2012, GB/T 33476.2-2016) göre biçimlendirir — yazı tipi, boyut ve aralık."
+      },
+      "govproc-method-selector": {
+        "title": "Kamu Alımı Yöntemi Seçici",
+        "desc": "Bir kamu alımı projesini altı yöntemin her birinin yasal koşullarıyla sınar ve zaten yapılmış seçimi doğrular."
+      },
+      "grilling": {
+        "title": "Sorgulama",
+        "desc": "Bir planı veya kararı madde madde sorgulayarak, istediğiniz kadar sert biçimde stres testinden geçirir."
+      },
+      "h3-prompt-writing": {
+        "title": "MiniMax H3 Prompt Yazımı",
+        "desc": "T2VA, I2VA, FL2VA, L2VA ve Ref2VA için MiniMax H3 video prompt'ları yazar."
+      },
+      "hot-search-cn": {
+        "title": "Çin Trend Toplayıcı",
+        "desc": "Weibo, Zhihu, Baidu, Bilibili, Douyin, 36Kr, Tieba ve Toutiao trend listeleri; tek platform veya karşılaştırmalı."
+      },
+      "identify-key-talent": {
+        "title": "Kilit Yetenek Tespiti",
+        "desc": "Rol tanımlarını özgeçmişler, performans ve değerlendirmelerle karşılaştırarak önce doğrulanması gereken kişileri kanıt matrisi ve risk planıyla işaretler."
+      },
+      "imap-smtp-email": {
+        "title": "IMAP / SMTP E-posta",
+        "desc": "IMAP ve SMTP üzerinden e-posta okur ve gönderir: okunmamış denetimi, ileti içeriği, arama ve posta kutusu yönetimi."
+      },
+      "invoice-verify": {
+        "title": "Fatura Doğrulama",
+        "desc": "Bir faturanın gerçek olup olmadığını ve hangi durumda olduğunu — iptal, alacak veya işaretli — metinden ya da yüklenen dosyadan kontrol eder."
+      },
+      "ios-application-dev": {
+        "title": "iOS Uygulama Geliştirme",
+        "desc": "iOS uygulama geliştirme: Swift, SwiftUI ve UIKit ile Apple'ın beklediği platform gelenekleri."
+      },
+      "ixhlink-skills-id-photo-standard": {
+        "title": "Standart Vesikalık Fotoğraf",
+        "desc": "Bir portreyi özgeçmiş, sınav, pasaport ve vize ölçülerine uygun vesikalık fotoğrafa dönüştürür — güzelleştirme yapılmaz."
+      },
+      "karpathy-guidelines": {
+        "title": "Karpathy Kodlama Yönergeleri",
+        "desc": "LLM'lerin tekrar eden kodlama hatalarını azaltan davranış yönergeleri. Kod yazarken veya incelerken kullanın."
+      },
+      "kdocs": {
+        "title": "Kingsoft Docs / WPS Cloud",
+        "desc": "Resmî Kingsoft Docs Skill'i: bulut belgelerini oluşturma, okuma, düzenleme, arama, paylaşma ve düzenleme."
+      },
+      "lark-unified": {
+        "title": "Lark / Feishu Suite",
+        "desc": "Birleşik bir Lark CLI: mesajlaşma, belgeler, e-tablolar, Base tabloları ve takvim."
+      },
+      "lexiang-knowledge-base": {
+        "title": "Tencent Lexiang",
+        "desc": "MCP üzerinden Lexiang bilgi tabanına tam erişim: kişisel ve paylaşılan tabanlarda arama, okuma ve yazma."
+      },
+      "local-ocr-linux": {
+        "title": "Yerel OCR (Linux)",
+        "desc": "Kurulu bir Tesseract ile görsellerdeki metni çevrimdışı okur."
+      },
+      "local-ocr-macos": {
+        "title": "Yerel OCR (macOS)",
+        "desc": "Yerleşik Vision çerçevesiyle görsellerdeki metni çevrimdışı okur."
+      },
+      "local-ocr-windows": {
+        "title": "Yerel OCR (Windows)",
+        "desc": "Yerleşik Windows OCR motoruyla görsellerdeki metni çevrimdışı okur."
+      },
+      "markitdown-skill": {
+        "title": "MarkItDown",
+        "desc": "Belgeleri Microsoft'un MarkItDown CLI'si ile Markdown'a dönüştürür. PDF, Office ve daha fazlası."
+      },
+      "mcporter": {
+        "title": "MCP Yöneticisi",
+        "desc": "MCP sunucularını ve araçlarını listeler, yapılandırır, kimlik doğrular ve HTTP veya stdio üzerinden doğrudan çağırır."
+      },
+      "meeting-minutes-assistant": {
+        "title": "Toplantı Tutanakları ve Eylemler",
+        "desc": "Bir toplantıyı yapılandırılmış tutanağa dönüştürür: kararlar, eylem maddeleri, sorumlular, son tarihler ve takip döngüsü."
+      },
+      "mermaid": {
+        "title": "Mermaid Diyagramları",
+        "desc": "Akış şemalarını, sıra ve ER diyagramlarını SVG veya ASCII olarak işler."
+      },
+      "morph-ppt": {
+        "title": "Morph Slaytlar",
+        "desc": "Slaytlar arasında akıcı Morph geçişleri olan .pptx sunumları oluşturur."
+      },
+      "morph-ppt-3d": {
+        "title": "3D Morph Slaytlar",
+        "desc": "GLB modelleri ve sinematik kamera hareketleri içeren Morph sunumları."
+      },
+      "officecli": {
+        "title": "Office Belgeleri",
+        "desc": "Word, Excel ve PowerPoint dosyalarını oluşturun, analiz edin ve düzenleyin."
+      },
+      "officecli-academic-paper": {
+        "title": "Akademik Makale",
+        "desc": "Dergi, konferans ve tez .docx belgelerini doğru biçimlendirmeyle hazırlar."
+      },
+      "officecli-data-dashboard": {
+        "title": "Excel Panosu",
+        "desc": "Formüller ve grafiklerle çalışan çok sayfalı Excel panoları."
+      },
+      "officecli-docx": {
+        "title": "Word Belgeleri",
+        "desc": "Girdi veya çıktı olarak bir .docx dosyasını ilgilendiren her şey."
+      },
+      "officecli-financial-model": {
+        "title": "Finansal Model",
+        "desc": "Üç tablolu modeller, DCF, LBO ve duyarlılık analizi."
+      },
+      "officecli-pitch-deck": {
+        "title": "Pitch Sunumu",
+        "desc": "Seed aşamasından Series C'ye yatırımcı sunumları."
+      },
+      "officecli-pptx": {
+        "title": "PowerPoint Slaytları",
+        "desc": "Girdi veya çıktı olarak bir .pptx dosyasını ilgilendiren her şey."
+      },
+      "officecli-word-form": {
+        "title": "Doldurulabilir Word Formları",
+        "desc": "Gerçek içerik denetimleri ve form alanları içeren Word formları."
+      },
+      "officecli-xlsx": {
+        "title": "Excel Elektronik Tabloları",
+        "desc": "Girdi veya çıktı olarak bir .xlsx dosyasını ilgilendiren her şey."
+      },
+      "old-photo-restorer": {
+        "title": "Eski Fotoğraf Restorasyonu",
+        "desc": "Eski, sararmış, çizilmiş veya hasar görmüş fotoğrafları — kırışıklıklar, gürültü, lekeler ve eksik parçalar — filigransız olarak onarır."
+      },
+      "one-config": {
+        "title": "Uygulama Yapılandırması",
+        "desc": "Bu uygulamanın yapılandırmasını inceleyin ve ayarlayın."
+      },
+      "one-troubleshooting": {
+        "title": "Sorun Giderme",
+        "desc": "Bu uygulamadaki sorunları teşhis edin ve çözün."
+      },
+      "one-webui-public": {
+        "title": "WebUI Genel Erişimi",
+        "desc": "WebUI'yi ağınızın dışından erişime açar."
+      },
+      "one-webui-setup": {
+        "title": "WebUI Kurulumu",
+        "desc": "Uzaktan erişim için WebUI modunu yapılandırır."
+      },
+      "openclaw-setup": {
+        "title": "OpenClaw Kurulumu",
+        "desc": "Kişisel asistan OpenClaw'ı kurun, dağıtın ve kullanın."
+      },
+      "patent-disclosure-writer": {
+        "title": "Patent Bildirimi Yazarı",
+        "desc": "Kısa bir fikri, kodu, bir PRD'yi veya çizimleri güçlendirilmiş bir patent bildirim belgesine dönüştürür."
+      },
+      "pdf": {
+        "title": "PDF Araç Seti",
+        "desc": "Metin ve tabloları çıkarır; PDF oluşturur, birleştirir veya böler."
+      },
+      "peekaboo": {
+        "title": "macOS Arayüz Otomasyonu",
+        "desc": "Peekaboo CLI ile macOS arayüzünü yakalar ve otomatikleştirir."
+      },
+      "pm-toolkit-zxh": {
+        "title": "Veri ve Verimlilik Araç Seti",
+        "desc": "A/B anlamlılığı, kohort elde tutma, SQL çekimleri, yayın öncesi inceleme, metin düzeltme, özgeçmiş eleştirisi, NDA ve gizlilik politikası taslakları."
+      },
+      "poster-design-studio": {
+        "title": "Poster Tasarım Stüdyosu",
+        "desc": "Bir konuyu, ürün fotoğrafını veya marka referanslarını durup bakılacak bir postere dönüştürür."
+      },
+      "price-compare": {
+        "title": "Fiyat Karşılaştırma",
+        "desc": "Birkaç ürünü fiyat ve özelliklere göre karşılaştırır; hangisinin en ucuz, hangisinin daha iyi alım olduğunu söyler."
+      },
+      "proboost-tiktok-shop-analysis": {
+        "title": "TikTok Shop Analizi",
+        "desc": "Bir TikTok Shop'un performansını — ürünler, trafik ve dönüşüm — ve operasyonel açığın nerede olduğunu okur."
+      },
+      "proboost-tiktok-video-analysis": {
+        "title": "TikTok Viral Video Çözümlemesi",
+        "desc": "Yüksek performanslı bir TikTok videosunu işe yarayan tercihlere ve yeniden kullanılabilecek unsurlara ayırır."
+      },
+      "product-discovery-zxh": {
+        "title": "Ürün Keşfi",
+        "desc": "Fikir beyin fırtınası, riskli varsayım haritalama, etki × risk sıralaması, doğrulama deneyleri ve görüşme sentezi."
+      },
+      "product-manager": {
+        "title": "Ürün Yöneticisi",
+        "desc": "Tüm ürün yaşam döngüsü: fırsat değerlendirmesi, PRD yazımı, yol haritası planlama, GTM ve lansman sonrası ölçüm."
+      },
+      "product-strategy-zxh": {
+        "title": "Ürün Stratejisi",
+        "desc": "Vizyon, strateji kanvası, iş ve lean kanvas, gelir modeli ve fiyatlandırma, SWOT, PESTLE, Ansoff, Porter ve değer önerisi."
+      },
+      "product-trend-researcher": {
+        "title": "Trend Araştırması",
+        "desc": "Pazar trendleri, rekabet ortamı ve teknoloji taramaları; kaynak derecelendirmeleri ve güven düzeyiyle bir karar brifi olarak sunulur."
+      },
+      "pubmed-literature-search": {
+        "title": "PubMed Literatür Araması",
+        "desc": "Zorunlu bir zaman penceresinde PubMed'de anahtar kelimeyle literatür araması; rapor olarak sunulur."
+      },
+      "qq-email": {
+        "title": "QQ Mail",
+        "desc": "QQ Mail için IMAP ile alır, SMTP ile gönderir; kimlik bilgileri ortamdan okunur."
+      },
+      "qqmusic": {
+        "title": "QQ Music",
+        "desc": "Şarkı, albüm, çalma listesi, müzik videosu ve sanatçı arar; ayrıca günlük öneriler sunar."
+      },
+      "remove-watermark": {
+        "title": "Filigran Kaldırma",
+        "desc": "Bir görselden filigranları, logoları, köşe işaretlerini, metni ve altyazıları kaldırır."
+      },
+      "resume-design": {
+        "title": "Özgeçmiş Tasarımı",
+        "desc": "Meitu Design Studio yapay zekâ tasarım CLI'si (`designkit`) ile özgeçmiş düzeni ve şablon çalışması."
+      },
+      "screen-automation": {
+        "title": "Ekran Otomasyonu",
+        "desc": "Arayüz öğelerini tanımak ve bulmak, ardından Windows veya macOS'ta geçerli ekranda bir görevi tamamlamak için yerel ekran görüşü."
+      },
+      "security-and-hardening": {
+        "title": "Güvenlik ve Sıkılaştırma",
+        "desc": "OWASP önlemleri, kimlik doğrulama, gizli anahtar yönetimi ve bağımlılık denetimi."
+      },
+      "self-media-distribution": {
+        "title": "Çok Platformlu Dağıtım",
+        "desc": "İçerik üretici platformlarına ve birden çok hesaba tek tıkla yayın — Douyin, WeChat Channels, Kuaishou ve diğerleri."
+      },
+      "seo-content-optimizer": {
+        "title": "SEO İçerik Optimize Edici",
+        "desc": "İçeriği arama görünürlüğü ve yapay zekâ yanıtlarında alıntılanma için optimize eder."
+      },
+      "skill-creator": {
+        "title": "Skill Oluşturucu",
+        "desc": "Kendi etkili Skill'lerinizi yazmak için bir kılavuz."
+      },
+      "skill-scanner": {
+        "title": "Skill Güvenlik Tarayıcısı",
+        "desc": "Kurmadan veya kullanmadan önce herhangi bir ajan Skill'ini güvenlik riskleri için tarar. Tencent Zhuque Lab desteğiyle."
+      },
+      "smart-product-selector": {
+        "title": "E-ticaret Ürün Seçimi",
+        "desc": "Ne satılacağına karar vermek için pazar verisi toplama, marj hesaplama ve seçim analizi."
+      },
+      "social-media-content": {
+        "title": "Sosyal Medya İçeriği",
+        "desc": "Sosyal içeriği sistemli üretir — konular, metin, etiketler ve yayın ritmi."
+      },
+      "software-copyright-cn": {
+        "title": "Çin Yazılım Telif Hakkı Başvurusu",
+        "desc": "Çin'de yazılım telif hakkı tescili için gereken kimlik belgelerini hazırlar."
+      },
+      "solo-company": {
+        "title": "Tek Kişilik Şirket Koçu",
+        "desc": "Tek başına çalışan bir kurucuyu konumlandırma, ürün, fiyatlandırma, müşteri kazanımı, teslimat ve geriye dönük değerlendirme boyunca; karar ağaçları ve bir panoyla yönlendirir."
+      },
+      "story-roleplay": {
+        "title": "Hikâye Rol Yapma",
+        "desc": "PNG, WebP ve JSON biçiminde karakter kartları ve dünya bilgileri."
+      },
+      "superpowers": {
+        "title": "Superpowers Mühendislik Yöntemi",
+        "desc": "Koddan önce şartname, yürütülebilir bir plan, zorunlu kırmızı-yeşil TDD, alt ajan güdümlü geliştirme, sistematik hata ayıklama ve inceleme, ardından birleştirme."
+      },
+      "supertonic-tts": {
+        "title": "Yerel Hızlı TTS",
+        "desc": "supertonic-mnn ile yüksek kaliteli yerel ses sentezi: 30'dan fazla dil, on ses, CLI ve Python API."
+      },
+      "talking-avatar-video": {
+        "title": "Konuşan Avatar Videosu",
+        "desc": "Tek bir portre ve kısa bir metin veya kayıt, sabit ve doğal anlatımlı bir konuşan kafa videosuna dönüşür."
+      },
+      "taobao": {
+        "title": "Platformlar Arası Fiyat Kontrolü",
+        "desc": "Bir ürünün en iyi fiyatını Taobao, Tmall, JD, Pinduoduo, Douyin ve Kuaishou'da bulur."
+      },
+      "tax-policy-knowledge": {
+        "title": "Vergi Politikası Bilgi Tabanı",
+        "desc": "Çin vergi ve finans politikası için başvuru bilgi tabanı."
+      },
+      "tencent-meeting-skill": {
+        "title": "Tencent Meeting",
+        "desc": "Toplantı rezerve edin, düzenleyin ve iptal edin; ayrıntıları, katılımcıları, bekleme odalarını, bir kullanıcının toplantı listesini ve kayıtları sorgulayın."
+      },
+      "the-entrepreneurship-handbook": {
+        "title": "Girişimcilik El Kitabı",
+        "desc": "Kurucular, yöneticiler ve iş liderleri için soru-cevap Skill'i."
+      },
+      "tiktok-script": {
+        "title": "TikTok Senaryosu",
+        "desc": "Tempo, ekran üstü metinler ve trend uyarlaması etrafında kurgulanmış TikTok kısa video senaryoları."
+      },
+      "totorosir-work-report": {
+        "title": "İş Raporu Asistanı",
+        "desc": "Dağınık notlardan ve bilet numaralarından haftalık, günlük, aylık, üç aylık ve yıllık raporlar ile proje ve kilometre taşı güncellemeleri."
+      },
+      "toutiao-search": {
+        "title": "Toutiao İçerik Araması",
+        "desc": "Toutiao gönderilerini ve videolarını anahtar kelimeyle arar; okunma sayısına veya tarihe göre sıralar; tablo, CSV dışa aktarma ve etkileşimli HTML raporuyla sunar."
+      },
+      "travel-guide-assistant": {
+        "title": "Seyahat Planlayıcı",
+        "desc": "Bir güzergâh planlar ve yol boyunca ulaşımı, konaklamayı, görülecek yerleri ve yemeği kontrol eder."
+      },
+      "user-persona-builder": {
+        "title": "Kullanıcı Persona Oluşturucu",
+        "desc": "Ayrıntılı personalar oluşturur: demografi, sorunlar, motivasyonlar ve içerik tercihleri."
+      },
+      "video-to-ppt": {
+        "title": "Videodan PPT'ye",
+        "desc": "Bir konuşma, toplantı veya ders kaydını slaytlara böler — kare çıkarma, iyileştirme ve yinelenenleri kaldırma — tam ekran PPTX olarak dışa aktarır."
+      },
+      "wacli": {
+        "title": "WhatsApp",
+        "desc": "wacli CLI ile WhatsApp mesajları gönderir, geçmişi arar veya eşitler."
+      },
+      "weather-now": {
+        "title": "Hava Durumu",
+        "desc": "Şehir hava durumu sade bir dille: bugün, yarın, öbür gün ve birkaç şehrin karşılaştırması."
+      },
+      "weaver-e10-jucailin": {
+        "title": "Weaver E10 İK",
+        "desc": "Weaver E10'da günlük İK: devam verileri ve raporları, giriş-çıkış kaydı, istisna iş akışları, bordro, sosyal sigorta, maaş değişiklikleri ve işe alım."
+      },
+      "weaver-e10-plan": {
+        "title": "Weaver E10 Planlar ve Raporlar",
+        "desc": "E10 raporlarını oluşturur, bulur, düzenler, yayımlar ve geri çeker; ayrıca paylaşılan rapor sayfalama, gönderim hatırlatıcıları ve yorumlar."
+      },
+      "web-access": {
+        "title": "Web Erişimi",
+        "desc": "Tüm çevrimiçi eylemler buradan geçer: arama, sayfa getirme, oturum gerektiren iş akışları ve tarayıcı etkileşimi."
+      },
+      "wechat-miniprogram": {
+        "title": "WeChat Mini Programı",
+        "desc": "WeChat içinde uygulama geliştirmek için WeChat Mini Program çerçevesi."
+      },
+      "wechat-official-account": {
+        "title": "WeChat Resmî Hesap Makalesi",
+        "desc": "Resmî Hesap tarzında kapsamlı makaleler — başlık, giriş, yapı ve kapanış."
+      },
+      "wechat-viral-video-writer": {
+        "title": "WeChat Channels Çözümlemesi",
+        "desc": "Viral bir Channels videosunu konu mantığına ve metin yapısına ayırır, ardından çekilebilir dört bölümlü bir senaryo yazar."
+      },
+      "wechat-wenyan-publish": {
+        "title": "Resmî Hesap Yayını",
+        "desc": "Uçtan uca: yazım standartları, 900×383 kapak, SVG'den PNG'ye görseller, wenyan teması ve yayın."
+      },
+      "wechatpay-basic-payment": {
+        "title": "WeChat Pay Temelleri",
+        "desc": "Ödemeler, iadeler, ekstreler, gelir paylaşımı, üye işyeri kaydı ve hesap onayı — seçim rehberi, kod örnekleri ve sorun gidermeyle."
+      },
+      "wecom-unified": {
+        "title": "WeCom Suite",
+        "desc": "Tam bir WeCom CLI: kişiler, belgeler, tablolar, akıllı tablolar ve dokümanlar, takvim, toplantılar, yapılacaklar, drive, posta, mesajlar ve medya."
+      },
+      "weekly-literature-briefing": {
+        "title": "Haftalık Literatür Bülteni",
+        "desc": "Bir alandaki haftanın PubMed öne çıkanlarını toplar, başlık ve özetleri iki dilli çevirir ve bülteni e-posta ile gönderir."
+      },
+      "weekly-report-generator": {
+        "title": "Haftalık Rapor Oluşturucu",
+        "desc": "Dağınık yapılacakları, sohbet kayıtlarını ve takvimleri cilalı bir haftalık veya günlük rapora dönüştürür."
+      },
+      "weixin-file-send": {
+        "title": "WeChat Dosya Gönderimi",
+        "desc": "Bir sohbetten bir WeChat kişisine dosya gönderir."
+      },
+      "weiyun": {
+        "title": "Tencent Weiyun",
+        "desc": "MCP üzerinden Weiyun bulut sürücüsüne tam erişim: listeleme, kategoriye göre gezinme, indirme, silme ve daha fazlası."
+      },
+      "x-recruiter": {
+        "title": "X İşe Alım Gönderileri",
+        "desc": "X'te iş ilanı gönderileri yayımlar; metin kuralları ve görsel prompt'larıyla."
+      },
+      "xiaohongshu-recruiter": {
+        "title": "Xiaohongshu İşe Alım",
+        "desc": "Xiaohongshu'da üretilmiş kapaklarla yapay zekâ iş ilanları yayımlar."
+      },
+      "xiaoliebian-scrm": {
+        "title": "Xiaoliebian Private Domain",
+        "desc": "WeCom topluluk büyümesi ve çekilişler, Moments ve toplu gönderim görevleri, özel alan ve topluluk analitiği ve personel görüşme özetleri."
+      },
+      "youtube-video-research": {
+        "title": "YouTube Video Araştırması",
+        "desc": "Bir araştırma görevini YouTube videolarından alınan birinci elden kanıtlarla destekler."
+      },
+      "zxh-api-connector-builder": {
+        "title": "API Bağlayıcı Oluşturucu",
+        "desc": "Üçüncü taraf bir API için bağlayıcı oluşturur — kimlik doğrulama, uç noktalar ve çağıranın ihtiyaç duyduğu biçim."
+      }
+    },
+    "builtinCategory": {
+      "office": "Belgeler ve Office",
+      "content": "İçerik Üretimi",
+      "media": "Görsel, Ses ve Video",
+      "diagram": "Diyagramlar ve Çizim",
+      "dev": "Geliştirme",
+      "data": "Veri ve Finans",
+      "workplace": "İş Yeri Paketleri",
+      "recruit": "İK ve İşe Alım",
+      "product": "Ürün ve Strateji",
+      "research": "Araştırma",
+      "life": "Yaşam ve Seyahat",
+      "system": "Kurulum ve Otomasyon",
+      "creative": "Yaratıcı Yazarlık"
+    }
   },
   "authMethod": "Kimlik Doğrulama",
   "geminiApiKey": "Gemini API Anahtarı",
@@ -1062,7 +1646,10 @@
     "discordStep1": "Discord'u açın ve bir kanalda botunuzu etiketleyin ya da ona özel mesaj gönderin",
     "discordStep2": "Eşleştirmeyi başlatmak için herhangi bir mesaj gönderin veya @bahsedin",
     "discordStep3": "Aşağıda bir eşleştirme isteği görünecek. Kullanıcıyı yetkilendirmek için \"Onayla\"ya tıklayın.",
-    "discordStep4": "Onaylandıktan sonra Discord'da asistanla sohbet etmeye başlayabilirsiniz!"
+    "discordStep4": "Onaylandıktan sonra Discord'da asistanla sohbet etmeye başlayabilirsiniz!",
+    "manualPairingHint": "İstek listede yok mu? Kullanıcıdan gelen eşleştirme kodunu girerek elle onaylayın veya reddedin.",
+    "manualPairingInvalid": "Kullanıcıya gösterilen 6 haneli eşleştirme kodunu girin",
+    "manualPairingPlaceholder": "6 haneli kod"
   },
   "lark": {
     "appId": "App ID",
@@ -1526,7 +2113,30 @@
     "factIdentity": "Oturum",
     "factCompany": "Şirket",
     "factDepartment": "Birim",
-    "openSettings": "Proje grubu ayarları"
+    "openSettings": "Proje grubu ayarları",
+    "guestName": "Misafir",
+    "guestTitle": "Misafir modu",
+    "guestDesc": "Bağımsız kişisel sürüm — sohbetleri ve çalışma alanlarını doğrudan kullanın. İş birliği için bir proje grubuna katılın.",
+    "guestJoinEnterprise": "Oturum aç / Proje grubuna katıl",
+    "joinProjectGroup": "Bir proje grubuna katıl",
+    "noProjectGroupLine": "Henüz bir proje grubunda değil",
+    "editionSsoNoGroup": "Oturum açıldı · Proje grubu yok",
+    "editionCompanyAdmin": "Şirket yöneticisi · Proje grubu yok",
+    "guestDescCompanyAdmin": "\"{{company}}\" şirketinin yerel yöneticisisiniz — üyeleri ve ayarları Ayarlar → Şirket Konsolu bölümünden yönetin. İş birliği için bir proje grubuna katılın.",
+    "guestAdminLogin": "WebUI yönetici girişi",
+    "memberDesc": "Bir proje grubuna katıldınız — proje grubunun dağıttığı Skill'ler ve araçlar kullanılabilir.",
+    "openConsole": "Proje grubu yönetim konsolunu aç",
+    "editionPersonal": "Kişisel · Oturum açılmadı",
+    "editionProjectGroup": "Proje grubu",
+    "departmentLine": "Departman: {{department}}",
+    "editionClient": "Kurumsal · Bağlı",
+    "editionClientDisconnected": "Kişisel · Kuruluş yok",
+    "ssoAuthed": "Şirket SSO'su ile oturum açıldı",
+    "ssoCompanyLine": "Şirket SSO'su: {{company}}",
+    "projectGroupLine": "Proje grubu: {{name}}",
+    "myGroupsTitle": "Proje gruplarım",
+    "switchDone": "Proje grubu değiştirildi",
+    "editionClientNeedLogin": "Kurumsal · Oturum açılmadı"
   },
   "enterpriseChannel": "Kurumsal kanal",
   "enterpriseChannelTip": "Bu model kanalı şirketiniz tarafından sağlanır. Kimlik bilgileri şirket sunucusunda kalır ve burada değiştirilemez veya silinemez.",
@@ -1646,5 +2256,1046 @@
     "passphraseTooShort": "En az {{min}} karakter kullanın.",
     "passphraseMismatch": "İki giriş eşleşmiyor.",
     "passphraseNoRecovery": "Bu parola kurtarılamaz. Kaybederseniz yedek bir daha açılamaz."
+  },
+  "assistantListLoading": "Asistanlar yükleniyor…",
+  "closeToTrayDesc": "Pencere kapatma düğmesine tıkladığınızda sistem tepsisine gizlenir. Uygulama arka planda çalışmaya devam eder. Yeniden açmak için tepsi simgesine çift tıklayın veya menüden Göster'i seçin; tamamen çıkmak için tepsi menüsündeki Çık'ı kullanın.",
+  "apiKeyUnrecoverable": "Anahtar geçersiz",
+  "apiKeyUnrecoverableTip": "Bu sağlayıcının API anahtarının şifresi artık çözülemiyor (şifreleme anahtarı değişti) ve yeniden girilmesi gerekiyor. Yeniden girmek için buraya tıklayın.",
+  "webui.deployModeTitle": "Kurumsal dağıtım modu",
+  "webui.deployModeDesc": "Her LAN'da yalnızca bir makine sunucu olmalıdır; diğerleri ona istemci olarak bağlanır. Bu makinede bir kuruluş oluşturana kadar varsayılan istemcidir.",
+  "webui.deployRoleServer": "Bu makine sunucu olarak",
+  "webui.deployRoleClient": "Bu makine istemci olarak",
+  "webui.deployServerUrlLabel": "Kurumsal sunucu adresi",
+  "webui.deployServerUrlPlaceholder": "ör. https://ai.example.com veya 192.168.1.10:25809",
+  "webui.deployServerUrlHint": "Yöneticinizin verdiği kurumsal sunucu adresini kullanın: alan adlı dağıtım için https:// ile başlayan bir alan adı, LAN'ınızdaki sunucu için IP ve bağlantı noktası.",
+  "webui.deployServerUrlInvalid": "Geçerli bir sunucu adresi girin, ör. https://ai.example.com veya 192.168.1.10:25809",
+  "webui.deployServerHint": "Bu makine kurumsal sunucuyu barındırıyor. LAN'daki diğer istemciler bu adrese bağlanabilir.",
+  "webui.deployClientHint": "İstemci modunda kurumsal SSO ve yönetim, uzak sunucuda tarayıcıdan çalışır. Yerel yönetim konsolu giriş noktaları gizlenir.",
+  "webui.deploySave": "Kaydet",
+  "webui.deploySaveAddress": "Adresi kaydet",
+  "webui.deploySaved": "Dağıtım modu kaydedildi",
+  "webui.deploySaveFailed": "Kaydetme başarısız oldu",
+  "webui.deployServerUrlHistoryLabel": "Son adresler",
+  "webui.deployServerUrlHistoryClear": "Temizle",
+  "webui.deployServerUrlHistoryClearTitle": "Adres geçmişi temizlensin mi?",
+  "webui.deployServerUrlHistoryClearDesc": "Yalnızca geçmiş listesi temizlenir; şu anda kayıtlı sunucu adresi etkilenmez.",
+  "webui.promoteConfirmTitle": "Sunucuya geçilsin mi?",
+  "webui.promoteConfirmDesc": "Bu makine sunucu olarak proje grubu verilerini barındıracak ve uzak sunucuyla bağlantısı kesilecek. Girdiğiniz adres geçmişte tutulur; istemciye geri dönerken yeniden seçebilirsiniz.",
+  "webui.demoteConfirmTitle": "İstemciye geçilsin mi?",
+  "webui.demoteConfirmDesc": "Bu makine şu anda kurumsal verileri barındırıyor. İstemciye geçtikten sonra Kuruluş sayfasında kuruluştan ayrılın ve uzak sunucu üzerinden oturum açın.",
+  "webui.switchToServerBlockedTitle": "Henüz sunucuya geçilemiyor",
+  "webui.switchToServerBlockedDesc": "Bu makine şu anda istemci modunda ve bir kuruluşa katılmış durumda. Sunucu moduna geçmek için önce Kuruluş sayfasında katıldığınız kuruluştan ayrılın.",
+  "webui.deployServerAddressLabel": "Diğer istemciler şunu kullanmalı: {{url}}",
+  "webui.deployServerAddressUnavailable": "WebUI'ye henüz LAN'dan ulaşılamıyor, bu yüzden diğer istemciler bağlanamaz. Önce Ayarlar → WebUI bölümünde etkinleştirin ve uzaktan erişime izin verin.",
+  "webui.deployRoleServerUnavailable": "\"Bu makine sunucu olarak\", kurumsal sürüm sunucu dağıtımı gerektirir; kişisel sürüm proje gruplarını barındırmaz.",
+  "marketplacePersona": {
+    "AccessibilityAuditor": {
+      "name": "Erişilebilirlik Denetçisi",
+      "desc": "Her kullanıcının ürünü gerçekten kullanabilmesi için arayüzleri WCAG'ye göre denetler."
+    },
+    "AccountsPayableAgent": {
+      "name": "Borç Hesapları Ajanı",
+      "desc": "Borç hesapları iş akışını otomatikleştirir ve ödemeleri doğru ve zamanında tutar."
+    },
+    "AdCreativeStrategist": {
+      "name": "Reklam Kreatif Stratejisti",
+      "desc": "Reklam kreatiflerini tasarlar ve performansını öngörür; dönüşüm için tasarlanmış varlıklar üretir."
+    },
+    "AdortDesignExpert": {
+      "name": "Ardot Tasarım Uzmanı",
+      "desc": "Ardot'u akıcı kullanır: tuvalde hassas arayüz kurar ve tasarımları doğrudan frontend koduna dönüştürür."
+    },
+    "AdTrackingExpert": {
+      "name": "Reklam İzleme Uzmanı",
+      "desc": "Kampanya performansının gerçekten ölçülebilmesi için izleme kodunu ve dönüşüm atıfını yönetir."
+    },
+    "AgentIdentityTrustExpert": {
+      "name": "Ajan Kimliği ve Güven Uzmanı",
+      "desc": "Yapay zekâ ajanları arasında kimlik ve güven mekanizmaları kurar."
+    },
+    "AgentOrchestrator": {
+      "name": "Ajan Orkestratörü",
+      "desc": "Çok ajanlı sistemleri yönetir; böylece bir yapay zekâ ekibi paralel değil, birlikte çalışır."
+    },
+    "AiContentCreatorTeam": {
+      "name": "Yapay Zekâ İçerik Üretici Ekibi",
+      "desc": "Marka konumlandırma, ilham panoları, reklam yönü, metin, video, görsel, rötuş ve yeniden kullanımı kapsayan yapay zekâ destekli çok modlu içerik ekibi — brifingden bitmiş varlığa."
+    },
+    "AiDataCopilot": {
+      "name": "Yapay Zekâ Veri Yardımcı Pilotu",
+      "desc": "Altı kişilik veri ekibi: doğal dilden SQL'e, Python modelleme, RAG bilgi soru-cevabı, panolar ve rapor üretimi."
+    },
+    "AiEngineer": {
+      "name": "Yapay Zekâ Mühendisi",
+      "desc": "Model geliştirme, dağıtım ve ayar için full-stack ML mühendisi — yapay zekâyı kâğıttan üretime taşır."
+    },
+    "AiHot": {
+      "name": "Yapay Zekâ Haber Özeti",
+      "desc": "Tek bir cümleyle günün seçilmiş yapay zekâ model, ürün, sektör ve makale haberlerini bir brifing olarak alın. Kurulum yok, giriş yok."
+    },
+    "AiImagePromptEngineer": {
+      "name": "Yapay Zekâ Görsel Prompt Mühendisi",
+      "desc": "Görsel üretiminin dilini bilir ve soyut bir görsel fikri kesin bir prompt'a dönüştürür."
+    },
+    "AIShifuExpert": {
+      "name": "AI Shifu Kurs Oluşturucu",
+      "desc": "Öğretim hedeflerinizi ve ham materyalinizi (PPT, Word, PDF, txt) etkileşimli, birebir bir yapay zekâ kursuna dönüştürür."
+    },
+    "AndonQExpert": {
+      "name": "AndonQ Tencent Cloud Desteği",
+      "desc": "Tencent Cloud'un tüm ürün hattını bilir: danışmanlık, sorun giderme ve hizmet raporlama."
+    },
+    "ApiTestingExpert": {
+      "name": "API Test Uzmanı",
+      "desc": "Kullanıcılarınızdan önce her API hatasını bulur ve arayüzleri kararlı ve doğru tutar."
+    },
+    "APMPerformanceExpert": {
+      "name": "APM Performans Uzmanı",
+      "desc": "Tencent Cloud APM ile teşhis ve ayar yapar, darboğazları belirler ve çözüm önerir."
+    },
+    "AppStoreOptimizationExpert": {
+      "name": "Uygulama Mağazası Optimizasyon Uzmanı",
+      "desc": "App Store ve Google Play sıralama algoritmalarını ve onlarda öne çıkmanın yolunu bilir."
+    },
+    "AShareAnalysis": {
+      "name": "A Hisse Araştırma Ekibi",
+      "desc": "Altı hazır iş akışında sekiz analist: makro strateji, piyasa okumaları, tekil hisse derinliği, değerleme, tedarik zinciri haritalama, fon akışları ve risk teşhisi."
+    },
+    "AskLiuxiaopai": {
+      "name": "Liu Xiaopai'ye Sor",
+      "desc": "Raphael AI kurucusunun ofis saati tarzında dijital ikizi: belirli kişiyi, gerçek acıyı, ilk doları ve ilk kullanıcıları netleştirin — sonra bu akşam yapılacak tek bir iş."
+    },
+    "AutonomousOptimizationArchitect": {
+      "name": "Otonom Optimizasyon Mimarı",
+      "desc": "Kendi kendini optimize eden ve geliştiren, kullanıldıkça akıllanan sistemler tasarlar."
+    },
+    "BackendArchitect": {
+      "name": "Backend Mimarı",
+      "desc": "Dağıtık sistemlerde ve yüksek eşzamanlılık tasarımında derindir; dağınık iş gereksinimlerini temiz bir mimariye dönüştürür."
+    },
+    "BaiduSeoExpert": {
+      "name": "Baidu SEO Uzmanı",
+      "desc": "Baidu algoritmasını ve Çin arama ekosistemini, içinde marka görünürlüğünü nasıl azamiye çıkaracağınızı bilir."
+    },
+    "BehavioralNudgeEngine": {
+      "name": "Davranışsal Dürtme Motoru",
+      "desc": "Davranışsal ekonomiyi ürün tasarımına uygular ve kullanıcıları daha iyi kararlara yönlendirir."
+    },
+    "BilibiliContentStrategist": {
+      "name": "Bilibili İçerik Stratejisti",
+      "desc": "Bilibili ekosistemini ve genç kitlesini bilir; izlenme getiren stratejiler kurar."
+    },
+    "BlockchainSecurityAuditor": {
+      "name": "Blokzincir Güvenlik Denetçisi",
+      "desc": "Akıllı sözleşmeleri ve DeFi protokollerini güvenlik açıkları için denetler."
+    },
+    "BookCoCreator": {
+      "name": "Kitap Ortak Yaratıcısı",
+      "desc": "Bir yazarla yapı ve içerik üzerinde, yayın standardına kadar birlikte çalışır."
+    },
+    "BrandGuardian": {
+      "name": "Marka Koruyucusu",
+      "desc": "On beş yıllık marka stratejisiyle, markanın göründüğü her yerde tutarlılığı savunur."
+    },
+    "CapacityExpert": {
+      "name": "Kapasite Planlama Uzmanı",
+      "desc": "Eşik izleme, kapasite tahmini ve otomatik ölçekleme politikası — hem darboğazı hem israfı önler."
+    },
+    "CarouselContentGrowthExpert": {
+      "name": "Karusel İçerik Büyüme Uzmanı",
+      "desc": "Sosyal platformlarda katılım ve büyümeyi artıran, yüksek etkileşimli karusel içerikler tasarlar."
+    },
+    "CATNetworkQualityAnalyst": {
+      "name": "Ağ Kalitesi Analisti",
+      "desc": "Çok boyutlu performans analizi, anomali konumlama, paket yakalama ve sorun kapsamlandırma — ağ ve servis arızalarının kök nedenini hızla bulur."
+    },
+    "ChaosExpert": {
+      "name": "Kaos Mühendisliği Uzmanı",
+      "desc": "Hata enjeksiyonu, dayanıklılık doğrulama ve devre kesici değerlendirmesiyle sistemleri kırılganlığa karşı güçlendirir."
+    },
+    "CharityDocFinanceExpert": {
+      "name": "Kâr Amacı Gütmeyen Belge ve Finans Uzmanı",
+      "desc": "Kâr amacı gütmeyen kuruluşlar için tek duraklı evrak ve finans: hibe başvuruları, kapanış raporları, makbuzlar, denetim hazırlığı ve uyum — hayırseverler idari işlere daha az zaman harcasın."
+    },
+    "ChatLawTeam": {
+      "name": "Çin Hukuki Danışmanlık Ekibi",
+      "desc": "Vaka kabulü, mevzuat araştırması, içtihat analizi ve yazılı görüş — medeni, aile, sözleşme ve iş hukuku konuları için danışmanlık raporları üretir."
+    },
+    "ChinaEcommerceOperationsExpert": {
+      "name": "Çin E-ticaret Operasyon Uzmanı",
+      "desc": "Tmall, JD ve Pinduoduo mağazalarını ürün seçiminden çok satan bir ilana kadar baştan sona yönetir."
+    },
+    "CloudOpsTeam": {
+      "name": "Tencent Cloud Operasyon Ekibi",
+      "desc": "Üç uzman: çoklu bulut yönetişimi ve mimari görselleştirme için CloudQ, bilet ve soru-cevap için AndonQ, geçiş planlaması ve TCO için MigraQ. Geçişten günlük operasyona."
+    },
+    "Code": {
+      "name": "Kodlama İş Akışı Uzmanı",
+      "desc": "Planla-uygula-doğrula-test et döngüsünün tamamına rehberlik eder; karmaşık işi bağımsız doğrulanabilir adımlara böler; çoklu görev takibi ve hatırlanan tercihlerle."
+    },
+    "CodeReviewExpert": {
+      "name": "Kod İnceleme Uzmanı",
+      "desc": "Her satırı kartal gözüyle okur ve hataları üretime ulaşmadan yakalar."
+    },
+    "ComplianceAuditor": {
+      "name": "Uyum Denetçisi",
+      "desc": "İş operasyonlarını sektör standartlarına göre baştan sona denetler."
+    },
+    "ContentCreator": {
+      "name": "İçerik Üretici",
+      "desc": "Bir markanın hikâyesini kitlesine ulaştıran, etkileyici çok platformlu içerik yazar."
+    },
+    "ContentDistributionTeam": {
+      "name": "İçerik Dağıtım Ekibi",
+      "desc": "13'ten fazla küresel sosyal platformda (WeChat Channels dâhil) tek duraklı dağıtım: platform bazlı kurallar, zamanlama, toplu yayın, platformlar arası analitik ve otomatik Xiaohongshu paylaşımı."
+    },
+    "ContentMonetizationTeam": {
+      "name": "İçerik Gelir Elde Etme Ekibi",
+      "desc": "CPS ortaklık komisyonları, CPE/CPM performans reklamları, üretici-marka eşleştirme ve gelir analizini kapsayan beş uzman."
+    },
+    "CorporateTrainingDesigner": {
+      "name": "Kurumsal Eğitim Tasarımcısı",
+      "desc": "Çalışan becerilerini hızla geliştiren yapılandırılmış kurumsal müfredatlar ve öğrenme yolları tasarlar."
+    },
+    "CrossBorderEcommerceExpert": {
+      "name": "Sınır Ötesi E-ticaret Uzmanı",
+      "desc": "Amazon, Shopify ve diğer uluslararası pazar yerlerini ve bir markayı küreselleştirmenin yolunu bilir."
+    },
+    "CulturalIntelligenceStrategist": {
+      "name": "Kültürel Zekâ Stratejisti",
+      "desc": "Bir markanın küreselleşirken ihtiyaç duyduğu kültürel duyarlılığı oluşturur."
+    },
+    "CustomerSupportExpert": {
+      "name": "Müşteri Destek Uzmanı",
+      "desc": "Bozulmuş bir etkileşimi savunucuya, hizmet kalitesini ağızdan ağıza yayılan övgüye dönüştürür."
+    },
+    "DataAnalysisExpert": {
+      "name": "Veri Analizi Uzmanı",
+      "desc": "Baştan sona elektronik tablo çalışması: oluşturma, düzenleme, analiz, formüller, biçimlendirme ve görselleştirme."
+    },
+    "DataAnalyticsReporter": {
+      "name": "Veri Analitiği Raporlayıcısı",
+      "desc": "Karmaşık veriyi stratejik içgörüye dönüştürür: metrik teşhisi, KPI çerçeveleri, veri kalitesi değerlendirmesi ve karar raporları."
+    },
+    "DatabaseOptimizationExpert": {
+      "name": "Veritabanı Optimizasyon Uzmanı",
+      "desc": "Veritabanı performansını ayarlar ve sorguları yeniden yazar; yavaşlar hızlanır, darboğazlar kaybolur."
+    },
+    "DataEngineer": {
+      "name": "Veri Mühendisi",
+      "desc": "Verinin kaynaktan içgörüye takılmadan akması için güvenilir iş hatları ve ETL kurar."
+    },
+    "DataExplorationExpert": {
+      "name": "Veri Keşfi Uzmanı",
+      "desc": "SQL sorgulama, keşif, görselleştirme, panolar, doğrulama ve içgörü üretimi."
+    },
+    "DataIntegrationAgent": {
+      "name": "Veri Entegrasyon Ajanı",
+      "desc": "Dağınık veriyi temizler ve şirket genelinde tek bir görünümde birleştirir."
+    },
+    "DealStrategist": {
+      "name": "Anlaşma Stratejisti",
+      "desc": "Karmaşık anlaşma stratejileri kurar ve ilerletir; satış ekiplerinin büyük anlaşmaları kapatmasına yardım eder."
+    },
+    "DeepResearchExpert": {
+      "name": "Derin Araştırma Uzmanı",
+      "desc": "Çok kaynaklı erişim, olgu doğrulama, bilgi keşfi ve yapılandırılmış raporlama — WeChat Resmî Hesap makale aramasıyla birlikte."
+    },
+    "DelightfulExperienceDesigner": {
+      "name": "Keyifli Deneyim Tasarımcısı",
+      "desc": "Marka deneyimine beklenmedik keyif anları serpiştirir."
+    },
+    "DesignEngineTeam": {
+      "name": "Tasarım ve Prototip Ekibi",
+      "desc": "Keşiften marka kalitesinde prototip teslimine kadar uzanan altı rollü bir yapay zekâ tasarım ekibi; 71 tasarım sistemi dâhilidir."
+    },
+    "DesignMdArchitect": {
+      "name": "Tasarım Sistemi Mimarı",
+      "desc": "58 markalık bir referans kütüphanesinden tasarım sistemi şartnameleri üretir ve üretime hazır HTML/CSS sayfalarını ve arayüz bileşenlerini doğrudan çıkarır."
+    },
+    "DesignToCodeExpert": {
+      "name": "Tasarımdan Koda Uzmanı",
+      "desc": "Figma dosyalarını ve ekran görüntülerini, erişilebilirlik dâhil, kullanılabilir kod bileşenlerine dönüştürür."
+    },
+    "DeveloperEvangelist": {
+      "name": "Geliştirici Evangelisti",
+      "desc": "Bir geliştirici topluluğunu büyütür ve mühendisler arasında benimsemeyi artırır."
+    },
+    "DevOpsAutomationEngineer": {
+      "name": "DevOps Otomasyon Mühendisi",
+      "desc": "CI/CD'den kod olarak altyapıya kadar her elle işlemi otomatikleştirir — tek tıkla dağıtım."
+    },
+    "DiscoveryCoach": {
+      "name": "Keşif Koçu",
+      "desc": "Satış ekiplerini derin keşif konusunda eğitir; gerçekten önemli iş sorununu ortaya çıkarmalarını sağlar."
+    },
+    "DiversityVisualExpert": {
+      "name": "Çeşitlilik Görsel Uzmanı",
+      "desc": "Yapay zekâ görsellerindeki sistemik önyargıyı gidermek için çalışır; görselleri kültürel olarak doğru ve kapsayıcı tutar."
+    },
+    "DockerfileGenExpert": {
+      "name": "Dockerfile Oluşturucu",
+      "desc": "Konteynerleştirme en iyi uygulamalarını izleyen Dockerfile'lar üretir."
+    },
+    "DocumentGenerationExpert": {
+      "name": "Belge Üretim Uzmanı",
+      "desc": "Her türden iş belgesi üretir ve her birinin süresini kısaltır."
+    },
+    "DocumentProcessingExpert": {
+      "name": "Belge İşleme Uzmanı",
+      "desc": "Bir belge paketi: Excel, Word, PowerPoint ve PDF dosyalarını oluşturma, düzenleme ve dönüştürme."
+    },
+    "DouyinStrategist": {
+      "name": "Douyin Stratejisti",
+      "desc": "Douyin algoritmasını ve içerik ekosistemini bilir — kısa video hitleri ve arkasındaki gelir elde etme."
+    },
+    "EarningsReviewer": {
+      "name": "Kazanç Gözden Geçirici",
+      "desc": "Kıdemli çeyrek inceleme analisti: görüşmeleri ve bildirimleri okur, kapsam modelini günceller; araştırma masası için çeyrek sonrası notu, sapma tablosunu ve değerleme düzeltmesini üretir."
+    },
+    "EmbeddedFirmwareEngineer": {
+      "name": "Gömülü Yazılım Mühendisi",
+      "desc": "Mikrodenetleyici programlama: pek az payı olan donanımda verimli, güvenilir yazılım."
+    },
+    "EngineeringAssuranceTeam": {
+      "name": "Mühendislik Güvence Ekibi",
+      "desc": "Bir mühendislik direktörü altında beş uzman: kod inceleyici (güvenlik/performans/doğruluk), mimar (sistem tasarımı/ADR), SRE (olay müdahalesi/dağıtımlar), test uzmanı (strateji/kapsam) ve teknik yazar (belgeler/runbook'lar)."
+    },
+    "EngineeringWorkflowSkills": {
+      "name": "Mühendislik İş Akışı Koçu",
+      "desc": "Google'ın Agent Skills'ine dayanan tam döngülü bir mühendislik koçu: şartname güdümlü, test güdümlü, kod incelemesi, CI/CD yayını."
+    },
+    "EnterpriseAccountStrategist": {
+      "name": "Büyük Müşteri Stratejisti",
+      "desc": "Büyük müşterileri ve genişleme stratejisini yönetir; bir müşteriyi uzun vadeli ortağa dönüştürür."
+    },
+    "EnterpriseLegalTeam": {
+      "name": "Kurumsal Hukuk Ekibi",
+      "desc": "Şirket içi hukuk için çok rollü bir ekip: sözleşmeler, işlemler, gizlilik, ürün, düzenleme, yapay zekâ yönetişimi, istihdam ve fikri mülkiyet triyajı."
+    },
+    "EntrepreneurshipCoach": {
+      "name": "Girişimcilik Koçu",
+      "desc": "Yarı mentor, yarı okuma ortağı. Kurucunun gerçek acısı ortaya çıktıkça üzerinde çalışır; GTM yürütme, müşterilerle yüzleşme ve işlerin hangi sırayla yapılacağı konusunda güçlüdür."
+    },
+    "EquityResearchExpert": {
+      "name": "Hisse Araştırma Uzmanı",
+      "desc": "Tam bir hisse araç seti: kazanç analizi, kapsam başlatma raporları, DCF ve karşılaştırmalar, long/short önerileri, yatırım notları, olay senaryoları ve portföy riski — alım tarafı ve satım tarafı iş akışları."
+    },
+    "EvidenceCollector": {
+      "name": "Kanıt Toplayıcı",
+      "desc": "Ekran görüntüsü olmadan bir hatayı kaydetmeyi reddeder; böylece hiçbir şey bir açıklamanın ardına saklanamaz."
+    },
+    "ExecutiveSummaryGenerator": {
+      "name": "Yönetici Özeti Oluşturucu",
+      "desc": "Uzun raporları bir yöneticinin özümseyebileceği hâle sıkıştırır ve dakikaları geri verir."
+    },
+    "ExperimentTrackingManager": {
+      "name": "Deney Takip Yöneticisi",
+      "desc": "Deney yaşam döngüsünü yönetir; her deneyin bir hipotezi, bir yürütmesi ve bir sonucu olur."
+    },
+    "FbsirSuperPartner": {
+      "name": "Süper Ortak",
+      "desc": "Bir hedef ya da gerçek materyal getirin, kullanılabilir bir çıktı alın; ana bilgisayar yetenekleri mevcut ve yetkiliyse yürütür, geri bildirir ve ardından 72 saatlik bir hüküm verir."
+    },
+    "FeedbackSynthesisAnalyst": {
+      "name": "Geri Bildirim Sentez Analisti",
+      "desc": "Yığınla kullanıcı geri bildiriminden içgörü damıtır ve kullanıcının sesini yöne dönüştürür."
+    },
+    "FinanceAccountingExpert": {
+      "name": "Finans ve Muhasebe Uzmanı",
+      "desc": "Ay sonu kapanışı, yevmiye kayıtları, mutabakat, finansal tablolar, sapma analizi ve SOX denetim desteği."
+    },
+    "FinanceDataExpert": {
+      "name": "Finansal Veri Uzmanı",
+      "desc": "Hisse, endeks, vadeli işlem, tahvil, fon ve makro dâhil 15 ailede 209 finansal veri API'sini doğal dille sorgular."
+    },
+    "FinancialModelingExpert": {
+      "name": "Finansal Modelleme Uzmanı",
+      "desc": "Çekirdek modelleme seti: DCF, karşılaştırılabilir şirket analizi, LBO, üç tablolu modeller, rekabet ortamı ve sunum QA."
+    },
+    "FinancialTracker": {
+      "name": "Finansal Takipçi",
+      "desc": "Proje ve iş finansmanını hassasen takip eder; her giriş ve çıkış kayıt altındadır."
+    },
+    "FinopsExpert": {
+      "name": "FinOps Uzmanı",
+      "desc": "Bulut maliyet yönetişimi: fatura analizi, atıl kaynak tespiti, fiyatlandırma modeli optimizasyonu ve maliyet paylaştırma."
+    },
+    "FortuneConsultant": {
+      "name": "Fal Danışmanı",
+      "desc": "Geleneksel kehanet kaynakları — BaZi ve Zi Wei haritaları, tarot ve Erik Çiçeği okumaları, ay takvimi sorguları. Sistemler arası çapraz kontrol edilir, yalnızca eğlence amaçlıdır."
+    },
+    "FrontendDeveloper": {
+      "name": "Frontend Geliştirici",
+      "desc": "Modern web yığınları ve ana akım çerçeveler; piksel hassasiyetinde duyarlı, yüksek performanslı uygulamalar geliştirir."
+    },
+    "FsiMarketResearcher": {
+      "name": "Sektör Araştırmacısı",
+      "desc": "Analistler ve portföy yöneticileri için sektör araştırması: manzara, rekabet yapısı, karşılaştırmalı değerleme tabloları ve tematik taramalar."
+    },
+    "GameAudioEngineer": {
+      "name": "Oyun Ses Mühendisi",
+      "desc": "FMOD/Wwise entegrasyonu ve uzamsal ses; bir oyunun sesini hayata geçirir."
+    },
+    "GameDesigner": {
+      "name": "Oyun Tasarımcısı",
+      "desc": "Sistem ve mekanik tasarımı; oyunu döngülerden, kaldıraçlardan ve psikolojiden kurar."
+    },
+    "GaokaoAdvisor": {
+      "name": "Gaokao Danışmanı",
+      "desc": "Gaokao bilgi tabanını ve taban puan verilerini kaynaklı geçmiş sınavlar, programlar ve başvuru kaynakları için tarar, ardından başvuru sürecinin tamamında yol gösterir ve paylaşılabilir bir rapor üretir."
+    },
+    "GitWorkflowExpert": {
+      "name": "Git İş Akışı Uzmanı",
+      "desc": "Gelişmiş Git iş akışları ve dallanma stratejisi; iş birliği artık sürtünme kaynağı olmaktan çıkar."
+    },
+    "GlReconciler": {
+      "name": "Defter-i Kebir Mutabakatçısı",
+      "desc": "Fon arka ofisi günlük ve ay sonu mutabakatı: kebir ile yardımcı defter arasındaki farkları bulur, kaynak işlemlere kadar izler, zamanlama/yeniden sınıflandırma/kur olarak sınıflandırır ve imzaya hazır bir liste üretir."
+    },
+    "GodotGameScriptEngineer": {
+      "name": "Godot Betik Mühendisi",
+      "desc": "GDScript 2.0 ve Godot 4 düğüm mimarisi."
+    },
+    "GodotMultiplayerEngineer": {
+      "name": "Godot Çok Oyunculu Mühendisi",
+      "desc": "Godot 4 MultiplayerAPI ve ağ çoğaltma."
+    },
+    "GodotShaderDeveloper": {
+      "name": "Godot Gölgelendirici Geliştiricisi",
+      "desc": "Godot gölgelendirme dili ve VisualShader."
+    },
+    "GovernmentDigitalPresalesConsultant": {
+      "name": "Kamu Ön Satış Danışmanı",
+      "desc": "Kamu sektörü dijital dönüşüm gereksinimlerini ve arkasındaki satın alma sürecini bilir."
+    },
+    "GPTResearcherTeam": {
+      "name": "Derin Araştırma Ekibi",
+      "desc": "Beş aşamada yedi rol birden çok kaynağı toplar, ardından bir inceleme-düzeltme döngüsü atıflı profesyonel bir rapor üretir."
+    },
+    "GrowthHacker": {
+      "name": "Büyüme Hackerı",
+      "desc": "Veri güdümlü deneylerle kullanılmamış büyüme kanallarını bulur ve bileşik getiri sağlar."
+    },
+    "HealthcareMarketingComplianceExpert": {
+      "name": "Sağlık Pazarlaması Uyumu",
+      "desc": "Tıbbi pazarlamayı düzenlemeler içinde, iddialarını doğru tutar."
+    },
+    "HrOperationsTeam": {
+      "name": "İK Operasyon Ekibi",
+      "desc": "Süreç olarak İK: eleme, ücret tasarımı, örgütsel gelişim ve operasyonel iş akışı; böylece yetenek stratejisi gerçekten yerine oturur."
+    },
+    "HuashuDataPro": {
+      "name": "Yerel Veri Analizi Ekibi",
+      "desc": "Tek kişilik şirket için veri ekibi. Bir Excel girer; trend, yapı ve anomali uzmanları paralel analiz eder ve web, Excel ve PPT raporları teslim eder. Hiçbir şey makineden çıkmaz."
+    },
+    "HuashuDocReviewer": {
+      "name": "Sözleşme ve Belge İnceleyici",
+      "desc": "Orijinal .docx içine yorum balonları ve izlenen değişiklikler ekler — yeni dosya yok, biçim hasarı yok."
+    },
+    "HumanizePptTeam": {
+      "name": "İnsan Dokunuşlu PPT Ekibi",
+      "desc": "Ham materyali insan sesli bir sunum taslağına dönüştürür, ardından HTML üretimini, sunucu modunu, video hareketini ve teslim QA'sını yönetir."
+    },
+    "IdentityGraphOperator": {
+      "name": "Kimlik Grafiği Operatörü",
+      "desc": "Platformlar arası tanımayı mümkün kılan kullanıcı kimlik grafiğini kurar ve sürdürür."
+    },
+    "IncidentResponseCommander": {
+      "name": "Olay Müdahale Komutanı",
+      "desc": "Kesinti sırasında ekibi sakin bir elle yönetir: konumlandır, hafiflet, kurtar."
+    },
+    "IndieFounderCoach": {
+      "name": "Bağımsız Kurucu Koçu",
+      "desc": "İnançla yalın ve kendi imkânlarıyla: tek başına kuranların minimum kaynakla sıfırdan sürdürülebilir, kârlı bir işe ulaşmasına, yoldaki her kararda yardım eder."
+    },
+    "IndustrySreTeam": {
+      "name": "Sektörel SRE Ekibi",
+      "desc": "Oyun, finans ve e-ticaretten on iki sektörel SRE beş boyutlu bir inceleme yapar ve tek tek işaretlenebilecek mimari önerileri döndürür."
+    },
+    "InfrastructureOperationsExpert": {
+      "name": "Altyapı Operasyon Uzmanı",
+      "desc": "BT altyapısını çalışır tutar; hiçbir şey hesapsız kalmaz."
+    },
+    "InspectionExpert": {
+      "name": "Bulut İnceleme Uzmanı",
+      "desc": "Beş boyutlu inceleme (güvenlik, performans, güvenilirlik, maliyet, uyum), öncelikli düzeltmeyle yüksek riskli tarama, trend analizi ve görsel raporlar — sorunu, sizi bulmadan önce bulur."
+    },
+    "InstagramOperationsExpert": {
+      "name": "Instagram Operasyon Uzmanı",
+      "desc": "Instagram'ın görsel dili ve içerik stratejisi; insanların takip etmek isteyeceği bir marka kurar."
+    },
+    "InternalCommsExpert": {
+      "name": "Kurum İçi İletişim Uzmanı",
+      "desc": "Kurum içi iletişim şablonları: durum raporları, yönetici güncellemeleri, şirket bültenleri, SSS, olay raporları ve proje güncellemeleri."
+    },
+    "InvestmentBankingExpert": {
+      "name": "Yatırım Bankacılığı Uzmanı",
+      "desc": "Pitch materyali, değerleme (karşılaştırmalar/DCF/LBO/üç tablo), sermaye piyasaları, alıcı tarafı durum tespiti, yeniden yapılandırma ve geri kazanım şelaleleri ve baştan sona işlem yürütme."
+    },
+    "InvestmentMastersTeam": {
+      "name": "Yatırım Ustaları Ekibi",
+      "desc": "On üç efsanevi yatırım felsefesi ve altı analist paralel çalışır, bir risk yöneticisi kısıtları belirler ve bir portföy yöneticisi sinyalleri bir oylamada toplar."
+    },
+    "JiraWorkflowAdmin": {
+      "name": "Jira İş Akışı Yöneticisi",
+      "desc": "Jira yapılandırması ve çevik iş akışı tasarımı; araç ekibe hizmet eder, tersi değil."
+    },
+    "KdocsDataTable": {
+      "name": "Akıllı Tablo Oluşturucu",
+      "desc": "Bir grup sohbeti kayıt dizisini yapılandırılmış tabloya çevirir, tek cümleden paylaşılabilir bir toplama formu üretir ve kuralları yerinde sabitler — aykırı değerler için koşullu biçimlendirme, açılır liste doğrulaması, kilitli başlıklar."
+    },
+    "KdocsDocButler": {
+      "name": "Belge Kâhyası",
+      "desc": "Bulut belgelerinizin tüm yaşamını yönetir: oluşturma, arama, konuya göre yapay zekâ ile klasörlere ayırma, toplu taşıma ve yeniden adlandırma, paylaşım bağlantıları ve izinler, içeriği Markdown olarak okuma."
+    },
+    "KdocsKnowledgeCollector": {
+      "name": "Bilgi Toplayıcı",
+      "desc": "Dağınık sayfaları, mesajları ve notları yapılandırılmış bir bilgi varlığına dönüştürür: bulut belgelerine tek tıkla kırpma, yapay zekâ konu gruplaması, çok belgeli özetler ve kişisel kütüphaneye düzenli arşivleme."
+    },
+    "KdocsPdfToolbox": {
+      "name": "PDF Araç Kutusu",
+      "desc": "PDF işleri tek yerde: sayfaya göre bölme, birleştirme, sayfa çıkarma, Word/Excel/PPT'ye dönüştürme, tam metin çeviri dışa aktarma (iki dilli veya tek dilli), içerik okuma ve sayfa sayımı."
+    },
+    "KdocsPptCreator": {
+      "name": "Yapay Zekâ Sunum Oluşturucu",
+      "desc": "Tek bir cümle veya tek bir referans belge yeter; yapay zekâ taslağı tasarlar ve — başlık, içerik ve özet sayfaları dâhil — tam sunumu, duruma uygun palet ve düzenle oluşturur."
+    },
+    "KuaishouStrategist": {
+      "name": "Kuaishou Stratejisti",
+      "desc": "Kuaishou'nun alt kademe şehir pazarını ve kültürünü anlar; oraya ait bir içerik stratejisi kurar."
+    },
+    "KycScreener": {
+      "name": "KYC Tarayıcısı",
+      "desc": "Müşteri kabul uyumu: KYC materyalini ayrıştırır, kural motorunu çalıştırır, yaptırım ve PEP listelerini kontrol eder ve riske göre derecelendirilmiş bir yükseltme paketi hazırlar."
+    },
+    "LawStudentCoach": {
+      "name": "Hukuk Öğrencisi Koçu",
+      "desc": "Hukuk öğrencileri için çalışma ortağı: Sokratik sorgulama, olay özetleri, IRAC, müfredat çalışması ve baro sınavı tekrarı."
+    },
+    "LegalBuilderHubExpert": {
+      "name": "Hukuki Skill Yönetişimi",
+      "desc": "Hukuk operasyonları ve Skill geliştiricileri için bir yönetişim asistanı; Skill kaynağını, araç izinlerini, güncelliği, lisansı ve güven sınırlarını değerlendirir."
+    },
+    "LegalClinicSupervisor": {
+      "name": "Hukuk Kliniği Süpervizörü",
+      "desc": "Hukuk fakültesi klinik öğretmenleri için bir gözetim asistanı: müşteri kabulü, araştırma başlangıcı, süre takibi, öğrenci oryantasyonu ve dönem sonu devri."
+    },
+    "LegalComplianceReviewer": {
+      "name": "Hukuki Uyum İnceleyicisi",
+      "desc": "Operasyonları ve ürün özelliklerini yasaların içinde tutar, uyum riskini önler."
+    },
+    "LevelDesigner": {
+      "name": "Seviye Tasarımcısı",
+      "desc": "Her seviyeyi bestelenmiş bir deneyim olarak ele alır, hikâyeyi uzam aracılığıyla anlatır."
+    },
+    "LinkedInContentCreator": {
+      "name": "LinkedIn İçerik Üretici",
+      "desc": "LinkedIn içerik stratejisi ve beraberindeki düşünce liderliği."
+    },
+    "LitigationLegalExpert": {
+      "name": "Dava Destek Uzmanı",
+      "desc": "Davacılar için vaka desteği: vaka ve delil düzenleme, zaman çizelgeleri, çapraz sorgu hazırlığı, hasar grafikleri ve dilekçe taslakları."
+    },
+    "LivestreamEcommerceCoach": {
+      "name": "Canlı Yayın Ticaret Koçu",
+      "desc": "Senaryodan reklam harcamasına canlı yayın satışının tam döngüsü; GMV atılımını hedefler."
+    },
+    "LlmWiki": {
+      "name": "LLM Wiki",
+      "desc": "Andrej Karpathy'nin LLM Wiki kalıbıyla kalıcı bir kişisel bilgi tabanı kurar ve sürdürür: makaleleri, yazıları ve notları yapılandırılmış Markdown'a derler, birbirine bağlar, çelişkileri işaretler ve dizini güncel tutar."
+    },
+    "LspIndexEngineer": {
+      "name": "LSP Dizin Mühendisi",
+      "desc": "Language Server Protocol ve kod dizinleme."
+    },
+    "MacOsSpatialMetalEngineer": {
+      "name": "macOS Uzamsal Metal Mühendisi",
+      "desc": "Apple'ın Metal grafik API'si ve macOS uzamsal bilişim."
+    },
+    "MarketingCampaignExpert": {
+      "name": "Pazarlama Kampanyası Uzmanı",
+      "desc": "Çok kanallı kampanyaları planlar, kurar ve optimize eder: içerik stratejisi, sosyal, e-posta ve ücretli."
+    },
+    "MarketingCampaignTeam": {
+      "name": "Pazarlama Kampanyası Ekibi",
+      "desc": "Bir pazarlama direktörü altında dört uzman: içerik üretici (blog/e-posta/sosyal/marka sesi), kampanya planlayıcı (strateji/kitle/kanal/bütçe), SEO uzmanı (teknik denetim/optimizasyon/analiz) ve marka analisti (konumlandırma/marka denetimi)."
+    },
+    "McpBuildExpert": {
+      "name": "MCP Geliştirme Uzmanı",
+      "desc": "Model Context Protocol'ün tasarımı ve uygulanması."
+    },
+    "MeetingPrepAgent": {
+      "name": "Toplantı Hazırlık Ajanı",
+      "desc": "Finansal danışmanlar için hazırlık ortağı: her müşteri toplantısından önce ilişki geçmişini, portföy hareketini, piyasa haberlerini ve bir gündemi toplar — beş dakikada hazır."
+    },
+    "MermaidDiagramExpert": {
+      "name": "Mermaid Diyagram Uzmanı",
+      "desc": "Sade dili profesyonel Mermaid diyagramlarına dönüştürür: altı diyagram türü, on beş tema, saniyeler içinde yayın kalitesinde SVG ve ASCII."
+    },
+    "Migraq": {
+      "name": "MigraQ Bulut Geçişi",
+      "desc": "Tencent Cloud geçişi: Alibaba Cloud, AWS ve Huawei Cloud genelinde kaynak taraması, spesifikasyon eşleştirme, TCO analizi ve geçiş planlaması."
+    },
+    "MigraqTeam": {
+      "name": "Bulut Geçiş Ekibi",
+      "desc": "Yedi uzman bir geçişi baştan sona yürütür: ürün seçimi, landing zone, mimari, teslimat, operasyon ve FDE dağıtımı."
+    },
+    "MobileApplicationDeveloper": {
+      "name": "Mobil Uygulama Geliştirici",
+      "desc": "Yerel iOS ve Android ile çapraz platform; akıcı hissettiren mobil uygulamalar geliştirir."
+    },
+    "ModelBuilder": {
+      "name": "Finansal Model Oluşturucu",
+      "desc": "DCF, LBO, üç tablolu modeller ve karşılaştırmalı değerlemeleri Excel'de sıfırdan kurar — tamamen bağlı formüller, izlenebilir, kurumsal düzeyde kalite kontrolü."
+    },
+    "ModelQualityAssuranceExpert": {
+      "name": "Model QA Uzmanı",
+      "desc": "Yapay zekâ modelinin kalitesini sistematik olarak değerlendirir; çıktılar doğru, adil ve güvenli kalır."
+    },
+    "ModernWebappExpert": {
+      "name": "Modern Web Uygulaması Uzmanı",
+      "desc": "React + TypeScript + Vite + Tailwind + shadcn/ui, tarayıcı otomasyonu dâhil."
+    },
+    "MonthEndCloser": {
+      "name": "Ay Sonu Kapanış Uzmanı",
+      "desc": "Finans liderleri için yakın bir ortak: tahakkuklar, devirler ve sapma açıklamaları üzerinden kontrol listesini yürütür ve kontrolöre imzaya hazır bir paket verir."
+    },
+    "MultiCloudExpert": {
+      "name": "Çoklu Bulut AIOps Uzmanı",
+      "desc": "Tencent Cloud, Alibaba Cloud, AWS, Azure ve GCP için tek ajan."
+    },
+    "MultiCloudManagementExpert": {
+      "name": "Çoklu Bulut Yönetim Uzmanı",
+      "desc": "Her bulutta mimari yönetişim, görselleştirme, otomatik inceleme, maliyet optimizasyonu ve risk değerlendirmesi — hepsi için tek uzman."
+    },
+    "NarrativeDesigner": {
+      "name": "Anlatı Tasarımcısı",
+      "desc": "Hikâye ile oyunu birbirinden ayrılamaz hâle gelene dek kaynaştırır."
+    },
+    "OpcTeam": {
+      "name": "Tek Kişilik Şirket Ekibi",
+      "desc": "Dokuz uzman, tek kişilik şirketin bütün yayını boyunca sizinle yürür — kaynak denetimi, niş konumlandırma, MVP, dönüşüm ve geriye dönük değerlendirme — Easy'nin Tek Kişilik İşletme metodolojisine dayanır."
+    },
+    "OpenSpecDocTeam": {
+      "name": "Uzun Belge Ekibi",
+      "desc": "Kurumsal düzeyde uzun belgeler: dört rol derin araştırma, taslak planlama, yazım ve uyum incelemesini kapsar."
+    },
+    "OutboundStrategist": {
+      "name": "Dışa Dönük Satış Stratejisti",
+      "desc": "Dışa dönük ve soğuk başlangıç satışı — bir yabancıdan sonraki otuz saniyeyi kazanmak."
+    },
+    "PaidMediaAuditor": {
+      "name": "Ücretli Medya Denetçisi",
+      "desc": "Reklam harcamasını ve bütçe dağılımını derinlemesine denetler ve boşa giden parayı bulur."
+    },
+    "PerformanceTestingExpert": {
+      "name": "Performans Testi Uzmanı",
+      "desc": "Performans testi ve kıyaslama — bir iyileştirmeyi izlenimle değil rakamlarla kanıtlamak."
+    },
+    "PitchAgent": {
+      "name": "Pitch Ajanı",
+      "desc": "Kıdemli bir bankacılık çalışanı: sıfırdan ilk pitch'i kurar — karşılaştırmalar, emsal işlemler, DCF, football field grafiği — ve modele bağlı markalı bir sunum."
+    },
+    "PodcastStrategist": {
+      "name": "Podcast Stratejisti",
+      "desc": "Podcast planlama ve büyüme ile sesin kazandığı daha derin kitle bağı."
+    },
+    "PpcBiddingStrategist": {
+      "name": "PPC Teklif Stratejisti",
+      "desc": "Google Ads ve Baidu teklif verme; kaliteli trafiği en düşük tıklama başına maliyetle satın alma."
+    },
+    "PptCreationExpert": {
+      "name": "Sunum Oluşturma Uzmanı",
+      "desc": "Bir fikri tek seferde bitmiş bir sunuma dönüştürür."
+    },
+    "PresalesTechnicalConsultant": {
+      "name": "Ön Satış Teknik Danışmanı",
+      "desc": "Teknik ile ticariyi birleştirir; müşteri çözümün değerini görebilir."
+    },
+    "PrivateDomainMarketingExpert": {
+      "name": "Özel Alan Pazarlama Uzmanı",
+      "desc": "Zaten sahip olduğunuz veriyi etkinleştirir, içindeki pazarlama fırsatını bulur ve gelire dönüştürür."
+    },
+    "PrivateDomainOperationsExpert": {
+      "name": "Özel Alan Operasyon Uzmanı",
+      "desc": "WeChat özel trafik havuzları kurar ve işletir; herkese açık trafiği sahip olunan bir varlığa dönüştürür."
+    },
+    "PrivateEquityExpert": {
+      "name": "Özel Sermaye Uzmanı",
+      "desc": "Anlaşma bulma, eleme, durum tespiti kontrol listeleri, IC notları, birim ekonomisi, getiri analizi, portföy yönetimi ve değer yaratma planları."
+    },
+    "ProductManagementExpert": {
+      "name": "Ürün Yönetimi Uzmanı",
+      "desc": "Şartname yazımı, yol haritası planlama, paydaş iletişimi, kullanıcı araştırması sentezi, rekabet analizi ve metrik takibi."
+    },
+    "ProductStrategyTeam": {
+      "name": "Ürün Stratejisi Ekibi",
+      "desc": "Bir ürün direktörü altında beş uzman: gereksinim analisti (PRD/şartnameler), kullanıcı araştırmacısı (sentez), rekabet analisti (istihbarat), veri analisti (metrikler) ve yol haritası planlayıcısı — fikirden lansmana."
+    },
+    "ProgrammaticAdBuyer": {
+      "name": "Programatik Reklam Alıcısı",
+      "desc": "Programatik satın alma ve DSP platformları; büyük ölçekte hassas hedefleme."
+    },
+    "ProjectShepherd": {
+      "name": "Proje Çobanı",
+      "desc": "Bir projeyi plana göre ilerletir — nazikçe ve hiçbir kilometre taşının kaymasına izin vermeden."
+    },
+    "PromoCreatorTeam": {
+      "name": "Tanıtım Videosu Ekibi",
+      "desc": "Altı rol, altı aşamada bir ürün URL'sini yayımlanabilir 60-90 saniyelik MP4'e taşır: yaratıcı brif, çekim çekim storyboard, varlık üretimi, HyperFrames kurgusu, BGM ve teslim."
+    },
+    "ProposalStrategist": {
+      "name": "Teklif Stratejisti",
+      "desc": "Satış teklifleri ve çözüm tasarımı; değeri reddedilmesi zor bir argümana dönüştürür."
+    },
+    "RapidPrototypingEngineer": {
+      "name": "Hızlı Prototipleme Mühendisi",
+      "desc": "Bir fikri hızla çalışan bir prototipe getirir; ekip dayanıp dayanmadığını öğrenir."
+    },
+    "RealityChecker": {
+      "name": "Gerçeklik Kontrolcüsü",
+      "desc": "Her şeyin daha fazla kanıta ihtiyacı olduğunu varsayar ve \"üretime hazır\" onayından önce ezici kanıt ister."
+    },
+    "RecruitmentExpert": {
+      "name": "İşe Alım Uzmanı",
+      "desc": "Tüm işe alım hunisi, ekip için doğru kişiyi bulmayı hedefler."
+    },
+    "RedditCommunityBuilder": {
+      "name": "Reddit Topluluk Kurucusu",
+      "desc": "Reddit kültürünü, dünyanın en büyük forumunda gerçek bir itibar kazanacak kadar iyi anlar."
+    },
+    "RemotionVideoExpert": {
+      "name": "Remotion Video Uzmanı",
+      "desc": "Remotion ile video üretimi: ürün demoları, açıklayıcılar, sosyal içerik ve sunumlar."
+    },
+    "ReportDistributionAgent": {
+      "name": "Rapor Dağıtım Ajanı",
+      "desc": "Rapor üretimini ve ihtiyacı olanlara ulaşma biçimini otomatikleştirir."
+    },
+    "RobloxAvatarCreator": {
+      "name": "Roblox Avatar Yaratıcısı",
+      "desc": "Roblox UGC ve avatar iş hattı."
+    },
+    "RobloxExperienceDesigner": {
+      "name": "Roblox Deneyim Tasarımcısı",
+      "desc": "Roblox platform UX ve gelir elde etme tasarımı."
+    },
+    "RobloxSystemScriptEngineer": {
+      "name": "Roblox Betik Mühendisi",
+      "desc": "Luau ve Roblox istemci-sunucu güvenlik modeli."
+    },
+    "RumFullstackTeam": {
+      "name": "RUM Full-Stack Ekibi",
+      "desc": "Tencent Cloud RUM baştan sona: 10 platformda aegis SDK ile WebVitals, istisna, API ve kaynak analizi, RUM-APM korelasyonuyla."
+    },
+    "SalesBattleTeam": {
+      "name": "Satış Savaş Ekibi",
+      "desc": "Hedefi kilitlemek için hesap araştırması, teması artırmak için erişim stratejisi, riski işaretlemek için rekabet istihbaratı ve çabayı dağıtmak için tahmin."
+    },
+    "SalesCoach": {
+      "name": "Satış Koçu",
+      "desc": "Yetkinlikten yürütmeye tam kapsamlı koçluk — toplantı hazırlığı, anlaşma stratejisi, iş senaryosu, rekabet analizi ve görüşme incelemeleri — Sokratik sorgulamayla yürür."
+    },
+    "SalesDataExtractionAgent": {
+      "name": "Satış Verisi Çıkarma Ajanı",
+      "desc": "Satış verisini nerede olursa olsun çeker ve düzenler."
+    },
+    "SalesPipelineAnalyst": {
+      "name": "Satış Hattı Analisti",
+      "desc": "Hat sağlığını veriyle analiz eder; tahmin tahminden çıkar."
+    },
+    "SearchTermAnalyst": {
+      "name": "Arama Terimi Analisti",
+      "desc": "Arama terimi verisinin altındaki niyeti kazıyıp çıkarır."
+    },
+    "SecurityEngineer": {
+      "name": "Güvenlik Mühendisi",
+      "desc": "Açığı, saldırgan bulmadan önce bulur ve düzeltir."
+    },
+    "SeniorDeveloper": {
+      "name": "Kıdemli Geliştirici",
+      "desc": "Birçok dil ve çerçevede on yılı aşkın full-stack — bir ekibin teknik omurgası."
+    },
+    "SeniorProjectManager": {
+      "name": "Kıdemli Proje Yöneticisi",
+      "desc": "Şelale ve çevik yöntemlerde on yılı aşkın deneyim ve karmaşık bir projede sağlam el."
+    },
+    "SeoContentTeam": {
+      "name": "SEO İçerik Ekibi",
+      "desc": "Beş aşamada yedi rol: anahtar kelime araştırması, uzun SEO yazımı, teknik optimizasyon, editörlük, bağlantı stratejisi ve dönüşüm analizi."
+    },
+    "SeoExpert": {
+      "name": "SEO Uzmanı",
+      "desc": "Google'ın algoritması ve teknik SEO ve sonuçlarda konumu nasıl koruyacağınız."
+    },
+    "ShortVideoEditingCoach": {
+      "name": "Kısa Video Kurgu Koçu",
+      "desc": "Kurgu tekniği ve tempo; her klip profesyonel etkiyle ulaşır."
+    },
+    "SiteReliabilityEngineer": {
+      "name": "Site Güvenilirlik Mühendisi",
+      "desc": "Operasyon sorunlarını yazılım mühendisliğiyle çözer ve %99,99 erişilebilirliği korur."
+    },
+    "SocialAdStrategist": {
+      "name": "Sosyal Reklam Stratejisti",
+      "desc": "Sosyal platform reklamcılığı; hassas hedeflemeyle en iyi edinme maliyetine ulaşır."
+    },
+    "SocialEngagementTeam": {
+      "name": "Sosyal Etkileşim Ekibi",
+      "desc": "Etkileşim otomasyonu, yapay zekâ yorum operasyonu, yüksek dönüşümlü sinyal madenciliği ve marka duygu izleme yoluyla 14'ten fazla küresel platformda sosyal etkileşimi güvenle artırır."
+    },
+    "SocialMediaStrategist": {
+      "name": "Sosyal Medya Stratejisti",
+      "desc": "Stratejiyi tüm platformlarda eşgüdümler; marka her birinde en güçlü sesle konuşur."
+    },
+    "Soe": {
+      "name": "Güvenlik Operasyon Uzmanı",
+      "desc": "WAF, ana bilgisayar güvenliği, bulut güvenlik duvarı, SOC ve tehdit savunma ürünlerinin çevrimdışı uyarı ve olay verilerini analiz eder; açık, saldırı ve adli analiz dâhil."
+    },
+    "SoftwareArchitect": {
+      "name": "Yazılım Mimarı",
+      "desc": "Ölçeklenebilir, yüksek erişilebilirlikli mimariyi yukarıdan aşağıya tasarlar ve mühendislik ekibini ona yönlendirir."
+    },
+    "SoftwareCompany": {
+      "name": "Yazılım Şirketi",
+      "desc": "Çalışan bir geliştirme ekibi: PM gereksinimleri belirler, mimar tasarlar ve görevleri böler, mühendisler toplu olarak uygular, QA doğrular — küçük istekler için hızlı yolla."
+    },
+    "SoftwareWorkshop": {
+      "name": "Yazılım Atölyesi",
+      "desc": "Altı mühendislik rolü — ürün incelemesi, kod incelemesi, güvenlik denetimi, QA, tasarım sistemi, hata ayıklama ve operasyon — fikirden üretime kadar."
+    },
+    "SoliditySmartContractEngineer": {
+      "name": "Solidity Mühendisi",
+      "desc": "Solidity ve EVM ekosistemi; güvenli ve çalıştırması ucuz sözleşmeler yazar."
+    },
+    "SprintPriorityManager": {
+      "name": "Sprint Öncelik Yöneticisi",
+      "desc": "Sabit bir sprintin izin verdiği en iyi önceliklendirme kararlarını verir; iterasyon en yüksek değerini teslim eder."
+    },
+    "SreExpert": {
+      "name": "SRE Uzmanı",
+      "desc": "Kök neden akıl yürütme, uyarı korelasyonu, süreç teşhisi ve SLO yönetişimi; sistematik bir teşhis yöntemiyle."
+    },
+    "StatementAuditor": {
+      "name": "LP Ekstre Denetçisi",
+      "desc": "LP sermaye hesabı ekstrelerinin son kontrolü: her satırı fon NAV'ından yeniden hesaplar, dağıtımları ve yönetim ücretlerini mutabık kılar ve bir şey çıkmadan önce imza önerileri ile istisna listesi düzenler."
+    },
+    "StockPartnerTeam": {
+      "name": "Hisse Araştırma Ekibi",
+      "desc": "Sektör stratejisi, sinyal yakalama, değerleme, ters yönlü konumlanma, temel analiz ve kısa vadeli işlemi kapsayan altı analist, canlı piyasa verisini birkaç açıdan okur."
+    },
+    "StrategyBacktestExpert": {
+      "name": "Strateji Geriye Dönük Test Uzmanı",
+      "desc": "Düz dille anlatılan bir stratejiyi, standart metrikler, grafikler ve HTML panosuyla çalıştırılabilir bir Python geriye dönük testine çevirir — ayrıca uygulama ayrıntıları, bilinen önyargılar ve sonucu nasıl okuyacağınız."
+    },
+    "StudioOperationsManager": {
+      "name": "Stüdyo Operasyon Yöneticisi",
+      "desc": "Kaynak tahsisinden sürece kadar stüdyo operasyonlarını günü gününe yürütür."
+    },
+    "StudioProducer": {
+      "name": "Stüdyo Yapımcısı",
+      "desc": "Bir projeyi onaydan teslime taşır; yaratıcılık, bütçe ve zamanı dengeler."
+    },
+    "StudyAbroadConsultant": {
+      "name": "Yurt Dışı Eğitim Danışmanı",
+      "desc": "Ülkeler genelinde başvuru süreçleri ve kurum bilgisi."
+    },
+    "SupplyChainStrategist": {
+      "name": "Tedarik Zinciri Stratejisti",
+      "desc": "Maliyet, verimlilik ve dayanıklılığın doğru dengesi için her halkayı optimize eder."
+    },
+    "TaxComplianceTeam": {
+      "name": "Vergi ve Uyum Ekibi",
+      "desc": "Beş aşamada baştan sona kurumsal finans uyumu: makbuzlar, defter tutma, tablolar, vergi beyanı ve uyum denetimi."
+    },
+    "TechnicalArtist": {
+      "name": "Teknik Sanatçı",
+      "desc": "Sanat yönetimi ile motor gerçeği arasında köprü kurar; gölgelendirici ve VFX'te rahattır."
+    },
+    "TechnicalDocumentationEngineer": {
+      "name": "Teknik Dokümantasyon Mühendisi",
+      "desc": "Karmaşık teknik fikirleri bilgiyi aktaracak kadar açık dokümantasyona dönüştürür."
+    },
+    "TencentCharityExpert": {
+      "name": "İyilik için Teknoloji Uzmanı",
+      "desc": "Tencent'in iyilik için teknoloji pratiğinden, kâr amacı gütmeyen sektöre yönelik ürün ve teknoloji çözümleri."
+    },
+    "TencentCloudPriceExpert": {
+      "name": "Tencent Cloud Fiyatlandırma",
+      "desc": "Satış için liste fiyatı sorgulama: ürün soruları, tekli ve toplu teklifler ve görselden yapılandırma tanıma. Fiyatlar canlı API'den gelir."
+    },
+    "TencentRtcExpert": {
+      "name": "TRTC Destek Uzmanı",
+      "desc": "Gerçek zamanlı ses/video desteği: kullanım ve kalite sorguları, tekil çağrı teşhisi, bulut inceleme okumaları, sorun giderme ve rakip SDK'lardan geçiş."
+    },
+    "TencentSecurityExpert": {
+      "name": "Tencent Güvenlik Uzmanı",
+      "desc": "Güvenlikte yıllar: tehdit modelleme, açık değerlendirmesi, güvenli kod incelemesi, mimari, olay müdahalesi ve danışmanlık."
+    },
+    "TerminalIntegrationExpert": {
+      "name": "Terminal Entegrasyon Uzmanı",
+      "desc": "Terminal uygulamalarının uzamsal bilişim ortamlarıyla entegrasyonu."
+    },
+    "TestResultsAnalyst": {
+      "name": "Test Sonuçları Analisti",
+      "desc": "Test sonuçlarını bir dedektifin kanıtı okuduğu gibi okur ve içlerinde saklanan kalite sorununu bulur."
+    },
+    "ThreatDetectionEngineer": {
+      "name": "Tehdit Tespit Mühendisi",
+      "desc": "Hasar vermeden önce tehdidi yakalayıp durduran tespit sistemleri kurar."
+    },
+    "TikTokStrategist": {
+      "name": "TikTok Stratejisti",
+      "desc": "TikTok algoritması ve uluslararası kısa video ekosistemi ve bir markanın onda nasıl patlama yaptığı."
+    },
+    "ToolEvaluationExpert": {
+      "name": "Araç Değerlendirme Uzmanı",
+      "desc": "Bir ekip için doğru aracı değerlendirir ve önerir; kimse yanlış araçla haftalarını kaybetmez."
+    },
+    "TradingAgentTeam": {
+      "name": "İşlem Analizi Ekibi",
+      "desc": "Beş aşamada on üç rol: teknik, temel, haber ve duygu toplama, boğa/ayı tartışması, işlem kararı, üç yönlü risk değerlendirmesi ve AL/SAT/TUT çağrısı içeren nihai rapor."
+    },
+    "TrendResearcher": {
+      "name": "Trend Araştırmacısı",
+      "desc": "Sektör ve teknoloji trendlerini izler ve ürün stratejisi için ileriye dönük girdiye dönüştürür."
+    },
+    "TripStarAgent": {
+      "name": "Seyahat Konsiyerji",
+      "desc": "Bir yaşam hizmetleri konsiyerji: gezi planlama, görülecek yerler, oteller, hava durumu, bütçe ve fırsat toplama tek yerde."
+    },
+    "TwitterOperationsExpert": {
+      "name": "X / Twitter Operasyon Uzmanı",
+      "desc": "X'te etkileşim stratejisi ve konu operasyonu; bir markayı küresel sohbete sokar."
+    },
+    "Txzhaopin": {
+      "name": "Tencent İşe Alım Asistanı",
+      "desc": "Kampüs ve deneyimli işe alımı kapsayan resmî Tencent işe alım asistanı: gereksinim alımı, özgeçmiş arama, mülakat planlama, soru hazırlama, değerlendirmeler, yapılacaklar ve veri panosu."
+    },
+    "UiDesigner": {
+      "name": "UI Tasarımcısı",
+      "desc": "Tasarım sistemleri ve bileşen kütüphaneleri; piksel mükemmelliğinde ve erişilebilir."
+    },
+    "UnityArchitect": {
+      "name": "Unity Mimarı",
+      "desc": "ScriptableObject'ler ve ayrıştırılmış sistem tasarımı."
+    },
+    "UnityEditorToolDeveloper": {
+      "name": "Unity Editör Aracı Geliştiricisi",
+      "desc": "Unity'de özel EditorWindow'lar ve iş hattı otomasyonu."
+    },
+    "UnityMultiplayerEngineer": {
+      "name": "Unity Çok Oyunculu Mühendisi",
+      "desc": "Netcode for GameObjects ve ağ tahmini."
+    },
+    "UnityShaderGraphArtist": {
+      "name": "Unity Shader Graph Sanatçısı",
+      "desc": "Unity Shader Graph ve HLSL."
+    },
+    "UnrealMultiplayerArchitect": {
+      "name": "Unreal Çok Oyunculu Mimarı",
+      "desc": "Unreal aktör çoğaltma ve sunucu yetkili mimari."
+    },
+    "UnrealSystemEngineer": {
+      "name": "Unreal Sistem Mühendisi",
+      "desc": "C++/Blueprint, Nanite ve Lumen."
+    },
+    "UnrealTechnicalArtist": {
+      "name": "Unreal Teknik Sanatçısı",
+      "desc": "UE5 malzeme editörü ve Niagara VFX."
+    },
+    "UnrealWorldBuilder": {
+      "name": "Unreal Dünya Kurucusu",
+      "desc": "UE5 World Partition ve büyük dünya akışı."
+    },
+    "UserExperienceArchitect": {
+      "name": "Kullanıcı Deneyimi Mimarı",
+      "desc": "Geliştiricilere sağlam bir teknik temel ve CSS sistemi verir — tasarım ile mühendislik arasındaki köprü."
+    },
+    "UserExperienceResearcher": {
+      "name": "Kullanıcı Deneyimi Araştırmacısı",
+      "desc": "Tasarım kararlarını varsayım yerine gerçek veriyle, davranış analizi ve kullanılabilirlik testiyle doğrular."
+    },
+    "ValuationReviewer": {
+      "name": "Portföy Değerleme İnceleyicisi",
+      "desc": "Bir PE/VC portföyünün değerlemesine başkanlık eder: GP değerleme paketlerini alır, standart şablonları çalıştırır, fon NAV'ını ve LP tahsislerini hesaplar ve LP raporunu IR onayı için taslak hâline getirir."
+    },
+    "VideoDissection": {
+      "name": "Video Çözümleme Ekibi",
+      "desc": "Viral bir Douyin videosunu tersine mühendislikle çözer: klibi çıkarır, senaryoyu yazıya döker, çekim boyutlarını, kamera hareketini, kesme ritmini ve rengi analiz eder ve kendi videonuzu çekmek için pratik bir planla tam bir döküm üretir."
+    },
+    "VideoGenTeam": {
+      "name": "Yapay Zekâ Video Üretim Ekibi",
+      "desc": "Tek bir döngüde üç rol: biri yapay zekâ ve teknoloji manşetlerini toplar, biri konuyu ve senaryoyu planlar, biri seslendirme ve altyazılı bitmiş MP4'ü işler. 60 saniyelik video, baştan sona."
+    },
+    "VisionOsSpatialEngineer": {
+      "name": "visionOS Uzamsal Mühendis",
+      "desc": "Apple Vision Pro uzamsal uygulamaları için visionOS geliştirme."
+    },
+    "VisualStorytellingExpert": {
+      "name": "Görsel Hikâye Anlatımı Uzmanı",
+      "desc": "Karmaşık bilgiyi takip etmeye değer bir görsel hikâyeye dönüştürür."
+    },
+    "WealthManagementExpert": {
+      "name": "Servet Yönetimi Uzmanı",
+      "desc": "Müşteri incelemeleri, finansal planlama, portföy yeniden dengeleme, vergi zararı hasadı, yatırım önerileri ve müşteri raporları."
+    },
+    "WebappTestingExpert": {
+      "name": "Web Uygulaması Test Uzmanı",
+      "desc": "Bir web uygulamasını başlatma, yapılandırma ve test etme sürecinde size yol gösterir."
+    },
+    "WeChatMiniProgramDeveloper": {
+      "name": "WeChat Mini Program Geliştiricisi",
+      "desc": "Mini Program çerçevesi ve ekosistemi; WeChat'te yerel hissettiren uygulamalar geliştirir."
+    },
+    "WechatOfficialAccountExpert": {
+      "name": "WeChat Resmî Hesap Uzmanı",
+      "desc": "Resmî Hesaplar için içerik stratejisi ve takipçi büyümesi ve beraberinde gelen 100 bin okumalı gönderiler."
+    },
+    "WeiboStrategist": {
+      "name": "Weibo Stratejisti",
+      "desc": "Konu pazarlaması ve Weibo'da fikrin nasıl yayıldığı; bir markayı trend listesinde tutar."
+    },
+    "WellArchExpert": {
+      "name": "Well-Architected Uzmanı",
+      "desc": "Mimari görselleştirme ve değerlendirme, kaynak topolojisi, altı Well-Architected sütunu ve mimari risk belirleme."
+    },
+    "WorkflowOptimizationExpert": {
+      "name": "İş Akışı Optimizasyon Uzmanı",
+      "desc": "Darboğazı bulur, süreci düzeltir, gerisini otomatikleştirir."
+    },
+    "XiaohongshuOperationsExpert": {
+      "name": "Xiaohongshu Operasyon Uzmanı",
+      "desc": "Xiaohongshu'nun öneri motorunu ve tohumlama kültürünü anlar ve etkileşim kazanan içerik yazar."
+    },
+    "XrCockpitInteractionExpert": {
+      "name": "XR Kokpit Etkileşim Uzmanı",
+      "desc": "XR ortamları için kokpit tarzı etkileşim tasarımı."
+    },
+    "XrImmersiveDeveloper": {
+      "name": "XR Sürükleyici Geliştirici",
+      "desc": "Varlık hissini koruyan VR ve MR uygulamaları için sürükleyici XR geliştirme."
+    },
+    "XrInterfaceArchitect": {
+      "name": "XR Arayüz Mimarı",
+      "desc": "XR için arayüz mimarisi; 3D uzayda etkileşim apaçık hissedilir."
+    },
+    "YahooFinanceCli": {
+      "name": "Piyasa İçgörü Kaşifi",
+      "desc": "Küresel hisseler için canlı fiyatlar, temel veriler, kazanç beklentileri, derecelendirmeler, geçmiş ve değerleme içgörüsü; bulanık arama, trend hisseler ve yan yana karşılaştırmayla."
+    },
+    "YunzhiQaAssistant": {
+      "name": "Bilgi Soru-Cevap Asistanı",
+      "desc": "Tencent Lexiang platformu üzerinde geri getirme destekli soru-cevap: Lexiang MCP üzerinden paralel anlamsal vektör çağırma, ardından getirilenlerden oluşturulan yapılandırılmış bir yanıt."
+    },
+    "ZeroKnowledgeProofAdmin": {
+      "name": "Sıfır Bilgi İspatı Yöneticisi",
+      "desc": "Sıfır bilgi ispatı sistemlerinin uygulanması ve yönetilmesi."
+    },
+    "ZhihuStrategist": {
+      "name": "Zhihu Stratejisti",
+      "desc": "Zhihu'nun öneri mekaniği ve bilgi pazarlaması; her seferinde bir iyi yanıtla otorite kurar."
+    }
   }
 }

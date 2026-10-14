@@ -22,5 +22,20 @@
     "networkError": "Verbindung fehlgeschlagen, bitte erneut versuchen",
     "serverError": "Serverfehler, bitte später erneut versuchen",
     "unknown": "Anmeldung fehlgeschlagen, bitte erneut versuchen"
+  },
+  "methods": {
+    "feishu": "Feishu",
+    "dingtalk": "DingTalk",
+    "wecom": "WeCom",
+    "oidc": "Unternehmenskonto (OIDC)",
+    "ldap": "LDAP",
+    "local": "Lokales Konto"
+  },
+  "ssoDivider": "Oder mit Unternehmens-SSO anmelden",
+  "ldap": {
+    "button": "LDAP-Domänenkonto",
+    "usernamePlaceholder": "Domänenkonto (z. B. jdoe oder user@corp.com)",
+    "passwordPlaceholder": "Domänenpasswort",
+    "submit": "Mit LDAP anmelden"
   }
 }

@@ -133,7 +133,8 @@
         "noBot": "Henüz bağlı bir bot yok. Ayarlar → Kanallar’dan bir bot bağlayıp tekrar gelin.",
         "noChat": "Bot bağlı ancak henüz sohbet yok: uygulamadan ona bir mesaj gönderin, burada görünecektir.",
         "goSettings": "Ayarları aç"
-      }
+      },
+      "dreamEngineNoProvider": "Önce bir Dream Engine model sağlayıcısı ekleyin"
     },
     "freq": {
       "manual": "Manuel",

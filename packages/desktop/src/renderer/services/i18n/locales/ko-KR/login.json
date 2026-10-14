@@ -22,5 +22,20 @@
     "networkError": "연결 실패, 다시 시도하세요",
     "serverError": "서버 오류, 나중에 다시 시도하세요",
     "unknown": "로그인 실패, 다시 시도하세요"
+  },
+  "methods": {
+    "feishu": "Feishu",
+    "dingtalk": "DingTalk",
+    "wecom": "WeCom",
+    "oidc": "기업 계정(OIDC)",
+    "ldap": "LDAP",
+    "local": "로컬 계정"
+  },
+  "ssoDivider": "또는 기업 SSO로 로그인",
+  "ldap": {
+    "button": "LDAP 도메인 계정",
+    "usernamePlaceholder": "도메인 계정(예: jdoe 또는 user@corp.com)",
+    "passwordPlaceholder": "도메인 비밀번호",
+    "submit": "LDAP로 로그인"
   }
 }

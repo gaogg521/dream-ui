@@ -22,5 +22,20 @@
     "networkError": "Error de conexión, intenta de nuevo",
     "serverError": "Error del servidor, intenta más tarde",
     "unknown": "Error al iniciar sesión, intenta de nuevo"
+  },
+  "methods": {
+    "feishu": "Feishu",
+    "dingtalk": "DingTalk",
+    "wecom": "WeCom",
+    "oidc": "Cuenta empresarial (OIDC)",
+    "ldap": "LDAP",
+    "local": "Cuenta local"
+  },
+  "ssoDivider": "O inicia sesión con SSO empresarial",
+  "ldap": {
+    "button": "Cuenta de dominio LDAP",
+    "usernamePlaceholder": "Cuenta de dominio (p. ej., jdoe o user@corp.com)",
+    "passwordPlaceholder": "Contraseña de dominio",
+    "submit": "Iniciar sesión con LDAP"
   }
 }

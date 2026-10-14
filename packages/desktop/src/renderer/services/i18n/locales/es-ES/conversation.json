@@ -88,7 +88,8 @@
     "viewAllTooltip": "Ver todo en el Centro de sesiones",
     "shareToSession": "Compartir en mi conversación",
     "exportSelected": "Exportar selección",
-    "exportAll": "Exportar todo"
+    "exportAll": "Exportar todo",
+    "shareToOrg": "Compartir con la empresa"
   },
   "historySearch": {
     "tooltip": "Buscar mensajes",
@@ -359,6 +360,10 @@
       "PROVIDER_NOT_FOUND": {
         "title": "El modelo configurado para esta conversación ya no existe",
         "body": "Esta conversación se creó con una configuración de proveedor de modelo que desde entonces se eliminó o se reemplazó. Elige un modelo disponible antes de enviar."
+      },
+      "USER_AGENT_TOOL_CALL_LOOP": {
+        "title": "El agente falló repetidamente en las llamadas a herramientas",
+        "body": "El agente llamó repetidamente a herramientas con parámetros no válidos y se detuvo para evitar un bucle. Reenvía el mensaje; si vuelve a ocurrir, cambia de modelo o envía comentarios."
       }
     }
   },
@@ -808,7 +813,14 @@
   "sessionCenter": {
     "title": "Centro de sesiones",
     "searchPlaceholder": "Buscar sesiones...",
-    "emptySearch": "No se encontraron sesiones coincidentes"
+    "emptySearch": "No se encontraron sesiones coincidentes",
+    "colTitle": "Título",
+    "colMode": "Modo",
+    "colModel": "Modelo",
+    "colUpdatedAt": "Actualizado",
+    "modeChat": "Chat",
+    "modeImage": "Generación de imágenes",
+    "modeVideo": "Generación de vídeo"
   },
   "mediaImageUnavailable": "No se puede mostrar esta imagen; puede que el archivo se haya movido o eliminado",
   "mediaVideoUnavailable": "No se puede reproducir este vídeo; puede que el archivo se haya movido o eliminado",
@@ -956,5 +968,9 @@
     "imported": "Importado como mi conversación",
     "importFailed": "Error al importar",
     "importAsCopy": "Importar como mi copia (continuar la conversación)"
-  }
+  },
+  "officePreview": {
+    "fileWatchUnavailable": "La vigilancia de archivos en vivo no está disponible: puede que el sistema se haya quedado sin manejadores de vigilancia de archivos (inotify). La vista previa automática de nuevos archivos de Office está desactivada. Aumenta fs.inotify.max_user_instances o cierra los programas que mantienen muchas vigilancias de archivos."
+  },
+  "mediaFailureAdvice_serviceBusy": "La cola del propio proveedor está llena en este momento; aquí no hay ningún error. Espera un momento y vuelve a intentarlo; si persiste durante horas, prueba otro modelo o canal."
 }

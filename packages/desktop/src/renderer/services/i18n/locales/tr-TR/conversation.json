@@ -88,7 +88,8 @@
     "viewAllTooltip": "Oturum Merkezi'nde tümünü görüntüle",
     "shareToSession": "Sohbetime paylaş",
     "exportSelected": "Seçilenleri dışa aktar",
-    "exportAll": "Tümünü dışa aktar"
+    "exportAll": "Tümünü dışa aktar",
+    "shareToOrg": "Şirketle paylaş"
   },
   "historySearch": {
     "tooltip": "Mesajları ara",
@@ -342,6 +343,10 @@
       "PROVIDER_NOT_FOUND": {
         "title": "Bu konuşmada kullanılan model artık mevcut değil",
         "body": "Bu konuşma, o zamandan beri silinmiş veya değiştirilmiş bir model sağlayıcı yapılandırmasıyla oluşturuldu. Göndermeden önce lütfen kullanılabilir bir model seçin."
+      },
+      "USER_AGENT_TOOL_CALL_LOOP": {
+        "title": "Ajan araç çağrılarında sürekli başarısız oldu",
+        "body": "Ajan araçları art arda geçersiz parametrelerle çağırdı ve döngüyü önlemek için durduruldu. Mesajı yeniden gönderin; tekrar ederse modeli değiştirin veya geri bildirim gönderin."
       }
     }
   },
@@ -809,7 +814,14 @@
   "sessionCenter": {
     "title": "Oturum Merkezi",
     "searchPlaceholder": "Oturumlarda ara...",
-    "emptySearch": "Eşleşen oturum bulunamadı"
+    "emptySearch": "Eşleşen oturum bulunamadı",
+    "colTitle": "Başlık",
+    "colMode": "Mod",
+    "colModel": "Model",
+    "colUpdatedAt": "Güncellendi",
+    "modeChat": "Sohbet",
+    "modeImage": "Görsel üretimi",
+    "modeVideo": "Video üretimi"
   },
   "mediaImageUnavailable": "Bu görsel görüntülenemiyor; dosya taşınmış veya silinmiş olabilir",
   "mediaVideoUnavailable": "Bu video oynatılamıyor; dosya taşınmış veya silinmiş olabilir",
@@ -957,5 +969,9 @@
     "imported": "Sohbetim olarak içe aktarıldı",
     "importFailed": "İçe aktarma başarısız",
     "importAsCopy": "Kopyam olarak içe aktar (sohbete devam)"
-  }
+  },
+  "officePreview": {
+    "fileWatchUnavailable": "Canlı dosya izleme kullanılamıyor — sistemin dosya izleme tanıtıcıları (inotify) tükenmiş olabilir. Yeni Office dosyalarının otomatik önizlemesi devre dışı. fs.inotify.max_user_instances değerini artırın veya çok sayıda dosya izlemesi tutan programları kapatın."
+  },
+  "mediaFailureAdvice_serviceBusy": "Sağlayıcının kendi kuyruğu şu an dolu — burada bir sorun yok. Biraz bekleyip yeniden deneyin; saatlerce sürerse başka bir model veya kanal deneyin."
 }

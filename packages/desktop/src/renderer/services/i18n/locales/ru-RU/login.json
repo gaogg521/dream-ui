@@ -22,5 +22,20 @@
     "networkError": "Ошибка подключения, попробуйте снова",
     "serverError": "Ошибка сервера, попробуйте позже",
     "unknown": "Ошибка входа, попробуйте снова"
+  },
+  "methods": {
+    "feishu": "Feishu",
+    "dingtalk": "DingTalk",
+    "wecom": "WeCom",
+    "oidc": "Корпоративная учётная запись (OIDC)",
+    "ldap": "LDAP",
+    "local": "Локальная учётная запись"
+  },
+  "ssoDivider": "Или войдите через корпоративный SSO",
+  "ldap": {
+    "button": "Доменная учётная запись LDAP",
+    "usernamePlaceholder": "Доменная учётная запись (напр., jdoe или user@corp.com)",
+    "passwordPlaceholder": "Доменный пароль",
+    "submit": "Войти через LDAP"
   }
 }

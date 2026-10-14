@@ -22,5 +22,20 @@
     "networkError": "Помилка з'єднання, будь ласка, спробуйте ще раз",
     "serverError": "Помилка сервера, будь ласка, спробуйте пізніше",
     "unknown": "Помилка входу, будь ласка, спробуйте ще раз"
+  },
+  "methods": {
+    "feishu": "Feishu",
+    "dingtalk": "DingTalk",
+    "wecom": "WeCom",
+    "oidc": "Корпоративний обліковий запис (OIDC)",
+    "ldap": "LDAP",
+    "local": "Локальний обліковий запис"
+  },
+  "ssoDivider": "Або увійдіть через корпоративний SSO",
+  "ldap": {
+    "button": "Доменний обліковий запис LDAP",
+    "usernamePlaceholder": "Доменний обліковий запис (напр., jdoe або user@corp.com)",
+    "passwordPlaceholder": "Доменний пароль",
+    "submit": "Увійти через LDAP"
   }
 }

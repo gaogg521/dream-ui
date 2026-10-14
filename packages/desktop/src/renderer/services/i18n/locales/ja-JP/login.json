@@ -22,5 +22,20 @@
     "networkError": "接続に失敗しました。後でもう一度お試しください",
     "serverError": "サーバーで問題が発生しました。しばらく待ってから再試行してください",
     "unknown": "ログインに失敗しました。後でもう一度お試しください"
+  },
+  "methods": {
+    "feishu": "Feishu",
+    "dingtalk": "DingTalk",
+    "wecom": "WeCom",
+    "oidc": "企業アカウント（OIDC）",
+    "ldap": "LDAP",
+    "local": "ローカルアカウント"
+  },
+  "ssoDivider": "または企業 SSO でサインイン",
+  "ldap": {
+    "button": "LDAP ドメインアカウント",
+    "usernamePlaceholder": "ドメインアカウント（例：jdoe または user@corp.com）",
+    "passwordPlaceholder": "ドメインパスワード",
+    "submit": "LDAP でサインイン"
   }
 }

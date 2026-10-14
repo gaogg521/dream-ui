@@ -88,7 +88,8 @@
     "viewAllTooltip": "セッションセンターですべて表示",
     "shareToSession": "自分の会話へ共有",
     "exportSelected": "選択を書き出す",
-    "exportAll": "すべて書き出す"
+    "exportAll": "すべて書き出す",
+    "shareToOrg": "会社に共有"
   },
   "historySearch": {
     "tooltip": "メッセージを検索",
@@ -359,6 +360,10 @@
       "PROVIDER_NOT_FOUND": {
         "title": "この会話で使用されていたモデルは削除されました",
         "body": "この会話は、既に削除または変更されたモデルプロバイダーの設定で作成されました。送信する前に、利用可能なモデルを選択してください。"
+      },
+      "USER_AGENT_TOOL_CALL_LOOP": {
+        "title": "エージェントがツール呼び出しに失敗し続けました",
+        "body": "エージェントが無効なパラメーターでツールを繰り返し呼び出したため、ループを避けるために停止しました。メッセージを再送信してください。それでも続く場合は、モデルを切り替えるかフィードバックを送信してください。"
       }
     }
   },
@@ -807,7 +812,14 @@
   "sessionCenter": {
     "title": "セッションセンター",
     "searchPlaceholder": "セッションを検索...",
-    "emptySearch": "一致するセッションが見つかりません"
+    "emptySearch": "一致するセッションが見つかりません",
+    "colTitle": "タイトル",
+    "colMode": "モード",
+    "colModel": "モデル",
+    "colUpdatedAt": "更新",
+    "modeChat": "チャット",
+    "modeImage": "画像生成",
+    "modeVideo": "動画生成"
   },
   "mediaImageUnavailable": "この画像を表示できません。ファイルが移動または削除された可能性があります",
   "mediaVideoUnavailable": "この動画を再生できません。ファイルが移動または削除された可能性があります",
@@ -955,5 +967,9 @@
     "imported": "自分の会話としてインポートしました",
     "importFailed": "インポートに失敗しました",
     "importAsCopy": "自分のコピーとしてインポート（会話を続ける）"
-  }
+  },
+  "officePreview": {
+    "fileWatchUnavailable": "ライブのファイル監視を利用できません。システムのファイル監視ハンドル（inotify）が不足している可能性があります。新しい Office ファイルの自動プレビューは無効です。fs.inotify.max_user_instances を増やすか、多くのファイル監視を保持しているプログラムを閉じてください。"
+  },
+  "mediaFailureAdvice_serviceBusy": "プロバイダー側のキューが現在満杯です。こちらに問題はありません。しばらく待ってから再試行してください。数時間続く場合は、別のモデルやチャネルをお試しください。"
 }

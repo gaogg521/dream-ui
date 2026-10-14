@@ -124,7 +124,591 @@
     "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
     "useSkill": "使う",
     "useSkillToast": "「{{name}}」を有効にして新しいチャットを開始します",
-    "editSkill": "編集"
+    "editSkill": "編集",
+    "team": "チーム",
+    "teamAuto": "チーム · 自動",
+    "detailEditViaChat": "チャットで編集",
+    "builtinSkill": {
+      "12306": {
+        "title": "中国鉄道 12306",
+        "desc": "中国鉄道 12306 の列車時刻、座席の空き状況、駅情報。"
+      },
+      "12306-train-assistant": {
+        "title": "12306 予約アシスタント",
+        "desc": "中国鉄道のチケットを検索・予約：空き状況、停車駅、乗り換え、キャンセル待ち、サインイン、注文、支払いリンク。"
+      },
+      "a-stock-data": {
+        "title": "A 株データツールキット",
+        "desc": "A 株データを一通り：相場、リサーチレポート、注目テーマと北向き資金のシグナル、信用取引、ブロックトレード。"
+      },
+      "ai-comic-drama-shot-maker": {
+        "title": "コミックドラマ ショットメーカー",
+        "desc": "コミックのコマ、キャラクターシート、止まったストーリーの一瞬を、動きのある 1 つのアニメーションショットに変えます。"
+      },
+      "ai-short-drama-script": {
+        "title": "AI ショートドラマ脚本",
+        "desc": "ショートドラマ脚本を一貫して：完全版脚本、単話、シリーズとエピソードのアウトライン、リライト、脚本診断。"
+      },
+      "ai-song-cover-studio": {
+        "title": "AI ソングカバースタジオ",
+        "desc": "録音を、新たに解釈したカバーや、参照トラックにもとづくリアレンジに変えます。"
+      },
+      "ai-storyboard-generator": {
+        "title": "ストーリーボードジェネレーター",
+        "desc": "脚本、シーン、広告ブリーフを、実用的なショットリスト付きの構造化ストーリーボードに変えます。"
+      },
+      "ai-video-image-music-studio": {
+        "title": "AI クリエイションスタジオ",
+        "desc": "動画・画像・音楽・ナレーションを 1 つの連続したフローで、ビジュアル編集を挟みながら制作します。"
+      },
+      "analyze-recruitment-trends": {
+        "title": "採用トレンドインサイト",
+        "desc": "市場・競合・採用に関する資料から、需要の変化や人材フローのシグナルを読み取り、出典・前提・推奨アクションを示します。"
+      },
+      "android-apk-builder": {
+        "title": "Android APK ビルダー（aapt2 不要）",
+        "desc": "aapt2 も完全な Android SDK もないマシンで、JDK + d8 + jarsigner だけでインストール可能な APK をビルドします。"
+      },
+      "android-native-dev": {
+        "title": "Android ネイティブ開発",
+        "desc": "Android アプリ開発と UI デザイン：Material Design 3、Kotlin、Jetpack Compose、プラットフォームの慣習。"
+      },
+      "apple-design": {
+        "title": "Apple Fluid Interface デザイン",
+        "desc": "Apple の流動的なインタラクションのガイダンスにもとづくデザインレビュー：ジェスチャー駆動 UI、スプリングアニメーション、慣性、マテリアル、奥行き、視差効果の軽減。"
+      },
+      "ardot-skillhub": {
+        "title": "Ardot ボードコンポーザー",
+        "desc": "既存の Ardot アートボードを、納品できる展示にまとめます：状態比較、レビューボード、フローのウォークスルー、ロール・デバイスのマトリクス。"
+      },
+      "assist-payroll-approval": {
+        "title": "給与承認アシスタント",
+        "desc": "給与結果、例外リスト、予算比較、承認ルールを、差異の根拠とリスク区分つきのサマリーにまとめます。"
+      },
+      "autocad-drawing": {
+        "title": "AutoCAD 作図",
+        "desc": "CAD 図面の作図・編集・最適化、またはデータ抽出：機械、建築、電気、給排水、空調、鉄骨、プロセス図。"
+      },
+      "bid-pipeline": {
+        "title": "入札コンテンツパイプライン",
+        "desc": "入札公告を、WeChat、Toutiao、Xiaohongshu、ショート動画向けの公開できる投稿に変換し、カバー、イラスト、コンプライアンスチェックを付けます。"
+      },
+      "bilibili-script": {
+        "title": "Bilibili 長尺動画スクリプト",
+        "desc": "冒頭のフック、セクション構成、弾幕向きの見どころを備えた、Bilibili スタイルの長尺動画スクリプト。"
+      },
+      "btpanel": {
+        "title": "baota パネルと MCP",
+        "desc": "baota パネルを操作します：サイト、ファイル、データベース、Docker、自動化、サーバー環境、さらにステータス確認とトラブルシューティング。"
+      },
+      "build-job-profile": {
+        "title": "職務プロファイルビルダー",
+        "desc": "採用ニーズ、事業目標、職務文書を、確認できるプロファイルにまとめます：責任範囲、コンピテンシー基準、段階別の要件、スクリーニングの根拠。"
+      },
+      "chinese-poetry": {
+        "title": "中国古典文学",
+        "desc": "中国の古典詩文を、作者・題名・テーマから探して解釈します。句の補完と出典の特定にも対応。"
+      },
+      "ci-cd-and-automation": {
+        "title": "CI/CD と自動化",
+        "desc": "パイプライン設計、ビルドとリリースの自動化、デプロイを再現可能に保つチェック。"
+      },
+      "cn-ecommerce-search": {
+        "title": "中国 EC 検索",
+        "desc": "中国の主要マーケットプレイスを横断して商品を検索し、出品と価格を並べて表示します。"
+      },
+      "comfyui-ops": {
+        "title": "ComfyUI のデプロイと運用",
+        "desc": "このマシン上で ComfyUI を直接インストール、トラブルシューティング、運用します。"
+      },
+      "content-factory": {
+        "title": "コンテンツファクトリー",
+        "desc": "マルチエージェントによるコンテンツ制作：1 つの元コンテンツを、複数チャネル向けの多様な形式に展開します。"
+      },
+      "creative-brainstorming-board": {
+        "title": "プロダクトブレインストームボード",
+        "desc": "5 列のホワイトボード手法で、アイデアを現実世界から明確な課題へと前進させます。新製品や仮説主導の探索に最適。"
+      },
+      "cron": {
+        "title": "オートメーション",
+        "desc": "スケジュールに従って実行されるタスクを作成・管理します。"
+      },
+      "delivery-no-pseudoblock": {
+        "title": "納品前セルフチェック",
+        "desc": "最終サマリー、結論、ステータスレポートなど、ユーザーに何かが届く前に実行される行動ゲート。主張するだけでなく、実際に読み込まれて実行されます。"
+      },
+      "design-first": {
+        "title": "ブレインストーム、まず設計",
+        "desc": "コードを書く前に設計を固め、合意した形からビルドを始められるようにします。"
+      },
+      "dingtalk-unified": {
+        "title": "DingTalk Suite",
+        "desc": "公式の DingTalk Workspace CLI：メッセージ、グループチャット、連絡先、カレンダー、ToDo、承認、勤怠、ログ、AI テーブル、ドキュメント。"
+      },
+      "douyin-video-fetch": {
+        "title": "Douyin 動画の取得",
+        "desc": "後の分析に向けて、Douyin の動画とそのメタデータを収集します。"
+      },
+      "drawio": {
+        "title": "Draw.io ダイアグラム",
+        "desc": "ネイティブで編集可能な Draw.io ダイアグラムを作成し、エクスポートします。"
+      },
+      "element-ui-guide": {
+        "title": "Element UI リファレンス",
+        "desc": "Element UI（Vue 2）のコンポーネントリファレンスとコード生成：props、イベント、メソッド、slot、または動作するコンポーネント。"
+      },
+      "expense-merger": {
+        "title": "経費請求書マージ",
+        "desc": "OFD と PDF の請求書フォルダーを 1 つの PDF に統合し、都市・経費区分・接待の内訳をまとめた表紙を付けます。"
+      },
+      "flight-trip-advisor": {
+        "title": "フライト旅行アドバイザー",
+        "desc": "指定した日付とルートについて、両地点の天気、遅延リスク、服装、空港の現地情報を案内します。"
+      },
+      "fore-vip-geo-optimizer": {
+        "title": "GEO オプティマイザー",
+        "desc": "生成エンジンでの引用シェアを高める 5 ステップのパイプライン：実際のユーザーの質問で AI エンジンを検索し、回答を集めて、ギャップに対処します。"
+      },
+      "fore-vip-oss": {
+        "title": "オブジェクトストレージのセットアップ",
+        "desc": "オブジェクトストレージを解説し、プロバイダーの選定と設定を案内します：Alibaba OSS、Tencent COS、AWS S3、Huawei OBS、MinIO など。"
+      },
+      "fortune-master": {
+        "title": "中国の形而上学リファレンス",
+        "desc": "八字、紫微斗数、奇門遁甲、六爻、梅花、タロット、占星術のチャート。娯楽目的のみ。"
+      },
+      "frontend-design": {
+        "title": "フロントエンドデザイン",
+        "desc": "Web 向けのインターフェースデザイン：レイアウト、視覚的な階層、ビルドが従えるコンポーネントの語彙。"
+      },
+      "frontend-dev": {
+        "title": "フロントエンド開発",
+        "desc": "Web インターフェースの構築：コンポーネント、状態、スタイリング、その下にあるブラウザーの挙動。"
+      },
+      "fund-analysis": {
+        "title": "ファンド分析",
+        "desc": "ファンドの保有銘柄、パフォーマンス、リスクプロファイルを読み取り、数字を文脈に沿って整理します。"
+      },
+      "github": {
+        "title": "GitHub",
+        "desc": "`gh` CLI で GitHub を操作します：Issue、プルリクエスト、ワークフローの実行、生の API 呼び出し。"
+      },
+      "gog": {
+        "title": "Google Workspace",
+        "desc": "コマンドラインから Google Workspace を操作します：Gmail、カレンダー、ドライブ、連絡先、スプレッドシート、ドキュメント。"
+      },
+      "gongwen-format": {
+        "title": "公文書書式整形",
+        "desc": "Word または Markdown 文書を、中国の公文書規格（GB/T 9704-2012、GB/T 33476.2-2016）に合わせて整形します：書体、サイズ、行間。"
+      },
+      "govproc-method-selector": {
+        "title": "政府調達方式セレクター",
+        "desc": "政府調達案件を 6 つの方式それぞれの法定要件と照らし合わせ、すでに決めた選択を検証します。"
+      },
+      "grilling": {
+        "title": "グリリング",
+        "desc": "計画や判断を、要望どおりの厳しさで一点ずつ問い詰めて、ストレステストします。"
+      },
+      "h3-prompt-writing": {
+        "title": "MiniMax H3 プロンプト作成",
+        "desc": "T2VA、I2VA、FL2VA、L2VA、Ref2VA 向けの MiniMax H3 動画プロンプトを作成します。"
+      },
+      "hot-search-cn": {
+        "title": "中国トレンドアグリゲーター",
+        "desc": "Weibo、Zhihu、Baidu、Bilibili、Douyin、36Kr、Tieba、Toutiao のトレンドリストを、単一プラットフォームまたは比較で表示します。"
+      },
+      "identify-key-talent": {
+        "title": "キーパーソン特定",
+        "desc": "役割定義を履歴書・実績・評価と照らし合わせ、まず確認すべき人材を、根拠マトリクスとリスク計画つきで示します。"
+      },
+      "imap-smtp-email": {
+        "title": "IMAP / SMTP メール",
+        "desc": "IMAP と SMTP でメールを読み書きします：未読チェック、メッセージ内容、検索、メールボックス管理。"
+      },
+      "invoice-verify": {
+        "title": "請求書検証",
+        "desc": "請求書が本物か、無効・取消・要注意などの状態かを、テキストまたはアップロードしたファイルから確認します。"
+      },
+      "ios-application-dev": {
+        "title": "iOS アプリ開発",
+        "desc": "iOS アプリ開発：Swift、SwiftUI、UIKit、Apple が求めるプラットフォームの慣習。"
+      },
+      "ixhlink-skills-id-photo-standard": {
+        "title": "標準証明写真",
+        "desc": "ポートレートを、履歴書・試験・パスポート・ビザの規格に合う証明写真に変換します。美化は行いません。"
+      },
+      "karpathy-guidelines": {
+        "title": "Karpathy コーディングガイドライン",
+        "desc": "LLM が繰り返すコーディングミスを減らす行動ガイドライン。コードの作成やレビュー時に使います。"
+      },
+      "kdocs": {
+        "title": "Kingsoft Docs / WPS Cloud",
+        "desc": "公式の Kingsoft Docs Skill：クラウド文書の作成、閲覧、編集、検索、共有、整理。"
+      },
+      "lark-unified": {
+        "title": "Lark / Feishu Suite",
+        "desc": "統合 Lark CLI：メッセージ、ドキュメント、スプレッドシート、Base テーブル、カレンダー。"
+      },
+      "lexiang-knowledge-base": {
+        "title": "Tencent Lexiang",
+        "desc": "MCP 経由で Lexiang ナレッジベースにフルアクセス：個人およびチームのナレッジベースを横断して検索・読み書き。"
+      },
+      "local-ocr-linux": {
+        "title": "ローカル OCR（Linux）",
+        "desc": "インストール済みの Tesseract で、画像内のテキストをオフラインで読み取ります。"
+      },
+      "local-ocr-macos": {
+        "title": "ローカル OCR（macOS）",
+        "desc": "内蔵の Vision フレームワークで、画像内のテキストをオフラインで読み取ります。"
+      },
+      "local-ocr-windows": {
+        "title": "ローカル OCR（Windows）",
+        "desc": "Windows 内蔵の OCR エンジンで、画像内のテキストをオフラインで読み取ります。"
+      },
+      "markitdown-skill": {
+        "title": "MarkItDown",
+        "desc": "Microsoft の MarkItDown CLI で文書を Markdown に変換します。PDF、Office など。"
+      },
+      "mcporter": {
+        "title": "MCP マネージャー",
+        "desc": "MCP サーバーとそのツールを、HTTP または stdio で直接一覧表示・設定・認証・呼び出しします。"
+      },
+      "meeting-minutes-assistant": {
+        "title": "議事録とアクション",
+        "desc": "会議を構造化された議事録にまとめます：決定事項、アクション項目、担当者、期限、フォローアップのループ。"
+      },
+      "mermaid": {
+        "title": "Mermaid ダイアグラム",
+        "desc": "フローチャート、シーケンス図、ER 図を SVG または ASCII でレンダリングします。"
+      },
+      "morph-ppt": {
+        "title": "Morph スライド",
+        "desc": "スライド間のなめらかな Morph トランジション付きの .pptx を作成します。"
+      },
+      "morph-ppt-3d": {
+        "title": "3D Morph スライド",
+        "desc": "GLB モデルとシネマティックなカメラワーク付きの Morph スライド。"
+      },
+      "officecli": {
+        "title": "Office ドキュメント",
+        "desc": "Word、Excel、PowerPoint ファイルを作成・分析・編集します。"
+      },
+      "officecli-academic-paper": {
+        "title": "学術論文",
+        "desc": "ジャーナル、学会、学位論文の .docx を適切な書式で作成します。"
+      },
+      "officecli-data-dashboard": {
+        "title": "Excel ダッシュボード",
+        "desc": "数式とグラフで動く複数シートの Excel ダッシュボード。"
+      },
+      "officecli-docx": {
+        "title": "Word ドキュメント",
+        "desc": "入力でも出力でも、.docx ファイルに関わるすべて。"
+      },
+      "officecli-financial-model": {
+        "title": "財務モデル",
+        "desc": "3 表モデル、DCF、LBO、感度分析。"
+      },
+      "officecli-pitch-deck": {
+        "title": "ピッチデック",
+        "desc": "シードからシリーズ C までの投資家向けデック。"
+      },
+      "officecli-pptx": {
+        "title": "PowerPoint スライド",
+        "desc": "入力でも出力でも、.pptx ファイルに関わるすべて。"
+      },
+      "officecli-word-form": {
+        "title": "入力できる Word フォーム",
+        "desc": "本物のコンテンツコントロールとフォームフィールドを備えた Word フォーム。"
+      },
+      "officecli-xlsx": {
+        "title": "Excel スプレッドシート",
+        "desc": "入力でも出力でも、.xlsx ファイルに関わるすべて。"
+      },
+      "old-photo-restorer": {
+        "title": "古い写真の修復",
+        "desc": "古くて黄ばんだ写真、傷ついた写真、破損した写真（折り目、ノイズ、シミ、欠損部分）を修復し、透かしなしで納品します。"
+      },
+      "one-config": {
+        "title": "アプリ設定",
+        "desc": "このアプリケーションの設定を確認・調整します。"
+      },
+      "one-troubleshooting": {
+        "title": "トラブルシューティング",
+        "desc": "このアプリケーションの問題を診断し、対処します。"
+      },
+      "one-webui-public": {
+        "title": "WebUI の公開アクセス",
+        "desc": "ネットワーク外からアクセスできるように WebUI を公開します。"
+      },
+      "one-webui-setup": {
+        "title": "WebUI のセットアップ",
+        "desc": "リモートアクセス用に WebUI モードを設定します。"
+      },
+      "openclaw-setup": {
+        "title": "OpenClaw のセットアップ",
+        "desc": "パーソナルアシスタント OpenClaw をインストール、デプロイ、利用します。"
+      },
+      "patent-disclosure-writer": {
+        "title": "特許開示書ライター",
+        "desc": "短いアイデア、コード、PRD、図面を、強化された特許開示書にまとめます。"
+      },
+      "pdf": {
+        "title": "PDF ツールキット",
+        "desc": "テキストや表を抽出し、PDF を作成、結合、分割します。"
+      },
+      "peekaboo": {
+        "title": "macOS UI オートメーション",
+        "desc": "Peekaboo CLI を通じて macOS のインターフェースをキャプチャし、自動操作します。"
+      },
+      "pm-toolkit-zxh": {
+        "title": "データ・効率化ツールキット",
+        "desc": "A/B の有意差、コホートリテンション、SQL 抽出、公開前レビュー、文章校正、履歴書の添削、NDA とプライバシーポリシーの草案。"
+      },
+      "poster-design-studio": {
+        "title": "ポスターデザインスタジオ",
+        "desc": "テーマ、商品写真、ブランド資料から、思わず足を止めるポスターを作ります。"
+      },
+      "price-compare": {
+        "title": "価格比較",
+        "desc": "複数の商品を価格とスペックで比較し、最安のものとお得なものを示します。"
+      },
+      "proboost-tiktok-shop-analysis": {
+        "title": "TikTok Shop 分析",
+        "desc": "TikTok Shop の成績（商品、トラフィック、コンバージョン）を読み、運営上のギャップを見つけます。"
+      },
+      "proboost-tiktok-video-analysis": {
+        "title": "TikTok バズ動画の分解",
+        "desc": "高い成果を出した TikTok 動画を、うまくいった要因の選択に分解し、再利用できる点を示します。"
+      },
+      "product-discovery-zxh": {
+        "title": "プロダクトディスカバリー",
+        "desc": "アイデア出し、リスクの高い仮説のマッピング、インパクト × リスクのランキング、検証実験、インタビューの統合。"
+      },
+      "product-manager": {
+        "title": "プロダクトマネージャー",
+        "desc": "プロダクトのライフサイクル全体：機会評価、PRD 作成、ロードマップ計画、GTM、リリース後の計測。"
+      },
+      "product-strategy-zxh": {
+        "title": "プロダクト戦略",
+        "desc": "ビジョン、戦略キャンバス、ビジネスキャンバスとリーンキャンバス、収益化と価格設定、SWOT、PESTLE、アンゾフ、ポーター、バリュープロポジション。"
+      },
+      "product-trend-researcher": {
+        "title": "トレンドリサーチ",
+        "desc": "市場トレンド、競合環境、技術スキャンを、情報源の評価と確度つきの意思決定ブリーフとして提供します。"
+      },
+      "pubmed-literature-search": {
+        "title": "PubMed 文献検索",
+        "desc": "必須の期間内で PubMed をキーワード検索し、レポートとして提供します。"
+      },
+      "qq-email": {
+        "title": "QQ メール",
+        "desc": "QQ メールを IMAP で受信し SMTP で送信します。認証情報は環境から読み取ります。"
+      },
+      "qqmusic": {
+        "title": "QQ ミュージック",
+        "desc": "曲、アルバム、プレイリスト、ミュージックビデオ、アーティストを検索し、毎日のおすすめも表示します。"
+      },
+      "remove-watermark": {
+        "title": "透かし除去",
+        "desc": "画像から透かし、ロゴ、コーナーマーク、テキスト、字幕を取り除きます。"
+      },
+      "resume-design": {
+        "title": "履歴書デザイン",
+        "desc": "Meitu Design Studio の AI デザイン CLI（`designkit`）を通じて、履歴書のレイアウトとテンプレートを作成します。"
+      },
+      "screen-automation": {
+        "title": "画面オートメーション",
+        "desc": "ローカルの画面認識でインターフェース要素を見つけて位置を特定し、Windows または macOS の現在の画面でタスクを完了します。"
+      },
+      "security-and-hardening": {
+        "title": "セキュリティとハードニング",
+        "desc": "OWASP 対策、認証、シークレット管理、依存関係の監査。"
+      },
+      "self-media-distribution": {
+        "title": "マルチプラットフォーム配信",
+        "desc": "クリエイタープラットフォームと複数アカウントへのワンクリック投稿：Douyin、WeChat Channels、Kuaishou など。"
+      },
+      "seo-content-optimizer": {
+        "title": "SEO コンテンツオプティマイザー",
+        "desc": "検索での可視性と、AI の回答に引用されることを意識してコンテンツを最適化します。"
+      },
+      "skill-creator": {
+        "title": "Skill クリエイター",
+        "desc": "効果的な自作 Skill を書くためのガイド。"
+      },
+      "skill-scanner": {
+        "title": "Skill セキュリティスキャナー",
+        "desc": "エージェント Skill をインストールまたは使用する前に、セキュリティリスクをスキャンします。Tencent Zhuque Lab 提供。"
+      },
+      "smart-product-selector": {
+        "title": "EC 商品選定",
+        "desc": "何を売るかを決めるための、市場データの収集、利益率の計算、選定分析。"
+      },
+      "social-media-content": {
+        "title": "ソーシャルメディアコンテンツ",
+        "desc": "テーマ、コピー、タグ、投稿頻度など、ソーシャルコンテンツを体系的に作成します。"
+      },
+      "software-copyright-cn": {
+        "title": "中国ソフトウェア著作権登録",
+        "desc": "中国のソフトウェア著作権登録に必要な識別資料を準備します。"
+      },
+      "solo-company": {
+        "title": "一人会社コーチ",
+        "desc": "ひとり起業家のポジショニング、プロダクト、価格設定、集客、提供、振り返りを、意思決定ツリーとダッシュボードで伴走します。"
+      },
+      "story-roleplay": {
+        "title": "ストーリーロールプレイ",
+        "desc": "PNG、WebP、JSON 形式のキャラクターカードと世界観情報。"
+      },
+      "superpowers": {
+        "title": "Superpowers エンジニアリング手法",
+        "desc": "コードの前に仕様、実行可能な計画、強制されるレッド・グリーン TDD、サブエージェント駆動開発、体系的なデバッグとレビュー、そしてマージ。"
+      },
+      "supertonic-tts": {
+        "title": "ローカル高速 TTS",
+        "desc": "supertonic-mnn による高品質なローカル音声合成：30 以上の言語、10 種類の声、CLI と Python API。"
+      },
+      "talking-avatar-video": {
+        "title": "トーキングアバター動画",
+        "desc": "1 枚のポートレートと短い台本または録音から、安定した自然な話し方のトーキングヘッド動画を作ります。"
+      },
+      "taobao": {
+        "title": "クロスプラットフォーム価格チェック",
+        "desc": "Taobao、Tmall、JD、Pinduoduo、Douyin、Kuaishou で商品の最安値を探します。"
+      },
+      "tax-policy-knowledge": {
+        "title": "税制ナレッジベース",
+        "desc": "中国の税務・財務政策のリファレンスナレッジベース。"
+      },
+      "tencent-meeting-skill": {
+        "title": "Tencent Meeting",
+        "desc": "会議の予約、編集、キャンセル、および詳細、参加者、待機室、ユーザーの会議リスト、録画の確認。"
+      },
+      "the-entrepreneurship-handbook": {
+        "title": "起業ハンドブック",
+        "desc": "創業者、マネージャー、経営者向けの Q&A Skill。"
+      },
+      "tiktok-script": {
+        "title": "TikTok スクリプト",
+        "desc": "テンポ、テキストオーバーレイ、トレンドへの適応を軸にした TikTok ショート動画のスクリプト。"
+      },
+      "totorosir-work-report": {
+        "title": "業務報告アシスタント",
+        "desc": "週報、日報、月報、四半期報、年報、プロジェクトやマイルストーンの更新を、散らばったメモやチケット番号から作成します。"
+      },
+      "toutiao-search": {
+        "title": "Toutiao コンテンツ検索",
+        "desc": "キーワードで Toutiao の投稿と動画を検索し、閲覧数または日付順に並べて、表、CSV エクスポート、インタラクティブな HTML レポートで提供します。"
+      },
+      "travel-guide-assistant": {
+        "title": "旅行プランナー",
+        "desc": "旅程を立て、その途中の交通、宿泊、観光地、食事を確認します。"
+      },
+      "user-persona-builder": {
+        "title": "ユーザーペルソナビルダー",
+        "desc": "詳細なペルソナを作成します：人口統計、課題、動機、コンテンツの好み。"
+      },
+      "video-to-ppt": {
+        "title": "動画から PPT へ",
+        "desc": "講演、会議、講義の録画をスライドに分割します（フレーム抽出、補正、重複の削除）。全面表示の PPTX として書き出します。"
+      },
+      "wacli": {
+        "title": "WhatsApp",
+        "desc": "wacli CLI で WhatsApp メッセージを送信し、履歴を検索・同期します。"
+      },
+      "weather-now": {
+        "title": "天気",
+        "desc": "都市の天気をわかりやすく：今日、明日、明後日、複数都市の比較。"
+      },
+      "weaver-e10-jucailin": {
+        "title": "Weaver E10 人事",
+        "desc": "Weaver E10 での日常の人事業務：勤怠データとレポート、打刻、例外ワークフロー、給与、社会保険、給与変更、採用。"
+      },
+      "weaver-e10-plan": {
+        "title": "Weaver E10 計画とレポート",
+        "desc": "E10 のレポートを作成、検索、編集、公開、取り下げし、共有レポートのページ送り、提出リマインダー、コメントにも対応します。"
+      },
+      "web-access": {
+        "title": "Web アクセス",
+        "desc": "オンラインの操作はすべてここを通ります：検索、ページ取得、サインインが必要なワークフロー、ブラウザー操作。"
+      },
+      "wechat-miniprogram": {
+        "title": "WeChat ミニプログラム",
+        "desc": "WeChat の中でアプリを作るための WeChat ミニプログラムフレームワーク。"
+      },
+      "wechat-official-account": {
+        "title": "WeChat 公式アカウント記事",
+        "desc": "公式アカウントのスタイルによる読み応えのある記事：タイトル、リード、構成、締め。"
+      },
+      "wechat-viral-video-writer": {
+        "title": "WeChat Channels の分解",
+        "desc": "バズった Channels 動画を、テーマの論理とコピーの構造に分解し、撮影できる 4 部構成の台本を書きます。"
+      },
+      "wechat-wenyan-publish": {
+        "title": "公式アカウントの公開",
+        "desc": "一貫して対応：執筆基準、900×383 のカバー、SVG から PNG へのアートワーク、wenyan テーマ、公開。"
+      },
+      "wechatpay-basic-payment": {
+        "title": "WeChat Pay 基礎",
+        "desc": "決済、返金、明細、収益分配、加盟店の登録、アカウント同意。選定ガイド、コードサンプル、トラブルシューティング付き。"
+      },
+      "wecom-unified": {
+        "title": "WeCom Suite",
+        "desc": "フル機能の WeCom CLI：連絡先、ドキュメント、シート、スマートテーブルとドキュメント、カレンダー、会議、ToDo、ドライブ、メール、メッセージ、メディア。"
+      },
+      "weekly-literature-briefing": {
+        "title": "週次文献ブリーフィング",
+        "desc": "ある分野の週間 PubMed ハイライトを取得し、タイトルと要旨をバイリンガルに翻訳して、ブリーフィングをメールで送ります。"
+      },
+      "weekly-report-generator": {
+        "title": "週報ジェネレーター",
+        "desc": "散らばった ToDo、チャットログ、カレンダーから、仕上がった週報または日報を作ります。"
+      },
+      "weixin-file-send": {
+        "title": "WeChat ファイル送信",
+        "desc": "会話から WeChat の連絡先にファイルを送信します。"
+      },
+      "weiyun": {
+        "title": "Tencent Weiyun",
+        "desc": "MCP 経由で Weiyun クラウドドライブにフルアクセス：一覧、カテゴリ別の閲覧、ダウンロード、削除など。"
+      },
+      "x-recruiter": {
+        "title": "X 採用投稿",
+        "desc": "X に求人投稿を公開します。文面ルールと画像プロンプト付き。"
+      },
+      "xiaohongshu-recruiter": {
+        "title": "Xiaohongshu 採用",
+        "desc": "Xiaohongshu に、生成したカバー付きの AI 求人投稿を公開します。"
+      },
+      "xiaoliebian-scrm": {
+        "title": "Xiaoliebian Private Domain",
+        "desc": "WeCom のコミュニティ成長とプレゼント企画、Moments と一斉配信タスク、プライベートドメインとコミュニティの分析、スタッフの会話の要約。"
+      },
+      "youtube-video-research": {
+        "title": "YouTube 動画リサーチ",
+        "desc": "YouTube 動画から得た一次情報の証拠で、調査タスクを裏付けます。"
+      },
+      "zxh-api-connector-builder": {
+        "title": "API コネクタービルダー",
+        "desc": "サードパーティ API 向けのコネクターを構築します：認証、エンドポイント、呼び出し側が必要とする形。"
+      }
+    },
+    "builtinCategory": {
+      "office": "ドキュメントと Office",
+      "content": "コンテンツ制作",
+      "media": "画像・音声・動画",
+      "diagram": "図表と作図",
+      "dev": "開発",
+      "data": "データと財務",
+      "workplace": "ワークプレイススイート",
+      "recruit": "人事と採用",
+      "product": "プロダクトと戦略",
+      "research": "リサーチ",
+      "life": "生活と旅行",
+      "system": "セットアップと自動化",
+      "creative": "クリエイティブライティング"
+    }
   },
   "authMethod": "認証",
   "geminiApiKey": "Gemini API キー",
@@ -1064,7 +1648,10 @@
     "discordStep1": "Discord を開き、チャンネルでボットにメンションするか、DM を送信します",
     "discordStep2": "任意のメッセージまたは @メンション を送信してペアリングを開始します",
     "discordStep3": "ペアリングリクエストが下に表示されます。「承認」をクリックしてユーザーを認可します。",
-    "discordStep4": "承認後、Discord でアシスタントとチャットを開始できます！"
+    "discordStep4": "承認後、Discord でアシスタントとチャットを開始できます！",
+    "manualPairingHint": "リクエストが一覧にありませんか？ユーザーからのペアリングコードを入力して、手動で承認または拒否してください。",
+    "manualPairingInvalid": "ユーザーに表示されている 6 桁のペアリングコードを入力してください",
+    "manualPairingPlaceholder": "6 桁のコード"
   },
   "lark": {
     "appId": "App ID",
@@ -1528,7 +2115,30 @@
     "factIdentity": "ログイン",
     "factCompany": "企業",
     "factDepartment": "部署",
-    "openSettings": "プロジェクトグループ設定"
+    "openSettings": "プロジェクトグループ設定",
+    "guestName": "ゲスト",
+    "guestTitle": "ゲストモード",
+    "guestDesc": "スタンドアロンの個人版です。会話とワークスペースをそのまま使えます。共同作業にはプロジェクトグループに参加してください。",
+    "guestJoinEnterprise": "ログイン / プロジェクトグループに参加",
+    "joinProjectGroup": "プロジェクトグループに参加",
+    "noProjectGroupLine": "まだプロジェクトグループに参加していません",
+    "editionSsoNoGroup": "サインイン済み · プロジェクトグループなし",
+    "editionCompanyAdmin": "会社管理者 · プロジェクトグループなし",
+    "guestDescCompanyAdmin": "あなたは会社「{{company}}」のローカル管理者です。メンバーと設定は「設定 → 会社コンソール」で管理できます。共同作業にはプロジェクトグループに参加してください。",
+    "guestAdminLogin": "WebUI 管理者ログイン",
+    "memberDesc": "プロジェクトグループに参加しました。プロジェクトグループが配布する Skill とツールを利用できます。",
+    "openConsole": "プロジェクトグループ管理コンソールを開く",
+    "editionPersonal": "個人 · 未サインイン",
+    "editionProjectGroup": "プロジェクトグループ",
+    "departmentLine": "部署：{{department}}",
+    "editionClient": "企業 · 接続済み",
+    "editionClientDisconnected": "個人 · 企業なし",
+    "ssoAuthed": "会社 SSO でサインイン済み",
+    "ssoCompanyLine": "会社 SSO：{{company}}",
+    "projectGroupLine": "プロジェクトグループ：{{name}}",
+    "myGroupsTitle": "自分のプロジェクトグループ",
+    "switchDone": "プロジェクトグループを切り替えました",
+    "editionClientNeedLogin": "企業 · 未サインイン"
   },
   "enterpriseChannel": "組織配布",
   "enterpriseChannelTip": "このモデルチャネルは会社が一括設定しています。認証情報は会社のサーバーに保管され、ここでは変更・削除できません。",
@@ -1648,5 +2258,1046 @@
     "passphraseTooShort": "{{min}} 文字以上にしてください。",
     "passphraseMismatch": "入力が一致しません。",
     "passphraseNoRecovery": "このパスフレーズは復旧できません。失うとバックアップは二度と開けません。"
+  },
+  "assistantListLoading": "アシスタントを読み込み中…",
+  "closeToTrayDesc": "ウィンドウの閉じるボタンをクリックすると、システムトレイに隠れます。アプリはバックグラウンドで動作し続けます。トレイアイコンをダブルクリックするかメニューから「表示」を選ぶと再び開きます。完全に終了するには、トレイメニューの「終了」を使ってください。",
+  "apiKeyUnrecoverable": "キーが無効です",
+  "apiKeyUnrecoverableTip": "このプロバイダーの API キーは復号できなくなりました（暗号化キーが変更されました）。再入力が必要です。ここをクリックして再入力してください。",
+  "webui.deployModeTitle": "企業デプロイモード",
+  "webui.deployModeDesc": "LAN ごとにサーバーにするマシンは 1 台のみとし、それ以外はクライアントとして接続します。このマシンで企業を作成するまでは、既定はクライアントです。",
+  "webui.deployRoleServer": "このマシンをサーバーにする",
+  "webui.deployRoleClient": "このマシンをクライアントにする",
+  "webui.deployServerUrlLabel": "企業サーバーのアドレス",
+  "webui.deployServerUrlPlaceholder": "例：https://ai.example.com または 192.168.1.10:25809",
+  "webui.deployServerUrlHint": "管理者から案内された企業サーバーのアドレスを使用してください。ドメイン運用なら https:// で始まるドメイン、LAN 内のサーバーなら IP とポートです。",
+  "webui.deployServerUrlInvalid": "有効なサーバーアドレスを入力してください（例：https://ai.example.com または 192.168.1.10:25809）",
+  "webui.deployServerHint": "このマシンが企業サーバーをホストしています。LAN 内の他のクライアントはこのアドレスに接続できます。",
+  "webui.deployClientHint": "クライアントモードでは、企業 SSO と管理はリモートサーバー上でブラウザーから行います。ローカルの管理コンソールの入口は非表示になります。",
+  "webui.deploySave": "保存",
+  "webui.deploySaveAddress": "アドレスを保存",
+  "webui.deploySaved": "デプロイモードを保存しました",
+  "webui.deploySaveFailed": "保存に失敗しました",
+  "webui.deployServerUrlHistoryLabel": "最近のアドレス",
+  "webui.deployServerUrlHistoryClear": "クリア",
+  "webui.deployServerUrlHistoryClearTitle": "アドレス履歴をクリアしますか？",
+  "webui.deployServerUrlHistoryClearDesc": "履歴リストのみがクリアされます。現在保存されているサーバーアドレスには影響しません。",
+  "webui.promoteConfirmTitle": "サーバーに切り替えますか？",
+  "webui.promoteConfirmDesc": "このマシンはサーバーとしてプロジェクトグループのデータをホストし、リモートサーバーから切断します。入力したアドレスは履歴に残るため、クライアントに戻すときに再び選択できます。",
+  "webui.demoteConfirmTitle": "クライアントに切り替えますか？",
+  "webui.demoteConfirmDesc": "このマシンは現在、企業データをホストしています。クライアントに切り替えたら、「企業」ページで企業から退出し、リモートサーバー経由でサインインしてください。",
+  "webui.switchToServerBlockedTitle": "まだサーバーに切り替えられません",
+  "webui.switchToServerBlockedDesc": "このマシンは現在クライアントモードで、企業に参加しています。サーバーモードに切り替えるには、まず「企業」ページで参加中の企業から退出してください。",
+  "webui.deployServerAddressLabel": "他のクライアントは次を使用してください：{{url}}",
+  "webui.deployServerAddressUnavailable": "WebUI はまだ LAN から到達できないため、他のクライアントは接続できません。先に「設定 → WebUI」で有効にして、リモートアクセスを許可してください。",
+  "webui.deployRoleServerUnavailable": "「このマシンをサーバーにする」にはエンタープライズ版サーバーのデプロイが必要です。個人版ではプロジェクトグループをホストできません。",
+  "marketplacePersona": {
+    "AccessibilityAuditor": {
+      "name": "アクセシビリティ監査担当",
+      "desc": "WCAG に沿ってインターフェースを監査し、すべてのユーザーが実際に製品を使えるようにします。"
+    },
+    "AccountsPayableAgent": {
+      "name": "買掛金エージェント",
+      "desc": "買掛金のワークフローを自動化し、支払いを正確かつ期日どおりに保ちます。"
+    },
+    "AdCreativeStrategist": {
+      "name": "広告クリエイティブストラテジスト",
+      "desc": "広告クリエイティブを設計して成果を予測し、コンバージョンを意識した素材を制作します。"
+    },
+    "AdortDesignExpert": {
+      "name": "Ardot デザインエキスパート",
+      "desc": "Ardot を使いこなし、キャンバス上で正確な UI を構築し、デザインをそのままフロントエンドコードに変換します。"
+    },
+    "AdTrackingExpert": {
+      "name": "広告トラッキングエキスパート",
+      "desc": "トラッキングコードとコンバージョンのアトリビューションを扱い、キャンペーンの成果を確実に測定できるようにします。"
+    },
+    "AgentIdentityTrustExpert": {
+      "name": "エージェントのアイデンティティと信頼のエキスパート",
+      "desc": "AI エージェント間のアイデンティティと信頼の仕組みを構築します。"
+    },
+    "AgentOrchestrator": {
+      "name": "エージェントオーケストレーター",
+      "desc": "マルチエージェントシステムを調整し、AI チームが並行ではなく連携して働けるようにします。"
+    },
+    "AiContentCreatorTeam": {
+      "name": "AI コンテンツクリエイターチーム",
+      "desc": "ブランドのポジショニング、ムードボード、広告の方向性、コピー、動画、画像、レタッチ、二次展開までを担う、AI 駆動のマルチモーダルコンテンツチーム。ブリーフから完成素材まで。"
+    },
+    "AiDataCopilot": {
+      "name": "AI データコパイロット",
+      "desc": "6 人のデータチーム：自然言語から SQL、Python モデリング、RAG ナレッジ Q&A、ダッシュボード、レポート生成。"
+    },
+    "AiEngineer": {
+      "name": "AI エンジニア",
+      "desc": "モデル開発、デプロイ、チューニングを担うフルスタック ML エンジニア。AI を論文から本番へ。"
+    },
+    "AiHot": {
+      "name": "AI ニュースダイジェスト",
+      "desc": "一言で、その日に厳選された AI のモデル・製品・業界・論文ニュースをブリーフィングにまとめて受け取れます。セットアップもログインも不要。"
+    },
+    "AiImagePromptEngineer": {
+      "name": "AI 画像プロンプトエンジニア",
+      "desc": "画像生成の言葉を熟知し、抽象的なビジュアルのアイデアを的確なプロンプトに変えます。"
+    },
+    "AIShifuExpert": {
+      "name": "AI Shifu コースビルダー",
+      "desc": "教える目的と元の素材（PPT、Word、PDF、txt）から、インタラクティブな 1 対 1 の AI コースを作ります。"
+    },
+    "AndonQExpert": {
+      "name": "AndonQ Tencent Cloud サポート",
+      "desc": "Tencent Cloud の全製品ラインを熟知：相談、トラブルシューティング、サービスレポート。"
+    },
+    "ApiTestingExpert": {
+      "name": "API テストエキスパート",
+      "desc": "ユーザーより先に API の不具合をすべて見つけ、インターフェースを安定して正しく保ちます。"
+    },
+    "APMPerformanceExpert": {
+      "name": "APM パフォーマンスエキスパート",
+      "desc": "Tencent Cloud APM で診断とチューニングを行い、ボトルネックを特定して対策を提案します。"
+    },
+    "AppStoreOptimizationExpert": {
+      "name": "アプリストア最適化エキスパート",
+      "desc": "App Store と Google Play のランキングアルゴリズムと、その中で目立つ方法を熟知しています。"
+    },
+    "AShareAnalysis": {
+      "name": "A 株リサーチチーム",
+      "desc": "6 つのプリセットワークフローにまたがる 8 人のアナリスト：マクロ戦略、市場の読み解き、個別銘柄の深掘り、バリュエーション、サプライチェーンのマッピング、資金フロー、リスク診断。"
+    },
+    "AskLiuxiaopai": {
+      "name": "Liu Xiaopai に聞く",
+      "desc": "Raphael AI 創業者のデジタルツインによる、オフィスアワー形式の相談：具体的な人、本当の痛み、最初の 1 ドル、最初のユーザーを絞り込み、今夜やる 1 つのことまで。"
+    },
+    "AutonomousOptimizationArchitect": {
+      "name": "自律最適化アーキテクト",
+      "desc": "自ら最適化し進化するシステムを設計し、使うほど賢くなります。"
+    },
+    "BackendArchitect": {
+      "name": "バックエンドアーキテクト",
+      "desc": "分散システムと高並行設計に精通し、混沌としたビジネス要件をすっきりしたアーキテクチャに変えます。"
+    },
+    "BaiduSeoExpert": {
+      "name": "Baidu SEO エキスパート",
+      "desc": "Baidu のアルゴリズムと中国の検索エコシステムを理解し、その中でブランドの露出を最大化する方法を知っています。"
+    },
+    "BehavioralNudgeEngine": {
+      "name": "行動ナッジエンジン",
+      "desc": "行動経済学をプロダクトデザインに応用し、ユーザーをより良い意思決定へ導きます。"
+    },
+    "BilibiliContentStrategist": {
+      "name": "Bilibili コンテンツストラテジスト",
+      "desc": "Bilibili のエコシステムと若い視聴者を理解し、再生数を稼ぐ戦略を組み立てます。"
+    },
+    "BlockchainSecurityAuditor": {
+      "name": "ブロックチェーンセキュリティ監査担当",
+      "desc": "スマートコントラクトと DeFi プロトコルのセキュリティ欠陥を監査します。"
+    },
+    "BookCoCreator": {
+      "name": "書籍共同制作者",
+      "desc": "著者と並走して構成と内容を練り、出版水準まで仕上げます。"
+    },
+    "BrandGuardian": {
+      "name": "ブランドガーディアン",
+      "desc": "15 年のブランド戦略経験で、ブランドが登場するあらゆる場面で一貫性を守ります。"
+    },
+    "CapacityExpert": {
+      "name": "キャパシティプランニングエキスパート",
+      "desc": "水位監視、キャパシティ予測、オートスケーリングポリシー：ボトルネックと無駄の両方を防ぎます。"
+    },
+    "CarouselContentGrowthExpert": {
+      "name": "カルーセルコンテンツ成長エキスパート",
+      "desc": "ソーシャルプラットフォームで参加と成長を促す、エンゲージメントの高いカルーセルコンテンツを設計します。"
+    },
+    "CATNetworkQualityAnalyst": {
+      "name": "ネットワーク品質アナリスト",
+      "desc": "多面的なパフォーマンス分析、異常の特定、パケットキャプチャ、問題の切り分け：ネットワークとサービス障害の根本原因を素早く見つけます。"
+    },
+    "ChaosExpert": {
+      "name": "カオスエンジニアリングエキスパート",
+      "desc": "障害注入、レジリエンス検証、サーキットブレーカーの評価で、システムを反脆弱にします。"
+    },
+    "CharityDocFinanceExpert": {
+      "name": "非営利団体の文書・財務エキスパート",
+      "desc": "非営利団体の書類と財務をワンストップで：助成金申請、完了報告、領収書、監査準備、コンプライアンス。慈善活動に携わる人が事務に割く時間を減らします。"
+    },
+    "ChatLawTeam": {
+      "name": "中国法律相談チーム",
+      "desc": "案件の受付、法令調査、判例分析、書面での助言：民事、家事、契約、労働に関する相談レポートを作成します。"
+    },
+    "ChinaEcommerceOperationsExpert": {
+      "name": "中国 EC 運営エキスパート",
+      "desc": "Tmall、JD、Pinduoduo の店舗運営を、商品選定からヒット商品の出品まで一貫して担います。"
+    },
+    "CloudOpsTeam": {
+      "name": "Tencent Cloud 運用チーム",
+      "desc": "3 人の専門家：マルチクラウドガバナンスとアーキテクチャ可視化の CloudQ、チケットと Q&A の AndonQ、移行計画と TCO の MigraQ。移行から日々の運用まで。"
+    },
+    "Code": {
+      "name": "コーディングワークフローエキスパート",
+      "desc": "計画・実行・検証・テストの全サイクルを導き、複雑な作業を独立して検証できるステップに分解します。複数タスクの追跡と好みの記憶に対応。"
+    },
+    "CodeReviewExpert": {
+      "name": "コードレビューエキスパート",
+      "desc": "鷹の目ですべての行を読み、本番に届く前に不具合を捕まえます。"
+    },
+    "ComplianceAuditor": {
+      "name": "コンプライアンス監査担当",
+      "desc": "業界標準に照らして、事業運営を端から端まで監査します。"
+    },
+    "ContentCreator": {
+      "name": "コンテンツクリエイター",
+      "desc": "ブランドのストーリーを読者に届ける、説得力のあるマルチプラットフォームのコンテンツを書きます。"
+    },
+    "ContentDistributionTeam": {
+      "name": "コンテンツ配信チーム",
+      "desc": "13 以上のグローバルなソーシャルプラットフォーム（WeChat Channels を含む）へワンストップで配信：プラットフォームごとのルール、スケジュール、一括投稿、クロスプラットフォーム分析、Xiaohongshu への自動投稿。"
+    },
+    "ContentMonetizationTeam": {
+      "name": "コンテンツ収益化チーム",
+      "desc": "CPS アフィリエイト報酬、CPE/CPM 成果報酬型広告、クリエイターとブランドのマッチング、収益分析を担う 5 人の専門家。"
+    },
+    "CorporateTrainingDesigner": {
+      "name": "企業研修デザイナー",
+      "desc": "従業員のスキルを素早く伸ばす、体系的な企業カリキュラムと学習パスを設計します。"
+    },
+    "CrossBorderEcommerceExpert": {
+      "name": "越境 EC エキスパート",
+      "desc": "Amazon、Shopify などの国際マーケットプレイスと、ブランドをグローバルに展開する方法を熟知しています。"
+    },
+    "CulturalIntelligenceStrategist": {
+      "name": "カルチュラルインテリジェンスストラテジスト",
+      "desc": "ブランドがグローバル化する際に必要な文化的感度を築きます。"
+    },
+    "CustomerSupportExpert": {
+      "name": "カスタマーサポートエキスパート",
+      "desc": "不満を抱えたやり取りを支持者に、サービス品質を口コミに変えます。"
+    },
+    "DataAnalysisExpert": {
+      "name": "データ分析エキスパート",
+      "desc": "作成、編集、分析、数式、書式設定、可視化まで、スプレッドシート作業を一貫して行います。"
+    },
+    "DataAnalyticsReporter": {
+      "name": "データ分析レポーター",
+      "desc": "複雑なデータを戦略的なインサイトに変えます：指標の診断、KPI フレームワーク、データ品質の評価、意思決定レポート。"
+    },
+    "DatabaseOptimizationExpert": {
+      "name": "データベース最適化エキスパート",
+      "desc": "データベースの性能をチューニングしクエリを書き換え、遅いクエリを速く、ボトルネックをなくします。"
+    },
+    "DataEngineer": {
+      "name": "データエンジニア",
+      "desc": "信頼できるパイプラインと ETL を構築し、データがソースからインサイトまで滞りなく流れるようにします。"
+    },
+    "DataExplorationExpert": {
+      "name": "データ探索エキスパート",
+      "desc": "SQL クエリ、探索、可視化、ダッシュボード、検証、インサイトの生成。"
+    },
+    "DataIntegrationAgent": {
+      "name": "データ統合エージェント",
+      "desc": "散在するデータをクレンジングして統合し、全社で一つのビューにまとめます。"
+    },
+    "DealStrategist": {
+      "name": "ディールストラテジスト",
+      "desc": "複雑な案件の戦略を立てて推し進め、営業チームが大型案件を獲得できるよう支援します。"
+    },
+    "DeepResearchExpert": {
+      "name": "ディープリサーチエキスパート",
+      "desc": "複数ソースの検索、ファクトチェック、知識発見、構造化レポート：WeChat 公式アカウント記事の検索にも対応。"
+    },
+    "DelightfulExperienceDesigner": {
+      "name": "デライトフルエクスペリエンスデザイナー",
+      "desc": "ブランド体験に、思いがけない喜びの瞬間を仕込みます。"
+    },
+    "DesignEngineTeam": {
+      "name": "デザイン・プロトタイプチーム",
+      "desc": "ディスカバリーからブランド品質のプロトタイプ納品までをカバーする 6 つのロールの AI デザインチーム。71 のデザインシステムを内蔵。"
+    },
+    "DesignMdArchitect": {
+      "name": "デザインシステムアーキテクト",
+      "desc": "58 ブランドのリファレンスライブラリからデザインシステム仕様を生成し、本番用の HTML/CSS ページと UI コンポーネントを直接出力します。"
+    },
+    "DesignToCodeExpert": {
+      "name": "デザインからコードへのエキスパート",
+      "desc": "Figma ファイルやスクリーンショットを、アクセシビリティ対応済みの使えるコードコンポーネントに変換します。"
+    },
+    "DeveloperEvangelist": {
+      "name": "デベロッパーエバンジェリスト",
+      "desc": "開発者コミュニティを育て、エンジニアの間での採用を促進します。"
+    },
+    "DevOpsAutomationEngineer": {
+      "name": "DevOps 自動化エンジニア",
+      "desc": "CI/CD からインフラのコード化まで、あらゆる手作業を自動化します。デプロイはワンクリック。"
+    },
+    "DiscoveryCoach": {
+      "name": "ディスカバリーコーチ",
+      "desc": "営業チームに深いヒアリングを教え、本当に重要なビジネス上の課題を引き出せるようにします。"
+    },
+    "DiversityVisualExpert": {
+      "name": "多様性ビジュアルエキスパート",
+      "desc": "AI 画像から構造的なバイアスを取り除き、ビジュアルを文化的に正確で包括的に保ちます。"
+    },
+    "DockerfileGenExpert": {
+      "name": "Dockerfile ジェネレーター",
+      "desc": "コンテナ化のベストプラクティスに沿った Dockerfile を生成します。"
+    },
+    "DocumentGenerationExpert": {
+      "name": "文書生成エキスパート",
+      "desc": "あらゆる種類のビジネス文書を生成し、1 件あたりにかかる時間を削減します。"
+    },
+    "DocumentProcessingExpert": {
+      "name": "文書処理エキスパート",
+      "desc": "文書スイート：Excel、Word、PowerPoint、PDF ファイルの作成、編集、変換。"
+    },
+    "DouyinStrategist": {
+      "name": "Douyin ストラテジスト",
+      "desc": "Douyin のアルゴリズムとコンテンツエコシステムを理解：ショート動画のヒットと、その背後にある収益化。"
+    },
+    "EarningsReviewer": {
+      "name": "決算レビュー担当",
+      "desc": "上級の四半期レビューアナリスト：決算説明会や開示資料を読み、カバレッジモデルを更新し、リサーチ部門向けに四半期後のノート、差異表、バリュエーション調整を作成します。"
+    },
+    "EmbeddedFirmwareEngineer": {
+      "name": "組み込みファームウェアエンジニア",
+      "desc": "マイコンのプログラミング：余裕の少ないハードウェアで、効率的で信頼できるファームウェアを作ります。"
+    },
+    "EngineeringAssuranceTeam": {
+      "name": "エンジニアリング保証チーム",
+      "desc": "エンジニアリングディレクター配下の 5 人の専門家：コードレビュアー（セキュリティ／性能／正確性）、アーキテクト（システム設計／ADR）、SRE（インシデント対応／デプロイ）、テスト専門家（戦略／カバレッジ）、テクニカルライター（ドキュメント／Runbook）。"
+    },
+    "EngineeringWorkflowSkills": {
+      "name": "エンジニアリングワークフローコーチ",
+      "desc": "Google の Agent Skills にもとづく全サイクルのエンジニアリングコーチ：仕様駆動、テスト駆動、コードレビュー、CI/CD リリース。"
+    },
+    "EnterpriseAccountStrategist": {
+      "name": "大口顧客ストラテジスト",
+      "desc": "大口顧客と拡大戦略を担い、顧客を長期的なパートナーへと育てます。"
+    },
+    "EnterpriseLegalTeam": {
+      "name": "企業法務チーム",
+      "desc": "社内法務向けのマルチロールチーム：契約、取引、プライバシー、製品、規制、AI ガバナンス、雇用、知的財産のトリアージ。"
+    },
+    "EntrepreneurshipCoach": {
+      "name": "起業コーチ",
+      "desc": "メンターと読書パートナーの両面を持ちます。創業者の本当の悩みが浮かび上がるたびに向き合い、GTM の実行、顧客との向き合い方、物事を進める順序に強みがあります。"
+    },
+    "EquityResearchExpert": {
+      "name": "株式リサーチエキスパート",
+      "desc": "株式リサーチのフルツールキット：決算分析、カバレッジ開始レポート、DCF とコンパラブル、ロング／ショートの提案、投資メモ、イベントシナリオ、ポートフォリオリスク。バイサイドとセルサイドのワークフローに対応。"
+    },
+    "EvidenceCollector": {
+      "name": "証拠収集担当",
+      "desc": "スクリーンショットのない不具合は記録しません。説明の陰に何も隠れないようにします。"
+    },
+    "ExecutiveSummaryGenerator": {
+      "name": "エグゼクティブサマリージェネレーター",
+      "desc": "長いレポートを、経営者が読み込める量に凝縮し、その時間を取り戻します。"
+    },
+    "ExperimentTrackingManager": {
+      "name": "実験トラッキングマネージャー",
+      "desc": "実験のライフサイクルを管理し、すべての実験に仮説、実行、結論があるようにします。"
+    },
+    "FbsirSuperPartner": {
+      "name": "スーパーパートナー",
+      "desc": "目標や実際の素材を持ち込むと、使える成果物が得られます。ホストの機能が利用可能で許可されている場合は実行して報告し、その後 72 時間後の判定を出します。"
+    },
+    "FeedbackSynthesisAnalyst": {
+      "name": "フィードバック統合アナリスト",
+      "desc": "大量のユーザーフィードバックからインサイトを抽出し、ユーザーの声を方向性に変えます。"
+    },
+    "FinanceAccountingExpert": {
+      "name": "財務・会計エキスパート",
+      "desc": "月次決算、仕訳、突合、財務諸表、差異分析、SOX 監査支援。"
+    },
+    "FinanceDataExpert": {
+      "name": "金融データエキスパート",
+      "desc": "株式、指数、先物、債券、ファンド、マクロなど 15 系統・209 の金融データ API を自然言語で照会します。"
+    },
+    "FinancialModelingExpert": {
+      "name": "財務モデリングエキスパート",
+      "desc": "モデリングの中核セット：DCF、類似企業分析、LBO、3 表モデル、競争環境、デッキの QA。"
+    },
+    "FinancialTracker": {
+      "name": "財務トラッカー",
+      "desc": "プロジェクトや事業の財務を正確に追跡し、すべての入出金を把握します。"
+    },
+    "FinopsExpert": {
+      "name": "FinOps エキスパート",
+      "desc": "クラウドコストのガバナンス：請求の分析、未使用リソースの検出、料金モデルの最適化、コストの配賦。"
+    },
+    "FortuneConsultant": {
+      "name": "占いコンサルタント",
+      "desc": "伝統的な占いのリファレンス：八字と紫微の命盤、タロットと梅花易数、旧暦の暦の照会。複数の体系で突き合わせます。娯楽目的のみ。"
+    },
+    "FrontendDeveloper": {
+      "name": "フロントエンドデベロッパー",
+      "desc": "モダンな Web スタックと主要フレームワークで、ピクセル単位の精度でレスポンシブで高性能なアプリを構築します。"
+    },
+    "FsiMarketResearcher": {
+      "name": "業界リサーチャー",
+      "desc": "アナリストとポートフォリオマネージャー向けの業界調査：全体像、競争構造、類似企業のバリュエーション表、テーマ別スクリーニング。"
+    },
+    "GameAudioEngineer": {
+      "name": "ゲームオーディオエンジニア",
+      "desc": "FMOD/Wwise の統合と空間オーディオで、ゲームのサウンドに命を吹き込みます。"
+    },
+    "GameDesigner": {
+      "name": "ゲームデザイナー",
+      "desc": "システムとメカニクスの設計：ループ、レバー、心理から遊びを組み立てます。"
+    },
+    "GaokaoAdvisor": {
+      "name": "高考アドバイザー",
+      "desc": "高考のナレッジベースと合格ラインデータから、出典つきの過去問、専攻、出願の参考情報を検索し、出願プロセス全体を案内して共有できるレポートを作成します。"
+    },
+    "GitWorkflowExpert": {
+      "name": "Git ワークフローエキスパート",
+      "desc": "高度な Git ワークフローとブランチ戦略で、共同作業が摩擦の原因にならないようにします。"
+    },
+    "GlReconciler": {
+      "name": "総勘定元帳リコンサイラー",
+      "desc": "ファンドのバックオフィスにおける日次・月次の突合：総勘定元帳と補助元帳の差異を見つけ、元の取引まで追跡し、タイミング／振替／為替に分類し、承認可能な一覧を作成します。"
+    },
+    "GodotGameScriptEngineer": {
+      "name": "Godot スクリプトエンジニア",
+      "desc": "GDScript 2.0 と Godot 4 のノードアーキテクチャ。"
+    },
+    "GodotMultiplayerEngineer": {
+      "name": "Godot マルチプレイヤーエンジニア",
+      "desc": "Godot 4 の MultiplayerAPI とネットワークレプリケーション。"
+    },
+    "GodotShaderDeveloper": {
+      "name": "Godot シェーダーデベロッパー",
+      "desc": "Godot のシェーディング言語と VisualShader。"
+    },
+    "GovernmentDigitalPresalesConsultant": {
+      "name": "官公庁プリセールスコンサルタント",
+      "desc": "公共部門のデジタルトランスフォーメーションの要件と、その背後にある調達プロセスを熟知しています。"
+    },
+    "GPTResearcherTeam": {
+      "name": "ディープリサーチチーム",
+      "desc": "5 つのステージにわたる 7 つのロールが複数ソースを集約し、レビューと修正のループを経て、出典つきのプロフェッショナルなレポートを作成します。"
+    },
+    "GrowthHacker": {
+      "name": "グロースハッカー",
+      "desc": "データ駆動の実験で未開拓の成長チャネルを見つけ、複利的に伸ばします。"
+    },
+    "HealthcareMarketingComplianceExpert": {
+      "name": "医療マーケティングコンプライアンス",
+      "desc": "医療マーケティングを規制の範囲内に収め、主張を正確に保ちます。"
+    },
+    "HrOperationsTeam": {
+      "name": "人事オペレーションチーム",
+      "desc": "プロセスとしての人事：スクリーニング、報酬設計、組織開発、運用ワークフローで、人材戦略を確実に定着させます。"
+    },
+    "HuashuDataPro": {
+      "name": "ローカルデータ分析チーム",
+      "desc": "一人会社向けのデータチーム。Excel を 1 つ渡すと、トレンド・構造・異常の専門家が並行して分析し、Web、Excel、PPT のレポートを納品します。データはマシンの外に出ません。"
+    },
+    "HuashuDocReviewer": {
+      "name": "契約・文書レビュアー",
+      "desc": "元の .docx の中にコメントバブルと変更履歴を追加します。新しいファイルは作らず、書式も壊しません。"
+    },
+    "HumanizePptTeam": {
+      "name": "人間味 PPT チーム",
+      "desc": "素材から人間味のあるデッキのアウトラインを作り、HTML 生成、発表者モード、動画モーション、納品 QA を取りまとめます。"
+    },
+    "IdentityGraphOperator": {
+      "name": "アイデンティティグラフオペレーター",
+      "desc": "プラットフォームをまたいだ識別を可能にする、ユーザーのアイデンティティグラフを構築・維持します。"
+    },
+    "IncidentResponseCommander": {
+      "name": "インシデント対応コマンダー",
+      "desc": "障害時に冷静にチームを統率します：特定、緩和、復旧。"
+    },
+    "IndieFounderCoach": {
+      "name": "インディー創業者コーチ",
+      "desc": "信念としてリーンでブートストラップ：ひとり創業者が最小限のリソースでゼロから持続可能で収益性のある事業に至るまで、途中のあらゆる意思決定を支援します。"
+    },
+    "IndustrySreTeam": {
+      "name": "業界 SRE チーム",
+      "desc": "ゲーム、金融、EC の 12 人の業界 SRE が 5 つの観点で点検を行い、チェックしながら進められるアーキテクチャ提案を返します。"
+    },
+    "InfrastructureOperationsExpert": {
+      "name": "インフラ運用エキスパート",
+      "desc": "IT インフラを稼働させ続け、何も把握漏れがないようにします。"
+    },
+    "InspectionExpert": {
+      "name": "クラウド点検エキスパート",
+      "desc": "5 つの観点（セキュリティ、性能、信頼性、コスト、コンプライアンス）での点検、優先順位つきの修復を伴う高リスクスキャン、トレンド分析、ビジュアルレポート：問題に見つかる前に問題を見つけます。"
+    },
+    "InstagramOperationsExpert": {
+      "name": "Instagram 運営エキスパート",
+      "desc": "Instagram のビジュアル言語とコンテンツ戦略で、フォローしたくなるブランドを築きます。"
+    },
+    "InternalCommsExpert": {
+      "name": "社内コミュニケーションエキスパート",
+      "desc": "社内コミュニケーションのテンプレート：ステータスレポート、経営層向け更新、社内ブリーフィング、FAQ、インシデント報告、プロジェクト更新。"
+    },
+    "InvestmentBankingExpert": {
+      "name": "投資銀行エキスパート",
+      "desc": "ピッチ資料、バリュエーション（コンプス／DCF／LBO／3 表）、資本市場、バイサイドのデューデリジェンス、再建と回収ウォーターフォール、案件執行まで一貫して対応します。"
+    },
+    "InvestmentMastersTeam": {
+      "name": "投資の巨匠チーム",
+      "desc": "13 の伝説的な投資哲学と 6 人のアナリストが並行して動き、リスクマネージャーが制約を設定し、ポートフォリオマネージャーがシグナルを集約して投票にまとめます。"
+    },
+    "JiraWorkflowAdmin": {
+      "name": "Jira ワークフロー管理者",
+      "desc": "Jira の設定とアジャイルワークフローの設計で、ツールがチームに仕えるようにします。"
+    },
+    "KdocsDataTable": {
+      "name": "スマートテーブルビルダー",
+      "desc": "グループチャットの参加表明スレッドを構造化テーブルに変え、一言から共有できる収集フォームを生成し、ルールをその場で固定します：外れ値の条件付き書式、ドロップダウン検証、ヘッダー固定。"
+    },
+    "KdocsDocButler": {
+      "name": "ドキュメントバトラー",
+      "desc": "クラウド文書のライフサイクル全体を管理：作成、検索、テーマ別の AI フォルダー分類、一括移動と名前変更、共有リンクと権限、内容の Markdown 出力。"
+    },
+    "KdocsKnowledgeCollector": {
+      "name": "ナレッジコレクター",
+      "desc": "散らばったページ、メッセージ、メモを構造化されたナレッジ資産に変えます：クラウド文書へのワンクリック切り抜き、AI によるテーマ分け、複数文書の要約、個人ライブラリへの整理されたアーカイブ。"
+    },
+    "KdocsPdfToolbox": {
+      "name": "PDF ツールボックス",
+      "desc": "PDF の作業をひとまとめに：ページ単位の分割、結合、ページ抽出、Word/Excel/PPT への変換、全文翻訳の書き出し（バイリンガルまたは単一言語）、内容の読み取り、ページ数の確認。"
+    },
+    "KdocsPptCreator": {
+      "name": "AI デッククリエイター",
+      "desc": "一言または参考文書 1 つから、AI がアウトラインを設計し、タイトル、内容、まとめのページを含むデッキ全体を、場面に合ったパレットとレイアウトで作ります。"
+    },
+    "KuaishouStrategist": {
+      "name": "Kuaishou ストラテジスト",
+      "desc": "Kuaishou の下位都市市場とその文化を理解し、そこに合ったコンテンツ戦略を組み立てます。"
+    },
+    "KycScreener": {
+      "name": "KYC スクリーナー",
+      "desc": "顧客受け入れのコンプライアンス：KYC 資料を解析し、ルールエンジンを実行し、制裁リストと PEP リストを照合して、リスクで階層化したエスカレーションパックを作成します。"
+    },
+    "LawStudentCoach": {
+      "name": "法学部生コーチ",
+      "desc": "法学部生の学習パートナー：ソクラテス式の問いかけ、事例の要約、IRAC、シラバスの整理、司法試験の復習。"
+    },
+    "LegalBuilderHubExpert": {
+      "name": "リーガルスキルガバナンス",
+      "desc": "リーガルオペレーションとスキル開発者向けのガバナンスアシスタント。スキルの出所、ツール権限、鮮度、ライセンス、信頼境界を評価します。"
+    },
+    "LegalClinicSupervisor": {
+      "name": "リーガルクリニック指導教員",
+      "desc": "法科大学院クリニックの指導教員向けの監督アシスタント：依頼者の受付、調査の着手、期限の追跡、学生のオンボーディング、学期末の引き継ぎ。"
+    },
+    "LegalComplianceReviewer": {
+      "name": "リーガルコンプライアンスレビュアー",
+      "desc": "運営と製品機能を法の範囲内に収め、コンプライアンスリスクを未然に防ぎます。"
+    },
+    "LevelDesigner": {
+      "name": "レベルデザイナー",
+      "desc": "すべてのレベルを構成された体験として捉え、空間を通じて物語を語ります。"
+    },
+    "LinkedInContentCreator": {
+      "name": "LinkedIn コンテンツクリエイター",
+      "desc": "LinkedIn のコンテンツ戦略と、それに伴うソートリーダーシップ。"
+    },
+    "LitigationLegalExpert": {
+      "name": "訴訟サポートエキスパート",
+      "desc": "訴訟弁護士向けの案件サポート：案件と証拠の整理、時系列、反対尋問の準備、損害額の図表、書面の下書き。"
+    },
+    "LivestreamEcommerceCoach": {
+      "name": "ライブコマースコーチ",
+      "desc": "台本から広告費まで、ライブ販売の全ループを、GMV の突破を目標に支援します。"
+    },
+    "LlmWiki": {
+      "name": "LLM Wiki",
+      "desc": "Andrej Karpathy の LLM Wiki パターンにもとづく、永続的な個人ナレッジベースを構築・維持します：論文、記事、メモを構造化 Markdown にまとめ、相互リンクし、矛盾を指摘し、インデックスを最新に保ちます。"
+    },
+    "LspIndexEngineer": {
+      "name": "LSP インデックスエンジニア",
+      "desc": "Language Server Protocol とコードインデックス。"
+    },
+    "MacOsSpatialMetalEngineer": {
+      "name": "macOS 空間 Metal エンジニア",
+      "desc": "Apple の Metal グラフィックス API と macOS の空間コンピューティング。"
+    },
+    "MarketingCampaignExpert": {
+      "name": "マーケティングキャンペーンエキスパート",
+      "desc": "オムニチャネルのキャンペーンを計画、構築、最適化します：コンテンツ戦略、ソーシャル、メール、有料広告。"
+    },
+    "MarketingCampaignTeam": {
+      "name": "マーケティングキャンペーンチーム",
+      "desc": "マーケティングディレクター配下の 4 人の専門家：コンテンツクリエイター（ブログ／メール／ソーシャル／ブランドボイス）、キャンペーンプランナー（戦略／オーディエンス／チャネル／予算）、SEO エキスパート（技術監査／最適化／分析）、ブランドアナリスト（ポジショニング／ブランド監査）。"
+    },
+    "McpBuildExpert": {
+      "name": "MCP 構築エキスパート",
+      "desc": "Model Context Protocol の設計と実装。"
+    },
+    "MeetingPrepAgent": {
+      "name": "会議準備エージェント",
+      "desc": "ファイナンシャルアドバイザーの準備パートナー：顧客との面談前に、関係の履歴、ポートフォリオの動き、市場ニュース、アジェンダをまとめます。5 分で準備完了。"
+    },
+    "MermaidDiagramExpert": {
+      "name": "Mermaid ダイアグラムエキスパート",
+      "desc": "自然な言葉をプロ品質の Mermaid ダイアグラムに変換：6 種類の図、15 のテーマ、出版品質の SVG と ASCII を数秒で。"
+    },
+    "Migraq": {
+      "name": "MigraQ クラウド移行",
+      "desc": "Tencent Cloud への移行：Alibaba Cloud、AWS、Huawei Cloud にまたがるリソーススキャン、スペックのマッチング、TCO 分析、移行計画。"
+    },
+    "MigraqTeam": {
+      "name": "クラウド移行チーム",
+      "desc": "7 人の専門家が、製品選定、ランディングゾーン、アーキテクチャ、デリバリー、運用、FDE デプロイまで、移行を端から端まで担います。"
+    },
+    "MobileApplicationDeveloper": {
+      "name": "モバイルアプリ開発者",
+      "desc": "ネイティブ iOS・Android とクロスプラットフォームで、なめらかなモバイルアプリを作ります。"
+    },
+    "ModelBuilder": {
+      "name": "財務モデルビルダー",
+      "desc": "DCF、LBO、3 表モデル、類似企業バリュエーションを Excel でゼロから構築します。数式は完全にリンクされ、追跡可能で、機関投資家水準の品質管理付き。"
+    },
+    "ModelQualityAssuranceExpert": {
+      "name": "モデル QA エキスパート",
+      "desc": "AI モデルの品質を体系的に評価し、出力を正確・公正・安全に保ちます。"
+    },
+    "ModernWebappExpert": {
+      "name": "モダン Web アプリエキスパート",
+      "desc": "React + TypeScript + Vite + Tailwind + shadcn/ui に、ブラウザー自動化も含みます。"
+    },
+    "MonthEndCloser": {
+      "name": "月次決算担当",
+      "desc": "財務責任者の頼れるパートナー：未払計上、ロールフォワード、差異説明までチェックリストを進め、コントローラーに署名できる状態のパッケージを渡します。"
+    },
+    "MultiCloudExpert": {
+      "name": "マルチクラウド AIOps エキスパート",
+      "desc": "Tencent Cloud、Alibaba Cloud、AWS、Azure、GCP を 1 つのエージェントで。"
+    },
+    "MultiCloudManagementExpert": {
+      "name": "マルチクラウド管理エキスパート",
+      "desc": "すべてのクラウドにまたがるアーキテクチャガバナンス、可視化、自動点検、コスト最適化、リスク評価：1 人の専門家ですべてに対応。"
+    },
+    "NarrativeDesigner": {
+      "name": "ナラティブデザイナー",
+      "desc": "物語と遊びを、切り離せなくなるまで融合させます。"
+    },
+    "OpcTeam": {
+      "name": "一人会社チーム",
+      "desc": "9 人の専門家が、一人会社の全行程（リソースの棚卸し、ニッチのポジショニング、MVP、コンバージョン、振り返り）に伴走します。Easy の「一人企業メソドロジー」に基づきます。"
+    },
+    "OpenSpecDocTeam": {
+      "name": "長文ドキュメントチーム",
+      "desc": "エンタープライズ級の長文ドキュメント：4 つのロールが、ディープリサーチ、アウトライン計画、執筆、コンプライアンスレビューを担当します。"
+    },
+    "OutboundStrategist": {
+      "name": "アウトバウンドストラテジスト",
+      "desc": "アウトバウンドとコールドスタートの営業：見知らぬ相手から次の 30 秒を勝ち取ります。"
+    },
+    "PaidMediaAuditor": {
+      "name": "有料メディア監査担当",
+      "desc": "広告費と予算配分を詳しく監査し、無駄になっているお金を見つけます。"
+    },
+    "PerformanceTestingExpert": {
+      "name": "パフォーマンステストエキスパート",
+      "desc": "パフォーマンステストとベンチマーク：印象ではなく数字で改善を証明します。"
+    },
+    "PitchAgent": {
+      "name": "ピッチエージェント",
+      "desc": "シニアのバンキングアソシエイト：コンプス、先例取引、DCF、フットボールフィールドチャートを含む最初のピッチをゼロから作り、モデルに連動したブランド付きデッキも用意します。"
+    },
+    "PodcastStrategist": {
+      "name": "ポッドキャストストラテジスト",
+      "desc": "ポッドキャストの企画と成長、そして音声ならではの深いリスナーとのつながり。"
+    },
+    "PpcBiddingStrategist": {
+      "name": "PPC 入札ストラテジスト",
+      "desc": "Google 広告と Baidu の入札：質の高いトラフィックを最低のクリック単価で獲得します。"
+    },
+    "PptCreationExpert": {
+      "name": "デック作成エキスパート",
+      "desc": "アイデアを一度で完成したプレゼンテーションに仕上げます。"
+    },
+    "PresalesTechnicalConsultant": {
+      "name": "プリセールス技術コンサルタント",
+      "desc": "技術とビジネスの橋渡しをし、顧客がソリューションの価値を理解できるようにします。"
+    },
+    "PrivateDomainMarketingExpert": {
+      "name": "プライベートドメインマーケティングエキスパート",
+      "desc": "すでにあるデータを活性化し、そこからマーケティングの機会を見つけて、収益につなげます。"
+    },
+    "PrivateDomainOperationsExpert": {
+      "name": "プライベートドメイン運営エキスパート",
+      "desc": "WeChat のプライベートトラフィックプールを構築・運営し、パブリックトラフィックを自社資産に変えます。"
+    },
+    "PrivateEquityExpert": {
+      "name": "プライベートエクイティエキスパート",
+      "desc": "案件発掘、スクリーニング、デューデリジェンスチェックリスト、IC メモ、ユニットエコノミクス、リターン分析、ポートフォリオ管理、価値創造計画。"
+    },
+    "ProductManagementExpert": {
+      "name": "プロダクトマネジメントエキスパート",
+      "desc": "仕様書の作成、ロードマップ計画、ステークホルダーとのコミュニケーション、ユーザーリサーチの統合、競合分析、指標の追跡。"
+    },
+    "ProductStrategyTeam": {
+      "name": "プロダクト戦略チーム",
+      "desc": "プロダクトディレクター配下の 5 人の専門家：要件アナリスト（PRD／仕様）、ユーザーリサーチャー（統合）、競合アナリスト（インテリジェンス）、データアナリスト（指標）、ロードマッププランナー。アイデアからローンチまで。"
+    },
+    "ProgrammaticAdBuyer": {
+      "name": "プログラマティック広告バイヤー",
+      "desc": "プログラマティック購買と DSP プラットフォームで、精密なターゲティングを大規模に実行します。"
+    },
+    "ProjectShepherd": {
+      "name": "プロジェクトシェパード",
+      "desc": "プロジェクトを計画どおりに進め続けます。穏やかに、しかしマイルストーンは決して遅らせません。"
+    },
+    "PromoCreatorTeam": {
+      "name": "プロモ動画チーム",
+      "desc": "6 つのロールが 6 つのステージで、製品 URL から公開可能な 60〜90 秒の MP4 まで仕上げます：クリエイティブブリーフ、ショット単位のストーリーボード、素材制作、HyperFrames 編集、BGM、納品。"
+    },
+    "ProposalStrategist": {
+      "name": "提案ストラテジスト",
+      "desc": "営業提案とソリューション設計：価値を、断りにくい論拠に仕立てます。"
+    },
+    "RapidPrototypingEngineer": {
+      "name": "ラピッドプロトタイピングエンジニア",
+      "desc": "アイデアを素早く動くプロトタイプにして、チームが成立するかを確かめられるようにします。"
+    },
+    "RealityChecker": {
+      "name": "リアリティチェッカー",
+      "desc": "すべてにさらなる証拠が必要だと考え、「本番対応可」の承認には圧倒的な証拠を求めます。"
+    },
+    "RecruitmentExpert": {
+      "name": "採用エキスパート",
+      "desc": "採用ファネル全体を通じて、チームにふさわしい人材を見つけます。"
+    },
+    "RedditCommunityBuilder": {
+      "name": "Reddit コミュニティビルダー",
+      "desc": "Reddit の文化を深く理解し、世界最大のフォーラムで本物の信頼を築きます。"
+    },
+    "RemotionVideoExpert": {
+      "name": "Remotion 動画エキスパート",
+      "desc": "Remotion による動画生成：製品デモ、解説動画、ソーシャルコンテンツ、プレゼンテーション。"
+    },
+    "ReportDistributionAgent": {
+      "name": "レポート配信エージェント",
+      "desc": "レポートの生成と、必要な人に届くまでの流れを自動化します。"
+    },
+    "RobloxAvatarCreator": {
+      "name": "Roblox アバタークリエイター",
+      "desc": "Roblox の UGC とアバターパイプライン。"
+    },
+    "RobloxExperienceDesigner": {
+      "name": "Roblox エクスペリエンスデザイナー",
+      "desc": "Roblox プラットフォームの UX と収益化設計。"
+    },
+    "RobloxSystemScriptEngineer": {
+      "name": "Roblox スクリプトエンジニア",
+      "desc": "Luau と Roblox のクライアント・サーバーセキュリティモデル。"
+    },
+    "RumFullstackTeam": {
+      "name": "RUM フルスタックチーム",
+      "desc": "Tencent Cloud RUM を端から端まで：10 プラットフォームの aegis SDK に加え、WebVitals、例外、API、リソースの分析と RUM-APM の連携。"
+    },
+    "SalesBattleTeam": {
+      "name": "営業バトルチーム",
+      "desc": "ターゲットを定めるアカウントリサーチ、接点を増やすアウトリーチ戦略、リスクを知らせる競合インテリジェンス、工数を配分する予測。"
+    },
+    "SalesCoach": {
+      "name": "営業コーチ",
+      "desc": "能力から実行までのフルスタックコーチング：会議準備、案件戦略、ビジネスケース、競合分析、通話レビュー。ソクラテス式の問いかけで進めます。"
+    },
+    "SalesDataExtractionAgent": {
+      "name": "営業データ抽出エージェント",
+      "desc": "営業データを、どのソースにあっても取り出して整理します。"
+    },
+    "SalesPipelineAnalyst": {
+      "name": "営業パイプラインアナリスト",
+      "desc": "データでパイプラインの健全性を分析し、予測を当て推量から脱却させます。"
+    },
+    "SearchTermAnalyst": {
+      "name": "検索語句アナリスト",
+      "desc": "検索語句データを掘り下げ、その裏にある意図を探ります。"
+    },
+    "SecurityEngineer": {
+      "name": "セキュリティエンジニア",
+      "desc": "攻撃者より先に脆弱性を見つけて修正します。"
+    },
+    "SeniorDeveloper": {
+      "name": "シニアデベロッパー",
+      "desc": "多数の言語とフレームワークにわたる 10 年以上のフルスタック経験：チームの技術的な大黒柱です。"
+    },
+    "SeniorProjectManager": {
+      "name": "シニアプロジェクトマネージャー",
+      "desc": "10 年以上のウォーターフォールとアジャイルの経験で、複雑なプロジェクトを落ち着いて導きます。"
+    },
+    "SeoContentTeam": {
+      "name": "SEO コンテンツチーム",
+      "desc": "5 つのステージにわたる 7 つのロール：キーワード調査、SEO 長文執筆、技術最適化、編集、リンク戦略、コンバージョン分析。"
+    },
+    "SeoExpert": {
+      "name": "SEO エキスパート",
+      "desc": "Google のアルゴリズムと技術的 SEO、そして検索結果で順位を保つ方法。"
+    },
+    "ShortVideoEditingCoach": {
+      "name": "ショート動画編集コーチ",
+      "desc": "編集テクニックとテンポで、どのクリップもプロらしいインパクトで届けます。"
+    },
+    "SiteReliabilityEngineer": {
+      "name": "サイトリライアビリティエンジニア",
+      "desc": "ソフトウェアエンジニアリングで運用課題を解決し、99.99% の可用性を維持します。"
+    },
+    "SocialAdStrategist": {
+      "name": "ソーシャル広告ストラテジスト",
+      "desc": "ソーシャルプラットフォーム広告：精密なターゲティングで最良の獲得単価を実現します。"
+    },
+    "SocialEngagementTeam": {
+      "name": "ソーシャルエンゲージメントチーム",
+      "desc": "インタラクションの自動化、AI によるコメント運用、高コンバージョンのシグナル発掘、ブランドセンチメントの監視で、14 以上のグローバルプラットフォームのソーシャルエンゲージメントを安全に高めます。"
+    },
+    "SocialMediaStrategist": {
+      "name": "ソーシャルメディアストラテジスト",
+      "desc": "すべてのプラットフォームの戦略を調整し、各プラットフォームでブランドの声が最も強く響くようにします。"
+    },
+    "Soe": {
+      "name": "セキュリティ運用エキスパート",
+      "desc": "WAF、ホストセキュリティ、クラウドファイアウォール、SOC、脅威防御製品のオフラインのアラート・イベントデータを分析します。脆弱性、攻撃、フォレンジック分析を含みます。"
+    },
+    "SoftwareArchitect": {
+      "name": "ソフトウェアアーキテクト",
+      "desc": "スケーラブルで可用性の高いアーキテクチャをトップダウンで設計し、エンジニアリングチームをそこへ導きます。"
+    },
+    "SoftwareCompany": {
+      "name": "ソフトウェアカンパニー",
+      "desc": "稼働する開発チーム：PM が要件を定め、アーキテクトが設計とタスク分割を行い、エンジニアがまとめて実装し、QA が検証します。小さな依頼向けの高速パスもあります。"
+    },
+    "SoftwareWorkshop": {
+      "name": "ソフトウェアワークショップ",
+      "desc": "6 つのエンジニアリングロール（プロダクトレビュー、コードレビュー、セキュリティ監査、QA、デザインシステム、デバッグと運用）で、アイデアから本番までをカバーします。"
+    },
+    "SoliditySmartContractEngineer": {
+      "name": "Solidity エンジニア",
+      "desc": "Solidity と EVM エコシステム：安全で実行コストの低いコントラクトを書きます。"
+    },
+    "SprintPriorityManager": {
+      "name": "スプリント優先度マネージャー",
+      "desc": "固定されたスプリントで可能な最良の優先度判断を下し、イテレーションが最大の価値を届けられるようにします。"
+    },
+    "SreExpert": {
+      "name": "SRE エキスパート",
+      "desc": "根本原因の推論、アラートの相関分析、プロセス診断、SLO ガバナンスを、体系的な診断手法で行います。"
+    },
+    "StatementAuditor": {
+      "name": "LP 報告書監査担当",
+      "desc": "LP 資本勘定報告書の最終チェック：各行をファンド NAV から逆算し、分配と管理報酬を突合し、送付前に承認推奨と例外リストを出します。"
+    },
+    "StockPartnerTeam": {
+      "name": "株式リサーチチーム",
+      "desc": "セクター戦略、シグナル捕捉、バリュエーション、逆張りのポジショニング、ファンダメンタルズ、短期売買にまたがる 6 人のアナリストが、リアルタイムの市場データをさまざまな角度から読み解きます。"
+    },
+    "StrategyBacktestExpert": {
+      "name": "戦略バックテストエキスパート",
+      "desc": "平易な言葉で記した戦略を、標準指標、チャート、HTML ダッシュボードつきの実行可能な Python バックテストに変換します。実装の詳細、既知のバイアス、結果の読み方も添えます。"
+    },
+    "StudioOperationsManager": {
+      "name": "スタジオ運営マネージャー",
+      "desc": "リソース配分からプロセスまで、スタジオの日々の運営を担います。"
+    },
+    "StudioProducer": {
+      "name": "スタジオプロデューサー",
+      "desc": "企画の承認から納品まで、クリエイティブ、予算、時間のバランスを取りながらプロジェクトを運びます。"
+    },
+    "StudyAbroadConsultant": {
+      "name": "留学コンサルタント",
+      "desc": "各国の出願プロセスと教育機関に関する知識。"
+    },
+    "SupplyChainStrategist": {
+      "name": "サプライチェーンストラテジスト",
+      "desc": "コスト、効率、回復力の適切なバランスを実現するよう、すべての工程を最適化します。"
+    },
+    "TaxComplianceTeam": {
+      "name": "税務・コンプライアンスチーム",
+      "desc": "5 つのステージにわたる企業財務コンプライアンスの一貫対応：証憑、記帳、財務諸表、税務申告、コンプライアンス監査。"
+    },
+    "TechnicalArtist": {
+      "name": "テクニカルアーティスト",
+      "desc": "アートディレクションとエンジンの現実の橋渡しをし、シェーダーと VFX を得意とします。"
+    },
+    "TechnicalDocumentationEngineer": {
+      "name": "テクニカルドキュメントエンジニア",
+      "desc": "複雑な技術的アイデアを、知識を伝えられるほど明快なドキュメントに変えます。"
+    },
+    "TencentCharityExpert": {
+      "name": "テック・フォー・グッドエキスパート",
+      "desc": "Tencent のテック・フォー・グッドの実践にもとづく、非営利セクター向けのプロダクトと技術ソリューション。"
+    },
+    "TencentCloudPriceExpert": {
+      "name": "Tencent Cloud 料金",
+      "desc": "営業向けの定価照会：製品の質問、単品・一括の見積もり、画像からの構成認識。価格はライブ API から取得します。"
+    },
+    "TencentRtcExpert": {
+      "name": "TRTC サポートエキスパート",
+      "desc": "リアルタイム音声・映像のサポート：利用量と品質の照会、単一通話の診断、クラウド点検の読み解き、トラブルシューティング、競合 SDK からの移行。"
+    },
+    "TencentSecurityExpert": {
+      "name": "Tencent セキュリティエキスパート",
+      "desc": "セキュリティ分野の長年の経験：脅威モデリング、脆弱性評価、セキュアコードレビュー、アーキテクチャ、インシデント対応、アドバイザリー。"
+    },
+    "TerminalIntegrationExpert": {
+      "name": "ターミナル統合エキスパート",
+      "desc": "ターミナルアプリケーションと空間コンピューティング環境の統合。"
+    },
+    "TestResultsAnalyst": {
+      "name": "テスト結果アナリスト",
+      "desc": "探偵が証拠を読むようにテスト結果を読み、そこに潜む品質問題を見つけます。"
+    },
+    "ThreatDetectionEngineer": {
+      "name": "脅威検知エンジニア",
+      "desc": "被害が出る前に脅威を捕捉して止める検知システムを構築します。"
+    },
+    "TikTokStrategist": {
+      "name": "TikTok ストラテジスト",
+      "desc": "TikTok のアルゴリズムと国際的なショート動画エコシステム、そしてブランドがそこで飛躍する方法。"
+    },
+    "ToolEvaluationExpert": {
+      "name": "ツール評価エキスパート",
+      "desc": "チームに合ったツールを評価して推薦し、間違ったツールに何週間も費やさずに済むようにします。"
+    },
+    "TradingAgentTeam": {
+      "name": "トレーディング分析チーム",
+      "desc": "5 つのステージにわたる 13 のロール：テクニカル、ファンダメンタル、ニュース、センチメントの収集、強気・弱気の討論、売買判断、3 者によるリスク評価、BUY/SELL/HOLD 判断つきの最終レポート。"
+    },
+    "TrendResearcher": {
+      "name": "トレンドリサーチャー",
+      "desc": "業界と技術のトレンドを追い、プロダクト戦略への先を見据えたインプットに変えます。"
+    },
+    "TripStarAgent": {
+      "name": "トラベルコンシェルジュ",
+      "desc": "暮らしのサービスのコンシェルジュ：旅程の計画、観光地、ホテル、天気、予算、お得情報の収集をひとつの場所で。"
+    },
+    "TwitterOperationsExpert": {
+      "name": "X / Twitter 運営エキスパート",
+      "desc": "X でのエンゲージメント戦略とトピック運営で、ブランドをグローバルな会話に乗せます。"
+    },
+    "Txzhaopin": {
+      "name": "Tencent 採用アシスタント",
+      "desc": "新卒・中途採用を担う Tencent 公式の採用アシスタント：要件の確認、履歴書検索、面接日程調整、出題、評価、ToDo、データダッシュボード。"
+    },
+    "UiDesigner": {
+      "name": "UI デザイナー",
+      "desc": "デザインシステムとコンポーネントライブラリを、ピクセルパーフェクトでアクセシブルに。"
+    },
+    "UnityArchitect": {
+      "name": "Unity アーキテクト",
+      "desc": "ScriptableObject と疎結合なシステム設計。"
+    },
+    "UnityEditorToolDeveloper": {
+      "name": "Unity エディターツール開発者",
+      "desc": "Unity のカスタム EditorWindow とパイプライン自動化。"
+    },
+    "UnityMultiplayerEngineer": {
+      "name": "Unity マルチプレイヤーエンジニア",
+      "desc": "Netcode for GameObjects とネットワーク予測。"
+    },
+    "UnityShaderGraphArtist": {
+      "name": "Unity Shader Graph アーティスト",
+      "desc": "Unity Shader Graph と HLSL。"
+    },
+    "UnrealMultiplayerArchitect": {
+      "name": "Unreal マルチプレイヤーアーキテクト",
+      "desc": "Unreal のアクターレプリケーションとサーバー権威型アーキテクチャ。"
+    },
+    "UnrealSystemEngineer": {
+      "name": "Unreal システムエンジニア",
+      "desc": "C++/Blueprint、Nanite、Lumen。"
+    },
+    "UnrealTechnicalArtist": {
+      "name": "Unreal テクニカルアーティスト",
+      "desc": "UE5 のマテリアルエディターと Niagara VFX。"
+    },
+    "UnrealWorldBuilder": {
+      "name": "Unreal ワールドビルダー",
+      "desc": "UE5 の World Partition と大規模ワールドのストリーミング。"
+    },
+    "UserExperienceArchitect": {
+      "name": "ユーザーエクスペリエンスアーキテクト",
+      "desc": "開発者に堅実な技術基盤と CSS システムを提供し、デザインとエンジニアリングの橋渡しをします。"
+    },
+    "UserExperienceResearcher": {
+      "name": "ユーザーエクスペリエンスリサーチャー",
+      "desc": "行動分析とユーザビリティテストにより、思い込みではなく実データでデザイン判断を検証します。"
+    },
+    "ValuationReviewer": {
+      "name": "ポートフォリオバリュエーション担当",
+      "desc": "PE/VC ポートフォリオのバリュエーションを統括：GP のバリュエーションパックを受け取り、標準テンプレートを実行し、ファンド NAV と LP 配分を計算し、IR の承認に向けて LP レポートの草案を作成します。"
+    },
+    "VideoDissection": {
+      "name": "動画解剖チーム",
+      "desc": "バズった Douyin 動画をリバースエンジニアリング：クリップを抽出し、台本を文字起こしし、ショットサイズ、カメラワーク、カットのリズム、色を分析し、自分で撮影するための実践的なプランを含む完全な分解を作成します。"
+    },
+    "VideoGenTeam": {
+      "name": "AI 動画制作チーム",
+      "desc": "3 つのロールがひとつのループで動きます：1 人が AI とテックの見出しを集め、1 人がテーマと台本を企画し、1 人がナレーションと字幕つきの完成 MP4 をレンダリングします。60 秒の動画を最初から最後まで。"
+    },
+    "VisionOsSpatialEngineer": {
+      "name": "visionOS 空間エンジニア",
+      "desc": "Apple Vision Pro の空間アプリ向け visionOS 開発。"
+    },
+    "VisualStorytellingExpert": {
+      "name": "ビジュアルストーリーテリングエキスパート",
+      "desc": "複雑な情報を、追いかけたくなるビジュアルストーリーに変えます。"
+    },
+    "WealthManagementExpert": {
+      "name": "資産管理エキスパート",
+      "desc": "顧客レビュー、ファイナンシャルプランニング、ポートフォリオのリバランス、損出し、投資提案、顧客レポート。"
+    },
+    "WebappTestingExpert": {
+      "name": "Web アプリテストエキスパート",
+      "desc": "Web アプリケーションの起動、設定、テストを順に案内します。"
+    },
+    "WeChatMiniProgramDeveloper": {
+      "name": "WeChat ミニプログラム開発者",
+      "desc": "ミニプログラムのフレームワークとエコシステム：WeChat のネイティブらしいアプリを作ります。"
+    },
+    "WechatOfficialAccountExpert": {
+      "name": "WeChat 公式アカウントエキスパート",
+      "desc": "公式アカウントのコンテンツ戦略とフォロワー増加、そして 10 万閲覧の投稿。"
+    },
+    "WeiboStrategist": {
+      "name": "Weibo ストラテジスト",
+      "desc": "トピックマーケティングと Weibo での世論の広がり方で、ブランドをトレンドに載せ続けます。"
+    },
+    "WellArchExpert": {
+      "name": "Well-Architected エキスパート",
+      "desc": "アーキテクチャの可視化と評価、リソーストポロジー、Well-Architected の 6 つの柱、アーキテクチャリスクの特定。"
+    },
+    "WorkflowOptimizationExpert": {
+      "name": "ワークフロー最適化エキスパート",
+      "desc": "ボトルネックを見つけ、プロセスを直し、残りを自動化します。"
+    },
+    "XiaohongshuOperationsExpert": {
+      "name": "Xiaohongshu 運営エキスパート",
+      "desc": "Xiaohongshu のレコメンドエンジンとシーディング文化を理解し、エンゲージメントを獲得するコンテンツを書きます。"
+    },
+    "XrCockpitInteractionExpert": {
+      "name": "XR コックピットインタラクションエキスパート",
+      "desc": "XR 環境向けのコックピット型インタラクションデザイン。"
+    },
+    "XrImmersiveDeveloper": {
+      "name": "XR 没入型デベロッパー",
+      "desc": "没入感を保つ VR・MR アプリケーション向けの没入型 XR 開発。"
+    },
+    "XrInterfaceArchitect": {
+      "name": "XR インターフェースアーキテクト",
+      "desc": "3D 空間での操作が自然に感じられるよう、XR 向けのインターフェースアーキテクチャを設計します。"
+    },
+    "YahooFinanceCli": {
+      "name": "マーケットインサイトエクスプローラー",
+      "desc": "世界の株式について、リアルタイム相場、ファンダメンタルズ、決算予想、格付け、履歴、バリュエーションのインサイトを提供。あいまい検索、注目銘柄、並べての比較にも対応。"
+    },
+    "YunzhiQaAssistant": {
+      "name": "ナレッジ Q&A アシスタント",
+      "desc": "Tencent Lexiang プラットフォーム上の検索拡張 Q&A：Lexiang MCP を通じた並列のセマンティックベクトル検索のあと、取得した内容から構造化された回答を作成します。"
+    },
+    "ZeroKnowledgeProofAdmin": {
+      "name": "ゼロ知識証明管理者",
+      "desc": "ゼロ知識証明システムの適用と管理。"
+    },
+    "ZhihuStrategist": {
+      "name": "Zhihu ストラテジスト",
+      "desc": "Zhihu のレコメンドの仕組みとナレッジマーケティングで、良い回答をひとつずつ積み重ねて権威を築きます。"
+    }
   }
 }

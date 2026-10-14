@@ -124,7 +124,591 @@
     "deleteAffectsNewOnlyHint": "Deleting only affects new conversations. Skills already selected in existing conversations keep working.",
     "useSkill": "Usar",
     "useSkillToast": "Iniciando um novo chat com \"{{name}}\" ativado",
-    "editSkill": "Editar"
+    "editSkill": "Editar",
+    "team": "Equipe",
+    "teamAuto": "Equipe · Auto",
+    "detailEditViaChat": "Editar por chat",
+    "builtinSkill": {
+      "12306": {
+        "title": "China Railway 12306",
+        "desc": "Horários de trens, disponibilidade de assentos e informações de estações da China Railway 12306."
+      },
+      "12306-train-assistant": {
+        "title": "Assistente de reservas 12306",
+        "desc": "Pesquise e reserve passagens da China Railway: disponibilidade, paradas, conexões, listas de espera, login, pedidos e links de pagamento."
+      },
+      "a-stock-data": {
+        "title": "Kit de dados de ações A",
+        "desc": "Dados completos de ações A: cotações, relatórios de pesquisa, sinais de temas em alta e northbound, negociação com margem e operações em bloco."
+      },
+      "ai-comic-drama-shot-maker": {
+        "title": "Criador de planos de drama em quadrinhos",
+        "desc": "Transforma um quadro de quadrinhos, uma ficha de personagem ou um momento congelado da história em um plano animado dinâmico."
+      },
+      "ai-short-drama-script": {
+        "title": "Roteiro de drama curto com IA",
+        "desc": "Roteirização de dramas curtos de ponta a ponta: roteiros completos, episódios avulsos, esboços de séries e episódios, reescritas e diagnóstico de roteiro."
+      },
+      "ai-song-cover-studio": {
+        "title": "Estúdio de covers de músicas com IA",
+        "desc": "Transforma uma gravação em um cover com nova interpretação ou em um rearranjo a partir de uma faixa de referência."
+      },
+      "ai-storyboard-generator": {
+        "title": "Gerador de storyboard",
+        "desc": "Transforma um roteiro, uma cena ou um briefing de anúncio em um storyboard estruturado com uma lista de planos prática."
+      },
+      "ai-video-image-music-studio": {
+        "title": "Estúdio de criação com IA",
+        "desc": "Vídeo, imagens, música e narração em um fluxo conectado, com edição visual no meio do caminho."
+      },
+      "analyze-recruitment-trends": {
+        "title": "Análise de tendências de recrutamento",
+        "desc": "Lê materiais de mercado, concorrentes e contratação em busca de mudanças de demanda e sinais de fluxo de talentos, com fontes, premissas e ações recomendadas."
+      },
+      "android-apk-builder": {
+        "title": "Gerador de APK Android (sem aapt2)",
+        "desc": "Gera um APK instalável apenas com JDK + d8 + jarsigner, em uma máquina sem aapt2 ou SDK Android completo."
+      },
+      "android-native-dev": {
+        "title": "Desenvolvimento nativo para Android",
+        "desc": "Desenvolvimento de apps Android e design de UI: Material Design 3, Kotlin, Jetpack Compose e as convenções da plataforma."
+      },
+      "apple-design": {
+        "title": "Design de interface fluida da Apple",
+        "desc": "Revisão de design segundo as diretrizes de interação fluida da Apple: UI orientada por gestos, animação de mola, inércia, materiais, profundidade e redução de movimento."
+      },
+      "ardot-skillhub": {
+        "title": "Compositor de quadros Ardot",
+        "desc": "Organiza pranchetas Ardot existentes em uma apresentação entregável — comparações de estados, quadros de revisão, percursos de fluxo, matrizes de papéis e dispositivos."
+      },
+      "assist-payroll-approval": {
+        "title": "Assistente de aprovação de folha de pagamento",
+        "desc": "Transforma resultados da folha, listas de exceções, comparações de orçamento e regras de aprovação em um resumo com evidências de variação e níveis de risco."
+      },
+      "autocad-drawing": {
+        "title": "Desenho no AutoCAD",
+        "desc": "Desenha, edita e otimiza desenhos CAD ou extrai dados deles — mecânica, arquitetura, elétrica, hidráulica, HVAC, aço e diagramas de processo."
+      },
+      "bid-pipeline": {
+        "title": "Pipeline de conteúdo de licitações",
+        "desc": "Transforma editais de licitação em publicações prontas para WeChat, Toutiao, Xiaohongshu e vídeo curto, com capas, ilustrações e verificação de conformidade."
+      },
+      "bilibili-script": {
+        "title": "Roteiro de vídeo longo para Bilibili",
+        "desc": "Roteiros de vídeos longos no estilo Bilibili com gancho de abertura, estrutura em seções e momentos adequados para danmaku."
+      },
+      "btpanel": {
+        "title": "Painel baota e MCP",
+        "desc": "Controla o painel baota: sites, arquivos, bancos de dados, Docker, automações e ambiente do servidor, além de verificações de status e solução de problemas."
+      },
+      "build-job-profile": {
+        "title": "Criador de perfis de cargo",
+        "desc": "Transforma necessidades de contratação, metas de negócio e documentos do cargo em um perfil revisável: responsabilidades, nível de competências, requisitos por níveis e evidências de triagem."
+      },
+      "chinese-poetry": {
+        "title": "Literatura clássica chinesa",
+        "desc": "Encontra e interpreta poesia e textos clássicos chineses — por autor, título ou tema — com complemento de versos e rastreio de fontes."
+      },
+      "ci-cd-and-automation": {
+        "title": "CI/CD e automação",
+        "desc": "Design de pipelines, automação de builds e releases e as verificações que tornam um deploy repetível."
+      },
+      "cn-ecommerce-search": {
+        "title": "Busca em e-commerce da China",
+        "desc": "Busca de produtos nos principais marketplaces chineses, com anúncios e preços lado a lado."
+      },
+      "comfyui-ops": {
+        "title": "Implantação e operação do ComfyUI",
+        "desc": "Instala, soluciona problemas e opera o ComfyUI diretamente nesta máquina."
+      },
+      "content-factory": {
+        "title": "Fábrica de conteúdo",
+        "desc": "Produção de conteúdo com vários agentes: uma peça de origem vira muitos formatos em diversos canais."
+      },
+      "creative-brainstorming-board": {
+        "title": "Quadro de brainstorming de produto",
+        "desc": "Um método de quadro branco de cinco colunas que leva uma ideia do mundo real a um problema declarado — para novos produtos e exploração guiada por hipóteses."
+      },
+      "cron": {
+        "title": "Automações",
+        "desc": "Crie e gerencie tarefas executadas em uma programação."
+      },
+      "delivery-no-pseudoblock": {
+        "title": "Autoverificação antes da entrega",
+        "desc": "Um portão comportamental executado antes que qualquer coisa chegue ao usuário — um resumo final, uma conclusão, um relatório de status — que de fato é carregado e executado, em vez de apenas afirmar que foi."
+      },
+      "design-first": {
+        "title": "Brainstorming, design primeiro",
+        "desc": "Define o design antes de escrever qualquer código, para que a construção parta de uma forma acordada."
+      },
+      "dingtalk-unified": {
+        "title": "DingTalk Suite",
+        "desc": "A CLI oficial do DingTalk Workspace: mensagens, chats em grupo, contatos, calendário, tarefas, aprovações, presença, registros, tabelas de IA e documentos."
+      },
+      "douyin-video-fetch": {
+        "title": "Busca de vídeos do Douyin",
+        "desc": "Coleta vídeos do Douyin e seus metadados para análise posterior."
+      },
+      "drawio": {
+        "title": "Diagramas no Draw.io",
+        "desc": "Cria diagramas nativos e editáveis do Draw.io e os exporta."
+      },
+      "element-ui-guide": {
+        "title": "Referência do Element UI",
+        "desc": "Referência de componentes e geração de código do Element UI (Vue 2) — props, eventos, métodos e slots, ou um componente funcional."
+      },
+      "expense-merger": {
+        "title": "Mesclador de notas de despesas",
+        "desc": "Mescla uma pasta de notas OFD e PDF em um único PDF, com uma folha de rosto que resume cidade, categoria de despesa e detalhes de representação."
+      },
+      "flight-trip-advisor": {
+        "title": "Consultor de viagens aéreas",
+        "desc": "Clima nas duas pontas, risco de atraso, o que vestir e notas de solo do aeroporto para uma data e rota específicas."
+      },
+      "fore-vip-geo-optimizer": {
+        "title": "Otimizador GEO",
+        "desc": "Pipeline de cinco etapas para a participação em citações de mecanismos generativos: consulta mecanismos de IA com perguntas reais de usuários, coleta respostas e trabalha as lacunas."
+      },
+      "fore-vip-oss": {
+        "title": "Configuração de armazenamento de objetos",
+        "desc": "Explica o armazenamento de objetos e orienta a escolha e a configuração de um provedor — Alibaba OSS, Tencent COS, AWS S3, Huawei OBS, MinIO e outros."
+      },
+      "fortune-master": {
+        "title": "Referência de metafísica chinesa",
+        "desc": "Mapas de Bazi, Zi Wei Dou Shu, Qi Men Dun Jia, Liu Yao, Mei Hua, tarô e astrologia. Apenas para entretenimento."
+      },
+      "frontend-design": {
+        "title": "Design de frontend",
+        "desc": "Design de interfaces para a web: layout, hierarquia visual e o vocabulário de componentes que um build pode seguir."
+      },
+      "frontend-dev": {
+        "title": "Desenvolvimento de frontend",
+        "desc": "Construção de interfaces web — componentes, estado, estilos e o comportamento do navegador por baixo."
+      },
+      "fund-analysis": {
+        "title": "Análise de fundos",
+        "desc": "Lê as posições, o desempenho e o perfil de risco de um fundo e coloca os números em contexto."
+      },
+      "github": {
+        "title": "GitHub",
+        "desc": "Opera o GitHub pela CLI `gh`: issues, pull requests, execuções de workflows e chamadas diretas à API."
+      },
+      "gog": {
+        "title": "Google Workspace",
+        "desc": "Google Workspace pela linha de comando: Gmail, Agenda, Drive, Contatos, Planilhas e Docs."
+      },
+      "gongwen-format": {
+        "title": "Formatação de documentos oficiais",
+        "desc": "Formata um documento Word ou Markdown conforme os padrões chineses de documentos oficiais (GB/T 9704-2012, GB/T 33476.2-2016) — fonte, tamanho e espaçamento."
+      },
+      "govproc-method-selector": {
+        "title": "Seletor de modalidade de compras públicas",
+        "desc": "Confronta um projeto de compras públicas com as condições legais de cada uma das seis modalidades e verifica a escolha já feita."
+      },
+      "grilling": {
+        "title": "Interrogatório",
+        "desc": "Testa um plano ou decisão questionando-o ponto a ponto, tão duramente quanto você pedir."
+      },
+      "h3-prompt-writing": {
+        "title": "Prompts para MiniMax H3",
+        "desc": "Escreve prompts de vídeo do MiniMax H3 para T2VA, I2VA, FL2VA, L2VA e Ref2VA."
+      },
+      "hot-search-cn": {
+        "title": "Agregador de tendências da China",
+        "desc": "Listas de tendências de Weibo, Zhihu, Baidu, Bilibili, Douyin, 36Kr, Tieba e Toutiao, por plataforma ou comparadas."
+      },
+      "identify-key-talent": {
+        "title": "Identificação de talentos-chave",
+        "desc": "Confronta definições de cargo com currículos, desempenho e avaliações para apontar as pessoas que valem ser verificadas primeiro, com matriz de evidências e plano de riscos."
+      },
+      "imap-smtp-email": {
+        "title": "E-mail IMAP / SMTP",
+        "desc": "Lê e envia e-mails por IMAP e SMTP: verificação de não lidos, conteúdo das mensagens, busca e gerenciamento da caixa de correio."
+      },
+      "invoice-verify": {
+        "title": "Verificação de notas fiscais",
+        "desc": "Verifica se uma nota fiscal é autêntica e em que estado está — anulada, creditada ou sinalizada — a partir de texto ou de um arquivo enviado."
+      },
+      "ios-application-dev": {
+        "title": "Desenvolvimento de apps iOS",
+        "desc": "Desenvolvimento de apps iOS: Swift, SwiftUI e UIKit e as convenções de plataforma esperadas pela Apple."
+      },
+      "ixhlink-skills-id-photo-standard": {
+        "title": "Foto 3x4 padrão",
+        "desc": "Transforma um retrato em uma foto de documento conforme as especificações de currículo, prova, passaporte e visto — sem embelezamento."
+      },
+      "karpathy-guidelines": {
+        "title": "Diretrizes de programação de Karpathy",
+        "desc": "Diretrizes de comportamento que reduzem os erros de programação que os LLMs continuam cometendo. Use ao escrever ou revisar código."
+      },
+      "kdocs": {
+        "title": "Kingsoft Docs / WPS Cloud",
+        "desc": "O Skill oficial do Kingsoft Docs: criar, ler, editar, pesquisar, compartilhar e organizar documentos na nuvem."
+      },
+      "lark-unified": {
+        "title": "Lark / Feishu Suite",
+        "desc": "Uma CLI unificada do Lark: mensagens, documentos, planilhas, tabelas Base e calendário."
+      },
+      "lexiang-knowledge-base": {
+        "title": "Tencent Lexiang",
+        "desc": "Acesso completo à base de conhecimento Lexiang via MCP: pesquisar, ler e escrever em bases pessoais e compartilhadas."
+      },
+      "local-ocr-linux": {
+        "title": "OCR local (Linux)",
+        "desc": "Lê texto de imagens offline usando um Tesseract instalado."
+      },
+      "local-ocr-macos": {
+        "title": "OCR local (macOS)",
+        "desc": "Lê texto de imagens offline com o framework Vision integrado."
+      },
+      "local-ocr-windows": {
+        "title": "OCR local (Windows)",
+        "desc": "Lê texto de imagens offline com o mecanismo de OCR integrado do Windows."
+      },
+      "markitdown-skill": {
+        "title": "MarkItDown",
+        "desc": "Converte documentos em Markdown com a CLI MarkItDown da Microsoft. PDF, Office e mais."
+      },
+      "mcporter": {
+        "title": "Gerenciador de MCP",
+        "desc": "Lista, configura, autentica e chama diretamente servidores MCP e suas ferramentas, por HTTP ou stdio."
+      },
+      "meeting-minutes-assistant": {
+        "title": "Atas e ações de reuniões",
+        "desc": "Transforma uma reunião em uma ata estruturada: decisões, ações, responsáveis, prazos e o ciclo de acompanhamento."
+      },
+      "mermaid": {
+        "title": "Diagramas Mermaid",
+        "desc": "Renderiza fluxogramas, diagramas de sequência e ER como SVG ou ASCII."
+      },
+      "morph-ppt": {
+        "title": "Slides Morph",
+        "desc": "Cria apresentações .pptx com transições Morph suaves entre slides."
+      },
+      "morph-ppt-3d": {
+        "title": "Slides Morph 3D",
+        "desc": "Apresentações Morph com modelos GLB e movimentos de câmera cinematográficos."
+      },
+      "officecli": {
+        "title": "Documentos do Office",
+        "desc": "Crie, analise e edite arquivos do Word, Excel e PowerPoint."
+      },
+      "officecli-academic-paper": {
+        "title": "Artigo acadêmico",
+        "desc": "Artigos de periódicos, congressos e teses em .docx com a formatação adequada."
+      },
+      "officecli-data-dashboard": {
+        "title": "Painel do Excel",
+        "desc": "Painéis do Excel com várias planilhas, movidos por fórmulas e gráficos."
+      },
+      "officecli-docx": {
+        "title": "Documentos do Word",
+        "desc": "Tudo que envolva um arquivo .docx, como entrada ou saída."
+      },
+      "officecli-financial-model": {
+        "title": "Modelo financeiro",
+        "desc": "Modelos de três demonstrações, DCF, LBO e análise de sensibilidade."
+      },
+      "officecli-pitch-deck": {
+        "title": "Pitch deck",
+        "desc": "Apresentações para investidores, do seed à Série C."
+      },
+      "officecli-pptx": {
+        "title": "Slides do PowerPoint",
+        "desc": "Tudo que envolva um arquivo .pptx, como entrada ou saída."
+      },
+      "officecli-word-form": {
+        "title": "Formulários do Word preenchíveis",
+        "desc": "Formulários do Word com controles de conteúdo e campos de formulário reais."
+      },
+      "officecli-xlsx": {
+        "title": "Planilhas do Excel",
+        "desc": "Tudo que envolva um arquivo .xlsx, como entrada ou saída."
+      },
+      "old-photo-restorer": {
+        "title": "Restauração de fotos antigas",
+        "desc": "Restaura fotografias antigas, amareladas, arranhadas ou danificadas — vincos, ruído, manchas e partes faltantes — entregues sem marca d'água."
+      },
+      "one-config": {
+        "title": "Configuração do aplicativo",
+        "desc": "Inspecione e ajuste a configuração deste aplicativo."
+      },
+      "one-troubleshooting": {
+        "title": "Solução de problemas",
+        "desc": "Diagnostique e resolva problemas deste aplicativo."
+      },
+      "one-webui-public": {
+        "title": "Acesso público à WebUI",
+        "desc": "Expõe a WebUI para acesso de fora da sua rede."
+      },
+      "one-webui-setup": {
+        "title": "Configuração da WebUI",
+        "desc": "Configura o modo WebUI para acesso remoto."
+      },
+      "openclaw-setup": {
+        "title": "Configuração do OpenClaw",
+        "desc": "Instale, implante e use o assistente pessoal OpenClaw."
+      },
+      "patent-disclosure-writer": {
+        "title": "Redator de divulgação de patente",
+        "desc": "Transforma uma ideia breve, código, um PRD ou desenhos em um documento de divulgação de patente reforçado."
+      },
+      "pdf": {
+        "title": "Kit de ferramentas PDF",
+        "desc": "Extrai texto e tabelas e cria, mescla ou divide PDFs."
+      },
+      "peekaboo": {
+        "title": "Automação da interface do macOS",
+        "desc": "Captura e automatiza a interface do macOS pela CLI Peekaboo."
+      },
+      "pm-toolkit-zxh": {
+        "title": "Kit de dados e eficiência",
+        "desc": "Significância A/B, retenção por coorte, consultas SQL, revisão pré-lançamento, revisão de textos, crítica de currículos, rascunhos de NDA e política de privacidade."
+      },
+      "poster-design-studio": {
+        "title": "Estúdio de design de pôsteres",
+        "desc": "Transforma um tema, uma foto de produto ou referências de marca em um pôster que faz parar para olhar."
+      },
+      "price-compare": {
+        "title": "Comparação de preços",
+        "desc": "Compara vários produtos por preço e especificações e diz qual é o mais barato e qual é a melhor compra."
+      },
+      "proboost-tiktok-shop-analysis": {
+        "title": "Análise do TikTok Shop",
+        "desc": "Lê o desempenho de um TikTok Shop — produtos, tráfego e conversão — e onde está a lacuna operacional."
+      },
+      "proboost-tiktok-video-analysis": {
+        "title": "Dissecação de vídeo viral do TikTok",
+        "desc": "Decompõe um vídeo de alto desempenho do TikTok nas escolhas que o fizeram funcionar e no que pode ser reaproveitado."
+      },
+      "product-discovery-zxh": {
+        "title": "Descoberta de produto",
+        "desc": "Brainstorming de ideias, mapeamento de premissas arriscadas, ranking de impacto × risco, experimentos de validação e síntese de entrevistas."
+      },
+      "product-manager": {
+        "title": "Gerente de produto",
+        "desc": "Todo o ciclo de vida do produto: avaliação de oportunidades, redação de PRD, planejamento de roadmap, GTM e medição pós-lançamento."
+      },
+      "product-strategy-zxh": {
+        "title": "Estratégia de produto",
+        "desc": "Visão, canvas de estratégia, canvas de negócio e lean, monetização e preços, SWOT, PESTLE, Ansoff, Porter e proposta de valor."
+      },
+      "product-trend-researcher": {
+        "title": "Pesquisa de tendências",
+        "desc": "Tendências de mercado, panorama competitivo e varreduras tecnológicas, entregues como briefing de decisão com avaliação de fontes e nível de confiança."
+      },
+      "pubmed-literature-search": {
+        "title": "Busca de literatura no PubMed",
+        "desc": "Busca de literatura por palavras-chave no PubMed dentro de uma janela de tempo obrigatória, entregue como relatório."
+      },
+      "qq-email": {
+        "title": "QQ Mail",
+        "desc": "Recebe por IMAP e envia por SMTP no QQ Mail, com credenciais lidas do ambiente."
+      },
+      "qqmusic": {
+        "title": "QQ Music",
+        "desc": "Busca músicas, álbuns, playlists, videoclipes e artistas, além de recomendações diárias."
+      },
+      "remove-watermark": {
+        "title": "Remoção de marca d'água",
+        "desc": "Remove marcas d'água, logotipos, marcas de canto, texto e legendas de uma imagem."
+      },
+      "resume-design": {
+        "title": "Design de currículo",
+        "desc": "Layout e modelos de currículo pela CLI de design com IA do Meitu Design Studio (`designkit`)."
+      },
+      "screen-automation": {
+        "title": "Automação de tela",
+        "desc": "Visão local de tela para reconhecer e localizar elementos da interface e depois concluir uma tarefa na tela atual no Windows ou macOS."
+      },
+      "security-and-hardening": {
+        "title": "Segurança e hardening",
+        "desc": "Prevenção OWASP, autenticação, gerenciamento de segredos e auditoria de dependências."
+      },
+      "self-media-distribution": {
+        "title": "Distribuição multiplataforma",
+        "desc": "Publicação com um clique em plataformas de criadores e várias contas — Douyin, WeChat Channels, Kuaishou e as demais."
+      },
+      "seo-content-optimizer": {
+        "title": "Otimizador de conteúdo SEO",
+        "desc": "Otimiza o conteúdo para visibilidade em buscas e para ser citado por respostas de IA."
+      },
+      "skill-creator": {
+        "title": "Criador de Skills",
+        "desc": "Um guia para escrever Skills eficazes por conta própria."
+      },
+      "skill-scanner": {
+        "title": "Scanner de segurança de Skills",
+        "desc": "Verifica qualquer Skill de agente em busca de riscos de segurança antes de instalar ou usar. Desenvolvido pelo Tencent Zhuque Lab."
+      },
+      "smart-product-selector": {
+        "title": "Seleção de produtos para e-commerce",
+        "desc": "Coleta de dados de mercado, cálculo de margem e análise de seleção para decidir o que vender."
+      },
+      "social-media-content": {
+        "title": "Conteúdo para redes sociais",
+        "desc": "Produz conteúdo social de forma sistemática — temas, textos, tags e cadência de publicação."
+      },
+      "software-copyright-cn": {
+        "title": "Registro de direitos autorais de software na China",
+        "desc": "Prepara os materiais de identificação exigidos para um registro de direitos autorais de software na China."
+      },
+      "solo-company": {
+        "title": "Coach de empresa de uma pessoa só",
+        "desc": "Acompanha um fundador solo em posicionamento, produto, preços, aquisição, entrega e retrospectiva, com árvores de decisão e um painel."
+      },
+      "story-roleplay": {
+        "title": "Roleplay de histórias",
+        "desc": "Cartões de personagem e informações de mundo em PNG, WebP e JSON."
+      },
+      "superpowers": {
+        "title": "Método de engenharia Superpowers",
+        "desc": "Especificação antes do código, um plano executável, TDD vermelho-verde obrigatório, desenvolvimento conduzido por subagentes, depuração e revisão sistemáticas, e depois merge."
+      },
+      "supertonic-tts": {
+        "title": "TTS local rápido",
+        "desc": "Síntese de voz local de alta qualidade com supertonic-mnn: mais de 30 idiomas, dez vozes, CLI e API Python."
+      },
+      "talking-avatar-video": {
+        "title": "Vídeo de avatar falante",
+        "desc": "Um retrato e um roteiro curto ou gravação viram um vídeo de apresentador com fala estável e natural."
+      },
+      "taobao": {
+        "title": "Verificação de preços entre plataformas",
+        "desc": "Encontra o melhor preço de um produto no Taobao, Tmall, JD, Pinduoduo, Douyin e Kuaishou."
+      },
+      "tax-policy-knowledge": {
+        "title": "Base de conhecimento de política tributária",
+        "desc": "Base de conhecimento de referência sobre política tributária e financeira da China."
+      },
+      "tencent-meeting-skill": {
+        "title": "Tencent Meeting",
+        "desc": "Agende, edite e cancele reuniões; consulte detalhes, participantes, salas de espera, a lista de reuniões de um usuário e gravações."
+      },
+      "the-entrepreneurship-handbook": {
+        "title": "O manual do empreendedorismo",
+        "desc": "Um Skill de perguntas e respostas para fundadores, gestores e líderes empresariais."
+      },
+      "tiktok-script": {
+        "title": "Roteiro de TikTok",
+        "desc": "Roteiros de vídeos curtos do TikTok baseados em ritmo, textos sobrepostos e adaptação a tendências."
+      },
+      "totorosir-work-report": {
+        "title": "Assistente de relatórios de trabalho",
+        "desc": "Relatórios semanais, diários, mensais, trimestrais e anuais, além de atualizações de projeto e marcos, a partir de anotações soltas e números de tickets."
+      },
+      "toutiao-search": {
+        "title": "Busca de conteúdo no Toutiao",
+        "desc": "Busca publicações e vídeos do Toutiao por palavra-chave, ordenados por leituras ou data, com tabela, exportação CSV e relatório HTML interativo."
+      },
+      "travel-guide-assistant": {
+        "title": "Planejador de viagens",
+        "desc": "Planeja um roteiro e verifica transporte, hospedagem, atrações e comida ao longo dele."
+      },
+      "user-persona-builder": {
+        "title": "Criador de personas de usuário",
+        "desc": "Cria personas detalhadas: dados demográficos, pontos de dor, motivações e preferências de conteúdo."
+      },
+      "video-to-ppt": {
+        "title": "Vídeo para PPT",
+        "desc": "Divide a gravação de uma palestra, reunião ou aula em slides — extração de quadros, melhoria e remoção de duplicatas — exportados como PPTX em tela cheia."
+      },
+      "wacli": {
+        "title": "WhatsApp",
+        "desc": "Envia mensagens do WhatsApp e pesquisa ou sincroniza o histórico pela CLI wacli."
+      },
+      "weather-now": {
+        "title": "Clima",
+        "desc": "Clima da cidade em linguagem simples: hoje, amanhã, depois de amanhã e comparação entre várias cidades."
+      },
+      "weaver-e10-jucailin": {
+        "title": "Weaver E10 RH",
+        "desc": "RH do dia a dia no Weaver E10: dados e relatórios de frequência, registro de ponto, fluxos de exceções, folha de pagamento, previdência social, alterações salariais e recrutamento."
+      },
+      "weaver-e10-plan": {
+        "title": "Weaver E10 Planos e relatórios",
+        "desc": "Cria, encontra, edita, publica e retira relatórios do E10, além de paginação de relatórios compartilhados, lembretes de envio e comentários."
+      },
+      "web-access": {
+        "title": "Acesso à web",
+        "desc": "Toda ação online passa por aqui: pesquisa, obtenção de páginas, fluxos com login e interação com o navegador."
+      },
+      "wechat-miniprogram": {
+        "title": "Mini programa do WeChat",
+        "desc": "O framework de mini programas do WeChat, para criar aplicativos dentro do WeChat."
+      },
+      "wechat-official-account": {
+        "title": "Artigo de conta oficial do WeChat",
+        "desc": "Artigos aprofundados no estilo de contas oficiais — título, abertura, estrutura e fecho."
+      },
+      "wechat-viral-video-writer": {
+        "title": "Dissecação do WeChat Channels",
+        "desc": "Decompõe um vídeo viral do Channels em sua lógica de tema e estrutura de texto e escreve um roteiro em quatro partes pronto para filmar."
+      },
+      "wechat-wenyan-publish": {
+        "title": "Publicação em conta oficial",
+        "desc": "De ponta a ponta: padrões de redação, capa de 900×383, arte de SVG para PNG, tema wenyan e publicação."
+      },
+      "wechatpay-basic-payment": {
+        "title": "Noções básicas do WeChat Pay",
+        "desc": "Pagamentos, reembolsos, extratos, divisão de lucros, cadastro de comerciantes e consentimento de conta — com orientação de seleção, exemplos de código e solução de problemas."
+      },
+      "wecom-unified": {
+        "title": "WeCom Suite",
+        "desc": "Uma CLI completa do WeCom: contatos, documentos, planilhas, tabelas inteligentes e docs, calendário, reuniões, tarefas, drive, e-mail, mensagens e mídia."
+      },
+      "weekly-literature-briefing": {
+        "title": "Briefing semanal de literatura",
+        "desc": "Reúne os destaques semanais do PubMed em uma área, traduz títulos e resumos de forma bilíngue e envia o briefing por e-mail."
+      },
+      "weekly-report-generator": {
+        "title": "Gerador de relatórios semanais",
+        "desc": "Transforma tarefas soltas, registros de chat e calendários em um relatório semanal ou diário bem acabado."
+      },
+      "weixin-file-send": {
+        "title": "Envio de arquivos no WeChat",
+        "desc": "Envia arquivos para um contato do WeChat a partir de uma conversa."
+      },
+      "weiyun": {
+        "title": "Tencent Weiyun",
+        "desc": "Acesso completo ao drive em nuvem Weiyun via MCP: listar, navegar por categoria, baixar, excluir e mais."
+      },
+      "x-recruiter": {
+        "title": "Vagas de recrutamento no X",
+        "desc": "Publica vagas no X, com regras de redação e prompts de imagem."
+      },
+      "xiaohongshu-recruiter": {
+        "title": "Recrutamento no Xiaohongshu",
+        "desc": "Publica vagas de IA no Xiaohongshu com capas geradas."
+      },
+      "xiaoliebian-scrm": {
+        "title": "Xiaoliebian Private Domain",
+        "desc": "Crescimento de comunidades do WeCom e sorteios, tarefas de Moments e transmissão, análises de domínio privado e comunidade e resumos de conversas da equipe."
+      },
+      "youtube-video-research": {
+        "title": "Pesquisa em vídeos do YouTube",
+        "desc": "Sustenta uma tarefa de pesquisa com evidências de primeira mão extraídas de vídeos do YouTube."
+      },
+      "zxh-api-connector-builder": {
+        "title": "Criador de conectores de API",
+        "desc": "Cria um conector para uma API de terceiros — autenticação, endpoints e a forma de que o chamador precisa."
+      }
+    },
+    "builtinCategory": {
+      "office": "Documentos e Office",
+      "content": "Criação de conteúdo",
+      "media": "Imagem, áudio e vídeo",
+      "diagram": "Diagramas e desenho",
+      "dev": "Desenvolvimento",
+      "data": "Dados e finanças",
+      "workplace": "Suítes de trabalho",
+      "recruit": "RH e recrutamento",
+      "product": "Produto e estratégia",
+      "research": "Pesquisa",
+      "life": "Vida e viagens",
+      "system": "Configuração e automação",
+      "creative": "Escrita criativa"
+    }
   },
   "authMethod": "Autenticação",
   "geminiApiKey": "Chave de API Gemini",
@@ -1074,7 +1658,10 @@
     "discordStep1": "Abra o Discord e mencione seu bot em um canal, ou envie um DM",
     "discordStep2": "Envie qualquer mensagem ou @menção para iniciar o pareamento",
     "discordStep3": "Uma solicitação de pareamento aparecerá abaixo. Clique em \"Aprovar\" para autorizar o usuário.",
-    "discordStep4": "Após aprovado, você pode começar a conversar com o assistente no Discord!"
+    "discordStep4": "Após aprovado, você pode começar a conversar com o assistente no Discord!",
+    "manualPairingHint": "A solicitação não está na lista? Insira o código de pareamento do usuário para aprovar ou rejeitar manualmente.",
+    "manualPairingInvalid": "Insira o código de pareamento de 6 dígitos mostrado ao usuário",
+    "manualPairingPlaceholder": "Código de 6 dígitos"
   },
   "lark": {
     "appId": "ID do Aplicativo",
@@ -1529,7 +2116,30 @@
     "factIdentity": "Conectado",
     "factCompany": "Empresa",
     "factDepartment": "Depto.",
-    "openSettings": "Config. do grupo"
+    "openSettings": "Config. do grupo",
+    "guestName": "Convidado",
+    "guestTitle": "Modo convidado",
+    "guestDesc": "Edição pessoal independente — use conversas e espaços de trabalho diretamente. Entre em um grupo de projeto para colaborar.",
+    "guestJoinEnterprise": "Entrar / Entrar no grupo de projeto",
+    "joinProjectGroup": "Entrar em um grupo de projeto",
+    "noProjectGroupLine": "Ainda não está em um grupo de projeto",
+    "editionSsoNoGroup": "Conectado · Sem grupo de projeto",
+    "editionCompanyAdmin": "Administrador da empresa · Sem grupo de projeto",
+    "guestDescCompanyAdmin": "Você é o administrador local da empresa “{{company}}” — gerencie membros e configurações em Configurações → Console da empresa. Entre em um grupo de projeto para colaborar.",
+    "guestAdminLogin": "Login de administrador da WebUI",
+    "memberDesc": "Você entrou em um grupo de projeto — Skills e ferramentas distribuídos pelo grupo de projeto estão disponíveis.",
+    "openConsole": "Abrir o console de administração do grupo de projeto",
+    "editionPersonal": "Pessoal · Sem login",
+    "editionProjectGroup": "Grupo de projeto",
+    "departmentLine": "Departamento: {{department}}",
+    "editionClient": "Empresa · Conectado",
+    "editionClientDisconnected": "Pessoal · Sem empresa",
+    "ssoAuthed": "Conectado por SSO da empresa",
+    "ssoCompanyLine": "SSO da empresa: {{company}}",
+    "projectGroupLine": "Grupo de projeto: {{name}}",
+    "myGroupsTitle": "Meus grupos de projeto",
+    "switchDone": "Grupo de projeto alterado",
+    "editionClientNeedLogin": "Empresa · Sem login"
   },
   "enterpriseChannel": "Canal da empresa",
   "enterpriseChannelTip": "Este canal de modelos é fornecido pela sua empresa. As credenciais ficam no servidor da empresa e ele não pode ser alterado nem removido aqui.",
@@ -1649,5 +2259,1046 @@
     "passphraseTooShort": "Use pelo menos {{min}} caracteres.",
     "passphraseMismatch": "As duas entradas não coincidem.",
     "passphraseNoRecovery": "Não há como recuperar esta senha. Se perdê-la, o backup não poderá ser aberto."
+  },
+  "assistantListLoading": "Carregando assistentes…",
+  "closeToTrayDesc": "Ao clicar no botão de fechar a janela, ela é ocultada na bandeja do sistema. O app continua em execução em segundo plano. Clique duas vezes no ícone da bandeja ou escolha Mostrar no menu para reabrir; use Sair no menu da bandeja para encerrar por completo.",
+  "apiKeyUnrecoverable": "Chave inválida",
+  "apiKeyUnrecoverableTip": "A chave de API deste provedor não pode mais ser descriptografada (a chave de criptografia mudou) e precisa ser inserida novamente. Clique aqui para inseri-la de novo.",
+  "webui.deployModeTitle": "Modo de implantação corporativa",
+  "webui.deployModeDesc": "Apenas uma máquina por LAN deve ser o servidor; todas as outras se conectam a ela como clientes. O padrão é cliente até você criar uma empresa nesta máquina.",
+  "webui.deployRoleServer": "Esta máquina como servidor",
+  "webui.deployRoleClient": "Esta máquina como cliente",
+  "webui.deployServerUrlLabel": "Endereço do servidor corporativo",
+  "webui.deployServerUrlPlaceholder": "ex.: https://ai.example.com ou 192.168.1.10:25809",
+  "webui.deployServerUrlHint": "Use o endereço do servidor corporativo que o administrador informou: um domínio começando com https:// em uma implantação com domínio, ou IP e porta para um servidor na sua LAN.",
+  "webui.deployServerUrlInvalid": "Insira um endereço de servidor válido, por exemplo https://ai.example.com ou 192.168.1.10:25809",
+  "webui.deployServerHint": "Esta máquina hospeda o servidor corporativo. Outros clientes na LAN podem se conectar a este endereço.",
+  "webui.deployClientHint": "No modo cliente, o SSO corporativo e a administração rodam no servidor remoto, no navegador. Os pontos de entrada do console de administração local ficam ocultos.",
+  "webui.deploySave": "Salvar",
+  "webui.deploySaveAddress": "Salvar endereço",
+  "webui.deploySaved": "Modo de implantação salvo",
+  "webui.deploySaveFailed": "Falha ao salvar",
+  "webui.deployServerUrlHistoryLabel": "Endereços recentes",
+  "webui.deployServerUrlHistoryClear": "Limpar",
+  "webui.deployServerUrlHistoryClearTitle": "Limpar o histórico de endereços?",
+  "webui.deployServerUrlHistoryClearDesc": "Apenas a lista do histórico é limpa; o endereço de servidor salvo atualmente não é afetado.",
+  "webui.promoteConfirmTitle": "Mudar para servidor?",
+  "webui.promoteConfirmDesc": "Esta máquina hospedará os dados do grupo de projeto como servidor e se desconectará do servidor remoto. O endereço informado é mantido no histórico, então você poderá escolhê-lo novamente ao voltar para cliente.",
+  "webui.demoteConfirmTitle": "Mudar para cliente?",
+  "webui.demoteConfirmDesc": "Esta máquina hospeda atualmente dados corporativos. Depois de mudar para cliente, saia da empresa na página Empresa e entre pelo servidor remoto.",
+  "webui.switchToServerBlockedTitle": "Ainda não é possível mudar para servidor",
+  "webui.switchToServerBlockedDesc": "Esta máquina está atualmente no modo cliente e entrou em uma empresa. Para mudar para o modo servidor, saia primeiro da empresa na página Empresa.",
+  "webui.deployServerAddressLabel": "Os outros clientes devem usar: {{url}}",
+  "webui.deployServerAddressUnavailable": "A WebUI ainda não está acessível pela LAN, então outros clientes não conseguem se conectar. Ative-a primeiro e permita o acesso remoto em Configurações → WebUI.",
+  "webui.deployRoleServerUnavailable": "\"Esta máquina como servidor\" exige uma implantação de servidor da edição Enterprise; a edição pessoal não hospeda grupos de projeto.",
+  "marketplacePersona": {
+    "AccessibilityAuditor": {
+      "name": "Auditor de acessibilidade",
+      "desc": "Audita interfaces conforme a WCAG para que todos os usuários possam realmente usar o produto."
+    },
+    "AccountsPayableAgent": {
+      "name": "Agente de contas a pagar",
+      "desc": "Automatiza o fluxo de contas a pagar e mantém os pagamentos corretos e em dia."
+    },
+    "AdCreativeStrategist": {
+      "name": "Estrategista criativo de publicidade",
+      "desc": "Projeta criativos de anúncios e prevê seu desempenho, produzindo peças feitas para converter."
+    },
+    "AdortDesignExpert": {
+      "name": "Especialista em design Ardot",
+      "desc": "Domina o Ardot: constrói UI precisa no canvas e transforma designs diretamente em código frontend."
+    },
+    "AdTrackingExpert": {
+      "name": "Especialista em rastreamento de anúncios",
+      "desc": "Cuida do código de rastreamento e da atribuição de conversões para que o desempenho das campanhas seja realmente mensurável."
+    },
+    "AgentIdentityTrustExpert": {
+      "name": "Especialista em identidade e confiança de agentes",
+      "desc": "Constrói mecanismos de identidade e confiança entre agentes de IA."
+    },
+    "AgentOrchestrator": {
+      "name": "Orquestrador de agentes",
+      "desc": "Orquestra sistemas multiagente para que uma equipe de IA colabore em vez de trabalhar em paralelo."
+    },
+    "AiContentCreatorTeam": {
+      "name": "Equipe de criação de conteúdo com IA",
+      "desc": "Uma equipe de conteúdo multimodal movida por IA que cobre posicionamento de marca, moodboards, direção de anúncios, textos, vídeo, imagens, retoque e reaproveitamento — do briefing ao ativo final."
+    },
+    "AiDataCopilot": {
+      "name": "Copiloto de dados com IA",
+      "desc": "Uma equipe de dados de seis pessoas: linguagem natural para SQL, modelagem em Python, perguntas e respostas de conhecimento com RAG, painéis e geração de relatórios."
+    },
+    "AiEngineer": {
+      "name": "Engenheiro de IA",
+      "desc": "Engenheiro de ML full-stack para desenvolvimento, implantação e ajuste de modelos — leva a IA do papel à produção."
+    },
+    "AiHot": {
+      "name": "Resumo de notícias de IA",
+      "desc": "Com uma frase você recebe as notícias selecionadas do dia sobre modelos, produtos, indústria e artigos de IA, reunidas em um briefing. Sem configuração, sem login."
+    },
+    "AiImagePromptEngineer": {
+      "name": "Engenheiro de prompts de imagem com IA",
+      "desc": "Conhece a linguagem da geração de imagens e transforma uma ideia visual abstrata em um prompt preciso."
+    },
+    "AIShifuExpert": {
+      "name": "Criador de cursos AI Shifu",
+      "desc": "Transforma seus objetivos de ensino e material bruto (PPT, Word, PDF, txt) em um curso de IA interativo um a um."
+    },
+    "AndonQExpert": {
+      "name": "Suporte Tencent Cloud AndonQ",
+      "desc": "Conhece toda a linha de produtos da Tencent Cloud: consultoria, solução de problemas e relatórios de serviço."
+    },
+    "ApiTestingExpert": {
+      "name": "Especialista em testes de API",
+      "desc": "Encontra cada defeito de API antes dos seus usuários e mantém as interfaces estáveis e corretas."
+    },
+    "APMPerformanceExpert": {
+      "name": "Especialista em desempenho APM",
+      "desc": "Diagnostica e ajusta com o Tencent Cloud APM, localizando gargalos e propondo correções."
+    },
+    "AppStoreOptimizationExpert": {
+      "name": "Especialista em otimização de lojas de apps",
+      "desc": "Conhece os algoritmos de ranking da App Store e do Google Play e como se destacar neles."
+    },
+    "AShareAnalysis": {
+      "name": "Equipe de pesquisa de ações A",
+      "desc": "Oito analistas em seis fluxos predefinidos: estratégia macro, leitura de mercado, profundidade por ativo, valuation, mapeamento da cadeia de suprimentos, fluxos de recursos e diagnóstico de risco."
+    },
+    "AskLiuxiaopai": {
+      "name": "Pergunte ao Liu Xiaopai",
+      "desc": "Um gêmeo digital do fundador da Raphael AI, no estilo de horário de atendimento: definir a pessoa específica, a dor real, o primeiro dólar e os primeiros usuários — e depois uma coisa para fazer hoje à noite."
+    },
+    "AutonomousOptimizationArchitect": {
+      "name": "Arquiteto de otimização autônoma",
+      "desc": "Projeta sistemas que se otimizam e evoluem sozinhos, ficando mais inteligentes quanto mais são usados."
+    },
+    "BackendArchitect": {
+      "name": "Arquiteto de backend",
+      "desc": "Fundo em sistemas distribuídos e design de alta concorrência; transforma requisitos de negócio bagunçados em uma arquitetura limpa."
+    },
+    "BaiduSeoExpert": {
+      "name": "Especialista em SEO do Baidu",
+      "desc": "Entende o algoritmo do Baidu e o ecossistema de busca chinês, e como maximizar a visibilidade da marca nele."
+    },
+    "BehavioralNudgeEngine": {
+      "name": "Motor de nudges comportamentais",
+      "desc": "Aplica economia comportamental ao design de produto, levando os usuários a decisões melhores."
+    },
+    "BilibiliContentStrategist": {
+      "name": "Estrategista de conteúdo do Bilibili",
+      "desc": "Conhece o ecossistema do Bilibili e seu público jovem e cria estratégias que rendem visualizações."
+    },
+    "BlockchainSecurityAuditor": {
+      "name": "Auditor de segurança blockchain",
+      "desc": "Audita contratos inteligentes e protocolos DeFi em busca de falhas de segurança."
+    },
+    "BookCoCreator": {
+      "name": "Cocriador de livros",
+      "desc": "Trabalha junto com o autor em estrutura e conteúdo, até o padrão de publicação."
+    },
+    "BrandGuardian": {
+      "name": "Guardião da marca",
+      "desc": "Quinze anos de estratégia de marca, defendendo a consistência onde quer que a marca apareça."
+    },
+    "CapacityExpert": {
+      "name": "Especialista em planejamento de capacidade",
+      "desc": "Monitoramento de limiares, previsão de capacidade e política de autoescalonamento — evita tanto gargalos quanto desperdício."
+    },
+    "CarouselContentGrowthExpert": {
+      "name": "Especialista em crescimento com conteúdo em carrossel",
+      "desc": "Projeta conteúdo em carrossel de alto engajamento que impulsiona participação e crescimento em plataformas sociais."
+    },
+    "CATNetworkQualityAnalyst": {
+      "name": "Analista de qualidade de rede",
+      "desc": "Análise de desempenho multidimensional, localização de anomalias, captura de pacotes e delimitação de problemas — encontra rápido a causa raiz de falhas de rede e serviço."
+    },
+    "ChaosExpert": {
+      "name": "Especialista em engenharia do caos",
+      "desc": "Injeção de falhas, validação de resiliência e avaliação de circuit breakers, para tornar os sistemas antifrágeis."
+    },
+    "CharityDocFinanceExpert": {
+      "name": "Especialista em documentos e finanças para o terceiro setor",
+      "desc": "Papelada e finanças para organizações sem fins lucrativos em um só lugar: pedidos de financiamento, relatórios de encerramento, recibos, preparação para auditoria e conformidade — para que quem atua na causa gaste menos tempo com burocracia."
+    },
+    "ChatLawTeam": {
+      "name": "Equipe de consultoria jurídica chinesa",
+      "desc": "Triagem de casos, pesquisa de legislação, análise de precedentes e parecer por escrito — produz relatórios de consulta para assuntos cíveis, de família, contratuais e trabalhistas."
+    },
+    "ChinaEcommerceOperationsExpert": {
+      "name": "Especialista em operações de e-commerce na China",
+      "desc": "Opera lojas no Tmall, JD e Pinduoduo de ponta a ponta, da seleção de produtos a um anúncio campeão."
+    },
+    "CloudOpsTeam": {
+      "name": "Equipe de operações Tencent Cloud",
+      "desc": "Três especialistas: CloudQ para governança multicloud e visualização de arquitetura, AndonQ para tickets e perguntas e respostas, MigraQ para planejamento de migração e TCO. Da migração à operação do dia a dia."
+    },
+    "Code": {
+      "name": "Especialista em fluxo de trabalho de programação",
+      "desc": "Conduz todo o ciclo planejar-executar-verificar-testar, dividindo trabalho complexo em etapas verificáveis de forma independente, com acompanhamento de várias tarefas e preferências lembradas."
+    },
+    "CodeReviewExpert": {
+      "name": "Especialista em revisão de código",
+      "desc": "Lê cada linha com olhos de águia e pega defeitos antes que cheguem à produção."
+    },
+    "ComplianceAuditor": {
+      "name": "Auditor de conformidade",
+      "desc": "Audita as operações do negócio de ponta a ponta conforme os padrões do setor."
+    },
+    "ContentCreator": {
+      "name": "Criador de conteúdo",
+      "desc": "Escreve conteúdo convincente para várias plataformas que leva a história de uma marca ao seu público."
+    },
+    "ContentDistributionTeam": {
+      "name": "Equipe de distribuição de conteúdo",
+      "desc": "Distribuição completa em mais de 13 plataformas sociais globais (incluindo WeChat Channels): regras por plataforma, agendamento, publicação em lote, análises entre plataformas e postagem automatizada no Xiaohongshu."
+    },
+    "ContentMonetizationTeam": {
+      "name": "Equipe de monetização de conteúdo",
+      "desc": "Cinco especialistas em comissões de afiliados CPS, anúncios de performance CPE/CPM, conexão criador-marca e análise de receita."
+    },
+    "CorporateTrainingDesigner": {
+      "name": "Designer de treinamento corporativo",
+      "desc": "Projeta currículos corporativos estruturados e trilhas de aprendizagem que aceleram as habilidades dos colaboradores."
+    },
+    "CrossBorderEcommerceExpert": {
+      "name": "Especialista em e-commerce transfronteiriço",
+      "desc": "Conhece a Amazon, o Shopify e os demais marketplaces internacionais e como levar uma marca para o mundo."
+    },
+    "CulturalIntelligenceStrategist": {
+      "name": "Estrategista de inteligência cultural",
+      "desc": "Constrói a sensibilidade cultural de que uma marca precisa ao se globalizar."
+    },
+    "CustomerSupportExpert": {
+      "name": "Especialista em atendimento ao cliente",
+      "desc": "Transforma uma interação frustrada em um defensor e a qualidade do serviço em boca a boca."
+    },
+    "DataAnalysisExpert": {
+      "name": "Especialista em análise de dados",
+      "desc": "Trabalho com planilhas de ponta a ponta: criação, edição, análise, fórmulas, formatação e visualização."
+    },
+    "DataAnalyticsReporter": {
+      "name": "Repórter de análise de dados",
+      "desc": "Transforma dados complexos em insights estratégicos: diagnóstico de métricas, frameworks de KPI, avaliação de qualidade de dados e relatórios de decisão."
+    },
+    "DatabaseOptimizationExpert": {
+      "name": "Especialista em otimização de banco de dados",
+      "desc": "Ajusta o desempenho do banco de dados e reescreve consultas, para que as lentas fiquem rápidas e os gargalos desapareçam."
+    },
+    "DataEngineer": {
+      "name": "Engenheiro de dados",
+      "desc": "Constrói pipelines e ETL confiáveis para que os dados fluam da fonte ao insight sem travar."
+    },
+    "DataExplorationExpert": {
+      "name": "Especialista em exploração de dados",
+      "desc": "Consultas SQL, exploração, visualização, painéis, validação e geração de insights."
+    },
+    "DataIntegrationAgent": {
+      "name": "Agente de integração de dados",
+      "desc": "Limpa e unifica dados dispersos em uma única visão corporativa."
+    },
+    "DealStrategist": {
+      "name": "Estrategista de negócios",
+      "desc": "Constrói e avança estratégias de negócios complexos, ajudando as equipes de vendas a fechar os grandes."
+    },
+    "DeepResearchExpert": {
+      "name": "Especialista em pesquisa aprofundada",
+      "desc": "Recuperação de múltiplas fontes, checagem de fatos, descoberta de conhecimento e relatórios estruturados — inclusive busca de artigos de contas oficiais do WeChat."
+    },
+    "DelightfulExperienceDesigner": {
+      "name": "Designer de experiências encantadoras",
+      "desc": "Planta momentos inesperados de encantamento na experiência da marca."
+    },
+    "DesignEngineTeam": {
+      "name": "Equipe de design e protótipos",
+      "desc": "Uma equipe de design com IA de seis papéis, da descoberta à entrega de protótipos com qualidade de marca, com 71 design systems integrados."
+    },
+    "DesignMdArchitect": {
+      "name": "Arquiteto de design system",
+      "desc": "Gera especificações de design system a partir de uma biblioteca de referência de 58 marcas e emite diretamente páginas HTML/CSS e componentes de UI prontos para produção."
+    },
+    "DesignToCodeExpert": {
+      "name": "Especialista em design para código",
+      "desc": "Converte arquivos do Figma e capturas de tela em componentes de código utilizáveis, com acessibilidade integrada."
+    },
+    "DeveloperEvangelist": {
+      "name": "Evangelista de desenvolvedores",
+      "desc": "Faz crescer uma comunidade de desenvolvedores e impulsiona a adoção entre engenheiros."
+    },
+    "DevOpsAutomationEngineer": {
+      "name": "Engenheiro de automação DevOps",
+      "desc": "Automatiza toda operação manual, de CI/CD a infraestrutura como código — implantação com um clique."
+    },
+    "DiscoveryCoach": {
+      "name": "Coach de descoberta",
+      "desc": "Treina equipes de vendas em descoberta profunda, para trazerem à tona a dor de negócio que realmente importa."
+    },
+    "DiversityVisualExpert": {
+      "name": "Especialista em imagem diversa",
+      "desc": "Trabalha para remover vieses sistêmicos de imagens de IA, mantendo os visuais culturalmente precisos e inclusivos."
+    },
+    "DockerfileGenExpert": {
+      "name": "Gerador de Dockerfile",
+      "desc": "Gera Dockerfiles que seguem as melhores práticas de conteinerização."
+    },
+    "DocumentGenerationExpert": {
+      "name": "Especialista em geração de documentos",
+      "desc": "Gera documentos de negócio de todos os tipos, reduzindo o tempo que cada um leva."
+    },
+    "DocumentProcessingExpert": {
+      "name": "Especialista em processamento de documentos",
+      "desc": "Uma suíte de documentos: criação, edição e conversão de arquivos do Excel, Word, PowerPoint e PDF."
+    },
+    "DouyinStrategist": {
+      "name": "Estrategista do Douyin",
+      "desc": "Conhece o algoritmo e o ecossistema de conteúdo do Douyin — sucessos de vídeos curtos e a monetização por trás deles."
+    },
+    "EarningsReviewer": {
+      "name": "Revisor de resultados",
+      "desc": "Analista sênior de revisão trimestral: lê calls e comunicados, atualiza o modelo de cobertura e produz a nota pós-trimestre, a tabela de variações e o ajuste de valuation para a mesa de pesquisa."
+    },
+    "EmbeddedFirmwareEngineer": {
+      "name": "Engenheiro de firmware embarcado",
+      "desc": "Programação de microcontroladores: firmware eficiente e confiável em hardware com muito pouca folga."
+    },
+    "EngineeringAssuranceTeam": {
+      "name": "Equipe de garantia de engenharia",
+      "desc": "Cinco especialistas sob um diretor de engenharia: revisor de código (segurança/desempenho/correção), arquiteto (design de sistemas/ADR), SRE (resposta a incidentes/deploys), especialista em testes (estratégia/cobertura) e redator técnico (documentação/runbooks)."
+    },
+    "EngineeringWorkflowSkills": {
+      "name": "Coach de fluxo de trabalho de engenharia",
+      "desc": "Um coach de engenharia de ciclo completo baseado nos Agent Skills do Google: orientado por especificação, orientado por testes, revisão de código, release CI/CD."
+    },
+    "EnterpriseAccountStrategist": {
+      "name": "Estrategista de grandes contas",
+      "desc": "Conduz grandes contas e estratégia de expansão, transformando um cliente em parceiro de longo prazo."
+    },
+    "EnterpriseLegalTeam": {
+      "name": "Equipe jurídica corporativa",
+      "desc": "Uma equipe multifuncional para o jurídico interno: contratos, transações, privacidade, produto, regulatório, governança de IA, trabalhista e triagem de propriedade intelectual."
+    },
+    "EntrepreneurshipCoach": {
+      "name": "Coach de empreendedorismo",
+      "desc": "Meio mentor, meio parceiro de leitura. Trabalha a dor real do fundador conforme ela surge e é forte em execução de GTM, em encarar clientes e na ordem em que fazer as coisas."
+    },
+    "EquityResearchExpert": {
+      "name": "Especialista em pesquisa de ações",
+      "desc": "Um kit completo de ações: análise de resultados, relatórios de início de cobertura, DCF e comparáveis, pitches long/short, memorandos de investimento, cenários de eventos e risco de carteira — fluxos de buy-side e sell-side."
+    },
+    "EvidenceCollector": {
+      "name": "Coletor de evidências",
+      "desc": "Recusa-se a registrar um defeito sem captura de tela, para que nada se esconda atrás de uma descrição."
+    },
+    "ExecutiveSummaryGenerator": {
+      "name": "Gerador de resumos executivos",
+      "desc": "Condensa relatórios longos em algo que um executivo consiga absorver e devolve os minutos."
+    },
+    "ExperimentTrackingManager": {
+      "name": "Gerente de acompanhamento de experimentos",
+      "desc": "Gerencia o ciclo de vida dos experimentos para que cada um tenha uma hipótese, uma execução e uma conclusão."
+    },
+    "FbsirSuperPartner": {
+      "name": "Super parceiro",
+      "desc": "Traga um objetivo ou material real e receba uma entrega utilizável; onde houver capacidades do host disponíveis e autorizadas, ele executa, relata e depois emite um veredito de 72 horas."
+    },
+    "FeedbackSynthesisAnalyst": {
+      "name": "Analista de síntese de feedback",
+      "desc": "Destila insights de uma massa de feedback de usuários e transforma a voz do usuário em direção."
+    },
+    "FinanceAccountingExpert": {
+      "name": "Especialista em finanças e contabilidade",
+      "desc": "Fechamento do mês, lançamentos contábeis, conciliação, demonstrações financeiras, análise de variações e apoio a auditorias SOX."
+    },
+    "FinanceDataExpert": {
+      "name": "Especialista em dados financeiros",
+      "desc": "Consulta 209 APIs de dados financeiros em linguagem natural, em 15 famílias, incluindo ações, índices, futuros, títulos, fundos e macro."
+    },
+    "FinancialModelingExpert": {
+      "name": "Especialista em modelagem financeira",
+      "desc": "O conjunto central de modelagem: DCF, análise de empresas comparáveis, LBO, modelos de três demonstrações, panorama competitivo e controle de qualidade de apresentações."
+    },
+    "FinancialTracker": {
+      "name": "Acompanhamento financeiro",
+      "desc": "Acompanha com precisão as finanças de projetos e do negócio, para que cada entrada e saída seja contabilizada."
+    },
+    "FinopsExpert": {
+      "name": "Especialista em FinOps",
+      "desc": "Governança de custos em nuvem: análise de faturas, detecção de recursos ociosos, otimização de modelos de preço e rateio de custos."
+    },
+    "FortuneConsultant": {
+      "name": "Consultor de fortuna",
+      "desc": "Referências tradicionais de adivinhação — mapas BaZi e Zi Wei, leituras de tarô e Flor de Ameixeira, consultas ao almanaque lunar. Cruzadas entre sistemas, apenas para entretenimento."
+    },
+    "FrontendDeveloper": {
+      "name": "Desenvolvedor frontend",
+      "desc": "Stacks web modernos e frameworks principais, construindo apps responsivos e de alto desempenho com precisão de pixel."
+    },
+    "FsiMarketResearcher": {
+      "name": "Pesquisador setorial",
+      "desc": "Pesquisa setorial para analistas e gestores de portfólio: panorama, estrutura competitiva, tabelas de valuation comparável e filtros temáticos."
+    },
+    "GameAudioEngineer": {
+      "name": "Engenheiro de áudio de jogos",
+      "desc": "Integração FMOD/Wwise e áudio espacial, dando vida ao som de um jogo."
+    },
+    "GameDesigner": {
+      "name": "Game designer",
+      "desc": "Design de sistemas e mecânicas, construindo jogo a partir de loops, alavancas e psicologia."
+    },
+    "GaokaoAdvisor": {
+      "name": "Consultor de Gaokao",
+      "desc": "Pesquisa a base de conhecimento do Gaokao e os dados de notas de corte por provas anteriores, cursos e referências de candidatura com fontes, depois conduz todo o processo de candidatura e produz um relatório compartilhável."
+    },
+    "GitWorkflowExpert": {
+      "name": "Especialista em fluxo de trabalho Git",
+      "desc": "Fluxos de trabalho avançados do Git e estratégia de branches, para que a colaboração deixe de ser fonte de atrito."
+    },
+    "GlReconciler": {
+      "name": "Conciliador de razão geral",
+      "desc": "Conciliação diária e de fim de mês do back office de fundos: encontra divergências entre razão geral e subsidiário, rastreia até as operações de origem, classifica como timing/reclassificação/câmbio e produz uma lista pronta para aprovação."
+    },
+    "GodotGameScriptEngineer": {
+      "name": "Engenheiro de scripts Godot",
+      "desc": "GDScript 2.0 e a arquitetura de nós do Godot 4."
+    },
+    "GodotMultiplayerEngineer": {
+      "name": "Engenheiro multiplayer Godot",
+      "desc": "MultiplayerAPI do Godot 4 e replicação de rede."
+    },
+    "GodotShaderDeveloper": {
+      "name": "Desenvolvedor de shaders Godot",
+      "desc": "A linguagem de shading do Godot e o VisualShader."
+    },
+    "GovernmentDigitalPresalesConsultant": {
+      "name": "Consultor de pré-vendas para governo",
+      "desc": "Conhece os requisitos de transformação digital do setor público e o processo de contratação por trás deles."
+    },
+    "GPTResearcherTeam": {
+      "name": "Equipe de pesquisa aprofundada",
+      "desc": "Sete papéis em cinco etapas agregam várias fontes e depois um ciclo de revisão e correção produz um relatório profissional com citações."
+    },
+    "GrowthHacker": {
+      "name": "Growth hacker",
+      "desc": "Encontra canais de crescimento inexplorados por meio de experimentos orientados por dados e os faz compor."
+    },
+    "HealthcareMarketingComplianceExpert": {
+      "name": "Conformidade em marketing de saúde",
+      "desc": "Mantém o marketing médico dentro da regulamentação e suas alegações, precisas."
+    },
+    "HrOperationsTeam": {
+      "name": "Equipe de operações de RH",
+      "desc": "RH como processo: triagem, desenho de remuneração, desenvolvimento organizacional e fluxo operacional, para que uma estratégia de talentos realmente aconteça."
+    },
+    "HuashuDataPro": {
+      "name": "Equipe de análise de dados local",
+      "desc": "Uma equipe de dados para empresa de uma pessoa só. Entra um Excel; especialistas em tendência, estrutura e anomalia analisam em paralelo e entregam relatórios web, Excel e PPT. Nada sai da máquina."
+    },
+    "HuashuDocReviewer": {
+      "name": "Revisor de contratos e documentos",
+      "desc": "Adiciona balões de comentário e alterações controladas dentro do .docx original — sem arquivo novo, sem danos ao formato."
+    },
+    "HumanizePptTeam": {
+      "name": "Equipe de PPT com toque humano",
+      "desc": "Transforma material bruto em um esboço de apresentação com voz humana e depois orquestra a geração HTML, o modo apresentador, o movimento de vídeo e o controle de qualidade da entrega."
+    },
+    "IdentityGraphOperator": {
+      "name": "Operador de grafo de identidade",
+      "desc": "Constrói e mantém o grafo de identidade de usuários que torna possível o reconhecimento entre plataformas."
+    },
+    "IncidentResponseCommander": {
+      "name": "Comandante de resposta a incidentes",
+      "desc": "Mantém a calma e conduz a equipe durante uma queda: localizar, mitigar, recuperar."
+    },
+    "IndieFounderCoach": {
+      "name": "Coach de fundadores independentes",
+      "desc": "Enxuto e autofinanciado por convicção: ajuda fundadores solo a sair do zero para um negócio sustentável e lucrativo com recursos mínimos, em cada decisão do caminho."
+    },
+    "IndustrySreTeam": {
+      "name": "Equipe de SRE setoriais",
+      "desc": "Doze SREs setoriais de jogos, finanças e e-commerce fazem uma inspeção em cinco dimensões e devolvem recomendações de arquitetura que podem ser marcadas uma a uma."
+    },
+    "InfrastructureOperationsExpert": {
+      "name": "Especialista em operações de infraestrutura",
+      "desc": "Mantém a infraestrutura de TI funcionando, sem que nada fique sem contabilização."
+    },
+    "InspectionExpert": {
+      "name": "Especialista em inspeção de nuvem",
+      "desc": "Inspeção em cinco dimensões (segurança, desempenho, confiabilidade, custo, conformidade), varredura de alto risco com correção priorizada, análise de tendências e relatórios visuais — encontra o problema antes que ele encontre você."
+    },
+    "InstagramOperationsExpert": {
+      "name": "Especialista em operações de Instagram",
+      "desc": "A linguagem visual e a estratégia de conteúdo do Instagram, construindo uma marca que as pessoas queiram seguir."
+    },
+    "InternalCommsExpert": {
+      "name": "Especialista em comunicação interna",
+      "desc": "Modelos de comunicação interna: relatórios de status, atualizações para a diretoria, comunicados da empresa, FAQs, relatórios de incidentes e atualizações de projeto."
+    },
+    "InvestmentBankingExpert": {
+      "name": "Especialista em banco de investimento",
+      "desc": "Material de pitch, valuation (comparáveis/DCF/LBO/três demonstrações), mercado de capitais, due diligence do comprador, reestruturação e waterfalls de recuperação, e execução de transações de ponta a ponta."
+    },
+    "InvestmentMastersTeam": {
+      "name": "Equipe de mestres do investimento",
+      "desc": "Treze filosofias lendárias de investimento mais seis analistas rodam em paralelo, um gestor de risco define as restrições e um gestor de portfólio agrega os sinais em uma votação."
+    },
+    "JiraWorkflowAdmin": {
+      "name": "Administrador de fluxos de trabalho do Jira",
+      "desc": "Configuração do Jira e design de fluxos de trabalho ágeis, para que a ferramenta sirva à equipe e não o contrário."
+    },
+    "KdocsDataTable": {
+      "name": "Criador de tabelas inteligentes",
+      "desc": "Transforma um tópico de inscrições de grupo de chat em uma tabela estruturada, gera um formulário de coleta compartilhável a partir de uma frase e fixa as regras no lugar — formatação condicional para valores atípicos, validação com lista suspensa, cabeçalhos travados."
+    },
+    "KdocsDocButler": {
+      "name": "Mordomo de documentos",
+      "desc": "Gerencia toda a vida dos seus documentos na nuvem: criar, pesquisar, organizar com IA em pastas por tema, mover e renomear em lote, links de compartilhamento e permissões, e ler o conteúdo como Markdown."
+    },
+    "KdocsKnowledgeCollector": {
+      "name": "Coletor de conhecimento",
+      "desc": "Transforma páginas, mensagens e anotações dispersas em um ativo de conhecimento estruturado: recorte com um clique para documentos na nuvem, agrupamento por tema com IA, resumos de vários documentos e arquivamento organizado em uma biblioteca pessoal."
+    },
+    "KdocsPdfToolbox": {
+      "name": "Caixa de ferramentas PDF",
+      "desc": "Trabalho com PDF em um só lugar: dividir por página, mesclar, extrair páginas, converter para Word/Excel/PPT, exportação de tradução de texto completo (bilíngue ou em um só idioma), leitura de conteúdo e contagem de páginas."
+    },
+    "KdocsPptCreator": {
+      "name": "Criador de apresentações com IA",
+      "desc": "Uma frase ou um documento de referência, e a IA projeta o esboço e constrói a apresentação completa — páginas de título, conteúdo e resumo — com paleta e layout adequados à ocasião."
+    },
+    "KuaishouStrategist": {
+      "name": "Estrategista do Kuaishou",
+      "desc": "Entende o mercado das cidades de menor porte do Kuaishou e sua cultura e constrói uma estratégia de conteúdo que pertence a ele."
+    },
+    "KycScreener": {
+      "name": "Triagem KYC",
+      "desc": "Conformidade na entrada de clientes: analisa material KYC, executa o motor de regras, confere listas de sanções e PEP e monta um pacote de escalonamento graduado por risco."
+    },
+    "LawStudentCoach": {
+      "name": "Coach para estudantes de Direito",
+      "desc": "Um parceiro de estudo para estudantes de Direito: perguntas socráticas, resumos de casos, IRAC, trabalho com a ementa e revisão para o exame da OAB."
+    },
+    "LegalBuilderHubExpert": {
+      "name": "Governança de Skills jurídicos",
+      "desc": "Um assistente de governança para operações jurídicas e desenvolvedores de Skills, avaliando procedência do Skill, permissões de ferramentas, atualidade, licença e limites de confiança."
+    },
+    "LegalClinicSupervisor": {
+      "name": "Supervisor de clínica jurídica",
+      "desc": "Um assistente de supervisão para professores de clínicas jurídicas: atendimento de clientes, início de pesquisa, acompanhamento de prazos, integração de alunos e passagem de fim de semestre."
+    },
+    "LegalComplianceReviewer": {
+      "name": "Revisor de conformidade jurídica",
+      "desc": "Mantém as operações e os recursos do produto dentro da lei e evita riscos de conformidade."
+    },
+    "LevelDesigner": {
+      "name": "Level designer",
+      "desc": "Trata cada fase como uma experiência composta, contando a história pelo espaço."
+    },
+    "LinkedInContentCreator": {
+      "name": "Criador de conteúdo para LinkedIn",
+      "desc": "Estratégia de conteúdo para LinkedIn e a liderança de pensamento que a acompanha."
+    },
+    "LitigationLegalExpert": {
+      "name": "Especialista em apoio a litígios",
+      "desc": "Apoio a casos para litigantes: organização de casos e provas, linhas do tempo, preparação de contrainterrogatório, gráficos de danos e minutas de peças."
+    },
+    "LivestreamEcommerceCoach": {
+      "name": "Coach de comércio por livestream",
+      "desc": "O ciclo completo de venda por livestream, do roteiro ao investimento em anúncios, visando um salto no GMV."
+    },
+    "LlmWiki": {
+      "name": "LLM Wiki",
+      "desc": "Constrói e mantém uma base de conhecimento pessoal duradoura sobre o padrão LLM Wiki de Andrej Karpathy: compila artigos, papers e anotações em Markdown estruturado, liga-os entre si, sinaliza contradições e mantém o índice atualizado."
+    },
+    "LspIndexEngineer": {
+      "name": "Engenheiro de índices LSP",
+      "desc": "O Language Server Protocol e a indexação de código."
+    },
+    "MacOsSpatialMetalEngineer": {
+      "name": "Engenheiro de Metal espacial no macOS",
+      "desc": "A API gráfica Metal da Apple e a computação espacial no macOS."
+    },
+    "MarketingCampaignExpert": {
+      "name": "Especialista em campanhas de marketing",
+      "desc": "Planeja, constrói e otimiza campanhas omnichannel: estratégia de conteúdo, social, e-mail e mídia paga."
+    },
+    "MarketingCampaignTeam": {
+      "name": "Equipe de campanhas de marketing",
+      "desc": "Quatro especialistas sob um diretor de marketing: criador de conteúdo (blog/e-mail/social/voz da marca), planejador de campanhas (estratégia/público/canal/orçamento), especialista em SEO (auditoria técnica/otimização/análise) e analista de marca (posicionamento/auditoria de marca)."
+    },
+    "McpBuildExpert": {
+      "name": "Especialista em construção de MCP",
+      "desc": "Design e implementação do Model Context Protocol."
+    },
+    "MeetingPrepAgent": {
+      "name": "Agente de preparação de reuniões",
+      "desc": "Um parceiro de preparação para consultores financeiros: antes de cada reunião com o cliente, reúne histórico do relacionamento, movimentação da carteira, notícias de mercado e uma pauta — pronto em cinco minutos."
+    },
+    "MermaidDiagramExpert": {
+      "name": "Especialista em diagramas Mermaid",
+      "desc": "Transforma linguagem natural em diagramas Mermaid profissionais: seis tipos de diagrama, quinze temas, SVG e ASCII de qualidade editorial em segundos."
+    },
+    "Migraq": {
+      "name": "Migração para nuvem MigraQ",
+      "desc": "Migração para a Tencent Cloud: varredura de recursos na Alibaba Cloud, AWS e Huawei Cloud, correspondência de especificações, análise de TCO e planejamento da migração."
+    },
+    "MigraqTeam": {
+      "name": "Equipe de migração para a nuvem",
+      "desc": "Sete especialistas conduzem uma migração de ponta a ponta: seleção de produtos, landing zone, arquitetura, entrega, operações e implantação FDE."
+    },
+    "MobileApplicationDeveloper": {
+      "name": "Desenvolvedor de aplicativos móveis",
+      "desc": "iOS e Android nativos e multiplataforma, construindo apps móveis que passam sensação de fluidez."
+    },
+    "ModelBuilder": {
+      "name": "Criador de modelos financeiros",
+      "desc": "Constrói do zero modelos DCF, LBO, de três demonstrações e valuations comparáveis no Excel — fórmulas totalmente vinculadas, rastreáveis, com controle de qualidade institucional."
+    },
+    "ModelQualityAssuranceExpert": {
+      "name": "Especialista em QA de modelos",
+      "desc": "Avalia sistematicamente a qualidade de modelos de IA, para que as saídas permaneçam precisas, justas e seguras."
+    },
+    "ModernWebappExpert": {
+      "name": "Especialista em apps web modernos",
+      "desc": "React + TypeScript + Vite + Tailwind + shadcn/ui, com automação de navegador incluída."
+    },
+    "MonthEndCloser": {
+      "name": "Especialista em fechamento do mês",
+      "desc": "Um parceiro próximo para líderes de finanças: percorre o checklist de provisões, rollforwards e explicações de variações e entrega ao controller um pacote pronto para assinar."
+    },
+    "MultiCloudExpert": {
+      "name": "Especialista em AIOps multicloud",
+      "desc": "Um agente para Tencent Cloud, Alibaba Cloud, AWS, Azure e GCP."
+    },
+    "MultiCloudManagementExpert": {
+      "name": "Especialista em gestão multicloud",
+      "desc": "Governança de arquitetura, visualização, inspeção automatizada, otimização de custos e avaliação de riscos em todas as nuvens — um especialista para todas."
+    },
+    "NarrativeDesigner": {
+      "name": "Designer narrativo",
+      "desc": "Funde história e jogo até que os dois não possam mais ser separados."
+    },
+    "OpcTeam": {
+      "name": "Equipe de empresa de uma pessoa só",
+      "desc": "Nove especialistas percorrem com você todo o arco da empresa de uma pessoa só — inventário de recursos, posicionamento de nicho, MVP, conversão e retrospectiva — baseado na metodologia de empresa de uma pessoa só de Easy."
+    },
+    "OpenSpecDocTeam": {
+      "name": "Equipe de documentos longos",
+      "desc": "Documentos longos de nível corporativo: quatro papéis cobrem pesquisa aprofundada, planejamento do esboço, redação e revisão de conformidade."
+    },
+    "OutboundStrategist": {
+      "name": "Estrategista de prospecção ativa",
+      "desc": "Vendas outbound e de partida a frio — ganhar os próximos trinta segundos de um desconhecido."
+    },
+    "PaidMediaAuditor": {
+      "name": "Auditor de mídia paga",
+      "desc": "Audita a fundo o gasto com anúncios e a alocação de orçamento e encontra o dinheiro desperdiçado."
+    },
+    "PerformanceTestingExpert": {
+      "name": "Especialista em testes de desempenho",
+      "desc": "Testes de desempenho e benchmarking — provar uma melhoria com números, não com impressões."
+    },
+    "PitchAgent": {
+      "name": "Pitch Agent",
+      "desc": "Um associado sênior de banco: constrói um primeiro pitch do zero — comparáveis, transações precedentes, DCF, gráfico football field — e uma apresentação de marca ligada ao modelo."
+    },
+    "PodcastStrategist": {
+      "name": "Estrategista de podcast",
+      "desc": "Planejamento e crescimento de podcasts e a conexão mais profunda com o público que o áudio conquista."
+    },
+    "PpcBiddingStrategist": {
+      "name": "Estrategista de lances PPC",
+      "desc": "Lances no Google Ads e no Baidu, comprando tráfego de qualidade ao menor custo por clique."
+    },
+    "PptCreationExpert": {
+      "name": "Especialista em criação de apresentações",
+      "desc": "Transforma uma ideia em uma apresentação pronta em uma só passada."
+    },
+    "PresalesTechnicalConsultant": {
+      "name": "Consultor técnico de pré-vendas",
+      "desc": "Liga o técnico ao comercial, para que o cliente veja o valor da solução."
+    },
+    "PrivateDomainMarketingExpert": {
+      "name": "Especialista em marketing de domínio privado",
+      "desc": "Ativa os dados que você já tem, encontra neles a oportunidade de marketing e a transforma em receita."
+    },
+    "PrivateDomainOperationsExpert": {
+      "name": "Especialista em operações de domínio privado",
+      "desc": "Constrói e opera pools de tráfego privado no WeChat, convertendo tráfego público em ativo próprio."
+    },
+    "PrivateEquityExpert": {
+      "name": "Especialista em private equity",
+      "desc": "Originação de operações, triagem, checklists de due diligence, memorandos de comitê de investimento, unit economics, análise de retornos, gestão de portfólio e planos de criação de valor."
+    },
+    "ProductManagementExpert": {
+      "name": "Especialista em gestão de produto",
+      "desc": "Redação de especificações, planejamento de roadmap, comunicação com stakeholders, síntese de pesquisa com usuários, análise competitiva e acompanhamento de métricas."
+    },
+    "ProductStrategyTeam": {
+      "name": "Equipe de estratégia de produto",
+      "desc": "Cinco especialistas sob um diretor de produto: analista de requisitos (PRD/especificações), pesquisador de usuários (síntese), analista competitivo (inteligência), analista de dados (métricas) e planejador de roadmap — da ideia ao lançamento."
+    },
+    "ProgrammaticAdBuyer": {
+      "name": "Comprador de mídia programática",
+      "desc": "Compra programática e plataformas DSP, executando segmentação precisa em escala."
+    },
+    "ProjectShepherd": {
+      "name": "Pastor de projetos",
+      "desc": "Mantém um projeto avançando conforme o plano — com delicadeza e sem deixar um marco escapar."
+    },
+    "PromoCreatorTeam": {
+      "name": "Equipe de vídeo promocional",
+      "desc": "Seis papéis em seis etapas levam uma URL de produto a um MP4 publicável de 60 a 90 segundos: briefing criativo, storyboard plano a plano, produção de ativos, edição com HyperFrames, BGM e entrega."
+    },
+    "ProposalStrategist": {
+      "name": "Estrategista de propostas",
+      "desc": "Propostas de vendas e design de soluções, transformando valor em um argumento difícil de recusar."
+    },
+    "RapidPrototypingEngineer": {
+      "name": "Engenheiro de prototipagem rápida",
+      "desc": "Leva uma ideia a um protótipo funcional rapidamente, para que a equipe descubra se ela se sustenta."
+    },
+    "RealityChecker": {
+      "name": "Verificador de realidade",
+      "desc": "Presume que tudo precisa de mais evidências e exige provas esmagadoras antes de aprovar como «pronto para produção»."
+    },
+    "RecruitmentExpert": {
+      "name": "Especialista em recrutamento",
+      "desc": "Todo o funil de contratação, voltado a encontrar a pessoa certa para a equipe."
+    },
+    "RedditCommunityBuilder": {
+      "name": "Construtor de comunidades no Reddit",
+      "desc": "Entende a cultura do Reddit bem o bastante para construir reputação genuína no maior fórum do mundo."
+    },
+    "RemotionVideoExpert": {
+      "name": "Especialista em vídeo com Remotion",
+      "desc": "Geração de vídeo com Remotion: demos de produto, vídeos explicativos, conteúdo social e apresentações."
+    },
+    "ReportDistributionAgent": {
+      "name": "Agente de distribuição de relatórios",
+      "desc": "Automatiza a geração de relatórios e a forma como chegam a quem precisa deles."
+    },
+    "RobloxAvatarCreator": {
+      "name": "Criador de avatares do Roblox",
+      "desc": "UGC do Roblox e o pipeline de avatares."
+    },
+    "RobloxExperienceDesigner": {
+      "name": "Designer de experiências do Roblox",
+      "desc": "UX da plataforma Roblox e design de monetização."
+    },
+    "RobloxSystemScriptEngineer": {
+      "name": "Engenheiro de scripts do Roblox",
+      "desc": "Luau e o modelo de segurança cliente-servidor do Roblox."
+    },
+    "RumFullstackTeam": {
+      "name": "Equipe full-stack de RUM",
+      "desc": "Tencent Cloud RUM de ponta a ponta: SDK aegis em 10 plataformas mais análise de WebVitals, exceções, API e recursos, com correlação RUM-APM."
+    },
+    "SalesBattleTeam": {
+      "name": "Equipe de batalha de vendas",
+      "desc": "Pesquisa de contas para fixar o alvo, estratégia de abordagem para melhorar o contato, inteligência competitiva para sinalizar riscos e previsão para alocar esforço."
+    },
+    "SalesCoach": {
+      "name": "Coach de vendas",
+      "desc": "Coaching completo da capacidade à execução — preparação de reuniões, estratégia de negócio, business case, análise competitiva e revisão de ligações — conduzido por perguntas socráticas."
+    },
+    "SalesDataExtractionAgent": {
+      "name": "Agente de extração de dados de vendas",
+      "desc": "Extrai e organiza dados de vendas de qualquer fonte em que estejam."
+    },
+    "SalesPipelineAnalyst": {
+      "name": "Analista de pipeline de vendas",
+      "desc": "Analisa a saúde do pipeline com dados, para que a previsão deixe de ser adivinhação."
+    },
+    "SearchTermAnalyst": {
+      "name": "Analista de termos de pesquisa",
+      "desc": "Escava os dados de termos de pesquisa em busca da intenção por baixo deles."
+    },
+    "SecurityEngineer": {
+      "name": "Engenheiro de segurança",
+      "desc": "Encontra e corrige a vulnerabilidade antes que um atacante o faça."
+    },
+    "SeniorDeveloper": {
+      "name": "Desenvolvedor sênior",
+      "desc": "Mais de dez anos de full-stack em várias linguagens e frameworks — a espinha dorsal técnica de uma equipe."
+    },
+    "SeniorProjectManager": {
+      "name": "Gerente de projetos sênior",
+      "desc": "Mais de dez anos em cascata e ágil, e a mão firme em um projeto complicado."
+    },
+    "SeoContentTeam": {
+      "name": "Equipe de conteúdo SEO",
+      "desc": "Sete papéis em cinco etapas: pesquisa de palavras-chave, redação SEO longa, otimização técnica, edição, estratégia de links e análise de conversão."
+    },
+    "SeoExpert": {
+      "name": "Especialista em SEO",
+      "desc": "O algoritmo do Google e o SEO técnico, e como manter uma posição nos resultados."
+    },
+    "ShortVideoEditingCoach": {
+      "name": "Coach de edição de vídeos curtos",
+      "desc": "Técnica de edição e ritmo, para que cada clipe chegue com impacto profissional."
+    },
+    "SiteReliabilityEngineer": {
+      "name": "Engenheiro de confiabilidade de sites",
+      "desc": "Resolve problemas de operações com engenharia de software e mantém 99,99% de disponibilidade."
+    },
+    "SocialAdStrategist": {
+      "name": "Estrategista de anúncios sociais",
+      "desc": "Publicidade em plataformas sociais, atingindo o melhor custo de aquisição com segmentação precisa."
+    },
+    "SocialEngagementTeam": {
+      "name": "Equipe de engajamento social",
+      "desc": "Aumenta o engajamento social com segurança em mais de 14 plataformas globais por meio de automação de interações, operação de comentários com IA, mineração de sinais de alta conversão e monitoramento de sentimento da marca."
+    },
+    "SocialMediaStrategist": {
+      "name": "Estrategista de redes sociais",
+      "desc": "Coordena a estratégia em todas as plataformas, para que a marca soe mais forte em cada uma."
+    },
+    "Soe": {
+      "name": "Especialista em operações de segurança",
+      "desc": "Analisa dados offline de alertas e eventos de WAF, segurança de hosts, firewall em nuvem, SOC e produtos de defesa contra ameaças, incluindo análise de vulnerabilidades, ataques e forense."
+    },
+    "SoftwareArchitect": {
+      "name": "Arquiteto de software",
+      "desc": "Projeta arquitetura escalável e de alta disponibilidade de cima para baixo e orienta a equipe de engenharia para ela."
+    },
+    "SoftwareCompany": {
+      "name": "Empresa de software",
+      "desc": "Uma equipe de desenvolvimento em operação: o PM define requisitos, o arquiteto projeta e divide tarefas, os engenheiros implementam em lote, o QA verifica — com caminho rápido para pedidos pequenos."
+    },
+    "SoftwareWorkshop": {
+      "name": "Oficina de software",
+      "desc": "Seis papéis de engenharia — revisão de produto, revisão de código, auditoria de segurança, QA, design system, depuração e operações — cobrindo da ideia à produção."
+    },
+    "SoliditySmartContractEngineer": {
+      "name": "Engenheiro de Solidity",
+      "desc": "Solidity e o ecossistema EVM, escrevendo contratos seguros e baratos de executar."
+    },
+    "SprintPriorityManager": {
+      "name": "Gerente de prioridades de sprint",
+      "desc": "Toma as melhores decisões de priorização que um sprint fixo permite, para que a iteração entregue seu maior valor."
+    },
+    "SreExpert": {
+      "name": "Especialista em SRE",
+      "desc": "Raciocínio de causa raiz, correlação de alertas, diagnóstico de processos e governança de SLO, por um método de diagnóstico sistemático."
+    },
+    "StatementAuditor": {
+      "name": "Auditor de extratos de LP",
+      "desc": "Verificação final dos extratos de conta de capital dos LPs: recalcula cada linha a partir do NAV do fundo, concilia distribuições e taxas de gestão e emite recomendações de aprovação e uma lista de exceções antes de qualquer envio."
+    },
+    "StockPartnerTeam": {
+      "name": "Equipe de pesquisa de ações",
+      "desc": "Seis analistas que cobrem estratégia setorial, captura de sinais, valuation, posicionamento contrário, fundamentos e trading de curto prazo, lendo dados de mercado ao vivo sob vários ângulos."
+    },
+    "StrategyBacktestExpert": {
+      "name": "Especialista em backtest de estratégias",
+      "desc": "Transforma uma estratégia descrita em linguagem simples em um backtest executável em Python, com métricas padrão, gráficos e um painel HTML — além dos detalhes de implementação, vieses conhecidos e como ler o resultado."
+    },
+    "StudioOperationsManager": {
+      "name": "Gerente de operações de estúdio",
+      "desc": "Conduz as operações do estúdio no dia a dia, da alocação de recursos ao processo."
+    },
+    "StudioProducer": {
+      "name": "Produtor de estúdio",
+      "desc": "Leva um projeto da aprovação à entrega, equilibrando criatividade, orçamento e prazo."
+    },
+    "StudyAbroadConsultant": {
+      "name": "Consultor de intercâmbio",
+      "desc": "Processos de candidatura e conhecimento de instituições em vários países."
+    },
+    "SupplyChainStrategist": {
+      "name": "Estrategista de cadeia de suprimentos",
+      "desc": "Otimiza cada elo para o equilíbrio certo entre custo, eficiência e resiliência."
+    },
+    "TaxComplianceTeam": {
+      "name": "Equipe de impostos e conformidade",
+      "desc": "Conformidade financeira corporativa de ponta a ponta em cinco etapas: comprovantes, escrituração, demonstrações, declaração de impostos e auditoria de conformidade."
+    },
+    "TechnicalArtist": {
+      "name": "Artista técnico",
+      "desc": "Liga a direção de arte à realidade do motor, à vontade em shaders e VFX."
+    },
+    "TechnicalDocumentationEngineer": {
+      "name": "Engenheiro de documentação técnica",
+      "desc": "Transforma ideias técnicas complexas em documentação clara o bastante para transmitir o conhecimento."
+    },
+    "TencentCharityExpert": {
+      "name": "Especialista em tecnologia para o bem",
+      "desc": "Soluções de produto e tecnologia para o setor sem fins lucrativos, da prática de tecnologia para o bem da Tencent."
+    },
+    "TencentCloudPriceExpert": {
+      "name": "Preços da Tencent Cloud",
+      "desc": "Consulta de preços de tabela para vendas: perguntas sobre produtos, cotações individuais e em massa e reconhecimento de configuração a partir de uma imagem. Os preços vêm da API ao vivo."
+    },
+    "TencentRtcExpert": {
+      "name": "Especialista em suporte TRTC",
+      "desc": "Suporte de áudio/vídeo em tempo real: consultas de uso e qualidade, diagnóstico de chamada única, leitura de inspeções em nuvem, solução de problemas e migração de SDKs concorrentes."
+    },
+    "TencentSecurityExpert": {
+      "name": "Especialista em segurança Tencent",
+      "desc": "Anos em segurança: modelagem de ameaças, avaliação de vulnerabilidades, revisão segura de código, arquitetura, resposta a incidentes e consultoria."
+    },
+    "TerminalIntegrationExpert": {
+      "name": "Especialista em integração de terminais",
+      "desc": "Integração de aplicativos de terminal com ambientes de computação espacial."
+    },
+    "TestResultsAnalyst": {
+      "name": "Analista de resultados de testes",
+      "desc": "Lê resultados de testes como um detetive lê evidências e encontra o problema de qualidade escondido neles."
+    },
+    "ThreatDetectionEngineer": {
+      "name": "Engenheiro de detecção de ameaças",
+      "desc": "Constrói sistemas de detecção que capturam e param uma ameaça antes que cause dano."
+    },
+    "TikTokStrategist": {
+      "name": "Estrategista de TikTok",
+      "desc": "O algoritmo do TikTok e o ecossistema internacional de vídeos curtos, e como uma marca se destaca nele."
+    },
+    "ToolEvaluationExpert": {
+      "name": "Especialista em avaliação de ferramentas",
+      "desc": "Avalia e recomenda a ferramenta certa para uma equipe, para que ninguém perca semanas com a errada."
+    },
+    "TradingAgentTeam": {
+      "name": "Equipe de análise de trading",
+      "desc": "Treze papéis em cinco etapas: coleta técnica, fundamentalista, de notícias e de sentimento, debate touro/urso, decisão de operação, avaliação tripla de riscos e um relatório final com recomendação de COMPRAR/VENDER/MANTER."
+    },
+    "TrendResearcher": {
+      "name": "Pesquisador de tendências",
+      "desc": "Acompanha tendências do setor e da tecnologia e as transforma em insumos prospectivos para a estratégia de produto."
+    },
+    "TripStarAgent": {
+      "name": "Concierge de viagens",
+      "desc": "Um concierge de serviços de vida: planejamento de roteiros, atrações, hotéis, clima, orçamento e coleta de ofertas em um só lugar."
+    },
+    "TwitterOperationsExpert": {
+      "name": "Especialista em operações de X / Twitter",
+      "desc": "Estratégia de engajamento e operação de temas no X, colocando uma marca na conversa global."
+    },
+    "Txzhaopin": {
+      "name": "Assistente de recrutamento da Tencent",
+      "desc": "O assistente oficial de contratação da Tencent para campus e profissionais experientes: levantamento de requisitos, busca de currículos, agendamento de entrevistas, elaboração de questões, avaliações, tarefas e painel de dados."
+    },
+    "UiDesigner": {
+      "name": "Designer de UI",
+      "desc": "Design systems e bibliotecas de componentes, com precisão de pixel e acessíveis."
+    },
+    "UnityArchitect": {
+      "name": "Arquiteto de Unity",
+      "desc": "ScriptableObjects e design de sistemas desacoplados."
+    },
+    "UnityEditorToolDeveloper": {
+      "name": "Desenvolvedor de ferramentas do editor do Unity",
+      "desc": "EditorWindows personalizados e automação de pipelines no Unity."
+    },
+    "UnityMultiplayerEngineer": {
+      "name": "Engenheiro multiplayer do Unity",
+      "desc": "Netcode for GameObjects e predição de rede."
+    },
+    "UnityShaderGraphArtist": {
+      "name": "Artista de Shader Graph do Unity",
+      "desc": "Unity Shader Graph e HLSL."
+    },
+    "UnrealMultiplayerArchitect": {
+      "name": "Arquiteto multiplayer do Unreal",
+      "desc": "Replicação de atores do Unreal e arquitetura com servidor autoritativo."
+    },
+    "UnrealSystemEngineer": {
+      "name": "Engenheiro de sistemas do Unreal",
+      "desc": "C++/Blueprint, Nanite e Lumen."
+    },
+    "UnrealTechnicalArtist": {
+      "name": "Artista técnico do Unreal",
+      "desc": "O editor de materiais do UE5 e Niagara VFX."
+    },
+    "UnrealWorldBuilder": {
+      "name": "Construtor de mundos do Unreal",
+      "desc": "World Partition do UE5 e streaming de mundos grandes."
+    },
+    "UserExperienceArchitect": {
+      "name": "Arquiteto de experiência do usuário",
+      "desc": "Dá aos desenvolvedores uma base técnica sólida e um sistema CSS — a ponte entre design e engenharia."
+    },
+    "UserExperienceResearcher": {
+      "name": "Pesquisador de experiência do usuário",
+      "desc": "Valida decisões de design com dados reais em vez de suposições, por meio de análise comportamental e testes de usabilidade."
+    },
+    "ValuationReviewer": {
+      "name": "Revisor de valuation de portfólio",
+      "desc": "Lidera o valuation de um portfólio de PE/VC: recebe os pacotes de valuation dos GPs, executa os modelos padrão, calcula o NAV do fundo e as alocações aos LPs e redige o relatório aos LPs para aprovação de RI."
+    },
+    "VideoDissection": {
+      "name": "Equipe de dissecação de vídeo",
+      "desc": "Faz engenharia reversa de um vídeo viral do Douyin: extrai o clipe, transcreve o roteiro, analisa tamanhos de plano, movimento de câmera, ritmo de corte e cor e produz uma decomposição completa com um plano prático para gravar o seu."
+    },
+    "VideoGenTeam": {
+      "name": "Equipe de criação de vídeo com IA",
+      "desc": "Três papéis em um só ciclo: um reúne manchetes de IA e tecnologia, outro planeja o tema e o roteiro, outro renderiza o MP4 final com narração e legendas. Um vídeo de 60 segundos, de ponta a ponta."
+    },
+    "VisionOsSpatialEngineer": {
+      "name": "Engenheiro espacial de visionOS",
+      "desc": "Desenvolvimento visionOS para apps espaciais do Apple Vision Pro."
+    },
+    "VisualStorytellingExpert": {
+      "name": "Especialista em narrativa visual",
+      "desc": "Transforma informação complicada em uma história visual que vale a pena acompanhar."
+    },
+    "WealthManagementExpert": {
+      "name": "Especialista em gestão de patrimônio",
+      "desc": "Revisões de clientes, planejamento financeiro, rebalanceamento de carteiras, colheita de perdas fiscais, propostas de investimento e relatórios para clientes."
+    },
+    "WebappTestingExpert": {
+      "name": "Especialista em testes de apps web",
+      "desc": "Conduz você pela inicialização, configuração e teste de um aplicativo web."
+    },
+    "WeChatMiniProgramDeveloper": {
+      "name": "Desenvolvedor de mini programas do WeChat",
+      "desc": "O framework e o ecossistema de mini programas, construindo apps com sensação nativa no WeChat."
+    },
+    "WechatOfficialAccountExpert": {
+      "name": "Especialista em contas oficiais do WeChat",
+      "desc": "Estratégia de conteúdo e crescimento de seguidores para contas oficiais, e as publicações de 100 mil leituras que vêm com ela."
+    },
+    "WeiboStrategist": {
+      "name": "Estrategista do Weibo",
+      "desc": "Marketing de temas e como a opinião circula no Weibo, mantendo uma marca na lista de tendências."
+    },
+    "WellArchExpert": {
+      "name": "Especialista em Well-Architected",
+      "desc": "Visualização e avaliação de arquitetura, topologia de recursos, os seis pilares do Well-Architected e identificação de riscos de arquitetura."
+    },
+    "WorkflowOptimizationExpert": {
+      "name": "Especialista em otimização de fluxos de trabalho",
+      "desc": "Encontra o gargalo, corrige o processo e automatiza o resto."
+    },
+    "XiaohongshuOperationsExpert": {
+      "name": "Especialista em operações do Xiaohongshu",
+      "desc": "Entende o mecanismo de recomendação do Xiaohongshu e sua cultura de seeding e escreve conteúdo que conquista engajamento."
+    },
+    "XrCockpitInteractionExpert": {
+      "name": "Especialista em interação de cockpit XR",
+      "desc": "Design de interação estilo cockpit para ambientes XR."
+    },
+    "XrImmersiveDeveloper": {
+      "name": "Desenvolvedor imersivo XR",
+      "desc": "Desenvolvimento XR imersivo para aplicativos VR e MR que sustentam a presença."
+    },
+    "XrInterfaceArchitect": {
+      "name": "Arquiteto de interfaces XR",
+      "desc": "Arquitetura de interface para XR, para que interagir no espaço 3D pareça óbvio."
+    },
+    "YahooFinanceCli": {
+      "name": "Explorador de insights de mercado",
+      "desc": "Cotações ao vivo, fundamentos, expectativas de resultados, ratings, histórico e insights de valuation de ações globais, com busca aproximada, papéis em alta e comparação lado a lado."
+    },
+    "YunzhiQaAssistant": {
+      "name": "Assistente de perguntas e respostas de conhecimento",
+      "desc": "Perguntas e respostas com recuperação aumentada sobre a plataforma Tencent Lexiang: recuperação semântica vetorial em paralelo pelo MCP do Lexiang e, depois, uma resposta estruturada a partir do que foi recuperado."
+    },
+    "ZeroKnowledgeProofAdmin": {
+      "name": "Administrador de provas de conhecimento zero",
+      "desc": "Aplicação e administração de sistemas de provas de conhecimento zero."
+    },
+    "ZhihuStrategist": {
+      "name": "Estrategista do Zhihu",
+      "desc": "Mecânica de recomendação do Zhihu e marketing de conhecimento, construindo autoridade uma boa resposta de cada vez."
+    }
   }
 }

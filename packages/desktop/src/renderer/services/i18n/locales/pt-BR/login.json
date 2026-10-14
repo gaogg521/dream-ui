@@ -22,5 +22,20 @@
     "networkError": "Falha na conexão, por favor tente novamente",
     "serverError": "Erro no servidor, por favor tente novamente mais tarde",
     "unknown": "O login falhou, por favor tente novamente"
+  },
+  "methods": {
+    "feishu": "Feishu",
+    "dingtalk": "DingTalk",
+    "wecom": "WeCom",
+    "oidc": "Conta corporativa (OIDC)",
+    "ldap": "LDAP",
+    "local": "Conta local"
+  },
+  "ssoDivider": "Ou entre com o SSO corporativo",
+  "ldap": {
+    "button": "Conta de domínio LDAP",
+    "usernamePlaceholder": "Conta de domínio (ex.: jdoe ou user@corp.com)",
+    "passwordPlaceholder": "Senha de domínio",
+    "submit": "Entrar com LDAP"
   }
 }

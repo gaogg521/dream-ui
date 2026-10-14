@@ -22,5 +22,20 @@
     "networkError": "اتصال ناموفق بود، لطفاً دوباره تلاش کنید",
     "serverError": "خطای سرور، لطفاً بعداً دوباره تلاش کنید",
     "unknown": "ورود ناموفق بود، لطفاً دوباره تلاش کنید"
+  },
+  "methods": {
+    "feishu": "Feishu",
+    "dingtalk": "DingTalk",
+    "wecom": "WeCom",
+    "oidc": "حساب سازمانی (OIDC)",
+    "ldap": "LDAP",
+    "local": "حساب محلی"
+  },
+  "ssoDivider": "یا با SSO سازمانی وارد شوید",
+  "ldap": {
+    "button": "حساب دامنهٔ LDAP",
+    "usernamePlaceholder": "حساب دامنه (مثلاً jdoe یا user@corp.com)",
+    "passwordPlaceholder": "رمز دامنه",
+    "submit": "ورود با LDAP"
   }
 }

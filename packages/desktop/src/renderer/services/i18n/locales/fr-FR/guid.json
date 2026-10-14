@@ -20,5 +20,11 @@
     "bannerButton": "Essayer des modèles gratuits",
     "pickerTitle": "Essayez des modèles d'IA gratuits",
     "pickerDesc": "Choisissez un fournisseur pour commencer — chacun offre une allocation de départ gratuite."
+  },
+  "authorTip": {
+    "ariaLabel": "Avis de contact de l’auteur",
+    "welcome": "Bienvenue dans One Work",
+    "contact": "Des questions ? Contactez",
+    "qqLabel": "QQ"
   }
 }

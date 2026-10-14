@@ -181,5 +181,6 @@
   "secureExport.openDenied": "Відмовлено ({{reason}})",
   "secureExport.status.active": "Діє",
   "secureExport.status.revoked": "Відкликано",
-  "secureExport.status.expired": "Минув"
+  "secureExport.status.expired": "Минув",
+  "copyLastOutput.empty": "Поки немає відповіді для копіювання"
 }

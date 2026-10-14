@@ -120,7 +120,8 @@
         "noBot": "Aucun bot connecté. Connectez-en un dans Paramètres → Canaux, puis revenez.",
         "noChat": "Le bot est connecté mais n’a pas encore de discussion : envoyez-lui un message depuis l’application, il apparaîtra ici.",
         "goSettings": "Ouvrir les paramètres"
-      }
+      },
+      "dreamEngineNoProvider": "Ajoutez d’abord un fournisseur de modèles Dream Engine"
     },
     "freq": {
       "manual": "Manuel",

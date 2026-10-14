@@ -88,7 +88,8 @@
     "viewAllTooltip": "Ver tudo na Central de Sessões",
     "shareToSession": "Compartilhar na minha conversa",
     "exportSelected": "Exportar selecionadas",
-    "exportAll": "Exportar todas"
+    "exportAll": "Exportar todas",
+    "shareToOrg": "Compartilhar com a empresa"
   },
   "historySearch": {
     "tooltip": "Pesquisar mensagens",
@@ -365,6 +366,10 @@
       "PROVIDER_NOT_FOUND": {
         "title": "O modelo usado nesta conversa não existe mais",
         "body": "Esta conversa foi criada com uma configuração de provedor de modelo que desde então foi excluída ou substituída. Escolha um modelo disponível antes de enviar."
+      },
+      "USER_AGENT_TOOL_CALL_LOOP": {
+        "title": "O agente falhou repetidamente nas chamadas de ferramentas",
+        "body": "O agente chamou ferramentas repetidamente com parâmetros inválidos e foi interrompido para evitar um loop. Reenvie a mensagem; se continuar acontecendo, troque de modelo ou envie feedback."
       }
     }
   },
@@ -813,7 +818,14 @@
   "sessionCenter": {
     "title": "Central de Sessões",
     "searchPlaceholder": "Pesquisar sessões...",
-    "emptySearch": "Nenhuma sessão correspondente encontrada"
+    "emptySearch": "Nenhuma sessão correspondente encontrada",
+    "colTitle": "Título",
+    "colMode": "Modo",
+    "colModel": "Modelo",
+    "colUpdatedAt": "Atualizado",
+    "modeChat": "Chat",
+    "modeImage": "Geração de imagem",
+    "modeVideo": "Geração de vídeo"
   },
   "mediaImageUnavailable": "Não é possível exibir esta imagem; o arquivo pode ter sido movido ou excluído",
   "mediaVideoUnavailable": "Não é possível reproduzir este vídeo; o arquivo pode ter sido movido ou excluído",
@@ -961,5 +973,9 @@
     "imported": "Importado como minha conversa",
     "importFailed": "Falha na importação",
     "importAsCopy": "Importar como minha cópia (continuar a conversa)"
-  }
+  },
+  "officePreview": {
+    "fileWatchUnavailable": "O monitoramento de arquivos em tempo real não está disponível — o sistema pode ter ficado sem identificadores de monitoramento de arquivos (inotify). A pré-visualização automática de novos arquivos do Office está desativada. Aumente fs.inotify.max_user_instances ou feche programas que mantêm muitos monitoramentos de arquivos."
+  },
+  "mediaFailureAdvice_serviceBusy": "A fila do próprio provedor está cheia no momento — não há nada errado aqui. Aguarde um instante e tente novamente; se persistir por horas, tente outro modelo ou canal."
 }

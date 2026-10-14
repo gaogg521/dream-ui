@@ -88,7 +88,8 @@
     "viewAllTooltip": "Voir tout dans le Centre de sessions",
     "shareToSession": "Partager dans ma conversation",
     "exportSelected": "Exporter la sélection",
-    "exportAll": "Tout exporter"
+    "exportAll": "Tout exporter",
+    "shareToOrg": "Partager avec l’entreprise"
   },
   "historySearch": {
     "tooltip": "Rechercher des messages",
@@ -359,6 +360,10 @@
       "PROVIDER_NOT_FOUND": {
         "title": "Le modèle configuré pour cette conversation n'existe plus",
         "body": "Cette conversation a été créée avec une configuration de fournisseur de modèle qui a depuis été supprimée ou remplacée. Veuillez choisir un modèle disponible avant d'envoyer."
+      },
+      "USER_AGENT_TOOL_CALL_LOOP": {
+        "title": "L’agent a enchaîné les échecs d’appels d’outils",
+        "body": "L’agent a appelé à plusieurs reprises des outils avec des paramètres invalides et a été arrêté pour éviter une boucle. Renvoyez le message ; si cela se reproduit, changez de modèle ou envoyez un retour."
       }
     }
   },
@@ -807,7 +812,14 @@
   "sessionCenter": {
     "title": "Centre de sessions",
     "searchPlaceholder": "Rechercher des sessions...",
-    "emptySearch": "Aucune session correspondante trouvée"
+    "emptySearch": "Aucune session correspondante trouvée",
+    "colTitle": "Titre",
+    "colMode": "Mode",
+    "colModel": "Modèle",
+    "colUpdatedAt": "Mis à jour",
+    "modeChat": "Discussion",
+    "modeImage": "Génération d’images",
+    "modeVideo": "Génération de vidéos"
   },
   "mediaImageUnavailable": "Cette image ne peut pas être affichée ; le fichier a peut-être été déplacé ou supprimé",
   "mediaVideoUnavailable": "Cette vidéo ne peut pas être lue ; le fichier a peut-être été déplacé ou supprimé",
@@ -955,5 +967,9 @@
     "imported": "Importé comme ma conversation",
     "importFailed": "Échec de l'import",
     "importAsCopy": "Importer comme ma copie (continuer la conversation)"
-  }
+  },
+  "officePreview": {
+    "fileWatchUnavailable": "La surveillance des fichiers en direct n’est pas disponible — le système a peut-être épuisé ses descripteurs de surveillance de fichiers (inotify). L’aperçu automatique des nouveaux fichiers Office est désactivé. Augmentez fs.inotify.max_user_instances ou fermez les programmes qui occupent de nombreuses surveillances de fichiers."
+  },
+  "mediaFailureAdvice_serviceBusy": "La file d’attente du fournisseur est pleine en ce moment — rien n’est anormal ici. Patientez un instant et réessayez ; si cela dure des heures, essayez un autre modèle ou un autre canal."
 }

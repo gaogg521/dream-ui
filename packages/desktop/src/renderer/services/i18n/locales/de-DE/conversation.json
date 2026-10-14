@@ -88,7 +88,8 @@
     "viewAllTooltip": "Alle im Sitzungscenter anzeigen",
     "shareToSession": "In meine Unterhaltung teilen",
     "exportSelected": "Auswahl exportieren",
-    "exportAll": "Alle exportieren"
+    "exportAll": "Alle exportieren",
+    "shareToOrg": "Mit dem Unternehmen teilen"
   },
   "historySearch": {
     "tooltip": "Nachrichten durchsuchen",
@@ -359,6 +360,10 @@
       "PROVIDER_NOT_FOUND": {
         "title": "Das für diese Unterhaltung konfigurierte Modell existiert nicht mehr",
         "body": "Diese Unterhaltung wurde mit einer Modellanbieter-Konfiguration erstellt, die inzwischen gelöscht oder ersetzt wurde. Bitte wähle vor dem Senden ein verfügbares Modell aus."
+      },
+      "USER_AGENT_TOOL_CALL_LOOP": {
+        "title": "Der Agent hat bei Tool-Aufrufen wiederholt versagt",
+        "body": "Der Agent hat Tools wiederholt mit ungültigen Parametern aufgerufen und wurde gestoppt, um eine Endlosschleife zu vermeiden. Sende die Nachricht erneut; falls das wieder passiert, wechsle das Modell oder sende Feedback."
       }
     }
   },
@@ -808,7 +813,14 @@
   "sessionCenter": {
     "title": "Sitzungscenter",
     "searchPlaceholder": "Sitzungen durchsuchen...",
-    "emptySearch": "Keine passenden Sitzungen gefunden"
+    "emptySearch": "Keine passenden Sitzungen gefunden",
+    "colTitle": "Titel",
+    "colMode": "Modus",
+    "colModel": "Modell",
+    "colUpdatedAt": "Aktualisiert",
+    "modeChat": "Chat",
+    "modeImage": "Bilderzeugung",
+    "modeVideo": "Videoerzeugung"
   },
   "mediaImageUnavailable": "Dieses Bild kann nicht angezeigt werden; die Datei wurde möglicherweise verschoben oder gelöscht",
   "mediaVideoUnavailable": "Dieses Video kann nicht abgespielt werden; die Datei wurde möglicherweise verschoben oder gelöscht",
@@ -956,5 +968,9 @@
     "imported": "Als meine Unterhaltung importiert",
     "importFailed": "Import fehlgeschlagen",
     "importAsCopy": "Als meine Kopie importieren (weiter chatten)"
-  }
+  },
+  "officePreview": {
+    "fileWatchUnavailable": "Die Live-Dateiüberwachung ist nicht verfügbar – dem System sind möglicherweise die Datei-Watch-Handles (inotify) ausgegangen. Die automatische Vorschau neuer Office-Dateien ist deaktiviert. Erhöhe fs.inotify.max_user_instances oder beende Programme, die viele Datei-Watches belegen."
+  },
+  "mediaFailureAdvice_serviceBusy": "Die Warteschlange des Anbieters ist gerade voll – hier ist nichts falsch. Warte einen Moment und versuche es erneut; falls es stundenlang anhält, probiere ein anderes Modell oder einen anderen Kanal."
 }

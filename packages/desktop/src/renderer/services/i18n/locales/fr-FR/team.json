@@ -101,7 +101,8 @@
     "noSearchResults": "Aucun résultat trouvé",
     "tellLeaderHint": "Pas de bon candidat ? Vous pouvez aussi demander au chef de s'en charger.",
     "tellLeaderCta": "Dire au chef →",
-    "tellLeaderPrefill": "Aide-moi à ajouter à l'équipe un membre doué pour ___"
+    "tellLeaderPrefill": "Aide-moi à ajouter à l'équipe un membre doué pour ___",
+    "noProviderConfigured": "Aucun fournisseur de modèles activé n’est configuré. Veuillez d’abord en ajouter un dans les Paramètres."
   },
   "reorderMember": "Faites glisser pour réorganiser le membre",
   "interruptAndSend": "Interrompre et envoyer",

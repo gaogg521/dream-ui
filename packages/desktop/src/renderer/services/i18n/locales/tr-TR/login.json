@@ -22,5 +22,20 @@
     "networkError": "Bağlantı başarısız, lütfen tekrar deneyin",
     "serverError": "Sunucu hatası, lütfen daha sonra tekrar deneyin",
     "unknown": "Giriş başarısız, lütfen tekrar deneyin"
+  },
+  "methods": {
+    "feishu": "Feishu",
+    "dingtalk": "DingTalk",
+    "wecom": "WeCom",
+    "oidc": "Kurumsal hesap (OIDC)",
+    "ldap": "LDAP",
+    "local": "Yerel hesap"
+  },
+  "ssoDivider": "Veya kurumsal SSO ile oturum açın",
+  "ldap": {
+    "button": "LDAP alan hesabı",
+    "usernamePlaceholder": "Alan hesabı (ör. jdoe veya user@corp.com)",
+    "passwordPlaceholder": "Alan parolası",
+    "submit": "LDAP ile oturum aç"
   }
 }
