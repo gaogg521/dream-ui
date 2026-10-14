@@ -3293,6 +3293,9 @@ export const oneDevops = {
   ),
   reportDlpEvents: httpPost<number, { events: DlpFindingInput[] }>('/api/one/devops/dlp/events', (p) => p),
   listRagDocuments: httpGet<RagDocumentEntry[], void>('/api/one/devops/rag/documents'),
+  filterRagDocuments: httpGet<RagDocumentEntry[], { query: string }>(
+    (params) => `/api/one/devops/rag/documents${params?.query ? `?query=${encodeURIComponent(params.query)}` : ''}`
+  ),
   listRagLibraries: httpGet<RagLibraryEntry[], void>('/api/one/devops/rag/libraries'),
   upsertRagLibrary: httpPost<
     RagLibraryEntry,

@@ -628,3 +628,100 @@
   background: var(--color-fill-3);
   font-weight: 600;
 }
+
+/* Keep the library chrome compact and align icon-park's inline wrappers. */
+.main:not(.documentMain) {
+  padding: 24px 32px;
+}
+.header {
+  min-height: 40px;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: nowrap;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.header h1 {
+  font-size: 24px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebarToggle {
+  margin: 0;
+  padding: 6px;
+  flex-shrink: 0;
+}
+.library :global(.i-icon) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.library :global(.arco-btn) {
+  align-items: center;
+  gap: 6px;
+}
+.library .document:global(.arco-btn) {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  white-space: nowrap;
+}
+.document:global(.arco-btn) > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.main :global(.arco-table-container) {
+  border: 0;
+  border-radius: 0;
+}
+.main :global(.arco-table-th),
+.main :global(.arco-table-td) {
+  padding: 14px 12px;
+}
+.main :global(.arco-table-td) {
+  height: 56px;
+}
+.main :global(.arco-table-th) {
+  white-space: nowrap;
+}
+.titleSearch {
+  max-width: 460px;
+  width: 100%;
+}
+@container (max-width: 850px) {
+  .main:not(.documentMain) {
+    padding: 20px;
+  }
+}
+
+.library .main :global(.arco-table) {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.library .main :global(.arco-table-container) {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+.library .main :global(.arco-table table) {
+  table-layout: fixed;
+  width: 100%;
+}
+.library .main :global(.arco-table-th),
+.library .main :global(.arco-table-td) {
+  padding: 14px 8px;
+}

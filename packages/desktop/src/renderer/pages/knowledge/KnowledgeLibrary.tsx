@@ -1,5 +1,6 @@
+import { ipcBridge } from '@/common';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Dropdown, Input, Menu, Select, Table, Tabs } from '@arco-design/web-react';
+import { Button, Dropdown, Input, Message, Menu, Select, Table, Tabs } from '@arco-design/web-react';
 import {
   Add,
   BookOpen,
@@ -61,6 +62,31 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   const [view, setView] = useState<View>('recent');
   const [tab, setTab] = useState('all');
   const [query, setQuery] = useState('');
+  const [matches, setMatches] = useState<{ query: string; ids: Set<string> }>({ query: '', ids: new Set() });
+  const searchPending = Boolean(query.trim()) && matches.query !== query.trim();
+  useEffect(() => {
+    const term = query.trim();
+    if (!term) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      ipcBridge.oneDevops.filterRagDocuments
+        .invoke({ query: term })
+        .then((documents) => {
+          if (!cancelled) setMatches({ query: term, ids: new Set(documents.map((doc) => doc.id)) });
+        })
+        .catch((error: unknown) => {
+          if (!cancelled) {
+            setMatches({ query: term, ids: new Set() });
+            Message.error(String(error));
+          }
+        });
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query, rows]);
+
   const [kind, setKind] = useState('all');
   const [guides, setGuides] = useState(true);
   const [visits, setVisits] = useState<Record<string, number>>(readVisits);
@@ -91,12 +117,12 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                 : true;
           return (
             scope &&
-            row.title.toLocaleLowerCase().includes(query.toLocaleLowerCase()) &&
+            (!query.trim() || (matches.query === query.trim() && matches.ids.has(row.id))) &&
             (kind === 'all' || row.status === kind)
           );
         })
         .toSorted((a, b) => (visits[b.id] ?? b.createdAt) - (visits[a.id] ?? a.createdAt)),
-    [rows, view, tab, query, kind, visits, isEnterprise, libraryId]
+    [rows, view, tab, query, matches, kind, visits, isEnterprise, libraryId]
   );
   const menu = (
     <Menu
@@ -208,7 +234,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   const tableColumns = [
     {
       title: label('name'),
-      width: 240,
+      width: '40%',
       render: (_: unknown, row: RagDocumentEntry) => (
         <Button
           type='text'
@@ -221,10 +247,10 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
         </Button>
       ),
     },
-    { title: label('owner'), dataIndex: 'createdBy', ellipsis: true, width: 110 },
+    ...(isEnterprise ? [{ title: label('owner'), dataIndex: 'createdBy', ellipsis: true, width: '17%' }] : []),
     {
       title: label('location'),
-      width: 100,
+      width: '19%',
       ellipsis: true,
       render: (_: unknown, row: RagDocumentEntry) =>
         libraries.find((library) => library.id === row.libraryId)?.name ??
@@ -232,7 +258,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
     },
     {
       title: label('lastOpened'),
-      width: 180,
+      width: '20%',
       ellipsis: true,
       render: (_: unknown, row: RagDocumentEntry) =>
         visits[row.id] ? new Date(visits[row.id]).toLocaleString(i18n.language) : label('notOpened'),
@@ -240,7 +266,6 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
     {
       title: t('common.superAssistant.registries.colActions'),
       width: 65,
-      fixed: 'right' as const,
       render: (_: unknown, row: RagDocumentEntry) => (
         <Dropdown
           trigger='click'
@@ -304,34 +329,38 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
               </Button>
             ))}
         </div>
-        <div className={styles.sectionTitle}>
-          <Button
-            type='text'
-            onClick={() => {
-              onLibraryChange(undefined);
-              setView('team');
-            }}
-          >
-            {label('team')}
-          </Button>
-          {onCreateLibrary ? (
-            <Button
-              type='text'
-              icon={<Add />}
-              aria-label={label('newSpace')}
-              onClick={() => {
-                setView('team');
-                onCreateLibrary?.();
-              }}
-            />
-          ) : (
-            <People />
-          )}
-        </div>
-        <div className={styles.tree}>
-          {isEnterprise && folders(null, false)}
-          {libraries.length === 0 && tree(false)}
-        </div>
+        {isEnterprise && (
+          <>
+            <div className={styles.sectionTitle}>
+              <Button
+                type='text'
+                onClick={() => {
+                  onLibraryChange(undefined);
+                  setView('team');
+                }}
+              >
+                {label('team')}
+              </Button>
+              {onCreateLibrary ? (
+                <Button
+                  type='text'
+                  icon={<Add />}
+                  aria-label={label('newSpace')}
+                  onClick={() => {
+                    setView('team');
+                    onCreateLibrary?.();
+                  }}
+                />
+              ) : (
+                <People />
+              )}
+            </div>
+            <div className={styles.tree}>
+              {isEnterprise && folders(null, false)}
+              {libraries.length === 0 && tree(false)}
+            </div>
+          </>
+        )}
         <div className={styles.sidebarFooter}>
           <BookOpen />
           <span>{t('common.knowledgeLibrary.documentCount', { count: rows.length })}</span>
@@ -359,17 +388,16 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           </>
         ) : (
           <>
-            <Button
-              type='text'
-              className={styles.sidebarToggle}
-              onClick={sidebar.toggle}
-              aria-expanded={!sidebar.collapsed}
-            >
-              <BookOpen /> {label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}
-            </Button>
             <header className={styles.header}>
-              <div>
-                <BookOpen className={styles.headerIcon} />
+              <div className={styles.heading}>
+                <Button
+                  type='text'
+                  className={styles.sidebarToggle}
+                  onClick={sidebar.toggle}
+                  aria-label={label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}
+                  aria-expanded={!sidebar.collapsed}
+                  icon={<BookOpen />}
+                />
                 <h1>{libraries.find((library) => library.id === libraryId)?.name ?? label(view)}</h1>
               </div>
               <Dropdown droplist={menu} trigger='click'>
@@ -383,7 +411,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                 <Tabs activeTab={tab} onChange={setTab} type='rounded'>
                   <Tabs.TabPane key='all' title={label('recentVisits')} />
                   <Tabs.TabPane key='personal' title={label('personal')} />
-                  <Tabs.TabPane key='team' title={label('team')} />
+                  {isEnterprise && <Tabs.TabPane key='team' title={label('team')} />}
                 </Tabs>
               ) : (
                 <span className={styles.subtitle}>{label('browseHint')}</span>
@@ -428,28 +456,31 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
               !libraries.some((item) => Boolean(libraryId) && item.parentId === libraryId)) && (
               <Table
                 rowKey='id'
-                loading={loading}
+                loading={loading || searchPending}
                 columns={tableColumns}
                 data={data}
                 border={false}
                 pagination={{ pageSize: 8, hideOnSinglePage: true }}
-                scroll={{ x: 700 }}
                 noDataElement={
-                  <div className={styles.empty}>
-                    <FolderOpen size={36} />
-                    <p>{label('empty')}</p>
-                    <Button
-                      onClick={() => onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)}
-                      loading={importing}
-                      disabled={readOnlyLibrary}
-                    >
-                      {label('import')}
-                    </Button>
-                  </div>
+                  searchPending ? null : (
+                    <div className={styles.empty}>
+                      <FolderOpen size={36} />
+                      <p>{label(query.trim() ? 'noMatches' : 'empty')}</p>
+                      {!query.trim() && (
+                        <Button
+                          onClick={() => onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)}
+                          loading={importing}
+                          disabled={readOnlyLibrary}
+                        >
+                          {label('import')}
+                        </Button>
+                      )}
+                    </div>
+                  )
                 }
               />
             )}
-            {guides && (
+            {guides && !query.trim() && (
               <section className={styles.guides}>
                 <div className={styles.guideHeading}>
                   <span>
@@ -499,26 +530,25 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                       action: () => onLink(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise),
                     },
                     { title: 'team', description: 'teamDescription', icon: <People />, action: () => setView('team') },
-                  ].map((card) => (
-                    <Button
-                      key={card.title}
-                      type='text'
-                      onClick={card.action}
-                      disabled={readOnlyLibrary && card.title !== 'team'}
-                    >
-                      <span className={styles.cardIcon}>{card.icon}</span>
-                      <h3>{label(card.title)}</h3>
-                      <p>{label(card.description)}</p>
-                      <ArrowRight />
-                    </Button>
-                  ))}
+                  ]
+                    .filter((card) => isEnterprise || card.title !== 'team')
+                    .map((card) => (
+                      <Button
+                        key={card.title}
+                        type='text'
+                        onClick={card.action}
+                        disabled={readOnlyLibrary && card.title !== 'team'}
+                      >
+                        <span className={styles.cardIcon}>{card.icon}</span>
+                        <h3>{label(card.title)}</h3>
+                        <p>{label(card.description)}</p>
+                        <ArrowRight />
+                      </Button>
+                    ))}
                 </div>
               </section>
             )}
-            <footer className={styles.footer}>
-              {settings}
-              <span>{t('common.superAssistant.rag.agentToolHint')}</span>
-            </footer>
+            <footer className={styles.footer}>{settings}</footer>
           </>
         )}
       </main>

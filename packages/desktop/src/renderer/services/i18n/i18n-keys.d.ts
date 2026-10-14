@@ -542,6 +542,7 @@ export type I18nKey =
   | 'common.knowledgeLibrary.newFolder'
   | 'common.knowledgeLibrary.newSpace'
   | 'common.knowledgeLibrary.newTable'
+  | 'common.knowledgeLibrary.noMatches'
   | 'common.knowledgeLibrary.notOpened'
   | 'common.knowledgeLibrary.organize'
   | 'common.knowledgeLibrary.owner'

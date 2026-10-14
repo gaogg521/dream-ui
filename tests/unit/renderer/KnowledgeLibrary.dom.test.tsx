@@ -1,10 +1,12 @@
 /** @vitest-environment jsdom */
 import React from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import KnowledgeLibrary from '@/renderer/pages/knowledge/KnowledgeLibrary';
 import type { RagDocumentEntry, RagLibraryEntry } from '@/common/types/devops/devopsTypes';
 import type { RagLibraryProps } from '@/renderer/pages/superAssistant/registries/RagSection';
+const filterDocuments = vi.hoisted(() => vi.fn());
+vi.mock('@/common', () => ({ ipcBridge: { oneDevops: { filterRagDocuments: { invoke: filterDocuments } } } }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key.split('.').at(-1), i18n: { language: 'en-US' } }),
 }));
@@ -48,7 +50,10 @@ const setup = (isEnterprise = true, overrides: Partial<RagLibraryProps> = {}) =>
   return { onOpen };
 };
 describe('Knowledge library browsing', () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+    filterDocuments.mockReset().mockResolvedValue([]);
+  });
   it('keeps the directory navigation beside the inline document instead of the list', () => {
     setup(true, { documentView: <section>Inline reader</section>, activeDocument: row('Team handbook', 'org') });
     expect(screen.getByText('Inline reader')).toBeInTheDocument();
@@ -87,6 +92,8 @@ describe('Knowledge library browsing', () => {
   });
   it('keeps standalone documents in my documents even with legacy org scope', () => {
     setup(false);
+    expect(screen.queryByRole('tab', { name: 'team' })).not.toBeInTheDocument();
+    expect(within(screen.getByRole('table')).queryByText('owner')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'personal' }));
     expect(within(screen.getByRole('table')).getByText('Team handbook')).toBeInTheDocument();
   });
@@ -95,10 +102,37 @@ describe('Knowledge library browsing', () => {
     setup();
     expect(within(screen.getByRole('table')).getAllByText('notOpened')).toHaveLength(2);
   });
-  it('shows an empty state when no document name matches', () => {
+  it.each([true, false])('finds body-only matches in enterprise=%s', async (enterprise) => {
+    filterDocuments.mockResolvedValue([row('Team handbook', 'org')]);
+    setup(enterprise);
+    fireEvent.change(screen.getByPlaceholderText('filterPlaceholder'), { target: { value: 'body-only-needle' } });
+    await waitFor(() => expect(filterDocuments).toHaveBeenCalledWith({ query: 'body-only-needle' }));
+    await waitFor(() => expect(within(screen.getByRole('table')).getByText('Team handbook')).toBeInTheDocument());
+    expect(within(screen.getByRole('table')).queryByText('Private notes')).not.toBeInTheDocument();
+  });
+  it('shows an empty state when neither name nor body matches', async () => {
     setup();
     fireEvent.change(screen.getByPlaceholderText('filterPlaceholder'), { target: { value: 'missing document' } });
-    expect(screen.getByText('empty')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('noMatches')).toBeInTheDocument());
+  });
+  it('ignores a late result from an earlier search', async () => {
+    let resolveFirst!: (rows: RagDocumentEntry[]) => void;
+    filterDocuments
+      .mockImplementationOnce(
+        () =>
+          new Promise<RagDocumentEntry[]>((resolve) => {
+            resolveFirst = resolve;
+          })
+      )
+      .mockResolvedValueOnce([]);
+    setup();
+    fireEvent.change(screen.getByPlaceholderText('filterPlaceholder'), { target: { value: 'first' } });
+    await waitFor(() => expect(filterDocuments).toHaveBeenCalledTimes(1));
+    fireEvent.change(screen.getByPlaceholderText('filterPlaceholder'), { target: { value: 'second' } });
+    await waitFor(() => expect(filterDocuments).toHaveBeenCalledTimes(2));
+    resolveFirst([row('Team handbook', 'org')]);
+    await waitFor(() => expect(screen.getByText('noMatches')).toBeInTheDocument());
+    expect(within(screen.getByRole('table')).queryByText('Team handbook')).not.toBeInTheDocument();
   });
   it('opens the selected document and records a visit', () => {
     const { onOpen } = setup();
