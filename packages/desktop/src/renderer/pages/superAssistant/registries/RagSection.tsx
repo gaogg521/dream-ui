@@ -37,7 +37,7 @@ import type {
   ResourceScope,
   ResourceVisibility,
 } from '@/common/types/devops/devopsTypes';
-import LibraryDocument from '../../knowledge/LibraryDocument';
+import LibraryDocument, { RichDocumentEditor } from '../../knowledge/LibraryDocument';
 import { aclInitialValues, aclPayload, ResourceAclCell, ResourceAclFields, useAllTenants } from './ResourceAcl';
 
 /** Strip the extension for a sensible default document title. */
@@ -100,6 +100,10 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   const { tenants } = useAllTenants();
 
   const [docModalVisible, setDocModalVisible] = useState(false);
+  const [draftTitle, setDraftTitle] = useState('');
+  const [draftContent, setDraftContent] = useState('');
+  const draftId = useRef<string | undefined>(undefined);
+  const originalDraft = useRef('');
   const [documentPersonal, setDocumentPersonal] = useState(false);
   const [urlPersonal, setUrlPersonal] = useState(false);
   const [documentKind, setDocumentKind] = useState<'markdown' | 'csv'>('markdown');
@@ -126,13 +130,17 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   const pendingNavigation = useRef<() => void>(() => {});
   const editRequest = useRef(0);
   const navigateDocument = (action: () => void) => {
-    if (savingEdit) return;
+    if (savingEdit || savingDoc) return;
     const run = () => {
       editRequest.current += 1;
       setEditLoading(false);
+      setDocModalVisible(false);
       action();
     };
-    if (editTarget && editContent !== originalContent.current) {
+    if (
+      (editTarget && editContent !== originalContent.current) ||
+      (docModalVisible && JSON.stringify([draftTitle, draftContent]) !== originalDraft.current)
+    ) {
       pendingNavigation.current = run;
       setDiscardConfirm(true);
     } else run();
@@ -170,6 +178,11 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   useEffect(() => {
     void refresh();
   }, [refresh]);
+  useEffect(() => {
+    if (!rows.some((document) => document.status === 'pending')) return;
+    const timer = setInterval(() => void refresh(), 5000);
+    return () => clearInterval(timer);
+  }, [rows, refresh]);
 
   const openConfig = () => {
     configForm.setFieldsValue({ baseUrl: config?.baseUrl ?? '', model: config?.model ?? '', apiKey: '' });
@@ -212,6 +225,20 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
       personal || libraries.find((item) => item.id === libraryId)?.scope === 'personal' || memberMode
     );
     setDocumentKind(kind);
+    setEditTarget(null);
+    draftId.current = undefined;
+    originalDraft.current = JSON.stringify([
+      '',
+      kind === 'csv'
+        ? `${t('common.knowledgeLibrary.columnLabel', { index: 1 })},${t('common.knowledgeLibrary.columnLabel', { index: 2 })}\n,\n`
+        : '',
+    ]);
+    setDraftTitle('');
+    setDraftContent(
+      kind === 'csv'
+        ? `${t('common.knowledgeLibrary.columnLabel', { index: 1 })},${t('common.knowledgeLibrary.columnLabel', { index: 2 })}\n,\n`
+        : ''
+    );
     docForm.resetFields();
     if (kind === 'csv')
       docForm.setFieldsValue({
@@ -220,8 +247,10 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     setDocModalVisible(true);
   };
 
-  const handleRegister = async () => {
-    const values = (await docForm.validate().catch((): null => null)) as {
+  const handleRegister = async (automatic = false) => {
+    const values = (
+      renderLibrary ? { title: draftTitle, content: draftContent } : await docForm.validate().catch((): null => null)
+    ) as {
       title: string;
       content?: string;
       scope?: ResourceScope;
@@ -231,26 +260,47 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     if (!values) {
       return;
     }
+    if (!values.title.trim()) values.title = t('common.knowledgeLibrary.untitled');
     setSavingDoc(true);
     try {
-      const doc = await ipcBridge.oneDevops.registerRagDocument.invoke({
-        title: documentKind === 'csv' && !/\.csv$/i.test(values.title) ? `${values.title}.csv` : values.title,
-        ...(documentKind === 'csv' ? { mimeType: 'text/csv' } : {}),
-        ...(libraryId ? { libraryId } : {}),
-        // A member's document is always private; the server decides, so no ACL is sent.
-        ...(documentPersonal || libraries.find((library) => library.id === libraryId)?.scope === 'personal'
-          ? { scope: 'personal' as const }
-          : memberMode
-            ? {}
-            : aclPayload(values)),
-      });
-      if (doc?.id && values.content?.trim()) {
-        await ipcBridge.oneDevops.setRagContent.invoke({ id: doc.id, content: values.content });
+      const doc =
+        draftId.current && renderLibrary
+          ? { id: draftId.current }
+          : await ipcBridge.oneDevops.registerRagDocument.invoke({
+              title: documentKind === 'csv' && !/\.csv$/i.test(values.title) ? `${values.title}.csv` : values.title,
+              ...(documentKind === 'csv' ? { mimeType: 'text/csv' } : {}),
+              ...(libraryId ? { libraryId } : {}),
+              // A member's document is always private; the server decides, so no ACL is sent.
+              ...(documentPersonal || libraries.find((library) => library.id === libraryId)?.scope === 'personal'
+                ? { scope: 'personal' as const }
+                : memberMode
+                  ? {}
+                  : aclPayload(values)),
+            });
+      if (renderLibrary && doc?.id) {
+        if (draftId.current)
+          await ipcBridge.oneDevops.updateRagDocumentLocation.invoke({
+            id: doc.id,
+            title: values.title,
+            ...(libraryId ? { libraryId } : {}),
+          });
+        draftId.current = doc.id;
       }
-      Message.success(t('common.superAssistant.registries.saved', { defaultValue: '已保存' }));
-      setDocModalVisible(false);
+      if (doc?.id) {
+        await ipcBridge.oneDevops.setRagContent.invoke({ id: doc.id, content: values.content ?? '' });
+      }
+      originalDraft.current = JSON.stringify([draftTitle, draftContent]);
+      if (!automatic) {
+        Message.success(t('common.superAssistant.registries.saved'));
+        setDocModalVisible(false);
+      }
       await refresh();
+      if (!automatic && renderLibrary && doc?.id) {
+        const saved = (await ipcBridge.oneDevops.listRagDocuments.invoke()).find((item) => item.id === doc.id);
+        if (saved) await openEdit(saved);
+      }
     } catch (error) {
+      if (automatic) throw error;
       Message.error(
         t('common.superAssistant.registries.saveFailed', { defaultValue: '保存失败' }) +
           ': ' +
@@ -262,10 +312,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   };
 
   /**
-   * Register one document with extracted content, then auto-process (chunk +
-   * embed) it right away if the embedding endpoint is configured — importing
-   * ten files shouldn't mean ten manual "处理" clicks afterward. Left as
-   * 'pending' when unconfigured; the existing manual flow still applies.
+   * Register extracted content. Saving queues background indexing on the server.
    */
   const registerAndProcess = useCallback(
     async (title: string, content: string, personal = false): Promise<void> => {
@@ -282,11 +329,8 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
       if (content.trim()) {
         await ipcBridge.oneDevops.setRagContent.invoke({ id: doc.id, content });
       }
-      if (config?.baseUrl && config?.model && content.trim()) {
-        await ipcBridge.oneDevops.processRagDocument.invoke({ id: doc.id });
-      }
     },
-    [config, libraryId, libraries]
+    [libraryId, libraries]
   );
 
   /** Import: pick one or more local files, extract text, register + auto-process each. */
@@ -400,22 +444,23 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   };
 
   /** Save the new text, then re-embed it so retrieval sees the edit. */
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = async (automatic = false) => {
     if (!editTarget) {
       return;
     }
     setSavingEdit(true);
     try {
       await ipcBridge.oneDevops.setRagContent.invoke({ id: editTarget.id, content: editContent });
-      if (config?.baseUrl && config?.model && editContent.trim()) {
-        await ipcBridge.oneDevops.processRagDocument.invoke({ id: editTarget.id });
-      }
-      Message.success(t('common.superAssistant.registries.saved', { defaultValue: '已保存' }));
+
+      if (!automatic) Message.success(t('common.superAssistant.registries.saved'));
       originalContent.current = editContent;
-      if (renderLibrary) setReading(true);
-      else setEditTarget(null);
+      if (!automatic) {
+        if (renderLibrary) setReading(true);
+        else setEditTarget(null);
+      }
       await refresh();
     } catch (error) {
+      if (automatic) throw error;
       Message.error(
         t('common.superAssistant.registries.saveFailed', { defaultValue: '保存失败' }) +
           ': ' +
@@ -613,8 +658,24 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
         renderLibrary({
           isEnterprise,
           activeDocument: editTarget,
-          documentView: editTarget ? (
+          documentView: docModalVisible ? (
             <LibraryDocument
+              key='new-document'
+              title={draftTitle}
+              onTitleChange={setDraftTitle}
+              content={draftContent}
+              mimeType={documentKind === 'csv' ? 'text/csv' : 'text/markdown'}
+              reading={false}
+              canEdit
+              saving={savingDoc}
+              onReading={() => {}}
+              onChange={setDraftContent}
+              onBack={closeDocument}
+              onSave={(automatic) => handleRegister(automatic)}
+            />
+          ) : editTarget ? (
+            <LibraryDocument
+              key={editTarget.id}
               title={editTarget.title}
               location={libraries.find((item) => item.id === editTarget.libraryId)?.name}
               content={editContent}
@@ -626,7 +687,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
               onReading={setReading}
               onChange={setEditContent}
               onBack={closeDocument}
-              onSave={() => void handleSaveEdit()}
+              onSave={(automatic) => handleSaveEdit(automatic)}
             />
           ) : undefined,
           libraries,
@@ -654,7 +715,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
             memberMode && Boolean(libraryId) && libraries.find((item) => item.id === libraryId)?.scope !== 'personal',
           loading,
           importing: importingFiles,
-          onCreate: openRegister,
+          onCreate: (kind, personal) => navigateDocument(() => openRegister(kind, personal)),
           onImport: (personal) => void handleImportFiles(personal),
           onLink: openUrlImport,
           onOpen: (record) =>
@@ -857,7 +918,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
             ? t('common.knowledgeLibrary.newDocument')
             : t('common.superAssistant.registries.addRag', { defaultValue: '注册文档' })
         }
-        visible={docModalVisible}
+        visible={!renderLibrary && docModalVisible}
         onCancel={() => setDocModalVisible(false)}
         onOk={() => void handleRegister()}
         confirmLoading={savingDoc}
@@ -874,7 +935,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
             field='content'
             label={t('common.superAssistant.rag.content', { defaultValue: '内容（用于切分嵌入）' })}
           >
-            {documentKind === 'csv' ? <CsvDocument value='' /> : <Input.TextArea rows={6} />}
+            {documentKind === 'csv' ? <CsvDocument value='' /> : <RichDocumentEditor value='' onChange={() => {}} />}
           </Form.Item>
           {!memberMode && !documentPersonal && <ResourceAclFields tenants={tenants} />}
         </Form>

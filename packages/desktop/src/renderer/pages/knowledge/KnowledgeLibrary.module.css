@@ -725,3 +725,14 @@
 .library .main :global(.arco-table-td) {
   padding: 14px 8px;
 }
+
+.richEditor { min-height: 380px; }
+.richToolbar { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 0 14px; border-bottom: 1px solid var(--color-border-2); margin-bottom: 18px; }
+.richEditor :global(.tiptap) { min-height: 320px; outline: none; line-height: 1.9; overflow-wrap: anywhere; }
+.richEditor :global(.tiptap p) { margin: 0 0 12px; }
+.richEditor :global(.tiptap img), .documentPaper img { max-width: 100%; height: auto; border-radius: 8px; }
+.richEditor :global(.tiptap table) { width: 100%; border-collapse: collapse; }
+.richEditor :global(.tiptap td), .richEditor :global(.tiptap th) { border: 1px solid var(--color-border-2); padding: 8px 12px; }
+.editorHint { color: var(--color-text-3); font-size: 12px; padding-top: 20px; }
+
+.documentTitle:global(.arco-input) { border: 0; background: transparent; font-size: 30px; font-weight: 650; padding: 12px 0 22px; height: auto; box-shadow: none; }
