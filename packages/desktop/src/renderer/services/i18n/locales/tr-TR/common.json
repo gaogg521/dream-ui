@@ -270,7 +270,8 @@
     "fieldScheduleTask": "Zamanlanmış görev",
     "scheduleTaskPlaceholder": "Her seferinde ne yapması gerektiği, örn. bu haftaki sürüm risklerini özetle ve yapılacakları listele",
     "scheduleTaskOptionalHint": "Boş bırakırsanız bu çalışanın çalıştırma talimatı kullanılır",
-    "scheduleTaskRequired": "Zamanlanmış görevi girin: şirket çalışanının çalıştırma talimatı yoktur, görev olmadan yapacak bir şeyi olmaz"
+    "scheduleTaskRequired": "Zamanlanmış görevi girin: şirket çalışanının çalıştırma talimatı yoktur, görev olmadan yapacak bir şeyi olmaz",
+    "employeeIdentityHint": "Kurumsal dijital çalışan"
   },
   "language": {
     "switchTooltip": "Dili değiştir"

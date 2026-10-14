@@ -618,7 +618,8 @@
     "fieldScheduleTask": "自动化",
     "scheduleTaskPlaceholder": "每次到点让它做什么，例如：汇总本周发布风险并列出待办",
     "scheduleTaskOptionalHint": "留空则使用该员工的运行指令",
-    "scheduleTaskRequired": "请填写自动化：公司员工没有运行指令，没有任务就不知道该做什么"
+    "scheduleTaskRequired": "请填写自动化：公司员工没有运行指令，没有任务就不知道该做什么",
+    "employeeIdentityHint": "企业数字员工"
   },
   "language": {
     "switchTooltip": "切换语言"

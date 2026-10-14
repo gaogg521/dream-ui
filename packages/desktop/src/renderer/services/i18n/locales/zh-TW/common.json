@@ -468,7 +468,8 @@
     "testPlanDeleteConfirm": "刪除測試計劃及所有用例？",
     "testPlansTitle": "測試計劃",
     "addTestPlan": "新增計劃",
-    "editTestPlan": "編輯測試計劃"
+    "editTestPlan": "編輯測試計劃",
+    "employeeIdentityHint": "企業數位員工"
   },
   "language": {
     "switchTooltip": "切換語言"

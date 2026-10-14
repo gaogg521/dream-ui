@@ -782,6 +782,7 @@ export type I18nKey =
   | 'common.superAssistant.editPipeline'
   | 'common.superAssistant.editTestCase'
   | 'common.superAssistant.editTestPlan'
+  | 'common.superAssistant.employeeIdentityHint'
   | 'common.superAssistant.employeeUnavailable'
   | 'common.superAssistant.expertInstallFailed'
   | 'common.superAssistant.fieldBackend'

@@ -270,7 +270,8 @@
     "fieldScheduleTask": "定期タスク",
     "scheduleTaskPlaceholder": "毎回やってほしいこと。例：今週のリリースリスクをまとめ、対応事項を挙げる",
     "scheduleTaskOptionalHint": "空欄の場合はこの社員の実行指示を使います",
-    "scheduleTaskRequired": "定期タスクを入力してください。会社の社員には実行指示がないため、タスクがないと何もできません"
+    "scheduleTaskRequired": "定期タスクを入力してください。会社の社員には実行指示がないため、タスクがないと何もできません",
+    "employeeIdentityHint": "企業のデジタル従業員"
   },
   "language": {
     "switchTooltip": "言語を切り替え"

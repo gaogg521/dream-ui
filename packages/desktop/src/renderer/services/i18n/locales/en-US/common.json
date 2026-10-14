@@ -618,7 +618,8 @@
     "fieldScheduleTask": "Automation",
     "scheduleTaskPlaceholder": "What it should do each time, e.g. summarise this week's release risks and list follow-ups",
     "scheduleTaskOptionalHint": "Leave empty to use this employee's run instructions",
-    "scheduleTaskRequired": "Enter the automation: a company employee has no run instructions, so without one it has nothing to do"
+    "scheduleTaskRequired": "Enter the automation: a company employee has no run instructions, so without one it has nothing to do",
+    "employeeIdentityHint": "Enterprise digital employee"
   },
   "language": {
     "switchTooltip": "Switch language"

@@ -270,7 +270,8 @@
     "fieldScheduleTask": "Tâche planifiée",
     "scheduleTaskPlaceholder": "Ce qu'il doit faire à chaque exécution, p. ex. résumer les risques de livraison de la semaine et lister les suites",
     "scheduleTaskOptionalHint": "Laissez vide pour utiliser les instructions d'exécution de cet employé",
-    "scheduleTaskRequired": "Saisissez la tâche planifiée : un employé de l'entreprise n'a pas d'instructions d'exécution, sans tâche il n'a rien à faire"
+    "scheduleTaskRequired": "Saisissez la tâche planifiée : un employé de l'entreprise n'a pas d'instructions d'exécution, sans tâche il n'a rien à faire",
+    "employeeIdentityHint": "Employé numérique de l'entreprise"
   },
   "language": {
     "switchTooltip": "Changer de langue"

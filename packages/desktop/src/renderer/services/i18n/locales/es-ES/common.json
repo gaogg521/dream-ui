@@ -270,7 +270,8 @@
     "fieldScheduleTask": "Tarea programada",
     "scheduleTaskPlaceholder": "Qué debe hacer cada vez, p. ej.: resumir los riesgos de lanzamiento de la semana y listar pendientes",
     "scheduleTaskOptionalHint": "Déjalo vacío para usar las instrucciones de ejecución de este empleado",
-    "scheduleTaskRequired": "Indica la tarea programada: un empleado de la empresa no tiene instrucciones de ejecución, sin tarea no tiene qué hacer"
+    "scheduleTaskRequired": "Indica la tarea programada: un empleado de la empresa no tiene instrucciones de ejecución, sin tarea no tiene qué hacer",
+    "employeeIdentityHint": "Empleado digital de la empresa"
   },
   "language": {
     "switchTooltip": "Cambiar idioma"

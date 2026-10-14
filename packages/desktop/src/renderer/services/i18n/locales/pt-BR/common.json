@@ -270,7 +270,8 @@
     "fieldScheduleTask": "Tarefa agendada",
     "scheduleTaskPlaceholder": "O que fazer a cada execução, ex.: resumir os riscos de lançamento da semana e listar pendências",
     "scheduleTaskOptionalHint": "Deixe em branco para usar as instruções de execução deste funcionário",
-    "scheduleTaskRequired": "Informe a tarefa agendada: um funcionário da empresa não tem instruções de execução, sem tarefa não há o que fazer"
+    "scheduleTaskRequired": "Informe a tarefa agendada: um funcionário da empresa não tem instruções de execução, sem tarefa não há o que fazer",
+    "employeeIdentityHint": "Funcionário digital da empresa"
   },
   "language": {
     "switchTooltip": "Mudar idioma"

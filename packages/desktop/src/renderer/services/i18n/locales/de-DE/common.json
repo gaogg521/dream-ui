@@ -270,7 +270,8 @@
     "fieldScheduleTask": "Geplante Aufgabe",
     "scheduleTaskPlaceholder": "Was bei jedem Lauf zu tun ist, z. B. Release-Risiken der Woche zusammenfassen und Folgeaufgaben auflisten",
     "scheduleTaskOptionalHint": "Leer lassen, um die Ausführungsanweisung dieses Mitarbeiters zu verwenden",
-    "scheduleTaskRequired": "Geplante Aufgabe eingeben: Ein Firmenmitarbeiter hat keine Ausführungsanweisung, ohne Aufgabe gibt es nichts zu tun"
+    "scheduleTaskRequired": "Geplante Aufgabe eingeben: Ein Firmenmitarbeiter hat keine Ausführungsanweisung, ohne Aufgabe gibt es nichts zu tun",
+    "employeeIdentityHint": "Digitaler Mitarbeiter des Unternehmens"
   },
   "language": {
     "switchTooltip": "Sprache wechseln"

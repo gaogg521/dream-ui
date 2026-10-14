@@ -270,7 +270,8 @@
     "fieldScheduleTask": "예약 작업",
     "scheduleTaskPlaceholder": "매번 수행할 작업. 예: 이번 주 릴리스 위험을 요약하고 후속 조치를 나열",
     "scheduleTaskOptionalHint": "비워 두면 이 직원의 실행 지침을 사용합니다",
-    "scheduleTaskRequired": "예약 작업을 입력하세요. 회사 직원에게는 실행 지침이 없어 작업이 없으면 할 일이 없습니다"
+    "scheduleTaskRequired": "예약 작업을 입력하세요. 회사 직원에게는 실행 지침이 없어 작업이 없으면 할 일이 없습니다",
+    "employeeIdentityHint": "기업 디지털 직원"
   },
   "language": {
     "switchTooltip": "언어 전환"

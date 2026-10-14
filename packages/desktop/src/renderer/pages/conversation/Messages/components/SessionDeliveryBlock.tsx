@@ -33,8 +33,8 @@ const WorkspaceBadge: React.FC<{ same: boolean }> = ({ same }) => {
       data-testid='session-block-workspace-badge'
     >
       {same
-        ? t('sessionBlock.sameWorkspace', { defaultValue: '同一工作区' })
-        : t('sessionBlock.differentWorkspace', { defaultValue: '跨工作区' })}
+        ? t('conversation.sessionBlock.sameWorkspace', { defaultValue: '同一工作区' })
+        : t('conversation.sessionBlock.differentWorkspace', { defaultValue: '跨工作区' })}
     </span>
   );
 };
@@ -70,7 +70,7 @@ const ViewConversationLink: React.FC<{ conversationId: string }> = ({ conversati
       data-testid={VIEW_TESTID}
       onClick={() => navigate(`/conversation/${conversationId}`)}
     >
-      {t('sessionBlock.viewConversation', { defaultValue: '查看会话' })}
+      {t('conversation.sessionBlock.viewConversation', { defaultValue: '查看会话' })}
     </div>
   );
 };
@@ -83,7 +83,7 @@ const InboundCard: React.FC<{ payload: SessionMessagePayload }> = ({ payload }) 
       title={
         <>
           <Message theme='outline' size='14' fill={iconColors.secondary} />{' '}
-          {t('sessionBlock.messageFrom', {
+          {t('conversation.sessionBlock.messageFrom', {
             defaultValue: '来自会话「{{title}}」的消息',
             title: payload.from_title,
           })}
@@ -93,7 +93,7 @@ const InboundCard: React.FC<{ payload: SessionMessagePayload }> = ({ payload }) 
       footer={
         payload.reply_requested && payload.reply_to_conversation_id ? (
           <div className='text-12px' style={{ color: 'var(--text-secondary)' }}>
-            {t('sessionBlock.replyRequested', { defaultValue: '发送方要求回信，可直接回复本会话。' })}
+            {t('conversation.sessionBlock.replyRequested', { defaultValue: '发送方要求回信，可直接回复本会话。' })}
           </div>
         ) : (
           <ViewConversationLink conversationId={payload.from_conversation_id} />
@@ -130,7 +130,7 @@ const OutboundCard: React.FC<{ payload: SessionsPayload }> = ({ payload }) => {
       title={
         <>
           <Right theme='outline' size='14' fill={iconColors.secondary} />{' '}
-          {t('sessionBlock.forwardedTo', {
+          {t('conversation.sessionBlock.forwardedTo', {
             defaultValue: '已转发到 {{count}} 个会话',
             count: payload.targets.length,
           })}
@@ -139,7 +139,7 @@ const OutboundCard: React.FC<{ payload: SessionsPayload }> = ({ payload }) => {
       footer={
         payload.reply_requested ? (
           <div className='text-12px' style={{ color: 'var(--text-secondary)' }}>
-            {t('sessionBlock.replyRequestedOutbound', { defaultValue: '已要求对方回信。' })}
+            {t('conversation.sessionBlock.replyRequestedOutbound', { defaultValue: '已要求对方回信。' })}
           </div>
         ) : undefined
       }
@@ -207,10 +207,10 @@ const ShareCard: React.FC<{ payload: SessionSharePayload }> = ({ payload }) => {
       <div className='flex items-center gap-8px flex-wrap'>
         <span className='text-13px font-medium' style={{ color: 'var(--text-primary)' }}>
           <Message theme='outline' size='14' fill={iconColors.secondary} />{' '}
-          {t('sessionShare.snapshotOf', { defaultValue: '会话记录分享「{{name}}」', name: payload.name })}
+          {t('conversation.sessionShare.snapshotOf', { defaultValue: '会话记录分享「{{name}}」', name: payload.name })}
         </span>
         <span className='text-11px px-6px py-1px rd-4px bg-3 select-none' style={{ color: 'var(--text-secondary)' }}>
-          {t('sessionShare.messageCount', { defaultValue: '{{count}} 条消息', count: payload.messages.length })}
+          {t('conversation.sessionShare.messageCount', { defaultValue: '{{count}} 条消息', count: payload.messages.length })}
         </span>
       </div>
       {payload.messages.length > 0 && (
