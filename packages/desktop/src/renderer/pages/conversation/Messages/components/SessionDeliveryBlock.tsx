@@ -210,7 +210,10 @@ const ShareCard: React.FC<{ payload: SessionSharePayload }> = ({ payload }) => {
           {t('conversation.sessionShare.snapshotOf', { defaultValue: '会话记录分享「{{name}}」', name: payload.name })}
         </span>
         <span className='text-11px px-6px py-1px rd-4px bg-3 select-none' style={{ color: 'var(--text-secondary)' }}>
-          {t('conversation.sessionShare.messageCount', { defaultValue: '{{count}} 条消息', count: payload.messages.length })}
+          {t('conversation.sessionShare.messageCount', {
+            defaultValue: '{{count}} 条消息',
+            count: payload.messages.length,
+          })}
         </span>
       </div>
       {payload.messages.length > 0 && (
