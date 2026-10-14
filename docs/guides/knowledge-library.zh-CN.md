@@ -33,7 +33,6 @@
 
 实现入口：LibraryDocument.tsx、RagSection.tsx、documentTextExtraction.ts；对应后端为 dream-domain-devops 的 embedding.rs、routes.rs、service.rs。
 
-
 ## 原文件阅读与内置学习指南（2026-10-14 补充）
 
 原文件与检索正文分开保存。新增原文件上传/下载接口 `/api/one/devops/rag/documents/{id}/source`，沿用文档读写权限；文件存放在数据目录下的 `knowledge-sources`，不暴露本机路径。单个原文件上限 100 MiB，支持单段 Range 请求。

@@ -332,7 +332,12 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
         const binary = atob(source.base64);
         const bytes = new Uint8Array(binary.length);
         for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
-        await httpUploadMultipart(`/api/one/devops/rag/documents/${doc.id}/source`, new File([bytes], source.name), 'file', { timeoutMs: 120000 });
+        await httpUploadMultipart(
+          `/api/one/devops/rag/documents/${doc.id}/source`,
+          new File([bytes], source.name),
+          'file',
+          { timeoutMs: 120000 }
+        );
       }
       if (content.trim()) {
         await ipcBridge.oneDevops.setRagContent.invoke({ id: doc.id, content });
@@ -345,7 +350,28 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   const handleImportFiles = async (personal = false) => {
     const filePaths = await ipcBridge.dialog.showOpen.invoke({
       properties: ['openFile', 'multiSelections'],
-      filters: [{ name: 'Documents and media', extensions: [...RAG_DOCUMENT_EXTENSIONS, 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'mp4', 'webm', 'mp3', 'wav', 'fig', 'psd', 'ai', 'sketch'] }],
+      filters: [
+        {
+          name: 'Documents and media',
+          extensions: [
+            ...RAG_DOCUMENT_EXTENSIONS,
+            'png',
+            'jpg',
+            'jpeg',
+            'gif',
+            'webp',
+            'svg',
+            'mp4',
+            'webm',
+            'mp3',
+            'wav',
+            'fig',
+            'psd',
+            'ai',
+            'sketch',
+          ],
+        },
+      ],
     });
     if (!filePaths?.length) {
       return;
@@ -357,7 +383,12 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
       const failures: string[] = [];
       for (const result of extracted) {
         try {
-          await registerAndProcess(titleFromFileName(result.fileName), 'error' in result ? '' : result.text, personal, result.filePath);
+          await registerAndProcess(
+            titleFromFileName(result.fileName),
+            'error' in result ? '' : result.text,
+            personal,
+            result.filePath
+          );
           succeeded += 1;
         } catch (error) {
           failures.push(`${result.fileName}: ${friendlyEnterpriseError(error, t)}`);
@@ -682,8 +713,17 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
               key={editTarget.id}
               documentId={editTarget.id}
               sourcePath={editTarget.filePath}
-              loadOriginal={async () => (await httpDownloadBinary(`/api/one/devops/rag/documents/${editTarget.id}/source`)).blob}
-              uploadOriginal={(file) => httpUploadMultipart<RagDocumentEntry>(`/api/one/devops/rag/documents/${editTarget.id}/source`, file, 'file', { timeoutMs: 120000 })}
+              loadOriginal={async () =>
+                (await httpDownloadBinary(`/api/one/devops/rag/documents/${editTarget.id}/source`)).blob
+              }
+              uploadOriginal={(file) =>
+                httpUploadMultipart<RagDocumentEntry>(
+                  `/api/one/devops/rag/documents/${editTarget.id}/source`,
+                  file,
+                  'file',
+                  { timeoutMs: 120000 }
+                )
+              }
               title={editTarget.title}
               location={libraries.find((item) => item.id === editTarget.libraryId)?.name}
               content={editContent}
