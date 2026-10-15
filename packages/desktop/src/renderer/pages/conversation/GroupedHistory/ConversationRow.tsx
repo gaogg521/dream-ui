@@ -328,7 +328,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
               popupHoverStay={false}
               position='top'
             >
-              <div className='chat-history__item-name overflow-hidden text-ellipsis flex items-center gap-4px min-w-0 text-14px font-[500] lh-20px whitespace-nowrap text-t-primary'>
+              <div className='chat-history__item-name overflow-hidden text-ellipsis flex items-center gap-4px min-w-0 text-13px font-[500] lh-20px whitespace-nowrap text-t-primary'>
                 <span className='block overflow-hidden text-ellipsis whitespace-nowrap min-w-0'>
                   {conversation.name}
                 </span>
@@ -365,7 +365,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
               popupHoverStay={false}
               position='top'
             >
-              <div className='chat-history__item-name overflow-hidden text-ellipsis flex items-center gap-4px w-full text-14px font-[500] lh-24px whitespace-nowrap min-w-0 text-t-primary'>
+              <div className='chat-history__item-name overflow-hidden text-ellipsis flex items-center gap-4px w-full text-13px font-[500] lh-24px whitespace-nowrap min-w-0 text-t-primary'>
                 <span className='block overflow-hidden text-ellipsis whitespace-nowrap min-w-0'>
                   {conversation.name}
                 </span>
