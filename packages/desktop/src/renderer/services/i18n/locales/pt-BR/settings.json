@@ -469,6 +469,10 @@
         "title": "Estúdio de design de pôsteres",
         "desc": "Transforma um tema, uma foto de produto ou referências de marca em um pôster que faz parar para olhar."
       },
+      "ppt-studio": {
+        "title": "PPT Studio",
+        "desc": "Apresentações com temas e layouts prontos a partir de um pedido, em segundos."
+      },
       "price-compare": {
         "title": "Comparação de preços",
         "desc": "Compara vários produtos por preço e especificações e diz qual é o mais barato e qual é a melhor compra."

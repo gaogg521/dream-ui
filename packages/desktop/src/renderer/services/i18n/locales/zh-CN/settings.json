@@ -466,6 +466,10 @@
         "title": "海报设计工作室",
         "desc": "Turn a topic description, a product photo, or brand references into a scroll-stopping even…"
       },
+      "ppt-studio": {
+        "title": "PPT 设计工坊",
+        "desc": "一句话生成带专业主题与版式的 PPT，几十秒出稿。"
+      },
       "price-compare": {
         "title": "商品比价",
         "desc": "多商品比价助手：输入多个商品的价格与参数，输出最低价与性价比建议"

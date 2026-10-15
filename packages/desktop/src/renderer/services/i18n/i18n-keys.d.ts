@@ -4333,6 +4333,8 @@ export type I18nKey =
   | 'settings.skillsHub.builtinSkill.pm-toolkit-zxh.title'
   | 'settings.skillsHub.builtinSkill.poster-design-studio.desc'
   | 'settings.skillsHub.builtinSkill.poster-design-studio.title'
+  | 'settings.skillsHub.builtinSkill.ppt-studio.desc'
+  | 'settings.skillsHub.builtinSkill.ppt-studio.title'
   | 'settings.skillsHub.builtinSkill.price-compare.desc'
   | 'settings.skillsHub.builtinSkill.price-compare.title'
   | 'settings.skillsHub.builtinSkill.proboost-tiktok-shop-analysis.desc'

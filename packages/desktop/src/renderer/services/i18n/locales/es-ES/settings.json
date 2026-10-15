@@ -469,6 +469,10 @@
         "title": "Estudio de diseño de carteles",
         "desc": "Convierte un tema, una foto de producto o referencias de marca en un cartel que detiene la mirada."
       },
+      "ppt-studio": {
+        "title": "PPT Studio",
+        "desc": "Presentaciones con temas y diseños listos a partir de una frase, en segundos."
+      },
       "price-compare": {
         "title": "Comparación de precios",
         "desc": "Compara varios productos por precio y especificaciones, e indica cuál es el más barato y cuál la mejor compra."

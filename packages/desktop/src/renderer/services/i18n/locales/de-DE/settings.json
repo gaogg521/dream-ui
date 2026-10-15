@@ -469,6 +469,10 @@
         "title": "Poster-Designstudio",
         "desc": "Verwandelt ein Thema, ein Produktfoto oder Markenreferenzen in ein Poster, vor dem man stehen bleibt."
       },
+      "ppt-studio": {
+        "title": "PPT Studio",
+        "desc": "Gestaltete Präsentationen aus einem Satz – Themes und Layouts inklusive, in Sekunden."
+      },
       "price-compare": {
         "title": "Preisvergleich",
         "desc": "Vergleicht mehrere Produkte nach Preis und Ausstattung und sagt, welches am günstigsten und welches der bessere Kauf ist."

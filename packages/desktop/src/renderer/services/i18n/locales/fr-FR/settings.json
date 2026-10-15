@@ -469,6 +469,10 @@
         "title": "Studio de design d’affiches",
         "desc": "Transforme un sujet, une photo produit ou des références de marque en une affiche qui arrête le regard."
       },
+      "ppt-studio": {
+        "title": "PPT Studio",
+        "desc": "Des présentations soignées en une phrase : thèmes et mises en page inclus, en quelques secondes."
+      },
       "price-compare": {
         "title": "Comparaison de prix",
         "desc": "Compare plusieurs produits sur le prix et les caractéristiques, et indique le moins cher et le meilleur achat."

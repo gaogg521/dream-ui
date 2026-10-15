@@ -466,6 +466,10 @@
         "title": "Poster Design Studio",
         "desc": "Turns a topic, a product photo or brand references into a poster worth stopping for."
       },
+      "ppt-studio": {
+        "title": "PPT Studio",
+        "desc": "Designed decks from one prompt: themes and layouts built in, ready in seconds."
+      },
       "price-compare": {
         "title": "Price Comparison",
         "desc": "Compares several products on price and spec, and says which is cheapest and which is the better buy."

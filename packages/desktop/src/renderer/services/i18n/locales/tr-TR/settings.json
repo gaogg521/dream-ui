@@ -469,6 +469,10 @@
         "title": "Poster Tasarım Stüdyosu",
         "desc": "Bir konuyu, ürün fotoğrafını veya marka referanslarını durup bakılacak bir postere dönüştürür."
       },
+      "ppt-studio": {
+        "title": "PPT Stüdyosu",
+        "desc": "Tek bir istemle tema ve düzenleri hazır sunumlar, saniyeler içinde."
+      },
       "price-compare": {
         "title": "Fiyat Karşılaştırma",
         "desc": "Birkaç ürünü fiyat ve özelliklere göre karşılaştırır; hangisinin en ucuz, hangisinin daha iyi alım olduğunu söyler."
