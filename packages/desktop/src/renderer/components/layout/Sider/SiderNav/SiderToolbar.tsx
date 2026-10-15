@@ -5,7 +5,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tooltip } from '@arco-design/web-react';
-import { ListCheckbox, Plus } from '@icon-park/react';
+import { ListCheckbox, MessageOne } from '@icon-park/react';
 import classNames from 'classnames';
 import type { SiderTooltipProps } from '@renderer/utils/ui/siderTooltip';
 import styles from '../Sider.module.css';
@@ -40,13 +40,15 @@ const SiderToolbar: React.FC<SiderToolbarProps> = ({
             )}
             onClick={onNewChat}
           >
-            <Plus
-              theme='outline'
-              size='16'
-              fill='currentColor'
-              className={classNames('block leading-none', styles.newChatIcon)}
-              style={{ lineHeight: 0 }}
-            />
+            <span className={classNames('flex items-center justify-center', styles.newChatChip)}>
+              <MessageOne
+                theme='filled'
+                size='14'
+                fill='currentColor'
+                className={classNames('block leading-none', styles.newChatIcon)}
+                style={{ lineHeight: 0 }}
+              />
+            </span>
           </div>
         </Tooltip>
       </div>
@@ -64,9 +66,9 @@ const SiderToolbar: React.FC<SiderToolbarProps> = ({
           )}
           onClick={onNewChat}
         >
-          <span className='box-border size-22px rd-6px bg-aou-2 border border-solid border-[var(--color-border-2)] group-hover:bg-fill-3 group-hover:border-transparent flex items-center justify-center shrink-0 transition-colors'>
-            <Plus
-              theme='outline'
+          <span className={classNames('flex items-center justify-center shrink-0', styles.newChatChip)}>
+            <MessageOne
+              theme='filled'
               size='14'
               fill='currentColor'
               className={classNames('block leading-none', styles.newChatIcon)}

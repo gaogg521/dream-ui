@@ -4,6 +4,22 @@
   position: relative;
 }
 
+/* The primary action gets a fixed sky-blue chip: violet is the team entry, amber the
+   automation one, green the knowledge base. The theme primary was tried first but several
+   colour presets make it a dark slate, which is the opposite of eye-catching. */
+.newChatChip {
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 1px solid #2563eb;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6 55%, #2563eb);
+  color: #fff;
+  box-shadow:
+    0 1px 3px rgba(37, 99, 235, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
 .newChatIcon {
   transform: translateZ(0);
   transition: transform 0.14s cubic-bezier(0.33, 1, 0.68, 1);
