@@ -246,7 +246,7 @@ const TeamSiderSection: React.FC<TeamSiderSectionProps> = ({
             >
               <Peoples theme='outline' size='13' fill='currentColor' style={{ lineHeight: 0 }} />
             </span>
-            <span className='text-14px text-t-tertiary sider-section-title group-hover/label:text-t-primary transition-colors font-[500] leading-none'>
+            <span className='text-14px text-t-primary sider-section-title transition-colors font-[600] leading-none'>
               {t('team.sider.title')}
             </span>
             <span className='ms-2px flex items-center justify-center opacity-0 group-hover/label:opacity-100 transition-opacity text-t-tertiary shrink-0'>
