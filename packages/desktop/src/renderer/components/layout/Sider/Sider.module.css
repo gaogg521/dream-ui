@@ -4,22 +4,6 @@
   position: relative;
 }
 
-/* The primary action gets a fixed sky-blue chip: violet is the team entry, amber the
-   automation one, green the knowledge base. The theme primary was tried first but several
-   colour presets make it a dark slate, which is the opposite of eye-catching. */
-.newChatChip {
-  box-sizing: border-box;
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
-  border: 1px solid #2563eb;
-  background: linear-gradient(135deg, #60a5fa, #3b82f6 55%, #2563eb);
-  color: #fff;
-  box-shadow:
-    0 1px 3px rgba(37, 99, 235, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-
 .newChatIcon {
   transform: translateZ(0);
   transition: transform 0.14s cubic-bezier(0.33, 1, 0.68, 1);
@@ -82,12 +66,16 @@
   width: 22px;
   height: 22px;
   border-radius: 7px;
-  border: 1px solid color-mix(in srgb, var(--team-section-accent) 70%, black);
-  background: linear-gradient(135deg, #a78bfa, var(--team-section-accent) 55%, #7c3aed);
-  color: #fff;
-  box-shadow:
-    0 1px 3px color-mix(in srgb, var(--team-section-accent) 45%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 35%, transparent);
+  /* Same tinted frame as the automation / knowledge icons so the group reads as one
+     level; the violet tint is stronger so the entry still stands out. */
+  border: 1px solid color-mix(in srgb, var(--team-section-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--team-section-accent) 22%, transparent);
+  color: #7c3aed;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 22%, transparent);
+}
+
+:global([data-theme='dark']) .teamSectionIcon {
+  color: #a78bfa;
 }
 
 /* layout.css greys every .sider-section-title in dark mode; the team entry is the
@@ -130,6 +118,10 @@
 
 .scheduledIcon {
   color: #f59e0b;
+}
+
+.newChatTint {
+  color: #3b82f6;
 }
 
 .knowledgeIcon {

@@ -40,9 +40,9 @@ const SiderToolbar: React.FC<SiderToolbarProps> = ({
             )}
             onClick={onNewChat}
           >
-            <span className={classNames('flex items-center justify-center', styles.newChatChip)}>
+            <span className={classNames('flex items-center justify-center', styles.navIconFrame, styles.newChatTint)}>
               <MessageOne
-                theme='filled'
+                theme='outline'
                 size='14'
                 fill='currentColor'
                 className={classNames('block leading-none', styles.newChatIcon)}
@@ -66,9 +66,11 @@ const SiderToolbar: React.FC<SiderToolbarProps> = ({
           )}
           onClick={onNewChat}
         >
-          <span className={classNames('flex items-center justify-center shrink-0', styles.newChatChip)}>
+          <span
+            className={classNames('flex items-center justify-center shrink-0', styles.navIconFrame, styles.newChatTint)}
+          >
             <MessageOne
-              theme='filled'
+              theme='outline'
               size='14'
               fill='currentColor'
               className={classNames('block leading-none', styles.newChatIcon)}
