@@ -823,6 +823,7 @@
     "originalLoadFailed": "原始檔案載入失敗",
     "retryOriginal": "重試",
     "sheetPreviewNote": "資料預覽：支援儲存格值和合併儲存格，最多顯示前 2000 列、100 欄；暫不還原圖表和原始樣式，可下載完整原件。",
+    "importSourceOnly": "已保留原件；此格式正文尚未擷取，暫不參與內容檢索。",
     "originalUnsupported": "此格式尚未支援線上預覽。原始檔案已保留，可下載查看。",
     "downloadOriginal": "下載原始檔案",
     "replaceOriginal": "替換原始檔案",

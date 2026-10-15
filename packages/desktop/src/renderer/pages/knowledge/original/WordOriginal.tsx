@@ -23,7 +23,7 @@ export default function WordOriginal({ url, title }: { url: string; title: strin
       if (!active) return;
       const pages = Array.from(document.querySelectorAll<HTMLElement>('section.docx'));
       const width = Math.max(1, ...pages.map((page) => page.offsetWidth));
-      document.body.style.zoom = String(Math.min(1, element.clientWidth / (width + 60)));
+      document.body.style.zoom = String(Math.min(1, document.documentElement.clientWidth / (width + 60)));
     };
     const observer = new ResizeObserver(resize);
     observer.observe(element);

@@ -823,6 +823,7 @@
     "originalLoadFailed": "原文件加载失败",
     "retryOriginal": "重试",
     "sheetPreviewNote": "数据预览：支持单元格值和合并单元格，最多显示前 2000 行、100 列；暂不还原图表和原始样式，可下载完整原件。",
+    "importSourceOnly": "已保留原件；此格式正文尚未提取，暂不参与内容检索。",
     "originalUnsupported": "此格式尚未接入在线预览。原文件已保留，可下载查看。",
     "downloadOriginal": "下载原文件",
     "replaceOriginal": "替换原文件",

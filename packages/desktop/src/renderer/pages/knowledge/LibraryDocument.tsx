@@ -12,6 +12,7 @@ import remarkTableBreaks from './remarkTableBreaks';
 import CsvDocument from './CsvDocument';
 import styles from './KnowledgeLibrary.module.css';
 import OriginalFileViewer from './original/OriginalFileViewer';
+import { usesOriginalFile } from './original/sourceKind';
 import HtmlOriginal from './original/HtmlOriginal';
 
 export function RichDocumentEditor({
@@ -195,12 +196,7 @@ export default function LibraryDocument(props: Props) {
   const [uploadingSource, setUploadingSource] = useState(false);
   const sourcePath = source?.filePath ?? props.sourcePath;
   const sourceMime = source?.mimeType ?? props.mimeType ?? '';
-  const original = Boolean(
-    props.documentId &&
-    props.loadOriginal &&
-    sourcePath?.startsWith('rag-source:') &&
-    !['text/markdown', 'text/csv', 'text/plain'].includes(sourceMime)
-  );
+  const original = Boolean(props.documentId && props.loadOriginal && usesOriginalFile(sourcePath, sourceMime));
   const pageRef = useRef<HTMLElement>(null);
   const [autoStatus, setAutoStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const submitted = useRef(JSON.stringify([props.title, props.content]));

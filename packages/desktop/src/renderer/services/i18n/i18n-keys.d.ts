@@ -539,6 +539,7 @@ export type I18nKey =
   | 'common.knowledgeLibrary.imageTooLarge'
   | 'common.knowledgeLibrary.import'
   | 'common.knowledgeLibrary.importDescription'
+  | 'common.knowledgeLibrary.importSourceOnly'
   | 'common.knowledgeLibrary.italic'
   | 'common.knowledgeLibrary.lastOpened'
   | 'common.knowledgeLibrary.learn'

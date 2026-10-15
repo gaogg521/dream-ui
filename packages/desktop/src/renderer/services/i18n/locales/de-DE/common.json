@@ -817,6 +817,7 @@
     "originalLoadFailed": "Originaldatei konnte nicht geladen werden",
     "retryOriginal": "Erneut versuchen",
     "sheetPreviewNote": "Datenvorschau: Werte und verbundene Zellen, bis zu 2.000 Zeilen und 100 Spalten. Diagramme und Originalformatierung werden nicht dargestellt. Die vollständige Originaldatei kann heruntergeladen werden.",
+    "importSourceOnly": "Originaldatei gespeichert. Für dieses Format wurde noch kein Text extrahiert; die Inhaltssuche ist daher noch nicht verfügbar.",
     "originalUnsupported": "Für dieses Format ist keine Online-Vorschau verfügbar. Das Original kann heruntergeladen werden.",
     "downloadOriginal": "Original herunterladen",
     "replaceOriginal": "Original ersetzen",

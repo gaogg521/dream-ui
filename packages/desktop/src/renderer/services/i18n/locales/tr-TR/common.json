@@ -817,6 +817,7 @@
     "originalLoadFailed": "Özgün dosya yüklenemedi",
     "retryOriginal": "Yeniden dene",
     "sheetPreviewNote": "Veri önizlemesi: değerler ve birleştirilmiş hücreler, en fazla 2.000 satır ve 100 sütun. Grafikler ve özgün biçimlendirme desteklenmez. Tam çalışma kitabı için orijinali indirin.",
+    "importSourceOnly": "Orijinal dosya saklandı. Bu biçimin metni henüz çıkarılmadığından içerik aramasına dahil edilmez.",
     "originalUnsupported": "Bu biçimde çevrimiçi önizleme yoktur. Özgün dosyayı indirebilirsiniz.",
     "downloadOriginal": "Özgün dosyayı indir",
     "replaceOriginal": "Özgün dosyayı değiştir",

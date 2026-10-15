@@ -264,8 +264,8 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
       width: '19%',
       ellipsis: true,
       render: (_: unknown, row: RagDocumentEntry) =>
-        libraries.find((library) => library.id === row.libraryId)?.name ??
-        (personal(row) ? label('personal') : label('team')),
+        libraries.find((library) => library.id === row.libraryId && (library.scope === 'personal') === personal(row))
+          ?.name ?? (personal(row) ? label('personal') : label('team')),
     },
     {
       title: label('lastOpened'),

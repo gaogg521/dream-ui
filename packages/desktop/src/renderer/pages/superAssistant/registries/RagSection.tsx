@@ -24,8 +24,10 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import libraryStyles from '../../knowledge/KnowledgeLibrary.module.css';
 import CsvDocument from '../../knowledge/CsvDocument';
+import { usesOriginalFile } from '../../knowledge/original/sourceKind';
 import { ipcBridge } from '@/common';
 import { httpDownloadBinary, httpUploadMultipart } from '@/common/adapter/httpBridge';
+import { isNativeDialogAvailable } from '@/common/adapter/ipcBridge';
 import { friendlyEnterpriseError } from '@renderer/utils/enterprise/friendlyEnterpriseError';
 import CompanyBadge from '@renderer/components/enterprise/CompanyBadge';
 import { isOrgAdminRole, useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
@@ -151,6 +153,8 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [importingFiles, setImportingFiles] = useState(false);
+  const webImportInput = useRef<HTMLInputElement>(null);
+  const webImportPersonal = useRef(false);
   const [urlModalVisible, setUrlModalVisible] = useState(false);
   const [importingUrl, setImportingUrl] = useState(false);
   const [urlForm] = Form.useForm();
@@ -264,26 +268,26 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     if (!values.title.trim()) values.title = t('common.knowledgeLibrary.untitled');
     setSavingDoc(true);
     try {
+      const target = libraries.find((library) => library.id === libraryId);
+      const privateDocument =
+        (Boolean(renderLibrary) && !isEnterprise) || documentPersonal || memberMode || target?.scope === 'personal';
+      const destination = target && (target.scope === 'personal') === privateDocument ? target.id : undefined;
       const doc =
         draftId.current && renderLibrary
           ? { id: draftId.current }
           : await ipcBridge.oneDevops.registerRagDocument.invoke({
               title: documentKind === 'csv' && !/\.csv$/i.test(values.title) ? `${values.title}.csv` : values.title,
               ...(documentKind === 'csv' ? { mimeType: 'text/csv' } : {}),
-              ...(libraryId ? { libraryId } : {}),
+              ...(destination ? { libraryId: destination } : {}),
               // A member's document is always private; the server decides, so no ACL is sent.
-              ...(documentPersonal || libraries.find((library) => library.id === libraryId)?.scope === 'personal'
-                ? { scope: 'personal' as const }
-                : memberMode
-                  ? {}
-                  : aclPayload(values)),
+              ...(privateDocument ? { scope: 'personal' as const } : memberMode ? {} : aclPayload(values)),
             });
       if (renderLibrary && doc?.id) {
         if (draftId.current)
           await ipcBridge.oneDevops.updateRagDocumentLocation.invoke({
             id: doc.id,
             title: values.title,
-            ...(libraryId ? { libraryId } : {}),
+            ...(destination ? { libraryId: destination } : {}),
           });
         draftId.current = doc.id;
       }
@@ -316,38 +320,85 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
    * Register extracted content. Saving queues background indexing on the server.
    */
   const registerAndProcess = useCallback(
-    async (title: string, content: string, personal = false, sourcePath?: string): Promise<void> => {
-      const doc = await ipcBridge.oneDevops.registerRagDocument.invoke({
-        title,
-        ...(libraryId ? { libraryId } : {}),
-        ...(personal || libraries.find((library) => library.id === libraryId)?.scope === 'personal'
-          ? { scope: 'personal' as const }
-          : {}),
-      });
-      if (!doc?.id) {
-        throw new Error('registerRagDocument returned no id');
-      }
-      if (sourcePath) {
+    async (title: string, content: string, personal = false, sourcePath?: string | File): Promise<void> => {
+      let originalFile: File | undefined;
+      if (typeof sourcePath === 'string') {
         const source = await ipcBridge.application.readRagSourceFile.invoke({ filePath: sourcePath });
         const binary = atob(source.base64);
         const bytes = new Uint8Array(binary.length);
         for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
-        await httpUploadMultipart(
-          `/api/one/devops/rag/documents/${doc.id}/source`,
-          new File([bytes], source.name),
-          'file',
-          { timeoutMs: 120000 }
-        );
+        originalFile = new File([bytes], source.name);
+      } else originalFile = sourcePath;
+      const target = libraries.find((library) => library.id === libraryId);
+      const privateDocument = !isEnterprise || personal || target?.scope === 'personal';
+      const doc = await ipcBridge.oneDevops.registerRagDocument.invoke({
+        title,
+        ...(target && (target.scope === 'personal') === privateDocument ? { libraryId: target.id } : {}),
+        ...(privateDocument ? { scope: 'personal' as const } : {}),
+        ...(originalFile?.type ? { mimeType: originalFile.type } : {}),
+      });
+      if (!doc?.id) {
+        throw new Error('registerRagDocument returned no id');
+      }
+      if (originalFile) {
+        await httpUploadMultipart(`/api/one/devops/rag/documents/${doc.id}/source`, originalFile, 'file', {
+          timeoutMs: 120000,
+        });
       }
       if (content.trim()) {
         await ipcBridge.oneDevops.setRagContent.invoke({ id: doc.id, content });
       }
     },
-    [libraryId, libraries]
+    [libraryId, libraries, isEnterprise]
   );
+
+  const handleWebImport = async (files: File[]) => {
+    setImportingFiles(true);
+    let succeeded = 0;
+    const failures: string[] = [];
+    const sourceOnly: string[] = [];
+    try {
+      const { extractLibraryText } = await import('../../knowledge/original/extractLibraryText');
+      for (const file of files) {
+        if (file.size > 100 * 1024 * 1024) {
+          failures.push(`${file.name}: ${t('common.knowledgeLibrary.originalTooLarge')}`);
+          continue;
+        }
+        try {
+          let content: string | null = null;
+          try {
+            content = await extractLibraryText(file);
+          } catch {
+            /* Keep an unreadable original available. */
+          }
+          await registerAndProcess(file.name, content ?? '', webImportPersonal.current, file);
+          if (!content?.trim()) sourceOnly.push(file.name);
+          succeeded += 1;
+        } catch (error) {
+          failures.push(`${file.name}: ${friendlyEnterpriseError(error, t)}`);
+        }
+      }
+      if (succeeded) Message.success(t('common.superAssistant.rag.importFilesSucceeded', { count: succeeded }));
+      if (sourceOnly.length) Message.info(`${t('common.knowledgeLibrary.importSourceOnly')} ${sourceOnly.join(', ')}`);
+      if (failures.length)
+        Message.error(
+          t('common.superAssistant.rag.importFilesFailed', { count: failures.length, reasons: failures.join('; ') })
+        );
+      await refresh();
+    } catch (error) {
+      Message.error(t('common.superAssistant.rag.importFailed') + ': ' + friendlyEnterpriseError(error, t));
+    } finally {
+      setImportingFiles(false);
+    }
+  };
 
   /** Import: pick one or more local files, extract text, register + auto-process each. */
   const handleImportFiles = async (personal = false) => {
+    if (!isNativeDialogAvailable()) {
+      webImportPersonal.current = personal;
+      webImportInput.current?.click();
+      return;
+    }
     const filePaths = await ipcBridge.dialog.showOpen.invoke({
       properties: ['openFile', 'multiSelections'],
       filters: [
@@ -381,6 +432,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
       const extracted = await ipcBridge.application.extractRagDocumentFiles.invoke({ filePaths });
       let succeeded = 0;
       const failures: string[] = [];
+      const sourceOnly: string[] = [];
       for (const result of extracted) {
         try {
           await registerAndProcess(
@@ -389,6 +441,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
             personal,
             result.filePath
           );
+          if ('error' in result || !result.text.trim()) sourceOnly.push(result.fileName);
           succeeded += 1;
         } catch (error) {
           failures.push(`${result.fileName}: ${friendlyEnterpriseError(error, t)}`);
@@ -411,6 +464,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
           })
         );
       }
+      if (sourceOnly.length) Message.info(`${t('common.knowledgeLibrary.importSourceOnly')} ${sourceOnly.join(', ')}`);
       await refresh();
     } catch (error) {
       Message.error(
@@ -453,9 +507,9 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     }
   };
 
-  const openEdit = async (record: RagDocumentEntry) => {
+  const openEdit = async (record: RagDocumentEntry, edit = false) => {
     const request = ++editRequest.current;
-    setReading(Boolean(renderLibrary));
+    setReading(Boolean(renderLibrary) && !edit);
     setEditTarget(record);
     setEditContent('');
     originalContent.current = '';
@@ -603,8 +657,13 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
       render: (_: unknown, record: RagDocumentEntry) =>
         canChange(record) ? (
           <div className='flex gap-6px'>
-            <Button size='small' onClick={() => void openEdit(record)}>
-              {t('common.edit', { defaultValue: '编辑' })}
+            <Button
+              size='small'
+              onClick={() => void openEdit(record, !usesOriginalFile(record.filePath, record.mimeType))}
+            >
+              {renderLibrary && usesOriginalFile(record.filePath, record.mimeType)
+                ? t('common.knowledgeLibrary.read')
+                : t('common.edit', { defaultValue: '编辑' })}
             </Button>
             {renderLibrary && (
               <Button
@@ -676,7 +735,20 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
                   <Tag size='small' color='arcoblue' title={t('common.superAssistant.rag.similarityTooltip')}>
                     {t('common.superAssistant.rag.similarityBadge', { value: hit.score.toFixed(3) })}
                   </Tag>
-                  <span>{hit.documentTitle}</span>
+                  {renderLibrary && rows.some((row) => row.id === hit.documentId) ? (
+                    <button
+                      type='button'
+                      className='cursor-pointer border-0 bg-transparent p-0 text-left text-primary hover:underline'
+                      onClick={() => {
+                        const document = rows.find((row) => row.id === hit.documentId);
+                        if (document) void openEdit(document);
+                      }}
+                    >
+                      {hit.documentTitle}
+                    </button>
+                  ) : (
+                    <span>{hit.documentTitle}</span>
+                  )}
                 </div>
                 <div className='text-12px'>{hit.content}</div>
               </div>
@@ -689,6 +761,18 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
 
   return (
     <>
+      <input
+        ref={webImportInput}
+        data-testid='knowledge-file-import'
+        type='file'
+        multiple
+        hidden
+        onChange={(event) => {
+          const files = Array.from(event.target.files ?? []);
+          event.target.value = '';
+          if (files.length) void handleWebImport(files);
+        }}
+      />
       {renderLibrary ? (
         renderLibrary({
           isEnterprise,
@@ -725,7 +809,13 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
                 )
               }
               title={editTarget.title}
-              location={libraries.find((item) => item.id === editTarget.libraryId)?.name}
+              location={
+                libraries.find(
+                  (item) =>
+                    item.id === editTarget.libraryId &&
+                    (item.scope === 'personal') === (editTarget.scope === 'personal')
+                )?.name ?? (editTarget.scope === 'personal' ? t('common.knowledgeLibrary.personal') : undefined)
+              }
               content={editContent}
               mimeType={editTarget.mimeType}
               reading={reading}

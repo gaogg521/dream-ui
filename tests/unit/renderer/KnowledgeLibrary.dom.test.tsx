@@ -50,6 +50,26 @@ const setup = (isEnterprise = true, overrides: Partial<RagLibraryProps> = {}) =>
   return { onOpen };
 };
 describe('Knowledge library browsing', () => {
+  it('does not label a private document as belonging to an organization space', () => {
+    setup(true, {
+      rows: [{ ...row('Private notes', 'personal'), libraryId: 'oraglib_default' }],
+      libraries: [
+        {
+          id: 'oraglib_default',
+          name: 'Organization space',
+          scope: 'org',
+          kind: 'space',
+          description: '',
+          createdBy: 'owner',
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      ],
+    });
+    const documentRow = within(screen.getByRole('table')).getByRole('button', { name: 'Private notes' }).closest('tr')!;
+    expect(documentRow).toHaveTextContent('personal');
+    expect(documentRow).not.toHaveTextContent('Organization space');
+  });
   it('opens built-in guides inline without creating user documents and keeps navigation available', () => {
     const onCreate = vi.fn();
     setup(false, { onCreate });

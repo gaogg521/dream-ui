@@ -817,6 +817,7 @@
     "originalLoadFailed": "No se pudo cargar el archivo original",
     "retryOriginal": "Reintentar",
     "sheetPreviewNote": "Vista de datos: valores y celdas combinadas, hasta 2000 filas y 100 columnas. No se muestran gráficos ni el estilo original. Descarga el original para ver el libro completo.",
+    "importSourceOnly": "Se conservó el archivo original. Aún no se ha extraído el texto de este formato, por lo que no aparece en la búsqueda de contenido.",
     "originalUnsupported": "Este formato no admite vista previa en línea. Puede descargar el original.",
     "downloadOriginal": "Descargar original",
     "replaceOriginal": "Reemplazar original",

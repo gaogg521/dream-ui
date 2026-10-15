@@ -817,6 +817,7 @@
     "originalLoadFailed": "원본 파일을 불러올 수 없습니다",
     "retryOriginal": "재시도",
     "sheetPreviewNote": "데이터 미리보기: 값과 병합 셀을 최대 2,000행, 100열까지 표시합니다. 차트와 원본 서식은 지원하지 않습니다. 전체 통합 문서는 원본을 다운로드하세요.",
+    "importSourceOnly": "원본 파일을 보관했습니다. 이 형식의 본문은 아직 추출되지 않아 내용 검색에 포함되지 않습니다.",
     "originalUnsupported": "이 형식은 온라인 미리보기를 지원하지 않습니다. 원본을 다운로드할 수 있습니다.",
     "downloadOriginal": "원본 다운로드",
     "replaceOriginal": "원본 교체",

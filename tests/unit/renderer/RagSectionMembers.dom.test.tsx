@@ -7,6 +7,17 @@ const mocks = vi.hoisted(() => ({
   context: null as unknown,
   docs: [] as unknown[],
   register: vi.fn(async () => ({ id: 'new-doc' })),
+  upload: vi.fn(async () => ({})),
+  setContent: vi.fn(async () => undefined),
+  translate: (key: string) => key,
+}));
+vi.mock('@/common/adapter/httpBridge', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/common/adapter/httpBridge')>()),
+  httpUploadMultipart: mocks.upload,
+}));
+vi.mock('@/common/adapter/ipcBridge', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/common/adapter/ipcBridge')>()),
+  isNativeDialogAvailable: () => false,
 }));
 
 vi.mock('@arco-design/web-react', async (importOriginal) => {
@@ -15,7 +26,7 @@ vi.mock('@arco-design/web-react', async (importOriginal) => {
 });
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: mocks.translate }),
 }));
 vi.mock('@/renderer/pages/enterprise/hooks/useOrgContext', () => ({
   useOrgContext: () => ({ context: mocks.context }),
@@ -30,7 +41,7 @@ vi.mock('@/common', () => ({
     oneDevops: {
       listRagLibraries: { invoke: vi.fn(async () => [{ id: 'shared-lib', name: 'Shared library' }]) },
       registerRagDocument: { invoke: mocks.register },
-      setRagContent: { invoke: vi.fn(async () => undefined) },
+      setRagContent: { invoke: mocks.setContent },
       listRagDocuments: { invoke: vi.fn(async () => mocks.docs) },
       getRagConfig: { invoke: vi.fn(async () => ({ baseUrl: '', model: '' })) },
     },
@@ -70,6 +81,8 @@ describe('RagSection for company members', () => {
       })),
     });
     mocks.register.mockClear();
+    mocks.upload.mockClear();
+    mocks.setContent.mockClear();
     mocks.docs = [doc('d1', 'Company handbook', 'org'), doc('d2', 'My notes', 'personal')];
   });
 
@@ -134,5 +147,47 @@ describe('RagSection for company members', () => {
         ),
       { timeout: 3000 }
     );
+  });
+  it('offers reading rather than a nonfunctional text edit action for an Office original', async () => {
+    mocks.context = null;
+    mocks.docs = [
+      {
+        ...doc('office', 'Office.docx', 'personal'),
+        filePath: 'rag-source:fixture',
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      },
+    ];
+    render(
+      <RagSection
+        renderLibrary={(props) => (
+          <>
+            {props.rows.map((row) => (
+              <div key={row.id}>{props.columns.at(-1)?.render?.(null, row, 0) as React.ReactNode}</div>
+            ))}
+          </>
+        )}
+      />
+    );
+    await screen.findByRole('button', { name: 'common.knowledgeLibrary.read' });
+    expect(screen.queryByRole('button', { name: 'common.edit' })).not.toBeInTheDocument();
+  });
+  it('uploads a browser-selected local file into personal scope without desktop file IPC', async () => {
+    mocks.context = null;
+    render(
+      <RagSection
+        renderLibrary={(props) => <button onClick={() => props.onImport(true)}>Import browser file</button>}
+      />
+    );
+    fireEvent.click(screen.getByText('Import browser file'));
+    const file = new File(['# Browser notes'], 'browser-notes.md', { type: 'text/markdown' });
+    Object.defineProperty(file, 'text', { value: async () => '# Browser notes' });
+    fireEvent.change(screen.getByTestId('knowledge-file-import'), { target: { files: [file] } });
+    await waitFor(() => expect(mocks.setContent).toHaveBeenCalledWith({ id: 'new-doc', content: '# Browser notes' }));
+    expect(mocks.register).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'browser-notes.md', scope: 'personal' })
+    );
+    expect(mocks.upload).toHaveBeenCalledWith('/api/one/devops/rag/documents/new-doc/source', file, 'file', {
+      timeoutMs: 120000,
+    });
   });
 });

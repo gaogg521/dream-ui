@@ -21,7 +21,7 @@ export default function SlidesOriginal({ url, title }: { url: string; title: str
     document.body.append(container);
     const viewer = init(container, { width: 960, mode: 'list' });
     const resize = () => {
-      document.body.style.zoom = String(Math.min(1, element.clientWidth / 960));
+      document.body.style.zoom = String(Math.min(1, document.documentElement.clientWidth / 960));
     };
     const observer = new ResizeObserver(resize);
     observer.observe(element);

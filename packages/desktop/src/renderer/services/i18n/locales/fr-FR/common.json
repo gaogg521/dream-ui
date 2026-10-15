@@ -817,6 +817,7 @@
     "originalLoadFailed": "Impossible de charger le fichier original",
     "retryOriginal": "Réessayer",
     "sheetPreviewNote": "Aperçu des données : valeurs et cellules fusionnées, jusqu’à 2 000 lignes et 100 colonnes. Les graphiques et le style original ne sont pas reproduits. Téléchargez le fichier original pour le classeur complet.",
+    "importSourceOnly": "Le fichier original est conservé. Le texte de ce format n’a pas encore été extrait et ne figure pas dans la recherche de contenu.",
     "originalUnsupported": "Aperçu indisponible pour ce format. Le fichier original peut être téléchargé.",
     "downloadOriginal": "Télécharger l’original",
     "replaceOriginal": "Remplacer l’original",

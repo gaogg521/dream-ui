@@ -1,3 +1,7 @@
+export function usesOriginalFile(path?: string | null, mime?: string | null) {
+  return Boolean(path?.startsWith('rag-source:') && !['text/markdown', 'text/csv', 'text/plain'].includes(mime ?? ''));
+}
+
 export function sourceKind(
   mime: string,
   title: string

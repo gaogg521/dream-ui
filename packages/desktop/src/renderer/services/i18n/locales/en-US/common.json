@@ -823,6 +823,7 @@
     "originalLoadFailed": "Could not load the original file",
     "retryOriginal": "Retry",
     "sheetPreviewNote": "Data preview: values and merged cells, up to 2,000 rows and 100 columns. Charts and original styling are not supported. Download the original for the full workbook.",
+    "importSourceOnly": "Original file retained. Text has not been extracted for this format, so it is not included in content search yet.",
     "originalUnsupported": "Online preview is not available for this format. The original file is retained and can be downloaded.",
     "downloadOriginal": "Download original",
     "replaceOriginal": "Replace original",
