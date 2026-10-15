@@ -559,6 +559,9 @@
   align-items: center;
   gap: 10px;
 }
+.documentBar :global(.arco-btn-text:not(.arco-btn-disabled)) {
+  color: var(--color-text-1);
+}
 .documentIdentity strong {
   overflow: hidden;
   text-overflow: ellipsis;
