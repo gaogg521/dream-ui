@@ -427,141 +427,153 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                 </Button>
               </Dropdown>
             </header>
-            <div className={styles.toolbar}>
-              {view === 'recent' ? (
-                <Tabs activeTab={tab} onChange={setTab} type='rounded'>
-                  <Tabs.TabPane key='all' title={label('recentVisits')} />
-                  <Tabs.TabPane key='personal' title={label('personal')} />
-                  {isEnterprise && <Tabs.TabPane key='team' title={label('team')} />}
-                </Tabs>
-              ) : (
-                <span className={styles.subtitle}>{label('browseHint')}</span>
-              )}
-              <Select
-                value={kind}
-                onChange={setKind}
-                className={styles.filter}
-                options={['all', 'ready', 'pending', 'error'].map((value) => ({ value, label: label(value) }))}
-              />
-            </div>
-            <Input
-              allowClear
-              prefix={<Search />}
-              value={query}
-              onChange={setQuery}
-              placeholder={label('filterPlaceholder')}
-              className={styles.titleSearch}
-            />
-            {view === 'search' && <section className={styles.searchPanel}>{search}</section>}
-            {libraryId && (
-              <nav className={styles.breadcrumbs} aria-label={label('location')}>
-                {[...pathIds].reverse().map((id) => (
-                  <Button key={id} type='text' onClick={() => onLibraryChange(id)}>
-                    {libraries.find((item) => item.id === id)?.name}
-                  </Button>
-                ))}
-              </nav>
-            )}
-            <div className={styles.folderCards}>
-              {libraries
-                .filter((item) => item.parentId === libraryId && Boolean(libraryId))
-                .map((item) => (
-                  <Button key={item.id} type='text' title={item.name} onClick={() => onLibraryChange(item.id)}>
-                    <FolderClose /> {item.name}
-                  </Button>
-                ))}
-            </div>
-            {(data.length > 0 ||
-              loading ||
-              query ||
-              !libraries.some((item) => Boolean(libraryId) && item.parentId === libraryId)) && (
-              <Table
-                rowKey='id'
-                loading={loading || searchPending}
-                columns={tableColumns}
-                data={data}
-                border={false}
-                pagination={{ pageSize: 8, hideOnSinglePage: true }}
-                noDataElement={
-                  searchPending ? null : (
-                    <div className={styles.empty}>
-                      <FolderOpen size={36} />
-                      <p>{label(query.trim() ? 'noMatches' : 'empty')}</p>
-                      {!query.trim() && (
-                        <Button
-                          onClick={() => onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)}
-                          loading={importing}
-                          disabled={readOnlyLibrary}
-                        >
-                          {label('import')}
-                        </Button>
-                      )}
-                    </div>
-                  )
-                }
-              />
-            )}
-            {guides && !query.trim() && (
-              <section className={styles.guides}>
-                <div className={styles.guideHeading}>
-                  <span>
-                    <BookOpen /> {label('learn')}
-                  </span>
-                  <Button type='text' onClick={() => setGuides(false)}>
-                    {label('dismiss')}
-                  </Button>
+            {view === 'search' ? (
+              <section className={styles.searchPanel}>{search}</section>
+            ) : (
+              <>
+                <div className={styles.toolbar}>
+                  {view === 'recent' ? (
+                    <Tabs activeTab={tab} onChange={setTab} type='rounded'>
+                      <Tabs.TabPane key='all' title={label('recentVisits')} />
+                      <Tabs.TabPane key='personal' title={label('personal')} />
+                      {isEnterprise && <Tabs.TabPane key='team' title={label('team')} />}
+                    </Tabs>
+                  ) : (
+                    <span className={styles.subtitle}>{label('browseHint')}</span>
+                  )}
+                  <Select
+                    value={kind}
+                    onChange={setKind}
+                    className={styles.filter}
+                    options={['all', 'ready', 'pending', 'error'].map((value) => ({ value, label: label(value) }))}
+                  />
                 </div>
-                <div className={styles.featureCards}>
-                  <Button type='text' onClick={() => setGuide('quickstart')}>
-                    <div>
-                      <h3>{label('quickstartGuide')}</h3>
-                      <p>{label('quickstartGuideDescription')}</p>
-                    </div>
-                    <FileText size={44} />
-                  </Button>
-                  <Button type='text' onClick={() => setGuide('usage')}>
-                    <div>
-                      <h3>{label('usageGuide')}</h3>
-                      <p>{label('usageGuideDescription')}</p>
-                    </div>
-                    <Search size={44} />
-                  </Button>
-                </div>
-                <div className={styles.guideHeading}>
-                  <span>{label('possibilities')}</span>
-                </div>
-                <div className={styles.smallCards}>
-                  {[
-                    {
-                      title: 'import',
-                      description: 'importDescription',
-                      icon: <Upload />,
-                      action: () => onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise),
-                    },
-                    {
-                      title: 'addLink',
-                      description: 'linkDescription',
-                      icon: <LinkOne />,
-                      action: () => onLink(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise),
-                    },
-                    { title: 'team', description: 'teamDescription', icon: <People />, action: () => setView('team') },
-                  ]
-                    .filter((card) => isEnterprise || card.title !== 'team')
-                    .map((card) => (
-                      <Button
-                        key={card.title}
-                        type='text'
-                        onClick={card.action}
-                        disabled={readOnlyLibrary && card.title !== 'team'}
-                      >
-                        <span className={styles.cardIcon}>{card.icon}</span>
-                        <h3>{label(card.title)}</h3>
-                        <p>{label(card.description)}</p>
-                        <ArrowRight />
+                <Input
+                  allowClear
+                  prefix={<Search />}
+                  value={query}
+                  onChange={setQuery}
+                  placeholder={label('filterPlaceholder')}
+                  className={styles.titleSearch}
+                />
+                {libraryId && (
+                  <nav className={styles.breadcrumbs} aria-label={label('location')}>
+                    {[...pathIds].reverse().map((id) => (
+                      <Button key={id} type='text' onClick={() => onLibraryChange(id)}>
+                        {libraries.find((item) => item.id === id)?.name}
+                      </Button>
+                    ))}
+                  </nav>
+                )}
+                <div className={styles.folderCards}>
+                  {libraries
+                    .filter((item) => item.parentId === libraryId && Boolean(libraryId))
+                    .map((item) => (
+                      <Button key={item.id} type='text' title={item.name} onClick={() => onLibraryChange(item.id)}>
+                        <FolderClose /> {item.name}
                       </Button>
                     ))}
                 </div>
-              </section>
+                {(data.length > 0 ||
+                  loading ||
+                  query ||
+                  !libraries.some((item) => Boolean(libraryId) && item.parentId === libraryId)) && (
+                  <Table
+                    rowKey='id'
+                    loading={loading || searchPending}
+                    columns={tableColumns}
+                    data={data}
+                    border={false}
+                    pagination={{ pageSize: 8, hideOnSinglePage: true }}
+                    noDataElement={
+                      searchPending ? null : (
+                        <div className={styles.empty}>
+                          <FolderOpen size={36} />
+                          <p>{label(query.trim() ? 'noMatches' : 'empty')}</p>
+                          {!query.trim() && (
+                            <Button
+                              onClick={() =>
+                                onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)
+                              }
+                              loading={importing}
+                              disabled={readOnlyLibrary}
+                            >
+                              {label('import')}
+                            </Button>
+                          )}
+                        </div>
+                      )
+                    }
+                  />
+                )}
+                {guides && !query.trim() && (
+                  <section className={styles.guides}>
+                    <div className={styles.guideHeading}>
+                      <span>
+                        <BookOpen /> {label('learn')}
+                      </span>
+                      <Button type='text' onClick={() => setGuides(false)}>
+                        {label('dismiss')}
+                      </Button>
+                    </div>
+                    <div className={styles.featureCards}>
+                      <Button type='text' onClick={() => setGuide('quickstart')}>
+                        <div>
+                          <h3>{label('quickstartGuide')}</h3>
+                          <p>{label('quickstartGuideDescription')}</p>
+                        </div>
+                        <FileText size={44} />
+                      </Button>
+                      <Button type='text' onClick={() => setGuide('usage')}>
+                        <div>
+                          <h3>{label('usageGuide')}</h3>
+                          <p>{label('usageGuideDescription')}</p>
+                        </div>
+                        <Search size={44} />
+                      </Button>
+                    </div>
+                    <div className={styles.guideHeading}>
+                      <span>{label('possibilities')}</span>
+                    </div>
+                    <div className={styles.smallCards}>
+                      {[
+                        {
+                          title: 'import',
+                          description: 'importDescription',
+                          icon: <Upload />,
+                          action: () => onImport(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise),
+                        },
+                        {
+                          title: 'addLink',
+                          description: 'linkDescription',
+                          icon: <LinkOne />,
+                          action: () => onLink(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise),
+                        },
+                        {
+                          title: 'team',
+                          description: 'teamDescription',
+                          icon: <People />,
+                          action: () => setView('team'),
+                        },
+                      ]
+                        .filter((card) => isEnterprise || card.title !== 'team')
+                        .map((card) => (
+                          <Button
+                            key={card.title}
+                            type='text'
+                            onClick={card.action}
+                            disabled={readOnlyLibrary && card.title !== 'team'}
+                          >
+                            <span className={styles.cardIcon}>{card.icon}</span>
+                            <h3>{label(card.title)}</h3>
+                            <p>{label(card.description)}</p>
+                            <ArrowRight />
+                          </Button>
+                        ))}
+                    </div>
+                  </section>
+                )}
+              </>
             )}
             <footer className={styles.footer}>{settings}</footer>
           </>

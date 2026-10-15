@@ -750,7 +750,9 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
                     <span>{hit.documentTitle}</span>
                   )}
                 </div>
-                <div className='text-12px'>{hit.content}</div>
+                <div className={renderLibrary ? 'line-clamp-3 whitespace-pre-wrap text-14px' : 'text-12px'}>
+                  {hit.content}
+                </div>
               </div>
             ))
           )}

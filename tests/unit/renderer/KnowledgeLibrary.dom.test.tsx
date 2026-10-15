@@ -50,6 +50,16 @@ const setup = (isEnterprise = true, overrides: Partial<RagLibraryProps> = {}) =>
   return { onOpen };
 };
 describe('Knowledge library browsing', () => {
+  it('gives semantic search a focused page without a second search field or document list', () => {
+    setup(false);
+    fireEvent.click(screen.getByRole('button', { name: 'search' }));
+    expect(screen.getByText('semantic search')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('filterPlaceholder')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /quickstartGuide.*quickstartGuideDescription/ })
+    ).not.toBeInTheDocument();
+  });
   it('does not label a private document as belonging to an organization space', () => {
     setup(true, {
       rows: [{ ...row('Private notes', 'personal'), libraryId: 'oraglib_default' }],
