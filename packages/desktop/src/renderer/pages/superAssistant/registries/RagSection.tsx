@@ -804,14 +804,37 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
               loadOriginal={async () =>
                 (await httpDownloadBinary(`/api/one/devops/rag/documents/${editTarget.id}/source`)).blob
               }
-              uploadOriginal={(file) =>
-                httpUploadMultipart<RagDocumentEntry>(
+              uploadOriginal={async (file) => {
+                let content: string | null = null;
+                try {
+                  const { extractLibraryText } = await import('../../knowledge/original/extractLibraryText');
+                  content = await extractLibraryText(file);
+                } catch {
+                  // Preserve the original even when its text cannot be extracted.
+                }
+                const metadata = await httpUploadMultipart<RagDocumentEntry>(
                   `/api/one/devops/rag/documents/${editTarget.id}/source`,
                   file,
                   'file',
                   { timeoutMs: 120000 }
-                )
-              }
+                );
+                setEditTarget(metadata);
+                let savedContent = '';
+                if (content?.trim()) {
+                  try {
+                    await ipcBridge.oneDevops.setRagContent.invoke({ id: metadata.id, content });
+                    savedContent = content;
+                  } catch {
+                    Message.error(t('common.knowledgeLibrary.saveFailed'));
+                  }
+                } else {
+                  Message.info(`${t('common.knowledgeLibrary.importSourceOnly')} ${file.name}`);
+                }
+                originalContent.current = savedContent;
+                setEditContent(savedContent);
+                void refresh();
+                return metadata;
+              }}
               title={editTarget.title}
               location={
                 libraries.find(

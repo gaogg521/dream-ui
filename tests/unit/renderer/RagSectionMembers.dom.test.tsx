@@ -42,6 +42,7 @@ vi.mock('@/common', () => ({
       listRagLibraries: { invoke: vi.fn(async () => [{ id: 'shared-lib', name: 'Shared library' }]) },
       registerRagDocument: { invoke: mocks.register },
       setRagContent: { invoke: mocks.setContent },
+      getRagContent: { invoke: vi.fn(async () => 'Previous original text') },
       listRagDocuments: { invoke: vi.fn(async () => mocks.docs) },
       getRagConfig: { invoke: vi.fn(async () => ({ baseUrl: '', model: '' })) },
     },
@@ -189,5 +190,47 @@ describe('RagSection for company members', () => {
     expect(mocks.upload).toHaveBeenCalledWith('/api/one/devops/rag/documents/new-doc/source', file, 'file', {
       timeoutMs: 120000,
     });
+  });
+  it('extracts replacement text and updates the existing document instead of keeping its old search body', async () => {
+    mocks.context = null;
+    const file = new File(['Replacement unique body'], 'replacement.txt', { type: 'text/plain' });
+    Object.defineProperty(file, 'text', { value: async () => 'Replacement unique body' });
+    mocks.upload.mockResolvedValueOnce({ ...doc('d2', 'My notes', 'personal'), filePath: 'rag-source:new' });
+    render(
+      <RagSection
+        renderLibrary={(props) => {
+          const document = props.documentView as
+            | React.ReactElement<{
+                uploadOriginal: (file: File) => Promise<unknown>;
+                content: string;
+                onBack: () => void;
+              }>
+            | undefined;
+          return (
+            <>
+              <button
+                disabled={!props.rows.some((row) => row.id === 'd2')}
+                onClick={() => props.onOpen(props.rows.find((row) => row.id === 'd2')!)}
+              >
+                Open document
+              </button>
+              {document && <button onClick={() => void document.props.uploadOriginal(file)}>Replace original</button>}
+              {document && <button onClick={document.props.onBack}>Close document</button>}
+              {document && <span>{document.props.content}</span>}
+            </>
+          );
+        }}
+      />
+    );
+    await waitFor(() => expect(screen.getByText('Open document')).toBeEnabled());
+    fireEvent.click(screen.getByText('Open document'));
+    fireEvent.click(await screen.findByText('Replace original'));
+    await waitFor(() =>
+      expect(mocks.setContent).toHaveBeenCalledWith({ id: 'd2', content: 'Replacement unique body' })
+    );
+    expect(mocks.register).not.toHaveBeenCalled();
+    expect(screen.getByText('Replacement unique body')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Close document'));
+    expect(screen.queryByText('Replace original')).not.toBeInTheDocument();
   });
 });
