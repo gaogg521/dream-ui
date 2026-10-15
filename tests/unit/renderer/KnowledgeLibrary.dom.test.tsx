@@ -50,6 +50,19 @@ const setup = (isEnterprise = true, overrides: Partial<RagLibraryProps> = {}) =>
   return { onOpen };
 };
 describe('Knowledge library browsing', () => {
+  it('opens built-in guides inline without creating user documents and keeps navigation available', () => {
+    const onCreate = vi.fn();
+    setup(false, { onCreate });
+    fireEvent.click(screen.getAllByRole('button', { name: /quickstartGuide/ })[0]);
+    expect(screen.getByRole('heading', { name: 'Get started with your library' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'usageGuide' }));
+    expect(screen.getByRole('heading', { name: 'Library user guide' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'backToLibrary' }));
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(onCreate).not.toHaveBeenCalled();
+  });
+
   beforeEach(() => {
     localStorage.clear();
     filterDocuments.mockReset().mockResolvedValue([]);

@@ -1,8 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Alert, Button, Spin } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { sourceKind } from './sourceKind';
 import styles from '../KnowledgeLibrary.module.css';
+const WordOriginal = lazy(() => import('./WordOriginal'));
+const SlidesOriginal = lazy(() => import('./SlidesOriginal'));
+const SheetsOriginal = lazy(() => import('./SheetsOriginal'));
+const HtmlOriginal = lazy(() => import('./HtmlOriginal'));
 
 type Props = { id: string; title: string; mime: string; load: () => Promise<Blob> };
 export default function OriginalFileViewer({ id, title, mime, load }: Props) {
@@ -10,13 +14,13 @@ export default function OriginalFileViewer({ id, title, mime, load }: Props) {
   const latestLoad = useRef(load);
   latestLoad.current = load;
   const [url, setUrl] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
     let objectUrl = '';
     setUrl('');
-    setError('');
+    setError(false);
     void latestLoad
       .current()
       .then((blob) => {
@@ -25,20 +29,20 @@ export default function OriginalFileViewer({ id, title, mime, load }: Props) {
         setUrl(objectUrl);
       })
       .catch(() => {
-        if (active) setError(t('common.knowledgeLibrary.originalLoadFailed'));
+        if (active) setError(true);
       });
     return () => {
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [id, mime, attempt, t]);
+  }, [id, mime, attempt]);
   if (error)
     return (
       <Alert
         type='error'
         content={
           <>
-            {error}
+            {t('common.knowledgeLibrary.originalLoadFailed')}
             <Button onClick={() => setAttempt((value) => value + 1)}>
               {t('common.knowledgeLibrary.retryOriginal')}
             </Button>
@@ -52,6 +56,18 @@ export default function OriginalFileViewer({ id, title, mime, load }: Props) {
     <div className={styles.originalViewer}>
       {kind === 'pdf' ? (
         <iframe title={title} src={`${url}#toolbar=1&navpanes=1`} className={styles.originalFrame} />
+      ) : kind === 'word' ? (
+        <Suspense fallback={<Spin tip={t('common.loading')} />}>
+          <WordOriginal url={url} title={title} />
+        </Suspense>
+      ) : kind === 'slides' ? (
+        <Suspense fallback={<Spin tip={t('common.loading')} />}>
+          <SlidesOriginal url={url} title={title} />
+        </Suspense>
+      ) : kind === 'sheets' ? (
+        <Suspense fallback={<Spin tip={t('common.loading')} />}>
+          <SheetsOriginal url={url} title={title} />
+        </Suspense>
       ) : kind === 'image' ? (
         <img alt={title} src={url} className={styles.originalImage} />
       ) : kind === 'video' ? (
@@ -59,7 +75,9 @@ export default function OriginalFileViewer({ id, title, mime, load }: Props) {
       ) : kind === 'audio' ? (
         <audio aria-label={title} controls preload='metadata' src={url} />
       ) : kind === 'html' ? (
-        <iframe title={title} src={url} sandbox='' className={styles.originalFrame} />
+        <Suspense fallback={<Spin tip={t('common.loading')} />}>
+          <HtmlOriginal url={url} title={title} />
+        </Suspense>
       ) : (
         <Alert type='info' content={t('common.knowledgeLibrary.originalUnsupported')} />
       )}

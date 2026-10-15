@@ -129,7 +129,7 @@ describe('inline knowledge document', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByTestId('knowledge-document')).toBeInTheDocument();
   });
-  it('previews HTML in an isolated frame with no script or same-origin privileges', () => {
+  it('runs self-contained HTML while isolating the app and blocking external connections', () => {
     render(
       <LibraryDocument
         {...props}
@@ -140,7 +140,9 @@ describe('inline knowledge document', () => {
     );
     const frame = screen.getByTestId('knowledge-document').querySelector('iframe')!;
     expect(frame.tagName).toBe('IFRAME');
-    expect(frame.getAttribute('sandbox')).toBe('');
+    expect(frame.getAttribute('sandbox')).toBe('allow-scripts');
+    expect(frame.getAttribute('srcdoc')).toContain("connect-src 'none'");
+    expect(frame.getAttribute('srcdoc')).toContain("default-src 'none'");
     expect(frame.getAttribute('srcdoc')).toContain('<h1>Preview</h1>');
   });
 });

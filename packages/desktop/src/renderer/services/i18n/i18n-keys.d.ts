@@ -580,6 +580,7 @@ export type I18nKey =
   | 'common.knowledgeLibrary.search'
   | 'common.knowledgeLibrary.searchDescription'
   | 'common.knowledgeLibrary.searchTitle'
+  | 'common.knowledgeLibrary.sheetPreviewNote'
   | 'common.knowledgeLibrary.source'
   | 'common.knowledgeLibrary.spaceName'
   | 'common.knowledgeLibrary.startDescription'

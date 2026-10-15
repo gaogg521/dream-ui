@@ -8,9 +8,11 @@ import { Alert, Button, Input, Message, Dropdown, Menu, Upload } from '@arco-des
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkTableBreaks from './remarkTableBreaks';
 import CsvDocument from './CsvDocument';
 import styles from './KnowledgeLibrary.module.css';
 import OriginalFileViewer from './original/OriginalFileViewer';
+import HtmlOriginal from './original/HtmlOriginal';
 
 export function RichDocumentEditor({
   value,
@@ -373,14 +375,14 @@ export default function LibraryDocument(props: Props) {
               <div className={styles.documentPaper}>{t('common.loading')}</div>
             ) : props.reading ? (
               html ? (
-                <iframe title={props.title} sandbox='' srcDoc={props.content} className={styles.htmlPreview} />
+                <HtmlOriginal title={props.title} content={props.content} />
               ) : (
                 <article className={styles.documentPaper}>
                   {csv ? (
                     <CsvDocument value={props.content} readOnly />
                   ) : (
                     <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
+                      remarkPlugins={[remarkGfm, remarkTableBreaks]}
                       urlTransform={(url) =>
                         /^(https?:|mailto:|#|\/|data:image\/(png|jpeg|gif|webp);base64,)/i.test(url) ? url : ''
                       }

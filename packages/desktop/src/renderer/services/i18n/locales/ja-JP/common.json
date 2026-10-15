@@ -816,6 +816,7 @@
     "usageGuideDescription": "顧客資料、議事録、プロジェクト一覧で学びます。",
     "originalLoadFailed": "元のファイルを読み込めません",
     "retryOriginal": "再試行",
+    "sheetPreviewNote": "データプレビュー：値と結合セルに対応し、最大2000行・100列を表示します。グラフと元の書式には未対応です。完全なブックは元のファイルをダウンロードしてください。",
     "originalUnsupported": "この形式はオンラインプレビューに未対応です。元のファイルはダウンロードできます。",
     "downloadOriginal": "元のファイルをダウンロード",
     "replaceOriginal": "元のファイルを置換",

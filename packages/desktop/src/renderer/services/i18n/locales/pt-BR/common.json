@@ -816,6 +816,7 @@
     "usageGuideDescription": "Aprenda com arquivos de clientes, notas de reuniões e listas de projetos.",
     "originalLoadFailed": "Não foi possível carregar o original",
     "retryOriginal": "Tentar novamente",
+    "sheetPreviewNote": "Prévia dos dados: valores e células mescladas, até 2.000 linhas e 100 colunas. Gráficos e estilo original não são exibidos. Baixe o original para ver a pasta de trabalho completa.",
     "originalUnsupported": "Este formato não tem prévia online. O original pode ser baixado.",
     "downloadOriginal": "Baixar original",
     "replaceOriginal": "Substituir original",
