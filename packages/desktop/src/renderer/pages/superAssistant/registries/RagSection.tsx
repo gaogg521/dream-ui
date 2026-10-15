@@ -732,13 +732,15 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
                       legitimately disagree — a keyword-only match ranks high with
                       a modest similarity — so the badge is labelled rather than
                       shown bare, which would read as a sorting bug. */}
-                  <Tag size='small' color='arcoblue' title={t('common.superAssistant.rag.similarityTooltip')}>
-                    {t('common.superAssistant.rag.similarityBadge', { value: hit.score.toFixed(3) })}
-                  </Tag>
+                  {!renderLibrary && (
+                    <Tag size='small' color='arcoblue' title={t('common.superAssistant.rag.similarityTooltip')}>
+                      {t('common.superAssistant.rag.similarityBadge', { value: hit.score.toFixed(3) })}
+                    </Tag>
+                  )}
                   {renderLibrary && rows.some((row) => row.id === hit.documentId) ? (
                     <button
                       type='button'
-                      className='cursor-pointer border-0 bg-transparent p-0 text-left text-primary hover:underline'
+                      className='cursor-pointer border-0 bg-transparent p-0 text-left text-16px font-500 text-t-primary hover:underline'
                       onClick={() => {
                         const document = rows.find((row) => row.id === hit.documentId);
                         if (document) void openEdit(document);
