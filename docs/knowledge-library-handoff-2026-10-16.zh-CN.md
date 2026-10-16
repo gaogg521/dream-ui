@@ -299,7 +299,7 @@ docker build --build-context ort-cache=/mnt/d/dream/outputs/ort-linux-cache-1016
 2. 个人文件菜单最新方案已通过 Word 菜单与中文保存实测，但需要在 Excel/PPT 同样回归；其他引擎菜单如导出、发送、打印/打印设置仍未完整测试，不要宣称每个菜单都可用。WASM 文件对话框已实际发现异常，后续应消除不受支持入口或实现产品内下载流程。
 3. 浏览器真正的后退/前进 popstate、硬关闭、强制刷新、长时间断网、保存并发与冲突提示需继续做真实 E2E。当前 navigator 包装与页面切换 guard，不等于全部浏览器生命周期都受保护。
 4. 对企业真实只读成员、被撤销成员、AD 禁用成员做完整 UI/API 联动验收。现有后端测试覆盖撤销与拒绝，但不替代所有真实账号场景。
-5. “默认向量索引”要补全新 profile/全新企业安装验收：已实现保存/导入自动排队并有索引就绪证据，但**关键词正文命中不证明新安装默认向量模型可用，也不证明语义检索已实测通过**。核对实际 embedding 配置、离线模型资源和失败反馈。
+5. ~~“默认向量索引”要补全新 profile/全新企业安装验收~~ **已完成（10-16 当日，附重大修复）**：干净缓存目录（模拟全新安装）实测通过——后端自行按 HuggingFace 缓存布局下载量化 MiniLM 模型（约 235 MB，按模型 API 元数据校验大小、原子落盘、`refs/main` 最后写入），产出 384 维向量，且改写中文查询句的余弦相似度高于无关文档（语义检索真实可用，非仅关键词命中）。**修复**：此前发现 hf-hub 0.5.0 的下载路径在 Windows 安全策略令 `CreateSymbolicLinkW` 假成功（返回 Ok 但不建链接）的机器上必然 panic（`assert!(pointer_path.exists())`），全新安装无法初始化本地模型；现由后端自建缓存绕开该路径，并对 fastembed 初始化包 `catch_unwind`，panic 转为文档级 `status='error'` + `last_error`，不再杀死 worker。测试：`cargo test -p dream-domain-devops --lib embedding::`（15 项）与 `--test local_embedding_fresh_install -- --ignored`（全新安装实测，需网络）。注意：`provider_channel::tests::probe_reports_an_unreachable_upstream_as_not_ok` 在本机网络环境预存失败（不可达上游被探出 502），与本次改动无关；`fake_openai_provider` 测试原有竞态（服务端未读 body 即响应）已修复为按 Content-Length 读全。
 6. 更新文档内较早的待验收描述为清晰状态表，避免历史段落让后续 AI 误判。
 
 ### 产品差距
