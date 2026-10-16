@@ -77,7 +77,13 @@ export default function OriginalFileViewer({ id, title, mime, load, uploadOrigin
         </Suspense>
       ) : kind === 'sheets' ? (
         <Suspense fallback={<Spin tip={t('common.loading')} />}>
-          <SheetsOriginal url={url} title={title} uploadOriginal={uploadOriginal} startEditing={startEditing} onSaved={onSaved} />
+          <SheetsOriginal
+            url={url}
+            title={title}
+            uploadOriginal={uploadOriginal}
+            startEditing={startEditing}
+            onSaved={onSaved}
+          />
         </Suspense>
       ) : kind === 'image' ? (
         <img alt={title} src={url} className={styles.originalImage} />

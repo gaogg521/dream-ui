@@ -502,3 +502,13 @@ PDF 渲染内核本身没问题（截图中文本/分页正常），差距在壳
 - **企业后台 ✓**：view 模式直开（"阅读"）→ 解锁 → **键入级保存闭环**（键入 E1017 → "已自动保存"，含后端回调确认）——此前自动化键入的短板已补。
 - **单机↔企业联动 ✓**：桌面注入企业会话（`one-enterprise:session` + server-url 25809，httpBridge 即时生效）→ 企业文档在桌面资料库可见 → 桌面打开企业 docx → **内网 ONLYOFFICE 编辑器 view 直开（"阅读"）→ 解锁到编辑模式**——dream-ui IntranetOfficeEditor 的 locked 路径首次真机验证。
 - 注意：联动测试给 DEV 注入了 admin@25809 的企业会话（localStorage 三个 `one-enterprise:*` 键）；恢复个人版 = 清除这三个键或退出企业登录。
+
+### 10.15 打包前审计：修正企业接线提交缺失（10-17）
+
+**重要更正**：§10.10 曾报告企业接线三提交（auth 门禁槽位 / 企业 app 接线 / Dockerfile ORT）"已推送"——实际它们只存在于本地 worktree（push-core-1016），**从未推送**；当时 QA 镜像能跑是因为 codex 从含接线的工作区构建。打包前审计发现后已补救：rebase 到 0.1.89（Dockerfile 提交因上游等价改动被自动丢弃）→ enterprise 编译通过 → **origin/main = `1b9b028`（0.1.89 + auth 门禁 + 企业接线）**。
+
+**打包要点**：
+
+- 企业镜像必须从 **`1b9b028` 或之后的 main** 构建——**`v0.1.89` tag 不含企业 Office 接线路由，直接按 tag 打包会 404**（建议让 release-please 出 0.1.90 或直接按 main 构建）。
+- 客户端（dream-ui `d581e896`）与 admin-web（dream-en `5c19220`，构建产物需进部署包）均已就绪。
+- 各仓工作区仍有其他任务 WIP（ui 6+1、core 34+4、en 65+11），打包务必从干净 checkout 构建。
