@@ -71,7 +71,7 @@ describe('OpenAiImagesAdapter', () => {
     expect(outcome.assets).toHaveLength(2);
     for (const asset of outcome.assets) {
       expect(asset.kind).toBe('image');
-      await expect(fs.promises.access(asset.filePath)).resolves.toBeUndefined();
+      expect(fs.existsSync(asset.filePath)).toBe(true);
       expect(path.isAbsolute(asset.filePath)).toBe(true);
     }
     // Distinct filenames despite same timestamp base

@@ -133,7 +133,7 @@ describe('TaskPollAdapter protocol fallback', () => {
 
     expect(outcome.success).toBe(true);
     expect(outcome.assets).toHaveLength(1);
-    await expect(fs.promises.access(outcome.assets[0].filePath)).resolves.toBeUndefined();
+    expect(fs.existsSync(outcome.assets[0].filePath)).toBe(true);
     // Reported so the job engine can store it — without this the probe is
     // re-bought on every generation.
     expect(switched).toEqual(['seedance-gateway']);

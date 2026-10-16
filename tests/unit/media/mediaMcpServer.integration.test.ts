@@ -160,7 +160,7 @@ describe('media MCP TCP service (integration)', () => {
 
     const assetPath = result?.job?.assets?.[0]?.filePath;
     expect(assetPath).toBeTruthy();
-    await expect(fs.promises.access(assetPath!)).resolves.toBeUndefined();
+    expect(fs.existsSync(assetPath!)).toBe(true);
 
     // Credentials are resolved in the main process, never shipped to the caller.
     expect(seenAuth).toContain('Bearer sk-secret');

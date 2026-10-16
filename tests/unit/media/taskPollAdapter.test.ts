@@ -99,7 +99,7 @@ describe('TaskPollAdapter (Form C)', () => {
 
     expect(outcome.success).toBe(true);
     expect(outcome.assets).toHaveLength(1);
-    await expect(fs.promises.access(outcome.assets[0].filePath)).resolves.toBeUndefined();
+    expect(fs.existsSync(outcome.assets[0].filePath)).toBe(true);
     // The id must surface before polling begins so the job engine can persist it.
     expect(submitted).toEqual(['task-abc']);
     expect(stages).toContain('submitted');

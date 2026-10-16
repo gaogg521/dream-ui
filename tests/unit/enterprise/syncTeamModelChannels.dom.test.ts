@@ -133,7 +133,9 @@ describe('syncTeamModelChannels', () => {
         baseUrl: 'https://one.corp.example/api/one/model-proxy/ochan_1',
         token: 'onech-ochan_1',
         models: ['gpt-image-2'],
-        modelSettings: undefined,
+        // Media models derive settings from the channel's model list.
+        modelSettings: { 'gpt-image-2': { model_kind: 'image' } },
+        modelProtocols: undefined,
       },
     ]);
   });
