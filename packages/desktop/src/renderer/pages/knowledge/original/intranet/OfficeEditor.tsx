@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function OfficeEditor(props: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { navigator } = useContext(UNSAFE_NavigationContext);
   const elementId = `knowledge-office-${useId().replace(/:/g, '')}`;
   const latest = useRef(props);
@@ -115,6 +115,12 @@ export default function OfficeEditor(props: Props) {
         if (disposed) return;
         editor = new api.DocEditor(elementId, {
           ...session.config,
+          editorConfig: {
+            ...(session.config as { editorConfig?: Record<string, unknown> }).editorConfig,
+            // Follow the app UI language; ONLYOFFICE falls back to English for
+            // locales its distribution does not ship.
+            lang: /^[a-z]{2}(-[A-Z]{2,3})?$/.test(i18n.language) ? i18n.language : 'en',
+          },
           events: {
             onDocumentReady: () => {
               if (!disposed) {

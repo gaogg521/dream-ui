@@ -38,6 +38,18 @@ function configureManagedDocument(context) {
   }
   configuration.commitChanges();
 }
+function configureUiLocale(context) {
+  const provider = context
+    .getServiceManager()
+    .createInstanceWithContext('com.sun.star.configuration.ConfigurationProvider', context);
+  const l10n = provider.createInstanceWithArguments('com.sun.star.configuration.ConfigurationUpdateAccess', [
+    new css.beans.PropertyValue({ Name: 'nodepath', Value: '/org.openoffice.Setup/L10N' }),
+  ]);
+  // zh-CN when the engine embeds the localization, else this is a no-op and
+  // the UI stays en-US; verify by reading the menu bar after a fresh boot.
+  l10n.setPropertyValue('ooLocale', 'zh-CN');
+  l10n.commitChanges();
+}
 function removeExternalFileControls(context) {
   const supplier = context.getValueByName('/singletons/com.sun.star.ui.theModuleUIConfigurationManagerSupplier');
   const module = [
@@ -95,11 +107,35 @@ Module.zetajs.then((api) => {
     try {
       if (data.cmd === 'load') {
         configureManagedDocument(office.getUnoComponentContext());
-        model = desktop.loadComponentFromURL(`file:///tmp/office/${data.fileName}`, '_default', 0, [
-          new css.beans.PropertyValue({ Name: 'MacroExecutionMode', Value: 0 }),
-        ]);
+        configureUiLocale(office.getUnoComponentContext());
+        const descriptors = [new css.beans.PropertyValue({ Name: 'MacroExecutionMode', Value: 0 })];
+        if (data.readOnly === true) {
+          // Viewer mode for the unified open path; .uno:EditDoc unlocks.
+          descriptors.push(new css.beans.PropertyValue({ Name: 'ReadOnly', Value: true }));
+        }
+        model = desktop.loadComponentFromURL(`file:///tmp/office/${data.fileName}`, '_default', 0, descriptors);
         removeExternalFileControls(office.getUnoComponentContext());
         model.getCurrentController().getFrame().getContainerWindow().FullScreen = true;
+        listener = office.unoObject([css.util.XModifyListener], {
+          disposing() {},
+          modified() {
+            if (model.isModified()) office.mainPort.postMessage({ cmd: 'dirty' });
+          },
+        });
+        model.addModifyListener(listener);
+        office.mainPort.postMessage({ cmd: 'ready' });
+      } else if (data.cmd === 'unlock') {
+        // .uno:EditDoc unlocks in place but may swap the internal model,
+        // silently detaching the modify listener — re-acquire the live model
+        // and re-attach so the save bridge keeps working. Closing and
+        // reloading here tears down the WASM kit, so never do that.
+        try {
+          model.removeModifyListener(listener);
+        } catch (error) {
+          office.mainPort.postMessage({ cmd: 'error', message: String(error) });
+        }
+        const current = desktop.getCurrentComponent();
+        if (current) model = current;
         listener = office.unoObject([css.util.XModifyListener], {
           disposing() {},
           modified() {

@@ -74,6 +74,7 @@ host.onFlush((id) => {
       host.flushed(id, false);
     });
 });
+host.onUnlock(() => port?.postMessage({ cmd: 'unlock', fileName }));
 const inputBridge = window.__installOfficeInput(canvas);
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 canvas.addEventListener('wheel', (event) => event.preventDefault(), { passive: false });
@@ -95,7 +96,7 @@ script.onload = () => {
             const bytes = Uint8Array.from(atob(document.base64), (character) => character.charCodeAt(0));
             FS.mkdirTree('/tmp/office');
             FS.writeFile(`/tmp/office/${fileName}`, bytes);
-            port.postMessage({ cmd: 'load', fileName });
+            port.postMessage({ cmd: 'load', fileName, readOnly: document.readOnly === true });
           } else if (data.cmd === 'ready') {
             window.dispatchEvent(new Event('resize'));
             canvas.style.visibility = 'visible';

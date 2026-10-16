@@ -200,6 +200,7 @@ type Props = {
 
 export default function LibraryDocument(props: Props) {
   const [officeEditing, setOfficeEditing] = useState(false);
+  const [officeLocked, setOfficeLocked] = useState(true);
   const officeGuard = useRef<(() => Promise<boolean>) | null>(null);
   const registerOfficeGuard = (guard: (() => Promise<boolean>) | null) => {
     officeGuard.current = guard;
@@ -231,6 +232,15 @@ export default function LibraryDocument(props: Props) {
     officeExtension &&
     props.canEdit &&
     (useIntranet || (!isEnterpriseRemoteActive() && window.__offlineOffice && props.uploadOriginal));
+  // Unified open path: editable Office originals go straight into the engine
+  // viewer; 编辑 merely unlocks the running session.
+  const officeAutoEntered = useRef(false);
+  useEffect(() => {
+    if (canEditOffice && !officeAutoEntered.current) {
+      officeAutoEntered.current = true;
+      setOfficeEditing(true);
+    }
+  }, [canEditOffice]);
   const pageRef = useRef<HTMLElement>(null);
   const [autoStatus, setAutoStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const submitted = useRef(JSON.stringify([props.title, props.content]));
@@ -317,18 +327,8 @@ export default function LibraryDocument(props: Props) {
           <span title={props.location}>{props.location}</span>
         </div>
         <div className={styles.documentCommands}>
-          {canEditOffice && (
-            <Button
-              onClick={() => {
-                if (!officeEditing) setOfficeEditing(true);
-                else
-                  void officeGuard.current?.().then((saved) => {
-                    if (saved) setOfficeEditing(false);
-                  });
-              }}
-            >
-              {t(officeEditing ? 'common.knowledgeLibrary.read' : 'common.edit')}
-            </Button>
+          {canEditOffice && officeEditing && officeLocked && (
+            <Button onClick={() => setOfficeLocked(false)}>{t('common.edit')}</Button>
           )}
           {props.canEdit && !original && (
             <span className={styles.editorHint} role='status'>
@@ -337,7 +337,7 @@ export default function LibraryDocument(props: Props) {
               )}
             </span>
           )}
-          {props.documentId && props.uploadOriginal && props.canEdit && !officeEditing && (
+          {props.documentId && props.uploadOriginal && props.canEdit && (!officeEditing || officeLocked) && (
             <Upload
               showUploadList={false}
               beforeUpload={(file) => {
@@ -346,13 +346,24 @@ export default function LibraryDocument(props: Props) {
                   return false;
                 }
                 setUploadingSource(true);
-                void props.uploadOriginal!(file)
-                  .then((metadata) => {
-                    setSource(metadata);
-                    props.onReading(true);
-                  })
-                  .catch(() => Message.error(t('common.knowledgeLibrary.originalUploadFailed')))
-                  .finally(() => setUploadingSource(false));
+                // Replacement must not race the open engine session: flush any
+                // pending bytes, drop the session, then re-enter on the new file.
+                const settle =
+                  officeEditing && !officeLocked
+                    ? Promise.resolve(officeGuard.current?.() ?? true).catch(() => false)
+                    : Promise.resolve(true);
+                void settle.finally(() => {
+                  setOfficeEditing(false);
+                  setOfficeLocked(true);
+                  officeAutoEntered.current = false;
+                  void props.uploadOriginal!(file)
+                    .then((metadata) => {
+                      setSource(metadata);
+                      props.onReading(true);
+                    })
+                    .catch(() => Message.error(t('common.knowledgeLibrary.originalUploadFailed')))
+                    .finally(() => setUploadingSource(false));
+                });
                 return false;
               }}
             >
@@ -416,6 +427,7 @@ export default function LibraryDocument(props: Props) {
             <OfflineOfficeEditor
               fileName={/\.(docx|xlsx|pptx)$/i.test(props.title) ? props.title : `${props.title}${officeExtension}`}
               mime={sourceMime}
+              locked={officeLocked}
               load={props.loadOriginal!}
               save={props.uploadOriginal!}
               registerBeforeLeave={registerOfficeGuard}

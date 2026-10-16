@@ -7,6 +7,8 @@ import type { OfficeEvent } from '@/common/types/offlineOffice';
 type Props = {
   fileName: string;
   mime: string;
+  /** Viewer-first unified open path: true opens the engine read-only. */
+  locked?: boolean;
   load: () => Promise<Blob>;
   save: (file: File) => Promise<unknown>;
   registerBeforeLeave: (guard: (() => Promise<boolean>) | null) => void;
@@ -166,7 +168,12 @@ export default function OfflineOfficeEditor(props: Props) {
       )
       .then(async (base64) => {
         if (disposed) return;
-        const opened = await api.open({ fileName: latest.current.fileName, base64, bounds: bounds() });
+        const opened = await api.open({
+          fileName: latest.current.fileName,
+          base64,
+          bounds: bounds(),
+          readOnly: latest.current.locked === true,
+        });
         id = opened.sessionId;
         if (disposed) {
           await api.close(id);
@@ -192,12 +199,17 @@ export default function OfflineOfficeEditor(props: Props) {
       latest.current.registerBeforeLeave(null);
       if (id) void api.close(id);
     };
-  }, []);
+    // Unlock re-runs this effect: the read-only session is closed and a fresh
+    // editable one opens, because unlocking in place (.uno:EditDoc) detaches
+    // the modify listener and drops engine keyboard input.
+  }, [props.locked]);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 500 }}>
       <div role='status' style={{ padding: '8px 16px' }}>
         {status === 'loading' ? (
           <Spin />
+        ) : latest.current.locked === true && status === 'ready' ? (
+          t('common.knowledgeLibrary.read')
         ) : (
           t(
             `common.knowledgeLibrary.${status === 'error' ? 'saveFailed' : status === 'saving' ? 'saving' : status === 'saved' ? 'autoSaved' : 'autoSave'}`

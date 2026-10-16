@@ -10,6 +10,7 @@ type OfficeSession = {
   view: WebContentsView;
   fileName: string;
   base64: string;
+  readOnly: boolean;
   revision: number;
   ready: boolean;
   visible: boolean;
@@ -95,7 +96,7 @@ async function flush(session: OfficeSession): Promise<boolean> {
 export function initOfflineOffice(): void {
   ipcMain.handle(
     'offline-office:open',
-    async (event, request: { fileName: string; base64: string; bounds: OfficeBounds }) => {
+    async (event, request: { fileName: string; base64: string; bounds: OfficeBounds; readOnly?: boolean }) => {
       const owner = BrowserWindow.fromWebContents(event.sender);
       if (!owner || event.senderFrame !== event.sender.mainFrame)
         throw new Error('Office requires an application window');
@@ -145,6 +146,7 @@ export function initOfflineOffice(): void {
         view,
         fileName: `document${extension}`,
         base64: request.base64,
+        readOnly: request.readOnly === true,
         revision: 0,
         ready: false,
         visible: true,
@@ -218,6 +220,11 @@ export function initOfflineOffice(): void {
     return snapshot;
   });
   ipcMain.handle('offline-office:flush', (event, id: string) => flush(owned(event, id)));
+  ipcMain.handle('offline-office:unlock', (event, id: string) => {
+    const session = owned(event, id);
+    session.readOnly = false;
+    session.view.webContents.send('office-engine:unlock');
+  });
   ipcMain.handle('offline-office:close', (event, id: string) => dispose(owned(event, id)));
   ipcMain.handle('offline-office:acknowledge', (event, id: string, revision: number, error?: string) => {
     const pending = owned(event, id).acknowledgements.get(revision);
@@ -226,7 +233,12 @@ export function initOfflineOffice(): void {
   });
   ipcMain.handle('office-engine:document', (event) => {
     const session = engine(event);
-    const result = { fileName: session.fileName, base64: session.base64, debug: !app.isPackaged };
+    const result = {
+      fileName: session.fileName,
+      base64: session.base64,
+      readOnly: session.readOnly,
+      debug: !app.isPackaged,
+    };
     session.base64 = '';
     return result;
   });

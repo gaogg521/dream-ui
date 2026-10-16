@@ -7,7 +7,13 @@ export type OfficeEvent = {
   message?: string;
 };
 export type OfflineOfficeApi = {
-  open: (request: { fileName: string; base64: string; bounds: OfficeBounds }) => Promise<{ sessionId: string }>;
+  open: (request: {
+    fileName: string;
+    base64: string;
+    bounds: OfficeBounds;
+    readOnly?: boolean;
+  }) => Promise<{ sessionId: string }>;
+  unlock: (sessionId: string) => Promise<void>;
   bounds: (sessionId: string, bounds: OfficeBounds) => Promise<void>;
   visibility: (sessionId: string, visible: boolean) => Promise<string | null>;
   flush: (sessionId: string) => Promise<boolean>;

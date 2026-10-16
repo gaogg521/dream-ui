@@ -12,7 +12,9 @@ const mocks = vi.hoisted(() => ({
   destroy: vi.fn(),
   config: {} as Record<string, unknown>,
 }));
-vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key.split('.').at(-1) }) }));
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key.split('.').at(-1), i18n: { language: 'zh-CN' } }),
+}));
 vi.mock('@/renderer/pages/knowledge/original/intranet/officeApi', () => ({
   officeApi: { open: mocks.open, flush: mocks.flush },
   loadOfficeApi: mocks.load,
