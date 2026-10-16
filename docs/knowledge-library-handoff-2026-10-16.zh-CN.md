@@ -487,3 +487,5 @@ PDF 渲染内核本身没问题（截图中文本/分页正常），差距在壳
 - **个人端中文工具栏**：引擎加载时 `.uno:Menubar` 折叠英文菜单栏（canvas OCR 验证消失）；宿主渲染中文快捷工具栏（撤销/重做/加粗/斜体/下划线/保存），经 `offline-office:dispatch` IPC → 线程 DispatchHelper 发 `.uno:*` 命令（命令名白名单校验）。语言键覆盖全部 13 个语言包（common.officeToolbar.\*）。引擎自带工具栏（图标为主）仍在，专业化整合时再处理。
 - **PDF 查看器正式化**：弃用 Chromium 原生插件 iframe（英文工具栏 + 裸加载百分比直达用户），新增 `PdfJsOriginal`——pdf.js 渲染 + 中文壳（页码 ‹ › 翻页、适宽 112% 实测、±缩放、用户手动缩放后不再自动重适）。已验证 51 页文档整页渲染清晰（canvas 像素 OCR）。坑：pdf.js 5.7 依赖 `Map.getOrInsertComputed`，Electron 142 渲染层还没有——组件内已内联 polyfill。
 - 验证方法沉淀：canvas 像素 toDataURL → OCR；DOM 布局链排查（canvas 252px 之谜 = 根容器没撑满父级，width:100% 解决）。
+
+- **预存 5 个失败测试已修复并推送 `2d06dba1`，pre-push 门禁恢复全绿**（这是自门禁被挡以来第一次不带 --no-verify 的推送）：① 媒体四件套根因是 vitest 的 fs 包装层让 `fs.promises.access` 解析为 **null** 而非 undefined（文件其实存在），断言改为 `fs.existsSync`；② syncTeamModelChannels 的期望缺了媒体模型推送引入的派生 `modelSettings` 与 `modelProtocols` 字段。
