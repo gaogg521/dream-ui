@@ -896,6 +896,14 @@
     "backToLibrary": "Back to library",
     "documentContent": "Document content"
   },
+  "officeToolbar": {
+    "undo": "元に戻す",
+    "redo": "やり直し",
+    "bold": "太字",
+    "italic": "斜体",
+    "underline": "下線",
+    "save": "保存"
+  },
   "required": "必須",
   "yes": "はい",
   "no": "いいえ",

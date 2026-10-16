@@ -896,6 +896,14 @@
     "backToLibrary": "Back to library",
     "documentContent": "Document content"
   },
+  "officeToolbar": {
+    "undo": "برگشت",
+    "redo": "بازانجام",
+    "bold": "ضخیم",
+    "italic": "مورب",
+    "underline": "زیرخط",
+    "save": "ذخیره"
+  },
   "required": "الزامی",
   "yes": "بله",
   "no": "خیر",

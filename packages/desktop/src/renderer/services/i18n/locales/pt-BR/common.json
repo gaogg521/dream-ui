@@ -896,6 +896,14 @@
     "backToLibrary": "Back to library",
     "documentContent": "Document content"
   },
+  "officeToolbar": {
+    "undo": "Desfazer",
+    "redo": "Refazer",
+    "bold": "Negrito",
+    "italic": "Itálico",
+    "underline": "Sublinhado",
+    "save": "Salvar"
+  },
   "required": "Obrigatório",
   "yes": "Sim",
   "no": "Não",

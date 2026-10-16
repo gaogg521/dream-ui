@@ -899,6 +899,14 @@
     "backToLibrary": "Back to library",
     "documentContent": "Document content"
   },
+  "officeToolbar": {
+    "undo": "Скасувати",
+    "redo": "Повторити",
+    "bold": "Жирний",
+    "italic": "Курсив",
+    "underline": "Підкреслений",
+    "save": "Зберегти"
+  },
   "required": "Обов’язково",
   "yes": "Так",
   "no": "Ні",

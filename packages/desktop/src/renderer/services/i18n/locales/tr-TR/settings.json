@@ -469,10 +469,6 @@
         "title": "Poster Tasarım Stüdyosu",
         "desc": "Bir konuyu, ürün fotoğrafını veya marka referanslarını durup bakılacak bir postere dönüştürür."
       },
-      "ppt-studio": {
-        "title": "PPT Stüdyosu",
-        "desc": "Tek bir istemle tema ve düzenleri hazır sunumlar, saniyeler içinde."
-      },
       "price-compare": {
         "title": "Fiyat Karşılaştırma",
         "desc": "Birkaç ürünü fiyat ve özelliklere göre karşılaştırır; hangisinin en ucuz, hangisinin daha iyi alım olduğunu söyler."
@@ -2201,7 +2197,7 @@
     "menuLabel": "Kullanımı sorgula"
   },
   "mediaModelUndeclared": "Ayarlanmadı —— Modeller sayfasında bir modeli Görsel veya Video olarak işaretleyin",
-  "enterpriseKeyMaskedTip": "Kurum tarafından dağıtılan anahtarlar maskelenir (yalnızca baş/son). Değiştirmeden kaydederseniz mevcut anahtar korunur; yeni anahtar yazmak tamamen değiştirir.",
+  "enterpriseKeyMaskedTip": "Bu model kanalı şirketiniz tarafından yönetilir ve burada salt okunurdur. Adresi, kimlik bilgilerini veya modelleri kurumsal konsolda değiştirin.",
   "enterpriseMachineBlockedNotice": "Bu cihaz, kuruluş yöneticiniz tarafından engellendi. Bu makinedeki takım kaynakları temizlendi.",
   "marketplaceCategory": {
     "marketingGrowth": "Pazarlama ve Büyüme",

@@ -116,6 +116,15 @@ Module.zetajs.then((api) => {
         model = desktop.loadComponentFromURL(`file:///tmp/office/${data.fileName}`, '_default', 0, descriptors);
         removeExternalFileControls(office.getUnoComponentContext());
         model.getCurrentController().getFrame().getContainerWindow().FullScreen = true;
+        // The engine ships English menus only; the host renders a localized
+        // quick toolbar, so fold the built-in menu bar away. Best effort —
+        // keep booting when the kit ignores the toggle.
+        try {
+          const helper = css.frame.DispatchHelper.create(office.getUnoComponentContext());
+          helper.executeDispatch(model.getCurrentController().getFrame(), '.uno:Menubar', '', 0, []);
+        } catch (menuError) {
+          office.mainPort.postMessage({ cmd: 'error', message: `menubar: ${String(menuError).slice(0, 120)}` });
+        }
         listener = office.unoObject([css.util.XModifyListener], {
           disposing() {},
           modified() {
@@ -144,6 +153,9 @@ Module.zetajs.then((api) => {
         });
         model.addModifyListener(listener);
         office.mainPort.postMessage({ cmd: 'ready' });
+      } else if (data.cmd === 'dispatch') {
+        const helper = css.frame.DispatchHelper.create(office.getUnoComponentContext());
+        helper.executeDispatch(model.getCurrentController().getFrame(), `.uno:${data.command}`, '', 0, []);
       } else if (data.cmd === 'store') {
         const unchanged = !model.isModified();
         if (!unchanged) model.store();

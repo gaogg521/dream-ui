@@ -896,6 +896,14 @@
     "backToLibrary": "Back to library",
     "documentContent": "Document content"
   },
+  "officeToolbar": {
+    "undo": "Geri Al",
+    "redo": "Yinele",
+    "bold": "Kalın",
+    "italic": "Eğik",
+    "underline": "Altı Çizili",
+    "save": "Kaydet"
+  },
   "required": "Zorunlu",
   "yes": "Evet",
   "no": "Hayır",

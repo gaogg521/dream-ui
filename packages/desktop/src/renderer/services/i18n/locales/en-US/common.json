@@ -901,5 +901,13 @@
     "continueEditing": "Continue editing",
     "backToLibrary": "Back to library",
     "documentContent": "Document content"
+  },
+  "officeToolbar": {
+    "undo": "Undo",
+    "redo": "Redo",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "save": "Save"
   }
 }

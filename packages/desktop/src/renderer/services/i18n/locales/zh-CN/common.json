@@ -901,5 +901,13 @@
     "continueEditing": "继续编辑",
     "backToLibrary": "返回资料库",
     "documentContent": "文档正文"
+  },
+  "officeToolbar": {
+    "undo": "撤销",
+    "redo": "重做",
+    "bold": "加粗",
+    "italic": "斜体",
+    "underline": "下划线",
+    "save": "保存"
   }
 }

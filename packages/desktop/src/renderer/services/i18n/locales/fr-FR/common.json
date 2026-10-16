@@ -896,6 +896,14 @@
     "backToLibrary": "Back to library",
     "documentContent": "Document content"
   },
+  "officeToolbar": {
+    "undo": "Annuler",
+    "redo": "Rétablir",
+    "bold": "Gras",
+    "italic": "Italique",
+    "underline": "Souligné",
+    "save": "Enregistrer"
+  },
   "required": "Obligatoire",
   "yes": "Oui",
   "no": "Non",

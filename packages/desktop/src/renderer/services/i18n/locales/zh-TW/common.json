@@ -902,6 +902,14 @@
     "backToLibrary": "返回資料庫",
     "documentContent": "文件正文"
   },
+  "officeToolbar": {
+    "undo": "復原",
+    "redo": "重做",
+    "bold": "粗體",
+    "italic": "斜體",
+    "underline": "底線",
+    "save": "儲存"
+  },
   "required": "必填",
   "yes": "是",
   "no": "否",

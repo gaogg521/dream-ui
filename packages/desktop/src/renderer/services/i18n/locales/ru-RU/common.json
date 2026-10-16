@@ -898,6 +898,14 @@
     "backToLibrary": "Back to library",
     "documentContent": "Document content"
   },
+  "officeToolbar": {
+    "undo": "Отменить",
+    "redo": "Повторить",
+    "bold": "Полужирный",
+    "italic": "Курсив",
+    "underline": "Подчёркнутый",
+    "save": "Сохранить"
+  },
   "required": "Обязательно",
   "yes": "Да",
   "no": "Нет",

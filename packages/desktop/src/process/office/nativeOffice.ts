@@ -225,6 +225,11 @@ export function initOfflineOffice(): void {
     session.readOnly = false;
     session.view.webContents.send('office-engine:unlock');
   });
+  ipcMain.handle('offline-office:dispatch', (event, id: string, command: string) => {
+    const session = owned(event, id);
+    if (!/^[A-Za-z0-9_.]+$/.test(command)) throw new Error('Unsupported Office command');
+    session.view.webContents.send('office-engine:dispatch', command);
+  });
   ipcMain.handle('offline-office:close', (event, id: string) => dispose(owned(event, id)));
   ipcMain.handle('offline-office:acknowledge', (event, id: string, revision: number, error?: string) => {
     const pending = owned(event, id).acknowledgements.get(revision);

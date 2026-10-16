@@ -469,10 +469,6 @@
         "title": "Poster-Designstudio",
         "desc": "Verwandelt ein Thema, ein Produktfoto oder Markenreferenzen in ein Poster, vor dem man stehen bleibt."
       },
-      "ppt-studio": {
-        "title": "PPT Studio",
-        "desc": "Gestaltete Präsentationen aus einem Satz – Themes und Layouts inklusive, in Sekunden."
-      },
       "price-compare": {
         "title": "Preisvergleich",
         "desc": "Vergleicht mehrere Produkte nach Preis und Ausstattung und sagt, welches am günstigsten und welches der bessere Kauf ist."
@@ -2201,7 +2197,7 @@
     "menuLabel": "Nutzung prüfen"
   },
   "mediaModelUndeclared": "Nicht festgelegt —— markiere ein Modell auf der Modellseite als Bild oder Video",
-  "enterpriseKeyMaskedTip": "Verteilte Unternehmensschlüssel sind maskiert (nur Anfang/Ende). Speichern ohne Änderung behält den ursprünglichen Schlüssel; ein neuer Schlüssel ersetzt ihn vollständig.",
+  "enterpriseKeyMaskedTip": "Dieser Modellkanal wird vom Unternehmen verwaltet und ist hier schreibgeschützt. Adresse, Zugangsdaten und Modelle können in der Unternehmenskonsole geändert werden.",
   "enterpriseMachineBlockedNotice": "Dieses Gerät wurde von Ihrem Organisationsadministrator gesperrt. Die Team-Ressourcen auf diesem Gerät wurden gelöscht.",
   "marketplaceCategory": {
     "marketingGrowth": "Marketing & Wachstum",

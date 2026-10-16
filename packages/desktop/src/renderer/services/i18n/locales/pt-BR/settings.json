@@ -469,10 +469,6 @@
         "title": "Estúdio de design de pôsteres",
         "desc": "Transforma um tema, uma foto de produto ou referências de marca em um pôster que faz parar para olhar."
       },
-      "ppt-studio": {
-        "title": "PPT Studio",
-        "desc": "Apresentações com temas e layouts prontos a partir de um pedido, em segundos."
-      },
       "price-compare": {
         "title": "Comparação de preços",
         "desc": "Compara vários produtos por preço e especificações e diz qual é o mais barato e qual é a melhor compra."
@@ -2204,7 +2200,7 @@
     "menuLabel": "Consultar uso"
   },
   "mediaModelUndeclared": "Não definido —— declare um modelo como Imagem ou Vídeo na página Modelos",
-  "enterpriseKeyMaskedTip": "Chaves emitidas pela empresa aparecem mascaradas (apenas início/fim). Salvar sem alterações mantém a chave original; digitar uma nova a substitui por completo.",
+  "enterpriseKeyMaskedTip": "Este canal de modelos é gerenciado pela empresa e aqui é somente leitura. Altere endereço, credenciais ou modelos no console empresarial.",
   "enterpriseMachineBlockedNotice": "Este dispositivo foi bloqueado pelo administrador da sua organização. Os recursos da equipe nesta máquina foram limpos.",
   "marketplaceCategory": {
     "marketingGrowth": "Marketing e crescimento",

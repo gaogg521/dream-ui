@@ -469,10 +469,6 @@
         "title": "Studio de design d’affiches",
         "desc": "Transforme un sujet, une photo produit ou des références de marque en une affiche qui arrête le regard."
       },
-      "ppt-studio": {
-        "title": "PPT Studio",
-        "desc": "Des présentations soignées en une phrase : thèmes et mises en page inclus, en quelques secondes."
-      },
       "price-compare": {
         "title": "Comparaison de prix",
         "desc": "Compare plusieurs produits sur le prix et les caractéristiques, et indique le moins cher et le meilleur achat."
@@ -2201,7 +2197,7 @@
     "menuLabel": "Consulter l'utilisation"
   },
   "mediaModelUndeclared": "Non défini —— déclarez un modèle comme Image ou Vidéo sur la page Modèles",
-  "enterpriseKeyMaskedTip": "Les clés émises par l'entreprise sont masquées (début/fin uniquement). Enregistrer sans modification conserve la clé d'origine ; saisir une nouvelle clé la remplace entièrement.",
+  "enterpriseKeyMaskedTip": "Ce canal de modèles est géré par votre entreprise et accessible ici en lecture seule. Modifiez son adresse, ses identifiants ou ses modèles dans la console entreprise.",
   "enterpriseMachineBlockedNotice": "Cet appareil a été bloqué par l'administrateur de votre organisation. Les ressources d'équipe sur cette machine ont été effacées.",
   "marketplaceCategory": {
     "marketingGrowth": "Marketing et croissance",

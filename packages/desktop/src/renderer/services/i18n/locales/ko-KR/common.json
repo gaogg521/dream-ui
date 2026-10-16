@@ -896,6 +896,14 @@
     "backToLibrary": "Back to library",
     "documentContent": "Document content"
   },
+  "officeToolbar": {
+    "undo": "실행 취소",
+    "redo": "다시 하기",
+    "bold": "굵게",
+    "italic": "기울임꼴",
+    "underline": "밑줄",
+    "save": "저장"
+  },
   "required": "필수",
   "yes": "예",
   "no": "아니요",

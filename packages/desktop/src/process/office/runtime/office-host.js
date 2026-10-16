@@ -75,6 +75,7 @@ host.onFlush((id) => {
     });
 });
 host.onUnlock(() => port?.postMessage({ cmd: 'unlock', fileName }));
+host.onDispatch((command) => port?.postMessage({ cmd: 'dispatch', command }));
 const inputBridge = window.__installOfficeInput(canvas);
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 canvas.addEventListener('wheel', (event) => event.preventDefault(), { passive: false });

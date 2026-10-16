@@ -13,6 +13,7 @@ import type { OfflineOfficeApi, OfficeEvent } from '../common/types/offlineOffic
 const offlineOffice: OfflineOfficeApi = {
   open: (request) => ipcRenderer.invoke('offline-office:open', request),
   unlock: (id) => ipcRenderer.invoke('offline-office:unlock', id),
+  dispatch: (id, command) => ipcRenderer.invoke('offline-office:dispatch', id, command),
   bounds: (id, bounds) => ipcRenderer.invoke('offline-office:bounds', id, bounds),
   visibility: (id, visible) => ipcRenderer.invoke('offline-office:visibility', id, visible),
   flush: (id) => ipcRenderer.invoke('offline-office:flush', id),

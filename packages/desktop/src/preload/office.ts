@@ -12,6 +12,11 @@ contextBridge.exposeInMainWorld('__officeEngine', {
     ipcRenderer.on('office-engine:unlock', handler);
     return () => ipcRenderer.off('office-engine:unlock', handler);
   },
+  onDispatch: (callback: (command: string) => void) => {
+    const handler = (_event: unknown, command: string) => callback(command);
+    ipcRenderer.on('office-engine:dispatch', handler);
+    return () => ipcRenderer.off('office-engine:dispatch', handler);
+  },
   flushed: (id: string, success: boolean) => ipcRenderer.send('office-engine:flushed', id, success),
   onFlush: (callback: (id: string) => void) => {
     const handler = (_event: unknown, id: string) => callback(id);

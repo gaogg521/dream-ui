@@ -24,6 +24,11 @@ export default function OfflineOfficeEditor(props: Props) {
   const [error, setError] = useState('');
   const [canRetrySave, setCanRetrySave] = useState(false);
   const retrySave = useRef<(() => Promise<void>) | null>(null);
+  const sessionId = useRef<string | undefined>(undefined);
+  const dispatchCommand = (command: string) => {
+    const id = sessionId.current;
+    if (id) void window.__offlineOffice?.dispatch(id, command);
+  };
   useEffect(() => {
     const api = window.__offlineOffice;
     if (!api || !container.current) return;
@@ -184,6 +189,7 @@ export default function OfflineOfficeEditor(props: Props) {
           readOnly: latest.current.locked === true,
         });
         id = opened.sessionId;
+        sessionId.current = id;
         if (disposed) {
           await api.close(id);
           return;
@@ -208,6 +214,7 @@ export default function OfflineOfficeEditor(props: Props) {
       window.removeEventListener('scroll', resize, true);
       latest.current.registerBeforeLeave(null);
       if (id) void api.close(id);
+      sessionId.current = undefined;
     };
     // Unlock re-runs this effect: the read-only session is closed and a fresh
     // editable one opens, because unlocking in place (.uno:EditDoc) detaches
@@ -215,6 +222,26 @@ export default function OfflineOfficeEditor(props: Props) {
   }, [props.locked]);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 500 }}>
+      {props.locked === false && (
+        <div style={{ display: 'flex', gap: 4, padding: '4px 12px', flexWrap: 'wrap' }}>
+          {(
+            [
+              ['undo', 'Undo'],
+              ['redo', 'Redo'],
+              ['bold', 'Bold'],
+              ['italic', 'Italic'],
+              ['underline', 'Underline'],
+            ] as Array<[string, string]>
+          ).map(([key, command]) => (
+            <Button key={key} size='mini' onClick={() => dispatchCommand(command)}>
+              {t(`common.officeToolbar.${key}`)}
+            </Button>
+          ))}
+          <Button size='mini' type='primary' loading={status === 'saving'} onClick={() => void retrySave.current?.()}>
+            {t('common.officeToolbar.save')}
+          </Button>
+        </div>
+      )}
       <div role='status' style={{ padding: '8px 16px' }}>
         {status === 'loading' ? (
           <Spin />

@@ -466,10 +466,6 @@
         "title": "Poster Design Studio",
         "desc": "Turns a topic, a product photo or brand references into a poster worth stopping for."
       },
-      "ppt-studio": {
-        "title": "PPT Studio",
-        "desc": "Designed decks from one prompt: themes and layouts built in, ready in seconds."
-      },
       "price-compare": {
         "title": "Price Comparison",
         "desc": "Compares several products on price and spec, and says which is cheapest and which is the better buy."
@@ -2231,7 +2227,7 @@
     "menuLabel": "Check usage"
   },
   "mediaModelUndeclared": "Not set — declare a model as Image or Video on the Models page",
-  "enterpriseKeyMaskedTip": "Enterprise-issued keys are masked (head/tail only, for verification). Saving without changes keeps the original key; typing a new one replaces it entirely.",
+  "enterpriseKeyMaskedTip": "This model channel is managed by your company and is read-only here. Change its address, credentials or models in the enterprise console.",
   "enterpriseMachineBlockedNotice": "This device has been blocked by your organization administrator. Team resources on this machine have been cleared.",
   "webui.deployRoleServerUnavailable": "\"This machine as server\" requires an enterprise-edition server deployment; the personal edition does not host project groups.",
   "marketplaceCategory": {

@@ -466,10 +466,6 @@
         "title": "海报设计工作室",
         "desc": "Turn a topic description, a product photo, or brand references into a scroll-stopping even…"
       },
-      "ppt-studio": {
-        "title": "PPT 设计工坊",
-        "desc": "一句话生成带专业主题与版式的 PPT，几十秒出稿。"
-      },
       "price-compare": {
         "title": "商品比价",
         "desc": "多商品比价助手：输入多个商品的价格与参数，输出最低价与性价比建议"
@@ -2232,7 +2228,7 @@
     "menuLabel": "查询用量"
   },
   "mediaModelUndeclared": "尚未设置 —— 在「模型」页把某个模型标为图片或视频类型",
-  "enterpriseKeyMaskedTip": "企业下发的 Key 已脱敏显示（仅保留首尾便于核对）。未修改则保存时保留原 Key；输入新 Key 将整体替换。",
+  "enterpriseKeyMaskedTip": "此模型渠道由企业统一管理，当前仅供查看。修改地址、密钥或模型请到企业管理后台。",
   "enterpriseMachineBlockedNotice": "这台设备已被组织管理员封禁，本机的团队资源已清空。",
   "webui.deployRoleServerUnavailable": "「本机作为服务器」需要部署企业版服务端，个人版不提供项目组托管能力。",
   "marketplaceCategory": {
