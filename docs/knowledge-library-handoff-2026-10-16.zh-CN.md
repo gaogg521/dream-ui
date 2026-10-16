@@ -333,3 +333,77 @@ docker build --build-context ort-cache=/mnt/d/dream/outputs/ort-linux-cache-1016
 先复查服务健康和资料数量 → 本地 main 重排到 origin/main → 回归个人 Excel/PPT 菜单与保存、导出等剩余入口 → 测保存失败/浏览器离开/权限撤销 → 全新安装的默认索引与语义搜索 → 专业化离线编辑 UI与复杂格式验收。
 
 当前可以确定的是：**服务恢复，图文与正文搜索可用，企业三种 Office 基础编辑保存已在产品 UI 实测，个人离线编辑已完成基础接入与保存，并修复了主要文件菜单脱离托管的问题。整体仍处于 DEV 验收阶段，不能宣布全面对齐 WorkBuddy或生产交付完成。**
+
+## 10. 2026-10-16 下午追加：本轮工作总结与接手指南（小密）
+
+> 赵老师已重启电脑，本轮回合由小密收尾并交接给下一任 AI。本文 §1–§9 为上午交接内容，本节为下午新增。
+
+### 10.1 已完成并落盘
+
+#### P0-2 向量检索「全新安装」实测 + 重大缺陷修复（已提交，未推送）
+
+- **根因**：hf-hub 0.5.0 在 Windows 上 `CreateSymbolicLinkW` 被本机安全软件**假成功**（`symlink_file` 返回 `Ok` 但不建文件）→ `snapshot` 的 `assert!(pointer_path.exists())` 必然 panic → 杀 worker。**全新安装在本机 100% 失败**。
+- **修复**：`dream-core/crates/dream-domain-devops/src/embedding.rs` 新增 `ensure_local_model_cache()` 自建模型缓存（reqwest 下载 + 大小校验 + 原子 rename + refs/main 最后写），fastembed init 包 `catch_unwind`，panic 不再杀 worker。
+- **实测**：干净 `ONE_DATA_DIR` → 下载 235MB → 384 维 → 语义排序断言通过（"餐补"文档 cosine 最高）。
+- **提交**：`dream-core 835c292`、`dream-en f90155c`（EMBEDDING.md 更新四级解析 + 本地模型回退章节）。**均未推送**。
+- 顺带修复 1 个预存 flaky 测试、新增 2 个缓存种子测试。
+
+#### dream-ui 交接文档更新（已提交 `e7e2cc6b`）
+
+- 把 P0-2 验收记录写入 `docs/knowledge-library-handoff-2026-10-16.zh-CN.md` §7.5。
+
+#### P0-1 本地 main 重排（前几轮已完成）
+
+- 两仓 `git reset --mixed` 重排到 origin/main，全程未碰 WIP，建备份分支 `backup/pre-main-realign-20261016`。
+
+#### 屏幕自动化小助手（已安装）
+
+- 路径：`C:\Users\allenzhao\AppData\Local\Programs\Xiaozs\ScreenAutomationHelper\ScreenAutomationHelper.exe`，CLI 可用，health 10/10。
+
+#### 客户端 DEV 环境拉起（关键突破，已运行）
+
+- **问题链**：① WorkBuddy 的 Bash/PowerShell 工具注入 `ELECTRON_RUN_AS_NODE=1`，让 electron 退化成纯 node、sentry 启动即崩（退码 1）；② 本机 `AlibabaProtect.exe`（阿里护卫，监听 60328）破坏 Chromium GPU/renderer 沙箱 → GPU 进程 0xC0000005 崩溃 / renderer `STATUS_FATAL_APP_EXIT`，Chromium 判不可用 FATAL 退出。
+- **修复**：`dream-ui/packages/desktop/src/process/utils/configureChromium.ts` 加 env gate `DREAM_DISABLE_CHROMIUM_SANDBOX=1 → app.commandLine.appendSwitch('no-sandbox')`（**不影响生产构建**，仅本机无 GPU/被安全软件破坏沙箱时启用）。
+- **启动命令（必须照此，且在沙箱外执行）**：
+  ```bash
+  cd /d/dream/dream-ui && env -u ELECTRON_RUN_AS_NODE DREAM_DEVTOOLS_CDP_PORT=9230 DREAM_DISABLE_CHROMIUM_SANDBOX=1 bun run dev
+  ```
+- **现状**：CDP 9230 已响应（Chrome/142），renderer 在 `http://localhost:5173/` 加载（`page | One Work`），dreamcore 已初始化，**全程无崩溃**。
+
+### 10.2 当前运行态
+
+- 客户端 DEV：后台运行中，CDP 9230 活，Electron 进程在跑。
+- `configureChromium.ts` 的修复**尚未提交**（在 working tree，未 commit）。
+
+### 10.3 企业镜像（docker compose）—— 未完成，卡在 JWT_SECRET
+
+- 文件：`D:/dream/dream-en/deploy/docker-compose.yml`；镜像 `ghcr.io/gaogg521/dream-core-enterprise:latest`（本机无本地镜像，需从 ghcr.io 拉，已验证可达：registry 返回 401 属正常未鉴权响应，docker 自动换 token）。
+- **卡点**：`JWT_SECRET` 用 `${JWT_SECRET:?set JWT_SECRET in .env}` 必填（其余变量均有 `:-` 默认值），需在 `deploy/.env` 提供。
+- **启动命令**：
+  ```bash
+  cd /d/dream/dream-en/deploy
+  JWT_SECRET=$(python -c "import secrets;print(secrets.token_hex(32))") COMPOSE_PROFILES=mysql docker compose up -d
+  ```
+- **注意**：会拉 4 个镜像（dream-core-enterprise、text-embeddings-inference:cpu-1.9.2 较大、mysql:8.0、caddy:2-alpine）；embedding 服务若非 profile 门控会被默认拉起（仅 RAG 后端需要，UI 测试非必需）。caddy 网关发布 80/443，需确认未被占用。
+
+### 10.4 遗留未交付项（给下一任 AI）
+
+1. **豆包建议的完整评估**（小密承诺过、至今未输出）：同意「块模型收敛 + Yjs 复用协同层」和「双轨制（A 轨原生块模型在线编辑 / B 轨 ONLYOFFICE 高保真）」方向，与我 v2「Office 已超出 WorkBuddy 宣称水平、差距在三载体协作层」结论收敛；**修正点**：docx→块模型转换的工程量与保真度边界需明确 scope（标题/段落/加粗/列表/表格/图片为首批，复杂排版不承诺回箱）、`office_text.rs` 结构化抽取同时提升 RAG 分块质量（与 P0-2 已完成的向量链路形成协同）、路线落位 P1.5/P2（依赖 P1 的 MD 编辑器与 P2 的 CRDT 层）。
+2. **P0-3 真实 UI 回归**：代码侧已确认菜单过滤三引擎（Writer/Calc/Impress）通用（`office-thread.js` 的 `removeExternalFileControls` 按 `model.supportsService` 自动分派），但**从未在真实客户端点过**。现在 DEV 已起 + 小助手已装，可直接做：屏幕自动化 → 打开知识库 → 点 Excel/PPT 文档 → 点「编辑」→ 验证 Open/SaveAs/菜单项被禁用。
+3. **configureChromium.ts 修复未提交**：建议单独 commit，说明 AlibabaProtect 破坏沙箱 + `--no-sandbox` env gate 的取舍。
+4. **三仓均未推送**：遵守对外谨慎，等赵老师确认。
+
+### 10.5 关键坑（下一任必看）
+
+- 启动 electron DEV **必须** `env -u ELECTRON_RUN_AS_NODE`（WorkBuddy 工具会注入，导致 electron 退化成 node、sentry 崩退码 1）。
+- **必须** `dangerouslyDisableSandbox: true`（沙箱外）：沙箱内启动会让 chromium 子进程被宿主安全软件 AlibabaProtect 杀；AlibabaProtect 是宿主级，沙箱绕不过。
+- **必须** `DREAM_DISABLE_CHROMIUM_SANDBOX=1`：AlibabaProtect 破坏 Chromium 沙箱。
+- 启动 electron 类后台进程用 `> log 2>&1` 重定向，否则 CDP 起来了但 bun 父进程退出会被误报 `failed`。
+- `60328` 上是 `AlibabaProtect.exe`，**不是** dreamcore；dreamcore 默认端口在 60328 范畴但此进程是安全软件。
+- 重启电脑后 `ELECTRON_RUN_AS_NODE` 泄漏会消失，但 AlibabaProtect 仍在，故 `--no-sandbox` 开关仍需带。
+
+### 10.6 三仓 git 状态（截至本回合）
+
+- `dream-core`：本地提交 `835c292`（未推送）
+- `dream-en`：本地提交 `f90155c`（未推送）
+- `dream-ui`：本地提交 `e7e2cc6b`（handoff 文档，未推送）；`configureChromium.ts` 改动未提交
