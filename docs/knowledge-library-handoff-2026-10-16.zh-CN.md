@@ -495,3 +495,10 @@ PDF 渲染内核本身没问题（截图中文本/分页正常），差距在壳
 - **引擎 chrome 确定性隐藏**（`a99f267b`）：LayoutManager hideElement 折叠 menubar/standardbar/statusbar，在 load 与 ready 后各执行一次（`.uno:Menubar` 是有状态 toggle 且跨启动持久，禁用）。锁定视图只剩文档 + 只读横幅。注意：docker cp 进容器后要 chmod——同坑也适用于 docker cp 进 WSL 的脚本。
 - **A 轨在线网格 MVP**（`5b54ec57`）：xlsx 锁定视图新增「在线编辑」入口（个人端、非内网时）——退出引擎视图，进入转换副本网格（前 200 行 × 26 列，SheetJS 驱动），「保存回原件」经受保护上传导出回 xlsx 并自动重载最新内容；数值保留数字类型，被编辑单元格的公式以当前值替代（UI 有明示）。真机闭环验证：编辑 A1 → 保存 → 后端新版本 → 重开网格读回新值。企业控制台镜像组件待跟进（企业主路径是 ONLYOFFICE 编辑）。
 - **协同层**：按 §10.7 顺序在 A 轨闭环后启动（Yjs CRDT + 块模型），本期未动。
+
+### 10.14 知识库全量回归（10-17，个人版 + 企业后台 + 联动）
+
+- **个人版 DEV 5/5 ✓**：PDF pdf.js 查看器（1/51 渲染）、引擎只读直开（锁定态编辑按钮）、A 轨在线编辑入口（锁定态）、解锁后中文工具栏六键、正文搜索（A轨验证1017 与引擎保存的 P10解锁1016 均入索引命中；`scratchpad/p03-pm-1016/search-*.mjs`）。
+- **企业后台 ✓**：view 模式直开（"阅读"）→ 解锁 → **键入级保存闭环**（键入 E1017 → "已自动保存"，含后端回调确认）——此前自动化键入的短板已补。
+- **单机↔企业联动 ✓**：桌面注入企业会话（`one-enterprise:session` + server-url 25809，httpBridge 即时生效）→ 企业文档在桌面资料库可见 → 桌面打开企业 docx → **内网 ONLYOFFICE 编辑器 view 直开（"阅读"）→ 解锁到编辑模式**——dream-ui IntranetOfficeEditor 的 locked 路径首次真机验证。
+- 注意：联动测试给 DEV 注入了 admin@25809 的企业会话（localStorage 三个 `one-enterprise:*` 键）；恢复个人版 = 清除这三个键或退出企业登录。
