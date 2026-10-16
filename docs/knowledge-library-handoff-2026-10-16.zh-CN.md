@@ -1,5 +1,7 @@
 # One Work 知识库改造交接
 
+> 后续保存状态补充：三个仓库已建立本地 `checkpoint/knowledge-20261016` 快照提交，并导出通过校验的 Git bundle。核心快照 `8cb6181` 包含尚未合入 main 的企业启动接线与 AD 依赖；桌面快照 `0811195`；企业后台快照 `5612858`。这些快照包含其他任务的并存改动，仅作完整 DEV 状态备份，不得整体合并主线。本地恢复说明：`D:/dream/outputs/knowledge-checkpoint-20261016/README.md`。下文“本轮未 push”是交接当时的历史状态，后续远端提交以 Git 为准。
+
 更新时间：2026-10-16，截至本次交接。这是交给后续 AI 的当前状态说明。旧文档中的“Office 尚未接入”等句子是按日期累积的历史记录，应以本文和最新日期记录为准。
 
 ## 1. 用户目标与已确认范围
@@ -199,11 +201,11 @@ knowledge-office-native-{word,excel,pptx}-saved-1015.*
 
 本轮已做 **本地提交**，没有执行 push：
 
-| 仓库 | 本地提交 | 内容 |
-| --- | --- | --- |
-| dream-ui | `3fcf7fc3` | 离线/内网 Office 编辑、自动保存、布局与教程说明、测试 |
-| dream-en | `8abbd90` | 企业内网编辑接入 UI、保存保护、教程及配置文档 |
-| dream-core | `4357c32` | Office 合同、领域服务、会话、回调、提取与领域路由 |
+| 仓库       | 本地提交   | 内容                                                  |
+| ---------- | ---------- | ----------------------------------------------------- |
+| dream-ui   | `3fcf7fc3` | 离线/内网 Office 编辑、自动保存、布局与教程说明、测试 |
+| dream-en   | `8abbd90`  | 企业内网编辑接入 UI、保存保护、教程及配置文档         |
+| dream-core | `4357c32`  | Office 合同、领域服务、会话、回调、提取与领域路由     |
 
 前一阶段知识库原件替换等已提交，核心 `b1c8824`，企业 UI `884808e`，桌面本地等价提交 `b455dc52`；此前远端已有对应成果。
 
@@ -228,13 +230,13 @@ Dockerfile                                         本轮添加 ORT BuildKit 缓
 
 截至最后检查，以下端口都在监听：
 
-| 服务 | 地址 | 状态 |
-| --- | --- | --- |
-| 个人源码 DEV renderer | http://localhost:5173/ | 已恢复 |
-| 个人随进程 core | http://127.0.0.1:61755/ | 当前临时端口，重启会变 |
-| 企业 admin Vite | http://localhost:25810/admin/knowledge-bases | 已登录 QA admin |
-| 企业 gateway | http://localhost:29870/ | 已恢复，Office enabled=true |
-| 内网 ONLYOFFICE QA | http://localhost:29976/ | 已恢复 |
+| 服务                  | 地址                                         | 状态                        |
+| --------------------- | -------------------------------------------- | --------------------------- |
+| 个人源码 DEV renderer | http://localhost:5173/                       | 已恢复                      |
+| 个人随进程 core       | http://127.0.0.1:61755/                      | 当前临时端口，重启会变      |
+| 企业 admin Vite       | http://localhost:25810/admin/knowledge-bases | 已登录 QA admin             |
+| 企业 gateway          | http://localhost:29870/                      | 已恢复，Office enabled=true |
+| 内网 ONLYOFFICE QA    | http://localhost:29976/                      | 已恢复                      |
 
 个人 DEV 当前根 PID `2224`，命令：
 
