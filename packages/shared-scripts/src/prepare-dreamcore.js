@@ -99,6 +99,36 @@ function writeJson(filePath, payload) {
   fs.writeFileSync(filePath, JSON.stringify(payload, null, 2) + '\n', 'utf-8');
 }
 
+// dreamcore does not link ONNX Runtime: the local knowledge-base embedding model
+// loads its shared library from next to the executable at run time (see
+// dream-core crates/dream-domain-devops/src/onnxruntime.rs). On Windows it also
+// needs the Visual C++ runtime DLLs the library is built against. A release
+// archive ships these beside the binary, so they must travel with it into the
+// bundle; a bundle without them still starts, but local embedding is unavailable.
+const RUNTIME_LIBRARY_PATTERN = /^(lib)?onnxruntime\.(dll|so|dylib)$|^(vcruntime140|vcruntime140_1|msvcp140)\.dll$/i;
+// Platforms for which dream-core releases an ONNX Runtime library (Microsoft
+// publishes none for Intel Macs).
+const PLATFORMS_WITH_ONNXRUNTIME = new Set(['win32-x64', 'linux-x64', 'linux-arm64', 'darwin-arm64']);
+
+/**
+ * Copy the runtime libraries that sit beside `binaryPath` (and, for a cargo
+ * build, in `<target>/onnxruntime/`) into `targetDir`. Returns the file names.
+ */
+function copyRuntimeLibraries(binaryPath, targetDir) {
+  const binaryDir = path.dirname(binaryPath);
+  const searchDirs = [binaryDir, path.join(binaryDir, 'onnxruntime'), path.join(binaryDir, '..', 'onnxruntime')];
+  const copied = [];
+  for (const dir of searchDirs) {
+    if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) continue;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isFile() || !RUNTIME_LIBRARY_PATTERN.test(entry.name) || copied.includes(entry.name)) continue;
+      copyFileSafe(path.join(dir, entry.name), path.join(targetDir, entry.name));
+      copied.push(entry.name);
+    }
+  }
+  return copied;
+}
+
 function getBinaryName(platform) {
   return platform === 'win32' ? 'dreamcore.exe' : 'dreamcore';
 }
@@ -677,6 +707,14 @@ function prepareDreamcore(options) {
   if (sourcePath) {
     copyFileSafe(sourcePath, targetBinaryPath);
     ensureExecutableMode(targetBinaryPath);
+    const runtimeLibraries = copyRuntimeLibraries(sourcePath, targetDir);
+    if (PLATFORMS_WITH_ONNXRUNTIME.has(runtimeKey) && !runtimeLibraries.some((name) => /onnxruntime/i.test(name))) {
+      console.warn(
+        `  ⚠️ No ONNX Runtime library found beside the dreamcore binary for ${runtimeKey}: the bundle will start, ` +
+          'but local knowledge-base embedding will be unavailable. Newer dreamcore releases ship it in the archive ' +
+          '(a pin older than that has none); for a local build run scripts/fetch-onnxruntime.* in dream-core.'
+      );
+    }
     const bundledManagedResourcesDir = prepareManagedResources(targetBinaryPath, targetDir);
 
     // The release tag is the authoritative version — the dreamcore
@@ -689,7 +727,7 @@ function prepareDreamcore(options) {
       generatedAt: new Date().toISOString(),
       sourceType,
       source: sourceDetail,
-      files: [binaryName, 'managed-resources/'],
+      files: [binaryName, ...runtimeLibraries, 'managed-resources/'],
     };
 
     writeJson(path.join(targetDir, 'manifest.json'), manifest);
@@ -707,6 +745,7 @@ function prepareDreamcore(options) {
 }
 
 module.exports = {
+  copyRuntimeLibraries,
   getActionsArtifactMissingMessage,
   getActionsArtifactName,
   prepareDreamcore,
