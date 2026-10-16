@@ -20,20 +20,8 @@ import { ipcBridge } from '@/common';
  */
 export const PROTOCOL_SCHEME = app.isPackaged ? 'dream' : 'dream-dev';
 
-/**
- * Schemes this build still answers to, newest first.
- *
- * The OS registration is not the only place the old name survives: a dreamcore
- * older than the rename maps any scheme it does not know back to the legacy
- * scheme, so a new app talking to a pinned older backend gets a legacy callback
- * even though it asked for `dream://`. Dropping that on the floor would mean login
- * succeeding in the browser and never arriving in the app. Both names are
- * registered with the OS and accepted here; only `PROTOCOL_SCHEME` is ever
- * handed out.
- */
-export const LEGACY_PROTOCOL_SCHEMES = ['aionui', 'aionui-dev'] as const;
-
-export const ACCEPTED_PROTOCOL_SCHEMES: readonly string[] = [PROTOCOL_SCHEME, ...LEGACY_PROTOCOL_SCHEMES];
+/** Production and development builds own separate One Work URL protocols. */
+export const ACCEPTED_PROTOCOL_SCHEMES: readonly string[] = [PROTOCOL_SCHEME];
 
 /** Does `url` use any scheme this build answers to? */
 export const isDeepLinkUrl = (url: string): boolean =>

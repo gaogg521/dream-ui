@@ -16,11 +16,8 @@ copyright: Copyright © 2026 1ONE
 protocols:
   - name: One Work Protocol
     schemes:
-      # `dream` is the current scheme. `aionui` stays registered so callbacks
-      # from an older bundled aioncore (which maps unknown schemes back to it)
-      # and links already stored by existing installs still open the app.
+      # Installed builds register only the One Work production protocol.
       - dream
-      - aionui
 
 # Encrypted outbound packages (enterprise export protection). Double-clicking
 # one hands its path to the running app (`second-instance` / macOS
@@ -325,14 +322,8 @@ linux:
       Comment: ${description}
       Icon: one-work
       Categories: Office;Utility;
-      # Both schemes, current first. An explicit `MimeType` REPLACES the list
-      # electron-builder would derive from `protocols:` above, so listing only
-      # the legacy `aionui` here left the deb with no handler for `dream://` —
-      # the scheme every packaged build actually registers and the one the SSO
-      # callback comes back on (`dream://sso-callback?token=…`). On Linux that
-      # is the difference between the browser handing the token back to the app
-      # and the browser saying it does not know how to open the link.
-      MimeType: x-scheme-handler/dream;x-scheme-handler/aionui;
+      # Explicit MIME handlers must match the production protocol above.
+      MimeType: x-scheme-handler/dream;
 
 npmRebuild: false
 buildDependenciesFromSource: false

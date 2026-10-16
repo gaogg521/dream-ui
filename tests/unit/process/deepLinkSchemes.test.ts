@@ -3,15 +3,7 @@
  * Copyright 2026 One Work
  * SPDX-License-Identifier: Apache-2.0
  *
- * The app hands out `dream://` but must keep answering to `aionui://`.
- *
- * Two independent reasons, and dropping either name breaks SSO in a way that
- * shows up as "login worked in the browser and the app never noticed":
- *
- *  1. An aioncore older than the rename maps any scheme it does not recognise
- *     back to `aionui`, and the desktop app pairs with a pinned release — so a
- *     current app asking for `dream` routinely receives an `aionui://` callback.
- *  2. An existing install already has the old association registered with the OS.
+ * One Work uses only its current production or development protocol.
  */
 
 import { describe, expect, it, vi } from 'vitest';
@@ -22,7 +14,7 @@ vi.mock('electron', () => ({
 
 vi.mock('@/common', () => ({ ipcBridge: {} }));
 
-const { ACCEPTED_PROTOCOL_SCHEMES, LEGACY_PROTOCOL_SCHEMES, PROTOCOL_SCHEME, isDeepLinkUrl, parseDeepLinkUrl } =
+const { ACCEPTED_PROTOCOL_SCHEMES, PROTOCOL_SCHEME, isDeepLinkUrl, parseDeepLinkUrl } =
   await import('@process/utils/deepLink');
 
 describe('deep-link schemes', () => {
@@ -30,9 +22,8 @@ describe('deep-link schemes', () => {
     expect(PROTOCOL_SCHEME).toBe('dream');
   });
 
-  it('still answers to the pre-rebrand scheme', () => {
-    expect(ACCEPTED_PROTOCOL_SCHEMES).toContain('aionui');
-    expect(LEGACY_PROTOCOL_SCHEMES).toContain('aionui');
+  it('registers only the current production scheme', () => {
+    expect(ACCEPTED_PROTOCOL_SCHEMES).toEqual(['dream']);
   });
 
   it('parses a callback on the current scheme', () => {
@@ -42,11 +33,9 @@ describe('deep-link schemes', () => {
     });
   });
 
-  it('parses a callback an older backend sent on the legacy scheme', () => {
-    expect(parseDeepLinkUrl('aionui://sso-callback?token=abc')).toEqual({
-      action: 'sso-callback',
-      params: { token: 'abc' },
-    });
+  it('rejects callbacks on retired protocols', () => {
+    expect(parseDeepLinkUrl('aionui://sso-callback?token=abc')).toBeNull();
+    expect(parseDeepLinkUrl('aionui-dev://sso-callback?token=abc')).toBeNull();
   });
 
   it('rejects a scheme this build never claimed', () => {

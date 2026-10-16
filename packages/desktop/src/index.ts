@@ -1307,11 +1307,7 @@ const handleAppReady = async (): Promise<void> => {
 };
 
 // ============ Protocol Registration ============
-// Claim every scheme this build answers to, not just the current one: an
-// A legacy aioncore older than the rename still emits `aionui://` callbacks (it maps
-// unknown schemes back to that), and an existing install already has the old
-// association pointing here. Registering only the new name would make those
-// callbacks open nothing at all.
+// Each build owns only its One Work protocol, keeping development and installed apps separate.
 for (const scheme of ACCEPTED_PROTOCOL_SCHEMES) {
   if (process.defaultApp) {
     // Dev mode: need to pass execPath explicitly
