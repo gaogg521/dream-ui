@@ -123,20 +123,24 @@ export default function OfflineOfficeEditor(props: Props) {
     const updateVisibility = () => {
       if (!id || disposed || !container.current) return;
       const area = bounds();
-      const overlap = Array.from(
-        document.querySelectorAll('.arco-trigger-popup, .arco-modal-wrapper, .arco-drawer')
-      ).some((node) => {
-        const rect = node.getBoundingClientRect();
-        return (
-          rect.width > 0 &&
-          rect.height > 0 &&
-          getComputedStyle(node).visibility !== 'hidden' &&
-          rect.right > area.x &&
-          rect.left < area.x + area.width &&
-          rect.bottom > area.y &&
-          rect.top < area.y + area.height
-        );
-      });
+      // The host view can hide this container without unmounting it (shell
+      // page switches) — the engine view must follow or it floats above
+      // whatever page the user switched to.
+      const containerGone = !container.current.isConnected || area.width === 0 || area.height === 0;
+      const overlap =
+        containerGone ||
+        Array.from(document.querySelectorAll('.arco-trigger-popup, .arco-modal-wrapper, .arco-drawer')).some((node) => {
+          const rect = node.getBoundingClientRect();
+          return (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            getComputedStyle(node).visibility !== 'hidden' &&
+            rect.right > area.x &&
+            rect.left < area.x + area.width &&
+            rect.bottom > area.y &&
+            rect.top < area.y + area.height
+          );
+        });
       if (visible === !overlap) return;
       visible = !overlap;
       void api.visibility(id, visible).then((image) => {
@@ -150,7 +154,12 @@ export default function OfflineOfficeEditor(props: Props) {
       attributes: true,
       attributeFilter: ['style', 'class'],
     });
-    const observer = new ResizeObserver(resize);
+    const onDocumentVisibility = () => updateVisibility();
+    document.addEventListener('visibilitychange', onDocumentVisibility);
+    const observer = new ResizeObserver(() => {
+      resize();
+      updateVisibility();
+    });
     observer.observe(container.current);
     window.addEventListener('resize', resize);
     window.addEventListener('scroll', resize, true);
@@ -192,6 +201,7 @@ export default function OfflineOfficeEditor(props: Props) {
       retrySave.current = null;
       navigationRestores.forEach((restore) => restore());
       popups.disconnect();
+      document.removeEventListener('visibilitychange', onDocumentVisibility);
       unsubscribe();
       observer.disconnect();
       window.removeEventListener('resize', resize);
