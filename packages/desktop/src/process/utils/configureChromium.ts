@@ -70,6 +70,18 @@ if (!app.isPackaged && !e2eUserDataDir) {
 // app.disableHardwareAcceleration() must run before app is ready.
 applyGpuRecoveryFlags();
 
+// ============ Chromium sandbox breakage on locked-down hosts ============
+// On some corporate/sandboxed Windows hosts, endpoint security software breaks
+// Chromium's sandbox model: the GPU process crashes with an access violation
+// (0xC0000005) and Chromium fatals with "GPU process isn't usable. Goodbye", and
+// the renderer process crashes with STATUS_FATAL_APP_EXIT right after the main
+// window is created. Both block the desktop app from booting. The fix is to drop
+// the entire Chromium sandbox via DREAM_DISABLE_CHROMIUM_SANDBOX=1. Env-gated so
+// production/packaged builds are never affected.
+if (process.env.DREAM_DISABLE_CHROMIUM_SANDBOX === '1') {
+  app.commandLine.appendSwitch('no-sandbox');
+}
+
 // Configure Chromium command-line flags for WebUI and CLI modes
 // 为 WebUI 和 CLI 模式配置 Chromium 命令行参数
 
