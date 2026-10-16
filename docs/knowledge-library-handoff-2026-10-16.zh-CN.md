@@ -474,3 +474,10 @@ PDF 渲染内核本身没问题（截图中文本/分页正常），差距在壳
 4. origin/main 预存 5 个失败测试修复（§10.8）。
 
 - **追加热修 `09d49159`**：用户实测发现切到主页/聊天后引擎画布悬浮在错误页面上（宿主容器被隐藏但未卸载，原显隐逻辑只盯弹窗）。修复：容器脱离布局/零尺寸/文档 visibilitychange 均视为隐藏，引擎视图跟随宿主页面显隐；真机复现验证通过。
+
+### 10.11 企业端同步与 QA 栈修复（10-17 凌晨）
+
+- **P1.0 企业端已实现并推送**：dream-en `97c141e`、dream-ui `97d37710`——企业知识库的可编辑 Office 原件现在直接以 ONLYOFFICE **view 模式**打开（状态"阅读"），「编辑」复用同一会话重初始化为 edit 模式（mode 不在会话 JWT 内，无需新建会话），语言跟随 i18n；重试改为复用会话只重初始化编辑器。真机验证（25809 栈 + admin Vite）：view 自动进场 ✓、解锁重初始化到编辑会话 ✓（状态 阅读→自动保存）；键入级保存闭环沿用早晨已验证的会话配置，待用户日常使用确认。
+- **QA 栈修复（codex 重启遗留）**：ONLYOFFICE 容器 knowledge-office-qa-1015 随重启退出 → 已启动；其 JWT secret 与 app 容器的 ONE_OFFICE_JWT_SECRET 不匹配（"文档安全令牌的格式不正确"）→ 已将引擎 local.json 的 inbox/outbox/session 对齐 app 环境值并修复 docker cp 导致的 root:600 权限（docservice 因读不到配置 FATAL）。**经验：docker cp 进容器的文件要 chmod；引擎容器重启会保留 local.json，改密钥后用 supervisorctl restart 而非 docker restart。**
+- 25809 栈的 admin 鉴权：`dream-session` cookie / Bearer 均可，token 沿用 scratchpad/enterprise-terminal-regression-20261012/admin.token。
+- 验证脚本沉淀：`scratchpad/p03-pm-1016/`（ent-login/ent-open-doc/ent-retry/ent-status 等，CDP 驱动 25810 Vite + 25809 后端）。
