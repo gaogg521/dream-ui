@@ -456,3 +456,19 @@ docker build --build-context ort-cache=/mnt/d/dream/outputs/ort-linux-cache-1016
 PDF 渲染内核本身没问题（截图中文本/分页正常），差距在壳：目录/缩略图常驻与收起、工具栏收敛、内部语汇（替换原件、加载百分比）不直达用户、加载态、全文搜索与文本选择。与 P1.0 可并行。引擎直开后 Word/Excel/PPT 的轻量预览仅作 fallback，停止单独打磨。
 
 **P2 A 轨在线网格**：不变，见 §10.7（xlsx 优先，复用数据抽取）。依赖顺序：P1.0 → P1.1 → P1.2 可并行推进；A 轨等 B 轨到达 WorkBuddy 体感水平后再排期。
+
+### 10.10 §10.9 实施记录（10-16 深夜）
+
+**已实现并真机验证（`7dd5fa93` 已推送）**：
+
+- **P1.0 个人端统一打开路径**：`LibraryDocument` 对可编辑 Office 原件自动进入引擎（无需点编辑）；会话以 `ReadOnly` 加载，canvas 显示 "This document is open in read-only mode"；「编辑」按钮解锁 = 关闭只读会话并以可编辑模式重开（约十几秒引擎重启）；输入后自动保存已验证打通（状态「已自动保存」+ knowledge-sources 出现新版本原件）。真机验证方法：CDP hash 导航 + playwright 点击 + canvas 像素 OCR。
+- **关键教训（后来者必读）**：只读解锁**不要**用 `.uno:EditDoc` 原地切换——它会替换内部模型，修改监听器静默脱钩（文字能进但 dirty 永不触发），且 `model.close()` 重载会拖垮 WASM kit。正确做法就是干净地重开会话（渲染层 effect 以 `locked` 为依赖重挂）。
+- **P1.1 企业 ONLYOFFICE**：`editorConfig.lang` 跟随应用 i18n（正则校验 locale，非中文语言自动英文兜底），`IntranetOfficeEditor.dom.test` mock 补了 i18n。
+- **WASM 中文化实验代码**（`configureUiLocale`，ooLocale=zh-CN）已随提交入库：vendor 构建出 l10n 资源后自动生效。
+
+**下轮继续（按 §10.9 顺序，设计已定稿）**：
+
+1. P1.0 企业端 view/edit 同步（admin-web 镜像组件，需企业栈真机验证）。
+2. P1.2 PDF 阅读器壳打磨（目录/缩略图常驻、内部语汇下架）。
+3. P1.1 个人端中文工具栏（隐藏引擎菜单栏 + 应用层中文工具栏驱动 UNO，与"专业化整合"合并）。
+4. origin/main 预存 5 个失败测试修复（§10.8）。
