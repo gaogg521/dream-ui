@@ -540,8 +540,11 @@
   min-height: calc(100vh - 210px);
   height: 100%;
   min-width: 0;
+  container-type: inline-size;
+  container-name: knowledge-document;
 }
 .documentBar {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -563,11 +566,18 @@
   color: var(--color-text-1);
 }
 .documentIdentity strong {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .documentIdentity span {
+  min-width: 0;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--color-text-3);
   font-size: 12px;
 }
@@ -613,6 +623,17 @@
   align-items: center;
   gap: 6px;
   margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+@container knowledge-document (max-width: 720px) {
+  .documentIdentity span {
+    display: none;
+  }
+  .documentBar {
+    gap: 8px;
+    padding-right: 12px;
+  }
 }
 .documentCanvas {
   flex: 1;

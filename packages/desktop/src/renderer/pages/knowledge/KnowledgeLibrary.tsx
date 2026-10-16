@@ -486,7 +486,9 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                     border={false}
                     pagination={{ pageSize: 8, hideOnSinglePage: true }}
                     noDataElement={
-                      searchPending ? null : (
+                      searchPending ? (
+                        <span role='status'>{t('common.loading')}</span>
+                      ) : (
                         <div className={styles.empty}>
                           <FolderOpen size={36} />
                           <p>{label(query.trim() ? 'noMatches' : 'empty')}</p>

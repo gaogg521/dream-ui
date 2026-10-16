@@ -106,10 +106,28 @@ export default defineConfig(({ mode }) => {
         // are bundled by esbuild rather than left as `require('@dream/web-host')`, which Node
         // cannot resolve because the package ships no compiled .js files (workspace-only).
         externalizeDepsPlugin({ exclude: ['fix-path', '@dream/web-host'] }),
+        ...(!isDevelopment
+          ? [
+              {
+                name: 'prepare-offline-office',
+                buildStart() {
+                  // A fresh checkout must include the verified engine too;
+                  // extraResources alone silently omits an unprepared folder.
+                  execSync(`node "${resolve('scripts/prepareOfflineOffice.mjs')}"`, { stdio: 'inherit' });
+                },
+              },
+            ]
+          : []),
         ...(isDevelopment
           ? [
               {
                 name: 'dev-build-mcp-servers',
+                buildStart(this: { addWatchFile: (path: string) => void }) {
+                  execSync(`node "${resolve('scripts/prepareOfflineOffice.mjs')}" --host-only`, { stdio: 'pipe' });
+                  for (const name of ['index.html', 'office-host.js', 'office-thread.js', 'office-input.js']) {
+                    this.addWatchFile(resolve('packages/desktop/src/process/office/runtime', name));
+                  }
+                },
                 closeBundle() {
                   execSync(`node "${resolve(__dirname, '../../scripts/build-mcp-servers.js')}"`, {
                     stdio: 'inherit',
@@ -182,6 +200,7 @@ export default defineConfig(({ mode }) => {
         rollupOptions: {
           input: {
             index: resolve('packages/desktop/src/preload/main.ts'),
+            office: resolve('packages/desktop/src/preload/office.ts'),
           },
         },
       },

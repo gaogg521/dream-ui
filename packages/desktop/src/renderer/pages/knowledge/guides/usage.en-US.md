@@ -14,7 +14,7 @@ Use CSV for basic rows and columns and Markdown for explanations. Live HTML dash
 
 ## Originals and search
 
-Original files preserve layout and media. Extracted text is used for search and indexing. Older text-only records need the original file attached again. PDF, image and media previews depend on the actual file. DOCX and PPTX have local original-file previews. Excel has a worksheet data preview (up to 2,000 rows and 100 columns, without charts or original styling). Native Office editing is not available yet. Download design files to open them in the corresponding application.
+Original files preserve layout and media. Extracted text is used for search and indexing. Older text-only records need the original file attached again. PDF, image and media previews depend on the actual file. DOCX and PPTX have local original-file previews. Excel has a worksheet data preview (up to 2,000 rows and 100 columns, without charts or original styling). Use Edit to modify DOCX, XLSX and PPTX originals. The personal desktop app uses an offline editor; enterprise editing requires an administrator-configured intranet service. Wait for Saved before leaving. Keep the editor open and retry if saving fails. Download the original when editing is unavailable. Download design files to open them in the corresponding application.
 
 Keyword search covers titles and saved bodies. Uploading a scanned image or a video does not automatically make its visual content or speech searchable. Semantic retrieval needs a ready index and a configured model.
 

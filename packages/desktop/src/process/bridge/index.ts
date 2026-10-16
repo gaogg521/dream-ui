@@ -2,6 +2,7 @@
  * Copyright 2026 One Work
  */
 
+import { initOfflineOffice } from '../office/nativeOffice';
 import { initApplicationBridge } from './applicationBridge';
 import { initDialogBridge } from './dialogBridge';
 import { initUpdateBridge } from './updateBridge';
@@ -17,6 +18,7 @@ import { initSecureExportBridge } from './secureExportBridge';
 export type BridgeDependencies = Record<string, never>;
 
 export function initAllBridges(_deps: BridgeDependencies = {}): void {
+  initOfflineOffice();
   initDialogBridge();
   initApplicationBridge();
   initWindowControlsBridge();

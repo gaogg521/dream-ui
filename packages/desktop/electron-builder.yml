@@ -205,6 +205,8 @@ extraResources:
     to: bundled-dreamcore
   - from: resources/hub
     to: hub
+  - from: resources/offline-office
+    to: offline-office
 win:
   target:
     - nsis

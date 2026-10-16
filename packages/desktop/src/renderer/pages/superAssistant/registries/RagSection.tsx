@@ -132,7 +132,9 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   const [discardConfirm, setDiscardConfirm] = useState(false);
   const pendingNavigation = useRef<() => void>(() => {});
   const editRequest = useRef(0);
-  const navigateDocument = (action: () => void) => {
+  const documentLeaveGuard = useRef<(() => Promise<boolean>) | null>(null);
+  const navigateDocument = async (action: () => void) => {
+    if (documentLeaveGuard.current && !(await documentLeaveGuard.current())) return;
     if (savingEdit || savingDoc) return;
     const run = () => {
       editRequest.current += 1;
@@ -141,7 +143,9 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
       action();
     };
     if (
-      (editTarget && editContent !== originalContent.current) ||
+      (editTarget &&
+        !usesOriginalFile(editTarget.filePath, editTarget.mimeType) &&
+        editContent !== originalContent.current) ||
       (docModalVisible && JSON.stringify([draftTitle, draftContent]) !== originalDraft.current)
     ) {
       pendingNavigation.current = run;
@@ -799,6 +803,20 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
           ) : editTarget ? (
             <LibraryDocument
               key={editTarget.id}
+              registerBeforeLeave={(guard) => {
+                documentLeaveGuard.current = guard;
+              }}
+              onOfficeSaved={async () => {
+                const [content, documents] = await Promise.all([
+                  ipcBridge.oneDevops.getRagContent.invoke({ id: editTarget.id }),
+                  ipcBridge.oneDevops.listRagDocuments.invoke(),
+                ]);
+                originalContent.current = content ?? '';
+                setEditContent(content ?? '');
+                setRows(documents ?? []);
+                const metadata = documents?.find((item) => item.id === editTarget.id);
+                if (metadata) setEditTarget(metadata);
+              }}
               documentId={editTarget.id}
               sourcePath={editTarget.filePath}
               loadOriginal={async () =>

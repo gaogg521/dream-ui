@@ -14,6 +14,11 @@ import styles from './KnowledgeLibrary.module.css';
 import OriginalFileViewer from './original/OriginalFileViewer';
 import { usesOriginalFile } from './original/sourceKind';
 import HtmlOriginal from './original/HtmlOriginal';
+import OfflineOfficeEditor from './original/OfflineOfficeEditor';
+import { sourceKind } from './original/sourceKind';
+import IntranetOfficeEditor from './original/intranet/OfficeEditor';
+import { officeApi } from './original/intranet/officeApi';
+import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
 
 export function RichDocumentEditor({
   value,
@@ -172,6 +177,8 @@ export function RichDocumentEditor({
 }
 
 type Props = {
+  onOfficeSaved?: () => Promise<void>;
+  registerBeforeLeave?: (guard: (() => Promise<boolean>) | null) => void;
   documentId?: string;
   sourcePath?: string | null;
   loadOriginal?: () => Promise<Blob>;
@@ -192,11 +199,38 @@ type Props = {
 };
 
 export default function LibraryDocument(props: Props) {
+  const [officeEditing, setOfficeEditing] = useState(false);
+  const officeGuard = useRef<(() => Promise<boolean>) | null>(null);
+  const registerOfficeGuard = (guard: (() => Promise<boolean>) | null) => {
+    officeGuard.current = guard;
+    props.registerBeforeLeave?.(guard);
+  };
   const [source, setSource] = useState<{ filePath: string | null; mimeType: string | null } | null>(null);
   const [uploadingSource, setUploadingSource] = useState(false);
   const sourcePath = source?.filePath ?? props.sourcePath;
   const sourceMime = source?.mimeType ?? props.mimeType ?? '';
   const original = Boolean(props.documentId && props.loadOriginal && usesOriginalFile(sourcePath, sourceMime));
+  const officeKind = sourceKind(sourceMime, props.title);
+  const officeExtension = ({ word: '.docx', sheets: '.xlsx', slides: '.pptx' } as Record<string, string>)[officeKind];
+  const [intranetAvailable, setIntranetAvailable] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void officeApi
+      .available()
+      .then((result) => {
+        if (active) setIntranetAvailable(result.enabled);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+  const useIntranet = intranetAvailable && (!window.__offlineOffice || isEnterpriseRemoteActive());
+  const canEditOffice =
+    original &&
+    officeExtension &&
+    props.canEdit &&
+    (useIntranet || (!isEnterpriseRemoteActive() && window.__offlineOffice && props.uploadOriginal));
   const pageRef = useRef<HTMLElement>(null);
   const [autoStatus, setAutoStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const submitted = useRef(JSON.stringify([props.title, props.content]));
@@ -283,6 +317,19 @@ export default function LibraryDocument(props: Props) {
           <span title={props.location}>{props.location}</span>
         </div>
         <div className={styles.documentCommands}>
+          {canEditOffice && (
+            <Button
+              onClick={() => {
+                if (!officeEditing) setOfficeEditing(true);
+                else
+                  void officeGuard.current?.().then((saved) => {
+                    if (saved) setOfficeEditing(false);
+                  });
+              }}
+            >
+              {t(officeEditing ? 'common.knowledgeLibrary.read' : 'common.edit')}
+            </Button>
+          )}
           {props.canEdit && !original && (
             <span className={styles.editorHint} role='status'>
               {t(
@@ -290,7 +337,7 @@ export default function LibraryDocument(props: Props) {
               )}
             </span>
           )}
-          {props.documentId && props.uploadOriginal && props.canEdit && (
+          {props.documentId && props.uploadOriginal && props.canEdit && !officeEditing && (
             <Upload
               showUploadList={false}
               beforeUpload={(file) => {
@@ -355,7 +402,26 @@ export default function LibraryDocument(props: Props) {
         </div>
       </header>
       <div className={original ? styles.originalCanvas : styles.documentCanvas}>
-        {original ? (
+        {officeEditing && canEditOffice ? (
+          useIntranet ? (
+            <IntranetOfficeEditor
+              documentId={props.documentId!}
+              registerBeforeLeave={registerOfficeGuard}
+              onSaved={async (version) => {
+                setSource({ filePath: `rag-source:${version}`, mimeType: sourceMime });
+                await props.onOfficeSaved?.();
+              }}
+            />
+          ) : (
+            <OfflineOfficeEditor
+              fileName={/\.(docx|xlsx|pptx)$/i.test(props.title) ? props.title : `${props.title}${officeExtension}`}
+              mime={sourceMime}
+              load={props.loadOriginal!}
+              save={props.uploadOriginal!}
+              registerBeforeLeave={registerOfficeGuard}
+            />
+          )
+        ) : original ? (
           <OriginalFileViewer
             id={`${props.documentId}:${sourcePath}`}
             title={props.title}

@@ -9,6 +9,21 @@
 import '@sentry/electron/preload';
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import { ADAPTER_BRIDGE_EVENT_KEY } from '../common/adapter/constant';
+import type { OfflineOfficeApi, OfficeEvent } from '../common/types/offlineOffice';
+const offlineOffice: OfflineOfficeApi = {
+  open: (request) => ipcRenderer.invoke('offline-office:open', request),
+  bounds: (id, bounds) => ipcRenderer.invoke('offline-office:bounds', id, bounds),
+  visibility: (id, visible) => ipcRenderer.invoke('offline-office:visibility', id, visible),
+  flush: (id) => ipcRenderer.invoke('offline-office:flush', id),
+  close: (id) => ipcRenderer.invoke('offline-office:close', id),
+  acknowledge: (id, revision, error) => ipcRenderer.invoke('offline-office:acknowledge', id, revision, error),
+  subscribe: (callback) => {
+    const listener = (_event: Electron.IpcRendererEvent, event: OfficeEvent) => callback(event);
+    ipcRenderer.on('offline-office:event', listener);
+    return () => ipcRenderer.removeListener('offline-office:event', listener);
+  },
+};
+contextBridge.exposeInMainWorld('__offlineOffice', offlineOffice);
 
 /**
  * @description 注入到renderer进程中, 用于与main进程通信
