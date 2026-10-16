@@ -436,3 +436,23 @@ docker build --build-context ort-cache=/mnt/d/dream/outputs/ort-linux-cache-1016
 - **新发现的预存问题**：dream-ui origin/main 基线（90dc2be7）上 `media/endpointFallback`、`media/mediaMcpServer.integration`、`media/openaiImagesAdapter`、`media/taskPollAdapter`、`enterprise/syncTeamModelChannels.dom` 共 5 个测试失败，与知识库无关（在基线复现确认），pre-push 门禁首次被它们挡住，本轮以 `--no-verify` 附证据推送；**这 5 个失败需要单独修复**。
 - **10.3 企业镜像仍挂起**（JWT_SECRET 未提供）：现有 WSL QA 栈（§6）仍是企业联调环境，ghcr compose 栈仅在需要全新安装验收时再拉起；届时先确认 `deploy/.env` 在 `.gitignore` 内。
 - 剩余待办不变：浏览器生命周期 E2E、只读/撤销/AD 禁用成员联动、离线编辑器中文化与专业化、§7 产品差距按 10.7 评估的顺序推进。
+
+### 10.9 Office 类文件展示与编辑整体优化方案（10-16 晚定稿，用户对照 WorkBuddy 截图反馈驱动）
+
+用户用三组对比截图（Excel、PDF、Word）指出：① 预览与编辑两步流转、预览失真（Excel 数据表提示"暂不还原图表和原始样式"；Word 的 docx-preview 排版与真实文档有差距）；② 编辑器全英文；③ PDF 可读但工具行粗糙（"替换原件 72%"等内部语汇直达用户）；④ 建议整体优化。定稿方案：
+
+**P1.0 统一打开路径——"打开即预览"（Word/Excel/PPT 三格式一致）**
+
+点开 Office 文档默认进引擎**只读**视图（个人 WASM / 企业 ONLYOFFICE 都支持只读态）；现有两个轻量预览组件（Excel 数据表、docx-preview）降级为引擎加载期的首屏占位，引擎就绪后无缝接管；"编辑"从模式切换变为解锁输入。一次消灭预览失真和两步流转，与 WorkBuddy 同构。改动面：`LibraryDocument.tsx` 与 `original/` 两端组件。代价是打开成本上移（引擎冷启动秒级），用加载进度 + 预览垫底缓解——WorkBuddy 同样付这个成本。
+
+**P1.1 中文化**
+
+- 企业 ONLYOFFICE：编辑器配置 `lang: 'zh-CN'`，一个参数的快赢。
+- 个人 WASM：**已实验证伪配置级切换**——在 `office-thread.js` 加 `configureUiLocale()` 写 `/org.openoffice.Setup/L10N/ooLocale=zh-CN`，两次引擎重启后菜单栏仍为英文（状态栏 English (USA)），判定 vendor 构建未内嵌中文 UI 资源。可行路径二选一：a) 向 allotropia 上游要（或自建）带 l10n 的 wasm 构建并在 manifest 加语言资源；b) 应用层隐藏引擎菜单栏、自建中文工具栏驱动 UNO 命令（与 §7"专业化整合工具栏"合并为同一任务，推荐）。实验代码保留在 `office-thread.js`（src 与 resources 两份，未提交），上游资源就位后自动生效。
+- 验证方法（后续复用）：CDP 读 `#qtcanvas` 像素导出 PNG → scratchpad/ocr 放大 + Windows.Media.Ocr 读菜单语言，不依赖截屏窗口前台。
+
+**P1.2 PDF/杂类阅读器打磨（纯 UI 任务）**
+
+PDF 渲染内核本身没问题（截图中文本/分页正常），差距在壳：目录/缩略图常驻与收起、工具栏收敛、内部语汇（替换原件、加载百分比）不直达用户、加载态、全文搜索与文本选择。与 P1.0 可并行。引擎直开后 Word/Excel/PPT 的轻量预览仅作 fallback，停止单独打磨。
+
+**P2 A 轨在线网格**：不变，见 §10.7（xlsx 优先，复用数据抽取）。依赖顺序：P1.0 → P1.1 → P1.2 可并行推进；A 轨等 B 轨到达 WorkBuddy 体感水平后再排期。
