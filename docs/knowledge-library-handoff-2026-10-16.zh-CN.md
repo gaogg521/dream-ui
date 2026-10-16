@@ -114,7 +114,7 @@ WorkBuddy 网页版 PDF 显示腾讯文档技术支持；某个个人 MP4 在网
 - `office_text.rs`：Word/PPT OOXML 文字提取、Excel 数据提取、解压与稀疏大表保护。
 - `office_routes.rs`：可用性、创建会话、刷新保存，以及能力票据保护的引擎取文件/回调路由。
 - `dream-core-api-types/src/knowledge_office.rs`：前后端合同。
-- **尚未提交** `dream-core-app/src/router/knowledge_office.rs` 及 router 接线：enterprise-only 配置、活跃成员与 AD 身份复查、构建 OfficeService、挂载引擎路由。
+- `dream-core-app/src/router/knowledge_office.rs` 及 router 接线（enterprise-only 配置、活跃成员与 AD 身份复查、构建 OfficeService、挂载引擎路由）已随 `d31f814` 推送；AD 门限接线待 AD/LDAP 任务落地后补上。
 
 企业 Office API：
 
@@ -199,30 +199,24 @@ knowledge-office-native-{word,excel,pptx}-saved-1015.*
 
 ## 5. Git 状态：务必区分提交与推送
 
-本轮已做 **本地提交**，没有执行 push：
+**10 月 16 日晚更新：知识库成果已全部推送到各自 origin/main。** 推送经干净 worktree（cherry-pick 后仅含知识库内容）完成，dream-ui pre-push 四道门禁（格式、tsc、i18n、受影响测试 50 项）全绿；dream-core 在干净树上 `cargo check -p dream-core-app --features enterprise --bin dreamcore` 与个人版构建通过：
 
-| 仓库       | 本地提交   | 内容                                                  |
-| ---------- | ---------- | ----------------------------------------------------- |
-| dream-ui   | `3fcf7fc3` | 离线/内网 Office 编辑、自动保存、布局与教程说明、测试 |
-| dream-en   | `8abbd90`  | 企业内网编辑接入 UI、保存保护、教程及配置文档         |
-| dream-core | `4357c32`  | Office 合同、领域服务、会话、回调、提取与领域路由     |
+| 仓库       | 已推送提交             | 内容                                                                         |
+| ---------- | ---------------------- | ---------------------------------------------------------------------------- |
+| dream-ui   | `df0d706e`             | 离线/内网 Office 编辑、自动保存、布局与教程说明、测试                        |
+| dream-ui   | `90332d93`、`de180165` | 本交接文档与验收状态（含 oxfmt 格式化）                                      |
+| dream-core | `f758692`、`831ead1`   | Office 合同、领域服务、会话、回调、提取与验收文档                            |
+| dream-core | `3a3e787`              | auth 目录身份门禁槽位（trait + 可选字段，未接线为 None）与 64 字符用户名登录 |
+| dream-core | `d31f814`              | 企业 app 组合接线：knowledge_office.rs、module 声明、engine 路由挂载         |
+| dream-core | `928b118`              | Dockerfile ORT BuildKit 缓存挂载                                             |
+| dream-en   | `8abbd90`              | 企业内网编辑接入 UI（更早已推送）                                            |
 
-前一阶段知识库原件替换等已提交，核心 `b1c8824`，企业 UI `884808e`，桌面本地等价提交 `b455dc52`；此前远端已有对应成果。
+要点：
 
-**企业 app 组合接线没有全部提交**：
-
-```text
-crates/dream-core-app/src/router/knowledge_office.rs  新文件
-crates/dream-core-app/src/router/mod.rs             Office module 声明
-crates/dream-core-app/src/router/routes.rs          服务构建与公开能力路由合并
-Dockerfile                                         本轮添加 ORT BuildKit 缓存的一处改动
-```
-
-原因：接线中的 MemberAdmission 使用工作区另一批尚未提交的 AD `DirectoryIdentityGate` / AuthState 改动。`routes.rs`、`state.rs`、Dockerfile 同时有其他工作，不得整个提交、不得削弱权限以便凑齐编译。本轮只对 state.rs 的 Office 字段/default/builder 做了精确暂存，其他人的 AD/模型代理改动保留。
-
-当前 DEV 镜像由**完整脏工作区**构建，包含现有 AD 依赖，因此实际 QA 可用；**不能说三个已提交 SHA 就能独立复现当前完整企业接线**。
-
-仓库有大量其他 AI/其他任务的未提交改动，不能 `git add .`、reset、clean 或整仓格式化。最后读取的本地 origin/main 跟踪值：UI `28c878fb`、core `cd80117`、en `884808e`，本轮未 fetch 核对服务端。因此 UI/core 推送前要在最新远端基线上整理自有提交、跑门禁，不要强推旧 main。
+- 企业接线的 `directory_identity` 槽位当前为 None：AD/LDAP 生命周期（`ldap_directory.rs`、迁移 006、SsoService 的 gate 实现与接线）仍是工作区未提交 WIP，由该任务自行整体提交后再把真实 gate 接入。MemberAdmission 的目录检查代码已就位，gate 一接即生效。
+- 干净 checkout（`D:/dream/scratchpad/push-core-1016`、`push-ui-1016` 两个 worktree）即可复现已推送状态；但**当前 DEV/QA 运行时仍由完整脏工作区构建**，其行为多出未提交的 AD 接线。
+- 各仓本地 main 与 origin/main 的 SHA 已分叉（本地 `05fa962`/`4357c32` 与远端 `831ead1`/`f758692` 内容相同、SHA 不同；UI 同理）。后续会话应把本地 main 重排到 origin/main。工作区仍有大量其他任务的未提交改动（core 约 40 个文件），不能 `git add .`、reset、clean 或整仓格式化；主仓 index 中原先对 state.rs 的精确暂存已因一次误执行 reset 打散，文件内容无损。
+- 推送过程中修复了 dream-ui 主仓 node_modules 断链（`bun install --frozen-lockfile` 补回 42 个包，zod/@anthropic-ai/sdk 解析恢复），此前 tsc 与 vitest 在主仓同样起不来属环境预存问题。
 
 已有独立校验 checkout：`D:/dream/scratchpad/knowledge-search-ui-verify`；core 的 `knowledge-core-docs-verify` 含上一轮未提交的旧 Office 合同，**不是当前完整实现，不要覆盖或误当成最新版**。
 
@@ -301,7 +295,7 @@ docker build --build-context ort-cache=/mnt/d/dream/outputs/ort-linux-cache-1016
 
 ### 优先收尾
 
-1. 整理企业 app 接线和 AD 权限依赖，精确提交自有 hunk；在干净 checkout 验证能复现当前服务。再整理 UI/core 与最新远端基线，运行推送门禁并推送。当前不是所有接线均已提交，也没有本轮 push。
+1. ~~整理企业 app 接线和 AD 权限依赖，精确提交自有 hunk；在干净 checkout 验证能复现当前服务。再整理 UI/core 与最新远端基线，运行推送门禁并推送。~~ **已完成（10-16 晚）**：知识库相关提交已全部推送，接线以 `d31f814` 落地，干净 worktree 编译与 UI 门禁通过；AD/LDAP 生命周期 WIP 留在原任务，落地后把 `directory_identity` 从 None 接到真实 gate。剩余：本地 main 重排到 origin/main。
 2. 个人文件菜单最新方案已通过 Word 菜单与中文保存实测，但需要在 Excel/PPT 同样回归；其他引擎菜单如导出、发送、打印/打印设置仍未完整测试，不要宣称每个菜单都可用。WASM 文件对话框已实际发现异常，后续应消除不受支持入口或实现产品内下载流程。
 3. 浏览器真正的后退/前进 popstate、硬关闭、强制刷新、长时间断网、保存并发与冲突提示需继续做真实 E2E。当前 navigator 包装与页面切换 guard，不等于全部浏览器生命周期都受保护。
 4. 对企业真实只读成员、被撤销成员、AD 禁用成员做完整 UI/API 联动验收。现有后端测试覆盖撤销与拒绝，但不替代所有真实账号场景。
@@ -336,6 +330,6 @@ docker build --build-context ort-cache=/mnt/d/dream/outputs/ort-linux-cache-1016
 
 ## 9. 建议接手顺序
 
-先复查服务健康和资料数量 → 阅读最新提交与未提交接线 → 解决 AD 依赖/干净 checkout 复现 → 回归个人 Excel/PPT 菜单与保存、导出等剩余入口 → 测保存失败/浏览器离开/权限撤销 → 全新安装的默认索引与语义搜索 → 专业化离线编辑 UI与复杂格式验收 → 提交/推送/文档状态统一。
+先复查服务健康和资料数量 → 本地 main 重排到 origin/main → 回归个人 Excel/PPT 菜单与保存、导出等剩余入口 → 测保存失败/浏览器离开/权限撤销 → 全新安装的默认索引与语义搜索 → 专业化离线编辑 UI与复杂格式验收。
 
 当前可以确定的是：**服务恢复，图文与正文搜索可用，企业三种 Office 基础编辑保存已在产品 UI 实测，个人离线编辑已完成基础接入与保存，并修复了主要文件菜单脱离托管的问题。整体仍处于 DEV 验收阶段，不能宣布全面对齐 WorkBuddy或生产交付完成。**
