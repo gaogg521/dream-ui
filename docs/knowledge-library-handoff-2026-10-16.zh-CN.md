@@ -489,3 +489,9 @@ PDF 渲染内核本身没问题（截图中文本/分页正常），差距在壳
 - 验证方法沉淀：canvas 像素 toDataURL → OCR；DOM 布局链排查（canvas 252px 之谜 = 根容器没撑满父级，width:100% 解决）。
 
 - **预存 5 个失败测试已修复并推送 `2d06dba1`，pre-push 门禁恢复全绿**（这是自门禁被挡以来第一次不带 --no-verify 的推送）：① 媒体四件套根因是 vitest 的 fs 包装层让 `fs.promises.access` 解析为 **null** 而非 undefined（文件其实存在），断言改为 `fs.existsSync`；② syncTeamModelChannels 的期望缺了媒体模型推送引入的派生 `modelSettings` 与 `modelProtocols` 字段。
+
+### 10.13 工具栏专业化定稿 + A 轨在线网格 MVP（10-17）
+
+- **引擎 chrome 确定性隐藏**（`a99f267b`）：LayoutManager hideElement 折叠 menubar/standardbar/statusbar，在 load 与 ready 后各执行一次（`.uno:Menubar` 是有状态 toggle 且跨启动持久，禁用）。锁定视图只剩文档 + 只读横幅。注意：docker cp 进容器后要 chmod——同坑也适用于 docker cp 进 WSL 的脚本。
+- **A 轨在线网格 MVP**（`5b54ec57`）：xlsx 锁定视图新增「在线编辑」入口（个人端、非内网时）——退出引擎视图，进入转换副本网格（前 200 行 × 26 列，SheetJS 驱动），「保存回原件」经受保护上传导出回 xlsx 并自动重载最新内容；数值保留数字类型，被编辑单元格的公式以当前值替代（UI 有明示）。真机闭环验证：编辑 A1 → 保存 → 后端新版本 → 重开网格读回新值。企业控制台镜像组件待跟进（企业主路径是 ONLYOFFICE 编辑）。
+- **协同层**：按 §10.7 顺序在 A 轨闭环后启动（Yjs CRDT + 块模型），本期未动。
