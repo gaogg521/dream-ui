@@ -122,7 +122,6 @@ export const BUILTIN_SKILL_CATEGORY: Record<string, string> = {
   peekaboo: 'system',
   'pm-toolkit-zxh': 'data',
   'poster-design-studio': 'media',
-  'ppt-studio': 'office',
   'price-compare': 'data',
   'proboost-tiktok-shop-analysis': 'data',
   'proboost-tiktok-video-analysis': 'data',

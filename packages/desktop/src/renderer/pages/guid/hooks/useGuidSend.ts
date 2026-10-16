@@ -16,11 +16,14 @@ import type { NavigateFunction } from 'react-router-dom';
 import { mutate as swrMutate } from 'swr';
 import { getConversationCreateErrorMessage } from '@/renderer/pages/conversation/utils/conversationCreateError';
 import { requestMediaMode } from '@/renderer/hooks/media/mediaModeStore';
+import { detectMediaIntent } from '@/common/media/detectMediaIntent';
+import { useMediaIntentConfirmation } from '@/renderer/hooks/media/useMediaIntentConfirmation';
 
 /** Just the slice of `useMediaComposer` the welcome page needs. */
 export type GuidMediaComposer = {
   mode: 'off' | 'image' | 'video';
   needsModel: boolean;
+  hasModelFor: (mode: 'image' | 'video') => boolean;
   changeMode: (mode: 'off' | 'image' | 'video') => void;
   /** The resolved model, handed to the conversation so it starts on the same one. */
   providerId?: string;
@@ -79,7 +82,7 @@ export type GuidSendDeps = {
 };
 
 export type GuidSendResult = {
-  handleSend: () => Promise<void>;
+  handleSend: () => Promise<void | false>;
   sendMessageHandler: () => void;
   isButtonDisabled: boolean;
 };
@@ -122,8 +125,9 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     localeKey,
   } = deps;
   const sendingRef = useRef(false);
+  const confirmMediaIntent = useMediaIntentConfirmation();
 
-  const handleSend = useCallback(async () => {
+  const handleSend = useCallback(async (): Promise<void | false> => {
     if (!selectedAssistantId) {
       return;
     }
@@ -134,6 +138,18 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
 
     const isCustomWorkspace = !!dir;
     const finalWorkspace = dir || '';
+
+    if (media?.mode === 'off') {
+      const intent = detectMediaIntent(input);
+      if (intent && media.hasModelFor(intent)) {
+        const selectedMode = await confirmMediaIntent(intent, media.hasModelFor);
+        if (selectedMode !== 'chat') {
+          media.changeMode(selectedMode);
+          // Preserve the draft and references while the user reviews the model.
+          return false;
+        }
+      }
+    }
 
     // Media generation short-circuits the assistant, exactly as it does inside a
     // conversation. The conversation is still created first: a job belongs to a
@@ -378,6 +394,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     // `media` carries the live mode; without it here the callback keeps the
     // first render's composer and every send looks like plain chat.
     media,
+    confirmMediaIntent,
     input,
     files,
     dir,
@@ -406,7 +423,8 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     sendingRef.current = true;
     setLoading(true);
     handleSend()
-      .then(() => {
+      .then((sent) => {
+        if (sent === false) return;
         setInput('');
         setMentionOpen(false);
         setMentionQuery(null);

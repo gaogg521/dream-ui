@@ -12,6 +12,11 @@ import { useGuidSend, type GuidSendDeps } from '@/renderer/pages/guid/hooks/useG
 const createConversationInvokeMock = vi.fn();
 const swrMutateMock = vi.fn();
 const requestMediaModeMock = vi.fn();
+const confirmMediaIntentMock = vi.fn();
+
+vi.mock('@/renderer/hooks/media/useMediaIntentConfirmation', () => ({
+  useMediaIntentConfirmation: () => confirmMediaIntentMock,
+}));
 
 vi.mock('@/common', () => ({
   ipcBridge: {
@@ -390,6 +395,7 @@ describe('useGuidSend media mode handoff', () => {
     deps.media = {
       mode: 'image',
       needsModel: false,
+      hasModelFor: () => true,
       changeMode: vi.fn(),
       providerId: 'provider-ark',
       model: 'seedream-4',
@@ -455,5 +461,35 @@ describe('useGuidSend media mode handoff', () => {
     });
 
     expect(requestMediaModeMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps the original draft and attachments when confirming video mode on the home page', async () => {
+    const deps = mediaDeps({ mode: 'off' });
+    deps.input = '生成视频：蓝色圆环旋转';
+    confirmMediaIntentMock.mockResolvedValue('video');
+    const { result } = renderHook(() => useGuidSend(deps));
+    await act(async () => {
+      result.current.sendMessageHandler();
+    });
+    expect(confirmMediaIntentMock).toHaveBeenCalledWith('video', deps.media?.hasModelFor);
+    expect(deps.media?.changeMode).toHaveBeenCalledWith('video');
+    expect(createConversationInvokeMock).not.toHaveBeenCalled();
+    expect(deps.media?.submit).not.toHaveBeenCalled();
+    expect(deps.setInput).not.toHaveBeenCalled();
+    expect(deps.setFiles).not.toHaveBeenCalled();
+  });
+
+  it('sends the original text once when media confirmation is cancelled', async () => {
+    const deps = mediaDeps({ mode: 'off' });
+    deps.input = '生成图片：蓝色圆环';
+    confirmMediaIntentMock.mockResolvedValue('chat');
+    const { result } = renderHook(() => useGuidSend(deps));
+    await act(async () => {
+      result.current.sendMessageHandler();
+    });
+    expect(createConversationInvokeMock).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(sessionStorage.getItem('acp_initial_message_conv-media-1')!).input).toBe(deps.input);
+    expect(deps.media?.changeMode).not.toHaveBeenCalled();
+    expect(deps.media?.submit).not.toHaveBeenCalled();
   });
 });

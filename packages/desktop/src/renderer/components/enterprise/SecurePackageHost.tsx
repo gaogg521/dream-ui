@@ -26,6 +26,7 @@ import {
   loadSecurePackage,
   setSecurePackageOpener,
   type OpenedPackage,
+  type SecurePackageSource,
 } from '@renderer/utils/enterprise/secureExport/openPackage';
 import {
   clearSecureExportState,
@@ -41,7 +42,7 @@ const SecurePackageHost: React.FC = () => {
   const [opened, setOpened] = useState<OpenedPackage | null>(null);
   const [opening, setOpening] = useState(false);
   const wasActive = useRef(false);
-  const backlog = useRef<string[]>([]);
+  const backlog = useRef<SecurePackageSource[]>([]);
 
   const active = Boolean(context?.isEnterprise) && isElectronDesktop() && isEnterpriseRemoteActive();
 
@@ -62,7 +63,7 @@ const SecurePackageHost: React.FC = () => {
   }, [active, loading]);
 
   const open = useCallback(
-    async (path: string) => {
+    async (path: SecurePackageSource) => {
       setOpening(true);
       try {
         const result = await loadSecurePackage(path, t);
@@ -92,7 +93,7 @@ const SecurePackageHost: React.FC = () => {
   }, [ready, open]);
 
   const request = useCallback(
-    (path: string) => {
+    (path: SecurePackageSource) => {
       if (!ready) {
         backlog.current.push(path);
         return;

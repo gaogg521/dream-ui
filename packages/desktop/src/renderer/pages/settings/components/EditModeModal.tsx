@@ -46,6 +46,7 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
     // Fall back to the initial provider value until the form is populated.
     const watchedBaseUrl = Form.useWatch('base_url', form);
     const watchedApiKey = Form.useWatch('api_key', form);
+    const enterpriseManaged = isEnterpriseManaged(data);
     const effectiveBaseUrl = watchedBaseUrl ?? data?.base_url;
     const effectiveApiKey = watchedApiKey ?? data?.api_key;
 
@@ -66,8 +67,8 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
     // When is_full_url, pass empty base_url to prevent auto-fetch with the full endpoint URL
     const modelListState = useModeModeList(
       data?.platform || 'gemini',
-      isFullUrl ? '' : effectiveBaseUrl,
-      isFullUrl ? '' : effectiveApiKey,
+      isFullUrl || enterpriseManaged ? '' : effectiveBaseUrl,
+      isFullUrl || enterpriseManaged ? '' : effectiveApiKey,
       true,
       undefined
     );
@@ -77,7 +78,6 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
     // the ORIGINAL value back, not the mask — a saved mask would silently kill
     // the channel. The moment the user edits the field the mask is considered
     // discarded and the typed value is saved as-is.
-    const enterpriseManaged = isEnterpriseManaged(data);
     const realApiKeyRef = useRef<string>(data?.api_key ?? '');
     const apiKeyEditedRef = useRef(false);
     useEffect(() => {
@@ -95,7 +95,7 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
     const handleBaseUrlBlur = async () => {
       // is_full_url providers don't fetch a model list (the endpoint is a full
       // chat URL, not a base), so there is nothing to refresh — mirror onFocus.
-      if (isFullUrl || isBedrock) return;
+      if (isFullUrl || isBedrock || enterpriseManaged) return;
 
       const nextBaseUrl = form.getFieldValue('base_url') as string | undefined;
       const apiKey = (form.getFieldValue('api_key') as string | undefined) ?? '';
@@ -207,12 +207,13 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
             // Validation failed — Arco Form highlights invalid fields automatically
           }
         }}
+        okButtonProps={{ disabled: enterpriseManaged }}
         okText={t('common.save')}
         cancelText={t('common.cancel')}
       >
         {messageContext}
         <div>
-          <Form form={form} layout='vertical'>
+          <Form form={form} layout='vertical' disabled={enterpriseManaged}>
             {/* 模型供应商名称（可编辑，带 Logo）/ Model Provider name (editable, with Logo) */}
             <Form.Item
               label={
@@ -264,7 +265,7 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
                   <div className='text-11px text-t-secondary mt-2'>
                     💡{' '}
                     {t('settings.enterpriseKeyMaskedTip', {
-                      defaultValue: '企业下发的 Key 已脱敏显示。未修改则保存时保留原 Key；输入新 Key 将整体替换。',
+                      defaultValue: '此模型渠道由企业统一管理，当前仅供查看。修改地址、密钥或模型请到企业管理后台。',
                     })}
                   </div>
                 ) : (
@@ -371,7 +372,7 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
                 allowCreate
                 mode={data?.models && data.models.length > 1 ? 'multiple' : undefined}
                 onFocus={async () => {
-                  if (isFullUrl) return;
+                  if (isFullUrl || enterpriseManaged) return;
                   // For Bedrock, build bedrock_config from current form values and fetch models
                   if (isBedrock) {
                     const values = form.getFields();
@@ -426,7 +427,13 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
                   }
                   void modelListState.mutate();
                 }}
-                options={isFullUrl ? [] : modelListState.data?.models || []}
+                options={
+                  enterpriseManaged
+                    ? (data?.models ?? []).map((value) => ({ label: value, value }))
+                    : isFullUrl
+                      ? []
+                      : modelListState.data?.models || []
+                }
               />
             </Form.Item>
           </Form>

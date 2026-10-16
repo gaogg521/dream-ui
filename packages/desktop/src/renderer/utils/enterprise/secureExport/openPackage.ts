@@ -10,10 +10,12 @@
 
 import { ipcBridge } from '@/common';
 import type { SecurePackage } from '@/common/adapter/ipcBridge';
+import { chatFileRefPath, type ChatFileRef } from '@/common/types/chatFile';
 import { getEnterpriseServerUrl } from '@/common/adapter/enterpriseMode';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import {
   PackageFormatError,
+  MAX_PACKAGE_BYTES,
   base64ToBytes,
   openPackage,
   readPackageHeader,
@@ -31,6 +33,7 @@ export type OpenedPackage = {
 
 /** `value` when it opened, `message` (ready to show) when it did not. */
 export type OpenPackageResult = { ok: boolean; value?: OpenedPackage; message?: string };
+export type SecurePackageSource = string | ChatFileRef;
 
 type Translate = (key: string, values?: Record<string, unknown>) => string;
 
@@ -66,10 +69,19 @@ function serverErrorMessage(error: unknown, t: Translate): string {
   }
 }
 
-export async function loadSecurePackage(sourcePath: string, t: Translate): Promise<OpenPackageResult> {
-  const base64 = await ipcBridge.secureExport.readBinary.invoke({ path: sourcePath }).catch((): null => null);
+export async function loadSecurePackage(source: SecurePackageSource, t: Translate): Promise<OpenPackageResult> {
+  const sourcePath = typeof source === 'string' ? source : chatFileRefPath(source);
+  const base64 = await (async () => {
+    if (typeof source === 'string') return ipcBridge.secureExport.readBinary.invoke({ path: source });
+    // Keep project files addressed by their scoped reference. Never resolve an
+    // absolute path in the renderer or send encrypted bytes through text preview.
+    const metadata = await ipcBridge.fs.getContentMetadata.invoke({ file: source });
+    if (!metadata || metadata.size > MAX_PACKAGE_BYTES) return null;
+    return ipcBridge.fs.readContent.invoke({ file: source, encoding: 'base64' });
+  })().catch((): null => null);
   if (!base64) return { ok: false, message: t('messages.secureExport.openUnreadable') };
   const bytes = base64ToBytes(base64);
+  if (bytes.length > MAX_PACKAGE_BYTES) return { ok: false, message: t('messages.secureExport.openUnreadable') };
 
   let header: PackageHeader;
   try {
@@ -115,16 +127,16 @@ export async function loadSecurePackage(sourcePath: string, t: Translate): Promi
   }
 }
 
-let opener: ((path: string) => void) | null = null;
+let opener: ((source: SecurePackageSource) => void) | null = null;
 
 /** Registered by the app shell's host; the one place that shows packages. */
-export function setSecurePackageOpener(next: ((path: string) => void) | null): void {
+export function setSecurePackageOpener(next: ((source: SecurePackageSource) => void) | null): void {
   opener = next;
 }
 
 /** Ask the shell to open a package file (from a button, a picker, a link). */
-export function requestOpenSecurePackage(path: string): boolean {
+export function requestOpenSecurePackage(source: SecurePackageSource): boolean {
   if (!opener) return false;
-  opener(path);
+  opener(source);
   return true;
 }

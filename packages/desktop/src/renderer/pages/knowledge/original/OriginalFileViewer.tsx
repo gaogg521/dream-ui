@@ -7,6 +7,7 @@ const WordOriginal = lazy(() => import('./WordOriginal'));
 const SlidesOriginal = lazy(() => import('./SlidesOriginal'));
 const SheetsOriginal = lazy(() => import('./SheetsOriginal'));
 const HtmlOriginal = lazy(() => import('./HtmlOriginal'));
+const PdfJsOriginal = lazy(() => import('./PdfJsOriginal'));
 
 type Props = { id: string; title: string; mime: string; load: () => Promise<Blob> };
 export default function OriginalFileViewer({ id, title, mime, load }: Props) {
@@ -55,7 +56,9 @@ export default function OriginalFileViewer({ id, title, mime, load }: Props) {
   return (
     <div className={styles.originalViewer}>
       {kind === 'pdf' ? (
-        <iframe title={title} src={`${url}#toolbar=1&navpanes=1`} className={styles.originalFrame} />
+        <Suspense fallback={<Spin tip={t('common.loading')} />}>
+          <PdfJsOriginal title={title} load={load} />
+        </Suspense>
       ) : kind === 'word' ? (
         <Suspense fallback={<Spin tip={t('common.loading')} />}>
           <WordOriginal url={url} title={title} />

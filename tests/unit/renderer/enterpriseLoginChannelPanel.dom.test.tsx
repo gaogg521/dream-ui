@@ -85,4 +85,18 @@ describe('EnterpriseLoginChannelPanel unavailable reasons', () => {
     expect(screen.queryByText(/尚未连接/)).toBeNull();
     expect(screen.queryByText(/管理员尚未/)).toBeNull();
   });
+
+  it('places the usable local login before unconfigured enterprise methods', async () => {
+    mockProviders([]);
+    render(<EnterpriseLoginChannelPanel remoteOrigin='http://10.0.0.5:25808' />);
+    await screen.findByText(/管理员尚未/);
+    expect(screen.getAllByRole('button')[0]).toHaveTextContent('本地账户');
+  });
+
+  it('prioritizes a configured SSO method while keeping local login available', async () => {
+    mockProviders([{ provider: 'ldap', enabled: true, configured: true }]);
+    render(<EnterpriseLoginChannelPanel remoteOrigin='http://10.0.0.5:25808' />);
+    await waitFor(() => expect(screen.getAllByRole('button')[0]).toHaveTextContent('LDAP 域控'));
+    expect(screen.getAllByRole('button')[1]).toHaveTextContent('本地账户');
+  });
 });

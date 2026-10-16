@@ -170,7 +170,7 @@ const RemoteServerSection: React.FC = () => {
         {session ? (
           <Tag color='green'>
             {t('common.enterprise.remoteConnectedAs', {
-              name: session.username,
+              name: session.name?.trim() || session.username,
               defaultValue: '已登录：{{name}}',
             })}
           </Tag>

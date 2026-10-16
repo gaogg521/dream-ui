@@ -10,14 +10,15 @@ import TrialVendorOptions from '@renderer/pages/settings/components/TrialVendorO
 import { isTrialOfferRedundant, readTrialOfferDismissed, persistTrialOfferDismissed } from './trialOfferVisibility';
 import type { IProvider } from '@/common/config/storage';
 import styles from './TrialModelBanner.module.css';
+import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
+import { useOrgContext } from '@/renderer/pages/enterprise/hooks/useOrgContext';
 
 /**
  * Corner offer for the built-in free models.
  *
  * Sits bottom-right rather than in the page column: it is a standing promotion
- * now, not an empty-state hint — a user who already has their own providers
- * sees it too — and the flow from title to composer should not be interrupted
- * for something that is not part of it.
+ * for personal workspaces without configured models. Enterprise clients use
+ * their administrator's model configuration instead of personal trial offers.
  *
  * Clicking opens a small picker: there is more than one trial vendor now
  * (OpenRouter's free router, and Baoyun's metered ¥10 grant), and firing two
@@ -26,6 +27,7 @@ import styles from './TrialModelBanner.module.css';
  */
 const TrialModelBanner: React.FC<{ providers?: IProvider[] }> = ({ providers }) => {
   const { t } = useTranslation();
+  const { context, loading } = useOrgContext();
   const [dismissed, setDismissed] = useState(() => readTrialOfferDismissed());
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -34,8 +36,12 @@ const TrialModelBanner: React.FC<{ providers?: IProvider[] }> = ({ providers }) 
     setDismissed(true);
   }, []);
 
-  const redundant = useMemo(() => isTrialOfferRedundant(providers), [providers]);
-  if (dismissed || redundant) return null;
+  const enterpriseConnected = isEnterpriseRemoteActive() || !!context?.isEnterprise;
+  const redundant = useMemo(
+    () => isTrialOfferRedundant(providers, enterpriseConnected),
+    [providers, enterpriseConnected]
+  );
+  if (loading || !providers || dismissed || redundant) return null;
 
   return (
     <>

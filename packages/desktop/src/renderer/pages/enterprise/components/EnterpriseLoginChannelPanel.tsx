@@ -4,7 +4,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Message, Spin } from '@arco-design/web-react';
+import { Button, Message, Spin } from '@arco-design/web-react';
 import { DataServer, HardDisk, Key } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import ChannelDingTalkLogo from '@renderer/assets/channel-logos/dingtalk.svg';
@@ -250,42 +250,47 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
   return (
     <Spin loading={loading}>
       <div className={styles.channelGrid}>
-        {channels.map((item) => {
-          const status = resolveChannelStatus(item.id, providers, loading);
-          const unavailable = status === 'not_configured' || status === 'disabled';
-          return (
-            <button
-              key={item.id}
-              type='button'
-              className={`${styles.channelTile} ${unavailable ? styles.channelTileUnavailable : ''}`}
-              // Only `pending` is truly non-interactive. An unconfigured
-              // channel stays clickable so the click can explain itself —
-              // disabling it here is what made the reason unreachable. The
-              // badge says WHY it looks grey up front (E5): same visual
-              // state as actual interactivity, click still explains.
-              disabled={status === 'pending'}
-              onClick={() => void handleChannelClick(item)}
-            >
-              {unavailable && (
-                <span className={styles.channelBadge}>
-                  {/* When the provider list could not be fetched at all, the
+        {[...channels]
+          .sort((left, right) => {
+            const rank = (item: ChannelMeta) =>
+              resolveChannelStatus(item.id, providers, loading) === 'ready' ? (item.id === 'local' ? 1 : 0) : 2;
+            return rank(left) - rank(right);
+          })
+          .map((item) => {
+            const status = resolveChannelStatus(item.id, providers, loading);
+            const unavailable = status === 'not_configured' || status === 'disabled';
+            return (
+              <Button
+                key={item.id}
+                className={`${styles.channelTile} ${unavailable ? styles.channelTileUnavailable : styles.channelTileReady}`}
+                // Only `pending` is truly non-interactive. An unconfigured
+                // channel stays clickable so the click can explain itself —
+                // disabling it here is what made the reason unreachable. The
+                // badge says WHY it looks grey up front (E5): same visual
+                // state as actual interactivity, click still explains.
+                disabled={status === 'pending'}
+                onClick={() => void handleChannelClick(item)}
+              >
+                {unavailable && (
+                  <span className={styles.channelBadge}>
+                    {/* When the provider list could not be fetched at all, the
                       channel's real state is unknown — the badge must not
                       assert 「未配置」, which contradicts the explanation right
                       below it ("cannot reach the server") and sends the member
                       to the wrong person: an admin who configured nothing,
                       rather than an address that answers nothing. */}
-                  {unavailableReason === 'server_unreachable' || unavailableReason === 'not_connected'
-                    ? t('common.enterprise.channelUnknownBadge', { defaultValue: '不可用' })
-                    : status === 'disabled'
-                      ? t('common.enterprise.channelDisabledBadge', { defaultValue: '已停用' })
-                      : t('common.enterprise.channelNotConfiguredBadge', { defaultValue: '未配置' })}
-                </span>
-              )}
-              {item.icon}
-              <span className={styles.channelLabel}>{channelLabel(item)}</span>
-            </button>
-          );
-        })}
+                    {unavailableReason === 'server_unreachable' || unavailableReason === 'not_connected'
+                      ? t('common.enterprise.channelUnknownBadge', { defaultValue: '不可用' })
+                      : status === 'disabled'
+                        ? t('common.enterprise.channelDisabledBadge', { defaultValue: '已停用' })
+                        : t('common.enterprise.channelNotConfiguredBadge', { defaultValue: '未配置' })}
+                  </span>
+                )}
+                {item.icon}
+                <span className={styles.channelLabel}>{channelLabel(item)}</span>
+              </Button>
+            );
+          })}
       </div>
       {unavailableReason ? (
         <div className={styles.reason}>

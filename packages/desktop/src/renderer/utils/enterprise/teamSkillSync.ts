@@ -11,6 +11,8 @@
  */
 
 import { ipcBridge } from '@/common';
+import { resolveMediaModelSpec } from '@/common/media/catalog';
+import type { IProvider } from '@/common/config/storage';
 import type { DlpFindingInput } from '@/common/adapter/ipcBridge';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import { getEnterpriseServerUrl, getEnterpriseSession } from '@/common/adapter/enterpriseMode';
@@ -267,6 +269,36 @@ async function channelToken(channelId: string, proxyBaseUrl: string): Promise<st
   return issued.token;
 }
 
+/** Reuse the standalone catalog before replacing the vendor URL with our proxy. */
+export function resolveTeamMediaSettings(channel: {
+  platform: string;
+  name: string;
+  upstreamBaseUrl: string;
+  models: string;
+  modelSettings?: string | null;
+}): IProvider['model_settings'] {
+  const settings = parseJsonOr<NonNullable<IProvider['model_settings']>>(channel.modelSettings, {});
+  const provider = {
+    platform: channel.platform,
+    name: channel.name,
+    base_url: channel.upstreamBaseUrl,
+    model_settings: settings,
+  };
+  for (const model of parseJsonOr<string[]>(channel.models, [])) {
+    for (const kind of ['image', 'video'] as const) {
+      const spec = resolveMediaModelSpec(kind, provider, model);
+      if (!spec) continue;
+      settings[model] = {
+        ...settings[model],
+        model_kind: kind,
+        ...(spec.endpointStyle ? { media_endpoint: spec.endpointStyle } : {}),
+      };
+      break;
+    }
+  }
+  return settings;
+}
+
 export async function syncTeamModelChannels(): Promise<TeamSkillSyncResult | null> {
   let channels: Awaited<ReturnType<typeof ipcBridge.oneDevops.listModelChannels.invoke>>;
   try {
@@ -301,7 +333,7 @@ export async function syncTeamModelChannels(): Promise<TeamSkillSyncResult | nul
           baseUrl,
           token,
           models: parseJsonOr<string[]>(channel.models, []),
-          modelSettings: parseJsonOr<unknown>(channel.modelSettings, undefined),
+          modelSettings: resolveTeamMediaSettings(channel),
           modelProtocols: parseJsonOr<unknown>(channel.modelProtocols, undefined),
         };
       } catch {

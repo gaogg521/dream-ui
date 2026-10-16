@@ -11,11 +11,15 @@
  */
 
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (k: string, opts?: { defaultValue?: string }) => opts?.defaultValue ?? k }),
+  useTranslation: () => ({
+    t: (k: string, opts?: { defaultValue?: string; name?: string }) =>
+      (opts?.defaultValue ?? k).replace('{{name}}', opts?.name ?? ''),
+  }),
 }));
 
 vi.mock('@renderer/utils/platform', () => ({ isElectronDesktop: () => true }));
@@ -84,5 +88,30 @@ describe('EnterpriseIdentitySettings composition', () => {
     const card = screen.getByTestId('server-card');
     const login = screen.getByTestId('remote-server-section');
     expect(card.compareDocumentPosition(login) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
+
+const RealRemoteServerSection = (
+  await vi.importActual<typeof import('@/renderer/pages/enterprise/components/RemoteServerSection')>(
+    '@/renderer/pages/enterprise/components/RemoteServerSection'
+  )
+).default;
+
+describe('enterprise signed-in label', () => {
+  afterEach(() => localStorage.removeItem('one-enterprise:session'));
+  it.each([
+    ['赵高', '已登录：赵高'],
+    ['', '已登录：sso_test'],
+  ])('uses a nonempty identity name before the account id (%s)', (name, expected) => {
+    localStorage.setItem(
+      'one-enterprise:session',
+      JSON.stringify({ token: 'unit-test-token', username: 'sso_test', name })
+    );
+    render(
+      <MemoryRouter>
+        <RealRemoteServerSection />
+      </MemoryRouter>
+    );
+    expect(screen.getByText(expected)).toBeInTheDocument();
   });
 });

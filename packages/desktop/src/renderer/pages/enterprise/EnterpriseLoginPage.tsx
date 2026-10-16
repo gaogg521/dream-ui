@@ -287,7 +287,7 @@ const EnterpriseLoginPage: React.FC = () => {
   );
 
   const renderStepIndicator = () => (
-    <div className='flex items-center justify-center gap-8px mb-20px'>
+    <div className='enterprise-login__steps'>
       {STEPS.map((s, index) => {
         // Forward navigation unlocks when the prerequisite holds; going back
         // is always allowed. Step 2 stays reachable even when disconnected:
@@ -303,25 +303,18 @@ const EnterpriseLoginPage: React.FC = () => {
         //   locked     — dashed border, dimmed, not-allowed cursor
         return (
           <React.Fragment key={s.step}>
-            {index > 0 && <span className='text-t-tertiary'>—</span>}
-            <button
-              type='button'
+            {index > 0 && <span className='enterprise-login__connector' aria-hidden='true' />}
+            <Button
               onClick={() => reachable && setStep(s.step)}
-              className='flex items-center gap-4px px-8px py-2px rd-6px'
-              style={{
-                border: active
-                  ? '1px solid rgb(var(--primary-6))'
-                  : `1px ${reachable ? 'solid' : 'dashed'} var(--color-border-2)`,
-                background: active ? 'var(--color-fill-2)' : 'transparent',
-                cursor: reachable ? 'pointer' : 'not-allowed',
-                opacity: reachable ? 1 : 0.5,
-              }}
+              className='enterprise-login__step'
+              aria-current={active ? 'step' : undefined}
+              disabled={!reachable}
             >
               <span className='text-12px text-t-secondary'>{s.step}</span>
               <span className={`text-13px ${active || reachable ? 'font-600 text-t-primary' : 'text-t-secondary'}`}>
                 {stepLabel(s)}
               </span>
-            </button>
+            </Button>
           </React.Fragment>
         );
       })}
@@ -329,8 +322,8 @@ const EnterpriseLoginPage: React.FC = () => {
   );
 
   return (
-    <div className='login-page'>
-      <div className='login-page__card' style={{ maxWidth: 560 }}>
+    <div className='login-page enterprise-login-page'>
+      <div className='login-page__card enterprise-login__card'>
         <div className='mb-12px'>
           <Button type='text' icon={<Left theme='outline' size='16' />} onClick={() => navigate('/guid')}>
             {t('common.back', { defaultValue: '返回' })}

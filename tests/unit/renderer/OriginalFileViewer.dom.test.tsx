@@ -4,6 +4,10 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import OriginalFileViewer from '@/renderer/pages/knowledge/original/OriginalFileViewer';
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key.split('.').at(-1) }) }));
+vi.mock('@/renderer/pages/knowledge/original/PdfJsOriginal', () => ({
+  __esModule: true,
+  default: () => <div data-testid='pdf-viewer-stub' />,
+}));
 const createUrl = vi.fn(() => 'blob:test-original');
 const revokeUrl = vi.fn();
 beforeEach(() => {
@@ -23,13 +27,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe('original file reader', () => {
-  it('shows the PDF original and releases its URL without refetching on ordinary rerenders', async () => {
+  it('renders the PDF viewer and releases its URL without refetching on ordinary rerenders', async () => {
     const load = vi.fn().mockResolvedValue(new Blob(['%PDF-test'], { type: 'application/pdf' }));
     const view = render(<OriginalFileViewer id='one' title='Guide.pdf' mime='application/pdf' load={load} />);
-    await waitFor(() =>
-      expect(screen.getByTitle('Guide.pdf')).toHaveAttribute('src', 'blob:test-original#toolbar=1&navpanes=1')
-    );
+    expect(await screen.findByTestId('pdf-viewer-stub')).toBeInTheDocument();
     view.rerender(<OriginalFileViewer id='one' title='Guide.pdf' mime='application/pdf' load={load} />);
+    // The mocked viewer stub does not fetch; the shell still reads the
+    // original exactly once for its download link.
     expect(load).toHaveBeenCalledTimes(1);
     view.unmount();
     expect(revokeUrl).toHaveBeenCalledWith('blob:test-original');

@@ -122,7 +122,12 @@ const matchesEntry = (spec: MediaModelSpec, provider: MediaProviderShape, modelN
   if (match.platform && !match.platform.some((p) => p.toLowerCase() === (provider.platform || '').toLowerCase())) {
     return false;
   }
-  if (match.baseUrlIncludes && !includesIgnoreCase(provider.base_url, match.baseUrlIncludes)) return false;
+  if (
+    match.baseUrlIncludes &&
+    !includesIgnoreCase(provider.base_url, match.baseUrlIncludes) &&
+    (!spec.endpointStyle || provider.model_settings?.[modelName]?.media_endpoint !== spec.endpointStyle)
+  )
+    return false;
   if (match.providerNameIncludes && !includesIgnoreCase(provider.name, match.providerNameIncludes)) return false;
 
   // An entry that pinned the provider (platform / base_url / provider name)

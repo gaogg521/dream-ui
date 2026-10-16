@@ -38,7 +38,7 @@ export type MediaIntent = 'image' | 'video' | null;
  * fire on every one of them.
  */
 const ANALYSIS_PATTERNS: RegExp[] = [
-  /(分析|识别|看看|看下|看一下|描述|解释|读取|提取|翻译|总结)[^。！？]{0,6}(图|照片|截图|视频)/,
+  /(分析|识别|查看|看看|看下|看一下|描述|解释|读取|提取|翻译|总结)[^。！？]{0,12}(图|照片|截图|视频)/,
   /(这|那|此)(张|个|幅|段|条)?(图|图片|照片|截图|视频)/,
   /图(片)?(里|中|上)/,
   /视频(里|中)/,
@@ -99,7 +99,18 @@ const CODE_CONTEXT =
  * otherwise fall through to the image rule.
  */
 export const detectMediaIntent = (input: string): MediaIntent => {
-  const text = input.trim();
+  // A prohibition is not an instruction to generate. Remove only the
+  // negated clause so a separate positive request can still be detected.
+  const text = input
+    .replace(
+      /(?:不要|别|无需|不需要|禁止)\s*(?:帮我|给我)?\s*(?:画|绘制|生成|制作|创建|设计|渲染)[^，。！？；\n]*/g,
+      ''
+    )
+    .replace(
+      /\b(?:do\s+not|don't|never)\s+(?:draw|sketch|paint|generate|create|make|render|design|produce)\b[^,.!?;\n]*/gi,
+      ''
+    )
+    .trim();
   if (!text || text.length > 2000) return null;
 
   if (ANALYSIS_PATTERNS.some((pattern) => pattern.test(text))) return null;

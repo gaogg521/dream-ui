@@ -78,9 +78,17 @@ const LoginSsoButtons: React.FC = () => {
     setLdapLoading(true);
     setLdapError(null);
     try {
+      // The providers probe seeds the double-submit cookie. LDAP login is
+      // protected by CSRF just like other cookie-authenticated POST routes.
+      const csrf = document.cookie
+        .split(';')
+        .map((part) => part.trim())
+        .find((part) => part.startsWith('dream-csrf-token='))
+        ?.slice('dream-csrf-token='.length);
       const response = await fetch('/api/one/sso/ldap/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(csrf ? { 'x-csrf-token': csrf } : {}) },
+        credentials: 'include',
         body: JSON.stringify({ username, password: ldapPassword }),
         signal: AbortSignal.timeout(15000),
       });

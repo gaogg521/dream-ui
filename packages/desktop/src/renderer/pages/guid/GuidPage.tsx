@@ -686,6 +686,9 @@ const GuidPage: React.FC = () => {
   // the dev server (which has no SPA fallback) and 404.
   useEffect(() => {
     if (!resetAssistantRequested && !preselectAssistantId) return;
+    // Consuming navigation flags is not a second new-chat action. Keep any
+    // draft entered while the assistant selection was settling.
+    skipNextClearRef.current = true;
     navigate(`${location.pathname}${location.search}${location.hash}`, { replace: true, state: null });
   }, [resetAssistantRequested, preselectAssistantId, location.pathname, location.search, location.hash, navigate]);
 

@@ -17,19 +17,19 @@ const DISMISSED_KEY = 'trial-model-offer-dismissed';
 /**
  * Whether showing the offer would tell the user something they already have.
  *
- * Two ways that can be true, and both matter:
- *  - any trial provider (either vendor) is present, i.e. they claimed one here;
- *  - *any* provider already serves the free model, e.g. they added their own
- *    OpenRouter key by hand. The offer would hand them a second route to
- *    models they can already reach.
- *
- * Checking only a trial provider id would nag exactly the users who went to
- * the trouble of configuring one themselves.
+ * The empty-state offer is redundant once a usable model is configured,
+ * including enterprise-issued providers. Disabled providers/models do not
+ * count as usable configuration.
  */
-export function isTrialOfferRedundant(providers: IProvider[] | undefined): boolean {
+export function isTrialOfferRedundant(providers: IProvider[] | undefined, enterpriseConnected = false): boolean {
+  if (enterpriseConnected) return true;
   if (!providers?.length) return false;
   return (
-    isTrialProviderClaimed(providers) || providers.some((provider) => provider.models?.includes(BUILT_IN_FREE_MODEL))
+    isTrialProviderClaimed(providers) ||
+    providers.some(
+      (provider) =>
+        provider.enabled !== false && provider.models?.some((model) => provider.model_enabled?.[model] !== false)
+    )
   );
 }
 

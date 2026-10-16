@@ -374,6 +374,19 @@ describe('GuidPage', () => {
     expect(capturedGuidInputCardProps.at(-1)?.focusRequestKey).toBeUndefined();
   });
 
+  it('does not clear a newly entered draft when consuming the new-chat assistant reset flag', () => {
+    locationMock.state = { resetAssistant: true };
+    const { rerender } = render(<GuidPage />);
+    expect(navigateMock).toHaveBeenCalled();
+    guidInputMock.setInput.mockClear();
+    guidInputMock.setFiles.mockClear();
+    locationMock.state = null;
+    locationMock.key = 'guid-reset-consumed';
+    rerender(<GuidPage />);
+    expect(guidInputMock.setInput).not.toHaveBeenCalled();
+    expect(guidInputMock.setFiles).not.toHaveBeenCalled();
+  });
+
   it('keeps replacing attachments supplied by an ordinary Guid prefill', () => {
     locationMock.state = {
       prefillPrompt: 'Replace prompt and attachments',
