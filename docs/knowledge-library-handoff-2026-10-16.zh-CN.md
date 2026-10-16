@@ -481,3 +481,9 @@ PDF 渲染内核本身没问题（截图中文本/分页正常），差距在壳
 - **QA 栈修复（codex 重启遗留）**：ONLYOFFICE 容器 knowledge-office-qa-1015 随重启退出 → 已启动；其 JWT secret 与 app 容器的 ONE_OFFICE_JWT_SECRET 不匹配（"文档安全令牌的格式不正确"）→ 已将引擎 local.json 的 inbox/outbox/session 对齐 app 环境值并修复 docker cp 导致的 root:600 权限（docservice 因读不到配置 FATAL）。**经验：docker cp 进容器的文件要 chmod；引擎容器重启会保留 local.json，改密钥后用 supervisorctl restart 而非 docker restart。**
 - 25809 栈的 admin 鉴权：`dream-session` cookie / Bearer 均可，token 沿用 scratchpad/enterprise-terminal-regression-20261012/admin.token。
 - 验证脚本沉淀：`scratchpad/p03-pm-1016/`（ent-login/ent-open-doc/ent-retry/ent-status 等，CDP 驱动 25810 Vite + 25809 后端）。
+
+### 10.12 P1.1 中文工具栏与 P1.2 PDF 查看器（10-17 凌晨，已推送 `fc743fca`/`a415fb8c`）
+
+- **个人端中文工具栏**：引擎加载时 `.uno:Menubar` 折叠英文菜单栏（canvas OCR 验证消失）；宿主渲染中文快捷工具栏（撤销/重做/加粗/斜体/下划线/保存），经 `offline-office:dispatch` IPC → 线程 DispatchHelper 发 `.uno:*` 命令（命令名白名单校验）。语言键覆盖全部 13 个语言包（common.officeToolbar.\*）。引擎自带工具栏（图标为主）仍在，专业化整合时再处理。
+- **PDF 查看器正式化**：弃用 Chromium 原生插件 iframe（英文工具栏 + 裸加载百分比直达用户），新增 `PdfJsOriginal`——pdf.js 渲染 + 中文壳（页码 ‹ › 翻页、适宽 112% 实测、±缩放、用户手动缩放后不再自动重适）。已验证 51 页文档整页渲染清晰（canvas 像素 OCR）。坑：pdf.js 5.7 依赖 `Map.getOrInsertComputed`，Electron 142 渲染层还没有——组件内已内联 polyfill。
+- 验证方法沉淀：canvas 像素 toDataURL → OCR；DOM 布局链排查（canvas 252px 之谜 = 根容器没撑满父级，width:100% 解决）。
