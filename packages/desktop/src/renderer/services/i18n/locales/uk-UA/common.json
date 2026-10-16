@@ -897,7 +897,11 @@
     "discard": "Discard changes",
     "continueEditing": "Continue editing",
     "backToLibrary": "Back to library",
-    "documentContent": "Document content"
+    "documentContent": "Document content",
+    "onlineEdit": "Онлайн-редагування",
+    "onlineSave": "Зберегти в оригінал",
+    "onlineSaved": "Збережено в оригінал; під час повторного відкриття — актуальний вміст",
+    "onlineEditNote": "Ви редагуєте перетворену копію (перші 200 рядків × 26 стовпців), яка під час збереження експортується назад у початковий xlsx; формули не зберігаються."
   },
   "officeToolbar": {
     "undo": "Скасувати",

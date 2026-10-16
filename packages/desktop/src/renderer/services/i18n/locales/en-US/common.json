@@ -900,7 +900,11 @@
     "discard": "Discard changes",
     "continueEditing": "Continue editing",
     "backToLibrary": "Back to library",
-    "documentContent": "Document content"
+    "documentContent": "Document content",
+    "onlineEdit": "Edit online",
+    "onlineSave": "Save to original",
+    "onlineSaved": "Saved to the original; reopening shows the latest content",
+    "onlineEditNote": "You are editing a converted copy (first 200 rows × 26 columns) exported back to the original xlsx on save; cell formulas are not preserved."
   },
   "officeToolbar": {
     "undo": "Undo",

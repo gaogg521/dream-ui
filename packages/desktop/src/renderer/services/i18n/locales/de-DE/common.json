@@ -894,7 +894,11 @@
     "discard": "Discard changes",
     "continueEditing": "Continue editing",
     "backToLibrary": "Back to library",
-    "documentContent": "Document content"
+    "documentContent": "Document content",
+    "onlineEdit": "Online bearbeiten",
+    "onlineSave": "Ins Original speichern",
+    "onlineSaved": "Im Original gespeichert; beim erneuten Öffnen ist der Inhalt aktuell",
+    "onlineEditNote": "Sie bearbeiten eine konvertierte Kopie (erste 200 Zeilen × 26 Spalten), die beim Speichern in die ursprüngliche xlsx-Datei exportiert wird; Formeln werden nicht erhalten."
   },
   "officeToolbar": {
     "undo": "Rückgängig",

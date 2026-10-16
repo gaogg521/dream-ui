@@ -896,7 +896,11 @@
     "discard": "Discard changes",
     "continueEditing": "Continue editing",
     "backToLibrary": "Back to library",
-    "documentContent": "Document content"
+    "documentContent": "Document content",
+    "onlineEdit": "Онлайн-редактирование",
+    "onlineSave": "Сохранить в оригинал",
+    "onlineSaved": "Сохранено в оригинал; при повторном открытии — актуальное содержимое",
+    "onlineEditNote": "Вы редактируете преобразованную копию (первые 200 строк × 26 столбцов), которая при сохранении экспортируется обратно в исходный xlsx; формулы не сохраняются."
   },
   "officeToolbar": {
     "undo": "Отменить",

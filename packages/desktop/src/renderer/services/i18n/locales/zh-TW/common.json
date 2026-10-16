@@ -900,7 +900,11 @@
     "discard": "放棄修改",
     "continueEditing": "繼續編輯",
     "backToLibrary": "返回資料庫",
-    "documentContent": "文件正文"
+    "documentContent": "文件正文",
+    "onlineEdit": "線上編輯",
+    "onlineSave": "存回原件",
+    "onlineSaved": "已存回原件，重新開啟即為最新內容",
+    "onlineEditNote": "線上編輯的是轉換副本（前 200 列 × 26 欄），儲存後匯出回 xlsx 原件；儲存格公式不會保留。"
   },
   "officeToolbar": {
     "undo": "復原",

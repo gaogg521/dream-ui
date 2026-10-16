@@ -894,7 +894,11 @@
     "discard": "Discard changes",
     "continueEditing": "Continue editing",
     "backToLibrary": "Back to library",
-    "documentContent": "Document content"
+    "documentContent": "Document content",
+    "onlineEdit": "Editar en línea",
+    "onlineSave": "Guardar en el original",
+    "onlineSaved": "Guardado en el original; al reabrir verá el contenido más reciente",
+    "onlineEditNote": "Edita una copia convertida (primeras 200 filas × 26 columnas) que se exporta al xlsx original al guardar; no se conservan las fórmulas."
   },
   "officeToolbar": {
     "undo": "Deshacer",

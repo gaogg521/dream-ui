@@ -894,7 +894,11 @@
     "discard": "Discard changes",
     "continueEditing": "Continue editing",
     "backToLibrary": "Back to library",
-    "documentContent": "Document content"
+    "documentContent": "Document content",
+    "onlineEdit": "Çevrimiçi düzenle",
+    "onlineSave": "Orijinale kaydet",
+    "onlineSaved": "Orijinale kaydedildi; yeniden açtığınızda en güncel içeriği görürsünüz",
+    "onlineEditNote": "Dönüştürülmüş bir kopyayı (ilk 200 satır × 26 sütun) düzenliyorsunuz; kaydettiğinizde orijinal xlsx’e yazılır. Formüller korunmaz."
   },
   "officeToolbar": {
     "undo": "Geri Al",

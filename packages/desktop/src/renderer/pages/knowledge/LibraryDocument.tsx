@@ -201,6 +201,7 @@ type Props = {
 export default function LibraryDocument(props: Props) {
   const [officeEditing, setOfficeEditing] = useState(false);
   const [officeLocked, setOfficeLocked] = useState(true);
+  const [officeGrid, setOfficeGrid] = useState(false);
   const officeGuard = useRef<(() => Promise<boolean>) | null>(null);
   const registerOfficeGuard = (guard: (() => Promise<boolean>) | null) => {
     officeGuard.current = guard;
@@ -330,6 +331,17 @@ export default function LibraryDocument(props: Props) {
           {canEditOffice && officeEditing && officeLocked && (
             <Button onClick={() => setOfficeLocked(false)}>{t('common.edit')}</Button>
           )}
+          {/* A-track: converted-copy grid editing for spreadsheets, offline only. */}
+          {canEditOffice && officeEditing && officeLocked && !useIntranet && (
+            <Button
+              onClick={() => {
+                setOfficeGrid(true);
+                setOfficeEditing(false);
+              }}
+            >
+              {t('common.knowledgeLibrary.onlineEdit')}
+            </Button>
+          )}
           {props.canEdit && !original && (
             <span className={styles.editorHint} role='status'>
               {t(
@@ -440,6 +452,11 @@ export default function LibraryDocument(props: Props) {
             title={props.title}
             mime={sourceMime}
             load={props.loadOriginal!}
+            uploadOriginal={props.uploadOriginal}
+            startEditing={officeGrid}
+            onSaved={async () => {
+              await props.onOfficeSaved?.();
+            }}
           />
         ) : (
           <>

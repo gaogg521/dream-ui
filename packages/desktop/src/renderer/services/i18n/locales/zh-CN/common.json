@@ -900,7 +900,11 @@
     "discard": "放弃修改",
     "continueEditing": "继续编辑",
     "backToLibrary": "返回资料库",
-    "documentContent": "文档正文"
+    "documentContent": "文档正文",
+    "onlineEdit": "在线编辑",
+    "onlineSave": "保存回原件",
+    "onlineSaved": "已保存回原件，重新打开即为最新内容",
+    "onlineEditNote": "在线编辑的是转换副本（前 200 行 × 26 列），保存后导出回 xlsx 原件；单元格公式不会保留。"
   },
   "officeToolbar": {
     "undo": "撤销",

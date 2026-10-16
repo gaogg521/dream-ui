@@ -9,8 +9,16 @@ const SheetsOriginal = lazy(() => import('./SheetsOriginal'));
 const HtmlOriginal = lazy(() => import('./HtmlOriginal'));
 const PdfJsOriginal = lazy(() => import('./PdfJsOriginal'));
 
-type Props = { id: string; title: string; mime: string; load: () => Promise<Blob> };
-export default function OriginalFileViewer({ id, title, mime, load }: Props) {
+type Props = {
+  id: string;
+  title: string;
+  mime: string;
+  load: () => Promise<Blob>;
+  uploadOriginal?: (file: File) => Promise<unknown>;
+  startEditing?: boolean;
+  onSaved?: () => Promise<void> | void;
+};
+export default function OriginalFileViewer({ id, title, mime, load, uploadOriginal, startEditing, onSaved }: Props) {
   const { t } = useTranslation();
   const latestLoad = useRef(load);
   latestLoad.current = load;
@@ -69,7 +77,7 @@ export default function OriginalFileViewer({ id, title, mime, load }: Props) {
         </Suspense>
       ) : kind === 'sheets' ? (
         <Suspense fallback={<Spin tip={t('common.loading')} />}>
-          <SheetsOriginal url={url} title={title} />
+          <SheetsOriginal url={url} title={title} uploadOriginal={uploadOriginal} startEditing={startEditing} onSaved={onSaved} />
         </Suspense>
       ) : kind === 'image' ? (
         <img alt={title} src={url} className={styles.originalImage} />

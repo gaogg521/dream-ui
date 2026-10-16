@@ -894,7 +894,11 @@
     "discard": "Discard changes",
     "continueEditing": "Continue editing",
     "backToLibrary": "Back to library",
-    "documentContent": "Document content"
+    "documentContent": "Document content",
+    "onlineEdit": "Editar on-line",
+    "onlineSave": "Salvar no original",
+    "onlineSaved": "Salvo no original; ao reabrir, o conteúdo mais recente será exibido",
+    "onlineEditNote": "Você edita uma cópia convertida (primeiras 200 linhas × 26 colunas) exportada de volta ao xlsx original ao salvar; fórmulas não são preservadas."
   },
   "officeToolbar": {
     "undo": "Desfazer",
