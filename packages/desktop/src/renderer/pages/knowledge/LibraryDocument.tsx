@@ -417,6 +417,7 @@ export default function LibraryDocument(props: Props) {
           useIntranet ? (
             <IntranetOfficeEditor
               documentId={props.documentId!}
+              locked={officeLocked}
               registerBeforeLeave={registerOfficeGuard}
               onSaved={async (version) => {
                 setSource({ filePath: `rag-source:${version}`, mimeType: sourceMime });

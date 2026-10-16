@@ -116,7 +116,8 @@ describe('intranet Office persistence and navigation', () => {
     await open();
     expect(await screen.findByText('originalLoadFailed')).toBeTruthy();
     fireEvent.click(screen.getByText('retry'));
-    await waitFor(() => expect(mocks.open).toHaveBeenCalledTimes(2));
+    // The session is reused across retries; only the editor re-initializes.
+    await waitFor(() => expect(mocks.open).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(mocks.load).toHaveBeenCalledTimes(2));
     ready();
     expect(await screen.findByText('autoSave')).toBeTruthy();

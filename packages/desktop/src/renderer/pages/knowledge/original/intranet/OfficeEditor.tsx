@@ -6,6 +6,8 @@ import { loadOfficeApi, officeApi } from './officeApi';
 
 type Props = {
   documentId: string;
+  /** Viewer-first unified open path: true renders ONLYOFFICE in view mode. */
+  locked?: boolean;
   registerBeforeLeave: (guard: (() => Promise<boolean>) | null) => void;
   onSaved?: (sourceVersion: string) => Promise<void>;
 };
@@ -21,6 +23,12 @@ export default function OfficeEditor(props: Props) {
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
   const [failureKind, setFailureKind] = useState<'originalLoadFailed' | 'saveFailed'>('originalLoadFailed');
+  const sessionRef = useRef<{
+    documentId: string;
+    sessionId: string;
+    scriptUrl: string;
+    config: Record<string, unknown>;
+  } | null>(null);
   useEffect(() => {
     setStatus('loading');
     setError('');
@@ -106,17 +114,27 @@ export default function OfficeEditor(props: Props) {
         if (navigator[key] === deferred) navigator[key] = original as (typeof navigator)[typeof key];
       });
     }
-    void officeApi
-      .open(props.documentId)
+    void (
+      sessionRef.current?.documentId === props.documentId
+        ? Promise.resolve(sessionRef.current)
+        : officeApi.open(props.documentId).then((session) => {
+            sessionRef.current = { documentId: props.documentId, ...session };
+            return session;
+          })
+    )
       .then(async (session) => {
         if (disposed) return;
         sessionId = session.sessionId;
         const api = await loadOfficeApi(session.scriptUrl);
         if (disposed) return;
+        const config = session.config as { editorConfig?: Record<string, unknown> };
         editor = new api.DocEditor(elementId, {
           ...session.config,
           editorConfig: {
-            ...(session.config as { editorConfig?: Record<string, unknown> }).editorConfig,
+            ...config.editorConfig,
+            // Viewer-first: the session opens in view mode; 编辑 re-initializes
+            // the same session in edit mode (mode is not part of the JWT).
+            mode: props.locked === true ? 'view' : ((config.editorConfig?.mode as string) ?? 'edit'),
             // Follow the app UI language; ONLYOFFICE falls back to English for
             // locales its distribution does not ship.
             lang: /^[a-z]{2}(-[A-Z]{2,3})?$/.test(i18n.language) ? i18n.language : 'en',
@@ -152,12 +170,14 @@ export default function OfficeEditor(props: Props) {
       retry.current = null;
       editor?.destroyEditor();
     };
-  }, [props.documentId, attempt]);
+  }, [props.documentId, props.locked, attempt]);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 500 }}>
       <div role='status' style={{ padding: '8px 16px' }}>
         {status === 'loading' ? (
           <Spin />
+        ) : props.locked === true && status === 'ready' ? (
+          t('common.knowledgeLibrary.read')
         ) : (
           t(
             `common.knowledgeLibrary.${status === 'error' ? failureKind : status === 'saving' ? 'saving' : status === 'saved' ? 'autoSaved' : 'autoSave'}`
