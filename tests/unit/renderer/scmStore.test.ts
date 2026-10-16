@@ -78,6 +78,7 @@ const status = (repoId: string, seq: number, resources: ScmResource[], over: Par
 type Harness = {
   port: ScmPort;
   listCalls: string[];
+  initCalls: Array<{ projectId: string; peId?: string }>;
   subscribeCalls: string[][];
   unsubscribeCalls: string[][];
   statusCalls: string[];
@@ -120,6 +121,7 @@ function makeHarness(): Harness {
   let actErrorTransport = false;
   const h: Harness = {
     listCalls: [],
+    initCalls: [],
     subscribeCalls: [],
     unsubscribeCalls: [],
     statusCalls: [],
@@ -157,7 +159,10 @@ function makeHarness(): Harness {
         h.diffCalls.push(params);
         return { patch: 'diff --git a b' } satisfies ScmDiffResult;
       },
-      init: async () => ({ repositories: initRepos }),
+      init: async (projectId, peId) => {
+        h.initCalls.push({ projectId, peId });
+        return { repositories: initRepos };
+      },
     },
     setRepos: (next) => {
       repos = next;
@@ -217,6 +222,28 @@ describe('initScmRepository', () => {
 
     expect(getScmSnapshot().repositories.map((r) => r.repo_id)).toEqual(['scm:pe1']);
     expect(h.subscribeCalls).toEqual([['scm:pe1']]);
+  });
+
+  // The backend auto-picks a root only for a single-root project; passing the
+  // root explicitly is what keeps a multi-root project off `invalid_params`.
+  it('sends the chosen pe_id through to scm/init', async () => {
+    h.setRepos([]);
+    await openScmProject('p1');
+    h.setInitRepos([repo()]);
+
+    await initScmRepository('pe2');
+
+    expect(h.initCalls).toEqual([{ projectId: 'p1', peId: 'pe2' }]);
+  });
+
+  it('sends no pe_id when the caller lets the backend auto-pick', async () => {
+    h.setRepos([]);
+    await openScmProject('p1');
+    h.setInitRepos([repo()]);
+
+    await initScmRepository();
+
+    expect(h.initCalls).toEqual([{ projectId: 'p1', peId: undefined }]);
   });
 
   // The backend also pushes repositoriesChanged for the same repository; the

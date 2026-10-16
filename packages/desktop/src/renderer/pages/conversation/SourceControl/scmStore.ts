@@ -72,8 +72,12 @@ export type ScmPort = {
   diff: (params: { repository: string; file: ScmFileRef; from: ContentRef; to: ContentRef }) => Promise<ScmDiffResult>;
   /** One of `scm/stage` | `scm/unstage` | `scm/discard`, chosen by `action`. */
   act: (action: ScmActionKind, params: { repository: string; files: ScmFileRef[] }) => Promise<ScmActionResult>;
-  /** `scm/init`: put the project's folder under version control. */
-  init: (projectId: string) => Promise<{ repositories: ScmRepository[] }>;
+  /**
+   * `scm/init`: put the project's folder under version control. `peId` picks the
+   * root; the backend accepts its omission only for a single-root project, so a
+   * multi-root project must always pass it (see `NotARepositoryNotice`).
+   */
+  init: (projectId: string, peId?: string) => Promise<{ repositories: ScmRepository[] }>;
 };
 
 export type ScmLoadState = 'idle' | 'loading' | 'ready' | 'error';
@@ -392,11 +396,16 @@ export const openScmProject = async (id: string): Promise<void> => {
  * backend also pushes `repositoriesChanged`, and applying the reply as that same
  * delta makes the two interchangeable — whichever lands first wins, the other
  * is a no-op. Rejects so the caller can say why it did not work.
+ *
+ * `peId` names the root to track. The backend auto-picks only when the project
+ * has exactly one local root — with several (or none resolvable) an omitted
+ * `peId` comes back as `invalid_params`, which reads as a malfunction. Callers
+ * that know the project's roots pass one explicitly (see `NotARepositoryNotice`).
  */
-export const initScmRepository = async (): Promise<void> => {
+export const initScmRepository = async (peId?: string): Promise<void> => {
   const id = projectId;
   if (!port || id === null) throw new Error('scm not ready');
-  const result = await port.init(id);
+  const result = await port.init(id, peId);
   applyRepositoriesChanged({ project_id: id, added: result.repositories ?? [], removed: [], changed: [] });
 };
 

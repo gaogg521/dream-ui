@@ -25,7 +25,7 @@
  * section drops in as a third with no framework change (see `ScmSectionStack`).
  */
 
-import { Button, Message, Tooltip } from '@arco-design/web-react';
+import { Button, Message, Select, Tooltip } from '@arco-design/web-react';
 import { ipcBridge } from '@/common';
 import {
   BranchTwo,
@@ -42,6 +42,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { usePreviewContext } from '../Preview';
+import { type RootRef } from '../explorer/explorerModel';
+import { RpcError } from '../explorer/monitorClient';
 import { discardAllTargets, ScmChangesView, stageAllTargets } from './ScmChangesView';
 import { ScmSection, ScmSectionDivider } from './ScmSection';
 import {
@@ -83,9 +85,16 @@ const SECTION_DEFAULT_FRACTION = 0.6;
 export type ScmPanelProps = {
   /** Owning project id — scopes the store's repositories + statuses. */
   projectId: string;
+  /**
+   * The project's pe roots, from the same `project.get` detail the explorer host
+   * already holds. Lets the init empty state pick the root to track instead of
+   * letting the backend auto-pick (which refuses anything but a single-root
+   * project). Optional only for tests and legacy call sites.
+   */
+  roots?: RootRef[];
 };
 
-export const ScmPanel: React.FC<ScmPanelProps> = ({ projectId }) => {
+export const ScmPanel: React.FC<ScmPanelProps> = ({ projectId, roots }) => {
   const { t } = useTranslation();
   const view = useScm();
   const ui = useScmUi();
@@ -149,7 +158,7 @@ export const ScmPanel: React.FC<ScmPanelProps> = ({ projectId }) => {
   // No pe root of this project is a repository → say so, do not fabricate a repo,
   // and offer to start tracking it.
   if (view.repositories.length === 0 || !selectedRepo) {
-    return <NotARepositoryNotice />;
+    return <NotARepositoryNotice roots={roots} />;
   }
 
   const multiRepo = view.repositories.length > 1;
@@ -759,33 +768,99 @@ const ActionReportExtras: React.FC<{
 };
 
 /**
+ * Turn an init failure into what the toast shows. The backend's `invalid_params`
+ * for the `pe_id` parameter means "no trackable root matched" — the folder was
+ * moved, deleted, or the client's root list was stale — which reads as a
+ * malfunction if the raw wire name lands on screen; say what it means instead.
+ * Everything else keeps the reason-suffixed shape (a transport failure, an
+ * authorization refusal…), where the reason is the real information.
+ */
+const describeInitError = (e: unknown): { key: string; vars?: Record<string, unknown> } => {
+  const param =
+    e instanceof RpcError && e.message === 'invalid_params'
+      ? (e.data as { param?: string } | undefined)?.param
+      : undefined;
+  if (param === 'pe_id') return { key: 'conversation.explorer.scm.initRootUnavailable' };
+  return {
+    key: 'conversation.explorer.scm.initFailed',
+    vars: { reason: e instanceof Error ? e.message : String(e) },
+  };
+};
+
+/**
+ * The roots init can actually target. `runtimeStatus === undefined` counts as
+ * available (status unknown — the backend remains the authority, and its
+ * `invalid_params` for a stale pick is mapped to a readable message below).
+ */
+const initCandidates = (roots: RootRef[] | undefined): RootRef[] =>
+  (roots ?? []).filter((root) => root.runtimeStatus === undefined || root.runtimeStatus === 'available');
+
+/**
  * Empty state for a folder that is not under version control. Most conversation
  * folders start out like this, so instead of a dead end it offers to start
  * tracking: the files there now become the starting point and everything the
  * agent changes afterwards lists here, with a diff and an undo.
+ *
+ * Which folder gets tracked is a root choice: the backend auto-picks only when
+ * the project has exactly one root and otherwise refuses an unpinned request
+ * (`invalid_params`). So with one root the choice is made silently; with several
+ * the user picks; with none reachable there is nothing to offer.
  */
-const NotARepositoryNotice: React.FC = () => {
+const NotARepositoryNotice: React.FC<{ roots: RootRef[] | undefined }> = ({ roots }) => {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
+  const [selectedPeId, setSelectedPeId] = useState<string | null>(null);
+  const candidates = useMemo(() => initCandidates(roots), [roots]);
+  // Multi-root default: the workspace root (what the conversation itself works
+  // in), else the first reachable root. A stale selection (root removed between
+  // renders) falls back to the same default rather than sending garbage.
+  const pickedPeId = useMemo(() => {
+    if (candidates.length === 0) return null;
+    if (candidates.length === 1) return candidates[0].pe_id;
+    if (selectedPeId && candidates.some((root) => root.pe_id === selectedPeId)) return selectedPeId;
+    return (candidates.find((root) => root.role === 'workspace') ?? candidates[0]).pe_id;
+  }, [candidates, selectedPeId]);
+
   const onInit = async (): Promise<void> => {
     setBusy(true);
     try {
-      await initScmRepository();
+      await initScmRepository(pickedPeId ?? undefined);
     } catch (e) {
-      Message.error(t('conversation.explorer.scm.initFailed', { reason: e instanceof Error ? e.message : String(e) }));
+      const failure = describeInitError(e);
+      Message.error(t(failure.key, failure.vars));
     } finally {
       setBusy(false);
     }
   };
+  // Roots unknown (prop absent): the legacy path — let the backend auto-pick a
+  // single root. Roots known but none reachable: nothing to offer, say why.
+  const canInit = roots === undefined || candidates.length > 0;
   return (
     <div className='h-full flex flex-col items-center justify-center gap-10px px-16px text-center'>
       <div className='text-t-secondary text-13px'>{t('conversation.explorer.scm.notARepository')}</div>
       <div className='text-t-tertiary text-12px leading-18px max-w-260px'>
         {t('conversation.explorer.scm.initHint')}
       </div>
-      <Button type='primary' size='small' loading={busy} onClick={() => void onInit()}>
-        {t('conversation.explorer.scm.initAction')}
-      </Button>
+      {roots !== undefined && candidates.length >= 2 && (
+        <div className='flex flex-col items-center gap-4px'>
+          <div className='text-t-tertiary text-12px'>{t('conversation.explorer.scm.initPickRoot')}</div>
+          <Select
+            size='mini'
+            className='w-200px'
+            data-scm-root-select
+            value={pickedPeId ?? undefined}
+            onChange={(value) => setSelectedPeId(value as string)}
+            options={candidates.map((root) => ({ value: root.pe_id, label: root.title }))}
+          />
+        </div>
+      )}
+      {canInit ? (
+        <Button type='primary' size='small' loading={busy} onClick={() => void onInit()}>
+          {t('conversation.explorer.scm.initAction')}
+        </Button>
+      ) : (
+        <div className='text-t-tertiary text-12px'>{t('conversation.explorer.scm.initNoRoot')}</div>
+      )}
     </div>
   );
 };

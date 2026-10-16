@@ -12,6 +12,8 @@ import { ipcBridge } from '@/common';
 
 import type { ScmRepository, ScmResource, ScmStatus } from '@/renderer/pages/conversation/SourceControl/scmModel';
 import type { ScmPort } from '@/renderer/pages/conversation/SourceControl/scmStore';
+import type { RootRef } from '@/renderer/pages/conversation/explorer/explorerModel';
+import { RpcError } from '@/renderer/pages/conversation/explorer/monitorClient';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -74,12 +76,13 @@ const status = (repoId: string, seq: number, resources: ScmResource[], over: Par
 
 type PortSetup = {
   repositories?: ScmRepository[];
-  init?: () => Promise<{ repositories: ScmRepository[] }>;
+  init?: (projectId: string, peId?: string) => Promise<{ repositories: ScmRepository[] }>;
   firstFrames?: Record<string, ScmStatus>;
   diff?: () => Promise<{ patch?: string; binary?: boolean; truncated?: boolean }>;
 };
 
 const diffCalls: unknown[] = [];
+const initCalls: Array<{ projectId: string; peId?: string }> = [];
 
 const installPort = (setup: PortSetup): void => {
   const port: ScmPort = {
@@ -93,16 +96,32 @@ const installPort = (setup: PortSetup): void => {
       diffCalls.push(params);
       return setup.diff ? setup.diff() : { patch: 'unified patch text' };
     },
-    init: async () => (setup.init ? setup.init() : { repositories: [] }),
+    init: async (projectId, peId) => {
+      initCalls.push({ projectId, peId });
+      return setup.init ? setup.init(projectId, peId) : { repositories: [] };
+    },
   };
   configureScmStore(port);
 };
+
+const rootRef = (
+  peId: string,
+  title: string,
+  role: RootRef['role'],
+  runtimeStatus: RootRef['runtimeStatus']
+): RootRef => ({
+  pe_id: peId,
+  title,
+  role,
+  runtimeStatus,
+});
 
 beforeEach(() => {
   resetScmStoreForTest();
   resetScmUiStoreForTest();
   localStorage.clear();
   diffCalls.length = 0;
+  initCalls.length = 0;
   openPreviewMock.mockClear();
 });
 
@@ -151,6 +170,120 @@ describe('ScmPanel empty / failure states', () => {
       expect(messageErrorMock).toHaveBeenCalledWith('conversation.explorer.scm.initFailed:disk is read-only')
     );
     expect(screen.getByText('conversation.explorer.scm.notARepository')).toBeInTheDocument();
+  });
+
+  // The backend auto-picks a root only for a single-root project and otherwise
+  // refuses an unpinned scm/init with invalid_params (the bug that read as
+  // "初始化版本控制失败：invalid_params"). With roots known, the panel pins them.
+  it('pins the single known root without showing a picker', async () => {
+    installPort({
+      repositories: [],
+      init: async () => ({ repositories: [repo()] }),
+      firstFrames: { [repo().repo_id]: status(repo().repo_id, 1, []) },
+    });
+    render(<ScmPanel projectId='p1' roots={[rootRef('pe1', 'workspace', 'workspace', 'available')]} />);
+    fireEvent.click(await screen.findByText('conversation.explorer.scm.initAction'));
+
+    expect(await screen.findByText('conversation.explorer.scm.noChanges')).toBeInTheDocument();
+    expect(initCalls).toEqual([{ projectId: 'p1', peId: 'pe1' }]);
+    expect(document.querySelector('[data-scm-root-select]')).toBeNull();
+  });
+
+  it('offers a root picker for a multi-root project and inits the default (workspace) root', async () => {
+    installPort({
+      repositories: [],
+      init: async () => ({ repositories: [repo()] }),
+      firstFrames: { [repo().repo_id]: status(repo().repo_id, 1, []) },
+    });
+    render(
+      <ScmPanel
+        projectId='p1'
+        roots={[
+          rootRef('pe1', 'attached-folder', 'attached', 'available'),
+          rootRef('pe2', 'conversation-root', 'workspace', 'available'),
+        ]}
+      />
+    );
+
+    // Wait out the repository list load — the empty state only exists after it.
+    await screen.findByText('conversation.explorer.scm.notARepository');
+
+    // The picker is there and defaults to the workspace root (its label shows).
+    expect(document.querySelector('[data-scm-root-select]')).not.toBeNull();
+    expect(screen.getByText('conversation.explorer.scm.initPickRoot')).toBeInTheDocument();
+    expect(screen.getByText('conversation-root')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('conversation.explorer.scm.initAction'));
+
+    expect(await screen.findByText('conversation.explorer.scm.noChanges')).toBeInTheDocument();
+    expect(initCalls).toEqual([{ projectId: 'p1', peId: 'pe2' }]);
+  });
+
+  it('inits the root the user picked from the list, not the default', async () => {
+    installPort({
+      repositories: [],
+      init: async () => ({ repositories: [repo()] }),
+      firstFrames: { [repo().repo_id]: status(repo().repo_id, 1, []) },
+    });
+    render(
+      <ScmPanel
+        projectId='p1'
+        roots={[
+          rootRef('pe1', 'attached-folder', 'attached', 'available'),
+          rootRef('pe2', 'conversation-root', 'workspace', 'available'),
+        ]}
+      />
+    );
+    await screen.findByText('conversation.explorer.scm.notARepository');
+
+    // Open the Arco Select dropdown and pick the attached folder.
+    const view = document.querySelector('[data-scm-root-select] .arco-select-view') as HTMLElement;
+    fireEvent.mouseDown(view);
+    fireEvent.click(view);
+    const option = await waitFor(() => {
+      const el = [...document.querySelectorAll('.arco-select-option')].find((o) => o.textContent === 'attached-folder');
+      if (!el) throw new Error('option not rendered yet');
+      return el;
+    });
+    fireEvent.click(option);
+    fireEvent.click(screen.getByText('conversation.explorer.scm.initAction'));
+
+    await screen.findByText('conversation.explorer.scm.noChanges');
+    expect(initCalls).toEqual([{ projectId: 'p1', peId: 'pe1' }]);
+  });
+
+  it('offers no init button when the project has roots but none is reachable', async () => {
+    installPort({ repositories: [] });
+    render(
+      <ScmPanel
+        projectId='p1'
+        roots={[
+          rootRef('pe1', 'gone', 'workspace', 'missing'),
+          rootRef('pe2', 'denied', 'attached', 'permission_denied'),
+        ]}
+      />
+    );
+
+    expect(await screen.findByText('conversation.explorer.scm.initNoRoot')).toBeInTheDocument();
+    expect(screen.queryByText('conversation.explorer.scm.initAction')).not.toBeInTheDocument();
+  });
+
+  it('says the folder is unreachable (not invalid_params) when the backend refuses the pinned root', async () => {
+    const messageErrorMock = vi.spyOn(Message, 'error').mockImplementation(() => undefined as never);
+    installPort({
+      repositories: [],
+      init: async () => {
+        throw new RpcError({ code: -32602, message: 'invalid_params', data: { param: 'pe_id' } });
+      },
+    });
+    // Rendered without roots (legacy path): the backend still refuses with
+    // invalid_params when its own root set is empty or multi-rooted, and the
+    // wire name must never surface raw.
+    render(<ScmPanel projectId='p1' />);
+    fireEvent.click(await screen.findByText('conversation.explorer.scm.initAction'));
+
+    await waitFor(() => expect(messageErrorMock).toHaveBeenCalledWith('conversation.explorer.scm.initRootUnavailable'));
+    expect(messageErrorMock).not.toHaveBeenCalledWith(expect.stringContaining('invalid_params'));
   });
 
   it('shows a load failure instead of an empty list when listRepositories rejects', async () => {

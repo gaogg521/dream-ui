@@ -38,6 +38,7 @@ import { projectFileRef } from '@/common/types/chatFile';
 import type { ChatFileRef } from '@/common/types/chatFile';
 import type { FileOrFolderItem } from '@/renderer/utils/file/fileTypes';
 import { resolvePreviewPayload } from '@/renderer/utils/file/previewPayload';
+import { requestOpenSecurePackage } from '@/renderer/utils/enterprise/secureExport/openPackage';
 
 import { ExplorerPanel } from './ExplorerPanel';
 import {
@@ -204,6 +205,12 @@ export const ExplorerContainer: React.FC<ExplorerContainerProps> = ({ projectId 
   // can stay open at once.
   const handleOpenFile = async (peId: string, relativePath: string): Promise<void> => {
     try {
+      if (/\.owenc$/i.test(relativePath)) {
+        if (!requestOpenSecurePackage(projectFileRef(peId, relativePath))) {
+          Message.error(t('messages.secureExport.openFailed', { reason: '' }));
+        }
+        return;
+      }
       const { content, contentType, metadata } = await buildExplorerPreviewPayload(peId, relativePath);
       openPreview(content, contentType, metadata);
     } catch (e) {
@@ -582,7 +589,7 @@ export const ExplorerContainer: React.FC<ExplorerContainerProps> = ({ projectId 
       </div>
       {activeTab === 'changes' && (
         <div className='flex-1 min-h-0'>
-          <ScmPanel projectId={projectId} />
+          <ScmPanel projectId={projectId} roots={roots} />
         </div>
       )}
       <Modal
