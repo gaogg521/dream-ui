@@ -21,6 +21,11 @@ describe('isTrialOfferRedundant', () => {
     expect(isTrialOfferRedundant([])).toBe(false);
   });
 
+  it('hides personal trial offers while connected to an enterprise, including before model sync', () => {
+    expect(isTrialOfferRedundant(undefined, true)).toBe(true);
+    expect(isTrialOfferRedundant([], true)).toBe(true);
+  });
+
   it('hides it once the trial provider is present', () => {
     expect(isTrialOfferRedundant([provider(TRIAL_PROVIDER_ID, [BUILT_IN_FREE_MODEL])])).toBe(true);
   });
@@ -36,11 +41,17 @@ describe('isTrialOfferRedundant', () => {
     );
   });
 
-  /** Providers that offer other models are not a substitute. */
-  it('still shows it to someone whose providers lack the free model', () => {
+  it('hides the no-model offer when personal or enterprise models are configured', () => {
     expect(isTrialOfferRedundant([provider('openai', ['gpt-5']), provider('custom', ['doubao-seed-evolving'])])).toBe(
-      false
+      true
     );
+  });
+
+  it('keeps the offer when every configured model is disabled', () => {
+    expect(isTrialOfferRedundant([{ id: 'disabled', models: ['model'], enabled: false } as never])).toBe(false);
+    expect(
+      isTrialOfferRedundant([{ id: 'disabled-model', models: ['model'], model_enabled: { model: false } } as never])
+    ).toBe(false);
   });
 
   it('tolerates a provider with no model list', () => {
