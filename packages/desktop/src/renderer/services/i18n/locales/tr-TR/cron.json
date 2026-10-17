@@ -167,6 +167,8 @@
     },
     "searchPlaceholder": "Görev ara...",
     "noSearchResults": "Eşleşen zamanlanmış görev yok.",
+    "emptyTitle": "Henüz zamanlanmış görev yok",
+    "emptyCreate": "Görev oluştur",
     "fromTemplate": "Şablondan ekle"
   },
   "trigger": {
@@ -191,7 +193,10 @@
   "templates": {
     "title": "Şablondan ekle",
     "hint": "Bir şablon seçin. Doldurduğu ad, istem ve zaman değiştirilebilir; oluşturulunca planlandığı gibi kendiliğinden çalışır.",
+    "featuredTitle": "Görev şablonları",
+    "viewAll": "Tümünü gör",
     "category": {
+      "all": "Tümü",
       "work": "İş",
       "learning": "Öğrenme",
       "life": "Günlük yaşam"

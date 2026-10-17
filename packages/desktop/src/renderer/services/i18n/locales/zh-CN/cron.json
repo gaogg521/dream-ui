@@ -61,6 +61,8 @@
     "keepAwakeTooltip": "开启后，One Work 将阻止电脑进入休眠状态",
     "searchPlaceholder": "搜索自动化...",
     "noSearchResults": "没有匹配的自动化。",
+    "emptyTitle": "还没有定时任务",
+    "emptyCreate": "创建定时任务",
     "createTask": "创建自动化",
     "editTask": "编辑自动化",
     "createSuccess": "任务创建成功",
@@ -179,7 +181,10 @@
   "templates": {
     "title": "从模板添加",
     "hint": "选一个模板，填好的名称、提示词和时间都可以改；创建后按计划自动运行。",
+    "featuredTitle": "定时任务模板",
+    "viewAll": "查看全部",
     "category": {
+      "all": "全部",
       "work": "工作",
       "learning": "学习",
       "life": "生活"

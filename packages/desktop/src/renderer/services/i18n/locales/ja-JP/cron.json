@@ -167,6 +167,8 @@
     },
     "searchPlaceholder": "タスクを検索...",
     "noSearchResults": "一致するスケジュール済みタスクはありません。",
+    "emptyTitle": "定型タスクはまだありません",
+    "emptyCreate": "タスクを作成",
     "fromTemplate": "テンプレートから追加"
   },
   "trigger": {
@@ -191,7 +193,10 @@
   "templates": {
     "title": "テンプレートから追加",
     "hint": "テンプレートを選んでください。入力済みの名前・プロンプト・時間はすべて変更でき、作成後は予定どおり自動で実行されます。",
+    "featuredTitle": "タスクテンプレート",
+    "viewAll": "すべて表示",
     "category": {
+      "all": "すべて",
       "work": "仕事",
       "learning": "学習",
       "life": "生活"

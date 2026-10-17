@@ -154,6 +154,8 @@
     },
     "searchPlaceholder": "Pesquisar tarefas...",
     "noSearchResults": "Nenhuma tarefa agendada correspondente.",
+    "emptyTitle": "Nenhuma tarefa agendada ainda",
+    "emptyCreate": "Criar tarefa",
     "fromTemplate": "Adicionar de um modelo"
   },
   "trigger": {
@@ -178,7 +180,10 @@
   "templates": {
     "title": "Adicionar de um modelo",
     "hint": "Escolha um modelo. Nome, prompt e horário preenchidos podem ser alterados; depois de criado, roda sozinho conforme o agendamento.",
+    "featuredTitle": "Modelos de tarefas",
+    "viewAll": "Ver todos",
     "category": {
+      "all": "Todos",
       "work": "Trabalho",
       "learning": "Aprendizado",
       "life": "Dia a dia"

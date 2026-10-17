@@ -159,6 +159,8 @@
     },
     "searchPlaceholder": "Buscar tareas...",
     "noSearchResults": "No hay tareas programadas coincidentes.",
+    "emptyTitle": "Aún no hay tareas programadas",
+    "emptyCreate": "Crear una tarea",
     "fromTemplate": "Añadir desde plantilla"
   },
   "trigger": {
@@ -183,7 +185,10 @@
   "templates": {
     "title": "Añadir desde plantilla",
     "hint": "Elige una plantilla. El nombre, el prompt y el horario se pueden cambiar; una vez creada se ejecuta sola.",
+    "featuredTitle": "Plantillas de tareas",
+    "viewAll": "Ver todas",
     "category": {
+      "all": "Todas",
       "work": "Trabajo",
       "learning": "Aprendizaje",
       "life": "Vida diaria"

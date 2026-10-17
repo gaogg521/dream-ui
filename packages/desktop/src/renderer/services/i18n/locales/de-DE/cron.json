@@ -154,6 +154,8 @@
     },
     "searchPlaceholder": "Aufgaben suchen...",
     "noSearchResults": "Keine passenden geplanten Aufgaben.",
+    "emptyTitle": "Noch keine geplanten Aufgaben",
+    "emptyCreate": "Aufgabe erstellen",
     "fromTemplate": "Aus Vorlage hinzufügen"
   },
   "trigger": {
@@ -178,7 +180,10 @@
   "templates": {
     "title": "Aus Vorlage hinzufügen",
     "hint": "Vorlage wählen. Name, Prompt und Zeitplan lassen sich ändern; nach dem Anlegen läuft sie von selbst.",
+    "featuredTitle": "Aufgabenvorlagen",
+    "viewAll": "Alle anzeigen",
     "category": {
+      "all": "Alle",
       "work": "Arbeit",
       "learning": "Lernen",
       "life": "Alltag"

@@ -60,6 +60,8 @@
     "keepAwakeTooltip": "When enabled, One Work will prevent your computer from going to sleep",
     "searchPlaceholder": "Search tasks...",
     "noSearchResults": "No matching automations.",
+    "emptyTitle": "No scheduled tasks yet",
+    "emptyCreate": "Create a task",
     "createTask": "Create Automation",
     "editTask": "Edit Automation",
     "createSuccess": "Task created successfully",
@@ -178,7 +180,10 @@
   "templates": {
     "title": "Add from template",
     "hint": "Pick a template. The name, prompt and schedule it fills in can all be changed; once created it runs on its own.",
+    "featuredTitle": "Task templates",
+    "viewAll": "View all",
     "category": {
+      "all": "All",
       "work": "Work",
       "learning": "Learning",
       "life": "Daily life"

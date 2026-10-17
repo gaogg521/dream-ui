@@ -61,6 +61,8 @@
     "keepAwakeTooltip": "開啟後，One Work 將阻止電腦進入休眠狀態",
     "searchPlaceholder": "搜尋自動化...",
     "noSearchResults": "沒有匹配的自動化。",
+    "emptyTitle": "還沒有定時任務",
+    "emptyCreate": "建立定時任務",
     "createTask": "建立自動化",
     "editTask": "編輯自動化",
     "createSuccess": "任務建立成功",
@@ -179,7 +181,10 @@
   "templates": {
     "title": "從範本新增",
     "hint": "選一個範本，填好的名稱、提示詞和時間都可以改；建立後按計畫自動執行。",
+    "featuredTitle": "定時任務範本",
+    "viewAll": "查看全部",
     "category": {
+      "all": "全部",
       "work": "工作",
       "learning": "學習",
       "life": "生活"

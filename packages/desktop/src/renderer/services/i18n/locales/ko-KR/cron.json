@@ -155,6 +155,8 @@
     },
     "searchPlaceholder": "작업 검색...",
     "noSearchResults": "일치하는 예약 작업이 없습니다.",
+    "emptyTitle": "아직 예약 작업이 없습니다",
+    "emptyCreate": "작업 만들기",
     "fromTemplate": "템플릿에서 추가"
   },
   "trigger": {
@@ -179,7 +181,10 @@
   "templates": {
     "title": "템플릿에서 추가",
     "hint": "템플릿을 고르세요. 채워진 이름, 프롬프트, 시간은 모두 바꿀 수 있고 만든 뒤에는 일정대로 자동 실행됩니다.",
+    "featuredTitle": "작업 템플릿",
+    "viewAll": "모두 보기",
     "category": {
+      "all": "전체",
       "work": "업무",
       "learning": "학습",
       "life": "생활"

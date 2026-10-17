@@ -154,6 +154,8 @@
     },
     "searchPlaceholder": "جستجوی وظایف...",
     "noSearchResults": "هیچ وظیفه زمان‌بندی‌شده منطبقی وجود ندارد.",
+    "emptyTitle": "No scheduled tasks yet",
+    "emptyCreate": "Create a task",
     "fromTemplate": "افزودن از قالب"
   },
   "trigger": {
@@ -178,7 +180,10 @@
   "templates": {
     "title": "افزودن از قالب",
     "hint": "یک قالب انتخاب کنید. نام، پرامپت و زمان پرشده قابل تغییرند؛ پس از ساخت طبق برنامه خودکار اجرا می‌شود.",
+    "featuredTitle": "Task templates",
+    "viewAll": "View all",
     "category": {
+      "all": "All",
       "work": "کار",
       "learning": "یادگیری",
       "life": "زندگی روزمره"

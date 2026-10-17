@@ -154,6 +154,8 @@
     },
     "searchPlaceholder": "Rechercher des tâches...",
     "noSearchResults": "Aucune tâche planifiée correspondante.",
+    "emptyTitle": "Aucune tâche planifiée pour le moment",
+    "emptyCreate": "Créer une tâche",
     "fromTemplate": "Ajouter depuis un modèle"
   },
   "trigger": {
@@ -178,7 +180,10 @@
   "templates": {
     "title": "Ajouter depuis un modèle",
     "hint": "Choisissez un modèle. Le nom, le prompt et l'horaire sont modifiables ; une fois créé, il s'exécute tout seul.",
+    "featuredTitle": "Modèles de tâches",
+    "viewAll": "Tout afficher",
     "category": {
+      "all": "Tous",
       "work": "Travail",
       "learning": "Apprentissage",
       "life": "Vie quotidienne"

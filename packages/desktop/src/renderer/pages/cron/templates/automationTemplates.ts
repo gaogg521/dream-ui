@@ -282,6 +282,24 @@ export const AUTOMATION_TEMPLATES: AutomationTemplate[] = [
 export const getAutomationTemplate = (id: string): AutomationTemplate | undefined =>
   AUTOMATION_TEMPLATES.find((template) => template.id === id);
 
+/**
+ * Templates shown on the automations panel itself, two per category — the
+ * ones that give the best first impression of what an automation is. Change
+ * this array (nothing else) to curate the panel.
+ */
+const FEATURED_TEMPLATE_IDS = [
+  'daily-ai-brief',
+  'daily-plan',
+  'daily-english',
+  'weekly-reading',
+  'evening-review',
+  'weather-commute',
+] as const;
+
+export function getFeaturedAutomationTemplates(): AutomationTemplate[] {
+  return FEATURED_TEMPLATE_IDS.map(getAutomationTemplate).filter((t): t is AutomationTemplate => t !== undefined);
+}
+
 /** The template's text for a UI language; anything but Chinese reads the English. */
 export function getAutomationTemplateText(template: AutomationTemplate, language: string): TemplateText {
   return language.toLowerCase().startsWith('zh') ? template.text['zh-CN'] : template.text['en-US'];

@@ -16,6 +16,7 @@ import { configService } from '@/common/config/configService';
 import { useConversationAssistants } from '@renderer/pages/conversation/hooks/useConversationAssistants';
 import CronStatusTag from './CronStatusTag';
 import CreateTaskDialog from './CreateTaskDialog';
+import FeaturedTemplates from './FeaturedTemplates';
 import { getJobAgentMeta } from './jobAgentMeta';
 import { useAgentLogos } from '@renderer/utils/model/agentLogo';
 import ThemedLogo from '@/renderer/components/agent/ThemedLogo';
@@ -209,8 +210,11 @@ const ScheduledTasksPage: React.FC = () => {
               <Spin />
             </div>
           ) : jobs.length === 0 ? (
-            <div className='flex min-h-220px items-center justify-center rounded-16px border border-dashed border-2 bg-fill-1'>
-              <Empty description={t('cron.noTasks')} />
+            <div className='flex min-h-220px flex-col items-center justify-center gap-14px rounded-16px border border-dashed border-2 bg-fill-1 px-16px py-28px'>
+              <div className='text-14px text-t-secondary'>{t('cron.page.emptyTitle')}</div>
+              <Button type='primary' size='small' data-testid='empty-create-task' onClick={handleCreateManually}>
+                {t('cron.page.emptyCreate')}
+              </Button>
             </div>
           ) : filteredJobs.length === 0 ? (
             <div className='flex min-h-220px items-center justify-center rounded-16px border border-dashed border-2 bg-fill-1'>
@@ -322,6 +326,8 @@ const ScheduledTasksPage: React.FC = () => {
               })}
             </div>
           )}
+
+          {!loading && !normalizedSearchQuery && <FeaturedTemplates isMobile={isMobile} />}
         </div>
       </div>
 
