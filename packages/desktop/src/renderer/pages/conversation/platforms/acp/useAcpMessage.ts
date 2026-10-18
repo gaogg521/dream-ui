@@ -11,7 +11,10 @@ import type { IResponseMessage } from '@/common/adapter/ipcBridge';
 import type { TokenUsageBreakdown, TokenUsageData } from '@/common/config/storage';
 import { useMergeLiveMessage } from '@/renderer/pages/conversation/Messages/hooks';
 import { logStreamTerminalObserved } from '@/renderer/pages/conversation/runtime/useConversationRuntimeView';
-import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
+import {
+  getConversationOrNull,
+  getConversationOrNullWithRetry,
+} from '@/renderer/pages/conversation/utils/conversationCache';
 import { isConversationProcessing } from '@/renderer/pages/conversation/utils/conversationRuntime';
 import { beginConversationTurn, endConversationTurn } from '@/renderer/pages/conversation/utils/conversationTurnClock';
 import { ensureConversationRuntime } from '@/renderer/pages/conversation/utils/ensureConversationRuntime';
@@ -682,7 +685,7 @@ export const useAcpMessage = (
   useEffect(() => {
     return ipcBridge.realtime.reconnected.on(() => {
       if (!runningRef.current && !aiProcessingRef.current) return;
-      void getConversationOrNull(conversation_id)
+      void getConversationOrNullWithRetry(conversation_id)
         .then((res) => {
           if (res && isConversationProcessing(res)) return;
           turnFinishedRef.current = true;

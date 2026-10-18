@@ -10,7 +10,10 @@ import { uuid } from '@/common/utils';
 import type { ThoughtData } from '@/renderer/components/chat/ThoughtDisplay';
 import { useMergeLiveMessage } from '@/renderer/pages/conversation/Messages/hooks';
 import { logStreamTerminalObserved } from '@/renderer/pages/conversation/runtime/useConversationRuntimeView';
-import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
+import {
+  getConversationOrNull,
+  getConversationOrNullWithRetry,
+} from '@/renderer/pages/conversation/utils/conversationCache';
 import { isConversationProcessing } from '@/renderer/pages/conversation/utils/conversationRuntime';
 import { ensureConversationRuntime } from '@/renderer/pages/conversation/utils/ensureConversationRuntime';
 import {
@@ -697,7 +700,7 @@ export const useDreamEngineMessage = (
   useEffect(() => {
     return ipcBridge.realtime.reconnected.on(() => {
       if (!streamRunningRef.current && !waitingResponseRef.current && !hasActiveToolsRef.current) return;
-      void getConversationOrNull(conversation_id)
+      void getConversationOrNullWithRetry(conversation_id)
         .then((res) => {
           if (res && isConversationProcessing(res)) return;
           turnFinishedRef.current = true;

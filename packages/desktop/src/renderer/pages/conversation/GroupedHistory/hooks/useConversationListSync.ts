@@ -329,7 +329,23 @@ export const getSnapshotConversationName = (conversation_id: string): string | u
   return name ? name : undefined;
 };
 
+// Single-flight: at most one list request in flight, plus at most one queued
+// behind it. `responseStream` asks for a refresh on EVERY frame of a
+// conversation the list does not know yet, so without this a slow list
+// endpoint turned each streamed token into another full-list request. They
+// piled up past Chromium's per-renderer limit and from then on every fetch in
+// the window — backend and Vite alike — failed with
+// net::ERR_INSUFFICIENT_RESOURCES ("TypeError: Failed to fetch"), including the
+// re-sync a realtime reconnect depends on.
+let refreshInFlight = false;
+let refreshQueued = false;
+
 const refreshConversations = () => {
+  if (refreshInFlight) {
+    refreshQueued = true;
+    return;
+  }
+  refreshInFlight = true;
   void ipcBridge.database.getUserConversations
     .invoke({ limit: 10000 })
     .then((result) => {
@@ -359,12 +375,24 @@ const refreshConversations = () => {
       emitStoreChange();
     })
     .catch((error) => {
+      // Keep the last good list. Clearing it emptied the sidebar on a
+      // transient failure and, worse, made every conversation "unknown" — so
+      // every later stream frame asked for yet another refresh.
       console.error('[WorkspaceGroupedHistory] Failed to load conversations:', error);
-      conversationsState = [];
-      conversation_idsState = new Set();
-      projectIdByIdState = new Map();
-      emitStoreChange();
+    })
+    .finally(() => {
+      refreshInFlight = false;
+      if (refreshQueued) {
+        refreshQueued = false;
+        refreshConversations();
+      }
     });
+};
+
+/** Test hook: reset the single-flight state between cases. */
+export const resetConversationRefreshStateForTest = (): void => {
+  refreshInFlight = false;
+  refreshQueued = false;
 };
 
 /** Source of a generating-state transition, logged for field diagnosis. */

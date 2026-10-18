@@ -37,9 +37,12 @@ vi.mock('@/renderer/pages/conversation/Messages/hooks', () => ({
   useMergeLiveMessage: () => addOrUpdateMessageMock,
 }));
 
-vi.mock('@/renderer/pages/conversation/utils/conversationCache', () => ({
-  getConversationOrNull: vi.fn(),
-}));
+vi.mock('@/renderer/pages/conversation/utils/conversationCache', () => {
+  const getConversationOrNull = vi.fn();
+  // The retry wrapper is exercised in conversationCacheRetry.test.ts; here it
+  // just forwards so each case drives the single mocked lookup.
+  return { getConversationOrNull, getConversationOrNullWithRetry: (id: string) => getConversationOrNull(id) };
+});
 
 vi.mock('@/common', () => ({
   ipcBridge: {
