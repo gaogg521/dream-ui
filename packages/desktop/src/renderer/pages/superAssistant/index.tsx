@@ -23,17 +23,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ipcBridge } from '@/common';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import { useDigitalEmployees } from './hooks/useDigitalEmployees';
-import {
-  AGENT_TEMPLATES,
-  getTemplateDescription,
-  getTemplateExamplePrompts,
-  getTemplateInstructions,
-  getTemplateName,
-} from './templates/agentTemplates';
 import AgentsTab, { type AgentCardRef } from './components/AgentsTab';
 import RagSection from './registries/RagSection';
 import ScenesTab from './components/ScenesTab';
-import CreateAgentModal, { type CreateAgentSeed } from './components/CreateAgentModal';
+import CreateAgentModal from './components/CreateAgentModal';
 import ManageAgentModal from './components/ManageAgentModal';
 import ScheduleAgentModal from './components/ScheduleAgentModal';
 import DigitalEmployeeDetailModal from './components/DigitalEmployeeDetailModal';
@@ -56,8 +49,7 @@ function resolveInitialTab(param: string | null): TabKey {
 }
 
 const SuperAssistantPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
-  const language = i18n.language;
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabKey>(() => resolveInitialTab(searchParams.get('tab')));
@@ -75,7 +67,6 @@ const SuperAssistantPage: React.FC = () => {
   const [manageTarget, setManageTarget] = useState<AgentCardRef | null>(null);
   const [scheduleTarget, setScheduleTarget] = useState<AgentCardRef | null>(null);
   const [detailTarget, setDetailTarget] = useState<AgentCardRef | null>(null);
-  const [createSeed, setCreateSeed] = useState<CreateAgentSeed | null>(null);
   const [startingChat, setStartingChat] = useState<string | null>(null);
 
   const manageAgentRow = useMemo(
@@ -122,26 +113,6 @@ const SuperAssistantPage: React.FC = () => {
     [refresh, t]
   );
 
-  // A template fills the create form in; the person edits it and picks the
-  // model and backend before anything is created. (Creating straight from the
-  // card skipped the binding, and an employee without one fails its first run.)
-  const handlePickTemplate = useCallback(
-    (templateId: string) => {
-      const template = AGENT_TEMPLATES.find((tpl) => tpl.id === templateId);
-      if (!template) {
-        return;
-      }
-      setCreateSeed({
-        name: getTemplateName(template, language),
-        description: getTemplateDescription(template, language),
-        instructions: getTemplateInstructions(template, language),
-        starterPrompts: getTemplateExamplePrompts(template, language),
-      });
-      setCreateModalVisible(true);
-    },
-    [language]
-  );
-
   return (
     <div className='flex h-full flex-col'>
       <div className='flex items-center justify-between border-b border-2 px-16px py-12px'>
@@ -159,7 +130,6 @@ const SuperAssistantPage: React.FC = () => {
                 startingChatId={startingChat}
                 onStartChat={(ref) => void handleStartChat(ref.agentId)}
                 onCreateAgent={() => setCreateModalVisible(true)}
-                onPickTemplate={handlePickTemplate}
                 onManageAgent={(ref) => setManageTarget(ref)}
                 onScheduleAgent={(ref) => setScheduleTarget(ref)}
                 onViewDigitalEmployeeDetail={(ref) => setDetailTarget(ref)}
@@ -178,10 +148,8 @@ const SuperAssistantPage: React.FC = () => {
 
       <CreateAgentModal
         visible={createModalVisible}
-        seed={createSeed}
         onClose={() => {
           setCreateModalVisible(false);
-          setCreateSeed(null);
         }}
         onCreated={() => void refresh()}
       />

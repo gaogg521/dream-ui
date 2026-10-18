@@ -16,7 +16,6 @@ import { useManagedAgentRuntimeCatalog } from '@renderer/hooks/agent/useManagedA
 import { useConversationAssistants } from '@renderer/pages/conversation/hooks/useConversationAssistants';
 import type { DigitalEmployeeWithRuns } from '../hooks/useDigitalEmployees';
 import { resolveEmployeeBackendLabel, resolveEmployeeExpertName } from '../utils/employeeDisplay';
-import { useAgentTemplates, getTemplateName, getTemplateDescription } from '../templates/agentTemplates';
 import { resolveEmployeeAvatar } from '../utils/employeeAvatar';
 
 export type AgentCardRef = {
@@ -30,8 +29,6 @@ type AgentsTabProps = {
   startingChatId?: string | null;
   onStartChat?: (agent: AgentCardRef) => void;
   onCreateAgent?: () => void;
-  /** Open the create form filled in from a template; nothing is created until the person confirms it. */
-  onPickTemplate?: (templateId: string) => void;
   onManageAgent?: (agent: AgentCardRef) => void;
   onScheduleAgent?: (agent: AgentCardRef) => void;
   onViewDigitalEmployeeDetail?: (agent: AgentCardRef) => void;
@@ -58,7 +55,6 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
   startingChatId,
   onStartChat,
   onCreateAgent,
-  onPickTemplate,
   onManageAgent,
   onScheduleAgent,
   onViewDigitalEmployeeDetail,
@@ -68,7 +64,6 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
   const { i18n } = useTranslation();
   const language = i18n.language;
   const localeKey = resolveLocaleKey(language ?? 'en-US');
-  const templates = useAgentTemplates();
   const managedAgentRuntimeCatalog = useManagedAgentRuntimeCatalog();
   const { presetAssistants } = useConversationAssistants();
 
@@ -78,37 +73,8 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
     [agents]
   );
 
-  if (cards.length === 0 && !templates.length) {
-    return (
-      <Empty
-        description={t('common.superAssistant.agentsEmpty', {
-          defaultValue: '还没有数字员工，先创建一个。',
-        })}
-      />
-    );
-  }
-
   return (
     <div className='flex flex-col gap-16px'>
-      {templates.length > 0 ? (
-        <Card title={t('common.superAssistant.templatesTitle', { defaultValue: '从模板创建' })}>
-          <div className='grid gap-12px md:grid-cols-3'>
-            {templates.map((tpl) => (
-              <button
-                key={tpl.id}
-                type='button'
-                onClick={() => onPickTemplate?.(tpl.id)}
-                className='flex flex-col items-start gap-4px rounded-6px border border-2 bg-2 p-12px text-left transition hover:border-primary'
-              >
-                <span className='text-24px'>{tpl.avatar}</span>
-                <span className='text-14px font-500'>{getTemplateName(tpl, language)}</span>
-                <span className='text-12px text-t-tertiary'>{getTemplateDescription(tpl, language)}</span>
-              </button>
-            ))}
-          </div>
-        </Card>
-      ) : null}
-
       <Card
         title={t('common.superAssistant.agentsListTitle', { defaultValue: '我的数字员工' })}
         extra={
@@ -119,8 +85,8 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
       >
         {cards.length === 0 ? (
           <Empty
-            description={t('common.superAssistant.agentsEmptyHint', {
-              defaultValue: '从上方模板开始，或点击「创建员工」。',
+            description={t('common.superAssistant.agentsEmpty', {
+              defaultValue: '还没有数字员工，先创建一个。',
             })}
           />
         ) : (
