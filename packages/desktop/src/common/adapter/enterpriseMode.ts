@@ -3,8 +3,7 @@
  *
  * State lives in renderer localStorage: httpBridge reads it synchronously on
  * every request to pick the base URL and attach the Bearer token. The main
- * process never sees these keys (no window/localStorage there), so its own
- * ipcBridge calls keep hitting the local backend.
+ * process receives the selected endpoint through the governance IPC bridge.
  */
 
 import { bridge } from '@/common/platform/bridge';
@@ -22,6 +21,18 @@ export type EnterpriseSession = {
 const KEY_ENABLED = 'one-enterprise:enabled';
 const KEY_SERVER_URL = 'one-enterprise:server-url';
 const KEY_SESSION = 'one-enterprise:session';
+const KEY_UNREACHABLE = 'one-enterprise:unreachable-since';
+export const ENTERPRISE_OFFLINE_FALLBACK_EVENT = 'one-enterprise-offline-fallback';
+export const ENTERPRISE_OFFLINE_GRACE_MS = 15 * 60 * 1000;
+
+/** Same-window changes need an event: the browser storage event only reaches other windows. */
+export const ENTERPRISE_CONNECTION_CHANGED_EVENT = 'one-enterprise-connection-changed';
+function notifyConnectionChanged(): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(ENTERPRISE_CONNECTION_CHANGED_EVENT));
+    window.dispatchEvent(new Event('one-org-context-changed'));
+  }
+}
 
 function storage(): Storage | null {
   return typeof localStorage === 'undefined' ? null : localStorage;
@@ -32,7 +43,9 @@ export function isEnterpriseModeEnabled(): boolean {
 }
 
 export function setEnterpriseModeEnabled(enabled: boolean): void {
+  if (!enabled || !isEnterpriseModeEnabled()) storage()?.removeItem(KEY_UNREACHABLE);
   storage()?.setItem(KEY_ENABLED, enabled ? 'true' : 'false');
+  notifyConnectionChanged();
 }
 
 /** Normalized (no trailing slash) http(s) origin of the remote server, or null. */
@@ -43,14 +56,22 @@ export function getEnterpriseServerUrl(): string | null {
 }
 
 export function setEnterpriseServerUrl(url: string): void {
+  // Never send credentials belonging to the previous company to a new server.
+  if (getEnterpriseServerUrl() !== url.trim().replace(/\/+$/, '')) {
+    storage()?.removeItem(KEY_SESSION);
+    storage()?.removeItem(KEY_UNREACHABLE);
+  }
   storage()?.setItem(KEY_SERVER_URL, url.trim());
+  notifyConnectionChanged();
 }
 
 /** Clear remote-server pointer (e.g. when switching deployment back to server). */
 export function clearEnterpriseRemotePointer(): void {
+  storage()?.removeItem(KEY_UNREACHABLE);
   storage()?.removeItem(KEY_SERVER_URL);
   storage()?.removeItem(KEY_SESSION);
   storage()?.setItem(KEY_ENABLED, 'false');
+  notifyConnectionChanged();
 }
 
 export function getEnterpriseSession(): EnterpriseSession | null {
@@ -70,11 +91,39 @@ export function setEnterpriseSession(session: EnterpriseSession | null): void {
   } else {
     storage()?.removeItem(KEY_SESSION);
   }
+  notifyConnectionChanged();
 }
 
 /** Remote mode is active when the toggle is on AND a server URL is set. */
 export function isEnterpriseRemoteActive(): boolean {
   return isEnterpriseModeEnabled() && getEnterpriseServerUrl() !== null;
+}
+
+/** Only transport failures count as offline. Reachable HTTP refusals reset the grace period. */
+export function recordEnterpriseReachability(reachable: boolean, now = Date.now()): boolean {
+  if (!isEnterpriseRemoteActive()) return false;
+  const state = storage();
+  if (reachable) {
+    state?.removeItem(KEY_UNREACHABLE);
+    return false;
+  }
+  const server = getEnterpriseServerUrl();
+  let since = now;
+  try {
+    const previous = JSON.parse(state?.getItem(KEY_UNREACHABLE) ?? 'null') as {
+      server?: string;
+      since?: number;
+    } | null;
+    if (previous?.server === server && typeof previous.since === 'number' && previous.since <= now)
+      since = previous.since;
+  } catch {
+    /* An invalid checkpoint starts a fresh grace period. */
+  }
+  state?.setItem(KEY_UNREACHABLE, JSON.stringify({ server, since }));
+  if (now - since < ENTERPRISE_OFFLINE_GRACE_MS) return false;
+  setEnterpriseModeEnabled(false);
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(ENTERPRISE_OFFLINE_FALLBACK_EVENT));
+  return true;
 }
 
 /**

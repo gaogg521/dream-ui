@@ -2138,7 +2138,12 @@
     "projectGroupLine": "專案組：{{name}}",
     "myGroupsTitle": "我的專案組",
     "switchDone": "已切換專案組",
-    "editionClientNeedLogin": "已連線企業 · 未登入"
+    "editionClientNeedLogin": "已連線企業 · 未登入",
+    "connectionChecking": "正在檢查企業連線",
+    "connectionSignInRequired": "企業登入已失效",
+    "connectionUnavailable": "企業連線異常",
+    "checkConnection": "檢查企業連線",
+    "offlineFallback": "企業伺服器連續 15 分鐘無法連線，已切回個人模式。可在企業連線設定中重新連線。"
   },
   "enterpriseChannel": "企業下發",
   "enterpriseChannelTip": "這條模型渠道由公司統一設定，憑證保存在公司伺服器上，本機無法修改或刪除。",

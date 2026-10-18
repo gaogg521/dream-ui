@@ -2138,7 +2138,12 @@
     "projectGroupLine": "プロジェクトグループ：{{name}}",
     "myGroupsTitle": "自分のプロジェクトグループ",
     "switchDone": "プロジェクトグループを切り替えました",
-    "editionClientNeedLogin": "企業 · 未サインイン"
+    "editionClientNeedLogin": "企業 · 未サインイン",
+    "connectionChecking": "企業接続を確認中",
+    "connectionSignInRequired": "企業ログインの有効期限切れ",
+    "connectionUnavailable": "企業接続エラー",
+    "checkConnection": "企業接続を確認",
+    "offlineFallback": "企業サーバーに15分間接続できないため、個人モードに切り替えました。企業接続設定から再接続できます。"
   },
   "enterpriseChannel": "組織配布",
   "enterpriseChannelTip": "このモデルチャネルは会社が一括設定しています。認証情報は会社のサーバーに保管され、ここでは変更・削除できません。",

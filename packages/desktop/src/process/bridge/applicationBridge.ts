@@ -29,6 +29,7 @@ import { restartApplication } from './restartApplication';
 import { extractTextFromFile, extractTextFromUrl } from '@process/utils/documentTextExtraction';
 
 const RUNTIME_MACHINE_ID_KEY = 'runtime.machineId';
+let governanceEndpointRevision = 0;
 
 /**
  * The identifier this machine reports itself under in the enterprise runtime
@@ -226,7 +227,12 @@ export function initApplicationBridge(): void {
   // and the media spend gate — pointed at whichever backend actually holds the
   // company's data (local, or the remote server in enterprise client mode).
   ipcBridge.application.setGovernanceEndpoint.provider(async (endpoint) => {
+    const revision = ++governanceEndpointRevision;
     setGovernanceEndpoint(endpoint ?? null);
+    if (endpoint) {
+      const machineId = await getOrCreateMachineId();
+      if (revision === governanceEndpointRevision) setGovernanceEndpoint({ ...endpoint, machineId });
+    }
   });
 
   ipcBridge.application.isDevToolsOpened.provider(() => {

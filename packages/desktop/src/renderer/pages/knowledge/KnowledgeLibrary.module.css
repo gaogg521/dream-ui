@@ -626,6 +626,17 @@
   flex-shrink: 0;
   white-space: nowrap;
 }
+.documentCommands .editorHint {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding-top: 0;
+  line-height: 20px;
+}
+.documentCommands :global(.arco-upload-wrapper) {
+  display: inline-flex;
+  align-items: center;
+}
 @container knowledge-document (max-width: 720px) {
   .documentIdentity span {
     display: none;

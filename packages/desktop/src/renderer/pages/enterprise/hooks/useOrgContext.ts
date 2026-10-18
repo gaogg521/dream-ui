@@ -3,19 +3,18 @@
  * and enterprise flag via /api/one/org/context (one-org crate).
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { ipcBridge } from '@/common';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import type { OrgContext } from '@/common/types/org/orgTypes';
+import {
+  getEnterpriseServerUrl,
+  getEnterpriseSession,
+  isEnterpriseRemoteActive,
+  recordEnterpriseReachability,
+} from '@/common/adapter/enterpriseMode';
 
-/**
- * Broadcast whenever this member's org membership changes (join / create /
- * exit). Every `useOrgContext()` call site fetches independently on its own
- * mount with no shared cache — without this event, sibling instances (e.g.
- * the sidebar's `WorkspaceIdentityEntry` badge vs the settings page that
- * actually performed the join/exit) go stale until the next full reload,
- * showing the wrong tenant/edition after an action that visibly succeeded.
- */
+/** Refresh the shared context after membership, deployment or session changes. */
 export const ORG_CONTEXT_CHANGED_EVENT = 'one-org-context-changed';
 
 export function isOrgAdminRole(role: string | null | undefined): boolean {
@@ -38,39 +37,104 @@ export type UseOrgContextResult = {
   refresh: () => Promise<void>;
 };
 
-export function useOrgContext(): UseOrgContextResult {
-  const [context, setContext] = useState<OrgContext | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [unauthorized, setUnauthorized] = useState(false);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setUnauthorized(false);
+// One snapshot keeps the footer, project-group page and identity surfaces in agreement.
+// The identity key stays in memory and is never logged or persisted.
+let snapshot: Omit<UseOrgContextResult, 'refresh'> = {
+  context: null,
+  loading: true,
+  error: null,
+  unauthorized: false,
+};
+const listeners = new Set<() => void>();
+let identity = '';
+let generation = 0;
+let pending: Promise<void> | null = null;
+let stop: (() => void) | undefined;
+function currentIdentity(): string {
+  return isEnterpriseRemoteActive()
+    ? JSON.stringify([getEnterpriseServerUrl(), getEnterpriseSession()?.token ?? ''])
+    : 'local';
+}
+function publish(value: typeof snapshot): void {
+  snapshot = value;
+  listeners.forEach((listener) => listener());
+}
+function refresh(force = false): Promise<void> {
+  const selected = currentIdentity();
+  if (pending && selected === identity && !force) return pending;
+  const changed = selected !== identity;
+  identity = selected;
+  const requestGeneration = ++generation;
+  if (changed || !snapshot.context) {
+    publish({ context: null, loading: true, error: null, unauthorized: false });
+  }
+  const request = (async () => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      const ctx = await ipcBridge.oneOrg.context.invoke();
-      setContext(ctx ?? null);
-    } catch (e) {
-      setContext(null);
-      setError(String(e));
-      setUnauthorized(isBackendHttpError(e) && e.status === 401);
+      const ctx = await Promise.race([
+        ipcBridge.oneOrg.context.invoke(),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Enterprise connection timed out')), 10000);
+        }),
+      ]);
+      if (!ctx) throw new Error('Enterprise context is unavailable');
+      if (requestGeneration === generation && selected === currentIdentity()) {
+        recordEnterpriseReachability(true);
+        publish({ context: ctx, loading: false, error: null, unauthorized: false });
+      }
+    } catch (error) {
+      if (requestGeneration === generation && selected === currentIdentity()) {
+        publish({
+          context: null,
+          loading: false,
+          error: String(error),
+          unauthorized: isBackendHttpError(error) && error.status === 401,
+        });
+        const transportFailure = isBackendHttpError(error)
+          ? [0, 502, 503, 504].includes(error.status)
+          : error instanceof TypeError ||
+            (error instanceof Error && /timed out|fetch failed|failed to fetch|network|ECONN/i.test(error.message));
+        recordEnterpriseReachability(!transportFailure);
+      }
     } finally {
-      setLoading(false);
+      clearTimeout(timer);
+      if (requestGeneration === generation) pending = null;
     }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  useEffect(() => {
-    const handler = (): void => {
+  })();
+  pending = request;
+  return request;
+}
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  if (listeners.size === 1) {
+    const update = (): void => {
       void refresh();
     };
-    window.addEventListener(ORG_CONTEXT_CHANGED_EVENT, handler);
-    return () => window.removeEventListener(ORG_CONTEXT_CHANGED_EVENT, handler);
-  }, [refresh]);
-
-  return { loading, context, error, unauthorized, refresh };
+    const events = ['storage', 'focus', 'online', 'offline'];
+    events.forEach((event) => window.addEventListener(event, update));
+    const membershipChanged = (): void => {
+      void refresh(true);
+    };
+    window.addEventListener(ORG_CONTEXT_CHANGED_EVENT, membershipChanged);
+    const timer = window.setInterval(update, 15000);
+    stop = () => {
+      events.forEach((event) => window.removeEventListener(event, update));
+      window.removeEventListener(ORG_CONTEXT_CHANGED_EVENT, membershipChanged);
+      window.clearInterval(timer);
+      generation++;
+      pending = null;
+    };
+    update();
+  }
+  return () => {
+    listeners.delete(listener);
+    if (!listeners.size) {
+      stop?.();
+      stop = undefined;
+    }
+  };
+}
+export function useOrgContext(): UseOrgContextResult {
+  const state = useSyncExternalStore(subscribe, () => snapshot);
+  return { ...state, refresh };
 }

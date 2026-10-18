@@ -3127,7 +3127,7 @@ import type {
 import type { FileVaultInfo, FileVaultObject, MyNotifications, MyScene } from '@/common/types/platform/enterpriseTypes';
 
 export const oneOrg = {
-  context: httpGet<OrgContext, void>('/api/one/org/context'),
+  context: httpGet<OrgContext, void>('/api/one/org/context', { timeoutMs: 10000 }),
   join: httpPost<OrgTenant, { code: string }>('/api/one/org/join'),
   // Phase 2 multi-membership: every project group the caller belongs to, plus
   // switching which one is active (server-side per-user active tenant — no

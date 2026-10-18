@@ -55,7 +55,7 @@ async function backendHoldsCompanyProviders(): Promise<boolean> {
 
 export function useTeamResourceSync(): void {
   const { t } = useTranslation();
-  const { context, loading } = useOrgContext();
+  const { context, loading, error } = useOrgContext();
   const isEnterprise = context?.isEnterprise ?? false;
   /** Whether the previous render resolved as enterprise — see the purge below. */
   const wasEnterprise = useRef(false);
@@ -116,6 +116,9 @@ export function useTeamResourceSync(): void {
     // never in an enterprise has nothing to purge, and firing four IPC calls
     // on every personal-mode start would be pure noise.
     if (loading) return;
+    // An outage or expired session is not a confirmed departure. Keep the offline
+    // cache while pausing sync; explicit disconnect and successful membership loss still purge.
+    if (error && isEnterpriseModeEnabled()) return;
     if (!isEnterprise && wasEnterprise.current) {
       wasEnterprise.current = false;
       void purgeMaterializedEnterpriseResources();
@@ -183,5 +186,5 @@ export function useTeamResourceSync(): void {
     syncAll();
     const timer = window.setInterval(syncAll, SYNC_INTERVAL_MS);
     return () => window.clearInterval(timer);
-  }, [isEnterprise, loading]);
+  }, [isEnterprise, context?.tenantId, loading, error]);
 }

@@ -15,6 +15,9 @@ let mockSession: EnterpriseSession | null = null;
 let mockIsEnterprise = false;
 let mockTenantName: string | null = null;
 let mockIsClient = true;
+let mockContextError: string | null = null;
+let mockContextLoading = false;
+let mockContextUnauthorized = false;
 let mockCompany: { companyId: string; name: string; origin: string; memberCount: number; viewerRole: string } | null =
   null;
 let mockIsCompanyAdmin = false;
@@ -60,7 +63,9 @@ vi.mock('@renderer/pages/enterprise/hooks/useOrgContext', () => ({
   ORG_CONTEXT_CHANGED_EVENT: 'org-context-changed',
   isOrgAdminRole: () => false,
   useOrgContext: () => ({
-    loading: false,
+    loading: mockContextLoading,
+    error: mockContextError,
+    unauthorized: mockContextUnauthorized,
     context: {
       tenantId: 'default',
       tenantName: mockTenantName,
@@ -122,7 +127,34 @@ describe('WorkspaceIdentityEntry', () => {
     mockIsClient = true;
     mockCompany = null;
     mockIsCompanyAdmin = false;
+    mockContextError = null;
+    mockContextLoading = false;
+    mockContextUnauthorized = false;
+    localStorage.clear();
     (window as unknown as { electronAPI?: unknown }).electronAPI = {};
+  });
+
+  it('does not claim connected when a saved session points at an unreachable company', () => {
+    localStorage.setItem('one-enterprise:enabled', 'true');
+    mockSession = { token: 't', username: 'admin', userId: 'u' };
+    mockContextError = 'fetch failed';
+    render(<WorkspaceIdentityEntry />);
+    expect(screen.getByText('企业连接异常')).toBeInTheDocument();
+    expect(screen.queryByText('已连接企业')).not.toBeInTheDocument();
+  });
+  it('waits for a successful live check before claiming connected', () => {
+    localStorage.setItem('one-enterprise:enabled', 'true');
+    mockSession = { token: 't', username: 'admin', userId: 'u' };
+    mockContextLoading = true;
+    render(<WorkspaceIdentityEntry />);
+    expect(screen.getByText('正在检查企业连接')).toBeInTheDocument();
+  });
+  it('distinguishes expired sign-in from an unreachable server', () => {
+    localStorage.setItem('one-enterprise:enabled', 'true');
+    mockContextError = '401';
+    mockContextUnauthorized = true;
+    render(<WorkspaceIdentityEntry />);
+    expect(screen.getByText('企业登录已失效')).toBeInTheDocument();
   });
 
   afterEach(() => {

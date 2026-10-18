@@ -2136,7 +2136,12 @@
     "projectGroupLine": "Proje grubu: {{name}}",
     "myGroupsTitle": "Proje gruplarım",
     "switchDone": "Proje grubu değiştirildi",
-    "editionClientNeedLogin": "Kurumsal · Oturum açılmadı"
+    "editionClientNeedLogin": "Kurumsal · Oturum açılmadı",
+    "connectionChecking": "Kurumsal bağlantı kontrol ediliyor",
+    "connectionSignInRequired": "Kurumsal oturumun süresi doldu",
+    "connectionUnavailable": "Kurumsal bağlantı kullanılamıyor",
+    "checkConnection": "Kurumsal bağlantıyı kontrol et",
+    "offlineFallback": "Kurumsal sunucuya 15 dakikadır ulaşılamıyor. Kişisel moda geçildi. Kurumsal bağlantı ayarlarından yeniden bağlanabilirsiniz."
   },
   "enterpriseChannel": "Kurumsal kanal",
   "enterpriseChannelTip": "Bu model kanalı şirketiniz tarafından sağlanır. Kimlik bilgileri şirket sunucusunda kalır ve burada değiştirilemez veya silinemez.",

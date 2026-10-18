@@ -9,7 +9,7 @@
  * empty list and the switcher never renders.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ipcBridge } from '@/common';
 import type { MyTenant } from '@/common/types/org/orgTypes';
 import { ORG_CONTEXT_CHANGED_EVENT } from './useOrgContext';
@@ -26,22 +26,30 @@ export function useMyTenants(): UseMyTenantsResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const generation = useRef(0);
   const refresh = useCallback(async () => {
+    const request = ++generation.current;
+    setTenants([]);
     setLoading(true);
     setError(null);
     try {
       const list = await ipcBridge.oneOrg.myTenants.invoke();
+      if (request !== generation.current) return;
       setTenants(list ?? []);
     } catch (e) {
+      if (request !== generation.current) return;
       setTenants([]);
       setError(String(e));
     } finally {
-      setLoading(false);
+      if (request === generation.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void refresh();
+    return () => {
+      generation.current++;
+    };
   }, [refresh]);
 
   useEffect(() => {

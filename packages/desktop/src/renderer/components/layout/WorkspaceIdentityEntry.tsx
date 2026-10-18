@@ -3,13 +3,17 @@
  * Desktop only; SSO always opens in the system browser.
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Avatar, Dropdown, Menu, Message } from '@arco-design/web-react';
 import { Check, Earth, Login, Peoples, Setting } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ipcBridge } from '@/common';
-import { getEnterpriseSession, isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
+import {
+  getEnterpriseSession,
+  isEnterpriseModeEnabled,
+  ENTERPRISE_OFFLINE_FALLBACK_EVENT,
+} from '@/common/adapter/enterpriseMode';
 import {
   isOrgAdminRole,
   ORG_CONTEXT_CHANGED_EVENT,
@@ -29,8 +33,19 @@ type WorkspaceIdentityEntryProps = {
 
 const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collapsed = false }) => {
   const { t } = useTranslation();
+  useEffect(() => {
+    const notify = () => {
+      Message.warning(
+        t('settings.workspaceIdentity.offlineFallback', {
+          defaultValue: '企业服务器连续 15 分钟不可达，已切回个人模式。可在企业连接设置中重新连接。',
+        })
+      );
+    };
+    window.addEventListener(ENTERPRISE_OFFLINE_FALLBACK_EVENT, notify);
+    return () => window.removeEventListener(ENTERPRISE_OFFLINE_FALLBACK_EVENT, notify);
+  }, [t]);
   const navigate = useNavigate();
-  const { context, loading, unauthorized } = useOrgContext();
+  const { context, loading, unauthorized, error } = useOrgContext();
   // Every project group the caller belongs to (Phase 2 multi-membership) — the
   // source for the switcher below. Empty for personal / standalone, so the
   // switcher never renders there.
@@ -82,19 +97,26 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
   // simply never connected yet — the exact "UI says connected, reality says
   // not" contradiction this whole investigation started from, just inverted.
   const isRemoteConnected = isEnterpriseModeEnabled();
-  const editionLine = hideLocalAdmin
-    ? !isRemoteConnected
-      ? t('settings.workspaceIdentity.editionClientDisconnected', { defaultValue: '个人版 · 未连接企业' })
-      : unauthorized || !remoteSession
-        ? t('settings.workspaceIdentity.editionClientNeedLogin', { defaultValue: '已连接企业 · 未登录' })
-        : t('settings.workspaceIdentity.editionClient', { defaultValue: '已连接企业' })
-    : context?.isEnterprise
-      ? t('settings.workspaceIdentity.editionProjectGroup', { defaultValue: '项目组' })
-      : remoteSession
-        ? t('settings.workspaceIdentity.editionSsoNoGroup', { defaultValue: '已登录 · 未加入项目组' })
-        : hasLocalCompany
-          ? t('settings.workspaceIdentity.editionCompanyAdmin', { defaultValue: '企业管理员 · 未加入项目组' })
-          : t('settings.workspaceIdentity.editionPersonal', { defaultValue: '个人版 · 未登录' });
+  const editionLine =
+    hideLocalAdmin || isRemoteConnected
+      ? !isRemoteConnected
+        ? t('settings.workspaceIdentity.editionClientDisconnected', { defaultValue: '个人版 · 未连接企业' })
+        : loading
+          ? t('settings.workspaceIdentity.connectionChecking', { defaultValue: '正在检查企业连接' })
+          : unauthorized
+            ? t('settings.workspaceIdentity.connectionSignInRequired', { defaultValue: '企业登录已失效' })
+            : error || !context
+              ? t('settings.workspaceIdentity.connectionUnavailable', { defaultValue: '企业连接异常' })
+              : !remoteSession
+                ? t('settings.workspaceIdentity.editionClientNeedLogin', { defaultValue: '已连接企业 · 未登录' })
+                : t('settings.workspaceIdentity.editionClient', { defaultValue: '已连接企业' })
+      : context?.isEnterprise
+        ? t('settings.workspaceIdentity.editionProjectGroup', { defaultValue: '项目组' })
+        : remoteSession
+          ? t('settings.workspaceIdentity.editionSsoNoGroup', { defaultValue: '已登录 · 未加入项目组' })
+          : hasLocalCompany
+            ? t('settings.workspaceIdentity.editionCompanyAdmin', { defaultValue: '企业管理员 · 未加入项目组' })
+            : t('settings.workspaceIdentity.editionPersonal', { defaultValue: '个人版 · 未登录' });
 
   const handleEnterpriseLogin = useCallback(() => {
     navigate('/enterprise/login');

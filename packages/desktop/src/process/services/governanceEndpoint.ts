@@ -27,6 +27,7 @@
 export type GovernanceEndpoint = {
   baseUrl: string;
   token: string;
+  machineId?: string;
 };
 
 /** In-memory only — never persisted, never logged. */
@@ -34,11 +35,12 @@ let governanceEndpoint: GovernanceEndpoint | null = null;
 
 /**
  * Point governance requests at the remote server. Called by the renderer when
- * enterprise remote mode turns on, and with `null` when it turns off or the
- * session ends.
+ * enterprise remote mode turns on, and with `null` only when remote mode turns off. A missing session
+ * retains the remote pointer and requires sign-in.
  */
 export function setGovernanceEndpoint(endpoint: GovernanceEndpoint | null): void {
-  governanceEndpoint = endpoint && endpoint.baseUrl && endpoint.token ? endpoint : null;
+  // A configured company without a session must never silently query the personal database.
+  governanceEndpoint = endpoint?.baseUrl ? { ...endpoint, baseUrl: endpoint.baseUrl.replace(/\/+$/, '') } : null;
 }
 
 export function getGovernanceEndpoint(): GovernanceEndpoint | null {
@@ -87,29 +89,49 @@ export async function governanceFetch<T>(method: string, path: string, body?: un
   if (!baseUrl) {
     throw new GovernanceUnavailableError('backend is not running');
   }
+  if (remote && !remote.token) {
+    throw new GovernanceUnavailableError(
+      'Enterprise sign-in is required. Sign in to the configured enterprise server.'
+    );
+  }
 
   const headers: Record<string, string> = {};
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (remote) headers['Authorization'] = `Bearer ${remote.token}`;
+  if (remote?.machineId) headers['x-dream-machine-id'] = remote.machineId;
 
-  const response = await fetch(`${baseUrl}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch {
+    throw new GovernanceUnavailableError(
+      remote
+        ? 'Enterprise connection unavailable. Check the enterprise server connection and retry.'
+        : 'Local backend connection unavailable. Retry when the backend is ready.'
+    );
+  }
 
   if (!response.ok) {
+    if (remote && response.status === 401) {
+      throw new GovernanceUnavailableError('Enterprise sign-in expired. Sign in again to use enterprise knowledge.');
+    }
     // Surface the status, not the body: an error page from a misconfigured
     // remote can be large and tells the caller nothing it can act on.
     throw new Error(`${method} ${path} returned HTTP ${response.status}`);
   }
 
   const contentType = response.headers.get('Content-Type');
-  if (!contentType?.includes('application/json')) {
-    return undefined as T;
-  }
+  if (!contentType?.includes('application/json')) throw new Error('Governance server returned an invalid response.');
 
   const json = (await response.json()) as unknown;
+  if (json && typeof json === 'object' && 'success' in json && json.success === false) {
+    throw new Error('Governance server rejected the request.');
+  }
   if (json && typeof json === 'object' && 'data' in json) {
     return (json as { data: T }).data;
   }

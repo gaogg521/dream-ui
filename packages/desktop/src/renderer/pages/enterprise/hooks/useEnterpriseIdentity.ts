@@ -7,7 +7,7 @@
  * returns THIS member's identity (not the host operator's).
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ipcBridge } from '@/common';
 import { ORG_CONTEXT_CHANGED_EVENT } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import type { EnterpriseIdentity } from '@/common/types/org/orgTypes';
@@ -24,22 +24,30 @@ export function useEnterpriseIdentity(): UseEnterpriseIdentityResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const generation = useRef(0);
   const refresh = useCallback(async () => {
+    const request = ++generation.current;
+    setIdentity(null);
     setLoading(true);
     setError(null);
     try {
       const result = await ipcBridge.oneEnterprise.me.invoke();
+      if (request !== generation.current) return;
       setIdentity(result ?? null);
     } catch (e) {
+      if (request !== generation.current) return;
       setIdentity(null);
       setError(String(e));
     } finally {
-      setLoading(false);
+      if (request === generation.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void refresh();
+    return () => {
+      generation.current++;
+    };
   }, [refresh]);
 
   // Re-fetch on the same membership-change signal the org context uses, so a

@@ -5,7 +5,7 @@
  * server (personal / standalone edition never sets one up).
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ipcBridge } from '@/common';
 import { ORG_CONTEXT_CHANGED_EVENT } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import type { CompanyOverview } from '@/common/types/org/orgTypes';
@@ -23,22 +23,30 @@ export function useCompanyIdentity(): UseCompanyIdentityResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const generation = useRef(0);
   const refresh = useCallback(async () => {
+    const request = ++generation.current;
+    setCompany(null);
     setLoading(true);
     setError(null);
     try {
       const result = await ipcBridge.oneEnterprise.company.invoke();
+      if (request !== generation.current) return;
       setCompany(result ?? null);
     } catch (e) {
+      if (request !== generation.current) return;
       setCompany(null);
       setError(String(e));
     } finally {
-      setLoading(false);
+      if (request === generation.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void refresh();
+    return () => {
+      generation.current++;
+    };
   }, [refresh]);
 
   useEffect(() => {

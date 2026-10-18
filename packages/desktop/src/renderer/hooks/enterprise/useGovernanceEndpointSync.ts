@@ -20,14 +20,14 @@ import {
   getEnterpriseServerUrl,
   getEnterpriseSession,
   isEnterpriseRemoteActive,
+  ENTERPRISE_CONNECTION_CHANGED_EVENT,
 } from '@/common/adapter/enterpriseMode';
 import { isElectronDesktop } from '@renderer/utils/platform';
 
 /**
  * localStorage has no change event within the same document, and the session can
- * be replaced by an SSO round-trip or cleared by a logout at any time. Polling
- * on a slow tick is far simpler than threading a callback through every writer,
- * and the push is a no-op when nothing changed.
+ * be replaced by an SSO round-trip or cleared by logout. Same-window events
+ * synchronize immediately; polling also covers legacy storage writers.
  */
 const POLL_INTERVAL_MS = 30 * 1000;
 
@@ -42,8 +42,7 @@ export function useGovernanceEndpointSync(): void {
       if (disposed) return;
       const session = getEnterpriseSession();
       const baseUrl = getEnterpriseServerUrl();
-      const endpoint =
-        isEnterpriseRemoteActive() && baseUrl && session?.token ? { baseUrl, token: session.token } : null;
+      const endpoint = isEnterpriseRemoteActive() && baseUrl ? { baseUrl, token: session?.token ?? '' } : null;
 
       // Compare before sending so a steady state costs nothing, and so the
       // token is not shuttled across the IPC boundary on every tick.
@@ -54,9 +53,8 @@ export function useGovernanceEndpointSync(): void {
       // This runs in a mount effect in the app shell, so anything thrown here
       // takes the whole Layout down with it. The bridge channel can legitimately
       // be absent — an older preload, or a host that wires only part of the
-      // bridge — so it is probed rather than assumed. Absent simply means the
-      // knowledge-base tool stays on the local backend, which is the correct
-      // default anyway.
+      // bridge — so it is probed rather than assumed. Only a compatible
+      // preload can synchronize remote governance requests.
       const channel = ipcBridge.application.setGovernanceEndpoint;
       if (typeof channel?.invoke !== 'function') return;
       try {
@@ -71,10 +69,16 @@ export function useGovernanceEndpointSync(): void {
     };
 
     push();
+    window.addEventListener(ENTERPRISE_CONNECTION_CHANGED_EVENT, push);
+    window.addEventListener('storage', push);
+    window.addEventListener('focus', push);
     const timer = window.setInterval(push, POLL_INTERVAL_MS);
     return () => {
       disposed = true;
       window.clearInterval(timer);
+      window.removeEventListener(ENTERPRISE_CONNECTION_CHANGED_EVENT, push);
+      window.removeEventListener('storage', push);
+      window.removeEventListener('focus', push);
     };
   }, []);
 }

@@ -2142,7 +2142,12 @@
     "factIdentity": "Signed in",
     "factCompany": "Company",
     "factDepartment": "Dept.",
-    "editionClientNeedLogin": "Enterprise · Not signed in"
+    "editionClientNeedLogin": "Enterprise · Not signed in",
+    "connectionChecking": "Checking enterprise connection",
+    "connectionSignInRequired": "Enterprise sign-in expired",
+    "connectionUnavailable": "Enterprise connection unavailable",
+    "checkConnection": "Check enterprise connection",
+    "offlineFallback": "The enterprise server has been unreachable for 15 minutes. Switched to personal mode. Reconnect in enterprise connection settings."
   },
   "codexBridge.title": "Codex Bridge",
   "codexBridge.description": "Let the external Codex CLI use one of your own configured models instead of its default OpenAI/ChatGPT account, by routing its requests through this app's local compatibility bridge.",

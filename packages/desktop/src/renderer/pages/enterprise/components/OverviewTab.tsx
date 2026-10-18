@@ -261,13 +261,23 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
     // carried the HTTP status and the backend's JSON envelope (internal
     // details, and unreadable to a member).
     return (
-      <Alert
-        type='error'
-        title={t('common.enterprise.contextError', { defaultValue: '无法获取企业信息' })}
-        content={t('common.enterprise.contextErrorHint', {
-          defaultValue: '获取企业信息失败，请检查与企业服务器的连接后重试。',
-        })}
-      />
+      <div className='flex flex-col gap-16px'>
+        <Alert
+          type='error'
+          title={t('common.enterprise.contextError', { defaultValue: '无法获取企业信息' })}
+          content={t('common.enterprise.contextErrorHint', {
+            defaultValue: '获取企业信息失败，请检查与企业服务器的连接后重试。',
+          })}
+        />
+        <div className='flex gap-8px'>
+          <Button type='primary' onClick={onChanged}>
+            {t('common.retry')}
+          </Button>
+          <Button onClick={() => navigate('/settings/enterprise-identity')}>
+            {t('settings.workspaceIdentity.checkConnection', { defaultValue: '检查企业连接' })}
+          </Button>
+        </div>
+      </div>
     );
   }
 

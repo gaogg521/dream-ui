@@ -78,6 +78,15 @@ describe('release packaging configuration', () => {
     expect(winBlock).not.toContain('    - zip');
   });
 
+  it('ships the PDF runtime required by main-process knowledge imports', () => {
+    const config = readProjectFile('packages/desktop/electron-builder.yml');
+
+    // officeparser lazily imports pdfjs-dist when a user imports a PDF. Removing
+    // it as "renderer-only" makes the packaged IPC request never return even
+    // though local DEV works because node_modules is complete there.
+    expect(config).not.toMatch(/!\*\*\/node_modules\/pdfjs-dist\/\*\*/);
+  });
+
   it('uploads mac zip artifacts without a stale Windows zip glob', () => {
     const workflow = readProjectFile('.github/workflows/_build-reusable.yml');
 

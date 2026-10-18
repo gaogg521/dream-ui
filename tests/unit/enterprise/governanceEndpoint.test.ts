@@ -70,15 +70,13 @@ describe('governanceFetch routing', () => {
 
   // A half-filled endpoint is worse than none: it would send unauthenticated
   // requests to the company server, which answers for nobody.
-  it('ignores an endpoint missing either half', async () => {
+  it('never retrieves personal data when the configured enterprise has no session', async () => {
     setGovernanceEndpoint({ baseUrl: 'https://one.corp.example', token: '' });
-    expect(isGovernanceRemote()).toBe(false);
-
-    setGovernanceEndpoint({ baseUrl: '', token: 'tok_abc' });
-    expect(isGovernanceRemote()).toBe(false);
-
-    await governanceFetch('GET', '/api/one/billing/plan');
-    expect(fetchMock.mock.calls[0][0]).toBe('http://127.0.0.1:13400/api/one/billing/plan');
+    await expect(governanceFetch('POST', '/api/one/devops/rag/search', { query: 'internal' })).rejects.toThrow(
+      'sign-in'
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(isGovernanceRemote()).toBe(true);
   });
 
   it('falls back to local again when the session ends', async () => {
@@ -87,6 +85,27 @@ describe('governanceFetch routing', () => {
 
     await governanceFetch('GET', '/api/one/billing/plan');
     expect(fetchMock.mock.calls[0][0]).toBe('http://127.0.0.1:13400/api/one/billing/plan');
+  });
+});
+
+describe('enterprise connectivity failures', () => {
+  it('reports an unreachable company without falling back to personal knowledge', async () => {
+    setGovernanceEndpoint({ baseUrl: 'https://one.corp.example/', token: 'tok', machineId: 'machine1' });
+    fetchMock.mockRejectedValue(new TypeError('fetch failed'));
+    await expect(governanceFetch('POST', '/api/one/devops/rag/search', { query: 'internal' })).rejects.toThrow(
+      'Enterprise connection unavailable'
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][1].headers['x-dream-machine-id']).toBe('machine1');
+  });
+  it('reports expired credentials as a sign-in problem', async () => {
+    setGovernanceEndpoint({ baseUrl: 'https://one.corp.example', token: 'tok' });
+    fetchMock.mockResolvedValue(jsonResponse({}, 401));
+    await expect(governanceFetch('POST', '/api/one/devops/rag/search', {})).rejects.toThrow('sign-in expired');
+  });
+  it('does not turn a wrong-server HTML response into an empty knowledge result', async () => {
+    fetchMock.mockResolvedValue({ ok: true, headers: { get: () => 'text/html' } });
+    await expect(governanceFetch('POST', '/api/one/devops/rag/search', {})).rejects.toThrow('invalid response');
   });
 });
 

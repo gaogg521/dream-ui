@@ -31,7 +31,11 @@ const {
   messageWarning,
   emitterHandlers,
 } = vi.hoisted(() => ({
-  orgContext: { current: { isEnterprise: false } },
+  orgContext: {
+    current: { isEnterprise: false } as { isEnterprise: boolean; tenantId?: string },
+    error: null as string | null,
+    enabled: false,
+  },
   clearTeamResources: vi.fn(() => Promise.resolve()),
   listProviders: vi.fn(() => Promise.resolve([] as { managed_by?: string }[])),
   syncTeamSkills: vi.fn(() => Promise.resolve(null)),
@@ -45,7 +49,7 @@ const {
 }));
 
 vi.mock('@renderer/pages/enterprise/hooks/useOrgContext', () => ({
-  useOrgContext: () => ({ context: orgContext.current }),
+  useOrgContext: () => ({ context: orgContext.current, error: orgContext.error }),
 }));
 
 vi.mock('@renderer/utils/platform', () => ({ isElectronDesktop: () => true }));
@@ -57,7 +61,7 @@ vi.mock('@/common', () => ({ ipcBridge: { mode: { listProviders: { invoke: listP
 
 // Explicitly OFF: the state a client is in after switching back to the personal
 // workspace. A merely-unreachable server keeps this true and must not purge.
-vi.mock('@/common/adapter/enterpriseMode', () => ({ isEnterpriseModeEnabled: () => false }));
+vi.mock('@/common/adapter/enterpriseMode', () => ({ isEnterpriseModeEnabled: () => orgContext.enabled }));
 
 vi.mock('@renderer/utils/enterprise/teamSkillSync', () => ({
   ENTERPRISE_RESOURCES_MARKER: 'one-enterprise:resources-materialized',
@@ -108,6 +112,26 @@ describe('useTeamResourceSync', () => {
     listProviders.mockResolvedValue([]);
     localStorage.clear();
     orgContext.current = { isEnterprise: false };
+    orgContext.error = null;
+    orgContext.enabled = false;
+  });
+
+  it('pauses sync without deleting offline resources when the enterprise is temporarily unreachable', () => {
+    orgContext.enabled = true;
+    orgContext.current = { isEnterprise: true, tenantId: 'A' };
+    const { rerender } = renderHook(() => useTeamResourceSync());
+    orgContext.error = 'connection unavailable';
+    orgContext.current = { isEnterprise: false };
+    rerender();
+    expect(clearTeamResources).not.toHaveBeenCalled();
+  });
+  it('refreshes team resources immediately when switching between project groups', () => {
+    orgContext.current = { isEnterprise: true, tenantId: 'A' };
+    const { rerender } = renderHook(() => useTeamResourceSync());
+    syncTeamSkills.mockClear();
+    orgContext.current = { isEnterprise: true, tenantId: 'B' };
+    rerender();
+    expect(syncTeamSkills).toHaveBeenCalledTimes(1);
   });
 
   it('purges the local team resources when the member stops resolving as enterprise', () => {

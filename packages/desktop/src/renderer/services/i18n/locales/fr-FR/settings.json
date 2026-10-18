@@ -2136,7 +2136,12 @@
     "projectGroupLine": "Groupe de projet : {{name}}",
     "myGroupsTitle": "Mes groupes de projet",
     "switchDone": "Groupe de projet changé",
-    "editionClientNeedLogin": "Entreprise · Non connecté"
+    "editionClientNeedLogin": "Entreprise · Non connecté",
+    "connectionChecking": "Vérification de la connexion entreprise",
+    "connectionSignInRequired": "Connexion entreprise expirée",
+    "connectionUnavailable": "Connexion entreprise indisponible",
+    "checkConnection": "Vérifier la connexion entreprise",
+    "offlineFallback": "Le serveur entreprise est inaccessible depuis 15 minutes. Passage en mode personnel. Reconnectez-vous dans les paramètres de connexion entreprise."
   },
   "enterpriseChannel": "Canal d'entreprise",
   "enterpriseChannelTip": "Ce canal de modèles est fourni par votre entreprise. Ses identifiants restent sur le serveur de l'entreprise et il ne peut être ni modifié ni supprimé ici.",

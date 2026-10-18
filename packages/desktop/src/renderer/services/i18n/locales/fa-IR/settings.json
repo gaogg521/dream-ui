@@ -2136,7 +2136,12 @@
     "projectGroupLine": "گروه پروژه: {{name}}",
     "myGroupsTitle": "گروه‌های پروژهٔ من",
     "switchDone": "گروه پروژه تغییر کرد",
-    "editionClientNeedLogin": "سازمانی · وارد نشده"
+    "editionClientNeedLogin": "سازمانی · وارد نشده",
+    "connectionChecking": "در حال بررسی اتصال سازمانی",
+    "connectionSignInRequired": "ورود سازمانی منقضی شده است",
+    "connectionUnavailable": "اتصال سازمانی در دسترس نیست",
+    "checkConnection": "بررسی اتصال سازمانی",
+    "offlineFallback": "سرور سازمانی به مدت ۱۵ دقیقه در دسترس نبود. حالت شخصی فعال شد. از تنظیمات اتصال سازمانی دوباره متصل شوید."
   },
   "enterpriseChannel": "کانال سازمانی",
   "enterpriseChannelTip": "این کانال مدل توسط سازمان شما پیکربندی شده است. اعتبارنامه آن روی سرور سازمان می‌ماند و در اینجا قابل تغییر یا حذف نیست.",
