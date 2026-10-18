@@ -8,7 +8,10 @@ import {
   reconcileGeneratingFromRuntime,
   reconcileWaitingConfirmationFromRuntime,
 } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
-import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
+import {
+  getConversationOrNull,
+  getConversationOrNullWithRetry,
+} from '@/renderer/pages/conversation/utils/conversationCache';
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import {
   conversationDeleted,
@@ -114,6 +117,34 @@ export const useConversationRuntimeView = (conversation_id: string): UseConversa
     return () => {
       cancelled = true;
     };
+  }, [conversation_id]);
+
+  // A realtime reconnect means frames were dropped — possibly this turn's
+  // `turn.completed`, the only other thing that moves the view off "running".
+  // Re-hydrate from the backend so the send box does not stay in its busy
+  // state for a turn that already ended.
+  useEffect(() => {
+    if (!conversation_id) {
+      return;
+    }
+    const reconnected = ipcBridge.realtime?.reconnected;
+    if (!reconnected) {
+      return;
+    }
+    return reconnected.on(() => {
+      void getConversationOrNullWithRetry(conversation_id)
+        .then((conversation) => {
+          const runtime = getRuntimeOrNull(conversation?.runtime);
+          if (!runtime) {
+            return;
+          }
+          flushRuntimeViewLogs(hydrateSucceeded(conversation_id, runtime));
+          reconcileWaitingConfirmationFromRuntime(conversation_id, runtime.pending_confirmations ?? 0);
+        })
+        .catch((error: unknown) => {
+          console.warn('[useConversationRuntimeView] Failed to re-hydrate after reconnect:', error);
+        });
+    });
   }, [conversation_id]);
 
   useEffect(() => {

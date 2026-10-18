@@ -4,6 +4,7 @@
 
 import { ipcBridge } from '@/common';
 import type { TChatConversation } from '@/common/config/storage';
+import { getConversationOrNullWithRetry } from '@/renderer/pages/conversation/utils/conversationCache';
 import { addEventListener } from '@/renderer/utils/emitter';
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 
@@ -686,6 +687,30 @@ const initializeConversationListSyncStore = () => {
     clearGenerating(event.session_id, 'turnCompleted');
     refreshConversations();
   });
+  // A realtime reconnect means frames were dropped, possibly a turn's terminal
+  // frame — the only thing that clears a spinner. Ask the backend about every
+  // row still spinning and clear the ones whose turn has ended. Unlike the
+  // hydrate reconcile this may clear: the socket is fresh, so an idle runtime
+  // here is not racing a live stream on this connection.
+  ipcBridge.realtime?.reconnected?.on(() => {
+    resyncGeneratingAfterReconnect();
+  });
+};
+
+const resyncGeneratingAfterReconnect = () => {
+  for (const conversation_id of generatingConversationIdsState) {
+    void getConversationOrNullWithRetry(conversation_id)
+      .then((conversation) => {
+        if (conversation?.runtime?.is_processing === true) {
+          return;
+        }
+        clearGenerating(conversation_id, 'reconcile');
+        clearAllWaitingConfirmation(conversation_id);
+      })
+      .catch((error: unknown) => {
+        console.warn('[conversationListSync] Failed to re-check a generating row after reconnect:', error);
+      });
+  }
 };
 
 export const useConversationListSync = () => {
