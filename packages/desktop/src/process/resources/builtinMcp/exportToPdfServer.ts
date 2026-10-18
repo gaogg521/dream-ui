@@ -103,7 +103,9 @@ function registerImageTool(server: McpServer): void {
       `timetables and any other picture whose text, numbers or dates must be exactly right: lay the picture out ` +
       `as HTML/CSS first (text stays editable and correct), then call this tool to produce the PNG. ` +
       `Prefer source_type="html_file" so relative image paths next to the HTML file resolve. ` +
-      `The whole page is captured unless a CSS selector is given. Returns the PNG path.`,
+      `The whole page is captured unless a CSS selector is given. Returns the PNG path. ` +
+      `For calendars, 小报, posters and similar pictures, load the "html-visual" skill first (Skill tool): ` +
+      `it holds the verified calendar/lunar data script and the working order.`,
     {
       source: z
         .string()
