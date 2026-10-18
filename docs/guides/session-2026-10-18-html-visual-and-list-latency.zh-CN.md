@@ -51,7 +51,17 @@ finish 帧恰好落在被踢掉的连接上时，后端 `is_processing=false`、
 另：dev 的 Electron 窗口被一个陈旧的 Service Worker（`localhost:5173/sw.js`，WebUI 的 PWA）控制着，
 `registerPwa` 在 Electron 下本应跳过，推测是某次 preload 失败时注册上的；本次问题与它无关，未处理。
 
+## 4. 技能目录遍历的另外两处（/api/skills、team-sync）
+
+- 开发机团队分发了 770 个技能，每次列技能都要打开并解析全部 SKILL.md；team-sync 对每个技能再读一遍清单。
+- 修复（dream-core a38eb7b、9174e13）：①`scan_skill_dirs` 按「清单大小/mtime + 目录 mtime」缓存解析结果，并把原来每技能 6 次异步 stat
+  的遍历改成一次阻塞 `std::fs`（每技能 2 次 stat）——**目录 mtime 不能取自父目录列表**：NTFS 会惰性刷新那份拷贝，测试抓到过「图标放进去却看不见」；
+  ②`sync_team_skills` 对「载荷相同+目录未变」的请求 5 分钟内直接答复；③MCP team-sync 对同一用户的相同请求 60 秒内直接答复。
+- 真机（release，770 个团队技能）：`GET /api/skills` 1.2–3 s → 0.25 s；`/api/skills/team-sync` 稳态 1.1–2.3 s → 70 ms（首次冷缓存仍 1.6 s）；
+  热扫描 770 个团队技能 550 ms → 130 ms，120 个内置 80 → 20 ms。
+- 顺带：上一个提交加的 `html-visual` 技能描述 369 字，超过 200 字的注入预算，只有 extension 测试套件能抓到——**dream-core 的推送不要绕过 `just push`/全量测试**。
+
 ## 仍待做
 
-- `/api/skills` 平均 3s（53 次）、`/api/{mcp,skills}/team-sync` 每次 3s（71 次）也是整目录遍历，可缓存。
 - 打包版要 dreamcore 发版 + bump pin 才有上述后端修复。
+- 团队技能的首次冷扫描仍要 ~0.5–1.6 s（每个技能一次读取），只发生在后端启动后第一次。
