@@ -675,6 +675,30 @@ export const useAcpMessage = (
     };
   }, [conversation_id]);
 
+  // Re-check the running state after the realtime socket reconnects. The
+  // backend closes a client that falls behind rather than dropping frames, and
+  // the lost frame can be this turn's `finish`; messages re-sync elsewhere.
+  // Only lowers the indicator — a live turn's next frame raises it again.
+  useEffect(() => {
+    return ipcBridge.realtime.reconnected.on(() => {
+      if (!runningRef.current && !aiProcessingRef.current) return;
+      void getConversationOrNull(conversation_id)
+        .then((res) => {
+          if (res && isConversationProcessing(res)) return;
+          turnFinishedRef.current = true;
+          setRunning(false);
+          runningRef.current = false;
+          setAiProcessing(false);
+          aiProcessingRef.current = false;
+          markTurnEnded();
+          setThought({ subject: '', description: '' });
+        })
+        .catch((error: unknown) => {
+          console.warn('[useAcpMessage] Failed to reconcile running state after reconnect:', error);
+        });
+    });
+  }, [conversation_id, markTurnEnded]);
+
   // Fetch slash commands via HTTP after runtime ensure completes.
   // WebSocket push of available_commands arrives during warmup when no
   // StreamRelay is listening, so the initial load must come from HTTP.

@@ -19,6 +19,7 @@ const {
   getUsageInvokeMock,
   responseStreamOnMock,
   responseStreamHandlerRef,
+  reconnectedHandlerRef,
 } = vi.hoisted(() => ({
   addOrUpdateMessageMock: vi.fn(),
   ensureRuntimeInvokeMock: vi.fn(),
@@ -28,6 +29,7 @@ const {
   responseStreamHandlerRef: {
     current: undefined as ((message: IResponseMessage) => void) | undefined,
   },
+  reconnectedHandlerRef: { current: undefined as (() => void) | undefined },
 }));
 
 vi.mock('@/renderer/pages/conversation/Messages/hooks', () => ({
@@ -41,6 +43,14 @@ vi.mock('@/renderer/pages/conversation/utils/conversationCache', () => ({
 
 vi.mock('@/common', () => ({
   ipcBridge: {
+    realtime: {
+      reconnected: {
+        on: (handler: () => void) => {
+          reconnectedHandlerRef.current = handler;
+          return vi.fn();
+        },
+      },
+    },
     acpConversation: {
       responseStream: {
         on: responseStreamOnMock.mockImplementation((handler: (message: IResponseMessage) => void) => {
@@ -82,6 +92,28 @@ describe('useAcpMessage', () => {
     getSlashCommandsInvokeMock.mockResolvedValue([]);
     getUsageInvokeMock.mockResolvedValue(null);
     responseStreamHandlerRef.current = undefined;
+  });
+
+  /**
+   * The backend closes a client that falls behind rather than dropping
+   * frames, and the lost frame can be the turn's `finish`. The reconnect has
+   * to settle the indicator, but must not end a turn that is still running.
+   */
+  it('clears a running turn on reconnect only once the backend reports it idle', async () => {
+    vi.mocked(getConversationOrNull).mockResolvedValue({ id: 'conv-1', runtime: { is_processing: true } } as never);
+    const { result } = renderHook(() => useAcpMessage('conv-1'));
+    await waitFor(() => expect(result.current.running).toBe(true));
+
+    act(() => reconnectedHandlerRef.current?.());
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.running).toBe(true);
+
+    vi.mocked(getConversationOrNull).mockResolvedValue({ id: 'conv-1', runtime: { is_processing: false } } as never);
+    act(() => reconnectedHandlerRef.current?.());
+    await waitFor(() => expect(result.current.running).toBe(false));
+    expect(result.current.aiProcessing).toBe(false);
   });
 
   it('completes hydration when the conversation lookup fails', async () => {

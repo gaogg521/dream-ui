@@ -686,6 +686,37 @@ export const useDreamEngineMessage = (
   }, [conversation_id]);
 
   /**
+   * Re-check the running state after the realtime socket reconnects.
+   *
+   * The backend closes a client that falls behind instead of silently dropping
+   * frames, and the frame it would have dropped can be this turn's `finish`.
+   * Messages re-sync on reconnect elsewhere; this is the running flag's half.
+   * Only lowers the indicator: a turn still in flight keeps streaming frames,
+   * which raise it again on their own.
+   */
+  useEffect(() => {
+    return ipcBridge.realtime.reconnected.on(() => {
+      if (!streamRunningRef.current && !waitingResponseRef.current && !hasActiveToolsRef.current) return;
+      void getConversationOrNull(conversation_id)
+        .then((res) => {
+          if (res && isConversationProcessing(res)) return;
+          turnFinishedRef.current = true;
+          endConversationTurn(conversation_id);
+          setStreamRunning(false);
+          streamRunningRef.current = false;
+          setWaitingResponse(false);
+          waitingResponseRef.current = false;
+          setHasActiveTools(false);
+          hasActiveToolsRef.current = false;
+          setThought({ subject: '', description: '' });
+        })
+        .catch((error: unknown) => {
+          console.warn('[useDreamEngineMessage] Failed to reconcile running state after reconnect:', error);
+        });
+    });
+  }, [conversation_id]);
+
+  /**
    * Hydrate the context indicator from the backend's own usage snapshot.
    *
    * `extra.last_token_usage` above only exists once THIS client has seen a turn

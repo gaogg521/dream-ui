@@ -18,6 +18,7 @@ const {
   conversationGetUsageInvokeMock,
   responseStreamOnMock,
   responseStreamHandlerRef,
+  reconnectedHandlerRef,
 } = vi.hoisted(() => ({
   reportClientTurnUsageMock: vi.fn(),
   addOrUpdateMessageMock: vi.fn(),
@@ -30,6 +31,7 @@ const {
   responseStreamHandlerRef: {
     current: undefined as ((message: IResponseMessage) => void) | undefined,
   },
+  reconnectedHandlerRef: { current: undefined as (() => void) | undefined },
 }));
 
 vi.mock('@/renderer/pages/conversation/Messages/hooks', () => ({
@@ -47,6 +49,14 @@ vi.mock('@/renderer/utils/enterprise/clientUsageReport', () => ({
 
 vi.mock('@/common', () => ({
   ipcBridge: {
+    realtime: {
+      reconnected: {
+        on: (handler: () => void) => {
+          reconnectedHandlerRef.current = handler;
+          return vi.fn();
+        },
+      },
+    },
     conversation: {
       responseStream: {
         on: responseStreamOnMock.mockImplementation((handler: (message: IResponseMessage) => void) => {
@@ -364,6 +374,36 @@ describe('useDreamEngineMessage turn end', () => {
    * `finish`. Re-arming on one is what left the spinner on forever: the turn is
    * over, so no second `finish` is coming to turn it off again.
    */
+  /**
+   * The backend closes a client that falls behind instead of dropping frames,
+   * and the frame lost can be this turn's `finish` (observed: "processing"
+   * for six minutes after the reply). The reconnect must settle it.
+   */
+  it('clears a turn whose finish was lost once the socket reconnects and the backend is idle', async () => {
+    const { result } = await mountHook();
+    emit({ type: 'start' });
+    await waitFor(() => expect(result.current.running).toBe(true));
+
+    vi.mocked(getConversationOrNull).mockResolvedValue({ id: 'conv-1', runtime: { is_processing: false } } as never);
+    act(() => reconnectedHandlerRef.current?.());
+
+    await waitFor(() => expect(result.current.running).toBe(false));
+  });
+
+  it('keeps the indicator after a reconnect while the backend is still running the turn', async () => {
+    const { result } = await mountHook();
+    emit({ type: 'start' });
+    await waitFor(() => expect(result.current.running).toBe(true));
+
+    vi.mocked(getConversationOrNull).mockResolvedValue({ id: 'conv-1', runtime: { is_processing: true } } as never);
+    act(() => reconnectedHandlerRef.current?.());
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(result.current.running).toBe(true);
+  });
+
   it('does not let a frame trailing a finished turn re-arm the spinner', async () => {
     const { result } = await mountHook();
 

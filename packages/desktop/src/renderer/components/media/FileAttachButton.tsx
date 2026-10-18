@@ -170,7 +170,11 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
     zIndex: 1050,
   };
 
-  const skillsPanel = (
+  // The panels below are render functions, not elements: this component
+  // re-renders on every streamed token (the send box above it does), and
+  // building a Tooltip per installed skill each time kept the renderer too busy
+  // to read the realtime socket. Arco only calls `popup` while it is open.
+  const renderSkillsPanel = () => (
     <div style={{ ...cardStyle, width: 400 }} onClick={(e) => e.stopPropagation()}>
       <div className='px-6px pt-6px pb-4px'>
         <input
@@ -234,7 +238,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
     </div>
   );
 
-  const mcpPanel = (
+  const renderMcpPanel = () => (
     <div
       style={{
         ...cardStyle,
@@ -287,7 +291,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
     </div>
   );
 
-  const menu = (
+  const renderMenu = () => (
     <div style={cardStyle} onClick={(e) => e.stopPropagation()}>
       {/* Loaded items stay above file actions so the session snapshot is visible */}
       {(hasMcpServers || hasSkills) && (
@@ -295,7 +299,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
           {hasMcpServers && (
             <div className='px-6px'>
               <Trigger
-                popup={() => mcpPanel}
+                popup={renderMcpPanel}
                 trigger='hover'
                 position='right'
                 popupVisible={mcpOpen}
@@ -318,7 +322,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
           {hasSkills && (
             <div className='px-6px'>
               <Trigger
-                popup={() => skillsPanel}
+                popup={renderSkillsPanel}
                 trigger='hover'
                 position='right'
                 popupVisible={skillsOpen}
@@ -373,7 +377,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
   return (
     <>
       <Trigger
-        popup={() => menu}
+        popup={renderMenu}
         trigger='click'
         position='tl'
         popupVisible={open}
