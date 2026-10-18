@@ -11,19 +11,26 @@
  *
  * TCP protocol: 4-byte big-endian length header + UTF-8 JSON body.
  * Port comes from EXPORT_PDF_MCP_PORT env var.
+ *
+ * The same script also serves `one-html-render` (EXPORT_MCP_TOOLS=image):
+ * one tool, `render_html_to_image`, backed by the same main-process server.
+ * It is registered as its own MCP server because the agent backend decides
+ * per server name which built-ins every conversation receives, and HTML → PNG
+ * is meant to be always available while the PDF exporter is not.
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import * as net from 'node:net';
-import { BUILTIN_EXPORT_PDF_NAME } from './constants';
+import { BUILTIN_EXPORT_PDF_NAME, BUILTIN_HTML_RENDER_NAME } from './constants';
 
 const PORT = parseInt(process.env.EXPORT_PDF_MCP_PORT || '0', 10);
 if (!PORT) {
   process.stderr.write('[export-pdf-mcp] EXPORT_PDF_MCP_PORT environment variable is required\n');
   process.exit(1);
 }
+const IMAGE_ONLY = process.env.EXPORT_MCP_TOOLS === 'image';
 
 function sendTcpRequest(port: number, data: unknown): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -69,10 +76,79 @@ function sendTcpRequest(port: number, data: unknown): Promise<unknown> {
 
 async function main() {
   const server = new McpServer({
-    name: BUILTIN_EXPORT_PDF_NAME,
+    name: IMAGE_ONLY ? BUILTIN_HTML_RENDER_NAME : BUILTIN_EXPORT_PDF_NAME,
     version: '1.0.0',
   });
 
+  if (IMAGE_ONLY) {
+    registerImageTool(server);
+  } else {
+    registerPdfTool(server);
+  }
+
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  process.stderr.write(
+    `[export-pdf-mcp] stdio server ready (${IMAGE_ONLY ? 'image' : 'pdf'}), forwarding to 127.0.0.1:${PORT}\n`
+  );
+}
+
+type ToolResponse = { success?: boolean; file_path?: string; error?: string };
+
+function registerImageTool(server: McpServer): void {
+  server.tool(
+    'render_html_to_image',
+    `Render an HTML page to a PNG image with the app's built-in Chromium. ` +
+      `Use it to deliver posters, 小报/手抄报, calendars, infographics, menus, invitations, certificates, ` +
+      `timetables and any other picture whose text, numbers or dates must be exactly right: lay the picture out ` +
+      `as HTML/CSS first (text stays editable and correct), then call this tool to produce the PNG. ` +
+      `Prefer source_type="html_file" so relative image paths next to the HTML file resolve. ` +
+      `The whole page is captured unless a CSS selector is given. Returns the PNG path.`,
+    {
+      source: z
+        .string()
+        .describe('For source_type="html_file" an absolute path to a .html file; for "html" the raw HTML markup.'),
+      source_type: z.enum(['html', 'html_file']).describe('"html_file" (preferred) or "html".'),
+      output_path: z.string().describe('Absolute path of the PNG to write. Must end with .png. Overwrites if exists.'),
+      width: z
+        .number()
+        .optional()
+        .describe('Viewport width in CSS pixels (default 1080). Set it to the design width of the page.'),
+      scale: z.number().optional().describe('Device pixel ratio, 1-3 (default 2, print-sharp).'),
+      selector: z
+        .string()
+        .optional()
+        .describe('CSS selector of the element to capture, e.g. "#poster". Omit to capture the full page.'),
+    },
+    async ({ source, source_type, output_path, width, scale, selector }) => {
+      try {
+        const response = (await sendTcpRequest(PORT, {
+          kind: 'image',
+          source,
+          source_type,
+          output_path,
+          width,
+          scale,
+          selector,
+        })) as ToolResponse;
+        if (response?.success) {
+          return {
+            content: [{ type: 'text' as const, text: `PNG rendered to: ${response.file_path ?? output_path}` }],
+          };
+        }
+        return {
+          content: [{ type: 'text' as const, text: `Failed to render PNG: ${response?.error ?? 'unknown error'}` }],
+          isError: true,
+        };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { content: [{ type: 'text' as const, text: `Render tool error: ${msg}` }], isError: true };
+      }
+    }
+  );
+}
+
+function registerPdfTool(server: McpServer): void {
   server.tool(
     'export_to_pdf',
     `Export content to a PDF file using the app's built-in converter. ` +
@@ -132,10 +208,6 @@ async function main() {
       }
     }
   );
-
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  process.stderr.write(`[export-pdf-mcp] stdio server ready, forwarding to 127.0.0.1:${PORT}\n`);
 }
 
 main().catch((err) => {

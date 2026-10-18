@@ -5,14 +5,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { detectMediaIntent } from '@/common/media/detectMediaIntent';
+import { detectMediaIntent, isLayoutRequest } from '@/common/media/detectMediaIntent';
 
 describe('detectMediaIntent', () => {
   describe('recognizes a request to generate an image', () => {
     it.each([
       '画一只猫',
       '画张图',
-      '帮我生成一张海报',
+      '帮我生成一张猫咪插画',
       '做个logo',
       '设计一个头像',
       '来张壁纸',
@@ -20,7 +20,7 @@ describe('detectMediaIntent', () => {
       '绘制一幅插画',
       'draw a cat',
       'generate an image of a sunset',
-      'create a poster for the launch',
+      'create an illustration for the launch',
       'make me a logo',
       'Draw a picture of a mountain',
     ])('%s', (input) => {
@@ -113,6 +113,40 @@ describe('detectMediaIntent', () => {
       'draw a comparison between the two',
     ])('%s', (input) => {
       expect(detectMediaIntent(input)).toBeNull();
+    });
+  });
+
+  /**
+   * 日历、小报、海报这类版面上的字和日期必须准确，图像模型做不到（实测：2027 年
+   * 2 月画出 29 天）。它们留在对话里由 Agent 用 HTML 排版再出 PNG，不弹切换。
+   * Text-heavy layouts stay with the chat agent (HTML, then PNG): an image model
+   * drew a 29-day February for 2027.
+   */
+  describe('leaves text-heavy layouts to the chat agent', () => {
+    it.each([
+      '做一个2027年日历小报',
+      '画一份2027年的年历',
+      '帮我生成一张活动海报',
+      '设计一张手抄报，主题是垃圾分类',
+      '生成一张信息图，介绍光合作用',
+      '做个奶茶店的价目表图片',
+      '生成一张婚礼邀请函',
+      'create a poster for the launch',
+      'generate an infographic about sleep',
+      'design a menu image for my cafe',
+    ])('%s', (input) => {
+      expect(isLayoutRequest(input)).toBe(true);
+      expect(detectMediaIntent(input)).toBeNull();
+    });
+
+    it('still routes a video request about a poster to video', () => {
+      expect(detectMediaIntent('把这张海报做成一段视频')).toBe('video');
+      expect(detectMediaIntent('生成一段海报风格的视频')).toBe('video');
+    });
+
+    it('does not flag ordinary pictures as layouts', () => {
+      expect(isLayoutRequest('画一只猫')).toBe(false);
+      expect(isLayoutRequest('generate an image of a sunset')).toBe(false);
     });
   });
 

@@ -238,6 +238,31 @@ describe('runBackendMigrations', () => {
     warnSpy.mockRestore();
   });
 
+  /**
+   * The HTML → PNG renderer is the export-pdf script in image mode, under its
+   * own name so dream-core can hand it to every conversation. It must dial the
+   * same port as export-pdf, or render calls reach nobody.
+   */
+  it('registers the HTML renderer on the export-pdf port in image mode', async () => {
+    listServersMock.mockResolvedValue([]);
+
+    await runBackendMigrations(configFile as never);
+
+    const imported = batchImportServersMock.mock.calls.flatMap((call) => call[0].servers as IMcpServer[]);
+    const pdf = imported.find((server) => server.name === 'one-export-pdf');
+    const render = imported.find((server) => server.name === 'one-html-render');
+    expect(pdf).toBeDefined();
+    expect(render).toBeDefined();
+    expect(render!.enabled).toBe(true);
+    expect(render!.builtin).toBe(true);
+    if (pdf!.transport.type !== 'stdio' || render!.transport.type !== 'stdio') throw new Error('expected stdio');
+    expect(render!.transport.args).toEqual(pdf!.transport.args);
+    expect(render!.transport.env).toEqual({
+      EXPORT_PDF_MCP_PORT: pdf!.transport.env!.EXPORT_PDF_MCP_PORT,
+      EXPORT_MCP_TOOLS: 'image',
+    });
+  });
+
   it('does not sync the built-in image MCP server when bootstrap makes no effective change', async () => {
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     listServersMock.mockResolvedValue([imageServer()]);

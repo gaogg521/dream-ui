@@ -16,6 +16,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import {
   renderHtmlToPdfBuffer,
+  renderHtmlToPngBuffer,
   convertViaWindowsCom,
   convertViaSoffice,
   convertViaOfficecliHtml,
@@ -27,9 +28,14 @@ const START_PORT = 19820;
 const MAX_PORT_ATTEMPTS = 10;
 
 type ExportRequest = {
+  /** Absent on requests from the PDF tool, which predates image export. */
+  kind?: 'pdf' | 'image';
   source: string;
   source_type: 'html' | 'html_file' | 'office_file';
   output_path?: string;
+  width?: number;
+  scale?: number;
+  selector?: string;
 };
 
 type ExportResponse = {
@@ -75,6 +81,10 @@ async function handleExportRequest(req: ExportRequest): Promise<ExportResponse> 
   }
   if (!source) {
     return { success: false, error: 'source is required' };
+  }
+
+  if (req.kind === 'image') {
+    return handleImageRequest(req, output_path);
   }
 
   try {
@@ -124,6 +134,32 @@ async function handleExportRequest(req: ExportRequest): Promise<ExportResponse> 
         return { success: false, error: e2 instanceof Error ? e2.message : String(e2) };
       }
     }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/**
+ * HTML → PNG for the `render_html_to_image` tool. Office files are refused
+ * rather than guessed at: the tool exists for pages the agent laid out itself.
+ */
+async function handleImageRequest(req: ExportRequest, outputPath: string): Promise<ExportResponse> {
+  if (req.source_type === 'office_file') {
+    return { success: false, error: 'image export accepts html or html_file, not office_file' };
+  }
+  if (path.extname(outputPath).toLowerCase() !== '.png') {
+    return { success: false, error: 'output_path must end with .png' };
+  }
+  if (req.source_type === 'html_file' && !existsSync(req.source)) {
+    return { success: false, error: `Source file not found: ${req.source}` };
+  }
+  try {
+    const png = await renderHtmlToPngBuffer(
+      req.source_type === 'html_file' ? { kind: 'file', filePath: req.source } : { kind: 'html', html: req.source },
+      { width: req.width, scale: req.scale, selector: req.selector }
+    );
+    await writeFile(outputPath, png);
+    return { success: true, file_path: outputPath };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : String(e) };
   }

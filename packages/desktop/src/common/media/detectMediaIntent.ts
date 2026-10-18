@@ -91,6 +91,33 @@ const CODE_CONTEXT =
   /(代码|函数|脚本|组件|程序|画布|\bcode\b|\bfunction\b|\bscript\b|\bcomponent\b|canvas|matplotlib|echarts|d3|svg|css|html|react|vue|python|写个|写一个)/i;
 
 /**
+ * 版面类作品：日历、小报、海报、信息图、菜单、证书……画面里的字、数字、日期必须
+ * 准确，而图像模型不会推理，只会「画出像字的东西」——用户看到 2 月有 29 天、
+ * 农历年份是乱码，指出错误后，下一句「2 月错了」又被当成一张新图的提示词。
+ * 这类请求交给对话里的 Agent：先用 HTML 排版（可改、字准），再渲染成 PNG。
+ *
+ * Text-heavy layouts — calendars, 小报, posters, infographics, menus,
+ * certificates. Every character, number and date on them must be right, and an
+ * image model does not reason: it paints things shaped like text. The observed
+ * result was a 2027 calendar with a 29-day February and a garbled zodiac year,
+ * and the user's follow-up "February is wrong" then became the prompt for a
+ * fresh picture. These go to the chat agent instead, which lays the page out in
+ * HTML (editable, text exact) and renders it to PNG.
+ */
+const ZH_LAYOUT_NOUN =
+  /(日历|月历|年历|台历|挂历|小报|手抄报|黑板报|板报|电子报|海报|宣传单|传单|宣传页|易拉宝|展板|长图|信息图|知识卡片|菜单|价目表|课程表|作息表|日程表|时间表|排班表|值日表|计划表|打卡表|名片|邀请函|请柬|贺卡|明信片|证书|奖状|简历|招生简章)/;
+const EN_LAYOUT_NOUN =
+  /\b(calendars?|posters?|flyers?|brochures?|leaflets?|infographics?|newsletters?|menus?|timetables?|invitations?|certificates?|resumes?|business\s+cards?|greeting\s+cards?)\b/i;
+
+/**
+ * 这句话是不是在要一张「版面类」图片（见上）。命中时不该切到图片模式。
+ *
+ * Whether the request is for a text-heavy layout (see above). Such a request
+ * must not be offered to an image model.
+ */
+export const isLayoutRequest = (input: string): boolean => ZH_LAYOUT_NOUN.test(input) || EN_LAYOUT_NOUN.test(input);
+
+/**
  * 判断一句话是不是在要图片或视频。
  *
  * 视频优先：「生成一段视频」同时含通用动词和视频名词，若先判图片会误落到图片。
@@ -117,6 +144,7 @@ export const detectMediaIntent = (input: string): MediaIntent => {
   if (CODE_CONTEXT.test(text)) return null;
 
   if (ZH_VIDEO.test(text) || EN_VIDEO.test(text)) return 'video';
+  if (isLayoutRequest(text)) return null;
   if (ZH_IMAGE.test(text) || EN_IMAGE.test(text)) return 'image';
   if (ZH_STRONG_DRAW.test(text) || EN_STRONG_DRAW.test(text)) return 'image';
   return null;

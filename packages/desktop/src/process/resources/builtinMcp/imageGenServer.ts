@@ -321,6 +321,8 @@ This tool ONLY produces new or edited image pixels. It CANNOT read, describe, OC
 
 NOT the right tool for charts, diagrams, dashboards, UI mockups, or any image that has to render specific data or text accurately. A generation model approximates: it will invent plausible-looking numbers and misspell labels, and you cannot correct one afterwards. If you are able to produce those by writing code — SVG, HTML/CSS, a plotting library — do that instead; it is exact, reviewable and re-runnable.
 
+That includes calendars, 小报/手抄报, posters with real event details, infographics, menus, price lists, timetables, invitations and certificates: a model asked for a 2027 calendar drew February with 29 days. Build those as an HTML page and turn it into a PNG with the render_html_to_image tool (one-html-render).
+
 The two combine well: generate artwork or a background here, then lay the precise part (labels, figures, captions) over it in code.
 
 Input Support:

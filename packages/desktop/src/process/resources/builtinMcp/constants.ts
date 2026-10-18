@@ -56,6 +56,12 @@ export function isBuiltinExportPdfTransport(transport?: {
   return (transport.args || []).some((arg) => typeof arg === 'string' && arg.includes('builtin-mcp-export-pdf.js'));
 }
 
+/**
+ * HTML → PNG rendering, served by the export-pdf script in image-only mode.
+ * dream-core's `AUTO_INJECTED_BUILTIN_NAMES` lists this name; keep them in step.
+ */
+export const BUILTIN_HTML_RENDER_NAME = 'one-html-render';
+
 export const BUILTIN_TEAM_KNOWLEDGE_ID = 'builtin-team-knowledge';
 export const BUILTIN_TEAM_KNOWLEDGE_NAME = 'one-team-knowledge';
 export const BUILTIN_TEAM_KNOWLEDGE_LEGACY_NAMES = [BUILTIN_TEAM_KNOWLEDGE_ID] as const;

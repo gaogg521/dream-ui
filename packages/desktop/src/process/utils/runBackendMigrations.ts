@@ -23,7 +23,11 @@ import {
   type IProvider,
 } from '@/common/config/storage';
 import { hasDeclaredMediaModel } from '@/common/media/declaredModel';
-import { BUILTIN_EXPORT_PDF_NAME, BUILTIN_TEAM_KNOWLEDGE_NAME } from '@process/resources/builtinMcp/constants';
+import {
+  BUILTIN_EXPORT_PDF_NAME,
+  BUILTIN_HTML_RENDER_NAME,
+  BUILTIN_TEAM_KNOWLEDGE_NAME,
+} from '@process/resources/builtinMcp/constants';
 import { WEB_SEARCH_BROKER_URL_ENV, WEB_SEARCH_INSTALL_ID_ENV, WEB_SEARCH_MCP_NAME } from '@/common/webSearch/catalog';
 import { startExportPdfMcpServer } from '@process/services/exportPdfMcpServer';
 import { startTeamKnowledgeMcpServer } from '@process/services/teamKnowledgeMcpServer';
@@ -222,6 +226,38 @@ function buildBuiltinExportPdfServer(port: number): McpImportServer {
       env,
     },
     original_json: JSON.stringify({ mcpServers: { [BUILTIN_EXPORT_PDF_NAME]: serverConfig } }, null, 2),
+  };
+}
+
+/**
+ * HTML → PNG rendering (`render_html_to_image`).
+ *
+ * Same script and TCP server as the PDF exporter, but its own row: the agent
+ * backend auto-injects this name into every conversation, so an agent asked for
+ * a calendar or a 小报 can lay it out as HTML and still hand back a picture,
+ * instead of sending text-heavy pages to an image model that misspells them.
+ */
+function buildBuiltinHtmlRenderServer(port: number): McpImportServer {
+  const scriptPath = getBuiltinMcpScriptPath('builtin-mcp-export-pdf');
+  const env = { EXPORT_PDF_MCP_PORT: String(port), EXPORT_MCP_TOOLS: 'image' };
+  const serverConfig = {
+    command: 'node',
+    args: [scriptPath],
+    env,
+  };
+
+  return {
+    name: BUILTIN_HTML_RENDER_NAME,
+    description: 'Built-in HTML to PNG renderer for posters, calendars, infographics and other text-heavy images.',
+    enabled: true,
+    builtin: true,
+    transport: {
+      type: 'stdio',
+      command: 'node',
+      args: [scriptPath],
+      env,
+    },
+    original_json: JSON.stringify({ mcpServers: { [BUILTIN_HTML_RENDER_NAME]: serverConfig } }, null, 2),
   };
 }
 
@@ -719,6 +755,7 @@ async function ensureBootstrapMcpServersInDb(configFile: ConfigFile): Promise<vo
     console.warn('[Migration] failed to start built-in export-pdf TCP server', error);
   }
   const exportPdfServer = exportPdfPort !== undefined ? buildBuiltinExportPdfServer(exportPdfPort) : undefined;
+  const htmlRenderServer = exportPdfPort !== undefined ? buildBuiltinHtmlRenderServer(exportPdfPort) : undefined;
 
   let teamKnowledgePort: number | undefined;
   try {
@@ -733,6 +770,7 @@ async function ensureBootstrapMcpServersInDb(configFile: ConfigFile): Promise<vo
     ...defaultServers,
     imageServer,
     ...(exportPdfServer ? [exportPdfServer] : []),
+    ...(htmlRenderServer ? [htmlRenderServer] : []),
     ...(teamKnowledgeServer ? [teamKnowledgeServer] : []),
   ].filter((server) => !existingByName.has(server.name));
   let imageServerUpdated = false;
@@ -861,6 +899,23 @@ async function ensureBootstrapMcpServersInDb(configFile: ConfigFile): Promise<vo
         exportPdfServerUpdated = true;
       }
     }
+  }
+
+  // The HTML renderer shares the export-pdf port, so it goes stale with it.
+  const existingHtmlRenderServer = existingByName.get(BUILTIN_HTML_RENDER_NAME);
+  if (
+    htmlRenderServer &&
+    existingHtmlRenderServer?.transport.type === 'stdio' &&
+    htmlRenderServer.transport.type === 'stdio' &&
+    !isSameStdioTransport(existingHtmlRenderServer.transport, htmlRenderServer.transport)
+  ) {
+    await mcpService.updateServer.invoke({
+      id: existingHtmlRenderServer.id,
+      data: {
+        transport: htmlRenderServer.transport,
+        original_json: htmlRenderServer.original_json,
+      },
+    });
   }
 
   // Same stale-port problem as export-pdf above (19840 + first free slot).

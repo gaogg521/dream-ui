@@ -46,6 +46,73 @@ ${html}
 }
 
 /**
+ * Wait until a freshly loaded page has finished rendering: fonts loaded,
+ * network idle, canvases drawn. Capped at 8s so a page that never settles
+ * still gets snapshotted instead of hanging the export.
+ */
+function waitForRenderSettled(win: BrowserWindow): Promise<void> {
+  return new Promise<void>((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (!settled) {
+        settled = true;
+        resolve();
+      }
+    };
+    win.webContents
+      .executeJavaScript(
+        `
+        (async () => {
+          const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+          try { await Promise.race([document.fonts.ready, sleep(1500)]); } catch {}
+          const idle = (ms) => new Promise((resolve) => {
+            let t;
+            const reset = () => { clearTimeout(t); t = setTimeout(resolve, ms); };
+            const obs = new PerformanceObserver((list) => {
+              for (const e of list.getEntries()) {
+                if (e.entryType === 'resource') reset();
+              }
+            });
+            try { obs.observe({ type: 'resource', buffered: true }); } catch {}
+            reset();
+          });
+          await Promise.race([idle(500), sleep(4000)]);
+          const canvasReady = async () => {
+            const canvases = Array.from(document.querySelectorAll('canvas'));
+            if (canvases.length === 0) return true;
+            for (const c of canvases) {
+              try {
+                const ctx = c.getContext('2d');
+                if (!ctx) continue;
+                const { width: w, height: h } = c;
+                if (w === 0 || h === 0) return false;
+                const data = ctx.getImageData(0, 0, w, h).data;
+                let drawn = 0;
+                for (let i = 3; i < data.length; i += 4) {
+                  if (data[i] > 10) drawn++;
+                  if (drawn > 50) break;
+                }
+                if (drawn <= 50) return false;
+              } catch { return false; }
+            }
+            return true;
+          };
+          for (let i = 0; i < 40; i++) {
+            if (await canvasReady()) break;
+            await sleep(100);
+          }
+          await sleep(300);
+          return true;
+        })()
+        `,
+        true
+      )
+      .finally(() => finish());
+    setTimeout(finish, 8000);
+  });
+}
+
+/**
  * Render HTML string to a PDF buffer via a hidden Chromium window.
  * Includes dynamic-content wait (fonts, network idle, canvas drawn) so JS-heavy
  * pages (Chart.js, etc.) finish rendering before we snapshot.
@@ -67,65 +134,7 @@ export async function renderHtmlToPdfBuffer(html: string): Promise<Buffer> {
 
   try {
     await win.loadURL(dataUrl);
-    await new Promise<void>((resolve) => {
-      let settled = false;
-      const finish = () => {
-        if (!settled) {
-          settled = true;
-          resolve();
-        }
-      };
-      win.webContents
-        .executeJavaScript(
-          `
-          (async () => {
-            const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-            try { await Promise.race([document.fonts.ready, sleep(1500)]); } catch {}
-            const idle = (ms) => new Promise((resolve) => {
-              let t;
-              const reset = () => { clearTimeout(t); t = setTimeout(resolve, ms); };
-              const obs = new PerformanceObserver((list) => {
-                for (const e of list.getEntries()) {
-                  if (e.entryType === 'resource') reset();
-                }
-              });
-              try { obs.observe({ type: 'resource', buffered: true }); } catch {}
-              reset();
-            });
-            await Promise.race([idle(500), sleep(4000)]);
-            const canvasReady = async () => {
-              const canvases = Array.from(document.querySelectorAll('canvas'));
-              if (canvases.length === 0) return true;
-              for (const c of canvases) {
-                try {
-                  const ctx = c.getContext('2d');
-                  if (!ctx) continue;
-                  const { width: w, height: h } = c;
-                  if (w === 0 || h === 0) return false;
-                  const data = ctx.getImageData(0, 0, w, h).data;
-                  let drawn = 0;
-                  for (let i = 3; i < data.length; i += 4) {
-                    if (data[i] > 10) drawn++;
-                    if (drawn > 50) break;
-                  }
-                  if (drawn <= 50) return false;
-                } catch { return false; }
-              }
-              return true;
-            };
-            for (let i = 0; i < 40; i++) {
-              if (await canvasReady()) break;
-              await sleep(100);
-            }
-            await sleep(300);
-            return true;
-          })()
-          `,
-          true
-        )
-        .finally(() => finish());
-      setTimeout(finish, 8000);
-    });
+    await waitForRenderSettled(win);
 
     return await win.webContents.printToPDF({
       printBackground: true,
@@ -135,6 +144,130 @@ export async function renderHtmlToPdfBuffer(html: string): Promise<Buffer> {
       margins: { marginType: 'none' },
     });
   } finally {
+    win.destroy();
+  }
+}
+
+export type HtmlImageSource = { kind: 'html'; html: string } | { kind: 'file'; filePath: string };
+
+export type HtmlImageOptions = {
+  /** Viewport width in CSS pixels. Content wider than this widens the capture. */
+  width?: number;
+  /** Device pixel ratio of the output; 2 gives print-sharp text. */
+  scale?: number;
+  /** Capture only this element's box instead of the whole page. */
+  selector?: string;
+};
+
+/** Longest edge of the PNG we are willing to produce, in device pixels. */
+const MAX_IMAGE_EDGE_PX = 16_000;
+
+/**
+ * Render HTML to a PNG of the full page (or of one element) via a hidden
+ * Chromium window.
+ *
+ * A file source is loaded through `file://` rather than a data URL so that
+ * relative `<img src="assets/x.png">` references next to the HTML resolve —
+ * the common case when an agent places generated illustrations beside the page.
+ *
+ * Sizing goes through the DevTools protocol instead of the window: a window
+ * cannot be made taller than the screen on every platform, while
+ * `Emulation.setDeviceMetricsOverride` + `captureBeyondViewport` captures any
+ * height and gives an exact device scale factor.
+ */
+export async function renderHtmlToPngBuffer(source: HtmlImageSource, options: HtmlImageOptions = {}): Promise<Buffer> {
+  const width = Math.round(Math.min(Math.max(options.width ?? 1080, 200), 4000));
+  const requestedScale = Math.min(Math.max(options.scale ?? 2, 1), 3);
+
+  const win = new BrowserWindow({
+    show: false,
+    width,
+    height: 800,
+    useContentSize: true,
+    webPreferences: {
+      // A plain hidden window stops producing frames once the device metrics
+      // are overridden, and every later executeJavaScript/capture call hangs
+      // (observed on Electron 39). Offscreen rendering always paints.
+      offscreen: true,
+      javascript: true,
+      images: true,
+      webgl: false,
+      sandbox: false,
+    },
+  });
+  const dbg = win.webContents.debugger;
+
+  try {
+    if (source.kind === 'file') {
+      await win.loadFile(source.filePath);
+    } else {
+      const normalizedHtml = normalizeHtmlForPdf(source.html);
+      await win.loadURL(
+        `data:text/html;charset=utf-8;base64,${Buffer.from(normalizedHtml, 'utf-8').toString('base64')}`
+      );
+    }
+
+    dbg.attach('1.3');
+    await dbg.sendCommand('Emulation.setDeviceMetricsOverride', {
+      width,
+      height: 800,
+      deviceScaleFactor: requestedScale,
+      mobile: false,
+    });
+    await waitForRenderSettled(win);
+
+    const box = (await win.webContents.executeJavaScript(
+      `(() => {
+        const sel = ${JSON.stringify(options.selector ?? '')};
+        if (sel) {
+          const el = document.querySelector(sel);
+          if (!el) return { missing: true };
+          const r = el.getBoundingClientRect();
+          return { x: r.left + window.scrollX, y: r.top + window.scrollY, width: r.width, height: r.height };
+        }
+        const d = document.documentElement;
+        const b = document.body;
+        return {
+          x: 0,
+          y: 0,
+          width: Math.max(d.scrollWidth, b ? b.scrollWidth : 0),
+          height: Math.max(d.scrollHeight, b ? b.scrollHeight : 0),
+        };
+      })()`,
+      true
+    )) as { missing?: boolean; x: number; y: number; width: number; height: number };
+
+    if (box.missing) {
+      throw new Error(`selector matched no element: ${options.selector}`);
+    }
+    const capWidth = Math.ceil(box.width);
+    const capHeight = Math.ceil(box.height);
+    if (capWidth <= 0 || capHeight <= 0) {
+      throw new Error('page rendered with zero size');
+    }
+
+    // Keep the longest edge within what Chromium can rasterize in one capture.
+    const longest = Math.max(capWidth, capHeight) * requestedScale;
+    const scale = longest > MAX_IMAGE_EDGE_PX ? MAX_IMAGE_EDGE_PX / Math.max(capWidth, capHeight) : requestedScale;
+
+    await dbg.sendCommand('Emulation.setDeviceMetricsOverride', {
+      width: Math.max(width, Math.ceil(box.x + capWidth)),
+      height: Math.ceil(box.y + capHeight),
+      deviceScaleFactor: scale,
+      mobile: false,
+    });
+    const shot = (await dbg.sendCommand('Page.captureScreenshot', {
+      format: 'png',
+      captureBeyondViewport: true,
+      clip: { x: box.x, y: box.y, width: capWidth, height: capHeight, scale: 1 },
+    })) as { data: string };
+    return Buffer.from(shot.data, 'base64');
+  } finally {
+    try {
+      if (dbg.isAttached()) dbg.detach();
+    } catch {
+      // window is being torn down anyway
+    }
     win.destroy();
   }
 }
