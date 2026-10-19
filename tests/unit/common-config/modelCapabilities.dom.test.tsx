@@ -67,6 +67,9 @@ vi.mock('@icon-park/react', () => ({
   Gift: () => <span aria-hidden='true'>trial-baoyun</span>,
   Heartbeat: () => <span>health</span>,
   Info: () => <span>info</span>,
+  // Rendered by RecommendedPlatforms (and its guide modal), which the provider
+  // form pulls in right below the trial card.
+  Link: () => <span aria-hidden='true'>open-site</span>,
   LinkCloud: () => <span aria-hidden='true'>link</span>,
   Loading: () => <span aria-hidden='true'>loading</span>,
   Minus: () => <span>remove-provider</span>,
@@ -74,6 +77,7 @@ vi.mock('@icon-park/react', () => ({
   PreviewClose: () => <span aria-label='vision-disabled'>vision-disabled</span>,
   PreviewOpen: () => <span aria-hidden='true'>vision</span>,
   Refresh: () => <span aria-hidden='true'>refresh</span>,
+  Right: () => <span aria-hidden='true'>guide</span>,
   Search: () => <span aria-hidden='true'>search</span>,
   SettingTwo: () => <span>configure</span>,
   // Rendered by TrialModelCard, which the provider form pulls in.
