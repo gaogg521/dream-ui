@@ -568,7 +568,16 @@
     "importDone": "장면 {{count}}개를 가져왔습니다",
     "importInvalid": "장면 내보내기 파일이 아닙니다",
     "importEmpty": "파일에 가져올 장면이 없습니다",
+    "badge": {
+      "label": "시나리오",
+      "title": "시나리오 \"{{name}}\" 사용 중"
+    },
     "greeting": {
+      "role": "내 역할",
+      "method": "작업 방식",
+      "rules": "필수 규칙",
+      "deliverables": "전달 결과물",
+      "difference": "일반 대화와 다른 점: 여기서는 아래의 역할과 규칙에 따라 일하며, 무엇이든 답하는 범용 어시스턴트가 아닙니다. 매 턴마다 지킵니다.",
       "hello": "안녕하세요, 「{{name}}」입니다.",
       "skills": "제가 가져온 스킬",
       "tools": "사용할 수 있는 도구",

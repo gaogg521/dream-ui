@@ -725,7 +725,16 @@
     "importDone": "Imported {{count}} scenes",
     "importInvalid": "That is not an exported scenes file",
     "importEmpty": "There are no scenes to import in that file",
+    "badge": {
+      "label": "Scene",
+      "title": "Using the scene \"{{name}}\""
+    },
     "greeting": {
+      "role": "My role",
+      "method": "How I work",
+      "rules": "Hard rules",
+      "deliverables": "What I hand over",
+      "difference": "Unlike a plain chat, I work here by the role and rules below, not as a do-everything assistant, and I keep to them on every turn.",
       "hello": "Hello, this is \"{{name}}\".",
       "skills": "Skills I bring",
       "tools": "Tools I can use",

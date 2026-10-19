@@ -568,7 +568,16 @@
     "importDone": "已匯入 {{count}} 個場景",
     "importInvalid": "這不是場景匯出檔案",
     "importEmpty": "檔案裡沒有可匯入的場景",
+    "badge": {
+      "label": "場景",
+      "title": "正在使用場景「{{name}}」"
+    },
     "greeting": {
+      "role": "我的角色",
+      "method": "工作方式",
+      "rules": "硬性規則",
+      "deliverables": "交付內容",
+      "difference": "和一般對話的差別：這裡我依下面的角色和規則工作，而不是什麼都答的通用助理；每一輪都會遵守。",
       "hello": "你好，這裡是「{{name}}」。",
       "skills": "我帶來的技能",
       "tools": "可用的工具",

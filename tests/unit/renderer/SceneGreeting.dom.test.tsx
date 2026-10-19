@@ -61,3 +61,35 @@ describe('SceneGreeting', () => {
     expect(shown.getByText('common.scenes.greeting.more{"count":4}')).toBeInTheDocument();
   });
 });
+
+describe('SceneGreeting: what the scene changes', () => {
+  it('says how this differs from a plain chat, and shows the role', () => {
+    render(<SceneGreeting greeting={greeting({ role: '你是一名严谨的数据分析师。' })} />);
+    expect(screen.getByText('common.scenes.greeting.difference')).toBeInTheDocument();
+    expect(screen.getByTestId('scene-greeting-role')).toHaveTextContent('你是一名严谨的数据分析师。');
+  });
+
+  it('lists the hard rules and the hand-over when the scene has them', () => {
+    const rules = ['不编造数据。', '口径要写进报告。'];
+    render(<SceneGreeting greeting={greeting({ rules, deliverables: '一页结论摘要' })} />);
+    const shown = within(screen.getByTestId('scene-greeting-rules'));
+    rules.forEach((rule) => expect(shown.getByText(rule)).toBeInTheDocument());
+    expect(screen.getByTestId('scene-greeting-deliverables')).toHaveTextContent('一页结论摘要');
+  });
+
+  it('keeps a long rule list short: the first four, then how many more', () => {
+    const rules = Array.from({ length: 7 }, (_, i) => `rule-${i}`);
+    render(<SceneGreeting greeting={greeting({ rules })} />);
+    const shown = within(screen.getByTestId('scene-greeting-rules'));
+    expect(shown.getByText('rule-3')).toBeInTheDocument();
+    expect(shown.queryByText('rule-4')).not.toBeInTheDocument();
+    expect(shown.getByText('common.scenes.greeting.more{"count":3}')).toBeInTheDocument();
+  });
+
+  it('leaves out the role, rules and hand-over of a conversation opened before they were recorded', () => {
+    render(<SceneGreeting greeting={greeting()} />);
+    expect(screen.queryByTestId('scene-greeting-role')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('scene-greeting-rules')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('scene-greeting-deliverables')).not.toBeInTheDocument();
+  });
+});

@@ -568,7 +568,16 @@
     "importDone": "Se importaron {{count}} escenarios",
     "importInvalid": "Ese no es un archivo de escenarios exportado",
     "importEmpty": "No hay escenarios para importar en ese archivo",
+    "badge": {
+      "label": "Escenario",
+      "title": "Usando el escenario «{{name}}»"
+    },
     "greeting": {
+      "role": "Mi rol",
+      "method": "Cómo trabajo",
+      "rules": "Reglas firmes",
+      "deliverables": "Qué entrego",
+      "difference": "A diferencia de un chat normal, aquí trabajo según el rol y las reglas de abajo, no como un asistente genérico, y las sigo en cada respuesta.",
       "hello": "Hola, esto es «{{name}}».",
       "skills": "Habilidades que traigo",
       "tools": "Herramientas disponibles",

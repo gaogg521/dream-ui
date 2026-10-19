@@ -73,6 +73,25 @@ export type SceneGreeting = {
   tools: string[];
   /** Whether the scene asks before it builds. */
   asksFirst: boolean;
+  /** Who the assistant is in this scene (the written role, shortened). */
+  role?: string;
+  /** The hard rules that apply at every step (only injected when the scene asks first). */
+  rules?: string[];
+  /** What the scene hands over (only injected when the scene asks first). */
+  deliverables?: string;
+};
+
+/** The leading "1." / "2)" of a numbered rule line is list chrome, not content. */
+const stripListMarker = (line: string): string => line.replace(/^\s*(?:\d+[.)、]|[-*•])\s*/, '').trim();
+
+/** One line of what a role says, for a greeting: enough to recognise it, not the whole prompt. */
+const summarizeRole = (text: string | null | undefined, maxLength = 160): string | undefined => {
+  const first = (text ?? '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line.length > 0);
+  if (!first) return undefined;
+  return first.length > maxLength ? `${first.slice(0, maxLength)}...` : first;
 };
 
 /** `[A-Za-z0-9_-]` is all the team sync keeps of a registry id in a directory name. */
@@ -133,9 +152,16 @@ export function buildSceneConversationRequest(params: {
           description: company.description,
           prompt: company.prompt,
           jobFunctions: company.jobFunctions,
+          starters: item.starters,
           intent: company.intent,
         }
-      : { name: item.name, description: item.description, prompt: mine?.prompt, intent: mine?.intent }
+      : {
+          name: item.name,
+          description: item.description,
+          prompt: mine?.prompt,
+          starters: item.starters,
+          intent: mine?.intent,
+        }
   );
   const extra: SceneConversationRequest['extra'] = {
     workspace: '',
@@ -157,6 +183,18 @@ export function buildSceneConversationRequest(params: {
     if (resolved.length > 0) extra.selected_mcp_server_ids = resolved;
   }
   if (item.starters.length > 0) extra.scene_starters = item.starters;
+  const intent = company ? company.intent : mine?.intent;
+  const asksFirst = Boolean(intent?.discovery);
+  const role = summarizeRole(company ? company.prompt : mine?.prompt) ?? summarizeRole(item.description);
+  // Hard rules and the hand-over only reach the conversation when the scene asks
+  // first (see `buildSceneRules`), so only then does the greeting claim them.
+  const hardRules = asksFirst
+    ? (intent?.constraints ?? '')
+        .split(/\r?\n/)
+        .map(stripListMarker)
+        .filter((line) => line.length > 0)
+    : [];
+  const deliverables = asksFirst ? intent?.deliverables.trim() : undefined;
   extra.scene_greeting = {
     name: item.name,
     description: item.description,
@@ -166,7 +204,10 @@ export function buildSceneConversationRequest(params: {
       const name = mcpServers.find((server) => server.id === id)?.name;
       return name ? [name] : [];
     }),
-    asksFirst: Boolean(company ? company.intent?.discovery : mine?.intent.discovery),
+    asksFirst,
+    ...(role ? { role } : {}),
+    ...(hardRules.length > 0 ? { rules: hardRules } : {}),
+    ...(deliverables ? { deliverables } : {}),
   };
   return { type: 'dream', name: item.name, model, extra };
 }

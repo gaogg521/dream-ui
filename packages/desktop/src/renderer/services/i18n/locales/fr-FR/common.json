@@ -568,7 +568,16 @@
     "importDone": "{{count}} scénarios importés",
     "importInvalid": "Ce n'est pas un fichier de scénarios exporté",
     "importEmpty": "Aucun scénario à importer dans ce fichier",
+    "badge": {
+      "label": "Scénario",
+      "title": "Scénario « {{name}} » en cours"
+    },
     "greeting": {
+      "role": "Mon rôle",
+      "method": "Ma façon de travailler",
+      "rules": "Règles strictes",
+      "deliverables": "Ce que je livre",
+      "difference": "Contrairement à une conversation ordinaire, je travaille ici selon le rôle et les règles ci-dessous, pas comme un assistant généraliste, et je les respecte à chaque réponse.",
       "hello": "Bonjour, voici « {{name}} ».",
       "skills": "Compétences à disposition",
       "tools": "Outils disponibles",

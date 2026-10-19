@@ -31,6 +31,7 @@ import GoogleModelSelector from '../platforms/gemini/GoogleModelSelector';
 import DreamEngineChat from '../platforms/dreamEngine/DreamEngineChat';
 import SceneGreeting from '@/renderer/components/scenes/SceneGreeting';
 import type { SceneGreeting as SceneGreetingData } from '@/renderer/utils/scenes/sceneChat';
+import SceneBadge from '@/renderer/components/scenes/SceneBadge';
 import DreamEngineModelSelector from '../platforms/dreamEngine/DreamEngineModelSelector';
 import { useDreamEngineModelSelection } from '../platforms/dreamEngine/useDreamEngineModelSelection';
 import { useConversationRuntimeView } from '../runtime/useConversationRuntimeView';
@@ -206,12 +207,16 @@ const DreamEngineConversationPanel: React.FC<{
     [runtimeConfig, t]
   );
 
+  // A conversation opened from a scene says so before anything is said, and keeps a badge in the header.
+  const sceneGreeting = (conversation.extra as { scene_greeting?: SceneGreetingData } | undefined)?.scene_greeting;
+
   const chatLayoutProps = {
     title: conversation.name,
     siderTitle: sliderTitle,
     sider: <ChatSlider conversation={conversation} />,
     headerExtra: (
       <div className='flex items-center gap-8px'>
+        {sceneGreeting && !isMobile && <SceneBadge greeting={sceneGreeting} />}
         <CronJobManager conversation_id={conversation.id} cron_job_id={cronJobId} />
         {!isMobile && (
           <DreamEngineModelSelector
@@ -240,9 +245,6 @@ const DreamEngineConversationPanel: React.FC<{
     backend: 'dream' as const,
     presetAssistant: presetAssistantInfo ? { ...presetAssistantInfo, id: dreamEngineAssistantId } : undefined,
   };
-
-  // A conversation opened from a scene says so before anything is said.
-  const sceneGreeting = (conversation.extra as { scene_greeting?: SceneGreetingData } | undefined)?.scene_greeting;
 
   return (
     <ChatLayout {...chatLayoutProps} conversation_id={conversation.id}>

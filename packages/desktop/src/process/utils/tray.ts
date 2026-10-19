@@ -13,6 +13,7 @@ import * as path from 'path';
 import { ipcBridge } from '@/common';
 import i18n from '@process/services/i18n';
 import { BRAND_DISPLAY_NAME } from '@/common/platform';
+import { DEV_TAG, isDevBuild, withDevDot } from '@process/utils/devBadge';
 
 let tray: TrayInstance | null = null;
 let closeToTrayEnabled = false;
@@ -84,10 +85,9 @@ export const toggleMainWindowFromTray = (): void => {
 const getTrayIcon = (): Electron.NativeImage => {
   const resourcesPath = app.isPackaged ? process.resourcesPath : path.join(process.cwd(), 'resources');
   const icon = nativeImage.createFromPath(path.join(resourcesPath, 'app.png'));
-  if (process.platform === 'darwin') {
-    return icon.resize({ width: 16, height: 16 });
-  }
-  return icon.resize({ width: 32, height: 32 });
+  const sized = icon.resize(process.platform === 'darwin' ? { width: 16, height: 16 } : { width: 32, height: 32 });
+  // The dev build wears a red dot so it can be told from the installed app.
+  return isDevBuild() ? withDevDot(sized) : sized;
 };
 
 /**
@@ -112,6 +112,9 @@ const buildTrayContextMenu = async (): Promise<Electron.Menu> => {
   const runningTasksCount = getRunningTasksCount();
 
   const template: Electron.MenuItemConstructorOptions[] = [
+    ...(isDevBuild()
+      ? [{ label: `${DEV_TAG} ${BRAND_DISPLAY_NAME}`, enabled: false }, { type: 'separator' as const }]
+      : []),
     {
       label: i18n.t('common.tray.showWindow'),
       click: showAndFocusMainWindow,
@@ -212,7 +215,7 @@ export const createOrUpdateTray = (): void => {
     // Brand: this is what Windows shows when hovering the tray icon. It is a
     // user-visible surface that no i18n check, tsc or test covers — it shipped
     // as 'Dream UI' through several rebrands because nothing fails when it is wrong.
-    tray.setToolTip(BRAND_DISPLAY_NAME);
+    tray.setToolTip(isDevBuild() ? `${DEV_TAG} ${BRAND_DISPLAY_NAME}` : BRAND_DISPLAY_NAME);
     void buildTrayContextMenu().then((menu) => tray?.setContextMenu(menu));
 
     // Double-click: always show/focus (Windows/Linux; macOS rarely fires this).

@@ -568,7 +568,16 @@
     "importDone": "{{count}} cenários importados",
     "importInvalid": "Este não é um arquivo de cenários exportado",
     "importEmpty": "Não há cenários para importar nesse arquivo",
+    "badge": {
+      "label": "Cenário",
+      "title": "Usando o cenário \"{{name}}\""
+    },
     "greeting": {
+      "role": "Meu papel",
+      "method": "Como eu trabalho",
+      "rules": "Regras firmes",
+      "deliverables": "O que entrego",
+      "difference": "Diferente de uma conversa comum: aqui trabalho pelo papel e pelas regras abaixo, não como um assistente genérico, e as sigo em todas as respostas.",
       "hello": "Olá, aqui é \"{{name}}\".",
       "skills": "Habilidades que trago",
       "tools": "Ferramentas disponíveis",

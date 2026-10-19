@@ -5,7 +5,12 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buildDiscoveryRules, buildRoleRules, buildSceneRules } from '@/renderer/utils/scenes/sceneProtocol';
+import {
+  buildDiscoveryRules,
+  buildRoleRules,
+  buildSceneFrame,
+  buildSceneRules,
+} from '@/renderer/utils/scenes/sceneProtocol';
 import type { SceneIntent } from '@/common/types/platform/sceneTypes';
 
 const intent = (patch: Partial<SceneIntent> = {}): SceneIntent => ({
@@ -75,14 +80,43 @@ describe('buildDiscoveryRules', () => {
   });
 });
 
+describe('buildSceneFrame', () => {
+  it('says this conversation belongs to a scene and what to answer when asked who the assistant is', () => {
+    const text = buildSceneFrame({ name: '数据分析与报告', description: '先问清决策再分析' });
+    expect(text).toContain('Scene: "数据分析与报告"');
+    expect(text).toContain('Purpose: 先问清决策再分析');
+    expect(text).toContain('If you are asked who you are or what you can do, answer as this scene');
+    expect(text).toContain('Do not introduce yourself as a generic assistant');
+  });
+
+  it('lists the example openers, from the input or else from the intent', () => {
+    expect(buildSceneFrame({ name: 'x', starters: ['A', ' ', 'B'] })).toContain('"A"; "B"');
+    expect(buildSceneFrame({ name: 'x', intent: intent({ starters: ['C'] }) })).toContain('"C"');
+    expect(buildSceneFrame({ name: 'x' })).not.toContain('Examples of how people start');
+  });
+
+  it('leaves out the purpose line when the scene has no description', () => {
+    expect(buildSceneFrame({ name: 'x', description: '  ' })).not.toContain('Purpose:');
+  });
+});
+
 describe('buildSceneRules', () => {
-  it('is only the role when the scene has no intent', () => {
-    expect(buildSceneRules({ name: 'x', prompt: 'p' })).toBe('p');
-    expect(buildSceneRules({ name: 'x', prompt: 'p', intent: null })).toBe('p');
+  it('is the scene identity followed by the role when the scene has no intent', () => {
+    for (const input of [
+      { name: 'x', prompt: 'p' },
+      { name: 'x', prompt: 'p', intent: null },
+    ]) {
+      const text = buildSceneRules(input);
+      expect(text.startsWith('## You are working inside a scene')).toBe(true);
+      expect(text.endsWith('## Your role in this scene\np')).toBe(true);
+      expect(text).not.toContain('understand first, then build');
+    }
   });
 
   it('adds the working method only when discovery is on', () => {
-    expect(buildSceneRules({ name: 'x', prompt: 'p', intent: intent({ discovery: false }) })).toBe('p');
+    expect(buildSceneRules({ name: 'x', prompt: 'p', intent: intent({ discovery: false }) })).not.toContain(
+      'understand first, then build'
+    );
     expect(buildSceneRules({ name: 'x', prompt: 'p', intent: intent() })).toContain('understand first, then build');
   });
 
@@ -108,6 +142,9 @@ describe('buildSceneRules', () => {
       prompt: 'p',
       intent: intent({ discovery: false, questions: ['Q?'], constraints: 'Never X.', deliverables: 'A prototype.' }),
     });
-    expect(text).toBe('p');
+    expect(text).toContain('## Your role in this scene\np');
+    expect(text).not.toContain('Never X.');
+    expect(text).not.toContain('A prototype.');
+    expect(text).not.toContain('Q?');
   });
 });

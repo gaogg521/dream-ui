@@ -41,6 +41,81 @@ const Chips: React.FC<{ items: string[]; testId: string }> = ({ items, testId })
   );
 };
 
+/** Rules shown before "and N more": the point is that rules exist, not to restate the scene. */
+const MAX_RULES = 4;
+
+/**
+ * What the scene changes about this conversation, as plain facts read from the
+ * conversation: the role, how it works, the rules in force and what it hands over,
+ * then the skills and tools that came along. Shared by the empty-chat greeting and
+ * the header badge, so the person can look it up again after the first message.
+ */
+export const SceneDetails: React.FC<{ greeting: SceneGreetingData }> = ({ greeting }) => {
+  const { t } = useTranslation();
+  const rules = greeting.rules ?? [];
+  return (
+    <div className='flex flex-col gap-14px'>
+      {greeting.role ? (
+        <div className='flex flex-col gap-4px'>
+          <div className='text-12px text-t-tertiary'>{t('common.scenes.greeting.role')}</div>
+          <div className='text-13px leading-[1.6] text-t-primary' data-testid='scene-greeting-role'>
+            {greeting.role}
+          </div>
+        </div>
+      ) : null}
+
+      <div className='flex flex-col gap-4px'>
+        <div className='text-12px text-t-tertiary'>{t('common.scenes.greeting.method')}</div>
+        <div className='text-13px leading-[1.6] text-t-secondary' data-testid='scene-greeting-how'>
+          {greeting.asksFirst ? t('common.scenes.greeting.asksFirst') : t('common.scenes.greeting.direct')}
+        </div>
+      </div>
+
+      {rules.length > 0 ? (
+        <div className='flex flex-col gap-4px'>
+          <div className='text-12px text-t-tertiary'>{t('common.scenes.greeting.rules')}</div>
+          <ul
+            className='m-0 flex list-disc flex-col gap-2px pl-18px text-13px leading-[1.6] text-t-secondary'
+            data-testid='scene-greeting-rules'
+          >
+            {rules.slice(0, MAX_RULES).map((rule) => (
+              <li key={rule}>{rule}</li>
+            ))}
+            {rules.length > MAX_RULES ? (
+              <li className='list-none text-t-tertiary'>
+                {t('common.scenes.greeting.more', { count: rules.length - MAX_RULES })}
+              </li>
+            ) : null}
+          </ul>
+        </div>
+      ) : null}
+
+      {greeting.deliverables ? (
+        <div className='flex flex-col gap-4px'>
+          <div className='text-12px text-t-tertiary'>{t('common.scenes.greeting.deliverables')}</div>
+          <div className='text-13px leading-[1.6] text-t-secondary' data-testid='scene-greeting-deliverables'>
+            {greeting.deliverables}
+          </div>
+        </div>
+      ) : null}
+
+      {greeting.skills.length > 0 ? (
+        <div className='flex flex-col gap-6px'>
+          <div className='text-12px text-t-tertiary'>{t('common.scenes.greeting.skills')}</div>
+          <Chips items={greeting.skills} testId='scene-greeting-skills' />
+        </div>
+      ) : null}
+
+      {greeting.tools.length > 0 ? (
+        <div className='flex flex-col gap-6px'>
+          <div className='text-12px text-t-tertiary'>{t('common.scenes.greeting.tools')}</div>
+          <Chips items={greeting.tools} testId='scene-greeting-tools' />
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 const SceneGreeting: React.FC<{ greeting: SceneGreetingData }> = ({ greeting }) => {
   const { t } = useTranslation();
   return (
@@ -57,23 +132,11 @@ const SceneGreeting: React.FC<{ greeting: SceneGreetingData }> = ({ greeting }) 
         </div>
       </div>
 
-      {greeting.skills.length > 0 ? (
-        <div className='flex flex-col gap-6px'>
-          <div className='text-12px text-t-tertiary'>{t('common.scenes.greeting.skills')}</div>
-          <Chips items={greeting.skills} testId='scene-greeting-skills' />
-        </div>
-      ) : null}
-
-      {greeting.tools.length > 0 ? (
-        <div className='flex flex-col gap-6px'>
-          <div className='text-12px text-t-tertiary'>{t('common.scenes.greeting.tools')}</div>
-          <Chips items={greeting.tools} testId='scene-greeting-tools' />
-        </div>
-      ) : null}
-
-      <div className='text-13px leading-[1.6] text-t-secondary' data-testid='scene-greeting-how'>
-        {greeting.asksFirst ? t('common.scenes.greeting.asksFirst') : t('common.scenes.greeting.direct')}
+      <div className='rd-8px bg-fill-1 px-12px py-8px text-12px leading-[1.6] text-t-secondary'>
+        {t('common.scenes.greeting.difference')}
       </div>
+
+      <SceneDetails greeting={greeting} />
     </div>
   );
 };

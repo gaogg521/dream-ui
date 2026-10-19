@@ -568,7 +568,16 @@
     "importDone": "{{count}} senaryo içe aktarıldı",
     "importInvalid": "Bu, dışa aktarılmış bir senaryo dosyası değil",
     "importEmpty": "Dosyada içe aktarılacak senaryo yok",
+    "badge": {
+      "label": "Senaryo",
+      "title": "\"{{name}}\" senaryosu kullanılıyor"
+    },
     "greeting": {
+      "role": "Rolüm",
+      "method": "Çalışma şeklim",
+      "rules": "Kesin kurallar",
+      "deliverables": "Teslim ettiklerim",
+      "difference": "Sıradan bir sohbetten farkı: burada her şeyi yanıtlayan genel bir asistan olarak değil, aşağıdaki rol ve kurallara göre çalışırım; her turda bunlara uyarım.",
       "hello": "Merhaba, burası \"{{name}}\".",
       "skills": "Getirdiğim beceriler",
       "tools": "Kullanabildiğim araçlar",

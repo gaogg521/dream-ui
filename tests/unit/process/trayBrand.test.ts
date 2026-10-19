@@ -35,7 +35,8 @@ describe('brand surfaces outside i18n', () => {
   it('sets the tray tooltip from the shared constant, never a literal', () => {
     const tray = read('packages/desktop/src/process/utils/tray.ts');
 
-    expect(tray).toContain('tray.setToolTip(BRAND_DISPLAY_NAME)');
+    // The dev build prefixes its tooltip with a tag; the name itself still comes from the constant.
+    expect(tray).toMatch(/setToolTip\([^;]*BRAND_DISPLAY_NAME/);
     // A literal here is the actual failure mode — it looks right at review time
     // and rots the moment the product is renamed.
     expect(tray).not.toMatch(/setToolTip\(\s*['"`]/);

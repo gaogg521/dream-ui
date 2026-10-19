@@ -48,6 +48,7 @@ import './process/bridge/feedbackBridge';
 import { wasLaunchedAtLogin } from '@process/bridge/applicationBridge';
 import { onLanguageChanged } from './process/bridge/systemSettingsBridge';
 import { setInitialLanguage } from '@process/services/i18n';
+import { createDevOverlayIcon, DEV_TAG, isDevBuild } from '@process/utils/devBadge';
 import { setupApplicationMenu } from './process/utils/appMenu';
 import { startWebHost } from '@dream/web-host';
 import { initializeZoomFactor, setupZoomForWindow } from './process/utils/zoom';
@@ -679,6 +680,12 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
     },
   });
   console.log(`[OneWork] Main window created (id=${mainWindow.id})`);
+
+  // The dev build and the installed app look the same on the taskbar; a red dot
+  // overlay on the dev window's icon tells them apart.
+  if (isDevBuild() && process.platform === 'win32') {
+    mainWindow.setOverlayIcon(createDevOverlayIcon(), DEV_TAG);
+  }
 
   // Show window after content is ready to prevent FOUC (Flash of Unstyled Content)
   // Use 'ready-to-show' which fires when renderer has painted first frame,

@@ -5,8 +5,9 @@
 /**
  * The standing rules a scene gives its conversation.
  *
- * Who the assistant is in this scene (the written prompt, or a line generated
- * from the scene's own fields) always comes first. When the scene asks first,
+ * That this is a scene, and what to answer when asked who the assistant is,
+ * comes first; then who it is in this scene (the written prompt, or a line
+ * generated from the scene's own fields). When the scene asks first,
  * the working method (requirements round before building) follows, together
  * with the questions the scene always needs answered, its hard rules and its
  * hand-over. It is plain text so it rides the existing `preset_rules` channel,
@@ -27,11 +28,40 @@ export type SceneRulesInput = {
   prompt?: string | null;
   /** Roles a company scene says it covers. */
   jobFunctions?: string[];
+  /** Example openers; the intent's own starters are used when this is absent. */
+  starters?: string[];
   intent?: SceneIntent | null;
 };
 
 const clean = (items: string[] | undefined): string[] =>
   (items ?? []).map((item) => item.trim()).filter((item) => item.length > 0);
+
+/**
+ * The identity layer: this conversation belongs to a scene.
+ *
+ * The role text alone is weak. It reaches the model as one more paragraph of a
+ * long system prompt, and a model asked "who are you / what can you do?" answers
+ * from its own identity and from every skill installed, never mentioning the
+ * scene the person deliberately picked. So the scene is stated as who the
+ * assistant is here, with what to say when asked, and how to open.
+ */
+export function buildSceneFrame(input: SceneRulesInput): string {
+  const name = input.name.trim() || 'this scene';
+  const lines = ['## You are working inside a scene', '', `Scene: "${name}"`];
+  const description = input.description?.trim();
+  if (description) lines.push(`Purpose: ${description}`);
+  lines.push(
+    '',
+    'The person opened this conversation from that scene on purpose, so here you are the scene, not a plain chat assistant. Your role and standing rules for this conversation follow.',
+    '- If you are asked who you are or what you can do, answer as this scene: say what you do for the user here, name three to five concrete things you can take on (drawn from the role, the rules and the examples), and say what they should send you to get started. Do not introduce yourself as a generic assistant or by the name of the underlying model, and do not list unrelated general abilities or every installed skill.',
+    '- Keep to the role and the rules below in every reply, not only the first.'
+  );
+  const starters = clean(input.starters ?? input.intent?.starters);
+  if (starters.length > 0) {
+    lines.push(`- Examples of how people start in this scene: ${starters.map((item) => `"${item}"`).join('; ')}.`);
+  }
+  return lines.join('\n');
+}
 
 /** The role layer: the written prompt, else what the scene's own fields say. */
 export function buildRoleRules(input: SceneRulesInput): string {
@@ -75,10 +105,10 @@ export function buildDiscoveryRules(questions: string[]): string {
 
 /** Everything the conversation should be told about the scene, as one block of standing rules. */
 export function buildSceneRules(input: SceneRulesInput): string {
-  const role = buildRoleRules(input);
+  const role = [buildSceneFrame(input), `## Your role in this scene\n${buildRoleRules(input)}`].join('\n\n');
   const intent = input.intent;
   // The questions, hard rules and hand-over belong to the ask-first mode: a
-  // scene that does not ask first is just its role (any rules go in the prompt).
+  // scene that does not ask first is its identity and role (any rules go in the prompt).
   if (!intent?.discovery) return role;
 
   const parts = [role, buildDiscoveryRules(intent.questions)];

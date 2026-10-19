@@ -4,6 +4,7 @@
 
 import i18n from 'i18next';
 import { ProcessConfig } from '@process/utils/initStorage';
+import { electronApp as app } from '@/common/electronSafe';
 import {
   DEFAULT_LANGUAGE,
   normalizeLanguageCode,
@@ -77,12 +78,27 @@ export const i18nReady = (async (): Promise<void> => {
 });
 
 /**
+ * The OS language, for a user who never picked one. The renderer falls back to
+ * `navigator.language` in that case, so the main process (tray menu, dialogs)
+ * must do the same or it stays English while the window is Chinese.
+ */
+function systemLanguage(): string | undefined {
+  try {
+    const locale = app.getLocale();
+    return locale ? normalizeLanguageCode(locale) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Set initial language (called after storage is ready)
  */
 export async function setInitialLanguage(language: string | undefined): Promise<void> {
   await i18nReady;
-  if (language) {
-    await ensureAndSwitch(i18n, language, getLocaleModules);
+  const effective = language || systemLanguage();
+  if (effective) {
+    await ensureAndSwitch(i18n, effective, getLocaleModules);
   }
 }
 

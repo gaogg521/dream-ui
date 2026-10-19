@@ -147,13 +147,17 @@ describe('buildSceneConversationRequest', () => {
       model,
       mcpServers: [{ id: 'row_1', name: 'Business MCP', original_json: '{"teamRegistryId":"omcp_1"}' }],
     }).extra.scene_greeting;
-    expect(greeting).toEqual({
+    expect(greeting).toMatchObject({
       name: '发布管理',
       description: '负责发版排期',
       skills: ['release-signoff'],
       tools: ['Business MCP'],
       asksFirst: true,
     });
+    // A scene that asks first also shows the role, and has no rules or hand-over to claim yet.
+    expect(greeting?.role).toBeTruthy();
+    expect(greeting?.rules).toBeUndefined();
+    expect(greeting?.deliverables).toBeUndefined();
   });
 
   it('a personal scene greets with its emoji, its skills and the servers it is limited to, by name', () => {
@@ -206,10 +210,13 @@ describe('buildSceneConversationRequest', () => {
     expect(request.extra).toMatchObject({
       workspace: '',
       custom_workspace: false,
-      preset_rules: '你是发布经理。',
       enabled_skills: ['release-signoff'],
       scene_id: 'scene_1',
     });
+    // The role comes after the scene identity, so the model answers "who are you" as the scene.
+    expect(request.extra.preset_rules).toContain('Scene: "发布管理"');
+    expect(request.extra.preset_rules.endsWith('## Your role in this scene\n你是发布经理。')).toBe(true);
+    expect(request.extra.scene_greeting?.role).toBe('你是发布经理。');
     expect(request.extra.selected_mcp_server_ids).toBeUndefined();
   });
 
@@ -232,7 +239,34 @@ describe('buildSceneConversationRequest', () => {
     expect(buildSceneConversationRequest({ item: asks, skills, model }).extra.preset_rules).toContain(
       'understand first, then build'
     );
-    expect(buildSceneConversationRequest({ item: quiet, skills, model }).extra.preset_rules).toBe('p');
+    const quietRules = buildSceneConversationRequest({ item: quiet, skills, model }).extra.preset_rules;
+    expect(quietRules).toContain('You are working inside a scene');
+    expect(quietRules).not.toContain('understand first, then build');
+  });
+
+  it('the greeting shows the rules and hand-over only when the scene asks first, since only then are they sent', () => {
+    const intent = {
+      discovery: true,
+      starters: [],
+      questions: [],
+      constraints: '1. 不编造数据。\n2、口径要写进报告。\n- 有问题先说。',
+      deliverables: '一页结论摘要',
+    };
+    const asks = buildSceneConversationRequest({
+      item: companySceneItem(scene({ prompt: '你是数据分析师。\n第二行。', intent })),
+      skills,
+      model,
+    }).extra;
+    expect(asks.scene_greeting?.rules).toEqual(['不编造数据。', '口径要写进报告。', '有问题先说。']);
+    expect(asks.scene_greeting?.deliverables).toBe('一页结论摘要');
+    expect(asks.scene_greeting?.role).toBe('你是数据分析师。');
+    const quiet = buildSceneConversationRequest({
+      item: companySceneItem(scene({ prompt: 'p', intent: { ...intent, discovery: false } })),
+      skills,
+      model,
+    }).extra;
+    expect(quiet.scene_greeting?.rules).toBeUndefined();
+    expect(quiet.scene_greeting?.deliverables).toBeUndefined();
   });
 
   it('a personal scene starts with its own skills and is limited to the MCP servers it names', () => {

@@ -568,7 +568,16 @@
     "importDone": "{{count}} Szenarien importiert",
     "importInvalid": "Das ist keine exportierte Szenario-Datei",
     "importEmpty": "In der Datei gibt es keine Szenarien zum Importieren",
+    "badge": {
+      "label": "Szenario",
+      "title": "Szenario „{{name}}“ aktiv"
+    },
     "greeting": {
+      "role": "Meine Rolle",
+      "method": "Meine Arbeitsweise",
+      "rules": "Feste Regeln",
+      "deliverables": "Was ich übergebe",
+      "difference": "Anders als in einem normalen Chat arbeite ich hier nach der Rolle und den Regeln unten, nicht als Allzweck-Assistent, und halte sie in jeder Antwort ein.",
       "hello": "Hallo, hier ist „{{name}}“.",
       "skills": "Mitgebrachte Skills",
       "tools": "Verfügbare Werkzeuge",

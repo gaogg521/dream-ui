@@ -48,7 +48,10 @@ type ElectronModule = {
   powerSaveBlocker: PowerSaveBlockerModule;
   BrowserWindow: typeof BrowserWindowClass;
   Menu: typeof MenuClass;
-  nativeImage: { createFromPath(path: string): NativeImageClass };
+  nativeImage: {
+    createFromPath(path: string): NativeImageClass;
+    createFromBitmap(buffer: Buffer, options: { width: number; height: number }): NativeImageClass;
+  };
   Notification: typeof NotificationClass;
   Tray: typeof TrayClass;
 };
@@ -77,6 +80,7 @@ export const electronMenu: typeof MenuClass | null = _electron?.Menu ?? null;
 
 export const electronNativeImage: {
   createFromPath(path: string): NativeImageClass;
+  createFromBitmap(buffer: Buffer, options: { width: number; height: number }): NativeImageClass;
 } | null = _electron?.nativeImage ?? null;
 
 export const electronTray: typeof TrayClass | null = _electron?.Tray ?? null;

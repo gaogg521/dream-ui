@@ -725,7 +725,16 @@
     "importDone": "已导入 {{count}} 个场景",
     "importInvalid": "这不是场景导出文件",
     "importEmpty": "文件里没有可导入的场景",
+    "badge": {
+      "label": "场景",
+      "title": "正在使用场景「{{name}}」"
+    },
     "greeting": {
+      "role": "我的角色",
+      "method": "工作方式",
+      "rules": "硬性规则",
+      "deliverables": "交付内容",
+      "difference": "和普通会话的区别：这里我按下面的角色和规则工作，而不是一个什么都答的通用助手；每一轮都会遵守。",
       "hello": "你好，这里是「{{name}}」。",
       "skills": "我带来的技能",
       "tools": "可用的工具",

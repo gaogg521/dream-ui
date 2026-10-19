@@ -22,6 +22,10 @@ import { IS_DISCONTINUED_BUILD } from '@/renderer/utils/discontinuedBuild';
 import MigrationInviteCapsule from './MigrationInviteCapsule';
 import './titlebar.css';
 
+/** True when running from a source checkout (`bun run dev`), not an installed build. */
+const IS_DEV_BUILD = import.meta.env.DEV;
+const DEV_TAG_TITLE = 'Development build (bun run dev)';
+
 interface TitlebarProps {
   workspaceAvailable: boolean;
 }
@@ -412,6 +416,11 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
       <div ref={toolbarRef} className='app-titlebar__toolbar'>
         {layout?.isMobile && <div id='app-titlebar-actions-slot' className='app-titlebar__actions-slot' />}
         {!layout?.isMobile && <LanguageQuickSwitch iconSize={iconSize} strokeWidth={desktopIconStroke} />}
+        {IS_DEV_BUILD && (
+          <span className='app-titlebar__dev-tag' title={DEV_TAG_TITLE} data-testid='dev-build-tag'>
+            DEV
+          </span>
+        )}
         {IS_DISCONTINUED_BUILD && <MigrationInviteCapsule />}
         {/* Enterprise member inbox (§4.2): self-gates on a live enterprise session. */}
         <NotificationBell iconSize={iconSize} strokeWidth={desktopIconStroke} />

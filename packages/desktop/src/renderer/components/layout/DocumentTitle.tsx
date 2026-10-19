@@ -25,12 +25,15 @@ export function titleForPath(pathname: string, t: (key: string) => string): stri
   return pathname.startsWith('/login') ? t('login.pageTitle') : BRAND_DISPLAY_NAME;
 }
 
+/** A dev build says so in its window title (taskbar hover, Alt+Tab); tests run in dev mode too. */
+const DEV_TITLE_PREFIX = import.meta.env.DEV && import.meta.env.MODE !== 'test' ? '[DEV] ' : '';
+
 const DocumentTitle: React.FC = () => {
   const { pathname } = useLocation();
   const { t, i18n } = useTranslation();
 
   useEffect(() => {
-    document.title = titleForPath(pathname, t);
+    document.title = `${DEV_TITLE_PREFIX}${titleForPath(pathname, t)}`;
   }, [pathname, t, i18n.language]);
 
   return null;
