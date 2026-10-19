@@ -178,6 +178,8 @@ export function RichDocumentEditor({
 
 type Props = {
   onOfficeSaved?: () => Promise<void>;
+  /** Hands this document to a conversation; omitted for drafts that are not saved yet. */
+  onAddToConversation?: () => void;
   registerBeforeLeave?: (guard: (() => Promise<boolean>) | null) => void;
   documentId?: string;
   sourcePath?: string | null;
@@ -328,6 +330,9 @@ export default function LibraryDocument(props: Props) {
           <span title={props.location}>{props.location}</span>
         </div>
         <div className={styles.documentCommands}>
+          {props.documentId && props.onAddToConversation && (
+            <Button onClick={props.onAddToConversation}>{t('common.knowledgeLibrary.addToConversation')}</Button>
+          )}
           {canEditOffice && officeEditing && officeLocked && (
             <Button onClick={() => setOfficeLocked(false)}>{t('common.edit')}</Button>
           )}

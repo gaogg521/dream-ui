@@ -905,3 +905,28 @@
 .library .document:global(.arco-btn) {
   height: 28px;
 }
+
+/* Sidebar file rows carry a hover-only "more" menu on the right. */
+.treeRow {
+  position: relative;
+  flex-shrink: 0;
+}
+.treeRow > :global(.arco-btn):first-child {
+  padding-right: 30px;
+}
+.tree .treeMore:global(.arco-btn) {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  justify-content: center;
+  transform: translateY(-50%);
+  opacity: 0;
+}
+.treeRow:hover .treeMore:global(.arco-btn),
+.treeRow:focus-within .treeMore:global(.arco-btn),
+.tree .treeMore:global(.arco-btn.arco-dropdown-open) {
+  opacity: 1;
+}

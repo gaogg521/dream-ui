@@ -527,4 +527,6 @@ PDF 渲染内核本身没问题（截图中文本/分页正常），差距在壳
 - **行高**：表格行 ≈60px → ≈43px（`td` 高 42、内边距 5px 8px），侧栏目录行 37 → 32px；行「…」菜单改为紧凑横排。
 - **真机验证**（DEV + CDP，个人库 27 份真实资料）：列表图标按类型正确（word/pdf/sheets/slides/html/image/markdown）；「添加到会话→新建会话」到 `/guid`，xlsx 原件作为附件出现（XLSX 17.7 KB）；「→ 英语学习」跳进该会话，pptx 附件进入发送框；会话「+→添加文件→资料库」多选 docx/pdf，附件卡片显示 DOCX 85 KB、PDF 1.2 MB；新建会话页「+→资料库」同样可用。
 - **测试**：`tests/unit/renderer/LibraryAttach.dom.test.tsx`（分类、文件转换、排队通道、添加到会话窗口，18 项）。jsdom 没有 `DataTransfer`，所以 `FileList` 用数组外观实现。
-- **没做**：文档阅读页内的「添加到会话」按钮、侧栏目录行的「…」菜单、企业控制台（dream-en admin-web）里同款入口——企业主路径是桌面端，控制台的知识库页另行跟进。
+- **补做（同日）**：文档阅读页顶栏「添加到会话」按钮、侧栏目录文件行悬停「…」菜单（阅读 / 添加到会话）；弹窗状态上提到 `RagSection`（`RagLibraryProps.onAddToConversation`），列表行、侧栏行、文档页三处共用同一个 `AddToConversationModal`。
+- **顺带修的布局 bug**（「数字员工与场景」页）：全局 `arco-override.css` 把 `.arco-spin` 改成 `inline-flex + 居中`，页面用 `<Spin className='w-full'>` 包住 Tabs 时被收缩到内容宽度——员工为空时卡片只有 290px、标题和「创建员工」按钮叠在一起；知识库表格比容器宽时又按两侧居中溢出，左半边被侧栏盖住。改成 `block` + 行内 `display:block`（工具类 `block` 压不过全局规则）；顶部「创建员工」只在「员工」页签显示。
+- **没做**：企业控制台（dream-en admin-web）里的「添加到会话」——控制台是浏览器管理页，没有会话上下文。

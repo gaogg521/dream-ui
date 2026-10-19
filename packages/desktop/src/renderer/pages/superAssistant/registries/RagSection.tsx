@@ -41,6 +41,7 @@ import type {
   ResourceVisibility,
 } from '@/common/types/devops/devopsTypes';
 import LibraryDocument, { RichDocumentEditor } from '../../knowledge/LibraryDocument';
+import AddToConversationModal from '../../knowledge/attach/AddToConversationModal';
 import { aclInitialValues, aclPayload, ResourceAclCell, ResourceAclFields, useAllTenants } from './ResourceAcl';
 
 /** Strip the extension for a sensible default document title. */
@@ -76,6 +77,8 @@ export type RagLibraryProps = {
   onImport: (personal?: boolean) => void;
   onLink: (personal?: boolean) => void;
   onOpen: (record: RagDocumentEntry) => void;
+  /** Opens the "add to conversation" dialog for these documents. */
+  onAddToConversation?: (records: RagDocumentEntry[]) => void;
   settings: React.ReactNode;
   search: React.ReactNode;
   columns: React.ComponentProps<typeof Table<RagDocumentEntry>>['columns'];
@@ -122,6 +125,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   const [hits, setHits] = useState<RagSearchHit[] | null>(null);
 
   const [metadataTarget, setMetadataTarget] = useState<RagDocumentEntry | null>(null);
+  const [attachDocs, setAttachDocs] = useState<RagDocumentEntry[] | null>(null);
   const [metadataTitle, setMetadataTitle] = useState('');
   const [metadataLibrary, setMetadataLibrary] = useState('oraglib_default');
   const [savingMetadata, setSavingMetadata] = useState(false);
@@ -781,6 +785,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
           if (files.length) void handleWebImport(files);
         }}
       />
+      {attachDocs && <AddToConversationModal documents={attachDocs} onClose={() => setAttachDocs(null)} />}
       {renderLibrary ? (
         renderLibrary({
           isEnterprise,
@@ -803,6 +808,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
           ) : editTarget ? (
             <LibraryDocument
               key={editTarget.id}
+              onAddToConversation={() => setAttachDocs([editTarget])}
               registerBeforeLeave={(guard) => {
                 documentLeaveGuard.current = guard;
               }}
@@ -901,6 +907,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
           onCreate: (kind, personal) => navigateDocument(() => openRegister(kind, personal)),
           onImport: (personal) => void handleImportFiles(personal),
           onLink: openUrlImport,
+          onAddToConversation: setAttachDocs,
           onOpen: (record) =>
             navigateDocument(() => {
               void openEdit(record);

@@ -20,7 +20,6 @@ import type { RagLibraryProps } from '../superAssistant/registries/RagSection';
 import type { RagDocumentEntry } from '@/common/types/devops/devopsTypes';
 import styles from './KnowledgeLibrary.module.css';
 import LibraryGuide, { type GuideId } from './guides/LibraryGuide';
-import AddToConversationModal from './attach/AddToConversationModal';
 import LibraryFileIcon from './shared/LibraryFileIcon';
 import { useLibrarySidebar } from './useLibrarySidebar';
 
@@ -55,6 +54,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   onImport,
   onLink,
   onOpen,
+  onAddToConversation,
   settings,
   search,
   columns,
@@ -63,7 +63,6 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   const label = (key: string) => t(`common.knowledgeLibrary.${key}`);
   const sidebar = useLibrarySidebar(libraries.map((item) => item.name));
   const [guide, setGuide] = useState<GuideId | null>(null);
-  const [attachTarget, setAttachTarget] = useState<RagDocumentEntry[] | null>(null);
   const onLibraryChange = (id?: string) => {
     setGuide(null);
     selectLibrary(id);
@@ -191,21 +190,45 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
       {label(id)}
     </Button>
   );
-  const tree = (isPersonal: boolean) =>
-    rows
-      .filter((row) => personal(row) === isPersonal)
-      .map((row) => (
-        <Button
-          key={row.id}
-          aria-current={activeDocument?.id === row.id ? 'page' : undefined}
-          type='text'
-          icon={<LibraryFileIcon title={row.title} mimeType={row.mimeType} filePath={row.filePath} size={16} />}
-          onClick={() => open(row)}
-          title={row.title}
+  const treeFile = (row: RagDocumentEntry) => (
+    <div key={row.id} className={styles.treeRow}>
+      <Button
+        aria-current={activeDocument?.id === row.id ? 'page' : undefined}
+        type='text'
+        icon={<LibraryFileIcon title={row.title} mimeType={row.mimeType} filePath={row.filePath} size={16} />}
+        onClick={() => open(row)}
+        title={row.title}
+      >
+        {row.title}
+      </Button>
+      {onAddToConversation && (
+        <Dropdown
+          trigger='click'
+          position='br'
+          droplist={
+            <Menu
+              onClickMenuItem={(key) => {
+                if (key === 'open') open(row);
+                else onAddToConversation([row]);
+              }}
+            >
+              <Menu.Item key='open'>{label('read')}</Menu.Item>
+              <Menu.Item key='add'>{label('addToConversation')}</Menu.Item>
+            </Menu>
+          }
         >
-          {row.title}
-        </Button>
-      ));
+          <Button
+            type='text'
+            size='mini'
+            className={styles.treeMore}
+            icon={<More />}
+            aria-label={t('common.superAssistant.registries.colActions')}
+          />
+        </Dropdown>
+      )}
+    </div>
+  );
+  const tree = (isPersonal: boolean) => rows.filter((row) => personal(row) === isPersonal).map((row) => treeFile(row));
   const pathIds = new Set<string>();
   let cursor = activeDocument?.libraryId ?? libraryId;
   while (cursor && !pathIds.has(cursor)) {
@@ -245,25 +268,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                     .filter(
                       (row) => (row.libraryId ?? 'oraglib_default') === library.id && personal(row) === personalScope
                     )
-                    .map((row) => (
-                      <Button
-                        key={row.id}
-                        aria-current={activeDocument?.id === row.id ? 'page' : undefined}
-                        type='text'
-                        icon={
-                          <LibraryFileIcon
-                            title={row.title}
-                            mimeType={row.mimeType}
-                            filePath={row.filePath}
-                            size={16}
-                          />
-                        }
-                        onClick={() => open(row)}
-                        title={row.title}
-                      >
-                        {row.title}
-                      </Button>
-                    ))}
+                    .map((row) => treeFile(row))}
                 </div>
               )}
             </React.Fragment>
@@ -309,9 +314,11 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           position='br'
           droplist={
             <div className={styles.actions}>
-              <Button size='small' onClick={() => setAttachTarget([row])}>
-                {label('addToConversation')}
-              </Button>
+              {onAddToConversation && (
+                <Button size='small' onClick={() => onAddToConversation([row])}>
+                  {label('addToConversation')}
+                </Button>
+              )}
               {columns?.at(-1)?.render?.(undefined, row, 0)}
             </div>
           }
@@ -358,20 +365,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
         </div>
         <div className={styles.tree}>
           {folders(null, true)}
-          {rows
-            .filter((row) => personal(row) && !libraryPersonal(row.libraryId))
-            .map((row) => (
-              <Button
-                key={row.id}
-                aria-current={activeDocument?.id === row.id ? 'page' : undefined}
-                type='text'
-                icon={<LibraryFileIcon title={row.title} mimeType={row.mimeType} filePath={row.filePath} size={16} />}
-                onClick={() => open(row)}
-                title={row.title}
-              >
-                {row.title}
-              </Button>
-            ))}
+          {rows.filter((row) => personal(row) && !libraryPersonal(row.libraryId)).map((row) => treeFile(row))}
         </div>
         {isEnterprise && (
           <>
@@ -614,7 +608,6 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           </>
         )}
       </main>
-      {attachTarget && <AddToConversationModal documents={attachTarget} onClose={() => setAttachTarget(null)} />}
     </div>
   );
 };
