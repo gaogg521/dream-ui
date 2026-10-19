@@ -1,0 +1,24 @@
+{
+  "version": "3.0.13",
+  "date": "2026-10-19",
+  "zh": [
+    {
+      "t": "单机版",
+      "d": "数字员工完成工作后，可以把摘要和文件送到已连接的机器人会话；本次同时修复知识库导入、会话状态和历史列表性能问题。dream 引擎与内置模型依旧开箱即用，无需注册、无需粘贴 Key。\n\n【新增】\n· 【结果通知】数字员工支持选择机器人和接收会话，成功发送摘要、完整结果和工作区附件，失败发送原因；手动与定时运行均可使用\n· 【图片排版】文字较多的图片可先用 HTML 排版再渲染为 PNG，支持图文布局与预览\n· 【平台接入】添加模型平台时提供推荐平台入口及配置指引\n\n【优化改进】\n· 【会话历史】会话列表不再逐条扫描技能目录，减少加载等待；技能目录缓存避免反复解析未变化的文件\n· 【数字员工】调度与通知统一设置，仅修改通知时保留原有调度；移除员工页过时的“从模板创建”入口，场景统一从场景页使用\n\n【修复】\n· 知识库在安装版中可正常导入文件，修复 PDF 运行依赖缺失，并覆盖五文件批量导入验证\n· 知识库保存或替换原文件后搜索结果未及时更新，文档工具栏对齐及保存状态显示异常\n· 会话重连后可能持续显示“处理中”，历史刷新请求堆积导致侧栏加载迟缓，以及附件面板过早加载\n· 微信机器人会话上下文加密持久化，后端重启后无需再发消息才能继续接收结果通知\n· 升级网络与压缩依赖，修复 13 条已知依赖漏洞"
+    },
+    {
+      "t": "企业版",
+      "d": "公司数字员工的结果通知复用成员自己已连接的机器人；企业连接状态与知识访问同步校验，减少显示已连接却无法访问的情况。\n\n【新增】\n· 【员工通知】成员可为公司员工选择自己的机器人接收会话，成功接收摘要和附件，失败接收原因，通知设置按用户隔离\n\n【优化改进】\n· 【团队同步】相同的团队技能同步与 MCP 同步请求使用缓存，减少切换团队和刷新时的重复文件扫描、数据库查询\n· 【知识访问】企业页面与知识 MCP 使用一致的连接检查，员工结果通知继续复用本机机器人连接\n\n【修复】\n· 企业服务不可达时仍显示已连接，持续离线 15 分钟后未按设计切回个人模式\n· 企业知识库的搜索更新、原件编辑和连接异常处理问题\n· 消息事件拥塞后结束状态或文件变化丢失；连接恢复时重新同步会话状态"
+    }
+  ],
+  "en": [
+    {
+      "t": "Personal edition",
+      "d": "Digital employees can deliver summaries and files to a connected bot conversation. This release also fixes knowledge imports, conversation status and history loading. The dream engine and built-in models still work out of the box, no sign-up and no API key needed.\n\n【新增】\n· Result notifications: choose a connected bot and recipient conversation for each employee. Successful manual and scheduled runs send a summary, full result and eligible workspace attachments; failed runs send the reason\n· Image layout: text-heavy pictures can be laid out as HTML and rendered to PNG, with layout previews\n· Platform setup: recommended providers and setup guidance are available when adding a model platform\n\n【优化改进】\n· History loading no longer scans the skill catalog for every conversation; unchanged skill files reuse parsed results\n· Scheduling and notifications share one settings dialog, while notification-only edits preserve existing schedules. The obsolete employee template panel is removed in favor of the dedicated Scenes tab\n\n【修复】\n· Packaged knowledge imports include the required PDF runtime, with five-file batch import regression coverage\n· Knowledge search refreshes after edits or original-file replacement; document toolbar alignment and saved-state display are corrected\n· Reconnected conversations could remain busy, repeated list refreshes could exhaust requests, and attachment panels loaded too early\n· WeChat conversation context is encrypted and persisted, allowing result notifications after a backend restart without another incoming message\n· Network and archive dependencies are upgraded to resolve 13 known dependency vulnerabilities"
+    },
+    {
+      "t": "Enterprise edition",
+      "d": "Company employee notifications reuse each member's connected bots. Enterprise connection status and knowledge access are checked together.\n\n【新增】\n· Members choose their own recipient conversation for company employees, receiving summaries and attachments on success or the reason on failure. Preferences remain isolated by user\n\n【优化改进】\n· Identical team skill and MCP synchronization requests reuse cached results, reducing repeated scans and database queries during team switches and refreshes\n· Enterprise pages and knowledge MCP use consistent connection checks; employee notifications continue to use local bot connections\n\n【修复】\n· An unreachable enterprise server could still appear connected; after 15 minutes offline the client now falls back to personal mode as designed\n· Enterprise knowledge search refresh, original-file editing and connection-error handling\n· Congested event delivery could lose completion or file-change events; reconnecting resynchronizes conversation state"
+    }
+  ]
+}
