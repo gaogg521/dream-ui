@@ -9,6 +9,8 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Message, Modal, Radio, Select, Switch } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { ipcBridge } from '@/common';
+import type { ICronPushTarget } from '@/common/adapter/ipcBridge';
+import PushTargetField from '@renderer/components/scenes/PushTargetField';
 import type { CronScheduleDto, PersonalAgent } from '@/common/types/employee/employeeTypes';
 
 type ScheduleAgentModalProps = {
@@ -19,6 +21,7 @@ type ScheduleAgentModalProps = {
 };
 
 type ScheduleKind = 'none' | 'every' | 'cron';
+const RESULT_NOTIFICATION_PLATFORMS = ['weixin', 'wecom', 'lark', 'dingtalk', 'telegram'] as const;
 
 const TZ_OPTIONS = [
   { label: 'UTC', value: 'UTC' },
@@ -38,6 +41,37 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
   const [enabled, setEnabled] = useState(true);
   const [task, setTask] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [scheduleEdited, setScheduleEdited] = useState(false);
+  const [pushTarget, setPushTarget] = useState<ICronPushTarget | null>(null);
+  const [notificationReady, setNotificationReady] = useState(false);
+  const [notificationValid, setNotificationValid] = useState(false);
+  const editSchedule =
+    <T,>(setValue: React.Dispatch<React.SetStateAction<T>>) =>
+    (value: T) => {
+      setScheduleEdited(true);
+      setValue(value);
+    };
+
+  useEffect(() => {
+    if (!visible || !agent) return;
+    let current = true;
+    setNotificationReady(false);
+    setNotificationValid(false);
+    setPushTarget(null);
+    ipcBridge.personalAgent.getNotification
+      .invoke({ agentId: agent.id })
+      .then((settings) => {
+        if (!current) return;
+        setPushTarget(settings.target);
+        setNotificationReady(true);
+      })
+      .catch((error: unknown) => {
+        if (current) Message.error(t('common.superAssistant.scheduleSaveFailed') + ': ' + String(error));
+      });
+    return () => {
+      current = false;
+    };
+  }, [visible, agent?.id, t]);
   // A company employee keeps its identity in `persona` and has no run
   // instructions, so for it the task is the only thing a scheduled run has.
   const taskRequired = agent?.origin === 'team';
@@ -47,6 +81,7 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
       return;
     }
     setSubmitting(false);
+    setScheduleEdited(false);
     // A schedule being created is meant to run; only an existing one carries a
     // switch position worth keeping (a never-scheduled employee reads `false`).
     setEnabled(agent.schedule ? agent.scheduleEnabled : true);
@@ -72,10 +107,10 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
   }, [visible, agent]);
 
   const handleSubmit = async () => {
-    if (!agent) {
+    if (!agent || !notificationReady || !notificationValid) {
       return;
     }
-    if (kind !== 'none' && taskRequired && !task.trim()) {
+    if (scheduleEdited && kind !== 'none' && taskRequired && !task.trim()) {
       Message.warning(t('common.superAssistant.scheduleTaskRequired'));
       return;
     }
@@ -87,23 +122,27 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
         schedule = { kind: 'every', every_ms: minutes * 60_000 };
       } else if (kind === 'cron') {
         const expr = cronExpr.trim();
-        if (!expr) {
+        if (scheduleEdited && !expr) {
           Message.warning(t('common.superAssistant.cronExprRequired', { defaultValue: '请输入 cron 表达式' }));
           setSubmitting(false);
           return;
         }
         schedule = { kind: 'cron', expr, tz };
       }
-      await ipcBridge.personalAgent.setSchedule.invoke({
-        agentId: agent.id,
-        schedule: {
-          schedule,
-          enabled: kind === 'none' ? false : enabled,
-          // Clearing the schedule clears its task with it.
-          task: kind === 'none' ? undefined : task.trim() || undefined,
-        },
-      });
-      Message.success(t('common.superAssistant.scheduleSaved', { defaultValue: '调度已保存' }));
+      await ipcBridge.personalAgent.setNotification.invoke({ agentId: agent.id, target: pushTarget });
+      // A member may configure their own recipient without permission to edit
+      // a shared employee's schedule. Preserve untouched schedules exactly.
+      if (scheduleEdited) {
+        await ipcBridge.personalAgent.setSchedule.invoke({
+          agentId: agent.id,
+          schedule: {
+            schedule,
+            enabled: kind === 'none' ? false : enabled,
+            task: kind === 'none' ? undefined : task.trim() || undefined,
+          },
+        });
+      }
+      Message.success(t('common.saveSuccess'));
       onSaved();
       onClose();
     } catch (error) {
@@ -120,11 +159,20 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
       onCancel={onClose}
       onOk={handleSubmit}
       confirmLoading={submitting}
+      okButtonProps={{ disabled: !notificationReady || !notificationValid }}
       maskClosable={false}
     >
       <Form layout='vertical'>
+        {notificationReady && (
+          <PushTargetField
+            value={pushTarget}
+            onChange={setPushTarget}
+            onValidityChange={setNotificationValid}
+            supportedPlatforms={RESULT_NOTIFICATION_PLATFORMS}
+          />
+        )}
         <Form.Item label={t('common.superAssistant.scheduleKind', { defaultValue: '调度类型' })}>
-          <Radio.Group value={kind} onChange={(val) => setKind(val as ScheduleKind)}>
+          <Radio.Group value={kind} onChange={(val) => editSchedule(setKind)(val as ScheduleKind)}>
             <Radio value='none'>{t('common.superAssistant.kindNone', { defaultValue: '不调度' })}</Radio>
             <Radio value='every'>{t('common.superAssistant.kindEvery', { defaultValue: '间隔' })}</Radio>
             <Radio value='cron'>{t('common.superAssistant.kindCron', { defaultValue: 'Cron 表达式' })}</Radio>
@@ -132,16 +180,16 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
         </Form.Item>
         {kind === 'every' ? (
           <Form.Item label={t('common.superAssistant.fieldEveryMinutes', { defaultValue: '间隔（分钟）' })}>
-            <Input value={everyMinutes} onChange={setEveryMinutes} placeholder='1' />
+            <Input value={everyMinutes} onChange={editSchedule(setEveryMinutes)} placeholder='1' />
           </Form.Item>
         ) : null}
         {kind === 'cron' ? (
           <>
             <Form.Item label={t('common.superAssistant.fieldCronExpr', { defaultValue: 'Cron 表达式' })}>
-              <Input value={cronExpr} onChange={setCronExpr} placeholder='0 9 * * *' />
+              <Input value={cronExpr} onChange={editSchedule(setCronExpr)} placeholder='0 9 * * *' />
             </Form.Item>
             <Form.Item label={t('common.superAssistant.fieldTz', { defaultValue: '时区' })}>
-              <Select value={tz} onChange={setTz} options={TZ_OPTIONS} />
+              <Select value={tz} onChange={editSchedule(setTz)} options={TZ_OPTIONS} />
             </Form.Item>
             <div className='mb-12px rounded-6px bg-fill-1 p-8px text-12px text-t-secondary'>
               <div className='mb-4px font-500 text-t-primary'>
@@ -174,7 +222,7 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
           >
             <Input.TextArea
               value={task}
-              onChange={setTask}
+              onChange={editSchedule(setTask)}
               rows={3}
               placeholder={t('common.superAssistant.scheduleTaskPlaceholder')}
             />
@@ -182,7 +230,7 @@ const ScheduleAgentModal: React.FC<ScheduleAgentModalProps> = ({ visible, agent,
         ) : null}
         {kind !== 'none' ? (
           <Form.Item label={t('common.superAssistant.fieldEnabled', { defaultValue: '启用' })}>
-            <Switch checked={enabled} onChange={setEnabled} />
+            <Switch checked={enabled} onChange={editSchedule(setEnabled)} />
           </Form.Item>
         ) : null}
       </Form>

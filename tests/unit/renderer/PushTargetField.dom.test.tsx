@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ targets: [] as unknown[], navigate: vi.fn() }));
@@ -56,6 +56,20 @@ describe('PushTargetField', () => {
     await settle();
     fireEvent.click(screen.getByTestId('push-target-switch'));
     expect(onChange).toHaveBeenCalledWith({ plugin_id: 'lark', chat_id: 'oc_1' });
+  });
+
+  it('lets the member choose the intended session when a bot has multiple chats', async () => {
+    mocks.targets = [lark];
+    const onChange = vi.fn();
+    const view = render(<PushTargetField value={null} onChange={onChange} />);
+    await act(async () => {
+      await settle();
+    });
+    fireEvent.click(screen.getByTestId('push-target-switch'));
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.click(view.container.querySelector('.arco-select-view')!);
+    fireEvent.click(await screen.findByText('飞书机器人 · oc_2'));
+    expect(onChange).toHaveBeenCalledWith({ plugin_id: 'lark', chat_id: 'oc_2' });
   });
 
   it('tells the person to connect a bot when there is none, and to message it when it has no chats', async () => {

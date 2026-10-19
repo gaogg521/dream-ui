@@ -2974,6 +2974,13 @@ import type {
 } from '@/common/types/employee/employeeTypes';
 
 export const personalAgent = {
+  getNotification: httpGetLocal<{ target: ICronPushTarget | null }, { agentId: string }>(
+    (p) => `/api/one/employee/agents/${p.agentId}/notification`
+  ),
+  setNotification: httpPutLocal<void, { agentId: string; target: ICronPushTarget | null }>(
+    (p) => `/api/one/employee/agents/${p.agentId}/notification`,
+    (p) => ({ target: p.target })
+  ),
   list: httpGetLocal<PersonalAgent[], void>('/api/one/employee/agents'),
   get: httpGetLocal<PersonalAgent, { agentId: string }>((p) => `/api/one/employee/agents/${p.agentId}`),
   create: httpPostLocal<PersonalAgent, CreatePersonalAgentInput>('/api/one/employee/agents'),
