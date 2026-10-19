@@ -2145,6 +2145,56 @@
   },
   "enterpriseChannel": "Unternehmenskanal",
   "enterpriseChannelTip": "Dieser Modellkanal wird von Ihrem Unternehmen bereitgestellt. Die Zugangsdaten verbleiben auf dem Unternehmensserver; er kann hier nicht geändert oder entfernt werden.",
+  "recommendedPlatforms": {
+    "title": "Empfohlene Plattformen",
+    "guideLink": "Einrichtungsanleitung",
+    "guideTitle": "Empfohlene Plattformen · Einrichtungsanleitung",
+    "guideSubtitle": "Ablauf: registrieren → abonnieren oder aufladen → Schlüssel holen → Tools verbinden. Die Preise sind die offiziellen Preise von Oktober 2026 (CNY) und können sich ändern; maßgeblich ist die offizielle Website.",
+    "guideOpenSite": "Website öffnen",
+    "openSite": "Website von {{name}} öffnen",
+    "openFailed": "Die Website konnte nicht geöffnet werden. Bitte versuchen Sie es später erneut.",
+    "baseUrlLabel": "Basis-URL",
+    "step": {
+      "register": "Registrieren",
+      "registerVerify": "Registrieren + Identitätsprüfung",
+      "subscribe": "Tarif abonnieren",
+      "createKey": "API-Schlüssel erstellen",
+      "getKey": "Schlüssel und Basis-URL holen",
+      "topUp": "Aufladen",
+      "connect": "Tools verbinden"
+    },
+    "zhipu": {
+      "name": "Zhipu GLM",
+      "tag": "Abo-basierter Coding-Tarif · Konkurrent zu Codex / Claude Code",
+      "subscribeDetail": "Lite / Pro · monatlich, vierteljährlich (20 % Rabatt) oder jährlich",
+      "keyDetail": "Auf der Tarifübersichtsseite",
+      "price": "Lite ¥118/Monat (vierteljährlich ¥94,4/Monat) · Pro ¥538/Monat (vierteljährlich ¥430,4/Monat) | Wochenpunkte: Lite 10.000 / Pro 60.000, außerhalb der Spitzenzeiten zum halben Preis | GLM-5.3 / Flash"
+    },
+    "deepseek": {
+      "name": "DeepSeek",
+      "tag": "API nach Verbrauch · kein Abo-Tarif",
+      "keyDetail": "In der Konsole",
+      "topUpDetail": "Alipay / WeChat / Banküberweisung",
+      "connectDetail": "base_url eintragen",
+      "price": "v4-flash Ausgabe ¥2 pro 1 Mio. Tokens · v4-pro Ausgabe ¥6 pro 1 Mio. Tokens | Spitzen- und Nebenzeitpreise, in ruhigen Zeiten zum halben Preis | Websuche ¥5 pro 1.000 Aufrufe (ab 1. Nov.)"
+    },
+    "mimo": {
+      "name": "Xiaomi MiMo",
+      "tag": "Abo-Tarif · kompatibel mit OpenAI / Anthropic",
+      "subscribeDetail": "Lite / Standard / Pro / Max",
+      "keyDetail": "Eigener Schlüssel (beginnt mit tp-)",
+      "price": "Lite ¥39/Monat · Standard ¥99/Monat · Pro ¥329/Monat · Max ¥659/Monat | Standard: 11 Mrd. Credits/Monat (ca. 1.600 Runden mit v2.6-flash) | 12 % Rabatt beim Erstkauf, 0,8-fache Abrechnung von 0 bis 8 Uhr | mimo-v2.6-pro / v2.6-flash"
+    },
+    "baoyun": {
+      "name": "Baoyun",
+      "tag": "API-Relay nach Verbrauch · ein Schlüssel für 50+ Modelle",
+      "registerDetail": "Gratis-Testguthaben bei der Registrierung",
+      "keyDetail": "Mit einem Klick in der Konsole",
+      "topUpDetail": "Abrechnung nach Verbrauch, Guthaben live einsehbar",
+      "connectDetail": "base_url ändern — funktioniert mit dem OpenAI SDK",
+      "price": "Abrechnung nach Verbrauch, kein Abo | OpenAI / Anthropic / Google und chinesische Modelle, insgesamt 50+, ein Schlüssel für alle | Live-Nutzungsüberwachung | Preise je Modell stehen in der Konsole"
+    }
+  },
   "trialVendor": {
     "openrouter": {
       "title": "OpenRouter kostenloser Router",

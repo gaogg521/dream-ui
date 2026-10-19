@@ -2145,6 +2145,56 @@
   },
   "enterpriseChannel": "Kurumsal kanal",
   "enterpriseChannelTip": "Bu model kanalı şirketiniz tarafından sağlanır. Kimlik bilgileri şirket sunucusunda kalır ve burada değiştirilemez veya silinemez.",
+  "recommendedPlatforms": {
+    "title": "Önerilen Platformlar",
+    "guideLink": "Kurulum rehberi",
+    "guideTitle": "Önerilen platformlar · kurulum rehberi",
+    "guideSubtitle": "Akış: kayıt ol → abone ol veya bakiye yükle → anahtar al → araçlarını bağla. Fiyatlar Ekim 2026 itibarıyla resmi site fiyatlarıdır (CNY) ve değişebilir; güncel bilgi için resmi siteye bakın.",
+    "guideOpenSite": "Web sitesini aç",
+    "openSite": "{{name}} web sitesini aç",
+    "openFailed": "Web sitesi açılamadı. Lütfen daha sonra tekrar deneyin.",
+    "baseUrlLabel": "Temel URL",
+    "step": {
+      "register": "Kayıt ol",
+      "registerVerify": "Kayıt ol + kimlik doğrulama",
+      "subscribe": "Plana abone ol",
+      "createKey": "API anahtarı oluştur",
+      "getKey": "Anahtarı ve temel URL’yi al",
+      "topUp": "Bakiye yükle",
+      "connect": "Araçlarını bağla"
+    },
+    "zhipu": {
+      "name": "Zhipu GLM",
+      "tag": "Abonelik tabanlı kodlama planı · Codex / Claude Code’a rakip",
+      "subscribeDetail": "Lite / Pro · aylık, üç aylık (%20 indirimli) veya yıllık",
+      "keyDetail": "Plana genel bakış sayfasında",
+      "price": "Lite ¥118/ay (üç aylık ¥94,4/ay) · Pro ¥538/ay (üç aylık ¥430,4/ay) | Haftalık puan: Lite 10 bin / Pro 60 bin, yoğun olmayan saatlerde yarı fiyat | GLM-5.3 / Flash"
+    },
+    "deepseek": {
+      "name": "DeepSeek",
+      "tag": "Kullandıkça öde API · üyelik planı yok",
+      "keyDetail": "Konsolda",
+      "topUpDetail": "Alipay / WeChat / banka havalesi",
+      "connectDetail": "base_url’yi girin",
+      "price": "v4-flash çıktı ¥2 / 1 milyon token · v4-pro çıktı ¥6 / 1 milyon token | Yoğun/yoğun olmayan saat fiyatı, boş saatlerde yarı fiyat | Web araması 1.000 çağrı başına ¥5 (1 Kasım’dan itibaren)"
+    },
+    "mimo": {
+      "name": "Xiaomi MiMo",
+      "tag": "Abonelik planı · OpenAI / Anthropic uyumlu",
+      "subscribeDetail": "Lite / Standard / Pro / Max",
+      "keyDetail": "Özel anahtar (tp- ile başlar)",
+      "price": "Lite ¥39/ay · Standard ¥99/ay · Pro ¥329/ay · Max ¥659/ay | Standard: ayda 11 milyar kredi (v2.6-flash ile yaklaşık 1.600 tur) | İlk alımda %12 indirim, 00:00–08:00 arası 0,8 kat ücretlendirme | mimo-v2.6-pro / v2.6-flash"
+    },
+    "baoyun": {
+      "name": "Baoyun",
+      "tag": "Kullandıkça öde API aktarıcısı · tek anahtarla 50+ model",
+      "registerDetail": "Kayıtta ücretsiz deneme kredisi",
+      "keyDetail": "Konsolda tek tıkla",
+      "topUpDetail": "Kullandıkça öde, bakiye anlık görünür",
+      "connectDetail": "base_url’yi değiştirin — OpenAI SDK ile çalışır",
+      "price": "Kullandıkça öde, abonelik yok | OpenAI / Anthropic / Google ve Çin’deki yerel modeller dahil 50+ model, tek anahtar | Anlık kullanım izleme | Model başına fiyatlar konsolda listelenir"
+    }
+  },
   "trialVendor": {
     "openrouter": {
       "title": "OpenRouter ücretsiz yönlendirici",

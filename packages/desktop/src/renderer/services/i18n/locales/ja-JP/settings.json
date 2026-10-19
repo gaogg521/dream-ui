@@ -2147,6 +2147,56 @@
   },
   "enterpriseChannel": "組織配布",
   "enterpriseChannelTip": "このモデルチャネルは会社が一括設定しています。認証情報は会社のサーバーに保管され、ここでは変更・削除できません。",
+  "recommendedPlatforms": {
+    "title": "おすすめプラットフォーム",
+    "guideLink": "接続ガイド",
+    "guideTitle": "おすすめプラットフォーム · 接続ガイド",
+    "guideSubtitle": "流れ：登録 → 契約／チャージ → キー取得 → ツールに接続。価格は 2026 年 10 月時点の公式サイト価格（人民元）で、変更される場合があります。最新情報は公式サイトをご確認ください。",
+    "guideOpenSite": "公式サイトを開く",
+    "openSite": "{{name}} の公式サイトを開く",
+    "openFailed": "公式サイトを開けませんでした。後でもう一度お試しください。",
+    "baseUrlLabel": "ベース URL",
+    "step": {
+      "register": "登録",
+      "registerVerify": "登録 + 本人確認",
+      "subscribe": "プランを契約",
+      "createKey": "API キーを作成",
+      "getKey": "キーとベース URL を取得",
+      "topUp": "チャージ",
+      "connect": "ツールに接続"
+    },
+    "zhipu": {
+      "name": "Zhipu GLM",
+      "tag": "サブスク型コーディングプラン · Codex / Claude Code に対抗",
+      "subscribeDetail": "Lite / Pro · 月額、3 か月（2 割引）、年額",
+      "keyDetail": "プラン概要ページで",
+      "price": "Lite ¥118/月（3 か月 ¥94.4/月）· Pro ¥538/月（3 か月 ¥430.4/月）｜週間ポイント Lite 1 万 / Pro 6 万、オフピークは半額換算｜GLM-5.3 / Flash"
+    },
+    "deepseek": {
+      "name": "DeepSeek",
+      "tag": "従量課金 API · 会員プランなし",
+      "keyDetail": "コンソールで",
+      "topUpDetail": "Alipay / WeChat / 銀行振込",
+      "connectDetail": "base_url を設定",
+      "price": "v4-flash 出力 ¥2/100 万トークン · v4-pro 出力 ¥6/100 万トークン｜ピーク／オフピーク料金、空き時間は半額｜Web 検索 ¥5/1,000 回（11/1 から）"
+    },
+    "mimo": {
+      "name": "Xiaomi MiMo",
+      "tag": "サブスク型プラン · OpenAI / Anthropic 互換",
+      "subscribeDetail": "Lite / Standard / Pro / Max",
+      "keyDetail": "専用キー（tp- で始まる）",
+      "price": "Lite ¥39/月 · Standard ¥99/月 · Pro ¥329/月 · Max ¥659/月｜Standard は月 110 億クレジット（v2.6-flash で約 1,600 ラウンド）｜初回 12% 割引、0〜8 時は 0.8 倍課金｜mimo-v2.6-pro / v2.6-flash"
+    },
+    "baoyun": {
+      "name": "Baoyun",
+      "tag": "従量課金 API 中継 · 1 つのキーで 50 以上のモデル",
+      "registerDetail": "登録で無料クレジット進呈",
+      "keyDetail": "コンソールでワンクリック発行",
+      "topUpDetail": "従量課金、残高はリアルタイム表示",
+      "connectDetail": "base_url を変更するだけ — OpenAI SDK で利用可能",
+      "price": "従量課金、契約不要｜OpenAI / Anthropic / Google と中国国内モデルなど 50 以上に 1 つのキーで対応｜利用量をリアルタイム監視｜モデルごとの単価はコンソールで確認"
+    }
+  },
   "trialVendor": {
     "openrouter": {
       "title": "OpenRouter 無料ルーター",

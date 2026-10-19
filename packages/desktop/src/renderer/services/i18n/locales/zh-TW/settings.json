@@ -2147,6 +2147,56 @@
   },
   "enterpriseChannel": "企業下發",
   "enterpriseChannelTip": "這條模型渠道由公司統一設定，憑證保存在公司伺服器上，本機無法修改或刪除。",
+  "recommendedPlatforms": {
+    "title": "推薦平台",
+    "guideLink": "接入指南",
+    "guideTitle": "推薦平台 · 接入指南",
+    "guideSubtitle": "流程：註冊 → 開通/儲值 → 取得 Key → 接入工具。價格為 2026 年 10 月官網價（人民幣），可能調整，請以官網為準。",
+    "guideOpenSite": "開啟官網",
+    "openSite": "開啟 {{name}} 官網",
+    "openFailed": "開啟官網失敗，請稍後重試",
+    "baseUrlLabel": "介面位址",
+    "step": {
+      "register": "註冊",
+      "registerVerify": "註冊 + 實名",
+      "subscribe": "訂閱方案",
+      "createKey": "建立 API Key",
+      "getKey": "取得 Key 與介面位址",
+      "topUp": "儲值",
+      "connect": "接入工具"
+    },
+    "zhipu": {
+      "name": "智譜 GLM",
+      "tag": "訂閱制程式設計方案 · 對標 Codex / Claude Code",
+      "subscribeDetail": "Lite / Pro · 包月、包季 8 折或包年",
+      "keyDetail": "在方案總覽頁",
+      "price": "Lite ¥118/月（包季 ¥94.4/月）· Pro ¥538/月（包季 ¥430.4/月）｜每週積分 Lite 1 萬 / Pro 6 萬，非尖峰時段積分半價｜GLM-5.3 / Flash"
+    },
+    "deepseek": {
+      "name": "DeepSeek",
+      "tag": "純 API 按量付費 · 無會員方案",
+      "keyDetail": "在控制台",
+      "topUpDetail": "支付寶 / 微信 / 對公轉帳",
+      "connectDetail": "填寫 base_url",
+      "price": "v4-flash 輸出 ¥2/百萬 token · v4-pro 輸出 ¥6/百萬 token｜尖離峰定價、閒時半價｜網頁搜尋 ¥5/千次（11-01 起）"
+    },
+    "mimo": {
+      "name": "小米 MiMo",
+      "tag": "訂閱制程式設計方案 · 相容 OpenAI / Anthropic",
+      "subscribeDetail": "Lite / Standard / Pro / Max",
+      "keyDetail": "專屬 Key（tp- 開頭）",
+      "price": "Lite ¥39/月 · Standard ¥99/月 · Pro ¥329/月 · Max ¥659/月｜Standard 每月 110 億 Credits（v2.6-flash 約 1600 輪任務）｜首購 88 折，0–8 點夜間 0.8 倍計費｜mimo-v2.6-pro / v2.6-flash"
+    },
+    "baoyun": {
+      "name": "寶雲",
+      "tag": "按量 API 中轉 · 一個 Key 聚合 50+ 模型",
+      "registerDetail": "註冊即送試用額度",
+      "keyDetail": "在控制台一鍵產生",
+      "topUpDetail": "按量計費，餘額即時可查",
+      "connectDetail": "改 base_url，OpenAI SDK 即可使用",
+      "price": "按量付費，無訂閱門檻｜涵蓋 OpenAI / Anthropic / Google 及國產等 50+ 模型，一個 Key 通用｜即時用量監控｜各模型單價以控制台為準"
+    }
+  },
   "trialVendor": {
     "openrouter": {
       "title": "OpenRouter 免費路由",

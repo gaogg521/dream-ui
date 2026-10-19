@@ -2176,6 +2176,56 @@
   "claudeBridge.loadFailed": "加载 Claude 桥接设置失败",
   "claudeBridge.saveSuccess": "Claude 桥接设置已保存",
   "claudeBridge.saveFailed": "保存 Claude 桥接设置失败",
+  "recommendedPlatforms": {
+    "title": "推荐平台",
+    "guideLink": "接入指南",
+    "guideTitle": "推荐平台 · 接入指南",
+    "guideSubtitle": "流程：注册 → 开通/充值 → 获取 Key → 接入工具。价格为 2026 年 10 月官网价（人民币），可能调整，请以官网为准。",
+    "guideOpenSite": "打开官网",
+    "openSite": "打开 {{name}} 官网",
+    "openFailed": "打开官网失败，请稍后重试",
+    "baseUrlLabel": "接口地址",
+    "step": {
+      "register": "注册",
+      "registerVerify": "注册 + 实名",
+      "subscribe": "订阅套餐",
+      "createKey": "创建 API Key",
+      "getKey": "获取 Key 与接口地址",
+      "topUp": "充值",
+      "connect": "接入工具"
+    },
+    "zhipu": {
+      "name": "智谱 GLM",
+      "tag": "订阅制编程套餐 · 对标 Codex / Claude Code",
+      "subscribeDetail": "Lite / Pro · 包月、包季 8 折或包年",
+      "keyDetail": "在套餐概览页",
+      "price": "Lite ¥118/月（包季 ¥94.4/月）· Pro ¥538/月（包季 ¥430.4/月）｜每周积分 Lite 1 万 / Pro 6 万，非高峰时段积分半价｜GLM-5.3 / Flash"
+    },
+    "deepseek": {
+      "name": "DeepSeek",
+      "tag": "纯 API 按量付费 · 无会员套餐",
+      "keyDetail": "在控制台",
+      "topUpDetail": "支付宝 / 微信 / 对公转账",
+      "connectDetail": "填写 base_url",
+      "price": "v4-flash 输出 ¥2/百万 token · v4-pro 输出 ¥6/百万 token｜峰谷定价、闲时半价｜网页搜索 ¥5/千次（11-01 起）"
+    },
+    "mimo": {
+      "name": "小米 MiMo",
+      "tag": "订阅制编程套餐 · 兼容 OpenAI / Anthropic",
+      "subscribeDetail": "Lite / Standard / Pro / Max",
+      "keyDetail": "专属 Key（tp- 开头）",
+      "price": "Lite ¥39/月 · Standard ¥99/月 · Pro ¥329/月 · Max ¥659/月｜Standard 每月 110 亿 Credits（v2.6-flash 约 1600 轮任务）｜首购 88 折，0–8 点夜间 0.8 倍计费｜mimo-v2.6-pro / v2.6-flash"
+    },
+    "baoyun": {
+      "name": "宝云",
+      "tag": "按量 API 中转 · 一个 Key 聚合 50+ 模型",
+      "registerDetail": "注册即送试用额度",
+      "keyDetail": "在控制台一键生成",
+      "topUpDetail": "按量计费，余额实时可查",
+      "connectDetail": "改 base_url，OpenAI SDK 即可使用",
+      "price": "按量付费，无订阅门槛｜覆盖 OpenAI / Anthropic / Google 及国产等 50+ 模型，一个 Key 通用｜实时用量监控｜具体模型单价以控制台为准"
+    }
+  },
   "trialVendor": {
     "openrouter": {
       "title": "OpenRouter 免费路由",

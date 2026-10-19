@@ -2175,6 +2175,56 @@
   "claudeBridge.loadFailed": "Failed to load Claude bridge settings",
   "claudeBridge.saveSuccess": "Claude bridge settings saved",
   "claudeBridge.saveFailed": "Failed to save Claude bridge settings",
+  "recommendedPlatforms": {
+    "title": "Recommended Platforms",
+    "guideLink": "Setup guide",
+    "guideTitle": "Recommended platforms · setup guide",
+    "guideSubtitle": "Flow: sign up → subscribe or top up → get a key → connect your tools. Prices are official-site prices as of October 2026 (CNY) and may change; the official site is authoritative.",
+    "guideOpenSite": "Open website",
+    "openSite": "Open the {{name}} website",
+    "openFailed": "Could not open the website. Please try again later.",
+    "baseUrlLabel": "Base URL",
+    "step": {
+      "register": "Sign up",
+      "registerVerify": "Sign up + real-name verification",
+      "subscribe": "Subscribe to a plan",
+      "createKey": "Create an API key",
+      "getKey": "Get key & base URL",
+      "topUp": "Top up",
+      "connect": "Connect your tools"
+    },
+    "zhipu": {
+      "name": "Zhipu GLM",
+      "tag": "Subscription coding plan · rivals Codex / Claude Code",
+      "subscribeDetail": "Lite / Pro · monthly, quarterly (20% off) or yearly",
+      "keyDetail": "On the plan overview page",
+      "price": "Lite ¥118/mo (¥94.4/mo quarterly) · Pro ¥538/mo (¥430.4/mo quarterly) | Weekly points: Lite 10k / Pro 60k, half-price off-peak | GLM-5.3 / Flash"
+    },
+    "deepseek": {
+      "name": "DeepSeek",
+      "tag": "Pay-as-you-go API · no subscription plan",
+      "keyDetail": "In the console",
+      "topUpDetail": "Alipay / WeChat / bank transfer",
+      "connectDetail": "Set the base_url",
+      "price": "v4-flash output ¥2 per 1M tokens · v4-pro output ¥6 per 1M tokens | Peak/off-peak pricing, half-price when idle | Web search ¥5 per 1,000 calls (from Nov 1)"
+    },
+    "mimo": {
+      "name": "Xiaomi MiMo",
+      "tag": "Subscription plan · OpenAI / Anthropic compatible",
+      "subscribeDetail": "Lite / Standard / Pro / Max",
+      "keyDetail": "Dedicated key (starts with tp-)",
+      "price": "Lite ¥39/mo · Standard ¥99/mo · Pro ¥329/mo · Max ¥659/mo | Standard: 11B credits/month (about 1,600 rounds with v2.6-flash) | 12% off first purchase, 0.8x billing 00:00–08:00 | mimo-v2.6-pro / v2.6-flash"
+    },
+    "baoyun": {
+      "name": "Baoyun",
+      "tag": "Metered API relay · one key for 50+ models",
+      "registerDetail": "Free trial credit on sign-up",
+      "keyDetail": "One click in the console",
+      "topUpDetail": "Pay as you go, live balance",
+      "connectDetail": "Change the base_url — works with the OpenAI SDK",
+      "price": "Pay as you go, no subscription | OpenAI / Anthropic / Google and domestic models, 50+ in total, one key for all | Live usage monitoring | Per-model prices are listed in the console"
+    }
+  },
   "trialVendor": {
     "openrouter": {
       "title": "OpenRouter free router",

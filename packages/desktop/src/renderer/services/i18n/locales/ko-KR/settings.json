@@ -2147,6 +2147,56 @@
   },
   "enterpriseChannel": "회사 채널",
   "enterpriseChannelTip": "이 모델 채널은 회사에서 제공합니다. 자격 증명은 회사 서버에 보관되며 여기서는 변경하거나 삭제할 수 없습니다.",
+  "recommendedPlatforms": {
+    "title": "추천 플랫폼",
+    "guideLink": "연동 가이드",
+    "guideTitle": "추천 플랫폼 · 연동 가이드",
+    "guideSubtitle": "순서: 가입 → 구독/충전 → 키 발급 → 도구 연결. 가격은 2026년 10월 공식 사이트 기준(위안화)이며 변경될 수 있습니다. 최신 정보는 공식 사이트를 확인하세요.",
+    "guideOpenSite": "공식 사이트 열기",
+    "openSite": "{{name}} 공식 사이트 열기",
+    "openFailed": "공식 사이트를 열지 못했습니다. 잠시 후 다시 시도하세요.",
+    "baseUrlLabel": "기본 URL",
+    "step": {
+      "register": "가입",
+      "registerVerify": "가입 + 실명 인증",
+      "subscribe": "요금제 구독",
+      "createKey": "API 키 생성",
+      "getKey": "키와 기본 URL 받기",
+      "topUp": "충전",
+      "connect": "도구 연결"
+    },
+    "zhipu": {
+      "name": "Zhipu GLM",
+      "tag": "구독형 코딩 요금제 · Codex / Claude Code 대항",
+      "subscribeDetail": "Lite / Pro · 월간, 분기(20% 할인), 연간",
+      "keyDetail": "요금제 개요 페이지에서",
+      "price": "Lite ¥118/월(분기 ¥94.4/월) · Pro ¥538/월(분기 ¥430.4/월) | 주간 포인트 Lite 1만 / Pro 6만, 비피크 시간대 반값 차감 | GLM-5.3 / Flash"
+    },
+    "deepseek": {
+      "name": "DeepSeek",
+      "tag": "종량제 API · 회원 요금제 없음",
+      "keyDetail": "콘솔에서",
+      "topUpDetail": "Alipay / WeChat / 계좌 이체",
+      "connectDetail": "base_url 입력",
+      "price": "v4-flash 출력 ¥2/100만 토큰 · v4-pro 출력 ¥6/100만 토큰 | 피크/비피크 요금, 한가한 시간대 반값 | 웹 검색 ¥5/1,000회(11/1부터)"
+    },
+    "mimo": {
+      "name": "Xiaomi MiMo",
+      "tag": "구독형 요금제 · OpenAI / Anthropic 호환",
+      "subscribeDetail": "Lite / Standard / Pro / Max",
+      "keyDetail": "전용 키(tp-로 시작)",
+      "price": "Lite ¥39/월 · Standard ¥99/월 · Pro ¥329/월 · Max ¥659/월 | Standard 월 110억 크레딧(v2.6-flash 기준 약 1,600회) | 첫 구매 12% 할인, 0~8시 야간 0.8배 과금 | mimo-v2.6-pro / v2.6-flash"
+    },
+    "baoyun": {
+      "name": "Baoyun",
+      "tag": "종량제 API 중계 · 키 하나로 50개 이상 모델",
+      "registerDetail": "가입 시 체험 크레딧 제공",
+      "keyDetail": "콘솔에서 원클릭 발급",
+      "topUpDetail": "종량제, 잔액 실시간 조회",
+      "connectDetail": "base_url만 바꾸면 OpenAI SDK로 사용 가능",
+      "price": "종량제, 구독 불필요 | OpenAI / Anthropic / Google 및 중국 국내 모델 등 50개 이상을 키 하나로 | 실시간 사용량 모니터링 | 모델별 단가는 콘솔에서 확인"
+    }
+  },
   "trialVendor": {
     "openrouter": {
       "title": "OpenRouter 무료 라우터",
