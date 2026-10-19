@@ -60,6 +60,7 @@ vi.mock('@icon-park/react', () => {
   const Icon = () => <span aria-hidden='true' />;
   return {
     ArrowUp: Icon,
+    BookOpen: Icon,
     Brain: Icon,
     FolderOpen: Icon,
     FolderUpload: Icon,

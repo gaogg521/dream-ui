@@ -514,3 +514,17 @@ PDF 渲染内核本身没问题（截图中文本/分页正常），差距在壳
 - 企业镜像必须从 **`1b9b028` 或之后的 main** 构建——**`v0.1.89` tag 不含企业 Office 接线路由，直接按 tag 打包会 404**（建议让 release-please 出 0.1.90 或直接按 main 构建）。
 - 客户端（dream-ui `d581e896`）与 admin-web（dream-en `5c19220`，构建产物需进部署包）均已就绪。
 - 各仓工作区仍有其他任务 WIP（ui 6+1、core 34+4、en 65+11），打包务必从干净 checkout 构建。
+
+### 10.16 资料库与会话打通 + 列表体验对齐（10-19，用户对照 WorkBuddy 反馈驱动）
+
+用户指出四点：会话「添加文件」连不到资料库；导入文件没有按类型区分的图标；右上角「新建」应改成「快速添加」；资料不能「添加到会话」且行高偏大。
+
+- **资料库 → 会话**（`pages/knowledge/attach/`）：`libraryAttachments.ts` 把资料变成可上传的 `File`——有原件（`rag-source:`）下载原件，Markdown/CSV 导出正文并补 `.md`/`.csv` 扩展名（agent 靠扩展名选读取方式），再走原有 `FileService.processDroppedFiles`，所以落点、进度、预览卡片与本地文件完全一致。一次最多 20 份。
+- **入口一**：会话发送框「+」→「添加文件 ▸」子菜单（本地文件 / 资料库），资料库弹出带搜索的多选窗口（`KnowledgeAttachPicker`）。媒体参考图模式不显示资料库。新建会话页（`GuidActionRow`）同样多了「资料库」项，两处都是点开才挂载，不影响首屏。
+- **入口二**：资料库列表行「…」菜单第一项「添加到会话」→ `AddToConversationModal`：新会话（经 `/guid` 的 `state.attachFiles`，`GuidPage` 现在不要求必须带 prompt 才消费附件）或最近 8 个会话（`requestConversationSendBoxFiles` 排队，目标会话 SendBox 挂载后 `useConversationSendBoxFiles` 消费，仿照 prefill 的写法，不论该会话类型）。
+- **类型图标**：`shared/LibraryFileIcon.tsx`，`libraryFileKind` 按 MIME/扩展名分 12 类（md 青、csv/xlsx 绿、pdf 红、docx 蓝、pptx 橙、html 紫…）；应用内新建的 Markdown 没有 MIME 也没扩展名，「无信号且无原件」按 Markdown 处理。列表、侧栏目录、快速添加菜单、选择窗口共用。**坑**：本应用把 Arco 的 `--arcoblue-6`/`--primary-6` 重映射成了石板灰，Word 用 `--blue-6` 才是真蓝。
+- **快速添加**：右上角按钮改名「快速添加」，菜单为新建文档 (.md) / 新建表格 (.csv) / 新建文件夹 / —— / 上传和导入 / 添加链接，带类型图标。
+- **行高**：表格行 ≈60px → ≈43px（`td` 高 42、内边距 5px 8px），侧栏目录行 37 → 32px；行「…」菜单改为紧凑横排。
+- **真机验证**（DEV + CDP，个人库 27 份真实资料）：列表图标按类型正确（word/pdf/sheets/slides/html/image/markdown）；「添加到会话→新建会话」到 `/guid`，xlsx 原件作为附件出现（XLSX 17.7 KB）；「→ 英语学习」跳进该会话，pptx 附件进入发送框；会话「+→添加文件→资料库」多选 docx/pdf，附件卡片显示 DOCX 85 KB、PDF 1.2 MB；新建会话页「+→资料库」同样可用。
+- **测试**：`tests/unit/renderer/LibraryAttach.dom.test.tsx`（分类、文件转换、排队通道、添加到会话窗口，18 项）。jsdom 没有 `DataTransfer`，所以 `FileList` 用数组外观实现。
+- **没做**：文档阅读页内的「添加到会话」按钮、侧栏目录行的「…」菜单、企业控制台（dream-en admin-web）里同款入口——企业主路径是桌面端，控制台的知识库页另行跟进。

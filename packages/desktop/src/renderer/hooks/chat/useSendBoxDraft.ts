@@ -115,6 +115,58 @@ export const useConversationSendBoxPrefill = (
   }, [conversation_id]);
 };
 
+type ConversationSendBoxFilesListener = (paths: string[]) => void;
+
+let pendingConversationFiles: { conversation_id: string; paths: string[] } | undefined;
+const conversationFilesListeners = new Map<string, ConversationSendBoxFilesListener>();
+
+/**
+ * Hands already-uploaded files (e.g. library documents) to the SendBox of the
+ * requested conversation. Like the prefill above, it waits for that SendBox to
+ * mount when the user is still navigating to it.
+ */
+export const requestConversationSendBoxFiles = (conversation_id: string, paths: string[]): void => {
+  if (!conversation_id || paths.length === 0) return;
+
+  const listener = conversationFilesListeners.get(conversation_id);
+  if (listener) {
+    listener(paths);
+    return;
+  }
+  const queued = pendingConversationFiles?.conversation_id === conversation_id ? pendingConversationFiles.paths : [];
+  pendingConversationFiles = { conversation_id, paths: [...queued, ...paths] };
+};
+
+/**
+ * Registers the mounted SendBox as the consumer of files queued for its conversation.
+ */
+export const useConversationSendBoxFiles = (
+  conversation_id: string | undefined,
+  onFiles: ConversationSendBoxFilesListener
+): void => {
+  const onFilesRef = useRef(onFiles);
+  onFilesRef.current = onFiles;
+
+  useEffect(() => {
+    if (!conversation_id) return;
+
+    const listener: ConversationSendBoxFilesListener = (paths) => onFilesRef.current(paths);
+    conversationFilesListeners.set(conversation_id, listener);
+
+    if (pendingConversationFiles?.conversation_id === conversation_id) {
+      const { paths } = pendingConversationFiles;
+      pendingConversationFiles = undefined;
+      listener(paths);
+    }
+
+    return () => {
+      if (conversationFilesListeners.get(conversation_id) === listener) {
+        conversationFilesListeners.delete(conversation_id);
+      }
+    };
+  }, [conversation_id]);
+};
+
 const setDraft = <K extends DraftConversationType>(
   type: K,
   conversation_id: string,

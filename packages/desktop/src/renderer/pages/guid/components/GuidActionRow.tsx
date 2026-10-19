@@ -18,6 +18,9 @@ import type { AgentModeOption } from '@/renderer/utils/model/agentTypes';
 import type { AgentRuntimeDerivedOption } from '@/renderer/utils/model/agentRuntimeCatalog';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { getCleanFileNames, FileService } from '@/renderer/services/FileService';
+import type { RagDocumentEntry } from '@/common/types/devops/devopsTypes';
+import KnowledgeAttachPicker from '../../knowledge/attach/KnowledgeAttachPicker';
+import { uploadLibraryDocumentPaths } from '../../knowledge/attach/libraryAttachments';
 import { resolveAssistantAvatar } from '@/renderer/utils/model/assistantAvatar';
 import { resolveAssistantName } from '@/renderer/utils/model/assistantDisplay';
 import { iconColors } from '@/renderer/styles/colors';
@@ -27,6 +30,7 @@ import { getAvailableModels } from '../utils/modelUtils';
 import { Button, Checkbox, Dropdown, Menu, Message, Tooltip } from '@arco-design/web-react';
 import {
   ArrowUp,
+  BookOpen,
   Brain,
   Close,
   FolderOpen,
@@ -294,6 +298,20 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
   // Browser file picker ref (WebUI only)
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
+
+  const handleLibraryConfirm = useCallback(
+    async (documents: RagDocumentEntry[]) => {
+      try {
+        const paths = await uploadLibraryDocumentPaths(documents);
+        if (paths.length > 0) onFilesUploaded(paths);
+        setLibraryOpen(false);
+      } catch {
+        Message.error(t('common.fileAttach.failed'));
+      }
+    },
+    [onFilesUploaded, t]
+  );
 
   const handleLocalFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -498,6 +516,15 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
         onClick: openHostFilePicker,
       });
     }
+    if (!referenceOnly) {
+      entries.push({
+        key: 'attach-library',
+        icon: <BookOpen theme='outline' size='16' />,
+        label: t('common.fileAttach.fromLibrary'),
+        variant: 'muted',
+        onClick: () => setLibraryOpen(true),
+      });
+    }
 
     // Skills (multi-select).
     if (allSkills.length > 0) {
@@ -578,6 +605,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
     activeMcpCount,
     isWebUI,
     openHostFilePicker,
+    referenceOnly,
     t,
   ]);
 
@@ -598,6 +626,8 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
             });
         } else if (key === 'device') {
           fileInputRef.current?.click();
+        } else if (key === 'library') {
+          setLibraryOpen(true);
         }
       }}
     >
@@ -621,6 +651,14 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
           <div className='flex items-center gap-8px'>
             <UploadOne theme='outline' size='16' fill={iconColors.secondary} style={{ lineHeight: 0 }} />
             <span>{t('common.fileAttach.addFiles')}</span>
+          </div>
+        </Menu.Item>
+      )}
+      {!referenceOnly && (
+        <Menu.Item key='library'>
+          <div className='flex items-center gap-8px'>
+            <BookOpen theme='outline' size='16' fill={iconColors.secondary} style={{ lineHeight: 0 }} />
+            <span>{t('common.fileAttach.fromLibrary')}</span>
           </div>
         </Menu.Item>
       )}
@@ -889,6 +927,9 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
                 )}
               </span>
             </Dropdown>
+          )}
+          {libraryOpen && !referenceOnly && (
+            <KnowledgeAttachPicker visible onCancel={() => setLibraryOpen(false)} onConfirm={handleLibraryConfirm} />
           )}
           {isWebUI && (
             <input

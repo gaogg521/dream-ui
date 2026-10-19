@@ -221,6 +221,8 @@
   "selectedCount": "Выбрано {{count}}",
   "selectedSkills": "Выбранные навыки",
   "fileAttach.addReferenceImage": "Добавить референс",
+  "fileAttach.localFile": "Локальные файлы",
+  "fileAttach.fromLibrary": "Библиотека",
   "sider": {
     "mcpServices": "Сервисы MCP",
     "mySkills": "Мои навыки",
@@ -812,6 +814,16 @@
     "serverErrUnreachable": "Не удаётся связаться с {{url}}. Проверьте, что адрес совпадает с выданным администратором, сервер запущен и оба компьютера могут связаться друг с другом. Корпоративной редакции обычно порт не нужен."
   },
   "knowledgeLibrary": {
+    "quickAdd": "Быстро добавить",
+    "addToConversation": "Добавить в диалог",
+    "newConversation": "Новый диалог",
+    "recentConversations": "Недавние диалоги",
+    "addedToConversation": "Материалов добавлено в диалог: {{count}}",
+    "attachPickerTitle": "Добавить из библиотеки",
+    "attachPickerSearch": "Поиск по названию",
+    "attachPickerEmpty": "Нет материалов для добавления",
+    "attachConfirm": "Добавить ({{count}})",
+    "attachLimit": "За раз можно добавить не более {{count}} материалов",
     "quickstartGuide": "Начните за минуту",
     "quickstartGuideDescription": "Создавайте документы, упорядочивайте и находите материалы.",
     "usageGuide": "Руководство по библиотеке",

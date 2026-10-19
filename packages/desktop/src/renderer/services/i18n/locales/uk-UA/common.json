@@ -222,6 +222,8 @@
   "selectedCount": "Вибрано {{count}}",
   "selectedSkills": "Вибрані навички",
   "fileAttach.addReferenceImage": "Додати референс",
+  "fileAttach.localFile": "Локальні файли",
+  "fileAttach.fromLibrary": "Бібліотека",
   "sider": {
     "mcpServices": "Сервіси MCP",
     "mySkills": "Мої навички",
@@ -813,6 +815,16 @@
     "serverErrUnreachable": "Не вдається зв’язатися з {{url}}. Перевірте, що адреса збігається з наданою адміністратором, сервер запущено й обидва комп’ютери можуть зв’язатися один з одним. Корпоративній редакції зазвичай порт не потрібен."
   },
   "knowledgeLibrary": {
+    "quickAdd": "Швидко додати",
+    "addToConversation": "Додати до розмови",
+    "newConversation": "Нова розмова",
+    "recentConversations": "Нещодавні розмови",
+    "addedToConversation": "Матеріалів додано до розмови: {{count}}",
+    "attachPickerTitle": "Додати з бібліотеки",
+    "attachPickerSearch": "Пошук за назвою",
+    "attachPickerEmpty": "Немає матеріалів для додавання",
+    "attachConfirm": "Додати ({{count}})",
+    "attachLimit": "За раз можна додати не більше {{count}} матеріалів",
     "quickstartGuide": "Почніть за хвилину",
     "quickstartGuideDescription": "Створюйте документи, упорядковуйте та знаходьте матеріали.",
     "usageGuide": "Посібник із бібліотеки",

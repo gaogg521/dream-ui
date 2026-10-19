@@ -222,6 +222,8 @@
   "yes": "是",
   "no": "否",
   "fileAttach.addReferenceImage": "添加参考图",
+  "fileAttach.localFile": "本地文件",
+  "fileAttach.fromLibrary": "资料库",
   "sider": {
     "memory": "记忆管理",
     "mcpServices": "MCP 服务",
@@ -816,6 +818,16 @@
     }
   },
   "knowledgeLibrary": {
+    "quickAdd": "快速添加",
+    "addToConversation": "添加到会话",
+    "newConversation": "新建会话",
+    "recentConversations": "最近会话",
+    "addedToConversation": "已添加 {{count}} 份资料到会话",
+    "attachPickerTitle": "从资料库添加",
+    "attachPickerSearch": "搜索资料标题",
+    "attachPickerEmpty": "没有可添加的资料",
+    "attachConfirm": "添加（{{count}}）",
+    "attachLimit": "一次最多添加 {{count}} 份资料",
     "quickstartGuide": "一分钟上手资料库",
     "quickstartGuideDescription": "新建图文文档、整理目录、搜索并复用资料。",
     "usageGuide": "资料库使用指南",

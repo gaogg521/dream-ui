@@ -12,7 +12,11 @@ import { useBtwCommand } from '@/renderer/components/chat/BtwOverlay/useBtwComma
 import { getFuzzyMatchIndices, useSlashCommandController } from '@/renderer/hooks/chat/useSlashCommandController';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
-import { appendPromptToDraft, useConversationSendBoxPrefill } from '@/renderer/hooks/chat/useSendBoxDraft';
+import {
+  appendPromptToDraft,
+  useConversationSendBoxFiles,
+  useConversationSendBoxPrefill,
+} from '@/renderer/hooks/chat/useSendBoxDraft';
 import { usePreviewContext } from '@/renderer/pages/conversation/Preview';
 import {
   buildAtFileInsertion,
@@ -728,6 +732,22 @@ const SendBox: React.FC<{
     [latestInputRef, setInputRef]
   );
   useConversationSendBoxPrefill(conversationContext?.conversation_id, handleConversationPrefill);
+  // Files queued for this conversation from elsewhere (library "add to conversation").
+  const handleQueuedFiles = useCallback(
+    (paths: string[]) => {
+      onFilesAdded?.(
+        paths.map((path) => ({
+          name: getSelectedItemDisplayLabel(path),
+          path,
+          size: 0,
+          type: '',
+          lastModified: Date.now(),
+        }))
+      );
+    },
+    [onFilesAdded]
+  );
+  useConversationSendBoxFiles(conversationContext?.conversation_id, handleQueuedFiles);
 
   useEffect(() => {
     if (!prefillFocusRequest || input !== prefillFocusRequest.expectedValue) {

@@ -5,11 +5,14 @@
 import type { IConversationMcpStatus, IConversationMcpStatusKind } from '@/common/config/storage';
 import { ipcBridge } from '@/common';
 import { Button, Message, Tooltip, Trigger } from '@arco-design/web-react';
-import { FolderOpen, Lightning, Paperclip, Plus, Right, Shield } from '@icon-park/react';
+import { BookOpen, FolderOpen, Lightning, Paperclip, Plus, Right, Shield, UploadOne } from '@icon-park/react';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
 import { iconColors } from '@/renderer/styles/colors';
 import { isElectronDesktop, resolveExtensionAssetUrl } from '@/renderer/utils/platform';
 import { FileService } from '@/renderer/services/FileService';
+import KnowledgeAttachPicker from '@/renderer/pages/knowledge/attach/KnowledgeAttachPicker';
+import { uploadLibraryDocuments } from '@/renderer/pages/knowledge/attach/libraryAttachments';
+import type { RagDocumentEntry } from '@/common/types/devops/devopsTypes';
 import type { FileMetadata } from '@/renderer/services/FileService';
 import { emitter } from '@/renderer/utils/emitter';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
@@ -92,6 +95,8 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
   const [open, setOpen] = useState(false);
   const [skillsOpen, setSkillsOpen] = useState(false);
   const [mcpOpen, setMcpOpen] = useState(false);
+  const [filesOpen, setFilesOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const skillNames = loadedSkills ?? conversationContext?.loadedSkills ?? [];
   const mcpStatuses = buildLoadedMcpStatuses(
@@ -143,12 +148,25 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
     [conversationContext?.conversation_id, onLocalFilesAdded, t]
   );
 
+  const handleLibraryConfirm = useCallback(
+    async (documents: RagDocumentEntry[]) => {
+      try {
+        const attached = await uploadLibraryDocuments(documents, conversationContext?.conversation_id);
+        if (attached.length > 0) onLocalFilesAdded?.(attached);
+        setLibraryOpen(false);
+      } catch {
+        Message.error(t('common.fileAttach.failed'));
+      }
+    },
+    [conversationContext?.conversation_id, onLocalFilesAdded, t]
+  );
+
   const isDesktop = isElectronDesktop();
   const hasSkills = skillNames.length > 0 && !referenceOnly;
   const hasMcpServers = mcpStatuses.length > 0 && !referenceOnly;
   const plusIcon = <Plus theme='outline' size='14' strokeWidth={2} fill={iconColors.primary} />;
 
-  if (isDesktop && !hasSkills && !hasMcpServers) {
+  if (isDesktop && referenceOnly && !hasSkills && !hasMcpServers) {
     return (
       <Button
         type='secondary'
@@ -291,6 +309,42 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
     </div>
   );
 
+  const renderFilesPanel = () => (
+    <div style={{ ...cardStyle, minWidth: 180 }} onClick={(e) => e.stopPropagation()}>
+      <div className='px-6px'>
+        {!isDesktop && (
+          <MenuItem
+            icon={<FolderOpen theme='outline' size={15} strokeWidth={2.5} />}
+            label={t('common.fileAttach.myDevice', { defaultValue: 'Upload from device' })}
+            onClick={() => {
+              fileInputRef.current?.click();
+              setFilesOpen(false);
+              setOpen(false);
+            }}
+          />
+        )}
+        <MenuItem
+          icon={<UploadOne theme='outline' size={15} strokeWidth={2.5} />}
+          label={t('common.fileAttach.localFile')}
+          onClick={() => {
+            openFileSelector(false);
+            setFilesOpen(false);
+            setOpen(false);
+          }}
+        />
+        <MenuItem
+          icon={<BookOpen theme='outline' size={15} strokeWidth={2.5} />}
+          label={t('common.fileAttach.fromLibrary')}
+          onClick={() => {
+            setLibraryOpen(true);
+            setFilesOpen(false);
+            setOpen(false);
+          }}
+        />
+      </div>
+    </div>
+  );
+
   const renderMenu = () => (
     <div style={cardStyle} onClick={(e) => e.stopPropagation()}>
       {/* Loaded items stay above file actions so the session snapshot is visible */}
@@ -348,28 +402,50 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
 
       {/* 文件操作最常用，在最下（离 + 最近） */}
       <div className='px-6px'>
-        {!isDesktop && (
-          <MenuItem
-            icon={<FolderOpen theme='outline' size={15} strokeWidth={2.5} />}
-            label={t('common.fileAttach.myDevice', { defaultValue: 'Upload from device' })}
-            onClick={() => {
-              fileInputRef.current?.click();
-              setOpen(false);
-            }}
-          />
+        {referenceOnly || !onLocalFilesAdded ? (
+          <>
+            {!isDesktop && (
+              <MenuItem
+                icon={<FolderOpen theme='outline' size={15} strokeWidth={2.5} />}
+                label={t('common.fileAttach.myDevice', { defaultValue: 'Upload from device' })}
+                onClick={() => {
+                  fileInputRef.current?.click();
+                  setOpen(false);
+                }}
+              />
+            )}
+            <MenuItem
+              icon={<Paperclip theme='outline' size={15} strokeWidth={2.5} />}
+              label={
+                referenceOnly
+                  ? t('common.fileAttach.addReferenceImage', { defaultValue: 'Add reference image' })
+                  : t('common.fileAttach.addFiles', { defaultValue: 'Add files' })
+              }
+              onClick={() => {
+                openFileSelector(referenceOnly);
+                setOpen(false);
+              }}
+            />
+          </>
+        ) : (
+          <Trigger
+            popup={renderFilesPanel}
+            trigger='hover'
+            position='right'
+            popupVisible={filesOpen}
+            onVisibleChange={setFilesOpen}
+            mouseEnterDelay={100}
+            mouseLeaveDelay={150}
+          >
+            <div>
+              <MenuItem
+                icon={<Paperclip theme='outline' size={15} strokeWidth={2.5} />}
+                label={t('common.fileAttach.addFiles', { defaultValue: 'Add files' })}
+                suffix={<Right theme='outline' size={12} strokeWidth={3} style={{ color: 'var(--text-disabled)' }} />}
+              />
+            </div>
+          </Trigger>
         )}
-        <MenuItem
-          icon={<Paperclip theme='outline' size={15} strokeWidth={2.5} />}
-          label={
-            referenceOnly
-              ? t('common.fileAttach.addReferenceImage', { defaultValue: 'Add reference image' })
-              : t('common.fileAttach.addFiles', { defaultValue: 'Add files' })
-          }
-          onClick={() => {
-            openFileSelector(referenceOnly);
-            setOpen(false);
-          }}
-        />
       </div>
     </div>
   );
@@ -394,6 +470,9 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
           data-testid='dream-engine-attach-folder-btn'
         />
       </Trigger>
+      {libraryOpen && onLocalFilesAdded && !referenceOnly && (
+        <KnowledgeAttachPicker visible onCancel={() => setLibraryOpen(false)} onConfirm={handleLibraryConfirm} />
+      )}
       <input
         ref={fileInputRef}
         type='file'

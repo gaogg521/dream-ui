@@ -64,7 +64,7 @@
   align-items: center;
   justify-content: flex-start;
   flex-shrink: 0;
-  height: 37px;
+  height: 32px;
 }
 .tree :global(.arco-btn) > span:last-child {
   overflow: hidden;
@@ -514,8 +514,10 @@
 }
 .actions {
   display: flex;
-  flex-direction: column;
+  flex-flow: row wrap;
+  align-items: center;
   gap: 6px;
+  max-width: 420px;
   padding: 10px;
   background: var(--color-bg-popup);
   border: 1px solid var(--color-border-2);
@@ -864,4 +866,42 @@
   height: auto;
   min-height: 32px;
   color: var(--color-text-2);
+}
+
+.menuItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.folderIcon {
+  color: rgb(var(--blue-6));
+}
+.menuSectionStart:global(.arco-menu-item) {
+  position: relative;
+  margin-top: 9px;
+}
+.menuSectionStart:global(.arco-menu-item)::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 4px;
+  right: 4px;
+  height: 1px;
+  background: var(--color-border-2);
+}
+.quickAdd:global(.arco-btn) {
+  border-radius: 9px;
+  font-weight: 600;
+}
+
+/* Denser document rows: the table used to pad each row to roughly 60px. */
+.library .main :global(.arco-table-td) {
+  height: 42px;
+  padding: 5px 8px;
+}
+.library .main :global(.arco-table-th) {
+  padding: 8px;
+}
+.library .document:global(.arco-btn) {
+  height: 28px;
 }

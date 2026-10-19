@@ -20,6 +20,8 @@ import type { RagLibraryProps } from '../superAssistant/registries/RagSection';
 import type { RagDocumentEntry } from '@/common/types/devops/devopsTypes';
 import styles from './KnowledgeLibrary.module.css';
 import LibraryGuide, { type GuideId } from './guides/LibraryGuide';
+import AddToConversationModal from './attach/AddToConversationModal';
+import LibraryFileIcon from './shared/LibraryFileIcon';
 import { useLibrarySidebar } from './useLibrarySidebar';
 
 type View = 'recent' | 'search' | 'personal' | 'team';
@@ -61,6 +63,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   const label = (key: string) => t(`common.knowledgeLibrary.${key}`);
   const sidebar = useLibrarySidebar(libraries.map((item) => item.name));
   const [guide, setGuide] = useState<GuideId | null>(null);
+  const [attachTarget, setAttachTarget] = useState<RagDocumentEntry[] | null>(null);
   const onLibraryChange = (id?: string) => {
     setGuide(null);
     selectLibrary(id);
@@ -145,22 +148,32 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
       }}
     >
       <Menu.Item key='create' disabled={readOnlyLibrary}>
-        <FileText /> {label('newDocument')}
+        <span className={styles.menuItem}>
+          <LibraryFileIcon title='.md' size={18} /> {label('newDocument')} (.md)
+        </span>
       </Menu.Item>
       <Menu.Item key='table' disabled={readOnlyLibrary}>
-        <FileText /> {label('newTable')}
+        <span className={styles.menuItem}>
+          <LibraryFileIcon title='.csv' size={18} /> {label('newTable')}
+        </span>
       </Menu.Item>
       <Menu.Item
         key='folder'
         onClick={() => onCreateFolder(view === 'personal' || libraryPersonal(libraryId) || !isEnterprise)}
       >
-        <FolderClose /> {label('newFolder')}
+        <span className={styles.menuItem}>
+          <FolderClose theme='filled' className={styles.folderIcon} /> {label('newFolder')}
+        </span>
       </Menu.Item>
-      <Menu.Item key='import' disabled={readOnlyLibrary}>
-        <Upload /> {label('import')}
+      <Menu.Item key='import' disabled={readOnlyLibrary} className={styles.menuSectionStart}>
+        <span className={styles.menuItem}>
+          <Upload /> {label('import')}
+        </span>
       </Menu.Item>
       <Menu.Item key='link' disabled={readOnlyLibrary}>
-        <LinkOne /> {label('addLink')}
+        <span className={styles.menuItem}>
+          <LinkOne /> {label('addLink')}
+        </span>
       </Menu.Item>
     </Menu>
   );
@@ -186,7 +199,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           key={row.id}
           aria-current={activeDocument?.id === row.id ? 'page' : undefined}
           type='text'
-          icon={<FileText className={styles.fileIcon} />}
+          icon={<LibraryFileIcon title={row.title} mimeType={row.mimeType} filePath={row.filePath} size={16} />}
           onClick={() => open(row)}
           title={row.title}
         >
@@ -209,7 +222,13 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
               <Button
                 type='text'
                 className={libraryId === library.id ? styles.active : ''}
-                icon={library.kind === 'folder' ? <FolderClose /> : <BookOpen />}
+                icon={
+                  library.kind === 'folder' ? (
+                    <FolderClose theme='filled' className={styles.folderIcon} />
+                  ) : (
+                    <BookOpen />
+                  )
+                }
                 onClick={() => {
                   sidebar.navigate();
                   onLibraryChange(library.id);
@@ -231,7 +250,14 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                         key={row.id}
                         aria-current={activeDocument?.id === row.id ? 'page' : undefined}
                         type='text'
-                        icon={<FileText className={styles.fileIcon} />}
+                        icon={
+                          <LibraryFileIcon
+                            title={row.title}
+                            mimeType={row.mimeType}
+                            filePath={row.filePath}
+                            size={16}
+                          />
+                        }
                         onClick={() => open(row)}
                         title={row.title}
                       >
@@ -251,7 +277,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           type='text'
           className={styles.document}
           title={row.title}
-          icon={<FileText className={styles.fileIcon} />}
+          icon={<LibraryFileIcon title={row.title} mimeType={row.mimeType} filePath={row.filePath} size={16} />}
           onClick={() => open(row)}
         >
           {row.title}
@@ -281,7 +307,14 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
         <Dropdown
           trigger='click'
           position='br'
-          droplist={<div className={styles.actions}>{columns?.at(-1)?.render?.(undefined, row, 0)}</div>}
+          droplist={
+            <div className={styles.actions}>
+              <Button size='small' onClick={() => setAttachTarget([row])}>
+                {label('addToConversation')}
+              </Button>
+              {columns?.at(-1)?.render?.(undefined, row, 0)}
+            </div>
+          }
         >
           <Button type='text' icon={<More />} aria-label={t('common.superAssistant.registries.colActions')} />
         </Dropdown>
@@ -332,7 +365,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                 key={row.id}
                 aria-current={activeDocument?.id === row.id ? 'page' : undefined}
                 type='text'
-                icon={<FileText className={styles.fileIcon} />}
+                icon={<LibraryFileIcon title={row.title} mimeType={row.mimeType} filePath={row.filePath} size={16} />}
                 onClick={() => open(row)}
                 title={row.title}
               >
@@ -422,8 +455,8 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                 <h1>{libraries.find((library) => library.id === libraryId)?.name ?? label(view)}</h1>
               </div>
               <Dropdown droplist={menu} trigger='click'>
-                <Button icon={<Add />} loading={importing}>
-                  {label('new')}
+                <Button icon={<Add />} loading={importing} className={styles.quickAdd}>
+                  {label('quickAdd')}
                 </Button>
               </Dropdown>
             </header>
@@ -581,6 +614,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           </>
         )}
       </main>
+      {attachTarget && <AddToConversationModal documents={attachTarget} onClose={() => setAttachTarget(null)} />}
     </div>
   );
 };

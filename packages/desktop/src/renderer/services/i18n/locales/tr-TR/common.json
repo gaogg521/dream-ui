@@ -219,6 +219,8 @@
   "selectedCount": "{{count}} seçili",
   "selectedSkills": "Seçili beceriler",
   "fileAttach.addReferenceImage": "Referans görsel ekle",
+  "fileAttach.localFile": "Yerel dosyalar",
+  "fileAttach.fromLibrary": "Kütüphane",
   "sider": {
     "mcpServices": "MCP Hizmetleri",
     "mySkills": "Yeteneklerim",
@@ -810,6 +812,16 @@
     "serverErrUnreachable": "{{url}} adresine ulaşılamıyor. Adresin yöneticinizin verdiğiyle eşleştiğini, sunucunun çalıştığını ve iki makinenin birbirine ulaşabildiğini kontrol edin. Kurumsal sürüm genellikle bağlantı noktası gerektirmez."
   },
   "knowledgeLibrary": {
+    "quickAdd": "Hızlı ekle",
+    "addToConversation": "Sohbete ekle",
+    "newConversation": "Yeni sohbet",
+    "recentConversations": "Son sohbetler",
+    "addedToConversation": "{{count}} öğe sohbete eklendi",
+    "attachPickerTitle": "Kütüphaneden ekle",
+    "attachPickerSearch": "Başlığa göre ara",
+    "attachPickerEmpty": "Eklenecek belge yok",
+    "attachConfirm": "Ekle ({{count}})",
+    "attachLimit": "Bir seferde en fazla {{count}} belge eklenebilir",
     "quickstartGuide": "Bir dakikada başlayın",
     "quickstartGuideDescription": "Görsel belge oluşturun, dosyaları düzenleyin ve bilgi bulun.",
     "usageGuide": "Kütüphane kullanım kılavuzu",

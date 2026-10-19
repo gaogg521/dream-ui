@@ -222,6 +222,8 @@
   "yes": "Yes",
   "no": "No",
   "fileAttach.addReferenceImage": "Add reference image",
+  "fileAttach.localFile": "Local files",
+  "fileAttach.fromLibrary": "Library",
   "sider": {
     "memory": "Memory",
     "mcpServices": "MCP Services",
@@ -816,6 +818,16 @@
     }
   },
   "knowledgeLibrary": {
+    "quickAdd": "Quick add",
+    "addToConversation": "Add to conversation",
+    "newConversation": "New conversation",
+    "recentConversations": "Recent conversations",
+    "addedToConversation": "Added {{count}} item(s) to the conversation",
+    "attachPickerTitle": "Add from library",
+    "attachPickerSearch": "Search by title",
+    "attachPickerEmpty": "No documents to add",
+    "attachConfirm": "Add ({{count}})",
+    "attachLimit": "You can add up to {{count}} documents at a time",
     "quickstartGuide": "Get started in one minute",
     "quickstartGuideDescription": "Create a visual document, organize files and find information.",
     "usageGuide": "Library user guide",

@@ -54,6 +54,8 @@ type GuidNavigationState = {
   selectedAssistantId?: string;
   prefillPrompt?: string;
   prefillFiles?: string[];
+  /** Already-uploaded files to attach to a blank draft (no prompt needed), e.g. from the library. */
+  attachFiles?: string[];
   preservePrefillDraft?: boolean;
   focusPrefill?: boolean;
   workspace?: string;
@@ -629,19 +631,19 @@ const GuidPage: React.FC = () => {
   useLayoutEffect(() => {
     const prefillState = location.state as GuidNavigationState | null;
     const prefillPrompt = prefillState?.prefillPrompt;
-    const prefillFiles = prefillState?.prefillFiles;
+    const prefillFiles = [...(prefillState?.prefillFiles ?? []), ...(prefillState?.attachFiles ?? [])];
     const preserveCurrentDraft = Boolean(prefillState?.preservePrefillDraft || skipNextClearRef.current);
-    if (prefillPrompt && consumedPrefillKeyRef.current !== location.key) {
+    if ((prefillPrompt || prefillFiles.length > 0) && consumedPrefillKeyRef.current !== location.key) {
       // Consume prompt + optional attachments (e.g. bug-report screenshots) once.
       consumedPrefillKeyRef.current = location.key;
       skipNextClearRef.current = true;
-      if (prefillState.preservePrefillDraft) {
+      if (prefillState?.preservePrefillDraft && prefillPrompt) {
         guidInput.setInput((draft) => appendPromptToDraft(draft, prefillPrompt));
       } else {
-        guidInput.setInput(prefillPrompt);
+        guidInput.setInput(prefillPrompt ?? '');
         // Prefill attachments (e.g. "via chat" screenshots) arrive as bare paths
         // with no source tag; treat them as uploads to preserve prior behavior.
-        guidInput.setFiles(prefillFiles && prefillFiles.length > 0 ? prefillFiles.map(uploadFileRef) : []);
+        guidInput.setFiles(prefillFiles.length > 0 ? prefillFiles.map(uploadFileRef) : []);
       }
     } else if (skipNextClearRef.current) {
       // This pass is the state-clearing replace() right after a prefill — keep

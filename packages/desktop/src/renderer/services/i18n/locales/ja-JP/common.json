@@ -219,6 +219,8 @@
   "selectedCount": "選択済み {{count}}",
   "selectedSkills": "選択済みスキル",
   "fileAttach.addReferenceImage": "参照画像を追加",
+  "fileAttach.localFile": "ローカルファイル",
+  "fileAttach.fromLibrary": "ライブラリ",
   "sider": {
     "mcpServices": "MCP サービス",
     "mySkills": "マイスキル",
@@ -810,6 +812,16 @@
     "serverErrUnreachable": "{{url}} に接続できません。アドレスが管理者から案内されたものと一致しているか、サーバーが稼働しているか、両方のマシンが相互に通信できるかを確認してください。エンタープライズ版は通常ポート不要です。"
   },
   "knowledgeLibrary": {
+    "quickAdd": "クイック追加",
+    "addToConversation": "会話に追加",
+    "newConversation": "新しい会話",
+    "recentConversations": "最近の会話",
+    "addedToConversation": "{{count}} 件の資料を会話に追加しました",
+    "attachPickerTitle": "ライブラリから追加",
+    "attachPickerSearch": "タイトルで検索",
+    "attachPickerEmpty": "追加できる資料がありません",
+    "attachConfirm": "追加（{{count}}）",
+    "attachLimit": "一度に追加できるのは {{count}} 件までです",
     "quickstartGuide": "1分で始める資料庫",
     "quickstartGuideDescription": "図文書類を作成し、整理・検索して再利用します。",
     "usageGuide": "資料庫の使い方",

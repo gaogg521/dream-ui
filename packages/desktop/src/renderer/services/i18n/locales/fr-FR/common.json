@@ -219,6 +219,8 @@
   "selectedCount": "{{count}} sélectionné(s)",
   "selectedSkills": "Compétences sélectionnées",
   "fileAttach.addReferenceImage": "Ajouter une image de référence",
+  "fileAttach.localFile": "Fichiers locaux",
+  "fileAttach.fromLibrary": "Bibliothèque",
   "sider": {
     "mcpServices": "Services MCP",
     "mySkills": "Mes compétences",
@@ -810,6 +812,16 @@
     "serverErrUnreachable": "Impossible de joindre {{url}}. Vérifiez que l’adresse correspond à celle fournie par votre administrateur, que le serveur est en marche et que les deux machines peuvent communiquer. L’édition Enterprise ne nécessite généralement pas de port."
   },
   "knowledgeLibrary": {
+    "quickAdd": "Ajout rapide",
+    "addToConversation": "Ajouter à la conversation",
+    "newConversation": "Nouvelle conversation",
+    "recentConversations": "Conversations récentes",
+    "addedToConversation": "{{count}} élément(s) ajouté(s) à la conversation",
+    "attachPickerTitle": "Ajouter depuis la bibliothèque",
+    "attachPickerSearch": "Rechercher par titre",
+    "attachPickerEmpty": "Aucun document à ajouter",
+    "attachConfirm": "Ajouter ({{count}})",
+    "attachLimit": "Vous pouvez ajouter jusqu’à {{count}} documents à la fois",
     "quickstartGuide": "Démarrer en une minute",
     "quickstartGuideDescription": "Créez des documents visuels, classez les fichiers et recherchez des informations.",
     "usageGuide": "Guide de la bibliothèque",

@@ -219,6 +219,8 @@
   "selectedCount": "선택됨 {{count}}",
   "selectedSkills": "선택된 스킬",
   "fileAttach.addReferenceImage": "참조 이미지 추가",
+  "fileAttach.localFile": "로컬 파일",
+  "fileAttach.fromLibrary": "자료실",
   "sider": {
     "mcpServices": "MCP 서비스",
     "mySkills": "내 스킬",
@@ -810,6 +812,16 @@
     "serverErrUnreachable": "{{url}}에 연결할 수 없습니다. 주소가 관리자가 알려준 것과 일치하는지, 서버가 실행 중인지, 두 컴퓨터가 서로 통신할 수 있는지 확인하세요. 엔터프라이즈 에디션은 보통 포트가 필요하지 않습니다."
   },
   "knowledgeLibrary": {
+    "quickAdd": "빠른 추가",
+    "addToConversation": "대화에 추가",
+    "newConversation": "새 대화",
+    "recentConversations": "최근 대화",
+    "addedToConversation": "자료 {{count}}개를 대화에 추가했습니다",
+    "attachPickerTitle": "자료실에서 추가",
+    "attachPickerSearch": "제목으로 검색",
+    "attachPickerEmpty": "추가할 자료가 없습니다",
+    "attachConfirm": "추가 ({{count}})",
+    "attachLimit": "한 번에 최대 {{count}}개까지 추가할 수 있습니다",
     "quickstartGuide": "1분 만에 시작하기",
     "quickstartGuideDescription": "문서를 만들고 자료를 정리, 검색하고 재사용하세요.",
     "usageGuide": "자료실 사용 안내",

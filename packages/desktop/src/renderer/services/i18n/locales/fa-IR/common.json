@@ -219,6 +219,8 @@
   "selectedCount": "{{count}} انتخاب‌شده",
   "selectedSkills": "مهارت‌های انتخاب‌شده",
   "fileAttach.addReferenceImage": "افزودن تصویر مرجع",
+  "fileAttach.localFile": "فایل‌های محلی",
+  "fileAttach.fromLibrary": "کتابخانه",
   "sider": {
     "mcpServices": "خدمات MCP",
     "mySkills": "مهارت‌های من",
@@ -810,6 +812,16 @@
     "serverErrUnreachable": "دسترسی به {{url}} ممکن نیست. بررسی کنید نشانی با آنچه مدیر داده یکی باشد، سرور در حال اجرا باشد و دو دستگاه به هم دسترسی داشته باشند. نسخهٔ سازمانی معمولاً به پورت نیاز ندارد."
   },
   "knowledgeLibrary": {
+    "quickAdd": "افزودن سریع",
+    "addToConversation": "افزودن به گفتگو",
+    "newConversation": "گفتگوی جدید",
+    "recentConversations": "گفتگوهای اخیر",
+    "addedToConversation": "{{count}} مورد به گفتگو افزوده شد",
+    "attachPickerTitle": "افزودن از کتابخانه",
+    "attachPickerSearch": "جستجو بر اساس عنوان",
+    "attachPickerEmpty": "سندی برای افزودن وجود ندارد",
+    "attachConfirm": "افزودن ({{count}})",
+    "attachLimit": "هر بار حداکثر {{count}} سند قابل افزودن است",
     "quickstartGuide": "شروع در یک دقیقه",
     "quickstartGuideDescription": "سند تصویری بسازید، فایل‌ها را مرتب کنید و اطلاعات را بیابید.",
     "usageGuide": "راهنمای کتابخانه",

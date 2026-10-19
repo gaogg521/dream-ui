@@ -219,6 +219,8 @@
   "selectedCount": "已選 {{count}}",
   "selectedSkills": "已選技能",
   "fileAttach.addReferenceImage": "新增參考圖",
+  "fileAttach.localFile": "本機檔案",
+  "fileAttach.fromLibrary": "資料庫",
   "sider": {
     "mcpServices": "MCP 服務",
     "mySkills": "我的技能",
@@ -816,6 +818,16 @@
     "serverErrUnreachable": "連線不上 {{url}}。請確認地址與管理員給的一致、對方伺服器已啟動、兩臺電腦網路互通；企業版通常不需要填寫埠。"
   },
   "knowledgeLibrary": {
+    "quickAdd": "快速新增",
+    "addToConversation": "加入對話",
+    "newConversation": "新增對話",
+    "recentConversations": "最近對話",
+    "addedToConversation": "已將 {{count}} 份資料加入對話",
+    "attachPickerTitle": "從資料庫新增",
+    "attachPickerSearch": "搜尋資料標題",
+    "attachPickerEmpty": "沒有可新增的資料",
+    "attachConfirm": "新增（{{count}}）",
+    "attachLimit": "一次最多新增 {{count}} 份資料",
     "quickstartGuide": "一分鐘上手資料庫",
     "quickstartGuideDescription": "建立圖文文件、整理目錄、搜尋並重用資料。",
     "usageGuide": "資料庫使用指南",
