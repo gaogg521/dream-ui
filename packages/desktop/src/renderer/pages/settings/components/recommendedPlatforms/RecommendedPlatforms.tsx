@@ -30,7 +30,7 @@ const RecommendedPlatforms: React.FC = () => {
   );
 
   return (
-    <div className='rounded-8px border border-solid border-fill-3 bg-fill-2 px-14px py-12px mb-12px'>
+    <div className='rd-8px bg-fill-2 px-14px py-12px mb-12px'>
       <div className='flex items-center justify-between gap-8px mb-10px'>
         <span className='text-13px font-medium text-t-primary'>{t('settings.recommendedPlatforms.title')}</span>
         <Button type='text' size='mini' onClick={() => setGuideVisible(true)} className='!px-4px'>
@@ -47,13 +47,13 @@ const RecommendedPlatforms: React.FC = () => {
             <Button
               key={platform.id}
               long
-              type='outline'
+              type='text'
               aria-label={t('settings.recommendedPlatforms.openSite', { name })}
               onClick={() => openSite(platform)}
-              className='!h-auto !py-10px !px-4px'
+              className='!h-auto !py-12px !px-6px !rd-10px !bg-base !border-arco-2 hover:!border-primary hover:!bg-base transition-colors'
             >
-              <span className='flex flex-col items-center gap-6px min-w-0'>
-                <img src={platform.logo} alt='' className='w-28px h-28px rounded-6px object-contain' />
+              <span className='flex flex-col items-center gap-8px min-w-0'>
+                <img src={platform.logo} alt='' className='w-32px h-32px rd-8px object-contain' />
                 <span className='text-12px text-t-primary max-w-full truncate'>{name}</span>
               </span>
             </Button>

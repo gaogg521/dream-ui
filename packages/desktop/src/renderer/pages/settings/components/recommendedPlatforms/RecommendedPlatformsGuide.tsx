@@ -36,9 +36,9 @@ const RecommendedPlatformsGuide: React.FC<GuideProps> = ({ visible, onClose, onO
       <div className='flex flex-col gap-12px max-h-[68vh] overflow-y-auto pr-4px'>
         <p className='m-0 text-12px text-t-secondary'>{t(`${base}.guideSubtitle`)}</p>
         {RECOMMENDED_PLATFORMS.map((platform) => (
-          <div key={platform.id} className='rounded-8px border border-solid border-fill-3 bg-fill-1 px-14px py-12px'>
+          <div key={platform.id} className='rd-10px border border-solid border-arco-2 bg-fill-1 px-14px py-12px'>
             <div className='flex items-center gap-10px mb-10px'>
-              <img src={platform.logo} alt='' className='w-28px h-28px rounded-6px object-contain shrink-0' />
+              <img src={platform.logo} alt='' className='w-32px h-32px rd-8px object-contain shrink-0' />
               <span className='text-14px font-medium text-t-primary'>{t(`${base}.${platform.id}.name`)}</span>
               <Tag size='small' color='arcoblue' className='min-w-0 truncate'>
                 {t(`${base}.${platform.id}.tag`)}
@@ -53,7 +53,7 @@ const RecommendedPlatformsGuide: React.FC<GuideProps> = ({ visible, onClose, onO
             </div>
             <div className='grid grid-cols-4 gap-8px'>
               {platform.steps.map((step, index) => (
-                <div key={step.label} className='relative rounded-6px bg-fill-2 px-10px py-8px min-w-0'>
+                <div key={step.label} className='relative rd-8px bg-fill-2 px-10px py-8px min-w-0'>
                   <div className='text-12px font-medium text-t-primary'>
                     {index + 1}. {t(`${base}.step.${step.label}`)}
                   </div>
