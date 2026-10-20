@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('react-i18next', () => ({
@@ -72,18 +72,23 @@ describe('SceneGreeting: what the scene changes', () => {
   it('lists the hard rules and the hand-over when the scene has them', () => {
     const rules = ['不编造数据。', '口径要写进报告。'];
     render(<SceneGreeting greeting={greeting({ rules, deliverables: '一页结论摘要' })} />);
+    fireEvent.click(screen.getByText('common.scenes.greeting.rulesCount{"count":2}'));
+    fireEvent.click(screen.getByText('common.scenes.greeting.deliverables'));
     const shown = within(screen.getByTestId('scene-greeting-rules'));
     rules.forEach((rule) => expect(shown.getByText(rule)).toBeInTheDocument());
     expect(screen.getByTestId('scene-greeting-deliverables')).toHaveTextContent('一页结论摘要');
   });
 
-  it('keeps a long rule list short: the first four, then how many more', () => {
+  it('folds the rules and hand-over away under a headline that says how many rules there are', () => {
     const rules = Array.from({ length: 7 }, (_, i) => `rule-${i}`);
-    render(<SceneGreeting greeting={greeting({ rules })} />);
-    const shown = within(screen.getByTestId('scene-greeting-rules'));
-    expect(shown.getByText('rule-3')).toBeInTheDocument();
-    expect(shown.queryByText('rule-4')).not.toBeInTheDocument();
-    expect(shown.getByText('common.scenes.greeting.more{"count":3}')).toBeInTheDocument();
+    render(<SceneGreeting greeting={greeting({ rules, deliverables: '一页结论摘要' })} />);
+    expect(screen.getByText('common.scenes.greeting.rulesCount{"count":7}')).toBeInTheDocument();
+    expect(screen.getByText('common.scenes.greeting.deliverables')).toBeInTheDocument();
+    // Every rule is there once the section is opened; nothing is silently cut.
+    fireEvent.click(screen.getByText('common.scenes.greeting.rulesCount{"count":7}'));
+    rules.forEach((rule) =>
+      expect(within(screen.getByTestId('scene-greeting-rules')).getByText(rule)).toBeInTheDocument()
+    );
   });
 
   it('leaves out the role, rules and hand-over of a conversation opened before they were recorded', () => {

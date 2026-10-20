@@ -574,6 +574,8 @@
       "title": "Usando el escenario «{{name}}»"
     },
     "greeting": {
+      "rulesCount": "Reglas firmes · {{count}}",
+      "workspaceTempShort": "Carpeta temporal (solo esta conversación)",
       "workspace": "Carpeta de trabajo",
       "workspaceTemp": "Una carpeta temporal solo para esta conversación. Para trabajar en un proyecto local, vuelve a la página de inicio, elige primero la carpeta bajo el cuadro de entrada y luego pulsa este escenario. La carpeta no se puede cambiar una vez creada la conversación.",
       "role": "Mi rol",

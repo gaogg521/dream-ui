@@ -574,6 +574,8 @@
       "title": "Usando o cenário \"{{name}}\""
     },
     "greeting": {
+      "rulesCount": "Regras firmes · {{count}}",
+      "workspaceTempShort": "Pasta temporária (só esta conversa)",
       "workspace": "Pasta de trabalho",
       "workspaceTemp": "Uma pasta temporária só para esta conversa. Para trabalhar em um projeto local, volte à página inicial, escolha primeiro a pasta abaixo da caixa de entrada e depois clique neste cenário. A pasta não pode ser trocada depois que a conversa existe.",
       "role": "Meu papel",

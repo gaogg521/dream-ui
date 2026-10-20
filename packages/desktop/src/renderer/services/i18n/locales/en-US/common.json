@@ -731,6 +731,8 @@
       "title": "Using the scene \"{{name}}\""
     },
     "greeting": {
+      "rulesCount": "Hard rules · {{count}}",
+      "workspaceTempShort": "Temporary folder (this conversation only)",
       "workspace": "Working folder",
       "workspaceTemp": "A temporary folder for this conversation only. To work in a local project, go back to the home page, pick the folder under the input box first, then click this scene. The folder cannot be changed once the conversation exists.",
       "role": "My role",

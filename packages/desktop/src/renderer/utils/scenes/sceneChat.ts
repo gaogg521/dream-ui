@@ -225,22 +225,26 @@ export async function startSceneConversation(
   model: TProviderWithModel,
   workspace?: string
 ): Promise<string | null> {
-  const skills = await ipcBridge.fs.listAvailableSkills
-    .invoke()
-    .then((rows) => rows.map(({ name, location, source }): LocalSkill => ({ name, location, source })))
-    // A scene whose skills cannot be read still opens: the rules and the
-    // connectors the team sync loads everywhere do not depend on them.
-    .catch((): LocalSkill[] => []);
-  // The local MCP rows are needed to resolve a company scene's connectors, and to name the
-  // servers a personal scene limits the conversation to.
+  // The skill list and the MCP rows are independent reads; waiting for one
+  // before asking for the other put their latencies end to end on the click.
+  // The MCP rows are needed to resolve a company scene's connectors, and to name
+  // the servers a personal scene limits the conversation to.
   const needsServers = Boolean(item.company?.mcpIds?.length || item.mine?.mcpServerIds.length);
-  const mcpServers = needsServers
-    ? await ensureBackendMcpCatalog()
-        .then(({ allServers }) =>
-          allServers.map(({ id, name, original_json }): LocalMcpServer => ({ id, name, original_json }))
-        )
-        .catch((): LocalMcpServer[] => [])
-    : [];
+  const [skills, mcpServers] = await Promise.all([
+    ipcBridge.fs.listAvailableSkills
+      .invoke()
+      .then((rows) => rows.map(({ name, location, source }): LocalSkill => ({ name, location, source })))
+      // A scene whose skills cannot be read still opens: the rules and the
+      // connectors the team sync loads everywhere do not depend on them.
+      .catch((): LocalSkill[] => []),
+    needsServers
+      ? ensureBackendMcpCatalog()
+          .then(({ allServers }) =>
+            allServers.map(({ id, name, original_json }): LocalMcpServer => ({ id, name, original_json }))
+          )
+          .catch((): LocalMcpServer[] => [])
+      : Promise.resolve<LocalMcpServer[]>([]),
+  ]);
   const conversation = await ipcBridge.conversation.create.invoke(
     buildSceneConversationRequest({ item, skills, mcpServers, model, workspace })
   );

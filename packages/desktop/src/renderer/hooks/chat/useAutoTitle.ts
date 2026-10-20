@@ -14,7 +14,14 @@ export const useAutoTitle = () => {
       const defaultTitle = t('conversation.welcome.newConversation');
       try {
         const conversation = await getConversationOrNull(conversation_id);
-        if (!conversation || conversation.name !== defaultTitle) {
+        // A conversation opened from a scene is named after the scene, so every one of
+        // them reads the same in the history. Treat that name as a default too: the
+        // first exchange gives it a title that says what this one is about.
+        const sceneName = (conversation?.extra as { scene_greeting?: { name?: string } } | undefined)?.scene_greeting
+          ?.name;
+        const isDefaultName =
+          conversation?.name === defaultTitle || (Boolean(sceneName) && conversation?.name === sceneName);
+        if (!conversation || !isDefaultName) {
           return;
         }
 

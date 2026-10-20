@@ -574,6 +574,8 @@
       "title": "Szenario „{{name}}“ aktiv"
     },
     "greeting": {
+      "rulesCount": "Feste Regeln · {{count}}",
+      "workspaceTempShort": "Temporärer Ordner (nur diese Unterhaltung)",
       "workspace": "Arbeitsordner",
       "workspaceTemp": "Ein temporärer Ordner nur für diese Unterhaltung. Um in einem lokalen Projekt zu arbeiten, gehen Sie zur Startseite, wählen Sie zuerst den Ordner unter dem Eingabefeld und klicken Sie dann auf dieses Szenario. Der Ordner lässt sich nach dem Erstellen der Unterhaltung nicht mehr ändern.",
       "role": "Meine Rolle",

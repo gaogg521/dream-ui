@@ -10,7 +10,11 @@ import { resolveLocaleKey } from '@/common/utils';
 import type { AssistantDetail } from '@/common/types/agent/assistantTypes';
 
 import { useInputFocusRing } from '@/renderer/hooks/chat/useInputFocusRing';
-import { appendPromptToDraft } from '@/renderer/hooks/chat/useSendBoxDraft';
+import {
+  appendPromptToDraft,
+  requestConversationSendBoxFiles,
+  requestConversationSendBoxPrefill,
+} from '@/renderer/hooks/chat/useSendBoxDraft';
 import { getFuzzyMatchIndices, useSlashCommandController } from '@/renderer/hooks/chat/useSlashCommandController';
 import { openExternalUrl } from '@/renderer/utils/platform';
 import SlashCommandMenu, { type SlashCommandMenuItem } from '@/renderer/components/chat/SlashCommandMenu';
@@ -819,13 +823,19 @@ const GuidPage: React.FC = () => {
           return;
         }
         emitter.emit('chat.history.refresh');
+        // What was already typed or attached on this page goes with the person into the
+        // scene instead of being thrown away by the navigation. It lands in the send box
+        // as a draft; nothing is sent on their behalf.
+        const draft = guidInput.input.trim();
+        if (draft) requestConversationSendBoxPrefill(conversationId, draft);
+        requestConversationSendBoxFiles(conversationId, displayFilePaths);
         await navigate(`/conversation/${conversationId}`);
       } catch (error) {
         console.error('[GuidPage] Failed to open a scene conversation:', error);
         Message.error(t('common.scenes.openFailed'));
       }
     },
-    [navigate, sceneModel, guidInput.dir, t]
+    [navigate, sceneModel, guidInput.dir, guidInput.input, displayFilePaths, t]
   );
 
   // Making a scene happens on the scenes tab, which opens its editor for `new`.

@@ -574,6 +574,8 @@
       "title": "Scénario « {{name}} » en cours"
     },
     "greeting": {
+      "rulesCount": "Règles strictes · {{count}}",
+      "workspaceTempShort": "Dossier temporaire (cette conversation seulement)",
       "workspace": "Dossier de travail",
       "workspaceTemp": "Un dossier temporaire réservé à cette conversation. Pour travailler dans un projet local, revenez à l’accueil, choisissez d’abord le dossier sous la zone de saisie, puis cliquez sur ce scénario. Le dossier ne peut plus être changé une fois la conversation créée.",
       "role": "Mon rôle",

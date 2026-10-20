@@ -574,6 +574,8 @@
       "title": "正在使用場景「{{name}}」"
     },
     "greeting": {
+      "rulesCount": "硬性規則 · {{count}} 條",
+      "workspaceTempShort": "暫存目錄（僅本次對話）",
       "workspace": "工作目錄",
       "workspaceTemp": "暫存目錄（僅供本次對話）。想在本機專案裡工作，請回到首頁，先在輸入框下方選好「在專案中工作」的資料夾，再點這個場景；對話建立後目錄不能更換。",
       "role": "我的角色",

@@ -1,0 +1,35 @@
+/* The folded sections (rules, hand-over) read as quiet rows, not as dark bars. */
+.folded:global(.arco-collapse) {
+  background: transparent;
+  border: 0;
+}
+.folded :global(.arco-collapse-item) {
+  border-bottom: 1px solid var(--color-border-2);
+  background: transparent;
+}
+.folded :global(.arco-collapse-item:last-child) {
+  border-bottom: 0;
+}
+.folded :global(.arco-collapse-item-header) {
+  min-height: 34px;
+  padding: 6px 0;
+  background: transparent;
+  border-bottom: 0;
+  color: var(--color-text-2);
+  font-size: 13px;
+  line-height: 20px;
+}
+.folded :global(.arco-collapse-item-header-title) {
+  font-weight: 500;
+}
+.folded :global(.arco-collapse-item-content) {
+  background: transparent;
+  padding: 0;
+}
+.folded :global(.arco-collapse-item-content-box) {
+  padding: 0 0 10px;
+  background: transparent;
+}
+.folded :global(.arco-collapse-item-icon-hover) {
+  color: var(--color-text-3);
+}

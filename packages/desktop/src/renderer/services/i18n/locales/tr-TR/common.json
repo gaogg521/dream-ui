@@ -574,6 +574,8 @@
       "title": "\"{{name}}\" senaryosu kullanılıyor"
     },
     "greeting": {
+      "rulesCount": "Kesin kurallar · {{count}}",
+      "workspaceTempShort": "Geçici klasör (yalnızca bu sohbet)",
       "workspace": "Çalışma klasörü",
       "workspaceTemp": "Yalnızca bu sohbet için geçici bir klasör. Yerel bir projede çalışmak için ana sayfada giriş kutusunun altından klasörü önce seçin, sonra bu senaryoya tıklayın. Sohbet oluşturulduktan sonra klasör değiştirilemez.",
       "role": "Rolüm",
