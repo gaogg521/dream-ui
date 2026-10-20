@@ -37,8 +37,9 @@ export type SceneConversationRequest = {
   name: string;
   model: TProviderWithModel;
   extra: {
+    /** The folder the person chose on the home page; empty means a temporary one for this conversation. */
     workspace: string;
-    custom_workspace: false;
+    custom_workspace: boolean;
     /** The scene's standing rules: role, working method, hard rules, acceptance. */
     preset_rules: string;
     /** Local skill names the conversation starts with. */
@@ -73,6 +74,8 @@ export type SceneGreeting = {
   tools: string[];
   /** Whether the scene asks before it builds. */
   asksFirst: boolean;
+  /** The project folder the conversation works in; absent when it uses its own temporary one. */
+  workspace?: string;
   /** Who the assistant is in this scene (the written role, shortened). */
   role?: string;
   /** The hard rules that apply at every step (only injected when the scene asks first). */
@@ -141,8 +144,11 @@ export function buildSceneConversationRequest(params: {
   /** Local MCP rows, to resolve a company scene's connectors; without them such a scene limits nothing. */
   mcpServers?: LocalMcpServer[];
   model: TProviderWithModel;
+  /** A project folder to work in; without one the conversation gets a temporary workspace. */
+  workspace?: string;
 }): SceneConversationRequest {
   const { item, skills, mcpServers = [], model } = params;
+  const workspace = params.workspace?.trim() ?? '';
   const company = item.company;
   const mine = item.mine;
   const rules = buildSceneRules(
@@ -164,8 +170,8 @@ export function buildSceneConversationRequest(params: {
         }
   );
   const extra: SceneConversationRequest['extra'] = {
-    workspace: '',
-    custom_workspace: false,
+    workspace,
+    custom_workspace: workspace.length > 0,
     preset_rules: rules,
     enabled_skills: company
       ? resolveSceneSkillNames(company, skills)
@@ -205,6 +211,7 @@ export function buildSceneConversationRequest(params: {
       return name ? [name] : [];
     }),
     asksFirst,
+    ...(workspace ? { workspace } : {}),
     ...(role ? { role } : {}),
     ...(hardRules.length > 0 ? { rules: hardRules } : {}),
     ...(deliverables ? { deliverables } : {}),
@@ -213,7 +220,11 @@ export function buildSceneConversationRequest(params: {
 }
 
 /** Create the scene's conversation and return its id, or `null` when the backend declined. */
-export async function startSceneConversation(item: SceneItem, model: TProviderWithModel): Promise<string | null> {
+export async function startSceneConversation(
+  item: SceneItem,
+  model: TProviderWithModel,
+  workspace?: string
+): Promise<string | null> {
   const skills = await ipcBridge.fs.listAvailableSkills
     .invoke()
     .then((rows) => rows.map(({ name, location, source }): LocalSkill => ({ name, location, source })))
@@ -231,7 +242,7 @@ export async function startSceneConversation(item: SceneItem, model: TProviderWi
         .catch((): LocalMcpServer[] => [])
     : [];
   const conversation = await ipcBridge.conversation.create.invoke(
-    buildSceneConversationRequest({ item, skills, mcpServers, model })
+    buildSceneConversationRequest({ item, skills, mcpServers, model, workspace })
   );
   return conversation?.id ?? null;
 }

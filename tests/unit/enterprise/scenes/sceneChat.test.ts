@@ -321,4 +321,18 @@ describe('startSceneConversation', () => {
     hooks.create.mockResolvedValue(null);
     await expect(startSceneConversation(companySceneItem(scene()), model)).resolves.toBeNull();
   });
+
+  it('opens in the project folder chosen on the home page, and in a temporary workspace otherwise', () => {
+    const item = companySceneItem(scene({ prompt: 'p' }));
+    const withFolder = buildSceneConversationRequest({ item, skills, model, workspace: '  D:/projects/site  ' }).extra;
+    expect(withFolder.workspace).toBe('D:/projects/site');
+    expect(withFolder.custom_workspace).toBe(true);
+    expect(withFolder.scene_greeting?.workspace).toBe('D:/projects/site');
+    for (const workspace of [undefined, '', '   ']) {
+      const extra = buildSceneConversationRequest({ item, skills, model, workspace }).extra;
+      expect(extra.workspace).toBe('');
+      expect(extra.custom_workspace).toBe(false);
+      expect(extra.scene_greeting?.workspace).toBeUndefined();
+    }
+  });
 });

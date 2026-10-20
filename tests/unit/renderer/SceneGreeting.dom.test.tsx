@@ -92,4 +92,11 @@ describe('SceneGreeting: what the scene changes', () => {
     expect(screen.queryByTestId('scene-greeting-rules')).not.toBeInTheDocument();
     expect(screen.queryByTestId('scene-greeting-deliverables')).not.toBeInTheDocument();
   });
+
+  it('tells where the conversation works: the chosen folder, or a temporary one and how to pick another', () => {
+    const { rerender } = render(<SceneGreeting greeting={greeting({ workspace: 'D:/projects/site' })} />);
+    expect(screen.getByTestId('scene-greeting-workspace')).toHaveTextContent('D:/projects/site');
+    rerender(<SceneGreeting greeting={greeting()} />);
+    expect(screen.getByTestId('scene-greeting-workspace')).toHaveTextContent('common.scenes.greeting.workspaceTemp');
+  });
 });

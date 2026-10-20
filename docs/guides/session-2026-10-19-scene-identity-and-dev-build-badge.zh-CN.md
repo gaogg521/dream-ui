@@ -33,3 +33,10 @@
 
 - 员工页的 `<Spin>` 被全局 `.arco-spin { inline-flex; 居中 }` 收缩（见 `knowledge-library-handoff-2026-10-16` §10.16）。
 - ⚠️ Bash 工具里 heredoc 写 Python 会吃掉反斜杠（`\n`、`\r` 变成真换行/回车），改含转义的源码要么用 Edit 工具，要么把脚本先用 Write 落盘再跑。
+
+## 5. 10-20 追加：场景带项目文件夹、任务过程叙述
+
+- **场景会话没法选本地项目文件夹**：`startSceneConversation` 之前把工作区写死成临时目录。现在首页输入框下方「在项目中工作」选的文件夹会带进场景（`workspace` + `custom_workspace: true`），场景网格的提示行会写「点击场景将在「xxx」文件夹中工作」，场景问候卡新增「工作目录」一栏（没选则说明用的是临时目录，以及怎么改）。**会话创建后目录不能再换**：后端 `local` 引用只收普通文件、不收文件夹，工作区也没有创建后修改的接口，所以必须在点场景前选好。真机验证：选 `onework测试` 后点场景，工作目录和右侧文件树都是该项目。
+- **长任务没有实时叙述**：UI 本来就会把工具调用之间的文字逐条渲染（真机上看得到），缺的是模型不说话——dream-engine 的 `# Doing tasks` 写着「用户要的是结果，不是对话」。已加一条「工具调用前用一句话说要做什么，有发现后说一句学到什么，不要标题和列表，不要求许可」（dream-engine `5c30e02`）。真机验证（deepseek-flash）：一个多步任务里出现「我先看看根目录结构…」「Glob 结果被截断到 100 条，所以我改用系统命令…」「统计文件数返回 0，可能是链接类型…」等逐步叙述。
+- ⚠️ **要进安装包**：这条在引擎里，dream-core 的 `Cargo.lock` 要指到 `5c30e02`，dream-core 发版并 bump dream-ui 的 `dreamcoreVersion` 之后安装版才有。本机 DEV 已用重编的 `dreamcore` 替换了 bundled 版本。
+- ⚠️ 验证对话文字别用 `document.body.innerText`：Markdown 在 Shadow DOM 里，取不到；用截图或直接读 `/api/conversations/<id>/messages`。

@@ -813,7 +813,7 @@ const GuidPage: React.FC = () => {
         return;
       }
       try {
-        const conversationId = await startSceneConversation(scene, sceneModel);
+        const conversationId = await startSceneConversation(scene, sceneModel, guidInput.dir);
         if (!conversationId) {
           Message.error(t('common.scenes.openFailed'));
           return;
@@ -825,7 +825,7 @@ const GuidPage: React.FC = () => {
         Message.error(t('common.scenes.openFailed'));
       }
     },
-    [navigate, sceneModel, t]
+    [navigate, sceneModel, guidInput.dir, t]
   );
 
   // Making a scene happens on the scenes tab, which opens its editor for `new`.
@@ -872,7 +872,7 @@ const GuidPage: React.FC = () => {
             onClearWorkspace={() => guidInput.setDir('')}
           />
 
-          <SceneGrid onOpenScene={handleOpenScene} onCreateScene={handleCreateScene} />
+          <SceneGrid onOpenScene={handleOpenScene} onCreateScene={handleCreateScene} workspaceDir={guidInput.dir} />
 
           {selectedAssistantPrompts.length > 0 ? (
             <div className='mt-40px w-full animate-fade-in ps-20px'>

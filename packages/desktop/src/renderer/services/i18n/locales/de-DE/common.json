@@ -568,11 +568,14 @@
     "importDone": "{{count}} Szenarien importiert",
     "importInvalid": "Das ist keine exportierte Szenario-Datei",
     "importEmpty": "In der Datei gibt es keine Szenarien zum Importieren",
+    "workspaceHint": "Das Szenario arbeitet im Ordner „{{name}}“",
     "badge": {
       "label": "Szenario",
       "title": "Szenario „{{name}}“ aktiv"
     },
     "greeting": {
+      "workspace": "Arbeitsordner",
+      "workspaceTemp": "Ein temporärer Ordner nur für diese Unterhaltung. Um in einem lokalen Projekt zu arbeiten, gehen Sie zur Startseite, wählen Sie zuerst den Ordner unter dem Eingabefeld und klicken Sie dann auf dieses Szenario. Der Ordner lässt sich nach dem Erstellen der Unterhaltung nicht mehr ändern.",
       "role": "Meine Rolle",
       "method": "Meine Arbeitsweise",
       "rules": "Feste Regeln",

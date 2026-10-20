@@ -568,11 +568,14 @@
     "importDone": "已匯入 {{count}} 個場景",
     "importInvalid": "這不是場景匯出檔案",
     "importEmpty": "檔案裡沒有可匯入的場景",
+    "workspaceHint": "點擊場景將在「{{name}}」資料夾中工作",
     "badge": {
       "label": "場景",
       "title": "正在使用場景「{{name}}」"
     },
     "greeting": {
+      "workspace": "工作目錄",
+      "workspaceTemp": "暫存目錄（僅供本次對話）。想在本機專案裡工作，請回到首頁，先在輸入框下方選好「在專案中工作」的資料夾，再點這個場景；對話建立後目錄不能更換。",
       "role": "我的角色",
       "method": "工作方式",
       "rules": "硬性規則",

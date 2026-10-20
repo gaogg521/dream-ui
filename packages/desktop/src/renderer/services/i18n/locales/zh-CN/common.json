@@ -725,11 +725,14 @@
     "importDone": "已导入 {{count}} 个场景",
     "importInvalid": "这不是场景导出文件",
     "importEmpty": "文件里没有可导入的场景",
+    "workspaceHint": "点击场景将在「{{name}}」文件夹中工作",
     "badge": {
       "label": "场景",
       "title": "正在使用场景「{{name}}」"
     },
     "greeting": {
+      "workspace": "工作目录",
+      "workspaceTemp": "临时目录（仅供本次会话）。想在本地项目里工作，请回到首页，先在输入框下方选好「在项目中工作」的文件夹，再点这个场景；会话创建后目录不能更换。",
       "role": "我的角色",
       "method": "工作方式",
       "rules": "硬性规则",

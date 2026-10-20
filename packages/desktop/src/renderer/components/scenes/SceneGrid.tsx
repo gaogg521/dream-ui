@@ -115,11 +115,13 @@ const SceneCard: React.FC<SceneCardProps> = ({ item, opening, disabled, onOpen }
 type SceneGridProps = {
   /** Open a conversation from the scene. Resolve when it has been opened (or has failed). */
   onOpenScene?: (item: SceneItem) => void | Promise<void>;
+  /** The project folder chosen above; a scene opens working in it. */
+  workspaceDir?: string;
   /** Go and make a new scene. Without it the grid offers no way to make one. */
   onCreateScene?: () => void;
 };
 
-const SceneGrid: React.FC<SceneGridProps> = ({ onOpenScene, onCreateScene }) => {
+const SceneGrid: React.FC<SceneGridProps> = ({ onOpenScene, onCreateScene, workspaceDir }) => {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [openingKey, setOpeningKey] = useState<string | null>(null);
@@ -173,6 +175,10 @@ const SceneGrid: React.FC<SceneGridProps> = ({ onOpenScene, onCreateScene }) => 
     );
   }
 
+  // A chosen folder is what the next scene will work in; say so, since the choice is made above.
+  const workspaceHint = workspaceDir
+    ? t('common.scenes.workspaceHint', { name: workspaceDir.split(/[\\/]/).filter(Boolean).pop() ?? workspaceDir })
+    : null;
   const visible = expanded ? ordered : ordered.slice(0, COLLAPSED_SCENE_COUNT);
   const hiddenCount = ordered.length - COLLAPSED_SCENE_COUNT;
 
@@ -204,8 +210,8 @@ const SceneGrid: React.FC<SceneGridProps> = ({ onOpenScene, onCreateScene }) => 
       <div className={styles.heading}>
         <div className={styles.headingCopy}>
           <h2 className={styles.title}>{t('common.scenes.title', { defaultValue: '工作场景' })}</h2>
-          <span className={styles.hint} title={t('common.scenes.gridHint')}>
-            {t('common.scenes.gridHint')}
+          <span className={styles.hint} title={workspaceHint ?? t('common.scenes.gridHint')}>
+            {workspaceHint ?? t('common.scenes.gridHint')}
           </span>
         </div>
         <div className={styles.headingActions}>

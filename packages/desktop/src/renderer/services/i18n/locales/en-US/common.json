@@ -725,11 +725,14 @@
     "importDone": "Imported {{count}} scenes",
     "importInvalid": "That is not an exported scenes file",
     "importEmpty": "There are no scenes to import in that file",
+    "workspaceHint": "A scene will open working in \"{{name}}\"",
     "badge": {
       "label": "Scene",
       "title": "Using the scene \"{{name}}\""
     },
     "greeting": {
+      "workspace": "Working folder",
+      "workspaceTemp": "A temporary folder for this conversation only. To work in a local project, go back to the home page, pick the folder under the input box first, then click this scene. The folder cannot be changed once the conversation exists.",
       "role": "My role",
       "method": "How I work",
       "rules": "Hard rules",

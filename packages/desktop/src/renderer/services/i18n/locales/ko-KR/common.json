@@ -568,11 +568,14 @@
     "importDone": "장면 {{count}}개를 가져왔습니다",
     "importInvalid": "장면 내보내기 파일이 아닙니다",
     "importEmpty": "파일에 가져올 장면이 없습니다",
+    "workspaceHint": "시나리오는 \"{{name}}\" 폴더에서 작업합니다",
     "badge": {
       "label": "시나리오",
       "title": "시나리오 \"{{name}}\" 사용 중"
     },
     "greeting": {
+      "workspace": "작업 폴더",
+      "workspaceTemp": "이 대화 전용 임시 폴더입니다. 로컬 프로젝트에서 작업하려면 홈 화면에서 입력창 아래의 폴더를 먼저 선택한 뒤 이 시나리오를 누르세요. 대화가 만들어진 뒤에는 바꿀 수 없습니다.",
       "role": "내 역할",
       "method": "작업 방식",
       "rules": "필수 규칙",

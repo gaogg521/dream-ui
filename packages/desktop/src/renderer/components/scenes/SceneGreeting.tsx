@@ -99,6 +99,13 @@ export const SceneDetails: React.FC<{ greeting: SceneGreetingData }> = ({ greeti
         </div>
       ) : null}
 
+      <div className='flex flex-col gap-4px'>
+        <div className='text-12px text-t-tertiary'>{t('common.scenes.greeting.workspace')}</div>
+        <div className='break-all text-13px leading-[1.6] text-t-secondary' data-testid='scene-greeting-workspace'>
+          {greeting.workspace ? greeting.workspace : t('common.scenes.greeting.workspaceTemp')}
+        </div>
+      </div>
+
       {greeting.skills.length > 0 ? (
         <div className='flex flex-col gap-6px'>
           <div className='text-12px text-t-tertiary'>{t('common.scenes.greeting.skills')}</div>
