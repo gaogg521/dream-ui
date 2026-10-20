@@ -22,6 +22,8 @@
 
 import { ipcBridge } from '@/common';
 import { ensureBackendMcpCatalog } from '@/renderer/hooks/mcp/catalog';
+import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
+import { loadLatestConversationMessages } from '@/renderer/utils/chat/messagePagination';
 import type { TProviderWithModel } from '@/common/config/storage';
 import type { MyScene } from '@/common/types/platform/enterpriseTypes';
 import type { PersonalScene } from '@/common/types/platform/sceneTypes';
@@ -219,7 +221,77 @@ export function buildSceneConversationRequest(params: {
   return { type: 'dream', name: item.name, model, extra };
 }
 
-/** Create the scene's conversation and return its id, or `null` when the backend declined. */
+const REUSE_KEY_PREFIX = 'one-work:scene-empty-conversation:';
+
+type ReusableRecord = { id: string; fingerprint: string };
+
+/**
+ * What makes two openings of a scene the same conversation: the standing rules, the starting
+ * skills and tools, the folder and the model. If the scene was edited, a folder picked or the
+ * model switched since the last opening, the fingerprint differs and nothing is reused.
+ */
+export function sceneFingerprint(request: SceneConversationRequest): string {
+  const { extra } = request;
+  return JSON.stringify([
+    extra.preset_rules,
+    extra.enabled_skills,
+    extra.selected_mcp_server_ids ?? [],
+    extra.workspace,
+    request.model.id,
+    request.model.use_model,
+  ]);
+}
+
+const readReusable = (sceneKey: string): ReusableRecord | null => {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(REUSE_KEY_PREFIX + sceneKey) ?? 'null');
+    if (!parsed || typeof parsed !== 'object') return null;
+    const { id, fingerprint } = parsed as Partial<ReusableRecord>;
+    return typeof id === 'string' && typeof fingerprint === 'string' ? { id, fingerprint } : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeReusable = (sceneKey: string, record: ReusableRecord | null): void => {
+  try {
+    if (record) localStorage.setItem(REUSE_KEY_PREFIX + sceneKey, JSON.stringify(record));
+    else localStorage.removeItem(REUSE_KEY_PREFIX + sceneKey);
+  } catch {
+    // Reuse is an optimisation; a store that cannot be written just means a new conversation each time.
+  }
+};
+
+/**
+ * The scene's last conversation, when it is still an untouched one: it exists, nothing has
+ * been said in it, it still carries the scene's name, and it was opened with the same rules,
+ * skills, tools, folder and model as now. Any doubt (a failed lookup included) means no.
+ */
+async function findReusableConversation(request: SceneConversationRequest): Promise<string | null> {
+  const sceneKey = request.extra.scene_id;
+  const record = readReusable(sceneKey);
+  if (!record) return null;
+  try {
+    if (record.fingerprint !== sceneFingerprint(request)) return null;
+    const [conversation, messages] = await Promise.all([
+      getConversationOrNull(record.id),
+      loadLatestConversationMessages(record.id, { limit: 1 }),
+    ]);
+    if (!conversation || conversation.name !== request.name || messages.items.length > 0) {
+      writeReusable(sceneKey, null);
+      return null;
+    }
+    return record.id;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Open the scene's conversation and return its id, or `null` when the backend declined.
+ * Clicking a scene and leaving without saying anything used to leave an empty conversation per
+ * click; the last untouched one is opened again instead (see `findReusableConversation`).
+ */
 export async function startSceneConversation(
   item: SceneItem,
   model: TProviderWithModel,
@@ -245,8 +317,11 @@ export async function startSceneConversation(
           .catch((): LocalMcpServer[] => [])
       : Promise.resolve<LocalMcpServer[]>([]),
   ]);
-  const conversation = await ipcBridge.conversation.create.invoke(
-    buildSceneConversationRequest({ item, skills, mcpServers, model, workspace })
-  );
+  const request = buildSceneConversationRequest({ item, skills, mcpServers, model, workspace });
+  const reusable = await findReusableConversation(request);
+  if (reusable) return reusable;
+  const conversation = await ipcBridge.conversation.create.invoke(request);
+  if (conversation?.id)
+    writeReusable(request.extra.scene_id, { id: conversation.id, fingerprint: sceneFingerprint(request) });
   return conversation?.id ?? null;
 }

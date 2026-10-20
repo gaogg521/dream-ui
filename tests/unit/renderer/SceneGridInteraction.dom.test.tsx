@@ -59,10 +59,14 @@ const SCENES = [scene('s1', '办公'), scene('s2', 'IT运维'), scene('s3', '网
 const ORDER_KEY = 'one-enterprise:scene-order:https://enterprise.test|tenant-1|member-1';
 const OFF_KEY = 'one-enterprise:scene-off:https://enterprise.test|tenant-1|member-1';
 
-const renderGrid = (onOpenScene?: (item: SceneItem) => void | Promise<void>, onCreateScene?: () => void) =>
+const renderGrid = (
+  onOpenScene?: (item: SceneItem) => void | Promise<void>,
+  onCreateScene?: () => void,
+  extra: Partial<React.ComponentProps<typeof SceneGrid>> = {}
+) =>
   render(
     <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
-      <SceneGrid onOpenScene={onOpenScene} onCreateScene={onCreateScene} />
+      <SceneGrid onOpenScene={onOpenScene} onCreateScene={onCreateScene} {...extra} />
     </SWRConfig>
   );
 
@@ -243,5 +247,50 @@ describe('SceneGrid with the person own scenes', () => {
     renderGrid(vi.fn());
     expect(await screen.findByText('我的官网')).toBeInTheDocument();
     expect(names()).toEqual(['我的官网']);
+  });
+});
+
+describe('SceneGrid opening a scene on arrival', () => {
+  beforeEach(reset);
+
+  it('opens the scene it was sent for, once, as soon as the list is there', async () => {
+    const open = vi.fn();
+    const { rerender } = renderGrid(open, undefined, { autoOpenKey: 's2' });
+    await waitFor(() => expect(open).toHaveBeenCalledTimes(1));
+    expect(open.mock.calls[0][0]).toMatchObject({ key: 's2', name: 'IT运维' });
+    // A re-render with the same key (the list refreshing) must not open it again.
+    rerender(
+      <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+        <SceneGrid onOpenScene={open} autoOpenKey='s2' />
+      </SWRConfig>
+    );
+    await screen.findByText('办公');
+    expect(open).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens a scene that has been switched off on the home page, since the scenes tab lists those too', async () => {
+    localStorage.setItem(OFF_KEY, JSON.stringify(['s3']));
+    const open = vi.fn();
+    renderGrid(open, undefined, { autoOpenKey: 's3' });
+    await waitFor(() => expect(open).toHaveBeenCalledTimes(1));
+    expect(open.mock.calls[0][0]).toMatchObject({ key: 's3' });
+  });
+
+  it('ignores a key that matches no scene, and waits for a way to open when it has none yet', async () => {
+    const open = vi.fn();
+    renderGrid(open, undefined, { autoOpenKey: 'gone' });
+    await screen.findByText('办公');
+    expect(open).not.toHaveBeenCalled();
+    renderGrid(undefined, undefined, { autoOpenKey: 's1' });
+    await screen.findAllByText('办公');
+  });
+
+  it('says which engine a scene opens with, next to the folder, when it is not the one picked above', async () => {
+    renderGrid(vi.fn(), undefined, { workspaceDir: 'D:/work/site', agentNote: 'always-1one' });
+    await screen.findByText('办公');
+    const hint = document.querySelector('[title]');
+    expect(document.body.textContent).toContain('common.scenes.workspaceHint');
+    expect(document.body.textContent).toContain('always-1one');
+    expect(hint).not.toBeNull();
   });
 });

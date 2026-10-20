@@ -569,6 +569,8 @@
     "importInvalid": "Ce n'est pas un fichier de scénarios exporté",
     "importEmpty": "Aucun scénario à importer dans ce fichier",
     "workspaceHint": "Le scénario travaillera dans le dossier « {{name}} »",
+    "start": "Démarrer",
+    "usesDefaultEngine": "Les scénarios s’ouvrent toujours avec 1ONE CLI, quel que soit le moteur choisi ci-dessus",
     "badge": {
       "label": "Scénario",
       "title": "Scénario « {{name}} » en cours"

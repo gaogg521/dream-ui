@@ -569,6 +569,8 @@
     "importInvalid": "シーンのエクスポートファイルではありません",
     "importEmpty": "ファイルにインポートできるシーンがありません",
     "workspaceHint": "シーンは「{{name}}」フォルダで作業します",
+    "start": "会話を開始",
+    "usesDefaultEngine": "シーンは上で選んだエンジンに関わらず常に 1ONE CLI で開きます",
     "badge": {
       "label": "シーン",
       "title": "シーン「{{name}}」を使用中"

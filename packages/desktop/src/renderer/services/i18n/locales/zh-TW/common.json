@@ -569,6 +569,8 @@
     "importInvalid": "這不是場景匯出檔案",
     "importEmpty": "檔案裡沒有可匯入的場景",
     "workspaceHint": "點擊場景將在「{{name}}」資料夾中工作",
+    "start": "開始對話",
+    "usesDefaultEngine": "場景固定用 1ONE CLI 開啟，不受上方所選引擎影響",
     "badge": {
       "label": "場景",
       "title": "正在使用場景「{{name}}」"

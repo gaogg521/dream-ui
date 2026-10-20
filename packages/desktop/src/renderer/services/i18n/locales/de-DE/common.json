@@ -569,6 +569,8 @@
     "importInvalid": "Das ist keine exportierte Szenario-Datei",
     "importEmpty": "In der Datei gibt es keine Szenarien zum Importieren",
     "workspaceHint": "Das Szenario arbeitet im Ordner „{{name}}“",
+    "start": "Starten",
+    "usesDefaultEngine": "Szenarien öffnen sich immer mit 1ONE CLI, unabhängig von der oben gewählten Engine",
     "badge": {
       "label": "Szenario",
       "title": "Szenario „{{name}}“ aktiv"

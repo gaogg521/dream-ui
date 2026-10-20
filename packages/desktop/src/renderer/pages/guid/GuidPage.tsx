@@ -60,6 +60,8 @@ type GuidNavigationState = {
   prefillFiles?: string[];
   /** Already-uploaded files to attach to a blank draft (no prompt needed), e.g. from the library. */
   attachFiles?: string[];
+  /** Open this scene right away (the scenes tab's start button). */
+  openSceneKey?: string;
   preservePrefillDraft?: boolean;
   focusPrefill?: boolean;
   workspace?: string;
@@ -882,7 +884,15 @@ const GuidPage: React.FC = () => {
             onClearWorkspace={() => guidInput.setDir('')}
           />
 
-          <SceneGrid onOpenScene={handleOpenScene} onCreateScene={handleCreateScene} workspaceDir={guidInput.dir} />
+          <SceneGrid
+            onOpenScene={handleOpenScene}
+            onCreateScene={handleCreateScene}
+            workspaceDir={guidInput.dir}
+            agentNote={isGeminiMode ? undefined : t('common.scenes.usesDefaultEngine')}
+            autoOpenKey={
+              sceneModel ? ((location.state as GuidNavigationState | null)?.openSceneKey ?? undefined) : undefined
+            }
+          />
 
           {selectedAssistantPrompts.length > 0 ? (
             <div className='mt-40px w-full animate-fade-in ps-20px'>

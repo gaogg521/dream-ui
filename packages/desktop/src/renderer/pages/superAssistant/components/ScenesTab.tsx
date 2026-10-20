@@ -13,9 +13,9 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Empty, Message, Modal, Popconfirm, Spin, Switch, Tag, Upload } from '@arco-design/web-react';
-import { Copy, Delete, Download, Edit, Plus, Upload as UploadIcon } from '@icon-park/react';
+import { Copy, Delete, Download, Edit, Play, Plus, Upload as UploadIcon } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import SceneEditor from '@/renderer/components/scenes/SceneEditor';
 import { useScenes } from '@/renderer/components/scenes/useScenes';
 import type { PersonalScene } from '@/common/types/platform/sceneTypes';
@@ -35,8 +35,10 @@ const SceneRow: React.FC<{
   item: SceneItem;
   on: boolean;
   onToggle: (on: boolean) => void;
+  /** Open a conversation from this scene (the home page does the opening; see `autoOpenKey`). */
+  onStart: (item: SceneItem) => void;
   actions?: React.ReactNode;
-}> = ({ item, on, onToggle, actions }) => {
+}> = ({ item, on, onToggle, onStart, actions }) => {
   const { t } = useTranslation();
   const asksFirst = Boolean(item.company?.intent?.discovery ?? item.mine?.intent.discovery);
   return (
@@ -82,6 +84,16 @@ const SceneRow: React.FC<{
           <div className='mt-4px line-clamp-1 text-12px text-t-tertiary'>{item.description}</div>
         ) : null}
       </div>
+      <Button
+        type='text'
+        size='small'
+        icon={<Play size={14} />}
+        onClick={() => onStart(item)}
+        data-testid='scene-start'
+        aria-label={`${t('common.scenes.start')} ${item.name}`}
+      >
+        {t('common.scenes.start')}
+      </Button>
       {actions}
       <Switch checked={on} aria-label={item.name} onChange={onToggle} />
     </div>
@@ -103,6 +115,7 @@ const ScenesTab: React.FC = () => {
     deletePersonal,
     error,
   } = useScenes();
+  const navigate = useNavigate();
   const [picking, setPicking] = useState(false);
   const [editor, setEditor] = useState<EditorState>(null);
 
@@ -114,6 +127,15 @@ const ScenesTab: React.FC = () => {
     next.delete('new');
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
+
+  // Starting happens on the home page, which owns the model, the folder and the opening itself;
+  // it opens this scene as soon as it has what it needs.
+  const handleStart = useCallback(
+    (item: SceneItem) => {
+      void navigate('/guid', { state: { openSceneKey: item.key } });
+    },
+    [navigate]
+  );
 
   const mine = useMemo(() => all.filter((item) => item.source === 'mine'), [all]);
   const company = useMemo(() => all.filter((item) => item.source === 'company'), [all]);
@@ -265,6 +287,7 @@ const ScenesTab: React.FC = () => {
                 item={item}
                 on={isEnabled(item.key)}
                 onToggle={(on) => setEnabled(item.key, on)}
+                onStart={handleStart}
                 actions={
                   item.mine ? (
                     <div className='flex shrink-0 items-center'>
@@ -318,6 +341,7 @@ const ScenesTab: React.FC = () => {
                   item={item}
                   on={isEnabled(item.key)}
                   onToggle={(on) => setEnabled(item.key, on)}
+                  onStart={handleStart}
                 />
               ))}
             </div>

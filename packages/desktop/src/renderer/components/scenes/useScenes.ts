@@ -64,7 +64,8 @@ export function useScenes() {
       const list = await ipcBridge.onePlatform.myScenes.invoke();
       return Array.isArray(list) ? list : [];
     },
-    { revalidateOnFocus: true, refreshInterval: 30000, shouldRetryOnError: false }
+    // Refreshed on focus and every five minutes; a company does not reissue scenes by the second.
+    { revalidateOnFocus: true, refreshInterval: 300000, shouldRetryOnError: false }
   );
 
   const { data: personalScenes, mutate: refreshPersonal } = useSWR<PersonalScene[]>(

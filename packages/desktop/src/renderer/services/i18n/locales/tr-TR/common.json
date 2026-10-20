@@ -569,6 +569,8 @@
     "importInvalid": "Bu, dışa aktarılmış bir senaryo dosyası değil",
     "importEmpty": "Dosyada içe aktarılacak senaryo yok",
     "workspaceHint": "Senaryo \"{{name}}\" klasöründe çalışacak",
+    "start": "Başlat",
+    "usesDefaultEngine": "Senaryolar, yukarıda hangi motor seçili olursa olsun her zaman 1ONE CLI ile açılır",
     "badge": {
       "label": "Senaryo",
       "title": "\"{{name}}\" senaryosu kullanılıyor"

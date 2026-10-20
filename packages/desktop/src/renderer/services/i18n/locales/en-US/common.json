@@ -726,6 +726,8 @@
     "importInvalid": "That is not an exported scenes file",
     "importEmpty": "There are no scenes to import in that file",
     "workspaceHint": "A scene will open working in \"{{name}}\"",
+    "start": "Start",
+    "usesDefaultEngine": "Scenes always open with 1ONE CLI, whichever engine is selected above",
     "badge": {
       "label": "Scene",
       "title": "Using the scene \"{{name}}\""

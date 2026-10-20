@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SWRConfig } from 'swr';
 
@@ -74,11 +74,17 @@ const scene = (id: string, name: string, patch: Partial<MyScene> = {}): MyScene 
 });
 const OFF_KEY = 'one-enterprise:scene-off:https://enterprise.test|tenant-1|member-1';
 
+const LocationProbe: React.FC = () => {
+  const location = useLocation();
+  return <span data-testid='location'>{`${location.pathname}|${JSON.stringify(location.state)}`}</span>;
+};
+
 const renderTab = (path = '/') =>
   render(
     <MemoryRouter initialEntries={[path]}>
       <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
         <ScenesTab />
+        <LocationProbe />
       </SWRConfig>
     </MemoryRouter>
   );
@@ -131,7 +137,17 @@ describe('ScenesTab', () => {
       renderTab();
       await screen.findByText('办公');
       const row = screen.getByText('办公').closest('[data-scene-row]') as HTMLElement;
-      expect(within(row).queryByRole('button')).not.toBeInTheDocument();
+      // Starting a conversation is open to everyone; changing the scene is not.
+      expect(within(row).getAllByRole('button')).toHaveLength(1);
+      expect(within(row).getByTestId('scene-start')).toBeInTheDocument();
+    });
+
+    it('starts a conversation from a row by sending the person to the home page with that scene to open', async () => {
+      renderTab('/settings/super-assistant');
+      await screen.findByText('IT运维');
+      const row = screen.getByText('IT运维').closest('[data-scene-row]') as HTMLElement;
+      fireEvent.click(within(row).getByTestId('scene-start'));
+      await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/guid|{"openSceneKey":"s2"}'));
     });
 
     it('marks a company scene that asks questions first', async () => {

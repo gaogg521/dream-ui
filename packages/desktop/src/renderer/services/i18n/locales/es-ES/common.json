@@ -569,6 +569,8 @@
     "importInvalid": "Ese no es un archivo de escenarios exportado",
     "importEmpty": "No hay escenarios para importar en ese archivo",
     "workspaceHint": "El escenario trabajará en la carpeta «{{name}}»",
+    "start": "Iniciar",
+    "usesDefaultEngine": "Los escenarios siempre se abren con 1ONE CLI, sea cual sea el motor elegido arriba",
     "badge": {
       "label": "Escenario",
       "title": "Usando el escenario «{{name}}»"

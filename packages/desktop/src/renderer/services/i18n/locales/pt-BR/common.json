@@ -569,6 +569,8 @@
     "importInvalid": "Este não é um arquivo de cenários exportado",
     "importEmpty": "Não há cenários para importar nesse arquivo",
     "workspaceHint": "O cenário trabalhará na pasta \"{{name}}\"",
+    "start": "Iniciar",
+    "usesDefaultEngine": "Os cenários sempre abrem com o 1ONE CLI, seja qual for o motor selecionado acima",
     "badge": {
       "label": "Cenário",
       "title": "Usando o cenário \"{{name}}\""

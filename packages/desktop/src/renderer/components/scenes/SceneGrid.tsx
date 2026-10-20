@@ -24,7 +24,7 @@ import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type D
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@arco-design/web-react';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Application, Plus, Refresh } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import styles from './SceneGrid.module.css';
@@ -117,11 +117,15 @@ type SceneGridProps = {
   onOpenScene?: (item: SceneItem) => void | Promise<void>;
   /** The project folder chosen above; a scene opens working in it. */
   workspaceDir?: string;
+  /** What a scene is opened with when that is not what the person picked above (the engine). */
+  agentNote?: string;
+  /** Open this scene as soon as the list is loaded (once), e.g. when the scenes tab sent the person here. */
+  autoOpenKey?: string;
   /** Go and make a new scene. Without it the grid offers no way to make one. */
   onCreateScene?: () => void;
 };
 
-const SceneGrid: React.FC<SceneGridProps> = ({ onOpenScene, onCreateScene, workspaceDir }) => {
+const SceneGrid: React.FC<SceneGridProps> = ({ onOpenScene, onCreateScene, workspaceDir, agentNote, autoOpenKey }) => {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [openingKey, setOpeningKey] = useState<string | null>(null);
@@ -129,6 +133,16 @@ const SceneGrid: React.FC<SceneGridProps> = ({ onOpenScene, onCreateScene, works
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } })
   );
+
+  const autoOpened = useRef<string | null>(null);
+  useEffect(() => {
+    if (!autoOpenKey || !loaded || !onOpenScene || autoOpened.current === autoOpenKey) return;
+    autoOpened.current = autoOpenKey;
+    const target = all.find((item) => item.key === autoOpenKey);
+    if (!target) return;
+    setOpeningKey(target.key);
+    void Promise.resolve(onOpenScene(target)).finally(() => setOpeningKey(null));
+  }, [autoOpenKey, loaded, all, onOpenScene]);
 
   if (!loaded) return null;
   if (error && all.length === 0)
@@ -176,9 +190,10 @@ const SceneGrid: React.FC<SceneGridProps> = ({ onOpenScene, onCreateScene, works
   }
 
   // A chosen folder is what the next scene will work in; say so, since the choice is made above.
-  const workspaceHint = workspaceDir
+  const folderHint = workspaceDir
     ? t('common.scenes.workspaceHint', { name: workspaceDir.split(/[\\/]/).filter(Boolean).pop() ?? workspaceDir })
     : null;
+  const workspaceHint = [folderHint, agentNote].filter(Boolean).join(' · ') || null;
   const visible = expanded ? ordered : ordered.slice(0, COLLAPSED_SCENE_COUNT);
   const hiddenCount = ordered.length - COLLAPSED_SCENE_COUNT;
 
