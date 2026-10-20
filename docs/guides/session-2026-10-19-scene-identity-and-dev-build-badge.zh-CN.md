@@ -80,3 +80,9 @@
 
 - **根因**：`useGuidModelSelection` 的默认值取"挂载时 provider 列表里第一个可用模型"，之后只要它还可用就**永远不动**；`persistPreference` 参数根本没用上。所以同一个 App，列表还没加载全时挂载的页面会停在先到的那个（`openrouter/free`），整页重新挂载的页面则是此刻的第一个（`my-personal-model`）。
 - **改法**：默认值变成"此刻的列表 + 用户上次手动选的那个"的纯函数——上次手动选的还在就用它，不在就用第一个；还处于"自动默认"状态时，列表变了会跟着重算；用户手选、助理默认（`persistPreference: false`）不会被挪动，也不会被记成用户的选择。记录在 `localStorage` 的 `guid.lastPickedModelKey`，只有首页无助理时的手选才写入。
+
+## 9. 首页引擎胶囊条：最多 5 个 + 「更多」
+
+- 之前把所有已安装的 CLI（含 Cursor、Pi 等未激活的）一字排开，条被撑得很长。现在 `splitBackendPills`（`pages/guid/utils/backendPills.ts`）只露 5 个，其余收进「更多 N」下拉。
+- **排序**：用「助手与专家 → 已启用」里拖拽出来的顺序（`assistants.enabledOrder`，首页胶囊条此前没读它，只按内置 `sort_order`），没设过就走旧顺序；**能用的在前、未激活的排在后面**，所以露出来的 5 个都是能点的；当前选中的引擎永远可见（原本落在「更多」里就顶掉最后一个位置）。
+- 下拉里未激活的引擎置灰不可选，悬停显示原因；列表超过 360px 高度可滚动。

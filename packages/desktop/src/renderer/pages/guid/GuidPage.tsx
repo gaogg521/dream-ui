@@ -19,6 +19,7 @@ import { getFuzzyMatchIndices, useSlashCommandController } from '@/renderer/hook
 import { openExternalUrl } from '@/renderer/utils/platform';
 import SlashCommandMenu, { type SlashCommandMenuItem } from '@/renderer/components/chat/SlashCommandMenu';
 import BackendSelectionArea from './components/BackendSelectionArea';
+import { useAssistantOrder } from '@/renderer/hooks/assistant/useAssistantOrder';
 import GuidActionRow from './components/GuidActionRow';
 import MediaModeControl from '@/renderer/components/media/MediaModeControl';
 import { useMediaComposer } from '@/renderer/hooks/media/useMediaComposer';
@@ -156,6 +157,7 @@ const GuidPage: React.FC = () => {
   // Only dream uses this provider-based model picker now (Gemini runs as a
   // regular ACP backend with its own model selector).
   const modelSelection = useGuidModelSelection('dream');
+  const { assistantOrder } = useAssistantOrder();
 
   const navState = location.state as GuidNavigationState | null;
   const resetAssistantRequested = navState?.resetAssistant === true;
@@ -878,6 +880,7 @@ const GuidPage: React.FC = () => {
             selectedBackendAgentId={agentSelection.selectedBackendAgentId}
             localeKey={localeKey}
             onSelectBackend={handleSelectBackend}
+            preferredOrder={assistantOrder}
           />
 
           <GuidInputCard
