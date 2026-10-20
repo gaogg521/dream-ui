@@ -1,3 +1,29 @@
+.library,
+.documentModal,
+.actions {
+  /* Arco declares dark neutrals on body, overriding inherited preset colors.
+     Keep library surfaces and nested Arco controls on the app token contract. */
+  --color-bg-1: var(--bg-base);
+  --color-bg-2: var(--bg-1);
+  --color-bg-3: var(--bg-2);
+  --color-bg-4: var(--bg-3);
+  --color-bg-5: var(--bg-3);
+  --color-bg-popup: var(--bg-1);
+  --color-fill-1: var(--bg-1);
+  --color-fill-2: var(--bg-2);
+  --color-fill-3: var(--bg-3);
+  --color-fill-4: var(--bg-active);
+  --color-border: var(--border-base);
+  --color-border-1: var(--border-light);
+  --color-border-2: var(--border-base);
+  --color-border-3: var(--border-base);
+  --color-border-4: var(--border-base);
+  --color-text-1: var(--text-primary);
+  --color-text-2: var(--text-secondary);
+  --color-text-3: var(--text-t-tertiary);
+  --color-text-4: var(--text-disabled);
+}
+
 .library {
   display: flex;
   height: 100%;
