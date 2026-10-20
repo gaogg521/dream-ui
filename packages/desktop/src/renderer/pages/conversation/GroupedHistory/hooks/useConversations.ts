@@ -61,6 +61,7 @@ export const useConversations = () => {
   const { id } = useParams();
   const {
     conversations,
+    listLoadError,
     isConversationGenerating,
     isConversationWaitingConfirmation,
     hasCompletionUnread,
@@ -247,6 +248,7 @@ export const useConversations = () => {
 
   return {
     conversations,
+    listLoadError,
     isConversationGenerating,
     isConversationWaitingConfirmation,
     hasCompletionUnread,

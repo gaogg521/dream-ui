@@ -3,6 +3,7 @@
  */
 
 import { ipcBridge } from '@/common';
+import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import type { TChatConversation } from '@/common/config/storage';
 import { getConversationOrNullWithRetry } from '@/renderer/pages/conversation/utils/conversationCache';
 import { addEventListener } from '@/renderer/utils/emitter';
@@ -211,8 +212,24 @@ export const applyWaitingConfirmationTransition = (
  */
 export const shouldReconcileMarkWaiting = (pendingConfirmations: number): boolean => pendingConfirmations > 0;
 
+/** Why the last attempt to load the conversation list failed. `code` is the backend's error code, when it sent one. */
+export type ConversationListLoadError = { code: string | null; message: string };
+
+/**
+ * Turn a failed list request into something the sidebar can show. The distinction
+ * that matters to the person is "the data file is damaged" (backend code
+ * `DATABASE_CORRUPT`: retrying cannot help) versus everything else (try again).
+ */
+export const toConversationListLoadError = (error: unknown): ConversationListLoadError => {
+  if (isBackendHttpError(error)) {
+    return { code: error.code || null, message: error.message };
+  }
+  return { code: null, message: error instanceof Error ? error.message : String(error) };
+};
+
 type ConversationListSyncSnapshot = {
   conversations: TChatConversation[];
+  listLoadError: ConversationListLoadError | null;
   generatingConversationIds: Set<string>;
   waitingConfirmationConversationIds: Set<string>;
   completionUnreadConversationIds: Set<string>;
@@ -251,6 +268,7 @@ const listeners = new Set<() => void>();
 
 let isStoreInitialized = false;
 let conversationsState: TChatConversation[] = [];
+let listLoadErrorState: ConversationListLoadError | null = null;
 let generatingConversationIdsState = new Set<string>();
 // Per-conversation set of pending confirmation ids (permission / acp_permission
 // / ask). A conversation with a non-empty set is "waiting on the user" and gets
@@ -273,6 +291,7 @@ let projectIdByIdState = new Map<string, string | null>();
 let activeConversationIdState: string | null = null;
 let snapshotState: ConversationListSyncSnapshot = {
   conversations: conversationsState,
+  listLoadError: listLoadErrorState,
   generatingConversationIds: generatingConversationIdsState,
   waitingConfirmationConversationIds: waitingConfirmationConversationIdsState,
   completionUnreadConversationIds: completionUnreadConversationIdsState,
@@ -282,6 +301,7 @@ let snapshotState: ConversationListSyncSnapshot = {
 const emitStoreChange = () => {
   snapshotState = {
     conversations: conversationsState,
+    listLoadError: listLoadErrorState,
     generatingConversationIds: generatingConversationIdsState,
     waitingConfirmationConversationIds: waitingConfirmationConversationIdsState,
     completionUnreadConversationIds: completionUnreadConversationIdsState,
@@ -350,6 +370,7 @@ const refreshConversations = () => {
   void ipcBridge.database.getUserConversations
     .invoke({ limit: 10000 })
     .then((result) => {
+      listLoadErrorState = null;
       const items = result?.items;
       if (items && Array.isArray(items)) {
         const filteredData = items.filter((conv) => {
@@ -378,8 +399,12 @@ const refreshConversations = () => {
     .catch((error) => {
       // Keep the last good list. Clearing it emptied the sidebar on a
       // transient failure and, worse, made every conversation "unknown" — so
-      // every later stream frame asked for yet another refresh.
+      // every later stream frame asked for yet another refresh. The failure is
+      // still surfaced (`listLoadError`): an empty sidebar over a damaged data
+      // file otherwise looks exactly like "no history yet".
       console.error('[WorkspaceGroupedHistory] Failed to load conversations:', error);
+      listLoadErrorState = toConversationListLoadError(error);
+      emitStoreChange();
     })
     .finally(() => {
       refreshInFlight = false;
@@ -390,10 +415,14 @@ const refreshConversations = () => {
     });
 };
 
+/** Ask for the list again, e.g. from the sidebar's retry button. */
+export const retryLoadConversations = (): void => refreshConversations();
+
 /** Test hook: reset the single-flight state between cases. */
 export const resetConversationRefreshStateForTest = (): void => {
   refreshInFlight = false;
   refreshQueued = false;
+  listLoadErrorState = null;
 };
 
 /** Source of a generating-state transition, logged for field diagnosis. */
@@ -720,6 +749,7 @@ export const useConversationListSync = () => {
 
   const {
     conversations,
+    listLoadError,
     generatingConversationIds,
     waitingConfirmationConversationIds,
     completionUnreadConversationIds,
@@ -776,6 +806,8 @@ export const useConversationListSync = () => {
 
   return {
     conversations,
+    listLoadError,
+    retryLoadConversations,
     isConversationGenerating,
     isConversationWaitingConfirmation,
     hasCompletionUnread,

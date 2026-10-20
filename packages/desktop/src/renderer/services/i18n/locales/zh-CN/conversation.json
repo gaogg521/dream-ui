@@ -22,6 +22,9 @@
   "history": {
     "recents": "最近",
     "noHistory": "暂无对话历史",
+    "loadFailed": "会话列表加载失败",
+    "databaseCorrupt": "本机数据文件已损坏",
+    "databaseCorruptHint": "历史会话暂时无法读取，数据没有被删除。请先不要删除数据目录，联系支持即可恢复。",
     "deleteTitle": "删除",
     "deleteConfirm": "确定删除该对话吗？",
     "confirmDelete": "删除",

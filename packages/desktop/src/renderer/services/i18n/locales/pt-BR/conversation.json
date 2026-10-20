@@ -22,6 +22,9 @@
   "history": {
     "recents": "Recentes",
     "noHistory": "Nenhum histórico de chat",
+    "loadFailed": "Não foi possível carregar as conversas",
+    "databaseCorrupt": "O arquivo de dados local está danificado",
+    "databaseCorruptHint": "O histórico não pode ser lido agora, mas nada foi apagado. Não exclua a pasta de dados; fale com o suporte para recuperá-lo.",
     "deleteTitle": "Excluir",
     "deleteConfirm": "Tem certeza de que deseja excluir este chat?",
     "confirmDelete": "Excluir",

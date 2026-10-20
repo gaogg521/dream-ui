@@ -53,9 +53,11 @@ vi.mock('@/common', () => ({
 
 vi.mock('@/renderer/utils/emitter', () => ({ addEventListener: () => () => {} }));
 
+import { BackendHttpError } from '@/common/adapter/httpBridge';
 import {
   getSnapshotConversationName,
   resetConversationRefreshStateForTest,
+  retryLoadConversations,
   useConversationListSync,
 } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
 
@@ -124,5 +126,40 @@ describe('conversation list refresh', () => {
       handlers.responseStream?.({ conversation_id: 'conv-old', type: 'content' });
     });
     expect(invoke).toHaveBeenCalledTimes(before + 1);
+  });
+
+  it('reports why the list could not be loaded, and clears the report once it can', async () => {
+    const { result } = renderHook(() => useConversationListSync());
+    // Drain anything the previous case left in flight, then start from a good load.
+    await flush();
+    while (pending.length > 0) pending.shift()?.resolve({ items: [] });
+    await flush();
+    act(() => retryLoadConversations());
+    pending.shift()?.resolve({ items: [] });
+    await flush();
+    expect(result.current.listLoadError).toBeNull();
+
+    act(() => retryLoadConversations());
+    pending.shift()?.reject(
+      new BackendHttpError({
+        method: 'GET',
+        path: '/api/conversations',
+        status: 503,
+        body: { code: 'DATABASE_CORRUPT', error: 'The local database file is damaged.' },
+      })
+    );
+    await flush();
+    expect(result.current.listLoadError?.code).toBe('DATABASE_CORRUPT');
+
+    // A plain network failure carries no code, so the sidebar offers a retry instead.
+    act(() => retryLoadConversations());
+    pending.shift()?.reject(new TypeError('Failed to fetch'));
+    await flush();
+    expect(result.current.listLoadError).toEqual({ code: null, message: 'Failed to fetch' });
+
+    act(() => retryLoadConversations());
+    pending.shift()?.resolve({ items: [{ id: 'conv-ok', name: 'Ok' }] });
+    await flush();
+    expect(result.current.listLoadError).toBeNull();
   });
 });

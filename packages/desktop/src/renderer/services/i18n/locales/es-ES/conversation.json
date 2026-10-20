@@ -22,6 +22,9 @@
   "history": {
     "recents": "Recientes",
     "noHistory": "Sin historial de chats",
+    "loadFailed": "No se pudieron cargar las conversaciones",
+    "databaseCorrupt": "El archivo de datos local está dañado",
+    "databaseCorruptHint": "El historial no se puede leer ahora, pero no se ha borrado nada. No elimine la carpeta de datos; contacte con soporte para recuperarlo.",
     "deleteTitle": "Eliminar",
     "deleteConfirm": "¿Estás seguro de que deseas eliminar este chat?",
     "confirmDelete": "Eliminar",

@@ -63,3 +63,20 @@
 - **公司场景轮询 30 秒 → 5 分钟**（仍有获得焦点时刷新）。
 - ⚠️ 真机顺带看到、**没修**的：首页的默认模型取的是 provider 列表里第一个可用模型，而这份列表在「刚从别的页面跳回来（用缓存）」和「整页刷新（取最新）」时顺序可能不同，所以同一个场景从管理页打开和从首页点开，可能用到不同的默认模型（`my-personal-model` vs `openrouter/free`）。复用空会话的指纹里带了模型，所以不会把别的模型的会话错当成这个。根因在首页默认模型的选法，不是场景特有的问题。
 - ⚠️ 隔离 profile（`DREAM_MULTI_INSTANCE=1` → `dream-ui-Dev-2`）里 `GET /api/conversations` 一直 500（后端 1ms 内失败，侧栏历史因此是空的），用户自己的 `dream-ui-Dev` 正常。那份库用了几个月、混过不同分支的二进制，怀疑某一行数据读不出来，没深查；验证场景会话时要用页面 URL 里的会话 id，别靠列表接口。
+
+## 8. 10-20 深查：隔离 profile 的会话列表 500 + 首页默认模型不稳
+
+### 8.1 会话列表 500 的真因：本机数据文件的一页坏了
+
+- **现象**：`GET /api/conversations?limit=10000` 返回 500，侧栏历史是空的；`limit` ≤ 8 正常、≥ 9 就 500。
+- **根因**：隔离 profile（`dream-ui-Dev-2`）的 `one-backend.db` 里 `conversations` 表有一页损坏——整库 `PRAGMA integrity_check` 报 `database disk image is malformed`，全表扫描读到第 9 行失败。10-11 的备份能通过检查，所以不是迁移引起的；第一次失败在 10-20 15:24，那段时间正好 C 盘写满（**物理原因没有证据，只是时间吻合，没法下定论**）。这个 profile 09-05 也坏过一次。
+- **为什么之前"查不出来"**：后端 `ApiError::Internal` 的原因只留在内存里、不进日志，访问日志里只有 `Internal server error.`；启动期的损坏检测只在启动时的那条查询失败时才触发，而这种"启动能过、某张表某页坏"的库完全绕过它。前端又把失败吞掉、保留上一份列表（首次加载就是空），于是和"没有历史"看起来一模一样。
+- **已修（dream-core `887f80e`）**：①访问日志新增 `error_cause`（Internal/BadGateway/Timeout 的私有原因，截断 400 字，响应体不变）；②`DbError::is_corruption` 成为"SQLite 说文件坏了"的唯一判据，启动恢复复用它；③`ConversationError::DatabaseCorrupted` → `503 DATABASE_CORRUPT`，不再是笼统的 500；④启动后台跑一次 `PRAGMA quick_check(1)`，坏了打 `DATABASE_FILE_DAMAGED`（带文件路径）。
+- **已修（dream-ui）**：会话列表加载失败不再静默——侧栏出提示：普通失败给「重试」，`DATABASE_CORRUPT` 单独说「本机数据文件已损坏，数据没有被删除，请先别删数据目录」且不给重试（重试没用）。`useConversationListSync` 新增 `listLoadError` / `retryLoadConversations`；组件 `ListLoadErrorNotice`；文案 `conversation.history.{loadFailed,databaseCorrupt,databaseCorruptHint}` 13 种语言。
+- **真机验证（新编的 debug dreamcore 对着损坏库的副本）**：启动即在日志里打出 `DATABASE_FILE_DAMAGED`，verdict 是 `Tree 103 page 103 cell 0: 2nd reference to page 868`（同一页被两处引用，即页面交叉链接）；`GET /api/conversations?limit=10000` 返回 `503 {"code":"DATABASE_CORRUPT"}`，访问日志 `error_code="DATABASE_CORRUPT"`。页面被重复引用更像是**两个写入者同时改一个文件**或写入被截断，而不是单纯"读坏了"；这个 profile 当天确实发生过两个 dreamcore 抢同一数据目录，但**没有直接证据**把两者连起来，别当结论用。
+- **抢救这份库**（按行读，遇坏页停）：新建空库、照搬原库 schema 与 `_sqlx_migrations`，逐表拷贝可读行，会话/消息缺的部分用 10-11 备份 `INSERT OR IGNORE` 补齐，结果 18 个会话、`integrity_check` ok。原件保留为 `one-backend.db.corrupt-1020` / `-wal.corrupt-1020` / `-shm.corrupt-1020`。脚本在 scratchpad `salvage-1020/salvage.py`。⚠️ `text_factory=bytes` 会让 CHECK 约束全挂（bytes ≠ text），要用解码函数。
+
+### 8.2 首页默认模型不稳：默认值是"挂载那一刻的第一个"
+
+- **根因**：`useGuidModelSelection` 的默认值取"挂载时 provider 列表里第一个可用模型"，之后只要它还可用就**永远不动**；`persistPreference` 参数根本没用上。所以同一个 App，列表还没加载全时挂载的页面会停在先到的那个（`openrouter/free`），整页重新挂载的页面则是此刻的第一个（`my-personal-model`）。
+- **改法**：默认值变成"此刻的列表 + 用户上次手动选的那个"的纯函数——上次手动选的还在就用它，不在就用第一个；还处于"自动默认"状态时，列表变了会跟着重算；用户手选、助理默认（`persistPreference: false`）不会被挪动，也不会被记成用户的选择。记录在 `localStorage` 的 `guid.lastPickedModelKey`，只有首页无助理时的手选才写入。

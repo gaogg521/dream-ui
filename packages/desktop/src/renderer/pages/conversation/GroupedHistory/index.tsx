@@ -23,9 +23,11 @@ import WorkspaceCollapse from '../components/WorkspaceCollapse';
 import siderStyles from '@renderer/components/layout/Sider/Sider.module.css';
 import DirectorySelectionModal from '@/renderer/components/settings/DirectorySelectionModal';
 import ConversationRow from './ConversationRow';
+import ListLoadErrorNotice from './ListLoadErrorNotice';
 import DragOverlayContent from './DragOverlayContent';
 import SortableConversationRow from './SortableConversationRow';
 import { useBatchSelection } from './hooks/useBatchSelection';
+import { retryLoadConversations } from './hooks/useConversationListSync';
 import { useConversationActions } from './hooks/useConversationActions';
 import { useConversations } from './hooks/useConversations';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
@@ -53,6 +55,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
 
   const {
     conversations,
+    listLoadError,
     isConversationGenerating,
     isConversationWaitingConfirmation,
     hasCompletionUnread,
@@ -68,6 +71,10 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     collapsedSections,
     toggleSection,
   } = useConversations();
+
+  const loadErrorNotice = listLoadError ? (
+    <ListLoadErrorNotice error={listLoadError} onRetry={retryLoadConversations} />
+  ) : null;
 
   // Sidebar shows a height-aware, scrollable preview (loads more than fits so
   // scrolling reveals it); the full list lives in Session Center (/sessions).
@@ -332,9 +339,11 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     return (
       <div className='flex flex-col flex-1 min-h-0 h-full'>
         <div className={classNames('flex-1 min-h-0 overflow-y-auto', siderStyles.scrollArea)}>
-          <div className='flex items-center justify-center py-12px'>
-            <Empty description={t('conversation.history.noHistory')} />
-          </div>
+          {loadErrorNotice ?? (
+            <div className='flex items-center justify-center py-12px'>
+              <Empty description={t('conversation.history.noHistory')} />
+            </div>
+          )}
         </div>
       </div>
     );
@@ -583,6 +592,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
             hover-reveal scrollbar (styles/themes/base.css) gives a visible
             cue that there's more to scroll instead of hiding it entirely. */}
         <div ref={scrollAreaRef} className='flex-1 min-h-0 overflow-y-auto'>
+          {loadErrorNotice}
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}

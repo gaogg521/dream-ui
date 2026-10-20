@@ -19,7 +19,7 @@
  * on one. What is selected and what is offered have to come from one list.
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { IProvider } from '@/common/config/storage';
 
@@ -82,5 +82,63 @@ describe('useGuidModelSelection', () => {
     const { result } = renderHook(() => useGuidModelSelection());
     await new Promise((r) => setTimeout(r, 50));
     expect(result.current.current_model).toBeUndefined();
+  });
+});
+
+describe('useGuidModelSelection default', () => {
+  const personal = provider({ id: 'personal', models: ['my-personal-model'], model_settings: {} });
+  const trial = provider({ id: 'trial', models: ['openrouter/free'], model_settings: {} });
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('follows the list as the providers finish loading, instead of freezing on whichever came first', async () => {
+    // The first load can hold only some of the providers.
+    providers.value = [trial];
+    const { result, rerender } = renderHook(() => useGuidModelSelection());
+    await waitFor(() => expect(result.current.current_model?.use_model).toBe('openrouter/free'));
+
+    providers.value = [personal, trial];
+    rerender();
+    await waitFor(() => expect(result.current.current_model?.use_model).toBe('my-personal-model'));
+  });
+
+  it('starts every mount on the same model: the one last picked by hand, if it is still offered', async () => {
+    providers.value = [personal, trial];
+    const first = renderHook(() => useGuidModelSelection());
+    await waitFor(() => expect(first.result.current.current_model?.use_model).toBe('my-personal-model'));
+    await first.result.current.setCurrentModel(
+      { ...(trial as IProvider), use_model: 'openrouter/free' },
+      { persistPreference: true }
+    );
+    first.unmount();
+
+    const second = renderHook(() => useGuidModelSelection());
+    await waitFor(() => expect(second.result.current.current_model?.use_model).toBe('openrouter/free'));
+    second.unmount();
+
+    // Once that model is gone the default falls back to the first offered one.
+    providers.value = [personal];
+    const third = renderHook(() => useGuidModelSelection());
+    await waitFor(() => expect(third.result.current.current_model?.use_model).toBe('my-personal-model'));
+  });
+
+  it('does not move a hand pick when the list changes, and does not remember an assistant default', async () => {
+    providers.value = [personal, trial];
+    const { result, rerender } = renderHook(() => useGuidModelSelection());
+    await waitFor(() => expect(result.current.current_model?.use_model).toBe('my-personal-model'));
+
+    // An assistant's own default: applied, but not written down as the person's choice.
+    await result.current.setCurrentModel(
+      { ...(trial as IProvider), use_model: 'openrouter/free' },
+      { persistPreference: false }
+    );
+    expect(localStorage.getItem('guid.lastPickedModelKey')).toBeNull();
+
+    providers.value = [{ ...(personal as object) } as IProvider, trial as IProvider];
+    rerender();
+    await new Promise((r) => setTimeout(r, 30));
+    expect(result.current.current_model?.use_model).toBe('openrouter/free');
   });
 });

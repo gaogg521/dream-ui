@@ -71,6 +71,9 @@ type GuidNavigationState = {
 /** Example prompts shown under the composer. */
 const MAX_EXAMPLE_PROMPTS = 4;
 
+/** How long to wait for the assistant's saved defaults before going on with the provisional model. */
+const MODEL_SETTLE_TIMEOUT_MS = 3000;
+
 const GuidPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -474,6 +477,21 @@ const GuidPage: React.FC = () => {
   }, [selectedAssistantDetail, selectedAssistantId]);
 
   const appliedAssistantDefaultsKeyRef = useRef<string | null>(null);
+  // The assistant whose saved defaults (model, mode, ...) have finished being applied. Until then
+  // `modelSelection.current_model` is only the provisional first provider.
+  const [defaultsAppliedForAssistant, setDefaultsAppliedForAssistant] = useState<string | null>(null);
+  // Give up waiting for the assistant list/detail after a moment, so a slow or failing load can
+  // never keep something that waits on the model from ever running.
+  const [modelSettleTimedOut, setModelSettleTimedOut] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setModelSettleTimedOut(true), MODEL_SETTLE_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
+  const modelSettled =
+    modelSettleTimedOut ||
+    (agentSelection.assistants.length > 0 &&
+      selectedAssistantId !== null &&
+      (selectedAssistantDetail === null || defaultsAppliedForAssistant === selectedAssistantId));
   const manualModelSelectionAssistantRef = useRef<string | null>(null);
   const manualThoughtLevelSelectionAssistantRef = useRef<string | null>(null);
   useEffect(() => {
@@ -572,9 +590,11 @@ const GuidPage: React.FC = () => {
       setGuidSelectedMcpServerIds(resolvedDefaults.mcpIds);
     };
 
-    void applyAssistantDefaults().catch((error) => {
-      console.error('[GuidPage] Failed to apply assistant defaults:', error);
-    });
+    void applyAssistantDefaults()
+      .catch((error) => {
+        console.error('[GuidPage] Failed to apply assistant defaults:', error);
+      })
+      .finally(() => setDefaultsAppliedForAssistant(selectedAssistantId));
   }, [
     agentSelection.currentAcpCachedModelInfo?.available_models,
     agentSelection.currentAgentModeOptions,
@@ -889,8 +909,12 @@ const GuidPage: React.FC = () => {
             onCreateScene={handleCreateScene}
             workspaceDir={guidInput.dir}
             agentNote={isGeminiMode ? undefined : t('common.scenes.usesDefaultEngine')}
+            // Wait for the assistant's saved model to land: opening on the provisional first provider is
+            // how the same scene used to start on a different model from here than from a click.
             autoOpenKey={
-              sceneModel ? ((location.state as GuidNavigationState | null)?.openSceneKey ?? undefined) : undefined
+              sceneModel && modelSettled
+                ? ((location.state as GuidNavigationState | null)?.openSceneKey ?? undefined)
+                : undefined
             }
           />
 

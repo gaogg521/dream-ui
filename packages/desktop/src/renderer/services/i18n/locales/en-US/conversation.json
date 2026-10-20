@@ -22,6 +22,9 @@
   "history": {
     "recents": "Recents",
     "noHistory": "No chat history",
+    "loadFailed": "Couldn’t load your conversations",
+    "databaseCorrupt": "The local data file is damaged",
+    "databaseCorruptHint": "Your history can’t be read right now, but nothing has been deleted. Please don’t delete the data folder; contact support and it can be recovered.",
     "deleteTitle": "Delete",
     "deleteConfirm": "Are you sure you want to delete this chat?",
     "confirmDelete": "Delete",

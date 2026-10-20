@@ -22,6 +22,9 @@
   "history": {
     "recents": "Récents",
     "noHistory": "Aucun historique de chat",
+    "loadFailed": "Impossible de charger les conversations",
+    "databaseCorrupt": "Le fichier de données local est endommagé",
+    "databaseCorruptHint": "L’historique est momentanément illisible, mais rien n’a été supprimé. Ne supprimez pas le dossier de données ; contactez le support.",
     "deleteTitle": "Supprimer",
     "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce chat ?",
     "confirmDelete": "Supprimer",

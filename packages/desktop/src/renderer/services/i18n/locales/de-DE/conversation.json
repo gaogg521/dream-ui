@@ -22,6 +22,9 @@
   "history": {
     "recents": "Zuletzt",
     "noHistory": "Kein Chatverlauf",
+    "loadFailed": "Unterhaltungen konnten nicht geladen werden",
+    "databaseCorrupt": "Die lokale Datendatei ist beschädigt",
+    "databaseCorruptHint": "Der Verlauf ist gerade nicht lesbar, aber nichts wurde gelöscht. Löschen Sie den Datenordner nicht; wenden Sie sich an den Support.",
     "deleteTitle": "Löschen",
     "deleteConfirm": "Diesen Chat wirklich löschen?",
     "confirmDelete": "Löschen",
