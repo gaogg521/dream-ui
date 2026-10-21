@@ -984,5 +984,6 @@
   "officePreview": {
     "fileWatchUnavailable": "La vigilancia de archivos en vivo no está disponible: puede que el sistema se haya quedado sin manejadores de vigilancia de archivos (inotify). La vista previa automática de nuevos archivos de Office está desactivada. Aumenta fs.inotify.max_user_instances o cierra los programas que mantienen muchas vigilancias de archivos."
   },
-  "mediaFailureAdvice_serviceBusy": "La cola del propio proveedor está llena en este momento; aquí no hay ningún error. Espera un momento y vuelve a intentarlo; si persiste durante horas, prueba otro modelo o canal."
+  "mediaFailureAdvice_serviceBusy": "La cola del propio proveedor está llena en este momento; aquí no hay ningún error. Espera un momento y vuelve a intentarlo; si persiste durante horas, prueba otro modelo o canal.",
+  "policyDenied_employeeResourceDenied": "El acceso o las dependencias del empleado han cambiado. Inicia un chat nuevo desde Empleados digitales y escenarios; si no aparece, contacta con tu administrador."
 }

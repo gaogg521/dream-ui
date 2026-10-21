@@ -985,5 +985,6 @@
   "officePreview": {
     "fileWatchUnavailable": "Canlı dosya izleme kullanılamıyor — sistemin dosya izleme tanıtıcıları (inotify) tükenmiş olabilir. Yeni Office dosyalarının otomatik önizlemesi devre dışı. fs.inotify.max_user_instances değerini artırın veya çok sayıda dosya izlemesi tutan programları kapatın."
   },
-  "mediaFailureAdvice_serviceBusy": "Sağlayıcının kendi kuyruğu şu an dolu — burada bir sorun yok. Biraz bekleyip yeniden deneyin; saatlerce sürerse başka bir model veya kanal deneyin."
+  "mediaFailureAdvice_serviceBusy": "Sağlayıcının kendi kuyruğu şu an dolu — burada bir sorun yok. Biraz bekleyip yeniden deneyin; saatlerce sürerse başka bir model veya kanal deneyin.",
+  "policyDenied_employeeResourceDenied": "Çalışanın erişimi veya bağımlılıkları değişti. Dijital Çalışanlar ve Senaryolar bölümünden yeni sohbet başlatın; çalışan görünmüyorsa yöneticinize başvurun."
 }

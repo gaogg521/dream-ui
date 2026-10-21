@@ -19,6 +19,14 @@ const t = vi.fn((key: string, values?: Record<string, string>) =>
 ) as unknown as Parameters<typeof getPolicyDenialMessage>[1];
 
 describe('getPolicyDenialMessage', () => {
+  it('explains revoked or changed employee resources without exposing backend internals', () => {
+    const error = backendError(403, {
+      success: false,
+      error: 'Internal error: Digital employee not found',
+      code: 'EMPLOYEE_RESOURCE_DENIED',
+    });
+    expect(getPolicyDenialMessage(error, t)).toBe('conversation.policyDenied_employeeResourceDenied');
+  });
   it('renders a translated sentence from the rule name rather than showing English', () => {
     const error = backendError(403, {
       success: false,

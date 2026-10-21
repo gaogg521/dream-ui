@@ -983,5 +983,6 @@
     "imported": "Imported as my conversation",
     "importFailed": "Import failed",
     "importAsCopy": "Import as my copy (continue chatting)"
-  }
+  },
+  "policyDenied_employeeResourceDenied": "Employee access or dependencies have changed. Start a new chat from Digital Employees & Scenarios; contact your administrator if the employee is missing."
 }

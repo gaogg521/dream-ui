@@ -989,5 +989,6 @@
   "officePreview": {
     "fileWatchUnavailable": "O monitoramento de arquivos em tempo real não está disponível — o sistema pode ter ficado sem identificadores de monitoramento de arquivos (inotify). A pré-visualização automática de novos arquivos do Office está desativada. Aumente fs.inotify.max_user_instances ou feche programas que mantêm muitos monitoramentos de arquivos."
   },
-  "mediaFailureAdvice_serviceBusy": "A fila do próprio provedor está cheia no momento — não há nada errado aqui. Aguarde um instante e tente novamente; se persistir por horas, tente outro modelo ou canal."
+  "mediaFailureAdvice_serviceBusy": "A fila do próprio provedor está cheia no momento — não há nada errado aqui. Aguarde um instante e tente novamente; se persistir por horas, tente outro modelo ou canal.",
+  "policyDenied_employeeResourceDenied": "O acesso ou as dependências do funcionário mudaram. Inicie uma nova conversa em Funcionários digitais e cenários; se ele não aparecer, contate seu administrador."
 }

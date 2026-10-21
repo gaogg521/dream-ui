@@ -114,7 +114,9 @@ const SiderFooter: React.FC<SiderFooterProps> = ({
   );
 
   useEffect(() => {
-    applySwatch(currentTheme, { notifyParent: false });
+    // The preset may override an older saved appearance. Keep React's mode in
+    // sync with the actual document before the first light/dark toggle.
+    applySwatch(currentTheme);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

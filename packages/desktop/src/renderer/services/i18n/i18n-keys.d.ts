@@ -1592,6 +1592,7 @@ export type I18nKey =
   | 'conversation.policyDenied_checkFailed'
   | 'conversation.policyDenied_contentBlocked'
   | 'conversation.policyDenied_departmentBudgetExceeded'
+  | 'conversation.policyDenied_employeeResourceDenied'
   | 'conversation.policyDenied_modelNotAllowed'
   | 'conversation.policyDenied_seatLimitExceeded'
   | 'conversation.policyDenied_sendRateLimited'

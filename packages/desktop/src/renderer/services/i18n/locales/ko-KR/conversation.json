@@ -983,5 +983,6 @@
   "officePreview": {
     "fileWatchUnavailable": "실시간 파일 감시를 사용할 수 없습니다. 시스템의 파일 감시 핸들(inotify)이 부족해졌을 수 있습니다. 새 Office 파일의 자동 미리보기가 꺼져 있습니다. fs.inotify.max_user_instances를 늘리거나 파일 감시를 많이 점유한 프로그램을 닫으세요."
   },
-  "mediaFailureAdvice_serviceBusy": "공급자 측 대기열이 지금 가득 찼습니다. 여기에는 문제가 없습니다. 잠시 기다린 후 다시 시도하세요. 몇 시간 동안 계속되면 다른 모델이나 채널을 사용해 보세요."
+  "mediaFailureAdvice_serviceBusy": "공급자 측 대기열이 지금 가득 찼습니다. 여기에는 문제가 없습니다. 잠시 기다린 후 다시 시도하세요. 몇 시간 동안 계속되면 다른 모델이나 채널을 사용해 보세요.",
+  "policyDenied_employeeResourceDenied": "직원의 권한 또는 종속 리소스가 변경되었습니다. 디지털 직원 및 시나리오에서 새 대화를 시작하세요. 직원이 없으면 관리자에게 문의하세요."
 }

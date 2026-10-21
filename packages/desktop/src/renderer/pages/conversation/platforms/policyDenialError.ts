@@ -27,6 +27,7 @@ const DENIAL_MESSAGE_KEYS = {
   BUDGET_EXCEEDED: { key: 'conversation.policyDenied_budgetExceeded', params: [] },
   MODEL_NOT_ALLOWED: { key: 'conversation.policyDenied_modelNotAllowed', params: ['model'] },
   POLICY_CHECK_FAILED: { key: 'conversation.policyDenied_checkFailed', params: [] },
+  EMPLOYEE_RESOURCE_DENIED: { key: 'conversation.policyDenied_employeeResourceDenied', params: [] },
   // T6-4: not a rule the admin configured — the seat cap is full. Distinct
   // copy on purpose: "wait for the budget window" (BUDGET_EXCEEDED) and "ask
   // for a seat" are different asks for the reader.

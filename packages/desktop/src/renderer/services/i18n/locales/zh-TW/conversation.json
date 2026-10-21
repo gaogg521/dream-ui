@@ -983,5 +983,6 @@
   },
   "officePreview": {
     "fileWatchUnavailable": "檔案實時監聽不可用——系統的檔案監聽控制代碼（inotify）可能已耗盡，新 Office 檔案的自動預覽已停用。請提高 fs.inotify.max_user_instances，或關閉佔用大量檔案監聽的程式。"
-  }
+  },
+  "policyDenied_employeeResourceDenied": "員工權限或相依資源已變更，請從「數位員工與場景」重新開始對話；若找不到員工，請聯絡管理員。"
 }

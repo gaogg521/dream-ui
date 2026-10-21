@@ -27,6 +27,7 @@ const {
   clearTeamResources,
   listProviders,
   syncTeamSkills,
+  syncTeamMcp,
   syncTeamAgents,
   messageWarning,
   emitterHandlers,
@@ -38,7 +39,11 @@ const {
   },
   clearTeamResources: vi.fn(() => Promise.resolve()),
   listProviders: vi.fn(() => Promise.resolve([] as { managed_by?: string }[])),
-  syncTeamSkills: vi.fn(() => Promise.resolve(null)),
+  syncTeamSkills: vi.fn((_isCurrent?: () => boolean) => Promise.resolve({ written: 0, removed: 0, kept: 0 })),
+  syncTeamMcp: vi.fn(
+    (_isCurrent?: () => boolean): Promise<{ written: number; removed: number; kept: number } | null> =>
+      Promise.resolve({ written: 0, removed: 0, kept: 0 })
+  ),
   syncTeamAgents: vi.fn(() => Promise.resolve(null)),
   messageWarning: vi.fn(),
   // A trivial stand-in for the real emitter: the hook subscribes once per
@@ -68,7 +73,7 @@ vi.mock('@renderer/utils/enterprise/teamSkillSync', () => ({
   clearTeamResources,
   syncContentInspection: vi.fn(() => Promise.resolve(null)),
   syncTeamAgents,
-  syncTeamMcp: vi.fn(() => Promise.resolve(null)),
+  syncTeamMcp,
   syncTeamModelChannels: vi.fn(() => Promise.resolve(null)),
   syncTeamSkills,
   // The other governance surfaces that ride this timer: tool-call policy,
@@ -104,7 +109,10 @@ import { useTeamResourceSync } from '@/renderer/hooks/enterprise/useTeamResource
 describe('useTeamResourceSync', () => {
   beforeEach(() => {
     clearTeamResources.mockClear();
-    syncTeamSkills.mockClear();
+    syncTeamSkills.mockReset();
+    syncTeamSkills.mockResolvedValue({ written: 0, removed: 0, kept: 0 });
+    syncTeamMcp.mockReset();
+    syncTeamMcp.mockResolvedValue({ written: 0, removed: 0, kept: 0 });
     syncTeamAgents.mockClear();
     messageWarning.mockClear();
     emitterHandlers.clear();
@@ -125,25 +133,25 @@ describe('useTeamResourceSync', () => {
     rerender();
     expect(clearTeamResources).not.toHaveBeenCalled();
   });
-  it('refreshes team resources immediately when switching between project groups', () => {
+  it('refreshes team resources immediately when switching between project groups', async () => {
     orgContext.current = { isEnterprise: true, tenantId: 'A' };
     const { rerender } = renderHook(() => useTeamResourceSync());
     syncTeamSkills.mockClear();
     orgContext.current = { isEnterprise: true, tenantId: 'B' };
     rerender();
-    expect(syncTeamSkills).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(syncTeamSkills).toHaveBeenCalledTimes(1));
   });
 
-  it('purges the local team resources when the member stops resolving as enterprise', () => {
+  it('purges the local team resources when the member stops resolving as enterprise', async () => {
     orgContext.current = { isEnterprise: true };
     const { rerender } = renderHook(() => useTeamResourceSync());
-    expect(syncTeamAgents).toHaveBeenCalled();
+    await vi.waitFor(() => expect(syncTeamAgents).toHaveBeenCalled());
     expect(clearTeamResources).not.toHaveBeenCalled();
 
     orgContext.current = { isEnterprise: false };
     rerender();
 
-    expect(clearTeamResources).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(clearTeamResources).toHaveBeenCalledTimes(1));
   });
 
   it('purges nothing for a client that was never in an enterprise', () => {
@@ -153,13 +161,106 @@ describe('useTeamResourceSync', () => {
     expect(syncTeamSkills).not.toHaveBeenCalled();
   });
 
-  it('syncs on entering enterprise mode, without purging first', () => {
+  it('syncs on entering enterprise mode, without purging first', async () => {
     const { rerender } = renderHook(() => useTeamResourceSync());
     orgContext.current = { isEnterprise: true };
     rerender();
 
-    expect(syncTeamSkills).toHaveBeenCalled();
+    await vi.waitFor(() => expect(syncTeamSkills).toHaveBeenCalled());
     expect(clearTeamResources).not.toHaveBeenCalled();
+  });
+
+  it('publishes employees only after both local dependencies finish', async () => {
+    let finishMcp!: (value: { written: number; removed: number; kept: number }) => void;
+    syncTeamMcp.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishMcp = resolve;
+        })
+    );
+    orgContext.current = { isEnterprise: true, tenantId: 'A' };
+    renderHook(() => useTeamResourceSync());
+    await vi.waitFor(() => expect(syncTeamSkills).toHaveBeenCalledTimes(1));
+    expect(syncTeamAgents).not.toHaveBeenCalled();
+    finishMcp({ written: 1, removed: 0, kept: 0 });
+    await vi.waitFor(() => expect(syncTeamAgents).toHaveBeenCalledTimes(1));
+  });
+
+  it('does not publish employees after a dependency failure', async () => {
+    syncTeamMcp.mockResolvedValueOnce(null);
+    orgContext.current = { isEnterprise: true, tenantId: 'A' };
+    renderHook(() => useTeamResourceSync());
+    await vi.waitFor(() => expect(syncTeamMcp).toHaveBeenCalledTimes(1));
+    await Promise.resolve();
+    expect(syncTeamAgents).not.toHaveBeenCalled();
+  });
+
+  it('does not overlap timer cycles while a dependency is still materializing', async () => {
+    let tick!: () => void;
+    const timer = vi.spyOn(window, 'setInterval').mockImplementation((callback) => {
+      tick = callback as () => void;
+      return 123;
+    });
+    let finish!: (value: { written: number; removed: number; kept: number }) => void;
+    syncTeamMcp.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        })
+    );
+    try {
+      orgContext.current = { isEnterprise: true, tenantId: 'A' };
+      renderHook(() => useTeamResourceSync());
+      await vi.waitFor(() => expect(syncTeamSkills).toHaveBeenCalledTimes(1));
+      tick();
+      tick();
+      await Promise.resolve();
+      expect(syncTeamSkills).toHaveBeenCalledTimes(1);
+      finish({ written: 1, removed: 0, kept: 0 });
+      await vi.waitFor(() => expect(syncTeamAgents).toHaveBeenCalledTimes(1));
+    } finally {
+      timer.mockRestore();
+    }
+  });
+
+  it('finishes old local writes before purging after departure', async () => {
+    let finish!: (value: { written: number; removed: number; kept: number }) => void;
+    syncTeamMcp.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        })
+    );
+    orgContext.current = { isEnterprise: true, tenantId: 'A' };
+    const { rerender } = renderHook(() => useTeamResourceSync());
+    await vi.waitFor(() => expect(syncTeamMcp).toHaveBeenCalledTimes(1));
+    orgContext.current = { isEnterprise: false };
+    rerender();
+    expect(clearTeamResources).not.toHaveBeenCalled();
+    finish({ written: 1, removed: 0, kept: 0 });
+    await vi.waitFor(() => expect(clearTeamResources).toHaveBeenCalledTimes(1));
+    expect(syncTeamAgents).not.toHaveBeenCalled();
+  });
+
+  it('invalidates the old tenant cycle before publishing the new tenant', async () => {
+    let finishOld!: (value: { written: number; removed: number; kept: number }) => void;
+    syncTeamMcp.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishOld = resolve;
+        })
+    );
+    orgContext.current = { isEnterprise: true, tenantId: 'A' };
+    const { rerender } = renderHook(() => useTeamResourceSync());
+    await vi.waitFor(() => expect(syncTeamMcp).toHaveBeenCalledTimes(1));
+    const isOldCurrent = syncTeamMcp.mock.calls[0][0]!;
+    orgContext.current = { isEnterprise: true, tenantId: 'B' };
+    rerender();
+    expect(isOldCurrent()).toBe(false);
+    expect(syncTeamAgents).not.toHaveBeenCalled();
+    finishOld({ written: 1, removed: 0, kept: 0 });
+    await vi.waitFor(() => expect(syncTeamAgents).toHaveBeenCalledTimes(1));
+    expect(syncTeamMcp).toHaveBeenCalledTimes(2);
   });
 
   it('purges a company channel the backend still holds even with no marker left', async () => {

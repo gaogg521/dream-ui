@@ -105,14 +105,14 @@ function purgeOnRevocation(error: unknown): Promise<void> {
  * - Registry fetch succeeds → posts the full set as `authoritative`, so the
  *   local backend reconciles server-side deletions.
  */
-export async function syncTeamSkills(): Promise<TeamSkillSyncResult | null> {
+export async function syncTeamSkills(isCurrent: () => boolean = () => true): Promise<TeamSkillSyncResult | null> {
   let registrySkills: Awaited<ReturnType<typeof ipcBridge.oneDevops.listSkills.invoke>>;
   try {
     registrySkills = await ipcBridge.oneDevops.listSkills.invoke();
   } catch (error) {
     // Refused → this client is no longer entitled to the org's skills.
     // Unreachable → keep the local cache untouched (offline-first).
-    if (isMembershipRefused(error)) await purgeOnRevocation(error);
+    if (isCurrent() && isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
   }
 
@@ -131,6 +131,7 @@ export async function syncTeamSkills(): Promise<TeamSkillSyncResult | null> {
     }));
 
   try {
+    if (!isCurrent()) return null;
     const report = await ipcBridge.fs.syncTeamSkills.invoke({ skills, authoritative: true });
     return { written: report.written.length, removed: report.removed.length, kept: report.kept };
   } catch {
@@ -144,12 +145,12 @@ export async function syncTeamSkills(): Promise<TeamSkillSyncResult | null> {
  * null, local cache untouched (offline-first). Personal servers with the same
  * name are never clobbered (backend conflict guard).
  */
-export async function syncTeamMcp(): Promise<TeamSkillSyncResult | null> {
+export async function syncTeamMcp(isCurrent: () => boolean = () => true): Promise<TeamSkillSyncResult | null> {
   let registry: Awaited<ReturnType<typeof ipcBridge.oneDevops.listMcpRegistry.invoke>>;
   try {
     registry = await ipcBridge.oneDevops.listMcpRegistry.invoke();
   } catch (error) {
-    if (isMembershipRefused(error)) await purgeOnRevocation(error);
+    if (isCurrent() && isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
   }
 
@@ -165,6 +166,7 @@ export async function syncTeamMcp(): Promise<TeamSkillSyncResult | null> {
     }));
 
   try {
+    if (!isCurrent()) return null;
     const report = await ipcBridge.fs.syncTeamMcp.invoke({ servers, authoritative: true });
     return { written: report.written.length, removed: report.removed.length, kept: report.kept };
   } catch {
@@ -462,7 +464,8 @@ export async function clearTeamResources(): Promise<void> {
  * encodes publish/visibility/grant decisions, so every row it returns is one
  * this member is entitled to.
  */
-export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
+export async function syncTeamAgents(isCurrent: () => boolean = () => true): Promise<TeamSkillSyncResult | null> {
+  const sourceScope = getEnterpriseServerUrl() ?? 'local-enterprise';
   let team: Awaited<ReturnType<typeof ipcBridge.personalAgent.listTeamAgents.invoke>>;
   let assistants: unknown[];
   let registrySkills: Awaited<ReturnType<typeof ipcBridge.oneDevops.listSkills.invoke>>;
@@ -478,7 +481,7 @@ export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
     registrySkills = skills;
     registryMcp = mcp;
   } catch (error) {
-    if (isMembershipRefused(error)) await purgeOnRevocation(error);
+    if (isCurrent() && isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
   }
 
@@ -509,7 +512,7 @@ export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
   });
 
   try {
-    const sourceScope = getEnterpriseServerUrl() ?? 'local-enterprise';
+    if (!isCurrent() || sourceScope !== (getEnterpriseServerUrl() ?? 'local-enterprise')) return null;
     const report = await ipcBridge.personalAgent.syncTeamAgents.invoke({
       agents,
       assistants,

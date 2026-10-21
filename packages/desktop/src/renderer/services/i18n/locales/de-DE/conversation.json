@@ -984,5 +984,6 @@
   "officePreview": {
     "fileWatchUnavailable": "Die Live-Dateiüberwachung ist nicht verfügbar – dem System sind möglicherweise die Datei-Watch-Handles (inotify) ausgegangen. Die automatische Vorschau neuer Office-Dateien ist deaktiviert. Erhöhe fs.inotify.max_user_instances oder beende Programme, die viele Datei-Watches belegen."
   },
-  "mediaFailureAdvice_serviceBusy": "Die Warteschlange des Anbieters ist gerade voll – hier ist nichts falsch. Warte einen Moment und versuche es erneut; falls es stundenlang anhält, probiere ein anderes Modell oder einen anderen Kanal."
+  "mediaFailureAdvice_serviceBusy": "Die Warteschlange des Anbieters ist gerade voll – hier ist nichts falsch. Warte einen Moment und versuche es erneut; falls es stundenlang anhält, probiere ein anderes Modell oder einen anderen Kanal.",
+  "policyDenied_employeeResourceDenied": "Zugriff oder Abhängigkeiten des Mitarbeiters wurden geändert. Starten Sie einen neuen Chat unter Digitale Mitarbeiter und Szenarien. Fehlt der Mitarbeiter, wenden Sie sich an Ihren Administrator."
 }

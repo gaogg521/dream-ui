@@ -1,5 +1,24 @@
 /* Arco Design custom overrides - non-theme related */
 
+/* Arco's dark palette is declared directly on body and overrides inherited
+   theme variables. Cards use our semantic tokens so every color scheme agrees
+   with its surrounding workspace, including cards without module overrides. */
+.arco-card {
+  background-color: var(--bg-1);
+  color: var(--text-primary);
+  border-color: var(--border-base);
+}
+
+.arco-card-header,
+.arco-card-actions {
+  border-color: var(--border-base);
+  background-color: transparent;
+}
+
+.arco-card-header-title {
+  color: var(--text-primary);
+}
+
 /*
  * Arco Spin 垂直居中修正。
  *

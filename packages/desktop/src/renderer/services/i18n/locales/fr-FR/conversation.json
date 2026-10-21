@@ -983,5 +983,6 @@
   "officePreview": {
     "fileWatchUnavailable": "La surveillance des fichiers en direct n’est pas disponible — le système a peut-être épuisé ses descripteurs de surveillance de fichiers (inotify). L’aperçu automatique des nouveaux fichiers Office est désactivé. Augmentez fs.inotify.max_user_instances ou fermez les programmes qui occupent de nombreuses surveillances de fichiers."
   },
-  "mediaFailureAdvice_serviceBusy": "La file d’attente du fournisseur est pleine en ce moment — rien n’est anormal ici. Patientez un instant et réessayez ; si cela dure des heures, essayez un autre modèle ou un autre canal."
+  "mediaFailureAdvice_serviceBusy": "La file d’attente du fournisseur est pleine en ce moment — rien n’est anormal ici. Patientez un instant et réessayez ; si cela dure des heures, essayez un autre modèle ou un autre canal.",
+  "policyDenied_employeeResourceDenied": "Les accès ou dépendances de cet employé ont changé. Ouvrez une nouvelle conversation depuis Employés numériques et scénarios ; si cet employé est absent, contactez votre administrateur."
 }

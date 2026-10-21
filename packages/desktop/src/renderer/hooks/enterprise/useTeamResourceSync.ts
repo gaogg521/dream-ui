@@ -59,6 +59,9 @@ export function useTeamResourceSync(): void {
   const isEnterprise = context?.isEnterprise ?? false;
   /** Whether the previous render resolved as enterprise — see the purge below. */
   const wasEnterprise = useRef(false);
+  const syncQueue = useRef<Promise<void>>(Promise.resolve());
+  const enterpriseActive = useRef(isEnterprise);
+  enterpriseActive.current = isEnterprise;
 
   /**
    * Take back the company's materialized resources, on evidence rather than on
@@ -83,12 +86,19 @@ export function useTeamResourceSync(): void {
    * longer the only evidence that counts.
    */
   const purgeMaterializedEnterpriseResources = useCallback(async () => {
+    const purge = syncQueue.current
+      .catch(() => {})
+      .then(async () => {
+        if (enterpriseActive.current) return;
+        if (!localStorage.getItem(ENTERPRISE_RESOURCES_MARKER) && !(await backendHoldsCompanyProviders())) {
+          return;
+        }
+        await clearTeamResources();
+        localStorage.removeItem(ENTERPRISE_RESOURCES_MARKER);
+      });
+    syncQueue.current = purge.catch(() => {});
     try {
-      if (!localStorage.getItem(ENTERPRISE_RESOURCES_MARKER) && !(await backendHoldsCompanyProviders())) {
-        return;
-      }
-      await clearTeamResources();
-      localStorage.removeItem(ENTERPRISE_RESOURCES_MARKER);
+      await purge;
     } catch {
       // Keep the marker: leaving it set means the next personal-mode start
       // tries again, which is the failure mode worth having.
@@ -143,48 +153,71 @@ export function useTeamResourceSync(): void {
     if (!isEnterprise || !isElectronDesktop()) return;
     localStorage.setItem(ENTERPRISE_RESOURCES_MARKER, '1');
     wasEnterprise.current = true;
+    let cancelled = false;
+    let pending = false;
     const syncAll = () => {
-      void syncTeamSkills();
-      void syncTeamMcp();
-      // P1-3: team-distributed digital employees ride the same timer. An
-      // admin who publishes/authorizes an employee (or revokes it) reaches
-      // the member's employee list within one cycle; locally the rows land
-      // in the normal registry, so no other UI changes.
-      void syncTeamAgents();
-      // Model channels ride the same timer: a channel the admin adds, retires
-      // or re-scopes should reach members without them restarting anything,
-      // and the token this refreshes is what a revocation invalidates.
-      void syncTeamModelChannels();
-      // Content rules ride the same timer, and the same call ships back the
-      // findings this machine recorded.
-      //
-      // ⚠️ Two consequences of the interval, both accepted: a rule the admin
-      // adds takes up to one cycle to start applying, and a finding takes up to
-      // one cycle to become visible in the console. The alternative — checking
-      // with the server per send — is the design this deliberately avoids.
-      void syncContentInspection();
-      // The other half of the same policy: content inspection decides what may
-      // be *sent*, this decides what tools may *run*. Both are enforced on this
-      // machine because that is where both happen, and both therefore inherit
-      // the same up-to-one-cycle propagation delay.
-      void syncToolSecurityPolicy();
-      // And the third: what may be *sent*, and with which model. Same machine,
-      // same reason, same propagation delay.
-      void syncSendPolicy();
-      // C0-1 plan A: the company-server channel the terminal-approval gate
-      // drives. A credential push, not a state sync — idempotent, and
-      // `clearTeamResources` (revocation) is what empties it again.
-      void syncEnterpriseUpstream();
-      // Company memory, for the same reason and on the same terms: recall runs
-      // against the local copy so the prompt never has to leave the machine.
-      void syncTeamMemory();
-      // P2-3 on_demand tier: pick up admin content requests. The request was
-      // audited when the admin made it; the upload lands a snapshot under the
-      // member's own server identity. Best-effort: failures retry next cycle.
-      void fulfilAuditUploadRequests();
+      if (cancelled || pending) return;
+      pending = true;
+      const cycle = async () => {
+        if (cancelled) return;
+        const isCurrent = () => !cancelled;
+        const [skills, mcp] = await Promise.all([syncTeamSkills(isCurrent), syncTeamMcp(isCurrent)]);
+        // P1-3: team-distributed digital employees ride the same timer. An
+        // admin who publishes/authorizes an employee (or revokes it) reaches
+        // the member's employee list within one cycle; locally the rows land
+        // in the normal registry, so no other UI changes.
+        if (cancelled) return;
+        if (skills !== null && mcp !== null) await syncTeamAgents(isCurrent);
+        if (cancelled) return;
+        await Promise.allSettled([
+          // Model channels ride the same timer: a channel the admin adds, retires
+          // or re-scopes should reach members without them restarting anything,
+          // and the token this refreshes is what a revocation invalidates.
+          syncTeamModelChannels(),
+          // Content rules ride the same timer, and the same call ships back the
+          // findings this machine recorded.
+          //
+          // ⚠️ Two consequences of the interval, both accepted: a rule the admin
+          // adds takes up to one cycle to start applying, and a finding takes up to
+          // one cycle to become visible in the console. The alternative — checking
+          // with the server per send — is the design this deliberately avoids.
+          syncContentInspection(),
+          // The other half of the same policy: content inspection decides what may
+          // be *sent*, this decides what tools may *run*. Both are enforced on this
+          // machine because that is where both happen, and both therefore inherit
+          // the same up-to-one-cycle propagation delay.
+          syncToolSecurityPolicy(),
+          // And the third: what may be *sent*, and with which model. Same machine,
+          // same reason, same propagation delay.
+          syncSendPolicy(),
+          // C0-1 plan A: the company-server channel the terminal-approval gate
+          // drives. A credential push, not a state sync — idempotent, and
+          // `clearTeamResources` (revocation) is what empties it again.
+          syncEnterpriseUpstream(),
+          // Company memory, for the same reason and on the same terms: recall runs
+          // against the local copy so the prompt never has to leave the machine.
+          syncTeamMemory(),
+          // P2-3 on_demand tier: pick up admin content requests. The request was
+          // audited when the admin made it; the upload lands a snapshot under the
+          // member's own server identity. Best-effort: failures retry next cycle.
+          fulfilAuditUploadRequests(),
+        ]);
+      };
+      syncQueue.current = syncQueue.current
+        .catch(() => {})
+        .then(cycle)
+        .catch((error) => {
+          console.error('[useTeamResourceSync] sync failed', error);
+        })
+        .finally(() => {
+          pending = false;
+        });
     };
     syncAll();
     const timer = window.setInterval(syncAll, SYNC_INTERVAL_MS);
-    return () => window.clearInterval(timer);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, [isEnterprise, context?.tenantId, loading, error]);
 }

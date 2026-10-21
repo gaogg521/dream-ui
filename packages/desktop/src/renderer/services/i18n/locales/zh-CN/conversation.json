@@ -983,5 +983,6 @@
     "imported": "已导入为我的会话",
     "importFailed": "导入失败",
     "importAsCopy": "导入为我的会话副本（可继续对话）"
-  }
+  },
+  "policyDenied_employeeResourceDenied": "员工权限或依赖已变更，请从「数字员工与场景」重新开始对话；若员工已消失，请联系管理员。"
 }

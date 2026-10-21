@@ -104,22 +104,33 @@ const DigitalEmployeeDetailModal: React.FC<DetailModalProps> = ({ visible, agent
   const expertName = agent ? resolveEmployeeExpertName(agent, presetAssistants, localeKey) : undefined;
   const [runs, setRuns] = useState<DigitalEmployeeRunRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const agentId = agent?.id;
 
   useEffect(() => {
-    if (!visible || !agent) {
-      setRuns([]);
+    setRuns([]);
+    if (!visible || !agentId) {
+      setLoading(false);
       return;
     }
+    let cancelled = false;
     setLoading(true);
     ipcBridge.personalAgent.listRuns
-      .invoke({ agentId: agent.id })
-      .then((data) => setRuns(data ?? []))
+      .invoke({ agentId })
+      .then((data) => {
+        if (!cancelled) setRuns(data ?? []);
+      })
       .catch((error) => {
+        if (cancelled) return;
         console.error('[DigitalEmployeeDetailModal] listRuns failed', error);
         setRuns([]);
       })
-      .finally(() => setLoading(false));
-  }, [visible, agent]);
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, agentId]);
 
   return (
     <Modal
