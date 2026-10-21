@@ -593,6 +593,12 @@
     "failed": "ساخت ناموفق بود",
     "preset_registered": "پیش‌تنظیم ایجنت با موفقیت ثبت شد!"
   },
+  "process": {
+    "working": "در حال انجام…",
+    "done": "{{count}} مرحله انجام شد",
+    "steps": "{{count}} مرحله",
+    "viewSteps": "نمایش مراحل"
+  },
   "thinking": {
     "complete": "تفکر کامل شد",
     "label": "در حال فکر کردن..."

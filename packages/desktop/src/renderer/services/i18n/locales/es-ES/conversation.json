@@ -594,6 +594,12 @@
     "failed": "Error al generar",
     "preset_registered": "¡Preset del agente registrado correctamente!"
   },
+  "process": {
+    "working": "Trabajando…",
+    "done": "{{count}} pasos completados",
+    "steps": "{{count}} pasos",
+    "viewSteps": "Ver pasos"
+  },
   "thinking": {
     "complete": "Pensamiento completado",
     "label": "Pensando..."

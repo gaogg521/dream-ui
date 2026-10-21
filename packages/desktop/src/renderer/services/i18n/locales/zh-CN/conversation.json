@@ -593,6 +593,12 @@
     "failed": "生成失败",
     "preset_registered": "已保存为全局预设"
   },
+  "process": {
+    "working": "正在处理…",
+    "done": "已完成 {{count}} 个步骤",
+    "steps": "共 {{count}} 步",
+    "viewSteps": "查看步骤"
+  },
   "thinking": {
     "complete": "思考完成",
     "label": "思考中..."

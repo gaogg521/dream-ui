@@ -593,6 +593,12 @@
     "failed": "Échec de la génération",
     "preset_registered": "Préréglage d'agent enregistré avec succès !"
   },
+  "process": {
+    "working": "En cours…",
+    "done": "{{count}} étapes terminées",
+    "steps": "{{count}} étapes",
+    "viewSteps": "Voir les étapes"
+  },
   "thinking": {
     "complete": "Réflexion terminée",
     "label": "Réflexion..."

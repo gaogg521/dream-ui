@@ -595,6 +595,12 @@
       "TEAM_ASSISTANT_FIELD_UNSUPPORTED": "Use assistant_id instead of {{field}}."
     }
   },
+  "process": {
+    "working": "Çalışıyor…",
+    "done": "{{count}} adım tamamlandı",
+    "steps": "{{count}} adım",
+    "viewSteps": "Adımları göster"
+  },
   "thinking": {
     "complete": "Düşünme tamamlandı",
     "label": "Düşünüyor..."

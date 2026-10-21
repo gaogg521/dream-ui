@@ -593,6 +593,12 @@
     "failed": "Failed to generate",
     "preset_registered": "Agent preset registered successfully!"
   },
+  "process": {
+    "working": "処理中…",
+    "done": "{{count}} ステップ完了",
+    "steps": "{{count}} ステップ",
+    "viewSteps": "ステップを表示"
+  },
   "thinking": {
     "complete": "思考完了",
     "label": "思考中..."

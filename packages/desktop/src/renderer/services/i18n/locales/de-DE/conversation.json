@@ -594,6 +594,12 @@
     "failed": "Generierung fehlgeschlagen",
     "preset_registered": "Agenten-Voreinstellung erfolgreich registriert!"
   },
+  "process": {
+    "working": "Wird bearbeitet…",
+    "done": "{{count}} Schritte erledigt",
+    "steps": "{{count}} Schritte",
+    "viewSteps": "Schritte anzeigen"
+  },
   "thinking": {
     "complete": "Denken abgeschlossen",
     "label": "Wird gedacht..."

@@ -48,6 +48,8 @@ import MessageCronTrigger from './components/MessageCronTrigger';
 import MessageSkillSuggest from './components/MessageSkillSuggest';
 import MessageText from './components/MessageText';
 import MessageThinking from './components/MessageThinking';
+import MessageProcessRun from './components/MessageProcessRun';
+import { foldProcessRuns, type ProcessRunItem } from './processRuns';
 import type { WriteFileResult } from './types';
 import { useAutoScroll } from './useAutoScroll';
 import SelectionReplyButton from './components/SelectionReplyButton';
@@ -61,7 +63,8 @@ type IMessageVO =
       messages: Array<IMessageToolGroup | IMessageAcpToolCall | IMessageToolCall>;
       sourceMessageIds: string[];
       created_at: number;
-    };
+    }
+  | ProcessRunItem;
 type IArtifactVO = { type: 'artifact'; id: string; artifact: IConversationArtifact; created_at: number };
 /**
  * A media generation job, shown inline in the conversation.
@@ -77,7 +80,7 @@ type IMediaJobVO = { type: 'media_job'; id: string; job: MediaJobView; created_a
 type IProcessedItem = IMessageVO | IArtifactVO | IMediaJobVO;
 
 /** Processed items that are not messages, and so never take part in turn logic. */
-const NON_MESSAGE_ITEM_TYPES = new Set(['file_summary', 'tool_summary', 'artifact', 'media_job']);
+const NON_MESSAGE_ITEM_TYPES = new Set(['file_summary', 'tool_summary', 'process_run', 'artifact', 'media_job']);
 
 const isNonMessageItem = (item: IProcessedItem): boolean => 'type' in item && NON_MESSAGE_ITEM_TYPES.has(item.type);
 
@@ -132,7 +135,7 @@ const getProcessedItemSourceMessageIds = (item: IProcessedItem): string[] => {
   if ('type' in item && (item.type === 'artifact' || item.type === 'media_job')) {
     return [item.id];
   }
-  if ('type' in item && item.type === 'tool_summary') {
+  if ('type' in item && (item.type === 'tool_summary' || item.type === 'process_run')) {
     return item.sourceMessageIds;
   }
   if ('type' in item && item.type === 'file_summary') {
@@ -463,6 +466,8 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
       }
       pushStandaloneMessage(message);
     }
+    // Fold the runs of thoughts and tool groups between the agent's texts into single rows.
+    const folded = foldProcessRuns<IMessageVO>(result);
     const visibleArtifacts = artifacts
       .filter((artifact) => {
         if (artifact.kind === 'cron_trigger') return artifact.status === 'active';
@@ -483,7 +488,7 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
       created_at: job.createdAt,
     }));
 
-    return [...result, ...visibleArtifacts, ...visibleMediaJobs].toSorted(
+    return [...folded, ...visibleArtifacts, ...visibleMediaJobs].toSorted(
       (a, b) => getProcessedItemCreatedAt(a) - getProcessedItemCreatedAt(b)
     );
   }, [artifacts, list, mediaJobs]);
@@ -700,6 +705,11 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
     scrollToBottom('smooth');
   };
 
+  // The run the agent is still adding to: the one at the very end of the transcript.
+  const lastProcessedItemId = processedList.findLast(
+    (item) => !('type' in item && (item.type === 'artifact' || item.type === 'media_job'))
+  )?.id;
+
   const renderItem = (_index: number, item: (typeof processedList)[0]) => {
     const highlighted = matchesTargetMessage(item, highlightedMessageId);
     if ('type' in item && item.type === 'artifact') {
@@ -730,6 +740,18 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
           style={highlighted ? highlightStyle : undefined}
         >
           <MediaJobCard job={item.job} onCancel={(id) => void cancelMediaJob(id)} />
+        </div>
+      );
+    }
+    if ('type' in item && item.type === 'process_run') {
+      return (
+        <div
+          key={item.id}
+          id={`message-${getProcessedItemAnchorId(item)}`}
+          className={`${rowWidthClass} min-w-0 message-item px-8px m-t-10px process_run`}
+          style={highlighted ? highlightStyle : undefined}
+        >
+          <MessageProcessRun run={item} active={isProcessing && item.id === lastProcessedItemId} />
         </div>
       );
     }

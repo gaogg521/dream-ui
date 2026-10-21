@@ -593,6 +593,12 @@
     "failed": "Failed to generate",
     "preset_registered": "Agent preset registered successfully!"
   },
+  "process": {
+    "working": "Working…",
+    "done": "{{count}} steps done",
+    "steps": "{{count}} steps",
+    "viewSteps": "View steps"
+  },
   "thinking": {
     "complete": "Thought complete",
     "label": "Thinking..."

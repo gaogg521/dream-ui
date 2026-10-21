@@ -599,6 +599,12 @@
     "failed": "Falha ao gerar",
     "preset_registered": "Predefinição do agente registrada com sucesso!"
   },
+  "process": {
+    "working": "Trabalhando…",
+    "done": "{{count}} etapas concluídas",
+    "steps": "{{count}} etapas",
+    "viewSteps": "Ver etapas"
+  },
   "thinking": {
     "complete": "Pensamento completo",
     "label": "Pensando..."
