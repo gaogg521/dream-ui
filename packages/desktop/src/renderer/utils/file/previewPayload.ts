@@ -16,10 +16,13 @@ import { getClientBusinessSetting } from '@/renderer/services/clientBusinessSett
  * document must never reach an editor that can save, or saving destroys the
  * unread remainder.
  *
+ * 5 rather than 1 because a self-contained HTML deliverable (images inlined as base64) is routinely
+ * 1-5 MB and was refused at 1 MB, while the page itself renders fine.
+ *
  * User-configurable via `preview.textSizeLimitMb` (settings → system). This is the
  * value used when that setting has never been set or holds something unusable.
  */
-export const DEFAULT_TEXT_PREVIEW_LIMIT_MB = 1;
+export const DEFAULT_TEXT_PREVIEW_LIMIT_MB = 5;
 
 /**
  * Bounds accepted for the configured limit, in MB.

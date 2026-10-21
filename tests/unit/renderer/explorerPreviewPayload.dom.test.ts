@@ -30,7 +30,7 @@ vi.mock('@/renderer/pages/conversation/explorer/monitorTransport', () => ({ init
 
 import { buildExplorerPreviewPayload } from '@/renderer/pages/conversation/explorer/ExplorerContainer';
 
-const TEXT_CEILING = 1024 * 1024;
+const TEXT_CEILING = 5 * 1024 * 1024; // the default text ceiling (DEFAULT_TEXT_PREVIEW_LIMIT_MB)
 const IMAGE_CEILING = 20 * 1024 * 1024;
 
 /** Backend metadata shape (already camelCased by the ipcBridge response map). */

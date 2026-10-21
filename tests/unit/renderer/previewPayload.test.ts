@@ -26,7 +26,7 @@ vi.mock('@/common', () => ({
 
 import { formatSizeAboveLimit, resolvePreviewPayload, upgradeFileRef } from '@/renderer/utils/file/previewPayload';
 
-const TEXT_CEILING = 1024 * 1024;
+const TEXT_CEILING = 5 * 1024 * 1024; // the default text ceiling (DEFAULT_TEXT_PREVIEW_LIMIT_MB)
 const IMAGE_CEILING = 20 * 1024 * 1024;
 
 const ref = { kind: 'local' as const, path: '/abs/file.txt' };

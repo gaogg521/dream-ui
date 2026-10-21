@@ -195,7 +195,7 @@ describe('the configured limit reaches the size check', () => {
     // Refusing to open a file because a preference could not be read would be worse
     // than gating it at the default.
     h.getClientBusinessSetting.mockRejectedValue(new Error('settings unavailable'));
-    h.getContentMetadata.mockResolvedValue(meta(2 * MB));
+    h.getContentMetadata.mockResolvedValue(meta((DEFAULT_TEXT_PREVIEW_LIMIT_MB + 1) * MB));
 
     const out = await resolvePreviewPayload(ref, 'code');
 
