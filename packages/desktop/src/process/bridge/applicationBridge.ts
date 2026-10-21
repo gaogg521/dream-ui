@@ -403,6 +403,8 @@ export function initApplicationBridge(): void {
       let fileSize = 0;
       try {
         fileSize = (await fs.stat(filePath)).size;
+        // The original is capped at 100 MiB on upload; parsing a file that can never be stored only burns minutes.
+        if (fileSize > 100 * 1024 * 1024) throw new Error('File exceeds 100 MiB');
         const extracted = await extractTextFromFile(filePath);
         results.push({ filePath, fileName, fileSize, ...extracted });
       } catch (e) {

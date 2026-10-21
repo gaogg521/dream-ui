@@ -35,6 +35,7 @@ import {
   wsMappedEmitter,
   stubEmitter,
   httpRequest,
+  httpUploadMultipart,
 } from '@/common/adapter/httpBridge';
 
 type FakeSocketEventMap = {
@@ -397,6 +398,46 @@ describe('httpBridge', () => {
         expect(err.backendMessage).toContain('timed out');
       }
       expect(fetchSpy.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+    });
+
+    describe('httpUploadMultipart', () => {
+      const hangingFetch = () =>
+        vi.fn().mockImplementation(
+          (_url: string, init?: RequestInit) =>
+            new Promise((_resolve, reject) => {
+              init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+            })
+        );
+      const file = new File(['bytes'], 'big.pdf');
+
+      it('stops the in-flight upload when the caller cancels, reporting an AbortError rather than a timeout', async () => {
+        vi.stubGlobal('fetch', hangingFetch());
+        const controller = new AbortController();
+        const upload = httpUploadMultipart('/api/upload', file, 'file', {
+          timeoutMs: 60_000,
+          signal: controller.signal,
+        });
+        controller.abort();
+        await expect(upload).rejects.toMatchObject({ name: 'AbortError' });
+      });
+
+      it('does not even start a request that was cancelled beforehand', async () => {
+        const fetchSpy = hangingFetch();
+        vi.stubGlobal('fetch', fetchSpy);
+        const controller = new AbortController();
+        controller.abort();
+        await expect(
+          httpUploadMultipart('/api/upload', file, 'file', { signal: controller.signal })
+        ).rejects.toMatchObject({ name: 'AbortError' });
+        expect(fetchSpy).not.toHaveBeenCalled();
+      });
+
+      it('still reports REQUEST_TIMEOUT when only the timer fires', async () => {
+        vi.stubGlobal('fetch', hangingFetch());
+        await expect(httpUploadMultipart('/api/upload', file, 'file', { timeoutMs: 10 })).rejects.toMatchObject({
+          code: 'REQUEST_TIMEOUT',
+        });
+      });
     });
 
     it('does not abort a fast response when a timeout is set', async () => {

@@ -251,6 +251,8 @@
       "importFailed": "インポートに失敗しました",
       "importFilesButton": "ファイルからインポート",
       "importFilesFailed": "{{count}} 件のドキュメントをインポートできませんでした：{{reasons}}",
+      "importProgress": "インポート中 {{current}}/{{total}}：{{name}}",
+      "importCancelled": "インポートをキャンセルしました",
       "importFilesSucceeded": "{{count}} 件のドキュメントをインポートしました",
       "importUrlButton": "URL からインポート",
       "importUrlHint": "Web ページ（自動でプレーンテキストに変換）と、PDF / Word / PPT / Excel などへの直接リンクに対応しています。",

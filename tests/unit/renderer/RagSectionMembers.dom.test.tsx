@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   register: vi.fn(async () => ({ id: 'new-doc' })),
   upload: vi.fn(async () => ({})),
   setContent: vi.fn(async () => 1),
+  remove: vi.fn(async () => undefined),
   translate: (key: string) => key,
 }));
 vi.mock('@/common/adapter/httpBridge', async (importOriginal) => ({
@@ -41,6 +42,7 @@ vi.mock('@/common', () => ({
     oneDevops: {
       listRagLibraries: { invoke: vi.fn(async () => [{ id: 'shared-lib', name: 'Shared library' }]) },
       registerRagDocument: { invoke: mocks.register },
+      deleteRagDocument: { invoke: mocks.remove },
       setRagContent: { invoke: mocks.setContent },
       getRagContent: { invoke: vi.fn(async () => 'Previous original text') },
       getRagContentState: { invoke: vi.fn(async () => ({ content: 'Previous original text', revision: 0 })) },
@@ -85,6 +87,7 @@ describe('RagSection for company members', () => {
     mocks.register.mockClear();
     mocks.upload.mockClear();
     mocks.setContent.mockClear();
+    mocks.remove.mockClear();
     mocks.docs = [doc('d1', 'Company handbook', 'org'), doc('d2', 'My notes', 'personal')];
   });
 
@@ -192,7 +195,23 @@ describe('RagSection for company members', () => {
     );
     expect(mocks.upload).toHaveBeenCalledWith('/api/one/devops/rag/documents/new-doc/source', file, 'file', {
       timeoutMs: 120000,
+      signal: expect.any(AbortSignal),
     });
+  });
+  it('does not leave an empty document behind when its original fails to upload', async () => {
+    mocks.context = null;
+    mocks.upload.mockRejectedValueOnce(new Error('upload timed out'));
+    render(
+      <RagSection
+        renderLibrary={(props) => <button onClick={() => props.onImport(true)}>Import browser file</button>}
+      />
+    );
+    fireEvent.click(screen.getByText('Import browser file'));
+    const file = new File(['%PDF'], 'big.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'text', { value: async () => '' });
+    fireEvent.change(screen.getByTestId('knowledge-file-import'), { target: { files: [file] } });
+    await waitFor(() => expect(mocks.remove).toHaveBeenCalledWith({ id: 'new-doc' }));
+    expect(mocks.setContent).not.toHaveBeenCalled();
   });
   it('extracts replacement text and updates the existing document instead of keeping its old search body', async () => {
     mocks.context = null;

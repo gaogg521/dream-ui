@@ -251,6 +251,8 @@
       "importFailed": "درون‌ریزی ناموفق بود",
       "importFilesButton": "درون‌ریزی از فایل‌ها",
       "importFilesFailed": "درون‌ریزی {{count}} سند ناموفق بود: {{reasons}}",
+      "importProgress": "در حال درون‌ریزی {{current}}/{{total}}: {{name}}",
+      "importCancelled": "درون‌ریزی لغو شد",
       "importFilesSucceeded": "{{count}} سند درون‌ریزی شد",
       "importUrlButton": "درون‌ریزی از نشانی",
       "importUrlHint": "از صفحات وب (به‌طور خودکار به متن ساده تبدیل می‌شوند) و پیوندهای مستقیم به فایل‌های PDF / Word / PPT / Excel و غیره پشتیبانی می‌کند.",

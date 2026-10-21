@@ -573,6 +573,8 @@
       "importFailed": "Import failed",
       "importFilesButton": "Import from Files",
       "importFilesFailed": "{{count}} document(s) failed to import: {{reasons}}",
+      "importProgress": "Importing {{current}}/{{total}}: {{name}}",
+      "importCancelled": "Import cancelled",
       "importFilesSucceeded": "Imported {{count}} document(s)",
       "importUrlButton": "Import from URL",
       "importUrlHint": "Supports web pages (auto-converted to plain text) and direct links to PDF / Word / PPT / Excel files, etc.",

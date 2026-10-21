@@ -254,6 +254,8 @@
       "importFailed": "Не вдалося імпортувати",
       "importFilesButton": "Імпорт із файлів",
       "importFilesFailed": "Не вдалося імпортувати документів: {{count}}: {{reasons}}",
+      "importProgress": "Імпорт {{current}}/{{total}}: {{name}}",
+      "importCancelled": "Імпорт скасовано",
       "importFilesSucceeded": "Імпортовано документів: {{count}}",
       "importUrlButton": "Імпорт за URL",
       "importUrlHint": "Підтримуються вебсторінки (автоматично перетворюються на звичайний текст) і прямі посилання на файли PDF / Word / PPT / Excel тощо.",

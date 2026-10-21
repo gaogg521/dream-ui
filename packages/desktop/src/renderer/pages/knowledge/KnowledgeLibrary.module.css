@@ -956,3 +956,23 @@
 .tree .treeMore:global(.arco-btn.arco-dropdown-open) {
   opacity: 1;
 }
+
+.importStatus {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--color-fill-2);
+  color: var(--color-text-2);
+  font-size: 13px;
+}
+
+.importStatus span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

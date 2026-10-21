@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Alert, Button, Spin } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { sourceKind } from './sourceKind';
+import { cacheOriginal, getCachedOriginal } from './originalCache';
 import styles from '../KnowledgeLibrary.module.css';
 const WordOriginal = lazy(() => import('./WordOriginal'));
 const SlidesOriginal = lazy(() => import('./SlidesOriginal'));
@@ -30,9 +31,10 @@ export default function OriginalFileViewer({ id, title, mime, load, uploadOrigin
     let objectUrl = '';
     setUrl('');
     setError(false);
-    void latestLoad
-      .current()
+    const cached = getCachedOriginal(id);
+    void (cached ? Promise.resolve(cached) : latestLoad.current())
       .then((blob) => {
+        if (!cached) cacheOriginal(id, blob);
         if (!active) return;
         objectUrl = URL.createObjectURL(blob);
         setUrl(objectUrl);
@@ -65,7 +67,7 @@ export default function OriginalFileViewer({ id, title, mime, load, uploadOrigin
     <div className={styles.originalViewer}>
       {kind === 'pdf' ? (
         <Suspense fallback={<Spin tip={t('common.loading')} />}>
-          <PdfJsOriginal title={title} load={load} />
+          <PdfJsOriginal title={title} load={load} url={url} />
         </Suspense>
       ) : kind === 'word' ? (
         <Suspense fallback={<Spin tip={t('common.loading')} />}>

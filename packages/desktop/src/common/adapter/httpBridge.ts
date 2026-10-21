@@ -301,6 +301,8 @@ export type HttpRequestOptions = {
    * indefinite spinner.
    */
   timeoutMs?: number;
+  /** Caller-owned cancellation (e.g. a "Cancel import" button). Only honoured by `httpUploadMultipart`. */
+  signal?: AbortSignal;
   /** Extra request headers merged on top of the default `Content-Type`. */
   headers?: Record<string, string>;
 };
@@ -571,15 +573,27 @@ export async function httpUploadMultipart<T>(
   }
 
   const timeoutMs = options?.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
-  const controller = timeoutMs > 0 ? new AbortController() : undefined;
-  const timeoutHandle = controller !== undefined ? setTimeout(() => controller.abort(), timeoutMs) : undefined;
+  const callerSignal = options?.signal;
+  if (callerSignal?.aborted) throw new DOMException('Upload cancelled', 'AbortError');
+  const controller = timeoutMs > 0 || callerSignal ? new AbortController() : undefined;
+  let timedOut = false;
+  const timeoutHandle =
+    controller !== undefined && timeoutMs > 0
+      ? setTimeout(() => {
+          timedOut = true;
+          controller.abort();
+        }, timeoutMs)
+      : undefined;
+  const onCallerAbort = () => controller?.abort();
+  callerSignal?.addEventListener('abort', onCallerAbort, { once: true });
 
   let response: Response;
   try {
     // FormData sets its own boundary Content-Type; don't override it.
     response = await fetch(url, { method: 'POST', headers, body: form, signal: controller?.signal });
   } catch (error) {
-    if (controller?.signal.aborted) {
+    if (callerSignal?.aborted) throw new DOMException('Upload cancelled', 'AbortError');
+    if (timedOut) {
       throw new BackendHttpError({
         method: 'POST',
         path,
@@ -592,6 +606,7 @@ export async function httpUploadMultipart<T>(
     if (timeoutHandle !== undefined) {
       clearTimeout(timeoutHandle);
     }
+    callerSignal?.removeEventListener('abort', onCallerAbort);
   }
 
   if (!response.ok) {

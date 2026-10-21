@@ -253,6 +253,8 @@
       "importFailed": "Не удалось импортировать",
       "importFilesButton": "Импорт из файлов",
       "importFilesFailed": "Не удалось импортировать документов: {{count}}: {{reasons}}",
+      "importProgress": "Импорт {{current}}/{{total}}: {{name}}",
+      "importCancelled": "Импорт отменён",
       "importFilesSucceeded": "Импортировано документов: {{count}}",
       "importUrlButton": "Импорт по URL",
       "importUrlHint": "Поддерживаются веб-страницы (автоматически преобразуются в обычный текст) и прямые ссылки на файлы PDF / Word / PPT / Excel и т. д.",

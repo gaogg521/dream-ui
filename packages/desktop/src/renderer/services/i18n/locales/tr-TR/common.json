@@ -251,6 +251,8 @@
       "importFailed": "İçe aktarma başarısız oldu",
       "importFilesButton": "Dosyalardan içe aktar",
       "importFilesFailed": "{{count}} belge içe aktarılamadı: {{reasons}}",
+      "importProgress": "İçe aktarılıyor {{current}}/{{total}}: {{name}}",
+      "importCancelled": "İçe aktarma iptal edildi",
       "importFilesSucceeded": "{{count}} belge içe aktarıldı",
       "importUrlButton": "URL'den içe aktar",
       "importUrlHint": "Web sayfalarını (otomatik olarak düz metne dönüştürülür) ve PDF / Word / PPT / Excel vb. dosyalara doğrudan bağlantıları destekler.",

@@ -251,6 +251,8 @@
       "importFailed": "Import fehlgeschlagen",
       "importFilesButton": "Aus Dateien importieren",
       "importFilesFailed": "{{count}} Dokument(e) konnten nicht importiert werden: {{reasons}}",
+      "importProgress": "Import {{current}}/{{total}}: {{name}}",
+      "importCancelled": "Import abgebrochen",
       "importFilesSucceeded": "{{count}} Dokument(e) importiert",
       "importUrlButton": "Aus URL importieren",
       "importUrlHint": "Unterstützt Webseiten (automatisch in Klartext umgewandelt) und direkte Links zu PDF-, Word-, PPT-, Excel-Dateien usw.",

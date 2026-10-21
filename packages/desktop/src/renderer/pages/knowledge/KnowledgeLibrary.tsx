@@ -53,6 +53,8 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   readOnlyLibrary,
   loading,
   importing,
+  importProgress,
+  onCancelImport,
   onCreate,
   onImport,
   onLink,
@@ -465,6 +467,24 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                 </Button>
               </Dropdown>
             </header>
+            {importing && (
+              <div className={styles.importStatus} role='status'>
+                <span title={importProgress?.name}>
+                  {importProgress
+                    ? t('common.superAssistant.rag.importProgress', {
+                        current: importProgress.current,
+                        total: importProgress.total,
+                        name: importProgress.name,
+                      })
+                    : t('common.loading')}
+                </span>
+                {onCancelImport && (
+                  <Button size='mini' status='danger' onClick={onCancelImport}>
+                    {t('common.cancel')}
+                  </Button>
+                )}
+              </div>
+            )}
             {view === 'search' ? (
               <section className={styles.searchPanel}>{search}</section>
             ) : (

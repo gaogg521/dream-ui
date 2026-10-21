@@ -251,6 +251,8 @@
       "importFailed": "Error al importar",
       "importFilesButton": "Importar desde archivos",
       "importFilesFailed": "No se pudieron importar {{count}} documento(s): {{reasons}}",
+      "importProgress": "Importando {{current}}/{{total}}: {{name}}",
+      "importCancelled": "Importación cancelada",
       "importFilesSucceeded": "Se importaron {{count}} documento(s)",
       "importUrlButton": "Importar desde URL",
       "importUrlHint": "Admite páginas web (convertidas automáticamente a texto sin formato) y enlaces directos a archivos PDF / Word / PPT / Excel, etc.",

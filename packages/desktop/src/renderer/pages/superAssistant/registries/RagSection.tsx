@@ -27,6 +27,7 @@ import CsvDocument from '../../knowledge/CsvDocument';
 import { usesOriginalFile } from '../../knowledge/original/sourceKind';
 import { ipcBridge } from '@/common';
 import { httpDownloadBinary, httpUploadMultipart } from '@/common/adapter/httpBridge';
+import { cacheOriginal, originalCacheKey } from '../../knowledge/original/originalCache';
 import { isNativeDialogAvailable } from '@/common/adapter/ipcBridge';
 import { friendlyEnterpriseError } from '@renderer/utils/enterprise/friendlyEnterpriseError';
 import CompanyBadge from '@renderer/components/enterprise/CompanyBadge';
@@ -60,6 +61,12 @@ const STATUS_COLORS: Record<string, string> = {
  */
 const PERSONAL_SCOPE = 'personal';
 
+/**
+ * A fixed 120 s cap made any larger original fail on an ordinary office uplink (an enterprise client sends it to
+ * the remote server). Allow ~8 s per MiB (floor of ~128 KiB/s), never less than 120 s.
+ */
+const uploadTimeoutMs = (bytes: number) => Math.max(120_000, Math.ceil(bytes / (1024 * 1024)) * 8_000);
+
 export type RagLibraryProps = {
   documentView?: React.ReactNode;
   activeDocument?: RagDocumentEntry | null;
@@ -73,6 +80,9 @@ export type RagLibraryProps = {
   readOnlyLibrary: boolean;
   loading: boolean;
   importing: boolean;
+  /** Which file the running import is on, so the library can show real progress. */
+  importProgress?: { current: number; total: number; name: string } | null;
+  onCancelImport?: () => void;
   onCreate: (kind?: 'markdown' | 'csv', personal?: boolean) => void;
   onImport: (personal?: boolean) => void;
   onLink: (personal?: boolean) => void;
@@ -163,6 +173,9 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [importingFiles, setImportingFiles] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ current: number; total: number; name: string } | null>(null);
+  const importAbort = useRef<AbortController | null>(null);
+  const cancelImport = () => importAbort.current?.abort();
   const webImportInput = useRef<HTMLInputElement>(null);
   const webImportPersonal = useRef(false);
   const [urlModalVisible, setUrlModalVisible] = useState(false);
@@ -337,7 +350,13 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
    * Register extracted content. Saving queues background indexing on the server.
    */
   const registerAndProcess = useCallback(
-    async (title: string, content: string, personal = false, sourcePath?: string | File): Promise<void> => {
+    async (
+      title: string,
+      content: string,
+      personal = false,
+      sourcePath?: string | File,
+      signal?: AbortSignal
+    ): Promise<void> => {
       let originalFile: File | undefined;
       if (typeof sourcePath === 'string') {
         const source = await ipcBridge.application.readRagSourceFile.invoke({ filePath: sourcePath });
@@ -346,6 +365,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
         for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
         originalFile = new File([bytes], source.name);
       } else originalFile = sourcePath;
+      if (signal?.aborted) throw new DOMException('Import cancelled', 'AbortError');
       const target = libraries.find((library) => library.id === libraryId);
       const privateDocument = !isEnterprise || personal || target?.scope === 'personal';
       const doc = await ipcBridge.oneDevops.registerRagDocument.invoke({
@@ -358,9 +378,20 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
         throw new Error('registerRagDocument returned no id');
       }
       if (originalFile) {
-        await httpUploadMultipart(`/api/one/devops/rag/documents/${doc.id}/source`, originalFile, 'file', {
-          timeoutMs: 120000,
-        });
+        try {
+          const stored = await httpUploadMultipart<RagDocumentEntry>(
+            `/api/one/devops/rag/documents/${doc.id}/source`,
+            originalFile,
+            'file',
+            { timeoutMs: uploadTimeoutMs(originalFile.size), signal }
+          );
+          // Opening the document right after importing it should not download the same bytes back.
+          if (stored?.filePath) cacheOriginal(originalCacheKey(doc.id, stored.filePath), originalFile);
+        } catch (error) {
+          // A document whose original never arrived is an empty shell in the library; do not leave it behind.
+          await ipcBridge.oneDevops.deleteRagDocument.invoke({ id: doc.id }).catch((): void => {});
+          throw error;
+        }
       }
       if (content.trim()) {
         await ipcBridge.oneDevops.setRagContent.invoke({
@@ -373,44 +404,90 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     [libraryId, libraries, isEnterprise]
   );
 
-  const handleWebImport = async (files: File[]) => {
+  const isCancelled = (error: unknown) => (error as { name?: string } | null)?.name === 'AbortError';
+
+  /** Runs one file at a time so progress is real and Cancel takes effect between (and during) uploads. */
+  const runImport = async (
+    items: { name: string; run: (signal: AbortSignal) => Promise<{ sourceOnly: boolean }> }[]
+  ): Promise<void> => {
+    const controller = new AbortController();
+    importAbort.current = controller;
     setImportingFiles(true);
     let succeeded = 0;
+    let cancelled = false;
     const failures: string[] = [];
     const sourceOnly: string[] = [];
     try {
-      const { extractLibraryText } = await import('../../knowledge/original/extractLibraryText');
-      for (const file of files) {
-        if (file.size > 100 * 1024 * 1024) {
-          failures.push(`${file.name}: ${t('common.knowledgeLibrary.originalTooLarge')}`);
-          continue;
+      for (const [index, item] of items.entries()) {
+        if (controller.signal.aborted) {
+          cancelled = true;
+          break;
         }
+        setImportProgress({ current: index + 1, total: items.length, name: item.name });
         try {
+          const result = await item.run(controller.signal);
+          if (result.sourceOnly) sourceOnly.push(item.name);
+          succeeded += 1;
+        } catch (error) {
+          if (isCancelled(error) || controller.signal.aborted) {
+            cancelled = true;
+            break;
+          }
+          failures.push(`${item.name}: ${friendlyEnterpriseError(error, t)}`);
+        }
+      }
+      if (succeeded > 0) {
+        Message.success(
+          t('common.superAssistant.rag.importFilesSucceeded', {
+            defaultValue: '已导入 {{count}} 个文档',
+            count: succeeded,
+          })
+        );
+      }
+      if (cancelled) Message.info(t('common.superAssistant.rag.importCancelled'));
+      if (failures.length > 0) {
+        Message.error(
+          t('common.superAssistant.rag.importFilesFailed', {
+            defaultValue: '{{count}} 个文档导入失败：{{reasons}}',
+            count: failures.length,
+            reasons: failures.join('; '),
+          })
+        );
+      }
+      if (sourceOnly.length) Message.info(`${t('common.knowledgeLibrary.importSourceOnly')} ${sourceOnly.join(', ')}`);
+      await refresh();
+    } catch (error) {
+      Message.error(
+        t('common.superAssistant.rag.importFailed', { defaultValue: '导入失败' }) +
+          ': ' +
+          friendlyEnterpriseError(error, t)
+      );
+    } finally {
+      importAbort.current = null;
+      setImportProgress(null);
+      setImportingFiles(false);
+    }
+  };
+
+  const handleWebImport = async (files: File[]) => {
+    const { extractLibraryText } = await import('../../knowledge/original/extractLibraryText');
+    await runImport(
+      files.map((file) => ({
+        name: file.name,
+        run: async (signal) => {
+          if (file.size > 100 * 1024 * 1024) throw new Error(t('common.knowledgeLibrary.originalTooLarge'));
           let content: string | null = null;
           try {
             content = await extractLibraryText(file);
           } catch {
             /* Keep an unreadable original available. */
           }
-          await registerAndProcess(file.name, content ?? '', webImportPersonal.current, file);
-          if (!content?.trim()) sourceOnly.push(file.name);
-          succeeded += 1;
-        } catch (error) {
-          failures.push(`${file.name}: ${friendlyEnterpriseError(error, t)}`);
-        }
-      }
-      if (succeeded) Message.success(t('common.superAssistant.rag.importFilesSucceeded', { count: succeeded }));
-      if (sourceOnly.length) Message.info(`${t('common.knowledgeLibrary.importSourceOnly')} ${sourceOnly.join(', ')}`);
-      if (failures.length)
-        Message.error(
-          t('common.superAssistant.rag.importFilesFailed', { count: failures.length, reasons: failures.join('; ') })
-        );
-      await refresh();
-    } catch (error) {
-      Message.error(t('common.superAssistant.rag.importFailed') + ': ' + friendlyEnterpriseError(error, t));
-    } finally {
-      setImportingFiles(false);
-    }
+          if (signal.aborted) throw new DOMException('Import cancelled', 'AbortError');
+          await registerAndProcess(file.name, content ?? '', webImportPersonal.current, file, signal);
+          return { sourceOnly: !content?.trim() };
+        },
+      }))
+    );
   };
 
   /** Import: pick one or more local files, extract text, register + auto-process each. */
@@ -448,54 +525,25 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     if (!filePaths?.length) {
       return;
     }
-    setImportingFiles(true);
-    try {
-      const extracted = await ipcBridge.application.extractRagDocumentFiles.invoke({ filePaths });
-      let succeeded = 0;
-      const failures: string[] = [];
-      const sourceOnly: string[] = [];
-      for (const result of extracted) {
-        try {
+    await runImport(
+      filePaths.map((filePath) => ({
+        name: titleFromFileName(filePath.split(/[\\/]/).pop() ?? filePath),
+        run: async (signal) => {
+          // One file per call: a huge PDF no longer holds every other file's result (and the progress) hostage.
+          const [result] = await ipcBridge.application.extractRagDocumentFiles.invoke({ filePaths: [filePath] });
+          if (signal.aborted) throw new DOMException('Import cancelled', 'AbortError');
+          const failed = 'error' in result;
           await registerAndProcess(
             titleFromFileName(result.fileName),
-            'error' in result ? '' : result.text,
+            failed ? '' : result.text,
             personal,
-            result.filePath
+            result.filePath,
+            signal
           );
-          if ('error' in result || !result.text.trim()) sourceOnly.push(result.fileName);
-          succeeded += 1;
-        } catch (error) {
-          failures.push(`${result.fileName}: ${friendlyEnterpriseError(error, t)}`);
-        }
-      }
-      if (succeeded > 0) {
-        Message.success(
-          t('common.superAssistant.rag.importFilesSucceeded', {
-            defaultValue: '已导入 {{count}} 个文档',
-            count: succeeded,
-          })
-        );
-      }
-      if (failures.length > 0) {
-        Message.error(
-          t('common.superAssistant.rag.importFilesFailed', {
-            defaultValue: '{{count}} 个文档导入失败：{{reasons}}',
-            count: failures.length,
-            reasons: failures.join('; '),
-          })
-        );
-      }
-      if (sourceOnly.length) Message.info(`${t('common.knowledgeLibrary.importSourceOnly')} ${sourceOnly.join(', ')}`);
-      await refresh();
-    } catch (error) {
-      Message.error(
-        t('common.superAssistant.rag.importFailed', { defaultValue: '导入失败' }) +
-          ': ' +
-          friendlyEnterpriseError(error, t)
-      );
-    } finally {
-      setImportingFiles(false);
-    }
+          return { sourceOnly: failed || !result.text.trim() };
+        },
+      }))
+    );
   };
 
   const openUrlImport = (personal = false) => {
@@ -861,8 +909,9 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
                   `/api/one/devops/rag/documents/${editTarget.id}/source`,
                   file,
                   'file',
-                  { timeoutMs: 120000 }
+                  { timeoutMs: uploadTimeoutMs(file.size) }
                 );
+                if (metadata.filePath) cacheOriginal(originalCacheKey(metadata.id, metadata.filePath), file);
                 setEditTarget(metadata);
                 editRevision.current = (
                   await ipcBridge.oneDevops.getRagContentState.invoke({ id: metadata.id })
@@ -932,6 +981,8 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
             memberMode && Boolean(libraryId) && libraries.find((item) => item.id === libraryId)?.scope !== 'personal',
           loading,
           importing: importingFiles,
+          importProgress,
+          onCancelImport: cancelImport,
           onCreate: (kind, personal) => navigateDocument(() => openRegister(kind, personal)),
           onImport: (personal) => void handleImportFiles(personal),
           onLink: openUrlImport,
@@ -959,8 +1010,19 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
                 </Button>
               )}
               <Button size='small' loading={importingFiles} onClick={() => void handleImportFiles()}>
-                {t('common.superAssistant.rag.importFilesButton', { defaultValue: '从文件导入' })}
+                {importProgress
+                  ? t('common.superAssistant.rag.importProgress', {
+                      current: importProgress.current,
+                      total: importProgress.total,
+                      name: importProgress.name,
+                    })
+                  : t('common.superAssistant.rag.importFilesButton', { defaultValue: '从文件导入' })}
               </Button>
+              {importingFiles && (
+                <Button size='small' status='danger' onClick={cancelImport}>
+                  {t('common.cancel')}
+                </Button>
+              )}
               <Button size='small' onClick={() => openUrlImport()}>
                 {t('common.superAssistant.rag.importUrlButton', { defaultValue: '从网页导入' })}
               </Button>

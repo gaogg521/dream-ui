@@ -3,7 +3,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { Markdown } from '@tiptap/markdown';
 import { TableKit } from '@tiptap/extension-table';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Input, Message, Dropdown, Menu, Upload } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
@@ -247,7 +247,9 @@ export default function LibraryDocument(props: Props) {
   const pageRef = useRef<HTMLElement>(null);
   const [autoStatus, setAutoStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const [saveConflict, setSaveConflict] = useState(false);
-  const submitted = useRef(JSON.stringify([props.title, props.content]));
+  // Serialising a large extracted text on every render made opening big documents sluggish; do it once per change.
+  const snapshotNow = useMemo(() => JSON.stringify([props.title, props.content]), [props.title, props.content]);
+  const submitted = useRef(snapshotNow);
   const [savedSnapshot, setSavedSnapshot] = useState(submitted.current);
   const failedSnapshot = useRef('');
   const inFlight = useRef(false);
@@ -255,7 +257,7 @@ export default function LibraryDocument(props: Props) {
   save.current = props.onSave;
   useEffect(() => {
     if (props.reading && !props.loading) {
-      const snapshot = JSON.stringify([props.title, props.content]);
+      const snapshot = snapshotNow;
       submitted.current = snapshot;
       setSavedSnapshot(snapshot);
       setAutoStatus('saved');
@@ -264,7 +266,7 @@ export default function LibraryDocument(props: Props) {
   }, [props.reading, props.loading, props.title, props.content]);
   const persist = async () => {
     if (inFlight.current) return false;
-    const snapshot = JSON.stringify([props.title, props.content]);
+    const snapshot = snapshotNow;
     inFlight.current = true;
     setAutoStatus('saving');
     try {
@@ -285,7 +287,7 @@ export default function LibraryDocument(props: Props) {
     }
   };
   useEffect(() => {
-    const snapshot = JSON.stringify([props.title, props.content]);
+    const snapshot = snapshotNow;
     if (
       props.reading ||
       original ||
@@ -319,7 +321,7 @@ export default function LibraryDocument(props: Props) {
         <Button
           type='text'
           onClick={() => {
-            if (props.reading || JSON.stringify([props.title, props.content]) === submitted.current) props.onBack();
+            if (props.reading || snapshotNow === submitted.current) props.onBack();
             else
               void persist().then((saved) => {
                 if (saved) props.onBack();
@@ -354,7 +356,7 @@ export default function LibraryDocument(props: Props) {
           {props.canEdit && !original && (
             <span className={styles.editorHint} role='status'>
               {t(
-                `common.knowledgeLibrary.${autoStatus === 'error' ? 'saveFailed' : props.saving || autoStatus === 'saving' || JSON.stringify([props.title, props.content]) !== savedSnapshot ? 'saving' : !props.content.trim() ? 'autoSave' : 'autoSaved'}`
+                `common.knowledgeLibrary.${autoStatus === 'error' ? 'saveFailed' : props.saving || autoStatus === 'saving' || snapshotNow !== savedSnapshot ? 'saving' : !props.content.trim() ? 'autoSave' : 'autoSaved'}`
               )}
             </span>
           )}
@@ -398,7 +400,7 @@ export default function LibraryDocument(props: Props) {
               <Button
                 type={props.reading ? 'secondary' : 'text'}
                 onClick={() => {
-                  if (JSON.stringify([props.title, props.content]) === submitted.current) props.onReading(true);
+                  if (snapshotNow === submitted.current) props.onReading(true);
                   else
                     void persist().then((saved) => {
                       if (saved) props.onReading(true);

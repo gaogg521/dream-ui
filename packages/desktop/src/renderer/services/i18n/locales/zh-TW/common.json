@@ -251,6 +251,8 @@
       "importFailed": "匯入失敗",
       "importFilesButton": "從檔案匯入",
       "importFilesFailed": "{{count}} 個文件匯入失敗：{{reasons}}",
+      "importProgress": "正在匯入 {{current}}/{{total}}：{{name}}",
+      "importCancelled": "已取消匯入",
       "importFilesSucceeded": "已匯入 {{count}} 個文件",
       "importUrlButton": "從網頁匯入",
       "importUrlHint": "支援網頁（自動轉純文字）以及直接指向 PDF / Word / PPT / Excel 等檔案的連結。",

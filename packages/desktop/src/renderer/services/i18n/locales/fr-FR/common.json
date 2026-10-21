@@ -251,6 +251,8 @@
       "importFailed": "Échec de l’importation",
       "importFilesButton": "Importer depuis des fichiers",
       "importFilesFailed": "Échec de l’importation de {{count}} document(s) : {{reasons}}",
+      "importProgress": "Importation {{current}}/{{total}} : {{name}}",
+      "importCancelled": "Importation annulée",
       "importFilesSucceeded": "{{count}} document(s) importé(s)",
       "importUrlButton": "Importer depuis une URL",
       "importUrlHint": "Prend en charge les pages web (converties automatiquement en texte brut) et les liens directs vers des fichiers PDF / Word / PPT / Excel, etc.",

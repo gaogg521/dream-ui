@@ -573,6 +573,8 @@
       "importFailed": "导入失败",
       "importFilesButton": "从文件导入",
       "importFilesFailed": "{{count}} 个文档导入失败：{{reasons}}",
+      "importProgress": "正在导入 {{current}}/{{total}}：{{name}}",
+      "importCancelled": "已取消导入",
       "importFilesSucceeded": "已导入 {{count}} 个文档",
       "importUrlButton": "从网页导入",
       "importUrlHint": "支持网页（自动转纯文本）以及直接指向 PDF / Word / PPT / Excel 等文件的链接。",

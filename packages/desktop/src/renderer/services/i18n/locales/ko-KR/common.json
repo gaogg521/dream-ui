@@ -251,6 +251,8 @@
       "importFailed": "가져오지 못했습니다",
       "importFilesButton": "파일에서 가져오기",
       "importFilesFailed": "문서 {{count}}개를 가져오지 못했습니다: {{reasons}}",
+      "importProgress": "가져오는 중 {{current}}/{{total}}: {{name}}",
+      "importCancelled": "가져오기를 취소했습니다",
       "importFilesSucceeded": "문서 {{count}}개를 가져왔습니다",
       "importUrlButton": "URL에서 가져오기",
       "importUrlHint": "웹 페이지(일반 텍스트로 자동 변환)와 PDF / Word / PPT / Excel 등 파일의 직접 링크를 지원합니다.",

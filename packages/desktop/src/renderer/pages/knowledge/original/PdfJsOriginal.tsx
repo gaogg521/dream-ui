@@ -5,6 +5,8 @@ import type { PDFDocumentProxy } from 'pdfjs-dist';
 type Props = {
   title: string;
   load: () => Promise<Blob>;
+  /** Blob URL of the already-downloaded original; avoids a second download through `load`. */
+  url?: string;
 };
 
 // Renders the original PDF with pdf.js instead of the browser plugin, whose
@@ -46,9 +48,12 @@ export default function PdfJsOriginal(props: Props) {
       const { PdfBinaryData } = await import('./pdfResources');
       const { default: worker } = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
       GlobalWorkerOptions.workerSrc = worker;
-      const blob = await latest.current.load();
+      // The viewer has already downloaded the original into a blob URL; read that instead of downloading again.
+      const bytes = latest.current.url
+        ? await (await fetch(latest.current.url)).arrayBuffer()
+        : await (await latest.current.load()).arrayBuffer();
       const task = getDocument({
-        data: new Uint8Array(await blob.arrayBuffer()),
+        data: new Uint8Array(bytes),
         useWorkerFetch: false,
         useWasm: false,
         BinaryDataFactory: PdfBinaryData,
