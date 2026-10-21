@@ -290,7 +290,8 @@ describe('SystemModalContent directory settings', () => {
     renderContent();
 
     expect(await screen.findByDisplayValue('300')).toBeInTheDocument();
-    expect(await screen.findByDisplayValue('5')).toBeInTheDocument();
+    // 5 is the idle-timeout default and also the default preview size limit (MB).
+    expect(await screen.findAllByDisplayValue('5')).toHaveLength(2);
     expect(configServiceMock.get).not.toHaveBeenCalledWith('acp.promptTimeout');
     expect(configServiceMock.get).not.toHaveBeenCalledWith('acp.agentIdleTimeout');
   });

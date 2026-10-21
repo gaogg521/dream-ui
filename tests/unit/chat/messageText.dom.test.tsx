@@ -637,7 +637,7 @@ describe('MessageText attachment paths', () => {
   // a saveable editor is what destroyed the unread remainder on save.
   it('opens oversized local markdown links without reading content, read-only', async () => {
     const filePath = '/workspace/demo/logs/app.log';
-    const oversize = 1024 * 1024 + 1;
+    const oversize = 5 * 1024 * 1024 + 1; // just over the default text preview limit
     localFileLinkMocks.payload = { path: filePath, reference: undefined };
     vi.mocked(ipcBridge.fs.getContentMetadata.invoke).mockResolvedValue({
       name: 'app.log',
@@ -660,7 +660,7 @@ describe('MessageText attachment paths', () => {
           file_path: filePath,
           oversized: true,
           sizeBytes: oversize,
-          thresholdBytes: 1024 * 1024,
+          thresholdBytes: 5 * 1024 * 1024,
           editable: false,
         }),
         { replace: true }
