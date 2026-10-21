@@ -246,6 +246,7 @@ export default function LibraryDocument(props: Props) {
   }, [canEditOffice]);
   const pageRef = useRef<HTMLElement>(null);
   const [autoStatus, setAutoStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+  const [saveConflict, setSaveConflict] = useState(false);
   const submitted = useRef(JSON.stringify([props.title, props.content]));
   const [savedSnapshot, setSavedSnapshot] = useState(submitted.current);
   const failedSnapshot = useRef('');
@@ -258,6 +259,7 @@ export default function LibraryDocument(props: Props) {
       submitted.current = snapshot;
       setSavedSnapshot(snapshot);
       setAutoStatus('saved');
+      setSaveConflict(false);
     }
   }, [props.reading, props.loading, props.title, props.content]);
   const persist = async () => {
@@ -270,9 +272,11 @@ export default function LibraryDocument(props: Props) {
       submitted.current = snapshot;
       setSavedSnapshot(snapshot);
       failedSnapshot.current = '';
+      setSaveConflict(false);
       setAutoStatus('saved');
       return true;
-    } catch {
+    } catch (error) {
+      setSaveConflict((error as { status?: number })?.status === 409);
       failedSnapshot.current = snapshot;
       setAutoStatus('error');
       return false;
@@ -429,6 +433,7 @@ export default function LibraryDocument(props: Props) {
           )}
         </div>
       </header>
+      {saveConflict && <Alert type='warning' content={t('common.knowledgeLibrary.contentConflict')} />}
       <div className={original ? styles.originalCanvas : styles.documentCanvas}>
         {officeEditing && canEditOffice ? (
           useIntranet ? (

@@ -9,7 +9,7 @@
   "message": "実行内容",
   "goToConversation": "会話に移動",
   "status": {
-    "active": "実行中",
+    "active": "有効",
     "paused": "一時停止中",
     "error": "エラー",
     "unread": "新しい実行",

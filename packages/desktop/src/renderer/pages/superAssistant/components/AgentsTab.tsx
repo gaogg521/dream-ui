@@ -7,8 +7,10 @@
  * own employees additionally get schedule / manage / delete.
  */
 
-import React, { useMemo } from 'react';
-import { Button, Card, Empty, Popconfirm, Tag } from '@arco-design/web-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Button, Card, Empty, Input, Pagination, Popconfirm, Tag } from '@arco-design/web-react';
+import { ipcBridge } from '@/common';
+import type { DigitalEmployeeRunRecord } from '@/common/types/employee/employeeTypes';
 import { Communication, Delete, Edit, FileText, Plus, Time } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { resolveLocaleKey } from '@/common/utils';
@@ -66,12 +68,46 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
   const localeKey = resolveLocaleKey(language ?? 'en-US');
   const managedAgentRuntimeCatalog = useManagedAgentRuntimeCatalog();
   const { presetAssistants } = useConversationAssistants();
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+  const [runsByAgent, setRunsByAgent] = useState<Record<string, DigitalEmployeeRunRecord[]>>({});
 
   // Company employees first: they are what the member was handed.
-  const cards = useMemo(
-    () => [...agents].sort((a, b) => Number(isTeamDistributed(b)) - Number(isTeamDistributed(a))),
-    [agents]
+  const cards = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase();
+    return agents
+      .filter((agent) =>
+        [agent.name, agent.description, resolveEmployeeExpertName(agent, presetAssistants, localeKey)].some((value) =>
+          value?.toLocaleLowerCase().includes(query)
+        )
+      )
+      .sort((a, b) => Number(isTeamDistributed(b)) - Number(isTeamDistributed(a)));
+  }, [agents, search, presetAssistants, localeKey]);
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(cards.length / pageSize)));
+  const visibleCards = useMemo(
+    () => cards.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [cards, currentPage]
   );
+  useEffect(() => {
+    let active = true;
+    // Only the visible page needs run summaries. Fetching one history per
+    // employee made a 500-item roster issue 500 concurrent requests.
+    void Promise.all(
+      visibleCards.map(async (agent) => {
+        try {
+          return [agent.id, (await ipcBridge.personalAgent.listRuns.invoke({ agentId: agent.id })) ?? []] as const;
+        } catch {
+          return [agent.id, []] as const;
+        }
+      })
+    ).then((entries) => {
+      if (active) setRunsByAgent(Object.fromEntries(entries));
+    });
+    return () => {
+      active = false;
+    };
+  }, [visibleCards]);
 
   return (
     <div className='flex flex-col gap-16px'>
@@ -83,22 +119,36 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
           </Button>
         }
       >
+        <Input.Search
+          className='mb-16px'
+          allowClear
+          value={search}
+          placeholder={t('common.superAssistant.searchEmployees')}
+          onChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+        />
         {cards.length === 0 ? (
           <Empty
-            description={t('common.superAssistant.agentsEmpty', {
-              defaultValue: '还没有数字员工，先创建一个。',
-            })}
+            description={
+              search.trim()
+                ? t('common.superAssistant.noMatchingEmployees')
+                : t('common.superAssistant.agentsEmpty', {
+                    defaultValue: '还没有数字员工，先创建一个。',
+                  })
+            }
           />
         ) : (
           <div className='grid gap-12px md:grid-cols-2'>
-            {cards.map((agent) => {
+            {visibleCards.map((agent) => {
               const ref: AgentCardRef = {
                 agentId: agent.id,
                 agentName: agent.name,
                 agentType: agent.agentType,
               };
               // A chat binding has no outcome to report; the card shows the last real run.
-              const latestRun = agent.recentRuns.find((run) => run.triggerSource !== 'chat');
+              const latestRun = (runsByAgent[agent.id] ?? agent.recentRuns).find((run) => run.triggerSource !== 'chat');
               const expertName = resolveEmployeeExpertName(agent, presetAssistants, localeKey);
               return (
                 <Card key={agent.id} size='small'>
@@ -197,6 +247,16 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
               );
             })}
           </div>
+        )}
+        {cards.length > pageSize && (
+          <Pagination
+            className='mt-16px'
+            current={currentPage}
+            pageSize={pageSize}
+            total={cards.length}
+            onChange={setPage}
+            showTotal
+          />
         )}
       </Card>
     </div>

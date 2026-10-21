@@ -471,7 +471,9 @@
       "scopeTeam": "Ausgewählte Projektgruppe",
       "visibilityAdmin": "Nur Administratoren",
       "visibilityAll": "Alle Mitglieder"
-    }
+    },
+    "searchEmployees": "Mitarbeiter, Beschreibungen oder Experten suchen",
+    "noMatchingEmployees": "Keine passenden Mitarbeiter"
   },
   "language": {
     "switchTooltip": "Sprache wechseln"
@@ -926,7 +928,10 @@
     "onlineEdit": "Online bearbeiten",
     "onlineSave": "Ins Original speichern",
     "onlineSaved": "Im Original gespeichert; beim erneuten Öffnen ist der Inhalt aktuell",
-    "onlineEditNote": "Sie bearbeiten eine konvertierte Kopie (erste 200 Zeilen × 26 Spalten), die beim Speichern in die ursprüngliche xlsx-Datei exportiert wird; Formeln werden nicht erhalten."
+    "onlineEditNote": "Sie bearbeiten eine konvertierte Kopie (erste 200 Zeilen × 26 Spalten), die beim Speichern in die ursprüngliche xlsx-Datei exportiert wird; Formeln werden nicht erhalten.",
+    "contentConflict": "Das Dokument wurde anderswo geändert. Ihr Entwurf bleibt erhalten. Kopieren Sie ihn vor dem erneuten Öffnen.",
+    "sourceOnlyStatus": "Original gespeichert; kein durchsuchbarer Text",
+    "sourceOnly": "Nur Original"
   },
   "officeToolbar": {
     "undo": "Rückgängig",

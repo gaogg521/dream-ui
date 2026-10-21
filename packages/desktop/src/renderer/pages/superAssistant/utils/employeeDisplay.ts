@@ -38,12 +38,21 @@ export function resolveEmployeeBackendLabel(
  * backend-only employee (every employee created before migration 004).
  */
 export function resolveEmployeeExpertName(
-  agent: Pick<PersonalAgent, 'assistantId' | 'customAgentId'>,
+  agent: Pick<PersonalAgent, 'assistantId' | 'customAgentId'> & {
+    automationConfig?: PersonalAgent['automationConfig'];
+  },
   assistants: Assistant[],
   localeKey = 'en-US'
 ): string | undefined {
   const assistantId = agent.assistantId ?? agent.customAgentId;
   if (!assistantId) return undefined;
+  const config = agent.automationConfig;
+  const localized = config?.teamExpertNameI18n;
+  if (localized && typeof localized === 'object') {
+    const name = (localized as Record<string, unknown>)[localeKey];
+    if (typeof name === 'string') return name;
+  }
+  if (typeof config?.teamExpertName === 'string' && config.teamExpertName) return config.teamExpertName;
   const assistant = assistants.find((item) => item.id === assistantId);
   return assistant ? resolveAssistantName(assistant, localeKey, assistant.name) : assistantId;
 }

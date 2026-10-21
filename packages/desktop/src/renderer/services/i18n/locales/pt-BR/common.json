@@ -471,7 +471,9 @@
       "scopeTeam": "Grupo de projeto selecionado",
       "visibilityAdmin": "Somente administradores",
       "visibilityAll": "Todos os membros"
-    }
+    },
+    "searchEmployees": "Buscar funcionários, descrições ou especialistas",
+    "noMatchingEmployees": "Nenhum funcionário encontrado"
   },
   "language": {
     "switchTooltip": "Mudar idioma"
@@ -926,7 +928,10 @@
     "onlineEdit": "Editar on-line",
     "onlineSave": "Salvar no original",
     "onlineSaved": "Salvo no original; ao reabrir, o conteúdo mais recente será exibido",
-    "onlineEditNote": "Você edita uma cópia convertida (primeiras 200 linhas × 26 colunas) exportada de volta ao xlsx original ao salvar; fórmulas não são preservadas."
+    "onlineEditNote": "Você edita uma cópia convertida (primeiras 200 linhas × 26 colunas) exportada de volta ao xlsx original ao salvar; fórmulas não são preservadas.",
+    "contentConflict": "O documento foi alterado em outra janela. Seu rascunho foi preservado. Copie-o antes de reabrir.",
+    "sourceOnlyStatus": "Original salvo; sem texto pesquisável",
+    "sourceOnly": "Só original"
   },
   "officeToolbar": {
     "undo": "Desfazer",

@@ -1,6 +1,6 @@
 import { ipcBridge } from '@/common';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Dropdown, Input, Message, Menu, Select, Table, Tabs } from '@arco-design/web-react';
+import { Button, Dropdown, Input, Message, Menu, Select, Table, Tabs, Tag } from '@arco-design/web-react';
 import {
   Add,
   BookOpen,
@@ -24,6 +24,9 @@ import LibraryFileIcon from './shared/LibraryFileIcon';
 import { useLibrarySidebar } from './useLibrarySidebar';
 
 type View = 'recent' | 'search' | 'personal' | 'team';
+
+const isSourceOnly = (doc: RagDocumentEntry) =>
+  doc.status === 'ready' && doc.chunkCount === 0 && Boolean(doc.filePath?.startsWith('rag-source:'));
 
 const readVisits = (): Record<string, number> => {
   try {
@@ -131,7 +134,10 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           return (
             scope &&
             (!query.trim() || (matches.query === query.trim() && matches.ids.has(row.id))) &&
-            (kind === 'all' || row.status === kind)
+            (kind === 'all' ||
+              (kind === 'sourceOnly'
+                ? isSourceOnly(row)
+                : row.status === kind && !(kind === 'ready' && isSourceOnly(row))))
           );
         })
         .toSorted((a, b) => (visits[b.id] ?? b.createdAt) - (visits[a.id] ?? a.createdAt)),
@@ -286,6 +292,11 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           onClick={() => open(row)}
         >
           {row.title}
+          {row.status === 'ready' && row.chunkCount === 0 && row.filePath?.startsWith('rag-source:') && (
+            <Tag size='small' title={label('sourceOnlyStatus')}>
+              {label('sourceOnly')}
+            </Tag>
+          )}
         </Button>
       ),
     },
@@ -472,7 +483,10 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                     value={kind}
                     onChange={setKind}
                     className={styles.filter}
-                    options={['all', 'ready', 'pending', 'error'].map((value) => ({ value, label: label(value) }))}
+                    options={['all', 'ready', 'sourceOnly', 'pending', 'error'].map((value) => ({
+                      value,
+                      label: label(value),
+                    }))}
                   />
                 </div>
                 <Input

@@ -471,7 +471,9 @@
       "scopeTeam": "選択したプロジェクトグループ",
       "visibilityAdmin": "管理者のみ",
       "visibilityAll": "全メンバー"
-    }
+    },
+    "searchEmployees": "従業員、説明、専門家を検索",
+    "noMatchingEmployees": "一致する従業員はいません"
   },
   "language": {
     "switchTooltip": "言語を切り替え"
@@ -926,7 +928,10 @@
     "onlineEdit": "オンライン編集",
     "onlineSave": "元ファイルに保存",
     "onlineSaved": "元ファイルに保存しました。開き直すと最新の内容が表示されます",
-    "onlineEditNote": "変換されたコピー（先頭 200 行 × 26 列）を編集し、保存時に元の xlsx へ書き戻します。数式は保持されません。"
+    "onlineEditNote": "変換されたコピー（先頭 200 行 × 26 列）を編集し、保存時に元の xlsx へ書き戻します。数式は保持されません。",
+    "contentConflict": "別の画面で文書が更新されました。下書きは保持されています。コピーしてから文書を開き直してください。",
+    "sourceOnlyStatus": "原本を保存済み。検索可能な本文なし",
+    "sourceOnly": "原本のみ"
   },
   "officeToolbar": {
     "undo": "元に戻す",

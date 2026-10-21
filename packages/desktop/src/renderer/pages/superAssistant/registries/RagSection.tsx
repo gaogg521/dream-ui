@@ -133,6 +133,8 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
   const [reading, setReading] = useState(true);
   const [editContent, setEditContent] = useState('');
   const originalContent = useRef('');
+  const editRevision = useRef<number | null>(null);
+  const draftRevision = useRef<number | null>(null);
   const [discardConfirm, setDiscardConfirm] = useState(false);
   const pendingNavigation = useRef<() => void>(() => {});
   const editRequest = useRef(0);
@@ -240,6 +242,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     setDocumentKind(kind);
     setEditTarget(null);
     draftId.current = undefined;
+    draftRevision.current = null;
     originalDraft.current = JSON.stringify([
       '',
       kind === 'csv'
@@ -300,7 +303,13 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
         draftId.current = doc.id;
       }
       if (doc?.id) {
-        await ipcBridge.oneDevops.setRagContent.invoke({ id: doc.id, content: values.content ?? '' });
+        if (draftRevision.current === null)
+          draftRevision.current = (await ipcBridge.oneDevops.getRagContentState.invoke({ id: doc.id })).revision;
+        draftRevision.current = await ipcBridge.oneDevops.setRagContent.invoke({
+          id: doc.id,
+          content: values.content ?? '',
+          expectedRevision: draftRevision.current,
+        });
       }
       originalDraft.current = JSON.stringify([draftTitle, draftContent]);
       if (!automatic) {
@@ -354,7 +363,11 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
         });
       }
       if (content.trim()) {
-        await ipcBridge.oneDevops.setRagContent.invoke({ id: doc.id, content });
+        await ipcBridge.oneDevops.setRagContent.invoke({
+          id: doc.id,
+          content,
+          expectedRevision: (await ipcBridge.oneDevops.getRagContentState.invoke({ id: doc.id })).revision,
+        });
       }
     },
     [libraryId, libraries, isEnterprise]
@@ -523,8 +536,10 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     originalContent.current = '';
     setEditLoading(true);
     try {
-      const content = (await ipcBridge.oneDevops.getRagContent.invoke({ id: record.id })) ?? '';
+      const state = await ipcBridge.oneDevops.getRagContentState.invoke({ id: record.id });
+      const content = state.content;
       if (request !== editRequest.current) return;
+      editRevision.current = state.revision;
       originalContent.current = content;
       setEditContent(content);
     } catch (error) {
@@ -547,7 +562,12 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     }
     setSavingEdit(true);
     try {
-      await ipcBridge.oneDevops.setRagContent.invoke({ id: editTarget.id, content: editContent });
+      if (editRevision.current === null) throw new Error('Document version has not loaded');
+      editRevision.current = await ipcBridge.oneDevops.setRagContent.invoke({
+        id: editTarget.id,
+        content: editContent,
+        expectedRevision: editRevision.current,
+      });
 
       if (!automatic) Message.success(t('common.superAssistant.registries.saved'));
       originalContent.current = editContent;
@@ -814,11 +834,12 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
               }}
               onOfficeSaved={async () => {
                 const [content, documents] = await Promise.all([
-                  ipcBridge.oneDevops.getRagContent.invoke({ id: editTarget.id }),
+                  ipcBridge.oneDevops.getRagContentState.invoke({ id: editTarget.id }),
                   ipcBridge.oneDevops.listRagDocuments.invoke(),
                 ]);
-                originalContent.current = content ?? '';
-                setEditContent(content ?? '');
+                editRevision.current = content.revision;
+                originalContent.current = content.content;
+                setEditContent(content.content);
                 setRows(documents ?? []);
                 const metadata = documents?.find((item) => item.id === editTarget.id);
                 if (metadata) setEditTarget(metadata);
@@ -843,10 +864,17 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
                   { timeoutMs: 120000 }
                 );
                 setEditTarget(metadata);
+                editRevision.current = (
+                  await ipcBridge.oneDevops.getRagContentState.invoke({ id: metadata.id })
+                ).revision;
                 let savedContent = '';
                 if (content?.trim()) {
                   try {
-                    await ipcBridge.oneDevops.setRagContent.invoke({ id: metadata.id, content });
+                    editRevision.current = await ipcBridge.oneDevops.setRagContent.invoke({
+                      id: metadata.id,
+                      content,
+                      expectedRevision: editRevision.current!,
+                    });
                     savedContent = content;
                   } catch {
                     Message.error(t('common.knowledgeLibrary.saveFailed'));

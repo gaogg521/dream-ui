@@ -9,7 +9,7 @@
   "message": "Mensagem",
   "goToConversation": "Ir para a conversa",
   "status": {
-    "active": "Ativo",
+    "active": "Ativada",
     "paused": "Pausado",
     "error": "Erro",
     "unread": "Nova execução",

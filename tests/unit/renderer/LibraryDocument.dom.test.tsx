@@ -15,6 +15,29 @@ const props = {
   onSave: vi.fn(),
 };
 describe('inline knowledge document', () => {
+  it('preserves a stale draft and blocks leaving after a version conflict', async () => {
+    const onSave = vi.fn().mockRejectedValue(Object.assign(new Error('Conflict'), { status: 409 }));
+    const onBack = vi.fn();
+    const view = render(
+      <LibraryDocument {...props} reading={false} mimeType='text/html' onSave={onSave} onBack={onBack} />
+    );
+    view.rerender(
+      <LibraryDocument
+        {...props}
+        reading={false}
+        mimeType='text/html'
+        content='Preserve my stale draft'
+        onSave={onSave}
+        onBack={onBack}
+      />
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'backToLibrary' }));
+    });
+    expect(screen.getByText('contentConflict')).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toHaveValue('Preserve my stale draft');
+    expect(onBack).not.toHaveBeenCalled();
+  });
   afterEach(() => {
     cleanup();
     vi.useRealTimers();

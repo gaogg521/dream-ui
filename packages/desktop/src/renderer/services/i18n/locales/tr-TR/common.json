@@ -471,7 +471,9 @@
       "scopeTeam": "Seçili proje grubu",
       "visibilityAdmin": "Yalnızca yöneticiler",
       "visibilityAll": "Tüm üyeler"
-    }
+    },
+    "searchEmployees": "Çalışan, açıklama veya uzman ara",
+    "noMatchingEmployees": "Eşleşen çalışan yok"
   },
   "language": {
     "switchTooltip": "Dili değiştir"
@@ -926,7 +928,10 @@
     "onlineEdit": "Çevrimiçi düzenle",
     "onlineSave": "Orijinale kaydet",
     "onlineSaved": "Orijinale kaydedildi; yeniden açtığınızda en güncel içeriği görürsünüz",
-    "onlineEditNote": "Dönüştürülmüş bir kopyayı (ilk 200 satır × 26 sütun) düzenliyorsunuz; kaydettiğinizde orijinal xlsx’e yazılır. Formüller korunmaz."
+    "onlineEditNote": "Dönüştürülmüş bir kopyayı (ilk 200 satır × 26 sütun) düzenliyorsunuz; kaydettiğinizde orijinal xlsx’e yazılır. Formüller korunmaz.",
+    "contentConflict": "Belge başka bir pencerede güncellendi. Taslağınız korundu. Belgeyi yeniden açmadan önce kopyalayın.",
+    "sourceOnlyStatus": "Orijinal kaydedildi; aranabilir metin yok",
+    "sourceOnly": "Yalnızca orijinal"
   },
   "officeToolbar": {
     "undo": "Geri Al",

@@ -471,7 +471,9 @@
       "scopeTeam": "Grupo de proyecto seleccionado",
       "visibilityAdmin": "Solo administradores",
       "visibilityAll": "Todos los miembros"
-    }
+    },
+    "searchEmployees": "Buscar empleados, descripciones o expertos",
+    "noMatchingEmployees": "No hay empleados coincidentes"
   },
   "language": {
     "switchTooltip": "Cambiar idioma"
@@ -926,7 +928,10 @@
     "onlineEdit": "Editar en línea",
     "onlineSave": "Guardar en el original",
     "onlineSaved": "Guardado en el original; al reabrir verá el contenido más reciente",
-    "onlineEditNote": "Edita una copia convertida (primeras 200 filas × 26 columnas) que se exporta al xlsx original al guardar; no se conservan las fórmulas."
+    "onlineEditNote": "Edita una copia convertida (primeras 200 filas × 26 columnas) que se exporta al xlsx original al guardar; no se conservan las fórmulas.",
+    "contentConflict": "El documento cambió en otra ventana. Tu borrador se conserva. Cópialo antes de volver a abrirlo.",
+    "sourceOnlyStatus": "Original guardado; sin texto consultable",
+    "sourceOnly": "Solo original"
   },
   "officeToolbar": {
     "undo": "Deshacer",

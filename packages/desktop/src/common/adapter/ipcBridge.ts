@@ -3020,12 +3020,15 @@ export const personalAgent = {
   // GOVERNANCE_PATH_PREFIXES for this entry alone; every entry above stays
   // local because preferLocalBackend overrides the prefix.
   listTeamAgents: httpGet<PersonalAgent[], void>('/api/one/employee/agents'),
+  getTeamSyncBundle: httpGet<{ agents: PersonalAgent[]; assistants: unknown[] }, void>(
+    '/api/one/employee/team-sync-bundle'
+  ),
   // P1-3 team-sync materialization — always LOCAL (like fs.syncTeamSkills /
   // fs.syncTeamMcp): writes the team view onto the co-located dreamcore,
   // keyed by the server agent id so `authoritative` reconciles by id diff.
   syncTeamAgents: httpPostLocal<
     { written: string[]; removed: string[]; conflicts: string[]; kept: number },
-    { agents: TeamSyncAgentInput[]; authoritative: boolean }
+    { agents: TeamSyncAgentInput[]; assistants?: unknown[]; sourceScope?: string; authoritative: boolean }
   >('/api/one/employee/team-sync'),
 };
 
@@ -3328,9 +3331,12 @@ export const oneDevops = {
   ),
   deleteRagDocument: httpDelete<void, { id: string }>((p) => `/api/one/devops/rag/documents/${p.id}`),
   getRagContent: httpGet<string, { id: string }>((p) => `/api/one/devops/rag/documents/${p.id}/content`),
-  setRagContent: httpPut<void, { id: string; content: string }>(
+  getRagContentState: httpGet<{ content: string; revision: number }, { id: string }>(
+    (p) => `/api/one/devops/rag/documents/${p.id}/content-state`
+  ),
+  setRagContent: httpPut<number, { id: string; content: string; expectedRevision: number }>(
     (p) => `/api/one/devops/rag/documents/${p.id}/content`,
-    (p) => ({ content: p.content })
+    (p) => ({ content: p.content, expectedRevision: p.expectedRevision })
   ),
   processRagDocument: httpPost<{ chunkCount: number }, { id: string }>(
     (p) => `/api/one/devops/rag/documents/${p.id}/process`

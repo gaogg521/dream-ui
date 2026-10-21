@@ -17,8 +17,14 @@ import type { DlpFindingInput } from '@/common/adapter/ipcBridge';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import { getEnterpriseServerUrl, getEnterpriseSession } from '@/common/adapter/enterpriseMode';
 import { emitter } from '@/renderer/utils/emitter';
+import { mutate } from 'swr';
 
 export type TeamSkillSyncResult = { written: number; removed: number; kept: number };
+
+async function refreshEmployeeViews(): Promise<void> {
+  await mutate('assistants.list');
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('one-team-employees-changed'));
+}
 
 export function filterTeamAgentBindings(
   config: Record<string, unknown>,
@@ -439,6 +445,7 @@ export async function clearTeamResources(): Promise<void> {
     // survived.
     ipcBridge.mode.syncTeamMemory.invoke({ recallEnabled: false, items: [] }),
   ]);
+  await refreshEmployeeViews();
 }
 
 /**
@@ -457,14 +464,19 @@ export async function clearTeamResources(): Promise<void> {
  */
 export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
   let team: Awaited<ReturnType<typeof ipcBridge.personalAgent.listTeamAgents.invoke>>;
+  let assistants: unknown[];
   let registrySkills: Awaited<ReturnType<typeof ipcBridge.oneDevops.listSkills.invoke>>;
   let registryMcp: Awaited<ReturnType<typeof ipcBridge.oneDevops.listMcpRegistry.invoke>>;
   try {
-    [team, registrySkills, registryMcp] = await Promise.all([
-      ipcBridge.personalAgent.listTeamAgents.invoke(),
+    const [bundle, skills, mcp] = await Promise.all([
+      ipcBridge.personalAgent.getTeamSyncBundle.invoke(),
       ipcBridge.oneDevops.listSkills.invoke(),
       ipcBridge.oneDevops.listMcpRegistry.invoke(),
     ]);
+    team = bundle.agents;
+    assistants = bundle.assistants;
+    registrySkills = skills;
+    registryMcp = mcp;
   } catch (error) {
     if (isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
@@ -497,7 +509,14 @@ export async function syncTeamAgents(): Promise<TeamSkillSyncResult | null> {
   });
 
   try {
-    const report = await ipcBridge.personalAgent.syncTeamAgents.invoke({ agents, authoritative: true });
+    const sourceScope = getEnterpriseServerUrl() ?? 'local-enterprise';
+    const report = await ipcBridge.personalAgent.syncTeamAgents.invoke({
+      agents,
+      assistants,
+      sourceScope,
+      authoritative: true,
+    });
+    await refreshEmployeeViews();
     return { written: report.written.length, removed: report.removed.length, kept: report.kept };
   } catch {
     return null;

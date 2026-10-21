@@ -9,7 +9,7 @@
   "message": "실행 내용",
   "goToConversation": "대화로 이동",
   "status": {
-    "active": "실행 중",
+    "active": "활성화됨",
     "paused": "일시 중지됨",
     "error": "오류",
     "unread": "새 실행",

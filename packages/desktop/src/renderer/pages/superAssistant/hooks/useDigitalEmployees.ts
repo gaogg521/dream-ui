@@ -19,8 +19,6 @@ export type DigitalEmployeeWithRuns = PersonalAgent & {
 export type UseDigitalEmployeesResult = {
   loading: boolean;
   agents: DigitalEmployeeWithRuns[];
-  totalAgentCount: number;
-  activeRunCount: number;
   refresh: () => Promise<void>;
 };
 
@@ -37,21 +35,7 @@ export function useDigitalEmployees(enabled: boolean): UseDigitalEmployeesResult
     setLoading(true);
     try {
       const list = await ipcBridge.personalAgent.list.invoke();
-      const withRuns = await Promise.all(
-        (list ?? []).map(async (agent): Promise<DigitalEmployeeWithRuns> => {
-          try {
-            const runs = await ipcBridge.personalAgent.listRuns.invoke({ agentId: agent.id });
-            return {
-              ...agent,
-              latestRun: runs?.[0],
-              recentRuns: runs ?? [],
-            };
-          } catch {
-            return { ...agent, recentRuns: [] };
-          }
-        })
-      );
-      setAgents(withRuns);
+      setAgents((list ?? []).map((agent): DigitalEmployeeWithRuns => ({ ...agent, recentRuns: [] })));
     } catch (error) {
       console.error('[useDigitalEmployees] refresh failed', error);
       setAgents([]);
@@ -67,18 +51,19 @@ export function useDigitalEmployees(enabled: boolean): UseDigitalEmployeesResult
         setLoading(false);
       }
     });
+    const onTeamSync = () => {
+      void refresh();
+    };
+    window.addEventListener('one-team-employees-changed', onTeamSync);
     return () => {
       disposed = true;
+      window.removeEventListener('one-team-employees-changed', onTeamSync);
     };
   }, [refresh]);
-
-  const activeRunCount = agents.reduce((sum, agent) => sum + (agent.latestRun?.status === 'running' ? 1 : 0), 0);
 
   return {
     loading,
     agents,
-    totalAgentCount: agents.length,
-    activeRunCount,
     refresh,
   };
 }

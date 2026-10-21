@@ -471,7 +471,9 @@
       "scopeTeam": "Groupe de projet sélectionné",
       "visibilityAdmin": "Administrateurs uniquement",
       "visibilityAll": "Tous les membres"
-    }
+    },
+    "searchEmployees": "Rechercher des employés, descriptions ou experts",
+    "noMatchingEmployees": "Aucun employé correspondant"
   },
   "language": {
     "switchTooltip": "Changer de langue"
@@ -926,7 +928,10 @@
     "onlineEdit": "Modifier en ligne",
     "onlineSave": "Enregistrer dans l’original",
     "onlineSaved": "Enregistré dans l’original ; la réouverture affiche le contenu à jour",
-    "onlineEditNote": "Vous modifiez une copie convertie (200 premières lignes × 26 colonnes) réexportée vers le xlsx d’origine à l’enregistrement ; les formules ne sont pas conservées."
+    "onlineEditNote": "Vous modifiez une copie convertie (200 premières lignes × 26 colonnes) réexportée vers le xlsx d’origine à l’enregistrement ; les formules ne sont pas conservées.",
+    "contentConflict": "Le document a été modifié ailleurs. Votre brouillon est conservé. Copiez-le avant de rouvrir le document.",
+    "sourceOnlyStatus": "Original enregistré ; aucun texte interrogeable",
+    "sourceOnly": "Original seul"
   },
   "officeToolbar": {
     "undo": "Annuler",

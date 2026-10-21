@@ -9,7 +9,7 @@
   "message": "Сообщение",
   "goToConversation": "Перейти к диалогу",
   "status": {
-    "active": "Активна",
+    "active": "Включено",
     "paused": "Приостановлена",
     "error": "Ошибка",
     "unread": "Новое выполнение",

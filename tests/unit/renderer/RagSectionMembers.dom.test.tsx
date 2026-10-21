@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   docs: [] as unknown[],
   register: vi.fn(async () => ({ id: 'new-doc' })),
   upload: vi.fn(async () => ({})),
-  setContent: vi.fn(async () => undefined),
+  setContent: vi.fn(async () => 1),
   translate: (key: string) => key,
 }));
 vi.mock('@/common/adapter/httpBridge', async (importOriginal) => ({
@@ -43,6 +43,7 @@ vi.mock('@/common', () => ({
       registerRagDocument: { invoke: mocks.register },
       setRagContent: { invoke: mocks.setContent },
       getRagContent: { invoke: vi.fn(async () => 'Previous original text') },
+      getRagContentState: { invoke: vi.fn(async () => ({ content: 'Previous original text', revision: 0 })) },
       listRagDocuments: { invoke: vi.fn(async () => mocks.docs) },
       getRagConfig: { invoke: vi.fn(async () => ({ baseUrl: '', model: '' })) },
     },
@@ -183,7 +184,9 @@ describe('RagSection for company members', () => {
     const file = new File(['# Browser notes'], 'browser-notes.md', { type: 'text/markdown' });
     Object.defineProperty(file, 'text', { value: async () => '# Browser notes' });
     fireEvent.change(screen.getByTestId('knowledge-file-import'), { target: { files: [file] } });
-    await waitFor(() => expect(mocks.setContent).toHaveBeenCalledWith({ id: 'new-doc', content: '# Browser notes' }));
+    await waitFor(() =>
+      expect(mocks.setContent).toHaveBeenCalledWith({ id: 'new-doc', content: '# Browser notes', expectedRevision: 0 })
+    );
     expect(mocks.register).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'browser-notes.md', scope: 'personal' })
     );
@@ -226,7 +229,11 @@ describe('RagSection for company members', () => {
     fireEvent.click(screen.getByText('Open document'));
     fireEvent.click(await screen.findByText('Replace original'));
     await waitFor(() =>
-      expect(mocks.setContent).toHaveBeenCalledWith({ id: 'd2', content: 'Replacement unique body' })
+      expect(mocks.setContent).toHaveBeenCalledWith({
+        id: 'd2',
+        content: 'Replacement unique body',
+        expectedRevision: 0,
+      })
     );
     expect(mocks.register).not.toHaveBeenCalled();
     expect(screen.getByText('Replacement unique body')).toBeInTheDocument();

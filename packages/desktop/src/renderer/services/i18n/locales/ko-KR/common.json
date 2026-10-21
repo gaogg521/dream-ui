@@ -471,7 +471,9 @@
       "scopeTeam": "선택한 프로젝트 그룹",
       "visibilityAdmin": "관리자만",
       "visibilityAll": "모든 구성원"
-    }
+    },
+    "searchEmployees": "직원, 설명 또는 전문가 검색",
+    "noMatchingEmployees": "일치하는 직원이 없습니다"
   },
   "language": {
     "switchTooltip": "언어 전환"
@@ -926,7 +928,10 @@
     "onlineEdit": "온라인 편집",
     "onlineSave": "원본에 저장",
     "onlineSaved": "원본에 저장했습니다. 다시 열면 최신 내용이 표시됩니다",
-    "onlineEditNote": "변환된 사본(처음 200행 × 26열)을 편집하며 저장 시 원본 xlsx로 내보냅니다. 수식은 유지되지 않습니다."
+    "onlineEditNote": "변환된 사본(처음 200행 × 26열)을 편집하며 저장 시 원본 xlsx로 내보냅니다. 수식은 유지되지 않습니다.",
+    "contentConflict": "다른 창에서 문서가 변경되었습니다. 초안은 유지됩니다. 복사한 후 문서를 다시 여세요.",
+    "sourceOnlyStatus": "원본 저장됨, 검색 가능한 본문 없음",
+    "sourceOnly": "원본만"
   },
   "officeToolbar": {
     "undo": "실행 취소",

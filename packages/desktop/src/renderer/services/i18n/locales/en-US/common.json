@@ -621,7 +621,9 @@
     "scheduleTaskPlaceholder": "What it should do each time, e.g. summarise this week's release risks and list follow-ups",
     "scheduleTaskOptionalHint": "Leave empty to use this employee's run instructions",
     "scheduleTaskRequired": "Enter the automation: a company employee has no run instructions, so without one it has nothing to do",
-    "employeeIdentityHint": "Enterprise digital employee"
+    "employeeIdentityHint": "Enterprise digital employee",
+    "searchEmployees": "Search employees, descriptions or experts",
+    "noMatchingEmployees": "No matching employees"
   },
   "language": {
     "switchTooltip": "Switch language"
@@ -932,7 +934,10 @@
     "onlineEdit": "Edit online",
     "onlineSave": "Save to original",
     "onlineSaved": "Saved to the original; reopening shows the latest content",
-    "onlineEditNote": "You are editing a converted copy (first 200 rows × 26 columns) exported back to the original xlsx on save; cell formulas are not preserved."
+    "onlineEditNote": "You are editing a converted copy (first 200 rows × 26 columns) exported back to the original xlsx on save; cell formulas are not preserved.",
+    "contentConflict": "Another editor updated this document. Your draft is preserved. Copy it before reopening the document.",
+    "sourceOnlyStatus": "Original saved; no searchable text",
+    "sourceOnly": "Original only"
   },
   "officeToolbar": {
     "undo": "Undo",

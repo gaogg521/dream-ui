@@ -57,6 +57,22 @@ describe('resolveEmployeeExpertName', () => {
     expect(resolveEmployeeExpertName({ assistantId: 'persona_1' }, assistants)).toBe('安全审计师');
   });
 
+  it('shows the distributed expert name without exposing its executable snapshot in personal experts', () => {
+    expect(
+      resolveEmployeeExpertName(
+        {
+          assistantId: 'team_snapshot',
+          automationConfig: {
+            teamExpertName: 'Central expert',
+            teamExpertNameI18n: { 'zh-CN': '企业专家' },
+          },
+        },
+        [],
+        'zh-CN'
+      )
+    ).toBe('企业专家');
+  });
+
   it('falls back to the legacy customAgentId column', () => {
     expect(resolveEmployeeExpertName({ customAgentId: 'persona_1' }, assistants)).toBe('安全审计师');
   });

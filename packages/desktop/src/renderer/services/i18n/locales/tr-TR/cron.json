@@ -9,7 +9,7 @@
   "message": "Message",
   "goToConversation": "Go to conversation",
   "status": {
-    "active": "Active",
+    "active": "Etkin",
     "paused": "Paused",
     "error": "Error",
     "unread": "New execution",

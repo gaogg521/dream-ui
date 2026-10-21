@@ -9,7 +9,7 @@
   "message": "执行内容",
   "goToConversation": "跳转到所属会话",
   "status": {
-    "active": "运行中",
+    "active": "已启用",
     "paused": "已暂停",
     "error": "执行出错",
     "unread": "有新执行",
