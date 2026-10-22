@@ -3,14 +3,11 @@ import { Message } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import type { TeamAssistant } from '@/common/types/team/teamTypes';
 import type { TeamAssistantInput } from '@/common/adapter/teamMapper';
-import { resolveLocaleKey } from '@/common/utils';
 import { getConversationCreateErrorMessage } from '@renderer/pages/conversation/utils/conversationCreateError';
 import { getSendBoxDraftHook } from '@renderer/hooks/chat/useSendBoxDraft';
-import { useMarketplacePersonas } from '@renderer/hooks/assistant/useMarketplacePersonas';
-import { refreshManagedAgentCatalogAndAssistants } from '@renderer/hooks/agent/useManagedAgents';
 import { useTeamAssistantOptions } from '../../hooks/useTeamAssistantOptions';
 import { useTeamTabs } from '../../hooks/TeamTabsContext';
-import { assistantToOption, type TeamAssistantOption } from '../assistantSelectUtils';
+import type { TeamAssistantOption } from '../assistantSelectUtils';
 import { resolveDefaultTeamAgentModel } from '../teamCreateModelResolver';
 import TeamAssistantPickerDropdown from './TeamAssistantPickerDropdown';
 
@@ -24,9 +21,7 @@ type Props = {
 
 const TeamAddMemberPopover: React.FC<Props> = ({ children, disabled = false }) => {
   const { t, i18n } = useTranslation();
-  const { assistants } = useTeamAssistantOptions(i18n?.language ?? 'en-US');
-  const { personas: marketplacePersonas, install: installMarketplacePersona } = useMarketplacePersonas();
-  const localeKey = resolveLocaleKey(i18n?.language ?? 'en-US');
+  const { assistants, adoptAssistant } = useTeamAssistantOptions(i18n?.language ?? 'en-US');
   const { addAssistant, switchTab, assistants: teamMembers = [] } = useTeamTabs();
   const [visible, setVisible] = useState(false);
   const [pendingAssistantId, setPendingAssistantId] = useState<string | undefined>();
@@ -85,15 +80,14 @@ const TeamAddMemberPopover: React.FC<Props> = ({ children, disabled = false }) =
       if (disabled || !addAssistant || pendingAssistantId) return;
       setPendingAssistantId(assistantId);
       try {
-        const installed = await installMarketplacePersona(assistantId);
-        void refreshManagedAgentCatalogAndAssistants();
-        await handleSelect(assistantToOption(installed, localeKey));
+        const adopted = await adoptAssistant(assistantId);
+        await handleSelect(adopted);
       } catch (error) {
         Message.error(getConversationCreateErrorMessage(error, t));
         setPendingAssistantId(undefined);
       }
     },
-    [disabled, addAssistant, pendingAssistantId, installMarketplacePersona, localeKey, t, handleSelect]
+    [disabled, addAssistant, pendingAssistantId, adoptAssistant, t, handleSelect]
   );
 
   return (
@@ -108,7 +102,6 @@ const TeamAddMemberPopover: React.FC<Props> = ({ children, disabled = false }) =
       panelTestId='team-add-member-panel'
       title={t('team.addMember.title', { defaultValue: 'Add member' })}
       subtitle={t('team.addMember.subtitle', { defaultValue: 'The same assistant can be added repeatedly' })}
-      marketplacePersonas={marketplacePersonas}
       onInstallAndSelect={handleInstallAndSelect}
       guidanceFooter={
         leader?.slot_id ? (

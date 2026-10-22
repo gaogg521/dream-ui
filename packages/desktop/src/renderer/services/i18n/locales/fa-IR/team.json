@@ -102,7 +102,10 @@
     "tellLeaderHint": "Not a good fit? You can also ask the Leader to arrange it.",
     "tellLeaderCta": "Tell the Leader →",
     "tellLeaderPrefill": "Help me add a member good at ___ to the team",
-    "noProviderConfigured": "No enabled model provider is configured. Please add one in Settings first."
+    "noProviderConfigured": "No enabled model provider is configured. Please add one in Settings first.",
+    "groupAgents": "عامل‌ها",
+    "groupExperts": "متخصصان",
+    "groupAll": "همه"
   },
   "view": {
     "label": "View",

@@ -102,7 +102,10 @@
     "tellLeaderHint": "沒有合適的？也可以直接讓 Leader 幫你安排。",
     "tellLeaderCta": "告訴 Leader →",
     "tellLeaderPrefill": "幫我在團隊裡加一個擅長 ___ 的成員",
-    "noProviderConfigured": "沒有可用的模型服務商，請先在設定中新增一個。"
+    "noProviderConfigured": "沒有可用的模型服務商，請先在設定中新增一個。",
+    "groupAgents": "智慧體",
+    "groupExperts": "專家",
+    "groupAll": "全部"
   },
   "view": {
     "label": "檢視",

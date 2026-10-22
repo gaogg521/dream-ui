@@ -11,9 +11,13 @@ import { selectableAssistants } from '@/renderer/utils/model/assistantSelection'
 
 export type UseConversationAssistantsResult = {
   presetAssistants: Assistant[];
+  /** Raw catalog, including disabled assistants — for pickers that can adopt (enable) one on click. */
+  allAssistants: Assistant[];
   isLoading: boolean;
   refresh: () => Promise<void>;
 };
+
+const EMPTY_ASSISTANTS: Assistant[] = [];
 
 export const useConversationAssistants = (): UseConversationAssistantsResult => {
   const { assistantOrder } = useAssistantOrder();
@@ -39,6 +43,7 @@ export const useConversationAssistants = (): UseConversationAssistantsResult => 
 
   return {
     presetAssistants,
+    allAssistants: assistants ?? EMPTY_ASSISTANTS,
     isLoading,
     refresh: async () => {
       await mutate('assistants.list');

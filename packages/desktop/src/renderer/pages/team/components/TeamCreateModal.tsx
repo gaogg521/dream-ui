@@ -6,16 +6,13 @@ import { useTranslation } from 'react-i18next';
 import { ipcBridge } from '@/common';
 import type { TTeam } from '@/common/types/team/teamTypes';
 import type { TeamAssistantInput } from '@/common/adapter/teamMapper';
-import { resolveLocaleKey } from '@/common/utils';
 import { useAuth } from '@renderer/hooks/context/AuthContext';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import DreamModal from '@renderer/components/base/DreamModal';
 import { WorkspaceFolderSelect } from '@renderer/components/workspace';
 import { getConversationCreateErrorMessage } from '@renderer/pages/conversation/utils/conversationCreateError';
-import { useMarketplacePersonas } from '@renderer/hooks/assistant/useMarketplacePersonas';
-import { refreshManagedAgentCatalogAndAssistants } from '@renderer/hooks/agent/useManagedAgents';
 import { useTeamAssistantOptions } from '../hooks/useTeamAssistantOptions';
-import { assistantToOption, type TeamAssistantOption } from './assistantSelectUtils';
+import type { TeamAssistantOption } from './assistantSelectUtils';
 import { resolveDefaultTeamAgentModel } from './teamCreateModelResolver';
 import TeamAssistantPicker from './memberPicker/TeamAssistantPicker';
 import TeamAssistantPickerDropdown from './memberPicker/TeamAssistantPickerDropdown';
@@ -40,8 +37,7 @@ const TeamCreateModal: React.FC<Props> = ({ visible, onClose, onCreated }) => {
   const { user } = useAuth();
   const layout = useLayoutContext();
   const isMobile = layout?.isMobile ?? false;
-  const { assistants: allAssistants } = useTeamAssistantOptions(i18n?.language ?? 'en-US');
-  const { personas: marketplacePersonas, install: installMarketplacePersona } = useMarketplacePersonas();
+  const { assistants: allAssistants, adoptAssistant } = useTeamAssistantOptions(i18n?.language ?? 'en-US');
   const [name, setName] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<TeamMemberDraft[]>([]);
   const [leaderSelectionId, setLeaderSelectionId] = useState<string | undefined>(undefined);
@@ -61,7 +57,6 @@ const TeamCreateModal: React.FC<Props> = ({ visible, onClose, onCreated }) => {
   // 窄屏专用：助手选择器以下拉列表形式，锚在“添加成员”按钮上按需唤出。
   const [assistantDropdownOpen, setAssistantDropdownOpen] = useState(false);
   const nameInputRef = useRef<RefInputType | null>(null);
-  const localeKey = resolveLocaleKey(i18n?.language ?? 'en-US');
 
   const hasOneLeader = useMemo(
     () => Boolean(leaderSelectionId && selectedMembers.some((member) => member.selectionId === leaderSelectionId)),
@@ -91,16 +86,14 @@ const TeamCreateModal: React.FC<Props> = ({ visible, onClose, onCreated }) => {
       if (pendingAssistantId) return;
       setPendingAssistantId(assistantId);
       try {
-        const installed = await installMarketplacePersona(assistantId);
-        void refreshManagedAgentCatalogAndAssistants();
-        handleSelectAssistant(assistantToOption(installed, localeKey));
+        handleSelectAssistant(await adoptAssistant(assistantId));
       } catch (error) {
         Message.error(getConversationCreateErrorMessage(error, t));
       } finally {
         setPendingAssistantId(undefined);
       }
     },
-    [pendingAssistantId, installMarketplacePersona, localeKey, t]
+    [pendingAssistantId, adoptAssistant, t]
   );
 
   const handleRemoveDraft = (selectionId: string) => {
@@ -187,7 +180,6 @@ const TeamCreateModal: React.FC<Props> = ({ visible, onClose, onCreated }) => {
           onSelect={handleSelectAssistant}
           testIdPrefix='team-create-agent'
           density='modal'
-          marketplacePersonas={marketplacePersonas}
           onInstallAndSelect={handleInstallAndSelectAssistant}
           pendingAssistantId={pendingAssistantId}
           onResultsChange={handleAssistantResultsChange}
@@ -289,7 +281,6 @@ const TeamCreateModal: React.FC<Props> = ({ visible, onClose, onCreated }) => {
       testIdPrefix='team-create-agent'
       panelTestId='team-create-assistant-pane'
       emptyText={t('team.create.noSupportedAgents', { defaultValue: 'No supported assistants available' })}
-      marketplacePersonas={marketplacePersonas}
       onInstallAndSelect={handleInstallAndSelectFromDropdown}
       pendingAssistantId={pendingAssistantId}
     >

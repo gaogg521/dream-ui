@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Empty, Spin, Tooltip } from '@arco-design/web-react';
+import { Button, Empty, Radio, Spin, Tooltip } from '@arco-design/web-react';
 import { Plus } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { DreamSearchInput, DreamInlineSearchInput } from '@renderer/components/base';
@@ -7,7 +7,9 @@ import type { MarketplacePersona } from '@/common/types/agent/assistantTypes';
 import {
   AssistantOptionLabel,
   assistantKey,
+  matchesAssistantQuery,
   mergeWithMarketplaceMatches,
+  type TeamAssistantGroup,
   type TeamAssistantOption,
 } from '../assistantSelectUtils';
 
@@ -55,14 +57,29 @@ const TeamAssistantPicker: React.FC<Props> = ({
   const isModalDensity = density === 'modal';
   const isInlineSearch = searchVariant === 'inline';
   const [query, setQuery] = useState('');
+  const [groupFilter, setGroupFilter] = useState<TeamAssistantGroup | 'all'>('all');
   const searchPlaceholder = t('team.create.searchPlaceholder', { defaultValue: 'Search' });
-  const filteredAssistants = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const installedMatches = q
-      ? assistants.filter((assistant) => assistant.name.toLowerCase().includes(q))
-      : assistants;
+  const queryMatches = useMemo(() => {
+    const installedMatches = assistants.filter((assistant) => matchesAssistantQuery(assistant, query));
     return mergeWithMarketplaceMatches(installedMatches, marketplacePersonas, query);
   }, [assistants, marketplacePersonas, query]);
+  const groupCounts = useMemo(() => {
+    const counts: Partial<Record<TeamAssistantGroup, number>> = {};
+    for (const assistant of queryMatches) {
+      if (assistant.group) counts[assistant.group] = (counts[assistant.group] ?? 0) + 1;
+    }
+    return counts;
+  }, [queryMatches]);
+  // The group switch only earns its row when the catalog actually spans both groups.
+  const showGroupFilter = Boolean(groupCounts.agent && groupCounts.expert) || groupFilter !== 'all';
+  const filteredAssistants = useMemo(
+    () => (groupFilter === 'all' ? queryMatches : queryMatches.filter((assistant) => assistant.group === groupFilter)),
+    [queryMatches, groupFilter]
+  );
+  const groupLabels: Record<TeamAssistantGroup, string> = {
+    agent: t('team.addMember.groupAgents', { defaultValue: 'Agents' }),
+    expert: t('team.addMember.groupExperts', { defaultValue: 'Experts' }),
+  };
 
   useEffect(() => {
     onResultsChange?.({ query, count: filteredAssistants.length });
@@ -91,6 +108,24 @@ const TeamAssistantPicker: React.FC<Props> = ({
             data-testid={`${testIdPrefix}-search`}
           />
         )}
+        {showGroupFilter ? (
+          <Radio.Group
+            type='button'
+            size='mini'
+            className='mt-8px'
+            value={groupFilter}
+            onChange={(value: TeamAssistantGroup | 'all') => setGroupFilter(value)}
+            data-testid={`${testIdPrefix}-group-filter`}
+          >
+            <Radio value='all'>{t('team.addMember.groupAll', { defaultValue: 'All' })}</Radio>
+            <Radio value='expert'>
+              {groupLabels.expert} {groupCounts.expert ?? 0}
+            </Radio>
+            <Radio value='agent'>
+              {groupLabels.agent} {groupCounts.agent ?? 0}
+            </Radio>
+          </Radio.Group>
+        ) : null}
       </div>
       <div
         data-testid={`${testIdPrefix}-picker-body`}
@@ -195,8 +230,18 @@ const TeamAssistantPicker: React.FC<Props> = ({
                   </div>
                 </Button>
               );
+              const group = assistant.group;
+              const startsGroup = Boolean(group) && filteredAssistants[index - 1]?.group !== group;
               return (
                 <div key={rowKey}>
+                  {startsGroup && group ? (
+                    <div
+                      className={`px-8px pb-4px text-12px font-500 leading-18px text-t-tertiary ${index > 0 ? 'pt-8px' : ''}`}
+                      data-testid={`${testIdPrefix}-group-${group}`}
+                    >
+                      {groupLabels[group]} · {groupCounts[group] ?? 0}
+                    </div>
+                  ) : null}
                   {blockReason ? (
                     // The picker can live inside a high z-index dropdown that is portaled to
                     // document.body (e.g. the mobile add-member dropdown at z-index ~10020).
