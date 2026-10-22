@@ -67,6 +67,39 @@ const PERSONAL_SCOPE = 'personal';
  */
 const uploadTimeoutMs = (bytes: number) => Math.max(120_000, Math.ceil(bytes / (1024 * 1024)) * 8_000);
 
+const RAG_SOURCE_LIMIT_BYTES = 100 * 1024 * 1024;
+const RAG_SOURCE_CHUNK_BYTES = 8 * 1024 * 1024;
+/** The content endpoint accepts at most 16 MiB; stay clear of it (CJK text is up to 3 bytes per character). */
+const MAX_INDEXED_TEXT_BYTES = 12 * 1024 * 1024;
+
+const abortError = () => new DOMException('Import cancelled', 'AbortError');
+
+/** Settles with whichever comes first: the call, or the user cancelling. An IPC call itself cannot be interrupted. */
+const raceAbort = <T,>(call: Promise<T>, signal?: AbortSignal): Promise<T> => {
+  if (!signal) return call;
+  if (signal.aborted) return Promise.reject(abortError());
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(abortError());
+    signal.addEventListener('abort', onAbort, { once: true });
+    call.then(
+      (value) => {
+        signal.removeEventListener('abort', onAbort);
+        resolve(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener('abort', onAbort);
+        reject(error);
+      }
+    );
+  });
+};
+
+/** Text too large to be worth indexing is dropped; the original is still kept (source-only). */
+const indexableText = (text: string): string =>
+  text.length * 3 > MAX_INDEXED_TEXT_BYTES && new TextEncoder().encode(text).length > MAX_INDEXED_TEXT_BYTES
+    ? ''
+    : text;
+
 export type RagLibraryProps = {
   documentView?: React.ReactNode;
   activeDocument?: RagDocumentEntry | null;
@@ -359,13 +392,31 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
     ): Promise<void> => {
       let originalFile: File | undefined;
       if (typeof sourcePath === 'string') {
-        const source = await ipcBridge.application.readRagSourceFile.invoke({ filePath: sourcePath });
-        const binary = atob(source.base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
-        originalFile = new File([bytes], source.name);
+        // Slice by slice: one message carrying a big file is silently dropped by the bridge (50 MiB cap), which
+        // left every import above ~37 MB waiting forever.
+        const parts: Blob[] = [];
+        let name = '';
+        for (let offset = 0, size = 1; offset < size; ) {
+          const slice = await raceAbort(
+            ipcBridge.application.readRagSourceChunk.invoke({
+              filePath: sourcePath,
+              offset,
+              length: RAG_SOURCE_CHUNK_BYTES,
+            }),
+            signal
+          );
+          if ('error' in slice) throw new Error(slice.error);
+          name = slice.name;
+          size = slice.size;
+          if (slice.base64.length === 0) break;
+          // Decoding through a data: URL keeps the byte-by-byte loop off the UI thread.
+          const piece = await (await fetch(`data:application/octet-stream;base64,${slice.base64}`)).blob();
+          parts.push(piece);
+          offset += piece.size;
+        }
+        originalFile = new File(parts, name);
       } else originalFile = sourcePath;
-      if (signal?.aborted) throw new DOMException('Import cancelled', 'AbortError');
+      if (signal?.aborted) throw abortError();
       const target = libraries.find((library) => library.id === libraryId);
       const privateDocument = !isEnterprise || personal || target?.scope === 'personal';
       const doc = await ipcBridge.oneDevops.registerRagDocument.invoke({
@@ -482,9 +533,10 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
           } catch {
             /* Keep an unreadable original available. */
           }
-          if (signal.aborted) throw new DOMException('Import cancelled', 'AbortError');
-          await registerAndProcess(file.name, content ?? '', webImportPersonal.current, file, signal);
-          return { sourceOnly: !content?.trim() };
+          if (signal.aborted) throw abortError();
+          const indexed = indexableText(content ?? '');
+          await registerAndProcess(file.name, indexed, webImportPersonal.current, file, signal);
+          return { sourceOnly: !indexed.trim() };
         },
       }))
     );
@@ -530,17 +582,26 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
         name: titleFromFileName(filePath.split(/[\\/]/).pop() ?? filePath),
         run: async (signal) => {
           // One file per call: a huge PDF no longer holds every other file's result (and the progress) hostage.
-          const [result] = await ipcBridge.application.extractRagDocumentFiles.invoke({ filePaths: [filePath] });
-          if (signal.aborted) throw new DOMException('Import cancelled', 'AbortError');
-          const failed = 'error' in result;
-          await registerAndProcess(
-            titleFromFileName(result.fileName),
-            failed ? '' : result.text,
-            personal,
-            result.filePath,
-            signal
-          );
-          return { sourceOnly: failed || !result.text.trim() };
+          // The job id lets Cancel stop the extraction itself, not just the wait for it.
+          const jobId = crypto.randomUUID();
+          const stopExtraction = (): void => {
+            void ipcBridge.application.cancelRagExtraction.invoke({ jobId });
+          };
+          signal.addEventListener('abort', stopExtraction, { once: true });
+          let result: Awaited<ReturnType<typeof ipcBridge.application.extractRagDocumentFiles.invoke>>[number];
+          try {
+            [result] = await raceAbort(
+              ipcBridge.application.extractRagDocumentFiles.invoke({ filePaths: [filePath], jobId }),
+              signal
+            );
+          } finally {
+            signal.removeEventListener('abort', stopExtraction);
+          }
+          if (signal.aborted) throw abortError();
+          if (result.fileSize > RAG_SOURCE_LIMIT_BYTES) throw new Error(t('common.knowledgeLibrary.originalTooLarge'));
+          const indexed = 'error' in result ? '' : indexableText(result.text);
+          await registerAndProcess(titleFromFileName(result.fileName), indexed, personal, result.filePath, signal);
+          return { sourceOnly: !indexed.trim() };
         },
       }))
     );

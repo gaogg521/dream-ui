@@ -117,4 +117,30 @@ describe('local bridge', () => {
     expect(console.error).toHaveBeenCalledWith('[bridge] Provider "test.failure" failed:', error);
     expect(outbound.some(({ name }) => name === 'subscribe.callback-test.failurerequest-1')).toBe(false);
   });
+
+  it('rejects the caller when the main process reports that its reply was too large to send', async () => {
+    const { bridge, getIncoming, outbound } = await loadLoopbackBridge();
+    const pending = bridge.buildProvider<string, void>('test.big').invoke();
+    const request = outbound.find(({ name }) => name === 'subscribe-test.big');
+    const { id } = request?.data as { id: string };
+
+    // adapter/main.ts cannot deliver a >50 MiB reply and announces the drop instead.
+    getIncoming()?.emit('bridge:error', {
+      originalEvent: `subscribe.callback-test.big${id}`,
+      reason: 'payload_too_large',
+    });
+
+    await expect(pending).rejects.toThrow('payload_too_large');
+  });
+
+  it('ignores a drop notice that belongs to another request', async () => {
+    const { bridge, getIncoming, outbound } = await loadLoopbackBridge();
+    const pending = bridge.buildProvider<string, void>('test.other').invoke();
+    const { id } = outbound.find(({ name }) => name === 'subscribe-test.other')?.data as { id: string };
+
+    getIncoming()?.emit('bridge:error', { originalEvent: 'subscribe.callback-test.somethingelse', reason: 'x' });
+    getIncoming()?.emit(`subscribe.callback-test.other${id}`, 'fine');
+
+    await expect(pending).resolves.toBe('fine');
+  });
 });

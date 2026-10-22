@@ -21,6 +21,7 @@ import { parseOfficeAsync } from 'officeparser';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
 import { RAG_DOCUMENT_EXTENSIONS } from '@/common/config/constants';
+import { parseOfficeInWorker } from './officeTextWorker';
 
 export type ExtractedDocument = {
   text: string;
@@ -75,9 +76,26 @@ async function extractByExtension(ext: string, read: () => Promise<Buffer | stri
   throw new Error(`Unsupported file type "${ext}". Supported: ${RAG_DOCUMENT_EXTENSIONS.join(', ')}`);
 }
 
+/** Office parsing is the expensive part (minutes and GBs on big files), so it runs in a bounded, cancellable worker. */
+const OFFICE_TIMEOUT_MS = 120_000;
+const OFFICE_MAX_HEAP_MB = 1536;
+/** Text longer than this is not worth indexing (a 13 MB spreadsheet yields ~18 M characters); keep the original only. */
+export const MAX_EXTRACTED_CHARS = 4_000_000;
+
 /** Read a local file and extract its text, dispatching by extension. */
-export async function extractTextFromFile(filePath: string): Promise<ExtractedDocument> {
+export async function extractTextFromFile(filePath: string, signal?: AbortSignal): Promise<ExtractedDocument> {
   const ext = path.extname(filePath);
+  if (OFFICE_EXTENSIONS.has(ext.toLowerCase())) {
+    const text = await parseOfficeInWorker(filePath, {
+      timeoutMs: OFFICE_TIMEOUT_MS,
+      maxHeapMb: OFFICE_MAX_HEAP_MB,
+      signal,
+    });
+    if (text.length > MAX_EXTRACTED_CHARS) {
+      throw new Error(`Extracted text is too large to index (${text.length} characters)`);
+    }
+    return { text, mimeType: `application/${ext.toLowerCase().slice(1)}`, suggestedTitle: null };
+  }
   return extractByExtension(ext, async () => {
     // officeparser accepts a Buffer directly; plain-text/HTML branches coerce
     // to string themselves, so reading as a Buffer once covers every case.

@@ -736,12 +736,17 @@ export const application = {
   getRuntimeNodeIdentity: bridge.buildProvider<IRuntimeNodeIdentity, void>('app.get-runtime-node-identity'),
   // RAG knowledge-base document import: pick paths first via dialog.showOpen,
   // then extract text from each (batch — per-file errors don't fail the rest).
-  extractRagDocumentFiles: bridge.buildProvider<IExtractRagFileResult[], { filePaths: string[] }>(
+  extractRagDocumentFiles: bridge.buildProvider<IExtractRagFileResult[], { filePaths: string[]; jobId?: string }>(
     'app.extract-rag-document-files'
   ),
-  readRagSourceFile: bridge.buildProvider<{ name: string; base64: string }, { filePath: string }>(
-    'app.read-rag-source-file'
-  ),
+  /** Stops the extraction started with this `jobId` (kills its worker). */
+  cancelRagExtraction: bridge.buildProvider<void, { jobId: string }>('app.cancel-rag-extraction'),
+  // A provider that throws never answers over this bridge (the caller would wait forever), so failures are values.
+  // The bridge drops any single message over 50 MiB, so an original is read in slices, never as one base64 blob.
+  readRagSourceChunk: bridge.buildProvider<
+    { name: string; size: number; base64: string } | { error: string },
+    { filePath: string; offset: number; length: number }
+  >('app.read-rag-source-chunk'),
   extractRagDocumentUrl: bridge.buildProvider<IExtractedDocument, { url: string }>('app.extract-rag-document-url'),
   // Persona-import modal: pick paths via dialog.showOpen, then read each
   // file's raw text content (no extraction/transformation — frontmatter must

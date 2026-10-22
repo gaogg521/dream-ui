@@ -137,10 +137,20 @@ export const invoke = <Data = unknown>(name: string, data?: unknown): Promise<Da
   const id = createRequestId(name);
   const callbackName = `subscribe.callback-${name}${id}`;
 
-  return new Promise<Data>((resolve) => {
+  return new Promise<Data>((resolve, reject) => {
     const dispose = on(callbackName, (result) => {
       dispose();
+      disposeError();
       resolve(result as Data);
+    });
+    // The main process drops a reply that is too large to send and only announces it here; without this the
+    // caller would wait forever for an answer that can never arrive.
+    const disposeError = on('bridge:error', (event) => {
+      const failure = event as { originalEvent?: string; reason?: string } | undefined;
+      if (failure?.originalEvent !== callbackName) return;
+      dispose();
+      disposeError();
+      reject(new Error(`Bridge reply for "${name}" was dropped (${failure.reason ?? 'unknown'})`));
     });
     emit(`subscribe-${name}`, { id, data });
   });

@@ -28,6 +28,11 @@ import type {
 import { restartApplication } from './restartApplication';
 import { extractTextFromFile, extractTextFromUrl } from '@process/utils/documentTextExtraction';
 
+/** Largest original the knowledge library keeps (the backend enforces the same cap). */
+const RAG_SOURCE_LIMIT_BYTES = 100 * 1024 * 1024;
+/** Largest slice of an original returned per call. */
+const RAG_SOURCE_CHUNK_BYTES = 8 * 1024 * 1024;
+
 const RUNTIME_MACHINE_ID_KEY = 'runtime.machineId';
 let governanceEndpointRevision = 0;
 
@@ -396,28 +401,57 @@ export function initApplicationBridge(): void {
 
   ipcBridge.application.getRuntimeNodeIdentity.provider(async () => getRuntimeNodeIdentity());
 
-  ipcBridge.application.extractRagDocumentFiles.provider(async ({ filePaths }) => {
+  const ragExtractionJobs = new Map<string, AbortController>();
+  ipcBridge.application.cancelRagExtraction.provider(async ({ jobId }) => {
+    ragExtractionJobs.get(jobId)?.abort();
+  });
+
+  ipcBridge.application.extractRagDocumentFiles.provider(async ({ filePaths, jobId }) => {
+    const controller = new AbortController();
+    if (jobId) ragExtractionJobs.set(jobId, controller);
     const results: IExtractRagFileResult[] = [];
-    for (const filePath of filePaths) {
-      const fileName = path.basename(filePath);
-      let fileSize = 0;
-      try {
-        fileSize = (await fs.stat(filePath)).size;
-        // The original is capped at 100 MiB on upload; parsing a file that can never be stored only burns minutes.
-        if (fileSize > 100 * 1024 * 1024) throw new Error('File exceeds 100 MiB');
-        const extracted = await extractTextFromFile(filePath);
-        results.push({ filePath, fileName, fileSize, ...extracted });
-      } catch (e) {
-        results.push({ filePath, fileName, fileSize, error: e instanceof Error ? e.message : String(e) });
+    try {
+      for (const filePath of filePaths) {
+        const fileName = path.basename(filePath);
+        let fileSize = 0;
+        try {
+          fileSize = (await fs.stat(filePath)).size;
+          // The original is capped at 100 MiB on upload; parsing a file that can never be stored only burns minutes.
+          if (fileSize > RAG_SOURCE_LIMIT_BYTES) throw new Error('File exceeds 100 MiB');
+          const extracted = await extractTextFromFile(filePath, controller.signal);
+          results.push({ filePath, fileName, fileSize, ...extracted });
+        } catch (e) {
+          results.push({ filePath, fileName, fileSize, error: e instanceof Error ? e.message : String(e) });
+        }
+        if (controller.signal.aborted) break;
       }
+    } finally {
+      if (jobId) ragExtractionJobs.delete(jobId);
     }
     return results;
   });
 
-  ipcBridge.application.readRagSourceFile.provider(async ({ filePath }) => {
-    const size = (await fs.stat(filePath)).size;
-    if (size > 100 * 1024 * 1024) throw new Error('File exceeds 100 MiB');
-    return { name: path.basename(filePath), base64: (await fs.readFile(filePath)).toString('base64') };
+  ipcBridge.application.readRagSourceChunk.provider(async ({ filePath, offset, length }) => {
+    try {
+      const handle = await fs.open(filePath, 'r');
+      try {
+        const { size } = await handle.stat();
+        if (size > RAG_SOURCE_LIMIT_BYTES) return { error: 'File exceeds 100 MiB' };
+        // Keep each reply far below the bridge's 50 MiB message cap (base64 adds a third).
+        const wanted = Math.max(0, Math.min(length, RAG_SOURCE_CHUNK_BYTES, size - offset));
+        const buffer = Buffer.alloc(wanted);
+        const { bytesRead } = await handle.read(buffer, 0, wanted, offset);
+        return {
+          name: path.basename(filePath),
+          size,
+          base64: buffer.subarray(0, bytesRead).toString('base64'),
+        };
+      } finally {
+        await handle.close();
+      }
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : String(e) };
+    }
   });
 
   ipcBridge.application.extractRagDocumentUrl.provider(async ({ url }) => extractTextFromUrl(url));
