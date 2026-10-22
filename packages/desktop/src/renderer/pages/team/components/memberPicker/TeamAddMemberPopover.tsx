@@ -58,6 +58,7 @@ const TeamAddMemberPopover: React.FC<Props> = ({ children, disabled = false }) =
       const model = await resolveDefaultTeamAgentModel({
         assistant_id: assistant.id,
         assistant_backend: assistant.backend,
+        inherit_dream_model: leader?.assistant_backend === 'dream' ? leader.model : undefined,
       });
       const input: TeamAssistantInput = {
         role: 'teammate',

@@ -24,8 +24,15 @@ import { assistantRuntimeKey, type AssistantDetail } from '@/common/types/agent/
 export async function resolveDefaultTeamAgentModel(params: {
   assistant_id?: string;
   assistant_backend?: string;
+  /**
+   * The model the team leader is running on. A dream-backend member with no usable
+   * model of its own follows the leader instead of "the first model of the first
+   * provider" — that provider can be a stale or exhausted one while the leader's
+   * model is known to work.
+   */
+  inherit_dream_model?: string;
 }): Promise<string> {
-  const { assistant_id, assistant_backend } = params;
+  const { assistant_id, assistant_backend, inherit_dream_model } = params;
 
   const assistantDetail = await resolveAssistantDetail(assistant_id);
   if (assistantDetail) {
@@ -41,7 +48,7 @@ export async function resolveDefaultTeamAgentModel(params: {
     // creation outright with "no enabled provider offers model '<name>'".
     // Verify before trusting it, and fall back to a model that exists.
     if (runtimeKey === 'dream') {
-      return resolveDreamEngineModel(assistantModel);
+      return resolveDreamEngineModel(assistantModel, inherit_dream_model);
     }
 
     if (assistantModel) {
@@ -51,6 +58,9 @@ export async function resolveDefaultTeamAgentModel(params: {
     return resolveBackendDefaultModel(runtimeKey);
   }
 
+  if (assistant_backend === 'dream') {
+    return resolveDreamEngineModel(undefined, inherit_dream_model);
+  }
   return resolveBackendDefaultModel(assistant_backend);
 }
 
@@ -124,14 +134,15 @@ async function resolveGeminiDefaultModel(): Promise<string> {
 // `preferred` is honoured only when an enabled provider actually offers it;
 // otherwise the first usable model wins. Both the placeholder case and the
 // stale-preference case therefore end up on a model the server can resolve.
-async function resolveDreamEngineModel(preferred?: string): Promise<string> {
+async function resolveDreamEngineModel(preferred?: string, inherited?: string): Promise<string> {
   const providers = await ipcBridge.mode.listProviders.invoke();
   const usable = (provider: (typeof providers)[number], model: string) =>
     provider.enabled !== false && provider.model_enabled?.[model] !== false;
+  const offered = (model?: string): model is string =>
+    Boolean(model) && providers.some((provider) => provider.models.includes(model!) && usable(provider, model!));
 
-  if (preferred && providers.some((provider) => provider.models.includes(preferred) && usable(provider, preferred))) {
-    return preferred;
-  }
+  if (offered(preferred)) return preferred;
+  if (offered(inherited)) return inherited;
 
   for (const provider of providers) {
     if (provider.enabled === false) continue;

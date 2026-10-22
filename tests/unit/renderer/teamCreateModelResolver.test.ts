@@ -234,4 +234,36 @@ describe('resolveDefaultTeamAgentModel — dream-engine models must exist server
 
     await expect(resolveDefaultTeamAgentModel({ assistant_id: 'expert-disabled-model' })).resolves.toBe('minimax-2-7');
   });
+
+  it('follows the leader model before falling back to the first provider', async () => {
+    // Seen live: the first provider was a stale local test endpoint, so a manually
+    // added expert failed every turn while the leader worked on its own model.
+    getAssistantMock.mockResolvedValue(dreamEngineAssistant(undefined));
+    listProvidersMock.mockResolvedValue([
+      { id: 'stale', enabled: true, models: ['my-personal-model'] },
+      { id: 'openrouter', enabled: true, models: ['openrouter/free'] },
+    ]);
+
+    await expect(
+      resolveDefaultTeamAgentModel({ assistant_id: 'word-creator', inherit_dream_model: 'openrouter/free' })
+    ).resolves.toBe('openrouter/free');
+  });
+
+  it('still prefers the expert own live model over the leader model', async () => {
+    getAssistantMock.mockResolvedValue(dreamEngineAssistant('minimax-2-7'));
+    listProvidersMock.mockResolvedValue([{ id: 'p1', enabled: true, models: ['kimi-k2-6', 'minimax-2-7'] }]);
+
+    await expect(
+      resolveDefaultTeamAgentModel({ assistant_id: 'expert', inherit_dream_model: 'kimi-k2-6' })
+    ).resolves.toBe('minimax-2-7');
+  });
+
+  it('ignores a leader model no enabled provider offers', async () => {
+    getAssistantMock.mockResolvedValue(dreamEngineAssistant(undefined));
+    listProvidersMock.mockResolvedValue([{ id: 'p1', enabled: true, models: ['kimi-k2-6'] }]);
+
+    await expect(
+      resolveDefaultTeamAgentModel({ assistant_id: 'expert', inherit_dream_model: 'retired-model' })
+    ).resolves.toBe('kimi-k2-6');
+  });
 });
