@@ -450,6 +450,7 @@ export default function LibraryDocument(props: Props) {
             />
           ) : (
             <OfflineOfficeEditor
+              cacheKey={`${props.documentId}:${sourcePath}`}
               fileName={/\.(docx|xlsx|pptx)$/i.test(props.title) ? props.title : `${props.title}${officeExtension}`}
               mime={sourceMime}
               locked={officeLocked}

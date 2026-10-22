@@ -21,9 +21,12 @@ import type { RagDocumentEntry } from '@/common/types/devops/devopsTypes';
 import styles from './KnowledgeLibrary.module.css';
 import LibraryGuide, { type GuideId } from './guides/LibraryGuide';
 import LibraryFileIcon from './shared/LibraryFileIcon';
+import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
 import { useLibrarySidebar } from './useLibrarySidebar';
 
 type View = 'recent' | 'search' | 'personal' | 'team';
+
+const OFFICE_FILE = /\.(docx?|xlsx?|pptx?|odt|ods|odp)$/i;
 
 const isSourceOnly = (doc: RagDocumentEntry) =>
   doc.status === 'ready' && doc.chunkCount === 0 && Boolean(doc.filePath?.startsWith('rag-source:'));
@@ -75,6 +78,13 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   useEffect(() => {
     setGuide(null);
   }, [libraryId, suppliedDocumentView]);
+  // Office originals open in the offline engine, whose boot is half of every open: start it while the user is
+  // still choosing, and drop the idle engine when they leave the library.
+  const prewarmOffice = rows.some((row) => OFFICE_FILE.test(row.title)) && !suppliedDocumentView;
+  useEffect(() => {
+    if (prewarmOffice && !isEnterpriseRemoteActive()) void window.__offlineOffice?.prewarm().catch(() => {});
+  }, [prewarmOffice]);
+  useEffect(() => () => void window.__offlineOffice?.releasePrewarm().catch(() => {}), []);
   const documentView =
     suppliedDocumentView || (guide ? <LibraryGuide id={guide} onClose={() => setGuide(null)} /> : undefined);
   const [view, setView] = useState<View>('recent');

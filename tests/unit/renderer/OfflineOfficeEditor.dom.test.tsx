@@ -33,6 +33,8 @@ beforeEach(() => {
     flush: vi.fn().mockResolvedValue(true),
     close: vi.fn().mockResolvedValue(undefined),
     acknowledge: vi.fn().mockResolvedValue(undefined),
+    prewarm: vi.fn().mockResolvedValue(undefined),
+    releasePrewarm: vi.fn().mockResolvedValue(undefined),
     subscribe: vi.fn((callback) => {
       receive = callback;
       return vi.fn();
@@ -93,6 +95,54 @@ describe('offline Office persistence', () => {
     fireEvent.click(screen.getByText('leave'));
     expect(await screen.findByText('destination')).toBeTruthy();
     expect(api.close).toHaveBeenCalledWith('session');
+  });
+  it('boots a spare engine once the document is on screen, for 编辑 and the next open', async () => {
+    await open();
+    expect(api.prewarm).not.toHaveBeenCalled();
+    receive({ sessionId: 'session', kind: 'ready' });
+    await waitFor(() => expect(api.prewarm).toHaveBeenCalledTimes(1), { timeout: 3000 });
+  });
+  it('shows the last snapshot of the same document version while the engine loads it again', async () => {
+    const editor = (cacheKey: string) => (
+      <MemoryRouter>
+        <OfflineOfficeEditor
+          cacheKey={cacheKey}
+          fileName='deck.pptx'
+          mime='application/vnd.openxmlformats-officedocument.presentationml.presentation'
+          load={async () => new Blob(['deck'])}
+          save={save}
+          registerBeforeLeave={() => {}}
+        />
+      </MemoryRouter>
+    );
+    const first = render(editor('doc-1:rag-source:v1'));
+    await waitFor(() => expect(api.open).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(api.open).mock.calls[0][0].hideUntilReady).toBe(false);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    receive({ sessionId: 'session', kind: 'ready' });
+    receive({ sessionId: 'session', kind: 'snapshot', image: 'data:image/jpeg;base64,AAAA' });
+    first.unmount();
+
+    const second = render(editor('doc-1:rag-source:v1'));
+    await waitFor(() => expect(api.open).toHaveBeenCalledTimes(2));
+    expect(vi.mocked(api.open).mock.calls[1][0].hideUntilReady).toBe(true);
+    expect(second.container.querySelector('img')?.getAttribute('src')).toBe('data:image/jpeg;base64,AAAA');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    receive({ sessionId: 'session', kind: 'ready' });
+    await waitFor(() => expect(second.container.querySelector('img')).toBeNull());
+    second.unmount();
+
+    // A new version (after a save) has no picture yet.
+    render(editor('doc-1:rag-source:v2'));
+    await waitFor(() => expect(api.open).toHaveBeenCalledTimes(3));
+    expect(vi.mocked(api.open).mock.calls[2][0].hideUntilReady).toBe(false);
+  });
+  it('does not boot a spare for an editor that closed before it was ready to', async () => {
+    await open();
+    receive({ sessionId: 'session', kind: 'ready' });
+    cleanup();
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+    expect(api.prewarm).not.toHaveBeenCalled();
   });
   it('retries retained engine bytes after an upload failure without reopening the original', async () => {
     save.mockRejectedValue(new Error('storage temporarily unavailable'));

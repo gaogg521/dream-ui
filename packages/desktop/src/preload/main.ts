@@ -19,6 +19,8 @@ const offlineOffice: OfflineOfficeApi = {
   flush: (id) => ipcRenderer.invoke('offline-office:flush', id),
   close: (id) => ipcRenderer.invoke('offline-office:close', id),
   acknowledge: (id, revision, error) => ipcRenderer.invoke('offline-office:acknowledge', id, revision, error),
+  prewarm: () => ipcRenderer.invoke('offline-office:prewarm'),
+  releasePrewarm: () => ipcRenderer.invoke('offline-office:release-prewarm'),
   subscribe: (callback) => {
     const listener = (_event: Electron.IpcRendererEvent, event: OfficeEvent) => callback(event);
     ipcRenderer.on('offline-office:event', listener);

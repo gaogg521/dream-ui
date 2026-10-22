@@ -4,8 +4,19 @@ import { useTranslation } from 'react-i18next';
 import { UNSAFE_NavigationContext } from 'react-router-dom';
 import type { OfficeEvent } from '@/common/types/offlineOffice';
 
+/** First-screen pictures by document version, newest last; shown on the next open while the engine loads. */
+const snapshots = new Map<string, string>();
+const SNAPSHOT_LIMIT = 12;
+function rememberSnapshot(key: string, image: string): void {
+  snapshots.delete(key);
+  snapshots.set(key, image);
+  while (snapshots.size > SNAPSHOT_LIMIT) snapshots.delete(snapshots.keys().next().value!);
+}
+
 type Props = {
   fileName: string;
+  /** Identifies this version of the document, for the placeholder snapshot. */
+  cacheKey?: string;
   mime: string;
   /** Viewer-first unified open path: true opens the engine read-only. */
   locked?: boolean;
@@ -33,8 +44,15 @@ export default function OfflineOfficeEditor(props: Props) {
     const api = window.__offlineOffice;
     if (!api || !container.current) return;
     let id: string | undefined,
-      disposed = false;
+      disposed = false,
+      spareTimer: ReturnType<typeof setTimeout> | undefined;
     const queued: OfficeEvent[] = [];
+    // Unlocking reopens the document in a new engine; until that one is ready the old status would claim
+    // "auto-saved" for an editor that is still loading.
+    setStatus('loading');
+    setError('');
+    const placeholder = latest.current.cacheKey ? snapshots.get(latest.current.cacheKey) : undefined;
+    setSnapshot(placeholder ?? null);
     retrySave.current = async () => {
       if (!id || disposed) return;
       setStatus('saving');
@@ -59,9 +77,20 @@ export default function OfflineOfficeEditor(props: Props) {
         return;
       }
       if (event.sessionId !== id || disposed) return;
+      if (event.kind === 'snapshot' && event.image && latest.current.cacheKey) {
+        rememberSnapshot(latest.current.cacheKey, event.image);
+      }
       if (event.kind === 'ready') {
         setStatus('ready');
         setError('');
+        // The engine view now shows the live document over the placeholder.
+        if (placeholder) setSnapshot((current) => (current === placeholder ? null : current));
+        // 编辑 and the next document each need a fresh engine; boot one in the background once this
+        // document is on screen, so neither waits for a cold start.
+        clearTimeout(spareTimer);
+        spareTimer = setTimeout(() => {
+          if (!disposed) void api.prewarm().catch(() => {});
+        }, 1500);
       }
       if (event.kind === 'dirty') setStatus('saving');
       if (event.kind === 'error') {
@@ -187,6 +216,7 @@ export default function OfflineOfficeEditor(props: Props) {
           base64,
           bounds: bounds(),
           readOnly: latest.current.locked === true,
+          hideUntilReady: Boolean(placeholder),
         });
         id = opened.sessionId;
         sessionId.current = id;
@@ -204,6 +234,7 @@ export default function OfflineOfficeEditor(props: Props) {
       });
     return () => {
       disposed = true;
+      clearTimeout(spareTimer);
       retrySave.current = null;
       navigationRestores.forEach((restore) => restore());
       popups.disconnect();

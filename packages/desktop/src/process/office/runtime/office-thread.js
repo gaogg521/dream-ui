@@ -115,6 +115,24 @@ Module.zetajs.then((api) => {
         }
         model = desktop.loadComponentFromURL(`file:///tmp/office/${data.fileName}`, '_default', 0, descriptors);
         removeExternalFileControls(office.getUnoComponentContext());
+        // The sidebar takes a third of a preview pane, and Impress opens it on the Navigator deck in read-only
+        // mode, shrinking the slide to a thumbnail. The slot's own boolean argument sets the state rather than
+        // toggling it, so repeating it is safe; repeat once more after the frame has finished building.
+        const hideSidebar = () => {
+          try {
+            css.frame.DispatchHelper.create(office.getUnoComponentContext()).executeDispatch(
+              model.getCurrentController().getFrame(),
+              '.uno:Sidebar',
+              '',
+              0,
+              [new css.beans.PropertyValue({ Name: 'Sidebar', Value: false })]
+            );
+          } catch (sidebarError) {
+            console.warn('[office] sidebar', String(sidebarError).slice(0, 120));
+          }
+        };
+        hideSidebar();
+        setTimeout(hideSidebar, 1000);
         model.getCurrentController().getFrame().getContainerWindow().FullScreen = true;
         // The engine ships English menus only; the host renders a localized
         // quick toolbar, so fold the built-in menu bar away. Best effort —
