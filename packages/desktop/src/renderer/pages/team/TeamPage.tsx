@@ -28,6 +28,7 @@ import TeamChatView from './components/TeamChatView';
 import TeamAgentIdentity from './components/TeamAgentIdentity';
 import TeamViewToggle from './components/TeamViewToggle';
 import TeamExportButton from './components/TeamExportButton';
+import TeamAutoStaffingToggle from './autoStaffing/TeamAutoStaffingToggle';
 import TeamActivityView from './activity/TeamActivityView';
 import TeamWarmupOverlay from './components/TeamWarmupOverlay';
 import { useTeamViewMode } from './hooks/useTeamViewMode';
@@ -819,6 +820,7 @@ const TeamPageContent: React.FC<TeamPageContentProps> = ({
           headerExtra={
             <div className='flex items-center gap-10px'>
               {assistants.length > 1 && <TeamViewToggle value={viewMode} onChange={setViewMode} />}
+              <TeamAutoStaffingToggle team_id={team.id} />
               <TeamExportButton team={team} />
             </div>
           }

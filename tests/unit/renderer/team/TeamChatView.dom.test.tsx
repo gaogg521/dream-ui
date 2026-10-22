@@ -39,6 +39,8 @@ vi.mock('@/renderer/pages/team/hooks/TeamTabsContext', () => ({
 
 import TeamChatView from '@/renderer/pages/team/components/TeamChatView';
 import { ipcBridge } from '@/common';
+import { setTeamAutoStaffing } from '@/renderer/pages/team/autoStaffing/useTeamAutoStaffing';
+import { AUTO_STAFFING_SYSTEM_NOTE } from '@/renderer/pages/team/autoStaffing/systemNote';
 
 describe('TeamChatView', () => {
   beforeEach(() => {
@@ -429,6 +431,39 @@ describe('TeamChatView', () => {
       reason: 'leader_intervention',
       queued_policy: 'retain',
     });
+  });
+
+  it('appends the auto-staffing note only to leader-bound messages, and only while it is on', async () => {
+    usePresetAssistantInfoMock.mockReturnValue({ info: null });
+    const ack = { team_run_id: 'run-1' } as never;
+    const leaderSpy = vi.spyOn(ipcBridge.team.sendMessage, 'invoke').mockResolvedValue(ack);
+    const agentSpy = vi.spyOn(ipcBridge.team.sendMessageToAgent, 'invoke').mockResolvedValue(ack);
+    const conversation = {
+      id: 'conv-1',
+      type: 'acp' as const,
+      name: 'Team member',
+      created_at: Date.now(),
+      updated_at: Date.now(),
+      extra: { workspace: '/tmp' },
+    };
+    type SendProps = { teamSendMessage: (payload: { input: string; files: [] }) => Promise<void> };
+    render(<TeamChatView team_id='team-1' slot_id='lead-1' isLeader conversation={conversation} />);
+    const leaderSend = (acpChatMock.mock.calls.at(-1)?.[0] as SendProps).teamSendMessage;
+
+    await leaderSend({ input: 'build a game', files: [] });
+    expect(leaderSpy).toHaveBeenLastCalledWith(expect.objectContaining({ input: 'build a game' }));
+
+    setTeamAutoStaffing('team-1', true);
+    await leaderSend({ input: 'build a game', files: [] });
+    expect(leaderSpy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ input: `build a game\n\n${AUTO_STAFFING_SYSTEM_NOTE}` })
+    );
+
+    render(<TeamChatView team_id='team-1' slot_id='worker-1' conversation={conversation} />);
+    const workerSend = (acpChatMock.mock.calls.at(-1)?.[0] as SendProps).teamSendMessage;
+    await workerSend({ input: 'just you', files: [] });
+    expect(agentSpy).toHaveBeenLastCalledWith(expect.objectContaining({ input: 'just you' }));
+    setTeamAutoStaffing('team-1', false);
   });
 
   it('marks teamRuntime.isActive true when slot matches activeSlotId and wires onFocus to switchTab', async () => {

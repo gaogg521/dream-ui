@@ -10,6 +10,7 @@ import type { ITeamMailboxMessage } from '@/common/types/team/teamTypes';
 import { ACTIVITY_USER_IDENTITY, isBroadcastMessage, isSystemMessageType } from './activityTypes';
 import { clampStyle, useIsClamped } from './useIsClamped';
 import { formatActivityTime } from './activityTime';
+import { stripSystemNotes } from '../autoStaffing/systemNote';
 
 /** Resolves a member/identity display name and color for a slot id. */
 export type ActivityIdentityResolver = {
@@ -45,7 +46,7 @@ const MessageCard: React.FC<Props> = ({ message, identity }) => {
       ? t('team.activity.userIdentity', { defaultValue: 'User / external' })
       : identity.nameOf(message.to_agent_id);
 
-  const body = message.summary && message.summary.length > 0 ? message.summary : message.content;
+  const body = stripSystemNotes(message.summary && message.summary.length > 0 ? message.summary : message.content);
   const attachments = message.files?.length ?? 0;
   const isClamped = useIsClamped(bodyRef, [body, expanded]);
   const time = formatActivityTime(message.created_at);

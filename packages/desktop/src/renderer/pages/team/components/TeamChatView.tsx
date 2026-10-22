@@ -17,6 +17,8 @@ import type { TeamSendBoxRuntime } from './teamSendRuntime';
 import type { TeamRunReconcileResult, TeamRunViewState } from '../hooks/useTeamRunView';
 import TeamChatEmptyState from './TeamChatEmptyState';
 import { useTeamTabs } from '@/renderer/pages/team/hooks/TeamTabsContext';
+import { readTeamAutoStaffing } from '../autoStaffing/useTeamAutoStaffing';
+import { withAutoStaffingNote } from '../autoStaffing/systemNote';
 import { usePresetAssistantInfo } from '@/renderer/hooks/agent/usePresetAssistantInfo';
 import { resolveConversationBackend } from '@/renderer/pages/conversation/utils/conversationAssistantIdentity';
 
@@ -161,7 +163,10 @@ const TeamChatView: React.FC<TeamChatViewProps> = ({
       // message in its own queue when the user prefers that — and the backend
       // falls back to the mailbox queue when the turn cannot take it.
       if (isLeader) {
-        const ack = await ipcBridge.team.sendMessage.invoke({ team_id, input, files, interject: true });
+        // Read at send time rather than closing over it, so flipping the header switch
+        // applies to the very next message.
+        const leaderInput = readTeamAutoStaffing(team_id) ? withAutoStaffingNote(input) : input;
+        const ack = await ipcBridge.team.sendMessage.invoke({ team_id, input: leaderInput, files, interject: true });
         onTeamRunAck?.(ack);
         return;
       }

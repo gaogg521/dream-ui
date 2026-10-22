@@ -245,5 +245,10 @@
     "noteImagesFailed": "有 {count} 张图片无法从磁盘读取，改为显示文件路径。",
     "noteImagesSkipped": "有 {count} 张图片过大未内嵌，改为显示文件路径。",
     "disclaimer": "本文件由应用生成的离线快照。工具输出为原文保留，请注意信息安全。"
+  },
+  "autoStaffing": {
+    "label": "自动组队",
+    "tooltipOn": "开启：Leader 需要加人时直接拉人，并告诉你加了谁、为什么。",
+    "tooltipOff": "关闭：Leader 加人前先给出阵容，等你确认。"
   }
 }

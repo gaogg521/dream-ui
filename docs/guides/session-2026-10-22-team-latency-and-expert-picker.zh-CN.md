@@ -33,8 +33,8 @@
 
 ### 2.1 新成员先空跑一轮「我已就位」（已修，后端）
 
-Leader 调 `team_spawn_agent` 后，后端给新成员写一条 *"You have been spawned as a teammate. Read your mailbox and wait for
-instructions."* 并唤醒它。成员于是完整跑一轮：读信箱 → 发「收到，已就位」→ 结束。这条确认又会唤醒 Leader。
+Leader 调 `team_spawn_agent` 后，后端给新成员写一条 _"You have been spawned as a teammate. Read your mailbox and wait for
+instructions."_ 并唤醒它。成员于是完整跑一轮：读信箱 → 发「收到，已就位」→ 结束。这条确认又会唤醒 Leader。
 
 炒股咨询团队：135.4s 拉了 3 个人 → 144.9~145.6s 三条「已就位」→ 160.3s 才派出第一个任务；每个成员这一轮约 10 秒
 （K线专家 137.0→147.8s）。股票资讯团队更典型：用户手动加的成员回「已就位」→ 唤醒 Leader → Leader 整轮只回了一句「请待命」。

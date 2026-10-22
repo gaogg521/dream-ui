@@ -245,5 +245,10 @@
     "noteImagesFailed": "有 {count} 張圖片無法從磁碟讀取，改為顯示檔案路徑。",
     "noteImagesSkipped": "有 {count} 張圖片過大未內嵌，改為顯示檔案路徑。",
     "disclaimer": "本檔案為應用產生的離線快照。工具輸出為原文保留，請注意資訊安全。"
+  },
+  "autoStaffing": {
+    "label": "自動組隊",
+    "tooltipOn": "開啟：Leader 需要加人時直接拉人，並告訴你加了誰、為什麼。",
+    "tooltipOff": "關閉：Leader 加人前先提出陣容，等你確認。"
   }
 }
