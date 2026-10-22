@@ -122,7 +122,7 @@ describe('local bridge', () => {
     const { bridge, getIncoming, outbound } = await loadLoopbackBridge();
     const pending = bridge.buildProvider<string, void>('test.big').invoke();
     const request = outbound.find(({ name }) => name === 'subscribe-test.big');
-    const { id } = request?.data as { id: string };
+    const { id } = request!.data as { id: string };
 
     // adapter/main.ts cannot deliver a >50 MiB reply and announces the drop instead.
     getIncoming()?.emit('bridge:error', {
@@ -136,7 +136,7 @@ describe('local bridge', () => {
   it('ignores a drop notice that belongs to another request', async () => {
     const { bridge, getIncoming, outbound } = await loadLoopbackBridge();
     const pending = bridge.buildProvider<string, void>('test.other').invoke();
-    const { id } = outbound.find(({ name }) => name === 'subscribe-test.other')?.data as { id: string };
+    const { id } = outbound.find(({ name }) => name === 'subscribe-test.other')!.data as { id: string };
 
     getIncoming()?.emit('bridge:error', { originalEvent: 'subscribe.callback-test.somethingelse', reason: 'x' });
     getIncoming()?.emit(`subscribe.callback-test.other${id}`, 'fine');
