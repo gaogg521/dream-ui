@@ -1241,6 +1241,7 @@ export type I18nKey =
   | 'conversation.chat.switchAgentFailed'
   | 'conversation.chat.thisAgent'
   | 'conversation.chat.tryAnotherAgent'
+  | 'conversation.chat.waitingApproval'
   | 'conversation.commandQueue.actionMode'
   | 'conversation.commandQueue.addToQueue'
   | 'conversation.commandQueue.addToQueueBusyHint'

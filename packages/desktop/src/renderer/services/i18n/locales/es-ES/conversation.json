@@ -467,6 +467,7 @@
     "noModelSelected": "No hay modelo seleccionado para la sesión actual, no se puede enviar el mensaje",
     "sendMessageTo": "Enviar mensaje a {{model}}",
     "processing": "Procesando...",
+    "waitingApproval": "Esperando a que el administrador de la empresa apruebe un comando de terminal: {{command}}",
     "quotaExceededTitle": "Cuota del modelo alcanzada",
     "quotaExceededBody": "La cuota del modelo actual se agotó. ¿Cambiar a {{model}} para continuar?",
     "quotaExceededNoFallback": "Cuota del modelo alcanzada. Por favor cambia a otro modelo disponible.",

@@ -26,6 +26,7 @@ import MobileActionSheet, {
 import SendBox from '@/renderer/components/chat/SendBox';
 import type { SessionAtMenuItem } from '@/renderer/components/chat/SessionAtMenu';
 import ThoughtDisplay from '@/renderer/components/chat/ThoughtDisplay';
+import { useTerminalApprovalWait } from '@/renderer/hooks/chat/useTerminalApprovalWait';
 import FileAttachButton from '@/renderer/components/media/FileAttachButton';
 import FilePreview from '@/renderer/components/media/FilePreview';
 import HorizontalFileList from '@/renderer/components/media/HorizontalFileList';
@@ -169,6 +170,9 @@ const DreamEngineSendBox: React.FC<{
       status: 'loaded',
     }));
   const { t, i18n } = useTranslation();
+  // A terminal call held for a company administrator's approval would otherwise
+  // look like a frozen turn for up to ten minutes.
+  const approvalWait = useTerminalApprovalWait(conversation_id);
   const confirmMediaIntent = useMediaIntentConfirmation();
   const { agents: managedAgents } = useManagedAgents();
   // 'dream' is this send box's own backend; the catalog is what turns it into
@@ -883,7 +887,11 @@ const DreamEngineSendBox: React.FC<{
       <ThoughtDisplay
         thought={thought}
         running={teamRuntime?.loading ?? running}
-        statusText={teamRuntime?.statusText}
+        statusText={
+          approvalWait
+            ? t('conversation.chat.waitingApproval', { command: approvalWait.command })
+            : teamRuntime?.statusText
+        }
         externalElapsedSource={Boolean(teamRuntime) || turnStartedAtMs != null}
         startedAtMs={teamRuntime ? (teamRuntime.startedAtMs ?? null) : turnStartedAtMs}
         onStop={effectiveHandleStop}

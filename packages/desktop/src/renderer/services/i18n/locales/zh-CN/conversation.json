@@ -467,6 +467,7 @@
     "noModelSelected": "当前会话未选择模型，无法发送消息",
     "sendMessageTo": "发送消息到 {{model}}",
     "processing": "正在处理中……",
+    "waitingApproval": "正在等待企业管理员审批终端命令：{{command}}",
     "quotaExceededTitle": "模型额度已用尽",
     "quotaExceededBody": "当前模型额度已用尽，是否切换到 {{model}}？",
     "quotaExceededNoFallback": "当前模型额度已用尽，请切换到其他可用模型。",

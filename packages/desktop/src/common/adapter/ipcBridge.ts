@@ -450,6 +450,9 @@ export const conversation = {
     };
   }),
   listChanged: wsEmitter<IConversationListChangedEvent>('conversation.listChanged'),
+  /** A terminal call is held until a company administrator decides (see the backend's LocalToolSecurityGate). */
+  approvalPending: wsEmitter<IConversationApprovalPendingEvent>('conversation.approvalPending'),
+  approvalResolved: wsEmitter<IConversationApprovalResolvedEvent>('conversation.approvalResolved'),
   sessionDeliveryCompleted: wsEmitter<{
     user_id: string;
     conversation_id: string;
@@ -2514,6 +2517,21 @@ export interface IConversationTurnCompletedEvent {
     status?: string | null;
     created_at: number;
   };
+}
+
+export interface IConversationApprovalPendingEvent {
+  conversationId: string;
+  taskId: string;
+  command: string;
+  startedAtMs: number;
+  expiresAtMs: number;
+}
+
+export interface IConversationApprovalResolvedEvent {
+  conversationId: string;
+  taskId: string;
+  outcome: 'approved' | 'denied' | 'failed';
+  reason?: string | null;
 }
 
 export interface IConversationListChangedEvent {
