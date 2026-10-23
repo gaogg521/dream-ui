@@ -23,6 +23,7 @@ import MobileActionSheet, {
 } from '@/renderer/components/chat/MobileActionSheet';
 import SendBox from '@/renderer/components/chat/SendBox';
 import ThoughtDisplay from '@/renderer/components/chat/ThoughtDisplay';
+import { useTerminalApprovalWait } from '@/renderer/hooks/chat/useTerminalApprovalWait';
 import FileAttachButton from '@/renderer/components/media/FileAttachButton';
 import { audioExts, getFileExtension, imageExts } from '@/renderer/services/FileService';
 import FilePreview from '@/renderer/components/media/FilePreview';
@@ -148,6 +149,9 @@ const AcpSendBox: React.FC<{
     context_limit,
   } = messageState;
   const { t } = useTranslation();
+  // A terminal call held for a company administrator's approval would otherwise
+  // look like a frozen turn for up to ten minutes.
+  const approvalWait = useTerminalApprovalWait(conversation_id);
   const confirmMediaIntent = useMediaIntentConfirmation();
   const teamPermission = useTeamPermission();
   // In team mode, all agents show the permission mode selector (members don't propagate)
@@ -860,7 +864,11 @@ Please check your local CLI tool authentication status`,
       />
       <ThoughtDisplay
         running={teamRuntime?.loading ?? (aiProcessing && !hasThinkingMessage)}
-        statusText={teamRuntime?.statusText}
+        statusText={
+          approvalWait
+            ? t('conversation.chat.waitingApproval', { command: approvalWait.command })
+            : teamRuntime?.statusText
+        }
         externalElapsedSource={Boolean(teamRuntime) || turnStartedAtMs != null}
         startedAtMs={teamRuntime ? (teamRuntime.startedAtMs ?? null) : turnStartedAtMs}
         onStop={effectiveHandleStop}
