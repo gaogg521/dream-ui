@@ -152,3 +152,24 @@ async function resolveDreamEngineModel(preferred?: string, inherited?: string): 
 
   throw new Error('No enabled model provider is configured. Please add one in Settings first.');
 }
+
+/**
+ * The model the leader really runs on. The roster's `model` is seeded from the assistant default
+ * and does not follow a change made in the model selector, so read the leader's own conversation
+ * first (live: leader on glm-flash-latest, roster saying deepseek-flash-vision-latest).
+ */
+export async function resolveLeaderDreamModel(
+  leader: { assistant_backend?: string; model?: string; conversation_id?: string } | undefined
+): Promise<string | undefined> {
+  if (leader?.assistant_backend !== 'dream') return undefined;
+  if (leader.conversation_id) {
+    try {
+      const conversation = await ipcBridge.conversation.get.invoke({ id: leader.conversation_id });
+      const selected = (conversation as { model?: { use_model?: string } } | null)?.model?.use_model?.trim();
+      if (selected) return selected;
+    } catch {
+      // fall through to the roster value
+    }
+  }
+  return leader.model;
+}

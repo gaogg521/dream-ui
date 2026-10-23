@@ -8,7 +8,7 @@ import { getSendBoxDraftHook } from '@renderer/hooks/chat/useSendBoxDraft';
 import { useTeamAssistantOptions } from '../../hooks/useTeamAssistantOptions';
 import { useTeamTabs } from '../../hooks/TeamTabsContext';
 import type { TeamAssistantOption } from '../assistantSelectUtils';
-import { resolveDefaultTeamAgentModel } from '../teamCreateModelResolver';
+import { resolveDefaultTeamAgentModel, resolveLeaderDreamModel } from '../teamCreateModelResolver';
 import TeamAssistantPickerDropdown from './TeamAssistantPickerDropdown';
 
 const useAcpDraft = getSendBoxDraftHook('acp', { _type: 'acp', atPath: [], content: '', uploadFile: [] });
@@ -58,7 +58,7 @@ const TeamAddMemberPopover: React.FC<Props> = ({ children, disabled = false }) =
       const model = await resolveDefaultTeamAgentModel({
         assistant_id: assistant.id,
         assistant_backend: assistant.backend,
-        inherit_dream_model: leader?.assistant_backend === 'dream' ? leader.model : undefined,
+        inherit_dream_model: await resolveLeaderDreamModel(leader),
       });
       const input: TeamAssistantInput = {
         role: 'teammate',

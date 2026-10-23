@@ -8,12 +8,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const getAssistantMock = vi.fn();
 const listProvidersMock = vi.fn();
+const getConversationMock = vi.fn();
 
 vi.mock('@/common', () => ({
   ipcBridge: {
     assistants: {
       get: {
         invoke: (...args: unknown[]) => getAssistantMock(...args),
+      },
+    },
+    conversation: {
+      get: {
+        invoke: (...args: unknown[]) => getConversationMock(...args),
       },
     },
     mode: {
@@ -24,7 +30,10 @@ vi.mock('@/common', () => ({
   },
 }));
 
-import { resolveDefaultTeamAgentModel } from '@/renderer/pages/team/components/teamCreateModelResolver';
+import {
+  resolveDefaultTeamAgentModel,
+  resolveLeaderDreamModel,
+} from '@/renderer/pages/team/components/teamCreateModelResolver';
 
 describe('resolveDefaultTeamAgentModel', () => {
   beforeEach(() => {
@@ -265,5 +274,36 @@ describe('resolveDefaultTeamAgentModel — dream-engine models must exist server
     await expect(
       resolveDefaultTeamAgentModel({ assistant_id: 'expert', inherit_dream_model: 'retired-model' })
     ).resolves.toBe('kimi-k2-6');
+  });
+});
+
+describe('resolveLeaderDreamModel', () => {
+  beforeEach(() => {
+    getConversationMock.mockReset();
+  });
+
+  it('reads the model the leader conversation really runs on, not the roster seed', async () => {
+    getConversationMock.mockResolvedValue({ model: { use_model: 'glm-flash-latest' } });
+
+    await expect(
+      resolveLeaderDreamModel({
+        assistant_backend: 'dream',
+        model: 'deepseek-flash-vision-latest',
+        conversation_id: 'conv-1',
+      })
+    ).resolves.toBe('glm-flash-latest');
+  });
+
+  it('falls back to the roster value when the conversation cannot be read', async () => {
+    getConversationMock.mockImplementation(() => Promise.reject(new Error('404')));
+
+    await expect(
+      resolveLeaderDreamModel({ assistant_backend: 'dream', model: 'roster-model', conversation_id: 'conv-1' })
+    ).resolves.toBe('roster-model');
+  });
+
+  it('does not apply to non-dream leaders', async () => {
+    await expect(resolveLeaderDreamModel({ assistant_backend: 'claude', model: 'opus' })).resolves.toBeUndefined();
+    expect(getConversationMock).not.toHaveBeenCalled();
   });
 });

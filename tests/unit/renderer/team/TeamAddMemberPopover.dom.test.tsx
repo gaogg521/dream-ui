@@ -83,6 +83,7 @@ vi.mock('@/renderer/pages/team/hooks/TeamTabsContext', () => ({
 
 vi.mock('@/renderer/pages/team/components/teamCreateModelResolver', () => ({
   resolveDefaultTeamAgentModel: (...args: unknown[]) => resolveDefaultTeamAgentModelMock(...args),
+  resolveLeaderDreamModel: async () => undefined,
 }));
 
 import TeamAddMemberPopover from '@/renderer/pages/team/components/memberPicker/TeamAddMemberPopover';
