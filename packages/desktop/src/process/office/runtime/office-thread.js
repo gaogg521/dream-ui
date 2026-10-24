@@ -134,15 +134,26 @@ Module.zetajs.then((api) => {
         hideSidebar();
         setTimeout(hideSidebar, 1000);
         model.getCurrentController().getFrame().getContainerWindow().FullScreen = true;
-        // The engine ships English menus only; the host renders a localized
-        // quick toolbar, so fold the built-in menu bar away. Best effort —
-        // keep booting when the kit ignores the toggle.
-        try {
-          const helper = css.frame.DispatchHelper.create(office.getUnoComponentContext());
-          helper.executeDispatch(model.getCurrentController().getFrame(), '.uno:Menubar', '', 0, []);
-        } catch (menuError) {
-          office.mainPort.postMessage({ cmd: 'error', message: `menubar: ${String(menuError).slice(0, 120)}` });
-        }
+        // The engine ships English chrome only; the host renders a localized
+        // quick toolbar. Hide the built-in menu bar, icon toolbar and status
+        // bar deterministically via the frame's layout manager (a
+        // .uno:Menubar dispatch would only TOGGLE, and the state persists
+        // across boots). The shell builds progressively, so hide right after
+        // load and once more after the ready signal. Best effort — keep
+        // booting when the kit ignores it.
+        const hideEngineChrome = () => {
+          try {
+            const frame = model.getCurrentController().getFrame();
+            const layout = frame.getLayoutManager ? frame.getLayoutManager() : frame.LayoutManager;
+            if (!layout) throw new Error('frame exposes no layout manager');
+            layout.hideElement('private:resource/menubar/menubar');
+            layout.hideElement('private:resource/toolbar/standardbar');
+            layout.hideElement('private:resource/statusbar/statusbar');
+          } catch (chromeError) {
+            office.mainPort.postMessage({ cmd: 'error', message: `chrome: ${String(chromeError).slice(0, 120)}` });
+          }
+        };
+        hideEngineChrome();
         listener = office.unoObject([css.util.XModifyListener], {
           disposing() {},
           modified() {
@@ -171,6 +182,7 @@ Module.zetajs.then((api) => {
         });
         model.addModifyListener(listener);
         office.mainPort.postMessage({ cmd: 'ready' });
+        setTimeout(hideEngineChrome, 800);
       } else if (data.cmd === 'dispatch') {
         const helper = css.frame.DispatchHelper.create(office.getUnoComponentContext());
         helper.executeDispatch(model.getCurrentController().getFrame(), `.uno:${data.command}`, '', 0, []);
