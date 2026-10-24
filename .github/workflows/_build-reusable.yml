@@ -542,8 +542,8 @@ jobs:
           # Homebrew coreutils being present on the runner image. Poll the
           # child PID instead; `kill`/`pkill` are the BSD tools and are
           # always present.
-          BUILD_TIMEOUT_SECONDS=1200
-          BUILD_MAX_ATTEMPTS=3
+          BUILD_TIMEOUT_SECONDS=1800
+          BUILD_MAX_ATTEMPTS=2
           BUILD_EXIT_CODE=1
           for attempt in $(seq 1 "$BUILD_MAX_ATTEMPTS"); do
             echo "=== macOS build attempt $attempt/$BUILD_MAX_ATTEMPTS (cap ${BUILD_TIMEOUT_SECONDS}s) ===" | tee -a "${RUNNER_TEMP}/build.log"
@@ -574,6 +574,12 @@ jobs:
 
             if [ "$TIMED_OUT" -eq 1 ]; then
               echo "⚠️ Attempt $attempt timed out after ${BUILD_TIMEOUT_SECONDS}s (likely a hung codesign/notarization call) — cleaning up and retrying" | tee -a "${RUNNER_TEMP}/build.log"
+              # 2026-10-24: two consecutive runs hung in all six attempts with
+              # zero console output (attempt logs never reached the job log),
+              # leaving the hang point a blind guess. Dump the tail of the
+              # killed attempt's log so the next timeout names its stall point.
+              echo "--- last 40 lines of attempt $attempt's log:" | tee -a "${RUNNER_TEMP}/build.log"
+              tail -40 "$ATTEMPT_LOG" | tee -a "${RUNNER_TEMP}/build.log"
               pkill -9 -f codesign 2>/dev/null || true
               rm -rf out
               continue
