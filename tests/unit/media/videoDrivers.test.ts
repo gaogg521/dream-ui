@@ -48,6 +48,23 @@ describe('driver registry', () => {
   });
 });
 
+describe('Ark audio parameter', () => {
+  it.each([false, true])('forwards an explicit generateAudio=%s as JSON', async (generateAudio) => {
+    const fetchMock = vi.fn(async () => jsonResponse({ id: 'ark-task' }));
+    vi.stubGlobal('fetch', fetchMock);
+    await getTaskDriver('ark-task')!.submit(submitCtx({ params: { generateAudio } }));
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body)).generate_audio).toBe(generateAudio);
+  });
+  it('keeps the vendor default when audio was not selected', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ id: 'ark-task' }));
+    vi.stubGlobal('fetch', fetchMock);
+    await getTaskDriver('ark-task')!.submit(submitCtx());
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).not.toHaveProperty('generate_audio');
+  });
+});
+
 describe('openai-video driver', () => {
   const driver = getTaskDriver('openai-video')!;
 

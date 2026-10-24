@@ -448,7 +448,7 @@ describe('TeamChatView', () => {
     };
     type SendProps = { teamSendMessage: (payload: { input: string; files: [] }) => Promise<void> };
     render(<TeamChatView team_id='team-1' slot_id='lead-1' isLeader conversation={conversation} />);
-    const leaderSend = (acpChatMock.mock.calls.at(-1)?.[0] as SendProps).teamSendMessage;
+    const leaderSend = (acpChatMock.mock.calls.at(-1)![0] as SendProps).teamSendMessage;
 
     await leaderSend({ input: 'build a game', files: [] });
     expect(leaderSpy).toHaveBeenLastCalledWith(expect.objectContaining({ input: 'build a game' }));
@@ -460,7 +460,7 @@ describe('TeamChatView', () => {
     );
 
     render(<TeamChatView team_id='team-1' slot_id='worker-1' conversation={conversation} />);
-    const workerSend = (acpChatMock.mock.calls.at(-1)?.[0] as SendProps).teamSendMessage;
+    const workerSend = (acpChatMock.mock.calls.at(-1)![0] as SendProps).teamSendMessage;
     await workerSend({ input: 'just you', files: [] });
     expect(agentSpy).toHaveBeenLastCalledWith(expect.objectContaining({ input: 'just you' }));
     setTeamAutoStaffing('team-1', false);

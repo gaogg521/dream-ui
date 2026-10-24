@@ -8,6 +8,20 @@ import { describe, expect, it } from 'vitest';
 import { detectMediaIntent, isLayoutRequest } from '@/common/media/detectMediaIntent';
 
 describe('detectMediaIntent', () => {
+  it.each([
+    '不要生成图片，只回答问题',
+    '请查看已生成的图片文件，然后识别颜色。不要生成图片，不要执行命令。',
+    '别画一只猫',
+    "Don't generate a video; answer in text.",
+    'Do not draw a cat.',
+  ])('does not treat a prohibited action as intent: %s', (input) => {
+    expect(detectMediaIntent(input)).toBeNull();
+  });
+
+  it('keeps a separate positive request after a prohibited action', () => {
+    expect(detectMediaIntent('不要生成视频，生成一张插画')).toBe('image');
+    expect(detectMediaIntent("Don't generate a video; generate an image of a cat.")).toBe('image');
+  });
   describe('recognizes a request to generate an image', () => {
     it.each([
       '画一只猫',

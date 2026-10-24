@@ -308,6 +308,19 @@ describe('media catalog resolution', () => {
       expect(resolveMediaModelSpec('video', declared, MODEL)?.endpointStyle).toBe('agnes-task');
     });
 
+    it('keeps Agnes 2.5 parameters behind an explicitly configured enterprise proxy', () => {
+      const provider = {
+        platform: 'openai',
+        base_url: 'http://localhost/api/one/model-proxy/channel',
+        name: 'Company',
+        model_settings: { 'agnes-video-2.5-flash': { model_kind: 'video', media_endpoint: 'agnes-task' } },
+      };
+      const spec = resolveMediaModelSpec('video', provider, 'agnes-video-2.5-flash');
+      expect(spec?.id).toBe('agnes-video-25');
+      expect(spec?.params.durations).toEqual([4, 5, 8, 10, 12]);
+      expect(spec?.params.negativePrompt).not.toBe(true);
+    });
+
     it('offers no resolution list, because the driver has no resolution knob', () => {
       const spec = resolveMediaModelSpec('video', atVendor, MODEL);
       expect(spec?.params?.resolutions).toBeUndefined();
