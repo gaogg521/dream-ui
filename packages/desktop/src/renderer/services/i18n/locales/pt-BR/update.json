@@ -57,6 +57,8 @@
   "releaseNotesLoading": "Buscando detalhes da atualização...",
   "releaseNotesFailed": "Falha ao buscar detalhes.",
   "viewRelease": "Ver release",
+  "itemCount": "{{n}} itens",
+  "viewMoreItems": "Ver tudo ({{n}} itens)",
   "releaseLog": "Registro de versões",
   "cancel": "Cancelar",
   "minimize": "Minimizar",

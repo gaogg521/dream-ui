@@ -5273,6 +5273,7 @@ export type I18nKey =
   | 'update.installerLastFailure.retryUpdate'
   | 'update.installerLastFailure.title'
   | 'update.installerLastFailure.viewLog'
+  | 'update.itemCount'
   | 'update.later'
   | 'update.manualInstall'
   | 'update.migration.capsule'
@@ -5319,6 +5320,7 @@ export type I18nKey =
   | 'update.restoreUpdateNotification'
   | 'update.showInFolder'
   | 'update.upToDateTitle'
+  | 'update.viewMoreItems'
   | 'update.viewRelease';
 
 export type I18nModule =

@@ -57,6 +57,8 @@
   "releaseNotesLoading": "Güncelleme ayrıntıları alınıyor...",
   "releaseNotesFailed": "Ayrıntılar alınamadı.",
   "viewRelease": "Sürümü görüntüle",
+  "itemCount": "{{n}} öğe",
+  "viewMoreItems": "Tümünü gör ({{n}} öğe)",
   "releaseLog": "Sürüm günlüğü",
   "cancel": "İptal",
   "minimize": "Küçült",

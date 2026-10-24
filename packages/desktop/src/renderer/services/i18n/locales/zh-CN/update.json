@@ -57,6 +57,8 @@
   "releaseNotesLoading": "更新内容获取中",
   "releaseNotesFailed": "获取失败，可",
   "viewRelease": "前往查看",
+  "itemCount": "{{n}} 项",
+  "viewMoreItems": "查看更多（共 {{n}} 项）",
   "releaseLog": "更新日志",
   "cancel": "取消",
   "minimize": "最小化",

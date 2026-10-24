@@ -2,13 +2,13 @@
  * Copyright 2026 One Work
  */
 
-import MarkdownView from '@/renderer/components/Markdown';
 import { useFeedback } from '@/renderer/hooks/context/FeedbackContext';
 import { Button, Modal, Progress } from '@arco-design/web-react';
 import { CheckOne, Close, Download, Minus } from '@icon-park/react';
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import ReleaseNotesView from './ReleaseNotesView';
 import { formatUpdateSize, useUpdateNotificationController } from './useUpdateNotificationController';
 
 // Shared action-button style across every notification state: rounded corners, no leading icon.
@@ -307,13 +307,12 @@ const UpdateNotificationCard: React.FC = () => {
         autoFocus={false}
         focusLock={false}
         unmountOnExit
+        // Two edition cards side by side need more than Arco's default 520px.
+        style={{ width: 'min(720px, calc(100vw - 48px))' }}
       >
-        <div
-          data-testid='update-release-log'
-          className='max-h-60vh overflow-y-auto text-13px text-t-secondary leading-relaxed custom-scrollbar'
-        >
+        <div data-testid='update-release-log' className='max-h-60vh overflow-y-auto custom-scrollbar'>
           {releaseNotes ? (
-            <MarkdownView allowHtml>{releaseNotes}</MarkdownView>
+            <ReleaseNotesView>{releaseNotes}</ReleaseNotesView>
           ) : state.releaseNotesStatus === 'loading' ? (
             <span>{t('update.releaseNotesLoading')}</span>
           ) : (

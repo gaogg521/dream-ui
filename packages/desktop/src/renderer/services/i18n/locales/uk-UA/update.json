@@ -57,6 +57,8 @@
   "releaseNotesLoading": "Отримання відомостей про оновлення...",
   "releaseNotesFailed": "Не вдалося отримати відомості.",
   "viewRelease": "Переглянути реліз",
+  "itemCount": "{{n}}",
+  "viewMoreItems": "Переглянути всі ({{n}})",
   "releaseLog": "Журнал змін",
   "cancel": "Скасувати",
   "minimize": "Згорнути",

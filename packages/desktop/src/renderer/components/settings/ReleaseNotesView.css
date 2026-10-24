@@ -1,0 +1,350 @@
+/**
+ * Release-notes panel — visual language mirrors the marketing site's updates
+ * section (1work.vip/updates.html): edition cards with a colored top border,
+ * color-coded category chips with count pills, and matching list markers.
+ * Surfaces and text use semantic theme variables so light/dark and branded
+ * color schemes adapt automatically; only the category hues are fixed, with
+ * dark-mode overrides via [data-theme='dark'] on <html>.
+ */
+
+.release-notes {
+  font-size: 13px;
+  color: var(--text-secondary);
+
+  /* Category palette (light): 600–700 text hues for ≥4.5:1 on card surfaces,
+     400–500 hues for the solid marker/chip square. */
+  --rn-new: #047857;
+  --rn-new-dot: #10b981;
+  --rn-improved: #0f766e;
+  --rn-improved-dot: #14b8a6;
+  --rn-security: #b45309;
+  --rn-security-dot: #f59e0b;
+  --rn-policy: #be123c;
+  --rn-policy-dot: #f43f5e;
+  --rn-fixed: #b91c1c;
+  --rn-fixed-dot: #ef4444;
+  --rn-arch: #4338ca;
+  --rn-arch-dot: #6366f1;
+  --rn-auth: #6d28d9;
+  --rn-auth-dot: #8b5cf6;
+  --rn-resource: #0369a1;
+  --rn-resource-dot: #0ea5e9;
+  --rn-observe: #0e7490;
+  --rn-observe-dot: #06b6d4;
+  --rn-topic: #4f46e5;
+  --rn-topic-dot: #6366f1;
+  --rn-personal: #10b981;
+  --rn-enterprise: #6366f1;
+}
+
+[data-theme='dark'] .release-notes {
+  /* Same hues the site uses on its dark background. */
+  --rn-new: #6ee7b7;
+  --rn-new-dot: #34d399;
+  --rn-improved: #5eead4;
+  --rn-improved-dot: #14b8a6;
+  --rn-security: #fcd34d;
+  --rn-security-dot: #f59e0b;
+  --rn-policy: #fda4af;
+  --rn-policy-dot: #f43f5e;
+  --rn-fixed: #fca5a5;
+  --rn-fixed-dot: #ef4444;
+  --rn-arch: #a5b4fc;
+  --rn-arch-dot: #6366f1;
+  --rn-auth: #c4b5fd;
+  --rn-auth-dot: #8b5cf6;
+  --rn-resource: #7dd3fc;
+  --rn-resource-dot: #0ea5e9;
+  --rn-observe: #67e8f9;
+  --rn-observe-dot: #06b6d4;
+  --rn-topic: #a5b4fc;
+  --rn-topic-dot: #818cf8;
+  --rn-personal: #34d399;
+  --rn-enterprise: #818cf8;
+}
+
+.release-notes__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.release-notes__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 20px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 32%, transparent);
+}
+
+.release-notes__date {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+
+/* Two edition cards side by side like the site's updates-grid; collapses to
+   one column when the modal gets narrow. Cards stretch to equal height so the
+   two columns bottom-align (the site stretches its cards the same way). */
+.release-notes__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.release-notes__card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-1);
+  border: 1px solid var(--border-base);
+  border-radius: 10px;
+  padding: 12px 14px 14px;
+}
+
+.release-notes__card--personal {
+  border-top: 2px solid var(--rn-personal);
+}
+
+.release-notes__card--enterprise {
+  border-top: 2px solid var(--rn-enterprise);
+}
+
+.release-notes__card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.release-notes__card-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--rn-personal);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rn-personal) 20%, transparent);
+}
+
+.release-notes__card--enterprise .release-notes__card-dot {
+  background: var(--rn-enterprise);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rn-enterprise) 20%, transparent);
+}
+
+.release-notes__card-count {
+  margin-left: auto;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--text-tertiary);
+  background: var(--bg-2);
+}
+
+.release-notes__lead {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--text-tertiary);
+}
+
+.release-notes__cat {
+  margin-top: 12px;
+}
+
+.release-notes__cat-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.release-notes__cat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.release-notes__cat-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+}
+
+.release-notes__cat-count {
+  margin-left: auto;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+}
+
+.release-notes__cat-head--new .release-notes__cat-label {
+  color: var(--rn-new);
+}
+.release-notes__cat-head--new .release-notes__cat-label::before {
+  background: var(--rn-new-dot);
+}
+.release-notes__cat-head--new .release-notes__cat-count {
+  color: var(--rn-new);
+  background: color-mix(in srgb, var(--rn-new-dot) 14%, transparent);
+}
+.release-notes__cat-head--improved .release-notes__cat-label {
+  color: var(--rn-improved);
+}
+.release-notes__cat-head--improved .release-notes__cat-label::before {
+  background: var(--rn-improved-dot);
+}
+.release-notes__cat-head--improved .release-notes__cat-count {
+  color: var(--rn-improved);
+  background: color-mix(in srgb, var(--rn-improved-dot) 14%, transparent);
+}
+.release-notes__cat-head--security .release-notes__cat-label {
+  color: var(--rn-security);
+}
+.release-notes__cat-head--security .release-notes__cat-label::before {
+  background: var(--rn-security-dot);
+}
+.release-notes__cat-head--security .release-notes__cat-count {
+  color: var(--rn-security);
+  background: color-mix(in srgb, var(--rn-security-dot) 14%, transparent);
+}
+.release-notes__cat-head--policy .release-notes__cat-label {
+  color: var(--rn-policy);
+}
+.release-notes__cat-head--policy .release-notes__cat-label::before {
+  background: var(--rn-policy-dot);
+}
+.release-notes__cat-head--policy .release-notes__cat-count {
+  color: var(--rn-policy);
+  background: color-mix(in srgb, var(--rn-policy-dot) 14%, transparent);
+}
+.release-notes__cat-head--fixed .release-notes__cat-label {
+  color: var(--rn-fixed);
+}
+.release-notes__cat-head--fixed .release-notes__cat-label::before {
+  background: var(--rn-fixed-dot);
+}
+.release-notes__cat-head--fixed .release-notes__cat-count {
+  color: var(--rn-fixed);
+  background: color-mix(in srgb, var(--rn-fixed-dot) 14%, transparent);
+}
+.release-notes__cat-head--arch .release-notes__cat-label {
+  color: var(--rn-arch);
+}
+.release-notes__cat-head--arch .release-notes__cat-label::before {
+  background: var(--rn-arch-dot);
+}
+.release-notes__cat-head--arch .release-notes__cat-count {
+  color: var(--rn-arch);
+  background: color-mix(in srgb, var(--rn-arch-dot) 14%, transparent);
+}
+.release-notes__cat-head--auth .release-notes__cat-label {
+  color: var(--rn-auth);
+}
+.release-notes__cat-head--auth .release-notes__cat-label::before {
+  background: var(--rn-auth-dot);
+}
+.release-notes__cat-head--auth .release-notes__cat-count {
+  color: var(--rn-auth);
+  background: color-mix(in srgb, var(--rn-auth-dot) 14%, transparent);
+}
+.release-notes__cat-head--resource .release-notes__cat-label {
+  color: var(--rn-resource);
+}
+.release-notes__cat-head--resource .release-notes__cat-label::before {
+  background: var(--rn-resource-dot);
+}
+.release-notes__cat-head--resource .release-notes__cat-count {
+  color: var(--rn-resource);
+  background: color-mix(in srgb, var(--rn-resource-dot) 14%, transparent);
+}
+.release-notes__cat-head--observe .release-notes__cat-label {
+  color: var(--rn-observe);
+}
+.release-notes__cat-head--observe .release-notes__cat-label::before {
+  background: var(--rn-observe-dot);
+}
+.release-notes__cat-head--observe .release-notes__cat-count {
+  color: var(--rn-observe);
+  background: color-mix(in srgb, var(--rn-observe-dot) 14%, transparent);
+}
+.release-notes__cat-head--topic .release-notes__cat-label {
+  color: var(--rn-topic);
+}
+.release-notes__cat-head--topic .release-notes__cat-label::before {
+  background: var(--rn-topic-dot);
+}
+.release-notes__cat-head--topic .release-notes__cat-count {
+  color: var(--rn-topic);
+  background: color-mix(in srgb, var(--rn-topic-dot) 14%, transparent);
+}
+
+.release-notes__list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.release-notes__item {
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+.release-notes__list li::marker {
+  color: var(--rn-personal);
+  font-weight: 700;
+}
+
+.release-notes__card--enterprise .release-notes__list li::marker {
+  color: var(--rn-enterprise);
+}
+
+.release-notes__item-tag,
+.release-notes__item strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* margin-top:auto pins the link to the stretched card's bottom, so the two
+   columns' "view more" rows sit on one baseline. */
+.release-notes__more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  margin-top: auto;
+  padding: 12px 0 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.release-notes__more:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

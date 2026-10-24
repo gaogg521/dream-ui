@@ -57,6 +57,8 @@
   "releaseNotesLoading": "更新内容を取得中",
   "releaseNotesFailed": "取得に失敗しました。",
   "viewRelease": "リリースを見る",
+  "itemCount": "{{n}}件",
+  "viewMoreItems": "すべて見る（全{{n}}件）",
   "releaseLog": "リリースログ",
   "cancel": "キャンセル",
   "minimize": "最小化",

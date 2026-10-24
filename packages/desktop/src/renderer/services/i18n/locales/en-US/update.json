@@ -57,6 +57,8 @@
   "releaseNotesLoading": "Fetching update details...",
   "releaseNotesFailed": "Failed to fetch update details.",
   "viewRelease": "View release",
+  "itemCount": "{{n}} items",
+  "viewMoreItems": "View all ({{n}} items)",
   "releaseLog": "Release Log",
   "cancel": "Cancel",
   "minimize": "Minimize",

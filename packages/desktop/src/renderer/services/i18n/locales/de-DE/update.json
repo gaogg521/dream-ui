@@ -57,6 +57,8 @@
   "releaseNotesLoading": "Update-Details werden abgerufen...",
   "releaseNotesFailed": "Update-Details konnten nicht abgerufen werden.",
   "viewRelease": "Release ansehen",
+  "itemCount": "{{n}} Einträge",
+  "viewMoreItems": "Alle ansehen ({{n}} Einträge)",
   "releaseLog": "Release-Log",
   "cancel": "Abbrechen",
   "minimize": "Minimieren",

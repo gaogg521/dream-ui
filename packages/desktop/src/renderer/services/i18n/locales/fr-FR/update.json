@@ -57,6 +57,8 @@
   "releaseNotesLoading": "Récupération des détails de la mise à jour...",
   "releaseNotesFailed": "Échec de la récupération des détails de la mise à jour.",
   "viewRelease": "Voir la version",
+  "itemCount": "{{n}} éléments",
+  "viewMoreItems": "Tout voir ({{n}} éléments)",
   "releaseLog": "Journal de version",
   "cancel": "Annuler",
   "minimize": "Minimiser",

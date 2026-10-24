@@ -57,6 +57,8 @@
   "releaseNotesLoading": "Получение сведений об обновлении...",
   "releaseNotesFailed": "Не удалось получить сведения.",
   "viewRelease": "Открыть релиз",
+  "itemCount": "{{n}}",
+  "viewMoreItems": "Показать все ({{n}})",
   "releaseLog": "Журнал изменений",
   "cancel": "Отмена",
   "minimize": "Свернуть",

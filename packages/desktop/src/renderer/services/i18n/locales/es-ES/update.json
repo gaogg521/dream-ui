@@ -56,6 +56,8 @@
   "releaseNotesLoading": "Obteniendo detalles de la actualización...",
   "releaseNotesFailed": "Error al obtener detalles de la actualización.",
   "viewRelease": "Ver versión",
+  "itemCount": "{{n}} elementos",
+  "viewMoreItems": "Ver todo ({{n}} elementos)",
   "releaseLog": "Registro de versiones",
   "cancel": "Cancelar",
   "minimize": "Minimizar",

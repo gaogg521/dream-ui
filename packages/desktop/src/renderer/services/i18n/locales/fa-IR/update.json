@@ -57,6 +57,8 @@
   "releaseNotesLoading": "در حال دریافت جزئیات به‌روزرسانی...",
   "releaseNotesFailed": "دریافت جزئیات به‌روزرسانی ناموفق بود.",
   "viewRelease": "مشاهده انتشار",
+  "itemCount": "{{n}} مورد",
+  "viewMoreItems": "مشاهده همه ({{n}} مورد)",
   "releaseLog": "گزارش انتشار",
   "cancel": "لغو",
   "minimize": "کوچک کردن",

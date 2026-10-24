@@ -57,6 +57,8 @@
   "releaseNotesLoading": "업데이트 내용을 가져오는 중",
   "releaseNotesFailed": "가져오지 못했습니다.",
   "viewRelease": "릴리스 보기",
+  "itemCount": "{{n}}개",
+  "viewMoreItems": "더 보기(총 {{n}}개)",
   "releaseLog": "릴리스 로그",
   "cancel": "취소",
   "minimize": "최소화",
