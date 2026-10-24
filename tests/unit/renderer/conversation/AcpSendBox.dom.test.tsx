@@ -94,6 +94,8 @@ vi.mock('@/common', () => ({
       stop: {
         invoke: stopInvokeMock,
       },
+      approvalPending: { on: vi.fn(() => vi.fn()) },
+      approvalResolved: { on: vi.fn(() => vi.fn()) },
     },
   },
 }));

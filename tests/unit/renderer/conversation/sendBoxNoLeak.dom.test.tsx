@@ -27,7 +27,11 @@ const { mutateMock } = vi.hoisted(() => ({ mutateMock: vi.fn() }));
 vi.mock('@/common', () => ({
   ipcBridge: {
     acpConversation: { sendMessage: { invoke: vi.fn() } },
-    conversation: { stop: { invoke: vi.fn() } },
+    conversation: {
+      stop: { invoke: vi.fn() },
+      approvalPending: { on: vi.fn(() => vi.fn()) },
+      approvalResolved: { on: vi.fn(() => vi.fn()) },
+    },
   },
 }));
 
