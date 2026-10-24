@@ -4,8 +4,13 @@
 > 重构：第一部分就是现在的标准流程，照着走即可；第二部分是仍然有效的坑的快速索引；
 > 1oneCore / 1oneUI 时代的历史教训压缩成第三部分的一张表，细节在文末的 session 文档里。
 >
-> **版本坐标（2026-09-20）**：3.0.6 之后已发 3.0.7（备份跨机恢复修订 + 口令），
-> 下一版是 **3.0.8**。S0–S7 流程在 3.0.7 上原样复跑通过，无需改动。
+> **版本坐标（2026-10-24）**：最新已发包 **3.0.14**（钉 dreamcore v0.1.98，全平台
+> Windows + macOS×2 + Linux×2）。S0–S7 流程在 3.0.14 上复跑通过；本版新增的坑
+> 已并入 S0/S2/S4/S5/§2.1/§2.8/§2.9。
+>
+> **开局先读最新一篇发版记录**（`dream-en/docs/release-record-<日期>-<版本>.zh-CN.md`）：
+> 打包范围、对象数、tag 惯例会演进——3.0.13 起是全平台五路 + COS 17 对象 + 五份根清单，
+> 按旧记忆的「三路打包」走会漏腿（3.0.14 实际发生，Linux 晚 dispatch 20 分钟）。
 >
 > 权威的"当前发布状态"永远用实时命令查（§3），别信任何文档里写死的时间点快照。
 
@@ -42,6 +47,12 @@ cd /d/dream/dream-ui && node -e "const s=require('semver');const [cur,next]=proc
 > 「3.0.6 修订版」写进更新记录标题。`3.0.6+1`（build metadata）同样无效，
 > electron-updater 直接忽略 `+` 之后的部分。
 
+**S0 附加两条（3.0.14 教训，写进流程）：**
+
+- **开局先读最新发版记录**再定打包范围与对象清单，别按记忆里的旧版数走。
+- **Mac 腿最先 dispatch、全程盯**：它是唯一会连挂数小时的腿（flaky 门禁 +
+  codesign 挂死），3.0.14 两次失败都是事后 1 小时才发现，每次白烧一轮等待。
+
 ### S1. 划界 + 全量 commit 检测（更新记录的完整来源）
 
 ```bash
@@ -66,6 +77,12 @@ git log --format='%h %ad %s' --date=format:'%m-%d %H:%M' --since='<上一步的�
    重点（3.0.6 的「新建团队可拖拽」曾埋在三合一条目末尾被用户当成漏了）。
 
 ### S2. 后端钉版决策：UI 配对才换 dreamcore tag
+
+> ⚠️ **build 预检会拦钉版落后**（`build-with-builder.js` 的 pre-flight 对比
+> dream-core main 上 build-relevant 提交）。并行会话持续往 dream-core 推提交时，
+> 打包会被反复拦下——**追到最新 tag 重钉重验**即可；确认落后的提交与本版无关
+> 才用 `DREAM_SKIP_PREFLIGHT=1`（3.0.14 当天被拦两次、v0.1.96→97→98 三连追，
+> 没用过 skip）。这个拦截是对的：它防的正是「新 UI 带旧后端上线的空壳」。
 
 > 🚨 **3.0.8 必须换钉版：`v0.1.74` 里没有本轮的后端改动。**
 >
@@ -106,6 +123,15 @@ git log --format='%h %ad %s' --date=format:'%m-%d %H:%M' --since='<上一步的�
 > ```
 >
 > 体积 123MB → 138MB 是技能嵌入的正常结果，不是产物损坏或拉错文件。
+
+> **挑验证字符串前先看它是否活在 `#[cfg(test)]` 里**——测试 fixture 的字面量
+> （哪怕中文长串）不进 release 二进制，grep 必然落空，别误判成「修复没进去」
+> （3.0.14 白查一轮）。稳的验证组合拳，按序：
+>
+> ① `git merge-base --is-ancestor <fix-commit> <tag>` —— 提交在 tag 祖先链上；
+> ② 下载的 zip 对 `dreamcore-checksums.txt` 做 SHA-256 —— 拿的确实是这个 tag 的产物；
+> ③ 生产代码里的短字面量 / tracing 文案 grep 二进制 —— 内容真嵌进去了。
+> 三条全过才叫「钉版验证过」，单靠 ③（或只看 tag 号）都不算。
 
 S1 的清单里若 dream-ui 新功能与 dream-core 划界后的 commit **配对**
 （备份↔个人版备份端点、搜索 UI↔web search 到会话、图片 UI↔Agnes 能力），
@@ -167,7 +193,7 @@ one.4 / one.5 / 0.1.72 三版产物集完全一致。**照技能走会在这一�
 2. `docs/release-notes/<ver>.json`：按 S1 的全量清单写（zh/en × 单机/企业 四段）；
 3. `chore(release): <ver>` 一个 commit 推 main（Mac CI 构建的就是它）。
 
-### S4. 三路并行打包
+### S4. 全平台并行打包（Windows 本机 + CI 四路：macOS×2 / Linux×2）
 
 ```bash
 # Windows 本机（~20 min；先确认无 electron/dreamcore dev 进程占文件，杀按 PID）
@@ -184,6 +210,13 @@ Mac CI 前本地把四道 gate 跑绿（`bun run format:check` / `bunx tsc --noE
 `bunx vitest run`），别为一个格式错烧一个 35 分钟的 cycle。
 等待窗口内：生成 `release-notes.md`（`node scripts/generate-release-notes.js --out …`）、
 注入 COS 凭据（§2.3）。
+
+> **dispatch 后立刻把四个平台全发齐**（arm64/x64/linux×2 各一个 run），发版脚本
+> 按「谁好谁先走」逐腿上线即可——别只发 Mac 等后面再补 Linux（3.0.14 按旧记忆
+> 只发了三路，Linux 是中途读 3.0.13 发版记录才补的）。
+>
+> **S6 的 CI 产物下载要按平台并行发起**，别串行排队：公司网络对 gh 限速可低到
+> ~70KB/s，一个串行链把 linux-x64 拖了 2 小时；多挂几个并行任务反而都能挤过。
 
 ### S5. Windows 腿先上线（增量发版：谁好谁先走，不等齐）
 
@@ -214,6 +247,16 @@ Mac CI 前本地把四道 gate 跑绿（`bun run format:check` / `bunx tsc --noE
 #    scripts/../scratchpad 里的 drive-open-dialog.ps1 模式），断言中间态的
 #    DOM（密码框是否真的出现），不要只断言最终 API 调用的返回码。
 ```
+
+> **打包版无法用 CDP 驱动 UI**：`configureChromium.ts` 对 `app.isPackaged` 无条件拒绝
+> 应用级调试端口（安全设计，不是缺陷，别再试）。⑤ 两个装机级验收的等效替代：
+> 包内 dreamcore.exe grep 技能语料/修复独有文案；app.asar grep 常量（如
+> `work.1oneclaw.com/trial-broker`）+ 确认对应单测存在。涉及真实点击路径的 ⑥
+> 只能装到干净机器手动走（2026-10-24 起无 CDP 通道）。
+>
+> **`bunx asar extract` 在本机会解包不完整**（只出 node_modules/static 后中断）——
+> asar 是拼接格式，**直接 `grep -a` app.asar 二进制**即可做类名/资产/常量检查，
+> 不必解包。
 
 ```bash
 scripts/publish-cos-release-asset.sh out/One-Work-<ver>-win-x64.exe <ver>   # exe：只进版本目录
@@ -257,13 +300,15 @@ scripts/download-gh-artifact.sh gaogg521/dream-ui <run_id> macos-build-arm64-<sh
 
 ### 2.1 Mac CI（build-manual.yml）
 
-| 症状                                  | 病根 / 解法                                                                                                                                                                 |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| run 几秒失败、steps 空、log not found | **计费拦截**（私有仓 macOS 10 倍计费）。用 `gh api repos/gaogg521/dream-ui/check-runs/<jobId>/annotations` 看真因；解法是修付款/提额度或转 public                           |
-| Prepare dreamcore 404                 | `dreamcoreVersion` 指向的 Release 不存在——S2 的 tag 先出包再 dispatch                                                                                                       |
-| 卡 oxfmt/tsc/vitest                   | 本地先跑绿四道 gate 再 dispatch；vitest 历史失败要现查是否与本次相关                                                                                                        |
-| 签名成功但装机报已损坏                | 看 build step 的守卫：`signing file=… Developer ID Application` → `properly code signed` → `Notarization completed` 三连，缺一即红（IDENTITY secret 只填证书 CN、不带前缀） |
-| 超时 60:17                            | x64 公证排队不可控，timeout 已提到 90 min；codesign 偶发卡死是 OCSP flaky，重跑                                                                                             |
+| 症状                                                                         | 病根 / 解法                                                                                                                                                                                                                         |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| run 几秒失败、steps 空、log not found                                        | **计费拦截**（私有仓 macOS 10 倍计费）。用 `gh api repos/gaogg521/dream-ui/check-runs/<jobId>/annotations` 看真因；解法是修付款/提额度或转 public                                                                                   |
+| Prepare dreamcore 404                                                        | `dreamcoreVersion` 指向的 Release 不存在——S2 的 tag 先出包再 dispatch                                                                                                                                                               |
+| 卡 oxfmt/tsc/vitest                                                          | 本地先跑绿四道 gate 再 dispatch；vitest 历史失败要现查是否与本次相关                                                                                                                                                                |
+| 签名成功但装机报已损坏                                                       | 看 build step 的守卫：`signing file=… Developer ID Application` → `properly code signed` → `Notarization completed` 三连，缺一即红（IDENTITY secret 只填证书 CN、不带前缀）                                                         |
+| 超时 60:17                                                                   | x64 公证排队不可控，timeout 已提到 90 min；codesign 偶发卡死是 OCSP flaky，重跑                                                                                                                                                     |
+| codesign **连环**挂死（所有 attempt 全超时、控制台零输出）                   | 2026-10-24 六连挂：arm64 同提交 13min 过、x64 六次全 1200s 超时且日志黑洞。wrapper 已根修（`f6e8bbf3`：1800s×2 + **超时转储尝试日志尾 40 行**）——连续挂先看转储日志定位挂点，别再盲重跑；当日是 Apple 公证网络异常，第四次 11min 过 |
+| Code Quality 挂在个别 dom 用例（mermaidBlockPanZoom / EnterpriseServerCard） | 并发负载时序 flake：本地单跑全过 + 同提交其他腿全过 = 假红。`gh run rerun --failed` 即可，别改产品代码、别为它烧 35 分钟全量重跑                                                                                                    |
 
 `installers_only` 必须为 **false**：Mac 自动更新走 `.zip` 不是 `.dmg`，
 true 会在上传前把 zip+yml 删掉（3.0.1 / 3.0.2 各踩一次）。
@@ -337,6 +382,33 @@ SmartScreen"未知发布者"，**与线上所有历史版本一致，是预期�
    WIP 会挡住你的纯文档推送——此时 `git push --no-verify` 是钩子自述
    的合法场景（docs-only），但先 `git diff --stat origin/main..main`
    确认自己的推送范围确实碰不到代码。
+3. **dom 测试在并发负载下时序假红**（2026-10-24 两例：EnterpriseServerCard
+   单跑 6/6 过、CI 上 34s 超时挂 2 个；mermaidBlockPanZoom 本地 7/7 过、
+   CI 点击放大挂 1 个）。单跑复验通过 + 失败源不在自己 diff → 重推 /
+   `gh run rerun --failed` 是正当处置，别为假红改产品代码。
+4. **mock 漂移是 Main Guard 红静音键的新形态**：组件新增 ipcBridge 通道（如
+   `conversation.approvalPending`）时，凡用固定形状 mock `@/common` 的 dom
+   测试会整树崩、**整个文件**全红。新增通道必须同步 grep `vi.mock\('@/common'`
+   把 mock 形状补齐（3.0.14 补了 3 个文件 40 个用例才转绿）。
+
+---
+
+### 2.9 多会话并行下的发版（2026-10-24 固化）
+
+多个 AI 会话共用四仓，dream-core / dream-ui 的 origin 会被并行会话持续推进
+（3.0.14 当天 dreamcore 0.1.95→0.1.98 四连发、dream-ui main 当天推进多次）。
+发版期的三条规矩：
+
+1. **动手前 fetch 一次，每次 push 前再 fetch**：push 被拒先 `git rebase origin/main`
+   再推（rebase 前确认没有别人基于你的提交），绝不 force。
+2. **本地旧检出 ≠ 落后工作**：遇到大量未推送提交 / WIP，先核对是否已被并行会话
+   经干净 worktree 落库（同消息 `git log --grep`、文件逐字节 `diff`、行数对账），
+   确认后备份到 `wip-backup-<日期>` 分支再 `reset --hard origin/main`——3.0.14 的
+   88 文件 WIP 核对后全部已在 origin，一场虚惊；dream-ui 的 office chrome 改进
+   则是真·未落库工作，验证后随版提交。两种都要会分辨。
+3. **打包中途被 pre-flight 拦 = 并行会话又进了新提交**（见 S2 警示框）：追最新
+   tag 重钉重验；如果并行会话当天连发，先 `gh run list --repo gaogg521/dream-core
+--workflow=Release` 看在途构建再决定钉哪个，减少追的轮数。
 
 ---
 
@@ -368,6 +440,7 @@ curl https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/latest.ym
 
 ## 相关文档
 
+- **3.0.14 发版全记录**（mac x64 codesign 连环挂、钉版三连追、多会话并行）：[`dream-en/docs/release-record-2026-10-24-3.0.14.zh-CN.md`](../../../../dream-en/docs/release-record-2026-10-24-3.0.14.zh-CN.md)
 - **3.0.6 发版全记录**（数字、决策、遗留）：[`dream-en/docs/release-record-2026-09-19-3.0.6.zh-CN.md`](../../../../dream-en/docs/release-record-2026-09-19-3.0.6.zh-CN.md)
 - **3.0.5 发版全记录 + 三个大坑**（划界、失效类名、双清单）：[`dream-en/docs/handoff-2026-09-13-openocta-parity.zh-CN.md`](../../../../dream-en/docs/handoff-2026-09-13-openocta-parity.zh-CN.md) §10
 - 3.0.0 Mac"已损坏"根治 + 改名：[`session-2026-08-31-mac-signing-and-brand-executable.zh-CN.md`](session-2026-08-31-mac-signing-and-brand-executable.zh-CN.md)
