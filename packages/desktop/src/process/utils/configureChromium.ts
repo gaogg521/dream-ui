@@ -163,8 +163,34 @@ export interface CdpStatus {
   startupEnabled: boolean;
   /** Whether CDP is enabled in the persisted config file (may differ from runtime) */
   configEnabled: boolean;
+  /** Whether the runtime gate currently lets agent commands through */
+  agentControl: boolean;
   /** Whether the app is running in development mode */
   isDevMode: boolean;
+}
+
+/**
+ * 运行时总闸：用户关掉后立即生效，不必重启。
+ *
+ * 配置文件里的 `enabled` 决定「桥要不要起」，这个旗子决定「桥起来之后命令放不放
+ * 行」。切换走 updateCdpConfig，桥（cdpBridge.ts）在每个命令入口读它 —— 所以关闭
+ * 是即时的；重新打开时若桥本来就没起（启动时被禁），仍需重启应用把桥拉起来。
+ *
+ * Runtime kill-switch: takes effect immediately, no restart needed. The config
+ * file's `enabled` decides whether the bridge starts at all; this flag decides
+ * whether a running bridge lets commands through. Toggled via updateCdpConfig and
+ * read by the bridge (cdpBridge.ts) at every command entry point, so turning it
+ * off is instant. Turning it back on still needs an app restart if the bridge
+ * never started (it was disabled at startup).
+ */
+let agentControlEnabled = true;
+
+export function isAgentControlEnabled(): boolean {
+  return agentControlEnabled;
+}
+
+export function setAgentControlEnabled(enabled: boolean): void {
+  agentControlEnabled = enabled;
 }
 
 /**
@@ -431,6 +457,7 @@ export function getCdpStatus(): CdpStatus {
     port: cdpPort,
     startupEnabled: cdpStartupEnabled,
     configEnabled: config.enabled ?? cdpStartupEnabled,
+    agentControl: agentControlEnabled,
     isDevMode: !app.isPackaged,
   };
 }
@@ -443,5 +470,10 @@ export function updateCdpConfig(newConfig: Partial<CdpConfig>): CdpConfig {
   const currentConfig = loadCdpConfig();
   const updatedConfig = { ...currentConfig, ...newConfig };
   saveCdpConfig(updatedConfig);
+  if (typeof newConfig.enabled === 'boolean') {
+    // The runtime gate follows the persisted switch immediately: off stops agent
+    // commands the moment the settings toggle flips, no restart involved.
+    setAgentControlEnabled(newConfig.enabled);
+  }
   return updatedConfig;
 }

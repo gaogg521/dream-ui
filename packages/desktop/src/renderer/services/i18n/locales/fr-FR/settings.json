@@ -3352,5 +3352,13 @@
       "name": "Stratège Zhihu",
       "desc": "Mécanique de recommandation de Zhihu et marketing de la connaissance, bâtissant l’autorité une bonne réponse à la fois."
     }
+  },
+  "agentBrowser": {
+    "title": "Contrôle du navigateur par l'agent",
+    "enable": "Autoriser l'agent à manipuler le navigateur",
+    "enableDesc": "L'agent peut ouvrir des pages web, cliquer et remplir des formulaires dans le navigateur intégré ; la page affiche un surlignage pendant ses actions. La désactivation est immédiate et l'agent ne peut plus manipuler le navigateur.",
+    "saved": "Enregistré",
+    "saveFailed": "Échec de l'enregistrement",
+    "restartHint": "Redémarrez l'application pour que l'agent puisse manipuler le navigateur."
   }
 }

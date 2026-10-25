@@ -3352,5 +3352,13 @@
     "passphraseTooShort": "Use at least {{min}} characters.",
     "passphraseMismatch": "The two entries do not match.",
     "passphraseNoRecovery": "There is no way to recover this passphrase. Lose it and the backup cannot be opened."
+  },
+  "agentBrowser": {
+    "title": "Agent browser control",
+    "enable": "Allow the agent to operate the browser",
+    "enableDesc": "The agent can open web pages, click and fill forms in the in-app browser; the page shows a highlight while it works. Turning this off takes effect immediately and the agent can no longer drive the browser.",
+    "saved": "Saved",
+    "saveFailed": "Failed to save",
+    "restartHint": "Restart the app to let the agent operate the browser."
   }
 }

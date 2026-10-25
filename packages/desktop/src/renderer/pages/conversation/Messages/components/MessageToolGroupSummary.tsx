@@ -10,6 +10,7 @@ import type { NormalizedToolCall, NormalizedToolStatus, ToolMessage } from '@/co
 import { normalizeToolMessages, hasRunningToolMessages } from '@/common/chat/normalizeToolCall';
 import LocalImageView from '@/renderer/components/media/LocalImageView';
 import { protectedDownloadFromPath } from '@/renderer/utils/enterprise/secureExport/protectedDownload';
+import { browserToolDisplayName } from './browserToolLabels';
 import './MessageToolGroupSummary.css';
 
 const statusToBadge = (status: NormalizedToolStatus): BadgeProps['status'] => {
@@ -35,6 +36,8 @@ const ToolItemDetail: React.FC<{ item: NormalizedToolCall }> = ({ item }) => {
   const [loadingFull, setLoadingFull] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const displayItem = fullItem ?? item;
+  // Browser MCP tools read as actions ("打开网页") instead of raw server names.
+  const displayName = browserToolDisplayName(displayItem.name, t);
   const hasDetail = displayItem.input || displayItem.output || item.truncated || item.imagePath;
   const [messageApi, messageContext] = Message.useMessage();
   const handleDownloadImage = useCallback(
@@ -87,7 +90,7 @@ const ToolItemDetail: React.FC<{ item: NormalizedToolCall }> = ({ item }) => {
           }
           onClick={hasDetail ? toggleExpanded : undefined}
         >
-          <span className='font-medium text-13px'>{displayItem.name}</span>
+          <span className='font-medium text-13px'>{displayName}</span>
           {displayItem.description && displayItem.description !== displayItem.name && (
             <span className='m-l-4px opacity-80 text-13px'>{displayItem.description}</span>
           )}

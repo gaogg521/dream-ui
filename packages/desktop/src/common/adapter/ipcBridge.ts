@@ -555,6 +555,8 @@ export interface ICdpStatus {
   port: number | null;
   startupEnabled: boolean;
   configEnabled: boolean;
+  /** Whether the runtime gate currently lets agent commands through */
+  agentControl: boolean;
   isDevMode: boolean;
 }
 

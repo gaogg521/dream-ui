@@ -3352,5 +3352,13 @@
       "name": "Zhihu-Stratege",
       "desc": "Zhihus Empfehlungsmechanik und Wissensmarketing – baut Autorität mit einer guten Antwort nach der anderen auf."
     }
+  },
+  "agentBrowser": {
+    "title": "Agent-Browsersteuerung",
+    "enable": "Dem Agent erlauben, den Browser zu bedienen",
+    "enableDesc": "Der Agent kann im integrierten Browser Webseiten öffnen, klicken und Formulare ausfüllen; bei Aktionen erscheint eine Hervorhebung auf der Seite. Das Ausschalten wirkt sofort, danach kann der Agent den Browser nicht mehr bedienen.",
+    "saved": "Gespeichert",
+    "saveFailed": "Speichern fehlgeschlagen",
+    "restartHint": "Starte die App neu, damit der Agent den Browser bedienen kann."
   }
 }

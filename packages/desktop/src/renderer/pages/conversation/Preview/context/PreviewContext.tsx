@@ -10,7 +10,7 @@ import { emitter } from '@/renderer/utils/emitter';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { BROWSER_BLANK_URL, BROWSER_TAB_FALLBACK_TITLE, MAX_BROWSER_TABS } from '../browser/constants';
 import { isBrowserMcpActivity, isBrowserMcpSettled } from '../browser/agentActivity';
-import { maybeNotifyFirstAgentBrowserUse } from '../browser/firstUseNotice';
+import { maybeNotifyFirstAgentBrowserUse, notifyAgentOpenedBrowserPanel } from '../browser/firstUseNotice';
 import { listPersistedPreviewScopeKeys, previewScopeStorageKey, type PreviewScopeKey } from './previewScope';
 import { peKey } from '@/renderer/pages/conversation/explorer/explorerModel';
 import { reflessTabKey } from './reflessTabKey';
@@ -1307,6 +1307,33 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
    * changed" — indistinguishable from a user click. The tool-call stream is the only
    * signal that separates the two.
    */
+  /**
+   * 智能体的浏览器工具在面板未打开时跑不了（CDP 桥会报「浏览器面板未打开」）。
+   * 与其让 Agent 撞墙、用户只看到一次莫名其妙的失败，不如在它需要时把面板拉起
+   * 来 —— 面板出现本身就是最直白的「智能体在用浏览器」信号。仅在没有浏览器
+   * tab 时触发，且 10 秒节流，防止连续工具调用反复开关。
+   *
+   * The agent's browser tools cannot run with the panel closed (the CDP bridge
+   * answers "browser panel not attached"). Rather than letting the agent ram the
+   * wall while the user sees one more inexplicable failure, open the panel when
+   * the agent needs it — the panel appearing is itself the clearest "the agent is
+   * using the browser" signal. Fires only when no browser tab exists, throttled
+   * to once per 10 s so bursts of tool calls cannot flap the panel.
+   */
+  const browserTabsRef = useRef<PreviewTab[]>([]);
+  useEffect(() => {
+    browserTabsRef.current = tabs;
+  }, [tabs]);
+  const agentAutoOpenAtRef = useRef(0);
+
+  const maybeOpenBrowserPanelForAgent = useCallback(() => {
+    if (browserTabsRef.current.some((tab) => tab.content_type === 'browser')) return;
+    if (Date.now() - agentAutoOpenAtRef.current < 10_000) return;
+    agentAutoOpenAtRef.current = Date.now();
+    openBrowserTab();
+    notifyAgentOpenedBrowserPanel();
+  }, [openBrowserTab]);
+
   useEffect(() => {
     const markBrowserTabs = (agentActive: boolean) => {
       setTabs((prevTabs) => {
@@ -1341,6 +1368,7 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (isBrowserMcpActivity(message.type, message.data)) {
         markBrowserTabs(true);
         maybeNotifyFirstAgentBrowserUse();
+        maybeOpenBrowserPanelForAgent();
         return;
       }
       if (isBrowserMcpSettled(message.type, message.data)) {
@@ -1349,7 +1377,7 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
 
     return unsubscribe;
-  }, []);
+  }, [maybeOpenBrowserPanelForAgent]);
 
   const previewContextValue = useMemo(() => {
     return {

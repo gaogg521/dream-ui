@@ -31,6 +31,7 @@ import {
   tokensMatch,
   type CdpRequest,
 } from './cdpTargetProtocol';
+import { isAgentControlEnabled } from '@process/utils/configureChromium';
 
 const HOST = '127.0.0.1';
 const WS_PATH = '/one-cdp';
@@ -54,6 +55,42 @@ type AttachedState = {
 
 let attached: AttachedState | null = null;
 let sockets = new Set<WebSocket>();
+
+/**
+ * 点击涟漪：Agent 每次通过桥按下鼠标时，在页面里就地画一个短促的高亮圈。
+ *
+ * 用户不知道"智能体在操作浏览器"的另一半原因是：面板开着，但页面上什么痕迹都
+ * 没有 —— 点击发生在 webview 里，主窗口的角标看不见。涟漪直接注入页面自身
+ * （Runtime.evaluate），坐标就是 CDP 事件自带的视口坐标，天然精确，任何缩放、
+ * 任何 CSP 都不影响（CDP 绕过页面 CSP）。这是纯视觉反馈，失败静默忽略。
+ *
+ * Click ripple: every time the agent presses the mouse through the bridge, draw a
+ * brief highlight ring in the page itself. The other half of "users don't know the
+ * agent is driving the browser" is that with the panel open nothing on the page
+ * itself shows it — clicks happen inside the webview where the main-window badge
+ * can't be seen. The ripple is injected into the page (Runtime.evaluate) at the
+ * exact viewport coordinates the CDP event already carries, so zoom and page CSP
+ * are irrelevant (CDP bypasses page CSP). Purely visual; failures are ignored.
+ */
+const RIPPLE_EXPRESSION = (x: number, y: number) =>
+  `(() => { try {
+    const d = document; const id = '__one_agent_click__';
+    const prev = d.getElementById(id); if (prev) prev.remove();
+    const e = d.createElement('div');
+    e.id = id;
+    e.style.cssText = 'position:fixed;z-index:2147483647;pointer-events:none;width:36px;height:36px;border-radius:50%;margin:-18px 0 0 -18px;left:${x}px;top:${y}px;box-shadow:0 0 0 3px rgba(34,211,238,.9),0 0 14px 5px rgba(34,211,238,.4);';
+    (d.body || d.documentElement).appendChild(e);
+    const a = e.animate([{transform:'scale(.35)',opacity:.95},{transform:'scale(1.7)',opacity:0}],{duration:600,easing:'ease-out'});
+    a.addEventListener('finish', () => e.remove());
+    setTimeout(() => e.remove(), 700);
+  } catch {} })();`;
+
+const injectClickRipple = (dbg: Debugger, x: number, y: number): void => {
+  dbg.sendCommand('Runtime.evaluate', { expression: RIPPLE_EXPRESSION(x, y), userGesture: true }).catch(() => {
+    // Cosmetic only — a page that refuses evaluation (destroyed, crashed) just
+    // misses the ripple; the click itself is unaffected.
+  });
+};
 
 const currentTargetInfo = () => {
   if (!attached || attached.contents.isDestroyed()) return buildTargetInfo('', 'about:blank');
@@ -194,6 +231,24 @@ const handleSocketMessage = async (ws: WebSocket, raw: string, announcedSessions
   const { id, method, params, sessionId } = req;
   if (!method) return;
 
+  if (!isAgentControlEnabled()) {
+    /**
+     * 用户在设置里关掉了智能体浏览器控制。所有命令（包括伪装层的元命令）一律
+     * 拒绝，并且把「去哪里打开」说清楚 —— Agent 看到这条消息还能转告用户。
+     *
+     * The user turned agent browser control off in settings. Every command
+     * (facade metadata included) is refused, with a pointer at where to re-enable
+     * it so the agent can relay that to the user.
+     */
+    sendError(
+      ws,
+      id,
+      'Agent browser control is turned off in One Work settings (Settings → System → Agent browser control). It must be re-enabled by the user; retrying will not succeed until then.',
+      sessionId
+    );
+    return;
+  }
+
   if (!isAcceptableSessionId(sessionId)) {
     sendError(ws, id, `Unknown sessionId: ${sessionId}`, sessionId);
     return;
@@ -293,10 +348,24 @@ const handleSocketMessage = async (ws: WebSocket, raw: string, announcedSessions
     sendError(
       ws,
       id,
-      'The in-app browser is not currently attached. Open the browser panel in One Work so a page is available to control.',
+      'The in-app browser is not currently attached. One Work opens the browser panel automatically when the agent needs it — wait a moment and retry the same call. If it still fails, ask the user to open the browser panel.',
       sessionId
     );
     return;
+  }
+
+  /**
+   * Agent 按下鼠标时先在页面里画涟漪再透传点击。只有经过桥的点击才画 —— 用户
+   * 自己的点击不经过桥，所以不会误标。
+   *
+   * Draw the ripple before forwarding the click. Only bridge-driven clicks pass
+   * through here — the user's own clicks never do, so they are never mislabelled.
+   */
+  if (method === 'Input.dispatchMouseEvent') {
+    const mouseParams = (params ?? {}) as { type?: string; x?: number; y?: number };
+    if (mouseParams.type === 'mousePressed' && typeof mouseParams.x === 'number' && typeof mouseParams.y === 'number') {
+      injectClickRipple(attached.dbg, mouseParams.x, mouseParams.y);
+    }
   }
 
   try {

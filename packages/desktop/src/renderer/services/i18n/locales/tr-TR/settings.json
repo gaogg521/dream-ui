@@ -3352,5 +3352,13 @@
       "name": "Zhihu Stratejisti",
       "desc": "Zhihu'nun öneri mekaniği ve bilgi pazarlaması; her seferinde bir iyi yanıtla otorite kurar."
     }
+  },
+  "agentBrowser": {
+    "title": "Aracı tarayıcı denetimi",
+    "enable": "Aracının tarayıcıyı kullanmasına izin ver",
+    "enableDesc": "Aracı, yerleşik tarayıcıda web sayfaları açabilir, tıklayabilir ve formları doldurabilir; çalışırken sayfada bir vurgu görünür. Kapatmak anında etkin olur ve aracı artık tarayıcıyı kullanamaz.",
+    "saved": "Kaydedildi",
+    "saveFailed": "Kaydedilemedi",
+    "restartHint": "Aracının tarayıcıyı kullanabilmesi için uygulamayı yeniden başlatın."
   }
 }

@@ -3352,5 +3352,13 @@
       "name": "Estratega de Zhihu",
       "desc": "Mecánica de recomendación de Zhihu y marketing de conocimiento, construyendo autoridad una buena respuesta a la vez."
     }
+  },
+  "agentBrowser": {
+    "title": "Control del navegador por el agente",
+    "enable": "Permitir que el agente opere el navegador",
+    "enableDesc": "El agente puede abrir páginas web, hacer clic y rellenar formularios en el navegador integrado; la página muestra un resaltado mientras trabaja. Al desactivarlo surte efecto de inmediato y el agente deja de poder operar el navegador.",
+    "saved": "Guardado",
+    "saveFailed": "Error al guardar",
+    "restartHint": "Reinicia la aplicación para que el agente pueda operar el navegador."
   }
 }

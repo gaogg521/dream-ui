@@ -78,3 +78,24 @@ export const maybeNotifyFirstAgentBrowserUse = (): void => {
     duration: 8000,
   });
 };
+
+/**
+ * 面板被智能体按需自动打开时的提示。
+ *
+ * 智能体的浏览器工具在面板没开时本会直接报错；自动打开把报错换成面板出现。但
+ * 「面板自己冒出来」仍需要一句话解释为什么 —— 尤其是首次之后（一次性提示已用过）
+ * 的场景。由调用方节流，这里不设去重。
+ *
+ * Notice shown when the panel is auto-opened on the agent's behalf. The agent's
+ * browser tools used to fail outright with the panel closed; auto-opening replaces
+ * that error with the panel appearing. But a panel appearing on its own still
+ * needs one sentence of explanation — especially after the first time (the
+ * one-time notice is spent). Throttling is the caller's job; no dedup here.
+ */
+export const notifyAgentOpenedBrowserPanel = (): void => {
+  Notification.info({
+    title: i18next.t('preview.browser.agentAutoOpened'),
+    content: i18next.t('preview.browser.agentFirstUseContent'),
+    duration: 5000,
+  });
+};

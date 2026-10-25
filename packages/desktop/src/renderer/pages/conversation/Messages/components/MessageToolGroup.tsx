@@ -25,6 +25,7 @@ import { ImagePreviewContext } from '../MessageList';
 import { COLLAPSE_CONFIG, TEXT_CONFIG } from '../constants';
 import type { ImageGenerationResult, WriteFileResult } from '../types';
 import { protectedDownloadBytes } from '@/renderer/utils/enterprise/secureExport/protectedDownload';
+import { browserToolDisplayName } from './browserToolLabels';
 
 const CODE_STYLE = { marginTop: 4, marginBottom: 4 };
 
@@ -544,6 +545,10 @@ const MessageToolGroup: React.FC<IMessageToolGroupProps> = ({ message }) => {
 
         // 通用工具调用展示 Generic tool call display
         // 将可展开的长内容放在 Alert 下方，保持 Alert 仅展示头部信息
+        // Browser MCP tools show a readable action ("打开网页") instead of the
+        // raw server-qualified name — the raw name is why users never realized
+        // the agent was driving the browser.
+        const toolDisplayName = browserToolDisplayName(name, t);
         return (
           <div key={call_id}>
             <Alert
@@ -565,7 +570,7 @@ const MessageToolGroup: React.FC<IMessageToolGroupProps> = ({ message }) => {
               content={
                 <div>
                   <Tag className={'me-4px'}>
-                    {name}
+                    {toolDisplayName}
                     {status === 'Canceled' ? `(${t('messages.canceledExecution')})` : ''}
                   </Tag>
                 </div>

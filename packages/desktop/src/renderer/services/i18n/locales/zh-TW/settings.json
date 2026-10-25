@@ -3574,5 +3574,13 @@
   "webui.switchToServerBlockedTitle": "暫時無法切換為伺服器",
   "webui.switchToServerBlockedDesc": "您當前的模式是客戶端，且已加入專案組。如需切換為伺服器，請先在「專案組」頁退出當前加入的專案組。",
   "webui.deployServerAddressLabel": "其他客戶端請填寫地址：{{url}}",
-  "webui.deployServerAddressUnavailable": "尚未開啟可供區域網存取的 WebUI，其他客戶端暫時無法連線。請先在設定 → WebUI 中啟用並允許遠端存取。"
+  "webui.deployServerAddressUnavailable": "尚未開啟可供區域網存取的 WebUI，其他客戶端暫時無法連線。請先在設定 → WebUI 中啟用並允許遠端存取。",
+  "agentBrowser": {
+    "title": "Agent 瀏覽器控制",
+    "enable": "允許 Agent 操作瀏覽器",
+    "enableDesc": "Agent 可以在應用內瀏覽器裡開啟網頁、點選和填寫表單，操作時頁面會有高亮提示。關閉後立即生效，Agent 將無法操作瀏覽器。",
+    "saved": "已儲存",
+    "saveFailed": "儲存失敗",
+    "restartHint": "需要重新啟動應用後，Agent 才能操作瀏覽器。"
+  }
 }

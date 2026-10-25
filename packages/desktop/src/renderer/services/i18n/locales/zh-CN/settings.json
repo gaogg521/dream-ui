@@ -3573,5 +3573,13 @@
     "passphraseTooShort": "至少 {{min}} 个字符。",
     "passphraseMismatch": "两次输入不一致。",
     "passphraseNoRecovery": "这个密码无法找回。丢失后备份将永远无法打开。"
+  },
+  "agentBrowser": {
+    "title": "智能体浏览器控制",
+    "enable": "允许智能体操作浏览器",
+    "enableDesc": "智能体可以在应用内浏览器里打开网页、点击和填写表单，操作时页面会有高亮提示。关闭后立即生效，智能体将无法操作浏览器。",
+    "saved": "已保存",
+    "saveFailed": "保存失败",
+    "restartHint": "需要重启应用后，智能体才能操作浏览器。"
   }
 }

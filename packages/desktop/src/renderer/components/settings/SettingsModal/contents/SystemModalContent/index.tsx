@@ -24,6 +24,7 @@ import useSWR from 'swr';
 import { useSettingsViewMode } from '../../settingsViewContext';
 import BrowserNotificationGrant from './BrowserNotificationGrant';
 import DevSettings from './DevSettings';
+import AgentBrowserControlSection from './AgentBrowserControlSection';
 import BackupSection from './BackupSection';
 import BrowserDataSection from './BrowserDataSection';
 import DirInputItem from './DirInputItem';
@@ -603,6 +604,9 @@ const SystemModalContent: React.FC = () => {
 
           {/* In-app browser: sign-in state and cache */}
           <BrowserDataSection />
+
+          {/* Agent browser control: the production-visible master switch */}
+          <AgentBrowserControlSection />
 
           {/* Backup and restore: carrying this install to another machine */}
           <BackupSection />
