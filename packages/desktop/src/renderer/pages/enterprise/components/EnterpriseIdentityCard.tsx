@@ -110,12 +110,14 @@ const EnterpriseIdentityCard: React.FC = () => {
             label: t('common.enterprise.fieldMyDepartment', { defaultValue: '我所在部门' }),
             value:
               identity.department ??
-              t('common.enterprise.orgIdentityNeedsContacts', { defaultValue: '—（需飞书通讯录权限）' }),
+              t('common.enterprise.orgIdentityNeedsContacts', { defaultValue: '—（需通讯录字段读取权限）' }),
           },
           {
             label: t('common.enterprise.fieldMyJobTitle', { defaultValue: '我的职位' }),
             value: identity.jobTitle ?? '-',
           },
+          { label: t('common.enterprise.employeeNo'), value: identity.employeeNo || '—' },
+          { label: t('common.enterprise.enterpriseEmail'), value: identity.enterpriseEmail || '—' },
         ]}
       />
     </div>

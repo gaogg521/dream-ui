@@ -173,7 +173,12 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
         type: 'dream',
         name: input,
         model: current_model,
-        extra: { workspace: finalWorkspace, custom_workspace: isCustomWorkspace },
+        extra: {
+          workspace: finalWorkspace,
+          custom_workspace: isCustomWorkspace,
+          selected_mcp_server_ids: [],
+          selected_session_mcp_servers: [],
+        },
       });
       if (!conversation?.id) {
         Message.error(t('conversation.createFailed'));

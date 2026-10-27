@@ -3582,5 +3582,17 @@
     "saved": "已保存",
     "saveFailed": "保存失败",
     "restartHint": "需要重启应用后，智能体才能操作浏览器。"
-  }
+  },
+  "mcpQuotaReplace": "最多启用 20 个 MCP，请先移除旧项再加入新项。",
+  "mcpQuotaDescription": "每位用户最多启用 20 个 MCP。企业授权只决定可选范围，不会全量启用；系统必需工具不占名额。替换时先从当前选择移除旧项，加入新项，再统一保存。",
+  "mcpLocalSelection": "本机生效的 MCP",
+  "mcpCompanySelection": "从企业授权目录选择 MCP",
+  "mcpSaveSelection": "保存生效列表",
+  "mcpSaveCompanySelection": "保存企业选择并同步",
+  "mcpSelectionSaved": "MCP 生效列表已更新",
+  "mcpSelectionSyncFailed": "企业选择已保存，但本机同步失败。请检查连接；名额已满时先替换本机旧项，再重试。",
+  "mcpPreviousPage": "上一页",
+  "mcpNextPage": "下一页",
+  "mcpHistoricalSelectionRequired": "历史会话的超量 MCP 快照已清理，消息记录已保留。请重新选择不超过 20 个 MCP 后新建会话。",
+  "mcpOAuthPending": "授权尚未完成。当前请求到期后，请主动点击登录重试。"
 }

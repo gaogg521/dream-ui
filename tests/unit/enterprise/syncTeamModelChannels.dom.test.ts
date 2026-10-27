@@ -40,8 +40,8 @@ vi.mock('@/common', () => ({
     oneDevops: {
       listModelChannels: { invoke: hooks.listModelChannels },
       issueChannelToken: { invoke: hooks.issueChannelToken },
-      listSkills: { invoke: vi.fn() },
-      listMcpRegistry: { invoke: vi.fn() },
+      listRuntimeSkills: { invoke: vi.fn() },
+      listActiveMcp: { invoke: vi.fn() },
     },
     mode: {
       syncModelChannels: { invoke: hooks.syncModelChannels },

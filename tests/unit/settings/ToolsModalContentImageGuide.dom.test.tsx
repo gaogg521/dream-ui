@@ -38,6 +38,11 @@ vi.mock('@/renderer/pages/settings/ToolsSettings/McpServerItem', () => ({
   default: () => null,
 }));
 
+// The MCP activation picker is a combobox of its own; this suite is about the media sections.
+vi.mock('@/renderer/pages/settings/ToolsSettings/McpActivationPanel', () => ({
+  default: () => null,
+}));
+
 vi.mock('@/renderer/hooks/agent/useModelProviderList', () => ({
   useProvidersQuery: () => ({ data: hooks.providers }),
 }));

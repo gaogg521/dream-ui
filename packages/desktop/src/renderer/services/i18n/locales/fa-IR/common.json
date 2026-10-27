@@ -716,7 +716,7 @@
     "orgIdentitySource": "منبع احراز هویت",
     "orgIdentityCompany": "شرکت",
     "orgIdentityUnknownCompany": "—",
-    "orgIdentityNeedsContacts": "—(نیازمند دسترسی به مخاطبین Feishu)",
+    "orgIdentityNeedsContacts": "— (directory field access required)",
     "ssoProviderFeishu": "Feishu",
     "ssoProviderDingtalk": "DingTalk",
     "ssoProviderWecom": "WeCom",
@@ -829,7 +829,9 @@
     "serverAdjusted": "{{typed}} نقطهٔ ورود سرور سازمانی نیست؛ به‌جای آن به {{url}} متصل شد.",
     "serverErrSelf": "{{url}} کلاینت One Work همین دستگاه است، نه سرور سازمانی. نشانی سازمانی‌ای را که مدیر به شما داده وارد کنید (همان که برای باز کردن کنسول مدیریت در مرورگر استفاده می‌شود).",
     "serverErrNoEnterprise": "{{url}} پاسخ می‌دهد اما سرور سازمانی نیست (API سازمانی ندارد). معمولاً این نشانی یک کلاینت One Work است — شاید همین دستگاه — یا نسخهٔ سازمانی هنوز آنجا مستقر نشده است.",
-    "serverErrUnreachable": "دسترسی به {{url}} ممکن نیست. بررسی کنید نشانی با آنچه مدیر داده یکی باشد، سرور در حال اجرا باشد و دو دستگاه به هم دسترسی داشته باشند. نسخهٔ سازمانی معمولاً به پورت نیاز ندارد."
+    "serverErrUnreachable": "دسترسی به {{url}} ممکن نیست. بررسی کنید نشانی با آنچه مدیر داده یکی باشد، سرور در حال اجرا باشد و دو دستگاه به هم دسترسی داشته باشند. نسخهٔ سازمانی معمولاً به پورت نیاز ندارد.",
+    "employeeNo": "Employee number",
+    "enterpriseEmail": "Enterprise email"
   },
   "knowledgeLibrary": {
     "quickAdd": "افزودن سریع",

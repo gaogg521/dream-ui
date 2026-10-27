@@ -3361,5 +3361,17 @@
     "saved": "Gespeichert",
     "saveFailed": "Speichern fehlgeschlagen",
     "restartHint": "Starte die App neu, damit der Agent den Browser bedienen kann."
-  }
+  },
+  "mcpQuotaReplace": "Remove an existing MCP before adding another (maximum 20).",
+  "mcpQuotaDescription": "Choose up to 20 MCP servers. Company authorization only makes a connector available; it never activates the entire catalog. System tools do not use your quota. To replace a tool, remove it from this selection, add the new one, then save.",
+  "mcpLocalSelection": "Enabled MCP servers on this device",
+  "mcpCompanySelection": "Company MCP selection",
+  "mcpSaveSelection": "Save active selection",
+  "mcpSaveCompanySelection": "Save company selection and sync",
+  "mcpSelectionSaved": "MCP selection saved",
+  "mcpSelectionSyncFailed": "Selection saved, but device sync failed. Check the connection and replace personal MCPs if the quota is full, then retry.",
+  "mcpPreviousPage": "Previous page",
+  "mcpNextPage": "Next page",
+  "mcpHistoricalSelectionRequired": "An unsafe legacy MCP snapshot was cleared. Your messages are preserved. Start a new conversation with up to 20 selected MCP servers.",
+  "mcpOAuthPending": "Authorization did not complete. Retry explicitly after the pending request expires."
 }

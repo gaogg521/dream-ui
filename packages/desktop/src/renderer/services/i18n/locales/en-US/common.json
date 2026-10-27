@@ -259,7 +259,7 @@
     "orgIdentitySource": "Auth source",
     "orgIdentityCompany": "Company",
     "orgIdentityUnknownCompany": "—",
-    "orgIdentityNeedsContacts": "—(needs Feishu Contacts permission)",
+    "orgIdentityNeedsContacts": "— (directory field access required)",
     "ssoProviderFeishu": "Feishu",
     "ssoProviderDingtalk": "DingTalk",
     "ssoProviderWecom": "WeCom",
@@ -374,7 +374,9 @@
     "serverErrNoEnterprise": "{{url}} answers but is not an enterprise server (no enterprise API). Usually this is the address of a One Work client — possibly this machine — or the enterprise edition is not deployed there yet.",
     "serverErrUnreachable": "Can't reach {{url}}. Check that the address matches what your admin gave you, the server is running, and both machines can reach each other. The enterprise edition usually needs no port.",
     "distributedBadge": "Company",
-    "distributedHint": "Handed out by your company administrator. It updates with the company sync and cannot be edited here."
+    "distributedHint": "Handed out by your company administrator. It updates with the company sync and cannot be edited here.",
+    "employeeNo": "Employee number",
+    "enterpriseEmail": "Enterprise email"
   },
   "superAssistant": {
     "title": "Digital employees and scenes",

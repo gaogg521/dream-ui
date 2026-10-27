@@ -716,7 +716,7 @@
     "orgIdentitySource": "Kimlik doğrulama kaynağı",
     "orgIdentityCompany": "Şirket",
     "orgIdentityUnknownCompany": "—",
-    "orgIdentityNeedsContacts": "—(Feishu Kişiler izni gerekir)",
+    "orgIdentityNeedsContacts": "— (directory field access required)",
     "ssoProviderFeishu": "Feishu",
     "ssoProviderDingtalk": "DingTalk",
     "ssoProviderWecom": "WeCom",
@@ -829,7 +829,9 @@
     "serverAdjusted": "{{typed}} kurumsal sunucunun giriş noktası değil; bunun yerine {{url}} adresine bağlanıldı.",
     "serverErrSelf": "{{url}}, bu makinenin kendi One Work istemcisidir, kurumsal sunucu değildir. Yöneticinizin verdiği kurumsal adresi girin (yönetim konsolunu tarayıcıda açmak için kullanılan adres).",
     "serverErrNoEnterprise": "{{url}} yanıt veriyor ancak kurumsal sunucu değil (kurumsal API yok). Genellikle bu, bir One Work istemcisinin — belki bu makinenin — adresidir ya da kurumsal sürüm orada henüz dağıtılmamıştır.",
-    "serverErrUnreachable": "{{url}} adresine ulaşılamıyor. Adresin yöneticinizin verdiğiyle eşleştiğini, sunucunun çalıştığını ve iki makinenin birbirine ulaşabildiğini kontrol edin. Kurumsal sürüm genellikle bağlantı noktası gerektirmez."
+    "serverErrUnreachable": "{{url}} adresine ulaşılamıyor. Adresin yöneticinizin verdiğiyle eşleştiğini, sunucunun çalıştığını ve iki makinenin birbirine ulaşabildiğini kontrol edin. Kurumsal sürüm genellikle bağlantı noktası gerektirmez.",
+    "employeeNo": "Employee number",
+    "enterpriseEmail": "Enterprise email"
   },
   "knowledgeLibrary": {
     "quickAdd": "Hızlı ekle",

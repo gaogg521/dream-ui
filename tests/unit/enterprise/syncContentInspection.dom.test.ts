@@ -34,8 +34,8 @@ vi.mock('@/common', () => ({
     oneDevops: {
       listMyDlpRules: { invoke: hooks.listMyDlpRules },
       reportDlpEvents: { invoke: hooks.reportDlpEvents },
-      listSkills: { invoke: vi.fn() },
-      listMcpRegistry: { invoke: vi.fn() },
+      listRuntimeSkills: { invoke: vi.fn() },
+      listActiveMcp: { invoke: vi.fn() },
       listModelChannels: { invoke: vi.fn() },
       issueChannelToken: { invoke: vi.fn() },
     },

@@ -716,7 +716,7 @@
     "orgIdentitySource": "Origem da autenticação",
     "orgIdentityCompany": "Empresa",
     "orgIdentityUnknownCompany": "—",
-    "orgIdentityNeedsContacts": "—(requer a permissão de Contatos do Feishu)",
+    "orgIdentityNeedsContacts": "— (directory field access required)",
     "ssoProviderFeishu": "Feishu",
     "ssoProviderDingtalk": "DingTalk",
     "ssoProviderWecom": "WeCom",
@@ -829,7 +829,9 @@
     "serverAdjusted": "{{typed}} não é o ponto de entrada do servidor corporativo; conectado a {{url}} em vez disso.",
     "serverErrSelf": "{{url}} é o cliente One Work desta própria máquina, não um servidor corporativo. Insira o endereço corporativo que o administrador informou (o usado para abrir o console de administração no navegador).",
     "serverErrNoEnterprise": "{{url}} responde, mas não é um servidor corporativo (sem API corporativa). Geralmente é o endereço de um cliente One Work — possivelmente esta máquina — ou a edição Enterprise ainda não foi implantada lá.",
-    "serverErrUnreachable": "Não foi possível acessar {{url}}. Verifique se o endereço corresponde ao informado pelo administrador, se o servidor está em execução e se as duas máquinas conseguem se comunicar. A edição Enterprise geralmente não precisa de porta."
+    "serverErrUnreachable": "Não foi possível acessar {{url}}. Verifique se o endereço corresponde ao informado pelo administrador, se o servidor está em execução e se as duas máquinas conseguem se comunicar. A edição Enterprise geralmente não precisa de porta.",
+    "employeeNo": "Employee number",
+    "enterpriseEmail": "Enterprise email"
   },
   "knowledgeLibrary": {
     "quickAdd": "Adição rápida",

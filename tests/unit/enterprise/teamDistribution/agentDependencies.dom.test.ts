@@ -1,17 +1,29 @@
 /** @vitest-environment jsdom */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-const mocks = vi.hoisted(() => ({ bundle: vi.fn(), skills: vi.fn(), mcp: vi.fn(), sync: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  bundle: vi.fn(),
+  skills: vi.fn(),
+  mcp: vi.fn(),
+  bound: vi.fn(),
+  sync: vi.fn(),
+  syncMcp: vi.fn(),
+}));
 vi.mock('@/common', () => ({
   ipcBridge: {
     personalAgent: { getTeamSyncBundle: { invoke: mocks.bundle }, syncTeamAgents: { invoke: mocks.sync } },
-    oneDevops: { listSkills: { invoke: mocks.skills }, listMcpRegistry: { invoke: mocks.mcp } },
+    oneDevops: {
+      listRuntimeSkills: { invoke: mocks.skills },
+      listActiveMcp: { invoke: mocks.mcp },
+      listEmployeeBoundMcp: { invoke: mocks.bound },
+    },
+    fs: { syncTeamMcp: { invoke: mocks.syncMcp } },
   },
 }));
 vi.mock('@/common/adapter/enterpriseMode', () => ({
   getEnterpriseServerUrl: () => 'https://qa-company.example',
   getEnterpriseSession: () => null,
 }));
-import { syncTeamAgents } from '@/renderer/utils/enterprise/teamSkillSync';
+import { syncTeamAgents, syncTeamMcp } from '@/renderer/utils/enterprise/teamSkillSync';
 
 describe('authorized employee dependency bundle', () => {
   beforeEach(() => {
@@ -19,6 +31,61 @@ describe('authorized employee dependency bundle', () => {
     mocks.skills.mockResolvedValue([{ id: 'allowed-skill', enabled: true }]);
     mocks.mcp.mockResolvedValue([{ id: 'allowed-mcp', enabled: true }]);
     mocks.sync.mockResolvedValue({ written: ['employee'], removed: [], conflicts: [], kept: 1 });
+    // The authorized catalog has nothing for an unauthorized id.
+    mocks.bound.mockResolvedValue([]);
+    mocks.syncMcp.mockResolvedValue({ written: [], removed: [], conflicts: [], kept: 0 });
+  });
+  it('keeps a connector the employee binds even though the member did not select it', async () => {
+    mocks.bundle.mockResolvedValue({
+      agents: [
+        {
+          id: 'employee',
+          name: 'Employee',
+          agentType: 'dream',
+          automationConfig: { boundMcpIds: ['allowed-mcp', 'bound-only'] },
+        },
+      ],
+      assistants: [],
+    });
+    mocks.bound.mockResolvedValue([
+      { id: 'bound-only', name: 'Bound only', type: 'sse', endpoint: 'https://m/sse', enabled: true },
+    ]);
+    await syncTeamAgents();
+    // Only the unselected id is asked for, so the member's own selection is not re-fetched.
+    expect(mocks.bound).toHaveBeenCalledWith({ ids: ['bound-only'] });
+    expect(mocks.sync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agents: [
+          expect.objectContaining({
+            automationConfig: expect.objectContaining({ boundMcpIds: ['allowed-mcp', 'bound-only'] }),
+          }),
+        ],
+      })
+    );
+  });
+  it('materializes employee-bound connectors flagged outside the quota, authoritatively', async () => {
+    mocks.bundle.mockResolvedValue({
+      agents: [
+        { id: 'employee', name: 'Employee', agentType: 'dream', automationConfig: { boundMcpIds: ['bound-only'] } },
+      ],
+      assistants: [],
+    });
+    mocks.bound.mockResolvedValue([
+      { id: 'bound-only', name: 'Bound only', type: 'sse', endpoint: 'https://m/sse', enabled: true },
+    ]);
+    await syncTeamMcp();
+    expect(mocks.syncMcp).toHaveBeenCalledWith({
+      servers: [
+        expect.objectContaining({ id: 'allowed-mcp', employeeBound: false }),
+        expect.objectContaining({ id: 'bound-only', employeeBound: true }),
+      ],
+      authoritative: true,
+    });
+  });
+  it('does not wipe cached bound connectors when the employee list cannot be read', async () => {
+    mocks.bundle.mockRejectedValue(new TypeError('network offline'));
+    await syncTeamMcp();
+    expect(mocks.syncMcp).toHaveBeenCalledWith(expect.objectContaining({ authoritative: false }));
   });
   it('hands expert rules and source scope to the local materializer with authorized bindings', async () => {
     const assistants = [{ key: 'owner/expert', rules: 'Unique expert instructions' }];

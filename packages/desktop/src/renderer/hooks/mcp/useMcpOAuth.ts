@@ -1,4 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
+import { openExternalUrl } from '@/renderer/utils/platform';
+import { useTranslation } from 'react-i18next';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { mcpService } from '@/common/adapter/ipcBridge';
 import type { IMcpServer } from '@/common/config/storage';
 
@@ -19,6 +21,15 @@ const OAUTH_CHECK_CONCURRENCY = 8;
  * 处理 MCP 服务器的 OAuth 认证状态检查和登录流程
  */
 export const useMcpOAuth = () => {
+  const { t } = useTranslation();
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+  const loginInFlightRef = useRef(new Set<string>());
   const [oauthStatus, setOAuthStatus] = useState<Record<string, McpOAuthStatus>>({});
   const [loggingIn, setLoggingIn] = useState<Record<string, boolean>>({});
   // Enterprise deployments push hundreds of URL-based MCP servers, and every
@@ -111,10 +122,25 @@ export const useMcpOAuth = () => {
         };
       }
 
+      if (loginInFlightRef.current.has(serverUrl)) return { success: false, error: t('settings.mcpOAuthPending') };
+      loginInFlightRef.current.add(serverUrl);
       setLoggingIn((prev) => ({ ...prev, [server.id]: true }));
 
       try {
         const result = await mcpService.loginMcpOAuth.invoke({ server_url: serverUrl });
+        if (!mountedRef.current) return { success: false };
+        if (result.authorization_url) await openExternalUrl(result.authorization_url);
+        if (result.pending) {
+          for (let attempt = 0; attempt < 120; attempt++) {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            if (!mountedRef.current) return { success: false };
+            const status = await mcpService.checkOAuthStatus.invoke({ server_url: serverUrl });
+            if (status.authenticated) {
+              result.success = true;
+              break;
+            }
+          }
+        }
 
         if (result.success) {
           // 登录成功，更新状态
@@ -130,7 +156,7 @@ export const useMcpOAuth = () => {
         } else {
           return {
             success: false,
-            error: result.error || 'Login failed',
+            error: result.error || t('settings.mcpOAuthPending'),
           };
         }
       } catch (error) {
@@ -139,10 +165,11 @@ export const useMcpOAuth = () => {
           error: error instanceof Error ? error.message : 'Unknown error',
         };
       } finally {
-        setLoggingIn((prev) => ({ ...prev, [server.id]: false }));
+        loginInFlightRef.current.delete(serverUrl);
+        if (mountedRef.current) setLoggingIn((prev) => ({ ...prev, [server.id]: false }));
       }
     },
-    [getOAuthServerUrl]
+    [getOAuthServerUrl, t]
   );
 
   // 登出

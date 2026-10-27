@@ -716,7 +716,7 @@
     "orgIdentitySource": "認証ソース",
     "orgIdentityCompany": "会社",
     "orgIdentityUnknownCompany": "—",
-    "orgIdentityNeedsContacts": "—（Feishu の連絡先権限が必要です）",
+    "orgIdentityNeedsContacts": "— (directory field access required)",
     "ssoProviderFeishu": "Feishu",
     "ssoProviderDingtalk": "DingTalk",
     "ssoProviderWecom": "WeCom",
@@ -829,7 +829,9 @@
     "serverAdjusted": "{{typed}} は企業サーバーの入口ではありません。代わりに {{url}} に接続しました。",
     "serverErrSelf": "{{url}} はこのマシン自身の One Work クライアントで、企業サーバーではありません。管理者から案内された企業アドレス（ブラウザーで管理コンソールを開くときのもの）を入力してください。",
     "serverErrNoEnterprise": "{{url}} は応答しますが、企業サーバーではありません（企業 API がありません）。多くの場合、One Work クライアント（このマシンの可能性もあります）のアドレスか、そこにエンタープライズ版がまだデプロイされていません。",
-    "serverErrUnreachable": "{{url}} に接続できません。アドレスが管理者から案内されたものと一致しているか、サーバーが稼働しているか、両方のマシンが相互に通信できるかを確認してください。エンタープライズ版は通常ポート不要です。"
+    "serverErrUnreachable": "{{url}} に接続できません。アドレスが管理者から案内されたものと一致しているか、サーバーが稼働しているか、両方のマシンが相互に通信できるかを確認してください。エンタープライズ版は通常ポート不要です。",
+    "employeeNo": "Employee number",
+    "enterpriseEmail": "Enterprise email"
   },
   "knowledgeLibrary": {
     "quickAdd": "クイック追加",

@@ -716,7 +716,7 @@
     "orgIdentitySource": "인증 소스",
     "orgIdentityCompany": "회사",
     "orgIdentityUnknownCompany": "—",
-    "orgIdentityNeedsContacts": "—(Feishu 연락처 권한 필요)",
+    "orgIdentityNeedsContacts": "— (directory field access required)",
     "ssoProviderFeishu": "Feishu",
     "ssoProviderDingtalk": "DingTalk",
     "ssoProviderWecom": "WeCom",
@@ -829,7 +829,9 @@
     "serverAdjusted": "{{typed}}은(는) 기업 서버의 진입점이 아니어서 대신 {{url}}에 연결했습니다.",
     "serverErrSelf": "{{url}}은(는) 이 컴퓨터 자체의 One Work 클라이언트이며 기업 서버가 아닙니다. 관리자가 알려준 기업 주소(브라우저에서 관리 콘솔을 여는 데 쓰는 주소)를 입력하세요.",
     "serverErrNoEnterprise": "{{url}}이(가) 응답하지만 기업 서버가 아닙니다(기업 API 없음). 보통 One Work 클라이언트(이 컴퓨터일 수 있음)의 주소이거나 그곳에 엔터프라이즈 에디션이 아직 배포되지 않은 경우입니다.",
-    "serverErrUnreachable": "{{url}}에 연결할 수 없습니다. 주소가 관리자가 알려준 것과 일치하는지, 서버가 실행 중인지, 두 컴퓨터가 서로 통신할 수 있는지 확인하세요. 엔터프라이즈 에디션은 보통 포트가 필요하지 않습니다."
+    "serverErrUnreachable": "{{url}}에 연결할 수 없습니다. 주소가 관리자가 알려준 것과 일치하는지, 서버가 실행 중인지, 두 컴퓨터가 서로 통신할 수 있는지 확인하세요. 엔터프라이즈 에디션은 보통 포트가 필요하지 않습니다.",
+    "employeeNo": "Employee number",
+    "enterpriseEmail": "Enterprise email"
   },
   "knowledgeLibrary": {
     "quickAdd": "빠른 추가",

@@ -722,7 +722,7 @@
     "orgIdentitySource": "認證來源",
     "orgIdentityCompany": "所屬企業",
     "orgIdentityUnknownCompany": "—",
-    "orgIdentityNeedsContacts": "—（需飛書通訊錄許可權）",
+    "orgIdentityNeedsContacts": "— (directory field access required)",
     "ssoProviderFeishu": "飛書",
     "ssoProviderDingtalk": "釘釘",
     "ssoProviderWecom": "企業微信",
@@ -835,7 +835,9 @@
     "serverAdjusted": "{{typed}} 不是企業伺服器入口，已自動改用 {{url}}。",
     "serverErrSelf": "{{url}} 是本機 One Work 客戶端自己的地址，不是企業伺服器。請填寫管理員提供的企業版存取地址（瀏覽器開啟企業管理後台用的那個）。",
     "serverErrNoEnterprise": "{{url}} 能存取，但不是企業伺服器（沒有企業介面）。常見原因：填成了某臺 One Work 客戶端（包括本機）的地址，或對方還沒部署企業版。",
-    "serverErrUnreachable": "連線不上 {{url}}。請確認地址與管理員給的一致、對方伺服器已啟動、兩臺電腦網路互通；企業版通常不需要填寫埠。"
+    "serverErrUnreachable": "連線不上 {{url}}。請確認地址與管理員給的一致、對方伺服器已啟動、兩臺電腦網路互通；企業版通常不需要填寫埠。",
+    "employeeNo": "Employee number",
+    "enterpriseEmail": "Enterprise email"
   },
   "knowledgeLibrary": {
     "quickAdd": "快速新增",

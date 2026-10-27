@@ -13,7 +13,7 @@ import { classifyConfigSetError, useAcpConfigOptions } from '@/renderer/hooks/ag
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { usePresetAssistantInfo } from '@/renderer/hooks/agent/usePresetAssistantInfo';
 import { iconColors } from '@/renderer/styles/colors';
-import { Button, Dropdown, Menu, Message, Tooltip, Typography } from '@arco-design/web-react';
+import { Alert, Button, Dropdown, Menu, Message, Tooltip, Typography } from '@arco-design/web-react';
 import { History } from '@icon-park/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +41,12 @@ import LegacyReadOnlyConversation from '../platforms/legacy/LegacyReadOnlyConver
 import { useActiveLease } from '../hooks/useActiveLease';
 import { useConversationHistoryContextSafe } from '@/renderer/hooks/context/ConversationHistoryContext';
 // import SkillRuleGenerator from './components/SkillRuleGenerator'; // Temporarily hidden
+
+const McpRecoveryNotice = ({ conversation }: { conversation?: TChatConversation }) => {
+  const { t } = useTranslation();
+  if (!(conversation?.extra as { mcp_selection_required?: boolean } | undefined)?.mcp_selection_required) return null;
+  return <Alert type='warning' content={t('settings.mcpHistoricalSelectionRequired')} />;
+};
 
 const configErrorMessageKey = (error: unknown) => {
   const errorKind = classifyConfigSetError(error);
@@ -248,6 +254,7 @@ const DreamEngineConversationPanel: React.FC<{
 
   return (
     <ChatLayout {...chatLayoutProps} conversation_id={conversation.id}>
+      <McpRecoveryNotice conversation={conversation} />
       <DreamEngineChat
         conversation_id={conversation.id}
         workspace={conversation.extra.workspace}
@@ -438,6 +445,7 @@ const ChatConversation: React.FC<{
       }
       conversation_id={conversation?.id}
     >
+      <McpRecoveryNotice conversation={conversation} />
       {conversationNode}
     </ChatLayout>
   );

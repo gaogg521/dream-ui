@@ -26,6 +26,35 @@ async function refreshEmployeeViews(): Promise<void> {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('one-team-employees-changed'));
 }
 
+/** Connector ids that distributed digital employees bind, de-duplicated. */
+export function collectEmployeeBoundMcpIds(
+  agents: ReadonlyArray<{ automationConfig?: unknown }> | undefined
+): string[] {
+  const ids = new Set<string>();
+  for (const agent of agents ?? []) {
+    const raw = (agent.automationConfig as Record<string, unknown> | undefined)?.boundMcpIds;
+    if (!Array.isArray(raw)) continue;
+    for (const id of raw) if (typeof id === 'string') ids.add(id);
+  }
+  return [...ids];
+}
+
+type McpRegistryRows = Awaited<ReturnType<typeof ipcBridge.oneDevops.listActiveMcp.invoke>>;
+
+/**
+ * Connectors the employees bind that the member did not select. They are the
+ * administrator's choice for the employee, so they are fetched from the
+ * authorized catalog and never count against the member's 20.
+ */
+async function fetchEmployeeBoundMcp(
+  agents: ReadonlyArray<{ automationConfig?: unknown }> | undefined,
+  selectedIds: ReadonlySet<string>
+): Promise<McpRegistryRows> {
+  const ids = collectEmployeeBoundMcpIds(agents).filter((id) => !selectedIds.has(id));
+  if (ids.length === 0) return [];
+  return (await ipcBridge.oneDevops.listEmployeeBoundMcp.invoke({ ids })) ?? [];
+}
+
 export function filterTeamAgentBindings(
   config: Record<string, unknown>,
   enabledSkillIds: ReadonlySet<string>,
@@ -106,9 +135,10 @@ function purgeOnRevocation(error: unknown): Promise<void> {
  *   local backend reconciles server-side deletions.
  */
 export async function syncTeamSkills(isCurrent: () => boolean = () => true): Promise<TeamSkillSyncResult | null> {
-  let registrySkills: Awaited<ReturnType<typeof ipcBridge.oneDevops.listSkills.invoke>>;
+  let registrySkills: Awaited<ReturnType<typeof ipcBridge.oneDevops.listRuntimeSkills.invoke>>;
   try {
-    registrySkills = await ipcBridge.oneDevops.listSkills.invoke();
+    // Runtime view, not the admin list: an administrator's list keeps `{{config.*}}` literal for auditing.
+    registrySkills = await ipcBridge.oneDevops.listRuntimeSkills.invoke();
   } catch (error) {
     // Refused → this client is no longer entitled to the org's skills.
     // Unreachable → keep the local cache untouched (offline-first).
@@ -146,28 +176,46 @@ export async function syncTeamSkills(isCurrent: () => boolean = () => true): Pro
  * name are never clobbered (backend conflict guard).
  */
 export async function syncTeamMcp(isCurrent: () => boolean = () => true): Promise<TeamSkillSyncResult | null> {
-  let registry: Awaited<ReturnType<typeof ipcBridge.oneDevops.listMcpRegistry.invoke>>;
+  let registry: Awaited<ReturnType<typeof ipcBridge.oneDevops.listActiveMcp.invoke>>;
   try {
-    registry = await ipcBridge.oneDevops.listMcpRegistry.invoke();
+    registry = await ipcBridge.oneDevops.listActiveMcp.invoke();
   } catch (error) {
     if (isCurrent() && isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;
   }
 
-  const servers = (registry ?? [])
-    .filter((s) => s.enabled)
-    .map((s) => ({
-      id: s.id,
-      name: s.name,
-      type: s.type,
-      endpoint: s.endpoint ?? '',
-      enabled: s.enabled,
-      secretsJson: s.secretsJson ?? undefined,
-    }));
+  // Employee-bound connectors ride along (outside the member's quota). If they
+  // cannot be read, sync non-authoritatively so cached bound rows are not wiped.
+  let bound: McpRegistryRows = [];
+  let boundKnown = true;
+  try {
+    const bundle = await ipcBridge.personalAgent.getTeamSyncBundle.invoke();
+    bound = await fetchEmployeeBoundMcp(bundle?.agents, new Set((registry ?? []).map((s) => s.id)));
+  } catch (error) {
+    if (isMembershipRefused(error)) {
+      if (isCurrent()) await purgeOnRevocation(error);
+      return null;
+    }
+    boundKnown = false;
+  }
+
+  const toPayload = (s: McpRegistryRows[number], employeeBound: boolean) => ({
+    id: s.id,
+    name: s.name,
+    type: s.type,
+    endpoint: s.endpoint ?? '',
+    enabled: s.enabled,
+    secretsJson: s.secretsJson ?? undefined,
+    employeeBound,
+  });
+  const servers = [
+    ...(registry ?? []).filter((s) => s.enabled).map((s) => toPayload(s, false)),
+    ...bound.filter((s) => s.enabled).map((s) => toPayload(s, true)),
+  ];
 
   try {
     if (!isCurrent()) return null;
-    const report = await ipcBridge.fs.syncTeamMcp.invoke({ servers, authoritative: true });
+    const report = await ipcBridge.fs.syncTeamMcp.invoke({ servers, authoritative: boundKnown });
     return { written: report.written.length, removed: report.removed.length, kept: report.kept };
   } catch {
     return null;
@@ -468,18 +516,23 @@ export async function syncTeamAgents(isCurrent: () => boolean = () => true): Pro
   const sourceScope = getEnterpriseServerUrl() ?? 'local-enterprise';
   let team: Awaited<ReturnType<typeof ipcBridge.personalAgent.listTeamAgents.invoke>>;
   let assistants: unknown[];
-  let registrySkills: Awaited<ReturnType<typeof ipcBridge.oneDevops.listSkills.invoke>>;
-  let registryMcp: Awaited<ReturnType<typeof ipcBridge.oneDevops.listMcpRegistry.invoke>>;
+  let registrySkills: Awaited<ReturnType<typeof ipcBridge.oneDevops.listRuntimeSkills.invoke>>;
+  let registryMcp: Awaited<ReturnType<typeof ipcBridge.oneDevops.listActiveMcp.invoke>>;
   try {
     const [bundle, skills, mcp] = await Promise.all([
       ipcBridge.personalAgent.getTeamSyncBundle.invoke(),
-      ipcBridge.oneDevops.listSkills.invoke(),
-      ipcBridge.oneDevops.listMcpRegistry.invoke(),
+      ipcBridge.oneDevops.listRuntimeSkills.invoke(),
+      ipcBridge.oneDevops.listActiveMcp.invoke(),
     ]);
     team = bundle.agents;
     assistants = bundle.assistants;
     registrySkills = skills;
-    registryMcp = mcp;
+    // Bindings may name connectors the member never selected; those resolve
+    // from the authorized catalog and stay outside the member's 20.
+    registryMcp = [
+      ...(mcp ?? []),
+      ...(await fetchEmployeeBoundMcp(bundle.agents, new Set((mcp ?? []).map((server) => server.id)))),
+    ];
   } catch (error) {
     if (isCurrent() && isMembershipRefused(error)) await purgeOnRevocation(error);
     return null;

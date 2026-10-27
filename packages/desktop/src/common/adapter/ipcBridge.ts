@@ -1168,6 +1168,8 @@ export const fs = {
         endpoint: string;
         enabled: boolean;
         secretsJson?: string;
+        /** Bound by a distributed employee only: kept outside the member's 20-connector quota. */
+        employeeBound?: boolean;
       }>;
       authoritative: boolean;
     }
@@ -1695,6 +1697,7 @@ export const mcpService = {
     (p) => p.data
   ),
   deleteServer: httpDelete<void, { id: string }>((p) => `/api/mcp/servers/${p.id}`),
+  replaceSelection: httpPut<IMcpServer[], { ids: string[] }>('/api/mcp/selection'),
   toggleServer: httpPost<IMcpServer, { id: string }>(
     (p) => `/api/mcp/servers/${p.id}/toggle`,
     () => undefined
@@ -1740,7 +1743,10 @@ export const mcpService = {
     IMcpServer & { runtime_scope_id?: string }
   >('/api/mcp/test-connection'),
   checkOAuthStatus: httpPost<{ authenticated: boolean }, { server_url: string }>('/api/mcp/oauth/check-status'),
-  loginMcpOAuth: httpPost<{ success: boolean; error?: string }, { server_url: string }>('/api/mcp/oauth/login'),
+  loginMcpOAuth: httpPost<
+    { success: boolean; pending?: boolean; authorization_url?: string; error?: string },
+    { server_url: string }
+  >('/api/mcp/oauth/login'),
   logoutMcpOAuth: httpPost<void, { server_url: string }>('/api/mcp/oauth/logout'),
   getAuthenticatedServers: httpGet<string[], void>('/api/mcp/oauth/authenticated'),
 };
@@ -3305,9 +3311,21 @@ export const oneDevops = {
     (p) => ({ body: p.body })
   ),
   listSkills: httpGet<SkillRegistryEntry[], void>('/api/one/devops/skills'),
+  /** Consumption view: published + enabled skills with `{{config.*}}` expanded; used for local sync. */
+  listRuntimeSkills: httpGet<SkillRegistryEntry[], void>('/api/one/devops/skills/runtime'),
   upsertSkill: httpPost<SkillRegistryEntry, UpsertSkillInput>('/api/one/devops/skills'),
   deleteSkill: httpDelete<void, { id: string }>((p) => `/api/one/devops/skills/${p.id}`),
   listMcpRegistry: httpGet<McpRegistryEntry[], void>('/api/one/devops/mcp-registry'),
+  listActiveMcp: httpGet<McpRegistryEntry[], void>('/api/one/devops/mcp-active'),
+  /** Connectors digital employees bind, resolved against the authorized catalog (not the member's selection). */
+  listEmployeeBoundMcp: httpPost<McpRegistryEntry[], { ids: string[] }>('/api/one/devops/mcp-bound'),
+  getMcpSelection: httpGet<{ selectedIds: string[]; maxCount: number }, void>('/api/one/devops/mcp-selection'),
+  replaceMcpSelection: httpPut<{ selectedIds: string[]; maxCount: number }, { selectedIds: string[] }>(
+    '/api/one/devops/mcp-selection'
+  ),
+  getMcpCatalog: httpGet<Array<{ id: string; name: string }>, { q: string; offset: number }>(
+    (p) => `/api/one/devops/mcp-catalog?q=${encodeURIComponent(p.q)}&offset=${p.offset}`
+  ),
   upsertMcpRegistry: httpPost<McpRegistryEntry, UpsertMcpRegistryInput>('/api/one/devops/mcp-registry'),
   deleteMcpRegistry: httpDelete<void, { id: string }>((p) => `/api/one/devops/mcp-registry/${p.id}`),
   // Company model channels. The listing never carries a credential — see

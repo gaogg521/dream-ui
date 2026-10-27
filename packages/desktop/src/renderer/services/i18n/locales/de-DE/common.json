@@ -716,7 +716,7 @@
     "orgIdentitySource": "Authentifizierungsquelle",
     "orgIdentityCompany": "Unternehmen",
     "orgIdentityUnknownCompany": "—",
-    "orgIdentityNeedsContacts": "—(erfordert die Berechtigung „Feishu-Kontakte“)",
+    "orgIdentityNeedsContacts": "— (directory field access required)",
     "ssoProviderFeishu": "Feishu",
     "ssoProviderDingtalk": "DingTalk",
     "ssoProviderWecom": "WeCom",
@@ -829,7 +829,9 @@
     "serverAdjusted": "{{typed}} ist nicht der Einstiegspunkt des Unternehmensservers; stattdessen wurde {{url}} verbunden.",
     "serverErrSelf": "{{url}} ist der One-Work-Client dieses Rechners, kein Unternehmensserver. Gib die Unternehmensadresse ein, die dir dein Administrator genannt hat (die, mit der die Admin-Konsole im Browser geöffnet wird).",
     "serverErrNoEnterprise": "{{url}} antwortet, ist aber kein Unternehmensserver (keine Unternehmens-API). Meist ist das die Adresse eines One-Work-Clients – möglicherweise dieses Rechners – oder die Enterprise-Edition ist dort noch nicht bereitgestellt.",
-    "serverErrUnreachable": "{{url}} ist nicht erreichbar. Prüfe, ob die Adresse mit der von deinem Administrator übereinstimmt, der Server läuft und beide Rechner einander erreichen können. Die Enterprise-Edition braucht meist keinen Port."
+    "serverErrUnreachable": "{{url}} ist nicht erreichbar. Prüfe, ob die Adresse mit der von deinem Administrator übereinstimmt, der Server läuft und beide Rechner einander erreichen können. Die Enterprise-Edition braucht meist keinen Port.",
+    "employeeNo": "Employee number",
+    "enterpriseEmail": "Enterprise email"
   },
   "knowledgeLibrary": {
     "quickAdd": "Schnell hinzufügen",

@@ -22,7 +22,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const hooks = vi.hoisted(() => ({
   listSkills: vi.fn(),
-  listMcpRegistry: vi.fn(),
+  listActiveMcp: vi.fn(),
   listModelChannels: vi.fn(),
   issueChannelToken: vi.fn(),
   syncTeamSkills: vi.fn(),
@@ -42,8 +42,8 @@ const hooks = vi.hoisted(() => ({
 vi.mock('@/common', () => ({
   ipcBridge: {
     oneDevops: {
-      listSkills: { invoke: hooks.listSkills },
-      listMcpRegistry: { invoke: hooks.listMcpRegistry },
+      listRuntimeSkills: { invoke: hooks.listSkills },
+      listActiveMcp: { invoke: hooks.listActiveMcp },
       listModelChannels: { invoke: hooks.listModelChannels },
       issueChannelToken: { invoke: hooks.issueChannelToken },
     },
@@ -194,7 +194,7 @@ describe('team resources when membership is refused', () => {
   });
 
   it('purges when the MCP registry refuses', async () => {
-    hooks.listMcpRegistry.mockRejectedValue(refusal(403));
+    hooks.listActiveMcp.mockRejectedValue(refusal(403));
     await expect(syncTeamMcp()).resolves.toBeNull();
     expect(purged()).toBe(true);
   });
@@ -224,7 +224,7 @@ describe('team resources when membership is refused', () => {
 
   it('purges once per revocation, not once per registry that noticed it', async () => {
     hooks.listSkills.mockRejectedValue(refusal(403));
-    hooks.listMcpRegistry.mockRejectedValue(refusal(403));
+    hooks.listActiveMcp.mockRejectedValue(refusal(403));
     hooks.listModelChannels.mockRejectedValue(refusal(403));
 
     // One sync cycle: all three registries refuse at once.
@@ -253,7 +253,7 @@ describe('C1-2: a blocked machine', () => {
 
   it('emits once per revocation, not once per registry that noticed it', async () => {
     hooks.listSkills.mockRejectedValue(machineBlocked());
-    hooks.listMcpRegistry.mockRejectedValue(machineBlocked());
+    hooks.listActiveMcp.mockRejectedValue(machineBlocked());
     hooks.listModelChannels.mockRejectedValue(machineBlocked());
 
     await Promise.all([syncTeamSkills(), syncTeamMcp(), syncTeamModelChannels()]);

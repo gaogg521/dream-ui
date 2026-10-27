@@ -719,7 +719,7 @@
     "orgIdentitySource": "Джерело автентифікації",
     "orgIdentityCompany": "Компанія",
     "orgIdentityUnknownCompany": "—",
-    "orgIdentityNeedsContacts": "—(потрібен дозвіл на контакти Feishu)",
+    "orgIdentityNeedsContacts": "— (directory field access required)",
     "ssoProviderFeishu": "Feishu",
     "ssoProviderDingtalk": "DingTalk",
     "ssoProviderWecom": "WeCom",
@@ -832,7 +832,9 @@
     "serverAdjusted": "{{typed}} не є точкою входу корпоративного сервера; натомість підключено до {{url}}.",
     "serverErrSelf": "{{url}} — це власний клієнт One Work цього комп’ютера, а не корпоративний сервер. Введіть корпоративну адресу, яку надав адміністратор (ту, за якою в браузері відкривається консоль адміністратора).",
     "serverErrNoEnterprise": "{{url}} відповідає, але не є корпоративним сервером (немає корпоративного API). Зазвичай це адреса клієнта One Work — можливо, цього комп’ютера — або корпоративну редакцію там ще не розгорнуто.",
-    "serverErrUnreachable": "Не вдається зв’язатися з {{url}}. Перевірте, що адреса збігається з наданою адміністратором, сервер запущено й обидва комп’ютери можуть зв’язатися один з одним. Корпоративній редакції зазвичай порт не потрібен."
+    "serverErrUnreachable": "Не вдається зв’язатися з {{url}}. Перевірте, що адреса збігається з наданою адміністратором, сервер запущено й обидва комп’ютери можуть зв’язатися один з одним. Корпоративній редакції зазвичай порт не потрібен.",
+    "employeeNo": "Employee number",
+    "enterpriseEmail": "Enterprise email"
   },
   "knowledgeLibrary": {
     "quickAdd": "Швидко додати",

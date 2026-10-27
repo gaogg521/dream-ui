@@ -1,3 +1,4 @@
+import McpActivationPanel from './McpActivationPanel';
 import { Button, Collapse, Dropdown, Menu, Modal } from '@arco-design/web-react';
 import { Down, Plus } from '@icon-park/react';
 import React from 'react';
@@ -152,6 +153,7 @@ const McpManagement: React.FC<McpManagementProps> = ({ message }) => {
 
   return (
     <div>
+      <McpActivationPanel servers={mcpServers} onChanged={setMcpServers} />
       <Collapse.Item
         className={' [&_div.arco-collapse-item-header-title]:flex-1'}
         header={

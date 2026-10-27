@@ -38,6 +38,8 @@ export type EnterpriseIdentity = {
   displayName?: string | null;
   department?: string | null;
   jobTitle?: string | null;
+  employeeNo?: string | null;
+  enterpriseEmail?: string | null;
   role: string;
 };
 

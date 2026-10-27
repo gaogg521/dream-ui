@@ -1,3 +1,4 @@
+import McpActivationPanel from '@/renderer/pages/settings/ToolsSettings/McpActivationPanel';
 /**
  * Copyright 2026 One Work
  */
@@ -310,6 +311,7 @@ const ModalMcpManagementSection: React.FC<{
 
   return (
     <div className='flex flex-col gap-16px min-h-0'>
+      <McpActivationPanel servers={mcpServers} onChanged={setMcpServers} />
       <div className='flex gap-8px items-center justify-between'>
         <div className='text-14px text-t-primary'>{t('settings.mcpSettings')}</div>
         <div>{renderAddButton()}</div>
