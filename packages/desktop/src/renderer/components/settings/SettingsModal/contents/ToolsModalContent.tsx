@@ -150,7 +150,15 @@ const ModalMcpManagementSection: React.FC<{
   isPageMode?: boolean;
 }> = ({ message, mcpServers, extensionMcpServers, setMcpServers, saveMcpServers, isPageMode }) => {
   const { t } = useTranslation();
-  const { oauthStatus, loggingIn, checkOAuthStatus, markLoginRequired, clearLoginRequired, login } = useMcpOAuth();
+  const {
+    oauthStatus,
+    loggingIn,
+    checkOAuthStatus,
+    checkMultipleServers,
+    markLoginRequired,
+    clearLoginRequired,
+    login,
+  } = useMcpOAuth();
   const visibleMcpServers = useMemo(
     () => mcpServers.filter((server) => !isBuiltinImageGenServer(server)),
     [mcpServers]
@@ -238,16 +246,33 @@ const ModalMcpManagementSection: React.FC<{
 
   const [importMode, setImportMode] = useState<'json' | 'oneclick'>('json');
 
+  // Key on the URL set, not the array identity: mcpServers gets a new
+  // reference on every status write (and SWR refresh), which would re-run
+  // this effect dozens of times per minute for an unchanged server list.
+  const urlBasedServerKey = useMemo(
+    () =>
+      mcpServers
+        .filter(
+          (s) => s.transport.type === 'http' || s.transport.type === 'sse' || s.transport.type === 'streamable_http'
+        )
+        .map((s) => s.id)
+        .sort()
+        .join('|'),
+    [mcpServers]
+  );
+
   useEffect(() => {
     const httpServers = mcpServers.filter(
       (s) => s.transport.type === 'http' || s.transport.type === 'sse' || s.transport.type === 'streamable_http'
     );
+    // Batched + throttled inside useMcpOAuth: enterprise pushes can list
+    // hundreds of URL servers, so per-server direct calls here once stormed
+    // the backend with concurrent OAuth checks.
     if (httpServers.length > 0) {
-      httpServers.forEach((server) => {
-        void checkOAuthStatus(server);
-      });
+      void checkMultipleServers(httpServers);
     }
-  }, [mcpServers, checkOAuthStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlBasedServerKey, checkMultipleServers]);
 
   const handleConfirmDelete = useCallback(async () => {
     if (!serverToDelete) return;

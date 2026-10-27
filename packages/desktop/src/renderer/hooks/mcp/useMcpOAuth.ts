@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { mcpService } from '@/common/adapter/ipcBridge';
 import type { IMcpServer } from '@/common/config/storage';
 
@@ -9,6 +9,11 @@ export interface McpOAuthStatus {
   error?: string;
 }
 
+/** Minimum interval between two OAuth status checks for the same server. */
+const OAUTH_CHECK_THROTTLE_MS = 30_000;
+/** Upper bound on concurrent OAuth status requests. */
+const OAUTH_CHECK_CONCURRENCY = 8;
+
 /**
  * MCP OAuth 管理 Hook
  * 处理 MCP 服务器的 OAuth 认证状态检查和登录流程
@@ -16,6 +21,13 @@ export interface McpOAuthStatus {
 export const useMcpOAuth = () => {
   const [oauthStatus, setOAuthStatus] = useState<Record<string, McpOAuthStatus>>({});
   const [loggingIn, setLoggingIn] = useState<Record<string, boolean>>({});
+  // Enterprise deployments push hundreds of URL-based MCP servers, and every
+  // mcpServers state update re-runs the effects that call checkOAuthStatus.
+  // Without per-server dedupe and throttling that meant hundreds of
+  // concurrent backend requests within a second — the OAuth-check storm that
+  // froze the client after an enterprise join.
+  const lastCheckAtRef = useRef(new Map<string, number>());
+  const inFlightRef = useRef(new Set<string>());
 
   const getOAuthServerUrl = useCallback((server: IMcpServer): string | null => {
     if (
@@ -30,11 +42,24 @@ export const useMcpOAuth = () => {
 
   // 检查 OAuth 状态
   const checkOAuthStatus = useCallback(
-    async (server: IMcpServer) => {
+    async (server: IMcpServer, options?: { force?: boolean }) => {
       const serverUrl = getOAuthServerUrl(server);
       if (!serverUrl) {
         return;
       }
+
+      const throttleKey = `${server.id}|${serverUrl}`;
+      if (!options?.force) {
+        if (inFlightRef.current.has(throttleKey)) {
+          return;
+        }
+        const lastCheckedAt = lastCheckAtRef.current.get(throttleKey) ?? 0;
+        if (Date.now() - lastCheckedAt < OAUTH_CHECK_THROTTLE_MS) {
+          return;
+        }
+      }
+      lastCheckAtRef.current.set(throttleKey, Date.now());
+      inFlightRef.current.add(throttleKey);
 
       setOAuthStatus((prev) => ({
         ...prev,
@@ -68,6 +93,8 @@ export const useMcpOAuth = () => {
             error: error instanceof Error ? error.message : 'Unknown error',
           },
         }));
+      } finally {
+        inFlightRef.current.delete(throttleKey);
       }
     },
     [getOAuthServerUrl]
@@ -152,12 +179,22 @@ export const useMcpOAuth = () => {
     [getOAuthServerUrl]
   );
 
-  // 批量检查多个服务器的 OAuth 状态
+  // 批量检查多个服务器的 OAuth 状态（并发受限，避免同时打出几百个请求）
   const checkMultipleServers = useCallback(
     async (servers: IMcpServer[]) => {
       const httpServers = servers.filter((s) => getOAuthServerUrl(s));
+      if (httpServers.length === 0) {
+        return;
+      }
 
-      await Promise.all(httpServers.map((server) => checkOAuthStatus(server)));
+      let cursor = 0;
+      const workers = Array.from({ length: Math.min(OAUTH_CHECK_CONCURRENCY, httpServers.length) }, async () => {
+        while (cursor < httpServers.length) {
+          const server = httpServers[cursor++];
+          await checkOAuthStatus(server);
+        }
+      });
+      await Promise.all(workers);
     },
     [checkOAuthStatus, getOAuthServerUrl]
   );

@@ -21,7 +21,15 @@ const McpManagement: React.FC<McpManagementProps> = ({ message }) => {
   const { t } = useTranslation();
   const { mcpServers, extensionMcpServers, saveMcpServers, setMcpServers } = useMcpServers();
   const visibleMcpServers = React.useMemo(() => mcpServers.filter(isVisibleMcpServer), [mcpServers]);
-  const { oauthStatus, loggingIn, checkOAuthStatus, markLoginRequired, clearLoginRequired, login } = useMcpOAuth();
+  const {
+    oauthStatus,
+    loggingIn,
+    checkOAuthStatus,
+    checkMultipleServers,
+    markLoginRequired,
+    clearLoginRequired,
+    login,
+  } = useMcpOAuth();
   const handleAuthRequired = React.useCallback(
     (server: IMcpServer) => {
       markLoginRequired(server.id);
@@ -109,11 +117,29 @@ const McpManagement: React.FC<McpManagementProps> = ({ message }) => {
 
   const [importMode, setImportMode] = React.useState<'json' | 'oneclick'>('json');
 
+  // Key on the server-id set, not the array identity: mcpServers gets a new
+  // reference on every status write (and SWR refresh), which would re-run
+  // this effect dozens of times per minute for an unchanged server list.
+  const urlBasedServerKey = React.useMemo(
+    () =>
+      mcpServers
+        .filter(isOAuthCapableServer)
+        .map((server) => server.id)
+        .sort()
+        .join('|'),
+    [mcpServers]
+  );
+
   React.useEffect(() => {
-    mcpServers.filter(isOAuthCapableServer).forEach((server) => {
-      void checkOAuthStatus(server);
-    });
-  }, [checkOAuthStatus, mcpServers]);
+    // Batched + throttled inside useMcpOAuth: enterprise pushes can list
+    // hundreds of URL servers, so per-server direct calls here once stormed
+    // the backend with concurrent OAuth checks.
+    const httpServers = mcpServers.filter(isOAuthCapableServer);
+    if (httpServers.length > 0) {
+      void checkMultipleServers(httpServers);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlBasedServerKey, checkMultipleServers]);
 
   const handleConfirmDelete = React.useCallback(async () => {
     if (!serverToDelete) {
