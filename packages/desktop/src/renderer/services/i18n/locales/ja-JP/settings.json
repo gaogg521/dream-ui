@@ -2143,7 +2143,8 @@
     "connectionSignInRequired": "企業ログインの有効期限切れ",
     "connectionUnavailable": "企業接続エラー",
     "checkConnection": "企業接続を確認",
-    "offlineFallback": "企業サーバーに15分間接続できないため、個人モードに切り替えました。企業接続設定から再接続できます。"
+    "offlineFallback": "企業サーバーに15分間接続できないため、個人モードに切り替えました。企業接続設定から再接続できます。",
+    "leaveEnterprise": "企業から退出"
   },
   "enterpriseChannel": "組織配布",
   "enterpriseChannelTip": "このモデルチャネルは会社が一括設定しています。認証情報は会社のサーバーに保管され、ここでは変更・削除できません。",

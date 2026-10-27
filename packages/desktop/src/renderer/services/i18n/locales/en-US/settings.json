@@ -2147,7 +2147,8 @@
     "connectionSignInRequired": "Enterprise sign-in expired",
     "connectionUnavailable": "Enterprise connection unavailable",
     "checkConnection": "Check enterprise connection",
-    "offlineFallback": "The enterprise server has been unreachable for 15 minutes. Switched to personal mode. Reconnect in enterprise connection settings."
+    "offlineFallback": "The enterprise server has been unreachable for 15 minutes. Switched to personal mode. Reconnect in enterprise connection settings.",
+    "leaveEnterprise": "Leave enterprise"
   },
   "codexBridge.title": "Codex Bridge",
   "codexBridge.description": "Let the external Codex CLI use one of your own configured models instead of its default OpenAI/ChatGPT account, by routing its requests through this app's local compatibility bridge.",

@@ -4991,6 +4991,7 @@ export type I18nKey =
   | 'settings.workspaceIdentity.guestName'
   | 'settings.workspaceIdentity.guestTitle'
   | 'settings.workspaceIdentity.joinProjectGroup'
+  | 'settings.workspaceIdentity.leaveEnterprise'
   | 'settings.workspaceIdentity.memberDesc'
   | 'settings.workspaceIdentity.myGroupsTitle'
   | 'settings.workspaceIdentity.noProjectGroupLine'

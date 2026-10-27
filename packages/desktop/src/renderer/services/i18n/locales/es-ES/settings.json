@@ -2141,7 +2141,8 @@
     "connectionSignInRequired": "Inicio de sesión empresarial caducado",
     "connectionUnavailable": "Conexión empresarial no disponible",
     "checkConnection": "Comprobar conexión empresarial",
-    "offlineFallback": "El servidor empresarial lleva 15 minutos inaccesible. Se cambió al modo personal. Puede reconectarse en los ajustes de conexión empresarial."
+    "offlineFallback": "El servidor empresarial lleva 15 minutos inaccesible. Se cambió al modo personal. Puede reconectarse en los ajustes de conexión empresarial.",
+    "leaveEnterprise": "Salir de la empresa"
   },
   "enterpriseChannel": "Canal de empresa",
   "enterpriseChannelTip": "Este canal de modelos lo proporciona tu empresa. Sus credenciales permanecen en el servidor de la empresa y no se puede modificar ni eliminar aquí.",

@@ -2141,7 +2141,8 @@
     "connectionSignInRequired": "Unternehmensanmeldung abgelaufen",
     "connectionUnavailable": "Unternehmensverbindung nicht verfügbar",
     "checkConnection": "Unternehmensverbindung prüfen",
-    "offlineFallback": "Der Unternehmensserver ist seit 15 Minuten nicht erreichbar. Zum persönlichen Modus gewechselt. Erneute Verbindung in den Unternehmenseinstellungen möglich."
+    "offlineFallback": "Der Unternehmensserver ist seit 15 Minuten nicht erreichbar. Zum persönlichen Modus gewechselt. Erneute Verbindung in den Unternehmenseinstellungen möglich.",
+    "leaveEnterprise": "Unternehmen verlassen"
   },
   "enterpriseChannel": "Unternehmenskanal",
   "enterpriseChannelTip": "Dieser Modellkanal wird von Ihrem Unternehmen bereitgestellt. Die Zugangsdaten verbleiben auf dem Unternehmensserver; er kann hier nicht geändert oder entfernt werden.",

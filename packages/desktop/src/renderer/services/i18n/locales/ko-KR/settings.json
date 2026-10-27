@@ -2143,7 +2143,8 @@
     "connectionSignInRequired": "기업 로그인 만료",
     "connectionUnavailable": "기업 연결 오류",
     "checkConnection": "기업 연결 확인",
-    "offlineFallback": "기업 서버에 15분 동안 연결할 수 없어 개인 모드로 전환했습니다. 기업 연결 설정에서 다시 연결할 수 있습니다."
+    "offlineFallback": "기업 서버에 15분 동안 연결할 수 없어 개인 모드로 전환했습니다. 기업 연결 설정에서 다시 연결할 수 있습니다.",
+    "leaveEnterprise": "기업 나가기"
   },
   "enterpriseChannel": "회사 채널",
   "enterpriseChannelTip": "이 모델 채널은 회사에서 제공합니다. 자격 증명은 회사 서버에 보관되며 여기서는 변경하거나 삭제할 수 없습니다.",

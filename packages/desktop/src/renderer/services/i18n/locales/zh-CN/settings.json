@@ -2148,7 +2148,8 @@
     "connectionSignInRequired": "企业登录已失效",
     "connectionUnavailable": "企业连接异常",
     "checkConnection": "检查企业连接",
-    "offlineFallback": "企业服务器连续 15 分钟不可达，已切回个人模式。可在企业连接设置中重新连接。"
+    "offlineFallback": "企业服务器连续 15 分钟不可达，已切回个人模式。可在企业连接设置中重新连接。",
+    "leaveEnterprise": "退出企业"
   },
   "codexBridge.title": "Codex 桥接",
   "codexBridge.description": "让外部 Codex CLI 使用你自己配置的模型，而不是它默认的 OpenAI/ChatGPT 账号——请求会通过本应用的本地兼容桥接转发。",

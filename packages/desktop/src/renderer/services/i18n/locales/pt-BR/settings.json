@@ -2144,7 +2144,8 @@
     "connectionSignInRequired": "Login empresarial expirado",
     "connectionUnavailable": "Conexão empresarial indisponível",
     "checkConnection": "Verificar conexão empresarial",
-    "offlineFallback": "O servidor empresarial está inacessível há 15 minutos. Alternado para o modo pessoal. Reconecte nas configurações de conexão empresarial."
+    "offlineFallback": "O servidor empresarial está inacessível há 15 minutos. Alternado para o modo pessoal. Reconecte nas configurações de conexão empresarial.",
+    "leaveEnterprise": "Sair da empresa"
   },
   "enterpriseChannel": "Canal da empresa",
   "enterpriseChannelTip": "Este canal de modelos é fornecido pela sua empresa. As credenciais ficam no servidor da empresa e ele não pode ser alterado nem removido aqui.",

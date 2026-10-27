@@ -4,14 +4,16 @@
  */
 
 import React, { useCallback, useEffect } from 'react';
-import { Avatar, Dropdown, Menu, Message } from '@arco-design/web-react';
-import { Check, Earth, Login, Peoples, Setting } from '@icon-park/react';
+import { Avatar, Dropdown, Menu, Message, Modal } from '@arco-design/web-react';
+import { Check, Earth, Login, Peoples, Power, Setting } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ipcBridge } from '@/common';
+import { DEPLOYMENT_ROLE_CHANGED_EVENT } from '@/common/config/webuiEnterpriseConfig';
 import {
   getEnterpriseSession,
   isEnterpriseModeEnabled,
+  setEnterpriseModeEnabled,
   ENTERPRISE_OFFLINE_FALLBACK_EVENT,
 } from '@/common/adapter/enterpriseMode';
 import {
@@ -160,6 +162,24 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
     }
   }, [t]);
 
+  // Same flow as the server card's 断开连接 (EnterpriseServerCard): keep the
+  // remembered session so reconnecting never needs a fresh SSO login, flip the
+  // mode off, and reload so every view re-reads from the personal workspace.
+  const handleLeaveEnterprise = useCallback(() => {
+    Modal.confirm({
+      title: t('common.enterprise.remoteDisableTitle', { defaultValue: '断开企业服务器' }),
+      content: t('common.enterprise.remoteDisableHint', {
+        defaultValue:
+          '断开后企业成员/邀请码/团队资源将不再从服务器获取，本机个人数据不受影响。远端登录状态会保留，下次连接无需重新登录。',
+      }),
+      onOk: () => {
+        setEnterpriseModeEnabled(false);
+        window.dispatchEvent(new CustomEvent(DEPLOYMENT_ROLE_CHANGED_EVENT));
+        window.location.reload();
+      },
+    });
+  }, [t]);
+
   // The org-admin console entry is only reachable from this dropdown today
   // (SiderEnterpriseEntry isn't mounted in the main nav), so a member who has
   // already joined must see membership-aware actions here — not the generic
@@ -212,6 +232,7 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
         if (key === 'admin') void handleAdminLogin();
         if (key === 'console') void handleAdminLogin();
         if (key === 'settings') navigate('/settings/enterprise');
+        if (key === 'leaveEnterprise') handleLeaveEnterprise();
       }}
     >
       {/* Header — a title, deliberately NOT a copy of the trigger pill. The pill
@@ -307,6 +328,18 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
           <span className={styles.actionRow}>
             <Earth theme='outline' size={15} />
             {t('settings.workspaceIdentity.guestAdminLogin', { defaultValue: 'WebUI 管理员登录' })}
+          </span>
+        </Menu.Item>
+      ) : null}
+      {/* Leave-enterprise shortcut. Shown whenever the connect toggle is on —
+          including expired-session and server-unreachable states, where the
+          identity branches above degrade but leaving must stay available.
+          Same confirm + semantics as the server card's 断开连接. */}
+      {isRemoteConnected ? (
+        <Menu.Item key='leaveEnterprise'>
+          <span className={styles.actionRow} style={{ color: 'rgb(var(--danger-6))' }}>
+            <Power theme='outline' size={15} />
+            {t('settings.workspaceIdentity.leaveEnterprise', { defaultValue: '退出企业' })}
           </span>
         </Menu.Item>
       ) : null}
