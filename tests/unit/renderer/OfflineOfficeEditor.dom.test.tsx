@@ -94,7 +94,7 @@ describe('offline Office persistence', () => {
     vi.mocked(api.flush).mockResolvedValue(true);
     fireEvent.click(screen.getByText('leave'));
     expect(await screen.findByText('destination')).toBeTruthy();
-    expect(api.close).toHaveBeenCalledWith('session');
+    await waitFor(() => expect(api.close).toHaveBeenCalledWith('session'));
   });
   it('boots a spare engine once the document is on screen, for 编辑 and the next open', async () => {
     await open();
