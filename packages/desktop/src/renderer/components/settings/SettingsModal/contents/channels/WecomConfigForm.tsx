@@ -4,7 +4,7 @@
 
 import type { IChannelPairingRequest, IChannelPluginStatus, IChannelUser } from '@/common/types/channel/channel';
 import ManualPairingInput from './ManualPairingInput';
-import { assistants, channel, type IWebUIStatus } from '@/common/adapter/ipcBridge';
+import { assistants, channel } from '@/common/adapter/ipcBridge';
 import { isDreamEngineAssistant, type Assistant } from '@/common/types/agent/assistantTypes';
 import { resolveLocaleKey } from '@/common/utils';
 import { openExternalUrl } from '@/renderer/utils/platform';
@@ -61,17 +61,11 @@ interface WecomConfigFormProps {
   pluginStatus: IChannelPluginStatus | null;
   modelSelection: GoogleModelSelection;
   onStatusChange: (status: IChannelPluginStatus | null) => void;
-  webuiStatus: IWebUIStatus | null;
 }
 
 const WECOM_DEV_DOCS_URL = 'https://developer.work.weixin.qq.com/document/path/101463';
 
-const WecomConfigForm: React.FC<WecomConfigFormProps> = ({
-  pluginStatus,
-  modelSelection,
-  onStatusChange,
-  webuiStatus,
-}) => {
+const WecomConfigForm: React.FC<WecomConfigFormProps> = ({ pluginStatus, modelSelection, onStatusChange }) => {
   const { t, i18n } = useTranslation();
   const localeKey = resolveLocaleKey(i18n?.language ?? 'en-US');
 
@@ -207,8 +201,8 @@ const WecomConfigForm: React.FC<WecomConfigFormProps> = ({
         plugin_id: 'wecom',
         config: {
           credentials: {
-            bot_id: id,
-            secret: sec,
+            app_id: id,
+            app_secret: sec,
           },
         },
       });
@@ -329,6 +323,7 @@ const WecomConfigForm: React.FC<WecomConfigFormProps> = ({
           >
             <span>
               <Input
+                aria-label={t('settings.wecom.botId', 'Bot ID')}
                 value={botId}
                 onChange={(value) => {
                   setBotId(value);
@@ -344,6 +339,7 @@ const WecomConfigForm: React.FC<WecomConfigFormProps> = ({
           </Tooltip>
         ) : (
           <Input
+            aria-label={t('settings.wecom.botId', 'Bot ID')}
             value={botId}
             onChange={(value) => {
               setBotId(value);
@@ -372,6 +368,7 @@ const WecomConfigForm: React.FC<WecomConfigFormProps> = ({
           >
             <span>
               <Input.Password
+                aria-label={t('settings.wecom.secret', 'Secret')}
                 value={secret}
                 onChange={(value) => {
                   setSecret(value);
@@ -388,6 +385,7 @@ const WecomConfigForm: React.FC<WecomConfigFormProps> = ({
           </Tooltip>
         ) : (
           <Input.Password
+            aria-label={t('settings.wecom.secret', 'Secret')}
             value={secret}
             onChange={(value) => {
               setSecret(value);
