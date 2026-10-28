@@ -21,6 +21,7 @@ import { isElectronDesktop } from '@renderer/utils/platform';
 import { addEventListener } from '@renderer/utils/emitter';
 import {
   clearTeamResources,
+  createTeamSyncBundleLoader,
   syncContentInspection,
   syncTeamAgents,
   syncTeamMcp,
@@ -161,13 +162,14 @@ export function useTeamResourceSync(): void {
       const cycle = async () => {
         if (cancelled) return;
         const isCurrent = () => !cancelled;
-        const [skills, mcp] = await Promise.all([syncTeamSkills(isCurrent), syncTeamMcp(isCurrent)]);
+        const loadBundle = createTeamSyncBundleLoader();
+        const [skills, mcp] = await Promise.all([syncTeamSkills(isCurrent), syncTeamMcp(isCurrent, loadBundle)]);
         // P1-3: team-distributed digital employees ride the same timer. An
         // admin who publishes/authorizes an employee (or revokes it) reaches
         // the member's employee list within one cycle; locally the rows land
         // in the normal registry, so no other UI changes.
         if (cancelled) return;
-        if (skills !== null && mcp !== null) await syncTeamAgents(isCurrent);
+        if (skills !== null && mcp !== null) await syncTeamAgents(isCurrent, loadBundle);
         if (cancelled) return;
         await Promise.allSettled([
           // Model channels ride the same timer: a channel the admin adds, retires

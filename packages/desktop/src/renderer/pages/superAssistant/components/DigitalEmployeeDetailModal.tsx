@@ -58,7 +58,7 @@ function useBoundResourceNames(agent: PersonalAgent | null, visible: boolean) {
       wanted.length ? fetch().catch((): undefined => undefined) : Promise.resolve([]);
     void Promise.all([
       load(skillIds, () => ipcBridge.oneDevops.listSkills.invoke()),
-      load(toolIds, () => ipcBridge.oneDevops.listMcpRegistry.invoke()),
+      load(toolIds, () => ipcBridge.oneDevops.listEmployeeBoundMcp.invoke({ ids: toolIds })),
     ]).then(([skills, tools]) => {
       if (!cancelled) setNames({ skills: pick(skills, skillIds), tools: pick(tools, toolIds) });
     });

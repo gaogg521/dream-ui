@@ -23,9 +23,27 @@ vi.mock('@/common/adapter/enterpriseMode', () => ({
   getEnterpriseServerUrl: () => 'https://qa-company.example',
   getEnterpriseSession: () => null,
 }));
-import { syncTeamAgents, syncTeamMcp } from '@/renderer/utils/enterprise/teamSkillSync';
+import { createTeamSyncBundleLoader, syncTeamAgents, syncTeamMcp } from '@/renderer/utils/enterprise/teamSkillSync';
 
 describe('authorized employee dependency bundle', () => {
+  it('shares a bundle within a cycle but fetches a fresh bundle for the next cycle', async () => {
+    mocks.bundle.mockResolvedValue({ agents: [], assistants: [] });
+    const load = createTeamSyncBundleLoader();
+    await syncTeamMcp(() => true, load);
+    await syncTeamAgents(() => true, load);
+    expect(mocks.bundle).toHaveBeenCalledTimes(1);
+    await syncTeamMcp(() => true, createTeamSyncBundleLoader());
+    expect(mocks.bundle).toHaveBeenCalledTimes(2);
+  });
+  it('does not turn a failed bundle into an authoritative empty employee set', async () => {
+    mocks.bundle.mockRejectedValue(new Error('offline'));
+    const load = createTeamSyncBundleLoader();
+    await syncTeamMcp(() => true, load);
+    await syncTeamAgents(() => true, load);
+    expect(mocks.bundle).toHaveBeenCalledTimes(1);
+    expect(mocks.syncMcp).toHaveBeenCalledWith(expect.objectContaining({ authoritative: false }));
+    expect(mocks.sync).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.skills.mockResolvedValue([{ id: 'allowed-skill', enabled: true }]);

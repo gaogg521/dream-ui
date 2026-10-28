@@ -3364,8 +3364,9 @@
     "saveFailed": "저장 실패",
     "restartHint": "에이전트가 브라우저를 조작하려면 앱을 다시 시작해야 합니다."
   },
-  "mcpQuotaReplace": "Remove an existing MCP before adding another (maximum 20).",
-  "mcpQuotaDescription": "Choose up to 20 MCP servers. Company authorization only makes a connector available; it never activates the entire catalog. System tools do not use your quota. To replace a tool, remove it from this selection, add the new one, then save.",
+  "mcpQuotaReplace": "기업 MCP 배포 한도는 총 50개입니다. 기존 항목을 제거한 후 추가하세요.",
+  "mcpBatchLimit": "클라이언트 성능을 위해 한 번에 새 항목을 10개 넘게 선택하지 마세요.",
+  "mcpQuotaDescription": "로컬 MCP 수는 무제한입니다. 기업 MCP는 저장할 때마다 최대 10개를 추가할 수 있으며 직원에 연결된 도구를 포함해 총 50개까지 배포할 수 있습니다.",
   "mcpLocalSelection": "Enabled MCP servers on this device",
   "mcpCompanySelection": "Company MCP selection",
   "mcpSaveSelection": "Save active selection",
@@ -3374,6 +3375,6 @@
   "mcpSelectionSyncFailed": "Selection saved, but device sync failed. Check the connection and replace personal MCPs if the quota is full, then retry.",
   "mcpPreviousPage": "Previous page",
   "mcpNextPage": "Next page",
-  "mcpHistoricalSelectionRequired": "An unsafe legacy MCP snapshot was cleared. Your messages are preserved. Start a new conversation with up to 20 selected MCP servers.",
+  "mcpHistoricalSelectionRequired": "초과된 기업 MCP 스냅샷을 정리했습니다. 로컬 MCP와 메시지는 유지됩니다. 저장당 최대 10개, 총 50개까지 추가하세요.",
   "mcpOAuthPending": "Authorization did not complete. Retry explicitly after the pending request expires."
 }

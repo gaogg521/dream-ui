@@ -21,6 +21,15 @@ import { mutate } from 'swr';
 
 export type TeamSkillSyncResult = { written: number; removed: number; kept: number };
 
+type TeamSyncBundle = Awaited<ReturnType<typeof ipcBridge.personalAgent.getTeamSyncBundle.invoke>>;
+type LoadTeamSyncBundle = () => Promise<TeamSyncBundle>;
+
+/** Share a single response only within one sync cycle, never across identities. */
+export function createTeamSyncBundleLoader(): LoadTeamSyncBundle {
+  let pending: Promise<TeamSyncBundle> | undefined;
+  return () => (pending ??= ipcBridge.personalAgent.getTeamSyncBundle.invoke());
+}
+
 async function refreshEmployeeViews(): Promise<void> {
   await mutate('assistants.list');
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('one-team-employees-changed'));
@@ -175,7 +184,10 @@ export async function syncTeamSkills(isCurrent: () => boolean = () => true): Pro
  * null, local cache untouched (offline-first). Personal servers with the same
  * name are never clobbered (backend conflict guard).
  */
-export async function syncTeamMcp(isCurrent: () => boolean = () => true): Promise<TeamSkillSyncResult | null> {
+export async function syncTeamMcp(
+  isCurrent: () => boolean = () => true,
+  loadBundle: LoadTeamSyncBundle = () => ipcBridge.personalAgent.getTeamSyncBundle.invoke()
+): Promise<TeamSkillSyncResult | null> {
   let registry: Awaited<ReturnType<typeof ipcBridge.oneDevops.listActiveMcp.invoke>>;
   try {
     registry = await ipcBridge.oneDevops.listActiveMcp.invoke();
@@ -189,7 +201,7 @@ export async function syncTeamMcp(isCurrent: () => boolean = () => true): Promis
   let bound: McpRegistryRows = [];
   let boundKnown = true;
   try {
-    const bundle = await ipcBridge.personalAgent.getTeamSyncBundle.invoke();
+    const bundle = await loadBundle();
     bound = await fetchEmployeeBoundMcp(bundle?.agents, new Set((registry ?? []).map((s) => s.id)));
   } catch (error) {
     if (isMembershipRefused(error)) {
@@ -512,7 +524,10 @@ export async function clearTeamResources(): Promise<void> {
  * encodes publish/visibility/grant decisions, so every row it returns is one
  * this member is entitled to.
  */
-export async function syncTeamAgents(isCurrent: () => boolean = () => true): Promise<TeamSkillSyncResult | null> {
+export async function syncTeamAgents(
+  isCurrent: () => boolean = () => true,
+  loadBundle: LoadTeamSyncBundle = () => ipcBridge.personalAgent.getTeamSyncBundle.invoke()
+): Promise<TeamSkillSyncResult | null> {
   const sourceScope = getEnterpriseServerUrl() ?? 'local-enterprise';
   let team: Awaited<ReturnType<typeof ipcBridge.personalAgent.listTeamAgents.invoke>>;
   let assistants: unknown[];
@@ -520,7 +535,7 @@ export async function syncTeamAgents(isCurrent: () => boolean = () => true): Pro
   let registryMcp: Awaited<ReturnType<typeof ipcBridge.oneDevops.listActiveMcp.invoke>>;
   try {
     const [bundle, skills, mcp] = await Promise.all([
-      ipcBridge.personalAgent.getTeamSyncBundle.invoke(),
+      loadBundle(),
       ipcBridge.oneDevops.listRuntimeSkills.invoke(),
       ipcBridge.oneDevops.listActiveMcp.invoke(),
     ]);

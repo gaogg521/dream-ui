@@ -3584,8 +3584,9 @@
     "saveFailed": "儲存失敗",
     "restartHint": "需要重新啟動應用後，Agent 才能操作瀏覽器。"
   },
-  "mcpQuotaReplace": "Remove an existing MCP before adding another (maximum 20).",
-  "mcpQuotaDescription": "Choose up to 20 MCP servers. Company authorization only makes a connector available; it never activates the entire catalog. System tools do not use your quota. To replace a tool, remove it from this selection, add the new one, then save.",
+  "mcpQuotaReplace": "企業 MCP 總下發最多 50 條，請先移除舊項再加入新項。",
+  "mcpBatchLimit": "為了確保用戶端的效能體驗，請勿一次勾選超過 10 條。",
+  "mcpQuotaDescription": "本機 MCP 不限數量。企業 MCP 每次最多新增 10 條，可分批累計下發並同時啟用最多 50 條。員工綁定獨立於使用者選擇，總下發仍不超過 50 條。",
   "mcpLocalSelection": "Enabled MCP servers on this device",
   "mcpCompanySelection": "Company MCP selection",
   "mcpSaveSelection": "Save active selection",
@@ -3594,6 +3595,6 @@
   "mcpSelectionSyncFailed": "Selection saved, but device sync failed. Check the connection and replace personal MCPs if the quota is full, then retry.",
   "mcpPreviousPage": "Previous page",
   "mcpNextPage": "Next page",
-  "mcpHistoricalSelectionRequired": "An unsafe legacy MCP snapshot was cleared. Your messages are preserved. Start a new conversation with up to 20 selected MCP servers.",
+  "mcpHistoricalSelectionRequired": "歷史會話的超量企業 MCP 快照已清理，本機 MCP 和訊息記錄已保留。請每批最多新增 10 條，總下發最多 50 條。",
   "mcpOAuthPending": "Authorization did not complete. Retry explicitly after the pending request expires."
 }

@@ -4,8 +4,13 @@ import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DigitalEmployeeRunRecord, PersonalAgent } from '@/common/types/employee/employeeTypes';
 
-const mocks = vi.hoisted(() => ({ runs: vi.fn(), navigate: vi.fn() }));
-vi.mock('@/common', () => ({ ipcBridge: { personalAgent: { listRuns: { invoke: mocks.runs } } } }));
+const mocks = vi.hoisted(() => ({ runs: vi.fn(), navigate: vi.fn(), bound: vi.fn() }));
+vi.mock('@/common', () => ({
+  ipcBridge: {
+    personalAgent: { listRuns: { invoke: mocks.runs } },
+    oneDevops: { listEmployeeBoundMcp: { invoke: mocks.bound } },
+  },
+}));
 vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate }));
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en-US' } }) }));
 vi.mock('@renderer/hooks/agent/useManagedAgents', () => ({ useManagedAgentRuntimeCatalog: () => [] }));
@@ -30,6 +35,8 @@ const run = (summary: string) =>
 describe('employee detail request ownership', () => {
   beforeEach(() => {
     mocks.runs.mockReset();
+    mocks.bound.mockReset();
+    mocks.runs.mockResolvedValue([]);
     vi.stubGlobal(
       'matchMedia',
       vi.fn((query: string) => ({
@@ -43,6 +50,20 @@ describe('employee detail request ownership', () => {
         dispatchEvent: vi.fn(),
       }))
     );
+  });
+  it('names a bound connector even when it is outside the user activation set', async () => {
+    mocks.bound.mockResolvedValue([{ id: 'bound-only', name: 'Employee browser' }]);
+    const agent = { ...employee('A'), automationConfig: { boundMcpIds: ['bound-only'] } } as PersonalAgent;
+    render(<DigitalEmployeeDetailModal visible agent={agent} onClose={vi.fn()} />);
+    expect(await screen.findByText('Employee browser')).toBeTruthy();
+    expect(mocks.bound).toHaveBeenCalledWith({ ids: ['bound-only'] });
+  });
+  it('keeps the bound count when a connector is revoked or its names cannot be read', async () => {
+    mocks.bound.mockRejectedValue(new Error('offline'));
+    const agent = { ...employee('A'), automationConfig: { boundMcpIds: ['bound-only'] } } as PersonalAgent;
+    render(<DigitalEmployeeDetailModal visible agent={agent} onClose={vi.fn()} />);
+    expect(await screen.findByText('common.superAssistant.boundCount')).toBeTruthy();
+    expect(screen.queryByText('Employee browser')).toBeNull();
   });
   it.each(['late success', 'late failure', 'close and reopen'])('keeps B history after A %s', async (scenario) => {
     const a = deferred();

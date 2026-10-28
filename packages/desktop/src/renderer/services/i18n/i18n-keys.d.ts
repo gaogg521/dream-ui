@@ -3846,6 +3846,7 @@ export type I18nKey =
   | 'settings.mcpAddServer'
   | 'settings.mcpAuthRequired'
   | 'settings.mcpAuthenticated'
+  | 'settings.mcpBatchLimit'
   | 'settings.mcpCheckAvailableSimple'
   | 'settings.mcpCheckFailedSimple'
   | 'settings.mcpCheckFailedSummary'

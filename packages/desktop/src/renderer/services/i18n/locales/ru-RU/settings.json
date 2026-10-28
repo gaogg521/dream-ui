@@ -3376,8 +3376,9 @@
     "saveFailed": "Не удалось сохранить",
     "restartHint": "Перезапустите приложение, чтобы агент мог управлять браузером."
   },
-  "mcpQuotaReplace": "Remove an existing MCP before adding another (maximum 20).",
-  "mcpQuotaDescription": "Choose up to 20 MCP servers. Company authorization only makes a connector available; it never activates the entire catalog. System tools do not use your quota. To replace a tool, remove it from this selection, add the new one, then save.",
+  "mcpQuotaReplace": "Всего можно выдать до 50 MCP компании. Сначала удалите старые элементы.",
+  "mcpBatchLimit": "Для стабильной работы клиента не выбирайте более 10 новых элементов за один раз.",
+  "mcpQuotaDescription": "Число локальных MCP не ограничено. Добавляйте до 10 MCP компании за одно сохранение, всего до 50, включая инструменты сотрудников.",
   "mcpLocalSelection": "Enabled MCP servers on this device",
   "mcpCompanySelection": "Company MCP selection",
   "mcpSaveSelection": "Save active selection",
@@ -3386,6 +3387,6 @@
   "mcpSelectionSyncFailed": "Selection saved, but device sync failed. Check the connection and replace personal MCPs if the quota is full, then retry.",
   "mcpPreviousPage": "Previous page",
   "mcpNextPage": "Next page",
-  "mcpHistoricalSelectionRequired": "An unsafe legacy MCP snapshot was cleared. Your messages are preserved. Start a new conversation with up to 20 selected MCP servers.",
+  "mcpHistoricalSelectionRequired": "Избыточные снимки MCP компании очищены. Локальные MCP и сообщения сохранены. Добавляйте до 10 за сохранение, всего до 50.",
   "mcpOAuthPending": "Authorization did not complete. Retry explicitly after the pending request expires."
 }

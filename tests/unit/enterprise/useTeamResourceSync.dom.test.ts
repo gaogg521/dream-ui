@@ -70,6 +70,7 @@ vi.mock('@/common/adapter/enterpriseMode', () => ({ isEnterpriseModeEnabled: () 
 
 vi.mock('@renderer/utils/enterprise/teamSkillSync', () => ({
   ENTERPRISE_RESOURCES_MARKER: 'one-enterprise:resources-materialized',
+  createTeamSyncBundleLoader: () => vi.fn(),
   clearTeamResources,
   syncContentInspection: vi.fn(() => Promise.resolve(null)),
   syncTeamAgents,

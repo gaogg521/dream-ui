@@ -3362,8 +3362,9 @@
     "saveFailed": "Échec de l'enregistrement",
     "restartHint": "Redémarrez l'application pour que l'agent puisse manipuler le navigateur."
   },
-  "mcpQuotaReplace": "Remove an existing MCP before adding another (maximum 20).",
-  "mcpQuotaDescription": "Choose up to 20 MCP servers. Company authorization only makes a connector available; it never activates the entire catalog. System tools do not use your quota. To replace a tool, remove it from this selection, add the new one, then save.",
+  "mcpQuotaReplace": "La distribution est limitée à 50 MCP d’entreprise. Retirez des éléments avant d’en ajouter.",
+  "mcpBatchLimit": "Pour préserver les performances du client, ne sélectionnez pas plus de 10 nouveaux éléments à la fois.",
+  "mcpQuotaDescription": "Les MCP locaux sont illimités. Ajoutez au plus 10 MCP d’entreprise par enregistrement, pour un total de 50, outils liés aux employés compris.",
   "mcpLocalSelection": "Enabled MCP servers on this device",
   "mcpCompanySelection": "Company MCP selection",
   "mcpSaveSelection": "Save active selection",
@@ -3372,6 +3373,6 @@
   "mcpSelectionSyncFailed": "Selection saved, but device sync failed. Check the connection and replace personal MCPs if the quota is full, then retry.",
   "mcpPreviousPage": "Previous page",
   "mcpNextPage": "Next page",
-  "mcpHistoricalSelectionRequired": "An unsafe legacy MCP snapshot was cleared. Your messages are preserved. Start a new conversation with up to 20 selected MCP servers.",
+  "mcpHistoricalSelectionRequired": "Les instantanés MCP d’entreprise excessifs ont été nettoyés. Les MCP locaux et les messages sont conservés. Ajoutez au plus 10 éléments par enregistrement, pour un total de 50.",
   "mcpOAuthPending": "Authorization did not complete. Retry explicitly after the pending request expires."
 }

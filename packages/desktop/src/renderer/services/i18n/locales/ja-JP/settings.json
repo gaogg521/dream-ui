@@ -3364,8 +3364,9 @@
     "saveFailed": "保存に失敗しました",
     "restartHint": "エージェントがブラウザーを操作するには、アプリの再起動が必要です。"
   },
-  "mcpQuotaReplace": "Remove an existing MCP before adding another (maximum 20).",
-  "mcpQuotaDescription": "Choose up to 20 MCP servers. Company authorization only makes a connector available; it never activates the entire catalog. System tools do not use your quota. To replace a tool, remove it from this selection, add the new one, then save.",
+  "mcpQuotaReplace": "企業 MCP の配布上限は合計50件です。既存の項目を削除してから追加してください。",
+  "mcpBatchLimit": "クライアントの性能を保つため、一度に10件を超える新規項目を選択しないでください。",
+  "mcpQuotaDescription": "ローカル MCP の数は無制限です。企業 MCP は保存ごとに最大10件追加でき、従業員に紐づくツールを含む配布合計は最大50件です。",
   "mcpLocalSelection": "Enabled MCP servers on this device",
   "mcpCompanySelection": "Company MCP selection",
   "mcpSaveSelection": "Save active selection",
@@ -3374,6 +3375,6 @@
   "mcpSelectionSyncFailed": "Selection saved, but device sync failed. Check the connection and replace personal MCPs if the quota is full, then retry.",
   "mcpPreviousPage": "Previous page",
   "mcpNextPage": "Next page",
-  "mcpHistoricalSelectionRequired": "An unsafe legacy MCP snapshot was cleared. Your messages are preserved. Start a new conversation with up to 20 selected MCP servers.",
+  "mcpHistoricalSelectionRequired": "過剰な企業 MCP スナップショットを整理しました。ローカル MCP とメッセージは保持されています。保存ごとに最大10件、合計50件まで追加できます。",
   "mcpOAuthPending": "Authorization did not complete. Retry explicitly after the pending request expires."
 }

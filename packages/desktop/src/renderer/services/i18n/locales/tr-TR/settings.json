@@ -3362,8 +3362,9 @@
     "saveFailed": "Kaydedilemedi",
     "restartHint": "Aracının tarayıcıyı kullanabilmesi için uygulamayı yeniden başlatın."
   },
-  "mcpQuotaReplace": "Remove an existing MCP before adding another (maximum 20).",
-  "mcpQuotaDescription": "Choose up to 20 MCP servers. Company authorization only makes a connector available; it never activates the entire catalog. System tools do not use your quota. To replace a tool, remove it from this selection, add the new one, then save.",
+  "mcpQuotaReplace": "Kurumsal MCP dağıtımı toplam 50 ile sınırlıdır. Önce mevcut öğeleri kaldırın.",
+  "mcpBatchLimit": "İstemci performansını korumak için bir defada 10’dan fazla yeni öğe seçmeyin.",
+  "mcpQuotaDescription": "Yerel MCP sayısı sınırsızdır. Her kayıtta en fazla 10 kurumsal MCP ekleyin; çalışan araçları dahil toplam dağıtım sınırı 50’dir.",
   "mcpLocalSelection": "Enabled MCP servers on this device",
   "mcpCompanySelection": "Company MCP selection",
   "mcpSaveSelection": "Save active selection",
@@ -3372,6 +3373,6 @@
   "mcpSelectionSyncFailed": "Selection saved, but device sync failed. Check the connection and replace personal MCPs if the quota is full, then retry.",
   "mcpPreviousPage": "Previous page",
   "mcpNextPage": "Next page",
-  "mcpHistoricalSelectionRequired": "An unsafe legacy MCP snapshot was cleared. Your messages are preserved. Start a new conversation with up to 20 selected MCP servers.",
+  "mcpHistoricalSelectionRequired": "Fazla kurumsal MCP anlık görüntüleri temizlendi. Yerel MCP’ler ve mesajlar korundu. Her kayıtta en fazla 10, toplam 50 öğe ekleyin.",
   "mcpOAuthPending": "Authorization did not complete. Retry explicitly after the pending request expires."
 }

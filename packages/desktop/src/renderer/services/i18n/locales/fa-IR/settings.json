@@ -3362,8 +3362,9 @@
     "saveFailed": "ذخیره ناموفق بود",
     "restartHint": "برای اینکه عامل بتواند مرورگر را کنترل کند، برنامه را دوباره راه‌اندازی کنید."
   },
-  "mcpQuotaReplace": "Remove an existing MCP before adding another (maximum 20).",
-  "mcpQuotaDescription": "Choose up to 20 MCP servers. Company authorization only makes a connector available; it never activates the entire catalog. System tools do not use your quota. To replace a tool, remove it from this selection, add the new one, then save.",
+  "mcpQuotaReplace": "حداکثر مجموع MCPهای سازمانی 50 است. ابتدا موارد قبلی را حذف کنید.",
+  "mcpBatchLimit": "برای حفظ عملکرد برنامه، لطفاً هم‌زمان بیش از 10 مورد جدید انتخاب نکنید.",
+  "mcpQuotaDescription": "MCPهای محلی نامحدود هستند. در هر ذخیره حداکثر 10 MCP سازمانی اضافه کنید؛ مجموع توزیع‌شده با ابزارهای کارکنان حداکثر 50 است.",
   "mcpLocalSelection": "Enabled MCP servers on this device",
   "mcpCompanySelection": "Company MCP selection",
   "mcpSaveSelection": "Save active selection",
@@ -3372,6 +3373,6 @@
   "mcpSelectionSyncFailed": "Selection saved, but device sync failed. Check the connection and replace personal MCPs if the quota is full, then retry.",
   "mcpPreviousPage": "Previous page",
   "mcpNextPage": "Next page",
-  "mcpHistoricalSelectionRequired": "An unsafe legacy MCP snapshot was cleared. Your messages are preserved. Start a new conversation with up to 20 selected MCP servers.",
+  "mcpHistoricalSelectionRequired": "تصاویر بیش‌ازحد MCP سازمانی پاک شدند. MCPهای محلی و پیام‌ها حفظ شدند. در هر ذخیره حداکثر 10 مورد جدید و در مجموع 50 مورد انتخاب کنید.",
   "mcpOAuthPending": "Authorization did not complete. Retry explicitly after the pending request expires."
 }

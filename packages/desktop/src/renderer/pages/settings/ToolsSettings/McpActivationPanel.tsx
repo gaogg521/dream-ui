@@ -2,28 +2,42 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Button, Message, Select, Space } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { mcpService, oneDevops } from '@/common/adapter/ipcBridge';
-import { getEnterpriseSession } from '@/common/adapter/enterpriseMode';
+import { getEnterpriseSession, isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
 import type { IMcpServer } from '@/common/config/storage';
 import { syncTeamMcp } from '@/renderer/utils/enterprise/teamSkillSync';
 
-const LIMIT = 20;
+const LIMIT = 50;
+const BATCH_LIMIT = 10;
 type Props = { servers: IMcpServer[]; onChanged: (servers: IMcpServer[]) => void };
 
-/** Edit the whole next set before committing it: replacement never briefly enables 21 tools. */
+const isCompanyServer = (server: IMcpServer): boolean => {
+  try {
+    return Boolean(JSON.parse(server.original_json ?? '{}').teamRegistryId);
+  } catch {
+    return false;
+  }
+};
+
+/** Commit the next selection as a whole so replacements never transiently exceed the quota. */
 export default function McpActivationPanel({ servers, onChanged }: Props) {
   const { t } = useTranslation();
   const [local, setLocal] = useState<string[]>([]);
   const [company, setCompany] = useState<string[]>([]);
+  const [savedCompany, setSavedCompany] = useState<string[]>([]);
   const [catalog, setCatalog] = useState<Array<{ id: string; name: string }>>([]);
   const [companyReady, setCompanyReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState('');
   const [offset, setOffset] = useState(0);
-  const enterprise = Boolean(getEnterpriseSession());
+  const enterprise = isEnterpriseModeEnabled() && Boolean(getEnterpriseSession());
+  const warnQuota = (kind: 'batch' | 'total') => {
+    const content = kind === 'batch' ? t('settings.mcpBatchLimit') : t('settings.mcpQuotaReplace');
+    Message.warning({ content: <span className='text-12px leading-18px'>{content}</span> });
+  };
 
   useEffect(() => {
-    setLocal(servers.filter((s) => s.enabled && !s.builtin).map((s) => s.id));
+    setLocal(servers.filter((s) => s.enabled && !s.builtin && !isCompanyServer(s)).map((s) => s.id));
   }, [servers]);
   useEffect(() => {
     if (!enterprise) return;
@@ -33,6 +47,7 @@ export default function McpActivationPanel({ servers, onChanged }: Props) {
       .then((result) => {
         if (active) {
           setCompany(result.selectedIds);
+          setSavedCompany(result.selectedIds);
           setCompanyReady(true);
         }
       })
@@ -67,9 +82,14 @@ export default function McpActivationPanel({ servers, onChanged }: Props) {
 
   const choose = (ids: string[], update: (ids: string[]) => void) => {
     if (ids.length > LIMIT) {
-      Message.warning(t('settings.mcpQuotaReplace'));
+      warnQuota('total');
       return;
     }
+    if (ids.filter((id) => !savedCompany.includes(id)).length > BATCH_LIMIT) {
+      warnQuota('batch');
+      return;
+    }
+    if (ids.length === LIMIT) warnQuota('total');
     update(ids);
   };
   const save = async (companySelection: boolean) => {
@@ -77,16 +97,21 @@ export default function McpActivationPanel({ servers, onChanged }: Props) {
     setSaving(true);
     try {
       if (companySelection) {
-        await oneDevops.replaceMcpSelection.invoke({ selectedIds: company });
+        const saved = await oneDevops.replaceMcpSelection.invoke({ selectedIds: company });
+        setSavedCompany(saved.selectedIds);
         const result = await syncTeamMcp();
         if (!result) throw new Error(t('settings.mcpSelectionSyncFailed'));
         onChanged(await mcpService.listServers.invoke());
       } else {
-        onChanged(await mcpService.replaceSelection.invoke({ ids: local }));
+        const companyIds = servers.filter((s) => s.enabled && !s.builtin && isCompanyServer(s)).map((s) => s.id);
+        onChanged(await mcpService.replaceSelection.invoke({ ids: [...local, ...companyIds] }));
       }
       Message.success(t('settings.mcpSelectionSaved'));
     } catch (error) {
-      Message.error(error instanceof Error ? error.message : t('settings.mcpImportFailed'));
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('MCP_BATCH_LIMIT_EXCEEDED')) warnQuota('batch');
+      else if (message.includes('MCP_LIMIT_EXCEEDED')) warnQuota('total');
+      else Message.error(message || t('settings.mcpImportFailed'));
     } finally {
       setSaving(false);
     }
@@ -100,7 +125,7 @@ export default function McpActivationPanel({ servers, onChanged }: Props) {
       {loadError && <Alert type='error' content={t('settings.mcpSelectionSyncFailed')} />}
       <Alert type='info' content={t('settings.mcpQuotaDescription')} />
       <div className='text-t-primary'>
-        {t('settings.mcpLocalSelection')} ({local.length}/{LIMIT})
+        {t('settings.mcpLocalSelection')} ({local.length})
       </div>
       <Select
         mode='multiple'
@@ -108,8 +133,8 @@ export default function McpActivationPanel({ servers, onChanged }: Props) {
         maxTagCount={5}
         value={local}
         disabled={saving}
-        onChange={(ids: string[]) => choose(ids, setLocal)}
-        options={servers.filter((s) => !s.builtin).map((s) => ({ label: s.name, value: s.id }))}
+        onChange={(ids: string[]) => setLocal(ids)}
+        options={servers.filter((s) => !s.builtin && !isCompanyServer(s)).map((s) => ({ label: s.name, value: s.id }))}
       />
       <Button disabled={saving} loading={saving} onClick={() => void save(false)}>
         {t('settings.mcpSaveSelection')}
