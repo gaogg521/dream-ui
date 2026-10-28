@@ -1027,7 +1027,19 @@ Please check your local CLI tool authentication status`,
                 {t('team.interruptAndSend')}
               </Button>
             )}
-            {tokenUsage ? <ContextUsageIndicator tokenUsage={tokenUsage} context_limit={context_limit} /> : undefined}
+            {tokenUsage ? (
+              <ContextUsageIndicator
+                tokenUsage={tokenUsage}
+                context_limit={context_limit}
+                onCompact={
+                  !teamSendMessage &&
+                  slashCommands.some((command) => command.source === 'acp' && command.name === 'compact')
+                    ? () => executeCommand({ input: '/compact', files: [] })
+                    : undefined
+                }
+                compactDisabled={isBusy || isQueueInteractionLocked || !commandQueueRuntimeGate.hydrated}
+              />
+            ) : undefined}
           </>
         }
       ></SendBox>

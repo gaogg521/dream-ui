@@ -569,8 +569,12 @@
     "cachedRead": "Cache read",
     "cachedWrite": "Cache write",
     "cacheHitRate": "Cache hit rate",
-    "compactReminder": "Context is over {{threshold}}% full. Run /compact to condense it, or start a new conversation.",
-    "compactBadge": "compact soon"
+    "compactReminder": "Context is over {{threshold}}% full. Choose Compact context, or start a new conversation.",
+    "compactBadge": "compact soon",
+    "compactAction": "Compact context",
+    "compactActionHint": "Summarize earlier messages to make room for the conversation.",
+    "compactBusy": "Wait for the current reply to finish or stop generation before compacting.",
+    "compactUnavailable": "Direct compaction is not available in this conversation. Start a new conversation to continue."
   },
   "skill_generator": {
     "title": "Generate Skill/Rule",

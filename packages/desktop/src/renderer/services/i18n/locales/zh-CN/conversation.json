@@ -569,8 +569,12 @@
     "cachedRead": "缓存读",
     "cachedWrite": "缓存写",
     "cacheHitRate": "缓存命中率",
-    "compactReminder": "上下文已超过 {{threshold}}%，建议使用 /compact 压缩上下文，或开启新对话。",
-    "compactBadge": "建议压缩"
+    "compactReminder": "上下文已超过 {{threshold}}%，请点击“压缩上下文”，或开启新对话。",
+    "compactBadge": "建议压缩",
+    "compactAction": "压缩上下文",
+    "compactActionHint": "将较早消息整理为摘要，为后续对话腾出上下文。",
+    "compactBusy": "请先等待当前回复结束或停止生成，再压缩上下文。",
+    "compactUnavailable": "当前会话尚未提供直接压缩能力，可新建会话继续。"
   },
   "skill_generator": {
     "title": "生成 Skill/规则",

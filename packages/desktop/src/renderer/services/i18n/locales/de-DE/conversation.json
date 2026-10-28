@@ -570,8 +570,12 @@
     "cachedRead": "Cache-Lesen",
     "cachedWrite": "Cache-Schreiben",
     "cacheHitRate": "Cache-Trefferquote",
-    "compactReminder": "Der Kontext ist zu über {{threshold}} % gefüllt. Nutze /compact zum Verdichten oder starte eine neue Unterhaltung.",
-    "compactBadge": "komprimieren"
+    "compactReminder": "Der Kontext ist zu über {{threshold}}% belegt. Wählen Sie Kontext komprimieren oder beginnen Sie ein neues Gespräch.",
+    "compactBadge": "komprimieren",
+    "compactAction": "Kontext komprimieren",
+    "compactActionHint": "Frühere Nachrichten zusammenfassen, um Platz für das Gespräch zu schaffen.",
+    "compactBusy": "Warten Sie auf das Ende der Antwort oder stoppen Sie die Generierung vor dem Komprimieren.",
+    "compactUnavailable": "Direkte Komprimierung ist in diesem Gespräch nicht verfügbar. Setzen Sie es in einem neuen Gespräch fort."
   },
   "skill_generator": {
     "title": "Skill/Regel generieren",

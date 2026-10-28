@@ -2,8 +2,8 @@
  * Copyright 2026 One Work
  */
 
-import { Popover } from '@arco-design/web-react';
-import React, { useMemo } from 'react';
+import { Button, Popover, Tooltip } from '@arco-design/web-react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { TokenUsageCost, TokenUsageData } from '@/common/config/storage';
@@ -19,6 +19,9 @@ interface ContextUsageIndicatorProps {
   context_limit: number;
   className?: string;
   size?: number;
+  /** Uses the normal send path, which owns error presentation. */
+  onCompact?: () => Promise<void> | void;
+  compactDisabled?: boolean;
 }
 
 const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({
@@ -26,9 +29,31 @@ const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({
   context_limit,
   className = '',
   size = 20,
+  onCompact,
+  compactDisabled = false,
 }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
+  const compactRequest = useRef(false);
+  const [requestingCompact, setRequestingCompact] = useState(false);
+  const compactHint = !onCompact
+    ? t('conversation.contextUsage.compactUnavailable')
+    : compactDisabled
+      ? t('conversation.contextUsage.compactBusy')
+      : t('conversation.contextUsage.compactActionHint');
+  const requestCompact = async () => {
+    if (!onCompact || compactDisabled || compactRequest.current) return;
+    compactRequest.current = true;
+    setRequestingCompact(true);
+    try {
+      await onCompact();
+    } catch {
+      // The normal send path already presents the concrete failure reason.
+    } finally {
+      compactRequest.current = false;
+      setRequestingCompact(false);
+    }
+  };
 
   const hasWindow = context_limit > 0;
 
@@ -178,11 +203,13 @@ const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({
       </div>
       {shouldRemindCompact && (
         <div className='text-12px mt-4px' style={{ color: getStrokeColor() }}>
-          {t('conversation.contextUsage.compactReminder', {
-            threshold: COMPACT_REMINDER_PCT,
-            defaultValue:
-              'Context is over {{threshold}}% full. Run /compact to condense it, or start a new conversation.',
-          })}
+          {onCompact
+            ? t('conversation.contextUsage.compactReminder', {
+                threshold: COMPACT_REMINDER_PCT,
+                defaultValue:
+                  'Context is over {{threshold}}% full. Choose Compact context to continue, or start a new conversation.',
+              })
+            : t('conversation.contextUsage.compactUnavailable')}
         </div>
       )}
       {details}
@@ -200,47 +227,70 @@ const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({
   );
 
   return (
-    <Popover content={popoverContent} position='top' trigger='hover' className='context-usage-popover'>
-      <div
-        className={`context-usage-indicator cursor-pointer flex items-center justify-center gap-4px ${className}`}
-        style={{ height: 32, width: shouldRemindCompact ? undefined : 32, paddingInline: shouldRemindCompact ? 6 : 0 }}
-      >
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
-          {/* 背景圆环 */}
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill='none'
-            stroke={getTrackColor()}
-            strokeWidth={strokeWidth}
-          />
-          {/* 进度圆环 — only when the denominator is known; otherwise the hollow track alone signals "count available, window unknown" */}
-          {hasWindow && (
+    <div className='inline-flex items-center gap-4px'>
+      <Popover content={popoverContent} position='top' trigger={['hover', 'click']} className='context-usage-popover'>
+        <div
+          className={`context-usage-indicator cursor-pointer flex items-center justify-center gap-4px ${className}`}
+          style={{
+            height: 32,
+            width: shouldRemindCompact ? undefined : 32,
+            paddingInline: shouldRemindCompact ? 6 : 0,
+          }}
+        >
+          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
+            {/* 背景圆环 */}
             <circle
               cx={size / 2}
               cy={size / 2}
               r={radius}
               fill='none'
-              stroke={getStrokeColor()}
+              stroke={getTrackColor()}
               strokeWidth={strokeWidth}
-              strokeLinecap='round'
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
             />
-          )}
-        </svg>
-        {/* The reminder itself: a ring that quietly changes colour is easy to
+            {/* 进度圆环 — only when the denominator is known; otherwise the hollow track alone signals "count available, window unknown" */}
+            {hasWindow && (
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                fill='none'
+                stroke={getStrokeColor()}
+                strokeWidth={strokeWidth}
+                strokeLinecap='round'
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
+              />
+            )}
+          </svg>
+          {/* The reminder itself: a ring that quietly changes colour is easy to
             miss, and by the time the engine blocks the turn outright the user
             has already lost the thread they were on. */}
-        {shouldRemindCompact && (
-          <span className='text-11px whitespace-nowrap leading-none' style={{ color: getStrokeColor() }}>
-            {formatPercentage(percentage, locale)} · {t('conversation.contextUsage.compactBadge', 'compact soon')}
-          </span>
-        )}
-      </div>
-    </Popover>
+          {shouldRemindCompact && (
+            <span className='text-11px whitespace-nowrap leading-none' style={{ color: getStrokeColor() }}>
+              {formatPercentage(percentage, locale)}
+              {!onCompact && <> · {t('conversation.contextUsage.compactBadge', 'compact soon')}</>}
+            </span>
+          )}
+        </div>
+      </Popover>
+      <Tooltip content={compactHint}>
+        <span>
+          <Button
+            size='mini'
+            type={shouldRemindCompact ? 'primary' : 'text'}
+            disabled={!onCompact || compactDisabled}
+            loading={requestingCompact}
+            onClick={() => void requestCompact()}
+            aria-label={t('conversation.contextUsage.compactAction')}
+            aria-description={compactHint}
+            data-testid='context-compact-action'
+          >
+            {t('conversation.contextUsage.compactAction')}
+          </Button>
+        </span>
+      </Tooltip>
+    </div>
   );
 };
 

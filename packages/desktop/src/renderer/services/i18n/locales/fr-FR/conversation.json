@@ -569,8 +569,12 @@
     "cachedRead": "Lecture du cache",
     "cachedWrite": "Écriture du cache",
     "cacheHitRate": "Taux de succès du cache",
-    "compactReminder": "Le contexte dépasse {{threshold}} % de remplissage. Utilisez /compact pour le condenser ou démarrez une nouvelle conversation.",
-    "compactBadge": "à compacter"
+    "compactReminder": "Le contexte dépasse {{threshold}} %. Choisissez Compresser le contexte ou démarrez une nouvelle conversation.",
+    "compactBadge": "à compacter",
+    "compactAction": "Compresser le contexte",
+    "compactActionHint": "Résumez les messages précédents pour libérer de la place dans la conversation.",
+    "compactBusy": "Attendez la fin de la réponse ou arrêtez la génération avant de compresser.",
+    "compactUnavailable": "La compression directe est indisponible dans cette conversation. Continuez dans une nouvelle conversation."
   },
   "skill_generator": {
     "title": "Générer une compétence/règle",

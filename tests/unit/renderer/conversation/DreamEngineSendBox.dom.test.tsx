@@ -50,6 +50,7 @@ const {
 }));
 
 const sendWhileBusyRef = vi.hoisted(() => ({ current: undefined as 'interject' | 'queue' | undefined }));
+const compactState = vi.hoisted(() => ({ available: false, usage: false }));
 vi.mock('@/renderer/hooks/config/useConfig', () => ({
   useConfig: () => [sendWhileBusyRef.current, vi.fn()],
 }));
@@ -182,7 +183,8 @@ vi.mock('@/renderer/hooks/chat/useSendBoxFiles', () => ({
   createSetUploadFile: () => vi.fn(),
 }));
 vi.mock('@/renderer/hooks/chat/useSlashCommands', () => ({
-  useSlashCommands: () => [],
+  useSlashCommands: () =>
+    compactState.available ? [{ name: 'compact', description: 'Compact', source: 'acp', kind: 'template' }] : [],
 }));
 vi.mock('@/renderer/hooks/file/useOpenFileSelector', () => ({
   useOpenFileSelector: () => ({
@@ -265,6 +267,8 @@ vi.mock('@/renderer/utils/file/messageFiles', () => ({
   splitChatFileRefs: () => ({ uploadFiles: [], atPath: [] }),
 }));
 vi.mock('@arco-design/web-react', () => ({
+  Popover: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  Tooltip: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   Message: {
     warning: vi.fn(),
     error: vi.fn(),
@@ -299,6 +303,8 @@ vi.mock('react-i18next', () => ({
 }));
 vi.mock('@/renderer/pages/conversation/platforms/dreamEngine/useDreamEngineMessage', () => ({
   useDreamEngineMessage: () => ({
+    tokenUsage: compactState.usage ? { total_tokens: 850_000 } : null,
+    context_limit: 1_000_000,
     thought: { subject: '', description: '' },
     running: false,
     setActiveMsgId: vi.fn(),
@@ -318,11 +324,29 @@ const modelSelection = {
 describe('DreamEngineSendBox', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    compactState.available = false;
+    compactState.usage = false;
     ensureConversationRuntimeMock.mockResolvedValue({ recovered: false, config_options: [], runtime: null });
     useTeamPermissionMock.mockReturnValue(null);
     draftContentRef.current = '';
     runtimeViewIsProcessingRef.current = false;
     runtimeViewSupportsMidturnRef.current = false;
+  });
+
+  it('executes the advertised compact command without clearing the draft or attached files', async () => {
+    compactState.available = true;
+    compactState.usage = true;
+    draftContentRef.current = 'keep this draft';
+    sendMessageInvokeMock.mockResolvedValue({ msg_id: 'compact-msg', turn_id: 'compact-turn', runtime: null });
+    render(<DreamEngineSendBox conversation_id='conv-1' modelSelection={modelSelection} />);
+    await act(async () => {
+      screen.getByRole('button', { name: 'conversation.contextUsage.compactAction' }).click();
+    });
+    await waitFor(() =>
+      expect(sendMessageInvokeMock).toHaveBeenCalledWith(expect.objectContaining({ input: '/compact', files: [] }))
+    );
+    expect(clearFilesMock).not.toHaveBeenCalled();
+    expect(draftMutateMock).not.toHaveBeenCalled();
   });
 
   it('does not warm up team session when draft content changes', async () => {

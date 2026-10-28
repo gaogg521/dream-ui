@@ -25,6 +25,20 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('@arco-design/web-react', () => ({
+  Button: ({
+    children,
+    onClick,
+    disabled,
+  }: {
+    children?: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+  }) => (
+    <button disabled={disabled} onClick={onClick}>
+      {children}
+    </button>
+  ),
+  Tooltip: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   Popover: ({ children, content }: { children?: React.ReactNode; content?: React.ReactNode }) => (
     <>
       {children}

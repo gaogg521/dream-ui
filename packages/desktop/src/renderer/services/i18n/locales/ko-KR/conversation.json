@@ -569,8 +569,12 @@
     "cachedRead": "캐시 읽기",
     "cachedWrite": "캐시 쓰기",
     "cacheHitRate": "캐시 적중률",
-    "compactReminder": "컨텍스트가 {{threshold}}%를 넘었습니다. /compact로 압축하거나 새 대화를 시작하세요.",
-    "compactBadge": "압축 권장"
+    "compactReminder": "컨텍스트가 {{threshold}}%를 넘었습니다. 컨텍스트 압축을 선택하거나 새 대화를 시작하세요.",
+    "compactBadge": "압축 권장",
+    "compactAction": "컨텍스트 압축",
+    "compactActionHint": "이전 메시지를 요약하여 대화를 이어갈 공간을 확보합니다.",
+    "compactBusy": "현재 응답이 완료되거나 생성을 중지한 후 압축하세요.",
+    "compactUnavailable": "이 대화에서는 직접 압축할 수 없습니다. 새 대화에서 계속하세요."
   },
   "skill_generator": {
     "title": "스킬/규칙 생성",

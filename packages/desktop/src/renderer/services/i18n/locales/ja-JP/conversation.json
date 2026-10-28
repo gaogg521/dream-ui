@@ -569,8 +569,12 @@
     "cachedRead": "キャッシュ読み取り",
     "cachedWrite": "キャッシュ書き込み",
     "cacheHitRate": "キャッシュヒット率",
-    "compactReminder": "コンテキストの使用量が {{threshold}}% を超えました。/compact で圧縮するか、新しい会話を始めてください。",
-    "compactBadge": "圧縮推奨"
+    "compactReminder": "コンテキストが {{threshold}}% を超えています。「コンテキストを圧縮」を選ぶか、新しい会話を開始してください。",
+    "compactBadge": "圧縮推奨",
+    "compactAction": "コンテキストを圧縮",
+    "compactActionHint": "以前のメッセージを要約し、会話を続けるための空きを確保します。",
+    "compactBusy": "現在の応答が完了するか生成を停止してから圧縮してください。",
+    "compactUnavailable": "この会話では直接圧縮できません。新しい会話で続けてください。"
   },
   "skill_generator": {
     "title": "Generate Skill/Rule",

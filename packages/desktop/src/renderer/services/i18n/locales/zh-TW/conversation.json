@@ -569,8 +569,12 @@
     "cachedRead": "快取讀取",
     "cachedWrite": "快取寫入",
     "cacheHitRate": "快取命中率",
-    "compactReminder": "上下文已超過 {{threshold}}%，建議使用 /compact 壓縮上下文，或開啟新對話。",
-    "compactBadge": "建議壓縮"
+    "compactReminder": "上下文已超過 {{threshold}}%，請點選「壓縮上下文」，或建立新對話。",
+    "compactBadge": "建議壓縮",
+    "compactAction": "壓縮上下文",
+    "compactActionHint": "將較早訊息整理為摘要，為後續對話騰出上下文。",
+    "compactBusy": "請先等待目前回覆結束或停止生成，再壓縮上下文。",
+    "compactUnavailable": "目前對話尚未提供直接壓縮功能，可建立新對話繼續。"
   },
   "skill_generator": {
     "title": "Generate Skill/Rule",

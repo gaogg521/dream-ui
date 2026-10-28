@@ -554,8 +554,12 @@
     "cachedRead": "Önbellek okuma",
     "cachedWrite": "Önbellek yazma",
     "cacheHitRate": "Önbellek isabet oranı",
-    "compactReminder": "Bağlam %{{threshold}} doluluk oranını aştı. /compact ile sıkıştırın veya yeni bir sohbet başlatın.",
-    "compactBadge": "sıkıştırın"
+    "compactReminder": "Bağlam %{{threshold}} üzerinde dolu. Bağlamı sıkıştır seçeneğini kullanın veya yeni sohbet başlatın.",
+    "compactBadge": "sıkıştırın",
+    "compactAction": "Bağlamı sıkıştır",
+    "compactActionHint": "Sohbette yer açmak için önceki mesajları özetleyin.",
+    "compactBusy": "Sıkıştırmadan önce mevcut yanıtın bitmesini bekleyin veya üretimi durdurun.",
+    "compactUnavailable": "Bu sohbette doğrudan sıkıştırma kullanılamıyor. Devam etmek için yeni sohbet başlatın."
   },
   "skill_generator": {
     "title": "Yetenek/Kural Oluştur",

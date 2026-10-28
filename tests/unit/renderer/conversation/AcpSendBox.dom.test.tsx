@@ -294,6 +294,7 @@ vi.mock('@/renderer/pages/conversation/platforms/acp/useAcpInitialMessage', () =
   useAcpInitialMessage: vi.fn(),
 }));
 vi.mock('@arco-design/web-react', () => ({
+  Tooltip: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   Message: {
     success: vi.fn(),
     error: vi.fn(),
@@ -353,6 +354,50 @@ describe('AcpSendBox', () => {
       reload: vi.fn(),
       setConfigOption: vi.fn(),
     });
+  });
+
+  it('runs an advertised compact command without sending or clearing the composer draft', async () => {
+    draftContentRef.current = 'unfinished question';
+    sendMessageInvokeMock.mockResolvedValue({ msg_id: 'compact-msg', turn_id: 'compact-turn', runtime: null });
+    render(
+      <AcpSendBox
+        conversation_id='conv-1'
+        backend='claude'
+        workspacePath='/tmp/workspace'
+        messageState={{
+          ...makeMessageState(),
+          tokenUsage: { total_tokens: 850_000 },
+          context_limit: 1_000_000,
+          slashCommands: [{ name: 'compact', description: 'Compact', source: 'acp', kind: 'template' }],
+        }}
+      />
+    );
+    await act(async () => {
+      screen.getByRole('button', { name: 'conversation.contextUsage.compactAction' }).click();
+    });
+    await waitFor(() =>
+      expect(sendMessageInvokeMock).toHaveBeenCalledWith(expect.objectContaining({ input: '/compact', files: [] }))
+    );
+    expect(clearFilesMock).not.toHaveBeenCalled();
+    expect(draftMutateMock).not.toHaveBeenCalled();
+  });
+
+  it('does not execute a skill named compact as an agent compaction operation', () => {
+    render(
+      <AcpSendBox
+        conversation_id='conv-1'
+        backend='claude'
+        workspacePath='/tmp/workspace'
+        messageState={{
+          ...makeMessageState(),
+          tokenUsage: { total_tokens: 850_000 },
+          context_limit: 1_000_000,
+          slashCommands: [{ name: 'compact', description: 'User skill', source: 'skill', kind: 'template' }],
+        }}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'conversation.contextUsage.compactAction' })).toBeDisabled();
+    expect(sendMessageInvokeMock).not.toHaveBeenCalled();
   });
 
   it('resets ACP loading state when sendMessage fails before any stream error arrives', async () => {

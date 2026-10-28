@@ -1073,7 +1073,17 @@ const DreamEngineSendBox: React.FC<{
               // nothing while that holds and starts showing the percentage the
               // moment a backend does report one. No onQueryDetail: the
               // category-detail query is a Claude-only capability.
-              <ContextUsageIndicator tokenUsage={tokenUsage} context_limit={context_limit} />
+              <ContextUsageIndicator
+                tokenUsage={tokenUsage}
+                context_limit={context_limit}
+                onCompact={
+                  !teamSendMessage &&
+                  slash_commands.some((command) => command.source === 'acp' && command.name === 'compact')
+                    ? () => executeCommand({ input: '/compact', files: [] })
+                    : undefined
+                }
+                compactDisabled={isBusy || isQueueInteractionLocked || !commandQueueRuntimeGate.hydrated}
+              />
             ) : undefined}
           </>
         }
