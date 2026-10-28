@@ -22,8 +22,11 @@ vi.mock('@/common/adapter/ipcBridge', () => ({
   oneDevops: {
     getMcpSelection: { invoke: async () => ({ selectedIds: mocks.selected }) },
     getMcpCatalog: {
-      invoke: async () =>
-        Array.from({ length: mocks.catalogCount }, (_, i) => ({ id: `team-${i}`, name: `Team ${i}` })),
+      invoke: async ({ offset }: { offset: number }) =>
+        Array.from({ length: mocks.catalogCount }, (_, i) => ({
+          id: `team-${offset + i}`,
+          name: `Team ${offset + i}`,
+        })),
     },
     replaceMcpSelection: { invoke: mocks.company },
   },
@@ -36,10 +39,17 @@ vi.mock('@arco-design/web-react', () => ({
     </button>
   ),
   Space: ({ children }: React.PropsWithChildren) => <div>{children}</div>,
-  Select: ({ options, onChange }: { options: { value: string }[]; onChange: (ids: string[]) => void }) => (
+  Select: ({
+    options,
+    onChange,
+  }: {
+    options: { value: string; label: string }[];
+    onChange: (ids: string[]) => void;
+  }) => (
     <button
       data-testid={`select-${options[0]?.value}`}
       data-options-count={options.length}
+      data-options-labels={JSON.stringify(options.map((option) => option.label))}
       onClick={() => onChange(options.map((item) => item.value))}
     >
       select
@@ -117,5 +127,23 @@ describe('enterprise-only MCP quota', () => {
     fireEvent.click(await screen.findByTestId('select-team-0'));
     expect(mocks.warning.mock.calls.at(-1)?.[0].content.props.children).toBe('settings.mcpQuotaReplace');
     expect(mocks.company).not.toHaveBeenCalled();
+  });
+  it('keeps selected connector names after paging and uses synced names before their catalog page loads', async () => {
+    mocks.enterprise = true;
+    mocks.selected = ['team-0', 'team-125'];
+    mocks.catalogCount = 50;
+    const synced = {
+      id: 'synced-125',
+      name: 'Synced connector',
+      original_json: JSON.stringify({ teamRegistryId: 'team-125' }),
+    } as IMcpServer;
+    render(<McpActivationPanel servers={[...locals, synced]} onChanged={vi.fn()} />);
+    await waitFor(() =>
+      expect(screen.getByTestId('select-team-0').dataset.optionsLabels).toContain('Synced connector')
+    );
+    await waitFor(() => expect(screen.getByText('settings.mcpNextPage')).not.toBeDisabled());
+    fireEvent.click(screen.getByText('settings.mcpNextPage'));
+    await waitFor(() => expect(screen.getByTestId('select-team-50').dataset.optionsLabels).toContain('Team 0'));
+    expect(screen.getByTestId('select-team-50').dataset.optionsLabels).toContain('Synced connector');
   });
 });

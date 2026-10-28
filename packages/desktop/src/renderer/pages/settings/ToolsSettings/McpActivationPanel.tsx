@@ -10,13 +10,15 @@ const LIMIT = 50;
 const BATCH_LIMIT = 10;
 type Props = { servers: IMcpServer[]; onChanged: (servers: IMcpServer[]) => void };
 
-const isCompanyServer = (server: IMcpServer): boolean => {
+const companyRegistryId = (server: IMcpServer): string | undefined => {
   try {
-    return Boolean(JSON.parse(server.original_json ?? '{}').teamRegistryId);
+    const id = JSON.parse(server.original_json ?? '{}')?.teamRegistryId;
+    return typeof id === 'string' && id.length > 0 ? id : undefined;
   } catch {
-    return false;
+    return undefined;
   }
 };
+const isCompanyServer = (server: IMcpServer): boolean => Boolean(companyRegistryId(server));
 
 /** Commit the next selection as a whole so replacements never transiently exceed the quota. */
 export default function McpActivationPanel({ servers, onChanged }: Props) {
@@ -25,6 +27,7 @@ export default function McpActivationPanel({ servers, onChanged }: Props) {
   const [company, setCompany] = useState<string[]>([]);
   const [savedCompany, setSavedCompany] = useState<string[]>([]);
   const [catalog, setCatalog] = useState<Array<{ id: string; name: string }>>([]);
+  const [catalogNames, setCatalogNames] = useState<Record<string, string>>({});
   const [companyReady, setCompanyReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -65,7 +68,13 @@ export default function McpActivationPanel({ servers, onChanged }: Props) {
       void oneDevops.getMcpCatalog
         .invoke({ q: query, offset })
         .then((rows) => {
-          if (active) setCatalog(rows);
+          if (active) {
+            setCatalog(rows);
+            setCatalogNames((previous) => ({
+              ...previous,
+              ...Object.fromEntries(rows.map((row) => [row.id, row.name])),
+            }));
+          }
         })
         .catch(() => {
           if (active) {
@@ -116,9 +125,12 @@ export default function McpActivationPanel({ servers, onChanged }: Props) {
       setSaving(false);
     }
   };
+  const syncedCompanyNames = new Map(servers.map((server) => [companyRegistryId(server), server.name]));
   const companyOptions = [
     ...catalog,
-    ...company.filter((id) => !catalog.some((row) => row.id === id)).map((id) => ({ id, name: id })),
+    ...company
+      .filter((id) => !catalog.some((row) => row.id === id))
+      .map((id) => ({ id, name: catalogNames[id] ?? syncedCompanyNames.get(id) ?? id })),
   ];
   return (
     <Space direction='vertical' className='w-full'>
