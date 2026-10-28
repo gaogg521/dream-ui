@@ -498,7 +498,8 @@
       "transcriptionFailed": "Échec de la transcription audio",
       "genericError": "Échec de la saisie vocale. Veuillez réessayer"
     },
-    "thisAgent": "cet agent"
+    "thisAgent": "cet agent",
+    "compacting": "Compression du contexte en cours, veuillez patienter."
   },
   "sideQuestion": {
     "title": "Question secondaire",

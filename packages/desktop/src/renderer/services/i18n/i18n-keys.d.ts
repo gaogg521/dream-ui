@@ -1214,6 +1214,7 @@ export type I18nKey =
   | 'conversation.chat.apiErrorNoCli'
   | 'conversation.chat.apiErrorSwitchFailed'
   | 'conversation.chat.apiErrorSwitched'
+  | 'conversation.chat.compacting'
   | 'conversation.chat.confirmationLoadError'
   | 'conversation.chat.noModelSelected'
   | 'conversation.chat.processing'

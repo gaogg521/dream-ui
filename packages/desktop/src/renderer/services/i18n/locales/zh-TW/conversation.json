@@ -498,7 +498,8 @@
       "transcriptionFailed": "音訊轉寫失敗",
       "genericError": "語音輸入失敗，請再試一次"
     },
-    "thisAgent": "目前助手"
+    "thisAgent": "目前助手",
+    "compacting": "正在為您壓縮中，請稍候。"
   },
   "sideQuestion": {
     "title": "順便問一下",

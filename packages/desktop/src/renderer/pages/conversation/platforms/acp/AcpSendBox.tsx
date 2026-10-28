@@ -195,6 +195,7 @@ const AcpSendBox: React.FC<{
     [promptCapability, t]
   );
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+  const [compactingConversation, setCompactingConversation] = useState<string | null>(null);
   const [currentMode, setCurrentMode] = useState<string | undefined>(session_mode);
   const prepareRuntimeConfig = useCallback(async () => {
     if (teamPermission) return;
@@ -342,6 +343,9 @@ const AcpSendBox: React.FC<{
           return;
         }
 
+        if (!runtimeView.isProcessing) {
+          setCompactingConversation(/^\/compact(?:\s|$)/.test(input.trim()) ? conversation_id : null);
+        }
         markSendStarted();
         setAiProcessing(true);
         const result = await ipcBridge.acpConversation.sendMessage.invoke({
@@ -352,6 +356,7 @@ const AcpSendBox: React.FC<{
         markSendAccepted(result.turn_id, result.runtime, result.msg_id);
         emitter.emit('chat.history.refresh');
       } catch (error: unknown) {
+        setCompactingConversation(null);
         const errorMsg =
           getPolicyDenialMessage(error, t) ||
           getConversationRuntimeWorkspaceErrorMessage(error, t) ||
@@ -446,6 +451,7 @@ Please check your local CLI tool authentication status`,
       t,
       teamPermission,
       teamSendMessage,
+      runtimeView.isProcessing,
     ]
   );
 
@@ -867,7 +873,10 @@ Please check your local CLI tool authentication status`,
         statusText={
           approvalWait
             ? t('conversation.chat.waitingApproval', { command: approvalWait.command })
-            : teamRuntime?.statusText
+            : (teamRuntime?.statusText ??
+              (aiProcessing && compactingConversation === conversation_id
+                ? t('conversation.chat.compacting')
+                : undefined))
         }
         externalElapsedSource={Boolean(teamRuntime) || turnStartedAtMs != null}
         startedAtMs={teamRuntime ? (teamRuntime.startedAtMs ?? null) : turnStartedAtMs}

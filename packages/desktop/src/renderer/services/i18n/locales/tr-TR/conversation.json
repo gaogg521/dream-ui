@@ -483,7 +483,8 @@
       "transcriptionFailed": "Ses yazıya dönüştürülemedi",
       "genericError": "Sesli giriş başarısız oldu. Lütfen tekrar deneyin"
     },
-    "thisAgent": "bu aracı"
+    "thisAgent": "bu aracı",
+    "compacting": "Bağlam sıkıştırılıyor, lütfen bekleyin."
   },
   "sideQuestion": {
     "title": "Kısa Soru",

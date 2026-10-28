@@ -499,7 +499,8 @@
       "transcriptionFailed": "Audio-Transkription fehlgeschlagen",
       "genericError": "Spracheingabe fehlgeschlagen. Bitte erneut versuchen"
     },
-    "thisAgent": "diesem Agenten"
+    "thisAgent": "diesem Agenten",
+    "compacting": "Der Kontext wird komprimiert. Bitte warten."
   },
   "sideQuestion": {
     "title": "Nebenfrage",

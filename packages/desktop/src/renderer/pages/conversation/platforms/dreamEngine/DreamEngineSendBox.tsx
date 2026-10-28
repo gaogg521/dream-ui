@@ -140,6 +140,7 @@ const DreamEngineSendBox: React.FC<{
   teamRuntime?: TeamSendBoxRuntime;
 }> = ({ conversation_id, modelSelection, session_mode, agent_name, teamSendMessage, teamRuntime }) => {
   const [dynamicModes, setDynamicModes] = useState<AgentModeOption[]>([]);
+  const [compactingConversation, setCompactingConversation] = useState<string | null>(null);
   const [currentMode, setCurrentMode] = useState<string | undefined>(session_mode);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const layout = useLayoutContext();
@@ -367,6 +368,9 @@ const DreamEngineSendBox: React.FC<{
           return;
         }
 
+        if (!runtimeView.isProcessing) {
+          setCompactingConversation(/^\/compact(?:\s|$)/.test(input.trim()) ? conversation_id : null);
+        }
         markSendStarted();
         setWaitingResponse(true);
         const res = await ipcBridge.conversation.sendMessage.invoke({
@@ -382,6 +386,7 @@ const DreamEngineSendBox: React.FC<{
           emitter.emit('dream.workspace.refresh');
         }
       } catch (error) {
+        setCompactingConversation(null);
         // A send refused at the HTTP layer never produces a stream, and the
         // stream events are the only thing that clears `waitingResponse` while
         // the member stays in this conversation (the rehydration that also
@@ -424,6 +429,7 @@ const DreamEngineSendBox: React.FC<{
       teamPermission,
       teamSendMessage,
       replyRequested,
+      runtimeView.isProcessing,
     ]
   );
 
@@ -890,7 +896,8 @@ const DreamEngineSendBox: React.FC<{
         statusText={
           approvalWait
             ? t('conversation.chat.waitingApproval', { command: approvalWait.command })
-            : teamRuntime?.statusText
+            : (teamRuntime?.statusText ??
+              (running && compactingConversation === conversation_id ? t('conversation.chat.compacting') : undefined))
         }
         externalElapsedSource={Boolean(teamRuntime) || turnStartedAtMs != null}
         startedAtMs={teamRuntime ? (teamRuntime.startedAtMs ?? null) : turnStartedAtMs}

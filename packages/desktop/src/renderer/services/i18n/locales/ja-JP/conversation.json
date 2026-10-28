@@ -498,7 +498,8 @@
       "transcriptionFailed": "音声の文字起こしに失敗しました",
       "genericError": "音声入力に失敗しました。もう一度お試しください"
     },
-    "thisAgent": "このエージェント"
+    "thisAgent": "このエージェント",
+    "compacting": "コンテキストを圧縮しています。しばらくお待ちください。"
   },
   "sideQuestion": {
     "title": "ちょっと質問",

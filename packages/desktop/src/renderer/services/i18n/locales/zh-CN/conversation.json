@@ -498,7 +498,8 @@
       "transcriptionFailed": "音频转写失败",
       "genericError": "语音输入失败，请重试"
     },
-    "thisAgent": "当前助手"
+    "thisAgent": "当前助手",
+    "compacting": "正在给您压缩中，请稍后。"
   },
   "sideQuestion": {
     "title": "顺便问一下",

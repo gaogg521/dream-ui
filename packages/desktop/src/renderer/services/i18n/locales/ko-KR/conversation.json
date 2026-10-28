@@ -498,7 +498,8 @@
       "transcriptionFailed": "오디오 전사에 실패했습니다",
       "genericError": "음성 입력에 실패했습니다. 다시 시도해 주세요"
     },
-    "thisAgent": "현재 에이전트"
+    "thisAgent": "현재 에이전트",
+    "compacting": "컨텍스트를 압축하고 있습니다. 잠시만 기다려 주세요."
   },
   "sideQuestion": {
     "title": "잠깐 질문",

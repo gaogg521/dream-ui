@@ -504,7 +504,8 @@
       "transcriptionFailed": "A transcrição de áudio falhou",
       "genericError": "Falha na entrada de voz. Por favor, tente novamente"
     },
-    "thisAgent": "este agente"
+    "thisAgent": "este agente",
+    "compacting": "Compactando o contexto, aguarde."
   },
   "sideQuestion": {
     "title": "Pergunta Paralela",

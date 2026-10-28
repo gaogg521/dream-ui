@@ -498,7 +498,8 @@
       "transcriptionFailed": "Audio transcription failed",
       "genericError": "Voice input failed. Please try again"
     },
-    "thisAgent": "this agent"
+    "thisAgent": "this agent",
+    "compacting": "Compacting your context, please wait."
   },
   "sideQuestion": {
     "title": "Side Question",

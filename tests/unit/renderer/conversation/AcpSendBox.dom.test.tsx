@@ -177,7 +177,9 @@ vi.mock('@/renderer/components/chat/MobileActionSheet', () => ({
   },
   useAttachEntry: () => ({ entries: [], hiddenFileInput: null }),
 }));
-vi.mock('@/renderer/components/chat/ThoughtDisplay', () => ({ default: () => null }));
+vi.mock('@/renderer/components/chat/ThoughtDisplay', () => ({
+  default: ({ statusText }: { statusText?: string }) => <div data-testid='thought-status'>{statusText}</div>,
+}));
 vi.mock('@/renderer/components/media/FileAttachButton', () => ({ default: () => null }));
 vi.mock('@/renderer/components/media/FilePreview', () => ({ default: () => null }));
 vi.mock('@/renderer/components/media/HorizontalFileList', () => ({
@@ -359,7 +361,7 @@ describe('AcpSendBox', () => {
   it('runs an advertised compact command without sending or clearing the composer draft', async () => {
     draftContentRef.current = 'unfinished question';
     sendMessageInvokeMock.mockResolvedValue({ msg_id: 'compact-msg', turn_id: 'compact-turn', runtime: null });
-    render(
+    const { rerender } = render(
       <AcpSendBox
         conversation_id='conv-1'
         backend='claude'
@@ -380,6 +382,24 @@ describe('AcpSendBox', () => {
     );
     expect(clearFilesMock).not.toHaveBeenCalled();
     expect(draftMutateMock).not.toHaveBeenCalled();
+    rerender(
+      <AcpSendBox
+        conversation_id='conv-1'
+        backend='claude'
+        workspacePath='/tmp/workspace'
+        messageState={{ ...makeMessageState(), aiProcessing: true }}
+      />
+    );
+    expect(screen.getByTestId('thought-status')).toHaveTextContent('conversation.chat.compacting');
+    rerender(
+      <AcpSendBox
+        conversation_id='conv-1'
+        backend='claude'
+        workspacePath='/tmp/workspace'
+        messageState={{ ...makeMessageState(), aiProcessing: false }}
+      />
+    );
+    expect(screen.getByTestId('thought-status')).toBeEmptyDOMElement();
   });
 
   it('does not execute a skill named compact as an agent compaction operation', () => {

@@ -499,7 +499,8 @@
       "transcriptionFailed": "Error en la transcripción de audio",
       "genericError": "Error en la entrada de voz. Por favor intenta de nuevo"
     },
-    "thisAgent": "este agente"
+    "thisAgent": "este agente",
+    "compacting": "Comprimiendo el contexto, espera un momento."
   },
   "sideQuestion": {
     "title": "Pregunta lateral",
