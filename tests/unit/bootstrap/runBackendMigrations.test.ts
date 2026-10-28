@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { execFile } from 'node:child_process';
 
 import { IMAGE_GEN_ENV_KEYS } from '@/common/config/imageGenerationMcpEnv';
 import {
@@ -31,6 +32,10 @@ const {
 
 vi.mock('@/common/adapter/httpBridge', () => ({
   httpRequest: httpRequestMock,
+}));
+
+vi.mock('node:child_process', () => ({
+  execFile: vi.fn((_command, _args, _options, callback) => callback({ code: 'ENOENT' })),
 }));
 
 vi.mock('@/common/adapter/ipcBridge', () => ({
@@ -168,6 +173,38 @@ describe('resolveImageGenerationMigrationConfig', () => {
 });
 
 describe('runBackendMigrations', () => {
+  it('still preflights an enabled chrome-devtools MCP when npx is unavailable', async () => {
+    const server: IMcpServer = {
+      ...imageServer(),
+      id: 'chrome-enabled',
+      name: 'chrome-devtools',
+      transport: { type: 'stdio', command: 'npx', args: ['-y', 'chrome-devtools-mcp@latest'] },
+    };
+    listServersMock.mockResolvedValue([imageServer(), server]);
+
+    await runBackendMigrations(configFile as never);
+
+    await vi.waitFor(() => expect(testMcpConnectionMock).toHaveBeenCalledWith(server));
+  });
+
+  it('never probes or starts a disabled chrome-devtools MCP during startup', async () => {
+    listServersMock.mockResolvedValue([
+      imageServer(),
+      {
+        ...imageServer(),
+        id: 'chrome-disabled',
+        name: 'chrome-devtools',
+        enabled: false,
+        transport: { type: 'stdio', command: 'npx', args: ['-y', 'chrome-devtools-mcp@latest'] },
+      },
+    ]);
+
+    await runBackendMigrations(configFile as never);
+
+    expect(execFile).not.toHaveBeenCalled();
+    expect(testMcpConnectionMock).not.toHaveBeenCalled();
+  });
+
   it('does not write image generation business config back to local config storage', async () => {
     listServersMock.mockResolvedValue([imageServer()]);
     configFileGetMock.mockImplementation(async (key: string) => {

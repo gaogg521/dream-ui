@@ -618,6 +618,7 @@ async function isCommandAvailable(command: string): Promise<boolean> {
 async function ensureBuiltinChromeDevtoolsAvailability(server?: IMcpServer): Promise<void> {
   if (
     !server ||
+    !server.enabled ||
     server.name !== BUILTIN_CHROME_DEVTOOLS_NAME ||
     server.transport.type !== 'stdio' ||
     server.transport.command !== 'npx'
