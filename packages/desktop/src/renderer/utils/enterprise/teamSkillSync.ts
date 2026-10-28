@@ -196,7 +196,7 @@ export async function syncTeamMcp(
     return null;
   }
 
-  // Employee-bound connectors ride along (outside the member's quota). If they
+  // Employee-bound connectors share the enterprise distribution cap. If they
   // cannot be read, sync non-authoritatively so cached bound rows are not wiped.
   let bound: McpRegistryRows = [];
   let boundKnown = true;
