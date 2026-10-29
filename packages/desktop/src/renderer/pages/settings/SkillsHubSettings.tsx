@@ -13,6 +13,7 @@ import { buildSkillImportNotice, getSkillImportErrorMessage } from './skillImpor
 import SkillUsedByStack, { getAssistantsUsingSkill } from './skillsHub/SkillUsedByStack';
 import { SKILLS_ROUTES } from './skillsHub/skillsRoutes';
 import { BUILTIN_CATEGORY_ORDER, skillPillKey, useBuiltinSkillDisplay } from './skillsHub/skillCorpus';
+import { skillRowKey } from './skillsHub/skillRowKey';
 import CompanyBadge from '@/renderer/components/enterprise/CompanyBadge';
 
 // Skill 信息类型 / Skill info type
@@ -883,7 +884,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
                     const isCustom = skill.source === 'custom';
                     return (
                       <div
-                        key={skill.name}
+                        key={skillRowKey(skill)}
                         data-testid={`my-skill-card-${normalizeTestId(skill.name)}`}
                         ref={(el) => {
                           skillRefs.current[skill.name] = el;
@@ -1105,7 +1106,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
             <div className='w-full flex flex-col gap-6px'>
               {extensionSkills.map((skill) => (
                 <div
-                  key={skill.name}
+                  key={skillRowKey(skill)}
                   style={{ contentVisibility: 'auto', containIntrinsicSize: '84px' }}
                   ref={(el) => {
                     skillRefs.current[skill.name] = el;
@@ -1152,7 +1153,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
             <div className='w-full flex flex-col gap-6px'>
               {builtinAutoSkills.map((skill) => (
                 <div
-                  key={skill.name}
+                  key={skillRowKey(skill)}
                   style={{ contentVisibility: 'auto', containIntrinsicSize: '84px' }}
                   ref={(el) => {
                     skillRefs.current[skill.name] = el;
