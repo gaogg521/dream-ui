@@ -18,6 +18,7 @@ import OfflineOfficeEditor from './original/OfflineOfficeEditor';
 import { sourceKind } from './original/sourceKind';
 import IntranetOfficeEditor from './original/intranet/OfficeEditor';
 import { officeApi } from './original/intranet/officeApi';
+import SaveAsMemoryButton from './attach/SaveAsMemoryButton';
 import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
 
 export function RichDocumentEditor({
@@ -336,6 +337,7 @@ export default function LibraryDocument(props: Props) {
           <span title={props.location}>{props.location}</span>
         </div>
         <div className={styles.documentCommands}>
+          {props.documentId && <SaveAsMemoryButton document={{ id: props.documentId, title: props.title }} />}
           {props.documentId && props.onAddToConversation && (
             <Button onClick={props.onAddToConversation}>{t('common.knowledgeLibrary.addToConversation')}</Button>
           )}

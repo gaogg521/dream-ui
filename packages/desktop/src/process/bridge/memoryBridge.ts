@@ -22,6 +22,7 @@ import { listAgents, readAgentFile, resolveAgentFile, writeAgentFile } from '@pr
 import { compactGroup, compactionStatus, undoCompaction } from '@process/services/engineMemory/compact';
 import {
   deleteEngineMemory,
+  importLibraryReference,
   listEngineMemory,
   moveGroupsToShared,
   writeEngineMemory,
@@ -162,6 +163,24 @@ function engineMemoryBase(): string {
 }
 
 export function initMemoryBridge(): void {
+  const claudeTarget = async (expected?: string) => {
+    const label = await resolveClaudeProjectRoot();
+    const groupId = sanitizePathForClaude(label);
+    if (expected !== undefined && expected !== groupId)
+      throw new Error('The selected Claude project changed; reopen the memory action');
+    return { label, groupId };
+  };
+  ipcBridge.memory.claudeCompactionStatus.provider(async () => {
+    const target = await claudeTarget();
+    return { ...compactionStatus(path.join(os.homedir(), '.claude'), target.groupId), ...target };
+  });
+  ipcBridge.memory.claudeCompact.provider(async ({ groupId }) =>
+    compactGroup(path.join(os.homedir(), '.claude'), (await claudeTarget(groupId)).groupId)
+  );
+  ipcBridge.memory.claudeUndoCompaction.provider(async ({ groupId }) =>
+    undoCompaction(path.join(os.homedir(), '.claude'), (await claudeTarget(groupId)).groupId)
+  );
+  ipcBridge.memory.engineImportReference.provider(async (input) => importLibraryReference(engineMemoryBase(), input));
   ipcBridge.memory.engineCompactionStatus.provider(async ({ groupId }) =>
     compactionStatus(engineMemoryBase(), groupId)
   );

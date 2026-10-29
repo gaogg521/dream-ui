@@ -18,6 +18,7 @@ export async function saveLibraryOriginal(input: {
   title: string;
   content: string;
   personal: boolean;
+  mimeType?: string;
   libraryId?: string;
   source?: string | File;
   signal?: AbortSignal;
@@ -52,7 +53,7 @@ export async function saveLibraryOriginal(input: {
     title: input.title,
     ...(input.libraryId ? { libraryId: input.libraryId } : {}),
     ...(input.personal ? { scope: 'personal' as const } : {}),
-    ...(original?.type ? { mimeType: original.type } : {}),
+    ...(input.mimeType || original?.type ? { mimeType: input.mimeType || original?.type } : {}),
   });
   if (!doc?.id) throw new Error('registerRagDocument returned no id');
   try {

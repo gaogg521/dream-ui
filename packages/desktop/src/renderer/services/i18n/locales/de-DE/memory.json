@@ -124,10 +124,19 @@
     "toLibrary": "In Bibliothek speichern",
     "toLibraryTitle": "Diesen Eintrag in der Bibliothek speichern?",
     "toLibraryBody": "Unter „Meine Dateien“ wird ein neues Dokument mit dem Text dieses Eintrags angelegt (nur für Sie sichtbar). Der Eintrag selbst bleibt unverändert; danach werden beide getrennt bearbeitet.",
-    "toLibraryEnterprise": "Auf dem Firmenserver wird unter Ihren eigenen „Meine Dateien“ ein neues Dokument mit dem Text dieses Eintrags angelegt (nur für Sie sichtbar, nicht für Administratoren). Der Eintrag selbst bleibt unverändert; danach werden beide getrennt bearbeitet.",
+    "toLibraryEnterprise": "Erstellt eine Dokumentkopie mit persönlichem Zugriffsbereich unter Meine Dokumente auf dem Unternehmensserver. Die ursprüngliche Erinnerung bleibt erhalten; beide Kopien werden unabhängig bearbeitet.",
     "toLibraryDone": "In der Bibliothek gespeichert",
     "toLibraryFailed": "Speichern fehlgeschlagen",
     "openManager": "Speicher öffnen",
-    "merged": "Zusammengeführt"
+    "merged": "Zusammengeführt",
+    "toMemory": "Als Assistentengedächtnis speichern",
+    "toMemoryTitle": "Dokument im Gedächtnis speichern?",
+    "toMemoryBody": "Kopiert den gespeicherten Text in das gemeinsame Gedächtnis dieses Computers für Gespräche ohne Projekt. Das Original bleibt unverändert; beide Kopien werden getrennt bearbeitet.",
+    "toMemoryDescription": "Suchbegriffe und Beschreibung (bearbeitbar)",
+    "toMemoryEmpty": "Kein gespeicherter Text vorhanden. Extrahieren Sie zuerst den Text.",
+    "toMemoryTooLarge": "Das Dokument überschreitet 1 MiB. Speichern Sie zuerst einen kürzeren Auszug.",
+    "toMemoryDone": "Im Assistentengedächtnis gespeichert",
+    "toMemoryFailed": "Speichern im Gedächtnis fehlgeschlagen",
+    "globalSearchPlaceholder": "Dokumente und Assistentengedächtnis durchsuchen"
   }
 }

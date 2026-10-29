@@ -20,6 +20,7 @@ import {
   type EngineMemoryOverview,
 } from '@/common/adapter/ipcBridge';
 import styles from './EngineMemoryTab.module.css';
+import MemoryTidyActions from './MemoryTidyActions';
 
 const TYPE_COLOR: Record<string, string> = {
   user: 'arcoblue',
@@ -34,7 +35,16 @@ const typeOf = (content: string): string => content.match(/^type:\s*(\w+)/m)?.[1
 
 const descOf = (content: string): string => {
   const described = content.match(/^description:\s*(.+?)$/m);
-  if (described) return described[1].trim();
+  if (described) {
+    const value = described[1].trim();
+    try {
+      const decoded: unknown = JSON.parse(value);
+      if (typeof decoded === 'string') return decoded;
+    } catch {
+      /* Plain YAML scalar. */
+    }
+    return value;
+  }
   return (
     content
       .replace(/^---[\s\S]*?---\n?/m, '')
@@ -349,7 +359,19 @@ const EngineMemoryTab: React.FC = () => {
           <p className={styles.hint}>{t('memory.engine.projectsHint')}</p>
           <Collapse bordered={false}>
             {projects.map((group) => (
-              <Collapse.Item key={group.id} name={group.id} header={groupHeader(group)}>
+              <Collapse.Item
+                key={group.id}
+                name={group.id}
+                header={groupHeader(group)}
+                extra={
+                  <MemoryTidyActions
+                    groupId={group.id}
+                    label={group.label}
+                    version={group.updatedAt}
+                    onChanged={load}
+                  />
+                }
+              >
                 {table(group, '')}
               </Collapse.Item>
             ))}

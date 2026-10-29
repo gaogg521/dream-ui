@@ -13,6 +13,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Input, Message, Modal, Spin, Table, Tag } from '@arco-design/web-react';
 import { Add, Delete, Edit, FileText, Refresh } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
+import MemoryTidyActions from './MemoryTidyActions';
 import { memory as memoryIpc, type MemoryFileEntry } from '@/common/adapter/ipcBridge';
 
 const TYPE_COLOR: Record<string, string> = {
@@ -198,6 +199,12 @@ const ClaudeAutoMemory: React.FC<Props> = ({ version }) => {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <span style={{ fontSize: 12, color: 'var(--color-text-3)' }}>{t('memory.autoHint')}</span>
         <div style={{ display: 'flex', gap: 8 }}>
+          <MemoryTidyActions
+            claude
+            label='Claude Code'
+            version={version + entries.reduce((sum, item) => sum + item.updatedAt, entries.length)}
+            onChanged={load}
+          />
           <Button size='small' icon={<Refresh theme='outline' />} loading={loading} onClick={() => void load()}>
             {t('memory.refresh')}
           </Button>

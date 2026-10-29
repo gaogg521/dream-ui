@@ -124,10 +124,19 @@
     "toLibrary": "자료실에 저장",
     "toLibraryTitle": "이 메모리를 자료실에 저장할까요?",
     "toLibraryBody": "\"내 자료\"에 새 문서가 만들어집니다(나만 볼 수 있음). 내용은 이 메모리의 본문입니다. 원래 메모리는 그대로이며 이후 각각 따로 수정됩니다.",
-    "toLibraryEnterprise": "회사 서버의 내 \"내 자료\"에 새 문서가 만들어집니다(나만 볼 수 있고 관리자는 볼 수 없음). 원래 메모리는 그대로이며 이후 각각 따로 수정됩니다.",
+    "toLibraryEnterprise": "회사 서버의 내 문서에 개인 범위의 문서 사본을 만듭니다. 원본 기억은 유지되며 각 사본은 별도로 편집됩니다.",
     "toLibraryDone": "자료실에 저장했습니다",
     "toLibraryFailed": "저장하지 못했습니다",
     "openManager": "메모리 관리 열기",
-    "merged": "병합됨"
+    "merged": "병합됨",
+    "toMemory": "도우미 기억으로 저장",
+    "toMemoryTitle": "문서를 도우미 기억으로 저장할까요?",
+    "toMemoryBody": "저장된 본문을 이 컴퓨터의 공유 기억에 복사하여 프로젝트 없는 대화에서 검색합니다. 원본은 그대로이며 각각 편집됩니다.",
+    "toMemoryDescription": "검색 키워드 및 설명 (수정 가능)",
+    "toMemoryEmpty": "저장된 본문이 없습니다. 먼저 텍스트를 추출하세요.",
+    "toMemoryTooLarge": "문서가 1 MiB를 초과합니다. 필요한 부분을 짧게 저장하세요.",
+    "toMemoryDone": "도우미 기억으로 저장됨",
+    "toMemoryFailed": "도우미 기억 저장 실패",
+    "globalSearchPlaceholder": "자료 및 도우미 기억 검색"
   }
 }

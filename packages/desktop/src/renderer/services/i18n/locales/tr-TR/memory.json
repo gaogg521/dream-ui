@@ -124,10 +124,19 @@
     "toLibrary": "Kütüphaneye kaydet",
     "toLibraryTitle": "Bu bellek kütüphaneye kaydedilsin mi?",
     "toLibraryBody": "\"Dosyalarım\" içinde bu belleğin metniyle yeni bir belge oluşturulur (yalnızca siz görürsünüz). Bellek değişmez; sonrasında ikisi ayrı düzenlenir.",
-    "toLibraryEnterprise": "Şirket sunucusundaki kendi \"Dosyalarım\" alanınızda bu belleğin metniyle yeni bir belge oluşturulur (yalnızca siz görürsünüz, yöneticiler göremez). Bellek değişmez; sonrasında ikisi ayrı düzenlenir.",
+    "toLibraryEnterprise": "Şirket sunucusundaki Belgelerim bölümünde kişisel kapsamlı bir belge kopyası oluşturur. Özgün bellek korunur; her kopya bağımsız düzenlenir.",
     "toLibraryDone": "Kütüphaneye kaydedildi",
     "toLibraryFailed": "Kaydedilemedi",
     "openManager": "Belleği aç",
-    "merged": "Birleştirildi"
+    "merged": "Birleştirildi",
+    "toMemory": "Asistan belleğine kaydet",
+    "toMemoryTitle": "Belge asistan belleğine kaydedilsin mi?",
+    "toMemoryBody": "Kayıtlı metin bu bilgisayardaki paylaşılan belleğe kopyalanır ve projesiz konuşmalarda kullanılır. Belge değişmez; kopyalar ayrı düzenlenir.",
+    "toMemoryDescription": "Arama sözcükleri ve açıklama (düzenlenebilir)",
+    "toMemoryEmpty": "Kayıtlı metin yok. Önce metni çıkarın.",
+    "toMemoryTooLarge": "Belge 1 MiB sınırını aşıyor. Önce kısa bir bölüm kaydedin.",
+    "toMemoryDone": "Asistan belleğine kaydedildi",
+    "toMemoryFailed": "Asistan belleğine kaydedilemedi",
+    "globalSearchPlaceholder": "Belgelerde ve asistan belleğinde ara"
   }
 }

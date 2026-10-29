@@ -124,10 +124,19 @@
     "toLibrary": "Guardar en la biblioteca",
     "toLibraryTitle": "¿Guardar esta memoria en la biblioteca?",
     "toLibraryBody": "Se crea un documento nuevo en Mis archivos (solo tú lo ves) con el texto de esta memoria. La memoria no cambia; después, cada una se edita por separado.",
-    "toLibraryEnterprise": "Se crea un documento nuevo en tus Mis archivos del servidor de la empresa (solo tú lo ves, los administradores no) con el texto de esta memoria. La memoria no cambia; después, cada una se edita por separado.",
+    "toLibraryEnterprise": "Crea una copia del documento de ámbito personal en Mis documentos del servidor de la empresa. La memoria original se conserva; cada copia se edita por separado.",
     "toLibraryDone": "Guardado en la biblioteca",
     "toLibraryFailed": "No se pudo guardar",
     "openManager": "Abrir Memoria",
-    "merged": "Unida"
+    "merged": "Unida",
+    "toMemory": "Guardar en la memoria del asistente",
+    "toMemoryTitle": "¿Guardar el documento en la memoria?",
+    "toMemoryBody": "Copia el texto guardado en la memoria compartida de este equipo para conversaciones sin proyecto. El original no cambia; las copias se editan por separado.",
+    "toMemoryDescription": "Palabras clave y descripción (editables)",
+    "toMemoryEmpty": "No hay texto guardado. Extráigalo primero.",
+    "toMemoryTooLarge": "El documento supera 1 MiB. Guarde primero un extracto más corto.",
+    "toMemoryDone": "Guardado en la memoria del asistente",
+    "toMemoryFailed": "No se pudo guardar en la memoria",
+    "globalSearchPlaceholder": "Buscar documentos y memoria del asistente"
   }
 }

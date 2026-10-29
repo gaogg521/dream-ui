@@ -1052,9 +1052,20 @@ export const memory = {
   suggestRoots: bridge.buildProvider<string[], void>('memory.suggestRoots'),
   /** Built-in engine memory (the files the model itself reads and writes). */
   engineList: bridge.buildProvider<EngineMemoryOverview, void>('memory.engineList'),
+  engineImportReference: bridge.buildProvider<
+    { filename: string },
+    { title: string; description: string; content: string }
+  >('memory.engineImportReference'),
   engineWrite: bridge.buildProvider<void, { groupId: string; filename: string; content: string }>('memory.engineWrite'),
   engineDelete: bridge.buildProvider<void, { path: string }>('memory.engineDelete'),
   /** Tidying a long memory directory: ask what it would do, do it (after a backup), undo it. */
+  claudeCompactionStatus: bridge.buildProvider<EngineCompactionStatus & { groupId: string; label: string }, void>(
+    'memory.claudeCompactionStatus'
+  ),
+  claudeCompact: bridge.buildProvider<EngineCompactionResult, { groupId: string }>('memory.claudeCompact'),
+  claudeUndoCompaction: bridge.buildProvider<{ restored: boolean; backupId?: string }, { groupId: string }>(
+    'memory.claudeUndoCompaction'
+  ),
   engineCompactionStatus: bridge.buildProvider<EngineCompactionStatus, { groupId: string }>(
     'memory.engineCompactionStatus'
   ),

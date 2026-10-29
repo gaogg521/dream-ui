@@ -124,10 +124,19 @@
     "toLibrary": "Salvar na biblioteca",
     "toLibraryTitle": "Salvar esta memória na biblioteca?",
     "toLibraryBody": "Um novo documento é criado em Meus arquivos (só você vê) com o texto desta memória. A memória não muda; depois disso, cada um é editado separadamente.",
-    "toLibraryEnterprise": "Um novo documento é criado em Meus arquivos no servidor da empresa (só você vê, administradores não) com o texto desta memória. A memória não muda; depois disso, cada um é editado separadamente.",
+    "toLibraryEnterprise": "Cria uma cópia do documento de escopo pessoal em Meus documentos no servidor da empresa. A memória original é mantida; cada cópia é editada separadamente.",
     "toLibraryDone": "Salvo na biblioteca",
     "toLibraryFailed": "Não foi possível salvar",
     "openManager": "Abrir Memória",
-    "merged": "Reunida"
+    "merged": "Reunida",
+    "toMemory": "Salvar na memória do assistente",
+    "toMemoryTitle": "Salvar documento na memória?",
+    "toMemoryBody": "Copia o texto salvo para a memória compartilhada deste computador, usada em conversas sem projeto. O original não muda; as cópias são editadas separadamente.",
+    "toMemoryDescription": "Palavras-chave e descrição (editáveis)",
+    "toMemoryEmpty": "O documento não tem texto salvo. Extraia o texto primeiro.",
+    "toMemoryTooLarge": "O documento excede 1 MiB. Salve um trecho menor primeiro.",
+    "toMemoryDone": "Salvo na memória do assistente",
+    "toMemoryFailed": "Não foi possível salvar na memória",
+    "globalSearchPlaceholder": "Pesquisar documentos e memória do assistente"
   }
 }

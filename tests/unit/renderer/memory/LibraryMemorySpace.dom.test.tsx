@@ -8,6 +8,7 @@ const ipc = vi.hoisted(() => ({
   engineList: vi.fn(),
   engineWrite: vi.fn(),
   registerRagDocument: vi.fn(),
+  deleteRagDocument: vi.fn(),
   getRagContentState: vi.fn(),
   setRagContent: vi.fn(),
 }));
@@ -19,6 +20,7 @@ vi.mock('@/common', () => ({
   ipcBridge: {
     oneDevops: {
       registerRagDocument: { invoke: ipc.registerRagDocument },
+      deleteRagDocument: { invoke: ipc.deleteRagDocument },
       getRagContentState: { invoke: ipc.getRagContentState },
       setRagContent: { invoke: ipc.setRagContent },
     },
@@ -57,10 +59,14 @@ const group = (id: string, kind: string, files: ReturnType<typeof file>[]) => ({
   updatedAt: 1,
 });
 
-const renderIt = (props: { enterprise?: boolean; onLibraryChanged?: () => void } = {}) =>
+const renderIt = (props: { enterprise?: boolean; onLibraryChanged?: () => void; searchQuery?: string } = {}) =>
   render(
     <MemoryRouter>
-      <LibraryMemorySpace enterprise={props.enterprise ?? false} onLibraryChanged={props.onLibraryChanged} />
+      <LibraryMemorySpace
+        enterprise={props.enterprise ?? false}
+        onLibraryChanged={props.onLibraryChanged}
+        searchQuery={props.searchQuery}
+      />
     </MemoryRouter>
   );
 
@@ -80,6 +86,7 @@ describe('LibraryMemorySpace', () => {
       ],
     });
     ipc.registerRagDocument.mockResolvedValue({ id: 'doc1' });
+    ipc.deleteRagDocument.mockResolvedValue(undefined);
     ipc.getRagContentState.mockResolvedValue({ content: '', revision: 3 });
     ipc.setRagContent.mockResolvedValue(4);
   });
@@ -139,4 +146,11 @@ describe('LibraryMemorySpace', () => {
     expect(ipc.setRagContent).not.toHaveBeenCalled();
     expect(onLibraryChanged).not.toHaveBeenCalled();
   });
+});
+
+it('shows only matching memories as a controlled global-search group', async () => {
+  renderIt({ searchQuery: 'monday' });
+  await waitFor(() => expect(screen.getByText('Deploy keys')).toBeTruthy());
+  expect(screen.queryByText('Codename')).toBeNull();
+  expect(screen.queryByPlaceholderText('memory.space.searchPlaceholder')).toBeNull();
 });

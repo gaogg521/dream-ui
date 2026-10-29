@@ -23,6 +23,7 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
+  renameSync,
   readFileSync,
   rmdirSync,
   statSync,
@@ -30,6 +31,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import type { EngineMemoryFile, EngineMemoryGroup, EngineMemoryOverview } from '@/common/adapter/ipcBridge';
 
 export const SHARED_GROUP_ID = '_shared';
@@ -66,7 +68,17 @@ function kindOf(groupId: string): EngineMemoryGroup['kind'] {
 function entryName(filename: string, content: string): string {
   if (filename === INDEX_FILE) return filename;
   const match = content.match(/^name:\s*(.+?)$/m);
-  return match ? match[1].trim() : filename.replace(/\.md$/, '').replace(/[-_]/g, ' ');
+  if (match) {
+    const value = match[1].trim();
+    try {
+      const decoded: unknown = JSON.parse(value);
+      if (typeof decoded === 'string') return decoded;
+    } catch {
+      /* Plain YAML scalar. */
+    }
+    return value;
+  }
+  return filename.replace(/\.md$/, '').replace(/[-_]/g, ' ');
 }
 
 /** A per-conversation directory is named after a long path; what identifies it is the date and the id. */
@@ -246,4 +258,60 @@ export function moveGroupsToShared(base: string, groupIds: string[]): MoveToShar
     removeIfEmpty(path.join(projectsDir(base), groupId));
   }
   return result;
+}
+
+/** Copy a user-selected library reference into shared memory, without overwriting any existing entry. */
+export function importLibraryReference(
+  base: string,
+  input: { title: string; description: string; content: string }
+): { filename: string } {
+  if (
+    typeof input.title !== 'string' ||
+    !input.title.trim() ||
+    typeof input.content !== 'string' ||
+    !input.content.trim()
+  )
+    throw new Error('A title and nonempty reference text are required');
+  if (Buffer.byteLength(input.content, 'utf8') > 1024 * 1024)
+    throw new Error('Reference text exceeds 1 MiB; select a smaller passage');
+  const title = Array.from(input.title.replace(/[\r\n]/g, ' ').trim())
+    .slice(0, 160)
+    .join('');
+  const description = Array.from(
+    String(input.description ?? '')
+      .replace(/[\r\n]/g, ' ')
+      .trim()
+  )
+    .slice(0, 120)
+    .join('');
+  const dir = memoryDirOf(base, SHARED_GROUP_ID);
+  mkdirSync(dir, { recursive: true });
+  const filename = `library_${randomUUID().replaceAll('-', '')}.md`;
+  const target = path.join(dir, filename);
+  const index = path.join(dir, INDEX_FILE);
+  const oldIndex = existsSync(index) ? readFileSync(index, 'utf8') : '';
+  const label = Array.from(title.replace(/[[\]]/g, ' ')).slice(0, 24).join('');
+  const prefix = `- [${label}](${filename})`;
+  const tail = Array.from(` — ${description}`)
+    .slice(0, Math.max(0, 120 - Array.from(prefix).length))
+    .join('');
+  const temporary = path.join(dir, `.index-${randomUUID()}.tmp`);
+  writeFileSync(
+    target,
+    `---\nname: ${JSON.stringify(title)}\ndescription: ${JSON.stringify(description)}\ntype: reference\n---\n\n${input.content}`,
+    { encoding: 'utf8', flag: 'wx' }
+  );
+  try {
+    writeFileSync(temporary, oldIndex + (oldIndex && !oldIndex.endsWith('\n') ? '\n' : '') + prefix + tail + '\n', {
+      encoding: 'utf8',
+      flag: 'wx',
+    });
+    renameSync(temporary, index);
+  } catch (error) {
+    unlinkSync(target);
+    throw error;
+  } finally {
+    if (existsSync(temporary)) unlinkSync(temporary);
+  }
+  return { filename };
 }

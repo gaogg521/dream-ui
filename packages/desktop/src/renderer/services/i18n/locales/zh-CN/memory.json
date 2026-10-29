@@ -124,10 +124,19 @@
     "toLibrary": "存入资料库",
     "toLibraryTitle": "把这条记忆存入资料库？",
     "toLibraryBody": "会在“我的资料”里新建一份文档（只有你能看到），内容是这条记忆的正文。原记忆不变，之后两边各改各的。",
-    "toLibraryEnterprise": "会在公司服务器上你自己的“我的资料”里新建一份文档（只有你能看到，管理员看不到）。原记忆不变，之后两边各改各的。",
+    "toLibraryEnterprise": "会在公司服务器的“我的资料”里新建个人范围的文档副本。原记忆保留，之后两边独立编辑。",
     "toLibraryDone": "已存入资料库",
     "toLibraryFailed": "存入失败",
     "openManager": "打开记忆管理",
-    "merged": "已合并"
+    "merged": "已合并",
+    "toMemory": "存为助手记忆",
+    "toMemoryTitle": "将此文档存为助手记忆？",
+    "toMemoryBody": "将已保存的正文复制到本机共享记忆，供后续无项目会话检索。原文档保持不变，两边独立编辑。",
+    "toMemoryDescription": "检索关键词与简述（可修改）",
+    "toMemoryEmpty": "文档还没有可保存的正文，请先提取文字。",
+    "toMemoryTooLarge": "文档超过1MiB，请先保存需要记住的较短节选。",
+    "toMemoryDone": "已存为助手记忆",
+    "toMemoryFailed": "保存助手记忆失败",
+    "globalSearchPlaceholder": "搜索资料与助手记忆"
   }
 }

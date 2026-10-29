@@ -124,10 +124,19 @@
     "toLibrary": "存入資料庫",
     "toLibraryTitle": "把這則記憶存入資料庫？",
     "toLibraryBody": "會在「我的資料」裡新增一份文件（只有你看得到），內容是這則記憶的內文。原記憶不變，之後兩邊各改各的。",
-    "toLibraryEnterprise": "會在公司伺服器上你自己的「我的資料」裡新增一份文件（只有你看得到，管理員看不到）。原記憶不變，之後兩邊各改各的。",
+    "toLibraryEnterprise": "會在公司伺服器的「我的資料」中新建個人範圍的文件副本。原記憶保留，之後兩邊獨立編輯。",
     "toLibraryDone": "已存入資料庫",
     "toLibraryFailed": "存入失敗",
     "openManager": "開啟記憶管理",
-    "merged": "已合併"
+    "merged": "已合併",
+    "toMemory": "存為助手記憶",
+    "toMemoryTitle": "將此文件存為助手記憶？",
+    "toMemoryBody": "將已儲存的正文複製到本機共用記憶，供後續無專案對話檢索。原文件保持不變，兩邊獨立編輯。",
+    "toMemoryDescription": "檢索關鍵詞與簡述（可修改）",
+    "toMemoryEmpty": "文件尚無可儲存的正文，請先擷取文字。",
+    "toMemoryTooLarge": "文件超過1MiB，請先儲存需要記住的較短節錄。",
+    "toMemoryDone": "已存為助手記憶",
+    "toMemoryFailed": "儲存助手記憶失敗",
+    "globalSearchPlaceholder": "搜尋資料與助手記憶"
   }
 }

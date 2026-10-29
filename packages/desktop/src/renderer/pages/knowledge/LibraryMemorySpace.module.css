@@ -33,6 +33,10 @@
   gap: 2px;
 }
 
+.actions :global(.arco-btn-text) {
+  color: rgb(var(--blue-6));
+}
+
 .hint {
   margin: 0;
   font-size: 13px;

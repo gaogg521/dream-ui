@@ -16,15 +16,17 @@ import { Button, Input, Message, Modal, Spin, Table, Tag } from '@arco-design/we
 import { Edit, FileText, Refresh } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ipcBridge } from '@/common';
 import { memory as memoryIpc, type EngineMemoryFile, type EngineMemoryGroup } from '@/common/adapter/ipcBridge';
 import styles from './LibraryMemorySpace.module.css';
+import { saveLibraryOriginal } from './attach/artifactImport';
 
 type Row = { group: EngineMemoryGroup; file: EngineMemoryFile };
 
 type Props = {
   /** Whether the library is the company's server: a copy made from here is then stored there, privately. */
   enterprise: boolean;
+  /** Controlled query when shown as a group in the global library search. */
+  searchQuery?: string;
   /** Reload the library after a document was added. */
   onLibraryChanged?: () => void;
 };
@@ -36,10 +38,19 @@ const TYPE_COLOR: Record<string, string> = {
   reference: 'purple',
 };
 const typeOf = (content: string): string => content.match(/^type:\s*(\w+)/m)?.[1] ?? 'reference';
-const descOf = (content: string): string => content.match(/^description:\s*(.+?)$/m)?.[1]?.trim() ?? '';
+const descOf = (content: string): string => {
+  const value = content.match(/^description:\s*(.+?)$/m)?.[1]?.trim() ?? '';
+  try {
+    const decoded: unknown = JSON.parse(value);
+    if (typeof decoded === 'string') return decoded;
+  } catch {
+    /* Plain YAML scalar. */
+  }
+  return value;
+};
 const bodyOf = (content: string): string => content.replace(/^---[\s\S]*?---\n?/, '').trim();
 
-const LibraryMemorySpace: React.FC<Props> = ({ enterprise, onLibraryChanged }) => {
+const LibraryMemorySpace: React.FC<Props> = ({ enterprise, onLibraryChanged, searchQuery }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [groups, setGroups] = useState<EngineMemoryGroup[]>([]);
@@ -72,10 +83,15 @@ const LibraryMemorySpace: React.FC<Props> = ({ enterprise, onLibraryChanged }) =
 
   useEffect(() => {
     void load();
+    const refresh = (): void => {
+      void load();
+    };
+    window.addEventListener('one-memory-changed', refresh);
+    return () => window.removeEventListener('one-memory-changed', refresh);
   }, [load]);
 
   const rows = useMemo<Row[]>(() => {
-    const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const words = (searchQuery ?? query).trim().toLowerCase().split(/\s+/).filter(Boolean);
     return groups
       .filter((group) => group.kind !== 'conversation')
       .flatMap((group) => group.files.filter((file) => file.filename !== 'MEMORY.md').map((file) => ({ group, file })))
@@ -85,7 +101,7 @@ const LibraryMemorySpace: React.FC<Props> = ({ enterprise, onLibraryChanged }) =
         return words.every((word) => haystack.includes(word));
       })
       .toSorted((a, b) => b.file.updatedAt - a.file.updatedAt);
-  }, [groups, query]);
+  }, [groups, query, searchQuery]);
 
   const saveEdit = async () => {
     if (!editing) return;
@@ -113,16 +129,11 @@ const LibraryMemorySpace: React.FC<Props> = ({ enterprise, onLibraryChanged }) =
       cancelText: t('common.cancel'),
       onOk: async () => {
         try {
-          const doc = await ipcBridge.oneDevops.registerRagDocument.invoke({
+          await saveLibraryOriginal({
             title: `${row.file.name}.md`,
-            mimeType: 'text/markdown',
-            scope: 'personal',
-          });
-          const { revision } = await ipcBridge.oneDevops.getRagContentState.invoke({ id: doc.id });
-          await ipcBridge.oneDevops.setRagContent.invoke({
-            id: doc.id,
             content: bodyOf(row.file.content),
-            expectedRevision: revision,
+            personal: true,
+            mimeType: 'text/markdown',
           });
           Message.success(t('memory.space.toLibraryDone'));
           onLibraryChanged?.();
@@ -202,14 +213,16 @@ const LibraryMemorySpace: React.FC<Props> = ({ enterprise, onLibraryChanged }) =
           </Button>
         </div>
       </div>
-      <p className={styles.hint}>{t('memory.space.hint')}</p>
-      <Input.Search
-        allowClear
-        value={query}
-        onChange={setQuery}
-        placeholder={t('memory.space.searchPlaceholder')}
-        className={styles.search}
-      />
+      {searchQuery === undefined && <p className={styles.hint}>{t('memory.space.hint')}</p>}
+      {searchQuery === undefined && (
+        <Input.Search
+          allowClear
+          value={query}
+          onChange={setQuery}
+          placeholder={t('memory.space.searchPlaceholder')}
+          className={styles.search}
+        />
+      )}
       {loading && groups.length === 0 ? (
         <div className={styles.empty}>
           <Spin loading />
@@ -223,7 +236,7 @@ const LibraryMemorySpace: React.FC<Props> = ({ enterprise, onLibraryChanged }) =
           pagination={rows.length > 12 ? { pageSize: 12 } : false}
           noDataElement={
             <div className={styles.empty}>
-              {query.trim() ? t('memory.space.noMatch') : t('memory.engine.sharedEmpty')}
+              {(searchQuery ?? query).trim() ? t('memory.space.noMatch') : t('memory.engine.sharedEmpty')}
             </div>
           }
         />

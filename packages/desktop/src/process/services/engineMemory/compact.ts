@@ -35,7 +35,6 @@ export const MERGED_MARKER = '<!-- merged-memory -->';
 const MERGED_PREFIX = 'merged_';
 const BACKUP_PREFIX = 'memory-backup-';
 const MAX_BACKUPS = 3;
-const GROUP_ID_PATTERN = /^[A-Za-z0-9_.-]+$/;
 const INDEX_LINE = /^\s*[-*]\s*\[/;
 
 /** More files than this and tidying is worth suggesting. */
@@ -71,7 +70,14 @@ const memoryDirOf = (base: string, groupId: string) => path.join(base, 'projects
 const groupDirOf = (base: string, groupId: string) => path.join(base, 'projects', groupId);
 
 function assertGroupId(groupId: string): void {
-  if (!GROUP_ID_PATTERN.test(groupId) || groupId === '.' || groupId === '..') {
+  if (
+    !groupId ||
+    groupId !== path.basename(groupId) ||
+    /[<>:"/\\|?*]/.test(groupId) ||
+    Array.from(groupId).some((character) => character.charCodeAt(0) < 32) ||
+    groupId === '.' ||
+    groupId === '..'
+  ) {
     throw new Error(`Invalid memory group: ${groupId}`);
   }
 }

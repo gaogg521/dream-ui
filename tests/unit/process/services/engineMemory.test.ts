@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   SHARED_GROUP_ID,
+  importLibraryReference,
   assertEngineMemoryFile,
   deleteEngineMemory,
   listEngineMemory,
@@ -140,5 +141,45 @@ describe('moveGroupsToShared', () => {
 
   it('refuses a group id that is not a directory name', () => {
     expect(() => moveGroupsToShared(base, ['../x'])).toThrow();
+  });
+});
+
+describe('importLibraryReference', () => {
+  it('copies the full reference and appends a compact Unicode-safe index without overwriting existing memory', () => {
+    put(SHARED_GROUP_ID, 'MEMORY.md', '# Existing\n- [Old](old.md) — keep\n');
+    const original = read(SHARED_GROUP_ID, 'MEMORY.md');
+    const result = importLibraryReference(base, {
+      title: '文档: 中文参考',
+      description: '关键词🌟'.repeat(40),
+      content: '正文\n第二行',
+    });
+    const text = read(SHARED_GROUP_ID, result.filename);
+    expect(text.endsWith('正文\n第二行')).toBe(true);
+    const index = read(SHARED_GROUP_ID, 'MEMORY.md');
+    expect(index.startsWith(original)).toBe(true);
+    expect(Array.from(index.trimEnd().split('\n').at(-1)!).length).toBeLessThanOrEqual(120);
+    expect(listEngineMemory(base).groups[0].files.find((f) => f.filename === result.filename)?.name).toBe(
+      '文档: 中文参考'
+    );
+  });
+  it('keeps two same-title copies as separate references', () => {
+    const input = { title: 'Report', description: 'report', content: 'Reference text' };
+    const first = importLibraryReference(base, input);
+    const second = importLibraryReference(base, input);
+    expect(first.filename).not.toBe(second.filename);
+    expect(read(SHARED_GROUP_ID, first.filename)).toBe(read(SHARED_GROUP_ID, second.filename));
+  });
+  it('rejects empty or oversized references before creating memory files', () => {
+    expect(() => importLibraryReference(base, { title: 'Empty', description: '', content: ' ' })).toThrow();
+    expect(() =>
+      importLibraryReference(base, { title: 'Large', description: '', content: '中'.repeat(400000) })
+    ).toThrow('1 MiB');
+    expect(existsSync(path.join(base, 'projects'))).toBe(false);
+  });
+  it('does not leave a new memory when the existing index cannot be read', () => {
+    const directory = path.join(base, 'projects', SHARED_GROUP_ID, 'memory');
+    mkdirSync(path.join(directory, 'MEMORY.md'), { recursive: true });
+    expect(() => importLibraryReference(base, { title: 'Report', description: 'report', content: 'text' })).toThrow();
+    expect(readdirSync(directory)).toEqual(['MEMORY.md']);
   });
 });

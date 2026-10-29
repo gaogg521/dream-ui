@@ -258,3 +258,20 @@ describe('undoCompaction', () => {
     expect(undoCompaction(base, GROUP)).toEqual({ restored: false });
   });
 });
+
+it('compacts and restores a Unicode Claude project leaf while rejecting traversal', () => {
+  const group = 'D--验收项目';
+  const directory = path.join(base, 'projects', group, 'memory');
+  mkdirSync(directory, { recursive: true });
+  for (const file of ['one.md', 'two.md']) {
+    const target = path.join(directory, file);
+    writeFileSync(target, `---\nname: ${file}\ndescription: 旧记忆\ntype: reference\n---\n\n保留原文 ${file}`);
+    const old = new Date(NOW - 40 * DAY);
+    utimesSync(target, old, old);
+  }
+  expect(compactionStatus(base, group, NOW).mergeable).toBe(2);
+  expect(compactGroup(base, group, NOW).merged).toBe(2);
+  expect(undoCompaction(base, group).restored).toBe(true);
+  expect(readFileSync(path.join(directory, 'one.md'), 'utf8')).toContain('保留原文 one.md');
+  expect(() => compactGroup(base, '../outside', NOW)).toThrow();
+});

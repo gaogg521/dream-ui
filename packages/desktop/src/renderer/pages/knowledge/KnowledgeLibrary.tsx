@@ -22,6 +22,7 @@ import type { RagLibraryProps } from '../superAssistant/registries/RagSection';
 import type { RagDocumentEntry } from '@/common/types/devops/devopsTypes';
 import styles from './KnowledgeLibrary.module.css';
 import LibraryGuide, { type GuideId } from './guides/LibraryGuide';
+import SaveAsMemoryButton from './attach/SaveAsMemoryButton';
 import LibraryMemorySpace from './LibraryMemorySpace';
 import LibraryFileIcon from './shared/LibraryFileIcon';
 import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
@@ -359,6 +360,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           position='br'
           droplist={
             <div className={styles.actions}>
+              <SaveAsMemoryButton document={row} />
               {onAddToConversation && (
                 <Button size='small' onClick={() => onAddToConversation([row])}>
                   {label('addToConversation')}

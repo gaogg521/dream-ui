@@ -124,10 +124,19 @@
     "toLibrary": "Enregistrer dans la bibliothèque",
     "toLibraryTitle": "Enregistrer ce souvenir dans la bibliothèque ?",
     "toLibraryBody": "Un nouveau document est créé dans Mes fichiers (visible de vous seul) avec le texte de ce souvenir. Le souvenir ne change pas ; ensuite, chacun est modifié séparément.",
-    "toLibraryEnterprise": "Un nouveau document est créé dans votre espace Mes fichiers sur le serveur de l'entreprise (visible de vous seul, pas des administrateurs) avec le texte de ce souvenir. Le souvenir ne change pas ; ensuite, chacun est modifié séparément.",
+    "toLibraryEnterprise": "Crée une copie du document à portée personnelle dans Mes documents sur le serveur de l’entreprise. La mémoire d’origine est conservée ; chaque copie est modifiée séparément.",
     "toLibraryDone": "Enregistré dans la bibliothèque",
     "toLibraryFailed": "Échec de l'enregistrement",
     "openManager": "Ouvrir Mémoire",
-    "merged": "Regroupé"
+    "merged": "Regroupé",
+    "toMemory": "Enregistrer dans la mémoire",
+    "toMemoryTitle": "Enregistrer ce document dans la mémoire ?",
+    "toMemoryBody": "Copie le texte enregistré dans la mémoire partagée de cet ordinateur, utilisée dans les conversations sans projet. Le document reste inchangé ; les copies sont modifiées séparément.",
+    "toMemoryDescription": "Mots-clés et description (modifiables)",
+    "toMemoryEmpty": "Aucun texte enregistré. Extrayez d’abord le texte.",
+    "toMemoryTooLarge": "Le document dépasse 1 Mio. Enregistrez d’abord un extrait plus court.",
+    "toMemoryDone": "Enregistré dans la mémoire",
+    "toMemoryFailed": "Impossible d’enregistrer dans la mémoire",
+    "globalSearchPlaceholder": "Rechercher dans les documents et la mémoire"
   }
 }

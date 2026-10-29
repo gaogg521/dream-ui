@@ -25,6 +25,8 @@ import remarkGfm from 'remark-gfm';
 import libraryStyles from '../../knowledge/KnowledgeLibrary.module.css';
 import CsvDocument from '../../knowledge/CsvDocument';
 import { saveLibraryOriginal, uploadTimeoutMs, indexableText } from '../../knowledge/attach/artifactImport';
+import LibraryMemorySpace from '../../knowledge/LibraryMemorySpace';
+import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
 import { usesOriginalFile } from '../../knowledge/original/sourceKind';
 import { ipcBridge } from '@/common';
 import { httpDownloadBinary, httpUploadMultipart } from '@/common/adapter/httpBridge';
@@ -786,10 +788,19 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
       <div className='mt-12px flex gap-6px'>
         <Input
           value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder={t('common.superAssistant.rag.searchPlaceholderHybrid')}
-          onPressEnter={() => void handleSearch()}
-          disabled={!configured}
+          onChange={(value) => {
+            setSearchQuery(value);
+            setHits(null);
+          }}
+          placeholder={
+            renderLibrary
+              ? t('memory.space.globalSearchPlaceholder')
+              : t('common.superAssistant.rag.searchPlaceholderHybrid')
+          }
+          onPressEnter={() => {
+            if (configured) void handleSearch();
+          }}
+          disabled={!configured && !renderLibrary}
         />
         <Button type='primary' loading={searching} disabled={!configured} onClick={() => void handleSearch()}>
           {t('common.superAssistant.rag.search', { defaultValue: '检索' })}
@@ -816,16 +827,17 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
                     </Tag>
                   )}
                   {renderLibrary && rows.some((row) => row.id === hit.documentId) ? (
-                    <button
-                      type='button'
+                    <Button
+                      type='text'
                       className='cursor-pointer border-0 bg-transparent p-0 text-left text-16px font-500 text-t-primary hover:underline'
+                      style={{ color: 'var(--color-text-1)' }}
                       onClick={() => {
                         const document = rows.find((row) => row.id === hit.documentId);
                         if (document) void openEdit(document);
                       }}
                     >
                       {hit.documentTitle}
-                    </button>
+                    </Button>
                   ) : (
                     <span>{hit.documentTitle}</span>
                   )}
@@ -838,6 +850,13 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
           )}
         </div>
       ) : null}
+      {renderLibrary && searchQuery.trim() && isNativeDialogAvailable() && (
+        <LibraryMemorySpace
+          enterprise={isEnterpriseRemoteActive()}
+          onLibraryChanged={() => void refresh()}
+          searchQuery={searchQuery}
+        />
+      )}
     </>
   );
 

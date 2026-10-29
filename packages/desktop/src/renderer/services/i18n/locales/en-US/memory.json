@@ -124,10 +124,19 @@
     "toLibrary": "Save to library",
     "toLibraryTitle": "Save this memory to the library?",
     "toLibraryBody": "A new document is created in My files (only you can see it) with this memory's text. The memory itself is unchanged; after that the two are edited separately.",
-    "toLibraryEnterprise": "A new document is created in your own My files on the company server (only you can see it, not administrators) with this memory's text. The memory itself is unchanged; after that the two are edited separately.",
+    "toLibraryEnterprise": "Creates a personal-scope document copy in My documents on the company server. The original memory is kept; each copy is edited independently.",
     "toLibraryDone": "Saved to the library",
     "toLibraryFailed": "Could not save it",
     "openManager": "Open Memory",
-    "merged": "Merged"
+    "merged": "Merged",
+    "toMemory": "Save as assistant memory",
+    "toMemoryTitle": "Save this document as assistant memory?",
+    "toMemoryBody": "Copy the saved text to shared memory on this computer for future conversations without a project. The document stays unchanged; the two copies are edited independently.",
+    "toMemoryDescription": "Search keywords and description (editable)",
+    "toMemoryEmpty": "This document has no saved text. Extract its text first.",
+    "toMemoryTooLarge": "The document exceeds 1 MiB. Save a shorter excerpt first.",
+    "toMemoryDone": "Saved as assistant memory",
+    "toMemoryFailed": "Could not save assistant memory",
+    "globalSearchPlaceholder": "Search documents and assistant memory"
   }
 }
