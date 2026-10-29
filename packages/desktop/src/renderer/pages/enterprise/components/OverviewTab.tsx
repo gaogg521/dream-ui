@@ -9,29 +9,13 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ipcBridge } from '@/common';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
-import { WEBUI_DEFAULT_PORT } from '@/common/config/constants';
-import { webui } from '@/common/adapter/ipcBridge';
-import { getEnterpriseServerUrl, getEnterpriseSession, isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
-import { DEPLOYMENT_ROLE_CHANGED_EVENT } from '@/common/config/webuiEnterpriseConfig';
-import { openExternalUrl } from '@/renderer/utils/platform';
+import { getEnterpriseSession, isEnterpriseModeEnabled } from '@/common/adapter/enterpriseMode';
 import { clearTeamResources } from '@renderer/utils/enterprise/teamSkillSync';
 import MemberSelfServiceSections from './MemberSelfServiceSections';
 import SecurePackagesSection from './SecurePackagesSection';
 import { useDeploymentRole } from '@renderer/hooks/enterprise/useDeploymentRole';
 import { ORG_CONTEXT_CHANGED_EVENT } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import type { OrgContext } from '@/common/types/org/orgTypes';
-
-const resolveLocalAdminUrl = async (): Promise<string> => {
-  try {
-    const status = await webui.getStatus.invoke();
-    if (status?.running && status.localUrl) {
-      return status.localUrl.replace(/\/+$/, '');
-    }
-  } catch {
-    // fall through
-  }
-  return `http://127.0.0.1:${WEBUI_DEFAULT_PORT}`;
-};
 
 type OverviewTabProps = {
   context: OrgContext | null;
@@ -75,45 +59,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
   const [exitVisible, setExitVisible] = useState(false);
   const [exitCode, setExitCode] = useState('');
   const [exiting, setExiting] = useState(false);
-
-  const [adminConsoleUrl, setAdminConsoleUrl] = useState('');
-
-  useEffect(() => {
-    // `disposed` guards the async branch: when hideLocalAdmin flips true (e.g.
-    // deployment role resolves to client after an initial loading render), the
-    // cleanup cancels the in-flight resolveLocalAdminUrl() so its late result
-    // can't overwrite the '' we just set — otherwise a client leaks the local
-    // admin console URL it should never show.
-    let disposed = false;
-
-    const resolve = () => {
-      if (hideLocalAdmin) {
-        // Client: never show the LOCAL admin console. Once actually connected
-        // to a remote server, THAT is the admin console to link to (BUG: this
-        // branch used to be unreachable because the `hideLocalAdmin` check
-        // above always returned first for every client, connected or not —
-        // a client who had joined a remote enterprise had no way to reach its
-        // admin backend from this page). Before connecting there is nothing
-        // to link to yet.
-        setAdminConsoleUrl(isEnterpriseModeEnabled() ? (getEnterpriseServerUrl() ?? '') : '');
-        return;
-      }
-      void resolveLocalAdminUrl().then((url) => {
-        if (!disposed) setAdminConsoleUrl(url);
-      });
-    };
-
-    resolve();
-    // The connect toggle lives on a different settings surface and only
-    // triggers a full reload when a session already exists — re-resolve on
-    // its change event so a client that connects and then joins within the
-    // same mount picks up the remote admin URL without needing a reload.
-    window.addEventListener(DEPLOYMENT_ROLE_CHANGED_EVENT, resolve);
-    return () => {
-      disposed = true;
-      window.removeEventListener(DEPLOYMENT_ROLE_CHANGED_EVENT, resolve);
-    };
-  }, [hideLocalAdmin]);
 
   const handleJoin = async () => {
     const code = inviteCode.trim();
@@ -298,11 +243,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
 
   if (context.isEnterprise) {
     const role = roleLabelKey[context.role] ?? roleLabelKey.member;
-    // The console is a separate SPA served at /admin by the gateway, no longer
-    // a hash route inside the WebUI. The path matters: the WebUI root redirects
-    // to /guid (the member's own chat), so a bare base URL looked like "the
-    // user's own web interface" rather than the admin backend.
-    const adminConsoleHref = adminConsoleUrl ? `${adminConsoleUrl.replace(/\/+$/, '')}/admin` : '';
 
     const descData: { label: string; value: React.ReactNode }[] = [
       { label: t('common.enterprise.fieldTenantName', { defaultValue: '企业名称' }), value: context.tenantName ?? '-' },
@@ -322,29 +262,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
     });
     return (
       <div className='max-w-560px'>
-        {adminConsoleHref ? (
-          <Alert
-            type='info'
-            className='mb-16px'
-            title={t('common.enterprise.adminConsoleTitle', { defaultValue: '企业管理后台' })}
-            content={
-              <div className='flex flex-col gap-8px'>
-                <span>
-                  {t('common.enterprise.adminConsoleHint', {
-                    defaultValue: '在浏览器打开以下地址可管理邀请码、成员、SSO 等（需使用管理员账号登录 WebUI）：',
-                  })}
-                </span>
-                <Button
-                  type='text'
-                  className='!p-0 !h-auto !text-left'
-                  onClick={() => void openExternalUrl(adminConsoleHref)}
-                >
-                  {adminConsoleHref}
-                </Button>
-              </div>
-            }
-          />
-        ) : null}
+        {/* The admin console opens from the single button in the page header
+            (openAdminConsole, with a failure toast). This card used to print
+            the SAVED server address as a literal URL — for a member who
+            connected through a machine-local address that changed since (WSL
+            NAT IP, the vault-upload "Failed to fetch" report), the card kept
+            advertising a dead link next to the working button. */}
         <Descriptions column={1} border data={descData} />
         <MemberSelfServiceSections />
         <SecurePackagesSection />
