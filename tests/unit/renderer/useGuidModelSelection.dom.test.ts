@@ -20,7 +20,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import type { IProvider } from '@/common/config/storage';
 
 const providers = vi.hoisted(() => ({ value: [] as unknown[] }));
@@ -140,5 +140,28 @@ describe('useGuidModelSelection default', () => {
     rerender();
     await new Promise((r) => setTimeout(r, 30));
     expect(result.current.current_model?.use_model).toBe('openrouter/free');
+  });
+});
+
+describe('independent scene model preference', () => {
+  it('remembers a scene pick without changing the chat or assistant selection', async () => {
+    localStorage.clear();
+    providers.value = [provider({ models: ['kimi-k2-6', 'glm-5-2'] })];
+    const hooks = renderHook(() => ({
+      chat: useGuidModelSelection(),
+      scene: useGuidModelSelection('dream', 'guid.sceneLastPickedModelKey'),
+    }));
+    await waitFor(() => expect(hooks.result.current.scene.current_model?.use_model).toBe('kimi-k2-6'));
+    await act(async () => {
+      await hooks.result.current.scene.setCurrentModel(
+        { ...(provider({ models: ['kimi-k2-6', 'glm-5-2'] }) as IProvider), use_model: 'glm-5-2' },
+        { persistPreference: true }
+      );
+    });
+    expect(hooks.result.current.chat.current_model?.use_model).toBe('kimi-k2-6');
+    expect(localStorage.getItem('guid.lastPickedModelKey')).toBeNull();
+    hooks.unmount();
+    const restored = renderHook(() => useGuidModelSelection('dream', 'guid.sceneLastPickedModelKey'));
+    await waitFor(() => expect(restored.result.current.current_model?.use_model).toBe('glm-5-2'));
   });
 });

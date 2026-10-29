@@ -734,6 +734,7 @@ export const application = {
   reportBrowserWebContentsId: bridge.buildProvider<IBridgeResponse<void>, { webContentsId: number }>(
     'app.report-browser-webcontents-id'
   ),
+  agentBrowserRequested: bridge.buildEmitter<void>('app.agent-browser-requested'),
   getStartOnBootStatus: bridge.buildProvider<IBridgeResponse<IStartOnBootStatus>, void>('app.get-start-on-boot-status'),
   setStartOnBoot: bridge.buildProvider<IBridgeResponse<IStartOnBootStatus>, { enabled: boolean }>(
     'app.set-start-on-boot'

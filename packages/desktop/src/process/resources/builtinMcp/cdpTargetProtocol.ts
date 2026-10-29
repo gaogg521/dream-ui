@@ -271,7 +271,8 @@ export const decideCdpCommand = (req: CdpRequest, getTargetInfo: () => TargetInf
     case 'Target.createTarget':
       return {
         kind: 'error',
-        message: 'One Work in-app browser exposes a single fixed tab; Target.createTarget is not supported.',
+        message:
+          'One Work exposes one in-app browser tab. Use list_pages, then navigate_page on the existing page; do not call new_page or retry Target.createTarget.',
       };
 
     case 'Target.createBrowserContext':

@@ -53,6 +53,7 @@ export type ExplorerView = {
 type PersistedUi = {
   expanded: PeKey[];
   selected?: PeKey;
+  shownOutputs?: PeKey[];
 };
 
 const listeners = new Set<() => void>();
@@ -63,6 +64,7 @@ let roots: RootRef[] = [];
 let cache: FactCache = new Map();
 let expanded = new Set<PeKey>();
 let selected: PeKey | null = null;
+let shownOutputs = new Set<PeKey>();
 let current = new Set<PeKey>();
 
 let snapshot: ExplorerView = { projectId: null, treeData: [], selected: null, expanded: [] };
@@ -87,7 +89,11 @@ const loadUi = (id: string): PersistedUi => {
     const raw = ls.getItem(uiStorageKey(id));
     if (!raw) return { expanded: [] };
     const parsed = JSON.parse(raw) as Partial<PersistedUi>;
-    return { expanded: Array.isArray(parsed.expanded) ? parsed.expanded : [], selected: parsed.selected };
+    return {
+      expanded: Array.isArray(parsed.expanded) ? parsed.expanded : [],
+      selected: parsed.selected,
+      shownOutputs: Array.isArray(parsed.shownOutputs) ? parsed.shownOutputs : [],
+    };
   } catch {
     return { expanded: [] };
   }
@@ -110,7 +116,7 @@ const loadUi = (id: string): PersistedUi => {
 const persistUi = (opts?: { guardEmptyOverwrite?: boolean }): void => {
   const ls = getLocalStorage();
   if (!ls || !projectId) return;
-  const data: PersistedUi = { expanded: [...expanded] };
+  const data: PersistedUi = { expanded: [...expanded], shownOutputs: [...shownOutputs] };
   if (selected) data.selected = selected;
   if (opts?.guardEmptyOverwrite && data.expanded.length === 0) {
     try {
@@ -223,6 +229,7 @@ const runReconcile = (): void => {
           const key = refToKey(snap.target);
           if (!stillWant.has(key)) continue; // guard: dropped
           cache = applySnapshot(cache, key, snap.entries);
+          showNewOutputs(snap.target, snap.entries);
           changed = true;
         }
         if (changed) commit();
@@ -254,6 +261,21 @@ const scheduleReconcile = (): void => {
   });
 };
 
+// Show the standard artifact directory once when it first appears. Persist the
+// acknowledgement so a user's later collapse is respected across reloads.
+const showNewOutputs = (target: DirRef, entries: Entry[]): void => {
+  if (target.relative_path !== '' || !roots.some((root) => root.pe_id === target.pe_id && root.role === 'workspace'))
+    return;
+  if (!entries.some((entry) => entry.name === 'outputs' && entry.kind === 'dir')) return;
+  const key = peKey(target.pe_id, 'outputs');
+  if (shownOutputs.has(key)) return;
+  shownOutputs.add(key);
+  expanded.add(peKey(target.pe_id, ''));
+  expanded.add(key);
+  persistUi();
+  scheduleReconcile();
+};
+
 // ── server push application (with anti-stale rules) ─────────────────────────
 
 /** Whether an incoming push target is still wanted (guard rule). */
@@ -263,6 +285,7 @@ const applyServerSnapshot = (target: DirRef, entries: Entry[]): void => {
   const key = refToKey(target);
   if (!isWanted(key)) return; // guard: unsubscribe-in-flight residue → drop
   cache = applySnapshot(cache, key, entries);
+  showNewOutputs(target, entries);
   commit();
 };
 
@@ -270,6 +293,7 @@ const applyServerDelta = (target: DirRef, changes: Change[]): void => {
   const key = refToKey(target);
   if (!isWanted(key)) return; // guard
   cache = applyDelta(cache, key, changes);
+  showNewOutputs(target, cache.get(key) ?? []);
 
   // Structural anti-stale rules on expanded/current/cache.
   for (const change of changes) {
@@ -367,6 +391,7 @@ export const openProject = (id: string, projectRoots: RootRef[]): void => {
   // in the tree — a leak. Keys are kept only for the current roots' pe_ids.
   const validPeIds = new Set(projectRoots.map((r) => r.pe_id));
   const ui = loadUi(id);
+  shownOutputs = new Set(ui.shownOutputs ?? []);
   const restored = ui.expanded.length > 0 ? ui.expanded : projectRoots.map((r) => peKey(r.pe_id, ''));
   expanded = new Set(restored.filter((k) => validPeIds.has(keyToRef(k).pe_id)));
   selected = ui.selected && validPeIds.has(keyToRef(ui.selected).pe_id) ? ui.selected : null;
@@ -460,6 +485,7 @@ export const resetExplorerStoreForTest = (): void => {
   cache = new Map();
   expanded = new Set();
   selected = null;
+  shownOutputs = new Set();
   current = new Set();
   reconcileScheduled = false;
   snapshot = { projectId: null, treeData: [], selected: null, expanded: [] };

@@ -93,7 +93,15 @@ async function main() {
   );
 }
 
-type ToolResponse = { success?: boolean; file_path?: string; error?: string };
+type ToolResponse = {
+  success?: boolean;
+  file_path?: string;
+  error?: string;
+  page_count?: number;
+  size_bytes?: number;
+  image_width?: number;
+  image_height?: number;
+};
 
 function registerImageTool(server: McpServer): void {
   server.tool(
@@ -135,7 +143,12 @@ function registerImageTool(server: McpServer): void {
         })) as ToolResponse;
         if (response?.success) {
           return {
-            content: [{ type: 'text' as const, text: `PNG rendered to: ${response.file_path ?? output_path}` }],
+            content: [
+              {
+                type: 'text' as const,
+                text: `PNG rendered to: ${response.file_path ?? output_path}\nVerified output: ${JSON.stringify({ size_bytes: response.size_bytes, width: response.image_width, height: response.image_height })}`,
+              },
+            ],
           };
         }
         return {
@@ -180,14 +193,14 @@ function registerPdfTool(server: McpServer): void {
           source,
           source_type,
           output_path,
-        })) as { success?: boolean; file_path?: string; error?: string };
+        })) as ToolResponse;
 
         if (response?.success) {
           return {
             content: [
               {
                 type: 'text' as const,
-                text: `PDF exported successfully to: ${response.file_path ?? output_path}`,
+                text: `PDF exported successfully to: ${response.file_path ?? output_path}\nVerified output: ${JSON.stringify({ page_count: response.page_count, size_bytes: response.size_bytes })}. Compare page_count with the requested page limit; reflow the source and export again if needed. No shell command is needed to check file size or count pages.`,
               },
             ],
           };

@@ -505,6 +505,14 @@
     },
     "showAll": "Mostrar todos ({{count}})",
     "gridHint": "Clique em um cenário para iniciar uma conversa com seu prompt e habilidades; arraste os cartões para reordenar",
+    "modelLabel": "Modelo do cenário",
+    "bundledTools": {
+      "browser": "Navegador integrado",
+      "pageReader": "Leitura de páginas",
+      "pdf": "Exportação PDF",
+      "image": "Imagens de listas e planos"
+    },
+    "dependenciesUnavailable": "As ferramentas ou habilidades integradas do cenário não estão prontas. Verifique se estão ativadas, atualize o cliente e tente novamente.",
     "openFailed": "Não foi possível abrir uma conversa para este cenário",
     "tabTitle": "Cenários",
     "tabHint": "Um cenário é a porta de entrada para um tipo de trabalho: papel, habilidades e ferramentas, e ele pergunta o que precisa antes de construir. Os da empresa e os seus ficam aqui; ative ou desative quando quiser.",

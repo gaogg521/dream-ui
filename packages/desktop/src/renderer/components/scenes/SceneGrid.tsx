@@ -119,13 +119,22 @@ type SceneGridProps = {
   workspaceDir?: string;
   /** What a scene is opened with when that is not what the person picked above (the engine). */
   agentNote?: string;
+  /** Scenes use the built-in conversation engine even when a CLI tab is selected. */
+  modelSelector?: React.ReactNode;
   /** Open this scene as soon as the list is loaded (once), e.g. when the scenes tab sent the person here. */
   autoOpenKey?: string;
   /** Go and make a new scene. Without it the grid offers no way to make one. */
   onCreateScene?: () => void;
 };
 
-const SceneGrid: React.FC<SceneGridProps> = ({ onOpenScene, onCreateScene, workspaceDir, agentNote, autoOpenKey }) => {
+const SceneGrid: React.FC<SceneGridProps> = ({
+  onOpenScene,
+  onCreateScene,
+  workspaceDir,
+  agentNote,
+  modelSelector,
+  autoOpenKey,
+}) => {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [openingKey, setOpeningKey] = useState<string | null>(null);
@@ -230,6 +239,12 @@ const SceneGrid: React.FC<SceneGridProps> = ({ onOpenScene, onCreateScene, works
           </span>
         </div>
         <div className={styles.headingActions}>
+          {modelSelector && (
+            <div className='flex items-center gap-6px' data-testid='scene-model-selector'>
+              <span className='text-12px text-t-secondary'>{t('common.scenes.modelLabel')}</span>
+              {modelSelector}
+            </div>
+          )}
           <span className={styles.count}>{ordered.length}</span>
           {createButton}
           {refreshButton}

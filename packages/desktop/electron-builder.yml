@@ -353,6 +353,7 @@ asarUnpack:
   - 'out/main/builtin-mcp-export-pdf.js'
   - 'out/main/builtin-mcp-team-knowledge.js'
   - 'out/main/builtin-mcp-browser.js'
+  - 'out/main/browser-runtime/**/*'
   - 'out/main/team-mcp-stdio.js'
 
 # Compression level: normal for faster builds, maximum for smallest size

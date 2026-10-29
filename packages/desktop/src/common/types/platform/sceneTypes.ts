@@ -68,6 +68,8 @@ export type PersonalScene = {
    * "whatever is enabled", which is what a conversation does by default.
    */
   mcpServerIds: string[];
+  /** Bundled tools resolved by trusted builtin name on this installation. */
+  builtinMcpNames?: string[];
   /** The template it was made from, when it was. Informational. */
   templateId?: string;
   createdAt: number;

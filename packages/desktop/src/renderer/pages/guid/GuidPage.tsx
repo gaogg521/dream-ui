@@ -157,6 +157,7 @@ const GuidPage: React.FC = () => {
   // Only dream uses this provider-based model picker now (Gemini runs as a
   // regular ACP backend with its own model selector).
   const modelSelection = useGuidModelSelection('dream');
+  const sceneModelSelection = useGuidModelSelection('dream', 'guid.sceneLastPickedModelKey');
   const { assistantOrder } = useAssistantOrder();
 
   const navState = location.state as GuidNavigationState | null;
@@ -833,11 +834,12 @@ const GuidPage: React.FC = () => {
 
   // A scene opens straight into a conversation that carries its prompt and
   // skills; the member types the task there, as with a company employee.
-  const sceneModel = modelSelection.current_model;
+  const sceneModel = sceneModelSelection.current_model;
   const handleOpenScene = useCallback(
     async (scene: SceneItem) => {
       if (!sceneModel) {
         Message.warning(t('conversation.noModelConfigured'));
+        await navigate('/settings/model');
         return;
       }
       try {
@@ -860,7 +862,9 @@ const GuidPage: React.FC = () => {
           t(
             error instanceof Error && error.message.includes('MCP_LIMIT_EXCEEDED')
               ? 'settings.mcpQuotaReplace'
-              : 'common.scenes.openFailed'
+              : error instanceof Error && error.message.includes('SCENE_DEPENDENCY_UNAVAILABLE')
+                ? 'common.scenes.dependenciesUnavailable'
+                : 'common.scenes.openFailed'
           )
         );
       }
@@ -918,8 +922,19 @@ const GuidPage: React.FC = () => {
             onCreateScene={handleCreateScene}
             workspaceDir={guidInput.dir}
             agentNote={isGeminiMode ? undefined : t('common.scenes.usesDefaultEngine')}
-            // Wait for the assistant's saved model to land: opening on the provisional first provider is
-            // how the same scene used to start on a different model from here than from a click.
+            modelSelector={
+              <GuidModelSelector
+                isGeminiMode
+                backend='dream'
+                modelList={sceneModelSelection.modelList}
+                current_model={sceneModel}
+                setCurrentModel={(model) => sceneModelSelection.setCurrentModel(model, { persistPreference: true })}
+                currentAcpCachedModelInfo={null}
+                selectedAcpModel={null}
+                setSelectedAcpModel={setGuidSelectedAcpModel}
+              />
+            }
+            // Wait for initial selection/catalog loading before opening a scene from another page.
             autoOpenKey={
               sceneModel && modelSettled
                 ? ((location.state as GuidNavigationState | null)?.openSceneKey ?? undefined)

@@ -13,6 +13,7 @@
 
 const esbuild = require('esbuild');
 const path = require('path');
+const fs = require('node:fs');
 
 const ROOT = path.resolve(__dirname, '..');
 
@@ -26,6 +27,17 @@ const SHARED_OPTIONS = {
 };
 
 async function main() {
+  // The published package already vendors its runtime dependencies. Preserve its
+  // ESM/package layout and license so external Node can run it outside ASAR.
+  const browserPackage = path.join(ROOT, 'node_modules/chrome-devtools-mcp');
+  const browserManifest = JSON.parse(fs.readFileSync(path.join(browserPackage, 'package.json'), 'utf8'));
+  if (browserManifest.version !== '0.16.0') throw new Error('Unexpected bundled browser driver version');
+  const runtimeRoot = path.resolve(ROOT, 'out/main/browser-runtime');
+  if (path.relative(path.resolve(ROOT, 'out/main'), runtimeRoot) !== 'browser-runtime')
+    throw new Error('Unsafe browser runtime output path');
+  fs.rmSync(runtimeRoot, { recursive: true, force: true });
+  fs.cpSync(browserPackage, runtimeRoot, { recursive: true, dereference: true });
+  console.log(`Bundled browser driver ${browserManifest.version} (no runtime npm dependency)`);
   await Promise.all([
     esbuild.build({
       ...SHARED_OPTIONS,

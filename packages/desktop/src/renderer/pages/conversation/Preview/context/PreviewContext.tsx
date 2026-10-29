@@ -1327,12 +1327,26 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const agentAutoOpenAtRef = useRef(0);
 
   const maybeOpenBrowserPanelForAgent = useCallback(() => {
-    if (browserTabsRef.current.some((tab) => tab.content_type === 'browser')) return;
+    const existing = browserTabsRef.current.find((tab) => tab.content_type === 'browser');
+    if (existing) {
+      setActiveTabId(existing.id);
+      setIsOpen(true);
+      return;
+    }
     if (Date.now() - agentAutoOpenAtRef.current < 10_000) return;
     agentAutoOpenAtRef.current = Date.now();
     openBrowserTab();
     notifyAgentOpenedBrowserPanel();
   }, [openBrowserTab]);
+
+  // Core streams bare tool names, whereas other engines stream MCP-qualified names.
+  // The authenticated CDP bridge is the authoritative signal that our browser is needed.
+  useEffect(() => {
+    return ipcBridge.application?.agentBrowserRequested?.on(() => {
+      maybeNotifyFirstAgentBrowserUse();
+      maybeOpenBrowserPanelForAgent();
+    });
+  }, [maybeOpenBrowserPanelForAgent]);
 
   useEffect(() => {
     const markBrowserTabs = (agentActive: boolean) => {

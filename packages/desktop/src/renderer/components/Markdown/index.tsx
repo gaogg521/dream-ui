@@ -101,14 +101,21 @@ const MarkdownView: React.FC<MarkdownViewProps> = React.memo(
             {ch as React.ReactNode}
           </span>
         ),
-        code: (props: Record<string, unknown>) => (
-          <CodeBlock
-            {...(props as Parameters<typeof CodeBlock>[0])}
-            codeStyle={codeStyle}
-            hiddenCodeCopyButton={hiddenCodeCopyButton}
-            diagramPanZoom
-          />
-        ),
+        code: (props: Record<string, unknown>) => {
+          const text = typeof props.children === 'string' ? props.children : '';
+          const reference = !props.className && !text.includes('\n') ? resolveLocalFileLinkReference(text) : null;
+          if (reference && onLocalFileLink) {
+            return <LocalFileLink reference={reference} onOpen={onLocalFileLink} />;
+          }
+          return (
+            <CodeBlock
+              {...(props as Parameters<typeof CodeBlock>[0])}
+              codeStyle={codeStyle}
+              hiddenCodeCopyButton={hiddenCodeCopyButton}
+              diagramPanZoom
+            />
+          );
+        },
         a: ({ node: _node, ...rest }: Record<string, unknown>) => {
           const anchorProps = rest as React.AnchorHTMLAttributes<HTMLAnchorElement>;
           const rawHref = typeof anchorProps.href === 'string' ? anchorProps.href : '';

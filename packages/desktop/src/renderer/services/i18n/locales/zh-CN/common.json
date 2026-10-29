@@ -664,6 +664,14 @@
     },
     "showAll": "展开全部（{{count}}）",
     "gridHint": "点击场景直接开始对话（已带上提示词与技能），拖动卡片可调整顺序",
+    "modelLabel": "场景模型",
+    "bundledTools": {
+      "browser": "内置浏览器",
+      "pageReader": "网页正文读取",
+      "pdf": "PDF 导出",
+      "image": "清单与计划图卡"
+    },
+    "dependenciesUnavailable": "场景所需的内置工具或 Skill 未就绪。请检查工具是否启用，并更新客户端后重试。",
     "openFailed": "无法打开该场景的对话",
     "tabTitle": "场景",
     "tabHint": "场景是做某类事的入口：带上角色、技能和工具，还会先问清需求再动手。企业下发的和你自己创建的都在这里，可随时开关。",

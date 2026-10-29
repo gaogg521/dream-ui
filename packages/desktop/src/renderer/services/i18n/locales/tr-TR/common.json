@@ -505,6 +505,14 @@
     },
     "showAll": "Tümünü göster ({{count}})",
     "gridHint": "İstemi ve becerileriyle sohbet başlatmak için bir senaryoya tıklayın; sıralamak için kartları sürükleyin",
+    "modelLabel": "Sahne modeli",
+    "bundledTools": {
+      "browser": "Yerleşik tarayıcı",
+      "pageReader": "Web sayfası okuma",
+      "pdf": "PDF dışa aktarma",
+      "image": "Kontrol listesi ve plan görselleri"
+    },
+    "dependenciesUnavailable": "Sahnenin yerleşik araçları veya becerileri hazır değil. Araçların etkin olduğunu kontrol edin, istemciyi güncelleyip yeniden deneyin.",
     "openFailed": "Bu senaryo için sohbet açılamadı",
     "tabTitle": "Senaryolar",
     "tabHint": "Senaryo, bir tür işin giriş noktasıdır: rol, beceriler ve araçlar içerir ve üretmeden önce gerekenleri sorar. Şirketinizin verdikleri ve kendi oluşturduklarınız burada; istediğiniz zaman açıp kapatın.",

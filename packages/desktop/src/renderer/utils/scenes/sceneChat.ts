@@ -24,14 +24,22 @@ import { ipcBridge } from '@/common';
 import { ensureBackendMcpCatalog } from '@/renderer/hooks/mcp/catalog';
 import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
 import { loadLatestConversationMessages } from '@/renderer/utils/chat/messagePagination';
-import type { TProviderWithModel } from '@/common/config/storage';
+import type { TProviderWithModel, IMcpServerTransport, ISessionMcpServer } from '@/common/config/storage';
 import type { MyScene } from '@/common/types/platform/enterpriseTypes';
 import type { PersonalScene } from '@/common/types/platform/sceneTypes';
 import { buildSceneRules } from './sceneProtocol';
 import type { SceneItem } from './sceneItem';
+import i18next from 'i18next';
 
 /** The slice of `ipcBridge.fs.listAvailableSkills` rows this needs. */
-export type LocalSkill = { name: string; location: string; source?: string };
+export type LocalSkill = { name: string; location: string; source?: string; displayName?: string };
+
+const BUILTIN_TOOL_LABELS = {
+  'one-browser': 'common.scenes.bundledTools.browser',
+  'one-page-reader': 'common.scenes.bundledTools.pageReader',
+  'one-export-pdf': 'common.scenes.bundledTools.pdf',
+  'one-html-render': 'common.scenes.bundledTools.image',
+} as const;
 
 /** The conversation-create payload for a scene (media-style dream conversation). */
 export type SceneConversationRequest = {
@@ -53,6 +61,7 @@ export type SceneConversationRequest = {
     exclude_auto_inject_skills?: string[];
     /** Explicit local MCP snapshot. Company scenes always provide this array. */
     selected_mcp_server_ids?: string[];
+    selected_session_mcp_servers?: ISessionMcpServer[];
     /** Which scene this was opened from; display and diagnostics only. */
     scene_id: string;
     /** The scene's example openers, offered as chips until the conversation begins. */
@@ -63,7 +72,14 @@ export type SceneConversationRequest = {
 };
 
 /** The slice of a local MCP server row this needs. */
-export type LocalMcpServer = { id: string; name?: string; original_json?: string };
+export type LocalMcpServer = {
+  id: string;
+  name?: string;
+  original_json?: string;
+  builtin?: boolean;
+  enabled?: boolean;
+  transport?: IMcpServerTransport;
+};
 
 /**
  * What the conversation shows before anything is said: which scene this is, what
@@ -200,6 +216,15 @@ export function buildSceneConversationRequest(params: {
     if (leftOut.length > 0) extra.exclude_auto_inject_skills = leftOut;
   }
   if (mine && mine.mcpServerIds.length > 0) extra.selected_mcp_server_ids = mine.mcpServerIds;
+  if (mine?.builtinMcpNames?.length) {
+    const bundled = mcpServers.filter(
+      (server) => server.builtin && server.enabled !== false && mine.builtinMcpNames?.includes(server.name ?? '')
+    );
+    extra.selected_mcp_server_ids = [...new Set([...mine.mcpServerIds, ...bundled.map((server) => server.id)])];
+    extra.selected_session_mcp_servers = bundled.flatMap((server) =>
+      server.name && server.transport ? [{ id: server.id, name: server.name, transport: server.transport }] : []
+    );
+  }
   // Company scenes never fall back to unrelated globally enabled connectors.
   // Opening a scene resolves and validates its required connectors first.
   if (company) {
@@ -209,7 +234,10 @@ export function buildSceneConversationRequest(params: {
   if (item.starters.length > 0) extra.scene_starters = item.starters;
   const intent = company ? company.intent : mine?.intent;
   const asksFirst = Boolean(intent?.discovery);
-  const role = summarizeRole(company ? company.prompt : mine?.prompt) ?? summarizeRole(item.description);
+  const role =
+    (mine?.templateId?.startsWith('builtin-') ? summarizeRole(item.description) : undefined) ??
+    summarizeRole(company ? company.prompt : mine?.prompt) ??
+    summarizeRole(item.description);
   // Hard rules and the hand-over only reach the conversation when the scene asks
   // first (see `buildSceneRules`), so only then does the greeting claim them.
   const hardRules = asksFirst
@@ -223,10 +251,11 @@ export function buildSceneConversationRequest(params: {
     name: item.name,
     description: item.description,
     ...(item.icon ? { icon: item.icon } : {}),
-    skills: extra.enabled_skills,
+    skills: extra.enabled_skills.map((name) => skills.find((skill) => skill.name === name)?.displayName || name),
     tools: (extra.selected_mcp_server_ids ?? []).flatMap((id) => {
       const name = mcpServers.find((server) => server.id === id)?.name;
-      return name ? [name] : [];
+      const label = name ? BUILTIN_TOOL_LABELS[name as keyof typeof BUILTIN_TOOL_LABELS] : undefined;
+      return name ? [label ? i18next.t(label, { defaultValue: name }) || name : name] : [];
     }),
     asksFirst,
     ...(workspace ? { workspace } : {}),
@@ -252,6 +281,7 @@ export function sceneFingerprint(request: SceneConversationRequest): string {
     extra.preset_rules,
     extra.enabled_skills,
     extra.selected_mcp_server_ids ?? [],
+    extra.selected_session_mcp_servers ?? [],
     extra.workspace,
     request.model.id,
     request.model.use_model,
@@ -325,23 +355,55 @@ export async function startSceneConversation(
   // before asking for the other put their latencies end to end on the click.
   // The MCP rows are needed to resolve a company scene's connectors, and to name
   // the servers a personal scene limits the conversation to.
-  const needsServers = Boolean(item.company?.mcpIds?.length || item.mine?.mcpServerIds.length);
+  const needsServers = Boolean(
+    item.company?.mcpIds?.length || item.mine?.mcpServerIds.length || item.mine?.builtinMcpNames?.length
+  );
   const [skills, mcpServers] = await Promise.all([
     ipcBridge.fs.listAvailableSkills
       .invoke()
-      .then((rows) => rows.map(({ name, location, source }): LocalSkill => ({ name, location, source })))
+      .then((rows) =>
+        rows.map(
+          ({ name, location, source, display_name }): LocalSkill => ({
+            name,
+            location,
+            source,
+            displayName: display_name,
+          })
+        )
+      )
       // A scene whose skills cannot be read still opens: the rules and the
       // connectors the team sync loads everywhere do not depend on them.
       .catch((): LocalSkill[] => []),
     needsServers
       ? ensureBackendMcpCatalog()
           .then(({ allServers }) =>
-            allServers.map(({ id, name, original_json }): LocalMcpServer => ({ id, name, original_json }))
+            allServers.map(
+              ({ id, name, original_json, builtin, enabled, transport }): LocalMcpServer => ({
+                id,
+                name,
+                original_json,
+                builtin,
+                enabled,
+                transport,
+              })
+            )
           )
           .catch((): LocalMcpServer[] => [])
       : Promise.resolve<LocalMcpServer[]>([]),
   ]);
   const request = buildSceneConversationRequest({ item, skills, mcpServers, model, workspace });
+  if (item.mine?.builtinMcpNames?.length) {
+    const available = new Set(
+      mcpServers
+        .filter((server) => server.builtin && server.enabled !== false && server.transport)
+        .map((server) => server.name)
+    );
+    if (
+      item.mine.builtinMcpNames.some((name) => !available.has(name)) ||
+      item.mine.skillNames.some((name) => !skills.some((skill) => skill.name === name))
+    )
+      throw new Error('SCENE_DEPENDENCY_UNAVAILABLE');
+  }
   if (
     item.company?.mcpIds.length &&
     (request.extra.selected_mcp_server_ids?.length ?? 0) !== new Set(item.company.mcpIds).size

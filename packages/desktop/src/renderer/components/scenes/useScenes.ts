@@ -33,6 +33,7 @@ import { companySceneItem, personalSceneItem, type SceneItem } from '@/renderer/
 import { applySceneOrder, loadSceneOrder, saveSceneOrder } from '@/renderer/utils/scenes/sceneOrder';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
+import { loadScenesWithDefaults } from '@/renderer/utils/scenes/defaultScenes';
 
 const PERSONAL_SCENES_KEY = 'personal-scenes';
 
@@ -70,7 +71,7 @@ export function useScenes() {
 
   const { data: personalScenes, mutate: refreshPersonal } = useSWR<PersonalScene[]>(
     PERSONAL_SCENES_KEY,
-    loadPersonalScenes,
+    loadScenesWithDefaults,
     { revalidateOnFocus: false }
   );
 
@@ -78,9 +79,11 @@ export function useScenes() {
   const personalList = useMemo(() => (Array.isArray(personalScenes) ? personalScenes : []), [personalScenes]);
 
   const all = useMemo<SceneItem[]>(() => {
+    const defaults = personalList.filter((scene) => ['builtin-work-v1', 'builtin-life-v1'].includes(scene.id));
     const items = [
+      ...defaults.map(personalSceneItem),
       ...(Array.isArray(companyScenes) ? companyScenes.map(companySceneItem) : []),
-      ...personalList.map(personalSceneItem),
+      ...personalList.filter((scene) => !defaults.includes(scene)).map(personalSceneItem),
     ];
     return applySceneOrder(items, order, (item) => item.key);
   }, [companyScenes, personalList, order]);

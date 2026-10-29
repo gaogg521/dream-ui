@@ -333,6 +333,15 @@ describe('startSceneConversation', () => {
     expect(hooks.activate).not.toHaveBeenCalled();
   });
 
+  it('explains unavailable bundled dependencies without creating an empty scene or changing enterprise selection', async () => {
+    const item = personalSceneItem(
+      newPersonalScene({ name: 'Work', skillNames: ['one-work-assistant'], builtinMcpNames: ['one-browser'] })
+    );
+    await expect(startSceneConversation(item, model)).rejects.toThrow('SCENE_DEPENDENCY_UNAVAILABLE');
+    expect(hooks.create).not.toHaveBeenCalled();
+    expect(hooks.activate).not.toHaveBeenCalled();
+  });
+
   it('creates the conversation and returns its id', async () => {
     const item = companySceneItem(scene({ skillIds: ['oskill_b2'] }));
     await expect(startSceneConversation(item, model)).resolves.toBe('conv_9');

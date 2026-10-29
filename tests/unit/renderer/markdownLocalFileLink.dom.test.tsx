@@ -10,6 +10,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import MarkdownView from '@/renderer/components/Markdown';
 
 const copyTextMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const revealMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+vi.mock('@/common', () => ({ ipcBridge: { shell: { showItemInFolder: { invoke: revealMock } } } }));
 
 vi.mock('@/renderer/components/Markdown/ShadowView', () => ({
   __esModule: true,
@@ -57,6 +59,7 @@ vi.mock('@arco-design/web-react', () => ({
 
 vi.mock('@icon-park/react', () => ({
   Copy: () => <span data-testid='copy-icon' />,
+  FolderOpen: () => <span data-testid='folder-icon' />,
 }));
 
 vi.mock('react-i18next', () => ({
@@ -66,6 +69,16 @@ vi.mock('react-i18next', () => ({
 }));
 
 describe('MarkdownView local file links', () => {
+  it('opens an inline-code Windows artifact path and reveals it without navigation', () => {
+    const onLocalFileLink = vi.fn();
+    render(
+      <MarkdownView onLocalFileLink={onLocalFileLink}>{'文件：`D:\\项目 空格\\outputs\\report.html`'}</MarkdownView>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'report.html' }));
+    expect(onLocalFileLink).toHaveBeenCalledWith('D:\\项目 空格\\outputs\\report.html', expect.any(Object));
+    fireEvent.click(screen.getByRole('button', { name: 'conversation.mediaResultReveal' }));
+    expect(revealMock).toHaveBeenCalledWith('D:\\项目 空格\\outputs\\report.html');
+  });
   beforeEach(() => {
     copyTextMock.mockClear();
   });

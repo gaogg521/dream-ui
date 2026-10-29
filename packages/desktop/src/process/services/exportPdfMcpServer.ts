@@ -22,7 +22,8 @@ import {
   convertViaOfficecliHtml,
   detectNativeOfficeConverter,
 } from '@process/bridge/exportBridge';
-import { writeFile } from 'fs/promises';
+import { writeFile, readFile } from 'fs/promises';
+import { PDFDocument } from 'pdf-lib';
 
 const START_PORT = 19820;
 const MAX_PORT_ATTEMPTS = 10;
@@ -42,6 +43,10 @@ type ExportResponse = {
   success: boolean;
   file_path?: string;
   error?: string;
+  page_count?: number;
+  size_bytes?: number;
+  image_width?: number;
+  image_height?: number;
 };
 
 let server: net.Server | null = null;
@@ -73,6 +78,20 @@ function createTcpMessageReader(onMessage: (msg: unknown) => void): (chunk: Buff
   };
 }
 
+/** Parse the actual PDF, including compressed page trees, rather than counting text patterns. */
+export async function inspectPdfFile(filePath: string): Promise<{ page_count: number; size_bytes: number }> {
+  const bytes = await readFile(filePath);
+  if (bytes.length === 0) throw new Error('The PDF output is empty');
+  const pdf = await PDFDocument.load(bytes, { updateMetadata: false });
+  const pages = pdf.getPageCount();
+  if (pages < 1) throw new Error('The PDF output contains no pages');
+  return { page_count: pages, size_bytes: bytes.length };
+}
+
+async function pdfSuccess(filePath: string): Promise<ExportResponse> {
+  return { success: true, file_path: filePath, ...(await inspectPdfFile(filePath)) };
+}
+
 async function handleExportRequest(req: ExportRequest): Promise<ExportResponse> {
   const { source, source_type, output_path } = req;
 
@@ -91,7 +110,7 @@ async function handleExportRequest(req: ExportRequest): Promise<ExportResponse> 
     if (source_type === 'html') {
       const pdfBuffer = await renderHtmlToPdfBuffer(source);
       await writeFile(output_path, pdfBuffer);
-      return { success: true, file_path: output_path };
+      return await pdfSuccess(output_path);
     }
 
     // html_file + office_file both need a real file on disk
@@ -100,11 +119,10 @@ async function handleExportRequest(req: ExportRequest): Promise<ExportResponse> 
     }
 
     if (source_type === 'html_file') {
-      const { readFile } = await import('fs/promises');
       const html = await readFile(source, 'utf-8');
       const pdfBuffer = await renderHtmlToPdfBuffer(html);
       await writeFile(output_path, pdfBuffer);
-      return { success: true, file_path: output_path };
+      return await pdfSuccess(output_path);
     }
 
     // office_file: COM / soffice / fallback
@@ -124,12 +142,12 @@ async function handleExportRequest(req: ExportRequest): Promise<ExportResponse> 
       } else {
         await convertViaOfficecliHtml(source, output_path);
       }
-      return { success: true, file_path: output_path };
+      return await pdfSuccess(output_path);
     } catch (e) {
       // Native failed — try fallback before giving up
       try {
         await convertViaOfficecliHtml(source, output_path);
-        return { success: true, file_path: output_path };
+        return await pdfSuccess(output_path);
       } catch (e2) {
         return { success: false, error: e2 instanceof Error ? e2.message : String(e2) };
       }
@@ -158,8 +176,13 @@ async function handleImageRequest(req: ExportRequest, outputPath: string): Promi
       req.source_type === 'html_file' ? { kind: 'file', filePath: req.source } : { kind: 'html', html: req.source },
       { width: req.width, scale: req.scale, selector: req.selector }
     );
+    if (png.length < 24 || !png.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])))
+      throw new Error('The renderer did not produce a valid PNG');
+    const image_width = png.readUInt32BE(16);
+    const image_height = png.readUInt32BE(20);
+    if (!image_width || !image_height) throw new Error('The rendered image has no dimensions');
     await writeFile(outputPath, png);
-    return { success: true, file_path: outputPath };
+    return { success: true, file_path: outputPath, size_bytes: png.length, image_width, image_height };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : String(e) };
   }

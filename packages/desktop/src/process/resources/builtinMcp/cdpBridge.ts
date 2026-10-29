@@ -55,6 +55,25 @@ type AttachedState = {
 
 let attached: AttachedState | null = null;
 let sockets = new Set<WebSocket>();
+let requestBrowser: (() => void) | undefined;
+let attachmentPending: Promise<void> | undefined;
+
+const ensureBrowserAttached = async (): Promise<void> => {
+  if (attached && !attached.contents.isDestroyed()) return;
+  if (!attachmentPending) {
+    attachmentPending = (async () => {
+      requestBrowser?.();
+      const deadline = Date.now() + 10_000;
+      while (Date.now() < deadline && isAgentControlEnabled()) {
+        if (attached && !attached.contents.isDestroyed()) return;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+    })().finally(() => {
+      attachmentPending = undefined;
+    });
+  }
+  await attachmentPending;
+};
 
 /**
  * 点击涟漪：Agent 每次通过桥按下鼠标时，在页面里就地画一个短促的高亮圈。
@@ -334,6 +353,7 @@ const handleSocketMessage = async (ws: WebSocket, raw: string, announcedSessions
   }
 
   // forward
+  await ensureBrowserAttached();
   if (!attached || attached.contents.isDestroyed()) {
     /**
      * 说清楚「怎么办」，因为 Agent 侧无法自己修复：attach 只由渲染进程在 webview
@@ -463,7 +483,8 @@ const writeJson = (res: ServerResponse, body: unknown) => {
  * main window never is (see the getType() check in attachInternal). Treating same-user local
  * processes as inside the trust boundary is an explicit assumption here.
  */
-export const startCdpBridge = async (): Promise<CdpBridgeHandle> => {
+export const startCdpBridge = async (onBrowserRequested?: () => void): Promise<CdpBridgeHandle> => {
+  requestBrowser = onBrowserRequested;
   const token = randomBytes(24).toString('hex');
 
   const httpServer: Server = createServer((req: IncomingMessage, res: ServerResponse) => {

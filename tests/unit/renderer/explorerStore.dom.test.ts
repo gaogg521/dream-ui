@@ -93,6 +93,22 @@ function makeDeferredPort(snapshots: Record<PeKey, Entry[]> = {}): DeferredPortH
 }
 
 const roots = [{ pe_id: 'pe1', title: 'app' }];
+it('shows outputs automatically once, subscribes to files, and preserves a later user collapse', async () => {
+  resetExplorerStoreForTest();
+  localStorage.clear();
+  const h = makePort({ [peKey('pe1', '')]: [dir('outputs')], [peKey('pe1', 'outputs')]: [file('report.pdf')] });
+  configureExplorerStore(h.port);
+  const workspaceRoots = [{ pe_id: 'pe1', title: 'app', role: 'workspace' as const }];
+  openProject('outputs-qa', workspaceRoots);
+  await flush();
+  expect(getExplorerSnapshot().expanded).toContain(peKey('pe1', 'outputs'));
+  expect(JSON.stringify(getExplorerSnapshot().treeData)).toContain('report.pdf');
+  setExpanded(peKey('pe1', 'outputs'), false);
+  openProject('other', []);
+  openProject('outputs-qa', workspaceRoots);
+  await flush();
+  expect(getExplorerSnapshot().expanded).not.toContain(peKey('pe1', 'outputs'));
+});
 const childNames = (tree: TreeNode[], key: PeKey): string[] | undefined => {
   const find = (nodes: TreeNode[]): TreeNode | undefined => {
     for (const n of nodes) {

@@ -104,7 +104,11 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ visible, mode, scene, onCance
     [skills]
   );
   const mcpOptions = useMemo(
-    () => mcpServers.filter((server) => !server.builtin).map((server) => ({ label: server.name, value: server.id })),
+    () =>
+      mcpServers.map((server) => ({
+        label: server.name,
+        value: server.builtin ? `builtin:${server.name}` : server.id,
+      })),
     [mcpServers]
   );
 
@@ -293,10 +297,15 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ visible, mode, scene, onCance
             mode='multiple'
             allowClear
             showSearch
-            value={draft.mcpServerIds}
+            value={[...draft.mcpServerIds, ...(draft.builtinMcpNames ?? []).map((name) => `builtin:${name}`)]}
             options={mcpOptions}
             placeholder={t('common.scenes.editor.mcpPlaceholder')}
-            onChange={(mcpServerIds: string[]) => set({ mcpServerIds })}
+            onChange={(values: string[]) =>
+              set({
+                mcpServerIds: values.filter((value) => !value.startsWith('builtin:')),
+                builtinMcpNames: values.filter((value) => value.startsWith('builtin:')).map((value) => value.slice(8)),
+              })
+            }
           />
         </Field>
 

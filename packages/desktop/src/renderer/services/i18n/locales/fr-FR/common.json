@@ -505,6 +505,14 @@
     },
     "showAll": "Tout afficher ({{count}})",
     "gridHint": "Cliquez sur un scénario pour démarrer une conversation avec son prompt et ses compétences ; faites glisser les cartes pour les réordonner",
+    "modelLabel": "Modèle du scénario",
+    "bundledTools": {
+      "browser": "Navigateur intégré",
+      "pageReader": "Lecture de pages web",
+      "pdf": "Export PDF",
+      "image": "Images de listes et de plans"
+    },
+    "dependenciesUnavailable": "Les outils ou compétences intégrés du scénario ne sont pas prêts. Vérifiez que les outils sont activés, mettez le client à jour et réessayez.",
     "openFailed": "Impossible d'ouvrir une conversation pour ce scénario",
     "tabTitle": "Scénarios",
     "tabHint": "Un scénario est l'entrée d'un type de travail : rôle, compétences et outils, et il pose les bonnes questions avant de construire. Ceux de votre entreprise et les vôtres sont ici ; activez-les ou désactivez-les à volonté.",

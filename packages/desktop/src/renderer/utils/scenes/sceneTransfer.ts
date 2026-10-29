@@ -59,6 +59,7 @@ export function parseScenesFile(text: string): ParsedScenes | null {
         intent: scene.intent,
         skillNames: scene.skillNames,
         mcpServerIds: scene.mcpServerIds,
+        builtinMcpNames: scene.builtinMcpNames,
         templateId: scene.templateId,
       })
     );

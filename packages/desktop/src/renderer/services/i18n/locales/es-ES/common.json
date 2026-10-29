@@ -505,6 +505,14 @@
     },
     "showAll": "Mostrar todos ({{count}})",
     "gridHint": "Haz clic en un escenario para iniciar una conversación con su prompt y habilidades; arrastra las tarjetas para reordenar",
+    "modelLabel": "Modelo del escenario",
+    "bundledTools": {
+      "browser": "Navegador integrado",
+      "pageReader": "Lectura de páginas web",
+      "pdf": "Exportar PDF",
+      "image": "Imágenes de listas y planes"
+    },
+    "dependenciesUnavailable": "Las herramientas o habilidades integradas del escenario no están listas. Compruebe que estén activadas, actualice el cliente y vuelva a intentarlo.",
     "openFailed": "No se pudo abrir una conversación para este escenario",
     "tabTitle": "Escenarios",
     "tabHint": "Un escenario es la puerta de entrada a un tipo de trabajo: rol, habilidades y herramientas, y pregunta lo necesario antes de construir. Aquí están los de tu empresa y los tuyos; actívalos o desactívalos cuando quieras.",

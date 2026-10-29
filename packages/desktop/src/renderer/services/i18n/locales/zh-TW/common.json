@@ -505,6 +505,14 @@
     },
     "showAll": "展開全部（{{count}}）",
     "gridHint": "點擊場景直接開始對話（已帶上提示詞與技能），拖動卡片可調整順序",
+    "modelLabel": "場景模型",
+    "bundledTools": {
+      "browser": "內建瀏覽器",
+      "pageReader": "網頁正文讀取",
+      "pdf": "PDF 匯出",
+      "image": "清單與計畫圖卡"
+    },
+    "dependenciesUnavailable": "場景所需的內建工具或 Skill 尚未就緒。請檢查工具是否啟用，並更新用戶端後重試。",
     "openFailed": "無法開啟該場景的對話",
     "tabTitle": "場景",
     "tabHint": "場景是做某類事的入口：帶上角色、技能和工具，還會先問清需求再動手。企業下發的和你自己建立的都在這裡，可隨時開關。",

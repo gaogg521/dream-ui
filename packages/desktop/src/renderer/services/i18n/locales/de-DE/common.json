@@ -505,6 +505,14 @@
     },
     "showAll": "Alle anzeigen ({{count}})",
     "gridHint": "Auf ein Szenario klicken, um ein Gespräch mit Prompt und Skills zu starten; Karten ziehen, um sie neu anzuordnen",
+    "modelLabel": "Szenariomodell",
+    "bundledTools": {
+      "browser": "Integrierter Browser",
+      "pageReader": "Webseiten lesen",
+      "pdf": "PDF-Export",
+      "image": "Checklisten und Plangrafiken"
+    },
+    "dependenciesUnavailable": "Die integrierten Werkzeuge oder Skills des Szenarios sind nicht bereit. Prüfen Sie, ob die Werkzeuge aktiviert sind, aktualisieren Sie den Client und versuchen Sie es erneut.",
     "openFailed": "Für dieses Szenario konnte kein Gespräch geöffnet werden",
     "tabTitle": "Szenarien",
     "tabHint": "Ein Szenario ist der Einstieg für eine Art von Arbeit: Rolle, Skills und Werkzeuge, und es fragt nach, bevor es baut. Szenarien Ihres Unternehmens und eigene sind hier; jedes lässt sich ein- und ausschalten.",

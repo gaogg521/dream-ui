@@ -664,6 +664,14 @@
     },
     "showAll": "Show all ({{count}})",
     "gridHint": "Click a scene to start a conversation with its prompt and skills; drag cards to reorder",
+    "modelLabel": "Scene model",
+    "bundledTools": {
+      "browser": "Built-in browser",
+      "pageReader": "Webpage reading",
+      "pdf": "PDF export",
+      "image": "Checklist and plan images"
+    },
+    "dependenciesUnavailable": "The scene’s bundled tools or skills are not ready. Check that the tools are enabled and update the client, then retry.",
     "openFailed": "Could not open a conversation for this scene",
     "tabTitle": "Scenes",
     "tabHint": "A scene is an entry point for a kind of work: a role, skills and tools, and it asks what it needs before it builds. Scenes from your company and ones you made are all here; switch any on or off.",

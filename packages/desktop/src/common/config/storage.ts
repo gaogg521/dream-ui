@@ -18,6 +18,7 @@ export interface IConfigStorageRefer {
   colorScheme: string; // @deprecated migrated to theme.activeId/theme.userThemes
   /** Scenes the person made for themselves (see `PersonalScene`); kept on this machine. */
   'scenes.personal'?: import('@/common/types/platform/sceneTypes').PersonalScene[];
+  'scenes.defaultsInitialized'?: boolean;
   /** Persisted app-wide UI zoom factor for Display settings */
   'ui.zoomFactor'?: number;
   /** Per-region configurable font sizes (px), set in Appearance settings */

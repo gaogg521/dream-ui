@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 import { Button, Message, Tooltip } from '@arco-design/web-react';
-import { Copy } from '@icon-park/react';
+import { Copy, FolderOpen } from '@icon-park/react';
+import { ipcBridge } from '@/common';
 import { iconColors } from '@/renderer/styles/colors';
 import { copyText } from '@/renderer/utils/ui/clipboard';
 import { useTranslation } from 'react-i18next';
@@ -113,6 +114,24 @@ const LocalFileLink: React.FC<LocalFileLinkProps> = ({ reference, children, onOp
           onClick={handleCopy}
         />
       </Tooltip>
+      {canOpen && (
+        <Tooltip content={t('conversation.mediaResultReveal')}>
+          <Button
+            aria-label={t('conversation.mediaResultReveal')}
+            type='text'
+            size='mini'
+            className='!p-1px !w-20px !h-20px flex-shrink-0'
+            icon={<FolderOpen theme='outline' size='14' fill={iconColors.secondary} />}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void ipcBridge.shell.showItemInFolder
+                .invoke(filePath)
+                .catch(() => Message.error(t('preview.openLocationFailed')));
+            }}
+          />
+        </Tooltip>
+      )}
     </span>
   );
 

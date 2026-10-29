@@ -40,17 +40,17 @@ const isModelKeyAvailable = (key: string | null, providers?: IProvider[]) => {
 /** localStorage key of the model the person last picked by hand on the welcome page. */
 const LAST_PICKED_MODEL_STORAGE_KEY = 'guid.lastPickedModelKey';
 
-const readLastPickedModelKey = (): string | null => {
+const readLastPickedModelKey = (storageKey: string): string | null => {
   try {
-    return localStorage.getItem(LAST_PICKED_MODEL_STORAGE_KEY);
+    return localStorage.getItem(storageKey);
   } catch {
     return null;
   }
 };
 
-const writeLastPickedModelKey = (key: string) => {
+const writeLastPickedModelKey = (storageKey: string, key: string) => {
   try {
-    localStorage.setItem(LAST_PICKED_MODEL_STORAGE_KEY, key);
+    localStorage.setItem(storageKey, key);
   } catch {
     // Storage can be unavailable (private mode, blocked site data); the pick just isn't remembered.
   }
@@ -104,7 +104,10 @@ export type GuidModelSelectionResult = {
  * transient in-page selection.
  * @param agentKey - current provider-based agent (currently only 'dream')
  */
-export const useGuidModelSelection = (agentKey: ProviderAgentKey = 'dream'): GuidModelSelectionResult => {
+export const useGuidModelSelection = (
+  agentKey: ProviderAgentKey = 'dream',
+  preferenceKey = LAST_PICKED_MODEL_STORAGE_KEY
+): GuidModelSelectionResult => {
   const { isGoogleAuth } = useGoogleAuthModels();
   const { data: modelConfig } = useProvidersQuery();
 
@@ -132,10 +135,10 @@ export const useGuidModelSelection = (agentKey: ProviderAgentKey = 'dream'): Gui
       autoDefaultKeyRef.current = null;
       // Only a hand pick on the plain welcome page is remembered; an assistant's default must not
       // become the default for everything else.
-      if (options?.persistPreference === true && key) writeLastPickedModelKey(key);
+      if (options?.persistPreference === true && key) writeLastPickedModelKey(preferenceKey, key);
       _setCurrentModel(model_info);
     },
-    []
+    [preferenceKey]
   );
 
   const resetCurrentModel = useCallback(
@@ -150,7 +153,7 @@ export const useGuidModelSelection = (agentKey: ProviderAgentKey = 'dream'): Gui
       // is whatever the provider happens to list first, which can be an image
       // or video endpoint. Falling back onto one of those replaces a broken
       // selection with another broken selection.
-      const resolved = resolveDefaultModel(modelList, readLastPickedModelKey());
+      const resolved = resolveDefaultModel(modelList, readLastPickedModelKey(preferenceKey));
       if (!resolved) return;
 
       // Not `setCurrentModel`: this is the hook's own pick, so it must stay "automatic"
@@ -159,7 +162,7 @@ export const useGuidModelSelection = (agentKey: ProviderAgentKey = 'dream'): Gui
       autoDefaultKeyRef.current = resolved.key;
       _setCurrentModel({ ...resolved.provider, use_model: resolved.modelName });
     },
-    [modelList]
+    [modelList, preferenceKey]
   );
 
   // Set default model when modelList or agent changes
@@ -176,7 +179,7 @@ export const useGuidModelSelection = (agentKey: ProviderAgentKey = 'dream'): Gui
         // Still the automatic default: follow it if the list settled differently than when it was
         // chosen (the first load can hold only some of the providers).
         if (currentKey === autoDefaultKeyRef.current) {
-          const wanted = resolveDefaultModel(modelList, readLastPickedModelKey());
+          const wanted = resolveDefaultModel(modelList, readLastPickedModelKey(preferenceKey));
           if (wanted && wanted.key !== currentKey) await resetCurrentModel();
         }
         return;
@@ -187,7 +190,7 @@ export const useGuidModelSelection = (agentKey: ProviderAgentKey = 'dream'): Gui
     setDefaultModel().catch((error) => {
       console.error('Failed to set default model:', error);
     });
-  }, [agentKey, current_model?.id, current_model?.use_model, modelList, resetCurrentModel]);
+  }, [agentKey, current_model?.id, current_model?.use_model, modelList, resetCurrentModel, preferenceKey]);
   return {
     modelList,
     isGoogleAuth,

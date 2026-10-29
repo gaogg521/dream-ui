@@ -19,8 +19,19 @@ import React from 'react';
 import { act, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const browserRequest = vi.hoisted(() => ({ listener: undefined as undefined | (() => void) }));
 vi.mock('@/common', () => ({
   ipcBridge: {
+    application: {
+      agentBrowserRequested: {
+        on: (fn: () => void) => {
+          browserRequest.listener = fn;
+          return () => {
+            browserRequest.listener = undefined;
+          };
+        },
+      },
+    },
     fileStream: { contentUpdate: { on: () => () => {} } },
     preview: { open: { on: () => () => {} } },
     conversation: { responseStream: { on: () => () => {} } },
@@ -30,6 +41,7 @@ vi.mock('@/common', () => ({
 
 vi.mock('@/renderer/pages/conversation/Preview/browser/firstUseNotice', () => ({
   maybeNotifyFirstAgentBrowserUse: vi.fn(),
+  notifyAgentOpenedBrowserPanel: vi.fn(),
 }));
 
 import {
@@ -60,6 +72,17 @@ beforeEach(() => {
 });
 
 describe('PreviewContext browser tabs', () => {
+  it('opens on a bridge request and reopens a hidden tab without duplicating it', () => {
+    renderProvider();
+    act(() => browserRequest.listener?.());
+    expect(browserTabs()).toHaveLength(1);
+    expect(ctx.isOpen).toBe(true);
+    act(() => ctx.closePreview());
+    expect(ctx.isOpen).toBe(false);
+    act(() => browserRequest.listener?.());
+    expect(ctx.isOpen).toBe(true);
+    expect(browserTabs()).toHaveLength(1);
+  });
   it('opens a blank browser tab with the placeholder title', () => {
     renderProvider();
     act(() => ctx.openBrowserTab());

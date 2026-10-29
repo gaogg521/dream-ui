@@ -86,62 +86,25 @@ describe('resolveBridgeToken', () => {
  * imported by a unit test), which is how the defect reached main. The command assembly is now a
  * pure function and can be pinned directly.
  */
-describe('buildMcpSpawnCommand — issue #3883', () => {
-  const version = '0.16.0';
-  const browserUrl = 'http://127.0.0.1:61622';
-
-  it('never spawns npx.cmd directly on Windows (that is the EINVAL form)', () => {
-    const { command } = buildMcpSpawnCommand({ platform: 'win32', version, browserUrl });
-    expect(command).not.toBe('npx.cmd');
-    expect(command).toBe('cmd.exe');
+describe('the bundled browser launch plan', () => {
+  it('uses the shipped Node and driver without a shell or package manager', () => {
+    const plan = buildMcpSpawnCommand({
+      nodePath: 'C:/Program Files/Node/node.exe',
+      runtimePath: 'C:/One Work/browser-runtime/build/src/index.js',
+      browserUrl: 'http://127.0.0.1:61622',
+    });
+    expect(plan.command).toBe('C:/Program Files/Node/node.exe');
+    expect(plan.args).toEqual([
+      'C:/One Work/browser-runtime/build/src/index.js',
+      '--browser-url',
+      'http://127.0.0.1:61622',
+    ]);
+    expect(JSON.stringify(plan)).not.toMatch(/npx|cmd.exe|@latest/);
   });
-
-  it('routes through cmd.exe /c on Windows with npx as an argument', () => {
-    const { command, args } = buildMcpSpawnCommand({ platform: 'win32', version, browserUrl });
-    expect(command).toBe('cmd.exe');
-    expect(args.slice(0, 2)).toEqual(['/c', 'npx']);
-    expect(args).toContain(`chrome-devtools-mcp@${version}`);
-  });
-
-  it('passes --browser-url as its own argv entry, never concatenated into one string', () => {
-    /**
-     * 分成两个 argv 条目是刻意的：shell: true 的写法会把整条命令拼成字符串再交给
-     * cmd.exe 解析，那时 browserUrl 里的 `&` `|` `^` 都会变成元字符。保持数组形式
-     * 才能让每个参数各自保留转义语义。
-     *
-     * Keeping these as separate argv entries is deliberate: the shell: true form concatenates
-     * the whole command into one string for cmd.exe to parse, at which point `&`, `|` and `^`
-     * inside browserUrl become metacharacters. The array form keeps each argument escaped.
-     */
-    for (const platform of ['win32', 'darwin', 'linux']) {
-      const { args } = buildMcpSpawnCommand({ platform, version, browserUrl });
-      const flagIndex = args.indexOf('--browser-url');
-      expect(flagIndex).toBeGreaterThanOrEqual(0);
-      expect(args[flagIndex + 1]).toBe(browserUrl);
-      expect(args.some((a) => a.includes(`--browser-url=`))).toBe(false);
-    }
-  });
-
-  it('keeps the plain npx invocation on POSIX platforms', () => {
-    for (const platform of ['darwin', 'linux']) {
-      const { command, args } = buildMcpSpawnCommand({ platform, version, browserUrl });
-      expect(command).toBe('npx');
-      expect(args[0]).toBe('-y');
-      expect(args).not.toContain('/c');
-    }
-  });
-
-  it('pins the MCP version rather than resolving @latest at launch', () => {
-    /**
-     * @latest 每次首启都要联网解析（离线直接失败），也意味着上游可以随时换掉驱动浏览器
-     * 的代码 —— 而那个浏览器里有用户的登录态。
-     *
-     * @latest re-resolves over the network on first launch (hard failure offline) and lets an
-     * uncontrolled upstream swap out the code driving a browser that holds the user's live
-     * sign-in cookies.
-     */
-    const { args } = buildMcpSpawnCommand({ platform: 'win32', version, browserUrl });
-    expect(args).not.toContain('chrome-devtools-mcp@latest');
-    expect(args).toContain(`chrome-devtools-mcp@${version}`);
+  it('keeps paths and URL as separate arguments even with spaces or shell metacharacters', () => {
+    const runtimePath = '/tmp/One Work & QA/browser-runtime/build/src/index.js';
+    const plan = buildMcpSpawnCommand({ nodePath: '/usr/bin/node', runtimePath, browserUrl: 'http://127.0.0.1:61622' });
+    expect(plan.args[0]).toBe(runtimePath);
+    expect(plan.args[2]).toBe('http://127.0.0.1:61622');
   });
 });

@@ -55,8 +55,9 @@ export function personalSceneItem(scene: PersonalScene): SceneItem {
   if (scene.skillNames.length > 0) {
     resources.push({ resourceType: 'skill', count: scene.skillNames.length, includesAll: false });
   }
-  if (scene.mcpServerIds.length > 0) {
-    resources.push({ resourceType: 'mcp', count: scene.mcpServerIds.length, includesAll: false });
+  const toolCount = scene.mcpServerIds.length + (scene.builtinMcpNames?.length ?? 0);
+  if (toolCount > 0) {
+    resources.push({ resourceType: 'mcp', count: toolCount, includesAll: false });
   }
   return {
     key: personalSceneKey(scene.id),
@@ -65,7 +66,7 @@ export function personalSceneItem(scene: PersonalScene): SceneItem {
     description: scene.description,
     icon: scene.icon,
     resources,
-    starters: scene.intent.discovery ? scene.intent.starters : [],
+    starters: scene.intent.starters,
     mine: scene,
   };
 }
