@@ -115,5 +115,19 @@
     "undoTitle": "Undo the last tidy?",
     "undoContent": "The files from before the tidy are put back and the merged files removed. Memories saved since are kept.",
     "undone": "Undone; your memory is back as it was"
+  },
+  "space": {
+    "hint": "What you ask the assistant to remember is saved here automatically, so you can look it up alongside your library. This is a live view of the assistant's memory; edits take effect right away. Tidying, backups and undo are in Memory.",
+    "searchPlaceholder": "Search memories (name and text)",
+    "noMatch": "No matching memories",
+    "view": "View / edit",
+    "toLibrary": "Save to library",
+    "toLibraryTitle": "Save this memory to the library?",
+    "toLibraryBody": "A new document is created in My files (only you can see it) with this memory's text. The memory itself is unchanged; after that the two are edited separately.",
+    "toLibraryEnterprise": "A new document is created in your own My files on the company server (only you can see it, not administrators) with this memory's text. The memory itself is unchanged; after that the two are edited separately.",
+    "toLibraryDone": "Saved to the library",
+    "toLibraryFailed": "Could not save it",
+    "openManager": "Open Memory",
+    "merged": "Merged"
   }
 }

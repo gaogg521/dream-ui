@@ -122,6 +122,8 @@ export type RagLibraryProps = {
   onOpen: (record: RagDocumentEntry) => void;
   /** Opens the "add to conversation" dialog for these documents. */
   onAddToConversation?: (records: RagDocumentEntry[]) => void;
+  /** Reload the document list after something outside the library added a document to it. */
+  onRefresh?: () => void;
   settings: React.ReactNode;
   search: React.ReactNode;
   columns: React.ComponentProps<typeof Table<RagDocumentEntry>>['columns'];
@@ -918,6 +920,7 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
       {renderLibrary ? (
         renderLibrary({
           isEnterprise,
+          onRefresh: () => void refresh(),
           activeDocument: editTarget,
           documentView: docModalVisible ? (
             <LibraryDocument

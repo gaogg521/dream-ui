@@ -115,5 +115,19 @@
     "undoTitle": "Annuler le dernier rangement ?",
     "undoContent": "Les fichiers d'avant sont remis et les fichiers regroupés supprimés. Les souvenirs enregistrés depuis sont conservés.",
     "undone": "Annulé ; la mémoire est comme avant"
+  },
+  "space": {
+    "hint": "Ce que vous demandez à l'assistant de retenir est enregistré ici automatiquement, pour le chercher avec votre bibliothèque. C'est une vue en direct de la mémoire de l'assistant ; les modifications sont immédiates. Rangement, sauvegardes et annulation se trouvent dans Mémoire.",
+    "searchPlaceholder": "Rechercher dans la mémoire (nom et texte)",
+    "noMatch": "Aucun souvenir correspondant",
+    "view": "Voir / modifier",
+    "toLibrary": "Enregistrer dans la bibliothèque",
+    "toLibraryTitle": "Enregistrer ce souvenir dans la bibliothèque ?",
+    "toLibraryBody": "Un nouveau document est créé dans Mes fichiers (visible de vous seul) avec le texte de ce souvenir. Le souvenir ne change pas ; ensuite, chacun est modifié séparément.",
+    "toLibraryEnterprise": "Un nouveau document est créé dans votre espace Mes fichiers sur le serveur de l'entreprise (visible de vous seul, pas des administrateurs) avec le texte de ce souvenir. Le souvenir ne change pas ; ensuite, chacun est modifié séparément.",
+    "toLibraryDone": "Enregistré dans la bibliothèque",
+    "toLibraryFailed": "Échec de l'enregistrement",
+    "openManager": "Ouvrir Mémoire",
+    "merged": "Regroupé"
   }
 }

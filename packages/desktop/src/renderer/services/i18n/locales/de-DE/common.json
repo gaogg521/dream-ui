@@ -958,7 +958,9 @@
     "onlineEditNote": "Sie bearbeiten eine konvertierte Kopie (erste 200 Zeilen × 26 Spalten), die beim Speichern in die ursprüngliche xlsx-Datei exportiert wird; Formeln werden nicht erhalten.",
     "contentConflict": "Das Dokument wurde anderswo geändert. Ihr Entwurf bleibt erhalten. Kopieren Sie ihn vor dem erneuten Öffnen.",
     "sourceOnlyStatus": "Original gespeichert; kein durchsuchbarer Text",
-    "sourceOnly": "Nur Original"
+    "sourceOnly": "Nur Original",
+    "memorySpace": "Speicherbereich",
+    "assistantMemory": "Speicher des Assistenten"
   },
   "officeToolbar": {
     "undo": "Rückgängig",

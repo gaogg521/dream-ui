@@ -964,7 +964,9 @@
     "onlineEditNote": "線上編輯的是轉換副本（前 200 列 × 26 欄），儲存後匯出回 xlsx 原件；儲存格公式不會保留。",
     "contentConflict": "其他視窗已更新此文件。草稿已保留，請複製草稿後重新開啟文件。",
     "sourceOnlyStatus": "原檔已儲存，尚無可檢索內文",
-    "sourceOnly": "僅原檔"
+    "sourceOnly": "僅原檔",
+    "memorySpace": "記憶空間",
+    "assistantMemory": "助手記憶"
   },
   "officeToolbar": {
     "undo": "復原",

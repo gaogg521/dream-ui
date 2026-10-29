@@ -964,7 +964,9 @@
     "onlineEditNote": "You are editing a converted copy (first 200 rows × 26 columns) exported back to the original xlsx on save; cell formulas are not preserved.",
     "contentConflict": "Another editor updated this document. Your draft is preserved. Copy it before reopening the document.",
     "sourceOnlyStatus": "Original saved; no searchable text",
-    "sourceOnly": "Original only"
+    "sourceOnly": "Original only",
+    "memorySpace": "Memory space",
+    "assistantMemory": "Assistant memory"
   },
   "officeToolbar": {
     "undo": "Undo",

@@ -115,5 +115,19 @@
     "undoTitle": "Desfazer a última organização?",
     "undoContent": "Os arquivos de antes voltam e os arquivos reunidos são removidos. Memórias salvas depois são mantidas.",
     "undone": "Desfeito; a memória voltou ao que era"
+  },
+  "space": {
+    "hint": "O que você pede ao assistente para lembrar é salvo aqui automaticamente, para procurar junto com sua biblioteca. Esta é uma visão ao vivo da memória do assistente; as edições valem na hora. Organizar, backups e desfazer ficam em Memória.",
+    "searchPlaceholder": "Pesquisar memórias (nome e texto)",
+    "noMatch": "Nenhuma memória encontrada",
+    "view": "Ver / editar",
+    "toLibrary": "Salvar na biblioteca",
+    "toLibraryTitle": "Salvar esta memória na biblioteca?",
+    "toLibraryBody": "Um novo documento é criado em Meus arquivos (só você vê) com o texto desta memória. A memória não muda; depois disso, cada um é editado separadamente.",
+    "toLibraryEnterprise": "Um novo documento é criado em Meus arquivos no servidor da empresa (só você vê, administradores não) com o texto desta memória. A memória não muda; depois disso, cada um é editado separadamente.",
+    "toLibraryDone": "Salvo na biblioteca",
+    "toLibraryFailed": "Não foi possível salvar",
+    "openManager": "Abrir Memória",
+    "merged": "Reunida"
   }
 }

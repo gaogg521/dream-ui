@@ -115,5 +115,19 @@
     "undoTitle": "Letztes Aufräumen rückgängig machen?",
     "undoContent": "Die Dateien von vorher kommen zurück, die zusammengeführten Dateien werden entfernt. Danach gespeicherte Einträge bleiben erhalten.",
     "undone": "Rückgängig gemacht; der Speicher ist wieder wie vorher"
+  },
+  "space": {
+    "hint": "Was der Assistent sich merken soll, wird hier automatisch abgelegt und lässt sich zusammen mit Ihrer Bibliothek durchsuchen. Das ist eine Live-Ansicht des Assistentenspeichers; Änderungen wirken sofort. Aufräumen, Sicherungen und Rückgängig finden Sie unter „Speicher“.",
+    "searchPlaceholder": "Speicher durchsuchen (Name und Text)",
+    "noMatch": "Keine passenden Einträge",
+    "view": "Ansehen / bearbeiten",
+    "toLibrary": "In Bibliothek speichern",
+    "toLibraryTitle": "Diesen Eintrag in der Bibliothek speichern?",
+    "toLibraryBody": "Unter „Meine Dateien“ wird ein neues Dokument mit dem Text dieses Eintrags angelegt (nur für Sie sichtbar). Der Eintrag selbst bleibt unverändert; danach werden beide getrennt bearbeitet.",
+    "toLibraryEnterprise": "Auf dem Firmenserver wird unter Ihren eigenen „Meine Dateien“ ein neues Dokument mit dem Text dieses Eintrags angelegt (nur für Sie sichtbar, nicht für Administratoren). Der Eintrag selbst bleibt unverändert; danach werden beide getrennt bearbeitet.",
+    "toLibraryDone": "In der Bibliothek gespeichert",
+    "toLibraryFailed": "Speichern fehlgeschlagen",
+    "openManager": "Speicher öffnen",
+    "merged": "Zusammengeführt"
   }
 }

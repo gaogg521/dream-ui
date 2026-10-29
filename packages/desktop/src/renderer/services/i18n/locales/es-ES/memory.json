@@ -115,5 +115,19 @@
     "undoTitle": "¿Deshacer el último orden?",
     "undoContent": "Los archivos de antes vuelven y los archivos unidos se eliminan. Las memorias guardadas después se conservan.",
     "undone": "Deshecho; la memoria vuelve a como estaba"
+  },
+  "space": {
+    "hint": "Lo que le pides al asistente que recuerde se guarda aquí automáticamente, para buscarlo junto a tu biblioteca. Es una vista en vivo de la memoria del asistente; los cambios se aplican al instante. Ordenar, copias de seguridad y deshacer están en Memoria.",
+    "searchPlaceholder": "Buscar en la memoria (nombre y texto)",
+    "noMatch": "No hay memorias que coincidan",
+    "view": "Ver / editar",
+    "toLibrary": "Guardar en la biblioteca",
+    "toLibraryTitle": "¿Guardar esta memoria en la biblioteca?",
+    "toLibraryBody": "Se crea un documento nuevo en Mis archivos (solo tú lo ves) con el texto de esta memoria. La memoria no cambia; después, cada una se edita por separado.",
+    "toLibraryEnterprise": "Se crea un documento nuevo en tus Mis archivos del servidor de la empresa (solo tú lo ves, los administradores no) con el texto de esta memoria. La memoria no cambia; después, cada una se edita por separado.",
+    "toLibraryDone": "Guardado en la biblioteca",
+    "toLibraryFailed": "No se pudo guardar",
+    "openManager": "Abrir Memoria",
+    "merged": "Unida"
   }
 }

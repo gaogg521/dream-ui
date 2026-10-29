@@ -115,5 +115,19 @@
     "undoTitle": "Son düzenleme geri alınsın mı?",
     "undoContent": "Düzenleme öncesi dosyalar geri konur, birleştirilen dosyalar silinir. Sonradan kaydedilen anılar korunur.",
     "undone": "Geri alındı; bellek eski haline döndü"
+  },
+  "space": {
+    "hint": "Asistana hatırlatmasını istediğiniz şeyler buraya otomatik kaydedilir; kütüphanenizle birlikte arayabilirsiniz. Bu, asistan belleğinin canlı görünümüdür; değişiklikler hemen geçerli olur. Düzenleme, yedek ve geri alma \"Bellek\" sayfasındadır.",
+    "searchPlaceholder": "Bellekte ara (ad ve metin)",
+    "noMatch": "Eşleşen bellek yok",
+    "view": "Görüntüle / düzenle",
+    "toLibrary": "Kütüphaneye kaydet",
+    "toLibraryTitle": "Bu bellek kütüphaneye kaydedilsin mi?",
+    "toLibraryBody": "\"Dosyalarım\" içinde bu belleğin metniyle yeni bir belge oluşturulur (yalnızca siz görürsünüz). Bellek değişmez; sonrasında ikisi ayrı düzenlenir.",
+    "toLibraryEnterprise": "Şirket sunucusundaki kendi \"Dosyalarım\" alanınızda bu belleğin metniyle yeni bir belge oluşturulur (yalnızca siz görürsünüz, yöneticiler göremez). Bellek değişmez; sonrasında ikisi ayrı düzenlenir.",
+    "toLibraryDone": "Kütüphaneye kaydedildi",
+    "toLibraryFailed": "Kaydedilemedi",
+    "openManager": "Belleği aç",
+    "merged": "Birleştirildi"
   }
 }

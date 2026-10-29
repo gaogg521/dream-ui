@@ -1,4 +1,5 @@
 import { ipcBridge } from '@/common';
+import { isNativeDialogAvailable } from '@/common/adapter/ipcBridge';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Dropdown, Input, Message, Menu, Select, Table, Tabs, Tag } from '@arco-design/web-react';
 import {
@@ -20,6 +21,7 @@ import type { RagLibraryProps } from '../superAssistant/registries/RagSection';
 import type { RagDocumentEntry } from '@/common/types/devops/devopsTypes';
 import styles from './KnowledgeLibrary.module.css';
 import LibraryGuide, { type GuideId } from './guides/LibraryGuide';
+import LibraryMemorySpace from './LibraryMemorySpace';
 import LibraryFileIcon from './shared/LibraryFileIcon';
 import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
 import { useLibrarySidebar } from './useLibrarySidebar';
@@ -63,6 +65,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   onLink,
   onOpen,
   onAddToConversation,
+  onRefresh,
   settings,
   search,
   columns,
@@ -71,12 +74,17 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   const label = (key: string) => t(`common.knowledgeLibrary.${key}`);
   const sidebar = useLibrarySidebar(libraries.map((item) => item.name));
   const [guide, setGuide] = useState<GuideId | null>(null);
+  // The assistant's own memory, shown in the document pane like a guide is. Its files live on this
+  // computer, so it is offered in the desktop app only.
+  const [memorySpace, setMemorySpace] = useState(false);
   const onLibraryChange = (id?: string) => {
     setGuide(null);
+    setMemorySpace(false);
     selectLibrary(id);
   };
   useEffect(() => {
     setGuide(null);
+    setMemorySpace(false);
   }, [libraryId, suppliedDocumentView]);
   // Office originals open in the offline engine, whose boot is half of every open: start it while the user is
   // still choosing, and drop the idle engine when they leave the library.
@@ -86,7 +94,12 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   }, [prewarmOffice]);
   useEffect(() => () => void window.__offlineOffice?.releasePrewarm().catch(() => {}), []);
   const documentView =
-    suppliedDocumentView || (guide ? <LibraryGuide id={guide} onClose={() => setGuide(null)} /> : undefined);
+    suppliedDocumentView ||
+    (guide ? (
+      <LibraryGuide id={guide} onClose={() => setGuide(null)} />
+    ) : memorySpace ? (
+      <LibraryMemorySpace enterprise={isEnterpriseRemoteActive()} onLibraryChanged={onRefresh} />
+    ) : undefined);
   const [view, setView] = useState<View>('recent');
   const [tab, setTab] = useState('all');
   const [query, setQuery] = useState('');
@@ -390,6 +403,37 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           {folders(null, true)}
           {rows.filter((row) => personal(row) && !libraryPersonal(row.libraryId)).map((row) => treeFile(row))}
         </div>
+        {isNativeDialogAvailable() && !suppliedDocumentView && (
+          <>
+            <div className={styles.sectionTitle}>
+              <Button
+                type='text'
+                onClick={() => {
+                  setGuide(null);
+                  setMemorySpace(true);
+                }}
+              >
+                {label('memorySpace')}
+              </Button>
+            </div>
+            <div className={styles.tree}>
+              <div className={styles.treeRow}>
+                <Button
+                  type='text'
+                  aria-current={memorySpace ? 'page' : undefined}
+                  icon={<BookOpen />}
+                  onClick={() => {
+                    sidebar.navigate();
+                    setGuide(null);
+                    setMemorySpace(true);
+                  }}
+                >
+                  {label('assistantMemory')}
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
         {isEnterprise && (
           <>
             <div className={styles.sectionTitle}>
@@ -424,10 +468,22 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
         )}
         {!suppliedDocumentView && (
           <nav className={styles.guideNav} aria-label={label('learn')}>
-            <Button type='text' onClick={() => setGuide('quickstart')}>
+            <Button
+              type='text'
+              onClick={() => {
+                setMemorySpace(false);
+                setGuide('quickstart');
+              }}
+            >
               <BookOpen /> {label('quickstartGuide')}
             </Button>
-            <Button type='text' onClick={() => setGuide('usage')}>
+            <Button
+              type='text'
+              onClick={() => {
+                setMemorySpace(false);
+                setGuide('usage');
+              }}
+            >
               <BookOpen /> {label('usageGuide')}
             </Button>
           </nav>

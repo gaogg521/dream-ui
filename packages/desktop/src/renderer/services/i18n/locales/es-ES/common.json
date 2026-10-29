@@ -958,7 +958,9 @@
     "onlineEditNote": "Edita una copia convertida (primeras 200 filas × 26 columnas) que se exporta al xlsx original al guardar; no se conservan las fórmulas.",
     "contentConflict": "El documento cambió en otra ventana. Tu borrador se conserva. Cópialo antes de volver a abrirlo.",
     "sourceOnlyStatus": "Original guardado; sin texto consultable",
-    "sourceOnly": "Solo original"
+    "sourceOnly": "Solo original",
+    "memorySpace": "Espacio de memoria",
+    "assistantMemory": "Memoria del asistente"
   },
   "officeToolbar": {
     "undo": "Deshacer",

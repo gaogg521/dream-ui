@@ -958,7 +958,9 @@
     "onlineEditNote": "Vous modifiez une copie convertie (200 premières lignes × 26 colonnes) réexportée vers le xlsx d’origine à l’enregistrement ; les formules ne sont pas conservées.",
     "contentConflict": "Le document a été modifié ailleurs. Votre brouillon est conservé. Copiez-le avant de rouvrir le document.",
     "sourceOnlyStatus": "Original enregistré ; aucun texte interrogeable",
-    "sourceOnly": "Original seul"
+    "sourceOnly": "Original seul",
+    "memorySpace": "Espace mémoire",
+    "assistantMemory": "Mémoire de l'assistant"
   },
   "officeToolbar": {
     "undo": "Annuler",

@@ -1,0 +1,62 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 28px;
+  color: var(--color-text-1);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-1);
+}
+
+.headActions,
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actions {
+  gap: 2px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-text-3);
+}
+
+.search {
+  max-width: 420px;
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+
+.desc {
+  font-size: 12px;
+  color: var(--color-text-2);
+}
+
+.empty {
+  padding: 40px 0;
+  font-size: 13px;
+  color: var(--color-text-3);
+  text-align: center;
+}

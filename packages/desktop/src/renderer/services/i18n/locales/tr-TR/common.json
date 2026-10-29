@@ -958,7 +958,9 @@
     "onlineEditNote": "Dönüştürülmüş bir kopyayı (ilk 200 satır × 26 sütun) düzenliyorsunuz; kaydettiğinizde orijinal xlsx’e yazılır. Formüller korunmaz.",
     "contentConflict": "Belge başka bir pencerede güncellendi. Taslağınız korundu. Belgeyi yeniden açmadan önce kopyalayın.",
     "sourceOnlyStatus": "Orijinal kaydedildi; aranabilir metin yok",
-    "sourceOnly": "Yalnızca orijinal"
+    "sourceOnly": "Yalnızca orijinal",
+    "memorySpace": "Bellek alanı",
+    "assistantMemory": "Asistan belleği"
   },
   "officeToolbar": {
     "undo": "Geri Al",
