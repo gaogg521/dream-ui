@@ -6,14 +6,17 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const hooks = vi.hoisted(() => ({ listAvailableSkills: vi.fn(), create: vi.fn() }));
+const hooks = vi.hoisted(() => ({ listAvailableSkills: vi.fn(), create: vi.fn(), activate: vi.fn(), sync: vi.fn() }));
 
 vi.mock('@/common', () => ({
   ipcBridge: {
     fs: { listAvailableSkills: { invoke: hooks.listAvailableSkills } },
+    oneDevops: { activateSceneMcp: { invoke: hooks.activate } },
     conversation: { create: { invoke: hooks.create } },
   },
 }));
+
+vi.mock('@/renderer/utils/enterprise/teamSkillSync', () => ({ syncTeamMcp: hooks.sync }));
 
 vi.mock('@/renderer/hooks/mcp/catalog', () => ({
   ensureBackendMcpCatalog: vi.fn(async () => ({
@@ -125,11 +128,11 @@ describe('buildSceneConversationRequest', () => {
     expect(request.extra.selected_mcp_server_ids).toEqual(['row_1']);
   });
 
-  it('but never leaves the conversation with no tools: none synced yet means no limit', () => {
+  it('uses an explicit empty snapshot when scene connectors are missing', () => {
     const item = companySceneItem(scene({ mcpIds: ['omcp_1'] }));
     expect(
       buildSceneConversationRequest({ item, skills, model, mcpServers: [] }).extra.selected_mcp_server_ids
-    ).toBeUndefined();
+    ).toEqual([]);
   });
 
   it('writes a greeting onto the conversation: which scene, what came with it, and how it will work', () => {
@@ -217,7 +220,7 @@ describe('buildSceneConversationRequest', () => {
     expect(request.extra.preset_rules).toContain('Scene: "发布管理"');
     expect(request.extra.preset_rules.endsWith('## Your role in this scene\n你是发布经理。')).toBe(true);
     expect(request.extra.scene_greeting?.role).toBe('你是发布经理。');
-    expect(request.extra.selected_mcp_server_ids).toBeUndefined();
+    expect(request.extra.selected_mcp_server_ids).toEqual([]);
   });
 
   it('a scene that names skills leaves the person’s other imported skills out, not the built-in ones', () => {
@@ -308,12 +311,26 @@ describe('startSceneConversation', () => {
   beforeEach(() => {
     hooks.listAvailableSkills.mockReset().mockResolvedValue(skills);
     hooks.create.mockReset().mockResolvedValue({ id: 'conv_9' });
+    hooks.activate.mockReset().mockResolvedValue({ selectedIds: ['omcp_1'], maxCount: 50 });
+    hooks.sync.mockReset().mockResolvedValue({ written: 1, removed: 0, kept: 1 });
   });
 
   it('limits a company scene to its synced connectors when it opens', async () => {
     const item = companySceneItem(scene({ mcpIds: ['omcp_1'] }));
     await startSceneConversation(item, model);
     expect(hooks.create.mock.calls[0][0].extra.selected_mcp_server_ids).toEqual(['row_1']);
+    expect(hooks.activate).toHaveBeenCalledWith({ sceneId: 'scene_1' });
+    expect(hooks.sync).toHaveBeenCalledBefore(hooks.create);
+  });
+
+  it('does not create a zero-tool conversation when distribution fails', async () => {
+    hooks.sync.mockResolvedValue(null);
+    await expect(startSceneConversation(companySceneItem(scene({ mcpIds: ['omcp_1'] })), model)).resolves.toBeNull();
+    expect(hooks.create).not.toHaveBeenCalled();
+  });
+  it('does not change selection for personal scenes', async () => {
+    await startSceneConversation(personalSceneItem(newPersonalScene()), model);
+    expect(hooks.activate).not.toHaveBeenCalled();
   });
 
   it('creates the conversation and returns its id', async () => {

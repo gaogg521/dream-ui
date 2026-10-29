@@ -51,7 +51,7 @@ export type SceneConversationRequest = {
      * auto-loads all of them, so without this a scene that names 10 skills opens with 130.
      */
     exclude_auto_inject_skills?: string[];
-    /** Local MCP server ids the conversation is limited to; absent means "whatever is enabled". */
+    /** Explicit local MCP snapshot. Company scenes always provide this array. */
     selected_mcp_server_ids?: string[];
     /** Which scene this was opened from; display and diagnostics only. */
     scene_id: string;
@@ -200,12 +200,11 @@ export function buildSceneConversationRequest(params: {
     if (leftOut.length > 0) extra.exclude_auto_inject_skills = leftOut;
   }
   if (mine && mine.mcpServerIds.length > 0) extra.selected_mcp_server_ids = mine.mcpServerIds;
-  // A company scene that grants connectors limits the conversation to those that
-  // are here; if none have synced yet it limits nothing rather than leaving the
-  // conversation with no tools at all.
+  // Company scenes never fall back to unrelated globally enabled connectors.
+  // Opening a scene resolves and validates its required connectors first.
   if (company) {
     const resolved = resolveSceneMcpServerIds(company, mcpServers);
-    if (resolved.length > 0) extra.selected_mcp_server_ids = resolved;
+    extra.selected_mcp_server_ids = resolved;
   }
   if (item.starters.length > 0) extra.scene_starters = item.starters;
   const intent = company ? company.intent : mine?.intent;
@@ -314,6 +313,14 @@ export async function startSceneConversation(
   model: TProviderWithModel,
   workspace?: string
 ): Promise<string | null> {
+  // Scene grants are an administrator's dependency selection, not another
+  // manual checkbox batch. Materialize them before resolving local IDs.
+  if (item.company) {
+    await ipcBridge.oneDevops.activateSceneMcp.invoke({ sceneId: item.company.id });
+    const { syncTeamMcp } = await import('@/renderer/utils/enterprise/teamSkillSync');
+    const synced = await syncTeamMcp();
+    if (!synced) return null;
+  }
   // The skill list and the MCP rows are independent reads; waiting for one
   // before asking for the other put their latencies end to end on the click.
   // The MCP rows are needed to resolve a company scene's connectors, and to name
@@ -335,6 +342,11 @@ export async function startSceneConversation(
       : Promise.resolve<LocalMcpServer[]>([]),
   ]);
   const request = buildSceneConversationRequest({ item, skills, mcpServers, model, workspace });
+  if (
+    item.company?.mcpIds.length &&
+    (request.extra.selected_mcp_server_ids?.length ?? 0) !== new Set(item.company.mcpIds).size
+  )
+    return null;
   const reusable = await findReusableConversation(request);
   if (reusable) return reusable;
   const conversation = await ipcBridge.conversation.create.invoke(request);

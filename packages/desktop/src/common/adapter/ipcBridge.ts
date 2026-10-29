@@ -3317,6 +3317,9 @@ export const oneDevops = {
   deleteSkill: httpDelete<void, { id: string }>((p) => `/api/one/devops/skills/${p.id}`),
   listMcpRegistry: httpGet<McpRegistryEntry[], void>('/api/one/devops/mcp-registry'),
   listActiveMcp: httpGet<McpRegistryEntry[], void>('/api/one/devops/mcp-active'),
+  activateSceneMcp: httpPost<{ selectedIds: string[]; maxCount: number }, { sceneId: string }>(
+    '/api/one/devops/mcp-selection/scene'
+  ),
   /** Connectors digital employees bind, resolved against the authorized catalog (not the member's selection). */
   listEmployeeBoundMcp: httpPost<McpRegistryEntry[], { ids: string[] }>('/api/one/devops/mcp-bound'),
   getMcpSelection: httpGet<{ selectedIds: string[]; maxCount: number }, void>('/api/one/devops/mcp-selection'),

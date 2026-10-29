@@ -856,7 +856,13 @@ const GuidPage: React.FC = () => {
         await navigate(`/conversation/${conversationId}`);
       } catch (error) {
         console.error('[GuidPage] Failed to open a scene conversation:', error);
-        Message.error(t('common.scenes.openFailed'));
+        Message.error(
+          t(
+            error instanceof Error && error.message.includes('MCP_LIMIT_EXCEEDED')
+              ? 'settings.mcpQuotaReplace'
+              : 'common.scenes.openFailed'
+          )
+        );
       }
     },
     [navigate, sceneModel, guidInput.dir, guidInput.input, displayFilePaths, t]
