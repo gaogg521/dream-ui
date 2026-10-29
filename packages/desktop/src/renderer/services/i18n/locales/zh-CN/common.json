@@ -731,7 +731,14 @@
       "mcpHint": "选了之后，这个场景的对话只使用这些 MCP；不选则沿用当前已启用的。",
       "mcpPlaceholder": "不限制",
       "preview": "查看将告诉 AI 的完整规则",
-      "previewHint": "这就是对话开始时 AI 读到的内容，由上面的设置自动生成。"
+      "previewHint": "这就是对话开始时 AI 读到的内容，由上面的设置自动生成。",
+      "permission": "工具审批",
+      "permissionHint": "从这个场景新开的会话，工具请求怎么处理。选“始终允许”后，场景自带的技能与内置工具不再逐次弹窗。已经开始的会话不受影响，可在会话输入框的权限设置里单独调整。",
+      "permissionModes": {
+        "default": "每次询问",
+        "auto_edit": "自动允许文件编辑",
+        "yolo": "始终允许（全部）"
+      }
     },
     "tryOpening": "试试这样开口：",
     "import": "导入",

@@ -572,7 +572,14 @@
       "mcpHint": "Seçerseniz bu senaryonun sohbetleri yalnızca bunları kullanır; seçmezseniz açık olanlar geçerlidir.",
       "mcpPlaceholder": "Sınır yok",
       "preview": "Yapay zekâya söylenecek tüm kuralları gör",
-      "previewHint": "Sohbet başlarken yapay zekânın okuduğu tam metindir; yukarıdaki ayarlardan üretilir."
+      "previewHint": "Sohbet başlarken yapay zekânın okuduğu tam metindir; yukarıdaki ayarlardan üretilir.",
+      "permission": "Araç onayı",
+      "permissionHint": "Bu senaryodan başlatılan konuşmalarda araç isteklerinin nasıl ele alınacağı. \"Her zaman izin ver\" seçilirse senaryonun becerileri ve yerleşik araçları her seferinde sormaz. Başlamış konuşmalar etkilenmez; onları mesaj kutusunun yanındaki izin ayarından değiştirebilirsiniz.",
+      "permissionModes": {
+        "default": "Her seferinde sor",
+        "auto_edit": "Dosya düzenlemelerine otomatik izin ver",
+        "yolo": "Her zaman izin ver (hepsi)"
+      }
     },
     "tryOpening": "Şöyle başlayabilirsiniz:",
     "import": "İçe aktar",

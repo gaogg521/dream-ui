@@ -17,8 +17,10 @@
 import { ConfigStorage } from '@/common/config/storage';
 import {
   SCENE_LIMITS,
+  SCENE_PERMISSION_MODES,
   emptySceneIntent,
   type PersonalScene,
+  type ScenePermissionMode,
   type SceneIntent,
 } from '@/common/types/platform/sceneTypes';
 
@@ -73,6 +75,9 @@ export function normalizePersonalScene(value: unknown): PersonalScene | null {
     skillNames: stringList(raw.skillNames),
     mcpServerIds: stringList(raw.mcpServerIds),
     ...(Array.isArray(raw.builtinMcpNames) ? { builtinMcpNames: stringList(raw.builtinMcpNames) } : {}),
+    ...((SCENE_PERMISSION_MODES as readonly unknown[]).includes(raw.permissionMode)
+      ? { permissionMode: raw.permissionMode as ScenePermissionMode }
+      : {}),
     templateId: typeof raw.templateId === 'string' ? raw.templateId : undefined,
     createdAt: typeof raw.createdAt === 'number' ? raw.createdAt : now,
     updatedAt: typeof raw.updatedAt === 'number' ? raw.updatedAt : now,
@@ -96,6 +101,7 @@ export function newPersonalScene(
     skillNames: seed.skillNames ?? [],
     mcpServerIds: seed.mcpServerIds ?? [],
     ...(seed.builtinMcpNames ? { builtinMcpNames: seed.builtinMcpNames } : {}),
+    ...(seed.permissionMode ? { permissionMode: seed.permissionMode } : {}),
     templateId: seed.templateId,
     createdAt: now,
     updatedAt: now,

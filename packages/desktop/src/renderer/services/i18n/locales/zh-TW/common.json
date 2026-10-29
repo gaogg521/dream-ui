@@ -572,7 +572,14 @@
       "mcpHint": "選了之後，這個場景的對話只使用這些 MCP；不選則沿用目前已啟用的。",
       "mcpPlaceholder": "不限制",
       "preview": "查看將告訴 AI 的完整規則",
-      "previewHint": "這就是對話開始時 AI 讀到的內容，由上面的設定自動產生。"
+      "previewHint": "這就是對話開始時 AI 讀到的內容，由上面的設定自動產生。",
+      "permission": "工具審批",
+      "permissionHint": "從這個場景新開的對話，工具請求如何處理。選「一律允許」後，場景自帶的技能與內建工具不再逐次彈窗。已開始的對話不受影響，可在對話輸入框的權限設定中單獨調整。",
+      "permissionModes": {
+        "default": "每次詢問",
+        "auto_edit": "自動允許檔案編輯",
+        "yolo": "一律允許（全部）"
+      }
     },
     "tryOpening": "試試這樣開口：",
     "import": "匯入",

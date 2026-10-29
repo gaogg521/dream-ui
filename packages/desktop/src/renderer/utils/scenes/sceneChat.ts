@@ -64,6 +64,8 @@ export type SceneConversationRequest = {
     selected_session_mcp_servers?: ISessionMcpServer[];
     /** Which scene this was opened from; display and diagnostics only. */
     scene_id: string;
+    /** How tool requests are approved from the first message on; absent means the usual ask-each-time. */
+    session_mode?: string;
     /** The scene's example openers, offered as chips until the conversation begins. */
     scene_starters?: string[];
     /** What the empty conversation shows (see `SceneGreeting`). */
@@ -231,6 +233,9 @@ export function buildSceneConversationRequest(params: {
     const resolved = resolveSceneMcpServerIds(company, mcpServers);
     extra.selected_mcp_server_ids = resolved;
   }
+  // A scene the person owns can start in the approval mode they chose for it. A company scene never
+  // does: how tools are approved there is the company's policy, not the scene's.
+  if (mine?.permissionMode && mine.permissionMode !== 'default') extra.session_mode = mine.permissionMode;
   if (item.starters.length > 0) extra.scene_starters = item.starters;
   const intent = company ? company.intent : mine?.intent;
   const asksFirst = Boolean(intent?.discovery);
@@ -282,6 +287,7 @@ export function sceneFingerprint(request: SceneConversationRequest): string {
     extra.enabled_skills,
     extra.selected_mcp_server_ids ?? [],
     extra.selected_session_mcp_servers ?? [],
+    extra.session_mode ?? '',
     extra.workspace,
     request.model.id,
     request.model.use_model,

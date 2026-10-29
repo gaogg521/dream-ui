@@ -572,7 +572,14 @@
       "mcpHint": "Si vous en choisissez, les conversations de ce scénario n'utilisent que celles-ci ; sinon ce qui est activé s'applique.",
       "mcpPlaceholder": "Aucune limite",
       "preview": "Voir les règles complètes données à l'IA",
-      "previewHint": "C'est exactement ce que l'IA lit au début de la conversation, généré à partir des réglages ci-dessus."
+      "previewHint": "C'est exactement ce que l'IA lit au début de la conversation, généré à partir des réglages ci-dessus.",
+      "permission": "Approbation des outils",
+      "permissionHint": "Comment les demandes d'outils sont traitées dans les conversations lancées depuis ce scénario. Avec « Toujours autoriser », les compétences et outils intégrés du scénario ne demandent plus à chaque fois. Les conversations déjà commencées ne changent pas ; réglez-les depuis le paramètre d'autorisations près de la zone de saisie.",
+      "permissionModes": {
+        "default": "Demander à chaque fois",
+        "auto_edit": "Autoriser automatiquement les modifications de fichiers",
+        "yolo": "Toujours autoriser (tout)"
+      }
     },
     "tryOpening": "Essayez de commencer par :",
     "import": "Importer",

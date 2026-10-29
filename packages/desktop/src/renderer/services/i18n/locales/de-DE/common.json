@@ -572,7 +572,14 @@
       "mcpHint": "Bei Auswahl nutzen Gespräche aus diesem Szenario nur diese; ohne Auswahl gilt, was aktiviert ist.",
       "mcpPlaceholder": "Keine Beschränkung",
       "preview": "Vollständige Regeln für die KI ansehen",
-      "previewHint": "Genau das liest die KI zu Gesprächsbeginn, erzeugt aus den Einstellungen oben."
+      "previewHint": "Genau das liest die KI zu Gesprächsbeginn, erzeugt aus den Einstellungen oben.",
+      "permission": "Tool-Freigabe",
+      "permissionHint": "Wie Tool-Anfragen in Gesprächen behandelt werden, die aus diesem Szenario gestartet werden. Bei „Immer erlauben“ fragen die Skills und integrierten Tools des Szenarios nicht mehr jedes Mal nach. Bereits begonnene Gespräche bleiben unberührt; sie lassen sich in der Berechtigungseinstellung neben dem Eingabefeld ändern.",
+      "permissionModes": {
+        "default": "Jedes Mal fragen",
+        "auto_edit": "Dateibearbeitungen automatisch erlauben",
+        "yolo": "Immer erlauben (alles)"
+      }
     },
     "tryOpening": "Zum Beispiel so einsteigen:",
     "import": "Importieren",

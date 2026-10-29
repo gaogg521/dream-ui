@@ -14,7 +14,13 @@
  */
 
 import { ipcBridge } from '@/common';
-import { SCENE_LIMITS, type PersonalScene, type SceneIntent } from '@/common/types/platform/sceneTypes';
+import {
+  SCENE_LIMITS,
+  SCENE_PERMISSION_MODES,
+  type PersonalScene,
+  type SceneIntent,
+  type ScenePermissionMode,
+} from '@/common/types/platform/sceneTypes';
 import { useMcpServers } from '@/renderer/hooks/mcp';
 import { SCENE_ICONS, personalSceneProblems } from '@/renderer/utils/scenes/personalScenes';
 import { buildSceneRules } from '@/renderer/utils/scenes/sceneProtocol';
@@ -306,6 +312,18 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ visible, mode, scene, onCance
                 builtinMcpNames: values.filter((value) => value.startsWith('builtin:')).map((value) => value.slice(8)),
               })
             }
+          />
+        </Field>
+
+        <Field label={t('common.scenes.editor.permission')} hint={t('common.scenes.editor.permissionHint')}>
+          <Select
+            value={draft.permissionMode ?? 'default'}
+            options={SCENE_PERMISSION_MODES.map((value) => ({
+              value,
+              label: t(`common.scenes.editor.permissionModes.${value}`),
+            }))}
+            onChange={(value: ScenePermissionMode) => set({ permissionMode: value === 'default' ? undefined : value })}
+            data-testid='scene-permission'
           />
         </Field>
 

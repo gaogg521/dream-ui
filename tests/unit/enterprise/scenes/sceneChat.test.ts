@@ -32,6 +32,7 @@ import {
   resolveSceneMcpServerIds,
   resolvePersonalSkillNames,
   resolveSceneSkillNames,
+  sceneFingerprint,
   startSceneConversation,
   type LocalSkill,
 } from '@/renderer/utils/scenes/sceneChat';
@@ -233,6 +234,34 @@ describe('buildSceneConversationRequest', () => {
     // A scene that names no skills keeps the usual defaults.
     const none = buildSceneConversationRequest({ item: companySceneItem(scene()), skills, model });
     expect(none.extra.exclude_auto_inject_skills).toBeUndefined();
+  });
+
+  it('a personal scene starts in the approval mode its owner chose; a company scene never does', () => {
+    const always = newPersonalScene({ name: '官网', permissionMode: 'yolo' });
+    expect(buildSceneConversationRequest({ item: personalSceneItem(always), skills, model }).extra.session_mode).toBe(
+      'yolo'
+    );
+    // Not chosen, or chosen as "ask every time": the engine's own default applies.
+    const asking = newPersonalScene({ name: '周报', permissionMode: 'default' });
+    expect(
+      buildSceneConversationRequest({ item: personalSceneItem(asking), skills, model }).extra.session_mode
+    ).toBeUndefined();
+    expect(
+      buildSceneConversationRequest({ item: personalSceneItem(newPersonalScene({ name: '空' })), skills, model }).extra
+        .session_mode
+    ).toBeUndefined();
+    // How tools are approved in a company scene is the company's policy.
+    expect(
+      buildSceneConversationRequest({ item: companySceneItem(scene()), skills, model }).extra.session_mode
+    ).toBeUndefined();
+    // A different mode is a different conversation: it must not reuse an untouched one opened under another.
+    const a = buildSceneConversationRequest({ item: personalSceneItem(always), skills, model });
+    const b = buildSceneConversationRequest({
+      item: personalSceneItem({ ...always, permissionMode: undefined }),
+      skills,
+      model,
+    });
+    expect(sceneFingerprint(a)).not.toBe(sceneFingerprint(b));
   });
 
   it('a company scene without a prompt falls back to what its own fields say', () => {

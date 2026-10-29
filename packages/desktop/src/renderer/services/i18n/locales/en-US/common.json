@@ -731,7 +731,14 @@
       "mcpHint": "If you pick some, conversations from this scene use only these; if you pick none, whatever is enabled applies.",
       "mcpPlaceholder": "No limit",
       "preview": "See the full rules the AI will be told",
-      "previewHint": "This is exactly what the AI reads when the conversation starts, generated from the settings above."
+      "previewHint": "This is exactly what the AI reads when the conversation starts, generated from the settings above.",
+      "permission": "Tool approval",
+      "permissionHint": "How tool requests are handled in conversations started from this scene. With \"Always allow\", the scene's skills and built-in tools stop asking each time. Conversations already started are not affected; change those from the permission setting next to the message box.",
+      "permissionModes": {
+        "default": "Ask every time",
+        "auto_edit": "Auto-allow file edits",
+        "yolo": "Always allow (everything)"
+      }
     },
     "tryOpening": "Try opening with:",
     "import": "Import",

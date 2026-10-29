@@ -52,6 +52,10 @@ export const emptySceneIntent = (): SceneIntent => ({
 });
 
 /** A scene a person made for themselves; kept on this machine, not issued by anyone. */
+/** The approval modes a scene may start its conversations in (the engine's own mode names). */
+export const SCENE_PERMISSION_MODES = ['default', 'auto_edit', 'yolo'] as const;
+export type ScenePermissionMode = (typeof SCENE_PERMISSION_MODES)[number];
+
 export type PersonalScene = {
   id: string;
   name: string;
@@ -70,6 +74,11 @@ export type PersonalScene = {
   mcpServerIds: string[];
   /** Bundled tools resolved by trusted builtin name on this installation. */
   builtinMcpNames?: string[];
+  /**
+   * How tool requests are approved in conversations opened from this scene. Absent means the
+   * normal behaviour: ask each time. It is the person's own choice, stored with their scene.
+   */
+  permissionMode?: ScenePermissionMode;
   /** The template it was made from, when it was. Informational. */
   templateId?: string;
   createdAt: number;

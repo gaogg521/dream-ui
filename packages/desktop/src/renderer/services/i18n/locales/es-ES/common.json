@@ -572,7 +572,14 @@
       "mcpHint": "Si eliges alguna, las conversaciones de este escenario usan solo esas; si no, vale lo que esté activado.",
       "mcpPlaceholder": "Sin límite",
       "preview": "Ver las reglas completas que recibirá la IA",
-      "previewHint": "Es exactamente lo que lee la IA al empezar la conversación, generado a partir de los ajustes de arriba."
+      "previewHint": "Es exactamente lo que lee la IA al empezar la conversación, generado a partir de los ajustes de arriba.",
+      "permission": "Aprobación de herramientas",
+      "permissionHint": "Cómo se gestionan las solicitudes de herramientas en las conversaciones iniciadas desde este escenario. Con «Permitir siempre», las habilidades y herramientas integradas del escenario dejan de preguntar cada vez. Las conversaciones ya iniciadas no cambian; se ajustan en la configuración de permisos junto al cuadro de mensaje.",
+      "permissionModes": {
+        "default": "Preguntar siempre",
+        "auto_edit": "Permitir ediciones de archivos automáticamente",
+        "yolo": "Permitir siempre (todo)"
+      }
     },
     "tryOpening": "Prueba a empezar con:",
     "import": "Importar",
