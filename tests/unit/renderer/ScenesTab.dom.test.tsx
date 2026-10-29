@@ -26,7 +26,8 @@ vi.mock('@/common/adapter/enterpriseMode', () => ({
 }));
 vi.mock('@/common/config/storage', () => ({
   ConfigStorage: {
-    get: async () => hooks.personal,
+    // The built-in starter scenes are seeded once and then marked done; these tests are about the rest.
+    get: async (key: string) => (key === 'scenes.defaultsInitialized' ? true : hooks.personal),
     set: async (_key: string, value: unknown) => {
       hooks.personal = value;
       return value;

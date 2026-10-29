@@ -48,4 +48,6 @@ it('cold-starts the shipped browser driver without npm, npx, PATH or a project n
     expect(basename(directory).startsWith('one-work-browser-offline-qa & space-')).toBe(true);
     await rm(directory, { recursive: true, force: true });
   }
-}, 15000);
+  // Spawns a real Node process and bundles with esbuild first; the whole suite runs this next to hundreds of
+  // workers, where 15 s was not enough.
+}, 60000);
