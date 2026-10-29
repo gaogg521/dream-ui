@@ -64,6 +64,11 @@ const SceneCard: React.FC<SceneCardProps> = ({ item, opening, disabled, onOpen, 
     .join(String.fromCharCode(10));
   // What to say under the name when there is no resource count to show.
   const fallbackLine = item.description || item.starters[0] || t('common.scenes.noResources');
+  // Name + resources + description is already three text rows, so a card with
+  // a description turns vertical: the avatar moves ABOVE the title (aligned
+  // with it) and the description gets the full card width to wrap naturally,
+  // instead of being squeezed by the avatar into a permanently clipped strip.
+  const stacked = Boolean(item.description);
 
   return (
     <div
@@ -74,10 +79,13 @@ const SceneCard: React.FC<SceneCardProps> = ({ item, opening, disabled, onOpen, 
       tabIndex={0}
       aria-busy={opening}
       aria-disabled={disabled}
-      className={[styles.card, isDragging ? styles.dragging : '', opening ? styles.opening : ''].join(' ')}
+      className={[styles.card, stacked ? styles.stacked : '', isDragging ? styles.dragging : '', opening ? styles.opening : ''].join(
+        ' '
+      )}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       data-scene-name={item.name}
       data-scene-source={item.source}
+      data-stacked={stacked ? 'true' : 'false'}
       title={tooltip}
       onClick={() => {
         if (!disabled && !isDragging) onOpen(item);
