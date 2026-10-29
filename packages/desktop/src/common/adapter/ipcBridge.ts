@@ -1576,10 +1576,10 @@ export const mode = {
    * `preferLocalBackend` for the same reason as `syncModelChannels`: the rules
    * come from the company server, but the check runs here.
    */
-  setContentInspectionRules: httpPostLocal<
-    { activeRules: number },
-    { rules: DlpLocalRule[]; scanEnabled?: boolean }
-  >('/api/content-inspection/rules', (p) => p),
+  setContentInspectionRules: httpPostLocal<{ activeRules: number }, { rules: DlpLocalRule[]; scanEnabled?: boolean }>(
+    '/api/content-inspection/rules',
+    (p) => p
+  ),
   /**
    * Take the findings this machine buffered since the last call.
    *

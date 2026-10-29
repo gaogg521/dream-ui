@@ -79,9 +79,12 @@ const SceneCard: React.FC<SceneCardProps> = ({ item, opening, disabled, onOpen, 
       tabIndex={0}
       aria-busy={opening}
       aria-disabled={disabled}
-      className={[styles.card, stacked ? styles.stacked : '', isDragging ? styles.dragging : '', opening ? styles.opening : ''].join(
-        ' '
-      )}
+      className={[
+        styles.card,
+        stacked ? styles.stacked : '',
+        isDragging ? styles.dragging : '',
+        opening ? styles.opening : '',
+      ].join(' ')}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       data-scene-name={item.name}
       data-scene-source={item.source}
