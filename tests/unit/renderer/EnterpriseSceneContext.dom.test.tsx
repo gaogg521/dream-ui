@@ -143,13 +143,15 @@ describe('EnterpriseSceneGrid density', () => {
     expect(screen.queryByRole('button', { name: 'common.scenes.showAll' })).not.toBeInTheDocument();
   });
 
-  it('keeps the description and job functions one hover away, not on the card', async () => {
+  it('shows the description on one line of the card; the job functions stay one hover away', async () => {
     hooks.myScenes.mockReset().mockResolvedValue(scenes(1));
     renderGrid();
     const card = (await screen.findByText('Scene 1')).closest('[data-scene-name]') as HTMLElement;
+    // Full text and the job functions in the tooltip, the description itself on the card.
     expect(card.title).toContain('Description 1');
     expect(card.title).toContain('Ops');
-    expect(screen.queryByText('Description 1')).not.toBeInTheDocument();
+    expect(card.querySelector('[data-testid="scene-card-description"]')).toHaveTextContent('Description 1');
+    expect(screen.queryByText('Ops')).not.toBeInTheDocument();
   });
 });
 
