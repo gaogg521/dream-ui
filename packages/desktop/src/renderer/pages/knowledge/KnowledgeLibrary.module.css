@@ -976,3 +976,28 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* The assistant's memory entry: one row, in the same rhythm as the other sections, with the memory
+   mark in green so it reads as its own kind of place; selected, it takes the same green tint. */
+.memoryMark {
+  color: rgb(var(--success-6));
+  opacity: 0.85;
+}
+.memoryTree {
+  margin-bottom: 6px;
+}
+.sidebar .tree :global(.arco-btn).memoryEntry {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-1);
+}
+.sidebar .tree :global(.arco-btn).memoryEntry :global(.arco-btn-icon) {
+  color: rgb(var(--success-6));
+}
+.sidebar .tree :global(.arco-btn).memoryEntry:hover {
+  background: var(--color-fill-2);
+}
+.sidebar .tree :global(.arco-btn).memoryEntry[aria-current='page'] {
+  font-weight: 600;
+  background: rgba(var(--success-6), 0.14);
+}

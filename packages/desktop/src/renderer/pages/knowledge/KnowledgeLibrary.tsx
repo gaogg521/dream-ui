@@ -15,6 +15,7 @@ import {
   People,
   ArrowRight,
   More,
+  Brain,
 } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import type { RagLibraryProps } from '../superAssistant/registries/RagSection';
@@ -415,22 +416,22 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
               >
                 {label('memorySpace')}
               </Button>
+              <Brain className={styles.memoryMark} theme='outline' size={16} />
             </div>
-            <div className={styles.tree}>
-              <div className={styles.treeRow}>
-                <Button
-                  type='text'
-                  aria-current={memorySpace ? 'page' : undefined}
-                  icon={<BookOpen />}
-                  onClick={() => {
-                    sidebar.navigate();
-                    setGuide(null);
-                    setMemorySpace(true);
-                  }}
-                >
-                  {label('assistantMemory')}
-                </Button>
-              </div>
+            <div className={`${styles.tree} ${styles.memoryTree}`}>
+              <Button
+                type='text'
+                className={styles.memoryEntry}
+                aria-current={memorySpace ? 'page' : undefined}
+                icon={<Brain theme='outline' size={16} />}
+                onClick={() => {
+                  sidebar.navigate();
+                  setGuide(null);
+                  setMemorySpace(true);
+                }}
+              >
+                {label('assistantMemory')}
+              </Button>
             </div>
           </>
         )}
