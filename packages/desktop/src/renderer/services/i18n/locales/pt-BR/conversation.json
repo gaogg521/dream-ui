@@ -692,6 +692,9 @@
       },
       "TRUNCATED_TOOL_CALL_RETRY": {
         "body": "A(s) chamada(s) de ferramenta {{names}} foram interrompidas pelo limite de saída antes de concluírem; nada foi executado. Tentando novamente agora."
+      },
+      "TEAM_MEMORY_RECALLED": {
+        "body": "{{count}} item(ns) da memória da empresa consultado(s):\n{{items}}"
       }
     }
   },

@@ -686,6 +686,9 @@
       },
       "TRUNCATED_TOOL_CALL_RETRY": {
         "body": "工具调用 {{names}} 被输出上限截断，未能完成；没有执行任何操作，正在重试。"
+      },
+      "TEAM_MEMORY_RECALLED": {
+        "body": "已参考 {{count}} 条公司记忆：\n{{items}}"
       }
     }
   },

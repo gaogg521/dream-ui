@@ -688,6 +688,9 @@
       },
       "TRUNCATED_TOOL_CALL_RETRY": {
         "body": "Araç çağrı(lar)ı {{names}} çıkış sınırı nedeniyle tamamlanamadan kesildi; hiçbir şey yürütülmedi. Şimdi yeniden deneniyor."
+      },
+      "TEAM_MEMORY_RECALLED": {
+        "body": "{{count}} şirket belleği öğesine başvuruldu:\n{{items}}"
       }
     }
   },

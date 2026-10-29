@@ -687,6 +687,9 @@
       },
       "TRUNCATED_TOOL_CALL_RETRY": {
         "body": "Tool-Aufruf(e) {{names}} wurde(n) durch das Ausgabelimit abgeschnitten und nicht abgeschlossen; nichts wurde ausgeführt. Es wird jetzt erneut versucht."
+      },
+      "TEAM_MEMORY_RECALLED": {
+        "body": "{{count}} Eintrag/Einträge aus dem Unternehmensspeicher berücksichtigt:\n{{items}}"
       }
     }
   },

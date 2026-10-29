@@ -913,6 +913,31 @@ export type MemoryFileEntry = {
 
 export type ProjectClaudeInfo = { exists: boolean; content: string; path: string };
 
+/** One memory file of the built-in engine. */
+export type EngineMemoryFile = {
+  name: string;
+  filename: string;
+  path: string;
+  content: string;
+  updatedAt: number;
+};
+
+/**
+ * A directory of the built-in engine's memory.
+ * `shared` is read by every conversation without a project of its own; `project` belongs to a
+ * folder the person chose; `conversation` is what older releases wrote per throwaway workspace.
+ */
+export type EngineMemoryGroup = {
+  id: string;
+  kind: 'shared' | 'project' | 'conversation';
+  label: string;
+  dir: string;
+  files: EngineMemoryFile[];
+  updatedAt: number;
+};
+
+export type EngineMemoryOverview = { baseDir: string; groups: EngineMemoryGroup[] };
+
 /** Resolved paths for Claude Code–style memory tied to a single project root */
 export type MemoryScopeInfo = {
   /** Directory used for ~/.claude/projects/{sanitized}/memory and project CLAUDE.md */
@@ -995,6 +1020,14 @@ export const memory = {
     'memory.setClaudeProjectRoots'
   ),
   suggestRoots: bridge.buildProvider<string[], void>('memory.suggestRoots'),
+  /** Built-in engine memory (the files the model itself reads and writes). */
+  engineList: bridge.buildProvider<EngineMemoryOverview, void>('memory.engineList'),
+  engineWrite: bridge.buildProvider<void, { groupId: string; filename: string; content: string }>('memory.engineWrite'),
+  engineDelete: bridge.buildProvider<void, { path: string }>('memory.engineDelete'),
+  engineMoveToShared: bridge.buildProvider<
+    { moved: number; renamed: number; duplicates: number },
+    { groupIds: string[] }
+  >('memory.engineMoveToShared'),
 };
 
 // ---------------------------------------------------------------------------

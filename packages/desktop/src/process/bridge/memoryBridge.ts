@@ -16,8 +16,14 @@ import type { TChatConversation } from '@/common/config/storage';
 import { readFileSync, writeFileSync, existsSync, statSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { shell } from 'electron';
+import { app, shell } from 'electron';
 import { getSystemDir, ProcessConfig } from '@process/utils/initStorage';
+import {
+  deleteEngineMemory,
+  listEngineMemory,
+  moveGroupsToShared,
+  writeEngineMemory,
+} from '@process/services/engineMemory';
 
 function sanitizePathForClaude(p: string): string {
   // Claude Code stores project memory at ~/.claude/projects/{sanitized}/memory/
@@ -147,7 +153,23 @@ async function buildScopeInfo(): Promise<MemoryScopeInfo> {
   };
 }
 
+/** Where the built-in engine keeps its memory — the same resolution as the engine's own. */
+function engineMemoryBase(): string {
+  const override = process.env.DREAM_MEMORY_DIR?.trim();
+  return override ? override : path.join(app.getPath('appData'), 'dream');
+}
+
 export function initMemoryBridge(): void {
+  ipcBridge.memory.engineList.provider(async () => listEngineMemory(engineMemoryBase()));
+  ipcBridge.memory.engineWrite.provider(async ({ groupId, filename, content }) => {
+    writeEngineMemory(engineMemoryBase(), groupId, filename, content);
+  });
+  ipcBridge.memory.engineDelete.provider(async ({ path: filePath }) => {
+    deleteEngineMemory(engineMemoryBase(), filePath);
+  });
+  ipcBridge.memory.engineMoveToShared.provider(async ({ groupIds }) =>
+    moveGroupsToShared(engineMemoryBase(), groupIds)
+  );
   ipcBridge.memory.getScope.provider(async () => buildScopeInfo());
 
   ipcBridge.memory.setClaudeProjectRoot.provider(async ({ path: rootPath }) => {

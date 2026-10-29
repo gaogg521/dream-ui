@@ -686,6 +686,9 @@
       },
       "TRUNCATED_TOOL_CALL_RETRY": {
         "body": "Tool call(s) {{names}} were cut off by the output limit before completing; nothing was executed. Retrying now."
+      },
+      "TEAM_MEMORY_RECALLED": {
+        "body": "Referenced {{count}} company memory item(s):\n{{items}}"
       }
     }
   },

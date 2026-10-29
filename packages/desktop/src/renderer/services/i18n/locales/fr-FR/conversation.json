@@ -686,6 +686,9 @@
       },
       "TRUNCATED_TOOL_CALL_RETRY": {
         "body": "Appel(s) d'outil {{names}} interrompu(s) par la limite de sortie avant achèvement ; rien n'a été exécuté. Nouvelle tentative."
+      },
+      "TEAM_MEMORY_RECALLED": {
+        "body": "{{count}} élément(s) de la mémoire de l'entreprise consulté(s) :\n{{items}}"
       }
     }
   },

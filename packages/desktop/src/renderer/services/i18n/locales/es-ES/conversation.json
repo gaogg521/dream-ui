@@ -687,6 +687,9 @@
       },
       "TRUNCATED_TOOL_CALL_RETRY": {
         "body": "La(s) llamada(s) a herramientas {{names}} se cortaron por el límite de salida y no se completaron; no se ejecutó nada. Reintentando ahora."
+      },
+      "TEAM_MEMORY_RECALLED": {
+        "body": "Se consultaron {{count}} elemento(s) de la memoria de la empresa:\n{{items}}"
       }
     }
   },

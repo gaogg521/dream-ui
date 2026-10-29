@@ -3,7 +3,7 @@
  */
 
 /**
- * Memory — Claude Code 记忆管理（项目范围可显式绑定仓库根目录）
+ * Memory — 内置助手记忆 + Claude Code 记忆管理（项目范围可显式绑定仓库根目录）
  * Ported from legacy 1one-command. Reads ~/.claude/projects/{sanitized}/memory/*.md
  * and global/project CLAUDE.md.
  */
@@ -33,6 +33,7 @@ import {
   type MemoryScopeInfo,
   type ProjectClaudeInfo,
 } from '@/common/adapter/ipcBridge';
+import EngineMemoryTab from './EngineMemoryTab';
 import EnterpriseMemoryTab from './EnterpriseMemoryTab';
 import styles from './index.module.css';
 
@@ -64,7 +65,7 @@ function getDesc(content: string): string {
 
 const MemoryPage: React.FC = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('auto');
+  const [activeTab, setActiveTab] = useState('engine');
   const [scope, setScope] = useState<MemoryScopeInfo | null>(null);
   const [pathInput, setPathInput] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -421,7 +422,7 @@ const MemoryPage: React.FC = () => {
         <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{t('memory.title')}</h2>
       </div>
 
-      {scopeLoading ? (
+      {activeTab !== 'auto' && activeTab !== 'project' ? null : scopeLoading ? (
         <div style={{ textAlign: 'center', padding: 24 }}>
           <Spin loading />
         </div>
@@ -564,6 +565,10 @@ const MemoryPage: React.FC = () => {
       </div>
 
       <Tabs activeTab={activeTab} onChange={setActiveTab} style={{ flex: 1 }} lazyload>
+        <Tabs.TabPane key='engine' title={t('memory.tabEngine')}>
+          <EngineMemoryTab />
+        </Tabs.TabPane>
+
         <Tabs.TabPane key='auto' title={t('memory.tabAuto')}>
           <div style={{ marginBottom: 12, fontSize: 12, color: 'var(--color-text-3)' }}>{t('memory.autoHint')}</div>
           {loading ? (
