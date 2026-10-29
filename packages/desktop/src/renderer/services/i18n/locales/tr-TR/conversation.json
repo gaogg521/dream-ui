@@ -691,6 +691,9 @@
       },
       "TEAM_MEMORY_RECALLED": {
         "body": "{{count}} şirket belleği öğesine başvuruldu:\n{{items}}"
+      },
+      "ENGINE_MEMORY_RECALLED": {
+        "body": "{{count}} kayıtlı bellek öğesi getirildi:\n{{items}}"
       }
     }
   },

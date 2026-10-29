@@ -689,6 +689,9 @@
       },
       "TEAM_MEMORY_RECALLED": {
         "body": "会社メモリを {{count}} 件参照しました：\n{{items}}"
+      },
+      "ENGINE_MEMORY_RECALLED": {
+        "body": "保存済みのメモリを {{count}} 件呼び出しました：\n{{items}}"
       }
     }
   },

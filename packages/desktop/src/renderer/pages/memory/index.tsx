@@ -419,7 +419,7 @@ const MemoryPage: React.FC = () => {
       style={{ padding: '20px 24px', height: '100%', display: 'flex', flexDirection: 'column' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{t('memory.title')}</h2>
+        <h2 className={styles.pageTitle}>{t('memory.title')}</h2>
       </div>
 
       {activeTab !== 'auto' && activeTab !== 'project' ? null : scopeLoading ? (

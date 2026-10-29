@@ -690,6 +690,9 @@
       },
       "TEAM_MEMORY_RECALLED": {
         "body": "Se consultaron {{count}} elemento(s) de la memoria de la empresa:\n{{items}}"
+      },
+      "ENGINE_MEMORY_RECALLED": {
+        "body": "Se incorporaron {{count}} elemento(s) de memoria guardada:\n{{items}}"
       }
     }
   },

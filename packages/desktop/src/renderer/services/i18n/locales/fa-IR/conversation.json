@@ -689,6 +689,9 @@
       },
       "TEAM_MEMORY_RECALLED": {
         "body": "{{count}} مورد از حافظه شرکت استفاده شد:\n{{items}}"
+      },
+      "ENGINE_MEMORY_RECALLED": {
+        "body": "{{count}} مورد از حافظهٔ ذخیره‌شده فراخوانی شد:\n{{items}}"
       }
     }
   },

@@ -1,0 +1,98 @@
+/* Colors come from the themed variables so the tab reads in both light and dark. */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--color-text-1);
+}
+
+.lead {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-text-2);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--color-border-2);
+  border-radius: 10px;
+  background: var(--color-bg-2);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-text-3);
+}
+
+.path {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 2px 8px;
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: var(--color-text-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: var(--color-fill-2);
+  border-radius: 4px;
+}
+
+.empty {
+  padding: 28px 0;
+  font-size: 13px;
+  color: var(--color-text-3);
+  text-align: center;
+}
+
+.rowHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-1);
+}
+
+/* Long lists of leftover per-conversation folders scroll inside the card instead of
+   pushing the rest of the page away. */
+.scroll {
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border-2);
+  border-radius: 8px;
+}
+
+.scroll :global(.arco-collapse-item-header) {
+  color: var(--color-text-1);
+}

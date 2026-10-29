@@ -9,7 +9,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Collapse, Input, Message, Modal, Spin, Table, Tag, Typography } from '@arco-design/web-react';
+import { Button, Collapse, Input, Message, Modal, Spin, Table, Tag } from '@arco-design/web-react';
 import { Add, Delete, Edit, FileText, Refresh } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -18,6 +18,7 @@ import {
   type EngineMemoryGroup,
   type EngineMemoryOverview,
 } from '@/common/adapter/ipcBridge';
+import styles from './EngineMemoryTab.module.css';
 
 const TYPE_COLOR: Record<string, string> = {
   user: 'arcoblue',
@@ -232,9 +233,7 @@ const EngineMemoryTab: React.FC = () => {
       rowKey='path'
       size='small'
       pagination={group.files.length > 10 ? { pageSize: 10 } : false}
-      noDataElement={
-        <div style={{ textAlign: 'center', color: 'var(--color-text-3)', padding: '24px 0' }}>{emptyText}</div>
-      }
+      noDataElement={<div className={styles.empty}>{emptyText}</div>}
     />
   );
 
@@ -246,14 +245,24 @@ const EngineMemoryTab: React.FC = () => {
     );
   }
 
-  return (
-    <div data-testid='engine-memory-tab' className='flex flex-col gap-16px'>
-      <div style={{ fontSize: 12, color: 'var(--color-text-3)' }}>{t('memory.engine.hint')}</div>
+  const groupHeader = (group: EngineMemoryGroup) => (
+    <span className={styles.rowHeader}>
+      {group.label}
+      <Tag size='small'>{t('memory.engine.fileCount', { count: group.files.length })}</Tag>
+    </span>
+  );
 
-      <section>
-        <div className='flex items-center justify-between mb-4px'>
-          <div style={{ fontWeight: 600 }}>{t('memory.engine.sharedTitle')}</div>
-          <div className='flex gap-8px'>
+  return (
+    <div data-testid='engine-memory-tab' className={styles.root}>
+      <p className={styles.lead}>{t('memory.engine.hint')}</p>
+
+      <section className={styles.card}>
+        <div className={styles.head}>
+          <div className={styles.titleRow}>
+            <span className={styles.title}>{t('memory.engine.sharedTitle')}</span>
+            {shared && <Tag size='small'>{t('memory.engine.fileCount', { count: shared.files.length })}</Tag>}
+          </div>
+          <div className={styles.actions}>
             <Button size='small' icon={<Refresh theme='outline' />} loading={loading} onClick={() => void load()}>
               {t('memory.refresh')}
             </Button>
@@ -262,34 +271,24 @@ const EngineMemoryTab: React.FC = () => {
             </Button>
           </div>
         </div>
-        <div style={{ fontSize: 12, color: 'var(--color-text-3)', marginBottom: 6 }}>
-          {t('memory.engine.sharedHint')}
-        </div>
+        <p className={styles.hint}>{t('memory.engine.sharedHint')}</p>
         {shared && (
-          <Typography.Text code style={{ fontSize: 11, display: 'inline-block', marginBottom: 8 }}>
+          <span className={styles.path} title={shared.dir}>
             {t('memory.engine.location')}: {shared.dir}
-          </Typography.Text>
+          </span>
         )}
         {shared && table(shared, t('memory.engine.sharedEmpty'))}
       </section>
 
       {projects.length > 0 && (
-        <section>
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>{t('memory.engine.projectsTitle')}</div>
-          <div style={{ fontSize: 12, color: 'var(--color-text-3)', marginBottom: 8 }}>
-            {t('memory.engine.projectsHint')}
+        <section className={styles.card}>
+          <div className={styles.head}>
+            <span className={styles.title}>{t('memory.engine.projectsTitle')}</span>
           </div>
+          <p className={styles.hint}>{t('memory.engine.projectsHint')}</p>
           <Collapse bordered={false}>
             {projects.map((group) => (
-              <Collapse.Item
-                key={group.id}
-                name={group.id}
-                header={
-                  <span>
-                    {group.label} <Tag size='small'>{t('memory.engine.fileCount', { count: group.files.length })}</Tag>
-                  </span>
-                }
-              >
+              <Collapse.Item key={group.id} name={group.id} header={groupHeader(group)}>
                 {table(group, '')}
               </Collapse.Item>
             ))}
@@ -298,42 +297,47 @@ const EngineMemoryTab: React.FC = () => {
       )}
 
       {legacy.length > 0 && (
-        <section data-testid='engine-memory-legacy'>
-          <div className='flex items-center justify-between mb-4px'>
-            <div style={{ fontWeight: 600 }}>{t('memory.engine.legacyTitle')}</div>
-            <Button type='primary' size='small' loading={busy} onClick={() => mergeIntoShared(legacy.map((g) => g.id))}>
-              {t('memory.engine.mergeAll')}
-            </Button>
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--color-text-3)', marginBottom: 8 }}>
-            {t('memory.engine.legacyHint', { groups: legacy.length, files: legacyFileCount })}
-          </div>
-          <Collapse bordered={false}>
-            {legacy.map((group) => (
-              <Collapse.Item
-                key={group.id}
-                name={group.id}
-                header={
-                  <span>
-                    {group.label} <Tag size='small'>{t('memory.engine.fileCount', { count: group.files.length })}</Tag>
-                  </span>
-                }
-                extra={
-                  <Button
-                    size='mini'
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      mergeIntoShared([group.id]);
-                    }}
-                  >
-                    {t('memory.engine.mergeOne')}
-                  </Button>
-                }
+        <section className={styles.card} data-testid='engine-memory-legacy'>
+          <div className={styles.head}>
+            <span className={styles.title}>{t('memory.engine.legacyTitle')}</span>
+            <div className={styles.actions}>
+              <Button
+                type='primary'
+                size='small'
+                loading={busy}
+                onClick={() => mergeIntoShared(legacy.map((g) => g.id))}
               >
-                {table(group, '')}
-              </Collapse.Item>
-            ))}
-          </Collapse>
+                {t('memory.engine.mergeAll')}
+              </Button>
+            </div>
+          </div>
+          <p className={styles.hint}>
+            {t('memory.engine.legacyHint', { groups: legacy.length, files: legacyFileCount })}
+          </p>
+          <div className={styles.scroll}>
+            <Collapse bordered={false}>
+              {legacy.map((group) => (
+                <Collapse.Item
+                  key={group.id}
+                  name={group.id}
+                  header={groupHeader(group)}
+                  extra={
+                    <Button
+                      size='mini'
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        mergeIntoShared([group.id]);
+                      }}
+                    >
+                      {t('memory.engine.mergeOne')}
+                    </Button>
+                  }
+                >
+                  {table(group, '')}
+                </Collapse.Item>
+              ))}
+            </Collapse>
+          </div>
         </section>
       )}
 

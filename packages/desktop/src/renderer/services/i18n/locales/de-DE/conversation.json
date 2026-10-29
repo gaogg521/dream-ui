@@ -690,6 +690,9 @@
       },
       "TEAM_MEMORY_RECALLED": {
         "body": "{{count}} Eintrag/Einträge aus dem Unternehmensspeicher berücksichtigt:\n{{items}}"
+      },
+      "ENGINE_MEMORY_RECALLED": {
+        "body": "{{count}} gespeicherte(r) Speichereintrag/-einträge einbezogen:\n{{items}}"
       }
     }
   },

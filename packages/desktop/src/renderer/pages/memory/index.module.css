@@ -1,7 +1,28 @@
 .page {
+  overflow-y: auto;
+  color: var(--color-text-1);
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-1);
 }
 
 .scopeSelect :global(.arco-select-view-value) {
   color: rgb(var(--success-6));
   font-weight: 600;
+}
+
+/* The theme's primary scale is a dark grey, which is invisible as the selected-tab colour on a
+   dark background; use the normal text colour and let weight and the underline mark the tab. */
+.page :global(.arco-tabs-header-title-active),
+.page :global(.arco-tabs-header-title-active:hover) {
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.page :global(.arco-tabs-header-ink) {
+  background-color: var(--color-text-1);
 }

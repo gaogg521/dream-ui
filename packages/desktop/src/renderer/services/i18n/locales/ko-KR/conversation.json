@@ -689,6 +689,9 @@
       },
       "TEAM_MEMORY_RECALLED": {
         "body": "회사 메모리 {{count}}건을 참고했습니다:\n{{items}}"
+      },
+      "ENGINE_MEMORY_RECALLED": {
+        "body": "저장된 메모리 {{count}}건을 불러왔습니다:\n{{items}}"
       }
     }
   },

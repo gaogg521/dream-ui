@@ -699,6 +699,9 @@
       },
       "TEAM_MEMORY_RECALLED": {
         "body": "Використано записів корпоративної пам'яті: {{count}}\n{{items}}"
+      },
+      "ENGINE_MEMORY_RECALLED": {
+        "body": "Підключено збережених записів пам'яті: {{count}}\n{{items}}"
       }
     }
   },

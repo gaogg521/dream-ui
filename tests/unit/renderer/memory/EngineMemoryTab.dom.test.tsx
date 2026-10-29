@@ -19,12 +19,10 @@ vi.mock('@/common/adapter/ipcBridge', () => ({
   },
 }));
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, vars?: Record<string, unknown>) =>
-      vars && Object.keys(vars).length > 0 ? `${key} ${JSON.stringify(vars)}` : key,
-  }),
-}));
+// A stable `t`, like react-i18next's: a fresh function each render would re-run the load effect.
+const t = (key: string, vars?: Record<string, unknown>) =>
+  vars && Object.keys(vars).length > 0 ? `${key} ${JSON.stringify(vars)}` : key;
+vi.mock('react-i18next', () => ({ useTranslation: () => ({ t }) }));
 
 vi.mock('@arco-design/web-react', async () => {
   const actual = await vi.importActual<typeof import('@arco-design/web-react')>('@arco-design/web-react');

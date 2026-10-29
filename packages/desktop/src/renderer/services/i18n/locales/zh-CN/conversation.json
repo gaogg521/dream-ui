@@ -689,6 +689,9 @@
       },
       "TEAM_MEMORY_RECALLED": {
         "body": "已参考 {{count}} 条公司记忆：\n{{items}}"
+      },
+      "ENGINE_MEMORY_RECALLED": {
+        "body": "已调取 {{count}} 条记忆：\n{{items}}"
       }
     }
   },
