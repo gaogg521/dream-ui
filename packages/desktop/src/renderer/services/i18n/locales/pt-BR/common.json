@@ -974,5 +974,16 @@
   "no": "Não",
   "company": {
     "title": "Console da empresa"
+  },
+  "artifactImport": {
+    "add": "Adicionar à biblioteca",
+    "title": "Salvar resultado",
+    "destination": "Destino",
+    "local": "Copia para a biblioteca local sem alterar o arquivo original.",
+    "enterprise": "Envia uma cópia ao servidor da empresa. Aplicam-se as permissões do espaço pessoal ou da equipe.",
+    "done": "Salvo na biblioteca",
+    "sourceOnly": "Original salvo; não foi possível extrair texto pesquisável.",
+    "failed": "Não foi possível salvar na biblioteca",
+    "modeChanged": "A conexão mudou. Feche esta janela e escolha o destino novamente."
   }
 }

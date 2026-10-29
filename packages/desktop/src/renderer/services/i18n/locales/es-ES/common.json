@@ -974,5 +974,16 @@
   "no": "No",
   "company": {
     "title": "Consola de la empresa"
+  },
+  "artifactImport": {
+    "add": "Añadir a la biblioteca",
+    "title": "Guardar resultado",
+    "destination": "Destino",
+    "local": "Copia el archivo en la biblioteca local sin modificar el original.",
+    "enterprise": "Sube una copia al servidor de la empresa. Se aplican los permisos del espacio personal o de equipo.",
+    "done": "Guardado en la biblioteca",
+    "sourceOnly": "Original guardado; no se extrajo texto para buscar.",
+    "failed": "No se pudo guardar en la biblioteca",
+    "modeChanged": "La conexión cambió. Cierre la ventana y elija de nuevo el destino."
   }
 }

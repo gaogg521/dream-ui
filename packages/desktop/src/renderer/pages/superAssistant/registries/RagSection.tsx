@@ -24,6 +24,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import libraryStyles from '../../knowledge/KnowledgeLibrary.module.css';
 import CsvDocument from '../../knowledge/CsvDocument';
+import { saveLibraryOriginal, uploadTimeoutMs, indexableText } from '../../knowledge/attach/artifactImport';
 import { usesOriginalFile } from '../../knowledge/original/sourceKind';
 import { ipcBridge } from '@/common';
 import { httpDownloadBinary, httpUploadMultipart } from '@/common/adapter/httpBridge';
@@ -65,12 +66,7 @@ const PERSONAL_SCOPE = 'personal';
  * A fixed 120 s cap made any larger original fail on an ordinary office uplink (an enterprise client sends it to
  * the remote server). Allow ~8 s per MiB (floor of ~128 KiB/s), never less than 120 s.
  */
-const uploadTimeoutMs = (bytes: number) => Math.max(120_000, Math.ceil(bytes / (1024 * 1024)) * 8_000);
-
 const RAG_SOURCE_LIMIT_BYTES = 100 * 1024 * 1024;
-const RAG_SOURCE_CHUNK_BYTES = 8 * 1024 * 1024;
-/** The content endpoint accepts at most 16 MiB; stay clear of it (CJK text is up to 3 bytes per character). */
-const MAX_INDEXED_TEXT_BYTES = 12 * 1024 * 1024;
 
 const abortError = () => new DOMException('Import cancelled', 'AbortError');
 
@@ -93,12 +89,6 @@ const raceAbort = <T,>(call: Promise<T>, signal?: AbortSignal): Promise<T> => {
     );
   });
 };
-
-/** Text too large to be worth indexing is dropped; the original is still kept (source-only). */
-const indexableText = (text: string): string =>
-  text.length * 3 > MAX_INDEXED_TEXT_BYTES && new TextEncoder().encode(text).length > MAX_INDEXED_TEXT_BYTES
-    ? ''
-    : text;
 
 export type RagLibraryProps = {
   documentView?: React.ReactNode;
@@ -392,67 +382,16 @@ const RagSection: React.FC<{ renderLibrary?: (props: RagLibraryProps) => React.R
       sourcePath?: string | File,
       signal?: AbortSignal
     ): Promise<void> => {
-      let originalFile: File | undefined;
-      if (typeof sourcePath === 'string') {
-        // Slice by slice: one message carrying a big file is silently dropped by the bridge (50 MiB cap), which
-        // left every import above ~37 MB waiting forever.
-        const parts: Blob[] = [];
-        let name = '';
-        for (let offset = 0, size = 1; offset < size; ) {
-          const slice = await raceAbort(
-            ipcBridge.application.readRagSourceChunk.invoke({
-              filePath: sourcePath,
-              offset,
-              length: RAG_SOURCE_CHUNK_BYTES,
-            }),
-            signal
-          );
-          if ('error' in slice) throw new Error(slice.error);
-          name = slice.name;
-          size = slice.size;
-          if (slice.base64.length === 0) break;
-          // Decoding through a data: URL keeps the byte-by-byte loop off the UI thread.
-          const piece = await (await fetch(`data:application/octet-stream;base64,${slice.base64}`)).blob();
-          parts.push(piece);
-          offset += piece.size;
-        }
-        originalFile = new File(parts, name);
-      } else originalFile = sourcePath;
-      if (signal?.aborted) throw abortError();
       const target = libraries.find((library) => library.id === libraryId);
       const privateDocument = !isEnterprise || personal || target?.scope === 'personal';
-      const doc = await ipcBridge.oneDevops.registerRagDocument.invoke({
+      await saveLibraryOriginal({
         title,
-        ...(target && (target.scope === 'personal') === privateDocument ? { libraryId: target.id } : {}),
-        ...(privateDocument ? { scope: 'personal' as const } : {}),
-        ...(originalFile?.type ? { mimeType: originalFile.type } : {}),
+        content,
+        personal: privateDocument,
+        libraryId: target && (target.scope === 'personal') === privateDocument ? target.id : undefined,
+        source: sourcePath,
+        signal,
       });
-      if (!doc?.id) {
-        throw new Error('registerRagDocument returned no id');
-      }
-      if (originalFile) {
-        try {
-          const stored = await httpUploadMultipart<RagDocumentEntry>(
-            `/api/one/devops/rag/documents/${doc.id}/source`,
-            originalFile,
-            'file',
-            { timeoutMs: uploadTimeoutMs(originalFile.size), signal }
-          );
-          // Opening the document right after importing it should not download the same bytes back.
-          if (stored?.filePath) cacheOriginal(originalCacheKey(doc.id, stored.filePath), originalFile);
-        } catch (error) {
-          // A document whose original never arrived is an empty shell in the library; do not leave it behind.
-          await ipcBridge.oneDevops.deleteRagDocument.invoke({ id: doc.id }).catch((): void => {});
-          throw error;
-        }
-      }
-      if (content.trim()) {
-        await ipcBridge.oneDevops.setRagContent.invoke({
-          id: doc.id,
-          content,
-          expectedRevision: (await ipcBridge.oneDevops.getRagContentState.invoke({ id: doc.id })).revision,
-        });
-      }
     },
     [libraryId, libraries, isEnterprise]
   );

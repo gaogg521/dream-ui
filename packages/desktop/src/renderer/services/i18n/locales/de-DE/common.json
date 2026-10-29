@@ -974,5 +974,16 @@
   "no": "Nein",
   "company": {
     "title": "Unternehmenskonsole"
+  },
+  "artifactImport": {
+    "add": "Zur Bibliothek hinzufügen",
+    "title": "Ergebnis speichern",
+    "destination": "Ziel",
+    "local": "Kopiert die Datei in die lokale Bibliothek. Das Original bleibt unverändert.",
+    "enterprise": "Eine Kopie wird auf den Firmenserver geladen. Es gelten die Rechte des persönlichen oder Team-Bereichs.",
+    "done": "In der Bibliothek gespeichert",
+    "sourceOnly": "Original gespeichert; kein durchsuchbarer Text extrahiert.",
+    "failed": "Speichern in der Bibliothek fehlgeschlagen",
+    "modeChanged": "Die Verbindung hat sich geändert. Schließen Sie das Fenster und wählen Sie das Ziel erneut."
   }
 }

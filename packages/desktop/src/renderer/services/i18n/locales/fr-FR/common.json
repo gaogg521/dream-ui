@@ -974,5 +974,16 @@
   "no": "Non",
   "company": {
     "title": "Console de l’entreprise"
+  },
+  "artifactImport": {
+    "add": "Ajouter à la bibliothèque",
+    "title": "Enregistrer le résultat",
+    "destination": "Destination",
+    "local": "Copie le fichier dans la bibliothèque locale sans modifier l’original.",
+    "enterprise": "Une copie est envoyée au serveur de l’entreprise. Les droits de l’espace personnel ou de l’équipe s’appliquent.",
+    "done": "Enregistré dans la bibliothèque",
+    "sourceOnly": "Original enregistré ; aucun texte interrogeable extrait.",
+    "failed": "Impossible d’enregistrer dans la bibliothèque",
+    "modeChanged": "La connexion a changé. Fermez cette fenêtre et choisissez à nouveau la destination."
   }
 }

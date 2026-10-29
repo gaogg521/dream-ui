@@ -974,5 +974,16 @@
   "no": "Hayır",
   "company": {
     "title": "Şirket konsolu"
+  },
+  "artifactImport": {
+    "add": "Kitaplığa ekle",
+    "title": "Çıktıyı kaydet",
+    "destination": "Hedef",
+    "local": "Dosyayı değiştirmeden yerel kitaplığa kopyalar.",
+    "enterprise": "Şirket sunucusuna kopya yüklenir. Kişisel ve ekip alanlarının izinleri geçerlidir.",
+    "done": "Kitaplığa kaydedildi",
+    "sourceOnly": "Asıl dosya kaydedildi; aranabilir metin çıkarılamadı.",
+    "failed": "Kitaplığa kaydedilemedi",
+    "modeChanged": "Bağlantı değişti. Pencereyi kapatıp hedefi tekrar seçin."
   }
 }

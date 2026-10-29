@@ -74,6 +74,11 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   const { t, i18n } = useTranslation();
   const label = (key: string) => t(`common.knowledgeLibrary.${key}`);
   const sidebar = useLibrarySidebar(libraries.map((item) => item.name));
+  useEffect(() => {
+    const refresh = () => onRefresh();
+    window.addEventListener('one-library-changed', refresh);
+    return () => window.removeEventListener('one-library-changed', refresh);
+  }, [onRefresh]);
   const [guide, setGuide] = useState<GuideId | null>(null);
   // The assistant's own memory, shown in the document pane like a guide is. Its files live on this
   // computer, so it is offered in the desktop app only.

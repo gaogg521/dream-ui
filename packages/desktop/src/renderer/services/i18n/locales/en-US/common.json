@@ -974,5 +974,16 @@
     "italic": "Italic",
     "underline": "Underline",
     "save": "Save"
+  },
+  "artifactImport": {
+    "add": "Add to library",
+    "title": "Save artifact",
+    "destination": "Destination",
+    "local": "This copies the original into your local library. The source file is unchanged.",
+    "enterprise": "This uploads a copy to the company server. My documents is your personal space; team space shares it according to its permissions.",
+    "done": "Saved to library",
+    "sourceOnly": "Original saved; no searchable text was extracted.",
+    "failed": "Could not save to library",
+    "modeChanged": "Your connection changed. Close this dialog and choose the destination again."
   }
 }

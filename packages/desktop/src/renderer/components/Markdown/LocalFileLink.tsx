@@ -2,9 +2,11 @@
  * Copyright 2026 One Work
  */
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Button, Message, Tooltip } from '@arco-design/web-react';
-import { Copy, FolderOpen } from '@icon-park/react';
+import { Copy, FolderOpen, AddOne } from '@icon-park/react';
+import ImportArtifactModal from '@/renderer/pages/knowledge/attach/ImportArtifactModal';
+import { isNativeDialogAvailable } from '@/common/adapter/ipcBridge';
 import { ipcBridge } from '@/common';
 import { iconColors } from '@/renderer/styles/colors';
 import { copyText } from '@/renderer/utils/ui/clipboard';
@@ -22,6 +24,7 @@ type LocalFileLinkProps = {
 
 const LocalFileLink: React.FC<LocalFileLinkProps> = ({ reference, children, onOpen }) => {
   const { t } = useTranslation();
+  const [importing, setImporting] = useState(false);
   const { filePath, line, rawReference } = reference;
   const fallbackLabel = filePath.split(/[\\/]/).pop() || filePath;
   const label = children || fallbackLabel;
@@ -132,6 +135,23 @@ const LocalFileLink: React.FC<LocalFileLinkProps> = ({ reference, children, onOp
           />
         </Tooltip>
       )}
+      {canOpen && line == null && isNativeDialogAvailable() && (
+        <Tooltip content={t('common.artifactImport.add')}>
+          <Button
+            type='text'
+            size='mini'
+            aria-label={t('common.artifactImport.add')}
+            className='!p-1px !w-20px !h-20px flex-shrink-0'
+            icon={<AddOne theme='outline' size='14' fill={iconColors.secondary} />}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setImporting(true);
+            }}
+          />
+        </Tooltip>
+      )}
+      {importing && <ImportArtifactModal path={filePath} onClose={() => setImporting(false)} />}
     </span>
   );
 
