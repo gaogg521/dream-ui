@@ -21,7 +21,8 @@ vi.mock('@/common/adapter/enterpriseMode', () => ({
 }));
 vi.mock('@/common/config/storage', () => ({
   ConfigStorage: {
-    get: async () => hooks.personal,
+    // The built-in starter scenes are seeded once and then marked done; these tests are about the rest.
+    get: async (key: string) => (key === 'scenes.defaultsInitialized' ? true : hooks.personal),
     set: async (_key: string, value: unknown) => {
       hooks.personal = value;
       return value;
@@ -35,6 +36,31 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, options?: { count?: number }) => (options?.count !== undefined ? `${key}:${options.count}` : key),
   }),
+}));
+
+// Arco's imperative Message renders through ReactDOM.render, which React 19 no longer has under jsdom.
+vi.mock('@arco-design/web-react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@arco-design/web-react')>()),
+  Message: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() },
+}));
+
+// The real editor loads the MCP catalogue and a form; what matters here is when it opens and what it saves.
+vi.mock('@/renderer/components/scenes/SceneEditor', () => ({
+  default: ({
+    visible,
+    scene,
+    onSave,
+  }: {
+    visible: boolean;
+    scene: { name: string } | null;
+    onSave: (scene: { name: string }) => void;
+  }) =>
+    visible && scene ? (
+      <div data-testid='scene-editor-stub'>
+        <span>{scene.name}</span>
+        <button onClick={() => onSave({ ...scene, name: `${scene.name}（改）` })}>stub-save</button>
+      </div>
+    ) : null,
 }));
 
 import SceneGrid from '@/renderer/components/scenes/SceneGrid';
@@ -292,5 +318,36 @@ describe('SceneGrid opening a scene on arrival', () => {
     expect(document.body.textContent).toContain('common.scenes.workspaceHint');
     expect(document.body.textContent).toContain('always-1one');
     expect(hint).not.toBeNull();
+  });
+});
+
+describe('SceneGrid editing a scene from its card', () => {
+  beforeEach(reset);
+
+  it('offers edit on the person own scenes only, never on a scene the company issued', async () => {
+    hooks.personal = [newPersonalScene({ name: '我的官网' })];
+    renderGrid(vi.fn());
+    await screen.findByText('我的官网');
+    const mineCard = screen.getByText('我的官网').closest('[data-scene-name]') as HTMLElement;
+    const companyCard = screen.getByText('办公').closest('[data-scene-name]') as HTMLElement;
+    expect(mineCard.querySelector('[data-testid="scene-card-edit"]')).not.toBeNull();
+    expect(companyCard.querySelector('[data-testid="scene-card-edit"]')).toBeNull();
+  });
+
+  it('opens the editor for that scene without opening a conversation, and saves the change', async () => {
+    const mine = newPersonalScene({ name: '我的官网', prompt: 'p' });
+    hooks.personal = [mine];
+    const open = vi.fn();
+    renderGrid(open);
+    await screen.findByText('我的官网');
+    const mineCard = screen.getByText('我的官网').closest('[data-scene-name]') as HTMLElement;
+    fireEvent.click(mineCard.querySelector('[data-testid="scene-card-edit"]') as HTMLElement);
+    expect(await screen.findByTestId('scene-editor-stub')).toHaveTextContent('我的官网');
+    expect(open).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText('stub-save'));
+    await waitFor(() => expect(screen.getByText('我的官网（改）')).toBeInTheDocument());
+    // Written back to the person's own store, the scene id unchanged.
+    const saved = (hooks.personal as Array<{ id: string; name: string }>).find((scene) => scene.id === mine.id);
+    expect(saved?.name).toBe('我的官网（改）');
   });
 });

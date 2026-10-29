@@ -762,7 +762,10 @@
       "more": "另有 {{count}} 个",
       "asksFirst": "说一句你想做什么就行——我会先问清对象、现状和范围，写出需求简报，等你确认后再动手。",
       "direct": "直接告诉我要做什么就行。"
-    }
+    },
+    "editScene": "编辑场景",
+    "editSavedKeepsCurrent": "已保存。当前会话保持开始时的设置，之后从这个场景新开的会话会用新设置。",
+    "editCompanyReadOnly": "这个场景由公司统一管理，不能在这里修改。"
   },
   "fileVault": {
     "title": "文件保险箱",

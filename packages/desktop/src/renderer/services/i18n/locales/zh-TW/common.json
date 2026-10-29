@@ -607,7 +607,10 @@
     "conversationTitle": "企業場景",
     "conversationHint": "以下場景的職能與資源包已疊加到當前帳號，在所有會話中自動生效。",
     "conversationCount": "企業場景 · {{count}}",
-    "conversationNone": "企業場景 · 未加入"
+    "conversationNone": "企業場景 · 未加入",
+    "editScene": "編輯場景",
+    "editSavedKeepsCurrent": "已儲存。目前的對話維持開始時的設定，之後從這個場景新開的對話會使用新設定。",
+    "editCompanyReadOnly": "這個場景由公司統一管理，無法在這裡修改。"
   },
   "fileVault": {
     "title": "檔案保險箱",

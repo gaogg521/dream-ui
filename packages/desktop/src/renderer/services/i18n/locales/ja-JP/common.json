@@ -607,7 +607,10 @@
     "conversationTitle": "企業シナリオ",
     "conversationHint": "これらのシナリオのロールとリソースパッケージはアカウント向けに統合され、すべての会話に自動的に適用されます。",
     "conversationCount": "企業シナリオ · {{count}}",
-    "conversationNone": "企業シナリオ · なし"
+    "conversationNone": "企業シナリオ · なし",
+    "editScene": "シーンを編集",
+    "editSavedKeepsCurrent": "保存しました。この会話は開始時の設定のままで、このシーンから新しく始める会話には新しい設定が使われます。",
+    "editCompanyReadOnly": "このシーンは会社が管理しているため、ここでは編集できません。"
   },
   "fileVault": {
     "title": "ファイルボールト",

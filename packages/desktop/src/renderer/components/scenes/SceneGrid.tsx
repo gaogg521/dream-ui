@@ -25,12 +25,13 @@ import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sort
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@arco-design/web-react';
 import React, { useEffect, useRef, useState } from 'react';
-import { Application, Plus, Refresh } from '@icon-park/react';
+import { Application, Edit, Plus, Refresh } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import styles from './SceneGrid.module.css';
 import type { SceneItem, SceneItemResource } from '@/renderer/utils/scenes/sceneItem';
 import { moveScene } from '@/renderer/utils/scenes/sceneOrder';
 import { useScenes } from './useScenes';
+import { useSceneQuickEdit } from '@/renderer/hooks/enterprise/useSceneQuickEdit';
 
 /** Scenes shown before "show all". One row at the home page's usual width. */
 const COLLAPSED_SCENE_COUNT = 4;
@@ -38,9 +39,16 @@ const COLLAPSED_SCENE_COUNT = 4;
 /** Pixels a press must travel before it is a drag; less than that is a click. */
 const DRAG_ACTIVATION_DISTANCE = 8;
 
-type SceneCardProps = { item: SceneItem; opening: boolean; disabled: boolean; onOpen: (item: SceneItem) => void };
+type SceneCardProps = {
+  item: SceneItem;
+  opening: boolean;
+  disabled: boolean;
+  onOpen: (item: SceneItem) => void;
+  /** Present only for a scene this person may edit; a company scene has no edit button. */
+  onEdit?: (item: SceneItem) => void;
+};
 
-const SceneCard: React.FC<SceneCardProps> = ({ item, opening, disabled, onOpen }) => {
+const SceneCard: React.FC<SceneCardProps> = ({ item, opening, disabled, onOpen, onEdit }) => {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.key });
   const resourceValue = (summary: SceneItemResource): string =>
@@ -108,6 +116,24 @@ const SceneCard: React.FC<SceneCardProps> = ({ item, opening, disabled, onOpen }
           )}
         </div>
       </div>
+      {onEdit ? (
+        <Button
+          type='text'
+          size='mini'
+          className={styles.editButton}
+          icon={<Edit size={13} />}
+          aria-label={`${t('common.scenes.editScene')} ${item.name}`}
+          title={t('common.scenes.editScene')}
+          data-testid='scene-card-edit'
+          // A press on the button is neither a drag of the card nor a click on it.
+          onPointerDown={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            onEdit(item);
+          }}
+        />
+      ) : null}
     </div>
   );
 };
@@ -139,6 +165,7 @@ const SceneGrid: React.FC<SceneGridProps> = ({
   const [expanded, setExpanded] = useState(false);
   const [openingKey, setOpeningKey] = useState<string | null>(null);
   const { companyActive, loaded, all, enabled: ordered, setOrder, refreshCompany, isValidating, error } = useScenes();
+  const quickEdit = useSceneQuickEdit();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } })
   );
@@ -260,11 +287,13 @@ const SceneGrid: React.FC<SceneGridProps> = ({
                 opening={openingKey === item.key}
                 disabled={Boolean(openingKey) || !onOpenScene}
                 onOpen={(target) => void handleOpen(target)}
+                onEdit={quickEdit.canEdit(item.key) ? (target) => quickEdit.open(target.key) : undefined}
               />
             ))}
           </div>
         </SortableContext>
       </DndContext>
+      {quickEdit.element}
       {hiddenCount > 0 && (
         <div className={styles.more}>
           <Button type='text' size='small' onClick={() => setExpanded((open) => !open)}>

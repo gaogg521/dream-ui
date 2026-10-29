@@ -607,7 +607,10 @@
     "conversationTitle": "Unternehmensszenarien",
     "conversationHint": "Rollen und Ressourcenpakete dieser Szenarien werden für dein Konto kombiniert und gelten automatisch in jeder Unterhaltung.",
     "conversationCount": "Unternehmensszenarien · {{count}}",
-    "conversationNone": "Unternehmensszenarien · Keine"
+    "conversationNone": "Unternehmensszenarien · Keine",
+    "editScene": "Szenario bearbeiten",
+    "editSavedKeepsCurrent": "Gespeichert. Dieses Gespräch behält die Einstellungen, mit denen es begonnen hat; neue Gespräche aus diesem Szenario verwenden die neuen.",
+    "editCompanyReadOnly": "Dieses Szenario wird von Ihrem Unternehmen verwaltet und kann hier nicht bearbeitet werden."
   },
   "fileVault": {
     "title": "Datei-Tresor",

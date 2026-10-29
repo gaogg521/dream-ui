@@ -607,7 +607,10 @@
     "conversationTitle": "Scénarios d’entreprise",
     "conversationHint": "Les rôles et packs de ressources de ces scénarios sont combinés pour votre compte et s’appliquent automatiquement dans chaque conversation.",
     "conversationCount": "Scénarios d’entreprise · {{count}}",
-    "conversationNone": "Scénarios d’entreprise · Aucun"
+    "conversationNone": "Scénarios d’entreprise · Aucun",
+    "editScene": "Modifier le scénario",
+    "editSavedKeepsCurrent": "Enregistré. Cette conversation garde les réglages avec lesquels elle a commencé ; les nouvelles conversations de ce scénario utiliseront les nouveaux.",
+    "editCompanyReadOnly": "Ce scénario est géré par votre entreprise et ne peut pas être modifié ici."
   },
   "fileVault": {
     "title": "Coffre de fichiers",

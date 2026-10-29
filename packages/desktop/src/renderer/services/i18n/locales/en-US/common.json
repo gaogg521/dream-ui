@@ -762,7 +762,10 @@
       "more": "{{count}} more",
       "asksFirst": "Just say what you want to do. I will first ask about who it is for, how things are today and the scope, write a requirements brief, and only build once you confirm.",
       "direct": "Just tell me what you need done."
-    }
+    },
+    "editScene": "Edit scene",
+    "editSavedKeepsCurrent": "Saved. This conversation keeps the settings it started with; new conversations from this scene use the new ones.",
+    "editCompanyReadOnly": "This scene is managed by your company and can't be edited here."
   },
   "fileVault": {
     "title": "File Vault",

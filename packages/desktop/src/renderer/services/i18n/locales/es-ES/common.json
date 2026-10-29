@@ -607,7 +607,10 @@
     "conversationTitle": "Escenarios empresariales",
     "conversationHint": "Los roles y paquetes de recursos de estos escenarios se combinan para tu cuenta y se aplican automáticamente en cada conversación.",
     "conversationCount": "Escenarios empresariales · {{count}}",
-    "conversationNone": "Escenarios empresariales · Ninguno"
+    "conversationNone": "Escenarios empresariales · Ninguno",
+    "editScene": "Editar escenario",
+    "editSavedKeepsCurrent": "Guardado. Esta conversación conserva los ajustes con los que empezó; las nuevas conversaciones de este escenario usarán los nuevos.",
+    "editCompanyReadOnly": "Este escenario lo gestiona tu empresa y no se puede editar aquí."
   },
   "fileVault": {
     "title": "Caja fuerte de archivos",

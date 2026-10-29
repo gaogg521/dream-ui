@@ -222,7 +222,12 @@ const DreamEngineConversationPanel: React.FC<{
     sider: <ChatSlider conversation={conversation} />,
     headerExtra: (
       <div className='flex items-center gap-8px'>
-        {sceneGreeting && !isMobile && <SceneBadge greeting={sceneGreeting} />}
+        {sceneGreeting && !isMobile && (
+          <SceneBadge
+            greeting={sceneGreeting}
+            sceneKey={(conversation.extra as { scene_id?: string } | undefined)?.scene_id}
+          />
+        )}
         <CronJobManager conversation_id={conversation.id} cron_job_id={cronJobId} />
         {!isMobile && (
           <DreamEngineModelSelector

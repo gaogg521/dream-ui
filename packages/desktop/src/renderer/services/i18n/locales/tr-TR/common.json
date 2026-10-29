@@ -607,7 +607,10 @@
     "conversationTitle": "Kurumsal senaryolar",
     "conversationHint": "Bu senaryoların rolleri ve kaynak paketleri hesabınız için birleştirilir ve her sohbette otomatik olarak uygulanır.",
     "conversationCount": "Kurumsal senaryolar · {{count}}",
-    "conversationNone": "Kurumsal senaryolar · Yok"
+    "conversationNone": "Kurumsal senaryolar · Yok",
+    "editScene": "Senaryoyu düzenle",
+    "editSavedKeepsCurrent": "Kaydedildi. Bu konuşma başladığı ayarları korur; bu senaryodan başlatılacak yeni konuşmalar yeni ayarları kullanır.",
+    "editCompanyReadOnly": "Bu senaryo şirketiniz tarafından yönetiliyor ve burada düzenlenemez."
   },
   "fileVault": {
     "title": "Dosya Kasası",

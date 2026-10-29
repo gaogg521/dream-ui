@@ -214,7 +214,10 @@ describe('cdpTargetProtocol — the target id follows the real main frame id of 
   it('announces the real frame id as the target id everywhere it is advertised', () => {
     expect(realInfo().targetId).toBe(REAL_FRAME);
     expect(buildListPayload('ws://x', 'Example', 'https://example.com/', REAL_FRAME)[0].id).toBe(REAL_FRAME);
-    const created = decideCdpCommand({ id: 1, method: 'Target.setDiscoverTargets', params: { discover: true } }, realInfo);
+    const created = decideCdpCommand(
+      { id: 1, method: 'Target.setDiscoverTargets', params: { discover: true } },
+      realInfo
+    );
     expect(created.kind === 'reply-and-emit' && created.emit[0].params).toMatchObject({
       targetInfo: { targetId: REAL_FRAME },
     });

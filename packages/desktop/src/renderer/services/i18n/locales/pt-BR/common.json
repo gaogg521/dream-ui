@@ -607,7 +607,10 @@
     "conversationTitle": "Cenários corporativos",
     "conversationHint": "Os papéis e pacotes de recursos desses cenários são combinados para a sua conta e aplicados automaticamente em todas as conversas.",
     "conversationCount": "Cenários corporativos · {{count}}",
-    "conversationNone": "Cenários corporativos · Nenhum"
+    "conversationNone": "Cenários corporativos · Nenhum",
+    "editScene": "Editar cenário",
+    "editSavedKeepsCurrent": "Salvo. Esta conversa mantém as configurações com que começou; novas conversas deste cenário usarão as novas.",
+    "editCompanyReadOnly": "Este cenário é gerenciado pela sua empresa e não pode ser editado aqui."
   },
   "fileVault": {
     "title": "Cofre de arquivos",

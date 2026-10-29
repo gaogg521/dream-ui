@@ -227,3 +227,23 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* The edit button sits at the card's trailing edge and only shows while the card is hovered or focused. */
+.editButton {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.card:hover .editButton,
+.card:focus-within .editButton,
+.editButton:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .editButton {
+    opacity: 0.7;
+  }
+}
