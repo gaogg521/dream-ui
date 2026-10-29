@@ -965,8 +965,7 @@
     "contentConflict": "其他窗口已更新此文档。你的草稿已保留，请复制草稿后重新打开文档。",
     "sourceOnlyStatus": "原件已保存，暂无可检索正文",
     "sourceOnly": "仅原件",
-    "memorySpace": "记忆空间",
-    "assistantMemory": "助手记忆"
+    "memorySpace": "记忆空间"
   },
   "officeToolbar": {
     "undo": "撤销",

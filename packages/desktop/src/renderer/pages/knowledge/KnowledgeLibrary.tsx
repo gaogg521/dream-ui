@@ -211,7 +211,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   const nav = (id: View, icon: React.ReactNode) => (
     <Button
       type='text'
-      className={view === id ? styles.active : ''}
+      className={view === id && !memorySpace ? styles.active : ''}
       icon={icon}
       onClick={() => {
         onLibraryChange(undefined);
@@ -376,6 +376,25 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           {nav('search', <Search />)}
           {nav('recent', <History />)}
         </nav>
+        {isNativeDialogAvailable() && !suppliedDocumentView && (
+          // The assistant's memory is a place of its own, not a kind of document: a row of its own,
+          // apart from search/recent and from the personal and team trees.
+          <nav className={styles.memoryNav} aria-label={label('memorySpace')}>
+            <Button
+              type='text'
+              className={memorySpace ? styles.active : ''}
+              aria-current={memorySpace ? 'page' : undefined}
+              icon={<Brain />}
+              onClick={() => {
+                sidebar.navigate();
+                setGuide(null);
+                setMemorySpace(true);
+              }}
+            >
+              {label('memorySpace')}
+            </Button>
+          </nav>
+        )}
         <div className={styles.sectionTitle}>
           <Button
             type='text'
@@ -404,37 +423,6 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           {folders(null, true)}
           {rows.filter((row) => personal(row) && !libraryPersonal(row.libraryId)).map((row) => treeFile(row))}
         </div>
-        {isNativeDialogAvailable() && !suppliedDocumentView && (
-          <>
-            <div className={styles.sectionTitle}>
-              <Button
-                type='text'
-                onClick={() => {
-                  setGuide(null);
-                  setMemorySpace(true);
-                }}
-              >
-                {label('memorySpace')}
-              </Button>
-              <Brain className={styles.memoryMark} theme='outline' size={16} />
-            </div>
-            <div className={`${styles.tree} ${styles.memoryTree}`}>
-              <Button
-                type='text'
-                className={styles.memoryEntry}
-                aria-current={memorySpace ? 'page' : undefined}
-                icon={<Brain theme='outline' size={16} />}
-                onClick={() => {
-                  sidebar.navigate();
-                  setGuide(null);
-                  setMemorySpace(true);
-                }}
-              >
-                {label('assistantMemory')}
-              </Button>
-            </div>
-          </>
-        )}
         {isEnterprise && (
           <>
             <div className={styles.sectionTitle}>

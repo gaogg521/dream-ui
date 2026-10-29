@@ -959,8 +959,7 @@
     "contentConflict": "Belge başka bir pencerede güncellendi. Taslağınız korundu. Belgeyi yeniden açmadan önce kopyalayın.",
     "sourceOnlyStatus": "Orijinal kaydedildi; aranabilir metin yok",
     "sourceOnly": "Yalnızca orijinal",
-    "memorySpace": "Bellek alanı",
-    "assistantMemory": "Asistan belleği"
+    "memorySpace": "Bellek alanı"
   },
   "officeToolbar": {
     "undo": "Geri Al",

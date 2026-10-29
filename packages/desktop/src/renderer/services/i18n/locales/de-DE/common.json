@@ -959,8 +959,7 @@
     "contentConflict": "Das Dokument wurde anderswo geändert. Ihr Entwurf bleibt erhalten. Kopieren Sie ihn vor dem erneuten Öffnen.",
     "sourceOnlyStatus": "Original gespeichert; kein durchsuchbarer Text",
     "sourceOnly": "Nur Original",
-    "memorySpace": "Speicherbereich",
-    "assistantMemory": "Speicher des Assistenten"
+    "memorySpace": "Speicherbereich"
   },
   "officeToolbar": {
     "undo": "Rückgängig",

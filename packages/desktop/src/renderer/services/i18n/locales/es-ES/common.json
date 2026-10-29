@@ -959,8 +959,7 @@
     "contentConflict": "El documento cambió en otra ventana. Tu borrador se conserva. Cópialo antes de volver a abrirlo.",
     "sourceOnlyStatus": "Original guardado; sin texto consultable",
     "sourceOnly": "Solo original",
-    "memorySpace": "Espacio de memoria",
-    "assistantMemory": "Memoria del asistente"
+    "memorySpace": "Espacio de memoria"
   },
   "officeToolbar": {
     "undo": "Deshacer",

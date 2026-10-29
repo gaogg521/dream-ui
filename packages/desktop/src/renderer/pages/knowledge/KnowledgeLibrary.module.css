@@ -977,27 +977,62 @@
   white-space: nowrap;
 }
 
-/* The assistant's memory entry: one row, in the same rhythm as the other sections, with the memory
-   mark in green so it reads as its own kind of place; selected, it takes the same green tint. */
-.memoryMark {
-  color: rgb(var(--success-6));
-  opacity: 0.85;
+/* Sidebar colour language: everything about the knowledge base is blue, everything about the
+   assistant's memory is green, and all of it is one size. */
+.sidebar {
+  --library-kb: rgb(var(--blue-6));
+  --library-memory: rgb(var(--success-6));
 }
-.memoryTree {
-  margin-bottom: 6px;
-}
-.sidebar .tree :global(.arco-btn).memoryEntry {
+.sidebar nav :global(.arco-btn-text),
+.sidebar .sectionTitle :global(.arco-btn-text),
+.sidebar .tree :global(.arco-btn-text),
+.sidebar .guideNav :global(.arco-btn-text),
+.sidebar .sidebarFooter,
+.sidebar .sidebarFooter span {
   font-size: 14px;
-  font-weight: 400;
-  color: var(--color-text-1);
+  color: var(--library-kb);
 }
-.sidebar .tree :global(.arco-btn).memoryEntry :global(.arco-btn-icon) {
-  color: rgb(var(--success-6));
+.sidebar .sectionTitle :global(.arco-btn-text) {
+  font-weight: 500;
 }
-.sidebar .tree :global(.arco-btn).memoryEntry:hover {
-  background: var(--color-fill-2);
+/* icon-park paints with fixed stroke/fill attributes rather than currentColor; a style rule beats
+   them, so the icons follow the colour of their text. Folder icons keep their own colour. */
+.sidebar nav svg [stroke]:not([stroke='none']),
+.sidebar .sectionTitle svg [stroke]:not([stroke='none']),
+.sidebar .guideNav svg [stroke]:not([stroke='none']),
+.sidebar .sidebarFooter svg [stroke]:not([stroke='none']),
+.sidebar .tree :global(.i-icon):not(.folderIcon) svg [stroke]:not([stroke='none']) {
+  stroke: currentColor;
 }
-.sidebar .tree :global(.arco-btn).memoryEntry[aria-current='page'] {
-  font-weight: 600;
-  background: rgba(var(--success-6), 0.14);
+.sidebar nav svg [fill]:not([fill='none']),
+.sidebar .sectionTitle svg [fill]:not([fill='none']),
+.sidebar .guideNav svg [fill]:not([fill='none']),
+.sidebar .sidebarFooter svg [fill]:not([fill='none']),
+.sidebar .tree :global(.i-icon):not(.folderIcon) svg [fill]:not([fill='none']) {
+  fill: currentColor;
+}
+
+/* The assistant's memory: a row of its own under search/recent, apart from the personal and team
+   trees. Same size and the same selected look as "recent"; only its colour says it is memory. */
+.memoryNav {
+  margin: 6px 0;
+  padding: 6px 0;
+  border-top: 1px solid var(--color-border-2);
+  border-bottom: 1px solid var(--color-border-2);
+}
+.sidebar .memoryNav :global(.arco-btn-text) {
+  color: var(--library-memory);
+}
+/* Arco recolours a text button on hover/focus with the theme's primary (a dark grey here), which
+   would turn the colour language off under the pointer; the hover background is enough. */
+.sidebar nav :global(.arco-btn-text):hover,
+.sidebar nav :global(.arco-btn-text):focus-visible,
+.sidebar .sectionTitle :global(.arco-btn-text):hover,
+.sidebar .tree :global(.arco-btn-text):hover,
+.sidebar .guideNav :global(.arco-btn-text):hover {
+  color: var(--library-kb);
+}
+.sidebar .memoryNav :global(.arco-btn-text):hover,
+.sidebar .memoryNav :global(.arco-btn-text):focus-visible {
+  color: var(--library-memory);
 }

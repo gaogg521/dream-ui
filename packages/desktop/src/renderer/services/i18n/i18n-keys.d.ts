@@ -520,7 +520,6 @@ export type I18nKey =
   | 'common.knowledgeLibrary.addToConversation'
   | 'common.knowledgeLibrary.addedToConversation'
   | 'common.knowledgeLibrary.all'
-  | 'common.knowledgeLibrary.assistantMemory'
   | 'common.knowledgeLibrary.attachConfirm'
   | 'common.knowledgeLibrary.attachLimit'
   | 'common.knowledgeLibrary.attachOriginal'

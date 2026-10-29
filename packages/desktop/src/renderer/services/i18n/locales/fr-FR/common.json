@@ -959,8 +959,7 @@
     "contentConflict": "Le document a été modifié ailleurs. Votre brouillon est conservé. Copiez-le avant de rouvrir le document.",
     "sourceOnlyStatus": "Original enregistré ; aucun texte interrogeable",
     "sourceOnly": "Original seul",
-    "memorySpace": "Espace mémoire",
-    "assistantMemory": "Mémoire de l'assistant"
+    "memorySpace": "Espace mémoire"
   },
   "officeToolbar": {
     "undo": "Annuler",

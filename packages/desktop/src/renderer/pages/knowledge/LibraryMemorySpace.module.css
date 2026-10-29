@@ -11,13 +11,16 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  /* The library's sidebar toggle floats in the top-left corner of the document pane. */
+  padding-left: 40px;
 }
 
 .title {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: var(--color-text-1);
+  /* Green is the colour of memory throughout the library. */
+  color: rgb(var(--success-6));
 }
 
 .headActions,

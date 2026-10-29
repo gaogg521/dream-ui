@@ -959,8 +959,7 @@
     "contentConflict": "別の画面で文書が更新されました。下書きは保持されています。コピーしてから文書を開き直してください。",
     "sourceOnlyStatus": "原本を保存済み。検索可能な本文なし",
     "sourceOnly": "原本のみ",
-    "memorySpace": "メモリ空間",
-    "assistantMemory": "アシスタントのメモリ"
+    "memorySpace": "メモリ空間"
   },
   "officeToolbar": {
     "undo": "元に戻す",
