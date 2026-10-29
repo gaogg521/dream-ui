@@ -18,6 +18,8 @@ import path from 'node:path';
 import os from 'node:os';
 import { app, shell } from 'electron';
 import { getSystemDir, ProcessConfig } from '@process/utils/initStorage';
+import { listAgents, readAgentFile, resolveAgentFile, writeAgentFile } from '@process/services/engineMemory/agentFiles';
+import { compactGroup, compactionStatus, undoCompaction } from '@process/services/engineMemory/compact';
 import {
   deleteEngineMemory,
   listEngineMemory,
@@ -160,6 +162,24 @@ function engineMemoryBase(): string {
 }
 
 export function initMemoryBridge(): void {
+  ipcBridge.memory.engineCompactionStatus.provider(async ({ groupId }) =>
+    compactionStatus(engineMemoryBase(), groupId)
+  );
+  ipcBridge.memory.engineCompact.provider(async ({ groupId }) => compactGroup(engineMemoryBase(), groupId));
+  ipcBridge.memory.engineUndoCompaction.provider(async ({ groupId }) => undoCompaction(engineMemoryBase(), groupId));
+  ipcBridge.memory.agentList.provider(async () => listAgents(os.homedir()));
+  ipcBridge.memory.agentRead.provider(async ({ agent, scope }) =>
+    readAgentFile(os.homedir(), await resolveClaudeProjectRoot(), agent, scope)
+  );
+  ipcBridge.memory.agentWrite.provider(async ({ agent, scope, content }) => {
+    writeAgentFile(os.homedir(), await resolveClaudeProjectRoot(), agent, scope, content);
+  });
+  ipcBridge.memory.agentOpen.provider(async ({ agent, scope }) => {
+    const { filePath, exists } = resolveAgentFile(os.homedir(), await resolveClaudeProjectRoot(), agent, scope);
+    // Opening a file that does not exist yet would fail; create it empty first so the editor has something to open.
+    if (!exists) writeAgentFile(os.homedir(), await resolveClaudeProjectRoot(), agent, scope, '');
+    await shell.openPath(filePath);
+  });
   ipcBridge.memory.engineList.provider(async () => listEngineMemory(engineMemoryBase()));
   ipcBridge.memory.engineWrite.provider(async ({ groupId, filename, content }) => {
     writeEngineMemory(engineMemoryBase(), groupId, filename, content);

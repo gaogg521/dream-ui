@@ -34,9 +34,6 @@
   "scopeUpdated": "Ámbito del proyecto actualizado",
   "scopeCleared": "Se usa el directorio de trabajo como raíz del proyecto",
   "loadScopeFailed": "No se pudo cargar el ámbito de la memoria",
-  "tabAuto": "Memoria automática de Claude Code",
-  "tabGlobal": "CLAUDE.md global de Claude Code",
-  "tabProject": "CLAUDE.md de proyecto de Claude Code",
   "autoHint": "Archivos en la ruta de abajo (las primeras ~200 líneas se cargan en cada sesión de Claude Code).",
   "globalHint": "Ruta: ~/.claude/CLAUDE.md — instrucciones compartidas por todos los proyectos.",
   "projectHint": "Instrucciones específicas del proyecto; se prefiere .claude/CLAUDE.md y, si no, CLAUDE.md en la raíz del repositorio.",
@@ -92,5 +89,31 @@
     "addShared": "Añadir a la memoria compartida",
     "loadFailed": "No se pudo leer la memoria del asistente integrado",
     "deleteFailed": "No se pudo eliminar"
+  },
+  "tabAgents": "Memoria de Agents",
+  "agents": {
+    "hint": "Gestiona los archivos de memoria/instrucciones que leen otros Agents de código (Claude Code, Codex, Gemini CLI, OpenCode). Elige un Agent, edita y guarda.",
+    "global": "Instrucciones globales",
+    "project": "Instrucciones del proyecto",
+    "auto": "Memoria automática (Claude Code)",
+    "globalHint": "El archivo de instrucciones que {{agent}} lee en todos los proyectos.",
+    "projectHint": "El archivo de instrucciones que {{agent}} lee en la carpeta del proyecto; define la carpeta abajo.",
+    "saved": "Guardado",
+    "willCreate": "El archivo aún no existe; al guardar se creará",
+    "used": "Usado",
+    "notUsed": "No usado"
+  },
+  "tidy": {
+    "title": "¿Ordenar la memoria del asistente?",
+    "content": "El asistente recuerda ahora {{total}} elementos, {{mergeable}} de ellos con más de dos semanas. Demasiados hacen la búsqueda más lenta y ocupan más contexto. Puedo unir esas memorias antiguas en unos pocos archivos por tipo y mes, sin cambiar ni perder una palabra. Antes se hace una copia de seguridad y puedes deshacerlo cuando quieras en Memoria.",
+    "agree": "Sí, ordenar",
+    "later": "Ahora no",
+    "done": "Ordenado: {{merged}} memorias antiguas unidas en {{mergedInto}} archivos, con todos los originales. Copia hecha; deshaz cuando quieras en Memoria.",
+    "failed": "No se pudo ordenar; tu memoria no cambió",
+    "button": "Ordenar memoria",
+    "undo": "Deshacer el último orden",
+    "undoTitle": "¿Deshacer el último orden?",
+    "undoContent": "Los archivos de antes vuelven y los archivos unidos se eliminan. Las memorias guardadas después se conservan.",
+    "undone": "Deshecho; la memoria vuelve a como estaba"
   }
 }

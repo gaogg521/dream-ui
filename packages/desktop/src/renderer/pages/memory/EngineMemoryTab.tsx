@@ -14,6 +14,7 @@ import { Add, Delete, Edit, FileText, Refresh } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import {
   memory as memoryIpc,
+  type EngineCompactionStatus,
   type EngineMemoryFile,
   type EngineMemoryGroup,
   type EngineMemoryOverview,
@@ -48,6 +49,7 @@ const descOf = (content: string): string => {
 const EngineMemoryTab: React.FC = () => {
   const { t } = useTranslation();
   const [overview, setOverview] = useState<EngineMemoryOverview | null>(null);
+  const [tidy, setTidy] = useState<EngineCompactionStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<{ groupId: string; file: EngineMemoryFile } | null>(null);
@@ -60,6 +62,12 @@ const EngineMemoryTab: React.FC = () => {
     setLoading(true);
     try {
       setOverview(await memoryIpc.engineList.invoke());
+      // Not worth failing the page over: without it the tidy buttons simply stay hidden.
+      setTidy(
+        await memoryIpc.engineCompactionStatus
+          .invoke({ groupId: '_shared' })
+          .catch((): EngineCompactionStatus | null => null)
+      );
     } catch {
       Message.error(t('memory.engine.loadFailed'));
     } finally {
@@ -142,6 +150,43 @@ const EngineMemoryTab: React.FC = () => {
         } catch {
           Message.error(t('memory.engine.deleteFailed'));
         }
+      },
+    });
+  };
+
+  const tidyShared = () => {
+    Modal.confirm({
+      title: t('memory.tidy.title'),
+      content: t('memory.tidy.content', { total: tidy?.total ?? 0, mergeable: tidy?.mergeable ?? 0 }),
+      okText: t('memory.tidy.agree'),
+      cancelText: t('memory.tidy.later'),
+      okButtonProps: { status: 'success' },
+      onOk: async () => {
+        try {
+          const result = await memoryIpc.engineCompact.invoke({ groupId: '_shared' });
+          Message.success(t('memory.tidy.done', result));
+        } catch {
+          Message.error(t('memory.tidy.failed'));
+        }
+        await load();
+      },
+    });
+  };
+
+  const undoTidy = () => {
+    Modal.confirm({
+      title: t('memory.tidy.undoTitle'),
+      content: t('memory.tidy.undoContent'),
+      okText: t('memory.tidy.undo'),
+      cancelText: t('common.cancel'),
+      onOk: async () => {
+        try {
+          await memoryIpc.engineUndoCompaction.invoke({ groupId: '_shared' });
+          Message.success(t('memory.tidy.undone'));
+        } catch {
+          Message.error(t('memory.saveFailed'));
+        }
+        await load();
       },
     });
   };
@@ -266,7 +311,23 @@ const EngineMemoryTab: React.FC = () => {
             <Button size='small' icon={<Refresh theme='outline' />} loading={loading} onClick={() => void load()}>
               {t('memory.refresh')}
             </Button>
-            <Button type='primary' size='small' icon={<Add theme='outline' />} onClick={() => setAdding(true)}>
+            {tidy && tidy.mergeable > 0 && (
+              <Button size='small' status={tidy.suggested ? 'success' : 'default'} onClick={tidyShared}>
+                {t('memory.tidy.button')}
+              </Button>
+            )}
+            {tidy?.backup && (
+              <Button size='small' onClick={undoTidy}>
+                {t('memory.tidy.undo')}
+              </Button>
+            )}
+            <Button
+              type='primary'
+              status='success'
+              size='small'
+              icon={<Add theme='outline' />}
+              onClick={() => setAdding(true)}
+            >
               {t('memory.engine.addShared')}
             </Button>
           </div>
@@ -303,6 +364,7 @@ const EngineMemoryTab: React.FC = () => {
             <div className={styles.actions}>
               <Button
                 type='primary'
+                status='success'
                 size='small'
                 loading={busy}
                 onClick={() => mergeIntoShared(legacy.map((g) => g.id))}

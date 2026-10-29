@@ -34,9 +34,6 @@
   "scopeUpdated": "Projektbereich aktualisiert",
   "scopeCleared": "Arbeitsverzeichnis wird als Projektstamm verwendet",
   "loadScopeFailed": "Speicherbereich konnte nicht geladen werden",
-  "tabAuto": "Claude-Code-Automatikspeicher",
-  "tabGlobal": "Globale CLAUDE.md (Claude Code)",
-  "tabProject": "Projekt-CLAUDE.md (Claude Code)",
   "autoHint": "Dateien unter dem folgenden Pfad (die ersten ~200 Zeilen werden je Claude-Code-Sitzung geladen).",
   "globalHint": "Pfad: ~/.claude/CLAUDE.md — projektübergreifend geteilte Anweisungen.",
   "projectHint": "Projektspezifische Anweisungen; bevorzugt .claude/CLAUDE.md, sonst CLAUDE.md im Repository-Stammverzeichnis.",
@@ -92,5 +89,31 @@
     "addShared": "Zum gemeinsamen Speicher hinzufügen",
     "loadFailed": "Speicher des integrierten Assistenten konnte nicht gelesen werden",
     "deleteFailed": "Löschen fehlgeschlagen"
+  },
+  "tabAgents": "Agent-Speicher",
+  "agents": {
+    "hint": "Hier verwalten Sie die Speicher-/Anweisungsdateien, die andere Coding-Agents (Claude Code, Codex, Gemini CLI, OpenCode) lesen. Agent wählen, bearbeiten, speichern.",
+    "global": "Globale Anweisungen",
+    "project": "Projektanweisungen",
+    "auto": "Auto-Speicher (Claude Code)",
+    "globalHint": "Die Anweisungsdatei, die {{agent}} in jedem Projekt liest.",
+    "projectHint": "Die Anweisungsdatei, die {{agent}} im Projektordner liest; den Ordner legen Sie unten fest.",
+    "saved": "Gespeichert",
+    "willCreate": "Die Datei existiert noch nicht; Speichern legt sie an",
+    "used": "Benutzt",
+    "notUsed": "Nicht benutzt"
+  },
+  "tidy": {
+    "title": "Speicher des Assistenten aufräumen?",
+    "content": "Der Assistent merkt sich jetzt {{total}} Einträge, {{mergeable}} davon sind älter als zwei Wochen. Zu viele machen die Suche langsamer und belegen mehr Kontext. Ich kann diese älteren Einträge nach Typ und Monat in wenigen Dateien zusammenfassen — kein Wort wird geändert oder gestrichen. Vorher wird eine Sicherung angelegt, und unter „Speicher“ lässt es sich jederzeit rückgängig machen.",
+    "agree": "Ja, aufräumen",
+    "later": "Jetzt nicht",
+    "done": "Aufgeräumt: {{merged}} ältere Einträge in {{mergedInto}} Dateien zusammengeführt, alle Originale bleiben erhalten. Sicherung angelegt; unter „Speicher“ rückgängig zu machen.",
+    "failed": "Aufräumen fehlgeschlagen; Ihr Speicher blieb unverändert",
+    "button": "Speicher aufräumen",
+    "undo": "Letztes Aufräumen rückgängig",
+    "undoTitle": "Letztes Aufräumen rückgängig machen?",
+    "undoContent": "Die Dateien von vorher kommen zurück, die zusammengeführten Dateien werden entfernt. Danach gespeicherte Einträge bleiben erhalten.",
+    "undone": "Rückgängig gemacht; der Speicher ist wieder wie vorher"
   }
 }

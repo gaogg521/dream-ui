@@ -938,6 +938,36 @@ export type EngineMemoryGroup = {
 
 export type EngineMemoryOverview = { baseDir: string; groups: EngineMemoryGroup[] };
 
+/** What tidying a memory directory would do, and whether there is a backup to go back to. */
+export type EngineCompactionStatus = {
+  /** Memory files, not counting the index. */
+  total: number;
+  /** Old memories that tidying would fold into per-type, per-month files. */
+  mergeable: number;
+  /** The directory is long enough that tidying should be offered to the person. */
+  suggested: boolean;
+  backup: { id: string; createdAt: number } | null;
+};
+
+export type EngineCompactionResult = { merged: number; mergedInto: number; kept: number; backupId: string };
+
+/** Coding agents whose instruction files this app can show and edit. */
+export type AgentMemoryKey = 'claude' | 'codex' | 'gemini' | 'opencode';
+export type AgentMemoryScope = 'global' | 'project';
+
+export type AgentMemoryInfo = {
+  key: AgentMemoryKey;
+  label: string;
+  /** The agent's config directory exists on this computer, i.e. it has been used here. */
+  used: boolean;
+  globalPath: string;
+  globalExists: boolean;
+  /** The file name used in a project folder (created there when none exists). */
+  projectFileName: string;
+};
+
+export type AgentMemoryFile = { path: string; exists: boolean; content: string };
+
 /** Resolved paths for Claude Code–style memory tied to a single project root */
 export type MemoryScopeInfo = {
   /** Directory used for ~/.claude/projects/{sanitized}/memory and project CLAUDE.md */
@@ -1024,6 +1054,23 @@ export const memory = {
   engineList: bridge.buildProvider<EngineMemoryOverview, void>('memory.engineList'),
   engineWrite: bridge.buildProvider<void, { groupId: string; filename: string; content: string }>('memory.engineWrite'),
   engineDelete: bridge.buildProvider<void, { path: string }>('memory.engineDelete'),
+  /** Tidying a long memory directory: ask what it would do, do it (after a backup), undo it. */
+  engineCompactionStatus: bridge.buildProvider<EngineCompactionStatus, { groupId: string }>(
+    'memory.engineCompactionStatus'
+  ),
+  engineCompact: bridge.buildProvider<EngineCompactionResult, { groupId: string }>('memory.engineCompact'),
+  engineUndoCompaction: bridge.buildProvider<{ restored: boolean; backupId?: string }, { groupId: string }>(
+    'memory.engineUndoCompaction'
+  ),
+  /** Other agents' instruction files: list the agents, read / write / open one file. */
+  agentList: bridge.buildProvider<AgentMemoryInfo[], void>('memory.agentList'),
+  agentRead: bridge.buildProvider<AgentMemoryFile, { agent: AgentMemoryKey; scope: AgentMemoryScope }>(
+    'memory.agentRead'
+  ),
+  agentWrite: bridge.buildProvider<void, { agent: AgentMemoryKey; scope: AgentMemoryScope; content: string }>(
+    'memory.agentWrite'
+  ),
+  agentOpen: bridge.buildProvider<void, { agent: AgentMemoryKey; scope: AgentMemoryScope }>('memory.agentOpen'),
   engineMoveToShared: bridge.buildProvider<
     { moved: number; renamed: number; duplicates: number },
     { groupIds: string[] }

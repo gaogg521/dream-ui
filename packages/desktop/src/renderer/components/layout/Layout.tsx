@@ -31,6 +31,7 @@ import { useNotificationClick } from '@renderer/hooks/system/notification/useNot
 import { useBrowserNotification } from '@renderer/hooks/system/notification/useBrowserNotification';
 import { useGovernanceEndpointSync } from '@renderer/hooks/enterprise/useGovernanceEndpointSync';
 import { useTeamResourceSync } from '@renderer/hooks/enterprise/useTeamResourceSync';
+import { useMemoryTidyPrompt } from '@renderer/hooks/system/useMemoryTidyPrompt';
 import { useEnterpriseNotificationsSync } from '@renderer/hooks/enterprise/useEnterpriseNotifications';
 import { useRuntimeNodeHeartbeat } from '@renderer/hooks/enterprise/useRuntimeNodeHeartbeat';
 import { useDesktopTurnNotification } from '@renderer/hooks/system/notification/useDesktopTurnNotification';
@@ -158,6 +159,8 @@ const Layout: React.FC<{
   // M3: sync enterprise-distributed team resources to local disk. No-op in
   // standalone mode (the hook gates on a resolved tenant).
   useTeamResourceSync();
+  // Offer to tidy the assistant's memory when it has grown long (asks first; "later" is honoured).
+  useMemoryTidyPrompt();
   // §4.2 notification bell: poll the member inbox + tray-toast arrivals. No-op
   // in standalone mode (same tenant gate as the resource sync).
   useEnterpriseNotificationsSync();

@@ -34,9 +34,6 @@
   "scopeUpdated": "プロジェクトの範囲を更新しました",
   "scopeCleared": "作業ディレクトリをプロジェクトルートとして使用します",
   "loadScopeFailed": "メモリの範囲の読み込みに失敗しました",
-  "tabAuto": "Claude Code 自動メモリ",
-  "tabGlobal": "Claude Code グローバル CLAUDE.md",
-  "tabProject": "Claude Code プロジェクト CLAUDE.md",
   "autoHint": "以下のパスにあるファイル（上流の仕様により、各 Claude Code セッションで先頭約 200 行が読み込まれます）。",
   "globalHint": "パス: ~/.claude/CLAUDE.md — すべてのプロジェクトで共有される指示。",
   "projectHint": "プロジェクト固有の指示。.claude/CLAUDE.md を優先し、なければリポジトリ直下の CLAUDE.md を使用します。",
@@ -92,5 +89,31 @@
     "addShared": "共有メモリに追加",
     "loadFailed": "内蔵アシスタントのメモリを読み込めませんでした",
     "deleteFailed": "削除に失敗しました"
+  },
+  "tabAgents": "Agent のメモリ",
+  "agents": {
+    "hint": "ほかのコーディング Agent（Claude Code、Codex、Gemini CLI、OpenCode）が読むメモリ／指示ファイルを管理します。Agent を選んで編集し、保存してください。",
+    "global": "グローバル指示",
+    "project": "プロジェクト指示",
+    "auto": "自動メモリ（Claude Code）",
+    "globalHint": "{{agent}} がすべてのプロジェクトで読む指示ファイルです。",
+    "projectHint": "{{agent}} がプロジェクトフォルダで読む指示ファイルです。フォルダは下で設定します。",
+    "saved": "保存しました",
+    "willCreate": "ファイルはまだありません。保存すると作成されます",
+    "used": "使用済み",
+    "notUsed": "未使用"
+  },
+  "tidy": {
+    "title": "アシスタントのメモリを整理しますか？",
+    "content": "アシスタントは現在 {{total}} 件を記憶しており、そのうち {{mergeable}} 件は 2 週間以上前のものです。多すぎると探すのが遅くなり、コンテキストも多く使います。古いメモリを種類と月ごとにいくつかのファイルへまとめられます。原文は一字も変えず、欠かしません。整理の前にバックアップを取り、「メモリ管理」でいつでも元に戻せます。",
+    "agree": "整理する",
+    "later": "今はしない",
+    "done": "整理しました：古いメモリ {{merged}} 件を {{mergedInto}} 個のファイルにまとめました。原文はすべて残っています。バックアップ済みで、「メモリ管理」から元に戻せます。",
+    "failed": "整理に失敗しました。メモリは変更されていません",
+    "button": "メモリを整理",
+    "undo": "前回の整理を元に戻す",
+    "undoTitle": "前回の整理を元に戻しますか？",
+    "undoContent": "整理前のファイルが戻り、まとめたファイルは削除されます。整理後に保存したメモリは残ります。",
+    "undone": "元に戻しました。メモリは整理前の状態です"
   }
 }

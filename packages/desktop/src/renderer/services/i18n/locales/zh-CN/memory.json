@@ -34,9 +34,6 @@
   "scopeUpdated": "已更新记忆绑定的项目",
   "scopeCleared": "已恢复为使用工作目录作为项目根",
   "loadScopeFailed": "加载记忆范围失败",
-  "tabAuto": "Claude Code 自动记忆",
-  "tabGlobal": "Claude Code 全局 CLAUDE.md",
-  "tabProject": "Claude Code 项目 CLAUDE.md",
   "autoHint": "下列路径中的 .md 文件（Claude Code 侧通常每次会话自动加载前约 200 行）。",
   "globalHint": "路径: ~/.claude/CLAUDE.md · 所有项目通用的全局指令。",
   "projectHint": "路径: 优先 .claude/CLAUDE.md，否则仓库根目录 CLAUDE.md。",
@@ -92,5 +89,31 @@
     "addShared": "新增到共享记忆",
     "loadFailed": "读取内置助手记忆失败",
     "deleteFailed": "删除失败"
+  },
+  "tabAgents": "Agent 记忆",
+  "agents": {
+    "hint": "这里管理其他编程 Agent（Claude Code、Codex、Gemini CLI、OpenCode）自己读取的记忆/指令文件。选一个 Agent，修改后保存即可。",
+    "global": "全局指令",
+    "project": "项目指令",
+    "auto": "自动记忆（Claude Code）",
+    "globalHint": "{{agent}} 在所有项目里都会读取的指令文件。",
+    "projectHint": "{{agent}} 在项目目录里读取的指令文件；项目目录在下方设置。",
+    "saved": "已保存",
+    "willCreate": "文件还不存在，保存后会创建",
+    "used": "用过",
+    "notUsed": "未使用"
+  },
+  "tidy": {
+    "title": "整理一下助手的记忆？",
+    "content": "助手现在记住了 {{total}} 条内容，其中 {{mergeable}} 条是两周前的旧记忆。记得太多会让它翻找变慢，也更占上下文。我可以把这些旧记忆按类型和月份合并成几个文件——原文一句不改、一句不丢，整理前会先备份，随时可以在“记忆管理”里撤销。",
+    "agree": "同意整理",
+    "later": "以后再说",
+    "done": "已整理：{{merged}} 条旧记忆合并成 {{mergedInto}} 个文件，原文都在。整理前已备份，可在“记忆管理”里撤销。",
+    "failed": "整理失败，记忆没有改动",
+    "button": "整理记忆",
+    "undo": "撤销上次整理",
+    "undoTitle": "撤销上次整理？",
+    "undoContent": "会把整理前的文件放回来，合并出的文件会删除。整理之后新存的记忆会保留。",
+    "undone": "已撤销，记忆已恢复到整理前"
   }
 }

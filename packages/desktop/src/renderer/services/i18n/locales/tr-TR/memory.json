@@ -34,9 +34,6 @@
   "scopeUpdated": "Proje kapsamı güncellendi",
   "scopeCleared": "Proje kökü olarak çalışma dizini kullanılıyor",
   "loadScopeFailed": "Bellek kapsamı yüklenemedi",
-  "tabAuto": "Claude Code otomatik belleği",
-  "tabGlobal": "Claude Code genel CLAUDE.md",
-  "tabProject": "Claude Code proje CLAUDE.md",
   "autoHint": "Aşağıdaki yoldaki dosyalar (her Claude Code oturumunda ilk ~200 satır yüklenir).",
   "globalHint": "Yol: ~/.claude/CLAUDE.md — tüm projelerde paylaşılan yönergeler.",
   "projectHint": "Projeye özgü yönergeler; önce .claude/CLAUDE.md, yoksa depo kökündeki CLAUDE.md kullanılır.",
@@ -92,5 +89,31 @@
     "addShared": "Ortak belleğe ekle",
     "loadFailed": "Yerleşik asistan belleği okunamadı",
     "deleteFailed": "Silinemedi"
+  },
+  "tabAgents": "Agent belleği",
+  "agents": {
+    "hint": "Diğer kodlama Agent'larının (Claude Code, Codex, Gemini CLI, OpenCode) okuduğu bellek/talimat dosyalarını yönetin. Bir Agent seçin, düzenleyin ve kaydedin.",
+    "global": "Genel talimatlar",
+    "project": "Proje talimatları",
+    "auto": "Otomatik bellek (Claude Code)",
+    "globalHint": "{{agent}} aracının her projede okuduğu talimat dosyası.",
+    "projectHint": "{{agent}} aracının proje klasöründe okuduğu talimat dosyası; klasörü aşağıdan ayarlayın.",
+    "saved": "Kaydedildi",
+    "willCreate": "Dosya henüz yok; kaydedince oluşturulur",
+    "used": "Kullanıldı",
+    "notUsed": "Kullanılmadı"
+  },
+  "tidy": {
+    "title": "Asistanın belleği düzenlensin mi?",
+    "content": "Asistan şu an {{total}} öğeyi hatırlıyor, bunların {{mergeable}} tanesi iki haftadan eski. Çok fazla olması aramayı yavaşlatır ve bağlamı daha çok kullanır. Bu eski anıları türe ve aya göre birkaç dosyada birleştirebilirim; tek kelime değişmez, hiçbiri atlanmaz. Önce yedek alınır, \"Bellek\"ten istediğiniz zaman geri alabilirsiniz.",
+    "agree": "Evet, düzenle",
+    "later": "Şimdi değil",
+    "done": "Düzenlendi: {{merged}} eski bellek {{mergedInto}} dosyada birleştirildi, tüm özgün metinler duruyor. Yedek alındı; \"Bellek\"ten geri alabilirsiniz.",
+    "failed": "Düzenleme başarısız; belleğiniz değişmedi",
+    "button": "Belleği düzenle",
+    "undo": "Son düzenlemeyi geri al",
+    "undoTitle": "Son düzenleme geri alınsın mı?",
+    "undoContent": "Düzenleme öncesi dosyalar geri konur, birleştirilen dosyalar silinir. Sonradan kaydedilen anılar korunur.",
+    "undone": "Geri alındı; bellek eski haline döndü"
   }
 }

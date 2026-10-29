@@ -8,6 +8,9 @@ const ipc = vi.hoisted(() => ({
   engineWrite: vi.fn(),
   engineDelete: vi.fn(),
   engineMoveToShared: vi.fn(),
+  engineCompactionStatus: vi.fn(),
+  engineCompact: vi.fn(),
+  engineUndoCompaction: vi.fn(),
 }));
 
 vi.mock('@/common/adapter/ipcBridge', () => ({
@@ -16,6 +19,9 @@ vi.mock('@/common/adapter/ipcBridge', () => ({
     engineWrite: { invoke: ipc.engineWrite },
     engineDelete: { invoke: ipc.engineDelete },
     engineMoveToShared: { invoke: ipc.engineMoveToShared },
+    engineCompactionStatus: { invoke: ipc.engineCompactionStatus },
+    engineCompact: { invoke: ipc.engineCompact },
+    engineUndoCompaction: { invoke: ipc.engineUndoCompaction },
   },
 }));
 
@@ -75,6 +81,9 @@ describe('EngineMemoryTab', () => {
   beforeEach(() => {
     Object.values(ipc).forEach((fn) => fn.mockReset());
     ipc.engineMoveToShared.mockResolvedValue({ moved: 2, renamed: 0, duplicates: 0 });
+    ipc.engineCompactionStatus.mockResolvedValue({ total: 3, mergeable: 0, suggested: false, backup: null });
+    ipc.engineCompact.mockResolvedValue({ merged: 8, mergedInto: 2, kept: 3, backupId: 'memory-backup-x' });
+    ipc.engineUndoCompaction.mockResolvedValue({ restored: true });
   });
 
   it('shows the shared memory the assistant reads in every projectless conversation', async () => {
@@ -97,5 +106,32 @@ describe('EngineMemoryTab', () => {
       expect(ipc.engineMoveToShared).toHaveBeenCalledWith({ groupIds: ['C--old-dream-temp-4c69a9e9'] })
     );
     await waitFor(() => expect(screen.queryByTestId('engine-memory-legacy')).toBeNull());
+  });
+
+  it('offers to tidy only when there are old memories to fold, and does it when asked', async () => {
+    ipc.engineList.mockResolvedValue(overview(false));
+    ipc.engineCompactionStatus.mockResolvedValue({ total: 90, mergeable: 40, suggested: true, backup: null });
+    render(<EngineMemoryTab />);
+
+    fireEvent.click(await screen.findByText('memory.tidy.button'));
+
+    await waitFor(() => expect(ipc.engineCompact).toHaveBeenCalledWith({ groupId: '_shared' }));
+    expect(screen.queryByText('memory.tidy.undo')).toBeNull();
+  });
+
+  it('hides the tidy button when nothing is old enough, and offers undo when a backup exists', async () => {
+    ipc.engineList.mockResolvedValue(overview(false));
+    ipc.engineCompactionStatus.mockResolvedValue({
+      total: 5,
+      mergeable: 0,
+      suggested: false,
+      backup: { id: 'memory-backup-x', createdAt: 1 },
+    });
+    render(<EngineMemoryTab />);
+
+    fireEvent.click(await screen.findByText('memory.tidy.undo'));
+
+    expect(screen.queryByText('memory.tidy.button')).toBeNull();
+    await waitFor(() => expect(ipc.engineUndoCompaction).toHaveBeenCalledWith({ groupId: '_shared' }));
   });
 });

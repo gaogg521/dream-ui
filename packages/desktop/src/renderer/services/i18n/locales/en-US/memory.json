@@ -34,9 +34,6 @@
   "scopeUpdated": "Project scope updated",
   "scopeCleared": "Using work directory as project root",
   "loadScopeFailed": "Failed to load memory scope",
-  "tabAuto": "Claude Code auto memory",
-  "tabGlobal": "Claude Code global CLAUDE.md",
-  "tabProject": "Claude Code project CLAUDE.md",
   "autoHint": "Files under the path below (first ~200 lines load into each Claude Code session per upstream rules).",
   "globalHint": "Path: ~/.claude/CLAUDE.md — instructions shared across all projects.",
   "projectHint": "Project-specific instructions; prefers .claude/CLAUDE.md, otherwise CLAUDE.md at repo root.",
@@ -92,5 +89,31 @@
     "addShared": "Add to shared memory",
     "loadFailed": "Could not read the built-in assistant memory",
     "deleteFailed": "Delete failed"
+  },
+  "tabAgents": "Agent memory",
+  "agents": {
+    "hint": "Manage the memory / instruction files that other coding agents (Claude Code, Codex, Gemini CLI, OpenCode) read. Pick an agent, edit, and save.",
+    "global": "Global instructions",
+    "project": "Project instructions",
+    "auto": "Auto memory (Claude Code)",
+    "globalHint": "The instruction file {{agent}} reads in every project.",
+    "projectHint": "The instruction file {{agent}} reads in the project folder; set the folder below.",
+    "saved": "Saved",
+    "willCreate": "The file does not exist yet; saving will create it",
+    "used": "Used",
+    "notUsed": "Not used"
+  },
+  "tidy": {
+    "title": "Tidy up the assistant's memory?",
+    "content": "The assistant now remembers {{total}} items, {{mergeable}} of them older than two weeks. Too many makes it slower to look things up and uses more context. I can fold those older memories into a few files by type and month — not a word changed or dropped. A backup is taken first, and you can undo it any time in Memory.",
+    "agree": "Yes, tidy up",
+    "later": "Not now",
+    "done": "Tidied: {{merged}} older memories folded into {{mergedInto}} files, every original kept. A backup was taken; undo it any time in Memory.",
+    "failed": "Tidying failed; your memory was not changed",
+    "button": "Tidy memory",
+    "undo": "Undo last tidy",
+    "undoTitle": "Undo the last tidy?",
+    "undoContent": "The files from before the tidy are put back and the merged files removed. Memories saved since are kept.",
+    "undone": "Undone; your memory is back as it was"
   }
 }

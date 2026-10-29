@@ -34,9 +34,6 @@
   "scopeUpdated": "Escopo do projeto atualizado",
   "scopeCleared": "Usando o diretório de trabalho como raiz do projeto",
   "loadScopeFailed": "Falha ao carregar o escopo da memória",
-  "tabAuto": "Memória automática do Claude Code",
-  "tabGlobal": "CLAUDE.md global do Claude Code",
-  "tabProject": "CLAUDE.md do projeto do Claude Code",
   "autoHint": "Arquivos no caminho abaixo (as primeiras ~200 linhas são carregadas em cada sessão do Claude Code).",
   "globalHint": "Caminho: ~/.claude/CLAUDE.md — instruções compartilhadas por todos os projetos.",
   "projectHint": "Instruções específicas do projeto; prefere .claude/CLAUDE.md e, na falta dele, CLAUDE.md na raiz do repositório.",
@@ -92,5 +89,31 @@
     "addShared": "Adicionar à memória compartilhada",
     "loadFailed": "Não foi possível ler a memória do assistente integrado",
     "deleteFailed": "Falha ao excluir"
+  },
+  "tabAgents": "Memória dos Agents",
+  "agents": {
+    "hint": "Gerencie os arquivos de memória/instruções que outros Agents de código (Claude Code, Codex, Gemini CLI, OpenCode) leem. Escolha um Agent, edite e salve.",
+    "global": "Instruções globais",
+    "project": "Instruções do projeto",
+    "auto": "Memória automática (Claude Code)",
+    "globalHint": "O arquivo de instruções que {{agent}} lê em todos os projetos.",
+    "projectHint": "O arquivo de instruções que {{agent}} lê na pasta do projeto; defina a pasta abaixo.",
+    "saved": "Salvo",
+    "willCreate": "O arquivo ainda não existe; salvar vai criá-lo",
+    "used": "Usado",
+    "notUsed": "Não usado"
+  },
+  "tidy": {
+    "title": "Organizar a memória do assistente?",
+    "content": "O assistente lembra agora de {{total}} itens, {{mergeable}} deles com mais de duas semanas. Itens demais deixam a busca mais lenta e usam mais contexto. Posso juntar essas memórias antigas em poucos arquivos por tipo e mês — sem mudar nem perder uma palavra. Um backup é feito antes, e você pode desfazer quando quiser em Memória.",
+    "agree": "Sim, organizar",
+    "later": "Agora não",
+    "done": "Organizado: {{merged}} memórias antigas reunidas em {{mergedInto}} arquivos, com todos os originais. Backup feito; desfaça em Memória quando quiser.",
+    "failed": "Falha ao organizar; sua memória não foi alterada",
+    "button": "Organizar memória",
+    "undo": "Desfazer última organização",
+    "undoTitle": "Desfazer a última organização?",
+    "undoContent": "Os arquivos de antes voltam e os arquivos reunidos são removidos. Memórias salvas depois são mantidas.",
+    "undone": "Desfeito; a memória voltou ao que era"
   }
 }

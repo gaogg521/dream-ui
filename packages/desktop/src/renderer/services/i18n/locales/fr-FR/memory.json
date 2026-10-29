@@ -34,9 +34,6 @@
   "scopeUpdated": "Portée du projet mise à jour",
   "scopeCleared": "Le répertoire de travail sert de racine de projet",
   "loadScopeFailed": "Échec du chargement de la portée de la mémoire",
-  "tabAuto": "Mémoire automatique de Claude Code",
-  "tabGlobal": "CLAUDE.md global de Claude Code",
-  "tabProject": "CLAUDE.md de projet de Claude Code",
   "autoHint": "Fichiers situés sous le chemin ci-dessous (les ~200 premières lignes sont chargées à chaque session Claude Code).",
   "globalHint": "Chemin : ~/.claude/CLAUDE.md — instructions partagées par tous les projets.",
   "projectHint": "Instructions propres au projet ; .claude/CLAUDE.md est prioritaire, sinon CLAUDE.md à la racine du dépôt.",
@@ -92,5 +89,31 @@
     "addShared": "Ajouter à la mémoire partagée",
     "loadFailed": "Impossible de lire la mémoire de l'assistant intégré",
     "deleteFailed": "Échec de la suppression"
+  },
+  "tabAgents": "Mémoire des Agents",
+  "agents": {
+    "hint": "Gérez les fichiers de mémoire/instructions que lisent les autres Agents de code (Claude Code, Codex, Gemini CLI, OpenCode). Choisissez un Agent, modifiez, enregistrez.",
+    "global": "Instructions globales",
+    "project": "Instructions du projet",
+    "auto": "Mémoire automatique (Claude Code)",
+    "globalHint": "Le fichier d'instructions que {{agent}} lit dans tous les projets.",
+    "projectHint": "Le fichier d'instructions que {{agent}} lit dans le dossier du projet ; définissez le dossier ci-dessous.",
+    "saved": "Enregistré",
+    "willCreate": "Le fichier n'existe pas encore ; l'enregistrer le créera",
+    "used": "Utilisé",
+    "notUsed": "Non utilisé"
+  },
+  "tidy": {
+    "title": "Ranger la mémoire de l'assistant ?",
+    "content": "L'assistant retient maintenant {{total}} éléments, dont {{mergeable}} datent de plus de deux semaines. Trop d'éléments ralentissent la recherche et occupent plus de contexte. Je peux regrouper ces anciens souvenirs en quelques fichiers par type et par mois, sans changer ni perdre un mot. Une sauvegarde est faite avant, et vous pouvez annuler à tout moment dans Mémoire.",
+    "agree": "Oui, ranger",
+    "later": "Pas maintenant",
+    "done": "Rangé : {{merged}} anciens souvenirs regroupés en {{mergedInto}} fichiers, tous les originaux conservés. Sauvegarde faite ; annulable dans Mémoire.",
+    "failed": "Échec du rangement ; votre mémoire n'a pas changé",
+    "button": "Ranger la mémoire",
+    "undo": "Annuler le dernier rangement",
+    "undoTitle": "Annuler le dernier rangement ?",
+    "undoContent": "Les fichiers d'avant sont remis et les fichiers regroupés supprimés. Les souvenirs enregistrés depuis sont conservés.",
+    "undone": "Annulé ; la mémoire est comme avant"
   }
 }
