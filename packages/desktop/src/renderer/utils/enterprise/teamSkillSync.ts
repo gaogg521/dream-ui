@@ -795,6 +795,17 @@ export async function syncTeamMemory(): Promise<number | null> {
 const MAX_SYNCED_MEMORY_ITEMS = 500;
 
 export async function syncContentInspection(): Promise<ContentInspectionSyncResult | null> {
+  // The policy's messageScanEnabled rides the same sync as the rules: it is
+  // the master switch the local inspector consults before enforcing them.
+  // A policy we could not read leaves the local switch untouched — same
+  // offline-first rule as the rules themselves.
+  let scanEnabled: boolean | undefined;
+  try {
+    const policy = await ipcBridge.onePlatform.mySecurityPolicy.invoke();
+    scanEnabled = policy?.messageScanEnabled;
+  } catch {
+    scanEnabled = undefined;
+  }
   let rules: Awaited<ReturnType<typeof ipcBridge.oneDevops.listMyDlpRules.invoke>>;
   try {
     rules = await ipcBridge.oneDevops.listMyDlpRules.invoke();
@@ -820,7 +831,7 @@ export async function syncContentInspection(): Promise<ContentInspectionSyncResu
 
   let activeRules = 0;
   try {
-    const report = await ipcBridge.mode.setContentInspectionRules.invoke({ rules: local });
+    const report = await ipcBridge.mode.setContentInspectionRules.invoke({ rules: local, scanEnabled });
     activeRules = report.activeRules;
   } catch {
     return null;
