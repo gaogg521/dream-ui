@@ -103,7 +103,19 @@ const MemberSelfServiceSections: React.FC = () => {
                 title: t('common.selfService.colMember', { defaultValue: '成员' }),
                 render: (_: unknown, row: Member) => row.displayName || row.username,
               },
-              { title: t('common.selfService.colRole', { defaultValue: '角色' }), dataIndex: 'role', width: 120 },
+              {
+                title: t('common.selfService.colRole', { defaultValue: '角色' }),
+                dataIndex: 'role',
+                width: 120,
+                render: (role: string) =>
+                  role === 'system_admin'
+                    ? t('common.enterprise.roleSystemAdmin', { defaultValue: '系统管理员' })
+                    : role === 'org_admin'
+                      ? t('common.enterprise.roleOrgAdmin', { defaultValue: '组织管理员' })
+                      : role === 'member'
+                        ? t('common.enterprise.roleMember', { defaultValue: '成员' })
+                        : role,
+              },
               {
                 title: t('common.selfService.colDepartment', { defaultValue: '部门' }),
                 dataIndex: 'orgUnitPath',

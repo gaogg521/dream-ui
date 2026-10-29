@@ -46,6 +46,11 @@ export type SceneConversationRequest = {
     preset_rules: string;
     /** Local skill names the conversation starts with. */
     enabled_skills: string[];
+    /**
+     * The person's own imported skills the conversation does NOT start with. Every conversation
+     * auto-loads all of them, so without this a scene that names 10 skills opens with 130.
+     */
+    exclude_auto_inject_skills?: string[];
     /** Local MCP server ids the conversation is limited to; absent means "whatever is enabled". */
     selected_mcp_server_ids?: string[];
     /** Which scene this was opened from; display and diagnostics only. */
@@ -182,6 +187,18 @@ export function buildSceneConversationRequest(params: {
         : [],
     scene_id: item.key,
   };
+  // A scene that names its skills is a focused setup: the person's other imported skills stay
+  // out of it (built-in ones the app itself relies on are not touched). A scene that names none
+  // keeps the usual defaults.
+  const sceneSkills = new Set(extra.enabled_skills);
+  if (sceneSkills.size > 0) {
+    const leftOut = [
+      ...new Set(
+        skills.filter((skill) => skill.source === 'custom' && !sceneSkills.has(skill.name)).map((s) => s.name)
+      ),
+    ];
+    if (leftOut.length > 0) extra.exclude_auto_inject_skills = leftOut;
+  }
   if (mine && mine.mcpServerIds.length > 0) extra.selected_mcp_server_ids = mine.mcpServerIds;
   // A company scene that grants connectors limits the conversation to those that
   // are here; if none have synced yet it limits nothing rather than leaving the

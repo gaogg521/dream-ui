@@ -220,6 +220,18 @@ describe('buildSceneConversationRequest', () => {
     expect(request.extra.selected_mcp_server_ids).toBeUndefined();
   });
 
+  it('a scene that names skills leaves the person’s other imported skills out, not the built-in ones', () => {
+    const named = buildSceneConversationRequest({
+      item: companySceneItem(scene({ skillIds: ['oskill_a1'] })),
+      skills,
+      model,
+    });
+    expect(named.extra.exclude_auto_inject_skills).toEqual(['imposter']);
+    // A scene that names no skills keeps the usual defaults.
+    const none = buildSceneConversationRequest({ item: companySceneItem(scene()), skills, model });
+    expect(none.extra.exclude_auto_inject_skills).toBeUndefined();
+  });
+
   it('a company scene without a prompt falls back to what its own fields say', () => {
     const item = companySceneItem(scene({ prompt: '   ' }));
     const rules = buildSceneConversationRequest({ item, skills, model }).extra.preset_rules;

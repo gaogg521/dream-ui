@@ -311,15 +311,17 @@ const ModelModalContent: React.FC = () => {
 
   const clearAllHealthData = () => {
     if (!data) return;
-    const nextArray: IProvider[] = data.map((platform: IProvider) => ({
-      ...platform,
-      model_health: undefined as IProvider['model_health'],
-    }));
+    // A company-delivered channel is read-only here (the server refuses the write), so it is skipped
+    // rather than failing the whole clear.
+    const editable = data.filter((platform: IProvider) => platform.managed_by !== 'enterprise');
+    const nextArray: IProvider[] = data.map((platform: IProvider) =>
+      platform.managed_by === 'enterprise'
+        ? platform
+        : { ...platform, model_health: undefined as IProvider['model_health'] }
+    );
     void mutate(nextArray, false);
 
-    Promise.all(
-      (data || []).map((platform) => ipcBridge.mode.updateProvider.invoke({ id: platform.id, model_health: {} }))
-    )
+    Promise.all(editable.map((platform) => ipcBridge.mode.updateProvider.invoke({ id: platform.id, model_health: {} })))
       .then(() => {
         void mutate();
         Message.success({
@@ -634,7 +636,7 @@ const ModelModalContent: React.FC = () => {
                         const canHealthCheck = isChatCapableModel(platform, model);
 
                         return (
-                          <div key={model}>
+                          <div key={`${model}:${index}`}>
                             <div className='flex items-center justify-between gap-8px px-8px py-12px transition-colors hover:bg-[var(--fill-0)]'>
                               <div className='flex min-w-0 flex-1 items-center gap-8px'>
                                 {/* 健康状态指示器 / Health status indicator */}
