@@ -127,6 +127,15 @@
   line-height: 16px;
   color: var(--color-text-3);
 }
+.description {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-text-3);
+}
 .resource {
   display: inline-flex;
   align-items: baseline;

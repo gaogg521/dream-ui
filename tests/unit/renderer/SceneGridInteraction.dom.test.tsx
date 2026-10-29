@@ -324,6 +324,22 @@ describe('SceneGrid opening a scene on arrival', () => {
 describe('SceneGrid editing a scene from its card', () => {
   beforeEach(reset);
 
+  it('says what a scene is for on a third line, without repeating it when there is nothing else to show', async () => {
+    hooks.company = false;
+    hooks.personal = [
+      { ...newPersonalScene({ name: '有说明', description: '整理会议纪要并导出PDF', skillNames: ['a'] }) },
+      newPersonalScene({ name: '无说明' }),
+    ];
+    renderGrid(vi.fn());
+    await screen.findByText('有说明');
+    const described = screen.getByText('有说明').closest('[data-scene-name]') as HTMLElement;
+    expect(described.querySelector('[data-testid="scene-card-description"]')).toHaveTextContent(
+      '整理会议纪要并导出PDF'
+    );
+    const bare = screen.getByText('无说明').closest('[data-scene-name]') as HTMLElement;
+    expect(bare.querySelector('[data-testid="scene-card-description"]')).toBeNull();
+  });
+
   it('offers edit on the person own scenes only, never on a scene the company issued', async () => {
     hooks.personal = [newPersonalScene({ name: '我的官网' })];
     renderGrid(vi.fn());

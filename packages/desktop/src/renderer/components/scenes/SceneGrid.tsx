@@ -115,6 +115,12 @@ const SceneCard: React.FC<SceneCardProps> = ({ item, opening, disabled, onOpen, 
             <span className={styles.fallbackLine}>{fallbackLine}</span>
           )}
         </div>
+        {/* A third line says what the scene is for. With no resource counts the line above already does. */}
+        {item.resources.length > 0 && item.description ? (
+          <div className={styles.description} data-testid='scene-card-description'>
+            {item.description}
+          </div>
+        ) : null}
       </div>
       {onEdit ? (
         <Button
