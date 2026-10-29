@@ -995,6 +995,10 @@
 .sidebar .sectionTitle :global(.arco-btn-text) {
   font-weight: 500;
 }
+/* Selected is bold wherever it is in the sidebar. */
+.sidebar .sectionTitle :global(.arco-btn-text).active {
+  font-weight: 600;
+}
 /* icon-park paints with fixed stroke/fill attributes rather than currentColor; a style rule beats
    them, so the icons follow the colour of their text. Folder icons keep their own colour. */
 .sidebar nav svg [stroke]:not([stroke='none']),

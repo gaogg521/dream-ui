@@ -208,10 +208,13 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
       </Menu.Item>
     </Menu>
   );
+  // Whether the pane shows the library itself, as opposed to a document, a guide or the memory space:
+  // only then does a view or a space in the sidebar count as selected.
+  const browsing = !memorySpace && !guide && !suppliedDocumentView;
   const nav = (id: View, icon: React.ReactNode) => (
     <Button
       type='text'
-      className={view === id && !memorySpace ? styles.active : ''}
+      className={view === id && browsing && !libraryId ? styles.active : ''}
       icon={icon}
       onClick={() => {
         onLibraryChange(undefined);
@@ -398,6 +401,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
         <div className={styles.sectionTitle}>
           <Button
             type='text'
+            className={view === 'personal' && browsing && !libraryId ? styles.active : ''}
             onClick={() => {
               onLibraryChange(undefined);
               setView('personal');
@@ -428,6 +432,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
             <div className={styles.sectionTitle}>
               <Button
                 type='text'
+                className={view === 'team' && browsing && !libraryId ? styles.active : ''}
                 onClick={() => {
                   onLibraryChange(undefined);
                   setView('team');
@@ -459,6 +464,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           <nav className={styles.guideNav} aria-label={label('learn')}>
             <Button
               type='text'
+              className={guide === 'quickstart' ? styles.active : ''}
               onClick={() => {
                 setMemorySpace(false);
                 setGuide('quickstart');
@@ -468,6 +474,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
             </Button>
             <Button
               type='text'
+              className={guide === 'usage' ? styles.active : ''}
               onClick={() => {
                 setMemorySpace(false);
                 setGuide('usage');
