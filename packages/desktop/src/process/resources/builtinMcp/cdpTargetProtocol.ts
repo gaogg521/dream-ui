@@ -360,7 +360,10 @@ export const buildRetargetEvents = (
       ]
     : []),
   { method: 'Target.targetCreated', params: { targetInfo: next } },
-  { method: 'Target.attachedToTarget', params: { sessionId: nextSessionId, targetInfo: next, waitingForDebugger: false } },
+  {
+    method: 'Target.attachedToTarget',
+    params: { sessionId: nextSessionId, targetInfo: next, waitingForDebugger: false },
+  },
 ];
 
 /** 常量时间比较，避免用字符串比较泄漏 token 前缀信息。/ Constant-time compare so token prefixes do not leak. */
