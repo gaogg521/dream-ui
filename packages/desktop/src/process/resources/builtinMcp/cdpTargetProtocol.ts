@@ -90,8 +90,33 @@ export type CdpDecision =
   | { kind: 'forward' }
   | { kind: 'error'; message: string };
 
-export const buildTargetInfo = (title: string, url: string): TargetInfo => ({
-  targetId: SINGLE_TARGET_ID,
+/**
+ * 会话 id 随「附加对象」换代。第 0 代就是固定值，之后每次换页面都生成新的，
+ * 这样 puppeteer 把它当成一个全新的会话，而不是拿旧会话的缓存去路由。
+ *
+ * The session id changes with every generation of the attached page. Generation 0 is the
+ * fixed value; each later page gets a fresh one so puppeteer treats it as a new session
+ * instead of routing through cached state of the old one.
+ */
+export const sessionIdForGeneration = (generation: number): string =>
+  generation <= 0 ? SINGLE_SESSION_ID : `${SINGLE_SESSION_ID}-${generation}`;
+
+/**
+ * `targetId` 默认是占位值；浏览器真正附加后，桥改用该页面**真实的主 frame id**。
+ *
+ * 这不是风格问题：puppeteer 假定「主 frame id == 页面 target id」（真实 Chrome 恒成立，
+ * 它在 swapFrameTree 里直接 `frame.updateId(target._targetId)`），之后 Page.navigate 带的
+ * frameId、Runtime 上下文的归属都按这个 id 找。占位 id 与 Electron 真实 frame id 不一致时，
+ * 导航会报 `No frame with given id found`。
+ *
+ * `targetId` defaults to a placeholder; once a browser is attached the bridge uses that page's
+ * REAL main frame id instead. This is functional: puppeteer assumes main frame id == page target
+ * id (always true in real Chrome; swapFrameTree does `frame.updateId(target._targetId)`), and
+ * Page.navigate's frameId and execution-context ownership are looked up by it. A placeholder that
+ * differs from Electron's real frame id makes navigation fail with `No frame with given id found`.
+ */
+export const buildTargetInfo = (title: string, url: string, targetId: string = SINGLE_TARGET_ID): TargetInfo => ({
+  targetId,
   type: 'page',
   title,
   url,
@@ -117,11 +142,11 @@ export const buildVersionPayload = (wsUrl: string, chromeVersion: string) => ({
 });
 
 /** /json/list 的响应：永远只有那一个页面。/ Always exactly one page. */
-export const buildListPayload = (wsUrl: string, title: string, url: string) => [
+export const buildListPayload = (wsUrl: string, title: string, url: string, targetId: string = SINGLE_TARGET_ID) => [
   {
     description: '',
     devtoolsFrontendUrl: '',
-    id: SINGLE_TARGET_ID,
+    id: targetId,
     title,
     type: 'page',
     url,
@@ -143,7 +168,11 @@ export const buildListPayload = (wsUrl: string, title: string, url: string) => [
  * while it kept driving the old one — a failure far harder to diagnose than an explicit
  * error.
  */
-export const decideCdpCommand = (req: CdpRequest, getTargetInfo: () => TargetInfo): CdpDecision => {
+export const decideCdpCommand = (
+  req: CdpRequest,
+  getTargetInfo: () => TargetInfo,
+  getSessionId: () => string = () => SINGLE_SESSION_ID
+): CdpDecision => {
   const method = req.method ?? '';
 
   switch (method) {
@@ -222,7 +251,7 @@ export const decideCdpCommand = (req: CdpRequest, getTargetInfo: () => TargetInf
         emit: [
           {
             method: 'Target.attachedToTarget',
-            params: { sessionId: SINGLE_SESSION_ID, targetInfo: getTargetInfo(), waitingForDebugger: false },
+            params: { sessionId: getSessionId(), targetInfo: getTargetInfo(), waitingForDebugger: false },
           },
         ],
       };
@@ -247,16 +276,17 @@ export const decideCdpCommand = (req: CdpRequest, getTargetInfo: () => TargetInf
      */
     case 'Target.attachToTarget': {
       const requested = req.params?.targetId;
-      if (typeof requested === 'string' && requested !== SINGLE_TARGET_ID) {
+      const current = getTargetInfo();
+      if (typeof requested === 'string' && requested !== current.targetId) {
         return { kind: 'error', message: `No such target id: ${requested}` };
       }
       return {
         kind: 'reply-and-emit',
-        payload: { sessionId: SINGLE_SESSION_ID },
+        payload: { sessionId: getSessionId() },
         emit: [
           {
             method: 'Target.attachedToTarget',
-            params: { sessionId: SINGLE_SESSION_ID, targetInfo: getTargetInfo(), waitingForDebugger: false },
+            params: { sessionId: getSessionId(), targetInfo: current, waitingForDebugger: false },
           },
         ],
       };
@@ -301,8 +331,37 @@ export const decideCdpCommand = (req: CdpRequest, getTargetInfo: () => TargetInf
  * Anything else is rejected rather than quietly treated as browser-level, since letting
  * it through would make a misrouted command look like it succeeded.
  */
-export const isAcceptableSessionId = (sessionId: string | undefined): boolean =>
-  sessionId === undefined || sessionId === '' || sessionId === SINGLE_SESSION_ID;
+export const isAcceptableSessionId = (sessionId: string | undefined, current: string = SINGLE_SESSION_ID): boolean =>
+  sessionId === undefined || sessionId === '' || sessionId === current;
+
+/**
+ * 附加对象换了（面板重建、切 tab、主 frame 变了）时，告诉已经连着的 puppeteer：
+ * 旧页面没了、新页面来了。puppeteer 的页面对象缓存着主 frame id，不通知就会拿旧 id 去导航。
+ * `previousAlive=false` 表示旧页面的销毁事件已经发过，不再重复。
+ *
+ * When the attached page changes (panel rebuilt, tab switch, main frame changed), tell the
+ * puppeteer already connected: the old page is gone, a new one arrived. Its page object caches
+ * the main frame id, so staying silent makes it navigate with a stale id. `previousAlive=false`
+ * means the old page's destruction was already announced and is not repeated.
+ */
+export const buildRetargetEvents = (
+  previous: { targetId: string; sessionId: string },
+  next: TargetInfo,
+  nextSessionId: string,
+  previousAlive: boolean
+): Array<{ method: string; params: Record<string, unknown> }> => [
+  ...(previousAlive
+    ? [
+        {
+          method: 'Target.detachedFromTarget',
+          params: { sessionId: previous.sessionId, targetId: previous.targetId },
+        },
+        { method: 'Target.targetDestroyed', params: { targetId: previous.targetId } },
+      ]
+    : []),
+  { method: 'Target.targetCreated', params: { targetInfo: next } },
+  { method: 'Target.attachedToTarget', params: { sessionId: nextSessionId, targetInfo: next, waitingForDebugger: false } },
+];
 
 /** 常量时间比较，避免用字符串比较泄漏 token 前缀信息。/ Constant-time compare so token prefixes do not leak. */
 export const tokensMatch = (a: string, b: string): boolean => {

@@ -10,10 +10,12 @@ import {
   SINGLE_SESSION_ID,
   SINGLE_TARGET_ID,
   buildListPayload,
+  buildRetargetEvents,
   buildTargetInfo,
   buildVersionPayload,
   decideCdpCommand,
   isAcceptableSessionId,
+  sessionIdForGeneration,
   tokensMatch,
 } from '@process/resources/builtinMcp/cdpTargetProtocol';
 
@@ -199,5 +201,78 @@ describe('cdpTargetProtocol — regressions found against real puppeteer', () =>
     // PageTarget._checkIfInitialized() only resolves once targetInfo.url !== ''.
     const info = buildTargetInfo('', 'https://example.com/');
     expect(info.url).not.toBe('');
+  });
+});
+
+describe('cdpTargetProtocol — the target id follows the real main frame id of the page', () => {
+  // puppeteer assumes main frame id === page target id (real Chrome always satisfies it) and later sends
+  // Page.navigate with that frame id; a placeholder that differs makes navigation fail with
+  // "No frame with given id found".
+  const REAL_FRAME = '5039D59E1AC9D59A7D74CECCFBCB7227';
+  const realInfo = () => buildTargetInfo('Example', 'https://example.com/', REAL_FRAME);
+
+  it('announces the real frame id as the target id everywhere it is advertised', () => {
+    expect(realInfo().targetId).toBe(REAL_FRAME);
+    expect(buildListPayload('ws://x', 'Example', 'https://example.com/', REAL_FRAME)[0].id).toBe(REAL_FRAME);
+    const created = decideCdpCommand({ id: 1, method: 'Target.setDiscoverTargets', params: { discover: true } }, realInfo);
+    expect(created.kind === 'reply-and-emit' && created.emit[0].params).toMatchObject({
+      targetInfo: { targetId: REAL_FRAME },
+    });
+  });
+
+  it('attaches only to the real target id and answers with the current session id', () => {
+    const session = sessionIdForGeneration(2);
+    const ok = decideCdpCommand(
+      { id: 2, method: 'Target.attachToTarget', params: { targetId: REAL_FRAME } },
+      realInfo,
+      () => session
+    );
+    expect(ok.kind).toBe('reply-and-emit');
+    if (ok.kind === 'reply-and-emit') {
+      expect(ok.payload).toEqual({ sessionId: session });
+      expect(ok.emit[0].params).toMatchObject({ sessionId: session, targetInfo: { targetId: REAL_FRAME } });
+    }
+    // the placeholder id is not a target any more once a real one exists
+    const stale = decideCdpCommand(
+      { id: 3, method: 'Target.attachToTarget', params: { targetId: SINGLE_TARGET_ID } },
+      realInfo,
+      () => session
+    );
+    expect(stale.kind).toBe('error');
+  });
+
+  it('gives each generation its own session id and rejects the previous one', () => {
+    expect(sessionIdForGeneration(0)).toBe(SINGLE_SESSION_ID);
+    expect(sessionIdForGeneration(1)).not.toBe(SINGLE_SESSION_ID);
+    expect(sessionIdForGeneration(1)).not.toBe(sessionIdForGeneration(2));
+    expect(isAcceptableSessionId(sessionIdForGeneration(2), sessionIdForGeneration(2))).toBe(true);
+    expect(isAcceptableSessionId(sessionIdForGeneration(1), sessionIdForGeneration(2))).toBe(false);
+  });
+
+  it('tells a connected client the old page left and the new one arrived, in that order', () => {
+    const events = buildRetargetEvents(
+      { targetId: 'OLD', sessionId: 'old-session' },
+      buildTargetInfo('', 'about:blank', 'NEW'),
+      'new-session',
+      true
+    );
+    expect(events.map((e) => e.method)).toEqual([
+      'Target.detachedFromTarget',
+      'Target.targetDestroyed',
+      'Target.targetCreated',
+      'Target.attachedToTarget',
+    ]);
+    expect(events[0].params).toMatchObject({ sessionId: 'old-session', targetId: 'OLD' });
+    expect(events[3].params).toMatchObject({ sessionId: 'new-session', targetInfo: { targetId: 'NEW' } });
+  });
+
+  it('does not announce the destruction of the old page twice when it was already announced', () => {
+    const events = buildRetargetEvents(
+      { targetId: 'OLD', sessionId: 'old-session' },
+      buildTargetInfo('', 'about:blank', 'NEW'),
+      'new-session',
+      false
+    );
+    expect(events.map((e) => e.method)).toEqual(['Target.targetCreated', 'Target.attachedToTarget']);
   });
 });

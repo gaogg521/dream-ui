@@ -22,12 +22,15 @@ import { WebSocketServer, type WebSocket } from 'ws';
 import { webContents, type Debugger, type WebContents } from 'electron';
 import {
   SINGLE_SESSION_ID,
+  SINGLE_TARGET_ID,
   buildListPayload,
+  buildRetargetEvents,
   buildTargetInfo,
   buildVersionPayload,
   decideCdpCommand,
   isAcceptableSessionId,
   isUnknownCdpMethodError,
+  sessionIdForGeneration,
   tokensMatch,
   type CdpRequest,
 } from './cdpTargetProtocol';
@@ -51,10 +54,26 @@ type AttachedState = {
   dbg: Debugger;
   onMessage: (event: unknown, method: string, params: unknown, sessionId: string) => void;
   onDestroyed: () => void;
+  /** 读到真实主 frame id 并采用为目标 id 之后 resolve。/ Resolves once the real main frame id is adopted. */
+  identityReady: Promise<void>;
 };
 
 let attached: AttachedState | null = null;
 let sockets = new Set<WebSocket>();
+/** 每条连接已经宣布过的会话 id（换页面时据此决定要不要通知它）。/ Session ids announced per connection. */
+const announcedBySocket = new Map<WebSocket, Set<string>>();
+
+/**
+ * 当前对外宣称的目标/会话身份。目标 id 取页面真实的主 frame id（见 cdpTargetProtocol 里
+ * buildTargetInfo 的说明）；会话 id 每次换页面换代。
+ *
+ * The identity currently presented to clients. The target id is the page's real main frame id
+ * (see buildTargetInfo in cdpTargetProtocol); the session id changes generation with each page.
+ */
+let identity = { targetId: SINGLE_TARGET_ID, sessionId: SINGLE_SESSION_ID };
+let identityGeneration = 0;
+/** 当前身份对应的页面已经销毁，其销毁事件已发出。/ The page behind `identity` is gone and its destruction already announced. */
+let identityDead = false;
 let requestBrowser: (() => void) | undefined;
 let attachmentPending: Promise<void> | undefined;
 
@@ -112,8 +131,44 @@ const injectClickRipple = (dbg: Debugger, x: number, y: number): void => {
 };
 
 const currentTargetInfo = () => {
-  if (!attached || attached.contents.isDestroyed()) return buildTargetInfo('', 'about:blank');
-  return buildTargetInfo(attached.contents.getTitle(), attached.contents.getURL());
+  if (!attached || attached.contents.isDestroyed()) return buildTargetInfo('', 'about:blank', identity.targetId);
+  return buildTargetInfo(attached.contents.getTitle(), attached.contents.getURL(), identity.targetId);
+};
+
+/**
+ * 采用新的目标 id。id 变了（或旧页面已销毁）就换代，并向已经宣布过旧会话的连接发
+ * 「旧页面没了、新页面来了」。没宣布过的连接下次问 Target.* 时自然拿到新身份。
+ *
+ * Adopt a new target id. If it differs (or the old page is gone) the generation advances, and
+ * every connection that had announced the old session is told the old page left and a new one
+ * arrived. Connections that never announced it get the new identity on their next Target.* call.
+ */
+const adoptTargetId = (nextTargetId: string): void => {
+  if (nextTargetId === identity.targetId && !identityDead) return;
+  const previous = identity;
+  const previousAlive = !identityDead;
+  identityGeneration += 1;
+  identity = { targetId: nextTargetId, sessionId: sessionIdForGeneration(identityGeneration) };
+  identityDead = false;
+  const info = currentTargetInfo();
+  for (const [ws, announced] of announcedBySocket) {
+    if (ws.readyState !== ws.OPEN || !announced.has(previous.sessionId)) continue;
+    for (const evt of buildRetargetEvents(previous, info, identity.sessionId, previousAlive)) {
+      ws.send(JSON.stringify({ method: evt.method, params: evt.params }));
+    }
+    announced.add(identity.sessionId);
+  }
+};
+
+/** 页面真实主 frame id；读不到时返回 undefined（调用方保持占位 id）。/ The page's real main frame id, if readable. */
+const readMainFrameId = async (dbg: Debugger): Promise<string | undefined> => {
+  try {
+    const tree = (await dbg.sendCommand('Page.getFrameTree')) as { frameTree?: { frame?: { id?: unknown } } };
+    const id = tree?.frameTree?.frame?.id;
+    return typeof id === 'string' && id.length > 0 ? id : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 const broadcast = (payload: Record<string, unknown>) => {
@@ -187,17 +242,44 @@ const attachInternal = (webContentsId: number): { ok: true } | { ok: false; reas
      * routes events to the page session by sessionId; without it these would look
      * browser-level and Page/Runtime events would be dropped.
      */
-    broadcast({ method, params: params ?? {}, sessionId: SINGLE_SESSION_ID });
+    broadcast({ method, params: params ?? {}, sessionId: identity.sessionId });
+    // 主 frame 的 id 变了（跨进程换页等）：puppeteer 缓存着旧 id，必须按新页面重新宣布。
+    // The main frame's id changed (e.g. a cross-process swap): puppeteer caches the old one, so
+    // announce the page again under the new id.
+    if (method === 'Page.frameNavigated') {
+      const frame = (params as { frame?: { id?: unknown; parentId?: unknown } } | undefined)?.frame;
+      if (frame && !frame.parentId && typeof frame.id === 'string' && frame.id !== identity.targetId) {
+        adoptTargetId(frame.id);
+      }
+    }
   };
 
   const onDestroyed = () => {
+    const gone = currentTargetInfo();
+    const goneSession = identity.sessionId;
     detachInternal();
-    broadcast({ method: 'Target.targetDestroyed', params: { targetId: currentTargetInfo().targetId } });
+    broadcast({
+      method: 'Target.detachedFromTarget',
+      params: { sessionId: goneSession, targetId: gone.targetId },
+    });
+    broadcast({ method: 'Target.targetDestroyed', params: { targetId: gone.targetId } });
+    identityDead = true;
   };
 
   dbg.on('message', onMessage);
   contents.once('destroyed', onDestroyed);
-  attached = { contents, dbg, onMessage, onDestroyed };
+  // 读真实主 frame id 作为目标 id；Page 域要先启用才能取到 frame 树。
+  // Read the real main frame id as the target id; the Page domain must be enabled first.
+  const identityReady = (async () => {
+    try {
+      await dbg.sendCommand('Page.enable');
+    } catch {
+      // The page may already be enabled by a client; getFrameTree below decides.
+    }
+    const frameId = await readMainFrameId(dbg);
+    if (frameId && attached?.contents.id === contents.id) adoptTargetId(frameId);
+  })();
+  attached = { contents, dbg, onMessage, onDestroyed, identityReady };
   return { ok: true };
 };
 
@@ -268,12 +350,27 @@ const handleSocketMessage = async (ws: WebSocket, raw: string, announcedSessions
     return;
   }
 
-  if (!isAcceptableSessionId(sessionId)) {
+  /**
+   * 先确保浏览器已附加、真实 frame id 已读到，再决定怎么答。否则 Target.* 会按占位 id 应答，
+   * 随后附加完成又改 id，客户端白白经历一次「页面被换掉」。等不到（面板没开）就用占位身份，
+   * 页面级命令随后会明确报「未附加」。
+   *
+   * Make sure the browser is attached and its real frame id read before deciding how to answer.
+   * Otherwise Target.* answers with the placeholder id and the id then changes on attach, putting
+   * the client through a needless "page replaced". If it never attaches (panel not open) the
+   * placeholder identity is used and page-level commands then say plainly it is not attached.
+   */
+  await ensureBrowserAttached();
+  if (attached && !attached.contents.isDestroyed()) {
+    await Promise.race([attached.identityReady, new Promise<void>((resolve) => setTimeout(resolve, 3000))]);
+  }
+
+  if (!isAcceptableSessionId(sessionId, identity.sessionId)) {
     sendError(ws, id, `Unknown sessionId: ${sessionId}`, sessionId);
     return;
   }
 
-  const decision = decideCdpCommand(req, currentTargetInfo);
+  const decision = decideCdpCommand(req, currentTargetInfo, () => identity.sessionId);
 
   if (decision.kind === 'error') {
     sendError(ws, id, decision.message, sessionId);
@@ -352,8 +449,7 @@ const handleSocketMessage = async (ws: WebSocket, raw: string, announcedSessions
     return;
   }
 
-  // forward
-  await ensureBrowserAttached();
+  // forward (attachment was already awaited above)
   if (!attached || attached.contents.isDestroyed()) {
     /**
      * 说清楚「怎么办」，因为 Agent 侧无法自己修复：attach 只由渲染进程在 webview
@@ -497,7 +593,7 @@ export const startCdpBridge = async (onBrowserRequested?: () => void): Promise<C
       return;
     }
     if (url.pathname === '/json/list' || url.pathname === '/json') {
-      writeJson(res, buildListPayload(wsUrl, info.title, info.url));
+      writeJson(res, buildListPayload(wsUrl, info.title, info.url, info.targetId));
       return;
     }
     res.writeHead(404).end('not found');
@@ -515,9 +611,16 @@ export const startCdpBridge = async (onBrowserRequested?: () => void): Promise<C
     wss.handleUpgrade(req, socket, head, (ws) => {
       sockets.add(ws);
       const announcedSessions = new Set<string>();
+      announcedBySocket.set(ws, announcedSessions);
       ws.on('message', (data) => void handleSocketMessage(ws, data.toString(), announcedSessions));
-      ws.on('close', () => sockets.delete(ws));
-      ws.on('error', () => sockets.delete(ws));
+      ws.on('close', () => {
+        sockets.delete(ws);
+        announcedBySocket.delete(ws);
+      });
+      ws.on('error', () => {
+        sockets.delete(ws);
+        announcedBySocket.delete(ws);
+      });
     });
   });
 
@@ -542,6 +645,7 @@ export const startCdpBridge = async (onBrowserRequested?: () => void): Promise<C
       detachInternal();
       for (const ws of sockets) ws.close();
       sockets = new Set();
+      announcedBySocket.clear();
       await new Promise<void>((resolve) => {
         wss.close(() => httpServer.close(() => resolve()));
       });
