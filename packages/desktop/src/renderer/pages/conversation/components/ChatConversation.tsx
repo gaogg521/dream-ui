@@ -182,6 +182,7 @@ const DreamEngineConversationPanel: React.FC<{
     onSelectModel,
     conversationId: conversation.id,
     recentConversations: conversationHistory?.conversations,
+    recoveryPaused: Boolean(runtimeView.activeTurnId),
   });
   // Project conversations get the Layout-level Explorer column (stage3 FULL);
   // ChatLayout's own right sider is only for no-project (legacy tree), so it does

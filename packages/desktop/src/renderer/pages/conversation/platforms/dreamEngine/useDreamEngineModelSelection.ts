@@ -3,7 +3,7 @@
  */
 
 import type { IProvider, TChatConversation, TProviderWithModel } from '@/common/config/storage';
-import { useModelProviderList, useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
+import { fetchProviders, useModelProviderList, useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isSavedModelStale, pickFallbackModel } from './staleModelFallback';
 
@@ -22,6 +22,11 @@ export type UseDreamEngineModelSelectionOptions = {
   conversationId?: string;
   /** All conversations, newest first or not — used to find the model in current use. */
   recentConversations?: TChatConversation[];
+  /**
+   * A turn is running. Switching the model of a conversation stops its running turn, so a saved
+   * model that merely looks gone is never swapped out from under work in progress.
+   */
+  recoveryPaused?: boolean;
 };
 
 export const useDreamEngineModelSelection = ({
@@ -29,6 +34,7 @@ export const useDreamEngineModelSelection = ({
   onSelectModel,
   conversationId,
   recentConversations,
+  recoveryPaused = false,
 }: UseDreamEngineModelSelectionOptions): DreamEngineModelSelection => {
   const [current_model, setCurrentModel] = useState<TProviderWithModel | undefined>(initialModel);
 
@@ -67,20 +73,31 @@ export const useDreamEngineModelSelection = ({
   const recoveredRef = useRef<string | null>(null);
   useEffect(() => {
     if (!conversationId || !Array.isArray(rawProviders)) return;
+    if (recoveryPaused) return;
     if (!isSavedModelStale(current_model, rawProviders)) return;
     const attemptKey = `${conversationId}:${current_model?.id}:${current_model?.use_model}`;
     if (recoveredRef.current === attemptKey) return;
     recoveredRef.current = attemptKey;
-    const fallback = pickFallbackModel({
-      staleModel: current_model,
-      providers,
-      getAvailableModels,
-      recentConversations: recentConversations ?? [],
-      conversationId,
-    });
-    if (!fallback) return;
-    console.info('[dream] saved model is gone; continuing with', fallback.id, fallback.use_model);
-    void handleSelectModel(fallback as unknown as IProvider, fallback.use_model);
+    void (async () => {
+      // The cached list can be older than a channel the company delivered (or briefly mid-sync).
+      // Only a model that is also missing from a fresh read is really gone.
+      try {
+        const fresh = await fetchProviders();
+        if (!isSavedModelStale(current_model, fresh)) return;
+      } catch {
+        return; // cannot tell: leave the conversation on the model it has
+      }
+      const fallback = pickFallbackModel({
+        staleModel: current_model,
+        providers,
+        getAvailableModels,
+        recentConversations: recentConversations ?? [],
+        conversationId,
+      });
+      if (!fallback) return;
+      console.info('[dream] saved model is gone; continuing with', fallback.id, fallback.use_model);
+      void handleSelectModel(fallback as unknown as IProvider, fallback.use_model);
+    })();
   }, [
     conversationId,
     current_model,
@@ -89,6 +106,7 @@ export const useDreamEngineModelSelection = ({
     providers,
     rawProviders,
     recentConversations,
+    recoveryPaused,
   ]);
 
   const getDisplayModelName = useCallback(
