@@ -11,7 +11,7 @@ import { Alert, Button, Input, Select, Message, Upload, Tabs } from '@arco-desig
 import type { UploadItem } from '@arco-design/web-react/es/Upload';
 import { Info } from '@icon-park/react';
 import QqContactLogo from '@renderer/assets/contact/qq-logo.png';
-import MailContactLogo from '@renderer/assets/contact/mail-color.png';
+import MailContactLogo from '@renderer/assets/contact/mail-logo.ico?url';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import type { RefTextAreaType } from '@arco-design/web-react/es/Input/textarea';
 import { useTranslation } from 'react-i18next';
