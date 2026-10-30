@@ -347,11 +347,12 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
         <Button
           type='text'
           className={styles.document}
+          aria-label={row.title}
           title={row.title}
           icon={<LibraryFileIcon title={row.title} mimeType={row.mimeType} filePath={row.filePath} size={16} />}
           onClick={() => open(row)}
         >
-          {row.title}
+          <span className={styles.documentTitle}>{row.title}</span>
           {row.status === 'ready' && row.chunkCount === 0 && row.filePath?.startsWith('rag-source:') && (
             <Tag size='small' title={label('sourceOnlyStatus')}>
               {label('sourceOnly')}
@@ -365,7 +366,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           {
             title: label('owner'),
             ellipsis: true,
-            width: '17%',
+            width: 108,
             render: (_: unknown, row: RagDocumentEntry) =>
               label(isEnterpriseRemoteActive() && !personal(row) ? 'enterpriseAuthor' : 'localAuthor'),
           },
@@ -384,7 +385,14 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
       width: '20%',
       ellipsis: true,
       render: (_: unknown, row: RagDocumentEntry) =>
-        visits[row.id] ? new Date(visits[row.id]).toLocaleString(i18n.language) : label('notOpened'),
+        visits[row.id] ? (
+          <time title={new Date(visits[row.id]).toLocaleString(i18n.language)}>
+            <span className={styles.fullTimestamp}>{new Date(visits[row.id]).toLocaleString(i18n.language)}</span>
+            <span className={styles.shortTimestamp}>{new Date(visits[row.id]).toLocaleDateString(i18n.language)}</span>
+          </time>
+        ) : (
+          label('notOpened')
+        ),
     },
     {
       title: t('common.superAssistant.registries.colActions'),
@@ -647,6 +655,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
                     rowKey='id'
                     loading={loading || searchPending}
                     columns={tableColumns}
+                    scroll={{ x: 600 }}
                     data={data}
                     border={false}
                     pagination={{ pageSize: 8, hideOnSinglePage: true }}

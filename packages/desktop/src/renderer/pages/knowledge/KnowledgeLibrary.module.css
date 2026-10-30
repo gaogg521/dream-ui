@@ -776,6 +776,32 @@
   min-width: 0;
   padding: 0;
   white-space: nowrap;
+  overflow: hidden;
+}
+.documentTitle {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.document :global(.arco-tag) {
+  flex-shrink: 0;
+}
+.main:not(.documentMain) {
+  container-type: inline-size;
+  container-name: knowledge-list;
+}
+.shortTimestamp {
+  display: none;
+}
+@container knowledge-list (max-width: 720px) {
+  .fullTimestamp {
+    display: none;
+  }
+  .shortTimestamp {
+    display: inline;
+  }
 }
 .document:global(.arco-btn) > span:last-child {
   overflow: hidden;

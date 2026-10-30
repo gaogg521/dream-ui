@@ -25,7 +25,8 @@ export function useLibrarySidebar(names: string[]) {
       ...names.map((name) => [...name].reduce((total, ch) => total + ((ch.codePointAt(0) ?? 0) > 127 ? 14 : 7), 64))
     )
   );
-  const compact = container < 760;
+  // Reserve room for the document table before the saved sidebar width squeezes it.
+  const compact = container < Math.max(760, (preferred ?? natural) + 680);
   useEffect(() => setOpen(null), [compact]);
   const collapsed = open === null ? compact : !open;
   const width = compact

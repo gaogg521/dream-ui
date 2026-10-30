@@ -56,4 +56,12 @@ describe('knowledge directory layout', () => {
     fireEvent.click(screen.getByRole('button'));
     expect(screen.getByTestId('layout').getAttribute('data-collapsed')).toBe('false');
   });
+  it('uses an overlay before the directory squeezes the document columns', () => {
+    render(<Sample />);
+    act(() => observe?.([{ contentRect: { width: 900 } }]));
+    expect(screen.getByTestId('layout').getAttribute('data-compact')).toBe('true');
+    expect(screen.getByTestId('layout').getAttribute('data-collapsed')).toBe('true');
+    act(() => observe?.([{ contentRect: { width: 1200 } }]));
+    expect(screen.getByTestId('layout').getAttribute('data-collapsed')).toBe('false');
+  });
 });
