@@ -64,10 +64,8 @@ const SceneCard: React.FC<SceneCardProps> = ({ item, opening, disabled, onOpen, 
     .join(String.fromCharCode(10));
   // What to say under the name when there is no resource count to show.
   const fallbackLine = item.description || item.starters[0] || t('common.scenes.noResources');
-  // Name + resources + description is already three text rows, so a card with
-  // a description turns vertical: the avatar moves ABOVE the title (aligned
-  // with it) and the description gets the full card width to wrap naturally,
-  // instead of being squeezed by the avatar into a permanently clipped strip.
+  // Detailed cards keep the avatar beside the title and give supporting text
+  // the full card width, rather than squeezing it beside the avatar.
   const stacked = Boolean(item.description);
 
   return (

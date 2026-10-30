@@ -66,23 +66,24 @@
   background: var(--color-bg-2);
   transition: border-color 0.18s;
 }
-/* Name + resources + description is already three rows of text, so cards with
-   a description go vertical: the avatar sits above the title (same left edge)
-   and the description takes the full width and wraps to at most three lines.
-   Cards without a description keep the compact horizontal strip. */
+/* Keep the avatar beside the title; supporting text uses the full card width. */
 .stacked {
   position: relative;
-  flex-direction: column;
-  align-items: stretch;
-}
-.stacked .avatar {
-  margin-bottom: 7px;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-content: start;
+  gap: 6px 10px;
 }
 .stacked .cardBody {
-  gap: 2px;
+  display: contents;
 }
 .stacked .nameRow {
+  min-height: 32px;
   padding-right: 22px;
+}
+.stacked .resources,
+.stacked .description {
+  grid-column: 1 / -1;
 }
 .stacked .description {
   display: -webkit-box;
