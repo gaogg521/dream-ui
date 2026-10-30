@@ -6,6 +6,11 @@ import KnowledgeLibrary from '@/renderer/pages/knowledge/KnowledgeLibrary';
 import type { RagDocumentEntry, RagLibraryEntry } from '@/common/types/devops/devopsTypes';
 import type { RagLibraryProps } from '@/renderer/pages/superAssistant/registries/RagSection';
 const filterDocuments = vi.hoisted(() => vi.fn());
+const enterpriseMode = vi.hoisted(() => ({ active: false }));
+vi.mock('@/common/adapter/enterpriseMode', () => ({ isEnterpriseRemoteActive: () => enterpriseMode.active }));
+beforeEach(() => {
+  enterpriseMode.active = false;
+});
 vi.mock('@/common', () => ({ ipcBridge: { oneDevops: { filterRagDocuments: { invoke: filterDocuments } } } }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key.split('.').at(-1), i18n: { language: 'en-US' } }),
@@ -50,6 +55,42 @@ const setup = (isEnterprise = true, overrides: Partial<RagLibraryProps> = {}) =>
   return { onOpen };
 };
 describe('Knowledge library browsing', () => {
+  it('shows readable authors by document source rather than leaking internal user IDs', () => {
+    enterpriseMode.active = true;
+    setup(true);
+    const table = within(screen.getByRole('table'));
+    expect(table.getByRole('button', { name: 'Private notes' }).closest('tr')).toHaveTextContent('localAuthor');
+    expect(table.getByRole('button', { name: 'Team handbook' }).closest('tr')).toHaveTextContent('enterpriseAuthor');
+    expect(table.getAllByRole('cell').some((cell) => cell.textContent === 'owner')).toBe(false);
+    expect(within(screen.getByRole('complementary')).getAllByText('companyTag')).toHaveLength(1);
+  });
+  it('previews five recently edited files in their directory paths without opening a space first', () => {
+    const docs = Array.from({ length: 8 }, (_, i) => ({
+      ...row(`file-${i}`, 'personal'),
+      createdAt: i + 1,
+      updatedAt: i === 0 ? 100 : i + 1,
+      libraryId: 'personal-space',
+    }));
+    setup(false, {
+      rows: docs,
+      libraries: [
+        {
+          id: 'personal-space',
+          name: 'My folder',
+          scope: 'personal',
+          kind: 'space',
+          description: '',
+          createdBy: 'owner',
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      ],
+    });
+    const sidebar = within(screen.getByRole('complementary'));
+    const files = sidebar.getAllByRole('button').filter((button) => button.title.startsWith('file-'));
+    expect(files.map((file) => file.title)).toEqual(['file-0', 'file-7', 'file-6', 'file-5', 'file-4']);
+    expect(sidebar.queryByRole('button', { name: 'file-1' })).not.toBeInTheDocument();
+  });
   it('gives semantic search a focused page without a second search field or document list', () => {
     setup(false);
     fireEvent.click(screen.getByRole('button', { name: 'search' }));

@@ -959,7 +959,9 @@
     "contentConflict": "O documento foi alterado em outra janela. Seu rascunho foi preservado. Copie-o antes de reabrir.",
     "sourceOnlyStatus": "Original salvo; sem texto pesquisável",
     "sourceOnly": "Só original",
-    "memorySpace": "Espaço de memória"
+    "memorySpace": "Espaço de memória",
+    "localAuthor": "Autor local",
+    "enterpriseAuthor": "Administrador da empresa"
   },
   "officeToolbar": {
     "undo": "Desfazer",

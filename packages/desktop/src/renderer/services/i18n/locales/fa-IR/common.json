@@ -959,7 +959,9 @@
     "contentConflict": "سند در پنجره دیگری تغییر کرده است. پیش‌نویس شما حفظ شده است. پیش از بازکردن دوباره سند، آن را کپی کنید.",
     "sourceOnlyStatus": "اصل فایل ذخیره شد؛ متن قابل جستجو وجود ندارد",
     "sourceOnly": "فقط اصل فایل",
-    "memorySpace": "فضای حافظه"
+    "memorySpace": "فضای حافظه",
+    "localAuthor": "نویسنده محلی",
+    "enterpriseAuthor": "مدیر سازمان"
   },
   "officeToolbar": {
     "undo": "برگشت",

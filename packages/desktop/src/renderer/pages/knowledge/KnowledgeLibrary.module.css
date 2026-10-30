@@ -940,6 +940,25 @@
 .treeRow > :global(.arco-btn):first-child {
   padding-right: 30px;
 }
+.library .sidebar .treeRow > :global(.arco-btn-text):first-child {
+  color: var(--color-text-1);
+}
+.treeFileTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.library .sidebar .treeRow :global(.arco-tag) {
+  flex-shrink: 0;
+  margin-left: 6px;
+  color: var(--color-text-3);
+  font-weight: 400;
+}
+.library .sidebar .guideNav :global(.arco-btn-text) {
+  color: var(--color-text-1);
+}
 .tree .treeMore:global(.arco-btn) {
   position: absolute;
   top: 50%;

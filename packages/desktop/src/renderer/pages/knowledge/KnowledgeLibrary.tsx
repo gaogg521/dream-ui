@@ -234,13 +234,17 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
   const treeFile = (row: RagDocumentEntry) => (
     <div key={row.id} className={styles.treeRow}>
       <Button
+        aria-label={row.title}
         aria-current={activeDocument?.id === row.id ? 'page' : undefined}
         type='text'
         icon={<LibraryFileIcon title={row.title} mimeType={row.mimeType} filePath={row.filePath} size={16} />}
         onClick={() => open(row)}
         title={row.title}
       >
-        {row.title}
+        <span className={styles.treeFileTitle}>{row.title}</span>
+        {isEnterpriseRemoteActive() && row.scope !== 'personal' && (
+          <Tag size='small'>{t('common.superAssistant.companyTag')}</Tag>
+        )}
       </Button>
       {onAddToConversation && (
         <Dropdown
@@ -269,13 +273,34 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
       )}
     </div>
   );
-  const tree = (isPersonal: boolean) => rows.filter((row) => personal(row) === isPersonal).map((row) => treeFile(row));
+  // Preview five recently edited documents per ownership group; selected paths stay complete.
+  const sidebarRows =
+    libraryId || activeDocument
+      ? rows
+      : [true, false].flatMap((scope) =>
+          rows
+            .filter((row) => personal(row) === scope)
+            .toSorted((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt) || a.id.localeCompare(b.id))
+            .slice(0, 5)
+        );
+  const tree = (isPersonal: boolean) =>
+    sidebarRows.filter((row) => personal(row) === isPersonal).map((row) => treeFile(row));
   const pathIds = new Set<string>();
   let cursor = activeDocument?.libraryId ?? libraryId;
   while (cursor && !pathIds.has(cursor)) {
     pathIds.add(cursor);
     cursor = libraries.find((item) => item.id === cursor)?.parentId ?? undefined;
   }
+  if (!libraryId && !activeDocument)
+    for (const row of sidebarRows) {
+      const seen = new Set<string>();
+      let parent = row.libraryId ?? 'oraglib_default';
+      while (parent && !seen.has(parent)) {
+        seen.add(parent);
+        pathIds.add(parent);
+        parent = libraries.find((item) => item.id === parent)?.parentId ?? '';
+      }
+    }
   const folders = (parentId: string | null, personalScope: boolean, depth = 0): React.ReactNode =>
     depth > 16
       ? null
@@ -305,7 +330,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
               {pathIds.has(library.id) && (
                 <div className={styles.nested}>
                   {folders(library.id, personalScope, depth + 1)}
-                  {rows
+                  {sidebarRows
                     .filter(
                       (row) => (row.libraryId ?? 'oraglib_default') === library.id && personal(row) === personalScope
                     )
@@ -335,7 +360,17 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
         </Button>
       ),
     },
-    ...(isEnterprise ? [{ title: label('owner'), dataIndex: 'createdBy', ellipsis: true, width: '17%' }] : []),
+    ...(isEnterprise
+      ? [
+          {
+            title: label('owner'),
+            ellipsis: true,
+            width: '17%',
+            render: (_: unknown, row: RagDocumentEntry) =>
+              label(isEnterpriseRemoteActive() && !personal(row) ? 'enterpriseAuthor' : 'localAuthor'),
+          },
+        ]
+      : []),
     {
       title: label('location'),
       width: '19%',
@@ -432,7 +467,7 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
         </div>
         <div className={styles.tree}>
           {folders(null, true)}
-          {rows.filter((row) => personal(row) && !libraryPersonal(row.libraryId)).map((row) => treeFile(row))}
+          {sidebarRows.filter((row) => personal(row) && !libraryPersonal(row.libraryId)).map((row) => treeFile(row))}
         </div>
         {isEnterprise && (
           <>

@@ -965,7 +965,9 @@
     "contentConflict": "Another editor updated this document. Your draft is preserved. Copy it before reopening the document.",
     "sourceOnlyStatus": "Original saved; no searchable text",
     "sourceOnly": "Original only",
-    "memorySpace": "Memory space"
+    "memorySpace": "Memory space",
+    "localAuthor": "Local author",
+    "enterpriseAuthor": "Enterprise administrator"
   },
   "officeToolbar": {
     "undo": "Undo",

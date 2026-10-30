@@ -267,6 +267,7 @@ export type RagDocumentEntry = {
   visibility: string;
   createdBy: string;
   createdAt: number;
+  updatedAt?: number;
   libraryId?: string;
 };
 
