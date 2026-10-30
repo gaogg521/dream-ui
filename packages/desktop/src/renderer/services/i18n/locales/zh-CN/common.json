@@ -230,6 +230,10 @@
     "mySkills": "我的技能"
   },
   "enterprise": {
+    "defaultCompanyWorkspace": "企业默认协作空间",
+    "projectGroupOwnershipHint": "项目组用于共同协作，可以独立存在，也可以隶属企业。加入项目组不等同于企业员工认证，资源以管理员授权为准。",
+    "independentProjectGroup": "独立项目组",
+    "companyProjectGroup": "企业项目组",
     "title": "项目组",
     "roleSystemAdmin": "系统管理员",
     "roleOrgAdmin": "组织管理员",
@@ -255,7 +259,7 @@
     "identityTabTitle": "企业身份",
     "identityError": "无法获取企业身份信息",
     "identityEmpty": "尚未通过企业 SSO 登录，暂无企业身份信息。",
-    "orgIdentityHint": "来自你的 SSO 登录身份，与项目组相互独立。",
+    "orgIdentityHint": "企业登录身份与项目组成员信息在本页统一查看。",
     "orgIdentitySource": "认证来源",
     "orgIdentityCompany": "所属企业",
     "orgIdentityUnknownCompany": "—",
@@ -266,7 +270,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "退出项目组",
     "exitTitle": "退出项目组",
-    "exitHint": "退出后将回到个人模式。若管理员设置了退出口令，请输入：",
+    "exitHint": "仅退出当前项目组，不会退出登录或更改企业认证身份。若管理员设置了退出口令，请输入：",
     "exitCodePlaceholder": "退出口令（未设置可留空）",
     "joinTitle": "加入项目组",
     "joinHint": "输入管理员提供的邀请码加入项目组。",
@@ -317,7 +321,7 @@
     "loginChannelUnavailable": "您的项目组尚未开通 {{method}} 登录，请联系管理员或改用其他方式。",
     "remoteBrowserLoginButton": "在浏览器登录企业账号",
     "remoteBrowserLoginHint": "飞书、钉钉、LDAP 等 SSO 认证在浏览器完成，完成后自动返回客户端。",
-    "openConsole": "进入项目组管理后台",
+    "openConsole": "进入企业管理后台",
     "planGateHint": "当前企业套餐不包含该功能，请联系企业管理员在「企业管理后台 → 订阅与用量」激活支持的授权码后重试。",
     "orgIdentityStatus": "认证状态",
     "orgIdentitySsoAuthed": "已通过企业 SSO 登录",
@@ -376,7 +380,9 @@
     "distributedBadge": "企业下发",
     "distributedHint": "由企业管理员下发，内容随企业同步更新，本机不能直接修改",
     "employeeNo": "工号",
-    "enterpriseEmail": "企业邮箱"
+    "enterpriseEmail": "企业邮箱",
+    "workspaceTitle": "企业与项目组",
+    "workspaceHint": "连接企业、登录身份与项目组协作在这里统一管理。"
   },
   "superAssistant": {
     "title": "数字员工与场景",

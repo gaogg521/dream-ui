@@ -41,7 +41,7 @@ const reloadApp = (): void => {
   window.location.reload();
 };
 
-const RemoteServerSection: React.FC = () => {
+const RemoteServerSection: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [enabled, setEnabled] = useState(isEnterpriseModeEnabled());
@@ -180,12 +180,14 @@ const RemoteServerSection: React.FC = () => {
           <Tag color='gray'>{t('common.enterprise.remoteDisabled', { defaultValue: '未启用' })}</Tag>
         )}
       </div>
-      <div className='text-t-secondary text-13px mb-12px'>
-        {t('common.enterprise.remoteHint', {
-          defaultValue:
-            '连接后，本机的会话/助手/个人数据仍在本地，仅企业治理（成员/邀请码/SSO/团队资源）来自企业服务器。企业 SSO（飞书/钉钉/LDAP 等）在浏览器完成登录，登录成功会自动切换为已连接。',
-        })}
-      </div>
+      {(!compact || !session) && (
+        <div className='text-t-secondary text-13px mb-12px'>
+          {t('common.enterprise.remoteHint', {
+            defaultValue:
+              '连接后，本机的会话/助手/个人数据仍在本地，仅企业治理（成员/邀请码/SSO/团队资源）来自企业服务器。企业 SSO（飞书/钉钉/LDAP 等）在浏览器完成登录，登录成功会自动切换为已连接。',
+          })}
+        </div>
+      )}
       {!enabled && !session && (
         <div className='text-t-tertiary text-12px mb-12px'>
           {/* Accurate, not aspirational: flipping the connect toggle alone is
@@ -205,7 +207,7 @@ const RemoteServerSection: React.FC = () => {
           })}
         </div>
       )}
-      {urlValid && (
+      {urlValid && (!compact || !session) && (
         <div className='text-t-secondary text-13px mb-12px'>
           {t('common.enterprise.remoteAdminUrlHint', {
             url: normalizedUrl,

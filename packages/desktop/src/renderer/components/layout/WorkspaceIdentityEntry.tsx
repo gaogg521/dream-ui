@@ -293,7 +293,7 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
             <Menu.Item key='console'>
               <span className={styles.actionRow}>
                 <Peoples theme='outline' size={15} />
-                {t('settings.workspaceIdentity.openConsole', { defaultValue: '进入项目组管理后台' })}
+                {t('settings.workspaceIdentity.openConsole', { defaultValue: '进入企业管理后台' })}
               </span>
             </Menu.Item>
           ) : null}
@@ -303,7 +303,7 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
           <Menu.Item key='settings'>
             <span className={styles.actionRow}>
               <Setting theme='outline' size={15} />
-              {t('settings.workspaceIdentity.openSettings', { defaultValue: '项目组设置' })}
+              {t('settings.workspaceIdentity.openSettings', { defaultValue: '查看登录信息' })}
             </span>
           </Menu.Item>
         </>

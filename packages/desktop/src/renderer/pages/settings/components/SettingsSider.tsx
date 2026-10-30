@@ -12,7 +12,6 @@ import {
   Earth,
   CheckOne,
   FileCabinet,
-  IdCard,
   Info,
   Lightning,
   LinkCloud,
@@ -54,7 +53,6 @@ export const BUILTIN_TAB_IDS = [
   // Enterprise
   'company',
   'enterprise',
-  'enterpriseIdentity',
   'fileVault',
   'approvals',
   // Other
@@ -76,6 +74,8 @@ export const LEGACY_ANCHOR_REMAP: Record<string, string> = {
   capabilities: 'skills',
   display: 'appearance',
   tools: 'mcp',
+  enterpriseIdentity: 'enterprise',
+  'enterprise-identity': 'enterprise',
 };
 
 /**
@@ -91,7 +91,7 @@ export const LEGACY_ANCHOR_REMAP: Record<string, string> = {
 const SETTINGS_GROUPS: ReadonlyArray<{ headerKey: string; members: readonly string[] }> = [
   { headerKey: 'settings.groupAiCore', members: ['agent', 'model', 'skills', 'mcp', 'memory'] },
   { headerKey: 'settings.groupApp', members: ['superAssistant', 'webui', 'codexBridge', 'claudeBridge'] },
-  { headerKey: 'settings.groupEnterprise', members: ['company', 'enterprise', 'enterpriseIdentity', 'fileVault'] },
+  { headerKey: 'settings.groupEnterprise', members: ['company', 'enterprise', 'fileVault'] },
   { headerKey: 'settings.groupAbout', members: ['system', 'about'] },
 ];
 
@@ -151,10 +151,7 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
   // The personal file vault is server-scoped (§4.3) — no enterprise server, no
   // vault, so the row only exists once enterprise mode is on.
   const showFileVault = enterpriseConnected;
-  // Project groups exist only on an enterprise server. A personal install has
-  // nothing to show there, so the row appears once a server is connected;
-  // 企业身份 stays as the place to connect.
-  const showProjectGroup = enterpriseConnected;
+  // The unified enterprise entry is also the connection entry for personal installs.
 
   const extensionTabs = useExtensionSettingsTabs();
   const { resolveExtTabName } = useExtI18n();
@@ -241,15 +238,9 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
       },
       enterprise: {
         id: 'enterprise',
-        label: t('common.enterprise.title', { defaultValue: '项目组' }),
+        label: t('common.enterprise.workspaceTitle'),
         icon: <Peoples />,
         path: 'enterprise',
-      },
-      enterpriseIdentity: {
-        id: 'enterpriseIdentity',
-        label: t('common.enterprise.identityTabTitle', { defaultValue: '企业身份' }),
-        icon: <IdCard />,
-        path: 'enterprise-identity',
       },
       fileVault: {
         id: 'fileVault',
@@ -270,7 +261,6 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
     const result: SiderItem[] = BUILTIN_TAB_IDS.filter(
       (id) =>
         (id !== 'company' || showCompany) &&
-        (id !== 'enterprise' || showProjectGroup) &&
         (id !== 'fileVault' || showFileVault) &&
         // Same condition as the vault: the rows are server-scoped, so the tab
         // only means anything once there is a company to ask.
@@ -355,16 +345,7 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
     }
 
     return { menus: result, groupHeaderAt: headerAt };
-  }, [
-    t,
-    isDesktop,
-    extensionTabs,
-    resolveExtTabName,
-    showCompany,
-    showFileVault,
-    showProjectGroup,
-    openAdminConsoleInBrowser,
-  ]);
+  }, [t, isDesktop, extensionTabs, resolveExtTabName, showCompany, showFileVault, openAdminConsoleInBrowser]);
 
   // Scroll affordance: the sider is long enough to clip entries, but the global
   // scrollbar thumb is transparent until hovered, so nothing tells the user more

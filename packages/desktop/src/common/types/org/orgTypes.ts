@@ -10,6 +10,8 @@
 export type OrgRole = 'member' | 'org_admin' | 'system_admin';
 
 export type OrgContext = {
+  /** Undefined on older servers; null means an independent project group. */
+  enterpriseId?: string | null;
   tenantId: string;
   tenantName?: string | null;
   role: OrgRole | string;
@@ -173,6 +175,8 @@ export type OrgTenant = {
  * marks the group currently in effect; switching activates a different one.
  */
 export type MyTenant = {
+  /** Undefined on older servers; null means an independent project group. */
+  enterpriseId?: string | null;
   tenantId: string;
   name: string;
   role: OrgRole | string;

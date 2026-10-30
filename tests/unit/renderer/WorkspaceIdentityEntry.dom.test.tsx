@@ -197,7 +197,9 @@ describe('WorkspaceIdentityEntry', () => {
     // group, not the signed-in person.
     fireEvent.click(screen.getByText('研发一组'));
 
-    expect(await screen.findByText('项目组设置')).toBeInTheDocument();
+    fireEvent.click(await screen.findByText('查看登录信息'));
+    expect(mockNavigate).toHaveBeenCalledWith('/settings/enterprise');
+    expect(screen.queryByText('项目组设置')).not.toBeInTheDocument();
     expect(screen.queryByText('加入项目组')).not.toBeInTheDocument();
     expect(screen.queryByText('登录 / 加入项目组')).not.toBeInTheDocument();
   });

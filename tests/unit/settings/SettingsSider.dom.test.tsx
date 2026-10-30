@@ -127,7 +127,7 @@ describe('SettingsSider', () => {
       'settings.claudeBridge.title',
       'settings.groupEnterprise',
       '企业管理后台',
-      '企业身份',
+      'common.enterprise.workspaceTitle',
       'settings.groupAbout',
       'settings.system',
       'settings.about',
@@ -169,7 +169,8 @@ describe('SettingsSider', () => {
       expect(order).toContain('文件保险箱');
       expect(order).toContain('我的审批');
       // Project groups live on the server, so the row exists only now.
-      expect(order).toContain('项目组');
+      expect(order).toContain('common.enterprise.workspaceTitle');
+      expect(order).not.toContain('企业身份');
       // Under the Enterprise header, not appended after 关于.
       expect(order.indexOf('我的审批')).toBeLessThan(order.indexOf('settings.groupAbout'));
     } finally {
@@ -189,16 +190,16 @@ describe('SettingsSider', () => {
 
     expect(order).not.toContain('企业管理后台');
     expect(order).toContain('settings.groupEnterprise');
-    expect(order.indexOf('settings.groupEnterprise')).toBe(order.indexOf('企业身份') - 1);
+    expect(order.indexOf('settings.groupEnterprise')).toBe(order.indexOf('common.enterprise.workspaceTitle') - 1);
   });
 
-  it('hides 项目组 on a personal install that is not connected to a server', () => {
+  it('offers one unified enterprise entry before a server is connected', () => {
     // The page can only show a membership the server holds; before connecting
     // it was an empty "join with an invite code" form that always failed.
     const { container } = render(<SettingsSider />);
     const order = renderedOrder(container);
 
     expect(order).not.toContain('项目组');
-    expect(order).toContain('企业身份');
+    expect(order).toContain('common.enterprise.workspaceTitle');
   });
 });

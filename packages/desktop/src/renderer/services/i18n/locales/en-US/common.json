@@ -230,6 +230,10 @@
     "mySkills": "My Skills"
   },
   "enterprise": {
+    "defaultCompanyWorkspace": "Default company workspace",
+    "projectGroupOwnershipHint": "Project groups support collaboration and may be independent or owned by a company. Joining a group does not verify employment; resources depend on administrator grants.",
+    "independentProjectGroup": "Independent project group",
+    "companyProjectGroup": "Company project group",
     "title": "Project Group",
     "roleSystemAdmin": "System Admin",
     "roleOrgAdmin": "Org Admin",
@@ -255,7 +259,7 @@
     "identityTabTitle": "Enterprise Identity",
     "identityError": "Failed to load enterprise identity",
     "identityEmpty": "Not signed in via enterprise SSO yet — no enterprise identity to show.",
-    "orgIdentityHint": "From your SSO login — independent of the project group.",
+    "orgIdentityHint": "View your enterprise sign-in identity and project membership together.",
     "orgIdentitySource": "Auth source",
     "orgIdentityCompany": "Company",
     "orgIdentityUnknownCompany": "—",
@@ -266,7 +270,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "Leave project group",
     "exitTitle": "Leave project group",
-    "exitHint": "You will return to personal mode. If the admin set an exit password, enter it below:",
+    "exitHint": "Leave only this project group. You remain signed in and your verified company identity is unchanged. Enter the exit password if required:",
     "exitCodePlaceholder": "Exit password (leave empty if unset)",
     "joinTitle": "Join a project group",
     "joinHint": "Enter the invite code from your admin to join.",
@@ -317,7 +321,7 @@
     "loginChannelUnavailable": "{{method}} login is not enabled for your project group. Contact your admin or try another method.",
     "remoteBrowserLoginButton": "Log in via browser",
     "remoteBrowserLoginHint": "Feishu, DingTalk, LDAP, and other SSO flows complete in the browser, then return to the client.",
-    "openConsole": "Open admin console",
+    "openConsole": "Open enterprise admin console",
     "planGateHint": "This feature is not included in the current company plan. Ask a company admin to activate a supporting license key under \"Company Console → Subscription & Usage\" and try again.",
     "orgIdentityStatus": "Auth status",
     "orgIdentitySsoAuthed": "Signed in via company SSO",
@@ -376,7 +380,9 @@
     "distributedBadge": "Company",
     "distributedHint": "Handed out by your company administrator. It updates with the company sync and cannot be edited here.",
     "employeeNo": "Employee number",
-    "enterpriseEmail": "Enterprise email"
+    "enterpriseEmail": "Enterprise email",
+    "workspaceTitle": "Enterprise & project groups",
+    "workspaceHint": "Manage your enterprise connection, sign-in and project membership in one place."
   },
   "superAssistant": {
     "title": "Digital employees and scenes",

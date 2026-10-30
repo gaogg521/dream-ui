@@ -703,6 +703,10 @@
     }
   },
   "enterprise": {
+    "defaultCompanyWorkspace": "Varsayılan şirket çalışma alanı",
+    "projectGroupOwnershipHint": "Proje grupları bağımsız olabilir veya bir şirkete bağlı olabilir. Katılmak çalışan kimliğini doğrulamaz; kaynaklar yönetici izinlerine bağlıdır.",
+    "independentProjectGroup": "Bağımsız proje grubu",
+    "companyProjectGroup": "Şirket proje grubu",
     "distributedBadge": "Şirket",
     "distributedHint": "Şirket yöneticisi tarafından dağıtıldı. Şirket eşitlemesiyle güncellenir ve burada düzenlenemez.",
     "title": "Proje Grubu",
@@ -730,7 +734,7 @@
     "identityTabTitle": "Kurumsal Kimlik",
     "identityError": "Kurumsal kimlik yüklenemedi",
     "identityEmpty": "Henüz kurumsal SSO ile oturum açılmadı — gösterilecek bir kurumsal kimlik yok.",
-    "orgIdentityHint": "SSO girişinizden alınır — proje grubundan bağımsızdır.",
+    "orgIdentityHint": "Kurumsal kimliğinizi ve proje üyeliğinizi birlikte görüntüleyin.",
     "orgIdentitySource": "Kimlik doğrulama kaynağı",
     "orgIdentityCompany": "Şirket",
     "orgIdentityUnknownCompany": "—",
@@ -741,7 +745,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "Proje grubundan ayrıl",
     "exitTitle": "Proje grubundan ayrıl",
-    "exitHint": "Kişisel moda döneceksiniz. Yönetici bir ayrılma parolası belirlediyse aşağıya girin:",
+    "exitHint": "Yalnızca bu gruptan ayrılırsınız. Oturum ve doğrulanmış şirket kimliği korunur. Gerekirse çıkış parolasını girin:",
     "exitCodePlaceholder": "Ayrılma parolası (belirlenmediyse boş bırakın)",
     "joinTitle": "Bir proje grubuna katıl",
     "joinHint": "Katılmak için yöneticinizden aldığınız davet kodunu girin.",
@@ -792,7 +796,7 @@
     "loginChannelUnavailable": "{{method}} ile giriş proje grubunuz için etkin değil. Yöneticinizle iletişime geçin veya başka bir yöntem deneyin.",
     "remoteBrowserLoginButton": "Tarayıcı ile giriş yap",
     "remoteBrowserLoginHint": "Feishu, DingTalk, LDAP ve diğer SSO akışları tarayıcıda tamamlanır, ardından istemciye dönersiniz.",
-    "openConsole": "Yönetim konsolunu aç",
+    "openConsole": "Kurumsal yönetim konsolunu aç",
     "planGateHint": "Bu özellik mevcut şirket planına dahil değil. Bir şirket yöneticisinden \"Şirket Konsolu → Abonelik ve Kullanım\" bölümünde destekleyen bir lisans anahtarını etkinleştirmesini isteyin ve yeniden deneyin.",
     "orgIdentityStatus": "Kimlik doğrulama durumu",
     "orgIdentitySsoAuthed": "Şirket SSO'su ile oturum açıldı",
@@ -849,7 +853,9 @@
     "serverErrNoEnterprise": "{{url}} yanıt veriyor ancak kurumsal sunucu değil (kurumsal API yok). Genellikle bu, bir One Work istemcisinin — belki bu makinenin — adresidir ya da kurumsal sürüm orada henüz dağıtılmamıştır.",
     "serverErrUnreachable": "{{url}} adresine ulaşılamıyor. Adresin yöneticinizin verdiğiyle eşleştiğini, sunucunun çalıştığını ve iki makinenin birbirine ulaşabildiğini kontrol edin. Kurumsal sürüm genellikle bağlantı noktası gerektirmez.",
     "employeeNo": "Employee number",
-    "enterpriseEmail": "Enterprise email"
+    "enterpriseEmail": "Enterprise email",
+    "workspaceTitle": "Kurum ve proje grupları",
+    "workspaceHint": "Kurum bağlantısını, oturumu ve proje üyeliğini tek yerden yönetin."
   },
   "knowledgeLibrary": {
     "quickAdd": "Hızlı ekle",

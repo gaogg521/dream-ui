@@ -709,6 +709,10 @@
   "enterprise.loginChannelsNoneConfiguredHint": "已連線企業伺服器，但管理員尚未在企業管理後台啟用任何 SSO 登入方式。可先用「本機帳戶」登入。",
   "enterprise.wizardEditingContext": "目前已連線：{{url}}。只有新位址連線成功後才會切換，取消不會變更現有連線。",
   "enterprise": {
+    "defaultCompanyWorkspace": "企業預設協作空間",
+    "projectGroupOwnershipHint": "專案組用於共同協作，可以獨立存在，也可以隸屬企業。加入專案組不等同企業員工認證，資源依管理員授權為準。",
+    "independentProjectGroup": "獨立專案組",
+    "companyProjectGroup": "企業專案組",
     "distributedBadge": "企業下發",
     "distributedHint": "由企業管理員下發，內容隨企業同步更新，本機不能直接修改",
     "title": "專案組",
@@ -736,7 +740,7 @@
     "identityTabTitle": "企業身份",
     "identityError": "無法獲取企業身份資訊",
     "identityEmpty": "尚未透過企業 SSO 登入，暫無企業身份資訊。",
-    "orgIdentityHint": "來自你的 SSO 登入身份，與專案組相互獨立。",
+    "orgIdentityHint": "在此統一檢視企業登入身分與專案群組成員資訊。",
     "orgIdentitySource": "認證來源",
     "orgIdentityCompany": "所屬企業",
     "orgIdentityUnknownCompany": "—",
@@ -747,7 +751,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "退出專案組",
     "exitTitle": "退出專案組",
-    "exitHint": "退出後將回到個人模式。若管理員設定了退出口令，請輸入：",
+    "exitHint": "僅退出目前專案組，不會登出或變更企業認證身分。若管理員設定了退出口令，請輸入：",
     "exitCodePlaceholder": "退出口令（未設定可留空）",
     "joinTitle": "加入專案組",
     "joinHint": "輸入管理員提供的邀請碼加入專案組。",
@@ -798,7 +802,7 @@
     "loginChannelUnavailable": "您的專案組尚未開通 {{method}} 登入，請聯絡管理員或改用其他方式。",
     "remoteBrowserLoginButton": "在瀏覽器登入企業帳號",
     "remoteBrowserLoginHint": "飛書、釘釘、LDAP 等 SSO 認證在瀏覽器完成，完成後自動返回客戶端。",
-    "openConsole": "進入專案組管理後台",
+    "openConsole": "進入企業管理後台",
     "planGateHint": "當前企業套餐不包含該功能，請聯絡企業管理員在「企業管理後台 → 訂閱與用量」啟用支援的授權碼後重試。",
     "orgIdentityStatus": "認證狀態",
     "orgIdentitySsoAuthed": "已透過企業 SSO 登入",
@@ -855,7 +859,9 @@
     "serverErrNoEnterprise": "{{url}} 能存取，但不是企業伺服器（沒有企業介面）。常見原因：填成了某臺 One Work 客戶端（包括本機）的地址，或對方還沒部署企業版。",
     "serverErrUnreachable": "連線不上 {{url}}。請確認地址與管理員給的一致、對方伺服器已啟動、兩臺電腦網路互通；企業版通常不需要填寫埠。",
     "employeeNo": "Employee number",
-    "enterpriseEmail": "Enterprise email"
+    "enterpriseEmail": "Enterprise email",
+    "workspaceTitle": "企業與專案群組",
+    "workspaceHint": "在此統一管理企業連線、登入身分與專案群組協作。"
   },
   "knowledgeLibrary": {
     "quickAdd": "快速新增",

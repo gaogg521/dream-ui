@@ -39,7 +39,9 @@ const EnterprisePage: React.FC = () => {
     <div className='flex h-full flex-col'>
       <div className='flex items-center justify-between border-b border-2 px-16px py-12px'>
         <div className='text-16px font-600 text-t-primary'>
-          {t('common.enterprise.title', { defaultValue: '企业' })}
+          {context?.tenantId === 'enterprise'
+            ? t('common.enterprise.defaultCompanyWorkspace')
+            : t('common.enterprise.title', { defaultValue: '项目组' })}
         </div>
         {isProjectGroupAdmin && (
           <Button type='primary' size='small' onClick={() => void openConsole()}>
@@ -48,12 +50,6 @@ const EnterprisePage: React.FC = () => {
         )}
       </div>
       <div className='flex-1 overflow-auto p-16px'>
-        {/* "Connect to a remote server" is an enterprise-IDENTITY concern
-            (browser SSO login / logout), not a project-group one, so it lives
-            on /settings/enterprise-identity. The deployment role card
-            (server/client) is neither tenant- nor company-scoped — it decides
-            which machine's data this whole app defers to — so it lives on
-            /settings/webui ("远程连接"). */}
         <Spin loading={loading}>
           <OverviewTab context={context} error={error} unauthorized={unauthorized} onChanged={() => void refresh()} />
         </Spin>

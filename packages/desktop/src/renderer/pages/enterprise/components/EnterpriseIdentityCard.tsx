@@ -51,7 +51,7 @@ const EnterpriseIdentityCard: React.FC = () => {
       <div className='max-w-560px'>
         <div className='text-t-secondary text-12px mb-12px'>
           {t('common.enterprise.orgIdentityHint', {
-            defaultValue: '来自你的 SSO 登录身份，与项目组相互独立。',
+            defaultValue: '身份信息来自企业登录，项目组与协作权限在本页统一管理。',
           })}
         </div>
         <Descriptions
@@ -84,7 +84,7 @@ const EnterpriseIdentityCard: React.FC = () => {
     <div className='max-w-560px'>
       <div className='text-t-secondary text-12px mb-12px'>
         {t('common.enterprise.orgIdentityHint', {
-          defaultValue: '来自你的 SSO 登录身份，与项目组相互独立。',
+          defaultValue: '身份信息来自企业登录，项目组与协作权限在本页统一管理。',
         })}
       </div>
       <Descriptions

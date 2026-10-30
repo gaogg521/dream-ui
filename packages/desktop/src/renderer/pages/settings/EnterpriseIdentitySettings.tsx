@@ -11,6 +11,7 @@ import { DEPLOYMENT_ROLE_CHANGED_EVENT } from '@/common/config/webuiEnterpriseCo
 import { isElectronDesktop } from '@renderer/utils/platform';
 import EnterpriseServerCard from './components/EnterpriseServerCard';
 import SettingsPageWrapper from './components/SettingsPageWrapper';
+import EnterprisePage from '@/renderer/pages/enterprise';
 
 const EnterpriseIdentitySettings: React.FC = () => {
   const { t } = useTranslation();
@@ -32,21 +33,33 @@ const EnterpriseIdentitySettings: React.FC = () => {
     <SettingsPageWrapper contentClassName='max-w-960px'>
       <div className='flex h-full flex-col'>
         <div className='flex items-center border-b border-2 px-16px py-12px'>
-          <div className='text-16px font-600 text-t-primary'>
-            {t('common.enterprise.identityTabTitle', { defaultValue: '企业身份' })}
-          </div>
+          <div className='text-16px font-600 text-t-primary'>{t('common.enterprise.workspaceTitle')}</div>
         </div>
         <div className='flex-1 overflow-auto p-16px'>
+          <p className='text-13px text-t-secondary mb-16px'>{t('common.enterprise.workspaceHint')}</p>
           {/* Ordered as the user actually proceeds: pick the server and
               connect to it, then log in against it. These used to sit on two
               different settings pages — the address on 远程连接, the login
               here — so someone who filled in an address had no visible next
               step and the SSO buttons stayed grey with no explanation. */}
           <EnterpriseServerCard />
-          {showRemoteSection && <RemoteServerSection />}
+          {showRemoteSection && <RemoteServerSection compact />}
           {/* Identity comes from a sign-in; before one there is only an error
               ("无法获取企业身份信息") to show. */}
-          {connected && hasSession && <EnterpriseIdentityCard />}
+          {connected && hasSession && (
+            <div
+              className='grid gap-16px'
+              style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))' }}
+            >
+              <section className='border border-2 rd-12px p-16px min-w-0'>
+                <h2 className='text-16px font-600 mb-12px'>{t('common.enterprise.identityTabTitle')}</h2>
+                <EnterpriseIdentityCard />
+              </section>
+            </div>
+          )}
+          <section className='border border-2 rd-12px overflow-hidden min-w-0 mt-16px'>
+            <EnterprisePage />
+          </section>
         </div>
       </div>
     </SettingsPageWrapper>

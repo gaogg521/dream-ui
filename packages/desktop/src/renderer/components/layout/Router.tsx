@@ -24,7 +24,6 @@ const WebuiSettings = React.lazy(() => import('@renderer/pages/settings/WebuiSet
 const CodexBridgeSettings = React.lazy(() => import('@renderer/pages/settings/CodexBridgeSettings'));
 const ClaudeBridgeSettings = React.lazy(() => import('@renderer/pages/settings/ClaudeBridgeSettings'));
 const EnterpriseSettings = React.lazy(() => import('@renderer/pages/settings/EnterpriseSettings'));
-const EnterpriseIdentitySettings = React.lazy(() => import('@renderer/pages/settings/EnterpriseIdentitySettings'));
 const FileVaultSettings = React.lazy(() => import('@renderer/pages/settings/FileVaultSettings'));
 const ApprovalsSettings = React.lazy(() => import('@renderer/pages/settings/ApprovalsSettings'));
 const ExtensionSettingsPage = React.lazy(() => import('@renderer/pages/settings/ExtensionSettingsPage'));
@@ -162,7 +161,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/settings/codex-bridge' element={withRouteFallback(CodexBridgeSettings)} />
           <Route path='/settings/claude-bridge' element={withRouteFallback(ClaudeBridgeSettings)} />
           <Route path='/settings/enterprise' element={withRouteFallback(EnterpriseSettings)} />
-          <Route path='/settings/enterprise-identity' element={withRouteFallback(EnterpriseIdentitySettings)} />
+          <Route path='/settings/enterprise-identity' element={<Navigate to='/settings/enterprise' replace />} />
           <Route path='/settings/file-vault' element={withRouteFallback(FileVaultSettings)} />
           <Route path='/settings/approvals' element={withRouteFallback(ApprovalsSettings)} />
           <Route path='/settings/system' element={withRouteFallback(SystemSettings)} />

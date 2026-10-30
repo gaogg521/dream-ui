@@ -703,6 +703,10 @@
     }
   },
   "enterprise": {
+    "defaultCompanyWorkspace": "Standard-Unternehmensarbeitsbereich",
+    "projectGroupOwnershipHint": "Projektgruppen können unabhängig oder einem Unternehmen zugeordnet sein. Ein Beitritt bestätigt kein Arbeitsverhältnis; Ressourcen erfordern Administratorfreigaben.",
+    "independentProjectGroup": "Unabhängige Projektgruppe",
+    "companyProjectGroup": "Unternehmensprojektgruppe",
     "distributedBadge": "Vom Unternehmen",
     "distributedHint": "Vom Unternehmensadministrator verteilt. Wird mit der Firmensynchronisierung aktualisiert und lässt sich hier nicht bearbeiten.",
     "title": "Projektgruppe",
@@ -730,7 +734,7 @@
     "identityTabTitle": "Unternehmensidentität",
     "identityError": "Unternehmensidentität konnte nicht geladen werden",
     "identityEmpty": "Noch nicht über Unternehmens-SSO angemeldet – keine Unternehmensidentität vorhanden.",
-    "orgIdentityHint": "Stammt aus deiner SSO-Anmeldung – unabhängig von der Projektgruppe.",
+    "orgIdentityHint": "Unternehmensidentität und Projektmitgliedschaft gemeinsam anzeigen.",
     "orgIdentitySource": "Authentifizierungsquelle",
     "orgIdentityCompany": "Unternehmen",
     "orgIdentityUnknownCompany": "—",
@@ -741,7 +745,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "Projektgruppe verlassen",
     "exitTitle": "Projektgruppe verlassen",
-    "exitHint": "Du kehrst in den persönlichen Modus zurück. Falls der Administrator ein Austrittspasswort festgelegt hat, gib es unten ein:",
+    "exitHint": "Sie verlassen nur diese Projektgruppe. Anmeldung und bestätigte Unternehmensidentität bleiben erhalten. Falls erforderlich, Austrittspasswort eingeben:",
     "exitCodePlaceholder": "Austrittspasswort (leer lassen, falls keines festgelegt ist)",
     "joinTitle": "Einer Projektgruppe beitreten",
     "joinHint": "Gib den Einladungscode deines Administrators ein, um beizutreten.",
@@ -792,7 +796,7 @@
     "loginChannelUnavailable": "Die Anmeldung mit {{method}} ist für deine Projektgruppe nicht aktiviert. Wende dich an deinen Administrator oder probiere eine andere Methode.",
     "remoteBrowserLoginButton": "Über den Browser anmelden",
     "remoteBrowserLoginHint": "Feishu, DingTalk, LDAP und andere SSO-Abläufe werden im Browser abgeschlossen, danach kehrst du zum Client zurück.",
-    "openConsole": "Admin-Konsole öffnen",
+    "openConsole": "Unternehmensverwaltung öffnen",
     "planGateHint": "Diese Funktion ist im aktuellen Unternehmensplan nicht enthalten. Bitte einen Unternehmensadministrator, unter „Unternehmenskonsole → Abonnement & Nutzung“ einen passenden Lizenzschlüssel zu aktivieren, und versuche es erneut.",
     "orgIdentityStatus": "Authentifizierungsstatus",
     "orgIdentitySsoAuthed": "Über Unternehmens-SSO angemeldet",
@@ -849,7 +853,9 @@
     "serverErrNoEnterprise": "{{url}} antwortet, ist aber kein Unternehmensserver (keine Unternehmens-API). Meist ist das die Adresse eines One-Work-Clients – möglicherweise dieses Rechners – oder die Enterprise-Edition ist dort noch nicht bereitgestellt.",
     "serverErrUnreachable": "{{url}} ist nicht erreichbar. Prüfe, ob die Adresse mit der von deinem Administrator übereinstimmt, der Server läuft und beide Rechner einander erreichen können. Die Enterprise-Edition braucht meist keinen Port.",
     "employeeNo": "Employee number",
-    "enterpriseEmail": "Enterprise email"
+    "enterpriseEmail": "Enterprise email",
+    "workspaceTitle": "Unternehmen und Projektgruppen",
+    "workspaceHint": "Verwalten Sie Verbindung, Anmeldung und Projektmitgliedschaft an einem Ort."
   },
   "knowledgeLibrary": {
     "quickAdd": "Schnell hinzufügen",

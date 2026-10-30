@@ -703,6 +703,10 @@
     }
   },
   "enterprise": {
+    "defaultCompanyWorkspace": "Espace collaboratif par défaut",
+    "projectGroupOwnershipHint": "Un groupe peut être indépendant ou rattaché à une entreprise. Y adhérer ne prouve pas un emploi ; les ressources dépendent des autorisations administratives.",
+    "independentProjectGroup": "Groupe de projet indépendant",
+    "companyProjectGroup": "Groupe de projet d’entreprise",
     "distributedBadge": "De l'entreprise",
     "distributedHint": "Distribué par l'administrateur de l'entreprise. Mis à jour avec la synchronisation, non modifiable ici.",
     "title": "Groupe de projet",
@@ -730,7 +734,7 @@
     "identityTabTitle": "Identité d’entreprise",
     "identityError": "Échec du chargement de l’identité d’entreprise",
     "identityEmpty": "Vous n’êtes pas encore connecté via le SSO d’entreprise : aucune identité d’entreprise à afficher.",
-    "orgIdentityHint": "Provient de votre connexion SSO, indépendamment du groupe de projet.",
+    "orgIdentityHint": "Consultez votre identité professionnelle et votre appartenance aux projets.",
     "orgIdentitySource": "Source d’authentification",
     "orgIdentityCompany": "Entreprise",
     "orgIdentityUnknownCompany": "—",
@@ -741,7 +745,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "Quitter le groupe de projet",
     "exitTitle": "Quitter le groupe de projet",
-    "exitHint": "Vous reviendrez en mode personnel. Si l’administrateur a défini un mot de passe de sortie, saisissez-le ci-dessous :",
+    "exitHint": "Vous quittez uniquement ce groupe. La connexion et l’identité professionnelle vérifiée restent inchangées. Saisissez le mot de passe de sortie si nécessaire :",
     "exitCodePlaceholder": "Mot de passe de sortie (laisser vide s’il n’y en a pas)",
     "joinTitle": "Rejoindre un groupe de projet",
     "joinHint": "Saisissez le code d’invitation fourni par votre administrateur pour rejoindre.",
@@ -792,7 +796,7 @@
     "loginChannelUnavailable": "La connexion via {{method}} n’est pas activée pour votre groupe de projet. Contactez votre administrateur ou essayez une autre méthode.",
     "remoteBrowserLoginButton": "Se connecter via le navigateur",
     "remoteBrowserLoginHint": "Les flux SSO Feishu, DingTalk, LDAP et autres se terminent dans le navigateur, puis vous revenez au client.",
-    "openConsole": "Ouvrir la console d’administration",
+    "openConsole": "Ouvrir la console d’administration de l’entreprise",
     "planGateHint": "Cette fonctionnalité n’est pas incluse dans l’offre actuelle de l’entreprise. Demandez à un administrateur de l’entreprise d’activer une clé de licence compatible dans « Console de l’entreprise → Abonnement et utilisation », puis réessayez.",
     "orgIdentityStatus": "État d’authentification",
     "orgIdentitySsoAuthed": "Connecté via le SSO de l’entreprise",
@@ -849,7 +853,9 @@
     "serverErrNoEnterprise": "{{url}} répond mais n’est pas un serveur d’entreprise (pas d’API d’entreprise). Il s’agit généralement de l’adresse d’un client One Work — peut-être cette machine — ou l’édition Enterprise n’y est pas encore déployée.",
     "serverErrUnreachable": "Impossible de joindre {{url}}. Vérifiez que l’adresse correspond à celle fournie par votre administrateur, que le serveur est en marche et que les deux machines peuvent communiquer. L’édition Enterprise ne nécessite généralement pas de port.",
     "employeeNo": "Employee number",
-    "enterpriseEmail": "Enterprise email"
+    "enterpriseEmail": "Enterprise email",
+    "workspaceTitle": "Entreprise et groupes de projet",
+    "workspaceHint": "Gérez la connexion, votre identité et vos projets au même endroit."
   },
   "knowledgeLibrary": {
     "quickAdd": "Ajout rapide",

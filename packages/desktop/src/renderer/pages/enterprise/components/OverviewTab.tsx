@@ -218,7 +218,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
           <Button type='primary' onClick={onChanged}>
             {t('common.retry')}
           </Button>
-          <Button onClick={() => navigate('/settings/enterprise-identity')}>
+          <Button onClick={() => navigate('/settings/enterprise')}>
             {t('settings.workspaceIdentity.checkConnection', { defaultValue: '检查企业连接' })}
           </Button>
         </div>
@@ -268,6 +268,21 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
             connected through a machine-local address that changed since (WSL
             NAT IP, the vault-upload "Failed to fetch" report), the card kept
             advertising a dead link next to the working button. */}
+        <div className='mb-12px text-13px text-t-secondary'>{t('common.enterprise.projectGroupOwnershipHint')}</div>
+        {context.tenantId === 'enterprise' && (
+          <Tag className='mb-12px' color='arcoblue'>
+            {t('common.enterprise.defaultCompanyWorkspace')}
+          </Tag>
+        )}
+        {context.enterpriseId !== undefined && (
+          <Tag className='mb-12px' color={context.enterpriseId ? 'arcoblue' : 'gray'}>
+            {t(
+              context.enterpriseId
+                ? 'common.enterprise.companyProjectGroup'
+                : 'common.enterprise.independentProjectGroup'
+            )}
+          </Tag>
+        )}
         <Descriptions column={1} border data={descData} />
         <MemberSelfServiceSections />
         <SecurePackagesSection />
@@ -285,7 +300,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
         >
           <div className='mb-8px text-t-secondary'>
             {t('common.enterprise.exitHint', {
-              defaultValue: '退出后将回到个人模式。若管理员设置了退出口令，请输入：',
+              defaultValue: '仅退出当前项目组，不会退出登录或更改企业认证身份。若管理员设置了退出口令，请输入：',
             })}
           </div>
           <Input.Password

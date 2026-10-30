@@ -703,6 +703,10 @@
     }
   },
   "enterprise": {
+    "defaultCompanyWorkspace": "企業の既定の共同作業スペース",
+    "projectGroupOwnershipHint": "共同作業グループは独立して存在することも、企業に属することもできます。参加は従業員認証ではなく、リソースは管理者の許可に従います。",
+    "independentProjectGroup": "独立プロジェクトグループ",
+    "companyProjectGroup": "企業プロジェクトグループ",
     "distributedBadge": "会社配布",
     "distributedHint": "会社の管理者が配布したものです。会社の同期で更新され、この端末では編集できません。",
     "title": "プロジェクトグループ",
@@ -730,7 +734,7 @@
     "identityTabTitle": "企業アイデンティティ",
     "identityError": "企業アイデンティティの読み込みに失敗しました",
     "identityEmpty": "まだ企業 SSO でサインインしていないため、表示できる企業アイデンティティがありません。",
-    "orgIdentityHint": "SSO ログインから取得した情報です。プロジェクトグループとは独立しています。",
+    "orgIdentityHint": "企業のログイン情報とプロジェクトの参加情報を確認できます。",
     "orgIdentitySource": "認証ソース",
     "orgIdentityCompany": "会社",
     "orgIdentityUnknownCompany": "—",
@@ -741,7 +745,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "プロジェクトグループから退出",
     "exitTitle": "プロジェクトグループから退出",
-    "exitHint": "個人モードに戻ります。管理者が退出パスワードを設定している場合は、以下に入力してください：",
+    "exitHint": "このグループのみ退出します。ログインと企業認証情報は維持されます。必要な場合は退出パスワードを入力してください：",
     "exitCodePlaceholder": "退出パスワード（未設定の場合は空欄）",
     "joinTitle": "プロジェクトグループに参加",
     "joinHint": "管理者から受け取った招待コードを入力して参加してください。",
@@ -792,7 +796,7 @@
     "loginChannelUnavailable": "{{method}} ログインはお使いのプロジェクトグループで有効になっていません。管理者に連絡するか、別の方法をお試しください。",
     "remoteBrowserLoginButton": "ブラウザーでログイン",
     "remoteBrowserLoginHint": "Feishu、DingTalk、LDAP などの SSO フローはブラウザーで完了し、その後クライアントに戻ります。",
-    "openConsole": "管理コンソールを開く",
+    "openConsole": "企業管理コンソールを開く",
     "planGateHint": "この機能は現在の会社プランに含まれていません。会社の管理者に「会社コンソール → サブスクリプションと使用量」で対応するライセンスキーを有効化してもらい、もう一度お試しください。",
     "orgIdentityStatus": "認証ステータス",
     "orgIdentitySsoAuthed": "会社 SSO でサインイン済み",
@@ -849,7 +853,9 @@
     "serverErrNoEnterprise": "{{url}} は応答しますが、企業サーバーではありません（企業 API がありません）。多くの場合、One Work クライアント（このマシンの可能性もあります）のアドレスか、そこにエンタープライズ版がまだデプロイされていません。",
     "serverErrUnreachable": "{{url}} に接続できません。アドレスが管理者から案内されたものと一致しているか、サーバーが稼働しているか、両方のマシンが相互に通信できるかを確認してください。エンタープライズ版は通常ポート不要です。",
     "employeeNo": "Employee number",
-    "enterpriseEmail": "Enterprise email"
+    "enterpriseEmail": "Enterprise email",
+    "workspaceTitle": "企業とプロジェクトグループ",
+    "workspaceHint": "企業への接続、ログイン、プロジェクトへの参加をまとめて管理します。"
   },
   "knowledgeLibrary": {
     "quickAdd": "クイック追加",

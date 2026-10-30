@@ -16,7 +16,6 @@ import {
   Earth,
   CheckOne,
   FileCabinet,
-  IdCard,
   Info,
   Lightning,
   LinkCloud,
@@ -88,15 +87,9 @@ export function getBuiltinSettingsNavItems(isDesktop: boolean, t: TranslateFn): 
     },
     enterprise: {
       id: 'enterprise',
-      label: t('common.enterprise.title', { defaultValue: '项目组' }),
+      label: t('common.enterprise.workspaceTitle'),
       icon: <Peoples theme='outline' size='16' />,
       path: 'enterprise',
-    },
-    enterpriseIdentity: {
-      id: 'enterpriseIdentity',
-      label: t('common.enterprise.identityTabTitle', { defaultValue: '企业身份' }),
-      icon: <IdCard theme='outline' size='16' />,
-      path: 'enterprise-identity',
     },
     fileVault: {
       id: 'fileVault',

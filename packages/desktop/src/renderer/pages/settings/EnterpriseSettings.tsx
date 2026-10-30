@@ -3,15 +3,10 @@
  */
 
 import React from 'react';
-import EnterprisePage from '@/renderer/pages/enterprise';
-import SettingsPageWrapper from './components/SettingsPageWrapper';
+import EnterpriseIdentitySettings from './EnterpriseIdentitySettings';
 
 const EnterpriseSettings: React.FC = () => {
-  return (
-    <SettingsPageWrapper contentClassName='max-w-960px'>
-      <EnterprisePage />
-    </SettingsPageWrapper>
-  );
+  return <EnterpriseIdentitySettings />;
 };
 
 export default EnterpriseSettings;

@@ -47,11 +47,52 @@ vi.mock('@renderer/hooks/enterprise/useDeploymentRole', () => ({
   }),
 }));
 
+vi.mock('@/renderer/pages/enterprise/components/MemberSelfServiceSections', () => ({ default: () => null }));
+vi.mock('@/renderer/pages/enterprise/components/SecurePackagesSection', () => ({ default: () => null }));
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, opts?: { defaultValue?: string }) => opts?.defaultValue ?? key,
   }),
 }));
+
+vi.stubGlobal('matchMedia', (query: string) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addListener: () => {},
+  removeListener: () => {},
+  addEventListener: () => {},
+  removeEventListener: () => {},
+  dispatchEvent: () => false,
+}));
+
+describe('OverviewTab — collaboration identity', () => {
+  it.each([
+    [null, 'common.enterprise.independentProjectGroup'],
+    ['company-a', 'common.enterprise.companyProjectGroup'],
+  ])('shows ownership without inferring employment: %s', (enterpriseId, label) => {
+    render(
+      <MemoryRouter>
+        <OverviewTab
+          context={{
+            tenantId: 'group-a',
+            tenantName: 'Delivery',
+            role: 'member',
+            isEnterprise: true,
+            memberCount: 2,
+            enterpriseId,
+          }}
+          error={null}
+          unauthorized={false}
+          onChanged={vi.fn()}
+        />
+      </MemoryRouter>
+    );
+    expect(screen.getByText(label)).toBeInTheDocument();
+    expect(screen.getByText('common.enterprise.projectGroupOwnershipHint')).toBeInTheDocument();
+  });
+});
 
 describe('OverviewTab — local hosting retired', () => {
   // A personal install outside any project group. Its stored deployment role
