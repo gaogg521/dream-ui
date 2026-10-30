@@ -281,6 +281,24 @@ scripts/download-gh-artifact.sh gaogg521/dream-ui <run_id> macos-build-arm64-<sh
 # asar 抽查同 S5-④（从 zip 里解 onework.app/Contents/Resources/app.asar）
 ```
 
+> **🚨 CI 产物下载三坑（2026-10-31 实战）：**
+>
+> 1. **同一文件绝不能有第二个写入者。** 老下载循环没杀干净时，新旧两代 curl
+>    并发写同一 zip——文件无限增长、CRC 全坏。杀循环必须连 curl.exe 一起
+>    （`taskkill /F /IM curl.exe` + 按 CommandLine 过滤杀 bash），重启前用
+>    `tasklist` 确认归零。
+> 2. **断点续传 `-C -` 跨 302 重定向不可靠**：续传请求可能收到 416 错误体并被
+>    curl 当作正常响应追加，文件比标称大 32KB/64KB 且前缀也可能错位。下载
+>    一律 fresh 单流，禁 resume。
+> 3. **校验目标是 GitHub 的 artifact digest**：`gh api .../actions/artifacts/<id>`
+>    返回 `digest: sha256:<64hex>` 与 `size_in_bytes`，下载后逐字节对账即算
+>    "拿到的是这份制品"。注意 `artifacts/<id>`（元数据）与
+>    `artifacts/<id>/zip`（下载）端点：后者必须 `Accept: application/octet-stream`
+>    才回二进制，回 JSON/415 说明走错端点或头不对。curl 直连
+>    `.../zip` + Bearer（302 后跟 CDN）实测可用；`gh api` 该端点反而拒
+>    octet-stream。网络限速时（公司 QoS 单连接可低到 ~17KB/s 且多连接无增益），
+>    换时段重试比并行连接有效。
+
 10 个对象逐个 `publish-cos-release-asset.sh` 上传 → 官网切 `macArm`/`macIntel`
 
 - 真实尺寸 → build + deploy。
