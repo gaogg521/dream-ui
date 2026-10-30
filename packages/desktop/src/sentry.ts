@@ -116,6 +116,7 @@ export function initSentry(): void {
     dsn: process.env.SENTRY_DSN,
     environment: app.isPackaged ? 'production' : 'development',
     beforeSend(event) {
+      if (isUserFeedbackEvent(event)) return event;
       const haystacks = collectEventSearchText(event);
       if (GPU_CRASH_DROP_PATTERNS.some((re) => haystacks.some((h) => re.test(h)))) {
         return null;

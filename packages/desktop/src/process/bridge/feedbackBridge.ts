@@ -10,6 +10,35 @@
 import { ipcMain, app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { collectFeedbackLogAttachment } from '../feedback/logs';
+import { deliverFeedbackReport } from '../feedback/reports';
+import type { FeedbackSubmission } from '@/common/types/feedbackDiagnostics';
+
+const submittingWindows = new Set<number>();
+
+ipcMain.handle('feedback:submit-report', async (event, payload: FeedbackSubmission) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (
+    !win ||
+    win.isDestroyed() ||
+    win.webContents.id !== event.sender.id ||
+    event.senderFrame !== event.sender.mainFrame
+  )
+    throw new Error('Feedback must originate in the application window');
+  const url = new URL(event.sender.getURL());
+  if (url.protocol !== 'file:' && !(!app.isPackaged && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)))
+    throw new Error('Untrusted feedback source');
+  const timeout =
+    typeof payload?.timeoutMs === 'number' && Number.isFinite(payload.timeoutMs)
+      ? Math.max(1000, Math.min(30000, payload.timeoutMs))
+      : 10000;
+  if (submittingWindows.has(event.sender.id)) throw new Error('Feedback is already being submitted');
+  submittingWindows.add(event.sender.id);
+  try {
+    return await deliverFeedbackReport(payload, timeout);
+  } finally {
+    submittingWindows.delete(event.sender.id);
+  }
+});
 
 type RendererFeedbackLogPayload = {
   details?: unknown;

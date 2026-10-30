@@ -113,3 +113,16 @@ export type FeedbackDiagnosticsContextInput = {
   routeAtSubmit?: string;
   selectedModule?: string;
 };
+
+export type FeedbackSubmission = {
+  timeoutMs?: number;
+  message: string;
+  description: string;
+  module: string;
+  contactEmail?: string;
+  tags?: Record<string, string>;
+  extra?: Record<string, unknown>;
+  attachments: { filename: string; data: Uint8Array; contentType: string }[];
+};
+
+export type FeedbackReceipt = { eventId: string; acceptedAt: number };

@@ -7,7 +7,7 @@ import { FEEDBACK_MODULES } from './feedbackModules';
 import { useTalkToButler } from '@/renderer/hooks/assistant/useTalkToButler';
 import { useAuth } from '@/renderer/hooks/context/AuthContext';
 import { uploadFileViaHttp } from '@/renderer/services/FileService';
-import { Button, Input, Modal, Select, Message, Upload } from '@arco-design/web-react';
+import { Alert, Button, Input, Select, Message, Upload } from '@arco-design/web-react';
 import type { UploadItem } from '@arco-design/web-react/es/Upload';
 import { Info } from '@icon-park/react';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
@@ -32,35 +32,9 @@ const DESCRIPTION_MAX_LENGTH = 2000;
 const MAX_SCREENSHOTS = 3;
 const ACCEPTED_IMAGE_TYPES = '.png,.jpg,.jpeg,.gif';
 
-// Duplicate delivery channel: Sentry (above) is the system of record, but a
-// mailto: draft gives the maintainer a copy in their own inbox without wiring
-// any real SMTP sender (dream-core's only email seam today is the org-invite
-// StubEmailSender, which reports "not configured" and needs real credentials
-// nobody has supplied). mailto: needs none — it opens the reporter's own OS
-// mail client with the draft ready, and they click send themselves.
-//
-// This is opt-in, not automatic: after a successful submit we ask a separate
-// yes/no question ("send a copy of this report to the maintainer's inbox by
-// email?") and only open the mailto: draft if the reporter agrees. Sending
-// nothing extra is always a valid answer — the Sentry submission above has
-// already completed either way.
 const FEEDBACK_CONTACT_EMAIL = '475332294@qq.com';
-
-function buildFeedbackMailtoUrl(moduleLabel: string, description: string): string {
-  const subject = `[One Work 反馈] ${moduleLabel}`;
-  const body = [
-    `模块：${moduleLabel}`,
-    '',
-    description,
-    '',
-    '——',
-    '截图与应用日志已随反馈提交至 Sentry，未附加在本邮件中。',
-  ].join('\n');
-  // Manual percent-encoding (not URLSearchParams) — RFC 6068 mailto bodies use
-  // %20 for spaces, while URLSearchParams's form-urlencoded '+' would show up
-  // literally in some mail clients.
-  return `mailto:${FEEDBACK_CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-}
+const FEEDBACK_CONTACT_QQ = '475332294';
+const FEEDBACK_QQ_URL = `https://wpa.qq.com/msgrd?v=3&uin=${FEEDBACK_CONTACT_QQ}&site=qq&menu=yes`;
 
 // dream's AuthUser is { id, username } and carries no email; aionpro's AuthUser
 // does. Read it structurally (no AuthUser type import, no `any`) so this file
@@ -129,12 +103,15 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
   const [diagnosing, setDiagnosing] = useState(false);
   const descriptionRef = useRef<RefTextAreaType | null>(null);
   const [error, setError] = useState('');
+  const [receipt, setReceipt] = useState<string | null>(null);
+  const submitLock = useRef(false);
 
   const resetForm = useCallback(() => {
     setModule(undefined);
     setDescription('');
     setScreenshots([]);
     setError('');
+    setReceipt(null);
   }, []);
 
   // Auto-focus the description textarea when the modal opens so users can
@@ -173,6 +150,7 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
   }, [visible, defaultModule, prefilledScreenshots]);
 
   const handleCancel = useCallback(() => {
+    if (submitLock.current) return;
     resetForm();
     onCancel();
   }, [onCancel, resetForm]);
@@ -180,11 +158,12 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
   const selectedModule = FEEDBACK_MODULES.find((item) => item.tag === module);
 
   const handleSubmit = useCallback(async () => {
-    if (!module || !description.trim()) {
+    if (!module || !description.trim() || submitLock.current || receipt) {
       return;
     }
 
     setError('');
+    submitLock.current = true;
     setSubmitting(true);
 
     try {
@@ -208,7 +187,7 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
 
       const moduleLabel = t(selectedModule?.i18nKey ?? 'settings.bugReportModuleOther');
 
-      await submitFeedbackReport({
+      const delivered = await submitFeedbackReport({
         attachments,
         collectDbDiagnostics: {
           explicitContext: feedbackDiagnosticsContext?.explicitContext,
@@ -229,33 +208,11 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
         tags: feedbackTags,
       });
 
-      Message.success(t('settings.bugReportSuccess'));
-      resetForm();
-      onCancel();
-
-      // Opt-in second delivery channel, asked separately from — and after —
-      // the already-successful Sentry submission above. Only opens the
-      // mailto: draft if the reporter explicitly agrees; declining is a
-      // no-op, not a failure.
-      Modal.confirm({
-        title: t('settings.bugReportEmailConfirmTitle', { defaultValue: 'Also email this report?' }),
-        content: t('settings.bugReportEmailConfirmContent', {
-          defaultValue:
-            "Open your email app with this report pre-filled, addressed to the maintainer ({{email}})? Requires a configured mail client — if you don't have one, you can skip this.",
-          email: FEEDBACK_CONTACT_EMAIL,
-        }),
-        okText: t('settings.bugReportEmailConfirmOk', { defaultValue: 'Open email draft' }),
-        cancelText: t('settings.bugReportEmailConfirmCancel', { defaultValue: 'No thanks' }),
-        alignCenter: true,
-        onOk: () => {
-          openExternalUrl(buildFeedbackMailtoUrl(moduleLabel, description)).catch((mailError: unknown) => {
-            console.error('[FeedbackReport] failed to open mailto draft:', mailError);
-          });
-        },
-      });
+      setReceipt(delivered.eventId);
     } catch {
       setError(t('settings.bugReportError'));
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   }, [
@@ -270,7 +227,32 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
     feedbackExtra,
     feedbackTags,
     feedbackDiagnosticsContext,
+    receipt,
   ]);
+
+  const contact = async (channel: 'qq' | 'copy' | 'email') => {
+    try {
+      if (channel === 'copy') {
+        await navigator.clipboard.writeText(FEEDBACK_CONTACT_QQ);
+        Message.success(t('settings.feedbackQqCopied'));
+      } else if (channel === 'qq') {
+        await openExternalUrl(FEEDBACK_QQ_URL);
+        Message.info(t('settings.feedbackQqOpening'));
+      } else {
+        const moduleLabel = t(selectedModule?.i18nKey ?? 'settings.bugReportModuleOther');
+        const subject = `[One Work] ${moduleLabel}`;
+        const body = [moduleLabel, description.trim(), receipt ? t('settings.feedbackReceipt', { id: receipt }) : '']
+          .filter(Boolean)
+          .join('\n\n');
+        await openExternalUrl(
+          `mailto:${FEEDBACK_CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+        );
+        Message.info(t('settings.feedbackEmailOpening'));
+      }
+    } catch {
+      Message.error(t('settings.feedbackContactFailed'));
+    }
+  };
 
   // "Solve via chat": hand the report to the Dream UI Butler for on-the-spot
   // diagnosis instead of submitting to the team. The typed description + module
@@ -393,9 +375,11 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
   return (
     <DreamModal
       variant='standard'
-      header={{ title: t('settings.bugReportTitle'), showClose: true }}
+      header={{ title: t('settings.bugReportTitle'), showClose: !submitting }}
       visible={visible}
       onCancel={handleCancel}
+      maskClosable={!submitting}
+      escToExit={!submitting}
       onOk={handleSubmit}
       confirmLoading={submitting}
       okText={t('settings.bugReportSubmit')}
@@ -411,7 +395,7 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
             <Button
               type='text'
               loading={diagnosing}
-              disabled={!description.trim() || submitting}
+              disabled={!description.trim() || submitting || Boolean(receipt)}
               onClick={() => void handleDiagnose()}
               data-testid='btn-feedback-diagnose'
               className='!text-primary-6 hover:!text-primary-5'
@@ -419,19 +403,26 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
               {t('settings.talkToButler.solveViaChat', { defaultValue: 'Solve via chat' })}
             </Button>
             <div className='flex items-center gap-8px'>
-              <Button onClick={handleCancel} className='px-20px min-w-80px' style={{ borderRadius: 8 }}>
-                {t('settings.bugReportCancel')}
-              </Button>
               <Button
-                type='primary'
-                loading={submitting}
-                disabled={!isFormValid || diagnosing}
-                onClick={() => void handleSubmit()}
+                disabled={submitting}
+                onClick={handleCancel}
                 className='px-20px min-w-80px'
                 style={{ borderRadius: 8 }}
               >
-                {t('settings.bugReportSubmit')}
+                {t(receipt ? 'common.close' : 'settings.bugReportCancel')}
               </Button>
+              {!receipt && (
+                <Button
+                  type='primary'
+                  loading={submitting}
+                  disabled={!isFormValid || diagnosing}
+                  onClick={() => void handleSubmit()}
+                  className='px-20px min-w-80px'
+                  style={{ borderRadius: 8 }}
+                >
+                  {t('settings.bugReportSubmit')}
+                </Button>
+              )}
             </div>
           </div>
         ),
@@ -448,6 +439,35 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
     >
       <div data-testid='feedback-report-scroll-body' className='overflow-x-hidden'>
         <div className='flex flex-col gap-16px'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-12px'>
+            <section className='border border-2 rd-12px p-12px flex flex-col gap-8px'>
+              <strong>{t('settings.feedbackQqTitle')}</strong>
+              <span className='text-18px font-600'>{FEEDBACK_CONTACT_QQ}</span>
+              <p className='text-12px text-t-secondary'>{t('settings.feedbackQqHint')}</p>
+              <div className='flex flex-wrap gap-8px mt-auto'>
+                <Button type='primary' onClick={() => void contact('qq')}>
+                  {t('settings.feedbackOpenQq')}
+                </Button>
+                <Button onClick={() => void contact('copy')}>{t('settings.feedbackCopyQq')}</Button>
+              </div>
+            </section>
+            <section className='border border-2 rd-12px p-12px flex flex-col gap-8px'>
+              <strong>{t('settings.feedbackEmailTitle')}</strong>
+              <span className='text-14px break-all'>{FEEDBACK_CONTACT_EMAIL}</span>
+              <p className='text-12px text-t-secondary'>{t('settings.feedbackEmailHint')}</p>
+              <Button className='mt-auto' onClick={() => void contact('email')}>
+                {t('settings.bugReportEmailConfirmOk')}
+              </Button>
+            </section>
+          </div>
+          <h3 className='text-15px font-600'>{t('settings.feedbackReportTitle')}</h3>
+          {receipt && (
+            <Alert
+              type='success'
+              title={t('settings.bugReportSuccess')}
+              content={<span className='break-all'>{t('settings.feedbackReceipt', { id: receipt })}</span>}
+            />
+          )}
           {/* Description */}
           <div className='flex flex-col gap-4px'>
             <label className='text-13px text-t-secondary'>
@@ -455,6 +475,7 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
             </label>
             <Input.TextArea
               ref={descriptionRef}
+              disabled={submitting || Boolean(receipt)}
               placeholder={t('settings.bugReportDescriptionPlaceholder')}
               value={description}
               onChange={(val) => {
@@ -473,6 +494,7 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
               {t('settings.bugReportModuleLabel')} <span className='text-red-500'>*</span>
             </label>
             <Select
+              disabled={submitting || Boolean(receipt)}
               placeholder={t('settings.bugReportModulePlaceholder')}
               value={module}
               onChange={(val) => {
@@ -501,6 +523,7 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
             </label>
             <div data-testid='feedback-report-upload-trigger'>
               <Upload
+                disabled={submitting || Boolean(receipt)}
                 listType='picture-card'
                 multiple
                 accept={ACCEPTED_IMAGE_TYPES}

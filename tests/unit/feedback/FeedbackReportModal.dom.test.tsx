@@ -23,6 +23,8 @@ vi.mock('@arco-design/web-react', async (importOriginal) => {
     Message: {
       ...actual.Message,
       success: vi.fn(),
+      info: vi.fn(),
+      error: vi.fn(),
     },
     Modal: {
       ...actual.Modal,
@@ -54,20 +56,7 @@ vi.mock('@/renderer/hooks/context/AuthContext', () => ({
   useAuth: () => ({ user: authMock.user }),
 }));
 
-const sentryMocks = vi.hoisted(() => {
-  const setTag = vi.fn();
-  const setUser = vi.fn();
-  return {
-    setTag,
-    setUser,
-    captureEvent: vi.fn(),
-    withScope: vi.fn((callback: (scope: { setTag: typeof setTag; setUser: typeof setUser }) => void) => {
-      callback({ setTag, setUser });
-    }),
-  };
-});
-
-vi.mock('@sentry/electron/renderer', () => sentryMocks);
+const sendFeedback = vi.hoisted(() => vi.fn());
 
 const { openExternalUrl } = vi.hoisted(() => ({
   openExternalUrl: vi.fn().mockResolvedValue(undefined),
@@ -90,13 +79,10 @@ const buildScreenshot = (name: string, byte: number): PrefilledScreenshot => ({
 describe('FeedbackReportModal — prefill', () => {
   beforeEach(() => {
     // Ensure no leftover global electronAPI from other tests interferes.
-    (window as unknown as { electronAPI?: unknown }).electronAPI = undefined;
+    (window as unknown as { electronAPI?: unknown }).electronAPI = { submitFeedbackReport: sendFeedback };
+    sendFeedback.mockReset().mockResolvedValue({ eventId: 'confirmed-id', acceptedAt: 1 });
     window.location.hash = '';
     authMock.user = null;
-    sentryMocks.setTag.mockClear();
-    sentryMocks.setUser.mockClear();
-    sentryMocks.captureEvent.mockClear();
-    sentryMocks.withScope.mockClear();
     openExternalUrl.mockClear();
     modalConfirmMock.mockClear();
   });
@@ -186,51 +172,33 @@ describe('FeedbackReportModal — prefill', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
-  it('submits feedback tags and extra context to Sentry', async () => {
+  it('submits tags and context and shows an inline receipt only after acknowledgement', async () => {
     const user = userEvent.setup();
     const onCancel = vi.fn();
     renderModal(
       <FeedbackReportModal
-        visible={true}
+        visible
         onCancel={onCancel}
         defaultModule='conversation-session'
-        feedbackTags={{
-          agent_error_code: 'USER_LLM_PROVIDER_AUTH_FAILED',
-          agent_error_ownership: 'user_llm_provider',
-        }}
-        feedbackExtra={{
-          agent_error: {
-            code: 'USER_LLM_PROVIDER_AUTH_FAILED',
-            ownership: 'user_llm_provider',
-          },
-        }}
+        feedbackTags={{ source: 'test' }}
+        feedbackExtra={{ trace: 'safe' }}
       />
     );
-
     await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'provider failed');
     await user.click(screen.getByText('settings.bugReportSubmit'));
-
-    await waitFor(() => {
-      expect(sentryMocks.captureEvent).toHaveBeenCalledTimes(1);
-    });
-
-    expect(sentryMocks.setTag).toHaveBeenCalledWith('type', 'user-feedback');
-    expect(sentryMocks.setTag).toHaveBeenCalledWith('module', 'conversation-session');
-    expect(sentryMocks.setTag).toHaveBeenCalledWith('agent_error_code', 'USER_LLM_PROVIDER_AUTH_FAILED');
-    expect(sentryMocks.setTag).toHaveBeenCalledWith('agent_error_ownership', 'user_llm_provider');
-    expect(sentryMocks.captureEvent).toHaveBeenCalledWith(
+    await screen.findByText('settings.bugReportSuccess');
+    expect(sendFeedback).toHaveBeenCalledWith(
       expect.objectContaining({
-        extra: {
-          description: 'provider failed',
-          agent_error: {
-            code: 'USER_LLM_PROVIDER_AUTH_FAILED',
-            ownership: 'user_llm_provider',
-          },
-        },
-      }),
-      expect.objectContaining({ attachments: [] })
+        module: 'conversation-session',
+        description: 'provider failed',
+        tags: { source: 'test' },
+        extra: { trace: 'safe' },
+        attachments: [],
+      })
     );
-    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(onCancel).not.toHaveBeenCalled();
+    expect(openExternalUrl).not.toHaveBeenCalled();
+    expect(modalConfirmMock).not.toHaveBeenCalled();
   });
 
   it('submits route and module diagnostics context for DB attachment collection', async () => {
@@ -292,12 +260,12 @@ describe('FeedbackReportModal — prefill', () => {
     await user.click(screen.getByText('settings.bugReportSubmit'));
 
     await waitFor(() => {
-      expect(sentryMocks.captureEvent).toHaveBeenCalledTimes(1);
+      expect(sendFeedback).toHaveBeenCalledTimes(1);
     });
 
     // The account email rides along on THIS event's scoped user (trimmed), with
     // no visible field for the reporter to fill in or edit.
-    expect(sentryMocks.setUser).toHaveBeenCalledWith({ email: 'me@account.com' });
+    expect(sendFeedback).toHaveBeenCalledWith(expect.objectContaining({ contactEmail: 'me@account.com' }));
   });
 
   it('submits without a scoped user when the signed-in user has no email', async () => {
@@ -309,73 +277,57 @@ describe('FeedbackReportModal — prefill', () => {
     await user.click(screen.getByText('settings.bugReportSubmit'));
 
     await waitFor(() => {
-      expect(sentryMocks.captureEvent).toHaveBeenCalledTimes(1);
+      expect(sendFeedback).toHaveBeenCalledTimes(1);
     });
 
-    expect(sentryMocks.setUser).not.toHaveBeenCalled();
+    expect(sendFeedback.mock.calls[0][0].contactEmail).toBeUndefined();
   });
 
-  it('asks for consent before opening a mailto draft, instead of sending automatically', async () => {
-    const onCancel = vi.fn();
+  it('opens QQ directly without submitting a report or showing success', async () => {
     const user = userEvent.setup();
-    renderModal(<FeedbackReportModal visible={true} onCancel={onCancel} defaultModule='conversation-session' />);
-
-    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'provider failed');
-    await user.click(screen.getByText('settings.bugReportSubmit'));
-
-    // The primary submission (Sentry + form close) completes on its own —
-    // the email question is a separate, later step, not a blocker.
-    await waitFor(() => {
-      expect(onCancel).toHaveBeenCalledTimes(1);
-    });
-
-    await waitFor(() => {
-      expect(modalConfirmMock).toHaveBeenCalledTimes(1);
-    });
-    const config = modalConfirmMock.mock.calls[0][0] as {
-      title: string;
-      onOk: () => void;
-    };
-    expect(config.title).toBe('settings.bugReportEmailConfirmTitle');
-    // No consent given yet — nothing should have been sent to the OS shell.
-    expect(openExternalUrl).not.toHaveBeenCalled();
+    renderModal(<FeedbackReportModal visible onCancel={vi.fn()} />);
+    expect(screen.queryByText('settings.bugReportSuccess')).not.toBeInTheDocument();
+    await user.click(screen.getByText('settings.feedbackOpenQq'));
+    expect(openExternalUrl).toHaveBeenCalledWith(expect.stringContaining('uin=475332294'));
+    expect(sendFeedback).not.toHaveBeenCalled();
+    expect(screen.queryByText('settings.bugReportSuccess')).not.toBeInTheDocument();
   });
-
-  it('opens the pre-filled mailto draft only once the reporter agrees via the confirm dialog', async () => {
+  it('opens an email draft only on explicit click, without submitting online', async () => {
     const user = userEvent.setup();
-    renderModal(<FeedbackReportModal visible={true} onCancel={vi.fn()} defaultModule='conversation-session' />);
-
-    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'provider failed');
-    await user.click(screen.getByText('settings.bugReportSubmit'));
-
-    await waitFor(() => {
-      expect(modalConfirmMock).toHaveBeenCalledTimes(1);
-    });
-    const { onOk } = modalConfirmMock.mock.calls[0][0] as { onOk: () => void };
-    onOk();
-
-    await waitFor(() => {
-      expect(openExternalUrl).toHaveBeenCalledTimes(1);
-    });
-    const [mailtoUrl] = openExternalUrl.mock.calls[0] as [string];
-    expect(mailtoUrl.startsWith('mailto:475332294@qq.com?')).toBe(true);
-    expect(mailtoUrl).toContain(`subject=${encodeURIComponent('[One Work 反馈] settings.bugReportModuleChat')}`);
-    expect(decodeURIComponent(mailtoUrl)).toContain('provider failed');
+    renderModal(<FeedbackReportModal visible onCancel={vi.fn()} defaultModule='conversation-session' />);
+    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'draft details');
+    await user.click(screen.getByText('settings.bugReportEmailConfirmOk'));
+    expect(decodeURIComponent(openExternalUrl.mock.calls[0][0])).toContain('draft details');
+    expect(openExternalUrl.mock.calls[0][0]).toMatch(/^mailto:475332294@qq.com/);
+    expect(sendFeedback).not.toHaveBeenCalled();
+    expect(screen.queryByText('settings.bugReportSuccess')).not.toBeInTheDocument();
   });
-
-  it('never opens a mailto draft when the reporter declines the confirm dialog', async () => {
+  it('keeps the draft and screenshots when delivery fails', async () => {
+    sendFeedback.mockRejectedValue(new Error('service unavailable'));
     const user = userEvent.setup();
-    renderModal(<FeedbackReportModal visible={true} onCancel={vi.fn()} defaultModule='conversation-session' />);
-
-    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'provider failed');
+    renderModal(<FeedbackReportModal visible onCancel={vi.fn()} defaultModule='conversation-session' />);
+    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'keep my report');
     await user.click(screen.getByText('settings.bugReportSubmit'));
-
-    await waitFor(() => {
-      expect(modalConfirmMock).toHaveBeenCalledTimes(1);
-    });
-    // Simulate the reporter dismissing/declining: only onOk fires anything,
-    // so simply never invoking it must leave the shell untouched.
-    expect(openExternalUrl).not.toHaveBeenCalled();
+    await screen.findByText('settings.bugReportError');
+    expect(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder')).toHaveValue('keep my report');
+    expect(screen.queryByText('settings.bugReportSuccess')).not.toBeInTheDocument();
+  });
+  it('does not show success while waiting for the delivery receipt', async () => {
+    let accept!: (value: { eventId: string; acceptedAt: number }) => void;
+    sendFeedback.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          accept = resolve;
+        })
+    );
+    const user = userEvent.setup();
+    renderModal(<FeedbackReportModal visible onCancel={vi.fn()} defaultModule='conversation-session' />);
+    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'pending report');
+    await user.click(screen.getByText('settings.bugReportSubmit'));
+    await waitFor(() => expect(sendFeedback).toHaveBeenCalled());
+    expect(screen.queryByText('settings.bugReportSuccess')).not.toBeInTheDocument();
+    accept({ eventId: 'real-receipt', acceptedAt: 1 });
+    await screen.findByText('settings.bugReportSuccess');
   });
 
   it('no longer renders the contact email field or its account-fill button', () => {

@@ -10,6 +10,7 @@ import '@sentry/electron/preload';
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import { ADAPTER_BRIDGE_EVENT_KEY } from '../common/adapter/constant';
 import type { OfflineOfficeApi, OfficeEvent } from '../common/types/offlineOffice';
+import type { FeedbackSubmission } from '../common/types/feedbackDiagnostics';
 const offlineOffice: OfflineOfficeApi = {
   open: (request) => ipcRenderer.invoke('offline-office:open', request),
   unlock: (id) => ipcRenderer.invoke('offline-office:unlock', id),
@@ -60,6 +61,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPathForFile: (file: File) => webUtils.getPathForFile(file),
   // Feedback: collect and compress recent log files
   collectFeedbackLogs: () => ipcRenderer.invoke('feedback:collect-logs'),
+  submitFeedbackReport: (payload: FeedbackSubmission) => ipcRenderer.invoke('feedback:submit-report', payload),
   // Feedback: capture a screenshot of the current window
   captureFeedbackScreenshot: () => ipcRenderer.invoke('feedback:capture-screenshot'),
   // Feedback: forward diagnostics logs to the main process console

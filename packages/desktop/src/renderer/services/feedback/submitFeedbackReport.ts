@@ -1,4 +1,4 @@
-import type { FeedbackDiagnosticsContextInput } from '@/common/types/feedbackDiagnostics';
+import type { FeedbackDiagnosticsContextInput, FeedbackReceipt } from '@/common/types/feedbackDiagnostics';
 import { httpRequest } from '@/common/adapter/httpBridge';
 
 const SUMMARY_PREVIEW_LENGTH = 60;
@@ -237,7 +237,7 @@ function buildSummary(moduleLabel: string, description: string): string {
   return `${moduleLabel}: ${summaryPreview}`;
 }
 
-export async function submitFeedbackReport(input: SubmitFeedbackReportInput): Promise<void> {
+export async function submitFeedbackReport(input: SubmitFeedbackReportInput): Promise<FeedbackReceipt> {
   const attachments = [...(input.attachments ?? [])];
   let eventId: string | undefined;
   let logAttachmentStatus: FeedbackLogAttachmentStatus = input.collectLogs ? 'empty' : 'skipped';
@@ -248,6 +248,8 @@ export async function submitFeedbackReport(input: SubmitFeedbackReportInput): Pr
   let dbDiagnosticsAttachment: FeedbackAttachment | null = null;
 
   try {
+    const send = typeof window !== 'undefined' ? window.electronAPI?.submitFeedbackReport : undefined;
+    if (!send) throw new Error('Feedback delivery is unavailable; use QQ or email');
     if (input.collectLogs) {
       const collectedLogAttachment = await collectLogAttachment();
       logAttachmentStatus = collectedLogAttachment.status;
@@ -269,48 +271,19 @@ export async function submitFeedbackReport(input: SubmitFeedbackReportInput): Pr
     const normalizedDescription = normalizeDescription(input.description);
     const eventSummary = buildSummary(input.moduleLabel, normalizedDescription);
     const contactEmail = input.contactEmail?.trim();
-    const Sentry = await import('@sentry/electron/renderer');
-
-    Sentry.withScope((scope) => {
-      scope.setTag('type', 'user-feedback');
-      scope.setTag('module', input.module);
-      // Attach the optional contact email to THIS feedback event only via the
-      // scoped user, so support can reach the reporter. Intentionally not a
-      // global Sentry.setUser — that would stick this address onto every later
-      // event (including crash reports the user never opted to share it on).
-      if (contactEmail) {
-        scope.setUser({ email: contactEmail });
-      }
-      Object.entries(input.tags ?? {}).forEach(([key, value]) => {
-        if (value.trim()) {
-          scope.setTag(key, value);
-        }
-      });
-
-      eventId = Sentry.captureEvent(
-        {
-          level: 'info',
-          message: eventSummary,
-          extra: {
-            description: normalizedDescription,
-            ...input.extra,
-          },
-        },
-        { attachments }
-      );
+    const receipt = await send({
+      message: eventSummary,
+      description: input.description.trim(),
+      module: input.module,
+      contactEmail,
+      tags: input.tags,
+      extra: input.extra,
+      attachments,
+      timeoutMs: input.flushTimeoutMs,
     });
-
-    if (input.flushTimeoutMs !== undefined) {
-      const client = Sentry.getClient();
-      if (!client) {
-        throw new Error(`Failed to flush feedback report${eventId ? ` (${eventId})` : ''}: Sentry is not initialized`);
-      }
-
-      const flushed = await client.flush(input.flushTimeoutMs);
-      if (!flushed) {
-        throw new Error(`Failed to flush feedback report${eventId ? ` (${eventId})` : ''}`);
-      }
-    }
+    if (!receipt?.eventId || !Number.isFinite(receipt.acceptedAt))
+      throw new Error('Feedback service did not return an acknowledgement');
+    eventId = receipt.eventId;
 
     logFeedbackReport('info', 'submitted', {
       module: input.module,
@@ -323,6 +296,7 @@ export async function submitFeedbackReport(input: SubmitFeedbackReportInput): Pr
       flushTimeoutMs: input.flushTimeoutMs,
       tagKeys: Object.keys(input.tags ?? {}),
     });
+    return receipt;
   } catch (error) {
     logFeedbackReport('error', 'failed', {
       module: input.module,
