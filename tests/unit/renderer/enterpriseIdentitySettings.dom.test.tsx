@@ -44,6 +44,9 @@ vi.mock('@renderer/pages/settings/components/EnterpriseServerCard', () => ({
 vi.mock('@/renderer/pages/enterprise/components/RemoteServerSection', () => ({
   default: () => <div data-testid='remote-server-section'>连接远端企业服务器</div>,
 }));
+vi.mock('@/renderer/pages/enterprise', () => ({
+  default: () => <div data-testid='project-group'>项目组与独立协作</div>,
+}));
 vi.mock('@/renderer/pages/enterprise/components/EnterpriseIdentityCard', () => ({
   default: () => <div data-testid='identity-card'>企业身份信息</div>,
 }));
@@ -59,7 +62,7 @@ describe('EnterpriseIdentitySettings composition', () => {
     localStorage.removeItem('one-enterprise:session');
   });
 
-  it('shows only the connect card before a server is connected', async () => {
+  it('keeps project groups visible independently of the enterprise connection', async () => {
     render(<EnterpriseIdentitySettings />);
 
     await waitFor(() => expect(screen.getByTestId('server-card')).toBeInTheDocument());
@@ -67,6 +70,7 @@ describe('EnterpriseIdentitySettings composition', () => {
     // stack of "未启用" / "暂无企业身份" cards that read as broken.
     expect(screen.queryByTestId('remote-server-section')).not.toBeInTheDocument();
     expect(screen.queryByTestId('identity-card')).not.toBeInTheDocument();
+    expect(screen.getByTestId('project-group')).toBeInTheDocument();
   });
 
   it('adds the login section once connected, and identity once signed in', async () => {
@@ -78,6 +82,7 @@ describe('EnterpriseIdentitySettings composition', () => {
     // Connected but not signed in: the identity card would only say
     // "无法获取企业身份信息".
     expect(screen.queryByTestId('identity-card')).not.toBeInTheDocument();
+    expect(screen.getByTestId('project-group')).toBeInTheDocument();
     unmount();
 
     localStorage.setItem('one-enterprise:session', JSON.stringify({ token: 't', username: 'u' }));
