@@ -230,6 +230,7 @@
     "mySkills": "我的技能"
   },
   "enterprise": {
+    "projectGroupExitHint": "仅退出当前项目组，不会退出登录或更改企业认证身份。若管理员设置了退出口令，请输入：",
     "defaultCompanyWorkspace": "企业默认协作空间",
     "projectGroupOwnershipHint": "项目组用于共同协作，可以独立存在，也可以隶属企业。加入项目组不等同于企业员工认证，资源以管理员授权为准。",
     "independentProjectGroup": "独立项目组",
@@ -270,7 +271,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "退出项目组",
     "exitTitle": "退出项目组",
-    "exitHint": "仅退出当前项目组，不会退出登录或更改企业认证身份。若管理员设置了退出口令，请输入：",
+    "exitHint": "退出后将回到个人模式。若管理员设置了退出口令，请输入：",
     "exitCodePlaceholder": "退出口令（未设置可留空）",
     "joinTitle": "加入项目组",
     "joinHint": "输入管理员提供的邀请码加入项目组。",

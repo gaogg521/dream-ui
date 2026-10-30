@@ -703,6 +703,7 @@
     }
   },
   "enterprise": {
+    "projectGroupExitHint": "Yalnızca bu gruptan ayrılırsınız. Oturum ve doğrulanmış şirket kimliği korunur. Gerekirse çıkış parolasını girin:",
     "defaultCompanyWorkspace": "Varsayılan şirket çalışma alanı",
     "projectGroupOwnershipHint": "Proje grupları bağımsız olabilir veya bir şirkete bağlı olabilir. Katılmak çalışan kimliğini doğrulamaz; kaynaklar yönetici izinlerine bağlıdır.",
     "independentProjectGroup": "Bağımsız proje grubu",
@@ -745,7 +746,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "Proje grubundan ayrıl",
     "exitTitle": "Proje grubundan ayrıl",
-    "exitHint": "Yalnızca bu gruptan ayrılırsınız. Oturum ve doğrulanmış şirket kimliği korunur. Gerekirse çıkış parolasını girin:",
+    "exitHint": "Kişisel moda döneceksiniz. Yönetici bir ayrılma parolası belirlediyse aşağıya girin:",
     "exitCodePlaceholder": "Ayrılma parolası (belirlenmediyse boş bırakın)",
     "joinTitle": "Bir proje grubuna katıl",
     "joinHint": "Katılmak için yöneticinizden aldığınız davet kodunu girin.",

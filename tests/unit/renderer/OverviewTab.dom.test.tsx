@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
@@ -68,6 +68,31 @@ vi.stubGlobal('matchMedia', (query: string) => ({
 }));
 
 describe('OverviewTab — collaboration identity', () => {
+  it.each([
+    [undefined, '退出后将回到个人模式。若管理员设置了退出口令，请输入：'],
+    [null, '仅退出当前项目组，不会退出登录或更改企业认证身份。若管理员设置了退出口令，请输入：'],
+  ])('describes exit according to the server contract: %s', (enterpriseId, hint) => {
+    render(
+      <MemoryRouter>
+        <OverviewTab
+          context={{
+            tenantId: 'group-a',
+            tenantName: 'Delivery',
+            role: 'member',
+            isEnterprise: true,
+            memberCount: 2,
+            enterpriseId,
+          }}
+          error={null}
+          unauthorized={false}
+          onChanged={vi.fn()}
+        />
+      </MemoryRouter>
+    );
+    fireEvent.click(screen.getByRole('button', { name: '退出项目组' }));
+    expect(screen.getByText(hint)).toBeInTheDocument();
+  });
+
   it.each([
     [null, 'common.enterprise.independentProjectGroup'],
     ['company-a', 'common.enterprise.companyProjectGroup'],

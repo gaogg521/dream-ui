@@ -703,6 +703,7 @@
     }
   },
   "enterprise": {
+    "projectGroupExitHint": "Solo abandonará este grupo. La sesión y la identidad empresarial verificada se mantienen. Introduzca la contraseña de salida si es necesaria:",
     "defaultCompanyWorkspace": "Espacio empresarial predeterminado",
     "projectGroupOwnershipHint": "Los grupos pueden ser independientes o pertenecer a una empresa. Unirse no verifica una relación laboral; los recursos requieren permisos del administrador.",
     "independentProjectGroup": "Grupo de proyecto independiente",
@@ -745,7 +746,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "Salir del grupo de proyecto",
     "exitTitle": "Salir del grupo de proyecto",
-    "exitHint": "Solo abandonará este grupo. La sesión y la identidad empresarial verificada se mantienen. Introduzca la contraseña de salida si es necesaria:",
+    "exitHint": "Volverás al modo personal. Si el administrador estableció una contraseña de salida, introdúcela a continuación:",
     "exitCodePlaceholder": "Contraseña de salida (déjala vacía si no hay ninguna)",
     "joinTitle": "Unirse a un grupo de proyecto",
     "joinHint": "Introduce el código de invitación de tu administrador para unirte.",

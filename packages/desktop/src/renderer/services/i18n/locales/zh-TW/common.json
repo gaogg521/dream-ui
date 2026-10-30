@@ -709,6 +709,7 @@
   "enterprise.loginChannelsNoneConfiguredHint": "已連線企業伺服器，但管理員尚未在企業管理後台啟用任何 SSO 登入方式。可先用「本機帳戶」登入。",
   "enterprise.wizardEditingContext": "目前已連線：{{url}}。只有新位址連線成功後才會切換，取消不會變更現有連線。",
   "enterprise": {
+    "projectGroupExitHint": "僅退出目前專案組，不會登出或變更企業認證身分。若管理員設定了退出口令，請輸入：",
     "defaultCompanyWorkspace": "企業預設協作空間",
     "projectGroupOwnershipHint": "專案組用於共同協作，可以獨立存在，也可以隸屬企業。加入專案組不等同企業員工認證，資源依管理員授權為準。",
     "independentProjectGroup": "獨立專案組",
@@ -751,7 +752,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "退出專案組",
     "exitTitle": "退出專案組",
-    "exitHint": "僅退出目前專案組，不會登出或變更企業認證身分。若管理員設定了退出口令，請輸入：",
+    "exitHint": "退出後將回到個人模式。若管理員設定了退出口令，請輸入：",
     "exitCodePlaceholder": "退出口令（未設定可留空）",
     "joinTitle": "加入專案組",
     "joinHint": "輸入管理員提供的邀請碼加入專案組。",

@@ -95,7 +95,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
       Message.success(
         t('common.enterprise.joinSuccess', {
           name: tenant?.tenantName ?? '',
-          defaultValue: '已加入企业 {{name}}',
+          defaultValue: '已加入项目组 {{name}}',
         })
       );
       setInviteCode('');
@@ -115,7 +115,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
         try {
           const ctx = await ipcBridge.oneOrg.context.invoke();
           if (ctx?.isEnterprise) {
-            Message.info(t('common.enterprise.joinAlready', { defaultValue: '您已加入该企业' }));
+            Message.info(t('common.enterprise.joinAlready', { defaultValue: '您已加入该项目组' }));
             setInviteCode('');
             onChanged();
             window.dispatchEvent(new CustomEvent(ORG_CONTEXT_CHANGED_EVENT));
@@ -138,7 +138,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
       // D2: purge locally-materialized team skills / MCP so the departing
       // member's agent stops auto-loading enterprise resources. Best-effort.
       await clearTeamResources();
-      Message.success(t('common.enterprise.exitSuccess', { defaultValue: '已退出企业' }));
+      Message.success(t('common.enterprise.exitSuccess', { defaultValue: '已退出项目组' }));
       setExitVisible(false);
       setExitCode('');
       onChanged();
@@ -183,7 +183,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
           </div>
           <div>
             <div className='text-15px font-600 text-t-primary mb-8px'>
-              {t('common.enterprise.joinTitle', { defaultValue: '加入企业' })}
+              {t('common.enterprise.joinTitle', { defaultValue: '加入项目组' })}
             </div>
             <div className='text-t-tertiary text-13px mb-8px'>
               {t('common.enterprise.joinNeedsLoginHint', { defaultValue: '登录企业账号后可用邀请码加入。' })}
@@ -245,8 +245,11 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
     const role = roleLabelKey[context.role] ?? roleLabelKey.member;
 
     const descData: { label: string; value: React.ReactNode }[] = [
-      { label: t('common.enterprise.fieldTenantName', { defaultValue: '企业名称' }), value: context.tenantName ?? '-' },
-      { label: t('common.enterprise.fieldTenantId', { defaultValue: '企业 ID' }), value: context.tenantId },
+      {
+        label: t('common.enterprise.fieldTenantName', { defaultValue: '项目组名称' }),
+        value: context.tenantName ?? '-',
+      },
+      { label: t('common.enterprise.fieldTenantId', { defaultValue: '项目组 ID' }), value: context.tenantId },
     ];
     descData.push({
       label: t('common.enterprise.fieldRole', { defaultValue: '我的角色' }),
@@ -288,10 +291,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
         <SecurePackagesSection />
         <Divider />
         <Button status='danger' onClick={() => setExitVisible(true)}>
-          {t('common.enterprise.exitButton', { defaultValue: '退出企业' })}
+          {t('common.enterprise.exitButton', { defaultValue: '退出项目组' })}
         </Button>
         <Modal
-          title={t('common.enterprise.exitTitle', { defaultValue: '退出企业' })}
+          title={t('common.enterprise.exitTitle', { defaultValue: '退出项目组' })}
           visible={exitVisible}
           onCancel={() => setExitVisible(false)}
           onOk={handleExit}
@@ -299,9 +302,13 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
           maskClosable={false}
         >
           <div className='mb-8px text-t-secondary'>
-            {t('common.enterprise.exitHint', {
-              defaultValue: '仅退出当前项目组，不会退出登录或更改企业认证身份。若管理员设置了退出口令，请输入：',
-            })}
+            {context.enterpriseId === undefined
+              ? t('common.enterprise.exitHint', {
+                  defaultValue: '退出后将回到个人模式。若管理员设置了退出口令，请输入：',
+                })
+              : t('common.enterprise.projectGroupExitHint', {
+                  defaultValue: '仅退出当前项目组，不会退出登录或更改企业认证身份。若管理员设置了退出口令，请输入：',
+                })}
           </div>
           <Input.Password
             value={exitCode}
@@ -318,7 +325,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ context, error, unauthorized,
       {showJoinEnterprise && (
         <div>
           <div className='text-15px font-600 text-t-primary mb-8px'>
-            {t('common.enterprise.joinTitle', { defaultValue: '加入企业' })}
+            {t('common.enterprise.joinTitle', { defaultValue: '加入项目组' })}
           </div>
           <div className='text-t-secondary mb-12px'>
             {t('common.enterprise.joinHint', { defaultValue: '输入管理员提供的邀请码加入企业。' })}

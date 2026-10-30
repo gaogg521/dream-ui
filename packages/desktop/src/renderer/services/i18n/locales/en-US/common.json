@@ -230,6 +230,7 @@
     "mySkills": "My Skills"
   },
   "enterprise": {
+    "projectGroupExitHint": "Leave only this project group. You remain signed in and your verified company identity is unchanged. Enter the exit password if required:",
     "defaultCompanyWorkspace": "Default company workspace",
     "projectGroupOwnershipHint": "Project groups support collaboration and may be independent or owned by a company. Joining a group does not verify employment; resources depend on administrator grants.",
     "independentProjectGroup": "Independent project group",
@@ -270,7 +271,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "Leave project group",
     "exitTitle": "Leave project group",
-    "exitHint": "Leave only this project group. You remain signed in and your verified company identity is unchanged. Enter the exit password if required:",
+    "exitHint": "You will return to personal mode. If the admin set an exit password, enter it below:",
     "exitCodePlaceholder": "Exit password (leave empty if unset)",
     "joinTitle": "Join a project group",
     "joinHint": "Enter the invite code from your admin to join.",

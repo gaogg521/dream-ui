@@ -405,6 +405,7 @@ export type I18nKey =
   | 'common.enterprise.orgIdentityStatus'
   | 'common.enterprise.orgIdentityUnknownCompany'
   | 'common.enterprise.planGateHint'
+  | 'common.enterprise.projectGroupExitHint'
   | 'common.enterprise.projectGroupOwnershipHint'
   | 'common.enterprise.remoteActiveHint'
   | 'common.enterprise.remoteActiveTitle'

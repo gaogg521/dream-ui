@@ -703,6 +703,7 @@
     }
   },
   "enterprise": {
+    "projectGroupExitHint": "Sie verlassen nur diese Projektgruppe. Anmeldung und bestätigte Unternehmensidentität bleiben erhalten. Falls erforderlich, Austrittspasswort eingeben:",
     "defaultCompanyWorkspace": "Standard-Unternehmensarbeitsbereich",
     "projectGroupOwnershipHint": "Projektgruppen können unabhängig oder einem Unternehmen zugeordnet sein. Ein Beitritt bestätigt kein Arbeitsverhältnis; Ressourcen erfordern Administratorfreigaben.",
     "independentProjectGroup": "Unabhängige Projektgruppe",
@@ -745,7 +746,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "Projektgruppe verlassen",
     "exitTitle": "Projektgruppe verlassen",
-    "exitHint": "Sie verlassen nur diese Projektgruppe. Anmeldung und bestätigte Unternehmensidentität bleiben erhalten. Falls erforderlich, Austrittspasswort eingeben:",
+    "exitHint": "Du kehrst in den persönlichen Modus zurück. Falls der Administrator ein Austrittspasswort festgelegt hat, gib es unten ein:",
     "exitCodePlaceholder": "Austrittspasswort (leer lassen, falls keines festgelegt ist)",
     "joinTitle": "Einer Projektgruppe beitreten",
     "joinHint": "Gib den Einladungscode deines Administrators ein, um beizutreten.",

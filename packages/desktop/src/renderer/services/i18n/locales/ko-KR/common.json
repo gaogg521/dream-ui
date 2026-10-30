@@ -703,6 +703,7 @@
     }
   },
   "enterprise": {
+    "projectGroupExitHint": "현재 그룹만 탈퇴합니다. 로그인과 기업 인증 정보는 유지됩니다. 필요한 경우 탈퇴 암호를 입력하세요:",
     "defaultCompanyWorkspace": "기업 기본 협업 공간",
     "projectGroupOwnershipHint": "프로젝트 그룹은 독립적으로 존재하거나 기업에 속할 수 있습니다. 그룹 가입은 직원 인증을 의미하지 않으며 리소스는 관리자 권한에 따릅니다.",
     "independentProjectGroup": "독립 프로젝트 그룹",
@@ -745,7 +746,7 @@
     "ssoProviderLdap": "LDAP",
     "exitButton": "프로젝트 그룹 나가기",
     "exitTitle": "프로젝트 그룹 나가기",
-    "exitHint": "현재 그룹만 탈퇴합니다. 로그인과 기업 인증 정보는 유지됩니다. 필요한 경우 탈퇴 암호를 입력하세요:",
+    "exitHint": "개인 모드로 돌아갑니다. 관리자가 나가기 비밀번호를 설정했다면 아래에 입력하세요:",
     "exitCodePlaceholder": "나가기 비밀번호(설정하지 않았다면 비워 두세요)",
     "joinTitle": "프로젝트 그룹 참여",
     "joinHint": "관리자에게서 받은 초대 코드를 입력해 참여하세요.",
