@@ -1,4 +1,5 @@
 {
+  "feedbackContactTitle": "QQ・メール",
   "title": "Settings",
   "skillsHub": {
     "title": "スキルハブ",
@@ -3388,5 +3389,5 @@
   "feedbackEmailOpening": "メールアプリの起動を要求しました。下書きを確認して送信してください。",
   "feedbackContactFailed": "操作を完了できませんでした。上記の連絡先をご利用ください。",
   "feedbackReceipt": "報告ID：{{id}}",
-  "feedbackReportTitle": "オンライン問題報告"
+  "feedbackReportTitle": "オンラインフィードバック"
 }

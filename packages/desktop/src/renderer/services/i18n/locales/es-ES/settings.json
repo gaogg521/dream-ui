@@ -1,4 +1,5 @@
 {
+  "feedbackContactTitle": "QQ y correo",
   "title": "Configuración",
   "skillsHub": {
     "title": "Centro de habilidades",
@@ -3386,5 +3387,5 @@
   "feedbackEmailOpening": "Se solicitó abrir el correo. Revisa y envía el borrador.",
   "feedbackContactFailed": "No se completó la acción. Usa los datos de contacto de arriba.",
   "feedbackReceipt": "ID del informe: {{id}}",
-  "feedbackReportTitle": "Informe de problema en línea"
+  "feedbackReportTitle": "Comentarios en línea"
 }

@@ -1,4 +1,5 @@
 {
+  "feedbackContactTitle": "QQ & email",
   "title": "Settings",
   "skillsHub": {
     "title": "Skills Hub",
@@ -3386,5 +3387,5 @@
   "feedbackEmailOpening": "Email launch requested. Review the draft and send it yourself.",
   "feedbackContactFailed": "Action did not complete. Use the contact details above manually.",
   "feedbackReceipt": "Report ID: {{id}}",
-  "feedbackReportTitle": "Online problem report"
+  "feedbackReportTitle": "Online feedback"
 }

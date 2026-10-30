@@ -283,10 +283,25 @@ describe('FeedbackReportModal — prefill', () => {
     expect(sendFeedback.mock.calls[0][0].contactEmail).toBeUndefined();
   });
 
+  it('keeps online feedback discoverable and preserves drafts when switching contact tabs', async () => {
+    const user = userEvent.setup();
+    renderModal(<FeedbackReportModal visible onCancel={vi.fn()} />);
+    await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'Keep my feedback draft');
+    await user.click(screen.getByText('settings.feedbackContactTitle'));
+    expect(screen.getByText('settings.feedbackQqTitle')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'settings.bugReportSubmit' })).not.toBeInTheDocument();
+    await user.click(screen.getByText('settings.feedbackReportTitle'));
+    expect(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder')).toHaveValue(
+      'Keep my feedback draft'
+    );
+    expect(sendFeedback).not.toHaveBeenCalled();
+  });
+
   it('opens QQ directly without submitting a report or showing success', async () => {
     const user = userEvent.setup();
     renderModal(<FeedbackReportModal visible onCancel={vi.fn()} />);
     expect(screen.queryByText('settings.bugReportSuccess')).not.toBeInTheDocument();
+    await user.click(screen.getByText('settings.feedbackContactTitle'));
     await user.click(screen.getByText('settings.feedbackOpenQq'));
     expect(openExternalUrl).toHaveBeenCalledWith(expect.stringContaining('uin=475332294'));
     expect(sendFeedback).not.toHaveBeenCalled();
@@ -296,6 +311,8 @@ describe('FeedbackReportModal — prefill', () => {
     const user = userEvent.setup();
     renderModal(<FeedbackReportModal visible onCancel={vi.fn()} defaultModule='conversation-session' />);
     await user.type(screen.getByPlaceholderText('settings.bugReportDescriptionPlaceholder'), 'draft details');
+    await user.click(screen.getByText('settings.feedbackContactTitle'));
+    expect(screen.queryByRole('button', { name: 'settings.bugReportSubmit' })).not.toBeInTheDocument();
     await user.click(screen.getByText('settings.bugReportEmailConfirmOk'));
     expect(decodeURIComponent(openExternalUrl.mock.calls[0][0])).toContain('draft details');
     expect(openExternalUrl.mock.calls[0][0]).toMatch(/^mailto:475332294@qq.com/);

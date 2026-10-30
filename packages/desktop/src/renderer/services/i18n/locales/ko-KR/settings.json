@@ -1,4 +1,5 @@
 {
+  "feedbackContactTitle": "QQ 및 이메일",
   "title": "설정",
   "skillsHub": {
     "title": "스킬 허브",
@@ -3388,5 +3389,5 @@
   "feedbackEmailOpening": "이메일 앱 실행을 요청했습니다. 초안을 확인하고 직접 보내세요.",
   "feedbackContactFailed": "작업을 완료하지 못했습니다. 위 연락처를 직접 이용하세요.",
   "feedbackReceipt": "신고 ID: {{id}}",
-  "feedbackReportTitle": "온라인 문제 신고"
+  "feedbackReportTitle": "온라인 의견"
 }

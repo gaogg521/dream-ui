@@ -1,4 +1,5 @@
 {
+  "feedbackContactTitle": "QQ та пошта",
   "title": "Налаштування",
   "skillsHub": {
     "title": "Центр навичок",
@@ -3401,5 +3402,5 @@
   "feedbackEmailOpening": "Запит на відкриття пошти надіслано. Перевірте й надішліть чернетку.",
   "feedbackContactFailed": "Дію не завершено. Скористайтеся контактами вище.",
   "feedbackReceipt": "Номер звіту: {{id}}",
-  "feedbackReportTitle": "Повідомити про проблему онлайн"
+  "feedbackReportTitle": "Онлайн-відгук"
 }

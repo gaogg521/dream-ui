@@ -3314,6 +3314,7 @@ export type I18nKey =
   | 'settings.extensionSkillsBadge'
   | 'settings.feedback'
   | 'settings.feedbackContactFailed'
+  | 'settings.feedbackContactTitle'
   | 'settings.feedbackCopyQq'
   | 'settings.feedbackEmailHint'
   | 'settings.feedbackEmailOpening'

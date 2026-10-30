@@ -1,4 +1,5 @@
 {
+  "feedbackContactTitle": "QQ и почта",
   "title": "Настройки",
   "skillsHub": {
     "title": "Центр навыков",
@@ -3400,5 +3401,5 @@
   "feedbackEmailOpening": "Запрошено открытие почты. Проверьте и отправьте черновик.",
   "feedbackContactFailed": "Действие не завершено. Используйте контакты выше.",
   "feedbackReceipt": "Номер отчёта: {{id}}",
-  "feedbackReportTitle": "Сообщить о проблеме онлайн"
+  "feedbackReportTitle": "Обратная связь"
 }

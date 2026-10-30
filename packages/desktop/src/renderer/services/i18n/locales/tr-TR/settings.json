@@ -1,4 +1,5 @@
 {
+  "feedbackContactTitle": "QQ ve e-posta",
   "title": "Ayarlar",
   "skillsHub": {
     "title": "Beceri Merkezi",
@@ -3386,5 +3387,5 @@
   "feedbackEmailOpening": "E-posta uygulaması istendi. Taslağı inceleyip kendiniz gönderin.",
   "feedbackContactFailed": "İşlem tamamlanamadı. Yukarıdaki iletişim bilgilerini kullanın.",
   "feedbackReceipt": "Rapor kimliği: {{id}}",
-  "feedbackReportTitle": "Çevrimiçi sorun raporu"
+  "feedbackReportTitle": "Çevrimiçi geri bildirim"
 }

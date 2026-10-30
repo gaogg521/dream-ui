@@ -7,9 +7,11 @@ import { FEEDBACK_MODULES } from './feedbackModules';
 import { useTalkToButler } from '@/renderer/hooks/assistant/useTalkToButler';
 import { useAuth } from '@/renderer/hooks/context/AuthContext';
 import { uploadFileViaHttp } from '@/renderer/services/FileService';
-import { Alert, Button, Input, Select, Message, Upload } from '@arco-design/web-react';
+import { Alert, Button, Input, Select, Message, Upload, Tabs } from '@arco-design/web-react';
 import type { UploadItem } from '@arco-design/web-react/es/Upload';
 import { Info } from '@icon-park/react';
+import QqContactLogo from '@renderer/assets/contact/qq-logo.png';
+import MailContactLogo from '@renderer/assets/contact/mail-color.png';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import type { RefTextAreaType } from '@arco-design/web-react/es/Input/textarea';
 import { useTranslation } from 'react-i18next';
@@ -103,10 +105,12 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
   const [diagnosing, setDiagnosing] = useState(false);
   const descriptionRef = useRef<RefTextAreaType | null>(null);
   const [error, setError] = useState('');
+  const [feedbackView, setFeedbackView] = useState('report');
   const [receipt, setReceipt] = useState<string | null>(null);
   const submitLock = useRef(false);
 
   const resetForm = useCallback(() => {
+    setFeedbackView('report');
     setModule(undefined);
     setDescription('');
     setScreenshots([]);
@@ -380,7 +384,9 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
       onCancel={handleCancel}
       maskClosable={!submitting}
       escToExit={!submitting}
-      onOk={handleSubmit}
+      onOk={() => {
+        if (feedbackView === 'report') void handleSubmit();
+      }}
       confirmLoading={submitting}
       okText={t('settings.bugReportSubmit')}
       cancelText={t('settings.bugReportCancel')}
@@ -388,20 +394,22 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
       alignCenter
       footer={{
         render: () => (
-          <div className='flex items-center justify-between gap-8px'>
+          <div className={`flex items-center gap-8px ${feedbackView === 'report' ? 'justify-between' : 'justify-end'}`}>
             {/* "Solve via chat" is an alternative self-service path — kept on the
                 left as a borderless text action so it reads as secondary to the
                 primary submit, not as a competing filled button. */}
-            <Button
-              type='text'
-              loading={diagnosing}
-              disabled={!description.trim() || submitting || Boolean(receipt)}
-              onClick={() => void handleDiagnose()}
-              data-testid='btn-feedback-diagnose'
-              className='!text-primary-6 hover:!text-primary-5'
-            >
-              {t('settings.talkToButler.solveViaChat', { defaultValue: 'Solve via chat' })}
-            </Button>
+            {feedbackView === 'report' && (
+              <Button
+                type='text'
+                loading={diagnosing}
+                disabled={!description.trim() || submitting || Boolean(receipt)}
+                onClick={() => void handleDiagnose()}
+                data-testid='btn-feedback-diagnose'
+                className='!text-primary-6 hover:!text-primary-5'
+              >
+                {t('settings.talkToButler.solveViaChat', { defaultValue: 'Solve via chat' })}
+              </Button>
+            )}
             <div className='flex items-center gap-8px'>
               <Button
                 disabled={submitting}
@@ -409,9 +417,9 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
                 className='px-20px min-w-80px'
                 style={{ borderRadius: 8 }}
               >
-                {t(receipt ? 'common.close' : 'settings.bugReportCancel')}
+                {t(receipt || feedbackView === 'contact' ? 'common.close' : 'settings.bugReportCancel')}
               </Button>
-              {!receipt && (
+              {!receipt && feedbackView === 'report' && (
                 <Button
                   type='primary'
                   loading={submitting}
@@ -438,121 +446,149 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
       maskStyle={{ zIndex: 1050 }}
     >
       <div data-testid='feedback-report-scroll-body' className='overflow-x-hidden'>
-        <div className='flex flex-col gap-16px'>
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-12px'>
-            <section className='border border-2 rd-12px p-12px flex flex-col gap-8px'>
-              <strong>{t('settings.feedbackQqTitle')}</strong>
-              <span className='text-18px font-600'>{FEEDBACK_CONTACT_QQ}</span>
-              <p className='text-12px text-t-secondary'>{t('settings.feedbackQqHint')}</p>
-              <div className='flex flex-wrap gap-8px mt-auto'>
-                <Button type='primary' onClick={() => void contact('qq')}>
-                  {t('settings.feedbackOpenQq')}
-                </Button>
-                <Button onClick={() => void contact('copy')}>{t('settings.feedbackCopyQq')}</Button>
-              </div>
-            </section>
-            <section className='border border-2 rd-12px p-12px flex flex-col gap-8px'>
-              <strong>{t('settings.feedbackEmailTitle')}</strong>
-              <span className='text-14px break-all'>{FEEDBACK_CONTACT_EMAIL}</span>
-              <p className='text-12px text-t-secondary'>{t('settings.feedbackEmailHint')}</p>
-              <Button className='mt-auto' onClick={() => void contact('email')}>
-                {t('settings.bugReportEmailConfirmOk')}
-              </Button>
-            </section>
-          </div>
-          <h3 className='text-15px font-600'>{t('settings.feedbackReportTitle')}</h3>
-          {receipt && (
-            <Alert
-              type='success'
-              title={t('settings.bugReportSuccess')}
-              content={<span className='break-all'>{t('settings.feedbackReceipt', { id: receipt })}</span>}
-            />
-          )}
-          {/* Description */}
-          <div className='flex flex-col gap-4px'>
-            <label className='text-13px text-t-secondary'>
-              {t('settings.bugReportDescriptionLabel')} <span className='text-red-500'>*</span>
-            </label>
-            <Input.TextArea
-              ref={descriptionRef}
-              disabled={submitting || Boolean(receipt)}
-              placeholder={t('settings.bugReportDescriptionPlaceholder')}
-              value={description}
-              onChange={(val) => {
-                setDescription(val);
-                setError('');
-              }}
-              maxLength={DESCRIPTION_MAX_LENGTH}
-              showWordLimit
-              autoSize={{ minRows: 3, maxRows: 6 }}
-            />
-          </div>
-
-          {/* Module Select */}
-          <div className='flex flex-col gap-4px'>
-            <label className='text-13px text-t-secondary'>
-              {t('settings.bugReportModuleLabel')} <span className='text-red-500'>*</span>
-            </label>
-            <Select
-              disabled={submitting || Boolean(receipt)}
-              placeholder={t('settings.bugReportModulePlaceholder')}
-              value={module}
-              onChange={(val) => {
-                setModule(val);
-                setError('');
-              }}
-            >
-              {FEEDBACK_MODULES.map((m) => (
-                <Select.Option key={m.tag} value={m.tag}>
-                  {t(m.i18nKey)}
-                </Select.Option>
-              ))}
-            </Select>
-          </div>
-
-          {/* Screenshot Upload */}
-          <div className='flex flex-col gap-4px'>
-            <label className='text-13px text-t-secondary'>
-              {t('settings.bugReportScreenshotLabel')}
-              {screenshots.length > 0 && (
-                <span data-testid='feedback-report-screenshot-count'>
-                  {' '}
-                  {t('settings.bugReportScreenshotUploaded', { count: screenshots.length })}
-                </span>
+        <Tabs
+          activeTab={feedbackView}
+          onChange={setFeedbackView}
+          style={{ '--primary-6': 'var(--blue-6)', '--arcoblue-6': 'var(--blue-6)' } as React.CSSProperties}
+        >
+          <Tabs.TabPane key='report' title={t('settings.feedbackReportTitle')} disabled={submitting}>
+            <div className='flex flex-col gap-16px pt-8px'>
+              {receipt && (
+                <Alert
+                  type='success'
+                  title={t('settings.bugReportSuccess')}
+                  content={<span className='break-all'>{t('settings.feedbackReceipt', { id: receipt })}</span>}
+                />
               )}
-            </label>
-            <div data-testid='feedback-report-upload-trigger'>
-              <Upload
-                disabled={submitting || Boolean(receipt)}
-                listType='picture-card'
-                multiple
-                accept={ACCEPTED_IMAGE_TYPES}
-                autoUpload={false}
-                fileList={screenshots}
-                onChange={handleScreenshotChange}
-                limit={MAX_SCREENSHOTS}
-                imagePreview
-              />
-            </div>
-          </div>
+              {/* Description */}
+              <div className='flex flex-col gap-4px'>
+                <label className='text-13px text-t-secondary'>
+                  {t('settings.bugReportDescriptionLabel')} <span className='text-red-500'>*</span>
+                </label>
+                <Input.TextArea
+                  ref={descriptionRef}
+                  disabled={submitting || Boolean(receipt)}
+                  placeholder={t('settings.bugReportDescriptionPlaceholder')}
+                  value={description}
+                  onChange={(val) => {
+                    setDescription(val);
+                    setError('');
+                  }}
+                  maxLength={DESCRIPTION_MAX_LENGTH}
+                  showWordLimit
+                  autoSize={{ minRows: 3, maxRows: 6 }}
+                />
+              </div>
 
-          {/* Auto-info Banner */}
-          <div className='flex'>
-            <div
-              data-testid='feedback-report-auto-info'
-              className='inline-flex max-w-full items-start gap-6px px-10px py-8px bg-fill-1 rd-8px text-12px leading-18px text-t-tertiary'
-            >
-              <Info theme='outline' size='14' className='mt-2px flex-shrink-0' />
-              <span>{t('settings.bugReportAutoInfo')}</span>
-            </div>
-          </div>
+              {/* Module Select */}
+              <div className='flex flex-col gap-4px'>
+                <label className='text-13px text-t-secondary'>
+                  {t('settings.bugReportModuleLabel')} <span className='text-red-500'>*</span>
+                </label>
+                <Select
+                  disabled={submitting || Boolean(receipt)}
+                  placeholder={t('settings.bugReportModulePlaceholder')}
+                  value={module}
+                  onChange={(val) => {
+                    setModule(val);
+                    setError('');
+                  }}
+                >
+                  {FEEDBACK_MODULES.map((m) => (
+                    <Select.Option key={m.tag} value={m.tag}>
+                      {t(m.i18nKey)}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </div>
 
-          {error ? (
-            <div className='px-12px py-8px bg-[rgba(var(--danger-6),0.1)] rd-8px text-13px text-red-500 b-1px b-solid b-[rgba(var(--danger-6),0.4)]'>
-              {error}
+              {/* Screenshot Upload */}
+              <div className='flex flex-col gap-4px'>
+                <label className='text-13px text-t-secondary'>
+                  {t('settings.bugReportScreenshotLabel')}
+                  {screenshots.length > 0 && (
+                    <span data-testid='feedback-report-screenshot-count'>
+                      {' '}
+                      {t('settings.bugReportScreenshotUploaded', { count: screenshots.length })}
+                    </span>
+                  )}
+                </label>
+                <div data-testid='feedback-report-upload-trigger'>
+                  <Upload
+                    disabled={submitting || Boolean(receipt)}
+                    listType='picture-card'
+                    multiple
+                    accept={ACCEPTED_IMAGE_TYPES}
+                    autoUpload={false}
+                    fileList={screenshots}
+                    onChange={handleScreenshotChange}
+                    limit={MAX_SCREENSHOTS}
+                    imagePreview
+                  />
+                </div>
+              </div>
+
+              {/* Auto-info Banner */}
+              <div className='flex'>
+                <div
+                  data-testid='feedback-report-auto-info'
+                  className='inline-flex max-w-full items-start gap-6px px-10px py-8px bg-fill-1 rd-8px text-12px leading-18px text-t-tertiary'
+                >
+                  <Info theme='outline' size='14' className='mt-2px flex-shrink-0' />
+                  <span>{t('settings.bugReportAutoInfo')}</span>
+                </div>
+              </div>
+
+              {error ? (
+                <div className='px-12px py-8px bg-[rgba(var(--danger-6),0.1)] rd-8px text-13px text-red-500 b-1px b-solid b-[rgba(var(--danger-6),0.4)]'>
+                  {error}
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
+          </Tabs.TabPane>
+          <Tabs.TabPane key='contact' title={t('settings.feedbackContactTitle')} disabled={submitting}>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-16px py-12px'>
+              <section className='border border-2 rd-20px p-20px flex flex-col gap-16px min-w-0 bg-fill-1'>
+                <div className='flex items-center gap-12px'>
+                  <span className='flex items-center justify-center w-52px h-52px rd-16px bg-[rgba(var(--blue-6),0.10)]'>
+                    <img src={QqContactLogo} alt='' className='w-40px h-40px object-contain' />
+                  </span>
+                  <strong className='text-16px text-t-primary'>{t('settings.feedbackQqTitle')}</strong>
+                </div>
+                <span className='text-24px font-600 text-t-primary tracking-wide'>{FEEDBACK_CONTACT_QQ}</span>
+                <p className='text-13px text-t-secondary leading-relaxed m-0'>{t('settings.feedbackQqHint')}</p>
+                <div className='flex flex-wrap gap-8px mt-auto pt-8px'>
+                  <Button
+                    type='primary'
+                    className='flex-1'
+                    style={{ background: 'rgb(var(--blue-6))', borderColor: 'rgb(var(--blue-6))' }}
+                    onClick={() => void contact('qq')}
+                  >
+                    {t('settings.feedbackOpenQq')}
+                  </Button>
+                  <Button className='flex-1' onClick={() => void contact('copy')}>
+                    {t('settings.feedbackCopyQq')}
+                  </Button>
+                </div>
+              </section>
+              <section className='border border-2 rd-20px p-20px flex flex-col gap-16px min-w-0 bg-fill-1'>
+                <div className='flex items-center gap-12px'>
+                  <span className='flex items-center justify-center w-52px h-52px rd-16px bg-[rgba(var(--blue-6),0.10)]'>
+                    <img src={MailContactLogo} alt='' className='w-40px h-40px object-contain' />
+                  </span>
+                  <strong className='text-16px text-t-primary'>{t('settings.feedbackEmailTitle')}</strong>
+                </div>
+                <span className='text-16px font-600 text-t-primary break-all leading-32px'>
+                  {FEEDBACK_CONTACT_EMAIL}
+                </span>
+                <p className='text-13px text-t-secondary leading-relaxed m-0'>{t('settings.feedbackEmailHint')}</p>
+                <Button className='mt-auto' onClick={() => void contact('email')}>
+                  {t('settings.bugReportEmailConfirmOk')}
+                </Button>
+              </section>
+            </div>
+          </Tabs.TabPane>
+        </Tabs>
       </div>
     </DreamModal>
   );

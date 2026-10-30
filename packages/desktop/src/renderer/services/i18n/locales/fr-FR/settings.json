@@ -1,4 +1,5 @@
 {
+  "feedbackContactTitle": "QQ et e-mail",
   "title": "Paramètres",
   "skillsHub": {
     "title": "Centre de compétences",
@@ -3386,5 +3387,5 @@
   "feedbackEmailOpening": "Ouverture de la messagerie demandée. Vérifiez puis envoyez le brouillon.",
   "feedbackContactFailed": "Action inachevée. Utilisez directement les coordonnées ci-dessus.",
   "feedbackReceipt": "Numéro du rapport : {{id}}",
-  "feedbackReportTitle": "Signaler un problème en ligne"
+  "feedbackReportTitle": "Avis en ligne"
 }

@@ -1,4 +1,5 @@
 {
+  "feedbackContactTitle": "QQ 與信箱",
   "title": "Settings",
   "skillsHub": {
     "title": "技能中心",
@@ -3608,5 +3609,5 @@
   "feedbackEmailOpening": "已嘗試開啟郵件應用程式，請確認草稿並自行寄送",
   "feedbackContactFailed": "操作未完成，請手動使用上方聯絡方式",
   "feedbackReceipt": "回報編號：{{id}}",
-  "feedbackReportTitle": "線上問題回報"
+  "feedbackReportTitle": "線上留言"
 }

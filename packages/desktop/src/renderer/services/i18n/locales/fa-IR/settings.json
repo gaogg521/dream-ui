@@ -1,4 +1,5 @@
 {
+  "feedbackContactTitle": "QQ و ایمیل",
   "title": "تنظیمات",
   "skillsHub": {
     "title": "مرکز مهارت‌ها",
@@ -3386,5 +3387,5 @@
   "feedbackEmailOpening": "درخواست باز کردن ایمیل ارسال شد. پیش‌نویس را بررسی و خودتان ارسال کنید.",
   "feedbackContactFailed": "عملیات کامل نشد. از اطلاعات تماس بالا استفاده کنید.",
   "feedbackReceipt": "شناسه گزارش: {{id}}",
-  "feedbackReportTitle": "گزارش آنلاین مشکل"
+  "feedbackReportTitle": "بازخورد آنلاین"
 }
