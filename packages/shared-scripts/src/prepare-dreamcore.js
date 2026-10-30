@@ -31,6 +31,12 @@ const REPO_SLUG = (process.env.DREAM_BACKEND_REPO || 'gaogg521/dream-core').spli
 const GITHUB_OWNER = REPO_SLUG[0];
 const GITHUB_REPO = REPO_SLUG[1] || 'dream-core';
 
+// Download budget for release assets. The default suits CI runners; a throttled
+// workstation (company QoS on github.com blob endpoints) can raise it, e.g.
+// DREAM_DOWNLOAD_TIMEOUT=3600000, instead of failing a transfer that just
+// needs more wall time.
+const DOWNLOAD_TIMEOUT_MS = Number(process.env.DREAM_DOWNLOAD_TIMEOUT) || 120000;
+
 const ACTIONS_ARTIFACT_TARGETS = {
   'darwin-arm64': {
     artifactName: 'dreamcore-manual-macos-arm64',
@@ -276,14 +282,16 @@ function downloadFile(url, outputPath) {
   if (process.platform === 'win32') {
     const ps = `$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri '${url}' -OutFile '${outputPath.replace(/'/g, "''")}'`;
     execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', ps], {
-      timeout: 120000,
+      timeout: DOWNLOAD_TIMEOUT_MS,
     });
     return;
   }
   try {
-    execFileSync('curl', ['-L', '--fail', '--silent', '--show-error', '-o', outputPath, url], { timeout: 120000 });
+    execFileSync('curl', ['-L', '--fail', '--silent', '--show-error', '-o', outputPath, url], {
+      timeout: DOWNLOAD_TIMEOUT_MS,
+    });
   } catch {
-    execFileSync('wget', ['-q', '-O', outputPath, url], { timeout: 120000 });
+    execFileSync('wget', ['-q', '-O', outputPath, url], { timeout: DOWNLOAD_TIMEOUT_MS });
   }
 }
 
@@ -327,7 +335,7 @@ function downloadReleaseAsset(assetName, tag, outputPath) {
         outputPath,
         `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/assets/${asset.id}`,
       ],
-      { timeout: 120000 }
+      { timeout: DOWNLOAD_TIMEOUT_MS }
     );
   } catch (error) {
     console.warn(`  Authenticated asset download failed (${error.message}), falling back to anonymous download`);
@@ -425,7 +433,7 @@ function downloadFileWithAuth(url, outputPath) {
 
   try {
     execFileSync('curl', ['-L', '--fail', '--silent', '--show-error', ...headers, '-o', outputPath, url], {
-      timeout: 120000,
+      timeout: DOWNLOAD_TIMEOUT_MS,
     });
     return;
   } catch {
@@ -433,7 +441,7 @@ function downloadFileWithAuth(url, outputPath) {
   }
 
   execFileSync('gh', ['api', url, '--output', outputPath], {
-    timeout: 120000,
+    timeout: DOWNLOAD_TIMEOUT_MS,
     env: {
       ...process.env,
       GH_TOKEN: token || process.env.GH_TOKEN,
