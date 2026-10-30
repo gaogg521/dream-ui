@@ -703,6 +703,10 @@
     }
   },
   "enterprise": {
+    "projectInviteEntry": "Projekt-Einladungscode",
+    "projectInviteHint": "Externe können sich ohne Unternehmens-SSO mit einem lokalen Konto anmelden und der Projektgruppe per Einladungscode beitreten.",
+    "projectInviteSignIn": "Anmelden und fortfahren",
+
     "projectGroupExitHint": "Sie verlassen nur diese Projektgruppe. Anmeldung und bestätigte Unternehmensidentität bleiben erhalten. Falls erforderlich, Austrittspasswort eingeben:",
     "defaultCompanyWorkspace": "Standard-Unternehmensarbeitsbereich",
     "projectGroupOwnershipHint": "Projektgruppen können unabhängig oder einem Unternehmen zugeordnet sein. Ein Beitritt bestätigt kein Arbeitsverhältnis; Ressourcen erfordern Administratorfreigaben.",
@@ -771,7 +775,7 @@
     "remoteNotLoggedIn": "Nicht angemeldet",
     "remoteDisabled": "Deaktiviert",
     "remoteEnabledShort": "Verbunden",
-    "remoteCardHint": "Schließe nach dem Verbinden die Anmeldung ab und tritt der Projektgruppe über den Eintrag „Anmelden / Projektgruppe beitreten“ unten links bei.",
+    "remoteCardHint": "Schließe nach dem Verbinden die Anmeldung ab und tritt der Projektgruppe über den Eintrag „Unternehmen beitreten“ unten links bei.",
     "remoteHint": "Nach dem Verbinden bleiben deine lokalen Unterhaltungen, Agenten und persönlichen Daten lokal; nur die Verwaltung der Projektgruppe (Mitglieder/Einladungen/SSO/Team-Ressourcen) kommt vom Unternehmensserver. SSO (Feishu/DingTalk/LDAP usw.) wird im Browser abgeschlossen.",
     "remoteUrlMissing": "Trage zuerst die Serveradresse in der Karte „Bereitstellungsmodus“ oben auf dieser Seite ein und speichere sie.",
     "remoteSsoLabel": "Unternehmens-SSO",

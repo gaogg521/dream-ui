@@ -703,6 +703,10 @@
     }
   },
   "enterprise": {
+    "projectInviteEntry": "プロジェクト招待コード",
+    "projectInviteHint": "外部の協力者は企業SSOを使わずローカルアカウントでログインし、招待コードでグループに参加できます。",
+    "projectInviteSignIn": "ログインして続行",
+
     "projectGroupExitHint": "このグループのみ退出します。ログインと企業認証情報は維持されます。必要な場合は退出パスワードを入力してください：",
     "defaultCompanyWorkspace": "企業の既定の共同作業スペース",
     "projectGroupOwnershipHint": "共同作業グループは独立して存在することも、企業に属することもできます。参加は従業員認証ではなく、リソースは管理者の許可に従います。",

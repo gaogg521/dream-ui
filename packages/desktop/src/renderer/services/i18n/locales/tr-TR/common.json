@@ -703,6 +703,10 @@
     }
   },
   "enterprise": {
+    "projectInviteEntry": "Proje davet kodu",
+    "projectInviteHint": "Dış katılımcılar şirket SSO’su olmadan yerel hesapla oturum açıp davet koduyla gruba katılabilir.",
+    "projectInviteSignIn": "Oturum aç ve devam et",
+
     "projectGroupExitHint": "Yalnızca bu gruptan ayrılırsınız. Oturum ve doğrulanmış şirket kimliği korunur. Gerekirse çıkış parolasını girin:",
     "defaultCompanyWorkspace": "Varsayılan şirket çalışma alanı",
     "projectGroupOwnershipHint": "Proje grupları bağımsız olabilir veya bir şirkete bağlı olabilir. Katılmak çalışan kimliğini doğrulamaz; kaynaklar yönetici izinlerine bağlıdır.",
@@ -771,7 +775,7 @@
     "remoteNotLoggedIn": "Oturum açılmadı",
     "remoteDisabled": "Devre dışı",
     "remoteEnabledShort": "Bağlı",
-    "remoteCardHint": "Bağlandıktan sonra, sol alttaki \"Oturum aç / Proje grubuna katıl\" girişinden oturum açmayı tamamlayıp proje grubuna katılın.",
+    "remoteCardHint": "Bağlandıktan sonra, sol alttaki \"Şirkete katıl\" girişinden oturum açmayı tamamlayıp proje grubuna katılın.",
     "remoteHint": "Bağlandıktan sonra yerel sohbetleriniz/ajanlarınız/kişisel verileriniz yerel kalır; yalnızca proje grubu yönetimi (üyeler/davetler/SSO/ekip kaynakları) kurumsal sunucudan gelir. SSO (Feishu/DingTalk/LDAP vb.) tarayıcıda tamamlanır.",
     "remoteUrlMissing": "Önce bu sayfanın üstündeki \"Dağıtım modu\" kartına sunucu adresini girip kaydedin.",
     "remoteSsoLabel": "Kurumsal SSO",

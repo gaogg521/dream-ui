@@ -1,3 +1,26 @@
+.panel:global(.arco-spin) {
+  display: block;
+  width: min(100%, 520px);
+  margin-inline: auto;
+}
+
+.channelTile.inviteTile {
+  min-height: 48px;
+  padding: 10px 12px;
+  justify-content: flex-start;
+  gap: 8px;
+  border-color: rgba(var(--blue-6), 0.25);
+  background: rgba(var(--blue-6), 0.06);
+}
+
+.inviteForm {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--color-border-2);
+  border-radius: 14px;
+  background: var(--color-fill-1);
+}
+
 .channelGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

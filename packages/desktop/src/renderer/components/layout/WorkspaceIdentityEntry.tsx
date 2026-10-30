@@ -312,14 +312,14 @@ const WorkspaceIdentityEntry: React.FC<WorkspaceIdentityEntryProps> = ({ collaps
         <Menu.Item key='joinGroup'>
           <span className={styles.actionRow}>
             <Login theme='outline' size={15} />
-            {t('settings.workspaceIdentity.joinProjectGroup', { defaultValue: '加入项目组' })}
+            {t('settings.workspaceIdentity.joinProjectGroup', { defaultValue: '加入企业' })}
           </span>
         </Menu.Item>
       ) : (
         <Menu.Item key='join'>
           <span className={styles.actionRow}>
             <Login theme='outline' size={15} />
-            {t('settings.workspaceIdentity.guestJoinEnterprise', { defaultValue: '登录 / 加入项目组' })}
+            {t('settings.workspaceIdentity.guestJoinEnterprise', { defaultValue: '加入企业' })}
           </span>
         </Menu.Item>
       )}

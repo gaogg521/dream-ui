@@ -168,7 +168,7 @@ describe('WorkspaceIdentityEntry', () => {
     // and no SSO session that is the personal workspace.
     fireEvent.click(screen.getByText('个人工作区'));
 
-    fireEvent.click(await screen.findByText('登录 / 加入项目组'));
+    fireEvent.click(await screen.findByText('加入企业'));
     expect(mockNavigate).toHaveBeenCalledWith('/enterprise/login');
   });
 
@@ -182,8 +182,7 @@ describe('WorkspaceIdentityEntry', () => {
 
     fireEvent.click(screen.getByText('赵高'));
 
-    fireEvent.click(await screen.findByText('加入项目组'));
-    expect(screen.queryByText('登录 / 加入项目组')).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByText('加入企业'));
     expect(mockNavigate).toHaveBeenCalledWith('/enterprise/login');
   });
 
@@ -201,7 +200,7 @@ describe('WorkspaceIdentityEntry', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/settings/enterprise');
     expect(screen.queryByText('项目组设置')).not.toBeInTheDocument();
     expect(screen.queryByText('加入项目组')).not.toBeInTheDocument();
-    expect(screen.queryByText('登录 / 加入项目组')).not.toBeInTheDocument();
+    expect(screen.queryByText('加入企业')).not.toBeInTheDocument();
   });
 
   it('does not claim "个人版·未登录" for a local system_admin who has set up a company', async () => {

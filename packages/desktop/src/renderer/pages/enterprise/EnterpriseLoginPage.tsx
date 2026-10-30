@@ -34,6 +34,7 @@ import { persistDeploymentServerUrl, useDeploymentRole } from '@renderer/hooks/e
 import { describeConnectFailure, readLocalClientInfo } from '@renderer/pages/settings/components/EnterpriseServerCard';
 import { probeRemoteEnterpriseServer, resolveEnterpriseServer } from '@renderer/utils/enterprise/probeEnterpriseServer';
 import EnterpriseLoginChannelPanel from './components/EnterpriseLoginChannelPanel';
+import { openEnterprisePasswordLoginInBrowser } from '@renderer/utils/enterprise/enterpriseBrowserLogin';
 import '@renderer/pages/login/LoginPage.css';
 
 type Step = 1 | 2 | 3;
@@ -79,8 +80,31 @@ const EnterpriseLoginPage: React.FC = () => {
   const [url, setUrl] = useState(() => searchParams.get('remote')?.trim() || '');
   const [connecting, setConnecting] = useState(false);
 
-  // Step 3 — invite code.
-  const [inviteCode, setInviteCode] = useState('');
+  // Invitation drafts are scoped to the hosting server and survive the browser callback.
+  const remoteOrigin = getEnterpriseServerUrl() || searchParams.get('remote')?.replace(/\/+$/, '') || null;
+  const draftKey = `onework:project-invite:${remoteOrigin ?? ''}`;
+  const readInviteDraft = () => {
+    try {
+      return sessionStorage.getItem(draftKey) ?? '';
+    } catch {
+      return '';
+    }
+  };
+  const [inviteCode, setInviteCode] = useState(readInviteDraft);
+  const previousDraftKey = useRef(draftKey);
+  useEffect(() => {
+    if (previousDraftKey.current !== draftKey) {
+      previousDraftKey.current = draftKey;
+      setInviteCode(readInviteDraft());
+      return;
+    }
+    try {
+      if (inviteCode.trim()) sessionStorage.setItem(draftKey, inviteCode.trim());
+      else sessionStorage.removeItem(draftKey);
+    } catch {
+      /* Storage can be unavailable in restricted browser contexts. */
+    }
+  }, [draftKey, inviteCode]);
   const [joining, setJoining] = useState(false);
 
   useEffect(() => {
@@ -189,7 +213,11 @@ const EnterpriseLoginPage: React.FC = () => {
     const code = inviteCode.trim();
     if (!code) {
       Message.warning(t('common.enterprise.inviteCodeRequired', { defaultValue: '请输入邀请码' }));
-      return;
+      return false;
+    }
+    if (!getEnterpriseSession()) {
+      Message.warning(t('common.enterprise.projectInviteHint'));
+      return false;
     }
     setJoining(true);
     try {
@@ -202,33 +230,20 @@ const EnterpriseLoginPage: React.FC = () => {
       );
       setInviteCode('');
       window.dispatchEvent(new CustomEvent(ORG_CONTEXT_CHANGED_EVENT));
+      return true;
     } catch (e) {
-      // The join may have succeeded even though the call threw (SSO already
-      // provisioned the membership, or a racing duplicate consumed the code).
-      // Re-check before showing an error — same reconciliation as the
-      // project-group page's join form.
-      const maybeJoined = isBackendHttpError(e) && (e.code === 'ALREADY_IN_ENTERPRISE' || e.code === 'INVALID_CODE');
-      if (maybeJoined) {
-        try {
-          const ctx = await ipcBridge.oneOrg.context.invoke();
-          if (ctx?.isEnterprise) {
-            Message.info(t('common.enterprise.joinAlready', { defaultValue: '您已加入该企业' }));
-            setInviteCode('');
-            window.dispatchEvent(new CustomEvent(ORG_CONTEXT_CHANGED_EVENT));
-            return;
-          }
-        } catch {
-          // Context re-check failed — fall through to the error path.
-        }
+      // A membership in some other group cannot prove that this invitation succeeded.
+      if (isBackendHttpError(e) && e.code === 'ALREADY_IN_ENTERPRISE') {
+        Message.info(t('common.enterprise.joinAlready', { defaultValue: '您已加入该项目组' }));
+        return false;
       }
       const detail = isBackendHttpError(e) && e.backendMessage ? `: ${e.backendMessage}` : '';
       Message.error(t('common.enterprise.joinFailed', { defaultValue: '加入失败' }) + detail);
+      return false;
     } finally {
       setJoining(false);
     }
   };
-
-  const remoteOrigin = getEnterpriseServerUrl() || searchParams.get('remote')?.replace(/\/+$/, '') || null;
 
   /** The address-entry form: used for the not-connected state AND for the
    * N1 flows (unreachable / no-enterprise / user pressed 修改地址). */
@@ -419,7 +434,59 @@ const EnterpriseLoginPage: React.FC = () => {
                 })}
               />
             )}
-            <EnterpriseLoginChannelPanel remoteOrigin={remoteOrigin} oauthRedirect='/enterprise/login' />
+            <EnterpriseLoginChannelPanel
+              remoteOrigin={remoteOrigin}
+              oauthRedirect='/enterprise/login'
+              projectInviteForm={
+                <div>
+                  <p className='text-13px text-t-secondary mt-0'>{t('common.enterprise.projectInviteHint')}</p>
+                  <div className='flex flex-wrap gap-8px'>
+                    <Input
+                      className='flex-1 min-w-160px'
+                      maxLength={128}
+                      value={inviteCode}
+                      onChange={setInviteCode}
+                      placeholder={t('common.enterprise.projectInviteEntry')}
+                    />
+                    <Button
+                      type='primary'
+                      loading={joining}
+                      style={{
+                        background: 'rgb(var(--blue-6))',
+                        borderColor: 'rgb(var(--blue-6))',
+                        color: 'var(--color-white)',
+                      }}
+                      onClick={async () => {
+                        if (!inviteCode.trim()) {
+                          Message.warning(t('common.enterprise.inviteCodeRequired', { defaultValue: '请输入邀请码' }));
+                          return;
+                        }
+                        if (!connected || probe === 'unreachable') {
+                          Message.warning(
+                            t('common.enterprise.wizardLoginNeedsConnect', {
+                              defaultValue: '请先完成第一步，连接企业服务器。',
+                            })
+                          );
+                          setStep(1);
+                          return;
+                        }
+                        if (!getEnterpriseSession()) {
+                          try {
+                            await openEnterprisePasswordLoginInBrowser('/enterprise/login', { remoteOrigin });
+                          } catch {
+                            Message.error(t('common.enterprise.joinFailed', { defaultValue: '加入失败' }));
+                          }
+                          return;
+                        }
+                        if (await handleJoin()) setStep(3);
+                      }}
+                    >
+                      {t(hasSession ? 'common.enterprise.joinButton' : 'common.enterprise.projectInviteSignIn')}
+                    </Button>
+                  </div>
+                </div>
+              }
+            />
             {hasSession && (
               <div className='flex justify-center mt-12px'>
                 <Button type='primary' onClick={() => setStep(3)}>
@@ -432,7 +499,7 @@ const EnterpriseLoginPage: React.FC = () => {
 
         {step === 3 && (
           <div>
-            {context?.isEnterprise ? (
+            {context?.isEnterprise && !inviteCode.trim() ? (
               <>
                 <Alert
                   type='success'

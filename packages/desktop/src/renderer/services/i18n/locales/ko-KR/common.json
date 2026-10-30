@@ -703,6 +703,10 @@
     }
   },
   "enterprise": {
+    "projectInviteEntry": "프로젝트 초대 코드",
+    "projectInviteHint": "외부 협업자는 기업 SSO 없이 로컬 계정으로 로그인한 후 초대 코드로 프로젝트 그룹에 참여할 수 있습니다.",
+    "projectInviteSignIn": "로그인 후 계속",
+
     "projectGroupExitHint": "현재 그룹만 탈퇴합니다. 로그인과 기업 인증 정보는 유지됩니다. 필요한 경우 탈퇴 암호를 입력하세요:",
     "defaultCompanyWorkspace": "기업 기본 협업 공간",
     "projectGroupOwnershipHint": "프로젝트 그룹은 독립적으로 존재하거나 기업에 속할 수 있습니다. 그룹 가입은 직원 인증을 의미하지 않으며 리소스는 관리자 권한에 따릅니다.",
@@ -771,7 +775,7 @@
     "remoteNotLoggedIn": "로그인하지 않음",
     "remoteDisabled": "사용 안 함",
     "remoteEnabledShort": "연결됨",
-    "remoteCardHint": "연결한 후 왼쪽 아래의 \"로그인 / 프로젝트 그룹 참여\" 항목에서 로그인을 완료하고 프로젝트 그룹에 참여하세요.",
+    "remoteCardHint": "연결한 후 왼쪽 아래의 \"기업 참여\" 항목에서 로그인을 완료하고 프로젝트 그룹에 참여하세요.",
     "remoteHint": "연결한 후에도 로컬 대화/에이전트/개인 데이터는 로컬에 남으며, 프로젝트 그룹 거버넌스(구성원/초대/SSO/팀 리소스)만 기업 서버에서 가져옵니다. SSO(Feishu/DingTalk/LDAP 등)는 브라우저에서 완료합니다.",
     "remoteUrlMissing": "먼저 이 페이지 상단의 \"배포 모드\" 카드에 서버 주소를 입력하고 저장하세요.",
     "remoteSsoLabel": "기업 SSO",

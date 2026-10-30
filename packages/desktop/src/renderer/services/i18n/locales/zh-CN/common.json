@@ -230,6 +230,10 @@
     "mySkills": "我的技能"
   },
   "enterprise": {
+    "projectInviteEntry": "项目组邀请码",
+    "projectInviteHint": "外部协作者可使用本地账户登录，无需企业 SSO；登录后使用邀请码加入项目组。",
+    "projectInviteSignIn": "登录并继续",
+
     "projectGroupExitHint": "仅退出当前项目组，不会退出登录或更改企业认证身份。若管理员设置了退出口令，请输入：",
     "defaultCompanyWorkspace": "企业默认协作空间",
     "projectGroupOwnershipHint": "项目组用于共同协作，可以独立存在，也可以隶属企业。加入项目组不等同于企业员工认证，资源以管理员授权为准。",
@@ -296,7 +300,7 @@
     "remoteNotLoggedIn": "未登录",
     "remoteDisabled": "未启用",
     "remoteEnabledShort": "已连接",
-    "remoteCardHint": "连接后，从左下角「登录 / 加入项目组」完成登录并加入项目组。",
+    "remoteCardHint": "连接后，从左下角「加入企业」完成登录并加入项目组。",
     "remoteHint": "连接后，本机的会话/助手/个人数据仍在本地，仅企业治理（成员/邀请码/SSO/团队资源）来自企业服务器。企业 SSO（飞书/钉钉/LDAP 等）在浏览器完成登录。",
     "remoteUrlMissing": "请先在本页上方的「项目组部署模式」中填写并保存服务器地址。",
     "remoteSsoLabel": "企业 SSO",

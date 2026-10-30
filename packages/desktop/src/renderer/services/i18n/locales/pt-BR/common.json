@@ -703,6 +703,10 @@
     }
   },
   "enterprise": {
+    "projectInviteEntry": "Código de convite do projeto",
+    "projectInviteHint": "Colaboradores externos podem entrar com uma conta local sem SSO e usar o código para participar do grupo.",
+    "projectInviteSignIn": "Entrar e continuar",
+
     "projectGroupExitHint": "Você sairá apenas deste grupo. O login e a identidade empresarial verificada serão mantidos. Informe a senha de saída, se necessária:",
     "defaultCompanyWorkspace": "Espaço empresarial padrão",
     "projectGroupOwnershipHint": "Grupos podem ser independentes ou pertencer a uma empresa. Participar não comprova vínculo empregatício; os recursos dependem das permissões administrativas.",
@@ -771,7 +775,7 @@
     "remoteNotLoggedIn": "Não conectado",
     "remoteDisabled": "Desativado",
     "remoteEnabledShort": "Conectado",
-    "remoteCardHint": "Depois de conectar, conclua o login e entre no grupo de projeto pela opção \"Entrar / Entrar no grupo de projeto\" no canto inferior esquerdo.",
+    "remoteCardHint": "Depois de conectar, conclua o login e entre no grupo de projeto pela opção \"Entrar na empresa\" no canto inferior esquerdo.",
     "remoteHint": "Depois de conectar, suas conversas/agentes/dados pessoais locais continuam locais; apenas a governança do grupo de projeto (membros/convites/SSO/recursos de equipe) vem do servidor corporativo. O SSO (Feishu/DingTalk/LDAP etc.) é concluído no navegador.",
     "remoteUrlMissing": "Primeiro preencha e salve o endereço do servidor no cartão \"Modo de implantação\" no topo desta página.",
     "remoteSsoLabel": "SSO corporativo",

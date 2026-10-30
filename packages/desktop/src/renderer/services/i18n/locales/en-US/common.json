@@ -230,6 +230,10 @@
     "mySkills": "My Skills"
   },
   "enterprise": {
+    "projectInviteEntry": "Project invitation code",
+    "projectInviteHint": "External collaborators can sign in with a local account without company SSO, then use the invitation code to join the project group.",
+    "projectInviteSignIn": "Sign in to continue",
+
     "projectGroupExitHint": "Leave only this project group. You remain signed in and your verified company identity is unchanged. Enter the exit password if required:",
     "defaultCompanyWorkspace": "Default company workspace",
     "projectGroupOwnershipHint": "Project groups support collaboration and may be independent or owned by a company. Joining a group does not verify employment; resources depend on administrator grants.",

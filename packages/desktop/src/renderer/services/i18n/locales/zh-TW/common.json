@@ -709,6 +709,10 @@
   "enterprise.loginChannelsNoneConfiguredHint": "已連線企業伺服器，但管理員尚未在企業管理後台啟用任何 SSO 登入方式。可先用「本機帳戶」登入。",
   "enterprise.wizardEditingContext": "目前已連線：{{url}}。只有新位址連線成功後才會切換，取消不會變更現有連線。",
   "enterprise": {
+    "projectInviteEntry": "專案組邀請碼",
+    "projectInviteHint": "外部協作者可使用本機帳戶登入，無需企業 SSO；登入後使用邀請碼加入專案組。",
+    "projectInviteSignIn": "登入並繼續",
+
     "projectGroupExitHint": "僅退出目前專案組，不會登出或變更企業認證身分。若管理員設定了退出口令，請輸入：",
     "defaultCompanyWorkspace": "企業預設協作空間",
     "projectGroupOwnershipHint": "專案組用於共同協作，可以獨立存在，也可以隸屬企業。加入專案組不等同企業員工認證，資源依管理員授權為準。",
@@ -777,7 +781,7 @@
     "remoteNotLoggedIn": "未登入",
     "remoteDisabled": "未啟用",
     "remoteEnabledShort": "已連線",
-    "remoteCardHint": "連線後，從左下角「登入 / 加入專案組」完成登入並加入專案組。",
+    "remoteCardHint": "連線後，從左下角「加入企業」完成登入並加入專案組。",
     "remoteHint": "連線後，本機的會話/助手/個人資料仍在本地，僅企業治理（成員/邀請碼/SSO/團隊資源）來自企業伺服器。企業 SSO（飛書/釘釘/LDAP 等）在瀏覽器完成登入。",
     "remoteUrlMissing": "請先在本頁上方的「專案組部署模式」中填寫並儲存伺服器地址。",
     "remoteSsoLabel": "企業 SSO",

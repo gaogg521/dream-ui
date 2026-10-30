@@ -5,7 +5,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Message, Spin } from '@arco-design/web-react';
-import { DataServer, HardDisk, Key } from '@icon-park/react';
+import { DataServer, HardDisk, Key, Peoples } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import ChannelDingTalkLogo from '@renderer/assets/channel-logos/dingtalk.svg';
 import ChannelFeishuLogo from '@renderer/assets/channel-logos/lark.svg';
@@ -33,6 +33,7 @@ type EnterpriseLoginChannelPanelProps = {
   /** Remote dreamcore origin when connecting as enterprise client. */
   remoteOrigin?: string | null;
   oauthRedirect?: string;
+  projectInviteForm?: React.ReactNode;
 };
 
 function resolveChannelStatus(channel: LoginChannel, providers: SsoProviderStatus[], loading: boolean): ChannelStatus {
@@ -48,8 +49,10 @@ function resolveChannelStatus(channel: LoginChannel, providers: SsoProviderStatu
 const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = ({
   remoteOrigin = null,
   oauthRedirect = '/settings/enterprise',
+  projectInviteForm,
 }) => {
   const { t } = useTranslation();
+  const [inviteVisible, setInviteVisible] = useState(false);
   const [providers, setProviders] = useState<SsoProviderStatus[]>([]);
   const [loading, setLoading] = useState(true);
   /**
@@ -248,7 +251,7 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
   );
 
   return (
-    <Spin loading={loading}>
+    <Spin loading={loading} className={styles.panel}>
       <div className={styles.channelGrid}>
         {[...channels]
           .sort((left, right) => {
@@ -291,7 +294,20 @@ const EnterpriseLoginChannelPanel: React.FC<EnterpriseLoginChannelPanelProps> = 
               </Button>
             );
           })}
+        {projectInviteForm && (
+          <Button
+            className={`${styles.channelTile} ${styles.inviteTile}`}
+            aria-expanded={inviteVisible}
+            onClick={() => setInviteVisible(!inviteVisible)}
+          >
+            <Peoples theme='outline' size={24} fill='rgb(var(--blue-6))' />
+            <span className={styles.channelLabel}>
+              {t('common.enterprise.projectInviteEntry', { defaultValue: '项目组邀请码' })}
+            </span>
+          </Button>
+        )}
       </div>
+      {inviteVisible && <section className={styles.inviteForm}>{projectInviteForm}</section>}
       {unavailableReason ? (
         <div className={styles.reason}>
           {unavailableReason === 'server_unreachable'

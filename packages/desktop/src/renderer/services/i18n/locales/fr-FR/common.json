@@ -703,6 +703,10 @@
     }
   },
   "enterprise": {
+    "projectInviteEntry": "Code d’invitation au projet",
+    "projectInviteHint": "Les collaborateurs externes peuvent se connecter avec un compte local sans SSO, puis rejoindre le groupe avec le code d’invitation.",
+    "projectInviteSignIn": "Se connecter et continuer",
+
     "projectGroupExitHint": "Vous quittez uniquement ce groupe. La connexion et l’identité professionnelle vérifiée restent inchangées. Saisissez le mot de passe de sortie si nécessaire :",
     "defaultCompanyWorkspace": "Espace collaboratif par défaut",
     "projectGroupOwnershipHint": "Un groupe peut être indépendant ou rattaché à une entreprise. Y adhérer ne prouve pas un emploi ; les ressources dépendent des autorisations administratives.",
@@ -771,7 +775,7 @@
     "remoteNotLoggedIn": "Non connecté",
     "remoteDisabled": "Désactivé",
     "remoteEnabledShort": "Connecté",
-    "remoteCardHint": "Une fois connecté, terminez la connexion et rejoignez le groupe de projet via l’entrée « Se connecter / Rejoindre un groupe de projet » en bas à gauche.",
+    "remoteCardHint": "Une fois connecté, terminez la connexion et rejoignez le groupe de projet via l’entrée « Rejoindre l’entreprise » en bas à gauche.",
     "remoteHint": "Une fois connecté, vos conversations, agents et données personnelles locaux restent en local ; seule la gouvernance du groupe de projet (membres/invitations/SSO/ressources d’équipe) provient du serveur d’entreprise. Le SSO (Feishu/DingTalk/LDAP, etc.) s’effectue dans le navigateur.",
     "remoteUrlMissing": "Saisissez et enregistrez d’abord l’adresse du serveur dans la carte « Mode de déploiement » en haut de cette page.",
     "remoteSsoLabel": "SSO d’entreprise",
