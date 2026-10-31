@@ -463,6 +463,23 @@ describe('useGuidSend media mode handoff', () => {
     expect(requestMediaModeMock).not.toHaveBeenCalled();
   });
 
+  it.each(['missing-model', 'unavailable-agent', 'failed-create'])(
+    'preserves the draft and references after %s',
+    async (failure) => {
+      const deps = createDeps();
+      if (failure === 'missing-model') deps.selectedAssistantBackend = 'dream';
+      if (failure === 'unavailable-agent') deps.selectedBackendAvailable = false;
+      if (failure === 'failed-create') createConversationInvokeMock.mockResolvedValue(undefined);
+      const { result } = renderHook(() => useGuidSend(deps));
+      await act(async () => {
+        result.current.sendMessageHandler();
+      });
+      expect(deps.setInput).not.toHaveBeenCalled();
+      expect(deps.setFiles).not.toHaveBeenCalled();
+      expect(deps.setDir).not.toHaveBeenCalled();
+    }
+  );
+
   it('keeps the original draft and attachments when confirming video mode on the home page', async () => {
     const deps = mediaDeps({ mode: 'off' });
     deps.input = '生成视频：蓝色圆环旋转';

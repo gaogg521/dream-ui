@@ -129,11 +129,11 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
 
   const handleSend = useCallback(async (): Promise<void | false> => {
     if (!selectedAssistantId) {
-      return;
+      return false;
     }
     if (!selectedBackendAvailable) {
       Message.warning(t('conversation.agentError.codes.USER_AGENT_NOT_INSTALLED.title'));
-      return;
+      return false;
     }
 
     const isCustomWorkspace = !!dir;
@@ -158,11 +158,11 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     if (media && media.mode !== 'off') {
       if (media.needsModel) {
         Message.warning(t('conversation.mediaModeNoModel'));
-        return;
+        return false;
       }
       if (!current_model) {
         Message.warning(t('conversation.noModelConfigured'));
-        return;
+        return false;
       }
       // `type` (or an assistant) is mandatory. dream is the right shell for a
       // generation-only conversation: it is the one type that takes a top-level
@@ -182,7 +182,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
       });
       if (!conversation?.id) {
         Message.error(t('conversation.createFailed'));
-        return;
+        return false;
       }
       if (isCustomWorkspace) updateWorkspaceTime(finalWorkspace);
       emitter.emit('chat.history.refresh');
@@ -297,7 +297,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     if (assistantBackend === 'dream') {
       if (!current_model) {
         Message.warning(t('conversation.noModelConfigured'));
-        return;
+        return false;
       }
       try {
         const conversation = await ipcBridge.conversation.create.invoke({
@@ -319,7 +319,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
 
         if (!conversation || !conversation.id) {
           Message.error(t('conversation.createFailed'));
-          return;
+          return false;
         }
 
         if (isCustomWorkspace) {
@@ -368,7 +368,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
       });
       if (!conversation || !conversation.id) {
         console.error('Failed to create ACP conversation - conversation object is null or missing id');
-        return;
+        return false;
       }
 
       if (isCustomWorkspace) {
