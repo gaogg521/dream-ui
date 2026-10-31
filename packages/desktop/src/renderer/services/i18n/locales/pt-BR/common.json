@@ -512,6 +512,9 @@
       "pdf": "Exportação PDF",
       "image": "Imagens de listas e planos"
     },
+    "dependenciesTitle": "Esta cena ainda não pode ser aberta",
+    "disabledTools": "Estas ferramentas estão desativadas: {{names}}. Clique em “Ir para as configurações”, ative-as em Configurações → Serviços MCP e volte para abrir a cena novamente.",
+    "missingDependencies": "Estas habilidades ou ferramentas integradas estão ausentes ou não estão prontas: {{names}}. Verifique Configurações → Minhas habilidades / Serviços MCP. Atualize ou repare o aplicativo se necessário e tente novamente.",
     "dependenciesUnavailable": "As ferramentas ou habilidades integradas do cenário não estão prontas. Verifique se estão ativadas, atualize o cliente e tente novamente.",
     "openFailed": "Não foi possível abrir uma conversa para este cenário",
     "tabTitle": "Cenários",

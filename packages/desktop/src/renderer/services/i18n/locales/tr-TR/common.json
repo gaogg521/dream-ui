@@ -512,6 +512,9 @@
       "pdf": "PDF dışa aktarma",
       "image": "Kontrol listesi ve plan görselleri"
     },
+    "dependenciesTitle": "Bu sahne henüz açılamıyor",
+    "disabledTools": "Şu araçlar kapalı: {{names}}. “Ayarlara git”e tıklayın, Ayarlar → MCP Hizmetleri altında etkinleştirin, ardından dönüp sahneyi yeniden açın.",
+    "missingDependencies": "Şu beceriler veya yerleşik araçlar eksik ya da hazır değil: {{names}}. Ayarlar → Becerilerim / MCP Hizmetleri bölümünü kontrol edin. Gerekirse uygulamayı güncelleyin veya onarın ve yeniden deneyin.",
     "dependenciesUnavailable": "Sahnenin yerleşik araçları veya becerileri hazır değil. Araçların etkin olduğunu kontrol edin, istemciyi güncelleyip yeniden deneyin.",
     "openFailed": "Bu senaryo için sohbet açılamadı",
     "tabTitle": "Senaryolar",

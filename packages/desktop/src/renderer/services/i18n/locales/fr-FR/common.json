@@ -512,6 +512,9 @@
       "pdf": "Export PDF",
       "image": "Images de listes et de plans"
     },
+    "dependenciesTitle": "Cette scène ne peut pas encore être ouverte",
+    "disabledTools": "Ces outils sont désactivés : {{names}}. Cliquez sur « Accéder aux paramètres », activez-les dans Paramètres → Services MCP, puis revenez ouvrir la scène.",
+    "missingDependencies": "Ces compétences ou outils intégrés sont absents ou ne sont pas prêts : {{names}}. Vérifiez Paramètres → Mes compétences / Services MCP. Mettez à jour ou réparez l’application si nécessaire, puis réessayez.",
     "dependenciesUnavailable": "Les outils ou compétences intégrés du scénario ne sont pas prêts. Vérifiez que les outils sont activés, mettez le client à jour et réessayez.",
     "openFailed": "Impossible d'ouvrir une conversation pour ce scénario",
     "tabTitle": "Scénarios",

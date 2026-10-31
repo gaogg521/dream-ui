@@ -4,8 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
+import { Modal } from '@arco-design/web-react';
+import commonZh from '@/renderer/services/i18n/locales/zh-CN/common.json';
+import { SceneDependencyUnavailableError } from '@/renderer/utils/scenes/sceneChat';
+import type { SceneItem } from '@/renderer/utils/scenes/sceneItem';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { PROVIDERS_SWR_KEY } from '@/renderer/hooks/agent/useModelProviderList';
@@ -22,11 +26,13 @@ const {
   resolveGuidAssistantDefaultsMock,
   sendMock,
   navigateMock,
+  sceneStartMock,
+  capturedSceneGridProps,
 } = vi.hoisted(() => ({
   modelSelectionMock: {
     modelList: [],
     isGoogleAuth: false,
-    current_model: undefined,
+    current_model: undefined as import('@/common/config/storage').TProviderWithModel | undefined,
     setCurrentModel: vi.fn(),
     resetCurrentModel: vi.fn(),
   },
@@ -124,11 +130,20 @@ const {
     isButtonDisabled: false,
   },
   navigateMock: vi.fn(),
+  sceneStartMock: vi.fn(),
+  capturedSceneGridProps: [] as Array<Record<string, unknown>>,
 }));
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, options?: { defaultValue?: string; [key: string]: unknown }) => options?.defaultValue || key,
+    t: (key: string, options?: { defaultValue?: string; [key: string]: unknown }) => {
+      const messages: Record<string, string> = {
+        'common.scenes.dependenciesTitle': commonZh.scenes.dependenciesTitle,
+        'common.scenes.disabledTools': commonZh.scenes.disabledTools,
+        'common.scenes.missingDependencies': commonZh.scenes.missingDependencies,
+      };
+      return messages[key]?.replace('{{names}}', String(options?.names ?? '')) || options?.defaultValue || key;
+    },
     i18n: { language: 'en-US' },
   }),
 }));
@@ -144,6 +159,17 @@ vi.mock('@/common', () => ({
       listAvailableSkills: { invoke: vi.fn().mockResolvedValue([]) },
     },
   },
+}));
+
+vi.mock('@/renderer/components/scenes/SceneGrid', () => ({
+  default: (props: Record<string, unknown>) => {
+    capturedSceneGridProps.push(props);
+    return null;
+  },
+}));
+vi.mock('@/renderer/utils/scenes/sceneChat', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/renderer/utils/scenes/sceneChat')>()),
+  startSceneConversation: sceneStartMock,
 }));
 
 vi.mock('@/renderer/hooks/mcp/catalog', () => ({
@@ -315,6 +341,9 @@ const guidInputCardProps = {
 describe('GuidPage', () => {
   beforeEach(() => {
     locationMock.state = null;
+    capturedSceneGridProps.length = 0;
+    sceneStartMock.mockReset();
+    modelSelectionMock.current_model = undefined;
     locationMock.key = 'guid-location';
     navigateMock.mockReset();
     swrMock.useSWRMock.mockReturnValue({ data: null });
@@ -359,6 +388,41 @@ describe('GuidPage', () => {
       },
     ];
   });
+
+  it.each(['disabled', 'missing'] as const)(
+    'explains %s scene dependencies and opens the relevant settings page',
+    async (reason) => {
+      modelSelectionMock.current_model = {
+        id: 'provider',
+        use_model: 'model',
+      } as import('@/common/config/storage').TProviderWithModel;
+      sceneStartMock.mockRejectedValue(
+        new SceneDependencyUnavailableError(
+          reason === 'disabled' ? ['one-browser'] : [],
+          [],
+          reason === 'missing' ? ['one-work-assistant'] : []
+        )
+      );
+      render(<GuidPage />);
+      try {
+        await act(async () => {
+          const onOpenScene = capturedSceneGridProps.at(-1)!.onOpenScene as (scene: SceneItem) => Promise<void>;
+          await onOpenScene({} as SceneItem);
+        });
+        const expected =
+          reason === 'disabled'
+            ? '以下工具已关闭：one-browser。请点击“前往设置”，在“设置 → MCP 服务”中启用它们，再返回重新打开场景。'
+            : '以下技能或内置工具未就绪：one-work-assistant。请在“设置 → 我的技能 / MCP 服务”中检查，必要时更新或修复客户端，再重试。';
+        expect(await screen.findByText(expected)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: 'common.goToSettings' }));
+        await waitFor(() =>
+          expect(navigateMock).toHaveBeenCalledWith(reason === 'disabled' ? '/settings/mcp' : '/settings/skills')
+        );
+      } finally {
+        act(() => Modal.destroyAll());
+      }
+    }
+  );
 
   it('keeps the existing replace contract for ordinary Guid prefills', () => {
     locationMock.state = { prefillPrompt: 'Replace with this prompt' };

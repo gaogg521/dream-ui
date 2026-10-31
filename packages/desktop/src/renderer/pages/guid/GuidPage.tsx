@@ -27,7 +27,7 @@ import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import GuidAuthorTip from './components/GuidAuthorTip';
 import GuidInputCard from './components/GuidInputCard';
 import SceneGrid from '@/renderer/components/scenes/SceneGrid';
-import { startSceneConversation } from '@/renderer/utils/scenes/sceneChat';
+import { SceneDependencyUnavailableError, startSceneConversation } from '@/renderer/utils/scenes/sceneChat';
 import type { SceneItem } from '@/renderer/utils/scenes/sceneItem';
 import { emitter } from '@/renderer/utils/emitter';
 import GuidModelSelector from './components/GuidModelSelector';
@@ -47,7 +47,7 @@ import { useOpenFileSelector } from '@/renderer/hooks/file/useOpenFileSelector';
 import { appendSpeechTranscript } from '@/renderer/hooks/system/useSpeechInput';
 import { useLiveTranscriptInsertion } from '@/renderer/hooks/system/useLiveTranscriptInsertion';
 import { ArrowRightUp } from '@icon-park/react';
-import { Button, ConfigProvider, Message } from '@arco-design/web-react';
+import { Button, ConfigProvider, Message, Modal } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -101,6 +101,7 @@ const GuidPage: React.FC = () => {
   const [guidDisabledBuiltinSkills, setGuidDisabledBuiltinSkills] = useState<string[] | undefined>(undefined);
   const [guidEnabledSkills, setGuidEnabledSkills] = useState<string[] | undefined>(undefined);
   const [availableMcpServers, setAvailableMcpServers] = useState<IMcpServer[]>([]);
+  const [sceneDependencyError, setSceneDependencyError] = useState<SceneDependencyUnavailableError | null>(null);
   const [guidSelectedMcpServerIds, setGuidSelectedMcpServerIds] = useState<string[] | undefined>(undefined);
 
   useEffect(() => {
@@ -858,6 +859,10 @@ const GuidPage: React.FC = () => {
         await navigate(`/conversation/${conversationId}`);
       } catch (error) {
         console.error('[GuidPage] Failed to open a scene conversation:', error);
+        if (error instanceof SceneDependencyUnavailableError) {
+          setSceneDependencyError(error);
+          return;
+        }
         Message.error(
           t(
             error instanceof Error && error.message.includes('MCP_LIMIT_EXCEEDED')
@@ -879,6 +884,37 @@ const GuidPage: React.FC = () => {
 
   return (
     <ConfigProvider getPopupContainer={() => guidContainerRef.current || document.body}>
+      {sceneDependencyError && (
+        <Modal
+          visible
+          maskClosable={false}
+          title={t('common.scenes.dependenciesTitle')}
+          okText={t('common.goToSettings')}
+          cancelText={t('common.cancel')}
+          onCancel={() => setSceneDependencyError(null)}
+          onOk={() => {
+            const path =
+              sceneDependencyError.disabledTools.length || sceneDependencyError.missingTools.length
+                ? '/settings/mcp'
+                : '/settings/skills';
+            setSceneDependencyError(null);
+            void navigate(path);
+          }}
+        >
+          <div className='flex flex-col gap-12px'>
+            {sceneDependencyError.disabledTools.length > 0 && (
+              <p>{t('common.scenes.disabledTools', { names: sceneDependencyError.disabledTools.join(', ') })}</p>
+            )}
+            {(sceneDependencyError.missingTools.length > 0 || sceneDependencyError.missingSkills.length > 0) && (
+              <p>
+                {t('common.scenes.missingDependencies', {
+                  names: [...sceneDependencyError.missingTools, ...sceneDependencyError.missingSkills].join(', '),
+                })}
+              </p>
+            )}
+          </div>
+        </Modal>
+      )}
       <div ref={guidContainerRef} className={styles.guidContainer}>
         <div className={styles.guidLayout}>
           <div className={styles.heroHeader}>

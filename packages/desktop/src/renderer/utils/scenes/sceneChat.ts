@@ -31,6 +31,22 @@ import { buildSceneRules } from './sceneProtocol';
 import type { SceneItem } from './sceneItem';
 import i18next from 'i18next';
 
+/** Dependencies required by a scene, reported without starting a partial conversation. */
+export class SceneDependencyUnavailableError extends Error {
+  constructor(
+    readonly disabledTools: string[],
+    readonly missingTools: string[],
+    readonly missingSkills: string[]
+  ) {
+    super('SCENE_DEPENDENCY_UNAVAILABLE');
+    this.name = 'SceneDependencyUnavailableError';
+  }
+
+  get dependencies(): string[] {
+    return [...new Set([...this.disabledTools, ...this.missingTools, ...this.missingSkills])];
+  }
+}
+
 /** The slice of `ipcBridge.fs.listAvailableSkills` rows this needs. */
 export type LocalSkill = { name: string; location: string; source?: string; displayName?: string };
 
@@ -399,16 +415,17 @@ export async function startSceneConversation(
   ]);
   const request = buildSceneConversationRequest({ item, skills, mcpServers, model, workspace });
   if (item.mine?.builtinMcpNames?.length) {
-    const available = new Set(
-      mcpServers
-        .filter((server) => server.builtin && server.enabled !== false && server.transport)
-        .map((server) => server.name)
-    );
-    if (
-      item.mine.builtinMcpNames.some((name) => !available.has(name)) ||
-      item.mine.skillNames.some((name) => !skills.some((skill) => skill.name === name))
-    )
-      throw new Error('SCENE_DEPENDENCY_UNAVAILABLE');
+    const requiredTools = item.mine.builtinMcpNames.map((name) => ({
+      name,
+      server: mcpServers.find((server) => server.builtin && server.name === name),
+    }));
+    const disabledTools = requiredTools.filter(({ server }) => server?.enabled === false).map(({ name }) => name);
+    const missingTools = requiredTools
+      .filter(({ server }) => server?.enabled !== false && !server?.transport)
+      .map(({ name }) => name);
+    const missingSkills = item.mine.skillNames.filter((name) => !skills.some((skill) => skill.name === name));
+    if (disabledTools.length || missingTools.length || missingSkills.length)
+      throw new SceneDependencyUnavailableError(disabledTools, missingTools, missingSkills);
   }
   if (
     item.company?.mcpIds.length &&

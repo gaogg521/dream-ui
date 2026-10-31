@@ -512,6 +512,9 @@
       "pdf": "PDF-Export",
       "image": "Checklisten und Plangrafiken"
     },
+    "dependenciesTitle": "Diese Szene kann noch nicht geöffnet werden",
+    "disabledTools": "Diese Werkzeuge sind deaktiviert: {{names}}. Klicken Sie auf „Zu den Einstellungen“, aktivieren Sie sie unter Einstellungen → MCP-Dienste und öffnen Sie die Szene anschließend erneut.",
+    "missingDependencies": "Diese Skills oder integrierten Werkzeuge fehlen oder sind nicht bereit: {{names}}. Prüfen Sie Einstellungen → Meine Skills / MCP-Dienste. Aktualisieren oder reparieren Sie bei Bedarf die App und versuchen Sie es erneut.",
     "dependenciesUnavailable": "Die integrierten Werkzeuge oder Skills des Szenarios sind nicht bereit. Prüfen Sie, ob die Werkzeuge aktiviert sind, aktualisieren Sie den Client und versuchen Sie es erneut.",
     "openFailed": "Für dieses Szenario konnte kein Gespräch geöffnet werden",
     "tabTitle": "Szenarien",

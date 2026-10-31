@@ -682,6 +682,9 @@
       "pdf": "PDF 导出",
       "image": "清单与计划图卡"
     },
+    "dependenciesTitle": "场景暂时无法打开",
+    "disabledTools": "以下工具已关闭：{{names}}。请点击“前往设置”，在“设置 → MCP 服务”中启用它们，再返回重新打开场景。",
+    "missingDependencies": "以下技能或内置工具未就绪：{{names}}。请在“设置 → 我的技能 / MCP 服务”中检查，必要时更新或修复客户端，再重试。",
     "dependenciesUnavailable": "场景所需的内置工具或 Skill 未就绪。请检查工具是否启用，并更新客户端后重试。",
     "openFailed": "无法打开该场景的对话",
     "tabTitle": "场景",

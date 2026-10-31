@@ -512,6 +512,9 @@
       "pdf": "PDF 匯出",
       "image": "清單與計畫圖卡"
     },
+    "dependenciesTitle": "場景暫時無法開啟",
+    "disabledTools": "以下工具已關閉：{{names}}。請點擊「前往設定」，在「設定 → MCP 服務」中啟用它們，再返回重新開啟場景。",
+    "missingDependencies": "以下技能或內建工具尚未就緒：{{names}}。請在「設定 → 我的技能 / MCP 服務」中檢查，必要時更新或修復用戶端，再重試。",
     "dependenciesUnavailable": "場景所需的內建工具或 Skill 尚未就緒。請檢查工具是否啟用，並更新用戶端後重試。",
     "openFailed": "無法開啟該場景的對話",
     "tabTitle": "場景",
