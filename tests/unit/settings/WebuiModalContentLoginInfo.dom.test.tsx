@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import type { IWebUIStatus } from '@/common/adapter/ipcBridge';
@@ -61,7 +62,15 @@ vi.mock('@/common/adapter/ipcBridge', () => ({
   },
 }));
 
+vi.mock('@/renderer/pages/settings/components/SettingsPageWrapper', () => ({
+  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+vi.mock('@/renderer/components/settings/SettingsModal/contents/channels/ChannelModalContent', () => ({
+  default: () => <div data-testid='channel-configuration'>Channel configuration</div>,
+}));
+
 import WebuiModalContent from '@/renderer/components/settings/SettingsModal/contents/WebuiModalContent';
+import WebuiSettings from '@/renderer/pages/settings/WebuiSettings';
 
 const baseStatus: IWebUIStatus = {
   running: false,
@@ -74,6 +83,24 @@ const baseStatus: IWebUIStatus = {
 describe('WebuiModalContent login info card', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('opens the channel configuration tab from the automation setup link', async () => {
+    getStatusMock.mockResolvedValue(baseStatus);
+    render(
+      <MemoryRouter initialEntries={['/settings/webui?tab=channels']}>
+        <WebuiSettings />
+      </MemoryRouter>
+    );
+    expect(await screen.findByTestId('channel-configuration')).toBeVisible();
+  });
+
+  it('follows a new requested tab when the existing settings view is reused', async () => {
+    getStatusMock.mockResolvedValue(baseStatus);
+    const view = render(<WebuiModalContent initialTab='channels' />);
+    expect(await screen.findByTestId('channel-configuration')).toBeVisible();
+    view.rerender(<WebuiModalContent initialTab='webui' />);
+    expect(await screen.findByText('settings.webui.loginInfo')).toBeVisible();
   });
 
   it('shows the local WebUI login credentials while the server is running', async () => {

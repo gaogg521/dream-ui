@@ -47,7 +47,7 @@ const GoToSettingsButton: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   return (
-    <Button size='mini' type='outline' onClick={() => void navigate('/settings/webui')}>
+    <Button size='mini' type='outline' onClick={() => void navigate('/settings/webui?tab=channels')}>
       {t('cron.page.form.push.goSettings')}
     </Button>
   );

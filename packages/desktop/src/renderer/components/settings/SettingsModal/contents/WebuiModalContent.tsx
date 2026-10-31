@@ -70,12 +70,15 @@ const DESKTOP_WEBUI_ALLOW_REMOTE_KEY = 'webui.desktop.allowRemote';
  * WebUI 设置内容组件
  * WebUI settings content component
  */
-const WebuiModalContent: React.FC = () => {
+const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ initialTab = 'webui' }) => {
   const { t, i18n } = useTranslation();
   const talkToButler = useTalkToButler();
   const viewMode = useSettingsViewMode();
   const isPageMode = viewMode === 'page';
-  const [activeTab, setActiveTab] = useState<'webui' | 'channels'>('webui');
+  const [activeTab, setActiveTab] = useState<'webui' | 'channels'>(initialTab);
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   // 检测是否在 Electron 桌面环境 / Check if running in Electron desktop environment
   const isDesktop = isElectronDesktop();

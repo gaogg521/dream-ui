@@ -79,7 +79,7 @@ describe('PushTargetField', () => {
     fireEvent.click(screen.getByTestId('push-target-switch'));
     expect(await screen.findByText('cron.page.form.push.noBot')).toBeInTheDocument();
     fireEvent.click(screen.getByText('cron.page.form.push.goSettings'));
-    expect(mocks.navigate).toHaveBeenCalledWith('/settings/webui');
+    expect(mocks.navigate).toHaveBeenCalledWith('/settings/webui?tab=channels');
     first.unmount();
 
     mocks.targets = [{ ...lark, chats: [] }];
