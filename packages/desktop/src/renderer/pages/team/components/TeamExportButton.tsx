@@ -7,8 +7,14 @@ import { Download } from '@icon-park/react';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TTeam } from '@/common/types/team/teamTypes';
-import { formatTimestamp, sanitizeFileName } from '@/renderer/utils/chat/conversationExport';
-import { protectedDownloadText } from '@/renderer/utils/enterprise/secureExport/protectedDownload';
+import { ipcBridge } from '@/common';
+import { isNativeDialogAvailable } from '@/common/adapter/ipcBridge';
+import { formatTimestamp, joinFilePath, sanitizeFileName } from '@/renderer/utils/chat/conversationExport';
+import {
+  downloadDecision,
+  prepareExport,
+  writeEncryptedPackage,
+} from '@/renderer/utils/enterprise/secureExport/gateway';
 import { useTeamTabs } from '../hooks/TeamTabsContext';
 import {
   collectTeamTranscript,
@@ -87,14 +93,63 @@ const TeamExportButton: React.FC<Props> = ({ team }) => {
 
       const total = transcript.members.reduce((sum, member) => sum + member.messageCount, 0);
       if (total === 0) {
+        const failure = transcript.notes.find((note) => note.kind === 'member_failed');
+        if (failure?.kind === 'member_failed') throw new Error(`${failure.name}: ${failure.reason}`);
         Message.warning(t('team.export.empty', { defaultValue: 'This team has no messages to export yet.' }));
         return;
       }
 
       const html = renderTeamTranscriptHtml(transcript, labels);
       const fileName = `${sanitizeFileName(team.name)}-${formatTimestamp(exportedAt)}.html`;
-      const outcome = await protectedDownloadText(html, fileName, 'text/html;charset=utf-8', 'team');
-      if (outcome !== 'done') return;
+      const decision = await prepareExport({
+        kind: 'team',
+        files: [{ name: fileName, text: html }],
+        suggestedName: fileName,
+        t: (key, values) => String(t(key as never, values as never)),
+      });
+      if (decision.mode === 'cancelled') return;
+      if (decision.mode === 'blocked') {
+        Message.error({ content: decision.message, duration: 6000 });
+        return;
+      }
+      if (isNativeDialogAvailable()) {
+        const encrypted = decision.mode === 'encrypted';
+        const directory = await ipcBridge.application.getPath.invoke({ name: 'downloads' }).catch(() => '');
+        const targetName = encrypted ? decision.fileName : fileName;
+        const target = await ipcBridge.dialog.showSave.invoke({
+          defaultPath: directory ? joinFilePath(directory, targetName) : targetName,
+          filters: encrypted
+            ? [{ name: t('messages.secureExport.fileTypeName'), extensions: ['owenc'] }]
+            : [{ name: 'HTML', extensions: ['html'] }],
+        });
+        if (!target) return;
+        const separator = Math.max(target.lastIndexOf('/'), target.lastIndexOf('\\'));
+        const saved = encrypted
+          ? await writeEncryptedPackage(target, decision.bytes)
+          : await ipcBridge.fs.writeFile.invoke({
+              path: target,
+              data: decision.files[0].text ?? html,
+              workspace: separator > 0 ? target.slice(0, separator) : undefined,
+            });
+        if (!saved) {
+          Message.error(t('messages.export.saveFailed'));
+          return;
+        }
+        decision.report();
+        Message.success({
+          content: (
+            <div className='flex items-center gap-8px'>
+              <span>{t('team.export.success', { total, size: formatSize(new Blob([html]).size) })}</span>
+              <Button size='mini' type='text' onClick={() => void ipcBridge.shell.showItemInFolder.invoke(target)}>
+                {t('messages.export.showInFolder')}
+              </Button>
+            </div>
+          ),
+          duration: 8000,
+        });
+        return;
+      }
+      downloadDecision(decision, 'text/html;charset=utf-8');
       Message.success(
         t('team.export.success', {
           defaultValue: 'Exported {{total}} messages ({{size}}).',
