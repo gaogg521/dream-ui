@@ -710,7 +710,7 @@
     "projectInviteHint": "Colaboradores externos podem entrar com uma conta local sem SSO e usar o código para participar do grupo.",
     "projectInviteSignIn": "Entrar e continuar",
 
-    "projectGroupExitHint": "Você sairá apenas deste grupo. O login e a identidade empresarial verificada serão mantidos. Informe a senha de saída, se necessária:",
+    "projectGroupExitHint": "Ao sair, você deixará este grupo. Se for o seu último grupo na empresa, você também sairá da empresa: sua conta local será desativada e esta sessão terminará; poderá ser restaurada se for recontratado. Se o administrador definiu um código de saída, informe-o:",
     "defaultCompanyWorkspace": "Espaço empresarial padrão",
     "projectGroupOwnershipHint": "Grupos podem ser independentes ou pertencer a uma empresa. Participar não comprova vínculo empregatício; os recursos dependem das permissões administrativas.",
     "independentProjectGroup": "Grupo de projeto independente",

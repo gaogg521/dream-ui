@@ -710,7 +710,7 @@
     "projectInviteHint": "Externe können sich ohne Unternehmens-SSO mit einem lokalen Konto anmelden und der Projektgruppe per Einladungscode beitreten.",
     "projectInviteSignIn": "Anmelden und fortfahren",
 
-    "projectGroupExitHint": "Sie verlassen nur diese Projektgruppe. Anmeldung und bestätigte Unternehmensidentität bleiben erhalten. Falls erforderlich, Austrittspasswort eingeben:",
+    "projectGroupExitHint": "Mit dem Verlassen verlässt du diese Projektgruppe. Ist es deine letzte Projektgruppe im Unternehmen, verlässt du auch das Unternehmen: dein lokales Konto wird deaktiviert und diese Anmeldung endet; bei erneuter Einstellung wird es wiederhergestellt. Falls der Administrator ein Austrittskennwort festgelegt hat, gib es ein:",
     "defaultCompanyWorkspace": "Standard-Unternehmensarbeitsbereich",
     "projectGroupOwnershipHint": "Projektgruppen können unabhängig oder einem Unternehmen zugeordnet sein. Ein Beitritt bestätigt kein Arbeitsverhältnis; Ressourcen erfordern Administratorfreigaben.",
     "independentProjectGroup": "Unabhängige Projektgruppe",

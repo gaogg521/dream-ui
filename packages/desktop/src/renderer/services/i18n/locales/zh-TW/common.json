@@ -716,7 +716,7 @@
     "projectInviteHint": "外部協作者可使用本機帳戶登入，無需企業 SSO；登入後使用邀請碼加入專案組。",
     "projectInviteSignIn": "登入並繼續",
 
-    "projectGroupExitHint": "僅退出目前專案組，不會登出或變更企業認證身分。若管理員設定了退出口令，請輸入：",
+    "projectGroupExitHint": "退出後你將離開目前專案組。若這是你在公司的最後一個專案組，你會同時移出公司：本機帳號停用、本次登入失效，重新入職後可恢復。若管理員設定了退出口令，請輸入：",
     "defaultCompanyWorkspace": "企業預設協作空間",
     "projectGroupOwnershipHint": "專案組用於共同協作，可以獨立存在，也可以隸屬企業。加入專案組不等同企業員工認證，資源依管理員授權為準。",
     "independentProjectGroup": "獨立專案組",

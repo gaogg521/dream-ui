@@ -70,7 +70,10 @@ vi.stubGlobal('matchMedia', (query: string) => ({
 describe('OverviewTab — collaboration identity', () => {
   it.each([
     [undefined, '退出后将回到个人模式。若管理员设置了退出口令，请输入：'],
-    [null, '仅退出当前项目组，不会退出登录或更改企业认证身份。若管理员设置了退出口令，请输入：'],
+    [
+      null,
+      '退出后你将离开当前项目组。若这是你在公司的最后一个项目组，你会同时移出公司：本地账号停用、本次登录失效，重新入职后可恢复。若管理员设置了退出口令，请输入：',
+    ],
   ])('describes exit according to the server contract: %s', (enterpriseId, hint) => {
     render(
       <MemoryRouter>

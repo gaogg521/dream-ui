@@ -710,7 +710,7 @@
     "projectInviteHint": "Dış katılımcılar şirket SSO’su olmadan yerel hesapla oturum açıp davet koduyla gruba katılabilir.",
     "projectInviteSignIn": "Oturum aç ve devam et",
 
-    "projectGroupExitHint": "Yalnızca bu gruptan ayrılırsınız. Oturum ve doğrulanmış şirket kimliği korunur. Gerekirse çıkış parolasını girin:",
+    "projectGroupExitHint": "Ayrıldığınızda bu gruptan çıkarsınız. Şirketteki son grubunuzsa şirketten de ayrılırsınız: yerel hesabınız devre dışı bırakılır ve bu oturum sona erer; yeniden işe alındığında geri yüklenir. Yönetici bir çıkış kodu belirlediyse girin:",
     "defaultCompanyWorkspace": "Varsayılan şirket çalışma alanı",
     "projectGroupOwnershipHint": "Proje grupları bağımsız olabilir veya bir şirkete bağlı olabilir. Katılmak çalışan kimliğini doğrulamaz; kaynaklar yönetici izinlerine bağlıdır.",
     "independentProjectGroup": "Bağımsız proje grubu",
