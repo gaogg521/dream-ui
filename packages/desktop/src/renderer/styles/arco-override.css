@@ -500,6 +500,29 @@ body[arco-theme='dark'] .arco-message-error {
   background: linear-gradient(90deg, rgba(255, 221, 219, 0.3) 0%, rgba(255, 243, 240, 0.3) 100%) !important;
 }
 
+/* Arco Notification custom styles — notice cards read one size smaller */
+.arco-notification-title {
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.arco-notification-content {
+  font-size: 12px;
+}
+
+.arco-notification-icon {
+  font-size: 16px;
+}
+
+/* Message copy follows the same one-size-down step */
+.arco-message-content {
+  font-size: 12px;
+}
+
+.arco-message-icon {
+  font-size: 16px;
+}
+
 /* Workspace tree: full-row hover & selection backgrounds (VSCode-style).
    Paint the whole node row, not the narrower title block. */
 .workspace-tree .arco-tree-node {
