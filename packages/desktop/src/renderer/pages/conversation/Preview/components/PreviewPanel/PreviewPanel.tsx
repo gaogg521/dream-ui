@@ -93,6 +93,7 @@ const PreviewPanel: React.FC = () => {
     isOpen,
     isMaximized,
     tabs,
+    visibleTabs,
     activeTabId,
     activeTab,
     closeTab,
@@ -144,7 +145,7 @@ const PreviewPanel: React.FC = () => {
 
   // 使用自定义 Hooks / Use custom hooks
   const currentTheme = useThemeDetection();
-  const { tabsContainerRef, tabFadeState } = useTabOverflow([tabs, activeTabId]);
+  const { tabsContainerRef, tabFadeState } = useTabOverflow([visibleTabs, activeTabId]);
   const { handleEditorScroll, handlePreviewScroll } = useScrollSync({
     enabled: isSplitScreenEnabled,
     editorContainerRef,
@@ -219,7 +220,7 @@ const PreviewPanel: React.FC = () => {
       // nothing at all while the content stays stale, so they conclude the file really
       // did not change — doubting their own memory rather than the software, which is
       // the one failure mode no amount of retrying gets them out of.
-      const tabType = tabs.find((tab) => tab.id === tabId)?.content_type;
+      const tabType = visibleTabs.find((tab) => tab.id === tabId)?.content_type;
       if (tabType === 'word' || tabType === 'excel' || tabType === 'ppt') {
         messageApi.info(t('preview.refresh.officeNotWired'));
         return;
@@ -368,7 +369,7 @@ const PreviewPanel: React.FC = () => {
   // 处理关闭tab / Handle close tab
   const handleCloseTab = useCallback(
     (tabId: string) => {
-      const tab = tabs.find((t) => t.id === tabId);
+      const tab = visibleTabs.find((t) => t.id === tabId);
       // 如果tab有未保存的修改，显示确认对话框 / If tab has unsaved changes, show confirmation dialog
       if (tab?.isDirty) {
         setCloseTabConfirm({ show: true, tabId });
@@ -377,7 +378,7 @@ const PreviewPanel: React.FC = () => {
         closeTab(tabId);
       }
     },
-    [tabs, closeTab]
+    [visibleTabs, closeTab]
   );
 
   /** Close everything the pending confirmation covers, then clear it. */
@@ -396,7 +397,7 @@ const PreviewPanel: React.FC = () => {
   const handleSaveAndCloseTab = useCallback(async () => {
     const pending = closeTabConfirm;
     const dirtyIds = (pending.batchTabIds?.length ? pending.batchTabIds : pending.tabId ? [pending.tabId] : []).filter(
-      (id) => tabs.find((tab) => tab.id === id)?.isDirty
+      (id) => visibleTabs.find((tab) => tab.id === id)?.isDirty
     );
     if (dirtyIds.length === 0) return;
 
@@ -483,29 +484,29 @@ const PreviewPanel: React.FC = () => {
   // 关闭左侧 tabs / Close tabs to the left
   const handleCloseLeft = useCallback(
     (tabId: string) => {
-      const currentIndex = tabs.findIndex((t) => t.id === tabId);
+      const currentIndex = visibleTabs.findIndex((t) => t.id === tabId);
       if (currentIndex <= 0) return;
-      requestCloseBatch(tabs.slice(0, currentIndex));
+      requestCloseBatch(visibleTabs.slice(0, currentIndex));
     },
-    [tabs, requestCloseBatch]
+    [visibleTabs, requestCloseBatch]
   );
 
   // 关闭右侧 tabs / Close tabs to the right
   const handleCloseRight = useCallback(
     (tabId: string) => {
-      const currentIndex = tabs.findIndex((t) => t.id === tabId);
-      if (currentIndex < 0 || currentIndex >= tabs.length - 1) return;
-      requestCloseBatch(tabs.slice(currentIndex + 1));
+      const currentIndex = visibleTabs.findIndex((t) => t.id === tabId);
+      if (currentIndex < 0 || currentIndex >= visibleTabs.length - 1) return;
+      requestCloseBatch(visibleTabs.slice(currentIndex + 1));
     },
-    [tabs, requestCloseBatch]
+    [visibleTabs, requestCloseBatch]
   );
 
   // 关闭其他 tabs / Close other tabs
   const handleCloseOthers = useCallback(
     (tabId: string) => {
-      requestCloseBatch(tabs.filter((t) => t.id !== tabId));
+      requestCloseBatch(visibleTabs.filter((t) => t.id !== tabId));
     },
-    [tabs, requestCloseBatch]
+    [visibleTabs, requestCloseBatch]
   );
 
   // 关闭所有未修改的 tabs / Close all unmodified tabs.
@@ -519,13 +520,17 @@ const PreviewPanel: React.FC = () => {
   // clean, requestCloseBatch never raises a confirmation — which is the point of
   // this entry: a bulk tidy-up that needs no second thought.
   const handleCloseUnmodified = useCallback(() => {
-    requestCloseBatch(tabs.filter((tab) => !tab.isDirty));
-  }, [tabs, requestCloseBatch]);
+    requestCloseBatch(visibleTabs.filter((tab) => !tab.isDirty));
+  }, [visibleTabs, requestCloseBatch]);
 
   // 关闭全部 tabs / Close all tabs
+  // 只关当前会话可见的 tabs：别的会话的浏览器 tab 不归这里的「全部」管，
+  // 留给它们自己的会话处理。
+  // Closes only the tabs visible in this conversation: another conversation's
+  // browser tabs are not "all" from here — they answer to their own conversation.
   const handleCloseAll = useCallback(() => {
-    requestCloseBatch(tabs);
-  }, [tabs, requestCloseBatch]);
+    requestCloseBatch(visibleTabs);
+  }, [visibleTabs, requestCloseBatch]);
 
   // 复制结果的统一提示 / Single place to report a copy's outcome.
   const reportCopy = useCallback(
@@ -1193,7 +1198,8 @@ const PreviewPanel: React.FC = () => {
   };
 
   // 将 tabs 转换为 PreviewTab 类型 / Convert tabs to PreviewTab type
-  const previewTabs: PreviewTab[] = tabs.map((tab) => {
+  // 页签栏只展示当前会话可见的 tabs / The strip lists only the tabs visible in this conversation
+  const previewTabs: PreviewTab[] = visibleTabs.map((tab) => {
     const paths = previewTabPaths(tab);
     return {
       id: tab.id,

@@ -13,6 +13,8 @@ import { isBrowserMcpActivity, isBrowserMcpSettled } from '../browser/agentActiv
 import { maybeNotifyFirstAgentBrowserUse, notifyAgentOpenedBrowserPanel } from '../browser/firstUseNotice';
 import { listPersistedPreviewScopeKeys, previewScopeStorageKey, type PreviewScopeKey } from './previewScope';
 import { peKey } from '@/renderer/pages/conversation/explorer/explorerModel';
+import { getCurrentConversation } from '@/renderer/pages/conversation/explorer/currentConversationStore';
+import { useCurrentConversation } from '@/renderer/pages/conversation/explorer/currentConversationStore';
 import { reflessTabKey } from './reflessTabKey';
 import { onPreviewWatchChange, reconcilePreviewWatch, resetPreviewWatch } from './previewWatchStore';
 
@@ -61,6 +63,18 @@ export interface PreviewMetadata {
   missingFile?: boolean; // 文件不存在或无法读取 / Whether the referenced file is missing or unreadable
   favicon?: string; // 浏览器 tab 的站点图标 URL / Site icon URL for browser tabs
   agentActive?: boolean; // Agent 正在操作该浏览器 tab / Agent is currently driving this browser tab
+  /**
+   * 归属会话：浏览器 tab 只在创建它的会话中可见。预览面板按项目/工作区作用域共享
+   * （见 previewScope.ts），不记归属的话，A 会话打开的网站会跟着面板出现在 B 会话。
+   * 无归属（本版之前的存量 tab）保持随处可见，不做猜测式迁移。
+   *
+   * Owning conversation: a browser tab is visible only in the conversation that
+   * opened it. The preview panel is shared per project/workspace scope (see
+   * previewScope.ts), so without ownership a site opened in conversation A follows
+   * the panel into conversation B. Unowned (pre-existing) tabs stay visible
+   * everywhere — no guessing migration.
+   */
+  ownerConversationId?: string;
 }
 
 export interface PreviewTab {
@@ -97,6 +111,19 @@ export type PreviewTabPatch = {
   metadata?: PreviewMetadata;
 };
 
+/**
+ * 浏览器页签跟随会话的可见性判定（纯函数，便于单测）。
+ * 无归属的浏览器 tab（存量数据）在任何会话都可见；有归属的只在创建它的会话可见。
+ *
+ * Visibility rule for "browser tabs follow their conversation" (pure, unit-testable).
+ * Unowned browser tabs (legacy data) are visible everywhere; owned ones only in
+ * the conversation that opened them.
+ */
+export const isTabVisibleInConversation = (tab: PreviewTab, conversationId: string | null): boolean =>
+  tab.content_type !== 'browser' ||
+  !tab.metadata?.ownerConversationId ||
+  tab.metadata.ownerConversationId === conversationId;
+
 export interface PreviewContextValue {
   // 预览面板状态 / Preview panel state
   isOpen: boolean;
@@ -113,6 +140,17 @@ export interface PreviewContextValue {
    */
   isMaximized: boolean;
   tabs: PreviewTab[]; // 所有打开的 tabs
+  /**
+   * 当前会话可见的 tabs：浏览器 tab 按归属会话过滤后的视图。页签栏与面板内容都应
+   * 消费它而不是 `tabs`——`tabs` 仍包含其他会话的浏览器 tab（webview 常驻、持久化、
+   * updateTab 都依赖完整列表）。
+   *
+   * Tabs visible in the current conversation: the browser-ownership-filtered view.
+   * The tab strip and panel content must consume this instead of `tabs` — `tabs`
+   * still contains other conversations' browser tabs (mounted webviews,
+   * persistence and updateTab all rely on the full list).
+   */
+  visibleTabs: PreviewTab[];
   activeTabId: string | null; // 当前激活的 tab ID
 
   // 获取当前激活的 tab / Get active tab
@@ -657,9 +695,24 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const fileMtimeRef = useRef<Map<string, number>>(new Map());
 
   // 获取当前激活的 tab / Get active tab
+  // 归属其他会话的浏览器 tab 视为不存在：否则切到 B 的第一帧会闪出 A 的浏览器内容，
+  // 归一化 effect 随后才会把 activeTabId 挪走。consumers 拿到 null 时面板自然不渲染。
+  // A browser tab owned by another conversation reads as absent: otherwise the first
+  // frame in conversation B would flash A's browser content before the normalization
+  // effect moves activeTabId. Consumers seeing null simply render no panel content.
+  const currentConversationId = useCurrentConversation();
   const activeTab = useMemo(() => {
-    return tabs.find((tab) => tab.id === activeTabId) || null;
-  }, [tabs, activeTabId]);
+    const tab = tabs.find((tab) => tab.id === activeTabId) || null;
+    return tab && isTabVisibleInConversation(tab, currentConversationId) ? tab : null;
+  }, [tabs, activeTabId, currentConversationId]);
+
+  // 当前会话可见的 tabs（浏览器 tab 按归属过滤；文档类不受影响，仍随作用域共享）。
+  // Tabs visible in the current conversation (browser tabs filtered by ownership;
+  // document tabs are unaffected and keep following the scope).
+  const visibleTabs = useMemo(
+    () => tabs.filter((tab) => isTabVisibleInConversation(tab, currentConversationId)),
+    [tabs, currentConversationId]
+  );
 
   // 从可能包含描述的字符串中提取文件名 / Extract filename from string that may contain description
   const extractFileName = useCallback((str?: string): string | undefined => {
@@ -751,6 +804,18 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
        */
       const currentTabs = tabsRef.current;
 
+      // 浏览器 tab 的归属元数据：新建 / 同内容复用 / replace / 上限复用四条路全部
+      // 归当前会话接管 —— 归属是可见性的依据，复用即接管，否则会借旧 tab 串台。
+      // 读取在 setTabs 之外（updater 必须保持纯函数，见上）。
+      //
+      // Ownership metadata for browser tabs: all four paths (new, same-content
+      // reuse, replace, cap reuse) take ownership for the current conversation —
+      // ownership drives visibility, so reuse is a takeover or old tabs would leak
+      // across conversations. Read outside setTabs (the updater must stay pure, see
+      // above).
+      const browserOwnerMetadata: PreviewMetadata | undefined =
+        type === 'browser' ? { ...(meta ?? {}), ownerConversationId: getCurrentConversation() ?? undefined } : meta;
+
       // 记下打开时的 mtime，作为下次保存的 If-Match 条件。
       // 必须在 setTabs 之外做 —— updater 在 StrictMode 下会跑两次，且必须保持纯函数。
       // 这是「打开 tab 时取一次」那个填充点：没有它，每个 tab 的首次保存都不带
@@ -818,13 +883,13 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
             // 如果用户已编辑内容，则保留当前内容，仅更新元数据 / Keep edited content, only merge metadata
             if (tab.isDirty) {
-              return meta ? { ...tab, metadata: { ...tab.metadata, ...meta } } : tab;
+              return browserOwnerMetadata ? { ...tab, metadata: { ...tab.metadata, ...browserOwnerMetadata } } : tab;
             }
 
             return {
               ...tab,
               content: new_content,
-              metadata: meta ? { ...tab.metadata, ...meta } : tab.metadata,
+              metadata: browserOwnerMetadata ? { ...tab.metadata, ...browserOwnerMetadata } : tab.metadata,
               originalContent: new_content,
             };
           });
@@ -834,7 +899,10 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
           id: newTabId,
           content: new_content,
           content_type: type,
-          metadata: meta,
+          // 浏览器 tab 盖归属会话章：可见性按会话隔离的依据（见 isTabVisibleInConversation）。
+          // Browser tabs get stamped with their owning conversation — the basis of the
+          // per-conversation visibility rule (see isTabVisibleInConversation).
+          metadata: browserOwnerMetadata,
           title,
           isDirty: false,
           originalContent: new_content, // 保存原始内容 / Save original content
@@ -847,7 +915,15 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         if (cappedTarget) {
           return prevTabs.map((tab) =>
-            tab.id === cappedTarget.id ? { ...tab, content: new_content, title, metadata: meta } : tab
+            tab.id === cappedTarget.id
+              ? {
+                  ...tab,
+                  content: new_content,
+                  title,
+                  // 复用最旧 tab 等于接管：归属改为当前会话 / Reusing the oldest tab is a takeover: ownership moves to the current conversation
+                  metadata: browserOwnerMetadata,
+                }
+              : tab
           );
         }
 
@@ -945,6 +1021,10 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // would drop the subscriptions the restore had just created.
       resetPreviewWatch();
       currentScopeRef.current = scopeKey;
+      // 换作用域后旧会话的浏览器 tab 已不在状态里，挂起的自动收起还原记录作废。
+      // A scope switch drops the old conversations' browser tabs from state, so any
+      // pending auto-collapse restore record is void.
+      autoHiddenBrowserRef.current = null;
       const loaded = scopeKey != null ? loadScopeState(scopeKey) : EMPTY_SCOPE_STATE;
       // Subscriptions for these tabs come from the tabs effect, which this setTabs
       // triggers — restored tabs are subscribed exactly like freshly opened ones.
@@ -1326,25 +1406,116 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [tabs]);
   const agentAutoOpenAtRef = useRef(0);
 
-  const maybeOpenBrowserPanelForAgent = useCallback(() => {
-    const existing = browserTabsRef.current.find((tab) => tab.content_type === 'browser');
-    if (existing) {
-      setActiveTabId(existing.id);
-      setIsOpen(true);
-      return;
+  // isOpen 的 ref 镜像：归一化/还原 effect 需要读它但不入 deps，避免循环。
+  // Ref mirror of isOpen: the normalization/restore effect reads it without
+  // depending on it, which would otherwise loop.
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
+  // 当前会话 id 的 ref 镜像：Agent 回调与订阅 effect 里要读最新值而不重挂订阅。
+  // Ref mirror of the current conversation id: agent callbacks and subscription
+  // effects read the latest value without re-subscribing.
+  const currentConversationIdRef = useRef(currentConversationId);
+  currentConversationIdRef.current = currentConversationId;
+
+  /**
+   * 面板因「激活的浏览器 tab 归属别的会话」而自动收起时记下（会话, tab），
+   * 回到归属会话时原样还原（面板重开 + 聚焦该 tab）。
+   * Remembered (conversation, tab) when the panel auto-collapsed because the
+   * active browser tab belonged to another conversation; restored verbatim
+   * (panel reopened + tab focused) when that conversation is entered again.
+   */
+  const autoHiddenBrowserRef = useRef<{ conversationId: string; tabId: string } | null>(null);
+
+  /**
+   * 会话切换的可见性归一化：
+   * 1. activeTab 落在别的会话的浏览器 tab 上 → 挪到本会话第一个可见 tab；
+   *    一个可见 tab 都没有 → 收起面板并记住来源，回原会话时还原。
+   * 2. 带着自动收起记录进入其归属会话 → 还原面板（面板本就开着则只清记录）。
+   *
+   * Visibility normalization on conversation switches:
+   * 1. activeTab on another conversation's browser tab → move to the first tab
+   *    visible here; none visible → collapse the panel, remember the source and
+   *    restore it when that conversation is entered again.
+   * 2. Entering the owning conversation of a pending auto-collapse → restore
+   *    (only clearing the record when the panel is already open).
+   */
+  useEffect(() => {
+    const activeTab = activeTabIdRef.current
+      ? tabsRef.current.find((tab) => tab.id === activeTabIdRef.current)
+      : undefined;
+    if (activeTab && !isTabVisibleInConversation(activeTab, currentConversationId)) {
+      const firstVisible = tabsRef.current.find((tab) => isTabVisibleInConversation(tab, currentConversationId));
+      if (firstVisible) {
+        setActiveTabId(firstVisible.id);
+      } else {
+        setIsOpen(false);
+        const owner = activeTab.metadata?.ownerConversationId;
+        autoHiddenBrowserRef.current = owner ? { conversationId: owner, tabId: activeTab.id } : null;
+      }
     }
-    if (Date.now() - agentAutoOpenAtRef.current < 10_000) return;
-    agentAutoOpenAtRef.current = Date.now();
-    openBrowserTab();
-    notifyAgentOpenedBrowserPanel();
-  }, [openBrowserTab]);
+    const pending = autoHiddenBrowserRef.current;
+    if (pending && pending.conversationId === currentConversationId) {
+      autoHiddenBrowserRef.current = null;
+      if (!isOpenRef.current) {
+        const tab = tabsRef.current.find((t) => t.id === pending.tabId);
+        if (tab) {
+          setIsOpen(true);
+          setActiveTabId(tab.id);
+        }
+      }
+    }
+  }, [currentConversationId, tabs]);
+
+  /**
+   * Agent 请求浏览器时把面板带到当前会话。`allowCreate` 只对流路径（消息带
+   * conversation_id，归属确凿）放开：void 的 agentBrowserRequested 事件不带会话，
+   * 替当前会话给别的会话的 Agent 开面板，正是本次要修的串台——一律不创建。
+   *
+   * Brings the panel up in the current conversation on agent request. `allowCreate`
+   * is only granted to the stream path (the message carries conversation_id, so
+   * attribution is certain): the void agentBrowserRequested event carries no
+   * conversation, and opening a panel here on another conversation's behalf is
+   * exactly the cross-conversation leak being fixed — never create on it.
+   *
+   * @param allowCreate 流路径传 true / true from the attributed stream path
+   */
+  const maybeOpenBrowserPanelForAgent = useCallback(
+    (allowCreate: boolean) => {
+      // 只接管当前会话可见的浏览器 tab；tab 全部归属其他会话时不动面板——
+      // 那是别的会话的 Agent 在请求。（CDP 桥继续驱动归属会话的隐藏 webview。）
+      //
+      // Only take over browser tabs visible in the current conversation; when every
+      // browser tab belongs to other conversations, leave the panel alone — the
+      // request comes from another conversation's agent. (The CDP bridge keeps
+      // driving the owning conversation's hidden webview.)
+      const existing = browserTabsRef.current.find(
+        (tab) => tab.content_type === 'browser' && isTabVisibleInConversation(tab, currentConversationIdRef.current)
+      );
+      if (existing) {
+        setActiveTabId(existing.id);
+        setIsOpen(true);
+        maybeNotifyFirstAgentBrowserUse();
+        return;
+      }
+      if (!allowCreate) return;
+      if (browserTabsRef.current.some((tab) => tab.content_type === 'browser')) return;
+      if (Date.now() - agentAutoOpenAtRef.current < 10_000) return;
+      agentAutoOpenAtRef.current = Date.now();
+      openBrowserTab();
+      notifyAgentOpenedBrowserPanel();
+      maybeNotifyFirstAgentBrowserUse();
+    },
+    [openBrowserTab]
+  );
 
   // Core streams bare tool names, whereas other engines stream MCP-qualified names.
   // The authenticated CDP bridge is the authoritative signal that our browser is needed.
+  // void 事件不带会话，故只允许接管可见 tab、不允许创建（见上方说明）。
+  // The void event carries no conversation, so it may only take over a visible tab,
+  // never create one (see the note above).
   useEffect(() => {
     return ipcBridge.application?.agentBrowserRequested?.on(() => {
-      maybeNotifyFirstAgentBrowserUse();
-      maybeOpenBrowserPanelForAgent();
+      maybeOpenBrowserPanelForAgent(false);
     });
   }, [maybeOpenBrowserPanelForAgent]);
 
@@ -1381,8 +1552,14 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const unsubscribe = stream.on((message) => {
       if (isBrowserMcpActivity(message.type, message.data)) {
         markBrowserTabs(true);
-        maybeNotifyFirstAgentBrowserUse();
-        maybeOpenBrowserPanelForAgent();
+        // 流带着 conversation_id：只有正在跑浏览器的是当前会话才打扰用户——
+        // 别的会话的 Agent 操作浏览器时，面板和提示都不能在当前会话冒出来。
+        // The stream carries conversation_id: only an in-conversation browser run
+        // may surface the panel and notices here — another conversation's agent
+        // driving the browser must not pop anything into this one.
+        if (message.conversation_id === getCurrentConversation()) {
+          maybeOpenBrowserPanelForAgent(true);
+        }
         return;
       }
       if (isBrowserMcpSettled(message.type, message.data)) {
@@ -1398,6 +1575,7 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isOpen,
       isMaximized,
       tabs,
+      visibleTabs,
       activeTabId,
       activeTab,
       openPreview,
@@ -1429,6 +1607,7 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
     isOpen,
     isMaximized,
     tabs,
+    visibleTabs,
     activeTabId,
     activeTab,
     openPreview,

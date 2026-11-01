@@ -20,6 +20,7 @@ import { act, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const browserRequest = vi.hoisted(() => ({ listener: undefined as undefined | (() => void) }));
+const responseStream = vi.hoisted(() => ({ listener: undefined as undefined | ((message: unknown) => void) }));
 vi.mock('@/common', () => ({
   ipcBridge: {
     application: {
@@ -34,7 +35,16 @@ vi.mock('@/common', () => ({
     },
     fileStream: { contentUpdate: { on: () => () => {} } },
     preview: { open: { on: () => () => {} } },
-    conversation: { responseStream: { on: () => () => {} } },
+    conversation: {
+      responseStream: {
+        on: (fn: (message: unknown) => void) => {
+          responseStream.listener = fn;
+          return () => {
+            responseStream.listener = undefined;
+          };
+        },
+      },
+    },
     fs: { getFileContent: { invoke: vi.fn() }, writeFile: { invoke: vi.fn() } },
   },
 }));
@@ -50,6 +60,10 @@ import {
   type PreviewContextValue,
 } from '@/renderer/pages/conversation/Preview/context/PreviewContext';
 import { MAX_BROWSER_TABS } from '@/renderer/pages/conversation/Preview/browser/constants';
+import {
+  resetCurrentConversationForTest,
+  setCurrentConversation,
+} from '@/renderer/pages/conversation/explorer/currentConversationStore';
 
 let ctx: PreviewContextValue;
 
@@ -69,17 +83,23 @@ const browserTabs = () => ctx.tabs.filter((tab) => tab.content_type === 'browser
 
 beforeEach(() => {
   localStorage.clear();
+  resetCurrentConversationForTest();
 });
 
 describe('PreviewContext browser tabs', () => {
-  it('opens on a bridge request and reopens a hidden tab without duplicating it', () => {
+  it('opens on the conversation’s own stream request and reopens a hidden tab without duplicating it', () => {
+    // 创建面板的信号必须带会话归属（tool_group 流消息），void 的桥请求只接管不创建
+    // Panel creation requires an attributed signal (tool_group stream); the void
+    // bridge request may only take over, never create.
     renderProvider();
-    act(() => browserRequest.listener?.());
+    act(() => setCurrentConversation('conv-a'));
+    const browserToolCall = { type: 'tool_group', data: [{ name: 'one-browser__navigate', status: 'Executing' }] };
+    act(() => responseStream.listener?.({ ...browserToolCall, conversation_id: 'conv-a' }));
     expect(browserTabs()).toHaveLength(1);
     expect(ctx.isOpen).toBe(true);
     act(() => ctx.closePreview());
     expect(ctx.isOpen).toBe(false);
-    act(() => browserRequest.listener?.());
+    act(() => responseStream.listener?.({ ...browserToolCall, conversation_id: 'conv-a' }));
     expect(ctx.isOpen).toBe(true);
     expect(browserTabs()).toHaveLength(1);
   });
@@ -400,5 +420,143 @@ describe('PreviewContext updateTab', () => {
     act(() => ctx.updateTab(tabId, { content: '' }));
 
     expect(browserTabs()[0].content).toBe('');
+  });
+});
+
+describe('browser tabs follow their conversation', () => {
+  it('stamps a new browser tab with the owning conversation', () => {
+    renderProvider();
+    act(() => setCurrentConversation('conv-a'));
+    act(() => ctx.openBrowserTab('https://example.com'));
+
+    expect(browserTabs()[0].metadata?.ownerConversationId).toBe('conv-a');
+    expect(ctx.visibleTabs).toHaveLength(1);
+  });
+
+  it('hides another conversation’s browser tab and auto-collapses the panel, restoring on return', () => {
+    // 核心场景（用户反馈）：A 打开网站后切到 B，A 的浏览器内容不能出现在 B；
+    // 回到 A 时面板与 tab 原样还原。
+    // The reported scenario: a site opened in A must not appear in B; returning
+    // to A restores the panel and the tab verbatim.
+    renderProvider();
+    act(() => setCurrentConversation('conv-a'));
+    act(() => ctx.openBrowserTab('https://example.com'));
+    expect(ctx.isOpen).toBe(true);
+
+    act(() => setCurrentConversation('conv-b'));
+    expect(ctx.visibleTabs).toHaveLength(0);
+    expect(ctx.activeTab).toBeNull();
+    expect(ctx.isOpen).toBe(false);
+
+    act(() => setCurrentConversation('conv-a'));
+    expect(ctx.isOpen).toBe(true);
+    expect(ctx.activeTabId).toBe(browserTabs()[0].id);
+    expect(ctx.visibleTabs).toHaveLength(1);
+  });
+
+  it('moves the active tab to a visible one instead of collapsing when one exists', () => {
+    renderProvider();
+    act(() => setCurrentConversation('conv-a'));
+    act(() => ctx.openBrowserTab('https://example.com'));
+    act(() => ctx.openPreview('const x = 1', 'code', { language: 'ts' }));
+    const codeTabId = ctx.activeTabId;
+
+    act(() => setCurrentConversation('conv-b'));
+    // 文档类 tab 不受归属影响，仍随作用域共享；激活 tab 挪到它而不是收面板
+    // Document tabs ignore ownership and keep following the scope; the active tab
+    // moves to the visible one instead of collapsing the panel.
+    expect(ctx.isOpen).toBe(true);
+    expect(ctx.activeTabId).toBe(codeTabId);
+    expect(ctx.visibleTabs.map((tab) => tab.content_type)).toEqual(['code']);
+  });
+
+  it('keeps unowned (legacy) browser tabs visible in every conversation', () => {
+    renderProvider();
+    // 无会话时打开 → 无归属（存量数据同型）→ 任何会话都可见
+    // Opened with no conversation → unowned (legacy shape) → visible everywhere.
+    act(() => ctx.openBrowserTab('https://example.com'));
+    expect(browserTabs()[0].metadata?.ownerConversationId).toBeUndefined();
+
+    act(() => setCurrentConversation('conv-x'));
+    expect(ctx.visibleTabs).toHaveLength(1);
+    expect(ctx.activeTab).not.toBeNull();
+  });
+
+  it('opens an owned, visible tab when the same address is opened from another conversation', () => {
+    // 浏览器 tab 刻意不去重（见「stacks tabs pointing at the same address」），
+    // 所以同地址在 B 打开会得到新 tab：归属 B、对 B 可见；A 的 tab 保持隐藏。
+    // Browser tabs deliberately never dedupe (see the stacking tests), so opening
+    // the same address in B yields a new tab: owned by B, visible in B, while A's
+    // stays hidden.
+    renderProvider();
+    act(() => setCurrentConversation('conv-a'));
+    act(() => ctx.openBrowserTab('https://dup.example'));
+    const tabAId = browserTabs()[0].id;
+
+    act(() => setCurrentConversation('conv-b'));
+    act(() => ctx.openBrowserTab('https://dup.example'));
+
+    expect(browserTabs()).toHaveLength(2);
+    expect(ctx.isOpen).toBe(true);
+    expect(ctx.activeTabId).not.toBe(tabAId);
+    expect(ctx.activeTab?.metadata?.ownerConversationId).toBe('conv-b');
+    expect(ctx.visibleTabs).toHaveLength(1);
+  });
+
+  it('does not pop the panel for an agent request when all browser tabs belong elsewhere', () => {
+    renderProvider();
+    act(() => setCurrentConversation('conv-a'));
+    act(() => ctx.openBrowserTab('https://example.com'));
+
+    act(() => setCurrentConversation('conv-b'));
+    expect(ctx.isOpen).toBe(false);
+
+    // B 会话里收到 Agent 的浏览器请求：tab 都属于 A，不在 B 弹面板、不建新 tab
+    // A browser request arrives while in B: every tab belongs to A — no panel, no new tab.
+    act(() => browserRequest.listener?.());
+    expect(browserTabs()).toHaveLength(1);
+    expect(browserTabs()[0].metadata?.ownerConversationId).toBe('conv-a');
+    expect(ctx.isOpen).toBe(false);
+  });
+
+  it('does not create a panel from the unattributed bridge request even with no tabs', () => {
+    // void 事件不带会话：在 B 里替别的会话的 Agent 开面板正是要修的串台，
+    // 所以无可见 tab 时一律不创建；创建权只归带 conversation_id 的流路径。
+    // The void event carries no conversation: opening a panel here on another
+    // conversation's behalf is the leak being fixed, so with no visible tab it
+    // never creates — creation belongs to the attributed stream path.
+    renderProvider();
+    act(() => setCurrentConversation('conv-b'));
+
+    act(() => browserRequest.listener?.());
+    expect(browserTabs()).toHaveLength(0);
+    expect(ctx.isOpen).toBe(false);
+  });
+
+  it('auto-opens a panel owned by the current conversation from its own stream activity', () => {
+    renderProvider();
+    act(() => setCurrentConversation('conv-b'));
+
+    const browserEntry = { name: 'one-browser__navigate', status: 'Executing' };
+    act(() => responseStream.listener?.({ type: 'tool_group', data: [browserEntry], conversation_id: 'conv-b' }));
+    expect(browserTabs()).toHaveLength(1);
+    expect(browserTabs()[0].metadata?.ownerConversationId).toBe('conv-b');
+    expect(ctx.isOpen).toBe(true);
+  });
+
+  it('ignores another conversation’s browser activity on the stream but reacts to its own', () => {
+    renderProvider();
+    act(() => setCurrentConversation('conv-b'));
+
+    const browserEntry = { name: 'one-browser__navigate', status: 'Executing' };
+    act(() => responseStream.listener?.({ type: 'tool_group', data: [browserEntry], conversation_id: 'conv-a' }));
+    // 别的会话的 Agent 在跑浏览器：当前会话无感知 / Another conversation's agent: nothing surfaces here.
+    expect(ctx.isOpen).toBe(false);
+    expect(browserTabs()).toHaveLength(0);
+
+    act(() => responseStream.listener?.({ type: 'tool_group', data: [browserEntry], conversation_id: 'conv-b' }));
+    expect(browserTabs()).toHaveLength(1);
+    expect(browserTabs()[0].metadata?.ownerConversationId).toBe('conv-b');
+    expect(ctx.isOpen).toBe(true);
   });
 });

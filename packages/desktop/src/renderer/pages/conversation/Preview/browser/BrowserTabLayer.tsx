@@ -3,7 +3,8 @@
  */
 
 import React, { useCallback } from 'react';
-import type { PreviewTab, PreviewTabPatch } from '../context/PreviewContext';
+import { useCurrentConversation } from '@/renderer/pages/conversation/explorer/currentConversationStore';
+import { isTabVisibleInConversation, type PreviewTab, type PreviewTabPatch } from '../context/PreviewContext';
 import BrowserViewer from './BrowserViewer';
 
 export interface BrowserTabLayerProps {
@@ -34,6 +35,14 @@ export interface BrowserTabLayerProps {
  * so they retain real dimensions and need no relayout when shown again.
  */
 const BrowserTabLayer: React.FC<BrowserTabLayerProps> = ({ browserTabs, activeTabId, updateTab }) => {
+  // 浏览器页签跟随会话：webview 仍全部常驻（切会话不销毁、页面状态不丢），
+  // 只有「归属当前会话且被激活」的 tab 可见 —— 别的会话打开的网站不会出现在这里。
+  // Browser tabs follow their conversation: every webview stays mounted (switching
+  // conversations neither destroys them nor loses page state), but only a tab that
+  // is owned by the current conversation AND active is shown — a site opened in
+  // another conversation never appears here.
+  const currentConversationId = useCurrentConversation();
+
   const handleUrlChange = useCallback(
     (tabId: string, url: string) => {
       // 地址存在 content 里，与其他 tab 类型保持一致 / Address lives in content, like other tab types
@@ -51,12 +60,14 @@ const BrowserTabLayer: React.FC<BrowserTabLayerProps> = ({ browserTabs, activeTa
 
   if (browserTabs.length === 0) return null;
 
-  const isBrowserActive = browserTabs.some((tab) => tab.id === activeTabId);
+  const isBrowserActive = browserTabs.some(
+    (tab) => tab.id === activeTabId && isTabVisibleInConversation(tab, currentConversationId)
+  );
 
   return (
     <div className='relative flex-1 overflow-hidden' style={{ display: isBrowserActive ? undefined : 'none' }}>
       {browserTabs.map((tab) => {
-        const isActive = tab.id === activeTabId;
+        const isActive = tab.id === activeTabId && isTabVisibleInConversation(tab, currentConversationId);
         return (
           <div
             key={tab.id}
