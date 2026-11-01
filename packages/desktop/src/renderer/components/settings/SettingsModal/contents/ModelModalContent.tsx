@@ -33,7 +33,8 @@ import { isNewApiPlatform, NEW_API_PROTOCOL_OPTIONS } from '@/renderer/utils/mod
 import EditModeModal from '@/renderer/pages/settings/components/EditModeModal';
 import DreamScrollArea from '@/renderer/components/base/DreamScrollArea';
 import TalkToButlerButton from '@/renderer/components/base/TalkToButlerButton';
-import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
+import { useModelProviderList, useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
+import { useTalkToButler } from '@/renderer/hooks/assistant/useTalkToButler';
 import { trialVendorOfProviderId } from '@/renderer/hooks/agent/useTrialModelClaim';
 import TrialQuotaBadge from '@/renderer/pages/settings/components/TrialQuotaBadge';
 import { useSettingsViewMode } from '../settingsViewContext';
@@ -122,6 +123,8 @@ const ModelModalContent: React.FC = () => {
   const [collapseKey, setCollapseKey] = useState<Record<string, boolean>>({});
   const [healthCheckLoading, setHealthCheckLoading] = useState<Record<string, boolean>>({});
   const { data, mutate } = useProvidersQuery();
+  const { providers: chatProviders } = useModelProviderList();
+  const talkToButler = useTalkToButler();
   const [message, messageContext] = Message.useMessage();
 
   /**
@@ -389,6 +392,14 @@ const ModelModalContent: React.FC = () => {
       <TalkToButlerButton
         label={t('settings.addModel')}
         chatLabel={t('settings.talkToButler.addViaChat', { defaultValue: 'Add via chat' })}
+        onChat={() => {
+          if (!chatProviders.length) {
+            Message.warning({ content: t('settings.modelChatRequiresSetup'), duration: 6000 });
+            addPlatformModalCtrl.open();
+            return;
+          }
+          void talkToButler({ prompt: t('settings.talkToButler.prompt.addModel') });
+        }}
         onManual={() => addPlatformModalCtrl.open()}
         manualLabel={t('settings.talkToButler.addManually', { defaultValue: 'Add manually' })}
         prompt={t('settings.talkToButler.prompt.addModel', {

@@ -3387,5 +3387,8 @@
   "feedbackEmailOpening": "E-Mail-App angefordert. Bitte den Entwurf prüfen und selbst senden.",
   "feedbackContactFailed": "Aktion nicht abgeschlossen. Nutzen Sie die Kontaktdaten oben.",
   "feedbackReceipt": "Berichts-ID: {{id}}",
-  "feedbackReportTitle": "Online-Feedback"
+  "feedbackReportTitle": "Online-Feedback",
+  "modelChatRequiresSetup": "Die Einrichtung per Chat benötigt ein aktiviertes Chatmodell. Fügen Sie zuerst hier ein Modell hinzu.",
+  "modelValidationFailed": "Prüfen und ergänzen Sie die Pflichtfelder: {{fields}}",
+  "modelFieldRequired": "Bitte {{field}} ausfüllen"
 }

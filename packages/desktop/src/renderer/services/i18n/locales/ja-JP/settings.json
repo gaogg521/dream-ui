@@ -3389,5 +3389,8 @@
   "feedbackEmailOpening": "メールアプリの起動を要求しました。下書きを確認して送信してください。",
   "feedbackContactFailed": "操作を完了できませんでした。上記の連絡先をご利用ください。",
   "feedbackReceipt": "報告ID：{{id}}",
-  "feedbackReportTitle": "オンラインフィードバック"
+  "feedbackReportTitle": "オンラインフィードバック",
+  "modelChatRequiresSetup": "会話で設定するには、有効な会話モデルが必要です。先にここでモデルを追加してください。",
+  "modelValidationFailed": "必須項目を確認して入力してください：{{fields}}",
+  "modelFieldRequired": "{{field}}を入力してください"
 }

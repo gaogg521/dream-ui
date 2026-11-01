@@ -3387,5 +3387,8 @@
   "feedbackEmailOpening": "Email launch requested. Review the draft and send it yourself.",
   "feedbackContactFailed": "Action did not complete. Use the contact details above manually.",
   "feedbackReceipt": "Report ID: {{id}}",
-  "feedbackReportTitle": "Online feedback"
+  "feedbackReportTitle": "Online feedback",
+  "modelChatRequiresSetup": "Chat setup needs an enabled chat model first. Add a model here before using chat setup.",
+  "modelValidationFailed": "Check and complete the required fields: {{fields}}",
+  "modelFieldRequired": "Please fill in {{field}}"
 }

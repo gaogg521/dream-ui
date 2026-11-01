@@ -3387,5 +3387,8 @@
   "feedbackEmailOpening": "Se solicitó abrir el correo. Revisa y envía el borrador.",
   "feedbackContactFailed": "No se completó la acción. Usa los datos de contacto de arriba.",
   "feedbackReceipt": "ID del informe: {{id}}",
-  "feedbackReportTitle": "Comentarios en línea"
+  "feedbackReportTitle": "Comentarios en línea",
+  "modelChatRequiresSetup": "La configuración por chat requiere un modelo de chat activado. Primero añade un modelo aquí.",
+  "modelValidationFailed": "Revisa y completa los campos obligatorios: {{fields}}",
+  "modelFieldRequired": "Completa {{field}}"
 }

@@ -401,9 +401,30 @@ const AddPlatformModal = ModalHOC<{
         modalCtrl.close();
       })
       .catch(() => {
-        // validation failed
+        const invalidFields = Object.keys(form.getFieldsError()).filter((field) => form.getFieldError(field));
+        if (!invalidFields.length) return;
+        message.error({
+          content: t('settings.modelValidationFailed', {
+            fields: invalidFields.map((field) => fieldLabels[field] || field).join(', '),
+          }),
+          duration: 6000,
+        });
+        form.scrollToField(invalidFields[0], { behavior: 'smooth', block: 'center' });
       });
   };
+
+  const fieldLabels: Record<string, string> = {
+    platform: t('settings.modelPlatform'),
+    base_url: t('settings.apiEndpoint'),
+    api_key: t('settings.apiKey'),
+    model: t('settings.modelName'),
+    bedrockAuthMethod: t('settings.bedrock.authMethod'),
+    bedrockRegion: t('settings.bedrock.region'),
+    bedrockAccessKeyId: t('settings.bedrock.accessKeyId'),
+    bedrockSecretAccessKey: t('settings.bedrock.secretAccessKey'),
+    bedrockProfile: t('settings.bedrock.profile'),
+  };
+  const requiredMessage = (field: string) => t('settings.modelFieldRequired', { field: fieldLabels[field] });
 
   return (
     <DreamModal
@@ -428,7 +449,7 @@ const AddPlatformModal = ModalHOC<{
             label={t('settings.modelPlatform')}
             field={'platform'}
             required
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: requiredMessage('platform') }]}
           >
             <Select
               showSearch
@@ -490,7 +511,7 @@ const AddPlatformModal = ModalHOC<{
             }
             field={'base_url'}
             required={isCustom || isNewApi}
-            rules={[{ required: isCustom || isNewApi }]}
+            rules={[{ required: isCustom || isNewApi, message: requiredMessage('base_url') }]}
           >
             <Input
               placeholder={
@@ -530,7 +551,7 @@ const AddPlatformModal = ModalHOC<{
             hidden={!platformNeedsApiKey(platform)}
             label={t('settings.apiKey')}
             required={platformNeedsApiKey(platform)}
-            rules={[{ required: platformNeedsApiKey(platform) }]}
+            rules={[{ required: platformNeedsApiKey(platform), message: requiredMessage('api_key') }]}
             field={'api_key'}
             extra={
               <div className='space-y-2px'>
@@ -561,7 +582,7 @@ const AddPlatformModal = ModalHOC<{
             field={'bedrockAuthMethod'}
             initialValue='accessKey'
             required={isBedrock}
-            rules={[{ required: isBedrock }]}
+            rules={[{ required: isBedrock, message: requiredMessage('bedrockAuthMethod') }]}
           >
             <Select>
               <Select.Option value='accessKey'>{t('settings.bedrock.authMethodAccessKey')}</Select.Option>
@@ -576,7 +597,7 @@ const AddPlatformModal = ModalHOC<{
             field={'bedrockRegion'}
             initialValue='us-east-1'
             required={isBedrock}
-            rules={[{ required: isBedrock }]}
+            rules={[{ required: isBedrock, message: requiredMessage('bedrockRegion') }]}
             extra={t('settings.bedrock.regionHint')}
           >
             <Select showSearch>
@@ -597,7 +618,12 @@ const AddPlatformModal = ModalHOC<{
             label={t('settings.bedrock.accessKeyId')}
             field={'bedrockAccessKeyId'}
             required={isBedrock && bedrockAuthMethod === 'accessKey'}
-            rules={[{ required: isBedrock && bedrockAuthMethod === 'accessKey' }]}
+            rules={[
+              {
+                required: isBedrock && bedrockAuthMethod === 'accessKey',
+                message: requiredMessage('bedrockAccessKeyId'),
+              },
+            ]}
           >
             <Input.Password placeholder='AKIA...' visibilityToggle />
           </Form.Item>
@@ -608,7 +634,12 @@ const AddPlatformModal = ModalHOC<{
             label={t('settings.bedrock.secretAccessKey')}
             field={'bedrockSecretAccessKey'}
             required={isBedrock && bedrockAuthMethod === 'accessKey'}
-            rules={[{ required: isBedrock && bedrockAuthMethod === 'accessKey' }]}
+            rules={[
+              {
+                required: isBedrock && bedrockAuthMethod === 'accessKey',
+                message: requiredMessage('bedrockSecretAccessKey'),
+              },
+            ]}
           >
             <Input.Password visibilityToggle />
           </Form.Item>
@@ -619,7 +650,9 @@ const AddPlatformModal = ModalHOC<{
             label={t('settings.bedrock.profile')}
             field={'bedrockProfile'}
             required={isBedrock && bedrockAuthMethod === 'profile'}
-            rules={[{ required: isBedrock && bedrockAuthMethod === 'profile' }]}
+            rules={[
+              { required: isBedrock && bedrockAuthMethod === 'profile', message: requiredMessage('bedrockProfile') },
+            ]}
             extra={t('settings.bedrock.profileHint')}
           >
             <Input placeholder='default' />
@@ -630,8 +663,8 @@ const AddPlatformModal = ModalHOC<{
             label={t('settings.modelName')}
             field={'model'}
             required
-            rules={[{ required: true }]}
-            validateStatus={!isFullUrl && modelListState.error ? 'error' : 'success'}
+            rules={[{ required: true, message: requiredMessage('model') }]}
+            validateStatus={!isFullUrl && modelListState.error ? 'error' : undefined}
             help={
               !isFullUrl && modelListState.error instanceof Error
                 ? modelListState.error.message

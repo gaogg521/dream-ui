@@ -3609,5 +3609,8 @@
   "feedbackEmailOpening": "已嘗試開啟郵件應用程式，請確認草稿並自行寄送",
   "feedbackContactFailed": "操作未完成，請手動使用上方聯絡方式",
   "feedbackReceipt": "回報編號：{{id}}",
-  "feedbackReportTitle": "線上留言"
+  "feedbackReportTitle": "線上留言",
+  "modelChatRequiresSetup": "透過對話設定需要先有一個已啟用的對話模型。請先在此處新增模型，再使用對話設定。",
+  "modelValidationFailed": "請檢查並填寫必填欄位：{{fields}}",
+  "modelFieldRequired": "請填寫{{field}}"
 }

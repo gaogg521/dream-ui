@@ -3390,5 +3390,8 @@
   "feedbackEmailOpening": "Abertura do e-mail solicitada. Revise e envie o rascunho.",
   "feedbackContactFailed": "Ação não concluída. Use os dados de contato acima.",
   "feedbackReceipt": "ID do relato: {{id}}",
-  "feedbackReportTitle": "Feedback online"
+  "feedbackReportTitle": "Feedback online",
+  "modelChatRequiresSetup": "A configuração por conversa precisa de um modelo de chat ativado. Primeiro adicione um modelo aqui.",
+  "modelValidationFailed": "Verifique e preencha os campos obrigatórios: {{fields}}",
+  "modelFieldRequired": "Preencha {{field}}"
 }

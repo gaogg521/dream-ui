@@ -27,6 +27,8 @@ const mocks = vi.hoisted(() => ({
   protocolReset: vi.fn(),
   singleModelValue: false,
   updateProvider: vi.fn(),
+  talkToButler: vi.fn(),
+  bootstrapWarning: vi.fn(),
 }));
 
 function MockSelectOption({ children, value }: { children?: React.ReactNode; value: string }) {
@@ -126,7 +128,10 @@ vi.mock('@renderer/hooks/agent/useModeModeList', () => ({
 
 vi.mock('@/renderer/hooks/agent/useModelProviderList', () => ({
   useProvidersQuery: () => ({ data: mocks.providers, mutate: mocks.providerMutate }),
+  useModelProviderList: () => ({ providers: mocks.providers }),
 }));
+
+vi.mock('@/renderer/hooks/assistant/useTalkToButler', () => ({ useTalkToButler: () => mocks.talkToButler }));
 
 vi.mock('@/renderer/components/settings/SettingsModal/settingsViewContext', () => ({
   useSettingsViewMode: () => 'modal',
@@ -137,7 +142,11 @@ vi.mock('@/renderer/hooks/system/useDeepLink', () => ({
 }));
 
 vi.mock('@/renderer/components/base/TalkToButlerButton', () => ({
-  default: ({ label }: { label: React.ReactNode }) => <span>{label}</span>,
+  default: ({ label, onChat }: { label: React.ReactNode; onChat?: () => void }) => (
+    <button type='button' onClick={onChat}>
+      {label}
+    </button>
+  ),
 }));
 
 vi.mock('@/renderer/pages/settings/components/EditModeModal', () => {
@@ -246,6 +255,7 @@ vi.mock('@arco-design/web-react', async (importOriginal) => {
     Message: {
       error: vi.fn(),
       success: vi.fn(),
+      warning: mocks.bootstrapWarning,
       useMessage: () => [
         {
           error: vi.fn(),
@@ -596,6 +606,29 @@ describe('model capability selectors', () => {
     await waitFor(() => {
       expect(mocks.onSubmit).toHaveBeenCalledWith(expect.objectContaining({ model_settings: {} }));
     });
+  });
+});
+
+describe('model setup chat entry', () => {
+  afterEach(() => {
+    cleanup();
+    mocks.talkToButler.mockClear();
+    mocks.bootstrapWarning.mockClear();
+  });
+  it('opens direct setup instead of chat when no chat model is available', async () => {
+    mocks.providers.splice(0);
+    render(<ModelModalContent />);
+    fireEvent.click(screen.getByRole('button', { name: 'settings.addModel' }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(mocks.bootstrapWarning).toHaveBeenCalledWith({ content: 'settings.modelChatRequiresSetup', duration: 6000 });
+    expect(mocks.talkToButler).not.toHaveBeenCalled();
+  });
+  it('keeps chat setup available once a chat model is configured', () => {
+    mocks.providers.splice(0, mocks.providers.length, provider());
+    render(<ModelModalContent />);
+    fireEvent.click(screen.getByRole('button', { name: 'settings.addModel' }));
+    expect(mocks.talkToButler).toHaveBeenCalledWith({ prompt: 'settings.talkToButler.prompt.addModel' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
 

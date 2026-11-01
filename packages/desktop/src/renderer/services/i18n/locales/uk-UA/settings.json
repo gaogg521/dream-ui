@@ -3402,5 +3402,8 @@
   "feedbackEmailOpening": "Запит на відкриття пошти надіслано. Перевірте й надішліть чернетку.",
   "feedbackContactFailed": "Дію не завершено. Скористайтеся контактами вище.",
   "feedbackReceipt": "Номер звіту: {{id}}",
-  "feedbackReportTitle": "Онлайн-відгук"
+  "feedbackReportTitle": "Онлайн-відгук",
+  "modelChatRequiresSetup": "Для налаштування через чат потрібна ввімкнена чат-модель. Спочатку додайте модель тут.",
+  "modelValidationFailed": "Перевірте й заповніть обов’язкові поля: {{fields}}",
+  "modelFieldRequired": "Заповніть поле «{{field}}»"
 }

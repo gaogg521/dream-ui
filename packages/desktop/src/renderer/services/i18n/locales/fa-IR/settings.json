@@ -3387,5 +3387,8 @@
   "feedbackEmailOpening": "درخواست باز کردن ایمیل ارسال شد. پیش‌نویس را بررسی و خودتان ارسال کنید.",
   "feedbackContactFailed": "عملیات کامل نشد. از اطلاعات تماس بالا استفاده کنید.",
   "feedbackReceipt": "شناسه گزارش: {{id}}",
-  "feedbackReportTitle": "بازخورد آنلاین"
+  "feedbackReportTitle": "بازخورد آنلاین",
+  "modelChatRequiresSetup": "راه‌اندازی از طریق گفتگو به یک مدل گفتگوی فعال نیاز دارد. ابتدا از اینجا یک مدل اضافه کنید.",
+  "modelValidationFailed": "فیلدهای الزامی را بررسی و تکمیل کنید: {{fields}}",
+  "modelFieldRequired": "لطفاً {{field}} را تکمیل کنید"
 }

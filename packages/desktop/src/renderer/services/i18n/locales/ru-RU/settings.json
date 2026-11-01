@@ -3401,5 +3401,8 @@
   "feedbackEmailOpening": "Запрошено открытие почты. Проверьте и отправьте черновик.",
   "feedbackContactFailed": "Действие не завершено. Используйте контакты выше.",
   "feedbackReceipt": "Номер отчёта: {{id}}",
-  "feedbackReportTitle": "Обратная связь"
+  "feedbackReportTitle": "Обратная связь",
+  "modelChatRequiresSetup": "Для настройки через чат нужна включённая чат-модель. Сначала добавьте модель здесь.",
+  "modelValidationFailed": "Проверьте и заполните обязательные поля: {{fields}}",
+  "modelFieldRequired": "Заполните поле «{{field}}»"
 }

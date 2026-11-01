@@ -3387,5 +3387,8 @@
   "feedbackEmailOpening": "Ouverture de la messagerie demandée. Vérifiez puis envoyez le brouillon.",
   "feedbackContactFailed": "Action inachevée. Utilisez directement les coordonnées ci-dessus.",
   "feedbackReceipt": "Numéro du rapport : {{id}}",
-  "feedbackReportTitle": "Avis en ligne"
+  "feedbackReportTitle": "Avis en ligne",
+  "modelChatRequiresSetup": "La configuration par chat nécessite un modèle de chat activé. Ajoutez d’abord un modèle ici.",
+  "modelValidationFailed": "Vérifiez et remplissez les champs obligatoires : {{fields}}",
+  "modelFieldRequired": "Veuillez remplir {{field}}"
 }

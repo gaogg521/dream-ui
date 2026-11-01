@@ -3608,5 +3608,8 @@
   "feedbackEmailOpening": "已尝试打开邮件应用，请确认草稿并自行发送",
   "feedbackContactFailed": "操作未完成，请手动使用上方联系方式",
   "feedbackReceipt": "反馈编号：{{id}}",
-  "feedbackReportTitle": "在线留言"
+  "feedbackReportTitle": "在线留言",
+  "modelChatRequiresSetup": "通过对话配置需要先有一个已启用的对话模型。请先在此处添加模型，再使用对话配置。",
+  "modelValidationFailed": "请检查并填写必填项：{{fields}}",
+  "modelFieldRequired": "请填写{{field}}"
 }

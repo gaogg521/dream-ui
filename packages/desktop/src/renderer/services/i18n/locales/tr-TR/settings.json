@@ -3387,5 +3387,8 @@
   "feedbackEmailOpening": "E-posta uygulaması istendi. Taslağı inceleyip kendiniz gönderin.",
   "feedbackContactFailed": "İşlem tamamlanamadı. Yukarıdaki iletişim bilgilerini kullanın.",
   "feedbackReceipt": "Rapor kimliği: {{id}}",
-  "feedbackReportTitle": "Çevrimiçi geri bildirim"
+  "feedbackReportTitle": "Çevrimiçi geri bildirim",
+  "modelChatRequiresSetup": "Sohbetle kurulum için önce etkin bir sohbet modeli gerekir. Önce buradan bir model ekleyin.",
+  "modelValidationFailed": "Gerekli alanları kontrol edip doldurun: {{fields}}",
+  "modelFieldRequired": "Lütfen {{field}} alanını doldurun"
 }

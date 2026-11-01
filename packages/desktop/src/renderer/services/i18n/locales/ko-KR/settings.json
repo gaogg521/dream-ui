@@ -3389,5 +3389,8 @@
   "feedbackEmailOpening": "이메일 앱 실행을 요청했습니다. 초안을 확인하고 직접 보내세요.",
   "feedbackContactFailed": "작업을 완료하지 못했습니다. 위 연락처를 직접 이용하세요.",
   "feedbackReceipt": "신고 ID: {{id}}",
-  "feedbackReportTitle": "온라인 의견"
+  "feedbackReportTitle": "온라인 의견",
+  "modelChatRequiresSetup": "대화로 설정하려면 활성화된 대화 모델이 필요합니다. 먼저 여기에서 모델을 추가하세요.",
+  "modelValidationFailed": "필수 항목을 확인하고 입력하세요: {{fields}}",
+  "modelFieldRequired": "{{field}}을(를) 입력하세요"
 }
