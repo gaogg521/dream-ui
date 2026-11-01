@@ -1,0 +1,24 @@
+{
+  "version": "3.0.16",
+  "date": "2026-11-01",
+  "zh": [
+    {
+      "t": "单机版",
+      "d": "本版集中修复日常使用中的一批卡点：首次添加模型不再被静默卡住，发送被拦时不再丢失草稿，团队作战记录导出更可靠；场景依赖不可用时讲清楚原因，机器人提醒一键直达渠道设置。后端同步修复内置技能资源恢复与团队排班。\n\n【修复】\n· 【设置】首次添加模型不再被静默卡住：校验失败时明确列出缺失字段并滚动定位到出错项；「通过对话添加模型」在还没有任何可用模型时改为先引导手动添加\n· 【聊天】发送被拦截时保留草稿与引用：未安装 Agent、未配置模型、会话创建失败等情况下，输入内容不再丢失\n· 【团队作战】导出记录更可靠：保存成功给出确认并可一键打开所在文件夹，失败原因明确展示；导出走统一安全导出通道\n· 【场景】场景依赖不可用时明确解释：所需技能或 MCP 被禁用、缺失时弹窗列出具体项，并一键跳转对应设置页\n· 【定时任务】机器人设置提醒中的「去设置」直达渠道配置页\n· 【技能】启动时自动恢复缺失的内置技能资源，容忍过期的技能导入记录\n· 【团队作战】已停用的 Agent 与助手默认成员不再参与团队排班"
+    },
+    {
+      "t": "企业版",
+      "d": "组织口径与安全加固：移除成员即「移出公司」全链路落地，登录审计记录真实来源 IP，灰盒审计完成一批安全加固；管理台新增退出密码设置卡并收尾会话体验。\n\n【新增】\n· 【管理台】成员页新增退出密码设置卡：管理员可为成员设置、修改、清除自助退出口令，清除需二次确认\n\n【优化改进】\n· 【组织】移除成员口径改为「移出公司」：被移出成员的本地账号立即停用并拒绝登录，身份随状态隐藏，成员数按在职档案统计，同名重新入职自动恢复\n· 【安全】登录审计记录真实来源 IP：适配两级反向代理链，限流键防伪造，扫码登录补审计\n· 【安全】灰盒审计加固：反向代理头仅信任本机对端（防伪造 IP 绕过限流）；企业管理员不可降级系统管理员；退出密码闸新增限流与失败审计；LDAP 登录限流防密码喷洒；邀请预览与加入限流；多公司共用服务器时退出互不影响；MFA 锁定账号不再占用席位；内部端点仅限本机访问\n· 【管理台】会话失效全局重检并跳转登录；MFA 令牌不再出现在地址栏；组织分组标题点击进入首个子页；限流提示文案更友好\n· 【客户端】退出确认弹窗文案随「移出公司」新口径更新，13 种语言同步"
+    }
+  ],
+  "en": [
+    {
+      "t": "Personal edition",
+      "d": "This release clears a batch of everyday friction: adding your first model no longer stalls silently, drafts survive blocked sends, team transcript exports are reliable, scene dependencies explain themselves, and bot reminders link straight to channel settings. The backend also recovers missing built-in skill resources and fixes team staffing.\n\n[Fixed]\n· Settings: adding your first model no longer stalls silently — failed validation lists the missing fields and scrolls to the first one; \"add via chat\" now guides you to manual setup when no usable model exists yet\n· Chat: drafts and attachments survive blocked sends — missing agent, no model configured, or a failed conversation creation no longer wipes your input\n· Teams: transcript exports are reliable — success confirms with a \"show in folder\" shortcut, failures state the reason, and exports go through the unified secure-export path\n· Scenes: unavailable scene dependencies now explain themselves — disabled or missing skills/MCP servers are listed with a one-click jump to the right settings page\n· Cron: the \"go to settings\" button in bot setup reminders lands on the channel configuration page\n· Skills: missing built-in skill resources are restored at startup, and stale skill imports no longer break the catalog\n· Teams: disabled agents and assistant defaults no longer take part in team staffing"
+    },
+    {
+      "t": "Enterprise edition",
+      "d": "Organization semantics and security hardening: removing a member now means removing them from the company end to end, login audits record the real client IP, a gray-box audit lands a batch of hardening, and the console gains an exit-passphrase card with session-experience polish.\n\n[New]\n· Console: a new exit-passphrase card on the members page lets admins set, change or clear a member's self-service exit gate, with confirmation before clearing\n\n[Improved]\n· Organization: removing a member now means \"removed from the company\" — their local account is deactivated and sign-in rejected immediately, their identity hides with their status, headcount counts active profiles, and re-hiring the same name restores their history\n· Security: login audits record the real client IP — two-level reverse-proxy chains are handled, rate-limit keys resist spoofing, and QR-code sign-in is audited\n· Security: gray-box audit hardening — proxy headers are only trusted from loopback peers (no more forged IPs bypassing rate limits); org admins can no longer demote system admins; the exit-passphrase gate gained rate limiting and failure auditing; LDAP sign-ins are rate-limited against password spraying; invite preview and join are rate-limited; leaving company A no longer deactivates B on shared servers; MFA-locked accounts no longer occupy seats; internal endpoints answer only to loopback\n· Console: expired sessions re-check globally and redirect to sign-in; MFA tokens no longer appear in the address bar; organization group titles click through to their first sub-page; rate-limit copy reads like human advice\n· Client: the exit confirmation dialog copy follows the \"removed from company\" wording, synced across 13 languages"
+    }
+  ]
+}
