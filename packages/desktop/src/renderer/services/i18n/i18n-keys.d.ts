@@ -268,6 +268,7 @@ export type I18nKey =
   | 'common.backendStartup.portReportTimeout.diagnosticsSent'
   | 'common.backendStartup.portReportTimeout.sendDiagnostics'
   | 'common.backendStartup.portReportTimeout.title'
+  | 'common.backendStartup.quitApp'
   | 'common.backendStartup.recoverableDatabaseCorruption.confirmDialog.cancelText'
   | 'common.backendStartup.recoverableDatabaseCorruption.confirmDialog.content'
   | 'common.backendStartup.recoverableDatabaseCorruption.confirmDialog.okText'

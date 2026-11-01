@@ -27,6 +27,8 @@ export interface ElectronBridgeAPI {
   recoverCorruptedDatabase?: () => Promise<void>;
   /** Opens the recovery download page through the OS, even when the backend is unavailable. */
   openDownloadLatest?: () => Promise<void>;
+  /** Quit from startup recovery without requiring a healthy backend. */
+  quitFromRecovery?: () => void;
 }
 
 export type BackendStartupFailureReason =

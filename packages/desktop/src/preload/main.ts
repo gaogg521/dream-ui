@@ -69,6 +69,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send('feedback:renderer-log', payload),
   recoverCorruptedDatabase: () => ipcRenderer.invoke('backend:recover-corrupted-database'),
   openDownloadLatest: () => ipcRenderer.invoke('app:open-download-latest'),
+  quitFromRecovery: () => ipcRenderer.send('app:quit-from-recovery'),
 });
 
 // Synchronously fetch the dreamcore port and expose it to the renderer

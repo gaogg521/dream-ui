@@ -385,6 +385,13 @@ ipcMain.handle('app:open-download-latest', async (event) => {
   await shell.openExternal('https://work.1oneclaw.com/');
 });
 
+ipcMain.on('app:quit-from-recovery', (event) => {
+  if (!mainWindow || event.sender !== mainWindow.webContents) return;
+  isExplicitQuit = true;
+  setIsQuitting(true);
+  app.quit();
+});
+
 ipcMain.handle('backend:recover-corrupted-database', async () => {
   const { recoverCorruptedDatabaseAfterUserConfirmation } = await import('./process/startup/recoverCorruptedDatabase');
   const { terminateStaleBackendProcesses } = await import('./process/startup/terminateStaleBackendProcesses');

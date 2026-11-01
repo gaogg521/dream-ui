@@ -12,9 +12,8 @@ import React from 'react';
  *     is unavailable, so trapping the user turns a partial outage into a total
  *     one
  *
- * These tests pin that distinction. Esc always closed the dialog (Arco's
- * escToExit defaults to true), so what is asserted here is the presence of a
- * *visible* way out, which is what the user in the 2026-08-07 report lacked.
+ * Startup failure must offer native quit without dismissing to a blank screen.
+ * Runtime failures can dismiss and continue using the rest of the application.
  */
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
@@ -38,6 +37,7 @@ import {
 type CapturedModalConfig = {
   closable?: boolean;
   maskClosable?: boolean;
+  escToExit?: boolean;
   footer?: React.ReactNode;
   title?: React.ReactNode;
 };
@@ -61,7 +61,10 @@ function stubModalController() {
   return { controller, close, config: () => captured };
 }
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  delete window.electronAPI;
+});
 
 describe('backend-independent recovery download', () => {
   afterEach(() => {
@@ -95,19 +98,25 @@ describe('backend-independent recovery download', () => {
 });
 
 describe('showInstallationIntegrityModal', () => {
-  it('leaves the backend-startup dialog with no way out, because there is nothing behind it', () => {
+  it('offers native quit on startup failure without dismissing to a blank screen', async () => {
+    const quit = vi.fn();
+    window.electronAPI = { emit: vi.fn(), on: vi.fn(), quitFromRecovery: quit };
     const { controller, config } = stubModalController();
 
     showInstallationIntegrityModal(controller, t, 'backend is dead');
 
     expect(config()?.closable).toBe(false);
     expect(config()?.maskClosable).toBe(false);
+    expect(config()?.escToExit).toBe(false);
 
     render(<ConfigProvider>{config()?.footer}</ConfigProvider>);
     expect(screen.queryByTestId('installation-integrity-dismiss')).toBeNull();
+    await userEvent.click(screen.getByTestId('installation-integrity-quit'));
+    expect(quit).toHaveBeenCalledOnce();
   });
 
   it('gives the runtime-component dialog a visible way out', () => {
+    window.electronAPI = { emit: vi.fn(), on: vi.fn(), quitFromRecovery: vi.fn() };
     const { controller, config } = stubModalController();
 
     showInstallationIntegrityModal(controller, t, 'claude acp is missing', undefined, 'incomplete_installation', {
@@ -118,6 +127,7 @@ describe('showInstallationIntegrityModal', () => {
 
     render(<ConfigProvider>{config()?.footer}</ConfigProvider>);
     expect(screen.getByTestId('installation-integrity-dismiss')).toBeInTheDocument();
+    expect(screen.queryByTestId('installation-integrity-quit')).toBeNull();
   });
 
   it('actually closes the dialog when that way out is used', async () => {

@@ -76,6 +76,7 @@
   "tray.recentChats": "Chats recientes",
   "tray.untitled": "Sin título",
   "backendStartup": {
+    "quitApp": "Salir de la aplicación",
     "legacyUserDataImport": {
       "title": "¿Restaurar tus datos anteriores?",
       "detail": "One Work ahora guarda sus datos en una ubicación nueva y una versión anterior no trasladó allí tus datos existentes. Tus conversaciones, modelos, habilidades y licencia siguen en este ordenador:\n\n{{path}}\n\nImportar sustituye el perfil actual, vacío, por esos datos y reinicia One Work. El perfil actual se conserva, no se elimina. Si lo omites, no se volverá a preguntar.",

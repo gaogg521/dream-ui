@@ -53,7 +53,7 @@ export function openDownloadLatest(): void {
  *
  * `showDiagnostics: false` kinds (the downgrade dialog) have no diagnostics
  * button at all: the root cause is fully understood and the only remedy is
- * updating, so the single download action stays unambiguous.
+ * updating. A separate quit action still lets users leave the blocked app.
  */
 const DIALOG_KIND_CONFIG: Record<
   InstallationIntegrityDialogKind,
@@ -302,6 +302,11 @@ export const InstallationIntegrityFooter: React.FC<{
 
   return (
     <Space>
+      {!onDismiss && window.electronAPI?.quitFromRecovery ? (
+        <Button data-testid='installation-integrity-quit' onClick={() => window.electronAPI?.quitFromRecovery?.()}>
+          {t('common.backendStartup.quitApp')}
+        </Button>
+      ) : null}
       {onDismiss ? (
         <Button data-testid='installation-integrity-dismiss' onClick={onDismiss}>
           {t('common.backendStartup.incompleteInstallation.continueWithoutComponent')}
@@ -357,9 +362,9 @@ export function showInstallationIntegrityModal(
   // still works (other backends, other models), and trapping the user in a modal
   // turns "Claude is unavailable" into "the app is unusable".
   //
-  // Esc always closed this dialog (Arco's escToExit defaults to true), so the
-  // fix is a visible way out, not a new one. The reconciler also closes this
-  // programmatically via the returned handle when the resource self-heals.
+  // Blocking startup screens have no normal titlebar. Their footer quits the
+  // application through native IPC; dismissing the modal would expose a blank
+  // screen. Runtime-only failures can still dismiss and continue working.
   const dismissible = options.dismissible === true;
   let handle: ReturnType<InstallationIntegrityModalController['error']>;
 
@@ -374,6 +379,7 @@ export function showInstallationIntegrityModal(
       />
     ),
     closable: dismissible,
+    escToExit: dismissible,
     maskClosable: false,
   });
 
