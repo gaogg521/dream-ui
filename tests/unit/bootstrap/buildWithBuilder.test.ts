@@ -16,7 +16,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const repoRoot = resolve(__dirname, '../../..');
@@ -353,6 +353,8 @@ childProcess.execSync = function mockedExecSync(command) {
           // The release pre-flight queries GitHub about the real pin; this test
           // is about the packaging flow, so keep it offline and deterministic.
           DREAM_SKIP_PREFLIGHT: '1',
+          // No toolset download: electron-builder itself is mocked in this flow test.
+          ONEWORK_INSTALLER_7ZA: process.execPath,
           DREAM_PREPARE_CALLS_FILE: callsPath,
           NODE_OPTIONS: [process.env.NODE_OPTIONS, `--require=${hookPath}`].filter(Boolean).join(' '),
         },
@@ -368,6 +370,12 @@ childProcess.execSync = function mockedExecSync(command) {
         expect(installUtil).toContain('onework-bundled-uninstaller override source');
         expect(installUtil).toContain('$PLUGINSDIR\\OneWork-fixed-uninstaller.exe');
         expect(installUtil.match(/onework-bundled-uninstaller override source/g)).toHaveLength(1);
+        const extraction = readFileSync(
+          resolve(dirname(resolveAppBuilderInstallUtil()), 'extractAppPackage.nsh'),
+          'utf8'
+        );
+        expect(extraction).not.toContain('nsisunz::Unzip');
+        expect(extraction.match(/!insertmacro ONEWORK_EXTRACT_ZIP/g)).toHaveLength(1);
       }
 
       const calls = JSON.parse(readFileSync(callsPath, 'utf8')) as Array<{ arch?: string } | null>;

@@ -2,6 +2,7 @@
 !define ONEWORK_INSTALLER_COMMON_NSH
 !include "installer-observability.nsh"
 !include "installer-errors-sentry.nsh"
+!include "support\extract-zip.nsh"
 !include "installer-process-control.nsh"
 !include "installer-remove-registry.nsh"
 !include "installer-repair-heal.nsh"

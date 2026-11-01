@@ -259,6 +259,31 @@ function patchElectronBuilderNsisInstaller() {
     fs.writeFileSync(installUtilPath, patched);
     console.log('Patched electron-builder NSIS uninstall failure handoff.');
   }
+
+  // nsisunz cannot open long output paths (the default Administrator profile
+  // already puts bundled ACP files at 262 characters). Keep ZIP compression,
+  // but use the same checksum-pinned Windows 7za toolset as electron-builder.
+  if (!process.env.ONEWORK_INSTALLER_7ZA) {
+    const resolver = path.join(appBuilderDir, 'out', 'util', 'electronGet.js');
+    const resolveScript = `require(${JSON.stringify(resolver)}).downloadBuilderToolset({releaseName:'7zip@1.0.0',filenameWithExt:'7zip-win-x64.tar.gz',checksums:{'7zip-win-x64.tar.gz':'be071f15bd6da2f78fe81c6ddef2009b0c4d8a51f36b780cb806c7e6df95e1b3'}}).then(dir=>process.stdout.write(require('path').join(dir,'bin','7za.exe'))).catch(error=>{console.error(error);process.exitCode=1})`;
+    const resolved = spawnSync(process.execPath, ['-e', resolveScript], { encoding: 'utf8', timeout: 180000 });
+    if (resolved.status !== 0) throw new Error(`Cannot prepare Windows ZIP extractor: ${resolved.stderr}`);
+    process.env.ONEWORK_INSTALLER_7ZA = resolved.stdout.trim();
+  }
+  if (!fs.existsSync(process.env.ONEWORK_INSTALLER_7ZA)) throw new Error('Windows ZIP extractor is missing.');
+  const extractorRoot = path.dirname(path.dirname(process.env.ONEWORK_INSTALLER_7ZA));
+  process.env.ONEWORK_INSTALLER_7ZA_LICENSE = path.join(extractorRoot, 'LICENSE.txt');
+  process.env.ONEWORK_INSTALLER_7ZA_COPYING = path.join(extractorRoot, 'COPYING');
+  const extractPath = path.join(appBuilderDir, 'templates', 'nsis', 'include', 'extractAppPackage.nsh');
+  const extraction = fs.readFileSync(extractPath, 'utf8');
+  const legacyZip =
+    /    nsisunz::Unzip "\$PLUGINSDIR\\app-\$packageArch\.zip" "\$INSTDIR"\r?\n    Pop \$R0\r?\n    StrCmp \$R0 "success" \+3\r?\n      MessageBox MB_OK\|MB_ICONEXCLAMATION "\$\(decompressionFailed\)\$\\n\$R0"\r?\n      Quit/;
+  const longPathZip = '    !insertmacro ONEWORK_EXTRACT_ZIP "$PLUGINSDIR\\app-$packageArch.zip"';
+  if (legacyZip.test(extraction)) {
+    fs.writeFileSync(extractPath, extraction.replace(legacyZip, longPathZip));
+  } else if (!extraction.includes(longPathZip)) {
+    throw new Error('electron-builder ZIP extraction template changed; update the long-path patch.');
+  }
 }
 
 function walkFiles(dir, acc = []) {

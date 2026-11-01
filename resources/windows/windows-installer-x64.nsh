@@ -4,7 +4,7 @@
 
 !define ONEWORK_TARGET_ARCH "x64"
 !define ONEWORK_RUNTIME_KEY "win32-x64"
-!define ONEWORK_EXTRACT_METHOD "7z"
+!define ONEWORK_EXTRACT_METHOD "zip"
 
 !addincludedir "${PROJECT_DIR}\resources\windows"
 !include "installer-common.nsh"
@@ -18,7 +18,7 @@
 !macroend
 
 !macro customFiles_x64
-  !insertmacro ONEWORK_LOG_EXTRACT_RESULT "7z"
+  !insertmacro ONEWORK_LOG_EXTRACT_RESULT "zip"
 !macroend
 
 ; Architecture guard. Inserted from ONEWORK_INSTALLER_PREINIT (preInit) so it runs before any
