@@ -25,6 +25,8 @@ export interface ElectronBridgeAPI {
   // Forward feedback diagnostics logs to the main process console / 转发反馈诊断日志到主进程控制台
   logFeedbackEvent?: (payload: { details?: unknown; level: 'info' | 'warn' | 'error'; message: string }) => void;
   recoverCorruptedDatabase?: () => Promise<void>;
+  /** Opens the recovery download page through the OS, even when the backend is unavailable. */
+  openDownloadLatest?: () => Promise<void>;
 }
 
 export type BackendStartupFailureReason =

@@ -15,7 +15,7 @@ import { captureBackendStartupFailure, initSentry, setSentryDeviceId } from './s
 initSentry();
 
 import './process/utils/configureConsoleLog';
-import { app, BrowserWindow, ipcMain, nativeImage, powerMonitor, session } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeImage, powerMonitor, session, shell } from 'electron';
 import fixPath from 'fix-path';
 import { config as loadDotenvConfig } from 'dotenv';
 
@@ -377,6 +377,12 @@ ipcMain.on('get-backend-startup-failed', (event) => {
 
 ipcMain.on('get-backend-startup-failure', (event) => {
   event.returnValue = backendStartupFailureInfo;
+});
+
+// Recovery must not depend on dreamcore: it is precisely what failed to start.
+ipcMain.handle('app:open-download-latest', async (event) => {
+  if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Unexpected recovery download caller');
+  await shell.openExternal('https://work.1oneclaw.com/');
 });
 
 ipcMain.handle('backend:recover-corrupted-database', async () => {

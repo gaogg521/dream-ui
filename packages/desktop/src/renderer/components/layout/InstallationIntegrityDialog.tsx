@@ -2,6 +2,7 @@ import { Button, Message, Modal, Space, Typography } from '@arco-design/web-reac
 import type { TFunction } from 'i18next';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
 import { type FeedbackEventTags, submitFeedbackReport } from '@/renderer/services/feedback/submitFeedbackReport';
 
 const DOWNLOAD_URL = 'https://work.1oneclaw.com/';
@@ -36,6 +37,12 @@ export type InstallationIntegrityDiagnostics = {
 };
 
 export function openDownloadLatest(): void {
+  if (window.electronAPI?.openDownloadLatest) {
+    void window.electronAPI.openDownloadLatest().catch(() => {
+      Message.error(i18next.t('settings.recommendedPlatforms.openFailed'));
+    });
+    return;
+  }
   window.open(DOWNLOAD_URL, '_blank', 'noopener,noreferrer');
 }
 

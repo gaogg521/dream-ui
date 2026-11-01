@@ -18,9 +18,9 @@ import React from 'react';
  */
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ConfigProvider } from '@arco-design/web-react';
+import { ConfigProvider, Message } from '@arco-design/web-react';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }),
@@ -30,7 +30,10 @@ vi.mock('@/renderer/services/feedback/submitFeedbackReport', () => ({
   submitFeedbackReport: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { showInstallationIntegrityModal } from '@/renderer/components/layout/InstallationIntegrityDialog';
+import {
+  openDownloadLatest,
+  showInstallationIntegrityModal,
+} from '@/renderer/components/layout/InstallationIntegrityDialog';
 
 type CapturedModalConfig = {
   closable?: boolean;
@@ -59,6 +62,37 @@ function stubModalController() {
 }
 
 afterEach(cleanup);
+
+describe('backend-independent recovery download', () => {
+  afterEach(() => {
+    delete window.electronAPI;
+    vi.restoreAllMocks();
+  });
+  it('uses native shell IPC instead of opening an Electron child window', async () => {
+    const nativeOpen = vi.fn().mockResolvedValue(undefined);
+    window.electronAPI = { emit: vi.fn(), on: vi.fn(), openDownloadLatest: nativeOpen };
+    const browserOpen = vi.spyOn(window, 'open').mockReturnValue(null);
+    openDownloadLatest();
+    expect(nativeOpen).toHaveBeenCalledOnce();
+    expect(browserOpen).not.toHaveBeenCalled();
+  });
+  it('reports a native browser launch failure instead of silently doing nothing', async () => {
+    window.electronAPI = {
+      emit: vi.fn(),
+      on: vi.fn(),
+      openDownloadLatest: vi.fn().mockRejectedValue(new Error('no browser')),
+    };
+    const showError = vi.spyOn(Message, 'error').mockReturnValue({} as ReturnType<typeof Message.error>);
+    openDownloadLatest();
+    await waitFor(() => expect(showError).toHaveBeenCalled());
+  });
+  it('retains normal browser navigation in WebUI', () => {
+    delete window.electronAPI;
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    openDownloadLatest();
+    expect(open).toHaveBeenCalledWith('https://work.1oneclaw.com/', '_blank', 'noopener,noreferrer');
+  });
+});
 
 describe('showInstallationIntegrityModal', () => {
   it('leaves the backend-startup dialog with no way out, because there is nothing behind it', () => {
