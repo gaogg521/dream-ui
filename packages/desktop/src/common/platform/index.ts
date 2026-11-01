@@ -1,6 +1,8 @@
 import path from 'path';
 import type { IPlatformServices } from './IPlatformServices';
 import { NodePlatformServices } from './NodePlatformServices';
+import { isPackagedTestRun, type RuntimeProfileApp } from './runtimeProfile';
+export { isPackagedTestRun } from './runtimeProfile';
 
 let _services: IPlatformServices | null = null;
 
@@ -356,6 +358,44 @@ export const BRAND_DISPLAY_NAME = 'One Work';
  */
 export const APP_USER_MODEL_ID = 'com.huanle.oneone.ai';
 export const DEV_APP_USER_MODEL_ID = 'com.huanle.oneone.ai.dev';
+export const TEST_APP_USER_MODEL_ID = 'com.huanle.oneone.ai.test';
+
+/** Apply one profile policy before any storage access, including early chunk loading. */
+export function configureAppDataProfile(
+  app: RuntimeProfileApp,
+  env: NodeJS.ProcessEnv = process.env,
+  executable = process.execPath,
+  argv: readonly string[] = process.argv
+): void {
+  // These dependencies are main-process only; keep them out of renderer bundles.
+  const fs = require('fs') as typeof import('fs');
+  const explicit = env.DREAM_E2E_TEST === '1' ? env.DREAM_E2E_USER_DATA_DIR?.trim() : undefined;
+  if (explicit) {
+    fs.mkdirSync(explicit, { recursive: true });
+    app.setPath('userData', explicit);
+    return;
+  }
+  const appData = app.getPath('appData');
+  if (isPackagedTestRun(app.isPackaged, executable, env, argv)) {
+    const crypto = require('crypto') as typeof import('crypto');
+    const location = crypto.createHash('sha256').update(executable.replace(/\\/g, '/')).digest('hex').slice(0, 12);
+    const version = app.getVersion().replace(/[^a-zA-Z0-9._-]/g, '_') || 'unknown';
+    const directory = path.join(appData, 'One Work-Test', version, location);
+    fs.mkdirSync(directory, { recursive: true });
+    app.setName('One Work-Test');
+    app.setPath('userData', directory);
+    app.setAppUserModelId(TEST_APP_USER_MODEL_ID);
+  } else if (!app.isPackaged) {
+    const name = env.DREAM_MULTI_INSTANCE === '1' ? 'dream-ui-Dev-2' : 'dream-ui-Dev';
+    app.setName(name);
+    app.setPath('userData', path.join(appData, name));
+    app.setAppUserModelId(DEV_APP_USER_MODEL_ID);
+  } else {
+    app.setName(PROD_USERDATA_APP_NAME);
+    app.setPath('userData', migrateAndResolveProdUserDataDir(appData));
+    app.setAppUserModelId(APP_USER_MODEL_ID);
+  }
+}
 
 export function registerPlatformServices(services: IPlatformServices): void {
   _services = services;
@@ -383,21 +423,7 @@ export function getPlatformServices(): IPlatformServices {
         // Dev isolation: set app name before any getPath('userData') call.
         // Rollup may load this chunk before configureChromium.ts runs, so we
         // must apply the dev name here as a safety net.
-        if (!app.isPackaged) {
-          const devAppName = getDevAppName();
-          app.setName(devAppName);
-          app.setPath('userData', path.join(path.dirname(app.getPath('userData')), devAppName));
-          app.setAppUserModelId(DEV_APP_USER_MODEL_ID);
-        } else {
-          // Production: pin the userData directory to PROD_USERDATA_APP_NAME,
-          // migrating a legacy-named directory ("1ONE Code") on first launch.
-          app.setName(PROD_USERDATA_APP_NAME);
-          // getPath('appData') — never dirname(getPath('userData')), which
-          // would create the target and cancel the migration. See
-          // migrateAndResolveProdUserDataDir.
-          app.setPath('userData', migrateAndResolveProdUserDataDir(app.getPath('appData')));
-          app.setAppUserModelId(APP_USER_MODEL_ID);
-        }
+        configureAppDataProfile(app);
         // Typed as IPlatformPaths so tsc enforces completeness: any new method
         // added to the interface will cause a compile error here if omitted below.
         const paths: import('./IPlatformServices').IPlatformPaths = {

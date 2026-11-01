@@ -47,8 +47,21 @@ export const resolveWithLegacyName = (parent: string, current: string, legacy: s
   return existsSync(legacyPath) ? legacyPath : currentPath;
 };
 
+const usesIsolatedStorage = (): boolean => {
+  const profile = getElectronPathOrFallback('userData').replace(/\\/g, '/');
+  return (
+    process.env.DREAM_E2E_TEST === '1' ||
+    process.env.DREAM_TEST_PROFILE === '1' ||
+    /\/(?:One Work-Test|dream-ui-Dev(?:-2)?)(?:\/|$)/i.test(profile)
+  );
+};
+
 export const getTempPath = () => {
-  const rootPath = getElectronPathOrFallback('temp');
+  // Legacy migration can delete its source: tests must never read the shared
+  // production temp/1one directory, even on their very first boot.
+  const rootPath = usesIsolatedStorage()
+    ? path.join(getElectronPathOrFallback('userData'), 'tmp')
+    : getElectronPathOrFallback('temp');
   return path.join(rootPath, '1one');
 };
 
@@ -118,7 +131,8 @@ const ensureCliSafeSymlink = (targetPath: string, symlinkName: string): string =
 export const getDataPath = (): string => {
   const rootPath = getElectronPathOrFallback('userData');
   const dataPath = path.join(rootPath, '1one');
-  return ensureCliSafeSymlink(dataPath, getEnvAwareName('.1one'));
+  const name = usesIsolatedStorage() ? `.1one-test-${generateHashWithFullName(rootPath)}` : getEnvAwareName('.1one');
+  return ensureCliSafeSymlink(dataPath, name);
 };
 
 /**
@@ -130,7 +144,10 @@ export const getDataPath = (): string => {
 export const getConfigPath = (): string => {
   const rootPath = getElectronPathOrFallback('userData');
   const configPath = path.join(rootPath, 'config');
-  return ensureCliSafeSymlink(configPath, getEnvAwareName('.1one-config'));
+  const name = usesIsolatedStorage()
+    ? `.1one-config-test-${generateHashWithFullName(rootPath)}`
+    : getEnvAwareName('.1one-config');
+  return ensureCliSafeSymlink(configPath, name);
 };
 
 /**

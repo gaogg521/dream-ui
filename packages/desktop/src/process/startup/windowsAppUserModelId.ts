@@ -4,7 +4,7 @@
 
 import type { App } from 'electron';
 
-import { APP_USER_MODEL_ID, DEV_APP_USER_MODEL_ID } from '@/common/platform';
+import { APP_USER_MODEL_ID, DEV_APP_USER_MODEL_ID, TEST_APP_USER_MODEL_ID, isPackagedTestRun } from '@/common/platform';
 
 /**
  * Windows AppUserModelID for packaged builds.
@@ -49,5 +49,11 @@ export function registerWindowsAppUserModelId(options: RegisterWindowsAppUserMod
   if (platform !== 'win32') {
     return;
   }
-  app.setAppUserModelId(app.isPackaged ? WINDOWS_APP_USER_MODEL_ID : DEV_APP_USER_MODEL_ID);
+  app.setAppUserModelId(
+    isPackagedTestRun(app.isPackaged, options.execPath)
+      ? TEST_APP_USER_MODEL_ID
+      : app.isPackaged
+        ? WINDOWS_APP_USER_MODEL_ID
+        : DEV_APP_USER_MODEL_ID
+  );
 }

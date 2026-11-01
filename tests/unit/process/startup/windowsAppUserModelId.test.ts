@@ -8,7 +8,7 @@ import { describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { registerWindowsAppUserModelId, WINDOWS_APP_USER_MODEL_ID } from '@/process/startup/windowsAppUserModelId';
-import { DEV_APP_USER_MODEL_ID } from '@/common/platform';
+import { DEV_APP_USER_MODEL_ID, TEST_APP_USER_MODEL_ID } from '@/common/platform';
 
 const makeApp = (isPackaged: boolean) => ({
   isPackaged,
@@ -16,6 +16,13 @@ const makeApp = (isPackaged: boolean) => ({
 });
 
 describe('registerWindowsAppUserModelId', () => {
+  it('keeps unpacked test builds separate from installed taskbar identity', () => {
+    vi.stubEnv('DREAM_TEST_PROFILE', '1');
+    const app = makeApp(true);
+    registerWindowsAppUserModelId({ app, platform: 'win32', execPath: 'D:/qa/out/win-unpacked/onework.exe' });
+    expect(app.setAppUserModelId).toHaveBeenCalledWith(TEST_APP_USER_MODEL_ID);
+    vi.unstubAllEnvs();
+  });
   it('registers the electron-builder appId on packaged win32 builds', () => {
     const app = makeApp(true);
     registerWindowsAppUserModelId({ app, platform: 'win32', execPath: 'C:\\app\\OneWork.exe' });

@@ -31,6 +31,7 @@ import {
   findImportableLegacyUserDataDir,
   LEGACY_USERDATA_IMPORT_DECLINED_MARKER,
   LEGACY_USERDATA_IMPORT_REQUESTED_MARKER,
+  isPackagedTestRun,
 } from '@/common/platform';
 import { normalizeLanguageCode } from '@/common/config/i18n';
 import i18n, { setInitialLanguage } from '@process/services/i18n';
@@ -67,7 +68,8 @@ async function resolveDialogLanguage(): Promise<string> {
  */
 export async function maybeOfferLegacyUserDataImport(): Promise<LegacyUserDataImportOutcome> {
   // Dev and E2E run under their own directory names and never migrate.
-  if (!app.isPackaged) return 'nothing-to-import';
+  if (!app.isPackaged || isPackagedTestRun(app.isPackaged) || process.env.DREAM_E2E_TEST === '1')
+    return 'nothing-to-import';
 
   const legacyPath = findImportableLegacyUserDataDir(app.getPath('appData'), app.getPath('userData'));
   if (!legacyPath) return 'nothing-to-import';

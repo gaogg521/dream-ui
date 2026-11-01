@@ -10,20 +10,6 @@ function parseArgs(argv) {
   return { flags, values };
 }
 
-function isWindows() {
-  return process.platform === 'win32';
-}
-
-function killProcessByName(name) {
-  return new Promise((resolve) => {
-    const args = isWindows() ? ['/F', '/IM', name] : ['-f', name];
-    const cmd = isWindows() ? 'taskkill' : 'pkill';
-    const child = spawn(cmd, args, { stdio: 'ignore', shell: false });
-    child.on('exit', () => resolve());
-    child.on('error', () => resolve());
-  });
-}
-
 function resolvePackagedApp(projectRoot) {
   const outDir = path.join(projectRoot, 'out');
   if (!fs.existsSync(outDir)) return null;
@@ -69,7 +55,7 @@ async function main() {
   const { flags, values } = parseArgs(process.argv.slice(2));
   const projectRoot = process.cwd();
   const dryRun = flags.has('--dry-run');
-  const shouldClean = !flags.has('--no-clean');
+  // Do not terminate installed clients (or unrelated Electron applications).
   const passthroughArgs = values;
 
   const packaged = resolvePackagedApp(projectRoot);
@@ -78,28 +64,17 @@ async function main() {
     process.exit(1);
   }
 
-  if (shouldClean) {
-    await killProcessByName('onework.exe');
-    await killProcessByName('One Work.exe');
-    await killProcessByName('One Work');
-    await killProcessByName('one-work');
-    await killProcessByName('1onecode.exe');
-    await killProcessByName('1onecode');
-    // Legacy executable names, in case an older build is still running.
-    await killProcessByName('AionUi.exe');
-    await killProcessByName('AionUi');
-    await killProcessByName('electron.exe');
-    await killProcessByName('electron');
-  }
-
   const env = {
     ...process.env,
     ONE_EXTENSIONS_PATH: path.join(projectRoot, 'examples'),
+    DREAM_TEST_PROFILE: '1',
+    DREAM_DISABLE_AUTO_UPDATE: '1',
   };
 
   console.log(`[packaged-launch] executable: ${packaged.executablePath}`);
   console.log(`[packaged-launch] cwd: ${packaged.cwd}`);
   console.log(`[packaged-launch] ONE_EXTENSIONS_PATH: ${env.ONE_EXTENSIONS_PATH}`);
+  console.log('[packaged-launch] isolated test profile enabled; installed client data is not used');
 
   if (dryRun) return;
 

@@ -5,6 +5,7 @@
 // configureChromium sets app name (dev isolation) and Chromium flags — must run before
 // ANY module that calls app.getPath('userData'), because Electron caches the path on first call.
 import './process/utils/configureChromium';
+import { isPackagedTestRun } from './common/platform/runtimeProfile';
 import { installGpuCrashHandler } from './process/utils/gpuRecovery';
 import { describeUncaughtError } from './process/utils/describeUncaughtError';
 import type { UncaughtErrorDiagnostics } from './process/utils/describeUncaughtError';
@@ -111,6 +112,7 @@ import electronSquirrelStartup from 'electron-squirrel-startup';
 registerMediaProtocolScheme();
 
 const isE2ETestMode = process.env.DREAM_E2E_TEST === '1';
+const isPackagedTestMode = isPackagedTestRun(app.isPackaged);
 const skipSingleInstanceLock = isE2ETestMode || process.env.DREAM_MULTI_INSTANCE === '1';
 const deepLinkFromArgv = process.argv.find((arg) => isDeepLinkUrl(arg));
 /** A `.owenc` file the OS launched this process to open (double-click / Open With). */
@@ -213,7 +215,7 @@ const onSecondInstance = (
 //    SAME profile there (no env-dependent naming), so protocol launch and
 //    running instance collide on the profile lock and forward exactly as they
 //    did before the bus existed. Production behavior stays byte-identical.
-const useDeepLinkBus = !app.isPackaged || skipSingleInstanceLock;
+const useDeepLinkBus = !isPackagedTestMode && (!app.isPackaged || skipSingleInstanceLock);
 
 if (useDeepLinkBus) {
   if (requestDeepLinkBusLock()) {
@@ -680,6 +682,12 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
     },
   });
   console.log(`[OneWork] Main window created (id=${mainWindow.id})`);
+  if (isPackagedTestMode) {
+    mainWindow.on('page-title-updated', (event, title) => {
+      event.preventDefault();
+      mainWindow.setTitle(`[TEST] ${title.replace(/^\[TEST\]\s*/, '')}`);
+    });
+  }
 
   // The dev build and the installed app look the same on the taskbar; a red dot
   // overlay on the dev window's icon tells them apart.
@@ -728,7 +736,10 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
   // 初始化自动更新服务（通过环境变量禁用时跳过，例如 E2E / CI 场景）
   const isCiRuntime = process.env.CI === 'true' || process.env.CI === '1' || process.env.GITHUB_ACTIONS === 'true';
   const disableAutoUpdater =
-    process.env.DREAM_DISABLE_AUTO_UPDATE === '1' || process.env.DREAM_E2E_TEST === '1' || isCiRuntime;
+    process.env.DREAM_DISABLE_AUTO_UPDATE === '1' ||
+    process.env.DREAM_E2E_TEST === '1' ||
+    isPackagedTestMode ||
+    isCiRuntime;
   if (!disableAutoUpdater) {
     Promise.all([import('./process/services/autoUpdaterService'), import('./process/bridge/updateBridge')])
       .then(([{ autoUpdaterService }, { createAutoUpdateStatusBroadcast }]) => {
@@ -1315,7 +1326,7 @@ const handleAppReady = async (): Promise<void> => {
 
 // ============ Protocol Registration ============
 // Each build owns only its One Work protocol, keeping development and installed apps separate.
-for (const scheme of ACCEPTED_PROTOCOL_SCHEMES) {
+for (const scheme of isPackagedTestMode ? [] : ACCEPTED_PROTOCOL_SCHEMES) {
   if (process.defaultApp) {
     // Dev mode: need to pass execPath explicitly
     app.setAsDefaultProtocolClient(scheme, process.execPath, [path.resolve(process.argv[1])]);

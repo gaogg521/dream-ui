@@ -4,16 +4,17 @@
 
 import type { NativeImage } from 'electron';
 import { electronApp as app, electronNativeImage as nativeImage } from '@/common/electronSafe';
+import { isPackagedTestRun } from '@/common/platform/runtimeProfile';
 
 /**
  * A source checkout run with `bun run dev` and the installed app look identical
  * in the tray and on the taskbar, and both are often running at once. Marking
  * every OS-level surface of the dev build with a red dot is what tells them apart.
  */
-export const isDevBuild = (): boolean => !app.isPackaged;
+export const isDevBuild = (): boolean => !app.isPackaged || isPackagedTestRun(app.isPackaged);
 
 /** Marks the menu and tooltip text of the dev build; never shown by the installed app. */
-export const DEV_TAG = '[DEV]';
+export const DEV_TAG = isPackagedTestRun(app?.isPackaged ?? false) ? '[TEST]' : '[DEV]';
 
 const DOT = { r: 235, g: 51, b: 36 };
 
