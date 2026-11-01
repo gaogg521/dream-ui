@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, statSync, type Stats } from 'node:fs';
+import { createRequire } from 'node:module';
+import { load } from 'js-yaml';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -22,6 +24,36 @@ function yamlBlock(content: string, key: string): string {
 }
 
 describe('release packaging configuration', () => {
+  it('filters ACP declarations and maps while preserving executable assets and licenses', () => {
+    const config = load(readProjectFile('packages/desktop/electron-builder.yml')) as {
+      extraResources: Array<{ from: string; filter?: string[] }>;
+    };
+    const resource = config.extraResources.find((entry) => entry.from === 'resources/bundled-dreamcore');
+    const builderRequire = createRequire(require.resolve('electron-builder/package.json'));
+    const { FileMatcher } = builderRequire('app-builder-lib/out/fileMatcher') as {
+      FileMatcher: new (
+        from: string,
+        to: string,
+        expand: (value: string) => string,
+        patterns?: string[]
+      ) => { createFilter(): (file: string, stat: Stats) => boolean };
+    };
+    const root = resolve('bundled-resource-fixture');
+    const filter = new FileMatcher(root, root, (value) => value, resource?.filter).createFilter();
+    const stat = statSync(__filename);
+    const acp = 'win32-x64/managed-resources/acp/claude/1/win32-x64/node_modules/sdk/';
+    expect(
+      ['index.js', 'index.mjs', 'helper.node', 'parser.wasm', 'LICENSE'].every((name) =>
+        filter(resolve(root, acp + name), stat)
+      )
+    ).toBe(true);
+    expect(['index.d.ts', 'index.d.mts', 'index.js.map'].some((name) => filter(resolve(root, acp + name), stat))).toBe(
+      false
+    );
+    expect(filter(resolve(root, 'win32-x64/managed-resources/node/node/npm/node_modules/sdk/index.d.ts'), stat)).toBe(
+      true
+    );
+  });
   it('keeps electronLanguages in sync with the UI languages the app ships', () => {
     // Chromium's native surfaces (context menu, spellcheck, IME candidate
     // window) are localized by the locale paks electronLanguages keeps. Adding a

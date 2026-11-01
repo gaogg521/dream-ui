@@ -201,6 +201,15 @@ extraResources:
   # prepared by scripts/shared-scripts/prepare-dreamcore.js)
   - from: resources/bundled-dreamcore
     to: bundled-dreamcore
+    # ACP adapters are compiled JavaScript. Keep their runtime and licenses,
+    # but avoid thousands of unused declaration/source-map writes on install.
+    # Leave the bundled Node/npm distribution and other managed assets intact.
+    filter:
+      - '**/*'
+      - '!**/managed-resources/acp/**/node_modules/**/*.map'
+      - '!**/managed-resources/acp/**/node_modules/**/*.d.ts'
+      - '!**/managed-resources/acp/**/node_modules/**/*.d.mts'
+      - '!**/managed-resources/acp/**/node_modules/**/*.d.cts'
   - from: resources/hub
     to: hub
   - from: resources/offline-office
