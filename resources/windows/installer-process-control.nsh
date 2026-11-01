@@ -278,6 +278,9 @@ Var /GLOBAL OneWorkCurrentOutDir
 !macroend
 
 !macro customCheckAppRunning
+  !ifndef BUILD_UNINSTALLER
+    !insertmacro ONEWORK_SHOW_INSTALL_STEP "${ONEWORK_STEP_CHECK_ZH}" "${ONEWORK_STEP_CHECK_EN}"
+  !endif
   Var /GLOBAL OneWorkCheckResult
   Var /GLOBAL OneWorkCloseRetries
   Var /GLOBAL OneWorkCloseWaitMs
@@ -320,6 +323,9 @@ Var /GLOBAL OneWorkCurrentOutDir
       ${EndIf}
   ${EndIf}
 
+  !ifndef BUILD_UNINSTALLER
+    !insertmacro ONEWORK_SHOW_INSTALL_STEP "${ONEWORK_STEP_REPLACE_ZH}" "${ONEWORK_STEP_REPLACE_EN}"
+  !endif
 !macroend
 
 !endif

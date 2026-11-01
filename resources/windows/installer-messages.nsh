@@ -4,6 +4,17 @@
 !define ONEWORK_MSG_INSTALL_FAILED_ZH "One Work 安装失败"
 !define ONEWORK_MSG_INSTALL_FAILED_EN "One Work installation failed"
 
+!define ONEWORK_STEP_CHECK_ZH "[1/5] 检查安装环境并关闭旧版 One Work"
+!define ONEWORK_STEP_CHECK_EN "[1/5] Checking the installation and closing the previous One Work"
+!define ONEWORK_STEP_REPLACE_ZH "[2/5] 准备替换旧程序文件（保留个人数据和配置）"
+!define ONEWORK_STEP_REPLACE_EN "[2/5] Preparing to replace program files (keeping your data and settings)"
+!define ONEWORK_STEP_EXTRACT_ZH "[3/5] 正在解压应用及内置助手，文件较多，请稍候"
+!define ONEWORK_STEP_EXTRACT_EN "[3/5] Extracting the app and bundled assistants; many files, please wait"
+!define ONEWORK_STEP_VERIFY_ZH "[4/5] 校验应用文件和内置助手资源"
+!define ONEWORK_STEP_VERIFY_EN "[4/5] Verifying application files and bundled assistants"
+!define ONEWORK_STEP_FINISH_ZH "[5/5] 安装完成，可以启动 One Work"
+!define ONEWORK_STEP_FINISH_EN "[5/5] Installation complete; One Work is ready to launch"
+
 !define ONEWORK_MSG_SUGGESTED_ACTION_ZH "建议操作"
 !define ONEWORK_MSG_SUGGESTED_ACTION_EN "Suggested action"
 

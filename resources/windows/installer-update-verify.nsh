@@ -99,6 +99,9 @@ Var /GLOBAL OneWorkActiveMarkerResult
 !macroend
 
 !macro ONEWORK_INSTALLER_CUSTOM_HEADER
+  !ifndef BUILD_UNINSTALLER
+    ShowInstDetails show
+  !endif
   !insertmacro ONEWORK_OVERRIDE_SINGLE_INSTANCE
   !insertmacro ONEWORK_OVERRIDE_APP_CANNOT_BE_CLOSED_MESSAGE
 !macroend
@@ -259,12 +262,14 @@ Var /GLOBAL OneWorkActiveMarkerResult
 !macroend
 
 !macro customInstall
+  !insertmacro ONEWORK_SHOW_INSTALL_STEP "${ONEWORK_STEP_VERIFY_ZH}" "${ONEWORK_STEP_VERIFY_EN}"
   !insertmacro ONEWORK_VERIFY_CORE_APP_FILES
   !insertmacro ONEWORK_VERIFY_BUNDLED_CORE_RESOURCES "${ONEWORK_RUNTIME_KEY}"
   !insertmacro ONEWORK_LOG_EVENT "verify-install ok instDir=$INSTDIR"
   !insertmacro DREAM_REMOVE_ORPHANED_INSTALLS
   !insertmacro ONEWORK_CLEAR_ACTIVE_INSTALLER_MARKER
   !insertmacro ONEWORK_SESSION_SUCCESS
+  !insertmacro ONEWORK_SHOW_INSTALL_STEP "${ONEWORK_STEP_FINISH_ZH}" "${ONEWORK_STEP_FINISH_EN}"
 !macroend
 
 !endif

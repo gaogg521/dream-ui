@@ -9,9 +9,12 @@
   File /oname=$PLUGINSDIR\onework-7za-LICENSE.txt "$%ONEWORK_INSTALLER_7ZA_LICENSE%"
   File /oname=$PLUGINSDIR\onework-7za-COPYING.txt "$%ONEWORK_INSTALLER_7ZA_COPYING%"
   !insertmacro ONEWORK_SLOG "event=extract-start method=zip-7za"
+  !insertmacro ONEWORK_SHOW_INSTALL_STEP "${ONEWORK_STEP_EXTRACT_ZH}" "${ONEWORK_STEP_EXTRACT_EN}"
+  !insertmacro ONEWORK_SET_EXTRACT_BUSY 1
   nsExec::ExecToStack '"$PLUGINSDIR\onework-7za.exe" x "${_ARCHIVE}" "-o$INSTDIR" -y -aoa -bso0 -bsp0'
   Pop $R0
   Pop $R1
+  !insertmacro ONEWORK_SET_EXTRACT_BUSY 0
   ${If} $R0 != 0
     !insertmacro ONEWORK_FAIL_UX \
       "${ONEWORK_E_EXTRACT_FAILED}" \

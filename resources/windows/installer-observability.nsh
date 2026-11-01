@@ -17,6 +17,50 @@ Var /GLOBAL OneWorkIsUpdated
 Var /GLOBAL OneWorkSessionLogResult
 Var /GLOBAL OneWorkSessionLogPath
 
+; Keep the status line and expanded details tied to real installer work.
+!macro ONEWORK_SHOW_INSTALL_STEP _ZH _EN
+  SetDetailsPrint both
+  ${If} $LANGUAGE == 2052
+  ${OrIf} $LANGUAGE == 1028
+    DetailPrint "${_ZH}"
+  ${Else}
+    DetailPrint "${_EN}"
+  ${EndIf}
+  ; Keep automatic temporary-file messages out of the user-facing step list.
+  SetDetailsPrint none
+!macroend
+
+; External ZIP extraction has no trustworthy NSIS percentage. Use the native
+; indeterminate indicator instead of fabricating progress or logging every file.
+!macro ONEWORK_SET_EXTRACT_BUSY _BUSY
+  Push $0
+  Push $1
+  Push $2
+  ${If} $HWNDPARENT != 0
+  GetDlgItem $0 $HWNDPARENT 1004
+  ${If} $0 == 0
+    FindWindow $2 "#32770" "" $HWNDPARENT
+    GetDlgItem $0 $2 1004
+  ${EndIf}
+  ${If} $0 != 0
+    System::Call 'user32::GetWindowLongW(p r0, i -16) i.r1'
+    !if ${_BUSY} == 1
+      IntOp $1 $1 | 0x8 ; PBS_MARQUEE
+    !else
+      SendMessage $0 0x40A 0 0 ; PBM_SETMARQUEE
+      IntOp $1 $1 & 0xFFFFFFF7
+    !endif
+    System::Call 'user32::SetWindowLongW(p r0, i -16, i r1)'
+    !if ${_BUSY} == 1
+      SendMessage $0 0x40A 1 35
+    !endif
+  ${EndIf}
+  ${EndIf}
+  Pop $2
+  Pop $1
+  Pop $0
+!macroend
+
 !macro ONEWORK_SESSION_HEADER
   !insertmacro ONEWORK_SLOG "event=header arch=${ONEWORK_TARGET_ARCH} updated=$OneWorkIsUpdated instDir=$INSTDIR version=${VERSION} log=$OneWorkSessionLogPath detail=customHeader"
 !macroend
