@@ -178,7 +178,8 @@ describe('AutoUpdaterService', () => {
 
     expect(autoUpdaterMock.setFeedURL).toHaveBeenCalledWith({
       provider: 'custom',
-      url: 'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases',
+      url: 'https://onework-1521070673.cos.ap-shanghai.myqcloud.com/releases',
+      mirrors: ['https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases'],
       updateProvider: CdnGenericProvider,
     });
   });

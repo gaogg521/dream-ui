@@ -22,6 +22,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import semver from 'semver';
 import { autoUpdaterService } from '../services/autoUpdaterService';
+import { getLastSelectedCdnBaseUrl } from '../services/cdnGenericProvider';
+import { CDN_UPDATE_BASE_URL, CDN_UPDATE_BASE_URLS, CDN_UPDATE_HOSTS } from '../services/updateFeed';
 import { consumeInstallerLastFailure } from '../services/installerLastFailure';
 
 /** Lazily loads i18n to avoid pulling in initStorage chain at module load time */
@@ -44,10 +46,9 @@ interface AutoUpdateCheckParams {
 // cannot be linked to or queried by unauthenticated clients. See RELEASE_PAGE_URL below.
 const DEFAULT_USER_AGENT = 'OneWork';
 const ALLOWED_ASSET_EXTS = new Set(['.exe', '.msi', '.dmg', '.zip', '.deb', '.rpm']);
-const CDN_HOST = '1onework-1251001122.cos.ap-shanghai.myqcloud.com';
-const CDN_BASE_URL = `https://${CDN_HOST}/releases`;
+// Every update bucket (new + legacy, see services/updateFeed.ts) may serve a download.
 const ALLOWED_DOWNLOAD_HOSTS = new Set<string>([
-  CDN_HOST,
+  ...CDN_UPDATE_HOSTS,
   'github.com',
   'objects.githubusercontent.com',
   'github-releases.githubusercontent.com',
@@ -66,7 +67,10 @@ const isAllowedAssetName = (name: string) => {
  * artifactName output, so no name conversion is needed.
  */
 const rewriteAssetUrlToCDN = (assetName: string, version: string): string => {
-  return `${CDN_BASE_URL}/${version}/${assetName}`;
+  // Follow the bucket the update check just used, so the link points at a
+  // bucket known to carry this version; before any check, the preferred one.
+  const base = getLastSelectedCdnBaseUrl() ?? CDN_UPDATE_BASE_URL;
+  return `${base}/${version}/${assetName}`;
 };
 
 /**
@@ -247,19 +251,30 @@ const fetchCdnReleaseNotes = async (version: string): Promise<string> => {
   if (cached !== undefined) return cached;
 
   let notes = '';
-  try {
-    const response = await fetch(`${CDN_BASE_URL}/${version}/release-notes.md`, {
-      signal: AbortSignal.timeout(8000),
-      headers: { 'User-Agent': DEFAULT_USER_AGENT },
-    });
-    if (response.ok) {
-      const text = (await response.text()).trim();
-      // Object storage answers some missing-key requests with an XML error
-      // document rather than a plain 404 — never render that as a changelog.
-      notes = text.startsWith('<') ? '' : text;
+  // The bucket the update check used first, then the others: a release is only
+  // guaranteed to be in every bucket once both have been published to.
+  const selected = getLastSelectedCdnBaseUrl();
+  const bases = [...new Set([...(selected ? [selected] : []), ...CDN_UPDATE_BASE_URLS])];
+  for (const base of bases) {
+    try {
+      const response = await fetch(`${base}/${version}/release-notes.md`, {
+        signal: AbortSignal.timeout(8000),
+        headers: { 'User-Agent': DEFAULT_USER_AGENT },
+      });
+      if (response.ok) {
+        const text = (await response.text()).trim();
+        // Object storage answers some missing-key requests with an XML error
+        // document rather than a plain 404 — never render that as a changelog.
+        notes = text.startsWith('<') ? '' : text;
+        if (notes) break;
+      }
+    } catch (error) {
+      log.info(
+        '[update] release notes sidecar unavailable:',
+        base,
+        error instanceof Error ? error.message : String(error)
+      );
     }
-  } catch (error) {
-    log.info('[update] release notes sidecar unavailable:', error instanceof Error ? error.message : String(error));
   }
 
   cdnReleaseNotesCache.set(version, notes);

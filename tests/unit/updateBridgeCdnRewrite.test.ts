@@ -160,12 +160,12 @@ describe('updateBridge CDN URL rewriting', () => {
       const macAsset = assets.find((a: { name: string }) => a.name === 'OneWork-1.9.22-mac-arm64.dmg');
       expect(macAsset).toBeDefined();
       expect(macAsset?.url).toBe(
-        'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/1.9.22/OneWork-1.9.22-mac-arm64.dmg'
+        'https://onework-1521070673.cos.ap-shanghai.myqcloud.com/releases/1.9.22/OneWork-1.9.22-mac-arm64.dmg'
       );
 
       const linuxAsset = assets.find((a: { name: string }) => a.name === 'OneWork-1.9.22-linux-amd64.deb');
       expect(linuxAsset?.url).toBe(
-        'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/1.9.22/OneWork-1.9.22-linux-amd64.deb'
+        'https://onework-1521070673.cos.ap-shanghai.myqcloud.com/releases/1.9.22/OneWork-1.9.22-linux-amd64.deb'
       );
     } finally {
       vi.unstubAllGlobals();
@@ -176,7 +176,7 @@ describe('updateBridge CDN URL rewriting', () => {
     const handler = await getCheckHandlerWithUpdateInfo(makeUpdateInfo());
     const result = await handler({});
     const asset = result.data?.latest?.assets?.[0];
-    expect(asset?.url).toMatch(/^https:\/\/1onework-1251001122\.cos\.ap-shanghai\.myqcloud\.com\/releases\/1\.9\.22\//);
+    expect(asset?.url).toMatch(/^https:\/\/onework-1521070673\.cos\.ap-shanghai\.myqcloud\.com\/releases\/1\.9\.22\//);
     expect(asset?.url).not.toMatch(/\/v1\.9\.22\//);
   });
 });
@@ -210,7 +210,7 @@ describe('updateBridge allowlist includes CDN host', () => {
 
       const result = await handler({
         downloadId: 'manual-download-1',
-        url: 'https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/1.9.22/OneWork-1.9.22-mac-arm64.dmg',
+        url: 'https://onework-1521070673.cos.ap-shanghai.myqcloud.com/releases/1.9.22/OneWork-1.9.22-mac-arm64.dmg',
         file_name: 'OneWork-1.9.22-mac-arm64.dmg',
       });
 
