@@ -33,9 +33,6 @@ jobs:
       run:
         shell: bash
     env:
-      # Keep aws-cli's config out of the operator's real ~/.aws.
-      AWS_CONFIG_FILE: ${{ runner.temp }}/aws-config
-      AWS_SHARED_CREDENTIALS_FILE: ${{ runner.temp }}/aws-credentials
       AWS_DEFAULT_REGION: ap-shanghai
       AWS_REQUEST_CHECKSUM_CALCULATION: when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
@@ -45,6 +42,14 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Keep aws-cli config out of the operator's real ~/.aws
+        # The `runner` context is not available in job-level env, so set it here.
+        run: |
+          {
+            echo "AWS_CONFIG_FILE=$RUNNER_TEMP/aws-config"
+            echo "AWS_SHARED_CREDENTIALS_FILE=$RUNNER_TEMP/aws-credentials"
+          } >> "$GITHUB_ENV"
 
       - name: Tools on this runner
         run: |
@@ -77,9 +82,10 @@ jobs:
           aws configure set default.s3.multipart_threshold 16MB
           aws configure set default.s3.multipart_chunksize 16MB
           aws configure set default.s3.max_concurrent_requests 8
-          head -c "${SIZE_MB}M" /dev/urandom > "$RUNNER_TEMP/probe.bin"
-          BYTES=$(stat -c %s "$RUNNER_TEMP/probe.bin")
-          SUMMARY="$RUNNER_TEMP/summary.md"
+          TMPD=$(cygpath -u "$RUNNER_TEMP" 2>/dev/null || echo "$RUNNER_TEMP")
+          head -c "${SIZE_MB}M" /dev/urandom > "$TMPD/probe.bin"
+          BYTES=$(stat -c %s "$TMPD/probe.bin")
+          SUMMARY="$TMPD/summary.md"
           {
             echo "### COS upload from the office runner — ${SIZE_MB} MB"
             echo ""
@@ -98,7 +104,7 @@ jobs:
             [ -n "$token" ] && envcmd+=(AWS_SESSION_TOKEN="$token")
             start=$(date +%s.%N)
             "${envcmd[@]}" \
-              timeout 900 aws s3 cp "$RUNNER_TEMP/probe.bin" "s3://${bucket}/${key}" \
+              timeout 900 aws s3 cp "$TMPD/probe.bin" "s3://${bucket}/${key}" \
               --endpoint-url "$ENDPOINT" --acl public-read --no-progress \
               --cli-connect-timeout 20 --cli-read-timeout 120
             code=$?
@@ -122,4 +128,4 @@ jobs:
 
           cat "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
           cat "$SUMMARY"
-          rm -f "$RUNNER_TEMP/probe.bin"
+          rm -f "$TMPD/probe.bin"
