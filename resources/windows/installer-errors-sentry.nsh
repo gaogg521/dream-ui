@@ -43,7 +43,11 @@
     !insertmacro ONEWORK_REPORT_TO_SENTRY_NOUI "${_CODE}" "${_DETAIL}"
   ${Else}
     ${If} $9 == "0"
-      Call OneWorkShowInstallerDiagnostics
+      !ifdef BUILD_UNINSTALLER
+        Call un.OneWorkShowInstallerDiagnostics
+      !else
+        Call OneWorkShowInstallerDiagnostics
+      !endif
       StrCpy $9 $OneWorkFailureDialogResult
     ${Else}
       ; A blocked PowerShell or failed diagnostic write still leaves actionable text.

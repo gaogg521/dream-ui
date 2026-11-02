@@ -388,6 +388,7 @@ try {
 
 function createHarnessNsi({ exePath, logPath, projectRoot, scenario }) {
   const detail = `${scenario.diagnostics} smoke=messagebox`;
+  const uninstaller = process.argv.includes('--uninstaller');
   return `
 Unicode true
 Name "One Work Failure MessageBox Smoke"
@@ -398,6 +399,7 @@ SilentInstall normal
 !define VERSION "0.0.0-smoke"
 !define ONEWORK_TARGET_ARCH "x64"
 !define ONEWORK_RUNTIME_KEY "win32-x64"
+${uninstaller ? '!define BUILD_UNINSTALLER' : ''}
 !include LogicLib.nsh
 !include nsDialogs.nsh
 !include "${nsisQuote(path.join(projectRoot, 'resources', 'windows', 'installer-observability.nsh'))}"
@@ -405,7 +407,7 @@ SilentInstall normal
 !macroend
 !include "${nsisQuote(path.join(projectRoot, 'resources', 'windows', 'installer-errors-sentry.nsh'))}"
 
-Section
+${uninstaller ? 'Section\nWriteUninstaller "$TEMP\\onework-diagnostics-qa-uninstaller.exe"\nSectionEnd\nSection "Uninstall"' : 'Section'}
   StrCpy $INSTDIR "$TEMP\\onework-messagebox-smoke"
   StrCpy $OneWorkSessionId "smokembox-${nsisQuote(scenario.code)}"
   StrCpy $OneWorkIsUpdated "1"

@@ -12,7 +12,11 @@ Var /GLOBAL OneWorkFailureCopyStatus
 
 ; NSIS is a 32-bit process even on x64 Windows. TASKDIALOGCONFIG is 96 bytes.
 ; Keep the error UI native to the installer; PowerShell only collects local files.
+!ifdef BUILD_UNINSTALLER
+Function un.OneWorkShowInstallerDiagnostics
+!else
 Function OneWorkShowInstallerDiagnostics
+!endif
   Push $0
   Push $1
   Push $2
