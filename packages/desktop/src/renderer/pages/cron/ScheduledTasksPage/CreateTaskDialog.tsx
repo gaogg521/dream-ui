@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Form, Input, Select, Message, TimePicker, Radio, Button, Switch } from '@arco-design/web-react';
+import { Form, Input, Select, Message, TimePicker, Radio, Button, Switch, Alert } from '@arco-design/web-react';
 import DreamModal from '@renderer/components/base/DreamModal';
 import ThemedLogo from '@/renderer/components/agent/ThemedLogo';
 import { Down, Robot } from '@icon-park/react';
@@ -288,12 +288,16 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const [time, setTime] = useState('09:00');
   const [weekday, setWeekday] = useState('MON');
   const [customSchedule, setCustomSchedule] = useState<CustomScheduleState>(createDefaultCustomSchedule);
+  const [initialScheduleState, setInitialScheduleState] = useState('');
 
   const isEditMode = !!editJob;
   const [execution_mode, setExecutionMode] = useState<ExecutionMode>('new_conversation');
   const [queueEnabled, setQueueEnabled] = useState(false);
   const [pushTarget, setPushTarget] = useState<ICronPushTarget | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [workspaceTouched, setWorkspaceTouched] = useState(false);
+  const [agentConfigTouched, setAgentConfigTouched] = useState(false);
+  const [workspaceUnavailable, setWorkspaceUnavailable] = useState(false);
   const [teamOwnershipStatus, setTeamOwnershipStatus] = useState<'checking' | 'team' | 'standalone'>('standalone');
 
   // Advanced settings state
@@ -314,7 +318,17 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setFrequency(parsed.frequency);
       setTime(parsed.time);
       setWeekday(parsed.weekday);
-      setCustomSchedule(parsed.frequency === 'custom' ? parseCustomSchedule(cronExpr) : createDefaultCustomSchedule());
+      const initialCustom =
+        parsed.frequency === 'custom' ? parseCustomSchedule(cronExpr) : createDefaultCustomSchedule();
+      setCustomSchedule(initialCustom);
+      setInitialScheduleState(
+        JSON.stringify({
+          frequency: parsed.frequency,
+          time: parsed.time,
+          weekday: parsed.weekday,
+          customSchedule: initialCustom,
+        })
+      );
       setExecutionMode(editJob.target.execution_mode || 'existing');
       setQueueEnabled(editJob.state.queue_enabled);
       setPushTarget(editJob.push_target ?? null);
@@ -336,6 +350,8 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setModelId(editJob.metadata.agent_config?.model_id ?? editJob.metadata.agent_config?.model?.model);
       setConfigOptions(editJob.metadata.agent_config?.config_options);
       setWorkspace(editJob.metadata.agent_config?.workspace);
+      setWorkspaceTouched(false);
+      setAgentConfigTouched(false);
     } else {
       form.resetFields();
       const start = seedSchedule(seed?.schedule);
@@ -351,6 +367,8 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setModelId(undefined);
       setConfigOptions(undefined);
       setWorkspace(undefined);
+      setWorkspaceTouched(false);
+      setAgentConfigTouched(false);
       setSelectedAssistantId(undefined);
       setTeamOwnershipStatus('standalone');
     }
@@ -369,6 +387,10 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       .then((conversation) => {
         if (cancelled) return;
         const nextIsTeamOwned = Boolean(resolveTeamIdFromExtra(conversation.extra));
+        if (editJob.target.execution_mode === 'existing' && !editJob.metadata.agent_config?.workspace) {
+          const inherited = conversation.extra?.workspace;
+          if (typeof inherited === 'string' && inherited.trim()) setWorkspace(inherited);
+        }
         setTeamOwnershipStatus(nextIsTeamOwned ? 'team' : 'standalone');
         if (nextIsTeamOwned) {
           setExecutionMode('existing');
@@ -384,6 +406,25 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       cancelled = true;
     };
   }, [visible, editJob]);
+
+  useEffect(() => {
+    if (!visible || !workspace?.trim()) {
+      setWorkspaceUnavailable(false);
+      return;
+    }
+    let cancelled = false;
+    void ipcBridge.fs.getFileMetadata.invoke({ path: workspace, workspace }).then(
+      (metadata) => {
+        if (!cancelled) setWorkspaceUnavailable(metadata.isDirectory !== true);
+      },
+      () => {
+        if (!cancelled) setWorkspaceUnavailable(true);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, workspace]);
 
   // Edit mode needs the assistant catalog to map a stored job to its
   // current assistant id. We isolate this in a separate effect so that
@@ -453,11 +494,13 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   }, [resolvedBackend, model_id, filteredProviders, getAvailableModels, editJob]);
 
   const handleGeminiModelSelect = useCallback(async (model: TProviderWithModel) => {
+    setAgentConfigTouched(true);
     setModelId(model.use_model);
   }, []);
 
   const handleAcpModelSelect: React.Dispatch<React.SetStateAction<string | null>> = useCallback(
     (action: React.SetStateAction<string | null>) => {
+      setAgentConfigTouched(true);
       setModelId((prev) => {
         const next = typeof action === 'function' ? action(prev ?? null) : action;
         return next ?? undefined;
@@ -552,6 +595,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
   const handleAssistantChange = useCallback(
     (value: string) => {
+      setAgentConfigTouched(true);
       setSelectedAssistantId(value);
       form.setFieldsValue({ assistant: value });
       // Reset model and config_options when agent changes
@@ -562,9 +606,18 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     [form]
   );
 
-  const handleWorkspaceClear = useCallback(() => {
-    setWorkspace(undefined);
-  }, []);
+  const handleWorkspaceChange = useCallback(
+    (next?: string) => {
+      setWorkspace(next || undefined);
+      if (isEditMode) {
+        setWorkspaceTouched(true);
+        setExecutionMode('new_conversation');
+      }
+    },
+    [isEditMode]
+  );
+
+  const handleWorkspaceClear = useCallback(() => handleWorkspaceChange(), [handleWorkspaceChange]);
 
   const handleSubmit = async () => {
     try {
@@ -573,12 +626,15 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
       const scheduleExpr = scheduleInfo.expr;
       const scheduleDesc = scheduleInfo.description;
-      const schedule = createCronSchedule(scheduleExpr, scheduleDesc);
+      const scheduleUnchanged =
+        isEditMode && initialScheduleState === JSON.stringify({ frequency, time, weekday, customSchedule });
+      const schedule = scheduleUnchanged ? editJob!.schedule : createCronSchedule(scheduleExpr, scheduleDesc);
       const assistantValue = typeof values.assistant === 'string' ? values.assistant : selectedAssistantId;
       const resolvedExecutionMode: ExecutionMode = isTeamOwnedTask ? 'existing' : execution_mode;
 
+      const shouldWriteAgentConfig = canEditAgentConfig && (!isEditMode || agentConfigTouched);
       let agent_config: ICreateCronJobParams['agent_config'] | ICronJobUpdateParams['metadata']['agent_config'];
-      if (canEditAgentConfig) {
+      if (shouldWriteAgentConfig) {
         if (!assistantValue) {
           throw new Error(t('cron.page.form.assistantRequired'));
         }
@@ -604,7 +660,8 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         const metadata: ICronJobUpdateParams['metadata'] = {
           conversation_title: editJob!.metadata.conversation_title,
         };
-        if (canEditAgentConfig) {
+        if (workspaceTouched) metadata.workspace = workspace?.trim() ? workspace : null;
+        if (shouldWriteAgentConfig) {
           metadata.agent_config = agent_config;
         }
 
@@ -990,7 +1047,33 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             </div>
           )}
 
-          {canEditAgentConfig && (
+          {isEditMode && !isExecutionModeLocked && (
+            <div className='mt-16px' data-testid='cron-workspace-editor'>
+              <label className='mb-8px block text-14px font-medium text-t-primary'>
+                {t('cron.page.form.workspaceRecoveryTitle')}
+              </label>
+              <WorkspaceFolderSelect
+                value={workspace}
+                onChange={handleWorkspaceChange}
+                onClear={handleWorkspaceClear}
+                placeholder={t('cron.page.form.defaultWorkspace')}
+                recentLabel={t('team.create.recentLabel')}
+                chooseDifferentLabel={t('team.create.chooseDifferentFolder')}
+                triggerTestId='cron-workspace-trigger'
+                menuTestId='cron-workspace-menu'
+                menuZIndex={10020}
+              />
+              <Button type='text' data-testid='cron-workspace-default' onClick={handleWorkspaceClear}>
+                {t('cron.page.form.useDefaultWorkspace')}
+              </Button>
+              <div className='text-12px text-t-secondary'>{t('cron.page.form.workspaceRecoveryHint')}</div>
+              {workspaceUnavailable && (
+                <Alert className='mt-8px' type='warning' content={t('cron.page.form.workspaceUnavailable')} />
+              )}
+            </div>
+          )}
+
+          {canEditAgentConfig && (!isEditMode || showModelSelector) && (
             <div className='mt-16px'>
               <Button
                 type='text'
@@ -1026,24 +1109,26 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                     </div>
                   )}
 
-                  <div className={advancedFieldCount === 1 ? 'md:col-span-2' : ''}>
-                    <label className='mb-8px block text-14px font-medium text-t-primary'>
-                      {t('cron.page.form.workspace')}
-                    </label>
-                    <WorkspaceFolderSelect
-                      value={workspace}
-                      onChange={(next) => setWorkspace(next || undefined)}
-                      onClear={handleWorkspaceClear}
-                      placeholder={t('cron.page.form.selectFolder')}
-                      recentLabel={t('team.create.recentLabel', { defaultValue: 'Recent' })}
-                      chooseDifferentLabel={t('team.create.chooseDifferentFolder', {
-                        defaultValue: 'Choose a different folder',
-                      })}
-                      triggerTestId='cron-workspace-trigger'
-                      menuTestId='cron-workspace-menu'
-                      menuZIndex={10020}
-                    />
-                  </div>
+                  {!isEditMode && (
+                    <div className={advancedFieldCount === 1 ? 'md:col-span-2' : ''}>
+                      <label className='mb-8px block text-14px font-medium text-t-primary'>
+                        {t('cron.page.form.workspace')}
+                      </label>
+                      <WorkspaceFolderSelect
+                        value={workspace}
+                        onChange={handleWorkspaceChange}
+                        onClear={handleWorkspaceClear}
+                        placeholder={t('cron.page.form.selectFolder')}
+                        recentLabel={t('team.create.recentLabel', { defaultValue: 'Recent' })}
+                        chooseDifferentLabel={t('team.create.chooseDifferentFolder', {
+                          defaultValue: 'Choose a different folder',
+                        })}
+                        triggerTestId='cron-workspace-trigger'
+                        menuTestId='cron-workspace-menu'
+                        menuZIndex={10020}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

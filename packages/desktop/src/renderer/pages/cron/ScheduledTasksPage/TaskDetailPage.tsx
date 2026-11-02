@@ -542,10 +542,6 @@ const TaskDetailPage: React.FC = () => {
               <div className='box-border rounded-12px border border-solid border-[var(--color-border-2)] bg-fill-2 px-16px py-14px'>
                 <div className='flex flex-col gap-10px'>
                   <p className='m-0 text-13px leading-20px text-t-primary'>{executionModeExplanation}</p>
-                  <div className='h-1px w-full bg-[var(--color-border-2)]' />
-                  <p className='m-0 text-12px leading-18px text-t-secondary'>
-                    {t('cron.page.form.executionModeEditHint')}
-                  </p>
                 </div>
               </div>
             </section>

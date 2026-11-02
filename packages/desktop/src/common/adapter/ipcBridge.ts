@@ -1174,7 +1174,10 @@ export const fs = {
     }
   >('/api/fs/zip'),
   cancelZip: httpPost<boolean, { request_id: string }>('/api/fs/zip/cancel'),
-  getFileMetadata: httpPost<IFileMetadata, { path: string; workspace?: string }>('/api/fs/metadata'),
+  getFileMetadata: withResponseMap(
+    httpPost<RawFileMetadata, { path: string; workspace?: string }>('/api/fs/metadata'),
+    fromBackendFileMetadata
+  ),
   // ── ChatFileRef content endpoints (PR-2: preview I/O by ref identity) ──────
   // Read a file addressed by ChatFileRef; `encoding` selects text (utf8) vs image
   // data URL (dataurl) vs raw base64. Backend: POST /api/fs/content → String.
@@ -2250,6 +2253,7 @@ export const cron = {
       message: p.updates.target?.payload.text,
       execution_mode: p.updates.target?.execution_mode,
       agent_config: p.updates.metadata?.agent_config,
+      workspace: p.updates.metadata?.workspace,
       conversation_title: p.updates.metadata?.conversation_title,
       max_retries: p.updates.state?.max_retries,
       queue_enabled: p.updates.state?.queue_enabled,
@@ -2382,6 +2386,8 @@ export interface ICronJobUpdateParams {
   metadata?: {
     conversation_title?: string;
     agent_config?: ICronAgentConfigWrite;
+    /** Absent keeps the current directory; null uses the default in fresh conversations. */
+    workspace?: string | null;
   };
   state?: {
     max_retries?: number;

@@ -42,6 +42,7 @@ vi.mock('@/common', () => ({
     conversation: {
       get: { invoke: vi.fn() },
     },
+    fs: { getFileMetadata: { invoke: vi.fn() } },
     // The push-to-bot picker lists the person's bots when the form opens.
     channel: { getPushTargets: { invoke: vi.fn(async () => []) } },
   },
@@ -80,7 +81,11 @@ vi.mock('@renderer/pages/guid/components/GuidModelSelector', () => ({
 }));
 
 vi.mock('@renderer/components/workspace', () => ({
-  WorkspaceFolderSelect: () => <div data-testid='workspace-folder-select' />,
+  WorkspaceFolderSelect: ({ onChange }: { onChange: (value: string) => void }) => (
+    <button type='button' data-testid='workspace-folder-select' onClick={() => onChange('/new-project')}>
+      Choose folder
+    </button>
+  ),
 }));
 
 vi.mock('@renderer/pages/cron/cronUtils', () => ({
@@ -147,6 +152,9 @@ describe('CreateTaskDialog', () => {
     vi.mocked(ipcBridge.cron.updateJob.invoke).mockResolvedValue(job());
     vi.mocked(ipcBridge.cron.createJob.invoke).mockResolvedValue(job());
     vi.mocked(ipcBridge.conversation.get.invoke).mockRejectedValue(new Error('not found'));
+    vi.mocked(ipcBridge.fs.getFileMetadata.invoke).mockResolvedValue({ isDirectory: true } as Awaited<
+      ReturnType<typeof ipcBridge.fs.getFileMetadata.invoke>
+    >);
   });
 
   it('does not render the task description field', async () => {
@@ -285,6 +293,48 @@ describe('CreateTaskDialog', () => {
     expect(resolveCronAgentConfig).not.toHaveBeenCalled();
     const [{ updates }] = vi.mocked(ipcBridge.cron.updateJob.invoke).mock.calls[0];
     expect(updates.metadata).not.toHaveProperty('agent_config');
+  });
+
+  it('lets an ongoing task repair its directory without unlocking its assistant', async () => {
+    const user = userEvent.setup();
+    const existing = ongoingConversationJob();
+    existing.schedule = { kind: 'every', every_ms: 60000, description: 'Keep the original schedule' };
+    render(<CreateTaskDialog visible onClose={() => {}} editJob={existing} />);
+    await user.click(await screen.findByTestId('workspace-folder-select'));
+    await user.click(screen.getByTestId('modal-ok'));
+    await waitFor(() => expect(ipcBridge.cron.updateJob.invoke).toHaveBeenCalledOnce());
+    const [{ updates }] = vi.mocked(ipcBridge.cron.updateJob.invoke).mock.calls[0];
+    expect(updates.metadata).toMatchObject({ workspace: '/new-project' });
+    expect(updates.metadata).not.toHaveProperty('agent_config');
+    expect(updates.target?.execution_mode).toBe('new_conversation');
+    expect(updates.schedule).toEqual(existing.schedule);
+  });
+
+  it('preserves assistant configuration when only changing a new-conversation task directory', async () => {
+    const user = userEvent.setup();
+    render(<CreateTaskDialog visible onClose={() => {}} editJob={job()} />);
+    await user.click(await screen.findByTestId('workspace-folder-select'));
+    await user.click(screen.getByTestId('modal-ok'));
+    await waitFor(() => expect(ipcBridge.cron.updateJob.invoke).toHaveBeenCalledOnce());
+    const [{ updates }] = vi.mocked(ipcBridge.cron.updateJob.invoke).mock.calls[0];
+    expect(updates.metadata).toMatchObject({ workspace: '/new-project' });
+    expect(updates.metadata).not.toHaveProperty('agent_config');
+    expect(resolveCronAgentConfig).not.toHaveBeenCalled();
+  });
+
+  it('warns about an unavailable directory and explicitly clears it for default-directory execution', async () => {
+    const user = userEvent.setup();
+    const existing = ongoingConversationJob();
+    existing.metadata.agent_config = { ...existing.metadata.agent_config!, workspace: '/deleted-project' };
+    vi.mocked(ipcBridge.fs.getFileMetadata.invoke).mockRejectedValue(new Error('not found'));
+    render(<CreateTaskDialog visible onClose={() => {}} editJob={existing} />);
+    expect(await screen.findByText('cron.page.form.workspaceUnavailable')).toBeInTheDocument();
+    await user.click(await screen.findByTestId('cron-workspace-default'));
+    await user.click(screen.getByTestId('modal-ok'));
+    await waitFor(() => expect(ipcBridge.cron.updateJob.invoke).toHaveBeenCalledOnce());
+    const [{ updates }] = vi.mocked(ipcBridge.cron.updateJob.invoke).mock.calls[0];
+    expect(updates.metadata?.workspace).toBeNull();
+    expect(updates.target?.execution_mode).toBe('new_conversation');
   });
 
   it('locks execution mode while resolving team ownership', async () => {
