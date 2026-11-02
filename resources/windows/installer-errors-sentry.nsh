@@ -3,6 +3,7 @@
 
 !include "${PROJECT_DIR}\resources\windows\support\_sentry-dsn.generated.nsh"
 !include "${PROJECT_DIR}\resources\windows\installer-messages.nsh"
+!include "${PROJECT_DIR}\resources\windows\installer-diagnostics.nsh"
 
 !define ONEWORK_E_UNINSTALLER_COPY_OR_REBUILD_FAILED "E1001"
 !define ONEWORK_E_OLD_UNINSTALL_FAILED "E1002"
@@ -20,35 +21,40 @@
 !macro ONEWORK_FAIL_UX _CODE _DETAIL _MSG_ZH _MSG_EN _ACTION_ZH _ACTION_EN _DIAGNOSTICS_ZH _DIAGNOSTICS_EN
   !insertmacro ONEWORK_SLOG "event=session-end result=fail code=${_CODE} detail=${_DETAIL}"
   Push $9
-  ${If} ${Silent}
-    StrCpy $9 "auto"
-  ${Else}
-    StrCpy $9 "yes"
-    MessageBox MB_YESNO|MB_ICONSTOP \
-      "${ONEWORK_MSG_INSTALL_FAILED_ZH} (${_CODE})$\r$\n$\r$\n\
-      ${_MSG_ZH}$\r$\n$\r$\n\
-      ${ONEWORK_MSG_SUGGESTED_ACTION_ZH}:$\r$\n${_ACTION_ZH}$\r$\n$\r$\n\
-      ${ONEWORK_MSG_DIAGNOSTICS_ZH}:$\r$\n${_DIAGNOSTICS_ZH}$\r$\n$\r$\n\
-      ${ONEWORK_MSG_INSTALLER_LOG_ZH}:$\r$\n$OneWorkSessionLogPath$\r$\n$\r$\n\
-      ${ONEWORK_MSG_SEND_REPORT_ZH}$\r$\n$\r$\n\
-      ${ONEWORK_MSG_BLOCK_SEPARATOR}$\r$\n$\r$\n\
-      ${ONEWORK_MSG_INSTALL_FAILED_EN} (${_CODE})$\r$\n$\r$\n\
-      ${_MSG_EN}$\r$\n$\r$\n\
-      ${ONEWORK_MSG_SUGGESTED_ACTION_EN}:$\r$\n${_ACTION_EN}$\r$\n$\r$\n\
-      ${ONEWORK_MSG_DIAGNOSTICS_EN}:$\r$\n${_DIAGNOSTICS_EN}$\r$\n$\r$\n\
-      ${ONEWORK_MSG_INSTALLER_LOG_EN}:$\r$\n$OneWorkSessionLogPath$\r$\n$\r$\n\
-      ${ONEWORK_MSG_SEND_REPORT_EN}" \
-      /SD IDNO IDNO +2
-    Goto +2
-    StrCpy $9 "no"
+  InitPluginsDir
+  File /oname=$PLUGINSDIR\onework-show-installer-failure.ps1 "${PROJECT_DIR}\resources\windows\support\show-installer-failure.ps1"
+  StrCpy $OneWorkFailureCode "${_CODE}"
+  StrCpy $OneWorkFailureDetail "${_DETAIL}"
+  StrCpy $OneWorkFailureMessage "${_MSG_ZH}$\r$\n${_MSG_EN}"
+  StrCpy $OneWorkFailureAction "${_ACTION_ZH}$\r$\n${_ACTION_EN}"
+  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -STA -ExecutionPolicy Bypass -File "$PLUGINSDIR\onework-show-installer-failure.ps1" -LogPath "$OneWorkSessionLogPath" -ExtractLogPath "$OneWorkExtractLogPath" -Code "${_CODE}" -Detail "${_DETAIL}" -MessageZh "${_MSG_ZH}" -MessageEn "${_MSG_EN}" -ActionZh "${_ACTION_ZH}" -ActionEn "${_ACTION_EN}" -Release "${VERSION}" -Arch "${ONEWORK_TARGET_ARCH}" -Session "$OneWorkSessionId" -InstallDir "$INSTDIR" -InstallerPath "$EXEPATH" -Language "$LANGUAGE" -ResultPath "$PLUGINSDIR\onework-diagnostics-path.txt" -NoUi`
+  Pop $9
+  StrCpy $OneWorkDiagnosticsPath "Diagnostic collection failed (exit=$9)"
+  ${If} $9 == "0"
+    Push $0
+    FileOpen $0 "$PLUGINSDIR\onework-diagnostics-path.txt" r
+    FileSeek $0 2 SET ; UTF-16LE BOM
+    FileReadUTF16LE $0 $OneWorkDiagnosticsPath
+    FileClose $0
+    Pop $0
   ${EndIf}
-  ${If} $9 == "no"
-    !insertmacro ONEWORK_SLOG "event=report-skipped reason=user-declined code=${_CODE}"
-  ${ElseIf} $9 == "auto"
+  ${If} ${Silent}
     !insertmacro ONEWORK_SLOG "event=report-auto reason=silent code=${_CODE}"
     !insertmacro ONEWORK_REPORT_TO_SENTRY_NOUI "${_CODE}" "${_DETAIL}"
   ${Else}
-    !insertmacro ONEWORK_REPORT_TO_SENTRY "${_CODE}" "${_DETAIL}"
+    ${If} $9 == "0"
+      Call OneWorkShowInstallerDiagnostics
+      StrCpy $9 $OneWorkFailureDialogResult
+    ${Else}
+      ; A blocked PowerShell or failed diagnostic write still leaves actionable text.
+      MessageBox MB_OK|MB_ICONSTOP "One Work installation failed (${_CODE})$\r$\n$OneWorkFailureMessage$\r$\n$OneWorkFailureDetail$\r$\nInstaller log: $OneWorkSessionLogPath$\r$\n$OneWorkDiagnosticsPath$\r$\nCtrl+C: 复制此信息 / Copy this information" /SD IDOK
+      StrCpy $9 "0"
+    ${EndIf}
+    ${If} $9 == "10"
+      !insertmacro ONEWORK_REPORT_TO_SENTRY "${_CODE}" "${_DETAIL}"
+    ${Else}
+      !insertmacro ONEWORK_SLOG "event=report-skipped reason=user-declined code=${_CODE}"
+    ${EndIf}
   ${EndIf}
   Pop $9
   !insertmacro ONEWORK_CLEAR_ACTIVE_INSTALLER_MARKER

@@ -16,6 +16,16 @@
   Pop $R1
   !insertmacro ONEWORK_SET_EXTRACT_BUSY 0
   ${If} $R0 != 0
+    ; Persist the extractor's own failed path / Win32 error before plugins are removed.
+    StrCpy $OneWorkExtractLogPath "$TEMP\onework-installer-$OneWorkSessionId-extract.txt"
+    Push $R2
+    ClearErrors
+    FileOpen $R2 "$OneWorkExtractLogPath" w
+    ${IfNot} ${Errors}
+      FileWriteUTF16LE $R2 "$R1"
+      FileClose $R2
+    ${EndIf}
+    Pop $R2
     !insertmacro ONEWORK_FAIL_UX \
       "${ONEWORK_E_EXTRACT_FAILED}" \
       "extract method=zip-7za exitCode=$R0" \

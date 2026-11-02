@@ -40,7 +40,14 @@ const EXTERNALLY_PROVIDED_DEFINES = new Set([
   'ONEWORK_SENTRY_DSN',
 ]);
 
-const NSIS_BUILTIN_DEFINES = new Set(['__FILE__', '__LINE__', '__DATE__', '__TIME__', 'NSIS_VERSION']);
+const NSIS_BUILTIN_DEFINES = new Set([
+  '__FILE__',
+  '__LINE__',
+  '__DATE__',
+  '__TIME__',
+  'NSIS_VERSION',
+  'NSIS_MAX_STRLEN',
+]);
 
 const listNshFiles = (dir: string): string[] => {
   const out: string[] = [];

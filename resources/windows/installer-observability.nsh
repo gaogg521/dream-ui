@@ -16,6 +16,8 @@ Var /GLOBAL OneWorkSessionId
 Var /GLOBAL OneWorkIsUpdated
 Var /GLOBAL OneWorkSessionLogResult
 Var /GLOBAL OneWorkSessionLogPath
+Var /GLOBAL OneWorkExtractLogPath
+Var /GLOBAL OneWorkDiagnosticsPath
 
 ; Keep the status line and expanded details tied to real installer work.
 !macro ONEWORK_SHOW_INSTALL_STEP _ZH _EN

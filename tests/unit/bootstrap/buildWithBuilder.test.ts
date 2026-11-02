@@ -194,7 +194,8 @@ childProcess.execSync = function mockedExecSync(command) {
     const files = readdirSync(resourcesDir).filter((file) => file.endsWith('.nsh'));
 
     const allowedMessageBoxes = new Map<string, RegExp[]>([
-      ['installer-errors-sentry.nsh', [/MessageBox MB_YESNO\|MB_ICONSTOP/]],
+      ['installer-errors-sentry.nsh', [/MessageBox MB_OK\|MB_ICONSTOP/]],
+      ['installer-diagnostics.nsh', [/MessageBox MB_OK\|MB_ICONSTOP/]],
       [
         'installer-process-control.nsh',
         [/ONEWORK_MSG_FILE_OR_FOLDER_IN_USE_ZH/, /\$\(appRunning\)/, /ONEWORK_MSG_CLOSE_OR_REMOVE_PREVIOUS_ZH/],

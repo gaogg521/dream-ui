@@ -168,14 +168,18 @@ function copyHarnessProject(projectRoot) {
   const supportDir = path.join(windowsDir, 'support');
   mkdirSync(supportDir, { recursive: true });
 
-  for (const file of ['installer-observability.nsh', 'installer-errors-sentry.nsh', 'installer-messages.nsh']) {
+  for (const file of [
+    'installer-observability.nsh',
+    'installer-errors-sentry.nsh',
+    'installer-messages.nsh',
+    'installer-diagnostics.nsh',
+  ]) {
     copyFileSync(path.join(repoRoot, 'resources', 'windows', file), path.join(windowsDir, file));
   }
 
-  copyFileSync(
-    path.join(repoRoot, 'resources', 'windows', 'support', 'report-installer-failure.ps1'),
-    path.join(supportDir, 'report-installer-failure.ps1')
-  );
+  for (const file of ['report-installer-failure.ps1', 'show-installer-failure.ps1']) {
+    copyFileSync(path.join(repoRoot, 'resources', 'windows', 'support', file), path.join(supportDir, file));
+  }
   writeFileSync(path.join(supportDir, '_sentry-dsn.generated.nsh'), '!define ONEWORK_SENTRY_DSN ""\n', 'utf8');
 }
 
@@ -273,6 +277,11 @@ function Get-WindowText([System.Windows.Automation.AutomationElement]$Window) {
   while ($queue.Count -gt 0) {
     $item = [System.Windows.Automation.AutomationElement]$queue.Dequeue()
     $name = $item.Current.Name
+    $valuePattern = $null
+    if ($item.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern, [ref]$valuePattern)) {
+      $value = $valuePattern.Current.Value
+      if ($value -and -not $texts.Contains($value)) { $texts.Add($value) }
+    }
     if ($name -and -not $texts.Contains($name)) { $texts.Add($name) }
     $child = $walker.GetFirstChild($item)
     while ($child) {
@@ -315,7 +324,7 @@ function Find-FailureWindow([string]$Code, [int]$TimeoutSec = 90) {
     foreach ($window in $windows) {
       $text = Get-WindowText $window
       if ($text -like "*One Work installation failed ($Code)*" -or
-          ($text -like "*($Code)*" -and $text -like '*Send this installer failure report*')) {
+          ($window.Current.Name -eq "One Work - $Code" -and $text -like "*Code: $Code*")) {
         return [ordered]@{ window = $window; text = $text; title = $window.Current.Name }
       }
     }
@@ -329,12 +338,12 @@ $proc = Start-Process -FilePath $ExePath -PassThru
 try {
   $failure = Find-FailureWindow $Code
   foreach ($required in @(
-    "One Work installation failed ($Code)",
+    "One Work - $Code",
     "scenario=$ScenarioId",
-    'Suggested action:',
-    'Diagnostics:',
+    'Suggested action',
+    'Stage/detail:',
     'Installer log:',
-    'Send this installer failure report'
+    'Diagnostics ZIP'
   )) {
     if ($failure.text -notlike "*$required*") {
       throw "Failure dialog for $Code is missing: $required"
@@ -349,10 +358,10 @@ try {
   }
   if ($Answer -eq 'yes') {
     $yesZh = [string][char]26159
-    $buttons = @('Yes', $yesZh, "$yesZh(Y)", "$yesZh(&Y)")
+    $buttons = @('Send report to team', ([string][char]21457 + [char]36865 + [char]25253 + [char]21578 + [char]32473 + [char]22242 + [char]38431))
   } else {
     $noZh = [string][char]21542
-    $buttons = @('No', $noZh, "$noZh(N)", "$noZh(&N)")
+    $buttons = @('Close', ([string][char]20851 + [char]38381))
   }
   if (-not (Try-ClickWindowButton $failure.window $buttons)) {
     throw "$Answer button not found for $Code failure dialog."
@@ -528,7 +537,7 @@ function runHarness({ autoDecline, compileOnly, makensis, scenario }) {
       return { code, exePath, logPath, mode: 'auto-decline' };
     }
 
-    console.log('[failure-messagebox] launching harness. Click No to close without attempting report upload.');
+    console.log('[failure-messagebox] launching harness. Click Close to exit without attempting report upload.');
     const run = spawnSync(exePath, [], { stdio: 'inherit' });
     if (run.status !== 2) {
       throw new Error(`harness exited with ${run.status}; expected installer failure exit code 2`);
