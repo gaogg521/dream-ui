@@ -192,8 +192,14 @@ for arch in x64 arm64; do
       echo "::error::linux-$arch metadata found but $META_NAME missing in output"
       MISSING=1
     fi
-  elif [ -n "$(find_dist "*-${VERSION}-linux-*.deb")" ]; then
-    echo "::error::linux installer present without ${META_NAME} — linux auto-update would silently die"
+  # Match this arch's installer only: a `linux-*.deb` glob also catches the OTHER
+  # arch's package and made an arm64-only run fail on the x64 check (and vice
+  # versa). The x64 package is named `amd64`, the manifest/arch label is `x64`.
+  elif [ "$arch" = "x64" ] && { [ -n "$(find_dist "*-${VERSION}-linux-amd64.deb")" ] || [ -n "$(find_dist "*-${VERSION}-linux-x64.deb")" ]; }; then
+    echo "::error::linux-x64 installer present without ${META_NAME} — linux auto-update would silently die"
+    MISSING=1
+  elif [ "$arch" = "arm64" ] && [ -n "$(find_dist "*-${VERSION}-linux-arm64.deb")" ]; then
+    echo "::error::linux-arm64 installer present without ${META_NAME} — linux auto-update would silently die"
     MISSING=1
   fi
 done

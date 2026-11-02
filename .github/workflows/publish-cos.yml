@@ -1,0 +1,327 @@
+name: Publish Release to COS
+
+# Publishes a finished desktop build to BOTH COS buckets, from the office-network
+# self-hosted runner. This replaces the old hand-run sequence
+# (download-gh-artifact -> prepare-release-assets -> publish-cos-release-asset x N)
+# and, unlike release-distribute.yml, takes its input from the CI build artifacts —
+# releases here never carry installers on a GitHub Release.
+#
+# Why a self-hosted runner: uploads from a GitHub-hosted runner stall on the way to
+# ap-shanghai (measured 2026-11-02, cos-upload-probe.yml), and the old bucket's
+# credentials come from an internal-only service a hosted runner cannot reach. On
+# the office runner a 300 MB upload takes ~30 s (cos-runner-smoke.yml).
+#
+# Buckets (see scripts/publish-cos-release-asset.sh):
+#   onework-1521070673   new, the website's download links (versions after 3.0.16)
+#   1onework-1251001122  old, the update channel every already-installed client polls
+# A release must reach both: published to the new bucket only, installed clients
+# would silently stay on "you are up to date".
+#
+# Usage: Actions -> "Publish Release to COS" -> Run workflow.
+#   run_ids  the "Manual Build" run ids, one per platform
+#            (e.g. 41261960267,41261962775,41261965244,41261967740)
+#   dry_run  defaults to TRUE: downloads, prepares and validates everything and
+#            prints what it would upload, but writes nothing. Untick for the real run.
+#
+# After a real run: switch the website (platformVersions / platformSizes — the
+# summary prints the sizes) and write the release record. See
+# docs/guides/packaging-release-playbook.zh-CN.md.
+#
+# SAFETY: this job runs on a real office machine. Keep it workflow_dispatch-only and
+# never add a pull_request trigger to any workflow that targets this runner.
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_ids:
+        description: 'Manual Build run ids, one per platform (comma or space separated)'
+        required: true
+        type: string
+      dry_run:
+        description: 'Dry run: download, prepare and validate only, upload nothing'
+        required: false
+        type: boolean
+        default: true
+      targets:
+        description: 'Which bucket(s) to publish to'
+        required: false
+        type: choice
+        options: [both, new, legacy]
+        default: both
+      force:
+        description: 'Allow publishing a version that already exists in a bucket (overwrites same keys)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: publish-cos
+  cancel-in-progress: false
+
+env:
+  AWS_DEFAULT_REGION: ap-shanghai
+  # aws-cli >= 2.23 adds CRC checksums COS rejects; compute them only when required.
+  AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+  AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+  NEW_BUCKET: onework-1521070673
+  LEGACY_BUCKET: 1onework-1251001122
+  ENDPOINT: https://cos.ap-shanghai.myqcloud.com
+  TARGETS: ${{ github.event.inputs.targets }}
+  DRY_RUN: ${{ github.event.inputs.dry_run }}
+  FORCE: ${{ github.event.inputs.force }}
+
+jobs:
+  publish:
+    name: Publish to COS
+    runs-on: [self-hosted, onework-publish]
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          # Full history + tags: release notes fall back to commits since the previous tag.
+          fetch-depth: 0
+
+      - name: Isolate aws-cli config from the operator's ~/.aws
+        # The `runner` context is not available in job-level env, so it is set here.
+        run: |
+          {
+            echo "AWS_CONFIG_FILE=$RUNNER_TEMP/aws-config"
+            echo "AWS_SHARED_CREDENTIALS_FILE=$RUNNER_TEMP/aws-credentials"
+          } >> "$GITHUB_ENV"
+          # Parts uploaded in parallel: a stalled part is retried on its own. Smoke-tested
+          # on the office runner against both buckets.
+          export AWS_CONFIG_FILE="$RUNNER_TEMP/aws-config" AWS_SHARED_CREDENTIALS_FILE="$RUNNER_TEMP/aws-credentials"
+          aws configure set default.s3.addressing_style virtual
+          aws configure set default.s3.multipart_threshold 16MB
+          aws configure set default.s3.multipart_chunksize 16MB
+          aws configure set default.s3.max_concurrent_requests 8
+
+      - name: Fetch temporary credentials for the old bucket
+        # Exchanges Token + SignKey for short-lived ak/sk and exports them as
+        # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (masked) for the later steps.
+        # Only the office-network runner can reach the internal credential service.
+        if: github.event.inputs.targets != 'new'
+        env:
+          COS_ALLOC_URL: https://codo-honeypot.123u.com/api/honeypot/oapi/qcloud/alloc
+          COS_ALLOC_TOKEN: ${{ secrets.COS_ALLOC_TOKEN }}
+          COS_ALLOC_SIGN_KEY: ${{ secrets.COS_ALLOC_SIGN_KEY }}
+        run: |
+          if [ -z "${COS_ALLOC_TOKEN}" ] || [ -z "${COS_ALLOC_SIGN_KEY}" ]; then
+            echo "::error::COS_ALLOC_TOKEN / COS_ALLOC_SIGN_KEY repository secrets are not set."
+            exit 1
+          fi
+          node scripts/fetch-cos-credentials.js --format github
+
+      - name: Check the new-bucket key is present
+        if: github.event.inputs.targets != 'legacy'
+        env:
+          NEW_AK: ${{ secrets.ONEWORK_COS_ACCESS_KEY_ID }}
+          NEW_SK: ${{ secrets.ONEWORK_COS_SECRET_ACCESS_KEY }}
+        run: |
+          if [ -z "${NEW_AK}" ] || [ -z "${NEW_SK}" ]; then
+            echo "::error::ONEWORK_COS_ACCESS_KEY_ID / ONEWORK_COS_SECRET_ACCESS_KEY repository secrets are not set."
+            exit 1
+          fi
+
+      - name: Download and verify the build artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_IDS: ${{ github.event.inputs.run_ids }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          rm -rf build-artifacts release-assets
+          mkdir -p build-artifacts
+          RUNS=$(echo "$RUN_IDS" | tr ',;' '  ')
+          [ -n "$(echo $RUNS)" ] || { echo "::error::run_ids is empty."; exit 1; }
+
+          SHAS=""
+          for run in $RUNS; do
+            [[ "$run" =~ ^[0-9]+$ ]] || { echo "::error::'$run' is not a run id."; exit 1; }
+            read -r conclusion sha < <(gh api "repos/$REPO/actions/runs/$run" --jq '[.conclusion, .head_sha] | @tsv')
+            if [ "$conclusion" != "success" ]; then
+              echo "::error::Run $run did not succeed (conclusion: ${conclusion:-still running}). Publish only finished, green builds."
+              exit 1
+            fi
+            SHAS="$SHAS $sha"
+            echo "run $run: $sha"
+            found=0
+            for name in $(gh api "repos/$REPO/actions/runs/$run/artifacts" --jq '.artifacts[].name'); do
+              if [[ "$name" =~ ^(macos|windows|linux)-build-(x64|arm64)(-[0-9a-f]{7,40})?$ ]]; then
+                canon=$(echo "$name" | sed -E 's/^((macos|windows|linux)-build-(x64|arm64)).*/\1/')
+                # prepare-release-assets.sh finds each platform's manifest by this directory name.
+                if [ -e "build-artifacts/$canon" ]; then
+                  echo "::error::Platform $canon appears in more than one run — one run per platform."
+                  exit 1
+                fi
+                bash scripts/download-gh-artifact.sh "$REPO" "$run" "$name" "build-artifacts/$canon"
+                found=1
+              else
+                echo "skipping artifact '$name' (not an installer build)"
+              fi
+            done
+            [ "$found" = 1 ] || { echo "::error::Run $run has no installer artifacts (expired?)."; exit 1; }
+          done
+
+          if [ "$(echo $SHAS | tr ' ' '\n' | sort -u | wc -l)" != 1 ]; then
+            echo "::error::The runs were built from different commits: $SHAS"
+            exit 1
+          fi
+          echo "HEAD_SHA=$(echo $SHAS | awk '{print $1}')" >> "$GITHUB_ENV"
+
+      - name: Derive the version and prepare the release assets
+        run: |
+          set -euo pipefail
+          # The version comes from what was built, not from package.json on today's main.
+          VERSIONS=$(find build-artifacts -type f -name 'latest*.yml' -print0 \
+            | xargs -0 grep -h '^version:' | sed -E "s/^version:[[:space:]]*['\"]?([^'\"[:space:]]+).*/\1/" | sort -u)
+          if [ "$(echo "$VERSIONS" | wc -l)" != 1 ] || ! [[ "$VERSIONS" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Expected exactly one x.y.z version across the update manifests, found: $VERSIONS"
+            exit 1
+          fi
+          echo "VERSION=$VERSIONS" >> "$GITHUB_ENV"
+          echo "Version: $VERSIONS"
+          MOCK_VERSION="$VERSIONS" bash scripts/prepare-release-assets.sh build-artifacts release-assets
+
+      - name: Generate release notes (the app's changelog panel reads them)
+        run: |
+          # Sidecar only — the app copes without it, so a failure here warns rather than blocks.
+          if node scripts/generate-release-notes.js --version "$VERSION" --to "$HEAD_SHA" --out release-assets/release-notes.md \
+            && [ -s release-assets/release-notes.md ]; then
+            echo "release notes:"; head -20 release-assets/release-notes.md
+          else
+            rm -f release-assets/release-notes.md
+            echo "::warning::No release notes produced for $VERSION — the changelog panel will be empty."
+          fi
+
+      - name: Guard — refuse to publish over an existing version
+        env:
+          NEW_AK: ${{ secrets.ONEWORK_COS_ACCESS_KEY_ID }}
+          NEW_SK: ${{ secrets.ONEWORK_COS_SECRET_ACCESS_KEY }}
+        run: |
+          set -uo pipefail
+          clash=0
+          check() { # <label> <bucket> <env prefix...>
+            label="$1"; bucket="$2"; shift 2
+            existing=$("$@" aws s3 ls "s3://${bucket}/releases/${VERSION}/" --endpoint-url "$ENDPOINT" 2>&1)
+            rc=$?
+            # `aws s3 ls` exits 1 with no output when the prefix is empty; only a message means a real error.
+            if [ "$rc" -ne 0 ] && [ -n "$existing" ]; then echo "::error::Could not list the $label bucket: $existing"; exit 1; fi
+            if [ -n "$existing" ]; then
+              echo "$label bucket already has releases/${VERSION}/ ($(echo "$existing" | wc -l) objects)"
+              clash=1
+            else
+              echo "$label bucket: releases/${VERSION}/ is empty — ok"
+            fi
+          }
+          case "$TARGETS" in both|new)
+            check new "$NEW_BUCKET" env -u AWS_SESSION_TOKEN AWS_ACCESS_KEY_ID="$NEW_AK" AWS_SECRET_ACCESS_KEY="$NEW_SK" ;; esac
+          case "$TARGETS" in both|legacy) check legacy "$LEGACY_BUCKET" env ;; esac
+          if [ "$clash" = 1 ]; then
+            if [ "$FORCE" = "true" ]; then
+              echo "::warning::force=true — same keys will be overwritten."
+            elif [ "$DRY_RUN" = "true" ]; then
+              echo "::warning::A real run would REFUSE here (version already published). Tick force to override."
+            else
+              echo "::error::Version ${VERSION} is already published. Same-version re-publish is not allowed (caches would serve stale files); release a new version, or re-run with force."
+              exit 1
+            fi
+          fi
+
+      - name: Publish to COS (installers first, update manifests last)
+        env:
+          ONEWORK_COS_ACCESS_KEY_ID: ${{ secrets.ONEWORK_COS_ACCESS_KEY_ID }}
+          ONEWORK_COS_SECRET_ACCESS_KEY: ${{ secrets.ONEWORK_COS_SECRET_ACCESS_KEY }}
+          COS_PUBLISH_TARGETS: ${{ github.event.inputs.targets == 'both' && 'new,legacy' || github.event.inputs.targets }}
+        run: |
+          set -euo pipefail
+          cd release-assets
+          # Order matters: a manifest must never be visible before the file it points to.
+          payloads=(); manifests=()
+          for f in *; do
+            [ -f "$f" ] || continue
+            case "$f" in latest*.yml) manifests+=("$f");; release-notes.md) ;; *) payloads+=("$f");; esac
+          done
+          ordered=("${payloads[@]}")
+          [ -f release-notes.md ] && ordered+=(release-notes.md)
+          ordered+=("${manifests[@]}")
+          echo "Publishing ${#ordered[@]} objects for ${VERSION} to: ${COS_PUBLISH_TARGETS}"
+          cd ..
+          for f in "${ordered[@]}"; do
+            size=$(stat -c %s "release-assets/$f")
+            if [ "$DRY_RUN" = "true" ]; then
+              printf '[dry-run] would upload %-52s %12s bytes\n' "$f" "$size"
+            else
+              bash scripts/publish-cos-release-asset.sh "release-assets/$f" "$VERSION"
+            fi
+          done
+          [ "$DRY_RUN" = "true" ] && echo "Dry run: nothing was written to COS." || echo "All objects uploaded."
+
+      - name: Verify what the public can download
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          set -uo pipefail
+          fail=0
+          hosts=()
+          case "$TARGETS" in both|new) hosts+=("$NEW_BUCKET");; esac
+          case "$TARGETS" in both|legacy) hosts+=("$LEGACY_BUCKET");; esac
+          for bucket in "${hosts[@]}"; do
+            base="https://${bucket}.cos.ap-shanghai.myqcloud.com/releases"
+            for f in release-assets/*; do
+              name=$(basename "$f")
+              want=$(stat -c %s "$f")
+              got=$(curl -sI -m 30 "$base/$VERSION/$name" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-length"{print $2}' | tail -1)
+              code=$(curl -s -o /dev/null -m 30 -w '%{http_code}' -I "$base/$VERSION/$name")
+              if [ "$code" != "200" ] || [ "$got" != "$want" ]; then
+                echo "::error::[$bucket] $name: http=$code size=$got (expected $want)"; fail=1
+              fi
+            done
+            for f in release-assets/latest*.yml; do
+              name=$(basename "$f")
+              body=$(curl -s -m 30 "$base/$name")
+              v=$(echo "$body" | grep -m1 '^version:' | sed -E "s/^version:[[:space:]]*['\"]?([^'\"[:space:]]+).*/\1/")
+              p=$(echo "$body" | grep -m1 '^path:' | sed -E "s/^path:[[:space:]]*['\"]?([^'\"]+)['\"]?.*/\1/")
+              pc=$(curl -s -o /dev/null -m 30 -w '%{http_code}' -I "$base/$VERSION/$p")
+              if [ "$v" != "$VERSION" ] || [ "$pc" != "200" ]; then
+                echo "::error::[$bucket] root $name: version=$v (expected $VERSION), path object http=$pc"; fail=1
+              else
+                echo "[$bucket] root $name -> $v, $p ok"
+              fi
+            done
+          done
+          [ "$fail" = 0 ] && echo "Verified: every object is public and matches its local size." || exit 1
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Publish ${VERSION:-?} to COS $([ "$DRY_RUN" = "true" ] && echo "— DRY RUN (nothing written)")"
+            echo ""
+            echo "- Targets: \`${TARGETS}\`; build commit \`${HEAD_SHA:-?}\`"
+            echo ""
+            if [ -d release-assets ]; then
+              echo "| object | bytes | MB (for \`platformSizes\`) |"
+              echo "|---|---|---|"
+              for f in release-assets/*; do
+                [ -f "$f" ] || continue
+                s=$(stat -c %s "$f")
+                case "$f" in *.exe|*.dmg|*.deb) mb="$(python -c "print(round($s/1048576))") MB";; *) mb="";; esac
+                echo "| $(basename "$f") | $s | $mb |"
+              done
+              echo ""
+            fi
+            echo "Next: switch the website (\`platformVersions\` / \`platformSizes\`), then the release record."
+            echo "Keep \`LEGACY_LAST_VERSION\` untouched — it is the last version that lives only in the old bucket."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Clean up the runner workspace
+        if: always()
+        run: rm -rf build-artifacts release-assets
