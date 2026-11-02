@@ -1,0 +1,125 @@
+name: COS Runner Smoke Test
+
+# Diagnostic only — nothing here publishes a release. Runs on the office-network
+# self-hosted runner (label `onework-publish`) and checks the three things a
+# publish job depends on: the tools exist, the internal credential-alloc service
+# is reachable (a GitHub-hosted runner cannot reach it), and uploads to both COS
+# buckets are fast. Background: cos-upload-probe.yml showed uploads from a
+# GitHub-hosted runner stall on the way to ap-shanghai.
+#
+# Safety: the runner is a real machine on the office network, so this repository
+# only lets the owner trigger jobs on it — manual dispatch, never pull_request —
+# and Settings → Actions requires approval for ALL outside contributors' workflow
+# runs. Do not add `runs-on: [self-hosted, ...]` to a workflow that pull requests
+# can trigger.
+
+on:
+  workflow_dispatch:
+    inputs:
+      size_mb:
+        description: 'Probe file size in MB (an installer is ~500)'
+        required: false
+        default: '300'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: [self-hosted, onework-publish]
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: bash
+    env:
+      # Keep aws-cli's config out of the operator's real ~/.aws.
+      AWS_CONFIG_FILE: ${{ runner.temp }}/aws-config
+      AWS_SHARED_CREDENTIALS_FILE: ${{ runner.temp }}/aws-credentials
+      AWS_DEFAULT_REGION: ap-shanghai
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      NEW_BUCKET: onework-1521070673
+      LEGACY_BUCKET: 1onework-1251001122
+      ENDPOINT: https://cos.ap-shanghai.myqcloud.com
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Tools on this runner
+        run: |
+          set +e
+          echo "host: $(hostname)  user: $(whoami)  shell: $(uname -s)  bash: $(bash --version | head -1)"
+          for tool in aws node gh git python; do
+            printf '%-7s' "$tool"; (command -v "$tool" >/dev/null && "$tool" --version 2>&1 | head -1) || echo "MISSING"
+          done
+
+      - name: Credential-alloc service reachable from here
+        env:
+          COS_ALLOC_URL: https://codo-honeypot.123u.com/api/honeypot/oapi/qcloud/alloc
+          COS_ALLOC_TOKEN: ${{ secrets.COS_ALLOC_TOKEN }}
+          COS_ALLOC_SIGN_KEY: ${{ secrets.COS_ALLOC_SIGN_KEY }}
+        run: |
+          set -euo pipefail
+          getent hosts codo-honeypot.123u.com 2>/dev/null || nslookup codo-honeypot.123u.com 2>/dev/null | tail -2 || true
+          # Writes AWS_* (masked) into $GITHUB_ENV for the legacy-bucket upload below.
+          node scripts/fetch-cos-credentials.js --format github
+
+      - name: Upload speed to both buckets
+        env:
+          NEW_AK: ${{ secrets.ONEWORK_COS_ACCESS_KEY_ID }}
+          NEW_SK: ${{ secrets.ONEWORK_COS_SECRET_ACCESS_KEY }}
+          SIZE_MB: ${{ github.event.inputs.size_mb }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set +e
+          aws configure set default.s3.addressing_style virtual
+          aws configure set default.s3.multipart_threshold 16MB
+          aws configure set default.s3.multipart_chunksize 16MB
+          aws configure set default.s3.max_concurrent_requests 8
+          head -c "${SIZE_MB}M" /dev/urandom > "$RUNNER_TEMP/probe.bin"
+          BYTES=$(stat -c %s "$RUNNER_TEMP/probe.bin")
+          SUMMARY="$RUNNER_TEMP/summary.md"
+          {
+            echo "### COS upload from the office runner — ${SIZE_MB} MB"
+            echo ""
+            echo "| bucket | result | seconds | MB/s |"
+            echo "|---|---|---|---|"
+          } > "$SUMMARY"
+
+          # upload <label> <bucket> <ak> <sk> [token]
+          upload() {
+            label="$1"; bucket="$2"; ak="$3"; sk="$4"; token="$5"
+            key="probe/${RUN_ID}/${label}.bin"
+            # Exactly this bucket's credentials; a stale session token must not leak in.
+            envcmd=(env)
+            [ -z "$token" ] && envcmd+=(-u AWS_SESSION_TOKEN)
+            envcmd+=(AWS_ACCESS_KEY_ID="$ak" AWS_SECRET_ACCESS_KEY="$sk")
+            [ -n "$token" ] && envcmd+=(AWS_SESSION_TOKEN="$token")
+            start=$(date +%s.%N)
+            "${envcmd[@]}" \
+              timeout 900 aws s3 cp "$RUNNER_TEMP/probe.bin" "s3://${bucket}/${key}" \
+              --endpoint-url "$ENDPOINT" --acl public-read --no-progress \
+              --cli-connect-timeout 20 --cli-read-timeout 120
+            code=$?
+            end=$(date +%s.%N)
+            secs=$(python -c "print(round($end-$start,1))")
+            if [ $code -eq 0 ]; then
+              result=ok; rate=$(python -c "print(round($BYTES/1048576/max($end-$start,0.001),2))")
+            elif [ $code -eq 124 ]; then
+              result="TIMEOUT"; rate="-"
+            else
+              result="failed (exit $code)"; rate="-"
+            fi
+            echo "| $label | $result | $secs | $rate |" >> "$SUMMARY"
+            echo "$label -> $result in ${secs}s"
+            # Delete what we put there, with the same credentials.
+            "${envcmd[@]}" aws s3 rm "s3://${bucket}/${key}" --endpoint-url "$ENDPOINT" >/dev/null 2>&1
+          }
+
+          upload "new-bucket (static key)" "$NEW_BUCKET" "$NEW_AK" "$NEW_SK" ""
+          upload "legacy-bucket (allocated key)" "$LEGACY_BUCKET" "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" "$AWS_SESSION_TOKEN"
+
+          cat "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+          cat "$SUMMARY"
+          rm -f "$RUNNER_TEMP/probe.bin"
