@@ -136,6 +136,46 @@ describe.skipIf(process.platform !== 'win32')('Windows installer diagnostic coll
     expect(Object.keys(await readArchive(archive))).toContain('diagnostics.json');
   });
 
+  it('includes detailed resource verification failures in the same installer session', async () => {
+    const root = fixture();
+    const log = join(root, 'verify.jsonl');
+    const verify = spawnSync(
+      powershell,
+      [
+        '-NoProfile',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-File',
+        resolve(__dirname, '../../../resources/windows/support/verify-bundled-dreamcore-install.ps1'),
+        '-InstallDir',
+        join(root, 'missing-install'),
+        '-RuntimeKey',
+        'win32-x64',
+        '-LogPath',
+        log,
+        '-Session',
+        'qa-session',
+        '-Release',
+        '3.0.16-qa',
+        '-Updated',
+        '1',
+      ],
+      { encoding: 'utf8', timeout: 30000 }
+    );
+    expect(verify.status, verify.stderr).toBe(1);
+    const result = collect(root, ['-LogPath', log]);
+    expect(result.status, result.stderr || result.stdout).toBe(0);
+    const files = await readArchive(result.stdout);
+    const events = files['installer-session.jsonl']
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line));
+    expect(
+      events.every((event) => event.session === 'qa-session' && event.version === '3.0.16-qa' && event.updated)
+    ).toBe(true);
+    expect(events.at(-1).message).toContain('missing_directory');
+  });
+
   it('returns a distinct collection failure so the installer can show its native fallback', () => {
     const root = fixture();
     writeFileSync(join(root, 'reports'), 'occupied by a file');

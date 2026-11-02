@@ -188,7 +188,7 @@ Var /GLOBAL OneWorkActiveMarkerResult
 !macro ONEWORK_VERIFY_BUNDLED_CORE_RESOURCES _RUNTIME_KEY
   InitPluginsDir
   File "/oname=$PLUGINSDIR\verify-bundled-dreamcore-install.ps1" "${PROJECT_DIR}\resources\windows\support\verify-bundled-dreamcore-install.ps1"
-  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\verify-bundled-dreamcore-install.ps1" -InstallDir "$INSTDIR" -RuntimeKey "${_RUNTIME_KEY}" -LogPath "$OneWorkSessionLogPath"`
+  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\verify-bundled-dreamcore-install.ps1" -InstallDir "$INSTDIR" -RuntimeKey "${_RUNTIME_KEY}" -LogPath "$OneWorkSessionLogPath" -Session "$OneWorkSessionId" -Release "${VERSION}" -Updated "$OneWorkIsUpdated"`
   Pop $OneWorkVerifyResourceResult
 
   ${If} $OneWorkVerifyResourceResult != 0

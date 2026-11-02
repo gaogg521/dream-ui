@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Mandatory = $true)]
   [string]$InstallDir,
 
@@ -7,7 +7,10 @@ param(
   [string]$RuntimeKey,
 
   [Parameter(Mandatory = $true)]
-  [string]$LogPath
+  [string]$LogPath,
+  [string]$Session,
+  [string]$Release,
+  [string]$Updated
 )
 
 $ErrorActionPreference = 'SilentlyContinue'
@@ -17,10 +20,10 @@ function Write-VerifyLog {
   $payload = [ordered]@{
     schemaVersion = 1
     ts = (Get-Date -Format o)
-    session = ''
-    version = ''
+    session = $Session
+    version = $Release
     arch = $RuntimeKey
-    updated = $false
+    updated = ($Updated -eq '1' -or $Updated -eq 'true')
     instDir = $InstallDir
     event = 'verify-bundled-dreamcore'
     message = $Message
