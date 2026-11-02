@@ -1,0 +1,124 @@
+name: COS Upload Probe
+
+# Diagnostic only — nothing here publishes a release. Measures how a GitHub-hosted
+# runner actually uploads to the release bucket, so the real publish step can use
+# the method that works. Background: a single `aws s3 cp` of an installer from a
+# runner once sat silent for 2h+ (release-distribute.yml, 2026-07-21); the bucket
+# lives in ap-shanghai and the runner is overseas.
+#
+# Every method uploads the same random file under probe/<run id>/ and the whole
+# prefix is deleted at the end. Each method is time-boxed so a stall shows up as a
+# timeout in the table instead of hanging the job.
+#
+# Needs the repository secrets ONEWORK_COS_ACCESS_KEY_ID / ONEWORK_COS_SECRET_ACCESS_KEY
+# (a static key that only authorises the new bucket — it works from a public runner,
+# unlike the internal-only credential-alloc service the old bucket depends on).
+
+on:
+  workflow_dispatch:
+    inputs:
+      size_mb:
+        description: 'Probe file size in MB (an installer is ~500)'
+        required: false
+        default: '300'
+        type: string
+      timeout_s:
+        description: 'Per-method time box in seconds'
+        required: false
+        default: '600'
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  BUCKET: onework-1521070673
+  AWS_DEFAULT_REGION: ap-shanghai
+  # aws-cli >= 2.23 adds CRC checksums that COS rejects; compute them only when required.
+  AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+  AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.ONEWORK_COS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.ONEWORK_COS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Runner and path
+        run: |
+          set +e
+          echo "aws-cli: $(aws --version 2>&1)"
+          curl -s -m 10 https://ipinfo.io/json | python3 -c "import sys,json;d=json.load(sys.stdin);print('runner:',d.get('city'),d.get('region'),d.get('country'),'|',d.get('org'))"
+          for host in cos.ap-shanghai.myqcloud.com onework-1521070673.cos.ap-shanghai.myqcloud.com cos.accelerate.myqcloud.com; do
+            curl -s -o /dev/null -m 15 -w "$host  connect=%{time_connect}s tls=%{time_appconnect}s http=%{http_code}\n" "https://$host/" || echo "$host unreachable"
+          done
+
+      - name: Probe uploads
+        env:
+          SIZE_MB: ${{ github.event.inputs.size_mb }}
+          TIMEOUT_S: ${{ github.event.inputs.timeout_s }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set +e
+          aws configure set default.s3.addressing_style virtual
+          head -c "${SIZE_MB}M" /dev/urandom > probe.bin
+          BYTES=$(stat -c %s probe.bin)
+          echo "probe file: $BYTES bytes"
+          SUMMARY=/tmp/summary.md
+          {
+            echo "### COS upload probe — ${SIZE_MB} MB from a GitHub-hosted runner"
+            echo ""
+            echo "| method | result | seconds | MB/s |"
+            echo "|---|---|---|---|"
+          } > "$SUMMARY"
+
+          # run_method <label> <endpoint> <threshold> <chunk> <concurrency>
+          run_method() {
+            label="$1"; endpoint="$2"; threshold="$3"; chunk="$4"; conc="$5"
+            aws configure set default.s3.multipart_threshold "$threshold"
+            aws configure set default.s3.multipart_chunksize "$chunk"
+            aws configure set default.s3.max_concurrent_requests "$conc"
+            echo "::group::$label"
+            start=$(date +%s.%N)
+            timeout "$TIMEOUT_S" aws s3 cp probe.bin "s3://${BUCKET}/probe/${RUN_ID}/$(echo "$label" | tr -c 'a-zA-Z0-9' '_').bin" \
+              --endpoint-url "$endpoint" --acl public-read \
+              --cli-connect-timeout 20 --cli-read-timeout 120 --no-progress
+            code=$?
+            end=$(date +%s.%N)
+            echo "::endgroup::"
+            secs=$(python3 -c "print(round($end-$start,1))")
+            if [ $code -eq 0 ]; then
+              result="ok"; rate=$(python3 -c "print(round($BYTES/1048576/max($end-$start,0.001),2))")
+            elif [ $code -eq 124 ]; then
+              result="TIMEOUT (stalled)"; rate="-"
+            else
+              result="failed (exit $code)"; rate="-"
+            fi
+            echo "| $label | $result | $secs | $rate |" >> "$SUMMARY"
+            echo "$label -> $result in ${secs}s"
+          }
+
+          EP=https://cos.ap-shanghai.myqcloud.com
+          # A: what release-distribute.yml does today — one big PUT.
+          run_method "A single PUT (current method)" "$EP" 5GB 8MB 1
+          # B: real multipart, parallel parts; a stalled part is retried by itself.
+          run_method "B multipart 16MB x 8" "$EP" 16MB 16MB 8
+          # C: same as B with smaller parts and more parallelism.
+          run_method "C multipart 8MB x 16" "$EP" 8MB 8MB 16
+          # D: COS global acceleration endpoint (only works if enabled on the bucket).
+          run_method "D multipart 16MB x 8 via accelerate endpoint" "https://cos.accelerate.myqcloud.com" 16MB 16MB 8
+
+          cat "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+          cat "$SUMMARY"
+
+      - name: Clean up probe objects
+        if: always()
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set +e
+          aws s3 rm "s3://${BUCKET}/probe/${RUN_ID}/" --recursive --endpoint-url https://cos.ap-shanghai.myqcloud.com
+          echo "remaining under probe/${RUN_ID}/:"
+          aws s3 ls "s3://${BUCKET}/probe/${RUN_ID}/" --endpoint-url https://cos.ap-shanghai.myqcloud.com | wc -l
