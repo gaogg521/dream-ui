@@ -264,6 +264,18 @@ scripts/publish-cos-release-asset.sh out/latest.yml <ver>                   # ym
 scripts/publish-cos-release-asset.sh <tmp>/release-notes.md <ver>           # sidecar：只进版本目录
 ```
 
+**两个桶（2026-11-02 起）**：一次调用同时传到两个桶，两套凭据互不通用，传之前都要备好：
+
+| 桶 | 作用 | 凭据 |
+| --- | --- | --- |
+| `onework-1521070673`（新） | 官网下载链接指向它（3.0.16 之后的版本） | `ONEWORK_COS_ACCESS_KEY_ID` / `ONEWORK_COS_SECRET_ACCESS_KEY`（feishu.txt 末尾，静态子账号 key） |
+| `1onework-1251001122`（旧） | **已装客户端的更新通道**：地址写死在已发出的 App 里（`electron-builder.yml` / `updateFeed.ts`），不传就等于已装用户收不到新版 | `scripts/fetch-cos-credentials.js` 换出的 `AWS_*`（照旧） |
+
+`COS_PUBLISH_TARGETS=new` 或 `legacy` 可只传其中一个；缺任一目标的凭据会在上传前直接报错，不会半传。
+旧桶的数据没有迁移：官网的 `src/site.config.js` 里 `LEGACY_LAST_VERSION`（现为 3.0.16）以内的版本链接指旧桶，
+之后的指新桶；**不要把 `LEGACY_LAST_VERSION` 之后某个版本只传了一个桶就切官网**。
+要彻底只用新桶，得先发一版把更新地址改成新桶的客户端并等用户升级完，企业版升级器还要求更新源与下载地址同源。
+
 官网切 `platformVersions.win` + `platformSizes.windows`（真实字节数 ÷ 1048576）→
 `cd D:\website\1onework && npm run build` → `python D:\game\scripts\deploy-1onework-www.py`
 → 验下载 URL 200 + 线上 bundle 含 `win:"<ver>"`。
