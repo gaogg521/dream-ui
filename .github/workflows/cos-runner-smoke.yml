@@ -83,6 +83,8 @@ jobs:
           aws configure set default.s3.multipart_chunksize 16MB
           aws configure set default.s3.max_concurrent_requests 8
           TMPD=$(cygpath -u "$RUNNER_TEMP" 2>/dev/null || echo "$RUNNER_TEMP")
+          # Native aws.exe needs a Windows-style path; /d/... is not converted through env/timeout.
+          TMPW=$(cygpath -m "$RUNNER_TEMP" 2>/dev/null || echo "$RUNNER_TEMP")
           head -c "${SIZE_MB}M" /dev/urandom > "$TMPD/probe.bin"
           BYTES=$(stat -c %s "$TMPD/probe.bin")
           SUMMARY="$TMPD/summary.md"
@@ -104,7 +106,7 @@ jobs:
             [ -n "$token" ] && envcmd+=(AWS_SESSION_TOKEN="$token")
             start=$(date +%s.%N)
             "${envcmd[@]}" \
-              timeout 900 aws s3 cp "$TMPD/probe.bin" "s3://${bucket}/${key}" \
+              timeout 900 aws s3 cp "$TMPW/probe.bin" "s3://${bucket}/${key}" \
               --endpoint-url "$ENDPOINT" --acl public-read --no-progress \
               --cli-connect-timeout 20 --cli-read-timeout 120
             code=$?
