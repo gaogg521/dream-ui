@@ -207,7 +207,11 @@ jobs:
           NEW_AK: ${{ secrets.ONEWORK_COS_ACCESS_KEY_ID }}
           NEW_SK: ${{ secrets.ONEWORK_COS_SECRET_ACCESS_KEY }}
         run: |
-          set -uo pipefail
+          # The runner starts bash with -e; `set -uo pipefail` would NOT turn it off, and a
+          # failing command substitution (aws s3 ls on an empty prefix exits 1) would end the
+          # step silently. Handle exit codes explicitly instead.
+          set +e
+          set -u -o pipefail
           clash=0
           check() { # <label> <bucket> <env prefix...>
             label="$1"; bucket="$2"; shift 2
@@ -268,7 +272,11 @@ jobs:
       - name: Verify what the public can download
         if: github.event.inputs.dry_run != 'true'
         run: |
-          set -uo pipefail
+          # The runner starts bash with -e; `set -uo pipefail` would NOT turn it off, and a
+          # failing command substitution (aws s3 ls on an empty prefix exits 1) would end the
+          # step silently. Handle exit codes explicitly instead.
+          set +e
+          set -u -o pipefail
           fail=0
           hosts=()
           case "$TARGETS" in both|new) hosts+=("$NEW_BUCKET");; esac
