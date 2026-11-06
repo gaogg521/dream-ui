@@ -549,10 +549,15 @@ jobs:
           # child PID instead; `kill`/`pkill` are the BSD tools and are
           # always present.
           # macos-x64's healthy pass (bun install + build + codesign + notarize)
-          # exceeds 1800s -- see the job timeout comment (2026-11-06). arm64
-          # keeps the tight cap so a genuinely hung call still dies in 30 min.
+          # exceeds 1800s and 3300s: with cap 3300s BOTH attempts on 2026-11-06
+          # reached "• signing file=out/mac/onework.app" at ~50-55 min with the
+          # whole pipeline healthy (afterPack verify 17/17, cross rebuild,
+          # prune all green) and were killed before codesign finished -- same
+          # "cancelled, not hung" shape as the 60:17 build of 2026-09-07. 4500s
+          # covers a ~70 min healthy pass; arm64 keeps the tight cap so a
+          # genuinely hung call still dies in 30 min.
           if [ "${{ matrix.platform }}" = "macos-x64" ]; then
-            BUILD_TIMEOUT_SECONDS=3300
+            BUILD_TIMEOUT_SECONDS=4500
           else
             BUILD_TIMEOUT_SECONDS=1800
           fi
