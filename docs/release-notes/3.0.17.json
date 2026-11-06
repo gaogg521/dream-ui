@@ -1,0 +1,24 @@
+{
+  "version": "3.0.17",
+  "date": "2026-11-06",
+  "zh": [
+    {
+      "t": "单机版",
+      "d": "本版重做了 Windows 安装体验：安装器实时展示安装阶段与解压进度，支持长路径，安装或卸载失败能自动收集本地诊断，包体也更小；更新源升级为「新桶优先、旧桶兜底」的双桶容灾。同时修复浏览器预览页签跨会话串内容、定时任务工作区恢复两大问题，技能文档修改与 Windows OCR 更稳。\n\n【新增】\n· 【安装器】实时显示安装阶段与解压活动：安装过程不再是一根进度条跑到底，能看清当前步骤与解压动态\n· 【安装器】安装/卸载失败自动收集本地诊断：一键复制诊断信息或打开日志文件夹，排障不用再猜；卸载失败路径同样覆盖\n· 【定时任务】任务编辑器支持显式恢复工作区：一键找回任务工作区，配置与历史都不丢（配套服务端恢复逻辑同步落地）\n\n【修复】\n· 【安装器】支持 Windows 长路径：解压深层目录文件不再失败\n· 【安装器】包体更小：裁掉未使用的 ACP 声明与 source map，下载安装更快\n· 【浏览器预览】页签跟随所属会话：预览面板跨会话不再串内容，Agent 自动开面板按会话归属门控\n· 【桌面】升级恢复下载改用系统浏览器打开，不再被内嵌窗口卡住\n· 【桌面】启动被阻断的画面（如初始化失败）提供原生退出按钮，不必再杀进程\n· 【技能】修改现有文档走轻量路径；Windows OCR 输出固定 UTF-8，中文识别不再乱码\n\n【优化改进】\n· 【更新】更新源双桶容灾：客户端优先新下载桶，新桶不通自动回退旧桶，更新链路更稳\n· 【界面】通知与消息提示整体缩小一号：Notification 标题 14/正文 12/图标 16，Message 12px，更轻量不遮挡\n· 【桌面】打包数据与已安装配置目录隔离，避免测试数据混入正式环境"
+    },
+    {
+      "t": "企业版",
+      "d": "本版企业侧与服务端共享两项后端修复，客户端更新链路同步双桶容灾。\n\n【修复】\n· 【定时任务】任务工作区恢复逻辑在企业服务端同步生效：恢复不丢配置与历史\n· 【技能】修改现有文档走轻量路径；Windows OCR 输出固定 UTF-8，中文识别不再乱码\n\n【优化改进】\n· 【更新】企业版客户端更新源双桶容灾：优先新下载桶，新桶不通自动回退旧桶"
+    }
+  ],
+  "en": [
+    {
+      "t": "Personal edition",
+      "d": "This release rebuilds the Windows install experience: the installer now shows real install stages and extraction activity, supports long paths, collects local diagnostics on failed installs or uninstalls, and ships smaller. The update source gains dual-bucket failover (new bucket first, legacy bucket as fallback). It also fixes browser preview tabs leaking across conversations, adds scheduled-task workspace recovery, and makes skill document edits and Windows OCR more reliable.\n\n[New]\n· Installer: real install stages and extraction activity — you can see the current step and unpacking progress instead of a single indeterminate bar\n· Installer: failed installs or uninstalls collect local diagnostics automatically — copy them or open the log folder with one click; uninstall failure paths are covered too\n· Cron: the task editor supports explicit workspace recovery — one click brings the workspace back with configuration and history intact (matched by the server-side recovery logic)\n\n[Fixed]\n· Installer: Windows long-path support — extracting into deep directories no longer fails\n· Installer: smaller package — unused ACP declarations and source maps are trimmed, downloads and installs finish faster\n· Browser preview: tabs now follow their owning conversation — the preview panel no longer mixes content across conversations, and agent-opened panels are gated by conversation ownership\n· Desktop: upgrade-recovery downloads open in the system browser instead of getting stuck in an embedded window\n· Desktop: blocked startup screens (e.g. failed initialization) now offer a native quit button — no more killing processes\n· Skills: editing existing documents takes the lightweight path; Windows OCR output is pinned to UTF-8, so Chinese recognition no longer garbles\n\n[Improved]\n· Updates: dual-bucket failover for the update source — clients prefer the new download bucket and fall back to the legacy bucket automatically\n· UI: notifications and messages are one size smaller across the board — Notification title 14/body 12/icon 16, Message 12px, lighter and less obtrusive\n· Desktop: packaged test data is isolated from installed profiles so test fixtures never leak into real environments"
+    },
+    {
+      "t": "Enterprise edition",
+      "d": "This release shares two backend fixes with the enterprise server, and the client update path gains dual-bucket failover.\n\n[Fixed]\n· Cron: task workspace recovery applies on the enterprise server as well — recovery keeps configuration and history\n· Skills: editing existing documents takes the lightweight path; Windows OCR output is pinned to UTF-8, so Chinese recognition no longer garbles\n\n[Improved]\n· Updates: enterprise clients get dual-bucket failover — the new download bucket first, automatic fallback to the legacy bucket"
+    }
+  ]
+}
