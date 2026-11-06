@@ -95,7 +95,13 @@ jobs:
     # cancelled, not hung, confirmed by re-running it alone and it finishing
     # normally. 90 min keeps meaningful headroom over the 76-min hang above
     # while giving notarization queue variance room to breathe.
-    timeout-minutes: 90
+    # 2026-11-06: three consecutive macos-x64 runs had BOTH wrapper attempts
+    # killed at exactly 1800s while still making progress (last lines: "signing
+    # file=..." / afterPack), i.e. the healthy x64 pass now exceeds the
+    # per-attempt cap -- same "cancelled, not hung" shape as 2026-09-07. Give
+    # x64 a longer per-attempt cap (3300s) and job budget below; arm64 keeps
+    # the tight cap so a genuinely hung call still dies in 30 min.
+    timeout-minutes: ${{ matrix.platform == 'macos-x64' && 180 || 90 }}
 
     outputs:
       commit-short: ${{ steps.commit.outputs.short }}
@@ -542,7 +548,14 @@ jobs:
           # Homebrew coreutils being present on the runner image. Poll the
           # child PID instead; `kill`/`pkill` are the BSD tools and are
           # always present.
-          BUILD_TIMEOUT_SECONDS=1800
+          # macos-x64's healthy pass (bun install + build + codesign + notarize)
+          # exceeds 1800s -- see the job timeout comment (2026-11-06). arm64
+          # keeps the tight cap so a genuinely hung call still dies in 30 min.
+          if [ "${{ matrix.platform }}" = "macos-x64" ]; then
+            BUILD_TIMEOUT_SECONDS=3300
+          else
+            BUILD_TIMEOUT_SECONDS=1800
+          fi
           BUILD_MAX_ATTEMPTS=2
           BUILD_EXIT_CODE=1
           for attempt in $(seq 1 "$BUILD_MAX_ATTEMPTS"); do
