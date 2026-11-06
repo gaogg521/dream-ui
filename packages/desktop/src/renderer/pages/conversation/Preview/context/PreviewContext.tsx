@@ -814,7 +814,7 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // across conversations. Read outside setTabs (the updater must stay pure, see
       // above).
       const browserOwnerMetadata: PreviewMetadata | undefined =
-        type === 'browser' ? { ...(meta ?? {}), ownerConversationId: getCurrentConversation() ?? undefined } : meta;
+        type === 'browser' ? { ...meta, ownerConversationId: getCurrentConversation() ?? undefined } : meta;
 
       // 记下打开时的 mtime，作为下次保存的 If-Match 条件。
       // 必须在 setTabs 之外做 —— updater 在 StrictMode 下会跑两次，且必须保持纯函数。
