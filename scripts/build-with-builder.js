@@ -268,7 +268,11 @@ function patchElectronBuilderNsisInstaller() {
     const resolveScript = `require(${JSON.stringify(resolver)}).downloadBuilderToolset({releaseName:'7zip@1.0.0',filenameWithExt:'7zip-win-x64.tar.gz',checksums:{'7zip-win-x64.tar.gz':'be071f15bd6da2f78fe81c6ddef2009b0c4d8a51f36b780cb806c7e6df95e1b3'}}).then(dir=>process.stdout.write(require('path').join(dir,'bin','7za.exe'))).catch(error=>{console.error(error);process.exitCode=1})`;
     const resolved = spawnSync(process.execPath, ['-e', resolveScript], { encoding: 'utf8', timeout: 180000 });
     if (resolved.status !== 0) throw new Error(`Cannot prepare Windows ZIP extractor: ${resolved.stderr}`);
-    process.env.ONEWORK_INSTALLER_7ZA = resolved.stdout.trim();
+    // 冷缓存首次下载时 downloadBuilderToolset 会先往 stdout 打一行下载进度
+    // （"• downloaded label=… progress=100%"），再写最终路径——整串 trim 会把
+    // 进度行一起当路径，existsSync 永远为假（CI 全新缓存必踩，本地热缓存不显现）。
+    // 路径恒为 stdout 最后一行，取末行才稳。
+    process.env.ONEWORK_INSTALLER_7ZA = resolved.stdout.trim().split(/\r?\n/).pop() || '';
   }
   if (!fs.existsSync(process.env.ONEWORK_INSTALLER_7ZA)) throw new Error('Windows ZIP extractor is missing.');
   const extractorRoot = path.dirname(path.dirname(process.env.ONEWORK_INSTALLER_7ZA));
