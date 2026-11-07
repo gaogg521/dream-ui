@@ -537,10 +537,38 @@ jobs:
           # this step map.)
           if [ "${{ matrix.platform }}" = "macos-x64" ]; then
             KP="${{ secrets.KEYCHAIN_PASSWORD || 'temp-keychain-password' }}"
-            echo "[sign-fix] unlock build.keychain"
-            security unlock-keychain -p "$KP" build.keychain || echo "[sign-fix] unlock FAILED"
-            echo "[sign-fix] re-apply key partition list:"
-            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KP" build.keychain 2>&1 | sed 's/^/[sign-fix] /' | tail -6
+            PP="${{ secrets.P12_PASSWORD }}"
+            echo "[sign-fix2] rebuilding build.keychain from scratch (fresh key items, search list pinned, bounded warm-up sign)"
+            security delete-keychain build.keychain 2>/dev/null || true
+            rm -f build.keychain certificate.p12
+            echo "${{ secrets.BUILD_CERTIFICATE_BASE64 }}" | base64 --decode > certificate.p12
+            security create-keychain -p "$KP" build.keychain
+            security default-keychain -s build.keychain
+            security list-keychain -d user -s build.keychain
+            security unlock-keychain -p "$KP" build.keychain
+            security import certificate.p12 -k build.keychain -P "$PP" -T /usr/bin/codesign -T /usr/bin/security
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KP" build.keychain > "${RUNNER_TEMP}/pl.log" 2>&1
+            echo "[sign-fix2] partition-list rc=$? lines=$(wc -l < "${RUNNER_TEMP}/pl.log")"
+            rm -f certificate.p12
+            # Bounded warm-up sign: exercises the exact keychain ACL path the
+            # real build uses. Fails in <=60s here with a clear message instead
+            # of hanging the whole attempt for the full cap.
+            ID_HASH=$(security find-identity -v -p codesigning build.keychain | awk '/^ *[0-9]+\]/{print $2; exit}')
+            echo "[sign-fix2] warm-up sign with identity $ID_HASH (60s cap)"
+            echo 'int main(){return 0;}' > /tmp/wd-test.c
+            cc -o /tmp/wd-test /tmp/wd-test.c
+            codesign --force --options runtime --timestamp --sign "$ID_HASH" /tmp/wd-test &
+            WDPID=$!
+            ( sleep 60; kill -9 $WDPID 2>/dev/null ) &
+            KILLER=$!
+            wait $WDPID; WDRC=$?
+            kill $KILLER 2>/dev/null
+            if [ $WDRC -eq 0 ]; then
+              echo "[sign-fix2] warm-up sign OK — keychain ACL path is live"
+            else
+              echo "::error::[sign-fix2] warm-up sign FAILED/HUNG (rc=$WDRC) — the keychain ACL path is still broken; see [wd] samples above."
+              exit 1
+            fi
           fi
 
           # ⚠️ 2026-09-07: macos-x64 twice sat at "• signing file=out/mac/...app"
