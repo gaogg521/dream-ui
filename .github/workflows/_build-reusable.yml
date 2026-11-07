@@ -543,6 +543,10 @@ jobs:
             rm -f build.keychain certificate.p12
             echo "${{ secrets.BUILD_CERTIFICATE_BASE64 }}" | base64 --decode > certificate.p12
             security create-keychain -p "$KP" build.keychain
+            # A fresh keychain locks itself after an idle timeout. Locked + headless
+            # = codesign waits forever for an authorisation prompt nobody can answer,
+            # which is exactly the getAcl -> mach_msg stack the watchdog sampled.
+            security set-keychain-settings -lut 21600 build.keychain
             security default-keychain -s build.keychain
             security list-keychain -d user -s build.keychain
             security unlock-keychain -p "$KP" build.keychain
@@ -566,6 +570,10 @@ jobs:
             kill $KILLER 2>/dev/null
             if [ $WDRC -eq 0 ]; then
               echo "[sign-fix2] warm-up sign OK — keychain ACL path is live"
+              # Re-unlock every 60s while the build runs: costs nothing, and removes
+              # "the keychain locked itself between import and signing" as a cause.
+              ( while :; do sleep 60; security unlock-keychain -p "$KP" build.keychain >/dev/null 2>&1; done ) &
+              KEEPALIVE_PID=$!
             else
               echo "::error::[sign-fix2] warm-up sign FAILED/HUNG (rc=$WDRC) — the keychain ACL path is still broken; see [wd] samples above."
               exit 1
@@ -607,11 +615,12 @@ jobs:
           # covers a ~70 min healthy pass; arm64 keeps the tight cap so a
           # genuinely hung call still dies in 30 min.
           if [ "${{ matrix.platform }}" = "macos-x64" ]; then
-            BUILD_TIMEOUT_SECONDS=4500
+            BUILD_TIMEOUT_SECONDS=2400
+            BUILD_MAX_ATTEMPTS=1
           else
             BUILD_TIMEOUT_SECONDS=1800
+            BUILD_MAX_ATTEMPTS=2
           fi
-          BUILD_MAX_ATTEMPTS=2
           BUILD_EXIT_CODE=1
           for attempt in $(seq 1 "$BUILD_MAX_ATTEMPTS"); do
             echo "=== macOS build attempt $attempt/$BUILD_MAX_ATTEMPTS (cap ${BUILD_TIMEOUT_SECONDS}s) ===" | tee -a "${RUNNER_TEMP}/build.log"
@@ -623,6 +632,8 @@ jobs:
             ELAPSED=0
             TIMED_OUT=0
             WATCHDOG_LAST=0
+            LAST_CS_PID=""
+            PROBED=0
             while kill -0 "$CMD_PID" 2>/dev/null; do
               if [ "$ELAPSED" -ge "$BUILD_TIMEOUT_SECONDS" ]; then
                 TIMED_OUT=1
@@ -638,6 +649,34 @@ jobs:
               # signing/notarization toolchain plus a 3s `sample` of the
               # codesign pid when one exists. Appended to the attempt log (so
               # the dump carries it) and echoed live into the job log.
+              # Lock probe (macos-x64, once): the same codesign pid seen on two ticks
+              # 2 min apart is stuck (a healthy signature takes seconds). Record the
+              # keychain state, unlock it, and see whether codesign moves within 20s.
+              # If it does, the keychain was locked; if not, it is something else.
+              if [ "${{ matrix.platform }}" = "macos-x64" ] && [ "$PROBED" -eq 0 ] && [ $((ELAPSED % 120)) -eq 0 ]; then
+                CUR_CS_PID=$(pgrep -x codesign | head -1)
+                if [ -n "$CUR_CS_PID" ] && [ "$CUR_CS_PID" = "$LAST_CS_PID" ]; then
+                  PROBED=1
+                  {
+                    echo "🔬 lock-probe @${ELAPSED}s $(date -u '+%H:%M:%SZ'): codesign pid $CUR_CS_PID unchanged for 2 min"
+                    echo "--- show-keychain-info:"; security show-keychain-info build.keychain 2>&1
+                    echo "--- list-keychains:"; security list-keychains -d user 2>&1
+                    echo "--- default-keychain:"; security default-keychain 2>&1
+                    security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD || 'temp-keychain-password' }}" build.keychain
+                    echo "--- unlock-keychain rc=$?"
+                  } >> "$ATTEMPT_LOG" 2>&1
+                  sleep 20
+                  ELAPSED=$((ELAPSED + 20))
+                  AFTER_CS_PID=$(pgrep -x codesign | head -1)
+                  if [ "$AFTER_CS_PID" = "$CUR_CS_PID" ]; then
+                    echo "🔬 verdict: STILL STUCK 20s after unlock — the keychain lock is NOT the cause" >> "$ATTEMPT_LOG"
+                  else
+                    echo "🔬 verdict: codesign pid changed/finished after unlock (was $CUR_CS_PID, now ${AFTER_CS_PID:-none}) — keychain LOCK was the cause" >> "$ATTEMPT_LOG"
+                  fi
+                  tail -14 "$ATTEMPT_LOG" | sed 's/^/[probe] /'
+                fi
+                LAST_CS_PID="$CUR_CS_PID"
+              fi
               if [ "$ELAPSED" -gt 0 ] && [ $((ELAPSED % 900)) -eq 0 ] && [ "$WATCHDOG_LAST" -ne "$ELAPSED" ]; then
                 WATCHDOG_LAST=$ELAPSED
                 {
@@ -685,6 +724,8 @@ jobs:
             # signing/notarization classification below on this attempt's log.
             break
           done
+
+          [ -n "${KEEPALIVE_PID:-}" ] && kill "$KEEPALIVE_PID" 2>/dev/null
 
           # Check if DMG was created (most important artifact)
           DMG_EXISTS=false
