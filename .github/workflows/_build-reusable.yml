@@ -734,9 +734,28 @@ jobs:
             echo "✅ DMG created successfully"
           fi
 
+          # What the electron-builder hooks (scripts/afterSign.js) actually decided.
+          # afterSign skips notarization WITHOUT failing the build when the signature
+          # check does not pass or the credentials are missing, so "exit 0" alone has
+          # shipped a signed-but-not-notarized package (2026-11-07 mac-x64: Developer
+          # ID signed, no stapled ticket, build green). Print the evidence, then gate.
+          echo "--- signing / notarization evidence from the build log:"
+          grep -aE "properly code signed|not code signed|ad-hoc|Skipping notarization|Starting notarization|Notarization (completed|failed)" "${RUNNER_TEMP}/build.log" | sed 's/^/[sign-evidence] /'
+
           # If build succeeded completely
           if [ $BUILD_EXIT_CODE -eq 0 ]; then
-            echo "✅ Build completed successfully"
+            if [ -n "${appleId:-}" ] && ! grep -aq "Notarization completed successfully" "${RUNNER_TEMP}/build.log"; then
+              echo "::error title=Not notarized::The build exited 0 but afterSign never reported 'Notarization completed successfully' (see [sign-evidence] above). Refusing to ship a package Gatekeeper will flag."
+              echo "notarization_status=not_notarized" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            APP_BUNDLE=$(find out -maxdepth 2 -name '*.app' -type d | head -n 1)
+            if [ -n "${appleId:-}" ] && [ -n "$APP_BUNDLE" ] && ! xcrun stapler validate "$APP_BUNDLE" >/dev/null 2>&1; then
+              echo "::error title=No stapled ticket::$APP_BUNDLE has no valid stapled notarization ticket."
+              echo "notarization_status=not_notarized" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            echo "✅ Build completed successfully (signed and notarized)"
             echo "notarization_status=success" >> $GITHUB_OUTPUT
             exit 0
           fi
