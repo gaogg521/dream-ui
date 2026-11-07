@@ -553,7 +553,8 @@ jobs:
             # Bounded warm-up sign: exercises the exact keychain ACL path the
             # real build uses. Fails in <=60s here with a clear message instead
             # of hanging the whole attempt for the full cap.
-            ID_HASH=$(security find-identity -v -p codesigning build.keychain | awk '/^ *[0-9]+\]/{print $2; exit}')
+            security find-identity -v -p codesigning build.keychain | sed 's/^/[sign-fix2] identities: /'
+            ID_HASH=$(security find-identity -v -p codesigning build.keychain | grep -m1 -E '^\s*[0-9]+\)' | awk '{print $2}')
             echo "[sign-fix2] warm-up sign with identity $ID_HASH (60s cap)"
             echo 'int main(){return 0;}' > /tmp/wd-test.c
             cc -o /tmp/wd-test /tmp/wd-test.c
