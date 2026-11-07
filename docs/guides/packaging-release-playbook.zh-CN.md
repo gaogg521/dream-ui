@@ -218,6 +218,17 @@ Mac CI 前本地把四道 gate 跑绿（`bun run format:check` / `bunx tsc --noE
 > **S6 的 CI 产物下载要按平台并行发起**，别串行排队：公司网络对 gh 限速可低到
 > ~70KB/s，一个串行链把 linux-x64 拖了 2 小时；多挂几个并行任务反而都能挤过。
 
+> **Mac CI 的现状（2026-11-07，3.0.17 起）：**
+>
+> - `macos-14` 镜像已被 GitHub 下线，五处 workflow 都换成了 `macos-15`；
+>   **mac-x64 腿跑在原生 Intel 的 `macos-15-intel` 上**（`build-manual.yml` 里的 `os`），不再交叉构建。
+> - 健康基线：mac-arm64 约 12 分钟、mac-x64 约 16 分钟（含公证）、Windows 约 15 分钟、
+>   Linux 4~10 分钟。**任何一条 Mac 腿超过 25 分钟就是卡死，别调大超时、别盲目 rerun**，见 §2.1.1。
+> - mac-x64 现在是单次尝试、上限 40 分钟（`_build-reusable.yml`），卡死了 40 分钟就带着诊断信息失败。
+> - Windows 腿的 CI 构建 3.0.17 才第一次成功（7za 工具集下载往 stdout 打进度行、污染了路径，
+>   `7e4208ba` 已修）；之前 Windows 一直在本机出包，现在 CI 也能出。
+> - dispatch 时 **Windows 的 run id 也要记下来**：发布 workflow 要的是「每个平台各一个 run」。
+
 ### S5. Windows 腿先上线（增量发版：谁好谁先走，不等齐）
 
 验收六件（全过才传）：
@@ -301,19 +312,47 @@ scripts/download-gh-artifact.sh gaogg521/dream-ui <run_id> macos-build-arm64-<sh
 >    `tasklist` 确认归零。
 > 2. **断点续传 `-C -` 跨 302 重定向不可靠**：续传请求可能收到 416 错误体并被
 >    curl 当作正常响应追加，文件比标称大 32KB/64KB 且前缀也可能错位。下载
->    一律 fresh 单流，禁 resume。
+>    一律 fresh 单流，禁 resume。`scripts/download-gh-artifact.sh` 已按此改写
+>    （2026-11-02）：每次重试都从空文件开始，下载后核对 GitHub 的 size 与 sha256，
+>    全部对上才解压；用 `python`（探测时真的执行一次，避开 Windows 的 `python3`
+>    Store 占位符）解压，不再依赖 `unzip`。
 > 3. **校验目标是 GitHub 的 artifact digest**：`gh api .../actions/artifacts/<id>`
 >    返回 `digest: sha256:<64hex>` 与 `size_in_bytes`，下载后逐字节对账即算
 >    "拿到的是这份制品"。注意 `artifacts/<id>`（元数据）与
->    `artifacts/<id>/zip`（下载）端点：后者必须 `Accept: application/octet-stream`
->    才回二进制，回 JSON/415 说明走错端点或头不对。curl 直连
->    `.../zip` + Bearer（302 后跟 CDN）实测可用；`gh api` 该端点反而拒
->    octet-stream。网络限速时（公司 QoS 单连接可低到 ~17KB/s 且多连接无增益），
+>    `artifacts/<id>/zip`（下载）端点：**下载端点要 `Accept: application/vnd.github+json`，
+>    回 303 跳到 blob 存储再 200**；`application/octet-stream` 现在会回 415（186 字节的
+>    JSON 错误体，脚本的大小校验会拦下它）。**这一条以前的手册写反了。**
+>    网络限速时（公司 QoS 单连接可低到 ~17KB/s 且多连接无增益），
 >    换时段重试比并行连接有效。
 
-10 个对象逐个 `publish-cos-release-asset.sh` 上传 → 官网切 `macArm`/`macIntel`
+**落地前必须核验产物是「签名 + 公证」的，不能只看 CI 绿**（详见 §2.1.1）。下载后在 zip 里查两个文件，
+Windows 上没法跑 codesign，这个文件存在性就是最便宜的核验：
 
-- 真实尺寸 → build + deploy。
+```bash
+python - <<'EOF'
+import zipfile, glob
+n = zipfile.ZipFile(glob.glob("*.zip")[0]).namelist()
+print("签名:", any(x.endswith(".app/Contents/_CodeSignature/CodeResources") for x in n))
+print("公证票据:", any(x.endswith(".app/Contents/CodeResources") for x in n))   # 必须是 True
+EOF
+```
+
+**两种发布方式，任选其一**（两个桶都要写，凭据互不通用，见本节「两个桶」）：
+
+1. **`publish-cos.yml`（办公网自托管 runner）**：Actions 里手动触发，填各平台构建的 run id，
+   默认 `dry_run=true` 只演练，确认后取消勾选真跑。runner 在本机，是手动起的、会话结束就掉线，
+   发版前先双击 `D:\actions-runner\run.cmd`。它会下载并校验工件、生成更新说明、先传安装包最后传清单、
+   最后从公网回读核对。**GitHub 托管 runner 往上海 COS 传大文件会卡死**（实测 300MB 超过 10 分钟没传完），
+   所以发布必须在办公网 runner 或本机做，不要放到托管 runner 上。
+2. **本机直接传**：下载工件后逐个 `publish-cos-release-asset.sh`，顺序固定为
+   **dmg / zip / blockmap 先、`latest*.yml` 最后**（清单一旦可见，它指向的文件必须已经在）。
+
+**增量补发一条腿（例如 3.0.17 先发四个平台、Intel Mac 后补）：**
+先发的批次里不要带那条腿的 `latest*.yml`（`prepare-release-assets.sh` 对缺失平台自然不生成），
+这样根清单里它还停在上一版，已装的老用户不会被推一个不存在的包；官网对应的钉也留在上一版。
+补发时再写它的 `latest*.yml` 并把官网那一个钉切过去。
+
+官网切钉与部署见 S7 末尾「官网部署」。
 
 ### S7. 终验（不看文案看 URL）
 
@@ -322,7 +361,24 @@ scripts/download-gh-artifact.sh gaogg521/dream-ui <run_id> macos-build-arm64-<sh
    的 `version:` = 新版本，其 `path:` 指向的对象同目录真实存在；
 3. 线上 `main-*.js` 含 `win/macArm/macIntel:"<ver>"` 与三个新尺寸；
 4. `platformVersions.linux` **没动**（本轮没打 deb 时它必须停在上一版，一个键管两条链）；
-5. 发版记录落盘 `dream-en/docs/release-record-<日期>-<ver>.zh-CN.md` 并推送。
+5. **两个桶都核对一遍**（`onework-1521070673` 与 `1onework-1251001122`）：每个对象 `Content-Length`
+   等于本地文件大小；每份根清单的 `version:` 与 `path:` 对应的对象都存在；根清单与构建产物逐字节相同。
+   只有 `latest*.yml` 在两个桶都对，已装用户才会收到更新。
+6. 发版记录落盘 `dream-en/docs/release-record-<日期>-<ver>.zh-CN.md` 并推送。
+
+**官网部署（2026-11-07 的教训）：**
+
+- 线上官网里有**工作区未提交的内容**（`onebuddy.html/css`、改过的 `carousel-manifest.json`、`en.json` 等）。
+  部署脚本 `deploy-1onework-www.py` 会先清空线上目录再解压，所以**绝不能用干净的 worktree / 某个提交
+  去构建部署**——会把这些线上现有内容抹掉；干净 worktree 里 `core.autocrlf=true` 还会把所有文本文件
+  换成 CRLF，造成几十个假差异。
+- 做法：改 `src/site.config.js` 的钉和尺寸（只暂存并提交这一个文件）→ 在**主工作区**
+  `npx vite build --outDir <临时目录> --emptyOutDir`（不要直接 `npm run build`，它的 prebuild 会联网机翻、
+  可能改别的文档）→ **和线上逐文件比 sha256**：应该只有 `main-*.js` 和引用它的 `index.html` 不同
+  → `python D:\game\scripts\deploy-1onework-www.py --dist <临时目录>` → 再比一次线上与本地构建
+  应当 100% 相同 → 线上 bundle 里 `macIntel:"<ver>"` 等钉与尺寸正确 → 真实请求下载链接。
+- `LEGACY_LAST_VERSION`（`site.config.js`）是**旧桶里最后一个版本**，不是「当前版本」，别当版本号改；
+  新版本两个桶都传好之前，别让官网链接先指向只有一个桶有的版本。
 
 ---
 
@@ -330,18 +386,86 @@ scripts/download-gh-artifact.sh gaogg521/dream-ui <run_id> macos-build-arm64-<sh
 
 ### 2.1 Mac CI（build-manual.yml）
 
-| 症状                                                                         | 病根 / 解法                                                                                                                                                                                                                         |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| run 几秒失败、steps 空、log not found                                        | **计费拦截**（私有仓 macOS 10 倍计费）。用 `gh api repos/gaogg521/dream-ui/check-runs/<jobId>/annotations` 看真因；解法是修付款/提额度或转 public                                                                                   |
-| Prepare dreamcore 404                                                        | `dreamcoreVersion` 指向的 Release 不存在——S2 的 tag 先出包再 dispatch                                                                                                                                                               |
-| 卡 oxfmt/tsc/vitest                                                          | 本地先跑绿四道 gate 再 dispatch；vitest 历史失败要现查是否与本次相关                                                                                                                                                                |
-| 签名成功但装机报已损坏                                                       | 看 build step 的守卫：`signing file=… Developer ID Application` → `properly code signed` → `Notarization completed` 三连，缺一即红（IDENTITY secret 只填证书 CN、不带前缀）                                                         |
-| 超时 60:17                                                                   | x64 公证排队不可控，timeout 已提到 90 min；codesign 偶发卡死是 OCSP flaky，重跑                                                                                                                                                     |
-| codesign **连环**挂死（所有 attempt 全超时、控制台零输出）                   | 2026-10-24 六连挂：arm64 同提交 13min 过、x64 六次全 1200s 超时且日志黑洞。wrapper 已根修（`f6e8bbf3`：1800s×2 + **超时转储尝试日志尾 40 行**）——连续挂先看转储日志定位挂点，别再盲重跑；当日是 Apple 公证网络异常，第四次 11min 过 |
-| Code Quality 挂在个别 dom 用例（mermaidBlockPanZoom / EnterpriseServerCard） | 并发负载时序 flake：本地单跑全过 + 同提交其他腿全过 = 假红。`gh run rerun --failed` 即可，别改产品代码、别为它烧 35 分钟全量重跑                                                                                                    |
+| 症状                                                                         | 病根 / 解法                                                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| run 几秒失败、steps 空、log not found                                        | **计费拦截**（私有仓 macOS 10 倍计费）。用 `gh api repos/gaogg521/dream-ui/check-runs/<jobId>/annotations` 看真因；解法是修付款/提额度或转 public                                                                                 |
+| Prepare dreamcore 404                                                        | `dreamcoreVersion` 指向的 Release 不存在——S2 的 tag 先出包再 dispatch                                                                                                                                                             |
+| 卡 oxfmt/tsc/vitest                                                          | 本地先跑绿四道 gate 再 dispatch；vitest 历史失败要现查是否与本次相关                                                                                                                                                              |
+| 签名成功但装机报已损坏                                                       | 看 build step 的守卫：`signing file=… Developer ID Application` → `properly code signed` → `Notarization completed` 三连，缺一即红（IDENTITY secret 只填证书 CN、不带前缀）                                                       |
+| 超时 60:17（早期结论，已被订正）                                             | 当时归因为「x64 公证排队 / OCSP flaky」。**2026-11 查明 x64 卡死的真因是钥匙串自动锁定，不是排队**，见 §2.1.1；健康构建 >25 分钟就是卡死，调大 timeout 是错方向                                                                   |
+| codesign **连环**挂死（所有 attempt 全超时、控制台零输出）                   | 先看 §2.1.1：采样栈停在 `getAcl → mach_msg` 就是钥匙串锁了。2026-10-24 那次六连挂的最终也发生在 x64 腿；wrapper（`f6e8bbf3`）的**超时转储**只会在被杀后打印尾部 40 行，**它的时间戳是转储时刻，不是各步实际时间**，别据此推算耗时 |
+| 构建绿、产物也有，但 `.app` 里没有公证票据                                   | `afterSign.js` 在签名校验不过或凭据缺失时只打印 Skipping、不让构建失败。已加闸门（`99bd3bd0`）；核验方法见 S6 与 §2.1.1                                                                                                           |
+| Code Quality 挂在个别 dom 用例（mermaidBlockPanZoom / EnterpriseServerCard） | 并发负载时序 flake：本地单跑全过 + 同提交其他腿全过 = 假红。`gh run rerun --failed` 即可，别改产品代码、别为它烧 35 分钟全量重跑                                                                                                  |
 
 `installers_only` 必须为 **false**：Mac 自动更新走 `.zip` 不是 `.dmg`，
 true 会在上传前把 zip+yml 删掉（3.0.1 / 3.0.2 各踩一次）。
+
+### 2.1.1 Intel Mac（mac-x64）签名卡死 + 「构建绿 ≠ 已公证」（2026-11-06/07，3.0.17）
+
+这一轮 mac-x64 卡了一夜多，最后查明是**钥匙串自动锁定**。这节是完整记录，下次遇到先读这里。
+
+**症状**：打包全绿（electron 构建、afterPack 校验、prune 都过），日志最后一行是
+`• signing file=out/mac/onework.app`，之后没有任何输出，直到被 attempt 上限杀掉。
+mac-arm64 在同一镜像上稳定通过；3.0.16 的 x64 在 macos-14 上总共 11 分钟；换成 macos-15 之后
+x64 **13 次 attempt 全部卡死**，而且 macos-15（arm 交叉）和 macos-15-intel（原生）两种硬件都一样。
+
+**怎么定位的**：给构建步加 watchdog（每 15 分钟抓 `ps` 和对 codesign 进程 `sample` 3 秒）。
+几次采样全部同一个现场：
+
+```
+codesign → SecKeyCopyAttributes → KeyItem::checkIntegrity → SSKey::getAcl
+  → SecurityServer::ClientSession::getAcl → mach_msg   ← 永久阻塞
+```
+
+意思是 codesign 在读私钥时要和 securityd 通信，而 securityd 在等一个**授权弹窗**的应答；
+无头的 CI 机器上没有 SecurityAgent 来答，所以永远等下去。**这个栈的典型成因是钥匙串被锁**
+（或私钥的 ACL 没放行）。
+
+**真因与修法（2026-11-07 验证，mac-x64 一次过、16 分钟）**：workflow 里钥匙串用默认的自动锁定超时，
+而且只在构建开始时 `unlock-keychain` 了一次，到签名时已经锁上。`_build-reusable.yml` 里
+mac-x64 的钥匙串准备段（`a22c1e34`）现在做三件事：
+
+1. 建钥匙串后 `security set-keychain-settings -lut 21600 build.keychain`（GitHub 官方文档的标准写法）；
+2. 构建期间后台每 60 秒 `security unlock-keychain` 一次（保活）；
+3. 构建前用一个小二进制做 60 秒有界的 **warm-up 签名**，过不了就 60 秒内失败，不再烧满整个 attempt。
+
+另外 watchdog 里加了**一次性锁探测**：同一个 codesign 进程卡住超过 2 分钟，就打印钥匙串状态、立刻解锁，
+20 秒后看进程有没有放行，日志里的 `🔬 verdict` 会直接告诉你「是不是锁」。
+
+**走过的弯路（别再试）**：
+
+| 做法                                                 | 结果                                                                         |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 逐级调大 attempt 上限（1800 → 3300 → 4500 秒）       | 全部被杀。健康 x64 只要 11~16 分钟，超过 25 分钟就是卡死，加时间只是多烧时间 |
+| 归因为交叉编译                                       | 换原生 Intel runner（macos-15-intel）一样卡                                  |
+| 只重打 partition-list                                | 采样栈不变，无效                                                             |
+| 重建钥匙串 + partition-list + warm-up                | 仍卡；**缺的是取消自动锁定和保活**，加上之后才过                             |
+| 盲目 rerun                                           | 100% 复现，不是偶发                                                          |
+| 据「超时转储的最后 40 行」推算「到签名点要 50 分钟」 | **错的**：转储里所有行的时间戳都是被杀那一刻，不是各步实际发生的时间         |
+
+**另一个陷阱：构建绿 ≠ 已公证。** 同一轮里，修好卡死后的第一次构建全绿、产物也齐，但
+`onework.app/Contents/CodeResources`（公证票据）**不存在**——它是 Developer ID 签了名、没公证的包，
+已发布的 arm64 和 3.0.16 的 x64 都有这个文件。原因是 `scripts/afterSign.js` 在「签名校验没过」或
+「Apple 凭据缺失」时只打印一行 `Skipping` 就返回、不让构建失败，而 workflow 成功分支曾把
+`notarization_status=success` 写死，`exit 0` 就当成功。那个包**没有发布**。
+
+现在（`99bd3bd0`，对所有 Mac 腿生效）：
+
+- 构建结束先把 afterSign 的判断打进 job 日志，行首是 `[sign-evidence]`，应当依次出现
+  `App onework is properly code signed` → `Starting notarization for …` → `Notarization completed successfully`；
+- 配了 `appleId` 却没有最后一行、或 `xcrun stapler validate` 不过，构建直接退出 1。
+
+**产物层面的核验**（不依赖 CI 日志，S6 里有命令）：zip 内 `onework.app/Contents/_CodeSignature/CodeResources`
+和 `onework.app/Contents/CodeResources` 两个文件都要存在；主程序 `Contents/MacOS/onework` 的 Mach-O 头
+`cputype` 是 `16777223` 表示 x86_64（arm64 是 `16777228`）。
+
+**Mac 腿卡了怎么办（流程）**：
+
+1. 看 job 日志里的 `[wd]` 采样栈和 `🔬 verdict`，而不是看超时转储；
+2. 别为一条腿烧掉整场发版：**按平台增量收口**——其余平台先发，这一条腿写好配方挂起，补发见 S6「增量补发」；
+3. 一次只改一个变量，每次改动都要能在 40 分钟内给出结论；
+4. 旧的 run 取消经常被 runner 拖到 attempt 边界才生效，不要对着运行中的 run 干等日志
+   （job 日志在 run 结束后才可读）。
 
 ### 2.2 ACP 内嵌组件 —— 每次发版必查
 
