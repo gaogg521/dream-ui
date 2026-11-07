@@ -572,6 +572,7 @@ jobs:
 
             ELAPSED=0
             TIMED_OUT=0
+            WATCHDOG_LAST=0
             while kill -0 "$CMD_PID" 2>/dev/null; do
               if [ "$ELAPSED" -ge "$BUILD_TIMEOUT_SECONDS" ]; then
                 TIMED_OUT=1
@@ -580,6 +581,32 @@ jobs:
               fi
               sleep 5
               ELAPSED=$((ELAPSED + 5))
+              # Watchdog (2026-11-07): the kill-time dump cannot tell what a
+              # still-alive attempt is waiting on, and its timestamps are dump
+              # times, not step times. Every 15 min of wall time, while the
+              # attempt is ALIVE, record who is actually running: ps over the
+              # signing/notarization toolchain plus a 3s `sample` of the
+              # codesign pid when one exists. Appended to the attempt log (so
+              # the dump carries it) and echoed live into the job log.
+              if [ "$ELAPSED" -gt 0 ] && [ $((ELAPSED % 900)) -eq 0 ] && [ "$WATCHDOG_LAST" -ne "$ELAPSED" ]; then
+                WATCHDOG_LAST=$ELAPSED
+                {
+                  echo "🔍 watchdog @${ELAPSED}s $(date -u '+%H:%M:%SZ') — signing toolchain processes:"
+                  ps aux | grep -E "codesign|notarytool|altool|stapler|spctl" | grep -v grep | head -8
+                } >> "$ATTEMPT_LOG" 2>&1
+                CS_PID=$(pgrep -x codesign | head -1)
+                [ -z "$CS_PID" ] && CS_PID=$(pgrep -f "codesign " | head -1)
+                if [ -n "$CS_PID" ]; then
+                  sample "$CS_PID" 3 -file "${RUNNER_TEMP}/sample-${attempt}-${ELAPSED}.txt" >/dev/null 2>&1 || true
+                  {
+                    echo "🔍 sample of codesign pid $CS_PID (3s) — top of call graph:"
+                    grep -aE "Call graph" -A 24 "${RUNNER_TEMP}/sample-${attempt}-${ELAPSED}.txt" 2>/dev/null | head -28
+                  } >> "$ATTEMPT_LOG" 2>&1
+                else
+                  echo "🔍 watchdog: no codesign process alive at ${ELAPSED}s" >> "$ATTEMPT_LOG" 2>&1
+                fi
+                tail -12 "$ATTEMPT_LOG" | sed 's/^/[wd] /'
+              fi
             done
 
             wait "$CMD_PID" 2>/dev/null
