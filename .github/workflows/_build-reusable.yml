@@ -519,8 +519,28 @@ jobs:
         if: startsWith(matrix.platform, 'macos')
         id: macos-build
         shell: bash
+        env:
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD || 'temp-keychain-password' }}
         run: |
           set +e  # Handle errors manually
+
+          # 2026-11-07 mac-x64 signing hang: watchdog samples (15/30/45 min into
+          # alive attempts) all show codesign blocked at the exact same spot —
+          # SecKeyCopyAttributes → KeyItem::checkIntegrity → SSKey::getAcl →
+          # SecurityServer::ClientSession::getAcl → mach_msg — the key's
+          # partition-list ACL was not in effect, so the keychain ACL integrity
+          # check waits on securityd forever (headless: no SecurityAgent to
+          # answer the prompt). arm64 on the same image passes 3/3, x64 hung
+          # 13/13 across macos-15 arm-cross and macos-15-intel native. Re-unlock
+          # and re-apply the partition list right before signing, verbose: if
+          # this no-ops or errors we see it in the log immediately instead of
+          # 75 min later in a dump.
+          if [ "${{ matrix.platform }}" = "macos-x64" ] && [ -n "$KEYCHAIN_PASSWORD" ]; then
+            echo "[sign-fix] unlock build.keychain"
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain || echo "[sign-fix] unlock FAILED"
+            echo "[sign-fix] re-apply key partition list:"
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain 2>&1 | sed 's/^/[sign-fix] /' | tail -6
+          fi
 
           # ⚠️ 2026-09-07: macos-x64 twice sat at "• signing file=out/mac/...app"
           # for 50+ minutes with zero further output, until the job's own
