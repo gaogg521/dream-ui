@@ -126,6 +126,49 @@ describe('HTMLRenderer', () => {
     expect(webview?.getAttribute('src')).toContain('Unsaved%20edit');
   });
 
+  describe('pages too large for a data URL', () => {
+    // Chromium rejects navigation to URLs over 2 MiB with ERR_INVALID_URL and the webview stays blank.
+    const bigHtml = (chars: number) => `<!doctype html><title>big</title><script>/*${'x'.repeat(chars)}*/</script>`;
+
+    it('loads a blank page and writes the content in by script once the webview is ready', async () => {
+      Object.defineProperty(window, 'electronAPI', { configurable: true, value: electronAPI });
+      const html = bigHtml(2_100_000);
+
+      const { container } = render(<HTMLRenderer content={html} />);
+      const webview = container.querySelector('webview') as (HTMLElement & { executeJavaScript?: unknown }) | null;
+      expect(webview).toBeInTheDocument();
+
+      const src = webview?.getAttribute('src') ?? '';
+      expect(src).toContain('data:text/html');
+      expect(src.length).toBeLessThan(2_000); // the tiny boot page, not the 2 MB document
+
+      const executeJavaScript = vi.fn(() => Promise.resolve());
+      Object.assign(webview as HTMLElement, { executeJavaScript });
+      webview?.dispatchEvent(new Event('dom-ready'));
+
+      await waitFor(() => expect(executeJavaScript).toHaveBeenCalled());
+      const writes = (executeJavaScript.mock.calls as unknown as string[][])
+        .map((call) => call[0])
+        .filter((script) => script.startsWith('document.open()'));
+      expect(writes).toHaveLength(1);
+      expect(writes[0]).toContain('document.write(');
+      expect(writes[0]).toContain('x'.repeat(1_000)); // the full document travels in the script
+      expect(writes[0].endsWith('document.close();')).toBe(true);
+    });
+
+    it('keeps the plain data URL for content that still fits', () => {
+      Object.defineProperty(window, 'electronAPI', { configurable: true, value: electronAPI });
+      const html = bigHtml(1_500_000);
+
+      const { container } = render(<HTMLRenderer content={html} />);
+      const webview = container.querySelector('webview');
+
+      const src = webview?.getAttribute('src') ?? '';
+      expect(src.length).toBeGreaterThan(1_500_000);
+      expect(src.length).toBeLessThanOrEqual(2_000_000);
+    });
+  });
+
   it('writes preview source selection to the renderer log bridge', async () => {
     Object.defineProperty(window, 'electronAPI', {
       configurable: true,

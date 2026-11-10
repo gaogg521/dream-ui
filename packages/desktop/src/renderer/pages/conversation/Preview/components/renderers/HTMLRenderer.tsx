@@ -38,6 +38,15 @@ interface ElectronWebView extends HTMLElement {
 type HtmlPreviewSourceKind = 'file' | 'data';
 type HtmlPreviewLogLevel = 'info' | 'warn' | 'error';
 
+/**
+ * Chromium refuses to navigate to a URL longer than 2 MiB (`ERR_INVALID_URL`), and the webview then stays
+ * blank with no error shown. A `data:` URL is the URL-encoded page, so any HTML larger than roughly 1.8 MB
+ * (an offline 3D viewer with an embedded model, a big report) hit that wall. Past this length the page is
+ * delivered by script instead (see `oversizedHtml`); the limit is kept below 2 MiB for the URL prefix.
+ */
+const MAX_DATA_URL_CHARS = 2_000_000;
+const OVERSIZE_BOOT_SRC = `data:text/html;charset=utf-8,${encodeURIComponent('<!doctype html><meta charset="utf-8"><title></title>')}`;
+
 function logHtmlPreview(level: HtmlPreviewLogLevel, message: string, data?: unknown): void {
   const rendererLogger = ipcBridge.application?.writeRendererLog;
   if (!rendererLogger) return;
@@ -380,15 +389,11 @@ const HTMLRenderer: React.FC<HTMLRendererProps> = ({
 
   // 计算 webview 的 src
   // Calculate webview src
-  const webviewSrc = useMemo(() => {
-    // 如果有文件路径且内容未被编辑，直接用 file:// URL 加载，避免 data: URL 的 opaque origin 限制
-    // If file path exists and content is clean, load via file:// to avoid data: URL opaque origin limits
-    if (shouldLoadFromFile && file_path) {
-      return `file://${file_path}`;
-    }
+  // 走 data URL 时实际交给 webview 的 HTML（含 base 标签）；走 file:// 时为 null
+  // The HTML actually handed to the webview on the data-URL path (base tag included); null for file://
+  const dataHtml = useMemo(() => {
+    if (shouldLoadFromFile && file_path) return null;
 
-    // 否则使用 data URL（适用于动态生成的 HTML 或没有外部资源的情况）
-    // Otherwise use data URL (for dynamically generated HTML or no external resources)
     let html = htmlContent;
 
     // 注入 base 标签支持相对路径 / Inject base tag for relative paths
@@ -408,9 +413,27 @@ const HTMLRenderer: React.FC<HTMLRendererProps> = ({
       }
     }
 
-    const encoded = encodeURIComponent(html);
-    return `data:text/html;charset=utf-8,${encoded}`;
+    return html;
   }, [htmlContent, file_path, shouldLoadFromFile]);
+
+  const webviewSrc = useMemo(() => {
+    // 如果有文件路径且内容未被编辑，直接用 file:// URL 加载，避免 data: URL 的 opaque origin 限制
+    // If file path exists and content is clean, load via file:// to avoid data: URL opaque origin limits
+    if (dataHtml === null && file_path) {
+      return `file://${file_path}`;
+    }
+
+    // 否则使用 data URL（适用于动态生成的 HTML 或没有外部资源的情况）
+    // Otherwise use data URL (for dynamically generated HTML or no external resources)
+    const url = `data:text/html;charset=utf-8,${encodeURIComponent(dataHtml ?? '')}`;
+    // 超过 Chromium 的 URL 上限就先载入一个空白小页，内容稍后用脚本写入
+    // Past Chromium's URL cap, load a tiny blank page and write the content in by script afterwards
+    return url.length > MAX_DATA_URL_CHARS ? OVERSIZE_BOOT_SRC : url;
+  }, [dataHtml, file_path]);
+
+  // 仅在 data URL 放不下时才有值：由脚本写入 webview 的完整页面
+  // Set only when the data URL would not fit: the full page, written into the webview by script
+  const oversizedHtml = webviewSrc === OVERSIZE_BOOT_SRC ? dataHtml : null;
 
   const webviewSourceKind: HtmlPreviewSourceKind = shouldLoadFromFile ? 'file' : 'data';
   const webviewSourceReason = useMemo(() => {
@@ -527,6 +550,38 @@ const HTMLRenderer: React.FC<HTMLRendererProps> = ({
       webview.removeEventListener('did-finish-load', handleLoad);
     };
   }, [executeScript]);
+
+  // 页面太大放不进 data URL 时：webview 先载入空白小页，再由这里把完整页面写进去。
+  // executeJavaScript 走 IPC，没有 URL 那 2 MiB 的上限；document.write 会让内联脚本照常执行。
+  // Page too big for a data URL: the webview loaded a tiny blank page, and the full page is written in
+  // here. executeJavaScript goes over IPC and has no 2 MiB URL cap; document.write runs inline scripts.
+  useEffect(() => {
+    const webview = webviewRef.current;
+    if (!webview || oversizedHtml === null) return;
+
+    let cancelled = false;
+    const writePage = () => {
+      if (cancelled) return;
+      logHtmlPreview('info', 'html_preview_oversize_write', { htmlChars: oversizedHtml.length });
+      webview
+        .executeJavaScript(`document.open();document.write(${JSON.stringify(oversizedHtml)});document.close();`)
+        .then(() => {
+          // The page was replaced, so the inspect-mode script injected on the blank page is gone.
+          if (!cancelled) executeScript();
+        })
+        .catch((error: unknown) => {
+          logHtmlPreview('error', 'html_preview_oversize_write_failed', { message: String(error) });
+        });
+    };
+
+    if (webviewLoadedRef.current) writePage();
+    else webview.addEventListener('dom-ready', writePage, { once: true });
+
+    return () => {
+      cancelled = true;
+      webview.removeEventListener('dom-ready', writePage);
+    };
+  }, [oversizedHtml, executeScript]);
 
   // 监听 webview 控制台消息，捕获检查元素事件和滚动事件
   // Listen for webview console messages to capture inspect element events and scroll events
