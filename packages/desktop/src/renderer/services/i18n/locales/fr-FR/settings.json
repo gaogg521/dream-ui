@@ -188,7 +188,7 @@
       },
       "autocad-drawing": {
         "title": "Dessin AutoCAD",
-        "desc": "Dessine, modifie et optimise des plans CAD, ou en extrait des données — mécanique, architecture, électricité, plomberie, CVC, charpente métallique et schémas de procédé."
+        "desc": "Dessine, modifie et optimise des plans CAD, ou en extrait des données — mécanique, architecture, électricité, plomberie, CVC, charpente métallique et schémas de procédé. Convertit aussi les DXF 3D, les modèles STEP/STL et les plans de formes de coque en modèles 3D orientables."
       },
       "bid-pipeline": {
         "title": "Pipeline de contenu pour appels d’offres",

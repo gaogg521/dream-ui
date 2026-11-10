@@ -188,7 +188,7 @@
       },
       "autocad-drawing": {
         "title": "Desenho no AutoCAD",
-        "desc": "Desenha, edita e otimiza desenhos CAD ou extrai dados deles — mecânica, arquitetura, elétrica, hidráulica, HVAC, aço e diagramas de processo."
+        "desc": "Desenha, edita e otimiza desenhos CAD ou extrai dados deles — mecânica, arquitetura, elétrica, hidráulica, HVAC, aço e diagramas de processo. Também converte DXF 3D, modelos STEP/STL e planos de linhas de casco em modelos 3D giratórios."
       },
       "bid-pipeline": {
         "title": "Pipeline de conteúdo de licitações",

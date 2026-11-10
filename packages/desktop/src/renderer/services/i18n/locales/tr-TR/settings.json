@@ -188,7 +188,7 @@
       },
       "autocad-drawing": {
         "title": "AutoCAD Çizimi",
-        "desc": "CAD çizimlerini çizer, düzenler ve optimize eder ya da onlardan veri çıkarır — makine, mimari, elektrik, tesisat, HVAC, çelik ve proses diyagramları."
+        "desc": "CAD çizimlerini çizer, düzenler ve optimize eder ya da onlardan veri çıkarır — makine, mimari, elektrik, tesisat, HVAC, çelik ve proses diyagramları. Ayrıca 3B DXF, STEP/STL modelleri ve tekne form planlarını döndürülebilir 3B modellere dönüştürür."
       },
       "bid-pipeline": {
         "title": "İhale İçerik Hattı",

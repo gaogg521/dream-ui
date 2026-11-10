@@ -188,7 +188,7 @@
       },
       "autocad-drawing": {
         "title": "Dibujo con AutoCAD",
-        "desc": "Dibuja, edita y optimiza planos CAD o extrae datos de ellos: mecánica, arquitectura, electricidad, fontanería, climatización, acero y diagramas de proceso."
+        "desc": "Dibuja, edita y optimiza planos CAD o extrae datos de ellos: mecánica, arquitectura, electricidad, fontanería, climatización, acero y diagramas de proceso. También convierte DXF 3D, modelos STEP/STL y planos de formas de casco en modelos 3D giratorios."
       },
       "bid-pipeline": {
         "title": "Pipeline de contenido de licitaciones",

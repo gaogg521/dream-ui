@@ -185,7 +185,7 @@
       },
       "autocad-drawing": {
         "title": "AutoCAD Drafting",
-        "desc": "Draws, edits and optimises CAD drawings, or extracts data from them — mechanical, architectural, electrical, plumbing, HVAC, steel and process diagrams."
+        "desc": "Draws, edits and optimises CAD drawings, or extracts data from them — mechanical, architectural, electrical, plumbing, HVAC, steel and process diagrams. Also turns 3D DXF, STEP/STL models and hull lines plans into rotatable 3D models."
       },
       "bid-pipeline": {
         "title": "Tender Content Pipeline",

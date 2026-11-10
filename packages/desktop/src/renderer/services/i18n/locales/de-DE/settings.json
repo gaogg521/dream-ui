@@ -188,7 +188,7 @@
       },
       "autocad-drawing": {
         "title": "AutoCAD-Zeichnen",
-        "desc": "Zeichnet, bearbeitet und optimiert CAD-Zeichnungen oder extrahiert Daten daraus – Maschinenbau, Architektur, Elektro, Sanitär, HLK, Stahlbau und Prozessdiagramme."
+        "desc": "Zeichnet, bearbeitet und optimiert CAD-Zeichnungen oder extrahiert Daten daraus – Maschinenbau, Architektur, Elektro, Sanitär, HLK, Stahlbau und Prozessdiagramme. Wandelt außerdem 3D-DXF, STEP/STL-Modelle und Schiffslinienrisse in drehbare 3D-Modelle um."
       },
       "bid-pipeline": {
         "title": "Ausschreibungs-Content-Pipeline",
