@@ -32,6 +32,13 @@
 - **验证**：测试 `tests/unit/previews/HTMLViewer.dom.test.tsx` 新增 2 条（超限走空白页+脚本写入且内容完整、接近上限仍走原 `data:`），反向验证过（上限调大则失败）；预览目录 225 个测试全过。真机：DEV 里点击 1.99 MB 的船体模型，面板正常渲染，真实鼠标拖动 `pointerdown→pointermove(buttons=1)→pointerup` 画布收到、画面变化，顶视图/线框按钮生效。
 - **没做**：超大到 `executeJavaScript` 也吃力的页面（几十 MB）没测；`document.write` 方式下页面origin仍是 `data:` 的 opaque origin，与原 `data:` 路径一致。
 
+## 追加：用户拿真实文件试（TY757 总布置图 / 40BC 真实 DXF）
+
+- **总布置图不是三维模型**：TY757 总布置图（散货船，75 个图层、58.6 万线段）是把侧视、各层甲板平面、上层建筑、艏艉视图和横剖面平铺画在一张图上，91% 的点在 Z=0。原先工具只在「所有 Z 完全相同」时才提示平面图，这张图有零散竖线所以**没提示，照样生成了一个 18.5MB 的「3D」页面**，容易误导。现在按「同一平面的点占比」判断（≥90% 提示「平铺的二维工程图」），并默认用顶视图打开；自检含正反例。
+- **DXF 里的实体可能是空壳**：这份 DXF 文件头第一行是 `LibreDWG 0.12.2`，340 个 3DSOLID/REGION/BODY 记录**只有头和 GUID，没有 ACIS 数据**，换什么读取器都还原不了。结论写进了技能文档：看到 LibreDWG 生成的 DXF，要让用户用 AutoCAD/中望等原生软件另存 DXF，或直接导出 STEP。
+- **真实 DXF 验证**：用户桌面的 `40BC_LINES.dxf`（LibreDWG 导出、代码页 ANSI_936）跑 `loft`，结果与重建版逐项一致（35280 个三角面、同样 4 条警告）。注意它不是 AutoCAD 原生导出的 DXF，只能说明识别逻辑在一份独立生成的真实文件上成立。
+- **未处理**：`SEAL40_3D_LINES.dxf`（FreeCAD 导出的同一条船的三维线）用 loft 能出船形，但每个站位的横剖线被打成约 25 段、只取最长一段，结果有毛刺和破面，**不可靠**，需要单独做（按纵向曲线族或多段拼接重建），本轮没动。
+
 ## 待发版
 
 - dream-core：autocad-drawing 技能更新（随 dreamcore 发版，安装包按 pin 带上）。后端二进制每平台约 +8.3 MB（OpenCascade wasm + three.js 嵌入）。
