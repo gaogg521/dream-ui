@@ -13,9 +13,11 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Message, Modal } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { ipcBridge } from '@/common';
+import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
 import type { CreatePersonalAgentInput } from '@/common/types/employee/employeeTypes';
 import { useEmployeeAgentBinding } from '../hooks/useEmployeeAgentBinding';
 import EmployeeBindingFields from './EmployeeBindingFields';
+import EmployeeAvatarField, { type EmployeeAvatarValue } from './EmployeeAvatarField';
 
 /** What a template fills the form with; every part stays editable before the employee is created. */
 export type CreateAgentSeed = {
@@ -38,7 +40,10 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ visible, onClose, o
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [instructions, setInstructions] = useState('');
+  const [avatar, setAvatar] = useState<EmployeeAvatarValue>({});
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const canEditAvatar = !isEnterpriseRemoteActive();
   const binding = useEmployeeAgentBinding();
   const { reset } = binding;
 
@@ -47,12 +52,15 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ visible, onClose, o
       setName(seed?.name ?? '');
       setDescription(seed?.description ?? '');
       setInstructions(seed?.instructions ?? '');
+      setAvatar({});
+      setAvatarUploading(false);
       setSubmitting(false);
       reset();
     }
   }, [visible, reset, seed]);
 
   const handleSubmit = async () => {
+    if (avatarUploading) return;
     const trimmedName = name.trim();
     if (!trimmedName) {
       Message.warning(t('common.superAssistant.nameRequired', { defaultValue: '请输入员工名称' }));
@@ -75,6 +83,7 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ visible, onClose, o
         description: description.trim() || undefined,
         ...bound,
         automationConfig: {
+          ...(canEditAvatar ? avatar : {}),
           ...(instructions.trim() ? { instructions: instructions.trim() } : {}),
           ...(seed?.starterPrompts?.length ? { starterPrompts: seed.starterPrompts } : {}),
         },
@@ -94,8 +103,11 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ visible, onClose, o
     <Modal
       title={t('common.superAssistant.createAgentTitle', { defaultValue: '创建数字员工' })}
       visible={visible}
-      onCancel={onClose}
+      onCancel={() => {
+        if (!avatarUploading) onClose();
+      }}
       onOk={handleSubmit}
+      okButtonProps={{ disabled: avatarUploading }}
       confirmLoading={submitting}
       maskClosable={false}
     >
@@ -109,6 +121,15 @@ const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ visible, onClose, o
             })}
           />
         </Form.Item>
+        {canEditAvatar && (
+          <EmployeeAvatarField
+            value={avatar}
+            onChange={setAvatar}
+            uploading={avatarUploading}
+            onUploadingChange={setAvatarUploading}
+            disabled={submitting}
+          />
+        )}
         <EmployeeBindingFields binding={binding} />
         <Form.Item label={t('common.superAssistant.fieldDescription', { defaultValue: '描述' })}>
           <Input.TextArea

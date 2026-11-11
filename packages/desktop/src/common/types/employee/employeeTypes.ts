@@ -48,8 +48,10 @@ export type PersonalAgentAutomationConfig = {
   persona?: string;
   /** Example tasks the admin wrote; each one opens a chat with that message. */
   starterPrompts?: string[];
-  /** Enterprise-governed PNG identity; team sync preserves this field. */
+  /** Uploaded avatar image; team sync preserves this field. */
   avatarUrl?: string;
+  /** Stable key for a built-in desktop portrait. */
+  avatarPreset?: string;
   [key: string]: unknown;
 };
 

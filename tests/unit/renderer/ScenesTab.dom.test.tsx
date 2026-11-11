@@ -59,7 +59,7 @@ vi.mock('react-i18next', () => ({
 
 import ScenesTab from '@/renderer/pages/superAssistant/components/ScenesTab';
 import type { MyScene } from '@/common/types/platform/enterpriseTypes';
-import { newPersonalScene } from '@/renderer/utils/scenes/personalScenes';
+import { newPersonalScene, SCENE_ICONS } from '@/renderer/utils/scenes/personalScenes';
 import type { PersonalScene } from '@/common/types/platform/sceneTypes';
 
 const scene = (id: string, name: string, patch: Partial<MyScene> = {}): MyScene => ({
@@ -264,6 +264,29 @@ describe('ScenesTab', () => {
       const preview = await screen.findByTestId('scene-rules-preview');
       expect(preview.textContent).toContain('understand first, then build');
       expect(preview.textContent).toContain('Who is the site for?');
+    });
+
+    it('offers 22 distinct portraits and saves the selected costume avatar', async () => {
+      renderTab();
+      await screen.findByText('办公');
+      fireEvent.click(screen.getByTestId('scene-new'));
+      fireEvent.click(await screen.findByText('common.scenes.blank'));
+      const editor = await screen.findByTestId('scene-editor');
+      const portraits = SCENE_ICONS.map((icon) => within(editor).getByRole('button', { name: icon }));
+      const addedPortraits = within(editor).getAllByRole('button', { name: /^common\.scenes\.editor\.icon \d+$/ });
+      const sources = [...portraits, ...addedPortraits].map((button) =>
+        button.querySelector('img')?.getAttribute('src')
+      );
+      expect(sources.every((src) => src?.includes('/portraits/'))).toBe(true);
+      expect(new Set(sources).size).toBe(22);
+      const tangPortrait = within(editor).getByRole('button', { name: 'common.scenes.editor.icon 20' });
+      expect(tangPortrait.querySelector('img')?.getAttribute('src')).toMatch(/\/costume\/tang\.png$/);
+      fireEvent.click(tangPortrait);
+      expect(tangPortrait).toHaveAttribute('aria-pressed', 'true');
+      expect(portraits[0]).toHaveAttribute('aria-pressed', 'false');
+      fireEvent.change(screen.getByTestId('scene-name'), { target: { value: '数据周报' } });
+      fireEvent.click(screen.getByTestId('scene-save'));
+      await waitFor(() => expect(saved()[0]?.icon).toBe('av-tang'));
     });
 
     it('drops the blank lines a person added but never filled in', async () => {

@@ -27,7 +27,16 @@ describe('SceneGreeting', () => {
     render(<SceneGreeting greeting={greeting()} />);
     expect(screen.getByText('common.scenes.greeting.hello{"name":"官网与 AI 助理搭建"}')).toBeInTheDocument();
     expect(screen.getByText('从一句话需求到可交付的官网')).toBeInTheDocument();
-    expect(screen.getByText('🌐')).toBeInTheDocument();
+    expect(screen.getByTestId('scene-greeting').querySelector('img')?.getAttribute('src')).toMatch(
+      /\/general\/web\.png$/
+    );
+  });
+
+  it('shows the selected costume portrait in the conversation', () => {
+    render(<SceneGreeting greeting={greeting({ icon: 'av-tang' })} />);
+    expect(screen.getByTestId('scene-greeting').querySelector('img')?.getAttribute('src')).toMatch(
+      /\/costume\/tang\.png$/
+    );
   });
 
   it('lists the skills and tools that came with it', () => {

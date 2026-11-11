@@ -10,9 +10,11 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Message, Modal, Switch } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { ipcBridge } from '@/common';
+import { isEnterpriseRemoteActive } from '@/common/adapter/enterpriseMode';
 import type { PersonalAgent } from '@/common/types/employee/employeeTypes';
 import { useEmployeeAgentBinding } from '../hooks/useEmployeeAgentBinding';
 import EmployeeBindingFields from './EmployeeBindingFields';
+import EmployeeAvatarField, { type EmployeeAvatarValue } from './EmployeeAvatarField';
 
 type ManageAgentModalProps = {
   visible: boolean;
@@ -26,6 +28,8 @@ const ManageAgentModal: React.FC<ManageAgentModalProps> = ({ visible, agent, onC
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [instructions, setInstructions] = useState('');
+  const [avatar, setAvatar] = useState<EmployeeAvatarValue>({});
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [shared, setShared] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const binding = useEmployeeAgentBinding();
@@ -34,6 +38,7 @@ const ManageAgentModal: React.FC<ManageAgentModalProps> = ({ visible, agent, onC
   // Sharing only makes sense inside an enterprise tenant; the personal
   // 'default' tenant has a single member with nobody to share with.
   const isEnterprise = Boolean(agent && agent.tenantId && agent.tenantId !== 'default');
+  const canEditAvatar = !isEnterprise && !isEnterpriseRemoteActive();
 
   useEffect(() => {
     if (!visible || !agent) {
@@ -43,6 +48,8 @@ const ManageAgentModal: React.FC<ManageAgentModalProps> = ({ visible, agent, onC
     setName(agent.name);
     setDescription(agent.description ?? '');
     setInstructions(agent.automationConfig?.instructions ?? '');
+    setAvatar({ avatarUrl: agent.automationConfig?.avatarUrl, avatarPreset: agent.automationConfig?.avatarPreset });
+    setAvatarUploading(false);
     setShared(agent.visibility === 'shared');
     reset({
       // Employees created before migration 004 have no persona; fall back to
@@ -55,7 +62,7 @@ const ManageAgentModal: React.FC<ManageAgentModalProps> = ({ visible, agent, onC
   }, [visible, agent, reset]);
 
   const handleSubmit = async () => {
-    if (!agent) {
+    if (!agent || avatarUploading) {
       return;
     }
     const trimmedName = name.trim();
@@ -85,6 +92,7 @@ const ManageAgentModal: React.FC<ManageAgentModalProps> = ({ visible, agent, onC
           ...bound,
           automationConfig: {
             ...agent.automationConfig,
+            ...(canEditAvatar ? { avatarUrl: avatar.avatarUrl, avatarPreset: avatar.avatarPreset } : {}),
             instructions: instructions.trim() || undefined,
           },
         },
@@ -111,8 +119,11 @@ const ManageAgentModal: React.FC<ManageAgentModalProps> = ({ visible, agent, onC
     <Modal
       title={t('common.superAssistant.manageTitle', { defaultValue: '管理员工' })}
       visible={visible}
-      onCancel={onClose}
+      onCancel={() => {
+        if (!avatarUploading) onClose();
+      }}
       onOk={handleSubmit}
+      okButtonProps={{ disabled: avatarUploading }}
       confirmLoading={submitting}
       maskClosable={false}
     >
@@ -120,6 +131,16 @@ const ManageAgentModal: React.FC<ManageAgentModalProps> = ({ visible, agent, onC
         <Form.Item label={t('common.superAssistant.fieldName', { defaultValue: '名称' })}>
           <Input value={name} onChange={setName} />
         </Form.Item>
+        {canEditAvatar && agent && (
+          <EmployeeAvatarField
+            employeeId={agent.id}
+            value={avatar}
+            onChange={setAvatar}
+            uploading={avatarUploading}
+            onUploadingChange={setAvatarUploading}
+            disabled={submitting}
+          />
+        )}
         <EmployeeBindingFields binding={binding} />
         <Form.Item label={t('common.superAssistant.fieldDescription', { defaultValue: '描述' })}>
           <Input.TextArea value={description} onChange={setDescription} rows={2} />

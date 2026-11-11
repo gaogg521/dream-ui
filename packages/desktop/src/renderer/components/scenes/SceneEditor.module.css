@@ -20,3 +20,17 @@
 .fields :global(.arco-select-view-focus) {
   border-color: rgb(var(--primary-6));
 }
+.fields .avatarOption {
+  width: 48px;
+  height: 48px;
+  padding: 3px;
+  border-radius: 10px;
+}
+
+.avatarPortrait {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 7px;
+  object-fit: cover;
+}

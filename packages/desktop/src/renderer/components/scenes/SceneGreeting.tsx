@@ -15,6 +15,7 @@
  */
 
 import type { SceneGreeting as SceneGreetingData } from '@/renderer/utils/scenes/sceneChat';
+import { personalSceneAvatarSrc } from '@/renderer/utils/scenes/sceneAvatar';
 import { Collapse, Tooltip } from '@arco-design/web-react';
 import { Application, FolderOpen } from '@icon-park/react';
 import React from 'react';
@@ -142,12 +143,17 @@ export const SceneDetails: React.FC<{ greeting: SceneGreetingData }> = ({ greeti
 
 const SceneGreeting: React.FC<{ greeting: SceneGreetingData }> = ({ greeting }) => {
   const { t } = useTranslation();
+  const avatar = greeting.icon ? personalSceneAvatarSrc(greeting.icon) : undefined;
   return (
     <div className='mx-auto flex max-w-560px flex-col gap-16px px-24px py-32px' data-testid='scene-greeting'>
       <div className='flex items-center gap-14px'>
-        <span className='flex h-48px w-48px shrink-0 items-center justify-center rd-14px bg-fill-2 text-26px'>
-          {greeting.icon ? greeting.icon : <Application size={24} />}
-        </span>
+        {avatar ? (
+          <img src={avatar} alt='' className='h-48px w-48px shrink-0 rd-14px object-cover' />
+        ) : (
+          <span className='flex h-48px w-48px shrink-0 items-center justify-center rd-14px bg-fill-2 text-26px'>
+            {greeting.icon ? greeting.icon : <Application size={24} />}
+          </span>
+        )}
         <div className='min-w-0'>
           <div className='text-17px font-600 leading-[24px] text-t-primary'>
             {t('common.scenes.greeting.hello', { name: greeting.name })}

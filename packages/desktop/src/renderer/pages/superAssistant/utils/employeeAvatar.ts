@@ -4,12 +4,16 @@ import securityAvatar from '@/renderer/assets/scenes/cybersecurity.png';
 import mediaAvatar from '@/renderer/assets/scenes/media-ops.png';
 import marketingAvatar from '@/renderer/assets/scenes/marketing.png';
 import type { PersonalAgent } from '@/common/types/employee/employeeTypes';
+import { personalSceneAvatarSrc } from '@/renderer/utils/scenes/sceneAvatar';
 
 const FALLBACKS = [officeAvatar, itOpsAvatar, securityAvatar, mediaAvatar, marketingAvatar];
 
 export function resolveEmployeeAvatar(agent: Pick<PersonalAgent, 'id' | 'automationConfig'>): string {
   const custom = agent.automationConfig?.avatarUrl;
   if (typeof custom === 'string' && custom) return custom;
+  const preset = agent.automationConfig?.avatarPreset;
+  const portrait = typeof preset === 'string' ? personalSceneAvatarSrc(preset) : undefined;
+  if (portrait) return portrait;
   let hash = 0;
   for (const char of agent.id) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   return FALLBACKS[hash % FALLBACKS.length];

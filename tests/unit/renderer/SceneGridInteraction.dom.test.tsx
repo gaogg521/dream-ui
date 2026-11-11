@@ -209,6 +209,23 @@ describe('SceneGrid scenes the member switched off', () => {
 describe('SceneGrid with the person own scenes', () => {
   beforeEach(reset);
 
+  it('shows the portrait for a saved preset icon and retains an imported custom icon', async () => {
+    hooks.company = false;
+    hooks.personal = [
+      newPersonalScene({ name: '已有场景', icon: '📊' }),
+      newPersonalScene({ name: '自定义场景', icon: '⭐' }),
+      newPersonalScene({ name: '古装场景', icon: 'av-tang' }),
+    ];
+    renderGrid();
+    const preset = (await screen.findByText('已有场景')).closest('[data-scene-name]');
+    const custom = (await screen.findByText('自定义场景')).closest('[data-scene-name]');
+    expect(preset?.querySelector('img')?.getAttribute('src')).toMatch(/\/work\/data\.png$/);
+    expect(custom?.querySelector('img')).toBeNull();
+    expect(custom).toHaveTextContent('⭐');
+    const costume = (await screen.findByText('古装场景')).closest('[data-scene-name]');
+    expect(costume?.querySelector('img')?.getAttribute('src')).toMatch(/\/costume\/tang\.png$/);
+  });
+
   it('shows company scenes and personal scenes together, personal ones marked as the person own', async () => {
     hooks.personal = [newPersonalScene({ name: '我的官网' })];
     renderGrid(vi.fn());

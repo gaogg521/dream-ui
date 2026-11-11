@@ -16,7 +16,7 @@
 import type { MyScene } from '@/common/types/platform/enterpriseTypes';
 import type { PersonalScene } from '@/common/types/platform/sceneTypes';
 import { personalSceneKey } from './personalScenes';
-import { sceneAvatarSrc } from './sceneAvatar';
+import { personalSceneAvatarSrc, sceneAvatarSrc } from './sceneAvatar';
 
 export type SceneItemResource = { resourceType: string; count: number; includesAll: boolean };
 
@@ -26,7 +26,7 @@ export type SceneItem = {
   source: 'company' | 'mine';
   name: string;
   description: string;
-  /** A picture (company scenes), or `undefined` when `icon` stands in for one. */
+  /** The scene portrait, or `undefined` when `icon` stands in for one. */
   imageSrc?: string;
   /** An emoji (personal scenes). */
   icon?: string;
@@ -64,6 +64,7 @@ export function personalSceneItem(scene: PersonalScene): SceneItem {
     source: 'mine',
     name: scene.name,
     description: scene.description,
+    imageSrc: personalSceneAvatarSrc(scene.icon),
     icon: scene.icon,
     resources,
     starters: scene.intent.starters,

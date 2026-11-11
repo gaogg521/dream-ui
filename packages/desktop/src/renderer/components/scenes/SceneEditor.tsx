@@ -23,6 +23,7 @@ import {
 } from '@/common/types/platform/sceneTypes';
 import { useMcpServers } from '@/renderer/hooks/mcp';
 import { SCENE_ICONS, personalSceneProblems } from '@/renderer/utils/scenes/personalScenes';
+import { ADDITIONAL_SCENE_ICONS, personalSceneAvatarSrc } from '@/renderer/utils/scenes/sceneAvatar';
 import { buildSceneRules } from '@/renderer/utils/scenes/sceneProtocol';
 import { Button, Collapse, Drawer, Input, Select, Switch } from '@arco-design/web-react';
 import { Delete, Plus } from '@icon-park/react';
@@ -133,6 +134,7 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ visible, mode, scene, onCance
 
   if (!draft) return null;
   const problems = personalSceneProblems(draft);
+  const selectedAvatar = personalSceneAvatarSrc(draft.icon);
   const set = (patch: Partial<PersonalScene>) => setDraft({ ...draft, ...patch });
   const setIntent = (patch: Partial<SceneIntent>) => setDraft({ ...draft, intent: { ...draft.intent, ...patch } });
 
@@ -176,17 +178,23 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ visible, mode, scene, onCance
       <div className={`flex flex-col gap-18px ${styles.fields}`} data-testid='scene-editor'>
         <Field label={t('common.scenes.editor.icon')}>
           <div className='flex flex-wrap gap-6px'>
-            {SCENE_ICONS.map((icon) => (
-              <Button
-                key={icon}
-                size='small'
-                type={draft.icon === icon ? 'primary' : 'secondary'}
-                aria-label={icon}
-                onClick={() => set({ icon })}
-              >
-                <span className='text-16px leading-none'>{icon}</span>
-              </Button>
-            ))}
+            {[...SCENE_ICONS, ...ADDITIONAL_SCENE_ICONS].map((icon, index) => {
+              const avatar = personalSceneAvatarSrc(icon);
+              const selected = avatar === selectedAvatar;
+              const label = index < SCENE_ICONS.length ? icon : `${t('common.scenes.editor.icon')} ${index + 1}`;
+              return (
+                <Button
+                  key={icon}
+                  className={styles.avatarOption}
+                  type={selected ? 'primary' : 'secondary'}
+                  aria-label={label}
+                  aria-pressed={selected}
+                  onClick={() => set({ icon })}
+                >
+                  <img src={avatar} alt='' className={styles.avatarPortrait} />
+                </Button>
+              );
+            })}
           </div>
         </Field>
 
