@@ -29,6 +29,7 @@ import { NavigationHistoryProvider } from '@renderer/hooks/context/NavigationHis
 import { useDeepLink } from '@renderer/hooks/system/useDeepLink';
 import { useNotificationClick } from '@renderer/hooks/system/notification/useNotificationClick';
 import { useBrowserNotification } from '@renderer/hooks/system/notification/useBrowserNotification';
+import { useNotificationPermissionPrompt } from '@renderer/hooks/system/notification/useNotificationPermissionPrompt';
 import { useGovernanceEndpointSync } from '@renderer/hooks/enterprise/useGovernanceEndpointSync';
 import { useTeamResourceSync } from '@renderer/hooks/enterprise/useTeamResourceSync';
 import { useMemoryTidyPrompt } from '@renderer/hooks/system/useMemoryTidyPrompt';
@@ -156,6 +157,7 @@ const Layout: React.FC<{
   useDeepLink();
   useNotificationClick();
   useBrowserNotification();
+  useNotificationPermissionPrompt();
   // M3: sync enterprise-distributed team resources to local disk. No-op in
   // standalone mode (the hook gates on a resolved tenant).
   useTeamResourceSync();

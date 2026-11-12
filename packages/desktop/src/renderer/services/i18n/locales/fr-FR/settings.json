@@ -932,6 +932,7 @@
   "hardwareAccelerationUpdateFailed": "Échec de la mise à jour du paramètre d'accélération matérielle",
   "browserNotification": {
     "enable": "Activer les notifications du navigateur",
+    "prompt": "Être averti quand une tâche se termine ou demande votre confirmation ? (Avec le téléphone verrouillé ou le navigateur en arrière-plan, il peut ne pas arriver.)",
     "granted": "Notifications du navigateur activées",
     "denied": "Notifications bloquées : activez-les dans les paramètres du site de votre navigateur",
     "insecureContext": "Les notifications du navigateur nécessitent un accès HTTPS ou localhost",

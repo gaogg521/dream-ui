@@ -46,7 +46,10 @@ vi.mock('@/renderer/utils/enterprise/secureExport/protectionDialog', () => ({ as
 import { prepareExport } from '@/renderer/utils/enterprise/secureExport/gateway';
 import { flushExportEvents } from '@/renderer/utils/enterprise/secureExport/events';
 import { base64ToBytes, openPackage } from '@/renderer/utils/enterprise/secureExport/packageFormat';
-import { setSecureExportEnterpriseActive } from '@/renderer/utils/enterprise/secureExport/policy';
+import {
+  setSecureExportBrowserClient,
+  setSecureExportEnterpriseActive,
+} from '@/renderer/utils/enterprise/secureExport/policy';
 import { contentHashPrefix } from '@/renderer/utils/enterprise/secureExport/watermark';
 
 const t = (key: string) => key;
@@ -65,6 +68,7 @@ function entitled(mode: 'optional' | 'default' | 'required', watermark = true) {
 beforeEach(() => {
   // Leaving the company drops the in-memory seed; each test starts cold.
   setSecureExportEnterpriseActive(false);
+  setSecureExportBrowserClient(false);
   store.clear();
   Object.values(mocks).forEach((m) => m.mockReset());
   mocks.reportEvents.mockResolvedValue({ accepted: 1 });
@@ -217,6 +221,46 @@ describe('export gateway', () => {
     await flushExportEvents();
     expect(mocks.reportEvents).toHaveBeenCalledTimes(1);
     expect(store.get('one.secureExport.events.v1')).toBe('[]');
+  });
+
+  describe('from a browser (phone over the tunnel) of a company member', () => {
+    const files = [{ name: 'plan.md', text: BODY }];
+
+    beforeEach(() => {
+      setSecureExportEnterpriseActive(true);
+      setSecureExportBrowserClient(true);
+    });
+
+    it('refuses an export the company wants watermarked or encrypted, and asks nothing', async () => {
+      for (const [mode, watermark] of [
+        ['optional', true],
+        ['default', false],
+        ['required', false],
+      ] as const) {
+        entitled(mode, watermark);
+        const decision = await prepareExport({ kind: 'conversation', files, suggestedName: 'x', t });
+        expect(decision).toEqual({
+          mode: 'blocked',
+          reason: 'unsupported_client',
+          message: 'messages.secureExport.useDesktop',
+        });
+      }
+      expect(mocks.ask).not.toHaveBeenCalled();
+      expect(mocks.createPackage).not.toHaveBeenCalled();
+    });
+
+    it('lets files through when the company turned no protection on', async () => {
+      entitled('optional', false);
+      const decision = await prepareExport({ kind: 'conversation', files, suggestedName: 'x', t });
+      expect(decision.mode).toBe('plain');
+    });
+
+    it('lets files through when the plan lacks the feature at all', async () => {
+      mocks.policy.mockResolvedValue({ exportWatermarkEnabled: true, exportEncryptionMode: 'required' });
+      mocks.plan.mockResolvedValue({ enterpriseId: 'ent-1', entitlements: [] });
+      const decision = await prepareExport({ kind: 'conversation', files, suggestedName: 'x', t });
+      expect(decision.mode).toBe('plain');
+    });
   });
 
   it('cancelling the dialog writes nothing', async () => {

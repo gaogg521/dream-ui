@@ -30,6 +30,7 @@ import {
 } from '@renderer/utils/enterprise/secureExport/openPackage';
 import {
   clearSecureExportState,
+  setSecureExportBrowserClient,
   setSecureExportEnterpriseActive,
 } from '@renderer/utils/enterprise/secureExport/policy';
 import SecurePackageViewer from './SecurePackageViewer';
@@ -44,11 +45,16 @@ const SecurePackageHost: React.FC = () => {
   const wasActive = useRef(false);
   const backlog = useRef<SecurePackageSource[]>([]);
 
-  const active = Boolean(context?.isEnterprise) && isElectronDesktop() && isEnterpriseRemoteActive();
+  const memberMachine = Boolean(context?.isEnterprise) && isEnterpriseRemoteActive();
+  const active = memberMachine && isElectronDesktop();
+  // A phone/browser reaching a member's machine over the tunnel: no watermark or packaging
+  // here, so the gateway must be told to refuse protected exports rather than stay silent.
+  const browserMember = memberMachine && !isElectronDesktop();
 
   useEffect((): (() => void) | undefined => {
     if (loading) return undefined;
-    setSecureExportEnterpriseActive(active);
+    setSecureExportEnterpriseActive(active || browserMember);
+    setSecureExportBrowserClient(browserMember);
     if (wasActive.current && !active) {
       clearSecureExportState();
       clearExportEventQueue();
@@ -60,7 +66,7 @@ const SecurePackageHost: React.FC = () => {
       void flushExportEvents();
     }, FLUSH_INTERVAL_MS);
     return () => window.clearInterval(timer);
-  }, [active, loading]);
+  }, [active, browserMember, loading]);
 
   const open = useCallback(
     async (path: SecurePackageSource) => {

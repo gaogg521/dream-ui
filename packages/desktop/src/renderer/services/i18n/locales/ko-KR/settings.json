@@ -932,6 +932,7 @@
   "hardwareAccelerationUpdateFailed": "하드웨어 가속 설정을 업데이트하지 못했습니다",
   "browserNotification": {
     "enable": "브라우저 알림 활성화",
+    "prompt": "작업이 끝나거나 확인이 필요할 때 알려 드릴까요? (휴대폰 잠금 중이거나 브라우저가 백그라운드일 때는 받지 못할 수 있습니다.)",
     "granted": "브라우저 알림이 활성화되었습니다",
     "denied": "알림이 차단되었습니다 — 브라우저 사이트 설정에서 허용해 주세요",
     "insecureContext": "브라우저 알림은 HTTPS 또는 localhost 접속이 필요합니다",

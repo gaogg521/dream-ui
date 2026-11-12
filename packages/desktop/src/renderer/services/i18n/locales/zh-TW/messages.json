@@ -133,6 +133,7 @@
   "secureExport.watermarkHint": "匯出的 Markdown 檔案會帶有不可見的溯源標記。",
   "secureExport.tooLarge": "匯出內容過大，無法加密（上限 200 MB）。",
   "secureExport.offline": "無法連線企業伺服器，暫時無法加密匯出，請稍後再試。",
+  "secureExport.useDesktop": "公司要求對匯出的檔案加浮水印或加密，這只能在 One Work 電腦用戶端裡完成。請在電腦上匯出。",
   "secureExport.failed": "加密匯出失敗：{{reason}}",
   "secureExport.copyBlocked": "企業要求加密匯出，已停用複製完整對話。",
   "secureExport.fileTypeName": "One Work 加密檔案",

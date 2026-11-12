@@ -1951,6 +1951,7 @@
   },
   "browserNotification": {
     "enable": "Enable browser notifications",
+    "prompt": "Benachrichtigen, wenn eine Aufgabe fertig ist oder Ihre Bestätigung braucht? (Bei gesperrtem Telefon oder Browser im Hintergrund kommt sie evtl. nicht an.)",
     "granted": "Browser notifications enabled",
     "denied": "Notifications blocked — enable them in your browser's site settings",
     "insecureContext": "Browser notifications require HTTPS or localhost access",

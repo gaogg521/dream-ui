@@ -932,6 +932,7 @@
   "hardwareAccelerationUpdateFailed": "Donanım hızlandırma ayarı güncellenemedi",
   "browserNotification": {
     "enable": "Tarayıcı bildirimlerini etkinleştir",
+    "prompt": "Bir görev bittiğinde veya onayınız gerektiğinde bildirim almak ister misiniz? (Telefon kilitliyken veya tarayıcı arka plandayken ulaşmayabilir.)",
     "granted": "Tarayıcı bildirimleri etkinleştirildi",
     "denied": "Bildirimler engellendi — tarayıcınızın site ayarlarından etkinleştirin",
     "insecureContext": "Tarayıcı bildirimleri için HTTPS veya localhost erişimi gereklidir",

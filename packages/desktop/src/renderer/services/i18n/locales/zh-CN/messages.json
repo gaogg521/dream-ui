@@ -133,6 +133,7 @@
   "secureExport.watermarkHint": "导出的 Markdown 文件会带有不可见的溯源标记。",
   "secureExport.tooLarge": "导出内容过大，无法加密（上限 200 MB）。",
   "secureExport.offline": "无法连接企业服务器，暂时不能加密导出，请稍后重试。",
+  "secureExport.useDesktop": "公司要求对导出的文件加水印或加密，这只能在 One Work 电脑客户端里完成。请在电脑上导出。",
   "secureExport.failed": "加密导出失败：{{reason}}",
   "secureExport.copyBlocked": "企业要求加密导出，已禁用复制完整会话。",
   "secureExport.fileTypeName": "One Work 加密文件",

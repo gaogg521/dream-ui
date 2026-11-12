@@ -133,6 +133,7 @@
   "secureExport.watermarkHint": "Exportierte Markdown-Dateien enthalten eine unsichtbare Rückverfolgungsmarke.",
   "secureExport.tooLarge": "Dieser Export ist zu groß zum Verschlüsseln (Grenze 200 MB).",
   "secureExport.offline": "Der Unternehmensserver ist nicht erreichbar, daher kann die Datei gerade nicht verschlüsselt werden. Versuchen Sie es später erneut.",
+  "secureExport.useDesktop": "Ihr Unternehmen verlangt geschützte Exporte (Wasserzeichen oder Verschlüsselung), was nur die One-Work-Desktop-App kann. Bitte exportieren Sie am Computer.",
   "secureExport.failed": "Verschlüsselter Export fehlgeschlagen: {{reason}}",
   "secureExport.copyBlocked": "Ihr Unternehmen verlangt verschlüsselten Export, daher ist das Kopieren des gesamten Verlaufs deaktiviert.",
   "secureExport.fileTypeName": "One Work verschlüsselte Datei",

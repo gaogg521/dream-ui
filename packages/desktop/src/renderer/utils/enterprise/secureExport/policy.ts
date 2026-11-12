@@ -37,6 +37,7 @@ const SEED_CACHE_KEY = 'one.secureExport.seed.v1';
 const SEED_REFRESH_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
 
 let enterpriseActive = false;
+let browserClient = false;
 let seedInMemory: WatermarkSeed | null = null;
 
 /**
@@ -47,6 +48,20 @@ let seedInMemory: WatermarkSeed | null = null;
 export function setSecureExportEnterpriseActive(active: boolean): void {
   enterpriseActive = active;
   if (!active) seedInMemory = null;
+}
+
+/**
+ * This client is a plain browser (a phone over the remote-access tunnel) of a machine that
+ * belongs to a company. Watermarking and `.owenc` packaging need the desktop app, so
+ * when the company turns either on, the gateway refuses exports from here instead of
+ * letting the files leave unprotected.
+ */
+export function setSecureExportBrowserClient(value: boolean): void {
+  browserClient = value;
+}
+
+export function isSecureExportBrowserClient(): boolean {
+  return browserClient;
 }
 
 export function isSecureExportEnterpriseActive(): boolean {

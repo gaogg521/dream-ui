@@ -133,6 +133,7 @@
   "secureExport.watermarkHint": "Les fichiers Markdown exportés portent une marque de traçage invisible.",
   "secureExport.tooLarge": "Cet export est trop volumineux pour être chiffré (limite 200 Mo).",
   "secureExport.offline": "Impossible de joindre le serveur de l'entreprise : le fichier ne peut pas être chiffré pour l'instant. Réessayez plus tard.",
+  "secureExport.useDesktop": "Votre entreprise exige des exports protégés (filigrane ou chiffrement), ce que seule l'application de bureau One Work sait faire. Exportez depuis l'ordinateur.",
   "secureExport.failed": "L'export chiffré a échoué : {{reason}}",
   "secureExport.copyBlocked": "Votre entreprise exige l'export chiffré : la copie de toute la conversation est désactivée.",
   "secureExport.fileTypeName": "Fichier chiffré One Work",

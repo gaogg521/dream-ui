@@ -133,6 +133,7 @@
   "secureExport.watermarkHint": "Dışa aktarılan Markdown dosyaları görünmez bir izleme işareti taşır.",
   "secureExport.tooLarge": "Bu dışa aktarma şifrelemek için çok büyük (sınır 200 MB).",
   "secureExport.offline": "Şirket sunucusuna ulaşılamıyor, bu yüzden dosya şu anda şifrelenemiyor. Daha sonra tekrar deneyin.",
+  "secureExport.useDesktop": "Şirketiniz dışa aktarmalarda filigran veya şifreleme zorunlu kılıyor; bunu yalnızca One Work masaüstü uygulaması yapabilir. Lütfen bilgisayarınızdan dışa aktarın.",
   "secureExport.failed": "Şifreli dışa aktarma başarısız: {{reason}}",
   "secureExport.copyBlocked": "Şirketiniz şifreli dışa aktarmayı zorunlu tuttuğu için tüm konuşmayı kopyalama devre dışı.",
   "secureExport.fileTypeName": "One Work şifreli dosyası",

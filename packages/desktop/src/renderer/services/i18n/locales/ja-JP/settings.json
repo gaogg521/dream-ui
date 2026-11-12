@@ -932,6 +932,7 @@
   "hardwareAccelerationUpdateFailed": "ハードウェアアクセラレーション設定の更新に失敗しました",
   "browserNotification": {
     "enable": "ブラウザ通知を有効にする",
+    "prompt": "タスクの完了や確認が必要なときに通知しますか？（スマートフォンのロック中やブラウザがバックグラウンドの間は届かないことがあります。）",
     "granted": "ブラウザ通知が有効になりました",
     "denied": "通知がブロックされています — ブラウザのサイト設定から有効にしてください",
     "insecureContext": "ブラウザ通知には HTTPS または localhost からのアクセスが必要です",

@@ -133,6 +133,7 @@
   "secureExport.watermarkHint": "내보낸 Markdown 파일에는 보이지 않는 추적 표시가 포함됩니다.",
   "secureExport.tooLarge": "내보낼 내용이 너무 커서 암호화할 수 없습니다 (최대 200 MB).",
   "secureExport.offline": "회사 서버에 연결할 수 없어 지금은 암호화할 수 없습니다. 잠시 후 다시 시도하세요.",
+  "secureExport.useDesktop": "회사 정책상 내보내는 파일에는 워터마크 또는 암호화가 필요하며, 이는 One Work 데스크톱 앱에서만 가능합니다. 컴퓨터에서 내보내 주세요.",
   "secureExport.failed": "암호화 내보내기 실패: {{reason}}",
   "secureExport.copyBlocked": "회사에서 암호화 내보내기를 요구하므로 전체 대화 복사가 비활성화되었습니다.",
   "secureExport.fileTypeName": "One Work 암호화 파일",

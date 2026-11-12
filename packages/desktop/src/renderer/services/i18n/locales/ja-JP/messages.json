@@ -133,6 +133,7 @@
   "secureExport.watermarkHint": "エクスポートした Markdown ファイルには見えない追跡マークが付きます。",
   "secureExport.tooLarge": "エクスポート内容が大きすぎて暗号化できません（上限 200 MB）。",
   "secureExport.offline": "会社のサーバーに接続できないため、今は暗号化できません。後でもう一度お試しください。",
+  "secureExport.useDesktop": "会社の方針で、書き出すファイルには透かしまたは暗号化が必要です。これは One Work のデスクトップアプリでのみ行えます。パソコンから書き出してください。",
   "secureExport.failed": "暗号化エクスポートに失敗しました：{{reason}}",
   "secureExport.copyBlocked": "会社が暗号化エクスポートを必須にしているため、会話全体のコピーは無効です。",
   "secureExport.fileTypeName": "One Work 暗号化ファイル",

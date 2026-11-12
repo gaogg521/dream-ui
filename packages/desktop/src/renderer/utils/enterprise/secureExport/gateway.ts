@@ -31,7 +31,13 @@ import {
   randomBytes,
   sealPackage,
 } from './packageFormat';
-import { getWatermarkSeed, isSecureExportEnterpriseActive, loadExportPolicy, type ExportPolicy } from './policy';
+import {
+  getWatermarkSeed,
+  isSecureExportBrowserClient,
+  isSecureExportEnterpriseActive,
+  loadExportPolicy,
+  type ExportPolicy,
+} from './policy';
 import { askExportProtection, type ProtectionChoice } from './protectionDialog';
 import { isWatermarkable, sha256Hex, stampMarkdown } from './watermark';
 
@@ -55,7 +61,7 @@ export type ExportDecision =
   | PlainExport
   | EncryptedExport
   | { mode: 'cancelled' }
-  | { mode: 'blocked'; reason: 'offline' | 'too_large' | 'failed'; message: string };
+  | { mode: 'blocked'; reason: 'offline' | 'too_large' | 'failed' | 'unsupported_client'; message: string };
 
 type Translate = (key: string, values?: Record<string, unknown>) => string;
 
@@ -125,6 +131,14 @@ export async function prepareExport(request: {
   }
   const policy = await loadExportPolicy({ fresh: true });
   if (!policy.entitled) {
+    return { mode: 'plain', files: request.files, report: NOOP };
+  }
+  if (isSecureExportBrowserClient()) {
+    // No watermarking or packaging in a browser: refuse what the company wants protected;
+    // when nothing is required there is nothing to offer either, so skip the dialog.
+    if (policy.watermark || policy.encryptionMode !== 'optional') {
+      return { mode: 'blocked', reason: 'unsupported_client', message: request.t('messages.secureExport.useDesktop') };
+    }
     return { mode: 'plain', files: request.files, report: NOOP };
   }
 

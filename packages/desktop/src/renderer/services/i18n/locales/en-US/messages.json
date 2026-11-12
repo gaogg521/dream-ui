@@ -133,6 +133,7 @@
   "secureExport.watermarkHint": "Exported Markdown files carry an invisible tracing mark.",
   "secureExport.tooLarge": "This export is too large to encrypt (limit 200 MB).",
   "secureExport.offline": "Can't reach the company server, so the file can't be encrypted right now. Try again later.",
+  "secureExport.useDesktop": "Your company requires protected exports (watermark / encryption), which only the One Work desktop app can do. Please export from your computer.",
   "secureExport.failed": "Encrypted export failed: {{reason}}",
   "secureExport.copyBlocked": "Your company requires encrypted export, so copying the whole transcript is disabled.",
   "secureExport.fileTypeName": "One Work encrypted file",

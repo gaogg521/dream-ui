@@ -133,6 +133,7 @@
   "secureExport.watermarkHint": "Arquivos Markdown exportados levam uma marca de rastreio invisível.",
   "secureExport.tooLarge": "A exportação é grande demais para criptografar (limite de 200 MB).",
   "secureExport.offline": "Não foi possível conectar ao servidor da empresa, então o arquivo não pode ser criptografado agora. Tente mais tarde.",
+  "secureExport.useDesktop": "Sua empresa exige exportação protegida (marca d'água ou criptografia), o que só o aplicativo de desktop do One Work consegue fazer. Exporte pelo computador.",
   "secureExport.failed": "A exportação criptografada falhou: {{reason}}",
   "secureExport.copyBlocked": "Sua empresa exige exportação criptografada, por isso copiar a conversa inteira está desativado.",
   "secureExport.fileTypeName": "Arquivo criptografado do One Work",

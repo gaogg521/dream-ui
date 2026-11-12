@@ -932,6 +932,7 @@
   "hardwareAccelerationUpdateFailed": "Falha ao atualizar a configuração de aceleração de hardware",
   "browserNotification": {
     "enable": "Ativar notificações do navegador",
+    "prompt": "Receber um aviso quando uma tarefa terminar ou precisar da sua confirmação? (Com o celular bloqueado ou o navegador em segundo plano, pode não chegar.)",
     "granted": "Notificações do navegador ativadas",
     "denied": "Notificações bloqueadas — ative-as nas configurações de site do seu navegador",
     "insecureContext": "As notificações do navegador exigem acesso via HTTPS ou localhost",

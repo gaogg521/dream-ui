@@ -932,6 +932,7 @@
   "hardwareAccelerationUpdateFailed": "Failed to update hardware acceleration setting",
   "browserNotification": {
     "enable": "Enable browser notifications",
+    "prompt": "Get notified when a task finishes or needs your confirmation? (A locked phone or a browser in the background may not receive it.)",
     "granted": "Browser notifications enabled",
     "denied": "Notifications blocked — enable them in your browser's site settings",
     "insecureContext": "Browser notifications require HTTPS or localhost access",
