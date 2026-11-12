@@ -118,6 +118,33 @@ describe('WebuiModalContent login info card', () => {
     expect(screen.getByText('admin')).toBeInTheDocument();
   });
 
+  it('lays the page out as one card per topic', async () => {
+    getStatusMock.mockResolvedValue({ ...baseStatus, running: false });
+    render(<WebuiModalContent />);
+    for (const id of [
+      'webui-service-card',
+      'webui-lan-card',
+      'webui-tunnel-card',
+      'webui-turn-push-card',
+      'webui-login-card',
+    ]) {
+      expect(await screen.findByTestId(id)).toBeInTheDocument();
+    }
+    // The QR card only exists once there is an address a phone can reach.
+    expect(screen.queryByTestId('webui-qr-card')).not.toBeInTheDocument();
+  });
+
+  it('shows the state of each card at a glance', async () => {
+    getStatusMock.mockResolvedValue({ ...baseStatus, running: true });
+    render(<WebuiModalContent />);
+    const service = await screen.findByTestId('webui-service-card');
+    await waitFor(() => expect(service).toHaveTextContent('settings.webui.running'));
+    // Nothing else is switched on yet, so those cards say so rather than staying silent.
+    expect(screen.getByTestId('webui-lan-card')).toHaveTextContent('settings.webui.statusOff');
+    expect(screen.getByTestId('webui-tunnel-card')).toHaveTextContent('settings.webui.statusOff');
+    expect(screen.getByTestId('webui-turn-push-card')).toHaveTextContent('settings.webui.statusOff');
+  });
+
   it('still shows the local WebUI login credentials when the server is stopped', async () => {
     // Regression guard: local WebUI credentials are independent of enterprise
     // deployment role and of whether the server happens to be running right

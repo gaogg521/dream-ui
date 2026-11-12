@@ -3413,5 +3413,10 @@
   "webui.turnPush.minAny": "제한 없음",
   "webui.turnPush.min1": "1분",
   "webui.turnPush.min5": "5분",
-  "webui.turnPush.min15": "15분"
+  "webui.turnPush.min15": "15분",
+  "webui.cardService": "이 컴퓨터의 WebUI",
+  "webui.cardServiceDesc": "이 컴퓨터에 웹 진입점을 열어 휴대폰 등 다른 기기에서 접속할 수 있게 합니다.",
+  "webui.cardLan": "로컬 네트워크 접속",
+  "webui.statusOff": "꺼짐",
+  "webui.statusOn": "켜짐"
 }

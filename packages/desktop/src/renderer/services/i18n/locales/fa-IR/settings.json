@@ -3411,5 +3411,10 @@
   "webui.turnPush.minAny": "هر مدتی",
   "webui.turnPush.min1": "۱ دقیقه",
   "webui.turnPush.min5": "۵ دقیقه",
-  "webui.turnPush.min15": "۱۵ دقیقه"
+  "webui.turnPush.min15": "۱۵ دقیقه",
+  "webui.cardService": "WebUI این رایانه",
+  "webui.cardServiceDesc": "یک ورودی وب روی این رایانه باز می‌کند تا گوشی و دستگاه‌های دیگر بتوانند به آن دسترسی داشته باشند.",
+  "webui.cardLan": "دسترسی در شبکهٔ محلی",
+  "webui.statusOff": "خاموش",
+  "webui.statusOn": "روشن"
 }

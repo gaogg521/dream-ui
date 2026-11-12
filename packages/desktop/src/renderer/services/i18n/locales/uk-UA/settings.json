@@ -3426,5 +3426,10 @@
   "webui.turnPush.minAny": "Будь-яка тривалість",
   "webui.turnPush.min1": "1 хвилина",
   "webui.turnPush.min5": "5 хвилин",
-  "webui.turnPush.min15": "15 хвилин"
+  "webui.turnPush.min15": "15 хвилин",
+  "webui.cardService": "WebUI цього комп'ютера",
+  "webui.cardServiceDesc": "Відкриває веб-вхід на цьому комп'ютері, щоб телефон та інші пристрої могли підключитися.",
+  "webui.cardLan": "Доступ із локальної мережі",
+  "webui.statusOff": "Вимк.",
+  "webui.statusOn": "Увімк."
 }

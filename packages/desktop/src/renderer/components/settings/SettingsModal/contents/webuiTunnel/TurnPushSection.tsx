@@ -6,8 +6,10 @@ import { configService } from '@/common/config/configService';
 import type { ICronPushTarget } from '@/common/adapter/ipcBridge';
 import PushTargetField from '@/renderer/components/scenes/PushTargetField';
 import { Message, Select } from '@arco-design/web-react';
+import { Remind } from '@icon-park/react';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import SettingsCard from './SettingsCard';
 
 const KEY = 'notify.turnCompleted';
 const DEFAULT_MIN_SECONDS = 60;
@@ -68,16 +70,25 @@ const TurnPushSection: React.FC = () => {
   };
 
   return (
-    <div className='mt-12px'>
+    <SettingsCard
+      data-testid='webui-turn-push-card'
+      icon={<Remind theme='outline' size='20' />}
+      title={t('settings.webui.turnPush.title')}
+      status={
+        value
+          ? { tone: 'success', text: t('settings.webui.statusOn') }
+          : { tone: 'neutral', text: t('settings.webui.statusOff') }
+      }
+    >
       <PushTargetField
+        embedded
         value={value}
         onChange={handleTarget}
         supportedPlatforms={SUPPORTED_PLATFORMS}
-        title={t('settings.webui.turnPush.title')}
         hint={t('settings.webui.turnPush.hint')}
       />
       {value && (
-        <div className='-mt-8px mb-12px flex items-center justify-between gap-12px'>
+        <div className='mt-10px flex items-center justify-between gap-12px'>
           <span className='text-12px text-t-secondary'>{t('settings.webui.turnPush.minDuration')}</span>
           <Select
             size='small'
@@ -93,7 +104,7 @@ const TurnPushSection: React.FC = () => {
           </Select>
         </div>
       )}
-    </div>
+    </SettingsCard>
   );
 };
 

@@ -3414,5 +3414,10 @@
   "webui.turnPush.minAny": "Qualquer duração",
   "webui.turnPush.min1": "1 minuto",
   "webui.turnPush.min5": "5 minutos",
-  "webui.turnPush.min15": "15 minutos"
+  "webui.turnPush.min15": "15 minutos",
+  "webui.cardService": "WebUI deste computador",
+  "webui.cardServiceDesc": "Abre uma entrada web neste computador para que o celular ou outros dispositivos possam acessá-lo.",
+  "webui.cardLan": "Acesso pela rede local",
+  "webui.statusOff": "Desativado",
+  "webui.statusOn": "Ativado"
 }

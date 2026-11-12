@@ -29,6 +29,8 @@ type PushTargetFieldProps = {
   /** Override the heading/explanation (the defaults speak about scheduled runs). */
   title?: string;
   hint?: string;
+  /** Sit inside a card that already draws the frame and heading: only the explanation and the switch remain. */
+  embedded?: boolean;
 };
 
 type PushOption = { key: string; label: string; target: ICronPushTarget };
@@ -63,6 +65,7 @@ const PushTargetField: React.FC<PushTargetFieldProps> = ({
   supportedPlatforms,
   title,
   hint,
+  embedded = false,
 }) => {
   const { t } = useTranslation();
   const inRouter = useInRouterContext();
@@ -115,13 +118,19 @@ const PushTargetField: React.FC<PushTargetFieldProps> = ({
 
   return (
     <div
-      className='mb-20px rounded-12px border border-solid border-[var(--color-border-2)] px-14px py-12px'
+      className={
+        embedded ? '' : 'mb-20px rounded-12px border border-solid border-[var(--color-border-2)] px-14px py-12px'
+      }
       data-testid='push-target-field'
     >
       <div className='flex items-start justify-between gap-16px'>
         <div className='min-w-0'>
-          <p className='m-0 text-14px font-medium text-t-primary'>{title ?? t('cron.page.form.push.title')}</p>
-          <p className='mb-0 mt-4px text-12px leading-18px text-t-secondary'>{hint ?? t('cron.page.form.push.hint')}</p>
+          {!embedded && (
+            <p className='m-0 text-14px font-medium text-t-primary'>{title ?? t('cron.page.form.push.title')}</p>
+          )}
+          <p className={`mb-0 text-12px leading-18px text-t-secondary ${embedded ? 'mt-0' : 'mt-4px'}`}>
+            {hint ?? t('cron.page.form.push.hint')}
+          </p>
         </div>
         <Switch checked={enabled} onChange={handleToggle} data-testid='push-target-switch' />
       </div>

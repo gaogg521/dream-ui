@@ -3411,5 +3411,10 @@
   "webui.turnPush.minAny": "Fark etmez",
   "webui.turnPush.min1": "1 dakika",
   "webui.turnPush.min5": "5 dakika",
-  "webui.turnPush.min15": "15 dakika"
+  "webui.turnPush.min15": "15 dakika",
+  "webui.cardService": "Bu bilgisayarın WebUI'si",
+  "webui.cardServiceDesc": "Telefonunuzun veya diğer cihazların erişebilmesi için bu bilgisayarda bir web girişi açar.",
+  "webui.cardLan": "Yerel ağ erişimi",
+  "webui.statusOff": "Kapalı",
+  "webui.statusOn": "Açık"
 }

@@ -3633,5 +3633,10 @@
   "webui.turnPush.minAny": "不限",
   "webui.turnPush.min1": "1 分鐘",
   "webui.turnPush.min5": "5 分鐘",
-  "webui.turnPush.min15": "15 分鐘"
+  "webui.turnPush.min15": "15 分鐘",
+  "webui.cardService": "本機 WebUI 服務",
+  "webui.cardServiceDesc": "在這台電腦上開啟網頁入口，手機或其他裝置才能存取。",
+  "webui.cardLan": "區域網路存取",
+  "webui.statusOff": "未開啟",
+  "webui.statusOn": "已開啟"
 }

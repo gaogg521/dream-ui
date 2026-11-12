@@ -3632,5 +3632,10 @@
   "webui.turnPush.minAny": "不限",
   "webui.turnPush.min1": "1 分钟",
   "webui.turnPush.min5": "5 分钟",
-  "webui.turnPush.min15": "15 分钟"
+  "webui.turnPush.min15": "15 分钟",
+  "webui.cardService": "本机 WebUI 服务",
+  "webui.cardServiceDesc": "在这台电脑上开启网页入口，手机或其他设备才能访问。",
+  "webui.cardLan": "局域网访问",
+  "webui.statusOff": "未开启",
+  "webui.statusOn": "已开启"
 }

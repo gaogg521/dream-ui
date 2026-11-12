@@ -3413,5 +3413,10 @@
   "webui.turnPush.minAny": "指定なし",
   "webui.turnPush.min1": "1 分",
   "webui.turnPush.min5": "5 分",
-  "webui.turnPush.min15": "15 分"
+  "webui.turnPush.min15": "15 分",
+  "webui.cardService": "このパソコンの WebUI",
+  "webui.cardServiceDesc": "このパソコンに Web の入口を開き、スマートフォンなどから接続できるようにします。",
+  "webui.cardLan": "ローカルネットワークでのアクセス",
+  "webui.statusOff": "オフ",
+  "webui.statusOn": "オン"
 }

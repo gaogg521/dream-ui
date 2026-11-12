@@ -3,25 +3,21 @@
  */
 
 import { Button, Message, Popconfirm, Switch, Tooltip } from '@arco-design/web-react';
-import { Copy, Refresh } from '@icon-park/react';
+import { Copy, Earth, Refresh } from '@icon-park/react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import SettingsCard, { type CardStatus } from './SettingsCard';
 import type { WebuiTunnelController } from './useWebuiTunnel';
 
-const STATE_COLOR: Record<string, string> = {
-  connected: 'text-success',
-  connecting: 'text-warning',
-  error: 'text-danger',
-};
-
 /**
- * "Access from outside your network": one switch, the address, and what is
- * going on. Sits under the LAN switch in Settings → Remote connection.
+ * "Access from outside your network": its own card with the switch, what is going on, and the
+ * address. `footer` carries the secondary way in (the butler's temporary public link).
  */
-const WebuiTunnelSection: React.FC<{ tunnel: WebuiTunnelController; webuiRunning: boolean }> = ({
-  tunnel,
-  webuiRunning,
-}) => {
+const WebuiTunnelSection: React.FC<{
+  tunnel: WebuiTunnelController;
+  webuiRunning: boolean;
+  footer?: React.ReactNode;
+}> = ({ tunnel, webuiRunning, footer }) => {
   const { t } = useTranslation();
   const { status, enabled } = tunnel;
 
@@ -38,68 +34,88 @@ const WebuiTunnelSection: React.FC<{ tunnel: WebuiTunnelController; webuiRunning
     Message.success(t('common.copySuccess'));
   };
 
-  const stateLabel = (): string | null => {
-    if (!enabled) return null;
-    if (!webuiRunning && status.state === 'off') return t('settings.webui.tunnelWaitingWebui');
-    if (status.state === 'error') return t(`settings.webui.tunnelError.${status.error ?? 'register_failed'}`);
-    if (status.state === 'connected') return t('settings.webui.tunnelConnected');
-    if (status.state === 'connecting') return t('settings.webui.tunnelConnecting');
-    return null;
+  const cardStatus = (): CardStatus => {
+    if (!enabled) return { tone: 'neutral', text: t('settings.webui.statusOff') };
+    if (!webuiRunning && status.state === 'off') {
+      return { tone: 'warning', text: t('settings.webui.tunnelWaitingWebui') };
+    }
+    switch (status.state) {
+      case 'connected':
+        return { tone: 'success', text: t('settings.webui.tunnelConnected').replace(/^✓\s*/, '') };
+      case 'connecting':
+        return { tone: 'warning', text: t('settings.webui.tunnelConnecting') };
+      case 'error': {
+        const reasons = {
+          no_binary: t('settings.webui.tunnelError.no_binary'),
+          register_failed: t('settings.webui.tunnelError.register_failed'),
+          rejected: t('settings.webui.tunnelError.rejected'),
+          spawn_failed: t('settings.webui.tunnelError.spawn_failed'),
+        };
+        return { tone: 'danger', text: reasons[status.error ?? 'register_failed'] };
+      }
+      default:
+        return { tone: 'neutral', text: t('settings.webui.statusOff') };
+    }
   };
 
-  const label = stateLabel();
+  const showDetails = enabled && (Boolean(status.url) || Boolean(footer));
 
   return (
-    <div className='py-12px'>
-      <div className='flex items-center justify-between gap-12px'>
-        <div className='min-w-0 flex-1'>
-          <div className='flex items-center gap-8px'>
-            <span className='text-14px text-t-primary'>{t('settings.webui.tunnelTitle')}</span>
-            {label && <span className={`text-12px ${STATE_COLOR[status.state] ?? 'text-t-tertiary'}`}>{label}</span>}
-          </div>
-          <div className='text-12px text-t-tertiary mt-2px'>{t('settings.webui.tunnelDesc')}</div>
-        </div>
+    <SettingsCard
+      data-testid='webui-tunnel-card'
+      icon={<Earth theme='outline' size='20' />}
+      title={t('settings.webui.tunnelTitle')}
+      description={t('settings.webui.tunnelDesc')}
+      status={cardStatus()}
+      action={
         <Switch
           className='settings-switch-on'
           checked={enabled}
           loading={tunnel.busy}
           onChange={(checked) => void handleToggle(checked)}
         />
-      </div>
-
-      {enabled && status.url && (
-        <div className='mt-8px flex items-center justify-between gap-8px rd-10px border border-line bg-fill-1 px-10px py-6px'>
-          <span className='text-12px text-t-tertiary shrink-0'>{t('settings.webui.tunnelAddress')}</span>
-          <div className='flex items-center gap-4px min-w-0'>
-            <span className='text-13px text-t-primary font-mono truncate'>{status.url}</span>
-            <Tooltip content={t('common.copy')}>
-              <Button
-                type='text'
-                size='mini'
-                className='rd-100px !px-6px inline-flex items-center !h-24px'
-                onClick={() => handleCopy(status.url as string)}
-              >
-                <Copy size={14} />
-              </Button>
-            </Tooltip>
-            <Popconfirm
-              title={t('settings.webui.tunnelResetConfirm')}
-              onOk={() => void handleReset()}
-              okText={t('common.confirm')}
-              cancelText={t('common.cancel')}
-            >
-              <Tooltip content={t('settings.webui.tunnelResetAddress')}>
-                <Button type='text' size='mini' className='rd-100px !px-6px inline-flex items-center !h-24px'>
-                  <Refresh size={14} />
-                </Button>
-              </Tooltip>
-            </Popconfirm>
-          </div>
+      }
+    >
+      {showDetails && (
+        <div className='space-y-10px'>
+          {status.url && (
+            <div className='flex items-center justify-between gap-8px rd-10px border border-line bg-fill-1 px-12px py-8px'>
+              <span className='text-12px text-t-tertiary shrink-0'>{t('settings.webui.tunnelAddress')}</span>
+              <div className='flex items-center gap-4px min-w-0'>
+                <span className='text-13px text-t-primary font-mono truncate'>{status.url}</span>
+                <Tooltip content={t('common.copy')}>
+                  <Button
+                    type='text'
+                    size='mini'
+                    className='rd-100px !px-6px inline-flex items-center !h-24px'
+                    onClick={() => handleCopy(status.url as string)}
+                  >
+                    <Copy size={14} />
+                  </Button>
+                </Tooltip>
+                <Popconfirm
+                  title={t('settings.webui.tunnelResetConfirm')}
+                  onOk={() => void handleReset()}
+                  okText={t('common.confirm')}
+                  cancelText={t('common.cancel')}
+                >
+                  <Tooltip content={t('settings.webui.tunnelResetAddress')}>
+                    <Button type='text' size='mini' className='rd-100px !px-6px inline-flex items-center !h-24px'>
+                      <Refresh size={14} />
+                    </Button>
+                  </Tooltip>
+                </Popconfirm>
+              </div>
+            </div>
+          )}
+          {enabled && (
+            <div className='text-12px leading-18px text-t-tertiary'>{t('settings.webui.tunnelSecurityHint')}</div>
+          )}
+          {footer}
         </div>
       )}
-
-      {enabled && <div className='text-12px text-t-tertiary mt-8px'>{t('settings.webui.tunnelSecurityHint')}</div>}
-    </div>
+      {!showDetails && footer}
+    </SettingsCard>
   );
 };
 
