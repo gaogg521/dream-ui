@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/renderer/services/i18n/format';
 import { useSettingsViewMode } from '../settingsViewContext';
 import WebuiTunnelSection from './webuiTunnel/WebuiTunnelSection';
+import TurnPushSection from './webuiTunnel/TurnPushSection';
 import { useWebuiTunnel } from './webuiTunnel/useWebuiTunnel';
 
 /**
@@ -722,6 +723,7 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
 
           {/* 外网访问：手机在局域网之外访问本机 / Access from outside the LAN */}
           <WebuiTunnelSection tunnel={tunnel} webuiRunning={Boolean(status?.running)} />
+          <TurnPushSection />
 
           {/* 临时公网访问入口 — 由管家通过 Cloudflare 隧道实现，跟上面的局域网开关无关，随时可用 */}
           <div className='text-12px text-t-tertiary mt-8px'>

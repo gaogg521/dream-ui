@@ -3404,5 +3404,12 @@
   "webui.tunnelError.no_binary": "Die Komponente für den Fernzugriff fehlt. Bitte installieren Sie One Work neu.",
   "webui.tunnelError.register_failed": "Relay-Server nicht erreichbar, neuer Versuch …",
   "webui.tunnelError.rejected": "Der Relay-Server hat diese Adresse abgelehnt. Holen Sie eine neue Adresse.",
-  "webui.tunnelError.spawn_failed": "Die Komponente für den Fernzugriff konnte nicht gestartet werden."
+  "webui.tunnelError.spawn_failed": "Die Komponente für den Fernzugriff konnte nicht gestartet werden.",
+  "webui.turnPush.title": "Meinen Chat-Bot benachrichtigen, wenn eine Aufgabe fertig ist",
+  "webui.turnPush.hint": "Wenn eine lange Aufgabe fertig ist, sendet Ihr verbundener Lark-, DingTalk-, WeCom-, WeChat- oder Telegram-Bot eine Nachricht – auch bei gesperrtem Telefon.",
+  "webui.turnPush.minDuration": "Nur wenn sie mindestens so lange lief",
+  "webui.turnPush.minAny": "Beliebige Dauer",
+  "webui.turnPush.min1": "1 Minute",
+  "webui.turnPush.min5": "5 Minuten",
+  "webui.turnPush.min15": "15 Minuten"
 }

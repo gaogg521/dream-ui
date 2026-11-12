@@ -3404,5 +3404,12 @@
   "webui.tunnelError.no_binary": "The remote access component is missing. Please reinstall One Work.",
   "webui.tunnelError.register_failed": "Can't reach the relay server, retrying…",
   "webui.tunnelError.rejected": "The relay server refused this address. Get a new address.",
-  "webui.tunnelError.spawn_failed": "Couldn't start the remote access component."
+  "webui.tunnelError.spawn_failed": "Couldn't start the remote access component.",
+  "webui.turnPush.title": "Message my chat bot when a task finishes",
+  "webui.turnPush.hint": "When a long task is done, your Lark, DingTalk, WeCom, WeChat or Telegram bot sends you a message, even when your phone is locked.",
+  "webui.turnPush.minDuration": "Only if it ran at least",
+  "webui.turnPush.minAny": "Any length",
+  "webui.turnPush.min1": "1 minute",
+  "webui.turnPush.min5": "5 minutes",
+  "webui.turnPush.min15": "15 minutes"
 }

@@ -44,6 +44,8 @@ export interface IConfigStorageRefer {
   'webui.desktop.allowRemote'?: boolean;
   /** 是否开启外网访问（手机在局域网之外访问本机）/ Reach this desktop from outside the LAN through the relay */
   'webui.desktop.remoteTunnel'?: boolean;
+  /** 长任务完成后推送到用户自己的 IM 机器人（后端 turn_push 读取同一个键）/ Push finished long tasks to the user's own chat bot */
+  'notify.turnCompleted'?: { enabled: boolean; plugin_id: string; chat_id: string; min_seconds: number };
   /** 桌面模式下 WebUI 端口 / WebUI port in desktop mode */
   'webui.desktop.port'?: number;
   customCss: string; // 自定义 CSS 样式 // @deprecated migrated to theme.activeId/theme.userThemes

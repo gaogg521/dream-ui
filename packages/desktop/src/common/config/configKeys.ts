@@ -22,6 +22,7 @@ export type ConfigKeyMap = {
   'webui.desktop.enabled': boolean | undefined;
   'webui.desktop.allowRemote': boolean | undefined;
   'webui.desktop.remoteTunnel': boolean | undefined;
+  'notify.turnCompleted': { enabled: boolean; plugin_id: string; chat_id: string; min_seconds: number } | undefined;
   'webui.desktop.port': number | undefined;
   'webui.deploymentRole': 'server' | 'client' | undefined;
   'webui.enterpriseServerUrl': string | undefined;

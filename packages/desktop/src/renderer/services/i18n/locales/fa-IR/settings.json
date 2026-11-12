@@ -3404,5 +3404,12 @@
   "webui.tunnelError.no_binary": "مؤلفهٔ دسترسی از راه دور وجود ندارد. لطفاً One Work را دوباره نصب کنید.",
   "webui.tunnelError.register_failed": "اتصال به سرور رله ممکن نیست، در حال تلاش مجدد…",
   "webui.tunnelError.rejected": "سرور رله این نشانی را رد کرد. نشانی جدید دریافت کنید.",
-  "webui.tunnelError.spawn_failed": "راه‌اندازی مؤلفهٔ دسترسی از راه دور ناموفق بود."
+  "webui.tunnelError.spawn_failed": "راه‌اندازی مؤلفهٔ دسترسی از راه دور ناموفق بود.",
+  "webui.turnPush.title": "اطلاع‌رسانی به ربات چت من پس از پایان کار",
+  "webui.turnPush.hint": "وقتی کار طولانی تمام شد، ربات متصل Lark، DingTalk، WeCom، WeChat یا Telegram برایتان پیام می‌فرستد، حتی وقتی گوشی قفل است.",
+  "webui.turnPush.minDuration": "فقط اگر دست‌کم این‌قدر طول کشید",
+  "webui.turnPush.minAny": "هر مدتی",
+  "webui.turnPush.min1": "۱ دقیقه",
+  "webui.turnPush.min5": "۵ دقیقه",
+  "webui.turnPush.min15": "۱۵ دقیقه"
 }

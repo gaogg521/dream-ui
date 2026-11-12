@@ -3625,5 +3625,12 @@
   "webui.tunnelError.no_binary": "远程访问组件缺失，请重新安装 One Work。",
   "webui.tunnelError.register_failed": "连不上中继服务器，正在重试…",
   "webui.tunnelError.rejected": "中继服务器拒绝了这个地址，请换一个新地址。",
-  "webui.tunnelError.spawn_failed": "远程访问组件启动失败。"
+  "webui.tunnelError.spawn_failed": "远程访问组件启动失败。",
+  "webui.turnPush.title": "任务完成后推送到我的聊天",
+  "webui.turnPush.hint": "长任务跑完后，让你已连接的飞书、钉钉、企业微信、微信或 Telegram 机器人发你一条消息，手机锁屏也收得到。",
+  "webui.turnPush.minDuration": "任务至少运行多久才推送",
+  "webui.turnPush.minAny": "不限",
+  "webui.turnPush.min1": "1 分钟",
+  "webui.turnPush.min5": "5 分钟",
+  "webui.turnPush.min15": "15 分钟"
 }

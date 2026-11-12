@@ -3404,5 +3404,12 @@
   "webui.tunnelError.no_binary": "Le composant d'accès à distance est absent. Réinstallez One Work.",
   "webui.tunnelError.register_failed": "Serveur relais injoignable, nouvelle tentative…",
   "webui.tunnelError.rejected": "Le serveur relais a refusé cette adresse. Obtenez une nouvelle adresse.",
-  "webui.tunnelError.spawn_failed": "Impossible de démarrer le composant d'accès à distance."
+  "webui.tunnelError.spawn_failed": "Impossible de démarrer le composant d'accès à distance.",
+  "webui.turnPush.title": "Prévenir mon bot de chat quand une tâche se termine",
+  "webui.turnPush.hint": "Quand une longue tâche est terminée, votre bot Lark, DingTalk, WeCom, WeChat ou Telegram vous envoie un message, même téléphone verrouillé.",
+  "webui.turnPush.minDuration": "Seulement si elle a duré au moins",
+  "webui.turnPush.minAny": "Peu importe",
+  "webui.turnPush.min1": "1 minute",
+  "webui.turnPush.min5": "5 minutes",
+  "webui.turnPush.min15": "15 minutes"
 }

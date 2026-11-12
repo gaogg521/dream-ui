@@ -50,6 +50,7 @@ vi.mock('@/common/config/configService', () => ({
 }));
 
 vi.mock('@/common/adapter/ipcBridge', () => ({
+  channel: { getPushTargets: { invoke: vi.fn(() => Promise.resolve([])) } },
   shell: { openExternal: { invoke: vi.fn(() => Promise.resolve()) } },
   webui: {
     getStatus: { invoke: () => getStatusMock() },

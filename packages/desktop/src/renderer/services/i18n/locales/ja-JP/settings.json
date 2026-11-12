@@ -3406,5 +3406,12 @@
   "webui.tunnelError.no_binary": "リモートアクセス用コンポーネントが見つかりません。One Work を再インストールしてください。",
   "webui.tunnelError.register_failed": "中継サーバーに接続できません。再試行しています…",
   "webui.tunnelError.rejected": "中継サーバーがこのアドレスを拒否しました。新しいアドレスを取得してください。",
-  "webui.tunnelError.spawn_failed": "リモートアクセス用コンポーネントを起動できませんでした。"
+  "webui.tunnelError.spawn_failed": "リモートアクセス用コンポーネントを起動できませんでした。",
+  "webui.turnPush.title": "タスク完了をチャットボットに通知",
+  "webui.turnPush.hint": "長いタスクが終わったら、接続済みの Lark・DingTalk・WeCom・WeChat・Telegram のボットがメッセージを送ります。スマートフォンがロック中でも届きます。",
+  "webui.turnPush.minDuration": "この時間以上かかった場合のみ",
+  "webui.turnPush.minAny": "指定なし",
+  "webui.turnPush.min1": "1 分",
+  "webui.turnPush.min5": "5 分",
+  "webui.turnPush.min15": "15 分"
 }

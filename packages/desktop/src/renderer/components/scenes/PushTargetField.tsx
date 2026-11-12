@@ -26,6 +26,9 @@ type PushTargetFieldProps = {
   onChange: (next: ICronPushTarget | null) => void;
   onValidityChange?: (valid: boolean) => void;
   supportedPlatforms?: readonly string[];
+  /** Override the heading/explanation (the defaults speak about scheduled runs). */
+  title?: string;
+  hint?: string;
 };
 
 type PushOption = { key: string; label: string; target: ICronPushTarget };
@@ -53,7 +56,14 @@ const GoToSettingsButton: React.FC = () => {
   );
 };
 
-const PushTargetField: React.FC<PushTargetFieldProps> = ({ value, onChange, onValidityChange, supportedPlatforms }) => {
+const PushTargetField: React.FC<PushTargetFieldProps> = ({
+  value,
+  onChange,
+  onValidityChange,
+  supportedPlatforms,
+  title,
+  hint,
+}) => {
   const { t } = useTranslation();
   const inRouter = useInRouterContext();
   const [targets, setTargets] = useState<IChannelPushTarget[] | null>(null);
@@ -110,8 +120,8 @@ const PushTargetField: React.FC<PushTargetFieldProps> = ({ value, onChange, onVa
     >
       <div className='flex items-start justify-between gap-16px'>
         <div className='min-w-0'>
-          <p className='m-0 text-14px font-medium text-t-primary'>{t('cron.page.form.push.title')}</p>
-          <p className='mb-0 mt-4px text-12px leading-18px text-t-secondary'>{t('cron.page.form.push.hint')}</p>
+          <p className='m-0 text-14px font-medium text-t-primary'>{title ?? t('cron.page.form.push.title')}</p>
+          <p className='mb-0 mt-4px text-12px leading-18px text-t-secondary'>{hint ?? t('cron.page.form.push.hint')}</p>
         </div>
         <Switch checked={enabled} onChange={handleToggle} data-testid='push-target-switch' />
       </div>

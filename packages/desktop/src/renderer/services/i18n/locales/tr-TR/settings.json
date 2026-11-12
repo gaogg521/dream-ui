@@ -3404,5 +3404,12 @@
   "webui.tunnelError.no_binary": "Uzaktan erişim bileşeni eksik. Lütfen One Work'ü yeniden yükleyin.",
   "webui.tunnelError.register_failed": "Aktarma sunucusuna ulaşılamıyor, yeniden deneniyor…",
   "webui.tunnelError.rejected": "Aktarma sunucusu bu adresi reddetti. Yeni bir adres alın.",
-  "webui.tunnelError.spawn_failed": "Uzaktan erişim bileşeni başlatılamadı."
+  "webui.tunnelError.spawn_failed": "Uzaktan erişim bileşeni başlatılamadı.",
+  "webui.turnPush.title": "Görev bitince sohbet botuma mesaj gönder",
+  "webui.turnPush.hint": "Uzun bir görev bittiğinde bağlı Lark, DingTalk, WeCom, WeChat veya Telegram botunuz size mesaj gönderir; telefon kilitliyken bile ulaşır.",
+  "webui.turnPush.minDuration": "Yalnızca en az şu kadar sürdüyse",
+  "webui.turnPush.minAny": "Fark etmez",
+  "webui.turnPush.min1": "1 dakika",
+  "webui.turnPush.min5": "5 dakika",
+  "webui.turnPush.min15": "15 dakika"
 }

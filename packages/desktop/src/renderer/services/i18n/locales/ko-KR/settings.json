@@ -3406,5 +3406,12 @@
   "webui.tunnelError.no_binary": "원격 접속 구성 요소가 없습니다. One Work를 다시 설치해 주세요.",
   "webui.tunnelError.register_failed": "중계 서버에 연결할 수 없어 다시 시도하는 중…",
   "webui.tunnelError.rejected": "중계 서버가 이 주소를 거부했습니다. 새 주소를 받아 주세요.",
-  "webui.tunnelError.spawn_failed": "원격 접속 구성 요소를 시작하지 못했습니다."
+  "webui.tunnelError.spawn_failed": "원격 접속 구성 요소를 시작하지 못했습니다.",
+  "webui.turnPush.title": "작업이 끝나면 내 채팅 봇으로 알림",
+  "webui.turnPush.hint": "긴 작업이 끝나면 연결된 Lark, DingTalk, WeCom, WeChat, Telegram 봇이 메시지를 보냅니다. 휴대폰이 잠겨 있어도 받을 수 있습니다.",
+  "webui.turnPush.minDuration": "최소 이 시간 이상 걸린 작업만",
+  "webui.turnPush.minAny": "제한 없음",
+  "webui.turnPush.min1": "1분",
+  "webui.turnPush.min5": "5분",
+  "webui.turnPush.min15": "15분"
 }

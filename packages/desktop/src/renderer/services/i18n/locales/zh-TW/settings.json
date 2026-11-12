@@ -3626,5 +3626,12 @@
   "webui.tunnelError.no_binary": "遠端存取元件遺失，請重新安裝 One Work。",
   "webui.tunnelError.register_failed": "連不上中繼伺服器，正在重試…",
   "webui.tunnelError.rejected": "中繼伺服器拒絕了這個位址，請換一個新位址。",
-  "webui.tunnelError.spawn_failed": "遠端存取元件啟動失敗。"
+  "webui.tunnelError.spawn_failed": "遠端存取元件啟動失敗。",
+  "webui.turnPush.title": "任務完成後推送到我的聊天",
+  "webui.turnPush.hint": "長任務跑完後，讓你已連接的飛書、釘釘、企業微信、微信或 Telegram 機器人傳一則訊息給你，手機鎖定螢幕也收得到。",
+  "webui.turnPush.minDuration": "任務至少執行多久才推送",
+  "webui.turnPush.minAny": "不限",
+  "webui.turnPush.min1": "1 分鐘",
+  "webui.turnPush.min5": "5 分鐘",
+  "webui.turnPush.min15": "15 分鐘"
 }

@@ -3418,5 +3418,12 @@
   "webui.tunnelError.no_binary": "Компонент удалённого доступа отсутствует. Переустановите One Work.",
   "webui.tunnelError.register_failed": "Не удаётся связаться с ретранслятором, повторная попытка…",
   "webui.tunnelError.rejected": "Ретранслятор отклонил этот адрес. Получите новый адрес.",
-  "webui.tunnelError.spawn_failed": "Не удалось запустить компонент удалённого доступа."
+  "webui.tunnelError.spawn_failed": "Не удалось запустить компонент удалённого доступа.",
+  "webui.turnPush.title": "Сообщать в мой чат-бот о завершении задачи",
+  "webui.turnPush.hint": "Когда длинная задача завершена, подключённый бот Lark, DingTalk, WeCom, WeChat или Telegram пришлёт сообщение — даже при заблокированном телефоне.",
+  "webui.turnPush.minDuration": "Только если выполнялась не менее",
+  "webui.turnPush.minAny": "Любая длительность",
+  "webui.turnPush.min1": "1 минута",
+  "webui.turnPush.min5": "5 минут",
+  "webui.turnPush.min15": "15 минут"
 }

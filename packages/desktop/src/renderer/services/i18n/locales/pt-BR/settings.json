@@ -3407,5 +3407,12 @@
   "webui.tunnelError.no_binary": "O componente de acesso remoto não foi encontrado. Reinstale o One Work.",
   "webui.tunnelError.register_failed": "Não foi possível acessar o servidor de retransmissão, tentando novamente…",
   "webui.tunnelError.rejected": "O servidor de retransmissão recusou este endereço. Obtenha um novo endereço.",
-  "webui.tunnelError.spawn_failed": "Não foi possível iniciar o componente de acesso remoto."
+  "webui.tunnelError.spawn_failed": "Não foi possível iniciar o componente de acesso remoto.",
+  "webui.turnPush.title": "Avisar no meu bot de chat quando uma tarefa terminar",
+  "webui.turnPush.hint": "Quando uma tarefa longa terminar, seu bot do Lark, DingTalk, WeCom, WeChat ou Telegram envia uma mensagem, mesmo com o celular bloqueado.",
+  "webui.turnPush.minDuration": "Somente se durou pelo menos",
+  "webui.turnPush.minAny": "Qualquer duração",
+  "webui.turnPush.min1": "1 minuto",
+  "webui.turnPush.min5": "5 minutos",
+  "webui.turnPush.min15": "15 minutos"
 }
