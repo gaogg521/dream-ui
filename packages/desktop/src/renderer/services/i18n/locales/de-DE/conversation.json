@@ -643,6 +643,9 @@
       "CONTEXT_WINDOW_LEARNED": {
         "body": "Dieses Modell hat ein kleineres Kontextfenster als angenommen ({{tokens}} Tokens). Die Unterhaltung wurde automatisch verdichtet und fortgesetzt — du musst nichts tun."
       },
+      "CONTEXT_DEGRADED_COMPACT": {
+        "body": "Das Modell hat bei etwa {{tokens}} Tokens Kontext nicht mehr richtig geantwortet. Die Unterhaltung wurde automatisch komprimiert und die Anfrage wird wiederholt. Wenn das öfter passiert, stelle in den Einstellungen dieses Modells ein kleineres Kontextfenster ein."
+      },
       "AUTOCOMPACT_FAILED": {
         "body": "Die automatische Verdichtung hat diesmal nicht funktioniert. Nutze /compact oder starte eine neue Unterhaltung."
       },

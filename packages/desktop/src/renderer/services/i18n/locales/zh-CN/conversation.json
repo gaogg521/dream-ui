@@ -642,6 +642,9 @@
       "CONTEXT_WINDOW_LEARNED": {
         "body": "这个模型的实际上下文窗口比预设的小（{{tokens}} tokens）。已自动压缩对话并继续，你不用做任何操作。"
       },
+      "CONTEXT_DEGRADED_COMPACT": {
+        "body": "模型在约 {{tokens}} tokens 的上下文下没能正常回复。已自动压缩对话并重试。如果经常出现，请在该模型的设置里把上下文窗口调小。"
+      },
       "AUTOCOMPACT_FAILED": {
         "body": "这次自动压缩没成功。可以手动执行 /compact，或开启新对话。"
       },

@@ -643,6 +643,9 @@
       "CONTEXT_WINDOW_LEARNED": {
         "body": "Este modelo tiene una ventana de contexto menor de la supuesta ({{tokens}} tokens). La conversación se condensó automáticamente y continuó; no tienes que hacer nada."
       },
+      "CONTEXT_DEGRADED_COMPACT": {
+        "body": "El modelo dejó de responder correctamente con unos {{tokens}} tokens de contexto. La conversación se comprimió automáticamente y se está reintentando la solicitud. Si sigue ocurriendo, define una ventana de contexto más pequeña para este modelo en sus ajustes."
+      },
       "AUTOCOMPACT_FAILED": {
         "body": "Esta vez la compactación automática no funcionó. Usa /compact o inicia una conversación nueva."
       },
