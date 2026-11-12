@@ -76,6 +76,14 @@
 - 完成通知：网页通知机制本来就有（`useBrowserNotification`，标签页在后台时弹）。补了首次访问的授权提示
   （`useNotificationPermissionPrompt`，原来授权入口藏在系统设置里，手机用户找不到）。**手机锁屏/浏览器被
   冻结时仍收不到**——真正可靠的推送要走 IM 渠道或小程序订阅消息，见下文方案讨论。
+- **任务完成推送到 IM（已做）**：设置 → 远程连接 →「任务完成后推送到我的聊天」，选一个已连接的机器人和会话
+  （复用定时任务的 `PushTargetField`），再选任务至少运行多久才推（不限/1/5/15 分钟，默认 1 分钟）。
+  偏好键 `notify.turnCompleted` = `{enabled, plugin_id, chat_id, min_seconds}`，由 dream-core
+  `dream-core-app/src/router/turn_push.rs` 读取：订阅实时总线，`message.stream` 的第一帧记为回合起点，
+  `turn.completed` 时算时长并经 `ChannelCronPusher` 发出。**只含会话名和用时，不含结果内容**；经聊天机器人
+  进来的会话不回推（回复本来就在那个聊天里）；没见过起点的回合不推；发送失败只记 warn。
+  支持的平台：微信、企业微信、飞书/Lark、钉钉、Telegram（和员工通知一致，Slack/Discord 的聊天 id 需要先有会话）。
+  ⚠️ 要发版 dreamcore + bump pin 才进安装包；没有 QQ 渠道插件。
 - dev 模式下 WebUI 对非根路径返回 404（渲染层走 Vite 代理），所以 dev 里测 SPA 深链接没意义，
   打包态才是真实行为。
 - broker 仓库（`dream-trial-broker`）没有 remote，提交只在本机。
