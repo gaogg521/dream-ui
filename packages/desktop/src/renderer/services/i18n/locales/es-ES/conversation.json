@@ -646,6 +646,9 @@
       "CONTEXT_DEGRADED_COMPACT": {
         "body": "El modelo dejó de responder correctamente con unos {{tokens}} tokens de contexto. La conversación se comprimió automáticamente y se está reintentando la solicitud. Si sigue ocurriendo, define una ventana de contexto más pequeña para este modelo en sus ajustes."
       },
+      "CONTEXT_SUSPECTED_OVERLIMIT": {
+        "body": "El modelo no respondió. Esta conversación (unos {{tokens}} tokens) probablemente es demasiado larga, y la compactación automática no lo resolvió o aún no se ha activado. Ejecuta /compact para compactarla manualmente y vuelve a intentarlo."
+      },
       "AUTOCOMPACT_FAILED": {
         "body": "Esta vez la compactación automática no funcionó. Usa /compact o inicia una conversación nueva."
       },

@@ -646,6 +646,9 @@
       "CONTEXT_DEGRADED_COMPACT": {
         "body": "Das Modell hat bei etwa {{tokens}} Tokens Kontext nicht mehr richtig geantwortet. Die Unterhaltung wurde automatisch komprimiert und die Anfrage wird wiederholt. Wenn das öfter passiert, stelle in den Einstellungen dieses Modells ein kleineres Kontextfenster ein."
       },
+      "CONTEXT_SUSPECTED_OVERLIMIT": {
+        "body": "Das Modell hat nicht geantwortet. Diese Unterhaltung (etwa {{tokens}} Tokens) ist vermutlich zu lang; die automatische Komprimierung hat das nicht gelöst oder noch nicht ausgelöst. Führe /compact aus, um sie manuell zu komprimieren, und versuche es erneut."
+      },
       "AUTOCOMPACT_FAILED": {
         "body": "Die automatische Verdichtung hat diesmal nicht funktioniert. Nutze /compact oder starte eine neue Unterhaltung."
       },

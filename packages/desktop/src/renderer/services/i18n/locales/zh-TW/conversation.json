@@ -645,6 +645,9 @@
       "CONTEXT_DEGRADED_COMPACT": {
         "body": "模型在約 {{tokens}} tokens 的上下文下未能正常回覆。已自動壓縮對話並重試。如果經常出現，請在該模型的設定中把上下文視窗調小。"
       },
+      "CONTEXT_SUSPECTED_OVERLIMIT": {
+        "body": "模型沒有回覆。目前對話（約 {{tokens}} tokens）疑似上下文超限，自動壓縮未能解決或尚未觸發。請手動執行 /compact 壓縮後再次嘗試。"
+      },
       "AUTOCOMPACT_FAILED": {
         "body": "這次自動壓縮沒成功。可以手動執行 /compact，或開啟新對話。"
       },

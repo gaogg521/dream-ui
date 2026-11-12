@@ -645,6 +645,9 @@
       "CONTEXT_DEGRADED_COMPACT": {
         "body": "模型在约 {{tokens}} tokens 的上下文下没能正常回复。已自动压缩对话并重试。如果经常出现，请在该模型的设置里把上下文窗口调小。"
       },
+      "CONTEXT_SUSPECTED_OVERLIMIT": {
+        "body": "模型没有回复。当前会话（约 {{tokens}} tokens）疑似上下文超限，自动压缩未能解决或尚未触发。请手动执行 /compact 压缩后再次尝试。"
+      },
       "AUTOCOMPACT_FAILED": {
         "body": "这次自动压缩没成功。可以手动执行 /compact，或开启新对话。"
       },

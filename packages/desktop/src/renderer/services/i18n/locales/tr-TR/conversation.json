@@ -647,6 +647,9 @@
       "CONTEXT_DEGRADED_COMPACT": {
         "body": "Model, yaklaşık {{tokens}} token bağlamda düzgün yanıt vermeyi bıraktı. Konuşma otomatik olarak sıkıştırıldı ve istek yeniden deneniyor. Bu sık yaşanıyorsa bu modelin ayarlarında bağlam penceresini küçültün."
       },
+      "CONTEXT_SUSPECTED_OVERLIMIT": {
+        "body": "Model yanıt vermedi. Bu konuşma (yaklaşık {{tokens}} token) büyük olasılıkla çok uzun; otomatik sıkıştırma sorunu çözmedi veya henüz devreye girmedi. /compact komutuyla elle sıkıştırın ve tekrar deneyin."
+      },
       "AUTOCOMPACT_FAILED": {
         "body": "Bu kez otomatik sıkıştırma başarısız oldu. /compact çalıştırın veya yeni bir sohbet başlatın."
       },
