@@ -3638,5 +3638,14 @@
   "webui.cardServiceDesc": "在這台電腦上開啟網頁入口，手機或其他裝置才能存取。",
   "webui.cardLan": "區域網路存取",
   "webui.statusOff": "未開啟",
-  "webui.statusOn": "已開啟"
+  "webui.statusOn": "已開啟",
+  "webui.heroTitle": "手機遠端使用",
+  "webui.heroSummaryInternet": "手機在哪都能連上這台電腦",
+  "webui.heroSummaryLan": "手機在同一 WiFi 下能連上這台電腦",
+  "webui.heroSummaryOff": "還沒有開啟，打開下面任一方式即可",
+  "webui.heroNoQr": "開啟本機服務，並打開區域網路或外網存取後，這裡會出現手機掃碼登入的 QR 碼。",
+  "webui.qrScanCaption": "用手機掃碼登入",
+  "webui.sectionConnect": "連線方式",
+  "webui.sectionNotify": "通知",
+  "webui.sectionAccount": "帳號"
 }

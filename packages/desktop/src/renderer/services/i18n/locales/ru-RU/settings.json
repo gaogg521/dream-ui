@@ -3430,5 +3430,14 @@
   "webui.cardServiceDesc": "Открывает веб-вход на этом компьютере, чтобы телефон и другие устройства могли подключиться.",
   "webui.cardLan": "Доступ из локальной сети",
   "webui.statusOff": "Выкл.",
-  "webui.statusOn": "Вкл."
+  "webui.statusOn": "Вкл.",
+  "webui.heroTitle": "Использование с телефона",
+  "webui.heroSummaryInternet": "Телефон может подключиться к этому компьютеру из любого места",
+  "webui.heroSummaryLan": "Телефон может подключиться к этому компьютеру в той же сети Wi-Fi",
+  "webui.heroSummaryOff": "Пока не настроено. Включите любой вариант ниже.",
+  "webui.heroNoQr": "Когда служба и доступ из локальной сети или извне включены, здесь появится QR-код для входа с телефона.",
+  "webui.qrScanCaption": "Отсканируйте телефоном для входа",
+  "webui.sectionConnect": "СПОСОБЫ ПОДКЛЮЧЕНИЯ",
+  "webui.sectionNotify": "УВЕДОМЛЕНИЯ",
+  "webui.sectionAccount": "АККАУНТ"
 }

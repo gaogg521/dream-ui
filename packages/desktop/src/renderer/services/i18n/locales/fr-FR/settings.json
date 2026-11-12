@@ -3416,5 +3416,14 @@
   "webui.cardServiceDesc": "Ouvre une entrée web sur cet ordinateur pour que le téléphone ou d'autres appareils puissent y accéder.",
   "webui.cardLan": "Accès sur le réseau local",
   "webui.statusOff": "Désactivé",
-  "webui.statusOn": "Activé"
+  "webui.statusOn": "Activé",
+  "webui.heroTitle": "Utiliser depuis le téléphone",
+  "webui.heroSummaryInternet": "Votre téléphone peut accéder à cet ordinateur de n'importe où",
+  "webui.heroSummaryLan": "Votre téléphone peut accéder à cet ordinateur sur le même Wi-Fi",
+  "webui.heroSummaryOff": "Pas encore configuré. Activez l'une des options ci-dessous.",
+  "webui.heroNoQr": "Une fois le service et l'accès par réseau local ou depuis l'extérieur activés, un code QR de connexion pour le téléphone apparaît ici.",
+  "webui.qrScanCaption": "Scannez avec le téléphone pour vous connecter",
+  "webui.sectionConnect": "MODES DE CONNEXION",
+  "webui.sectionNotify": "NOTIFICATIONS",
+  "webui.sectionAccount": "COMPTE"
 }

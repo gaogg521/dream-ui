@@ -3416,5 +3416,14 @@
   "webui.cardServiceDesc": "Telefonunuzun veya diğer cihazların erişebilmesi için bu bilgisayarda bir web girişi açar.",
   "webui.cardLan": "Yerel ağ erişimi",
   "webui.statusOff": "Kapalı",
-  "webui.statusOn": "Açık"
+  "webui.statusOn": "Açık",
+  "webui.heroTitle": "Telefonunuzdan kullanın",
+  "webui.heroSummaryInternet": "Telefonunuz bu bilgisayara her yerden ulaşabilir",
+  "webui.heroSummaryLan": "Telefonunuz aynı Wi-Fi'de bu bilgisayara ulaşabilir",
+  "webui.heroSummaryOff": "Henüz ayarlanmadı. Aşağıdaki seçeneklerden birini açın.",
+  "webui.heroNoQr": "Hizmet ile yerel ağ veya dış erişim açıldığında, telefonla giriş için QR kodu burada görünür.",
+  "webui.qrScanCaption": "Giriş için telefonunuzla tarayın",
+  "webui.sectionConnect": "BAĞLANMA YOLLARI",
+  "webui.sectionNotify": "BİLDİRİMLER",
+  "webui.sectionAccount": "HESAP"
 }

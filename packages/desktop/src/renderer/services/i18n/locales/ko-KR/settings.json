@@ -3418,5 +3418,14 @@
   "webui.cardServiceDesc": "이 컴퓨터에 웹 진입점을 열어 휴대폰 등 다른 기기에서 접속할 수 있게 합니다.",
   "webui.cardLan": "로컬 네트워크 접속",
   "webui.statusOff": "꺼짐",
-  "webui.statusOn": "켜짐"
+  "webui.statusOn": "켜짐",
+  "webui.heroTitle": "휴대폰에서 사용",
+  "webui.heroSummaryInternet": "휴대폰으로 어디서나 이 컴퓨터에 접속할 수 있습니다",
+  "webui.heroSummaryLan": "같은 Wi-Fi 안에서 휴대폰으로 이 컴퓨터에 접속할 수 있습니다",
+  "webui.heroSummaryOff": "아직 설정되지 않았습니다. 아래 항목 중 하나를 켜세요.",
+  "webui.heroNoQr": "서비스를 켜고 로컬 네트워크 또는 외부 접속을 켜면 휴대폰 로그인용 QR 코드가 여기에 나타납니다.",
+  "webui.qrScanCaption": "휴대폰으로 스캔해 로그인",
+  "webui.sectionConnect": "연결 방법",
+  "webui.sectionNotify": "알림",
+  "webui.sectionAccount": "계정"
 }

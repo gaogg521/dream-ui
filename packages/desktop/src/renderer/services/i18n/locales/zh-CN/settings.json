@@ -3637,5 +3637,14 @@
   "webui.cardServiceDesc": "在这台电脑上开启网页入口，手机或其他设备才能访问。",
   "webui.cardLan": "局域网访问",
   "webui.statusOff": "未开启",
-  "webui.statusOn": "已开启"
+  "webui.statusOn": "已开启",
+  "webui.heroTitle": "手机远程使用",
+  "webui.heroSummaryInternet": "手机在哪都能连上这台电脑",
+  "webui.heroSummaryLan": "手机在同一 WiFi 下能连上这台电脑",
+  "webui.heroSummaryOff": "还没有开启，打开下面任一方式即可",
+  "webui.heroNoQr": "开启本机服务，并打开局域网或外网访问后，这里会出现手机扫码登录的二维码。",
+  "webui.qrScanCaption": "用手机扫码登录",
+  "webui.sectionConnect": "连接方式",
+  "webui.sectionNotify": "通知",
+  "webui.sectionAccount": "账号"
 }

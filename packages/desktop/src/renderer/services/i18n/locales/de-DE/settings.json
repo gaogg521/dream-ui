@@ -3416,5 +3416,14 @@
   "webui.cardServiceDesc": "Öffnet auf diesem Computer einen Web-Zugang, damit Smartphone und andere Geräte darauf zugreifen können.",
   "webui.cardLan": "Zugriff im lokalen Netzwerk",
   "webui.statusOff": "Aus",
-  "webui.statusOn": "An"
+  "webui.statusOn": "An",
+  "webui.heroTitle": "Vom Smartphone aus nutzen",
+  "webui.heroSummaryInternet": "Ihr Smartphone erreicht diesen Computer von überall",
+  "webui.heroSummaryLan": "Ihr Smartphone erreicht diesen Computer im selben WLAN",
+  "webui.heroSummaryOff": "Noch nicht eingerichtet. Schalten Sie unten eine Option ein.",
+  "webui.heroNoQr": "Sobald der Dienst und der Zugriff im lokalen Netzwerk oder von außen aktiv sind, erscheint hier ein QR-Code zur Anmeldung per Smartphone.",
+  "webui.qrScanCaption": "Mit dem Smartphone scannen und anmelden",
+  "webui.sectionConnect": "VERBINDUNGSARTEN",
+  "webui.sectionNotify": "BENACHRICHTIGUNGEN",
+  "webui.sectionAccount": "KONTO"
 }

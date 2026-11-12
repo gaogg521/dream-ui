@@ -118,10 +118,11 @@ describe('WebuiModalContent login info card', () => {
     expect(screen.getByText('admin')).toBeInTheDocument();
   });
 
-  it('lays the page out as one card per topic', async () => {
+  it('lays the page out as an overview plus one card per topic', async () => {
     getStatusMock.mockResolvedValue({ ...baseStatus, running: false });
     render(<WebuiModalContent />);
     for (const id of [
+      'webui-hero-card',
       'webui-service-card',
       'webui-lan-card',
       'webui-tunnel-card',
@@ -130,8 +131,10 @@ describe('WebuiModalContent login info card', () => {
     ]) {
       expect(await screen.findByTestId(id)).toBeInTheDocument();
     }
-    // The QR card only exists once there is an address a phone can reach.
-    expect(screen.queryByTestId('webui-qr-card')).not.toBeInTheDocument();
+    // The temporary public link stays reachable even before anything is switched on.
+    expect(screen.getByTestId('webui-butler-link')).toBeInTheDocument();
+    // No QR code until there is an address a phone can reach; the overview says what to do instead.
+    expect(screen.getByTestId('webui-hero-card')).toHaveTextContent('settings.webui.heroNoQr');
   });
 
   it('shows the state of each card at a glance', async () => {

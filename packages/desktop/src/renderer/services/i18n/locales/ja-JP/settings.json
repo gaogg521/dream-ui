@@ -3418,5 +3418,14 @@
   "webui.cardServiceDesc": "このパソコンに Web の入口を開き、スマートフォンなどから接続できるようにします。",
   "webui.cardLan": "ローカルネットワークでのアクセス",
   "webui.statusOff": "オフ",
-  "webui.statusOn": "オン"
+  "webui.statusOn": "オン",
+  "webui.heroTitle": "スマートフォンから使う",
+  "webui.heroSummaryInternet": "スマートフォンからどこでもこのパソコンに接続できます",
+  "webui.heroSummaryLan": "同じ Wi-Fi 内のスマートフォンからこのパソコンに接続できます",
+  "webui.heroSummaryOff": "まだ設定されていません。下のいずれかをオンにしてください。",
+  "webui.heroNoQr": "サービスをオンにし、ローカルネットワークまたは外部アクセスを有効にすると、ここにログイン用の QR コードが表示されます。",
+  "webui.qrScanCaption": "スマートフォンでスキャンしてログイン",
+  "webui.sectionConnect": "接続方法",
+  "webui.sectionNotify": "通知",
+  "webui.sectionAccount": "アカウント"
 }

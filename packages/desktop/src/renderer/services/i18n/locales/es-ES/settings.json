@@ -3416,5 +3416,14 @@
   "webui.cardServiceDesc": "Abre una entrada web en este equipo para que el móvil u otros dispositivos puedan acceder.",
   "webui.cardLan": "Acceso en la red local",
   "webui.statusOff": "Desactivado",
-  "webui.statusOn": "Activado"
+  "webui.statusOn": "Activado",
+  "webui.heroTitle": "Usar desde el móvil",
+  "webui.heroSummaryInternet": "Tu móvil puede acceder a este equipo desde cualquier lugar",
+  "webui.heroSummaryLan": "Tu móvil puede acceder a este equipo en la misma red Wi-Fi",
+  "webui.heroSummaryOff": "Aún no está configurado. Activa cualquier opción de abajo.",
+  "webui.heroNoQr": "Cuando el servicio y el acceso por red local o desde fuera estén activados, aquí aparecerá un código QR para iniciar sesión desde el móvil.",
+  "webui.qrScanCaption": "Escanea con el móvil para iniciar sesión",
+  "webui.sectionConnect": "CÓMO CONECTAR",
+  "webui.sectionNotify": "NOTIFICACIONES",
+  "webui.sectionAccount": "CUENTA"
 }

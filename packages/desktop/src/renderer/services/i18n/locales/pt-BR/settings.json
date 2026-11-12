@@ -3419,5 +3419,14 @@
   "webui.cardServiceDesc": "Abre uma entrada web neste computador para que o celular ou outros dispositivos possam acessá-lo.",
   "webui.cardLan": "Acesso pela rede local",
   "webui.statusOff": "Desativado",
-  "webui.statusOn": "Ativado"
+  "webui.statusOn": "Ativado",
+  "webui.heroTitle": "Usar pelo celular",
+  "webui.heroSummaryInternet": "Seu celular consegue acessar este computador de qualquer lugar",
+  "webui.heroSummaryLan": "Seu celular consegue acessar este computador na mesma rede Wi-Fi",
+  "webui.heroSummaryOff": "Ainda não configurado. Ative qualquer opção abaixo.",
+  "webui.heroNoQr": "Com o serviço e o acesso pela rede local ou externo ativados, um QR code para entrar pelo celular aparece aqui.",
+  "webui.qrScanCaption": "Escaneie com o celular para entrar",
+  "webui.sectionConnect": "COMO CONECTAR",
+  "webui.sectionNotify": "NOTIFICAÇÕES",
+  "webui.sectionAccount": "CONTA"
 }

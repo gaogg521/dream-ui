@@ -3416,5 +3416,14 @@
   "webui.cardServiceDesc": "یک ورودی وب روی این رایانه باز می‌کند تا گوشی و دستگاه‌های دیگر بتوانند به آن دسترسی داشته باشند.",
   "webui.cardLan": "دسترسی در شبکهٔ محلی",
   "webui.statusOff": "خاموش",
-  "webui.statusOn": "روشن"
+  "webui.statusOn": "روشن",
+  "webui.heroTitle": "استفاده از گوشی",
+  "webui.heroSummaryInternet": "گوشی شما از هر جا می‌تواند به این رایانه وصل شود",
+  "webui.heroSummaryLan": "گوشی شما در همان Wi-Fi می‌تواند به این رایانه وصل شود",
+  "webui.heroSummaryOff": "هنوز راه‌اندازی نشده است. یکی از گزینه‌های زیر را روشن کنید.",
+  "webui.heroNoQr": "وقتی سرویس و دسترسی شبکهٔ محلی یا بیرونی روشن شود، کد QR ورود با گوشی اینجا نمایش داده می‌شود.",
+  "webui.qrScanCaption": "برای ورود با گوشی اسکن کنید",
+  "webui.sectionConnect": "روش‌های اتصال",
+  "webui.sectionNotify": "اعلان‌ها",
+  "webui.sectionAccount": "حساب"
 }

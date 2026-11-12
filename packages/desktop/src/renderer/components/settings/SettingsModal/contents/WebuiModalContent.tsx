@@ -19,12 +19,13 @@ import ChannelWeixinLogo from '@/renderer/assets/channel-logos/weixin.svg';
 import { isElectronDesktop } from '@/renderer/utils/platform';
 import '@/renderer/pages/settings/components/settings.css';
 import { Button, Form, Input, Message, Switch, Tabs, Tooltip } from '@arco-design/web-react';
-import { CheckOne, Communication, Computer, Copy, Earth, EditTwo, Iphone, Lock, Refresh, Wifi } from '@icon-park/react';
-import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Communication, Computer, Copy, Earth, EditTwo, Lock, Wifi } from '@icon-park/react';
+import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/renderer/services/i18n/format';
 import { useSettingsViewMode } from '../settingsViewContext';
-import SettingsCard from './webuiTunnel/SettingsCard';
+import RemoteHero from './webuiTunnel/RemoteHero';
+import SettingsCard, { SectionLabel } from './webuiTunnel/SettingsCard';
 import WebuiTunnelSection from './webuiTunnel/WebuiTunnelSection';
 import TurnPushSection from './webuiTunnel/TurnPushSection';
 import { useWebuiTunnel } from './webuiTunnel/useWebuiTunnel';
@@ -40,10 +41,6 @@ const CHANNEL_LOGOS = [
 ] as const;
 
 const ChannelModalContentLazy = React.lazy(() => import('./channels/ChannelModalContent'));
-const QRCodeSVGLazy = React.lazy(async () => {
-  const mod = await import('qrcode.react');
-  return { default: mod.QRCodeSVG };
-});
 
 const DESKTOP_WEBUI_ENABLED_KEY = 'webui.desktop.enabled';
 const DESKTOP_WEBUI_ALLOW_REMOTE_KEY = 'webui.desktop.allowRemote';
@@ -560,24 +557,6 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
   const displayPassword = getDisplayPassword();
   const displayUsername = status?.adminUsername || 'admin';
 
-  const webuiSteps = useMemo(
-    () => [
-      {
-        label: t('settings.webui.enable', { defaultValue: 'Enable WebUI' }),
-        done: webuiEnabled || Boolean(status?.running),
-      },
-      {
-        label: t('settings.webui.accessUrl', { defaultValue: 'Access URL' }),
-        done: webuiEnabled || Boolean(status?.running),
-      },
-      {
-        label: t('settings.webui.allowRemote', { defaultValue: 'Allow LAN Access' }),
-        done: allowRemotePreference || Boolean(status?.allowRemote),
-      },
-    ],
-    [allowRemotePreference, status?.allowRemote, status?.running, t, webuiEnabled]
-  );
-
   // 浏览器端只显示 Channels 配置，不显示 WebUI 服务配置 / In browser mode, only show Channels config, not WebUI service config
   if (!isDesktop) {
     return (
@@ -596,38 +575,7 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
 
   const webuiPanel = (
     <DreamScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
-      <div className='space-y-12px px-[12px] md:px-[28px]'>
-        {/* 标题 / Title */}
-        <h2 className='text-20px font-500 text-t-primary m-0'>WebUI</h2>
-
-        {/* 描述说明 / Description */}
-        <div className='space-y-6px'>
-          <p className='m-0 text-13px text-t-secondary leading-relaxed'>{t('settings.webui.description')}</p>
-          <div className='flex flex-wrap gap-x-12px gap-y-6px'>
-            {webuiSteps.map((step, idx) => (
-              <div key={step.label} className='inline-flex items-center gap-6px'>
-                <span
-                  className={
-                    step.done
-                      ? 'inline-flex items-center justify-center w-16px h-16px rd-50% text-10px font-600 bg-[rgba(var(--success-6),0.12)] text-[rgba(var(--success-6),1)]'
-                      : 'inline-flex items-center justify-center w-16px h-16px rd-50% text-10px font-600 bg-fill-2 text-t-quaternary'
-                  }
-                >
-                  {idx + 1}
-                </span>
-                {step.done ? <CheckOne theme='filled' size='12' className='text-[rgba(var(--success-6),1)]' /> : null}
-                <span
-                  className={
-                    step.done ? 'text-12px text-[rgba(var(--success-6),1)] font-500' : 'text-12px text-t-tertiary'
-                  }
-                >
-                  {step.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
+      <div className='space-y-12px px-[12px] md:px-[28px] pb-8px'>
         {/* Messaging 强引导入口 / Messaging primary entry — disabled, kept for future use
         <div className='rd-12px border border-line bg-2 px-12px py-10px flex items-center justify-between gap-10px'>
             <div className='min-w-0 flex items-center gap-8px'>
@@ -643,69 +591,103 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
           </div>
         */}
 
-        {/* 本机服务 / Local WebUI service */}
-        <SettingsCard
-          data-testid='webui-service-card'
-          icon={<Computer theme='outline' size='20' />}
-          title={t('settings.webui.cardService')}
-          description={t('settings.webui.cardServiceDesc')}
-          status={
-            startLoading
-              ? { tone: 'warning', text: t('settings.webui.starting') }
-              : status?.running
-                ? { tone: 'success', text: t('settings.webui.running') }
-                : { tone: 'neutral', text: t('settings.webui.statusOff') }
+        {/* 总览：手机现在怎么连、各通道状态、扫码二维码 / Overview: how a phone can connect right now, and the QR code */}
+        <RemoteHero
+          serviceOn={Boolean(status?.running)}
+          lanOn={Boolean(status?.running && status.allowRemote)}
+          internetOn={tunnel.status.state === 'connected'}
+          internetTone={
+            tunnel.status.state === 'connected'
+              ? 'success'
+              : tunnel.status.state === 'error'
+                ? 'danger'
+                : tunnel.enabled
+                  ? 'warning'
+                  : 'neutral'
           }
-          action={
-            <Switch
-              className='settings-switch-on'
-              checked={webuiEnabled}
-              loading={startLoading}
-              onChange={handleToggle}
-            />
-          }
-        >
-          {/* 访问地址（启用 WebUI 后即显示，不依赖后端 running 状态）/ Access URL (shown whenever WebUI is enabled, not tied to backend running state) */}
-          {webuiEnabled && (
-            <div className='flex items-center justify-between gap-8px rd-10px border border-line bg-fill-1 px-12px py-8px'>
-              <span className='text-12px text-t-tertiary shrink-0'>{t('settings.webui.accessUrl')}</span>
-              <div className='flex items-center gap-4px min-w-0'>
-                <button
-                  className='text-13px text-primary font-mono hover:underline cursor-pointer bg-transparent border-none p-0 truncate'
-                  onClick={() => shell.openExternal.invoke(getDisplayUrl()).catch(console.error)}
-                >
-                  {getDisplayUrl()}
-                </button>
-                <Tooltip content={t('common.copy')}>
-                  <Button
-                    type='text'
-                    size='mini'
-                    className='rd-100px !px-6px inline-flex items-center !h-24px'
-                    onClick={() => handleCopy(getDisplayUrl())}
-                  >
-                    <Copy size={14} />
-                  </Button>
-                </Tooltip>
-              </div>
-            </div>
-          )}
-        </SettingsCard>
-
-        {/* 局域网访问 — 仅局域网内可达，与「外网访问」是两回事 / LAN access, distinct from access from outside the LAN */}
-        <SettingsCard
-          data-testid='webui-lan-card'
-          icon={<Wifi theme='outline' size='20' />}
-          title={t('settings.webui.cardLan')}
-          description={t('settings.webui.allowRemoteDesc')}
-          status={
-            allowRemotePreference
-              ? { tone: 'success', text: t('settings.webui.statusOn') }
-              : { tone: 'neutral', text: t('settings.webui.statusOff') }
-          }
-          action={
-            <Switch className='settings-switch-on' checked={allowRemotePreference} onChange={handleAllowRemoteChange} />
-          }
+          address={tunnel.reachableUrl ?? (status?.running && status.allowRemote ? status.networkUrl : undefined)}
+          canShowQr={Boolean(status?.running && (status.allowRemote || tunnel.reachableUrl))}
+          qr={{
+            url: qrUrl,
+            loading: qrLoading,
+            expiresAt: qrExpiresAt ? formatExpiresAt(qrExpiresAt) : null,
+            onRefresh: () => void generateQRCode(),
+            onCopy: () => qrUrl && handleCopy(qrUrl),
+          }}
+          onCopyAddress={handleCopy}
         />
+
+        <SectionLabel>{t('settings.webui.sectionConnect')}</SectionLabel>
+
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-12px'>
+          {/* 本机服务 / Local WebUI service */}
+          <SettingsCard
+            data-testid='webui-service-card'
+            icon={<Computer theme='outline' size='20' />}
+            title={t('settings.webui.cardService')}
+            description={t('settings.webui.cardServiceDesc')}
+            status={
+              startLoading
+                ? { tone: 'warning', text: t('settings.webui.starting') }
+                : status?.running
+                  ? { tone: 'success', text: t('settings.webui.running') }
+                  : { tone: 'neutral', text: t('settings.webui.statusOff') }
+            }
+            action={
+              <Switch
+                className='settings-switch-on'
+                checked={webuiEnabled}
+                loading={startLoading}
+                onChange={handleToggle}
+              />
+            }
+          >
+            {/* 访问地址（启用 WebUI 后即显示，不依赖后端 running 状态）/ Access URL (shown whenever WebUI is enabled, not tied to backend running state) */}
+            {webuiEnabled && (
+              <div className='flex items-center justify-between gap-8px rd-10px border border-line bg-fill-1 px-12px py-8px'>
+                <span className='text-12px text-t-tertiary shrink-0'>{t('settings.webui.accessUrl')}</span>
+                <div className='flex items-center gap-4px min-w-0'>
+                  <button
+                    className='text-13px text-primary font-mono hover:underline cursor-pointer bg-transparent border-none p-0 truncate'
+                    onClick={() => shell.openExternal.invoke(getDisplayUrl()).catch(console.error)}
+                  >
+                    {getDisplayUrl()}
+                  </button>
+                  <Tooltip content={t('common.copy')}>
+                    <Button
+                      type='text'
+                      size='mini'
+                      className='rd-100px !px-6px inline-flex items-center !h-24px'
+                      onClick={() => handleCopy(getDisplayUrl())}
+                    >
+                      <Copy size={14} />
+                    </Button>
+                  </Tooltip>
+                </div>
+              </div>
+            )}
+          </SettingsCard>
+
+          {/* 局域网访问 — 仅局域网内可达，与「外网访问」是两回事 / LAN access, distinct from access from outside the LAN */}
+          <SettingsCard
+            data-testid='webui-lan-card'
+            icon={<Wifi theme='outline' size='20' />}
+            title={t('settings.webui.cardLan')}
+            description={t('settings.webui.allowRemoteDesc')}
+            status={
+              allowRemotePreference
+                ? { tone: 'success', text: t('settings.webui.statusOn') }
+                : { tone: 'neutral', text: t('settings.webui.statusOff') }
+            }
+            action={
+              <Switch
+                className='settings-switch-on'
+                checked={allowRemotePreference}
+                onChange={handleAllowRemoteChange}
+              />
+            }
+          />
+        </div>
 
         {/* 外网访问：手机在局域网之外访问本机 / Access from outside the LAN */}
         <WebuiTunnelSection
@@ -713,10 +695,15 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
           webuiRunning={Boolean(status?.running)}
           footer={
             /* 临时公网访问入口 — 由管家通过 Cloudflare 隧道实现，随时可用 */
-            <div className='text-12px text-t-tertiary'>
-              {t('settings.webui.needPublicAccessHint')}{' '}
-              <button
-                className='text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-12px'
+            <div className='flex flex-wrap items-center justify-between gap-10px rd-12px border border-dashed border-[var(--color-border-3)] px-14px py-10px'>
+              <div className='min-w-0 text-13px font-500 text-t-primary'>
+                {t('settings.webui.needPublicAccessHint')}
+              </div>
+              <Button
+                size='small'
+                type='outline'
+                className='rd-100px'
+                data-testid='webui-butler-link'
                 onClick={() =>
                   void talkToButler({
                     prompt: t('settings.talkToButler.prompt.setupRemote', {
@@ -727,75 +714,12 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
                 }
               >
                 {t('settings.webui.letButlerSetup', { defaultValue: 'Let the butler open a temporary public link' })} →
-              </button>
+              </Button>
             </div>
           }
         />
 
-        {/* 手机扫码登录（仅服务器运行且有可达地址时显示）/ QR login (only when running and reachable) */}
-        {status?.running && (status.allowRemote || tunnel.reachableUrl) && (
-          <SettingsCard
-            data-testid='webui-qr-card'
-            icon={<Iphone theme='outline' size='20' />}
-            title={t('settings.webui.qrLogin')}
-            description={t('settings.webui.qrLoginHint')}
-          >
-            <div className='flex flex-col items-center gap-12px'>
-              {/* 二维码显示区域 / QR Code display area */}
-              <div className='p-12px bg-fill-1 border border-line rd-10px'>
-                {qrLoading ? (
-                  <div className='w-140px h-140px flex items-center justify-center'>
-                    <span className='text-14px text-t-tertiary'>{t('common.loading')}</span>
-                  </div>
-                ) : qrUrl ? (
-                  <div className='p-8px bg-white rd-8px'>
-                    <Suspense
-                      fallback={
-                        <div className='w-140px h-140px flex items-center justify-center'>
-                          <span className='text-14px text-t-tertiary'>{t('common.loading')}</span>
-                        </div>
-                      }
-                    >
-                      <QRCodeSVGLazy value={qrUrl} size={140} level='M' />
-                    </Suspense>
-                  </div>
-                ) : (
-                  <div className='w-140px h-140px flex items-center justify-center'>
-                    <span className='text-14px text-t-tertiary'>{t('settings.webui.qrGenerateFailed')}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* 过期时间、复制链接和刷新按钮 / Expiration time, copy link and refresh button */}
-              <div className='flex items-center gap-8px'>
-                {qrExpiresAt && (
-                  <span className='text-12px text-t-tertiary'>
-                    {t('settings.webui.qrExpires', { time: formatExpiresAt(qrExpiresAt) })}
-                  </span>
-                )}
-                {qrUrl && (
-                  <Tooltip content={t('settings.webui.copyQrLink')}>
-                    <button
-                      className='p-4px bg-transparent border-none text-t-tertiary hover:text-t-primary cursor-pointer'
-                      onClick={() => handleCopy(qrUrl)}
-                    >
-                      <Copy size={16} />
-                    </button>
-                  </Tooltip>
-                )}
-                <Tooltip content={t('settings.webui.refreshQr')}>
-                  <button
-                    className='p-4px bg-transparent border-none text-t-tertiary hover:text-t-primary cursor-pointer'
-                    onClick={() => void generateQRCode()}
-                    disabled={qrLoading}
-                  >
-                    <Refresh size={16} className={qrLoading ? 'animate-spin' : ''} />
-                  </button>
-                </Tooltip>
-              </div>
-            </div>
-          </SettingsCard>
-        )}
+        <SectionLabel>{t('settings.webui.sectionNotify')}</SectionLabel>
 
         {/* 任务完成通知 / Task-finished notifications */}
         <TurnPushSection />
@@ -804,6 +728,8 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
             是同一件事的两半（连哪台服务器 / 用什么身份登录它），分处两页时用户填完
             地址却找不到登录入口。这一页只保留"本机 WebUI 怎么被访问"这一维度。 */}
 
+        <SectionLabel>{t('settings.webui.sectionAccount')}</SectionLabel>
+
         {/* 登录信息 — 本机 WebUI 的登录凭据，与企业连接无关，始终显示 */}
         <SettingsCard
           data-testid='webui-login-card'
@@ -811,7 +737,7 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
           title={t('settings.webui.loginInfo')}
         >
           {/* 账号 / Account */}
-          <div className='flex items-center justify-between gap-12px pb-10px'>
+          <div className='flex items-center justify-between gap-12px'>
             <span className='text-14px text-t-secondary shrink-0'>{t('settings.webui.username')}:</span>
             <div className='inline-flex items-center gap-8px rd-100px border border-line bg-fill-1 px-10px py-4px min-w-0'>
               <span className='text-14px text-t-primary truncate'>{displayUsername}</span>

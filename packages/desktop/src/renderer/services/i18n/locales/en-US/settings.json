@@ -3416,5 +3416,14 @@
   "webui.cardServiceDesc": "Open a web entrance on this computer so your phone or other devices can reach it.",
   "webui.cardLan": "Local network access",
   "webui.statusOff": "Off",
-  "webui.statusOn": "On"
+  "webui.statusOn": "On",
+  "webui.heroTitle": "Use from your phone",
+  "webui.heroSummaryInternet": "Your phone can reach this computer from anywhere",
+  "webui.heroSummaryLan": "Your phone can reach this computer on the same Wi-Fi",
+  "webui.heroSummaryOff": "Not set up yet. Turn on any option below.",
+  "webui.heroNoQr": "Once the service and LAN or outside access are on, a QR code to sign in from your phone appears here.",
+  "webui.qrScanCaption": "Scan with your phone to sign in",
+  "webui.sectionConnect": "HOW TO CONNECT",
+  "webui.sectionNotify": "NOTIFICATIONS",
+  "webui.sectionAccount": "ACCOUNT"
 }

@@ -70,7 +70,9 @@ const PushTargetField: React.FC<PushTargetFieldProps> = ({
   const { t } = useTranslation();
   const inRouter = useInRouterContext();
   const [targets, setTargets] = useState<IChannelPushTarget[] | null>(null);
-  const [enabled, setEnabled] = useState(value !== null);
+  const [enabledState, setEnabled] = useState(value !== null);
+  // Embedded, the surrounding card owns the on/off switch and only mounts this when it is on.
+  const enabled = embedded || enabledState;
 
   useEffect(() => {
     let alive = true;
@@ -107,6 +109,12 @@ const PushTargetField: React.FC<PushTargetFieldProps> = ({
     onValidityChange?.(!enabled || (value !== null && !missing && targets !== null));
   }, [enabled, value, missing, targets, onValidityChange]);
 
+  // A single choice needs no choosing: when the card switch opens this up with exactly one bot
+  // and chat available, take it (the standalone switch does the same in `handleToggle`).
+  useEffect(() => {
+    if (embedded && targets !== null && value === null && options.length === 1) onChange(options[0].target);
+  }, [embedded, targets, value, options, onChange]);
+
   const handleToggle = (on: boolean) => {
     setEnabled(on);
     if (!on) {
@@ -123,20 +131,20 @@ const PushTargetField: React.FC<PushTargetFieldProps> = ({
       }
       data-testid='push-target-field'
     >
-      <div className='flex items-start justify-between gap-16px'>
-        <div className='min-w-0'>
-          {!embedded && (
+      {!embedded && (
+        <div className='flex items-start justify-between gap-16px'>
+          <div className='min-w-0'>
             <p className='m-0 text-14px font-medium text-t-primary'>{title ?? t('cron.page.form.push.title')}</p>
-          )}
-          <p className={`mb-0 text-12px leading-18px text-t-secondary ${embedded ? 'mt-0' : 'mt-4px'}`}>
-            {hint ?? t('cron.page.form.push.hint')}
-          </p>
+            <p className='mb-0 mt-4px text-12px leading-18px text-t-secondary'>
+              {hint ?? t('cron.page.form.push.hint')}
+            </p>
+          </div>
+          <Switch checked={enabled} onChange={handleToggle} data-testid='push-target-switch' />
         </div>
-        <Switch checked={enabled} onChange={handleToggle} data-testid='push-target-switch' />
-      </div>
+      )}
 
       {enabled && targets !== null && (
-        <div className='mt-12px'>
+        <div className={embedded ? '' : 'mt-12px'}>
           {options.length > 0 || missing ? (
             <Select
               value={selected}

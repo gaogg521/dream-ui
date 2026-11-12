@@ -5,7 +5,7 @@
 import { configService } from '@/common/config/configService';
 import type { ICronPushTarget } from '@/common/adapter/ipcBridge';
 import PushTargetField from '@/renderer/components/scenes/PushTargetField';
-import { Message, Select } from '@arco-design/web-react';
+import { Message, Select, Switch } from '@arco-design/web-react';
 import { Remind } from '@icon-park/react';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,15 +28,20 @@ const readStored = (): Stored | null => {
  * "Tell my chat bot when a long task finishes" — the notification that still
  * arrives when a phone is locked and its browser tab is frozen. The backend
  * reads the same preference, so saving it here is all it takes.
+ *
+ * The card's own switch opens the chooser; the preference only turns "enabled" once a bot and
+ * chat are actually picked, so an opened-but-empty card never claims to be on.
  */
 const TurnPushSection: React.FC = () => {
   const { t } = useTranslation();
   const [stored, setStored] = useState<Stored | null>(readStored);
+  const [opened, setOpened] = useState(false);
   const minSeconds = stored?.min_seconds ?? DEFAULT_MIN_SECONDS;
   const value: ICronPushTarget | null =
     stored?.enabled && stored.plugin_id && stored.chat_id
       ? { plugin_id: stored.plugin_id, chat_id: stored.chat_id }
       : null;
+  const switchedOn = value !== null || opened;
 
   const save = useCallback(
     async (next: Stored) => {
@@ -62,6 +67,11 @@ const TurnPushSection: React.FC = () => {
     });
   };
 
+  const handleSwitch = (on: boolean): void => {
+    setOpened(on);
+    if (!on && value !== null) handleTarget(null);
+  };
+
   const minLabels: Record<number, string> = {
     0: t('settings.webui.turnPush.minAny'),
     60: t('settings.webui.turnPush.min1'),
@@ -74,35 +84,35 @@ const TurnPushSection: React.FC = () => {
       data-testid='webui-turn-push-card'
       icon={<Remind theme='outline' size='20' />}
       title={t('settings.webui.turnPush.title')}
+      description={t('settings.webui.turnPush.hint')}
       status={
         value
           ? { tone: 'success', text: t('settings.webui.statusOn') }
           : { tone: 'neutral', text: t('settings.webui.statusOff') }
       }
+      action={<Switch className='settings-switch-on' checked={switchedOn} onChange={handleSwitch} />}
     >
-      <PushTargetField
-        embedded
-        value={value}
-        onChange={handleTarget}
-        supportedPlatforms={SUPPORTED_PLATFORMS}
-        hint={t('settings.webui.turnPush.hint')}
-      />
-      {value && (
-        <div className='mt-10px flex items-center justify-between gap-12px'>
-          <span className='text-12px text-t-secondary'>{t('settings.webui.turnPush.minDuration')}</span>
-          <Select
-            size='small'
-            style={{ width: 140 }}
-            value={minSeconds}
-            onChange={(seconds: number) => void save({ ...(stored as Stored), min_seconds: seconds })}
-          >
-            {MIN_SECONDS_CHOICES.map((seconds) => (
-              <Select.Option key={seconds} value={seconds}>
-                {minLabels[seconds]}
-              </Select.Option>
-            ))}
-          </Select>
-        </div>
+      {switchedOn && (
+        <>
+          <PushTargetField embedded value={value} onChange={handleTarget} supportedPlatforms={SUPPORTED_PLATFORMS} />
+          {value && (
+            <div className='flex items-center justify-between gap-12px'>
+              <span className='text-13px text-t-secondary'>{t('settings.webui.turnPush.minDuration')}</span>
+              <Select
+                size='small'
+                style={{ width: 140 }}
+                value={minSeconds}
+                onChange={(seconds: number) => void save({ ...(stored as Stored), min_seconds: seconds })}
+              >
+                {MIN_SECONDS_CHOICES.map((seconds) => (
+                  <Select.Option key={seconds} value={seconds}>
+                    {minLabels[seconds]}
+                  </Select.Option>
+                ))}
+              </Select>
+            </div>
+          )}
+        </>
       )}
     </SettingsCard>
   );
