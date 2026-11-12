@@ -67,6 +67,7 @@ const ALL_LEGACY_KEYS: LegacyConfigKey[] = [
   'ui.fontSize.code',
   'webui.desktop.enabled',
   'webui.desktop.allowRemote',
+  'webui.desktop.remoteTunnel',
   'webui.desktop.port',
   'customCss',
   'css.themes',

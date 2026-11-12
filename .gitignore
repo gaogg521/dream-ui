@@ -204,6 +204,7 @@ worktrees/
 docs/superpowers/
 resources/bundled-bun
 resources/bundled-dreamcore
+resources/frpc/
 # legacy directory name, still produced by older local checkouts
 resources/bundled-aioncore
 resources/hub

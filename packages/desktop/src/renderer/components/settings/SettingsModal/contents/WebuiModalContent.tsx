@@ -24,6 +24,8 @@ import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } fr
 import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/renderer/services/i18n/format';
 import { useSettingsViewMode } from '../settingsViewContext';
+import WebuiTunnelSection from './webuiTunnel/WebuiTunnelSection';
+import { useWebuiTunnel } from './webuiTunnel/useWebuiTunnel';
 
 /**
  * 偏好设置行组件
@@ -84,6 +86,7 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
   const isDesktop = isElectronDesktop();
 
   const [status, setStatus] = useState<IWebUIStatus | null>(null);
+  const tunnel = useWebuiTunnel();
   const [loading, setLoading] = useState(false);
   const [startLoading, setStartLoading] = useState(false);
   const port = WEBUI_DEFAULT_PORT;
@@ -482,10 +485,13 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
       const qrData = await webui.generateQRToken.invoke();
 
       if (qrData) {
+        // The public address works from anywhere (including the LAN), so it
+        // wins when the tunnel is connected; otherwise fall back to the LAN URL.
         const baseUrl =
-          status.allowRemote && status.networkUrl
+          tunnel.reachableUrl ??
+          (status.allowRemote && status.networkUrl
             ? status.networkUrl
-            : (status.localUrl ?? `http://localhost:${status.port ?? port}`);
+            : (status.localUrl ?? `http://localhost:${status.port ?? port}`));
         setQrUrl(`${baseUrl}/qr-login?token=${qrData.token}`);
         setQrExpiresAt(qrData.expires_at_ms);
 
@@ -510,11 +516,20 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
     } finally {
       setQrLoading(false);
     }
-  }, [status?.running, status?.allowRemote, status?.networkUrl, status?.localUrl, status?.port, port, t]);
+  }, [
+    status?.running,
+    status?.allowRemote,
+    status?.networkUrl,
+    status?.localUrl,
+    status?.port,
+    port,
+    t,
+    tunnel.reachableUrl,
+  ]);
 
   // 当服务器启动且允许远程访问时自动生成二维码 / Auto-generate QR code when server starts and remote access is allowed
   useEffect(() => {
-    if (status?.running && status.allowRemote && !qrUrl) {
+    if (status?.running && (status.allowRemote || tunnel.reachableUrl) && !qrUrl) {
       void generateQRCode();
     }
     // 清理定时器 / Cleanup timer
@@ -523,11 +538,11 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
         clearTimeout(qrRefreshTimerRef.current);
       }
     };
-  }, [status?.allowRemote, status?.running, generateQRCode, qrUrl]);
+  }, [status?.allowRemote, status?.running, generateQRCode, qrUrl, tunnel.reachableUrl]);
 
   // 服务器停止或关闭远程访问时清除二维码 / Clear QR code when server stops or remote access is disabled
   useEffect(() => {
-    if (!status?.running || !status.allowRemote) {
+    if (!status?.running || (!status.allowRemote && !tunnel.reachableUrl)) {
       setQrUrl(null);
       setQrExpiresAt(null);
       if (qrRefreshTimerRef.current) {
@@ -535,7 +550,16 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
         qrRefreshTimerRef.current = null;
       }
     }
-  }, [status?.allowRemote, status?.running]);
+  }, [status?.allowRemote, status?.running, tunnel.reachableUrl]);
+
+  // The QR points at the public address once the tunnel is up (and back at the
+  // LAN one if it drops), so a code made before that moment must be redone.
+  const qrBaseRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (qrBaseRef.current === tunnel.reachableUrl) return;
+    qrBaseRef.current = tunnel.reachableUrl;
+    if (status?.running) setQrUrl(null);
+  }, [tunnel.reachableUrl, status?.running]);
 
   // 格式化过期时间 / Format expiration time
   const formatExpiresAt = (timestamp: number) => {
@@ -696,6 +720,9 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
             <Switch className='settings-switch-on' checked={allowRemotePreference} onChange={handleAllowRemoteChange} />
           </PreferenceRow>
 
+          {/* 外网访问：手机在局域网之外访问本机 / Access from outside the LAN */}
+          <WebuiTunnelSection tunnel={tunnel} webuiRunning={Boolean(status?.running)} />
+
           {/* 临时公网访问入口 — 由管家通过 Cloudflare 隧道实现，跟上面的局域网开关无关，随时可用 */}
           <div className='text-12px text-t-tertiary mt-8px'>
             {t('settings.webui.needPublicAccessHint')}{' '}
@@ -770,7 +797,7 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
           </div>
 
           {/* 二维码登录（仅服务器运行且允许远程访问时显示）/ QR Code Login (only when server running and remote access allowed) */}
-          {status?.running && status.allowRemote && (
+          {status?.running && (status.allowRemote || tunnel.reachableUrl) && (
             <>
               <div className='border-t border-line my-12px' />
               <div className='text-14px font-500 mb-4px text-t-primary'>{t('settings.webui.qrLogin')}</div>

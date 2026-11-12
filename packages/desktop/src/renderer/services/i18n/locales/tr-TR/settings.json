@@ -3390,5 +3390,18 @@
   "feedbackReportTitle": "Çevrimiçi geri bildirim",
   "modelChatRequiresSetup": "Sohbetle kurulum için önce etkin bir sohbet modeli gerekir. Önce buradan bir model ekleyin.",
   "modelValidationFailed": "Gerekli alanları kontrol edip doldurun: {{fields}}",
-  "modelFieldRequired": "Lütfen {{field}} alanını doldurun"
+  "modelFieldRequired": "Lütfen {{field}} alanını doldurun",
+  "webui.tunnelTitle": "Her yerden erişim",
+  "webui.tunnelDesc": "Aynı Wi-Fi'de olmasanız bile telefonunuzdan internet üzerinden kendi bilgisayarınızdaki One Work'ü açın. Bu bilgisayarın açık kalması gerekir.",
+  "webui.tunnelAddress": "Adres",
+  "webui.tunnelConnected": "✓ Bağlandı",
+  "webui.tunnelConnecting": "Bağlanıyor…",
+  "webui.tunnelWaitingWebui": "WebUI açıldığında başlar",
+  "webui.tunnelResetAddress": "Yeni adres al",
+  "webui.tunnelResetConfirm": "Mevcut adres çalışmayacak. Yeni bir adres alınsın mı?",
+  "webui.tunnelSecurityHint": "Bu adrese sahip olan herkes giriş sayfanıza ulaşabilir, bu yüzden güçlü bir parola kullanın. Trafik One Work'ün aktarma sunucusundan geçer. Bilgisayarınız açık ve uyanık kalmalıdır.",
+  "webui.tunnelError.no_binary": "Uzaktan erişim bileşeni eksik. Lütfen One Work'ü yeniden yükleyin.",
+  "webui.tunnelError.register_failed": "Aktarma sunucusuna ulaşılamıyor, yeniden deneniyor…",
+  "webui.tunnelError.rejected": "Aktarma sunucusu bu adresi reddetti. Yeni bir adres alın.",
+  "webui.tunnelError.spawn_failed": "Uzaktan erişim bileşeni başlatılamadı."
 }

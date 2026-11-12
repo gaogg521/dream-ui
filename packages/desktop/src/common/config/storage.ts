@@ -42,6 +42,8 @@ export interface IConfigStorageRefer {
   'webui.desktop.enabled'?: boolean;
   /** 桌面模式下是否允许远程访问 / Allow remote access in desktop mode */
   'webui.desktop.allowRemote'?: boolean;
+  /** 是否开启外网访问（手机在局域网之外访问本机）/ Reach this desktop from outside the LAN through the relay */
+  'webui.desktop.remoteTunnel'?: boolean;
   /** 桌面模式下 WebUI 端口 / WebUI port in desktop mode */
   'webui.desktop.port'?: number;
   customCss: string; // 自定义 CSS 样式 // @deprecated migrated to theme.activeId/theme.userThemes

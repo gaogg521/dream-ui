@@ -3392,5 +3392,18 @@
   "feedbackReportTitle": "オンラインフィードバック",
   "modelChatRequiresSetup": "会話で設定するには、有効な会話モデルが必要です。先にここでモデルを追加してください。",
   "modelValidationFailed": "必須項目を確認して入力してください：{{fields}}",
-  "modelFieldRequired": "{{field}}を入力してください"
+  "modelFieldRequired": "{{field}}を入力してください",
+  "webui.tunnelTitle": "どこからでもアクセス",
+  "webui.tunnelDesc": "同じ Wi-Fi にいなくても、スマートフォンからインターネット経由で自分のパソコンの One Work を開けます。このパソコンの電源は入れたままにしてください。",
+  "webui.tunnelAddress": "アドレス",
+  "webui.tunnelConnected": "✓ 接続済み",
+  "webui.tunnelConnecting": "接続中…",
+  "webui.tunnelWaitingWebui": "WebUI をオンにすると自動で接続します",
+  "webui.tunnelResetAddress": "新しいアドレスを取得",
+  "webui.tunnelResetConfirm": "現在のアドレスは使えなくなります。新しいアドレスを取得しますか？",
+  "webui.tunnelSecurityHint": "このアドレスを知っている人は誰でもログインページにアクセスできます。強力なパスワードを設定してください。通信は One Work の中継サーバーを経由します。パソコンは起動したままスリープさせないでください。",
+  "webui.tunnelError.no_binary": "リモートアクセス用コンポーネントが見つかりません。One Work を再インストールしてください。",
+  "webui.tunnelError.register_failed": "中継サーバーに接続できません。再試行しています…",
+  "webui.tunnelError.rejected": "中継サーバーがこのアドレスを拒否しました。新しいアドレスを取得してください。",
+  "webui.tunnelError.spawn_failed": "リモートアクセス用コンポーネントを起動できませんでした。"
 }

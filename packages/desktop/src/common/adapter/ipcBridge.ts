@@ -2190,6 +2190,14 @@ export const task = {
 // operations route to backend /api/webui/* under local-mode.
 // ---------------------------------------------------------------------------
 
+/** Outside-the-LAN access (phone -> this desktop) through the One Work relay. */
+export type IWebUITunnel = {
+  state: 'off' | 'connecting' | 'connected' | 'error';
+  /** Public https origin; present once an address exists, even while reconnecting. */
+  url?: string;
+  error?: 'no_binary' | 'register_failed' | 'rejected' | 'spawn_failed';
+};
+
 export interface IWebUIStatus {
   running: boolean;
   port: number;
@@ -2199,6 +2207,8 @@ export interface IWebUIStatus {
   lanIP?: string;
   adminUsername: string;
   initialPassword?: string;
+  /** Always sent by the main process; optional so optimistic renderer updates need not invent one. */
+  tunnel?: IWebUITunnel;
 }
 
 export interface IWebUIStartResult {
@@ -2214,6 +2224,9 @@ export const webui = {
   getStatus: bridge.buildProvider<IWebUIStatus, void>('webui.get-status'),
   start: bridge.buildProvider<IWebUIStartResult, { port?: number; allowRemote?: boolean }>('webui.start'),
   stop: bridge.buildProvider<void, void>('webui.stop'),
+  setTunnel: bridge.buildProvider<IWebUITunnel, { enabled: boolean }>('webui.set-tunnel'),
+  resetTunnelAddress: bridge.buildProvider<IWebUITunnel, void>('webui.reset-tunnel-address'),
+  tunnelChanged: bridge.buildEmitter<IWebUITunnel>('webui.tunnel-changed'),
   statusChanged: bridge.buildEmitter<{
     running: boolean;
     port?: number;

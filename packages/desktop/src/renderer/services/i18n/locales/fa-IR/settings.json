@@ -3390,5 +3390,18 @@
   "feedbackReportTitle": "بازخورد آنلاین",
   "modelChatRequiresSetup": "راه‌اندازی از طریق گفتگو به یک مدل گفتگوی فعال نیاز دارد. ابتدا از اینجا یک مدل اضافه کنید.",
   "modelValidationFailed": "فیلدهای الزامی را بررسی و تکمیل کنید: {{fields}}",
-  "modelFieldRequired": "لطفاً {{field}} را تکمیل کنید"
+  "modelFieldRequired": "لطفاً {{field}} را تکمیل کنید",
+  "webui.tunnelTitle": "دسترسی از هر جا",
+  "webui.tunnelDesc": "حتی اگر در همان Wi-Fi نیستید، One Work روی رایانهٔ خودتان را از طریق اینترنت با گوشی باز کنید. این رایانه باید روشن بماند.",
+  "webui.tunnelAddress": "نشانی",
+  "webui.tunnelConnected": "✓ متصل شد",
+  "webui.tunnelConnecting": "در حال اتصال…",
+  "webui.tunnelWaitingWebui": "با روشن شدن WebUI شروع می‌شود",
+  "webui.tunnelResetAddress": "دریافت نشانی جدید",
+  "webui.tunnelResetConfirm": "نشانی فعلی از کار می‌افتد. نشانی جدید دریافت شود؟",
+  "webui.tunnelSecurityHint": "هر کسی که این نشانی را داشته باشد می‌تواند به صفحهٔ ورود شما برسد، پس از رمز عبور قوی استفاده کنید. ترافیک از سرور رله One Work عبور می‌کند. رایانه باید روشن بماند و به حالت خواب نرود.",
+  "webui.tunnelError.no_binary": "مؤلفهٔ دسترسی از راه دور وجود ندارد. لطفاً One Work را دوباره نصب کنید.",
+  "webui.tunnelError.register_failed": "اتصال به سرور رله ممکن نیست، در حال تلاش مجدد…",
+  "webui.tunnelError.rejected": "سرور رله این نشانی را رد کرد. نشانی جدید دریافت کنید.",
+  "webui.tunnelError.spawn_failed": "راه‌اندازی مؤلفهٔ دسترسی از راه دور ناموفق بود."
 }

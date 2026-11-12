@@ -3390,5 +3390,18 @@
   "feedbackReportTitle": "Comentarios en línea",
   "modelChatRequiresSetup": "La configuración por chat requiere un modelo de chat activado. Primero añade un modelo aquí.",
   "modelValidationFailed": "Revisa y completa los campos obligatorios: {{fields}}",
-  "modelFieldRequired": "Completa {{field}}"
+  "modelFieldRequired": "Completa {{field}}",
+  "webui.tunnelTitle": "Acceso desde cualquier lugar",
+  "webui.tunnelDesc": "Abre tu propio One Work desde el móvil a través de internet, aunque no estés en la misma red Wi-Fi. Este equipo debe permanecer encendido.",
+  "webui.tunnelAddress": "Dirección",
+  "webui.tunnelConnected": "✓ Conectado",
+  "webui.tunnelConnecting": "Conectando…",
+  "webui.tunnelWaitingWebui": "Se inicia al activar WebUI",
+  "webui.tunnelResetAddress": "Obtener una dirección nueva",
+  "webui.tunnelResetConfirm": "La dirección actual dejará de funcionar. ¿Obtener una nueva?",
+  "webui.tunnelSecurityHint": "Cualquiera que tenga esta dirección puede llegar a tu página de inicio de sesión, así que usa una contraseña segura. El tráfico pasa por el servidor de retransmisión de One Work. El equipo debe permanecer encendido y sin suspenderse.",
+  "webui.tunnelError.no_binary": "Falta el componente de acceso remoto. Reinstala One Work.",
+  "webui.tunnelError.register_failed": "No se puede acceder al servidor de retransmisión, reintentando…",
+  "webui.tunnelError.rejected": "El servidor de retransmisión rechazó esta dirección. Obtén una dirección nueva.",
+  "webui.tunnelError.spawn_failed": "No se pudo iniciar el componente de acceso remoto."
 }

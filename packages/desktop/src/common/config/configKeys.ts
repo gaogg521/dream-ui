@@ -21,6 +21,7 @@ export type ConfigKeyMap = {
   'window.bounds': { x?: number; y?: number; width: number; height: number } | undefined;
   'webui.desktop.enabled': boolean | undefined;
   'webui.desktop.allowRemote': boolean | undefined;
+  'webui.desktop.remoteTunnel': boolean | undefined;
   'webui.desktop.port': number | undefined;
   'webui.deploymentRole': 'server' | 'client' | undefined;
   'webui.enterpriseServerUrl': string | undefined;

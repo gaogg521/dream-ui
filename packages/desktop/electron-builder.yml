@@ -212,6 +212,10 @@ extraResources:
       - '!**/managed-resources/acp/**/node_modules/**/*.d.cts'
   - from: resources/hub
     to: hub
+  # frpc for "remote access" (phone -> own desktop), per platform/arch,
+  # prepared by scripts/prepareFrpc.mjs
+  - from: resources/frpc
+    to: frpc
   - from: resources/offline-office
     to: offline-office
 win:

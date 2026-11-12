@@ -3390,5 +3390,18 @@
   "feedbackReportTitle": "Online feedback",
   "modelChatRequiresSetup": "Chat setup needs an enabled chat model first. Add a model here before using chat setup.",
   "modelValidationFailed": "Check and complete the required fields: {{fields}}",
-  "modelFieldRequired": "Please fill in {{field}}"
+  "modelFieldRequired": "Please fill in {{field}}",
+  "webui.tunnelTitle": "Access from anywhere",
+  "webui.tunnelDesc": "Open your own One Work from your phone over the internet, without being on the same Wi-Fi. This computer must stay on.",
+  "webui.tunnelAddress": "Address",
+  "webui.tunnelConnected": "✓ Connected",
+  "webui.tunnelConnecting": "Connecting…",
+  "webui.tunnelWaitingWebui": "Starts when WebUI is turned on",
+  "webui.tunnelResetAddress": "Get a new address",
+  "webui.tunnelResetConfirm": "The current address will stop working. Get a new one?",
+  "webui.tunnelSecurityHint": "Anyone who has this address can reach your login page, so use a strong password. Traffic passes through One Work's relay server. Your computer must stay on and awake.",
+  "webui.tunnelError.no_binary": "The remote access component is missing. Please reinstall One Work.",
+  "webui.tunnelError.register_failed": "Can't reach the relay server, retrying…",
+  "webui.tunnelError.rejected": "The relay server refused this address. Get a new address.",
+  "webui.tunnelError.spawn_failed": "Couldn't start the remote access component."
 }

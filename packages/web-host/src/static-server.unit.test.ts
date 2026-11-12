@@ -493,6 +493,61 @@ describe('static-server', () => {
     expect(json.proxied).toBe(true);
   });
 
+  it('/qr-login (the page a scanned QR code opens) reverse-proxies to backend, not the SPA fallback', async () => {
+    const backend = await startMockBackend((req, res) => {
+      if (req.url?.startsWith('/qr-login') && req.method === 'GET') {
+        res.writeHead(200, { 'content-type': 'text/html' });
+        res.end('<title>backend-qr-login-page</title>');
+        return;
+      }
+      res.writeHead(404).end();
+    });
+    stopBackend = backend.close;
+    handle = await startStaticServer({ staticDir, backendPort: backend.port, port: 0 });
+
+    for (const url of ['/qr-login?token=abc', '/qr-login']) {
+      const r = await fetch(`${handle.localUrl}${url}`);
+      expect(r.status).toBe(200);
+      expect(await r.text()).toContain('backend-qr-login-page');
+    }
+  });
+
+  describe('visitor address behind the remote-access tunnel', () => {
+    const TOKEN = 'relay-secret-token';
+
+    async function clientIpSeenByBackend(headers: Record<string, string>, relayToken?: string): Promise<string> {
+      let seen = '';
+      const backend = await startMockBackend((req, res) => {
+        seen = String(req.headers['x-dream-client-ip'] ?? '');
+        res.writeHead(200).end('ok');
+      });
+      stopBackend = backend.close;
+      handle = await startStaticServer({
+        staticDir,
+        backendPort: backend.port,
+        port: 0,
+        trustedRelayToken: relayToken,
+      });
+      await fetch(`${handle.localUrl}/api/ping`, { headers });
+      return seen;
+    }
+
+    it('forwards the real visitor address when the relay token matches', async () => {
+      const ip = await clientIpSeenByBackend({ 'x-onework-relay-token': TOKEN, 'x-real-ip': '203.0.113.9' }, TOKEN);
+      expect(ip).toBe('203.0.113.9');
+    });
+
+    it('ignores a forged X-Real-IP without the token (e.g. via another tunnel)', async () => {
+      const ip = await clientIpSeenByBackend({ 'x-real-ip': '9.9.9.9' }, TOKEN);
+      expect(ip).toBe('127.0.0.1');
+    });
+
+    it('ignores X-Real-IP when no relay token is configured at all', async () => {
+      const ip = await clientIpSeenByBackend({ 'x-onework-relay-token': TOKEN, 'x-real-ip': '9.9.9.9' });
+      expect(ip).toBe('127.0.0.1');
+    });
+  });
+
   it('/api/auth/user reverse-proxies to backend (no local handler)', async () => {
     const backend = await startMockBackend((req, res) => {
       if (req.url === '/api/auth/user' && req.method === 'GET') {

@@ -17,8 +17,10 @@ import {
   startDesktopWebUI,
   stopDesktopWebUI,
   getDesktopWebUIStatus,
+  setDesktopRemoteTunnelWanted,
   setDesktopWebUIInitialPassword,
 } from '@process/utils/webuiConfig';
+import { getRemoteTunnelStatus, onTunnelStatusChange, resetRemoteTunnelAddress } from '@process/services/remoteTunnel';
 
 type AdminUsernameResult = { username?: string };
 
@@ -75,6 +77,18 @@ async function maybeSeedInitialPassword(): Promise<void> {
 }
 
 export function initWebuiBridge(): void {
+  onTunnelStatusChange((status) => ipcBridge.webui.tunnelChanged.emit(status));
+
+  ipcBridge.webui.setTunnel.provider(async ({ enabled }) => {
+    await setDesktopRemoteTunnelWanted(enabled);
+    return getRemoteTunnelStatus();
+  });
+
+  ipcBridge.webui.resetTunnelAddress.provider(async () => {
+    await resetRemoteTunnelAddress();
+    return getRemoteTunnelStatus();
+  });
+
   ipcBridge.webui.getStatus.provider(async () => {
     const snapshot = getDesktopWebUIStatus();
     const adminUsername = await fetchAdminUsername();

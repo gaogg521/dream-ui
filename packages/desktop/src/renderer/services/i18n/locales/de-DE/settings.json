@@ -3390,5 +3390,18 @@
   "feedbackReportTitle": "Online-Feedback",
   "modelChatRequiresSetup": "Die Einrichtung per Chat benötigt ein aktiviertes Chatmodell. Fügen Sie zuerst hier ein Modell hinzu.",
   "modelValidationFailed": "Prüfen und ergänzen Sie die Pflichtfelder: {{fields}}",
-  "modelFieldRequired": "Bitte {{field}} ausfüllen"
+  "modelFieldRequired": "Bitte {{field}} ausfüllen",
+  "webui.tunnelTitle": "Zugriff von überall",
+  "webui.tunnelDesc": "Öffnen Sie Ihr eigenes One Work per Smartphone über das Internet – auch ohne im selben WLAN zu sein. Dieser Computer muss eingeschaltet bleiben.",
+  "webui.tunnelAddress": "Adresse",
+  "webui.tunnelConnected": "✓ Verbunden",
+  "webui.tunnelConnecting": "Verbindung wird hergestellt …",
+  "webui.tunnelWaitingWebui": "Startet, sobald WebUI eingeschaltet ist",
+  "webui.tunnelResetAddress": "Neue Adresse holen",
+  "webui.tunnelResetConfirm": "Die aktuelle Adresse funktioniert dann nicht mehr. Neue Adresse holen?",
+  "webui.tunnelSecurityHint": "Jeder, der diese Adresse kennt, erreicht Ihre Anmeldeseite – verwenden Sie daher ein starkes Passwort. Der Datenverkehr läuft über den Relay-Server von One Work. Ihr Computer muss eingeschaltet bleiben und darf nicht in den Ruhezustand gehen.",
+  "webui.tunnelError.no_binary": "Die Komponente für den Fernzugriff fehlt. Bitte installieren Sie One Work neu.",
+  "webui.tunnelError.register_failed": "Relay-Server nicht erreichbar, neuer Versuch …",
+  "webui.tunnelError.rejected": "Der Relay-Server hat diese Adresse abgelehnt. Holen Sie eine neue Adresse.",
+  "webui.tunnelError.spawn_failed": "Die Komponente für den Fernzugriff konnte nicht gestartet werden."
 }

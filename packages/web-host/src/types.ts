@@ -55,6 +55,8 @@ export type WebHostOptions = {
   sessionGuardedPrefixes?: string[];
   port?: number;
   allowRemote?: boolean;
+  /** See `StaticServerOptions.trustedRelayToken`. */
+  trustedRelayToken?: string;
   dataDir?: string;
   logDir?: string;
   dirs?: BackendSystemDirs;

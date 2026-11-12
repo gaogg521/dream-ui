@@ -3611,5 +3611,18 @@
   "feedbackReportTitle": "在线留言",
   "modelChatRequiresSetup": "通过对话配置需要先有一个已启用的对话模型。请先在此处添加模型，再使用对话配置。",
   "modelValidationFailed": "请检查并填写必填项：{{fields}}",
-  "modelFieldRequired": "请填写{{field}}"
+  "modelFieldRequired": "请填写{{field}}",
+  "webui.tunnelTitle": "随时随地访问",
+  "webui.tunnelDesc": "不在同一个 WiFi 下，也能用手机通过互联网打开你自己电脑上的 One Work。需要这台电脑保持开机。",
+  "webui.tunnelAddress": "地址",
+  "webui.tunnelConnected": "✓ 已连接",
+  "webui.tunnelConnecting": "连接中…",
+  "webui.tunnelWaitingWebui": "开启 WebUI 后自动连接",
+  "webui.tunnelResetAddress": "换一个新地址",
+  "webui.tunnelResetConfirm": "当前地址将失效，确定换一个新的吗？",
+  "webui.tunnelSecurityHint": "任何拿到这个地址的人都能访问你的登录页，请务必使用强密码。流量会经过 One Work 的中继服务器。电脑需保持开机且不休眠。",
+  "webui.tunnelError.no_binary": "远程访问组件缺失，请重新安装 One Work。",
+  "webui.tunnelError.register_failed": "连不上中继服务器，正在重试…",
+  "webui.tunnelError.rejected": "中继服务器拒绝了这个地址，请换一个新地址。",
+  "webui.tunnelError.spawn_failed": "远程访问组件启动失败。"
 }

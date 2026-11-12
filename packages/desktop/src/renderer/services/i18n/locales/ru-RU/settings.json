@@ -3404,5 +3404,18 @@
   "feedbackReportTitle": "Обратная связь",
   "modelChatRequiresSetup": "Для настройки через чат нужна включённая чат-модель. Сначала добавьте модель здесь.",
   "modelValidationFailed": "Проверьте и заполните обязательные поля: {{fields}}",
-  "modelFieldRequired": "Заполните поле «{{field}}»"
+  "modelFieldRequired": "Заполните поле «{{field}}»",
+  "webui.tunnelTitle": "Доступ из любого места",
+  "webui.tunnelDesc": "Открывайте свой One Work с телефона через интернет, даже если вы не в той же сети Wi-Fi. Этот компьютер должен оставаться включённым.",
+  "webui.tunnelAddress": "Адрес",
+  "webui.tunnelConnected": "✓ Подключено",
+  "webui.tunnelConnecting": "Подключение…",
+  "webui.tunnelWaitingWebui": "Запустится при включении WebUI",
+  "webui.tunnelResetAddress": "Получить новый адрес",
+  "webui.tunnelResetConfirm": "Текущий адрес перестанет работать. Получить новый?",
+  "webui.tunnelSecurityHint": "Любой, у кого есть этот адрес, сможет открыть страницу входа, поэтому используйте надёжный пароль. Трафик проходит через ретранслятор One Work. Компьютер должен оставаться включённым и не засыпать.",
+  "webui.tunnelError.no_binary": "Компонент удалённого доступа отсутствует. Переустановите One Work.",
+  "webui.tunnelError.register_failed": "Не удаётся связаться с ретранслятором, повторная попытка…",
+  "webui.tunnelError.rejected": "Ретранслятор отклонил этот адрес. Получите новый адрес.",
+  "webui.tunnelError.spawn_failed": "Не удалось запустить компонент удалённого доступа."
 }

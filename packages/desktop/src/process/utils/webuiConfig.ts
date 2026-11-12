@@ -13,11 +13,19 @@ import { createMediaRouteDeps, handleMediaHttpRequest } from '@process/services/
 import { mediaJobRouteDeps } from '@process/bridge/mediaBridge';
 import { getMediaJobManager } from '@process/services/mediaJob';
 import { toMediaJobView } from '@process/services/mediaJob/types';
+import {
+  getRelayToken,
+  getRemoteTunnelStatus,
+  startRemoteTunnel,
+  stopRemoteTunnel,
+} from '@process/services/remoteTunnel';
+import type { TunnelStatus } from '@process/services/remoteTunnel';
 
 const WEBUI_CONFIG_FILE = 'webui.config.json';
 const DESKTOP_WEBUI_ENABLED_KEY = 'webui.desktop.enabled';
 const DESKTOP_WEBUI_ALLOW_REMOTE_KEY = 'webui.desktop.allowRemote';
 const DESKTOP_WEBUI_PORT_KEY = 'webui.desktop.port';
+const DESKTOP_WEBUI_REMOTE_TUNNEL_KEY = 'webui.desktop.remoteTunnel';
 
 /**
  * Read WebUI preferences from the backend's /api/settings/client store.
@@ -34,6 +42,7 @@ async function readWebUIDesktopPreferences(): Promise<{
   enabled: boolean;
   allowRemote: boolean;
   port: number | undefined;
+  remoteTunnel: boolean;
 }> {
   try {
     const settings = await httpRequest<Record<string, unknown>>('GET', '/api/settings/client');
@@ -41,10 +50,11 @@ async function readWebUIDesktopPreferences(): Promise<{
     const allowRemote = settings?.[DESKTOP_WEBUI_ALLOW_REMOTE_KEY] === true;
     const rawPort = settings?.[DESKTOP_WEBUI_PORT_KEY];
     const port = typeof rawPort === 'number' && rawPort > 0 ? rawPort : undefined;
-    return { enabled, allowRemote, port };
+    const remoteTunnel = settings?.[DESKTOP_WEBUI_REMOTE_TUNNEL_KEY] === true;
+    return { enabled, allowRemote, port, remoteTunnel };
   } catch (error) {
     console.error('[WebUI] Failed to read preferences from backend:', error);
-    return { enabled: false, allowRemote: false, port: undefined };
+    return { enabled: false, allowRemote: false, port: undefined, remoteTunnel: false };
   }
 }
 
@@ -174,6 +184,23 @@ export type DesktopWebUIHandle = {
 };
 
 let currentHandle: (WebHostHandle & { allowRemote: boolean }) | null = null;
+// Whether the user wants the outside-the-LAN tunnel. Survives the WebUI being
+// stopped and restarted (port / LAN-toggle changes restart it), so the tunnel
+// follows the WebUI instead of silently staying off after such a restart.
+let remoteTunnelWanted = false;
+
+/**
+ * Switch the remote-access tunnel on or off. With the WebUI running it takes
+ * effect immediately; otherwise it starts together with the WebUI.
+ */
+export async function setDesktopRemoteTunnelWanted(wanted: boolean): Promise<void> {
+  remoteTunnelWanted = wanted;
+  if (!wanted) {
+    await stopRemoteTunnel();
+    return;
+  }
+  if (currentHandle) await startRemoteTunnel(currentHandle.port);
+}
 // First-use plaintext password for the active handle. Set by webui.start IPC
 // handler before startDesktopWebUI() when the backend reports needs_setup=true,
 // so Settings can display the generated password exactly once. Cleared on stop.
@@ -251,6 +278,9 @@ export async function startDesktopWebUI(opts: { port?: number; allowRemote?: boo
     ],
     port: preferredPort,
     allowRemote,
+    // Lets the login rate limit tell tunnel visitors apart instead of seeing them all as
+    // frpc on 127.0.0.1 (one stranger's failed logins must not lock the owner out).
+    trustedRelayToken: getRelayToken(),
     // Must align with the desktop IPC path's backend dataDir (src/index.ts), otherwise
     // users see divergent SQLite state between desktop app and bundled WebUI.
     dataDir: getDataPath(),
@@ -267,6 +297,11 @@ export async function startDesktopWebUI(opts: { port?: number; allowRemote?: boo
   });
 
   currentHandle = Object.assign(handle, { allowRemote });
+  if (remoteTunnelWanted) {
+    // Do not make enabling the WebUI wait on the network: the tunnel reports
+    // its own progress through the status events.
+    void startRemoteTunnel(handle.port).catch((error) => console.error('[WebUI] remote tunnel start failed:', error));
+  }
   return toDesktopHandle(handle, allowRemote);
 }
 
@@ -277,6 +312,7 @@ export async function stopDesktopWebUI(): Promise<void> {
   const handle = currentHandle;
   if (!handle) return;
   currentHandle = null;
+  await stopRemoteTunnel();
   currentInitialPassword = undefined;
   try {
     await handle.stop();
@@ -297,7 +333,9 @@ export function getDesktopWebUIStatus(): {
   networkUrl?: string;
   lanIP?: string;
   initialPassword?: string;
+  tunnel: TunnelStatus;
 } {
+  const tunnel = getRemoteTunnelStatus();
   if (!currentHandle) {
     const lanIP = getLanIP();
     return {
@@ -306,6 +344,7 @@ export function getDesktopWebUIStatus(): {
       allowRemote: false,
       localUrl: `http://localhost:${DEFAULT_WEBUI_PORT}`,
       lanIP: lanIP ?? undefined,
+      tunnel,
     };
   }
   return {
@@ -316,12 +355,14 @@ export function getDesktopWebUIStatus(): {
     networkUrl: currentHandle.networkUrl,
     lanIP: currentHandle.lanIP,
     initialPassword: currentInitialPassword,
+    tunnel,
   };
 }
 
 export const restoreDesktopWebUIFromPreferences = async (): Promise<void> => {
-  const { enabled, allowRemote, port } = await readWebUIDesktopPreferences();
+  const { enabled, allowRemote, port, remoteTunnel } = await readWebUIDesktopPreferences();
   if (!enabled) return;
+  remoteTunnelWanted = remoteTunnel;
 
   const preferredPort = port ?? DEFAULT_WEBUI_PORT;
 

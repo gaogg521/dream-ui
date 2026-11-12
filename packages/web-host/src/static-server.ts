@@ -14,12 +14,19 @@ import http, { type IncomingMessage, type Server, type ServerResponse } from 'no
 import { networkInterfaces } from 'node:os';
 import net, { type Socket } from 'node:net';
 import serveHandler from 'serve-handler';
+import { headersFromHead, resolveClientIp } from './client-ip.js';
 
 export type StaticServerOptions = {
   staticDir: string;
   backendPort: number;
   port?: number;
   allowRemote?: boolean;
+  /**
+   * Secret that the remote-access tunnel (frpc) stamps on every request as
+   * `x-onework-relay-token`. Only a request carrying it has its `X-Real-IP`
+   * believed as the visitor's address (see `client-ip.ts`).
+   */
+  trustedRelayToken?: string;
   /**
    * Dev-only origin of the renderer dev server (e.g. `http://localhost:5173`).
    * When set, renderer requests are reverse-proxied there instead of being read
@@ -503,7 +510,13 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
         return;
       }
 
-      const clientIp = normalizeIp(remoteIpByLocalPort.get(req.socket.remotePort ?? -1));
+      // Per request, not per connection: a relayed connection can be reused for
+      // different visitors, so the address has to be read from this request.
+      const clientIp = resolveClientIp(
+        normalizeIp(remoteIpByLocalPort.get(req.socket.remotePort ?? -1)),
+        req.headers,
+        opts.trustedRelayToken
+      );
 
       // /api/* — reverse proxy to backend (includes /api/auth/*).
       // /login and /logout are dream-auth's top-level auth endpoints: proxy them too
@@ -522,6 +535,10 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
         req.url.startsWith('/api/') ||
         req.url.startsWith('/api?') ||
         req.url === '/login' ||
+        // The page a scanned QR code opens (backend `GET /qr-login`). Without this it fell
+        // through to the SPA fallback below, so scanning landed on the ordinary login page.
+        req.url === '/qr-login' ||
+        req.url.startsWith('/qr-login?') ||
         req.url === '/logout' ||
         req.url === '/health' ||
         req.url.startsWith('/health?')
@@ -624,7 +641,12 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
       cleanup();
       const clientIp = normalizeIp(client.remoteAddress);
       if (decision === true) {
-        spliceUpgradeToBackend(client, opts.backendPort, peeked, clientIp);
+        spliceUpgradeToBackend(
+          client,
+          opts.backendPort,
+          peeked,
+          resolveClientIp(clientIp, headersFromHead(peeked), opts.trustedRelayToken)
+        );
         return;
       }
       spliceToTcpEndpoint(client, internalPort, peeked, remoteIpByLocalPort, clientIp);
