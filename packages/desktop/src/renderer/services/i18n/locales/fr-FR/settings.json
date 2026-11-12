@@ -3425,5 +3425,10 @@
   "webui.qrScanCaption": "Scannez avec le téléphone pour vous connecter",
   "webui.sectionConnect": "MODES DE CONNEXION",
   "webui.sectionNotify": "NOTIFICATIONS",
-  "webui.sectionAccount": "COMPTE"
+  "webui.sectionAccount": "COMPTE",
+  "webui.sectionInternet": "ACCÈS DEPUIS L'EXTÉRIEUR",
+  "webui.tempTitle": "Lien public temporaire",
+  "webui.tempDesc": "Crée une adresse publique temporaire via un tunnel Cloudflare. Elle change à chaque génération, ce qui convient à un partage rapide. Il faut d'abord demander au majordome de la configurer.",
+  "webui.tempTag": "Temporaire",
+  "webui.fixedTag": "Adresse fixe"
 }

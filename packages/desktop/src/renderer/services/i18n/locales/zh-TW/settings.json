@@ -3647,5 +3647,10 @@
   "webui.qrScanCaption": "用手機掃碼登入",
   "webui.sectionConnect": "連線方式",
   "webui.sectionNotify": "通知",
-  "webui.sectionAccount": "帳號"
+  "webui.sectionAccount": "帳號",
+  "webui.sectionInternet": "外網存取",
+  "webui.tempTitle": "臨時公網連結",
+  "webui.tempDesc": "藉由 Cloudflare 隧道產生一個臨時的公網位址：每次重新產生都會變，適合臨時分享。需要先讓管家幫你申請開通。",
+  "webui.tempTag": "臨時",
+  "webui.fixedTag": "固定位址"
 }

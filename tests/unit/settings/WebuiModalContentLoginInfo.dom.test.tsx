@@ -126,12 +126,16 @@ describe('WebuiModalContent login info card', () => {
       'webui-service-card',
       'webui-lan-card',
       'webui-tunnel-card',
+      'webui-temp-card',
       'webui-turn-push-card',
       'webui-login-card',
     ]) {
       expect(await screen.findByTestId(id)).toBeInTheDocument();
     }
-    // The temporary public link stays reachable even before anything is switched on.
+    // The two ways in from outside sit side by side, each labelled for what it is, and the
+    // temporary link is reachable even before anything is switched on.
+    expect(screen.getByTestId('webui-tunnel-card')).toHaveTextContent('settings.webui.fixedTag');
+    expect(screen.getByTestId('webui-temp-card')).toHaveTextContent('settings.webui.tempTag');
     expect(screen.getByTestId('webui-butler-link')).toBeInTheDocument();
     // No QR code until there is an address a phone can reach; the overview says what to do instead.
     expect(screen.getByTestId('webui-hero-card')).toHaveTextContent('settings.webui.heroNoQr');

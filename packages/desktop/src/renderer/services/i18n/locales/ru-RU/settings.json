@@ -3439,5 +3439,10 @@
   "webui.qrScanCaption": "Отсканируйте телефоном для входа",
   "webui.sectionConnect": "СПОСОБЫ ПОДКЛЮЧЕНИЯ",
   "webui.sectionNotify": "УВЕДОМЛЕНИЯ",
-  "webui.sectionAccount": "АККАУНТ"
+  "webui.sectionAccount": "АККАУНТ",
+  "webui.sectionInternet": "ДОСТУП ИЗВНЕ",
+  "webui.tempTitle": "Временная публичная ссылка",
+  "webui.tempDesc": "Создаёт временный публичный адрес через туннель Cloudflare. Он меняется при каждом создании, поэтому подходит для быстрого обмена. Сначала нужно попросить дворецкого настроить его.",
+  "webui.tempTag": "Временная",
+  "webui.fixedTag": "Постоянный адрес"
 }

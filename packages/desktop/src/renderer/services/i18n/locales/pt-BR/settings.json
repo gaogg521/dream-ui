@@ -3428,5 +3428,10 @@
   "webui.qrScanCaption": "Escaneie com o celular para entrar",
   "webui.sectionConnect": "COMO CONECTAR",
   "webui.sectionNotify": "NOTIFICAÇÕES",
-  "webui.sectionAccount": "CONTA"
+  "webui.sectionAccount": "CONTA",
+  "webui.sectionInternet": "ACESSO DE FORA DA REDE",
+  "webui.tempTitle": "Link público temporário",
+  "webui.tempDesc": "Cria um endereço público temporário por um túnel Cloudflare. Ele muda a cada vez, então serve para compartilhar rapidamente. Primeiro peça ao mordomo para configurá-lo.",
+  "webui.tempTag": "Temporário",
+  "webui.fixedTag": "Endereço fixo"
 }

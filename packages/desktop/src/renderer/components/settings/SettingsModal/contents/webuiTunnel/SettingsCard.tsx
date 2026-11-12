@@ -51,6 +51,8 @@ type SettingsCardProps = {
   title: string;
   description?: React.ReactNode;
   status?: CardStatus | null;
+  /** Small outlined tag after the title, for what kind of thing this is ("fixed", "temporary"). */
+  badge?: string;
   /** Right side of the header, usually the card's on/off switch. */
   action?: React.ReactNode;
   children?: React.ReactNode;
@@ -69,6 +71,7 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
   title,
   description,
   status,
+  badge,
   action,
   children,
   className = '',
@@ -87,6 +90,11 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
       <div className='min-w-0 flex-1'>
         <div className='flex flex-wrap items-center gap-x-8px gap-y-4px'>
           <h3 className='m-0 text-15px font-600 text-t-primary'>{title}</h3>
+          {badge && (
+            <span className='px-6px rd-4px border border-solid border-[var(--color-border-3)] text-11px leading-16px text-t-tertiary'>
+              {badge}
+            </span>
+          )}
           {status && <StatusPill tone={status.tone} text={status.text} />}
         </div>
         {description && <div className='mt-4px text-12px leading-18px text-t-secondary'>{description}</div>}

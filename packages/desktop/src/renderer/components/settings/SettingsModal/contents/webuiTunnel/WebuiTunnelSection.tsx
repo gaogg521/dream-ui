@@ -10,14 +10,13 @@ import SettingsCard, { type CardStatus } from './SettingsCard';
 import type { WebuiTunnelController } from './useWebuiTunnel';
 
 /**
- * "Access from outside your network": its own card with the switch, what is going on, and the
- * address. `footer` carries the secondary way in (the butler's temporary public link).
+ * The fixed way in from outside the LAN: its own card with the switch, what is going on, and the
+ * address that stays the same. The temporary link is the card next to it (`TempAccessCard`).
  */
 const WebuiTunnelSection: React.FC<{
   tunnel: WebuiTunnelController;
   webuiRunning: boolean;
-  footer?: React.ReactNode;
-}> = ({ tunnel, webuiRunning, footer }) => {
+}> = ({ tunnel, webuiRunning }) => {
   const { t } = useTranslation();
   const { status, enabled } = tunnel;
 
@@ -58,13 +57,15 @@ const WebuiTunnelSection: React.FC<{
     }
   };
 
-  const showDetails = enabled && (Boolean(status.url) || Boolean(footer));
+  const showDetails = enabled && Boolean(status.url);
 
   return (
     <SettingsCard
       data-testid='webui-tunnel-card'
+      className='h-full'
       icon={<Earth theme='outline' size='20' />}
       title={t('settings.webui.tunnelTitle')}
+      badge={t('settings.webui.fixedTag')}
       description={t('settings.webui.tunnelDesc')}
       status={cardStatus()}
       action={
@@ -111,10 +112,8 @@ const WebuiTunnelSection: React.FC<{
           {enabled && (
             <div className='text-12px leading-18px text-t-tertiary'>{t('settings.webui.tunnelSecurityHint')}</div>
           )}
-          {footer}
         </div>
       )}
-      {!showDetails && footer}
     </SettingsCard>
   );
 };

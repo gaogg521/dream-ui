@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/renderer/services/i18n/format';
 import { useSettingsViewMode } from '../settingsViewContext';
 import RemoteHero from './webuiTunnel/RemoteHero';
+import TempAccessCard from './webuiTunnel/TempAccessCard';
 import SettingsCard, { SectionLabel } from './webuiTunnel/SettingsCard';
 import WebuiTunnelSection from './webuiTunnel/WebuiTunnelSection';
 import TurnPushSection from './webuiTunnel/TurnPushSection';
@@ -689,35 +690,23 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
           />
         </div>
 
-        {/* 外网访问：手机在局域网之外访问本机 / Access from outside the LAN */}
-        <WebuiTunnelSection
-          tunnel={tunnel}
-          webuiRunning={Boolean(status?.running)}
-          footer={
-            /* 临时公网访问入口 — 由管家通过 Cloudflare 隧道实现，随时可用 */
-            <div className='flex flex-wrap items-center justify-between gap-10px rd-12px border border-dashed border-[var(--color-border-3)] px-14px py-10px'>
-              <div className='min-w-0 text-13px font-500 text-t-primary'>
-                {t('settings.webui.needPublicAccessHint')}
-              </div>
-              <Button
-                size='small'
-                type='outline'
-                className='rd-100px'
-                data-testid='webui-butler-link'
-                onClick={() =>
-                  void talkToButler({
-                    prompt: t('settings.talkToButler.prompt.setupRemote', {
-                      defaultValue:
-                        'Help me temporarily expose One Work to the public internet (via a Cloudflare tunnel) so I can open it from outside my local network.',
-                    }),
-                  })
-                }
-              >
-                {t('settings.webui.letButlerSetup', { defaultValue: 'Let the butler open a temporary public link' })} →
-              </Button>
-            </div>
-          }
-        />
+        <SectionLabel>{t('settings.webui.sectionInternet')}</SectionLabel>
+
+        {/* 外网访问有两种：固定地址（自建中继，随时可用）和临时公网链接（Cloudflare 隧道，需让管家申请）
+            Two ways in from outside the LAN: a fixed address (our relay) and a temporary public link (Cloudflare tunnel, set up by the butler) */}
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-12px'>
+          <WebuiTunnelSection tunnel={tunnel} webuiRunning={Boolean(status?.running)} />
+          <TempAccessCard
+            onAskButler={() =>
+              void talkToButler({
+                prompt: t('settings.talkToButler.prompt.setupRemote', {
+                  defaultValue:
+                    'Help me temporarily expose One Work to the public internet (via a Cloudflare tunnel) so I can open it from outside my local network.',
+                }),
+              })
+            }
+          />
+        </div>
 
         <SectionLabel>{t('settings.webui.sectionNotify')}</SectionLabel>
 

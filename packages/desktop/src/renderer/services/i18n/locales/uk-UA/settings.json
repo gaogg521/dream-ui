@@ -3440,5 +3440,10 @@
   "webui.qrScanCaption": "Скануйте телефоном для входу",
   "webui.sectionConnect": "СПОСОБИ ПІДКЛЮЧЕННЯ",
   "webui.sectionNotify": "СПОВІЩЕННЯ",
-  "webui.sectionAccount": "АКАУНТ"
+  "webui.sectionAccount": "АКАУНТ",
+  "webui.sectionInternet": "ДОСТУП ЗЗОВНІ",
+  "webui.tempTitle": "Тимчасове публічне посилання",
+  "webui.tempDesc": "Створює тимчасову публічну адресу через тунель Cloudflare. Вона змінюється щоразу, тому підходить для швидкого обміну. Спершу потрібно попросити дворецького її налаштувати.",
+  "webui.tempTag": "Тимчасове",
+  "webui.fixedTag": "Постійна адреса"
 }

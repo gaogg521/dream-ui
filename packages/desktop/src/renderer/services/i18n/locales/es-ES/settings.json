@@ -3425,5 +3425,10 @@
   "webui.qrScanCaption": "Escanea con el móvil para iniciar sesión",
   "webui.sectionConnect": "CÓMO CONECTAR",
   "webui.sectionNotify": "NOTIFICACIONES",
-  "webui.sectionAccount": "CUENTA"
+  "webui.sectionAccount": "CUENTA",
+  "webui.sectionInternet": "ACCESO DESDE FUERA DE LA RED",
+  "webui.tempTitle": "Enlace público temporal",
+  "webui.tempDesc": "Crea una dirección pública temporal mediante un túnel de Cloudflare. Cambia cada vez que se genera, así que sirve para compartir rápido. Primero pídele al mayordomo que lo configure.",
+  "webui.tempTag": "Temporal",
+  "webui.fixedTag": "Dirección fija"
 }

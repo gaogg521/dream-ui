@@ -3425,5 +3425,10 @@
   "webui.qrScanCaption": "Giriş için telefonunuzla tarayın",
   "webui.sectionConnect": "BAĞLANMA YOLLARI",
   "webui.sectionNotify": "BİLDİRİMLER",
-  "webui.sectionAccount": "HESAP"
+  "webui.sectionAccount": "HESAP",
+  "webui.sectionInternet": "AĞ DIŞINDAN ERİŞİM",
+  "webui.tempTitle": "Geçici genel bağlantı",
+  "webui.tempDesc": "Cloudflare tüneliyle geçici bir genel adres oluşturur. Her oluşturulduğunda değişir, bu yüzden kısa süreli paylaşım için uygundur. Önce kâhyadan sizin için kurmasını istemeniz gerekir.",
+  "webui.tempTag": "Geçici",
+  "webui.fixedTag": "Sabit adres"
 }

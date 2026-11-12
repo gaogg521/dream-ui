@@ -3427,5 +3427,10 @@
   "webui.qrScanCaption": "スマートフォンでスキャンしてログイン",
   "webui.sectionConnect": "接続方法",
   "webui.sectionNotify": "通知",
-  "webui.sectionAccount": "アカウント"
+  "webui.sectionAccount": "アカウント",
+  "webui.sectionInternet": "外部ネットワークからのアクセス",
+  "webui.tempTitle": "一時的な公開リンク",
+  "webui.tempDesc": "Cloudflare トンネルで一時的な公開アドレスを作成します。作成のたびに変わるため、一時的な共有向けです。先に執事に設定を依頼する必要があります。",
+  "webui.tempTag": "一時",
+  "webui.fixedTag": "固定アドレス"
 }

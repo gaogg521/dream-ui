@@ -3425,5 +3425,10 @@
   "webui.qrScanCaption": "Mit dem Smartphone scannen und anmelden",
   "webui.sectionConnect": "VERBINDUNGSARTEN",
   "webui.sectionNotify": "BENACHRICHTIGUNGEN",
-  "webui.sectionAccount": "KONTO"
+  "webui.sectionAccount": "KONTO",
+  "webui.sectionInternet": "ZUGRIFF VON AUSSERHALB",
+  "webui.tempTitle": "Temporärer öffentlicher Link",
+  "webui.tempDesc": "Erstellt über einen Cloudflare-Tunnel eine temporäre öffentliche Adresse. Sie ändert sich bei jeder Erstellung und eignet sich daher zum kurzen Teilen. Der Butler muss sie zuerst für Sie einrichten.",
+  "webui.tempTag": "Temporär",
+  "webui.fixedTag": "Feste Adresse"
 }

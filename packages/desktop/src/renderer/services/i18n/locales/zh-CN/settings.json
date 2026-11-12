@@ -3646,5 +3646,10 @@
   "webui.qrScanCaption": "用手机扫码登录",
   "webui.sectionConnect": "连接方式",
   "webui.sectionNotify": "通知",
-  "webui.sectionAccount": "账号"
+  "webui.sectionAccount": "账号",
+  "webui.sectionInternet": "外网访问",
+  "webui.tempTitle": "临时公网链接",
+  "webui.tempDesc": "借助 Cloudflare 隧道生成一个临时的公网地址：每次重新生成都会变，适合临时分享。需要先让管家帮你申请开通。",
+  "webui.tempTag": "临时",
+  "webui.fixedTag": "固定地址"
 }

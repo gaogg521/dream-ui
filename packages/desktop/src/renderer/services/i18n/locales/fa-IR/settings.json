@@ -3425,5 +3425,10 @@
   "webui.qrScanCaption": "برای ورود با گوشی اسکن کنید",
   "webui.sectionConnect": "روش‌های اتصال",
   "webui.sectionNotify": "اعلان‌ها",
-  "webui.sectionAccount": "حساب"
+  "webui.sectionAccount": "حساب",
+  "webui.sectionInternet": "دسترسی از خارج از شبکه",
+  "webui.tempTitle": "پیوند عمومی موقت",
+  "webui.tempDesc": "با تونل Cloudflare یک نشانی عمومی موقت می‌سازد. با هر بار ساخت تغییر می‌کند و برای اشتراک‌گذاری کوتاه‌مدت مناسب است. ابتدا باید از دستیار بخواهید آن را راه‌اندازی کند.",
+  "webui.tempTag": "موقت",
+  "webui.fixedTag": "نشانی ثابت"
 }

@@ -3425,5 +3425,10 @@
   "webui.qrScanCaption": "Scan with your phone to sign in",
   "webui.sectionConnect": "HOW TO CONNECT",
   "webui.sectionNotify": "NOTIFICATIONS",
-  "webui.sectionAccount": "ACCOUNT"
+  "webui.sectionAccount": "ACCOUNT",
+  "webui.sectionInternet": "FROM OUTSIDE YOUR NETWORK",
+  "webui.tempTitle": "Temporary public link",
+  "webui.tempDesc": "Creates a temporary public address through a Cloudflare tunnel. It changes every time it is made, so it suits quick sharing. The butler has to set it up for you first.",
+  "webui.tempTag": "Temporary",
+  "webui.fixedTag": "Fixed address"
 }
