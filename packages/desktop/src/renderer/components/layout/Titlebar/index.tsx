@@ -1,15 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
-import {
-  ArrowCircleLeft,
-  ArrowLeft,
-  ArrowRight,
-  Browser,
-  ExpandLeft,
-  ExpandRight,
-  Peoples,
-  Search,
-} from '@icon-park/react';
+import { ArrowCircleLeft, ArrowLeft, ArrowRight, ExpandLeft, ExpandRight, Peoples, Search } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -24,6 +15,7 @@ import { WORKSPACE_STATE_EVENT, dispatchWorkspaceToggleEvent } from '@renderer/u
 import type { WorkspaceStateDetail } from '@renderer/utils/workspace/workspaceEvents';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useNavigationHistory } from '@/renderer/hooks/context/NavigationHistoryContext';
+import BrowserIcon from '@/renderer/pages/conversation/Preview/browser/BrowserIcon';
 import { useOptionalPreviewContext } from '@/renderer/pages/conversation/Preview/context/PreviewContext';
 import { useFeedback } from '@/renderer/hooks/context/FeedbackContext';
 import { resolveFeedbackModule } from '@/renderer/services/feedback/resolveFeedbackModule';
@@ -462,7 +454,7 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
             title={browserTooltip}
             data-testid='titlebar-browser-button'
           >
-            <Browser theme='outline' size={iconSize} fill='currentColor' strokeWidth={desktopIconStroke} />
+            <BrowserIcon size={iconSize} />
           </button>
         )}
         {showWorkspaceButton && (

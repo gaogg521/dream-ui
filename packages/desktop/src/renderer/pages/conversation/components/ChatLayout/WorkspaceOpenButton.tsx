@@ -1,7 +1,8 @@
 import { ipcBridge } from '@/common';
 import { isElectronDesktop } from '@/renderer/utils/platform';
+import BrowserIcon from '@/renderer/pages/conversation/Preview/browser/BrowserIcon';
 import { useOptionalPreviewContext } from '@/renderer/pages/conversation/Preview/context/PreviewContext';
-import { Browser, Command, Down, FolderOpen, Terminal } from '@icon-park/react';
+import { Command, Down, FolderOpen, Terminal } from '@icon-park/react';
 import { Button, Dropdown, Tooltip } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -132,7 +133,7 @@ const WorkspaceOpenButton: React.FC<WorkspaceOpenButtonProps> = ({ workspacePath
       {
         key: 'browser',
         label: t('conversation.workspace.openWith.browser', { defaultValue: 'Browser' }),
-        icon: <Browser size={16} />,
+        icon: <BrowserIcon size={16} />,
         available: Boolean(openBrowserTab),
       },
     ],
@@ -170,7 +171,7 @@ const WorkspaceOpenButton: React.FC<WorkspaceOpenButtonProps> = ({ workspacePath
       case 'explorer':
         return <FolderOpen size={16} />;
       case 'browser':
-        return <Browser size={16} />;
+        return <BrowserIcon size={16} />;
       case 'terminal':
       default:
         return <Terminal size={16} />;
