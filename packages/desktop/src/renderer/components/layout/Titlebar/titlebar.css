@@ -167,6 +167,15 @@
   background-color: rgba(0, 0, 0, 0.14);
 }
 
+/* Toggle buttons in the "on" state (e.g. in-app browser panel is showing). */
+.app-titlebar__button--active {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .app-titlebar__button--active {
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
 [data-theme='dark'] .app-titlebar__button:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }

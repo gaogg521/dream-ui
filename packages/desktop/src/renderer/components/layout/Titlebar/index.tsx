@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
-import { ArrowCircleLeft, ArrowLeft, ArrowRight, ExpandLeft, ExpandRight, Peoples, Search } from '@icon-park/react';
+import {
+  ArrowCircleLeft,
+  ArrowLeft,
+  ArrowRight,
+  Browser,
+  ExpandLeft,
+  ExpandRight,
+  Peoples,
+  Search,
+} from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -15,6 +24,7 @@ import { WORKSPACE_STATE_EVENT, dispatchWorkspaceToggleEvent } from '@renderer/u
 import type { WorkspaceStateDetail } from '@renderer/utils/workspace/workspaceEvents';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useNavigationHistory } from '@/renderer/hooks/context/NavigationHistoryContext';
+import { useOptionalPreviewContext } from '@/renderer/pages/conversation/Preview/context/PreviewContext';
 import { useFeedback } from '@/renderer/hooks/context/FeedbackContext';
 import { resolveFeedbackModule } from '@/renderer/services/feedback/resolveFeedbackModule';
 import { isElectronDesktop, isMacOS } from '@/renderer/utils/platform';
@@ -140,6 +150,15 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
   const showWindowControls = isDesktopRuntime && !isMacRuntime;
   // Keep the workspace entry in the titlebar on every platform.
   const showWorkspaceButton = workspaceAvailable;
+
+  // 内置浏览器入口：以前只藏在右栏头部「打开方式」下拉里，右栏收起（默认）时根本看不到。
+  // 仅桌面端（webview 需要 Electron）且在会话页。
+  // In-app browser entry: it used to live only in the workspace header's "open with"
+  // dropdown, invisible whenever the workspace is collapsed (the default).
+  const previewContext = useOptionalPreviewContext();
+  const showBrowserButton = Boolean(previewContext) && workspaceAvailable && isDesktopRuntime && !layout?.isMobile;
+  const browserShown = Boolean(previewContext?.isOpen && previewContext.activeTab?.content_type === 'browser');
+  const browserTooltip = t('conversation.workspace.openWith.browser', { defaultValue: 'Browser' });
 
   const workspaceTooltip = workspaceCollapsed
     ? t('common.expandMore', { defaultValue: 'Expand workspace' })
@@ -433,6 +452,19 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
         >
           <FeedbackIcon size={iconSize} strokeWidth={desktopIconStroke} />
         </button>
+        {showBrowserButton && (
+          <button
+            type='button'
+            className={classNames('app-titlebar__button', browserShown && 'app-titlebar__button--active')}
+            onClick={previewContext?.toggleBrowserPanel}
+            aria-label={browserTooltip}
+            aria-pressed={browserShown}
+            title={browserTooltip}
+            data-testid='titlebar-browser-button'
+          >
+            <Browser theme='outline' size={iconSize} fill='currentColor' strokeWidth={desktopIconStroke} />
+          </button>
+        )}
         {showWorkspaceButton && (
           <button
             type='button'

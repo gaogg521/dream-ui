@@ -186,6 +186,8 @@ export interface PreviewContextValue {
    * Open a browser tab; blank page when url is omitted.
    */
   openBrowserTab: (url?: string) => void;
+  /** 标题栏浏览器按钮：显示中则收起，否则打开（复用已有 tab）。Toggle the browser panel, reusing an existing tab. */
+  toggleBrowserPanel: () => void;
   /**
    * 面板内浏览器区域的占位元素（ref 回调写入，面板卸载时置 null）。
    * Placeholder element of the browser area in the panel (set by a ref callback, null on unmount).
@@ -1021,6 +1023,30 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
    */
   const toggleMaximized = useCallback(() => setIsMaximized((prev) => !prev), []);
 
+  /**
+   * 标题栏浏览器按钮：浏览器正显示 → 收起面板（页面保留）；否则切到当前会话已有的浏览器
+   * tab 并打开面板，一个都没有才新建空白 tab。避免每点一次就多开一个空白 tab。
+   *
+   * Titlebar browser button: browser showing → hide the panel (page stays); otherwise
+   * activate this conversation's existing browser tab and open the panel, creating a
+   * blank tab only when there is none — clicking must not pile up blank tabs.
+   */
+  const toggleBrowserPanel = useCallback(() => {
+    if (isOpen && activeTab?.content_type === 'browser') {
+      closePreview();
+      return;
+    }
+    const existing = tabsRef.current.find(
+      (tab) => tab.content_type === 'browser' && isTabVisibleInConversation(tab, currentConversationId)
+    );
+    if (existing) {
+      setActiveTabId(existing.id);
+      setIsOpen(true);
+      return;
+    }
+    openBrowserTab();
+  }, [isOpen, activeTab, closePreview, currentConversationId, openBrowserTab]);
+
   const clearPreviewForScope = useCallback(() => {
     setIsMaximized(false);
     setIsOpen(false);
@@ -1683,6 +1709,7 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updateContent,
       updateTab,
       openBrowserTab,
+      toggleBrowserPanel,
       browserSlot,
       setBrowserSlot,
       browserTabLimitHitAt,
@@ -1718,6 +1745,7 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
     updateContent,
     updateTab,
     openBrowserTab,
+    toggleBrowserPanel,
     browserTabLimitHitAt,
     persistQuotaExceededAt,
     saveContent,

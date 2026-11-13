@@ -6,6 +6,7 @@ import { useResizableSplit } from '@/renderer/hooks/ui/useResizableSplit';
 import ChatTitleEditor from '@/renderer/pages/conversation/components/ChatTitleEditor';
 import MobileWorkspaceOverlay from './MobileWorkspaceOverlay';
 import WorkspacePanelHeader from './WorkspacePanelHeader';
+import { useBrowserAutoFit } from '@/renderer/pages/conversation/hooks/useBrowserAutoFit';
 import { useContainerWidth } from '@/renderer/pages/conversation/hooks/useContainerWidth';
 import { useLayoutConstraints } from '@/renderer/pages/conversation/hooks/useLayoutConstraints';
 import { useTitleRename } from '@/renderer/pages/conversation/hooks/useTitleRename';
@@ -74,7 +75,7 @@ const ChatLayout: React.FC<{
   const isMobile = Boolean(layout?.isMobile);
 
   // Preview panel state
-  const { isOpen: isPreviewOpenRaw, isMaximized } = usePreviewContext();
+  const { isOpen: isPreviewOpenRaw, isMaximized, activeTab: previewActiveTab } = usePreviewContext();
   // Only hoist to the Layout host on desktop. On mobile (narrow width < 768) the
   // host is not rendered (`previewRegionActive` in Layout.tsx is gated on
   // `!isMobile`), so hoisting there would leave the preview with no renderer at
@@ -154,6 +155,7 @@ const ChatLayout: React.FC<{
   const {
     splitRatio: chatSplitRatio,
     setSplitRatio: setChatSplitRatio,
+    setSplitRatioTransient: setChatSplitRatioTransient,
     createDragHandle: createPreviewDragHandle,
   } = useResizableSplit({
     defaultWidth: 60,
@@ -172,6 +174,18 @@ const ChatLayout: React.FC<{
     isPreviewOpen,
     rightSiderCollapsed,
     isMobile,
+  });
+
+  // Browser needs real width: shrink chat / fold the workspace sider when it shows up.
+  useBrowserAutoFit({
+    browserShown: isDesktop && isPreviewOpen && previewActiveTab?.content_type === 'browser',
+    containerWidth,
+    workspaceEnabled,
+    rightSiderCollapsed,
+    setRightSiderCollapsed,
+    workspaceWidthPx,
+    chatSplitRatio,
+    setChatSplitRatioTransient,
   });
 
   // --- Hook E: layout constraints ---

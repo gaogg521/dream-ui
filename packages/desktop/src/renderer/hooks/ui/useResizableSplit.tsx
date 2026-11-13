@@ -86,6 +86,16 @@ export const useResizableSplit = (options: UseResizableSplitOptions = {}) => {
     [storageKey, dispatchSplitResizeEvent]
   );
 
+  // 临时调整：只改当前状态，不写 LocalStorage（自动适应用，不覆盖用户偏好）
+  // Transient adjustment: state only, never persisted (auto-fit must not overwrite the user's preference)
+  const setSplitRatioTransient = useCallback(
+    (ratio: number) => {
+      setSplitRatioState(ratio);
+      dispatchSplitResizeEvent(ratio);
+    },
+    [dispatchSplitResizeEvent]
+  );
+
   // 处理拖动开始事件 / Handle drag start event
   const handleDragStart = useCallback(
     (reverse = false) =>
@@ -273,6 +283,7 @@ export const useResizableSplit = (options: UseResizableSplitOptions = {}) => {
     splitRatio,
     dragHandle: renderHandle({ className: 'end-0' }),
     setSplitRatio,
+    setSplitRatioTransient,
     createDragHandle: renderHandle,
   };
 };

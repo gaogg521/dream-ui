@@ -16,6 +16,49 @@ export const DEFAULT_WORKSPACE_PANEL_PX = 260;
  * button cluster) past the viewport edge at wider explorer widths.
  */
 export const PREVIEW_REGION_CHROME_PX = 24;
+/**
+ * Width a browser page needs to render like a desktop site instead of being
+ * clipped (the 340px document minimum is far too narrow for a web page).
+ */
+export const BROWSER_PREFERRED_PANEL_PX = 640;
+
+export type BrowserFitInput = {
+  containerWidth: number;
+  /** Workspace sider width in px while it is open */
+  workspaceWidthPx: number;
+  workspaceVisible: boolean;
+  chatSplitRatio: number;
+};
+
+export type BrowserFitPlan = {
+  /** Collapse the workspace sider so the browser gets the room */
+  collapseWorkspace: boolean;
+  /** New chat ratio (percent) when the chat area has to give way; null = leave as is */
+  chatRatio: number | null;
+};
+
+/**
+ * Decide how to make room for a freshly shown browser panel: shrink the chat area
+ * first (down to its minimum), and collapse the workspace sider only when that is
+ * still not enough. Never grows the chat area.
+ */
+export const planBrowserFit = ({
+  containerWidth,
+  workspaceWidthPx,
+  workspaceVisible,
+  chatSplitRatio,
+}: BrowserFitInput): BrowserFitPlan => {
+  const wsPx = workspaceVisible ? workspaceWidthPx : 0;
+  const collapseWorkspace = workspaceVisible && containerWidth - wsPx - MIN_CHAT_PANEL_PX < BROWSER_PREFERRED_PANEL_PX;
+  const available = Math.max(containerWidth - (collapseWorkspace ? 0 : wsPx), 1);
+  const currentPreviewPx = (available * (100 - chatSplitRatio)) / 100;
+  if (currentPreviewPx >= BROWSER_PREFERRED_PANEL_PX) {
+    return { collapseWorkspace, chatRatio: null };
+  }
+  const desiredChatPx = Math.max(MIN_CHAT_PANEL_PX, available - BROWSER_PREFERRED_PANEL_PX);
+  const ratio = Math.max(MIN_CHAT_RATIO, Math.min(chatSplitRatio, (desiredChatPx / available) * 100));
+  return { collapseWorkspace, chatRatio: ratio };
+};
 
 export type LayoutCalcInput = {
   containerWidth: number;

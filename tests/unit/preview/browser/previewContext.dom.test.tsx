@@ -124,6 +124,35 @@ describe('PreviewContext browser tabs', () => {
     expect(ctx.isOpen).toBe(true);
   });
 
+  it('toggleBrowserPanel: opens once, hides while showing, and reopens the same tab (no blank-tab pile-up)', () => {
+    renderProvider();
+    act(() => ctx.toggleBrowserPanel());
+    expect(browserTabs()).toHaveLength(1);
+    expect(ctx.isOpen).toBe(true);
+    expect(ctx.activeTab?.content_type).toBe('browser');
+
+    act(() => ctx.toggleBrowserPanel());
+    expect(ctx.isOpen).toBe(false);
+    expect(browserTabs()).toHaveLength(1);
+
+    act(() => ctx.toggleBrowserPanel());
+    expect(ctx.isOpen).toBe(true);
+    expect(browserTabs()).toHaveLength(1);
+  });
+
+  it('toggleBrowserPanel: switches to the browser tab when another tab is active', () => {
+    renderProvider();
+    act(() => ctx.openBrowserTab('https://example.com'));
+    const browserTabId = browserTabs()[0].id;
+    act(() => ctx.openPreview('# doc', 'markdown'));
+    expect(ctx.activeTab?.content_type).toBe('markdown');
+
+    act(() => ctx.toggleBrowserPanel());
+    expect(ctx.isOpen).toBe(true);
+    expect(ctx.activeTabId).toBe(browserTabId);
+    expect(browserTabs()).toHaveLength(1);
+  });
+
   it('opens a browser tab at a given address', () => {
     renderProvider();
     act(() => ctx.openBrowserTab('https://example.com'));
