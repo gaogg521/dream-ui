@@ -13,30 +13,44 @@
  * desktop client with a resolved enterprise tenant. In standalone mode
  * nothing runs — no identity lookup, no heartbeat request, no timer.
  *
- * `installedAgents` is intentionally left empty for now — there is no
- * existing endpoint that cheaply reports "which CLI agents are installed on
- * this machine" (the closest match, `AgentRegistry::list_management_rows`,
- * is fully implemented but never wired to a route). Wiring that up is a
- * separate, larger addition; the roster is still useful without it (machine
- * identity + reachability), and an empty list is honest rather than faked.
+ * `installedAgents` is the display names of the agents this machine's local
+ * backend reports as installed — the same catalog the Agent settings page
+ * shows (`GET /api/agents/management`, `installed: true`). Lookup failures
+ * degrade to an empty list so a flaky catalog never costs the machine its
+ * heartbeat (identity + reachability matter more than the agent column).
  */
 
 import { useEffect } from 'react';
 import { ipcBridge } from '@/common';
+import { fetchManagedAgents } from '@renderer/utils/model/agentTypes';
 import { useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import { isElectronDesktop } from '@renderer/utils/platform';
 
 const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
 
+async function listInstalledAgentNames(): Promise<string[]> {
+  try {
+    const agents = await fetchManagedAgents();
+    const names = agents
+      .filter((agent) => agent.installed)
+      .map((agent) => (agent.name || agent.backend || '').trim())
+      .filter((name) => name.length > 0);
+    return Array.from(new Set(names));
+  } catch {
+    return [];
+  }
+}
+
 async function sendHeartbeat(): Promise<void> {
   try {
     const identity = await ipcBridge.application.getRuntimeNodeIdentity.invoke();
+    const installedAgents = await listInstalledAgentNames();
     await ipcBridge.oneAdmin.runtimeHeartbeat.invoke({
       machineId: identity.machineId,
       displayName: identity.hostname,
       hostnames: [identity.hostname],
       ipAddresses: identity.ipAddresses,
-      installedAgents: [],
+      installedAgents,
     });
   } catch {
     // Best-effort — a missed heartbeat just means this node looks stale in
