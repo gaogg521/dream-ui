@@ -594,6 +594,7 @@ curl https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/latest.ym
 
 ## 相关文档
 
+- **3.0.18 交接话术 + 上周（11-01~11-13）踩坑汇总**（给接手发版的 Agent 直接贴）：[`release-handoff-3.0.18-for-glm.zh-CN.md`](release-handoff-3.0.18-for-glm.zh-CN.md)
 - **3.0.14 发版全记录**（mac x64 codesign 连环挂、钉版三连追、多会话并行）：[`dream-en/docs/release-record-2026-10-24-3.0.14.zh-CN.md`](../../../../dream-en/docs/release-record-2026-10-24-3.0.14.zh-CN.md)
 - **3.0.6 发版全记录**（数字、决策、遗留）：[`dream-en/docs/release-record-2026-09-19-3.0.6.zh-CN.md`](../../../../dream-en/docs/release-record-2026-09-19-3.0.6.zh-CN.md)
 - **3.0.5 发版全记录 + 三个大坑**（划界、失效类名、双清单）：[`dream-en/docs/handoff-2026-09-13-openocta-parity.zh-CN.md`](../../../../dream-en/docs/handoff-2026-09-13-openocta-parity.zh-CN.md) §10
