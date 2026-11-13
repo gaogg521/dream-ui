@@ -519,18 +519,19 @@ describe('browser tabs follow their conversation', () => {
     expect(ctx.isOpen).toBe(false);
   });
 
-  it('does not create a panel from the unattributed bridge request even with no tabs', () => {
-    // void 事件不带会话：在 B 里替别的会话的 Agent 开面板正是要修的串台，
-    // 所以无可见 tab 时一律不创建；创建权只归带 conversation_id 的流路径。
-    // The void event carries no conversation: opening a panel here on another
-    // conversation's behalf is the leak being fixed, so with no visible tab it
-    // never creates — creation belongs to the attributed stream path.
+  it('creates a panel from the bridge request when no browser tab exists anywhere', () => {
+    // dream 引擎发裸工具名，流路径认不出浏览器调用；桥请求时若一个浏览器 tab 都没有，
+    // webview 未挂载、Agent 无法自救（等满 10 秒报 not attached），必须在当前会话新建。
+    // The core streams bare tool names so the stream path never fires; with no browser
+    // tab anywhere the webview is unmounted and the agent cannot recover, so the bridge
+    // request must create one in the current conversation.
     renderProvider();
     act(() => setCurrentConversation('conv-b'));
 
     act(() => browserRequest.listener?.());
-    expect(browserTabs()).toHaveLength(0);
-    expect(ctx.isOpen).toBe(false);
+    expect(browserTabs()).toHaveLength(1);
+    expect(browserTabs()[0].metadata?.ownerConversationId).toBe('conv-b');
+    expect(ctx.isOpen).toBe(true);
   });
 
   it('auto-opens a panel owned by the current conversation from its own stream activity', () => {

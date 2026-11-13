@@ -1467,17 +1467,14 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [currentConversationId, tabs]);
 
   /**
-   * Agent 请求浏览器时把面板带到当前会话。`allowCreate` 只对流路径（消息带
-   * conversation_id，归属确凿）放开：void 的 agentBrowserRequested 事件不带会话，
-   * 替当前会话给别的会话的 Agent 开面板，正是本次要修的串台——一律不创建。
+   * Agent 请求浏览器时把面板带到当前会话。只有「整个面板里没有任何浏览器 tab」才会新建；
+   * 已有别的会话的 tab 时不动面板，避免串台（见下方守卫）。
    *
-   * Brings the panel up in the current conversation on agent request. `allowCreate`
-   * is only granted to the stream path (the message carries conversation_id, so
-   * attribution is certain): the void agentBrowserRequested event carries no
-   * conversation, and opening a panel here on another conversation's behalf is
-   * exactly the cross-conversation leak being fixed — never create on it.
+   * Brings the panel up in the current conversation on agent request. A tab is only
+   * created when no browser tab exists anywhere; if another conversation owns one, the
+   * panel is left alone to avoid the cross-conversation leak (see the guards below).
    *
-   * @param allowCreate 流路径传 true / true from the attributed stream path
+   * @param allowCreate 两条触发路径（流 / 桥事件）都传 true；false 只接管已有 tab
    */
   const maybeOpenBrowserPanelForAgent = useCallback(
     (allowCreate: boolean) => {
@@ -1508,14 +1505,24 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
     [openBrowserTab]
   );
 
-  // Core streams bare tool names, whereas other engines stream MCP-qualified names.
-  // The authenticated CDP bridge is the authoritative signal that our browser is needed.
-  // void 事件不带会话，故只允许接管可见 tab、不允许创建（见上方说明）。
-  // The void event carries no conversation, so it may only take over a visible tab,
-  // never create one (see the note above).
+  // Core streams bare tool names (`navigate_page`, not `one-browser__navigate_page`), so the
+  // stream path above never recognises its browser calls. The authenticated CDP bridge is
+  // therefore the authoritative signal that our browser is needed.
+  //
+  // dream 引擎发的是裸工具名，流路径认不出浏览器调用；桥的请求才是权威信号。
+  // 桥一旦请求而面板里一个浏览器 tab 都没有，webview 根本没挂载，Agent 无法自救，
+  // 只会等满 10 秒报「not attached」——这时必须在当前会话新建。代价：用户正看着 A 会话、
+  // 而 B 会话的 Agent 首次用浏览器时，面板会开在 A。只要任何会话已有浏览器 tab，
+  // 就仍然只接管、不创建（maybeOpenBrowserPanelForAgent 内的守卫）。
+  //
+  // When the bridge asks and there is no browser tab at all, no webview is mounted and the
+  // agent cannot recover on its own — it just waits out 10 s and fails with "not attached".
+  // So create one in the current conversation. Trade-off: if the user is viewing A while B's
+  // agent uses the browser for the first time, the panel opens in A. Once any conversation
+  // has a browser tab the request only takes over, never creates (guard in the callback).
   useEffect(() => {
     return ipcBridge.application?.agentBrowserRequested?.on(() => {
-      maybeOpenBrowserPanelForAgent(false);
+      maybeOpenBrowserPanelForAgent(true);
     });
   }, [maybeOpenBrowserPanelForAgent]);
 
