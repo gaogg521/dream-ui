@@ -270,6 +270,16 @@ let isStoreInitialized = false;
 let conversationsState: TChatConversation[] = [];
 let listLoadErrorState: ConversationListLoadError | null = null;
 let generatingConversationIdsState = new Set<string>();
+
+/**
+ * 当前正在生成回复的会话 id（只读快照）。给非 React 的回调用 —— 例如智能体请求浏览器时，
+ * 要判断「是哪个会话的智能体在跑」，而桥的请求本身不带会话。
+ *
+ * Read-only snapshot of the conversations currently generating a reply, for non-React
+ * callers — e.g. deciding which conversation's agent is asking for the browser when the
+ * bridge request itself carries no conversation.
+ */
+export const getGeneratingConversationIds = (): ReadonlySet<string> => generatingConversationIdsState;
 // Per-conversation set of pending confirmation ids (permission / acp_permission
 // / ask). A conversation with a non-empty set is "waiting on the user" and gets
 // the distinct sidebar icon. Kept separate from the derived id set below so

@@ -9,11 +9,13 @@ import { chatFileRefKey, isChatFileRef } from '@/common/types/chatFile';
 import { emitter } from '@/renderer/utils/emitter';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { BROWSER_BLANK_URL, BROWSER_TAB_FALLBACK_TITLE, MAX_BROWSER_TABS } from '../browser/constants';
+import BrowserHost from '../browser/BrowserHost';
 import { isBrowserMcpActivity, isBrowserMcpSettled } from '../browser/agentActivity';
 import { maybeNotifyFirstAgentBrowserUse, notifyAgentOpenedBrowserPanel } from '../browser/firstUseNotice';
 import { listPersistedPreviewScopeKeys, previewScopeStorageKey, type PreviewScopeKey } from './previewScope';
 import { peKey } from '@/renderer/pages/conversation/explorer/explorerModel';
 import { getCurrentConversation } from '@/renderer/pages/conversation/explorer/currentConversationStore';
+import { getGeneratingConversationIds } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
 import { useCurrentConversation } from '@/renderer/pages/conversation/explorer/currentConversationStore';
 import { reflessTabKey } from './reflessTabKey';
 import { onPreviewWatchChange, reconcilePreviewWatch, resetPreviewWatch } from './previewWatchStore';
@@ -95,6 +97,22 @@ export interface OpenPreviewOptions {
    * tab to avoid losing changes).
    */
   replace?: boolean;
+  /**
+   * 浏览器 tab 的归属会话；省略则归当前会话。Agent 在「别的会话」里请求浏览器时用它
+   * 把页签盖到真正在跑的那个会话上。
+   *
+   * Owning conversation for a browser tab; defaults to the current one. Used when an
+   * agent in ANOTHER conversation asks for the browser, so the tab is stamped with the
+   * conversation that is actually running.
+   */
+  ownerConversationId?: string;
+  /**
+   * 后台创建：只建 tab，不激活、不展开面板（不抢当前会话的画面）。
+   * Create in the background: add the tab without activating it or opening the panel.
+   */
+  background?: boolean;
+  /** 预先指定新 tab 的 id（调用方需要事后引用它）。/ Preassign the new tab's id when the caller must refer to it. */
+  tabId?: string;
 }
 
 /**
@@ -168,6 +186,12 @@ export interface PreviewContextValue {
    * Open a browser tab; blank page when url is omitted.
    */
   openBrowserTab: (url?: string) => void;
+  /**
+   * 面板内浏览器区域的占位元素（ref 回调写入，面板卸载时置 null）。
+   * Placeholder element of the browser area in the panel (set by a ref callback, null on unmount).
+   */
+  browserSlot: HTMLElement | null;
+  setBrowserSlot: (element: HTMLElement | null) => void;
   closePreview: () => void;
   /** 切换最大化 / Toggle maximized. */
   toggleMaximized: () => void;
@@ -220,7 +244,7 @@ export interface PreviewContextValue {
   clearTabUpdate: (tabId: string) => void;
   findPreviewTab: (type: PreviewContentType, content?: string, metadata?: PreviewMetadata) => PreviewTab | null; // 查找匹配的 tab
   closePreviewByIdentity: (type: PreviewContentType, content?: string, metadata?: PreviewMetadata) => void; // 根据内容关闭指定 tab
-  closePreviewIfScopeChanged: (scopeKey: PreviewScopeKey) => void; // 切换隔离 scope(project;见 previewScope.ts):持久化旧 scope、恢复新 scope 的 tabs+可见性(per-project)
+  closePreviewIfScopeChanged: (scopeKey: PreviewScopeKey, enteringConversationId?: string | null) => void; // 切换隔离 scope(project;见 previewScope.ts):持久化旧 scope、恢复新 scope 的 tabs+可见性(per-project)
 
   // 发送框集成 / Sendbox integration
   addToSendBox: (text: string) => void;
@@ -570,6 +594,10 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // `closePreviewIfScopeChanged` (per-project restore, see switchScope below).
   const [isOpen, setIsOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  // 预览面板里「浏览器区域」的占位元素；面板收起（卸载）时为 null。全局宿主据此定位。
+  // The placeholder element for the browser area inside the preview panel; null while the
+  // panel is closed (unmounted). The global BrowserHost positions itself from it.
+  const [browserSlot, setBrowserSlot] = useState<HTMLElement | null>(null);
   const [tabs, setTabs] = useState<PreviewTab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   // The preview scope currently loaded into state (project id / workspace / null).
@@ -814,7 +842,9 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // across conversations. Read outside setTabs (the updater must stay pure, see
       // above).
       const browserOwnerMetadata: PreviewMetadata | undefined =
-        type === 'browser' ? { ...meta, ownerConversationId: getCurrentConversation() ?? undefined } : meta;
+        type === 'browser'
+          ? { ...meta, ownerConversationId: options?.ownerConversationId ?? getCurrentConversation() ?? undefined }
+          : meta;
 
       // 记下打开时的 mtime，作为下次保存的 If-Match 条件。
       // 必须在 setTabs 之外做 —— updater 在 StrictMode 下会跑两次，且必须保持纯函数。
@@ -873,7 +903,7 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
         : null;
 
       // 生成唯一 ID / Generate unique ID
-      const newTabId = `${type}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const newTabId = options?.tabId ?? `${type}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const targetTabId = existingTab?.id ?? replaceTarget?.id ?? cappedTarget?.id ?? newTabId;
 
       setTabs((prevTabs) => {
@@ -930,6 +960,7 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return [...prevTabs, newTab];
       });
 
+      if (options?.background) return;
       setActiveTabId(targetTabId);
       setIsOpen(true);
     },
@@ -1004,10 +1035,36 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Same scope is a no-op. `currentScopeRef` lives in the app-root context so it
   // survives conversation-page remounts.
   const closePreviewIfScopeChanged = useCallback(
-    (scopeKey: PreviewScopeKey) => {
+    (scopeKey: PreviewScopeKey, enteringConversationId?: string | null) => {
       const prev = currentScopeRef.current;
       if (prev === scopeKey) return;
-      if (prev != null) persistScopeState(prev, { isOpen, tabs, activeTabId });
+
+      /**
+       * 带走「归属于正要进入的会话」的浏览器页签。预览状态按项目作用域存放，智能体在后台为
+       * 另一个项目里的会话建的页签（见 maybeOpenBrowserPanelForAgent）此刻还在旧作用域的
+       * 内存状态里 —— 不带走就会被新作用域的已存状态整个替换掉，用户切过去时页签和智能体正在
+       * 驱动的网页一起消失。带走后它不再写回旧作用域，并在新作用域里直接展开。
+       *
+       * Carry along browser tabs owned by the conversation being entered. Preview state is
+       * stored per project scope, so a tab the agent created in the background for a
+       * conversation in ANOTHER project is still in the old scope's in-memory state — left
+       * behind, it would be replaced wholesale by the new scope's stored state and vanish,
+       * along with the page the agent is driving, the moment the user switches over. Carried
+       * tabs are not written back to the old scope and are shown at once in the new one.
+       */
+      // 由调用方显式传入：切换发生的这一刻全局「当前会话」存储还是 null（实测），不能读它。
+      // Passed in explicitly by the caller: at the instant of the switch the global "current
+      // conversation" store still reads null (measured), so it cannot be read here.
+      const entering = enteringConversationId ?? null;
+      const carried = entering
+        ? tabs.filter((tab) => tab.content_type === 'browser' && tab.metadata?.ownerConversationId === entering)
+        : [];
+      const staying = carried.length > 0 ? tabs.filter((tab) => !carried.includes(tab)) : tabs;
+      const stayingActiveTabId = carried.some((tab) => tab.id === activeTabId)
+        ? (staying[staying.length - 1]?.id ?? null)
+        : activeTabId;
+
+      if (prev != null) persistScopeState(prev, { isOpen, tabs: staying, activeTabId: stayingActiveTabId });
       // Release the leaving scope's directory subscriptions.
       //
       // Placed before the state updates as a matter of habit, not because the position
@@ -1028,10 +1085,15 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const loaded = scopeKey != null ? loadScopeState(scopeKey) : EMPTY_SCOPE_STATE;
       // Subscriptions for these tabs come from the tabs effect, which this setTabs
       // triggers — restored tabs are subscribed exactly like freshly opened ones.
-      setTabs(loaded.tabs);
-      setActiveTabId(loaded.activeTabId);
-      activeTabIdRef.current = loaded.activeTabId;
-      setIsOpen(loaded.isOpen);
+      const nextTabs =
+        carried.length > 0
+          ? [...loaded.tabs, ...carried.filter((c) => !loaded.tabs.some((tab) => tab.id === c.id))]
+          : loaded.tabs;
+      const nextActiveTabId = carried.length > 0 ? carried[0].id : loaded.activeTabId;
+      setTabs(nextTabs);
+      setActiveTabId(nextActiveTabId);
+      activeTabIdRef.current = nextActiveTabId;
+      setIsOpen(carried.length > 0 ? true : loaded.isOpen);
       setIsMaximized(false);
       setDomSnippets([]);
     },
@@ -1498,11 +1560,38 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (browserTabsRef.current.some((tab) => tab.content_type === 'browser')) return;
       if (Date.now() - agentAutoOpenAtRef.current < 10_000) return;
       agentAutoOpenAtRef.current = Date.now();
-      openBrowserTab();
-      notifyAgentOpenedBrowserPanel();
-      maybeNotifyFirstAgentBrowserUse();
+
+      /**
+       * 归属判定：桥请求不带会话，但「谁在生成」是已知的。当前会话在生成、或没有任何会话在
+       * 生成（兜底）→ 归当前会话，照常开面板；只有别的会话在生成时才归它，并在后台建页签 ——
+       * 不抢当前会话的画面，用户切到那个会话时由 autoHiddenBrowserRef 自动展开。
+       * 多个别的会话同时在生成时无法分辨，取第一个：归属只决定页签显示在哪，智能体照样能驱动
+       * （webview 由全局宿主常驻，见 BrowserHost）。
+       *
+       * Ownership: the bridge request carries no conversation, but who is generating is
+       * known. Current conversation generating, or nobody generating (fallback) → the
+       * current one, panel opens as usual. Only when ANOTHER conversation is generating does
+       * it own the tab, created in the background — the current conversation's view is left
+       * alone, and autoHiddenBrowserRef opens the panel when the user switches there. If
+       * several other conversations generate at once they cannot be told apart, so the first
+       * wins: ownership only decides where the tab is shown, the agent can drive it either
+       * way (the global BrowserHost keeps the webview mounted).
+       */
+      const current = currentConversationIdRef.current;
+      const generating = getGeneratingConversationIds();
+      const owner =
+        generating.size === 0 || (current && generating.has(current)) ? current : generating.values().next().value;
+      if (!owner || owner === current) {
+        openBrowserTab();
+        notifyAgentOpenedBrowserPanel();
+        maybeNotifyFirstAgentBrowserUse();
+        return;
+      }
+      const tabId = `browser-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      openPreview(BROWSER_BLANK_URL, 'browser', undefined, { ownerConversationId: owner, background: true, tabId });
+      autoHiddenBrowserRef.current = { conversationId: owner, tabId };
     },
-    [openBrowserTab]
+    [openBrowserTab, openPreview]
   );
 
   // Core streams bare tool names (`navigate_page`, not `one-browser__navigate_page`), so the
@@ -1594,6 +1683,8 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updateContent,
       updateTab,
       openBrowserTab,
+      browserSlot,
+      setBrowserSlot,
       browserTabLimitHitAt,
       persistQuotaExceededAt,
       saveContent,
@@ -1611,6 +1702,7 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
       clearDomSnippets,
     };
   }, [
+    browserSlot,
     isOpen,
     isMaximized,
     tabs,
@@ -1643,7 +1735,12 @@ export const PreviewProvider: React.FC<{ children: React.ReactNode }> = ({ child
     clearDomSnippets,
   ]);
 
-  return <PreviewContext.Provider value={previewContextValue}>{children}</PreviewContext.Provider>;
+  return (
+    <PreviewContext.Provider value={previewContextValue}>
+      {children}
+      <BrowserHost />
+    </PreviewContext.Provider>
+  );
 };
 
 export const usePreviewContext = () => {

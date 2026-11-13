@@ -44,7 +44,6 @@ import OfficeDocPreview from '../viewers/OfficeDocViewer';
 import PptViewer from '../viewers/PptViewer';
 import CodeEditor from '../editors/CodeEditor';
 import URLViewer from '../viewers/URLViewer';
-import BrowserTabLayer from '../../browser/BrowserTabLayer';
 import { MAX_BROWSER_TABS } from '../../browser/constants';
 import {
   PreviewTabs,
@@ -106,8 +105,8 @@ const PreviewPanel: React.FC = () => {
     tabsWithUpdate,
     clearTabUpdate,
     addDomSnippet,
-    updateTab,
     openBrowserTab,
+    setBrowserSlot,
     browserTabLimitHitAt,
     persistQuotaExceededAt,
   } = usePreviewContext();
@@ -1213,9 +1212,6 @@ const PreviewPanel: React.FC = () => {
     };
   });
 
-  // 浏览器 tab 常驻挂载，切 tab 不销毁 webview / Browser tabs stay mounted across switches
-  const browserTabs = tabs.filter((tab) => tab.content_type === 'browser');
-
   return (
     <PreviewToolbarExtrasProvider value={toolbarExtrasContextValue}>
       {/* bg-1 是必需的：面板必须自己铺满底色，不能依赖外层容器
@@ -1317,9 +1313,17 @@ const PreviewPanel: React.FC = () => {
         {/* 预览内容 / Preview content */}
         {renderContent()}
 
-        {/* 浏览器层：常驻挂载，切 tab 不重新加载页面
-            Browser layer: always mounted so tab switches don't reload pages */}
-        <BrowserTabLayer browserTabs={browserTabs} activeTabId={activeTabId} updateTab={updateTab} />
+        {/* 浏览器区域占位：webview 不在这里渲染，而是由全局 BrowserHost 常驻挂载并贴在这个元素上
+            （面板收起时 webview 照常存活）。激活的不是浏览器 tab 时收成 0，宿主随之停靠到屏幕外。
+            Browser area placeholder: the webviews are not rendered here — the global BrowserHost
+            keeps them mounted and sits over this element (they survive the panel closing).
+            Collapsed to zero when the active tab is not a browser, parking the host off-screen. */}
+        <div
+          ref={setBrowserSlot}
+          data-testid='browser-slot'
+          className='relative flex-1 overflow-hidden'
+          style={{ display: content_type === 'browser' ? undefined : 'none' }}
+        />
 
         {/* Tab 右键菜单 / Tab context menu */}
         {/* eslint-disable-next-line max-len */}

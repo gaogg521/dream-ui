@@ -76,6 +76,9 @@ let identityGeneration = 0;
 let identityDead = false;
 let requestBrowser: (() => void) | undefined;
 let attachmentPending: Promise<void> | undefined;
+/** 上一条智能体命令的时间，用来划分「一波」操作。/ Time of the last agent command, to delimit bursts. */
+let lastAgentCommandAt = 0;
+const AGENT_BURST_GAP_MS = 30_000;
 
 const ensureBrowserAttached = async (): Promise<void> => {
   if (attached && !attached.contents.isDestroyed()) return;
@@ -83,8 +86,26 @@ const ensureBrowserAttached = async (): Promise<void> => {
     attachmentPending = (async () => {
       requestBrowser?.();
       const deadline = Date.now() + 10_000;
+      let lastRequestAt = Date.now();
       while (Date.now() < deadline && isAgentControlEnabled()) {
         if (attached && !attached.contents.isDestroyed()) return;
+        /**
+         * 请求是一次性的 void 事件，渲染进程还没订阅（应用刚启动、窗口仍在加载）时就丢了，
+         * 之后干等满 10 秒。等待期间每 2 秒重发一次；渲染端处理幂等（已有 tab 只会聚焦，
+         * 不会重复创建）。真机复现：dev 刚起窗口时第一条桥命令固定卡 10025ms，紧接着第二条
+         * 命令（重新发起请求）立刻成功。
+         *
+         * The request is a one-shot void event; when the renderer has not subscribed yet (app
+         * just launched, window still loading) it is lost and the loop idles the full 10 s.
+         * Re-send every 2 s while waiting; the renderer side is idempotent (an existing tab is
+         * only focused, never duplicated). Reproduced live: right after dev start the first
+         * bridge command hangs exactly 10025 ms while the second — which re-issues the request —
+         * succeeds at once.
+         */
+        if (Date.now() - lastRequestAt >= 2_000) {
+          lastRequestAt = Date.now();
+          requestBrowser?.();
+        }
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
     })().finally(() => {
@@ -361,6 +382,26 @@ const handleSocketMessage = async (ws: WebSocket, raw: string, announcedSessions
    * placeholder identity is used and page-level commands then say plainly it is not attached.
    */
   await ensureBrowserAttached();
+
+  /**
+   * 智能体开始新一波浏览器操作时，请界面把面板弹出来。网页视图现在由全局宿主常驻，面板收起时
+   * 桥照样挂着它 —— 不再有「没挂上 → 发请求」这一步，于是智能体会在用户看不见的地方操作浏览器。
+   * 以「距上次命令超过 30 秒」划分一波：用户在一波操作中途手动收起面板不会被反复弹回，
+   * 下一波再弹出。首次挂载时 ensureBrowserAttached 已经发过请求，这里只管已挂载的情况。
+   *
+   * Ask the UI to surface the panel when the agent starts a new burst of browser work. The
+   * webview is now kept alive by the global host, so with the panel collapsed the bridge stays
+   * attached — there is no longer an "unattached → request" step, and the agent would drive the
+   * browser where the user cannot see it. A burst is "30 s since the last command": a panel the
+   * user collapses mid-burst is not fought over, the next burst surfaces it again. The first
+   * attach already requested in ensureBrowserAttached; this only covers the already-attached case.
+   */
+  const now = Date.now();
+  if (attached && !attached.contents.isDestroyed() && now - lastAgentCommandAt > AGENT_BURST_GAP_MS) {
+    requestBrowser?.();
+  }
+  lastAgentCommandAt = now;
+
   if (attached && !attached.contents.isDestroyed()) {
     await Promise.race([attached.identityReady, new Promise<void>((resolve) => setTimeout(resolve, 3000))]);
   }

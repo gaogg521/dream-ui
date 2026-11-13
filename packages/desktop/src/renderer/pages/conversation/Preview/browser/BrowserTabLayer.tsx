@@ -14,6 +14,13 @@ export interface BrowserTabLayerProps {
   activeTabId: string | null;
   /** 回写 tab 字段 / Patch fields back onto a tab */
   updateTab: (tabId: string, patch: PreviewTabPatch) => void;
+  /**
+   * 面板的浏览器区域此刻是否在屏幕上。为 false（面板收起）时所有 tab 都不「可见」，
+   * 但 webview 照常挂载 —— 由 BrowserHost 停靠在屏幕外。
+   * Whether the panel's browser area is on screen. When false (panel closed) no tab counts
+   * as visible, but every webview stays mounted — BrowserHost parks them off-screen.
+   */
+  panelVisible?: boolean;
 }
 
 /**
@@ -34,7 +41,12 @@ export interface BrowserTabLayerProps {
  * survives. Inactive tabs are hidden via `visibility` rather than `display:none`
  * so they retain real dimensions and need no relayout when shown again.
  */
-const BrowserTabLayer: React.FC<BrowserTabLayerProps> = ({ browserTabs, activeTabId, updateTab }) => {
+const BrowserTabLayer: React.FC<BrowserTabLayerProps> = ({
+  browserTabs,
+  activeTabId,
+  updateTab,
+  panelVisible = true,
+}) => {
   // 浏览器页签跟随会话：webview 仍全部常驻（切会话不销毁、页面状态不丢），
   // 只有「归属当前会话且被激活」的 tab 可见 —— 别的会话打开的网站不会出现在这里。
   // Browser tabs follow their conversation: every webview stays mounted (switching
@@ -60,14 +72,16 @@ const BrowserTabLayer: React.FC<BrowserTabLayerProps> = ({ browserTabs, activeTa
 
   if (browserTabs.length === 0) return null;
 
-  const isBrowserActive = browserTabs.some(
-    (tab) => tab.id === activeTabId && isTabVisibleInConversation(tab, currentConversationId)
-  );
-
+  // 不再用 display:none 隐藏整层：webview 在 display:none 下没有布局。没有激活的浏览器 tab
+  // 时每个 tab 都是 visibility:hidden，整层仍占满宿主（宿主此时停在屏幕外或被占位元素收成 0）。
+  // The whole layer is no longer hidden with display:none (a webview gets no layout there).
+  // With no active browser tab every tab is visibility:hidden and the layer still fills the
+  // host (which is then parked off-screen or collapsed to zero by the slot).
   return (
-    <div className='relative flex-1 overflow-hidden' style={{ display: isBrowserActive ? undefined : 'none' }}>
+    <div className='relative flex-1 overflow-hidden'>
       {browserTabs.map((tab) => {
-        const isActive = tab.id === activeTabId && isTabVisibleInConversation(tab, currentConversationId);
+        const isActive =
+          panelVisible && tab.id === activeTabId && isTabVisibleInConversation(tab, currentConversationId);
         return (
           <div
             key={tab.id}

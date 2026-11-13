@@ -49,6 +49,16 @@ vi.mock('@/common', () => ({
   },
 }));
 
+// 宿主（真实 webview）有自己的测试；这里只测上下文逻辑，不让 jsdom 挂载浏览器视图。
+// The host (real webviews) has its own tests; this file covers context logic only.
+vi.mock('@/renderer/pages/conversation/Preview/browser/BrowserHost', () => ({ default: () => null }));
+
+// 可控的「正在生成的会话」集合 / A controllable "conversations currently generating" set.
+const generating = vi.hoisted(() => ({ ids: new Set<string>() }));
+vi.mock('@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync', () => ({
+  getGeneratingConversationIds: () => generating.ids,
+}));
+
 vi.mock('@/renderer/pages/conversation/Preview/browser/firstUseNotice', () => ({
   maybeNotifyFirstAgentBrowserUse: vi.fn(),
   notifyAgentOpenedBrowserPanel: vi.fn(),
@@ -82,6 +92,7 @@ const renderProvider = () =>
 const browserTabs = () => ctx.tabs.filter((tab) => tab.content_type === 'browser');
 
 beforeEach(() => {
+  generating.ids = new Set<string>();
   localStorage.clear();
   resetCurrentConversationForTest();
 });
@@ -532,6 +543,83 @@ describe('browser tabs follow their conversation', () => {
     expect(browserTabs()).toHaveLength(1);
     expect(browserTabs()[0].metadata?.ownerConversationId).toBe('conv-b');
     expect(ctx.isOpen).toBe(true);
+  });
+
+  it('anchors the tab to the generating conversation without touching the viewed one', () => {
+    // 用户在看 A，B 的智能体首次请求浏览器：页签归 B、后台创建，A 的画面不动。
+    // The user views A while B's agent first asks for the browser: the tab is owned by B and
+    // created in the background, leaving A's view alone.
+    renderProvider();
+    act(() => setCurrentConversation('conv-a'));
+    generating.ids = new Set(['conv-b']);
+
+    act(() => browserRequest.listener?.());
+
+    expect(browserTabs()).toHaveLength(1);
+    expect(browserTabs()[0].metadata?.ownerConversationId).toBe('conv-b');
+    expect(ctx.isOpen).toBe(false);
+    expect(ctx.activeTabId).toBeNull();
+    expect(ctx.visibleTabs).toHaveLength(0);
+  });
+
+  it('opens the background tab’s panel when the user switches to its conversation', () => {
+    renderProvider();
+    act(() => setCurrentConversation('conv-a'));
+    generating.ids = new Set(['conv-b']);
+    act(() => browserRequest.listener?.());
+    const tabId = browserTabs()[0].id;
+
+    act(() => setCurrentConversation('conv-b'));
+
+    expect(ctx.isOpen).toBe(true);
+    expect(ctx.activeTabId).toBe(tabId);
+    expect(ctx.visibleTabs).toHaveLength(1);
+  });
+
+  it('keeps ownership with the current conversation when it is the one generating', () => {
+    renderProvider();
+    act(() => setCurrentConversation('conv-a'));
+    generating.ids = new Set(['conv-a', 'conv-b']);
+
+    act(() => browserRequest.listener?.());
+
+    expect(browserTabs()[0].metadata?.ownerConversationId).toBe('conv-a');
+    expect(ctx.isOpen).toBe(true);
+  });
+
+  it('carries the background tab across a project-scope switch into its owning conversation', () => {
+    // 预览状态按项目作用域存放：B 在另一个项目里，切过去时作用域切换会用 B 的已存状态替换页签，
+    // 后台页签必须被带走，否则用户一切过去页签和智能体正在驱动的网页一起消失。
+    // Preview state is stored per project scope; B lives in another project, so the switch
+    // replaces the tabs with B's stored state — the background tab has to be carried over or
+    // it vanishes, with the page the agent is driving, the moment the user switches.
+    renderProvider();
+    act(() => setCurrentConversation('conv-a'));
+    act(() => ctx.closePreviewIfScopeChanged('project_a', 'conv-a'));
+    generating.ids = new Set(['conv-b']);
+    act(() => browserRequest.listener?.());
+    const tabId = browserTabs()[0].id;
+    expect(ctx.isOpen).toBe(false);
+
+    act(() => setCurrentConversation('conv-b'));
+    act(() => ctx.closePreviewIfScopeChanged('project_b', 'conv-b'));
+
+    expect(browserTabs().map((tab) => tab.id)).toEqual([tabId]);
+    expect(ctx.isOpen).toBe(true);
+    expect(ctx.activeTabId).toBe(tabId);
+    expect(ctx.visibleTabs).toHaveLength(1);
+  });
+
+  it('does not carry another conversation’s browser tab into the new scope', () => {
+    renderProvider();
+    act(() => setCurrentConversation('conv-a'));
+    act(() => ctx.closePreviewIfScopeChanged('project_a', 'conv-a'));
+    act(() => ctx.openBrowserTab('https://example.com'));
+
+    act(() => setCurrentConversation('conv-c'));
+    act(() => ctx.closePreviewIfScopeChanged('project_c', 'conv-c'));
+
+    expect(browserTabs()).toHaveLength(0);
   });
 
   it('auto-opens a panel owned by the current conversation from its own stream activity', () => {
