@@ -11,6 +11,13 @@
   "skills": "技能",
   "workspace": "项目",
   "settings": "设置",
+  "bottomNav": {
+    "home": "首页",
+    "chats": "会话",
+    "scheduled": "定时任务",
+    "knowledge": "知识库",
+    "settings": "设置"
+  },
   "system": "系统",
   "about": "关于我们",
   "back": "返回聊天",
@@ -234,7 +241,6 @@
     "projectInviteEntry": "项目组邀请码",
     "projectInviteHint": "外部协作者可使用本地账户登录，无需企业 SSO；登录后使用邀请码加入项目组。",
     "projectInviteSignIn": "登录并继续",
-
     "projectGroupExitHint": "退出后你将离开当前项目组。若这是你在公司的最后一个项目组，你会同时移出公司：本地账号停用、本次登录失效，重新入职后可恢复。若管理员设置了退出口令，请输入：",
     "defaultCompanyWorkspace": "企业默认协作空间",
     "projectGroupOwnershipHint": "项目组用于共同协作，可以独立存在，也可以隶属企业。加入项目组不等同于企业员工认证，资源以管理员授权为准。",

@@ -645,9 +645,9 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
           >
             {/* 访问地址（启用 WebUI 后即显示，不依赖后端 running 状态）/ Access URL (shown whenever WebUI is enabled, not tied to backend running state) */}
             {webuiEnabled && (
-              <div className='flex items-center justify-between gap-8px rd-10px border border-line bg-fill-1 px-12px py-8px'>
+              <div className='flex flex-wrap items-center justify-between gap-8px rd-10px border border-line bg-fill-1 px-12px py-8px'>
                 <span className='text-12px text-t-tertiary shrink-0'>{t('settings.webui.accessUrl')}</span>
-                <div className='flex items-center gap-4px min-w-0'>
+                <div className='flex items-center gap-4px min-w-0 flex-1 justify-end'>
                   <button
                     className='text-13px text-primary font-mono hover:underline cursor-pointer bg-transparent border-none p-0 truncate'
                     onClick={() => shell.openExternal.invoke(getDisplayUrl()).catch(console.error)}

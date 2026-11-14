@@ -13,6 +13,7 @@
 import React, { useState } from 'react';
 import { Tabs } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
+import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import AgentMemoryTab from './AgentMemoryTab';
 import EngineMemoryTab from './EngineMemoryTab';
 import EnterpriseMemoryTab from './EnterpriseMemoryTab';
@@ -20,12 +21,19 @@ import styles from './index.module.css';
 
 const MemoryPage: React.FC = () => {
   const { t } = useTranslation();
+  const layout = useLayoutContext();
+  const isMobile = layout?.isMobile ?? false;
   const [activeTab, setActiveTab] = useState('engine');
 
   return (
     <div
       className={styles.page}
-      style={{ padding: '20px 24px', height: '100%', display: 'flex', flexDirection: 'column' }}
+      style={{
+        padding: isMobile ? '12px 16px' : '20px 24px',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <h2 className={styles.pageTitle}>{t('memory.title')}</h2>

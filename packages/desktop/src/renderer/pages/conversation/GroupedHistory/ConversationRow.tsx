@@ -308,7 +308,40 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
             </span>
           )}
         </span>
-        {detailed ? (
+        {detailed && isMobile ? (
+          // Mobile session-center card: the fixed 4-column grid below needs
+          // ≈452px of row width, so on a phone the title track collapses to
+          // zero and the date column clips off-screen. Stack instead — name
+          // on the first line, mode/model/date as a compact meta line under
+          // it. `pe-20px` keeps both lines clear of the absolutely-positioned
+          // more-button (end-8px + size-20px) that is always visible on touch.
+          <div className='flex flex-col justify-center gap-2px min-w-0 flex-1 collapsed-hidden pe-20px'>
+            <div className='flex items-center gap-4px min-w-0 text-13px font-[500] lh-18px'>
+              <span className='block overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-t-primary'>
+                {conversation.name}
+              </span>
+              {forkLineage && (
+                <span className='flex-shrink-0 line-height-0 text-t-tertiary' data-testid='conversation-fork-badge'>
+                  <ForkBranchIcon size={12} />
+                </span>
+              )}
+            </div>
+            <div className='flex items-center gap-6px text-11px lh-14px min-w-0 whitespace-nowrap'>
+              <span className={classNames('shrink-0 font-[500]', modeColorClass)}>{modeLabel}</span>
+              {detailedMeta.modelLabel ? (
+                <>
+                  <span className='shrink-0 text-t-tertiary'>·</span>
+                  <span className='overflow-hidden text-ellipsis min-w-0 text-t-secondary'>
+                    {detailedMeta.modelLabel}
+                  </span>
+                </>
+              ) : null}
+              {detailedMeta.dateLabel ? (
+                <span className='ml-auto shrink-0 text-t-tertiary'>{detailedMeta.dateLabel}</span>
+              ) : null}
+            </div>
+          </div>
+        ) : detailed ? (
           // A real table layout (CSS grid), not a flex row: the title track
           // is `minmax(0, 1fr)` so it — not the empty space after the last
           // column — absorbs whatever width the three fixed columns don't

@@ -13,6 +13,7 @@ import { useConversationActions } from '@/renderer/pages/conversation/GroupedHis
 import { useConversations } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversations';
 import type { ConversationRowProps } from '@/renderer/pages/conversation/GroupedHistory/types';
 import { useMediaJobs } from '@/renderer/hooks/media/useMediaJobs';
+import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { normalizeWorkspaceKey } from '@/common/media/jobView';
 import { groupConversationsByRecency } from '@/renderer/pages/conversation/GroupedHistory/utils/recencyGrouping';
 import { useCronJobsMap } from '@/renderer/pages/cron';
@@ -36,8 +37,13 @@ const SectionHeading: React.FC<{ children: React.ReactNode }> = ({ children }) =
 // Column labels for the detailed history rows below — same grid template as
 // ConversationRow's `detailed` layout so the labels land exactly over their
 // columns instead of just sitting above a wall of text.
+// Mobile hides it entirely: the detailed rows switch to the stacked card
+// layout there (no columns to label), and the header's fixed grid would
+// overflow a phone viewport.
 const ConversationColumnHeader: React.FC = () => {
   const { t } = useTranslation();
+  const layout = useLayoutContext();
+  if (layout?.isMobile) return null;
   return (
     <div
       className='grid items-center h-24px pr-16px select-none'

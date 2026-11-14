@@ -14,6 +14,7 @@ import type { TFunction } from 'i18next';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
+import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import DreamScrollArea from '@/renderer/components/base/DreamScrollArea';
 import TalkToButlerButton from '@/renderer/components/base/TalkToButlerButton';
 import AddMcpServerModal from '@/renderer/pages/settings/components/AddMcpServerModal';
@@ -522,6 +523,11 @@ const ToolsModalContent: React.FC = () => {
 
   const viewMode = useSettingsViewMode();
   const isPageMode = viewMode === 'page';
+  const layout = useLayoutContext();
+  // Arco's horizontal form gives the label a narrow fixed column that wraps
+  // CJK labels vertically on a phone (e.g. 「图像模型」becomes one char per
+  // line); vertical layout stacks the label above the picker instead.
+  const isMobile = layout?.isMobile ?? false;
   const routerNavigate = useNavigate();
   const settingsTabNavigate = useSettingsTabNavigate();
   // Page hosts must inject SettingsTabNavigateProvider; fall back to the model
@@ -597,7 +603,7 @@ const ToolsModalContent: React.FC = () => {
 
             <Divider className='mt-0px mb-20px' />
 
-            <Form layout='horizontal' labelAlign='left' className='space-y-12px'>
+            <Form layout={isMobile ? 'vertical' : 'horizontal'} labelAlign='left' className='space-y-12px'>
               <Form.Item
                 label={t('settings.imageGenerationModel')}
                 tooltip={
@@ -636,7 +642,7 @@ const ToolsModalContent: React.FC = () => {
 
             <Divider className='mt-0px mb-20px' />
 
-            <Form layout='horizontal' labelAlign='left' className='space-y-12px'>
+            <Form layout={isMobile ? 'vertical' : 'horizontal'} labelAlign='left' className='space-y-12px'>
               <Form.Item
                 label={t('settings.videoGenerationModel')}
                 tooltip={

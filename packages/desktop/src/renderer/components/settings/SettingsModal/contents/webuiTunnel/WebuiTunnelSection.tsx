@@ -80,9 +80,9 @@ const WebuiTunnelSection: React.FC<{
       {showDetails && (
         <div className='space-y-10px'>
           {status.url && (
-            <div className='flex items-center justify-between gap-8px rd-10px border border-line bg-fill-1 px-12px py-8px'>
+            <div className='flex flex-wrap items-center justify-between gap-8px rd-10px border border-line bg-fill-1 px-12px py-8px'>
               <span className='text-12px text-t-tertiary shrink-0'>{t('settings.webui.tunnelAddress')}</span>
-              <div className='flex items-center gap-4px min-w-0'>
+              <div className='flex items-center gap-4px min-w-0 flex-1 justify-end'>
                 <span className='text-13px text-t-primary font-mono truncate'>{status.url}</span>
                 <Tooltip content={t('common.copy')}>
                   <Button

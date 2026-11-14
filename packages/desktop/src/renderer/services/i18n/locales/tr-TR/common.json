@@ -11,6 +11,13 @@
   "skills": "Beceriler",
   "workspace": "Proje",
   "settings": "Ayarlar",
+  "bottomNav": {
+    "home": "Ana Sayfa",
+    "chats": "Sohbetler",
+    "scheduled": "Zamanlanmış",
+    "knowledge": "Kitaplık",
+    "settings": "Ayarlar"
+  },
   "system": "Sistem",
   "about": "Hakkımızda",
   "back": "Sohbete Dön",
@@ -710,7 +717,6 @@
     "projectInviteEntry": "Proje davet kodu",
     "projectInviteHint": "Dış katılımcılar şirket SSO’su olmadan yerel hesapla oturum açıp davet koduyla gruba katılabilir.",
     "projectInviteSignIn": "Oturum aç ve devam et",
-
     "projectGroupExitHint": "Ayrıldığınızda bu gruptan çıkarsınız. Şirketteki son grubunuzsa şirketten de ayrılırsınız: yerel hesabınız devre dışı bırakılır ve bu oturum sona erer; yeniden işe alındığında geri yüklenir. Yönetici bir çıkış kodu belirlediyse girin:",
     "defaultCompanyWorkspace": "Varsayılan şirket çalışma alanı",
     "projectGroupOwnershipHint": "Proje grupları bağımsız olabilir veya bir şirkete bağlı olabilir. Katılmak çalışan kimliğini doğrulamaz; kaynaklar yönetici izinlerine bağlıdır.",

@@ -4,6 +4,7 @@
 
 import type { IChannelPairingRequest, IChannelPluginStatus, IChannelUser } from '@/common/types/channel/channel';
 import ManualPairingInput from './ManualPairingInput';
+import PreferenceRow from './PreferenceRow';
 import { assistants, channel } from '@/common/adapter/ipcBridge';
 import { isDreamEngineAssistant, type Assistant } from '@/common/types/agent/assistantTypes';
 import { resolveLocaleKey } from '@/common/utils';
@@ -24,23 +25,6 @@ import {
 } from './assistantBinding';
 
 type LoginState = 'idle' | 'loading_qr' | 'showing_qr' | 'scanned' | 'connected';
-
-/**
- * Preference row component (local, mirrors other config forms)
- */
-const PreferenceRow: React.FC<{
-  label: string;
-  description?: React.ReactNode;
-  children: React.ReactNode;
-}> = ({ label, description, children }) => (
-  <div className='flex items-center justify-between gap-24px py-12px'>
-    <div className='flex-1'>
-      <span className='text-14px text-t-primary'>{label}</span>
-      {description && <div className='text-12px text-t-tertiary mt-2px'>{description}</div>}
-    </div>
-    <div className='flex items-center'>{children}</div>
-  </div>
-);
 
 const SectionHeader: React.FC<{ title: string; action?: React.ReactNode }> = ({ title, action }) => (
   <div className='flex items-center justify-between mb-12px'>

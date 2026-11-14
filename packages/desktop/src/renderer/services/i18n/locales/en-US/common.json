@@ -11,6 +11,13 @@
   "skills": "Skills",
   "workspace": "Project",
   "settings": "Settings",
+  "bottomNav": {
+    "home": "Home",
+    "chats": "Chats",
+    "scheduled": "Scheduled",
+    "knowledge": "Library",
+    "settings": "Settings"
+  },
   "system": "System",
   "about": "About Us",
   "back": "Back to Chat",
@@ -234,7 +241,6 @@
     "projectInviteEntry": "Project invitation code",
     "projectInviteHint": "External collaborators can sign in with a local account without company SSO, then use the invitation code to join the project group.",
     "projectInviteSignIn": "Sign in to continue",
-
     "projectGroupExitHint": "Leaving moves you out of this project group. If it is your last project group in the company, you also leave the company: your local account is deactivated and this login ends; you can be restored when rehired. If the administrator set an exit code, enter it:",
     "defaultCompanyWorkspace": "Default company workspace",
     "projectGroupOwnershipHint": "Project groups support collaboration and may be independent or owned by a company. Joining a group does not verify employment; resources depend on administrator grants.",

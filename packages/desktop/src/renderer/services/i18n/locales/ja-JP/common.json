@@ -11,6 +11,13 @@
   "skills": "スキル",
   "workspace": "プロジェクト",
   "settings": "設定",
+  "bottomNav": {
+    "home": "ホーム",
+    "chats": "チャット",
+    "scheduled": "定時タスク",
+    "knowledge": "ナレッジ",
+    "settings": "設定"
+  },
   "system": "システム",
   "about": "私たちについて",
   "back": "チャットに戻る",
@@ -710,7 +717,6 @@
     "projectInviteEntry": "プロジェクト招待コード",
     "projectInviteHint": "外部の協力者は企業SSOを使わずローカルアカウントでログインし、招待コードでグループに参加できます。",
     "projectInviteSignIn": "ログインして続行",
-
     "projectGroupExitHint": "退会するとこのプロジェクトグループを離れます。会社で最後のグループの場合は会社からも外れ、ローカルアカウントは無効化され、このログインは終了します。再採用されれば復元できます。管理者が退出口コードを設定している場合は入力してください:",
     "defaultCompanyWorkspace": "企業の既定の共同作業スペース",
     "projectGroupOwnershipHint": "共同作業グループは独立して存在することも、企業に属することもできます。参加は従業員認証ではなく、リソースは管理者の許可に従います。",

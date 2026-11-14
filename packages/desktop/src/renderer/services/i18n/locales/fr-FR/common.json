@@ -11,6 +11,13 @@
   "skills": "Compétences",
   "workspace": "Espace de travail",
   "settings": "Paramètres",
+  "bottomNav": {
+    "home": "Accueil",
+    "chats": "Chats",
+    "scheduled": "Planifiés",
+    "knowledge": "Bibliothèque",
+    "settings": "Réglages"
+  },
   "system": "Système",
   "about": "À propos",
   "back": "Retour au chat",
@@ -710,7 +717,6 @@
     "projectInviteEntry": "Code d’invitation au projet",
     "projectInviteHint": "Les collaborateurs externes peuvent se connecter avec un compte local sans SSO, puis rejoindre le groupe avec le code d’invitation.",
     "projectInviteSignIn": "Se connecter et continuer",
-
     "projectGroupExitHint": "En quittant, vous quittez ce groupe. S'il s'agit de votre dernier groupe dans l'entreprise, vous quittez aussi l'entreprise : votre compte local est désactivé et cette connexion prend fin ; il sera restauré en cas de réembauche. Si l'administrateur a défini un code de sortie, saisissez-le :",
     "defaultCompanyWorkspace": "Espace collaboratif par défaut",
     "projectGroupOwnershipHint": "Un groupe peut être indépendant ou rattaché à une entreprise. Y adhérer ne prouve pas un emploi ; les ressources dépendent des autorisations administratives.",

@@ -1,7 +1,9 @@
 /* Base styles - theme-independent */
 
 :root {
-  --app-min-width: 360px;
+  /* 320px covers the narrowest shipping phones; 360 clipped small devices
+     (and the desktop window snap-down path) into permanent horizontal scroll. */
+  --app-min-width: 320px;
   --titlebar-height: 36px;
 }
 

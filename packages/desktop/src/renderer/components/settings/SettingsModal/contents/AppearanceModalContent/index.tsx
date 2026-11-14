@@ -62,7 +62,9 @@ const AppearanceModalContent: React.FC = () => {
             <div className='w-full flex flex-col divide-y divide-border-2'>
               {FONT_SIZE_KEYS.map((key) => (
                 <PreferenceRow key={key} label={t(FONT_REGION_LABEL_KEY[key])}>
-                  <div className='flex items-center gap-12px flex-wrap justify-end'>
+                  {/* Left-aligned until md: right-aligning a wrapped control row
+                      on a narrow viewport scatters the controls across two lines. */}
+                  <div className='flex items-center gap-12px flex-wrap md:justify-end'>
                     <FontFamilySelect
                       value={fontFamilies[key]}
                       onChange={(family) => void setFontFamily(key, family)}

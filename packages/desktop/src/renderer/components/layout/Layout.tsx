@@ -6,6 +6,7 @@ import { ipcBridge } from '@/common';
 import { TEAM_MODE_ENABLED } from '@/common/config/constants';
 import PwaPullToRefresh from '@/renderer/components/layout/PwaPullToRefresh';
 import Titlebar from '@/renderer/components/layout/Titlebar';
+import MobileBottomNav, { MOBILE_BOTTOM_NAV_BASE_HEIGHT } from '@/renderer/components/layout/MobileBottomNav';
 import { Layout as ArcoLayout, Tooltip } from '@arco-design/web-react';
 import classNames from 'classnames';
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
@@ -146,6 +147,9 @@ const Layout: React.FC<{
 }> = ({ sider, onSessionClick: _onSessionClick }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  // Bottom quick nav is a WebUI-phone affordance only: an Electron window
+  // dragged narrow keeps the desktop chrome (drawer + titlebar) instead.
+  const showMobileBottomNav = isMobile && !isElectronDesktop();
   // Desktop sider width, freely draggable and persisted across sessions.
   const [desktopSiderWidth, setDesktopSiderWidth] = useState<number>(readStoredSiderWidth);
   const desktopSiderWidthRef = useRef(desktopSiderWidth);
@@ -594,6 +598,15 @@ const Layout: React.FC<{
                 }
               >
                 <Outlet />
+                {showMobileBottomNav && (
+                  // Reserves the fixed bottom nav's height inside the content
+                  // column so page bottoms (e.g. the chat send box) stay above it.
+                  <div
+                    aria-hidden
+                    className='shrink-0'
+                    style={{ height: `calc(${MOBILE_BOTTOM_NAV_BASE_HEIGHT}px + env(safe-area-inset-bottom))` }}
+                  />
+                )}
                 {directorySelectionContextHolder}
                 <SecurePackageHost />
                 <PwaPullToRefresh />
@@ -668,6 +681,7 @@ const Layout: React.FC<{
             )}
           </ArcoLayout>
         </div>
+        {showMobileBottomNav && <MobileBottomNav />}
       </NavigationHistoryProvider>
     </LayoutContext.Provider>
   );

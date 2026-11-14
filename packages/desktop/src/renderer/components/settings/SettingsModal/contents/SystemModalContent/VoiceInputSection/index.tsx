@@ -6,6 +6,7 @@ import type { SpeechToTextConfig } from '@/common/types/provider/speech';
 import type { IProvider } from '@/common/config/storage';
 import { ipcBridge } from '@/common';
 import DreamSelect from '@/renderer/components/base/DreamSelect';
+import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { SPEECH_TO_TEXT_CONFIG_CHANGED_EVENT } from '@/renderer/services/SpeechToTextService';
 import { getClientBusinessSetting, setClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
 import { sortModelsForTranscription } from '@/renderer/services/speech/speechModels';
@@ -47,6 +48,9 @@ const FieldLabel: React.FC<{ labelKey: string; requirement: 'required' | 'option
 
 const VoiceInputSection: React.FC = () => {
   const { t } = useTranslation();
+  const layout = useLayoutContext();
+  // Horizontal Arco form wraps CJK labels vertically on a phone; stack them.
+  const isMobile = layout?.isMobile ?? false;
   const [config, setConfig] = useState<SpeechToTextConfig>(DEFAULT_SPEECH_TO_TEXT_CONFIG);
   // Source is UI state, only initialized from the stored config. A purely
   // derived source would snap "custom" back to "hosted" while base_url is
@@ -284,7 +288,7 @@ const VoiceInputSection: React.FC = () => {
         <>
           <Divider className='mt-0px mb-20px' />
 
-          <Form layout='horizontal' labelAlign='left' className='space-y-12px'>
+          <Form layout={isMobile ? 'vertical' : 'horizontal'} labelAlign='left' className='space-y-12px'>
             <Form.Item label={t('settings.speechToTextSource')}>
               <DreamSelect value={source} onChange={handleSourceChange}>
                 <DreamSelect.Option value='hosted'>{t('settings.speechToTextSourceHosted')}</DreamSelect.Option>
