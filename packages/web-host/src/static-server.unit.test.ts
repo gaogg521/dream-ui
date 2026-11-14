@@ -4,6 +4,7 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import net from 'node:net';
+import zlib from 'node:zlib';
 import type { AddressInfo } from 'node:net';
 import { startStaticServer, type StaticServerHandle } from './static-server.js';
 
@@ -882,5 +883,85 @@ describe('static-server', () => {
     // may still be undefined on CI machines without a LAN interface
     expect(typeof h2.networkUrl === 'string' || h2.networkUrl === undefined).toBe(true);
     await h2.stop();
+  });
+});
+
+describe('static-server gzip', () => {
+  let handle: StaticServerHandle | null = null;
+  let stopBackend: (() => Promise<void>) | null = null;
+  let staticDir = '';
+
+  beforeEach(async () => {
+    staticDir = await mkRendererFixture();
+    // Make the fixture asset big enough to be a meaningful gzip payload.
+    const big = 'console.log("hi");'.repeat(400);
+    await fs.writeFile(path.join(staticDir, 'assets', 'main.js'), big);
+    const backend = await startMockBackend((_req, res) => res.end('nope'));
+    stopBackend = backend.close;
+    handle = await startStaticServer({
+      staticDir,
+      backendPort: backend.port,
+      port: 0,
+      allowRemote: false,
+    });
+  });
+
+  afterEach(async () => {
+    if (handle) {
+      await handle.stop();
+      handle = null;
+    }
+    if (stopBackend) {
+      await stopBackend();
+      stopBackend = null;
+    }
+    await fs.rm(staticDir, { recursive: true, force: true });
+  });
+
+  function fetchAsset(
+    acceptEncoding?: string
+  ): Promise<{ status: number | undefined; headers: http.IncomingHttpHeaders; body: Buffer }> {
+    return new Promise((resolve, reject) => {
+      const req = http.get(
+        {
+          host: '127.0.0.1',
+          port: handle!.port,
+          path: '/assets/main.js',
+          headers: acceptEncoding ? { 'Accept-Encoding': acceptEncoding } : {},
+        },
+        (res) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body: Buffer.concat(chunks) }));
+        }
+      );
+      req.on('error', reject);
+    });
+  }
+
+  it('serves gzipped body when the client accepts gzip', async () => {
+    const res = await fetchAsset('gzip, br');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-encoding']).toBe('gzip');
+    expect(res.headers.vary?.toLowerCase()).toContain('accept-encoding');
+    const raw = await new Promise<Buffer>((resolve, reject) => {
+      zlib.gunzip(res.body, (err, out) => (err ? reject(err) : resolve(out)));
+    });
+    expect(raw.toString('utf8')).toBe('console.log("hi");'.repeat(400));
+    expect(res.body.length).toBeLessThan(raw.length);
+  });
+
+  it('serves raw bytes when the client sends no Accept-Encoding', async () => {
+    const res = await fetchAsset(undefined);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-encoding']).toBeUndefined();
+    expect(res.body.toString('utf8')).toBe('console.log("hi");'.repeat(400));
+  });
+
+  it('serves raw bytes when the client only accepts br', async () => {
+    // We only implement gzip; a br-only client must get identity, not gzip.
+    const res = await fetchAsset('br');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-encoding']).toBeUndefined();
   });
 });

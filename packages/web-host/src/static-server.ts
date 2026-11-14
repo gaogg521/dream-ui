@@ -11,8 +11,12 @@
  */
 
 import http, { type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import fsp from 'node:fs/promises';
 import { networkInterfaces } from 'node:os';
+import path from 'node:path';
 import net, { type Socket } from 'node:net';
+import { promisify } from 'node:util';
+import zlib from 'node:zlib';
 import serveHandler from 'serve-handler';
 import { headersFromHead, resolveClientIp } from './client-ip.js';
 
@@ -206,7 +210,7 @@ async function hasBackendSession(req: IncomingMessage, backendPort: number): Pro
   // The TTL bounds how long a revoked session keeps working (seconds), and
   // caching the negative verdict too is what stops an unauthenticated flood
   // from hammering the backend.
-  const cacheKey = `${cookie} ${authorization}`;
+  const cacheKey = `${cookie}\u0000${authorization}`;
   const cached = sessionProbeCache.get(cacheKey);
   const now = Date.now();
   if (cached && now - cached.at < SESSION_PROBE_TTL_MS) return cached.ok;
@@ -472,6 +476,135 @@ function peekWsRoute(buf: Buffer): boolean | null {
   return /^GET\s+\/(?:ws|api\/stt\/stream)(?:\?[^\s]*)?\s+HTTP\/1\.[01]\r?$/.test(firstLine);
 }
 
+/*
+ * Lazy gzip cache for static renderer assets.
+ *
+ * The WebUI's renderer ships ~12 MB of JavaScript on the critical path. Without
+ * compression a tunnel/LAN visitor on a weak link stalls mid-download with the
+ * HTML title already painted — reported as "the page spins forever and never
+ * opens". serve-handler has no compression option, so gzip here: first request
+ * for a compressible file compresses once and caches (LRU, keyed by
+ * path+mtime+size so a rebuilt renderer invalidates naturally), later requests
+ * replay the buffer. Raw bytes still go out when the client doesn't accept
+ * gzip (curl defaults, HTTP/1.0 proxies), preserving old behavior.
+ */
+const GZIP_CACHE_MAX_BYTES = 48 * 1024 * 1024;
+type GzipCacheEntry = { body: Buffer; type: string };
+const gzipCache = new Map<string, GzipCacheEntry>();
+let gzipCacheBytes = 0;
+
+const gzipPromise = promisify(zlib.gzip);
+
+const COMPRESSIBLE_STATIC_TYPES: Record<string, string> = {
+  '.js': 'application/javascript; charset=utf-8',
+  '.mjs': 'application/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.html': 'text/html; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.map': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.txt': 'text/plain; charset=utf-8',
+  '.webmanifest': 'application/manifest+json',
+};
+
+function acceptsGzip(req: IncomingMessage): boolean {
+  const acceptEncoding = req.headers['accept-encoding'];
+  return typeof acceptEncoding === 'string' && /\bgzip\b/i.test(acceptEncoding);
+}
+
+function gzipCacheGet(key: string): GzipCacheEntry | undefined {
+  const entry = gzipCache.get(key);
+  if (entry) {
+    // Refresh insertion order so the Map acts as an LRU, not FIFO.
+    gzipCache.delete(key);
+    gzipCache.set(key, entry);
+  }
+  return entry;
+}
+
+function gzipCacheSet(key: string, entry: GzipCacheEntry): void {
+  const existing = gzipCache.get(key);
+  if (existing) {
+    gzipCacheBytes -= existing.body.length;
+    gzipCache.delete(key);
+  }
+  gzipCache.set(key, entry);
+  gzipCacheBytes += entry.body.length;
+  while (gzipCacheBytes > GZIP_CACHE_MAX_BYTES && gzipCache.size > 1) {
+    const oldest = gzipCache.keys().next().value as string | undefined;
+    if (oldest === undefined) break;
+    const evicted = gzipCache.get(oldest);
+    gzipCache.delete(oldest);
+    if (evicted) gzipCacheBytes -= evicted.body.length;
+  }
+}
+
+/**
+ * Serve a static file from `staticDir` gzipped when the client accepts it and
+ * the file type benefits. Returns false (caller falls through to serve-handler
+ * and its SPA rewrite) for anything that isn't a plain compressible file:
+ * directory roots, unknown extensions, Range requests, paths escaping the
+ * static dir, missing files.
+ */
+async function tryServeGzippedStatic(req: IncomingMessage, res: ServerResponse, staticDir: string): Promise<boolean> {
+  if ((req.method !== 'GET' && req.method !== 'HEAD') || !acceptsGzip(req) || req.headers.range) {
+    return false;
+  }
+  let pathname: string;
+  try {
+    pathname = decodeURIComponent(new URL(req.url ?? '/', 'http://localhost').pathname);
+  } catch (e) {
+    return false;
+  }
+  const root = path.resolve(staticDir);
+  const candidate = path.resolve(root, `.${path.posix.normalize(pathname)}`);
+  if (candidate !== root && !candidate.startsWith(root + path.sep)) {
+    return false;
+  }
+  const contentType = COMPRESSIBLE_STATIC_TYPES[path.extname(candidate).toLowerCase()];
+  if (!contentType) {
+    return false;
+  }
+  let stat;
+  try {
+    stat = await fsp.stat(candidate);
+  } catch (e) {
+    return false;
+  }
+  if (!stat.isFile() || stat.size === 0) {
+    return false;
+  }
+  const key = `${candidate}\u0000${stat.mtimeMs}\u0000${stat.size}`;
+  let entry = gzipCacheGet(key);
+  if (!entry) {
+    try {
+      const raw = await fsp.readFile(candidate);
+      const body = await gzipPromise(raw, { level: 6 });
+      // Re-stat race: the file may have been replaced while compressing; if
+      // so, serve this body anyway but key the cache on the fresh stat so the
+      // next request re-compresses instead of replaying a mixed cache entry.
+      const fresh = await fsp.stat(candidate).catch(() => stat);
+      const cacheKey = `${candidate}\u0000${fresh.mtimeMs}\u0000${fresh.size}`;
+      entry = { body, type: contentType };
+      gzipCacheSet(cacheKey, entry);
+    } catch (e) {
+      return false;
+    }
+  }
+  res.writeHead(200, {
+    'content-type': entry.type,
+    'content-encoding': 'gzip',
+    'content-length': String(entry.body.length),
+    vary: 'Accept-Encoding',
+  });
+  if (req.method === 'HEAD') {
+    res.end();
+  } else {
+    res.end(entry.body);
+  }
+  return true;
+}
+
 export async function startStaticServer(opts: StaticServerOptions): Promise<StaticServerHandle> {
   const port = opts.port ?? DEFAULT_PORT;
   const allowRemote = opts.allowRemote === true;
@@ -580,6 +713,12 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
       // reload rather than live — still current, just not hot.
       if (rendererDevServer) {
         forwardToRendererDevServer(req, res, rendererDevServer);
+        return;
+      }
+      // Big JS/CSS assets go out gzipped when the client accepts it (see the
+      // gzip cache block above); everything else — SPA rewrites, images,
+      // Range requests, non-compressible types — falls through unchanged.
+      if (await tryServeGzippedStatic(req, res, opts.staticDir)) {
         return;
       }
       await serveHandler(req, res, {
