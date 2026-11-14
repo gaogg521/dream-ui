@@ -52,3 +52,25 @@ i18n：`common.bottomNav.*` 5 键补齐全部 13 个 locale，`bun run i18n:type
 
 - **真机验收**：隧道 frpc 只转发生产 25808，手机要看这批修复需等下次发版装包，或临时 `bun run webui --no-build --remote --port 25809` 后用手机连同一 WiFi 访问 `http://<LAN-IP>:25809`。
 - 独立 H5 分包/移动组件库（路线三）与移动专属业务流：本轮明确不做。
+
+## 同日追加：隧道访客「白屏转圈」诊断与 gzip 修复（commit 809c8a5e）
+
+用户反馈：开启公网远程访问后，浏览器一直转圈打不开（`https://<subdomain>.r.1work.vip`，标题能出现、页面空白）。诊断结论：**不是穿透工具的问题**——当时实测隧道全链路健康：HTML 0.44s / 7MB 主 JS 1.5s / `/api/auth/status` 200 / `/ws` 升级 101；干净浏览器 9s 完整渲染出登录页；生产机是打包版 `onework.exe`（自带 bundle，与仓库 out/renderer 重建无关）。
+
+**真根因**：web-host 的 serve-handler 6.1.7 **没有 compression 选项**（README 误导，源码里根本没有），渲染层一直**裸传 ~12.5MB** JS+CSS。弱网访客 2KB 的 HTML 先到（标题出现）、JS 拉不完 → React 不挂载 → 白屏转圈——与反馈截图完全吻合。
+
+修复（`packages/web-host/src/static-server.ts`）：
+
+- 惰性 gzip：首次请求压缩并缓存（LRU 48MB，key=`path+mtime+size` 重建即失效），按 `Accept-Encoding` 协商；无 gzip 客户端 / Range / 已压缩格式（图片字体视频）原样回退；br-only 客户端回退 identity（只实现了 gzip）。
+- 关键路径 12.5MB → 3.8MB（index 7.15→2.18MB、vendor 5.26→1.57MB）。
+- 顺带把该文件里 5 处历史遗留的裸控制字节（NUL/退格，其中 2 处是本次误写）转成正规 `\u0000`/`\b` 转义文本。
+- 4 个新单测钉死行为（gzip 协商 / 无 AE 回退 / br-only 回退 / 解压校验）。
+
+⚠️ **诊断坑（都是真实踩过的）**：
+
+1. **含 NUL 字节的文件会让 grep 按"二进制"处理**（无 `-a` 时静默吞输出、Read 工具直接拒读）——web-host/static-server.ts 历史上就带一个裸 NUL。
+2. **经 heredoc 传 python 的 `\\b`/`\u0000` 转义会被链路吞掉一层**，写进源码变成裸控制字节（0x08/0x00）——运行时大部分等价但 grep/正则全坏；规避：python 里用 `bytes([92])`（反斜杠码点）构造，不要写字面反斜杠转义。
+3. 修复"没生效"时先排除：进程是否载的旧代码（tsx 需重启）、hash 路由同文档导航不换 bundle、SW 缓存——这次三个都排除了才定位到转义层。
+4. 客户端已有 SW（v2）对 script/style 强制走网络 + MIME 守卫，旧缓存不是此类白屏的原因，别冤枉它。
+
+**对已装 3.0.18 的存量用户**：gzip 修复要随下次发版才生效；立即可用的替代缓解是在 frps 的 nginx 上开 `gzip on; gzip_proxied any;`（边缘压缩，无需客户端更新）——需要服务器操作，另行确认。
