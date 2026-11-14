@@ -56,7 +56,14 @@ const SettingsPageHeader: React.FC<SettingsPageHeaderProps> = ({
     <div
       data-testid={dataTestId}
       className={classNames(
-        'bg-1',
+        // Must be `bg-base`, not `bg-1`: this header sits on a bg-base page
+        // wrapper, and its background is exactly the content-column width — a
+        // bg-1 strip on bg-base paints a hard-edged floating band behind the
+        // title/tabs. Grey themes hide it (subtle grey step), but the cyber
+        // blue theme's bg-1/bg-base contrast made it glaringly obvious.
+        // bg-base keeps the sticky cover opaque (scrolled rows still hide
+        // under it) while blending into the page in every theme.
+        'bg-base',
         // Negative `top` must equal the scroll container's top padding
         // (SettingsPageWrapper: py-14px mobile / md:py-32px). CSS sticky pins to
         // the scrollport's content edge while overflow clips at the padding edge,
