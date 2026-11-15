@@ -74,3 +74,12 @@ i18n：`common.bottomNav.*` 5 键补齐全部 13 个 locale，`bun run i18n:type
 4. 客户端已有 SW（v2）对 script/style 强制走网络 + MIME 守卫，旧缓存不是此类白屏的原因，别冤枉它。
 
 **对已装 3.0.18 的存量用户**：gzip 修复要随下次发版才生效；立即可用的替代缓解是在 frps 的 nginx 上开 `gzip on; gzip_proxied any;`（边缘压缩，无需客户端更新）——需要服务器操作，另行确认。
+
+### 边缘 gzip 已部署（2026-11-15，用户确认后执行）
+
+frps 服务器（43.163.105.71，Rocky，`root@` + `~/.ssh/id_rsa`）`/etc/nginx/conf.d/onework-remote.conf` 的 443 server 块加了 gzip 块（`gzip_proxied any` 必须，否则 frp 全是"代理响应"不压）。备份 `onework-remote.conf.bak-gzip-20261115T094119`，已过 `nginx -t` 并 reload。实测隧道：关键路径 12.45MB→3.95MB（vendor 5.26→1.59MB、index 7.15→2.27MB、vendor css 599→77KB），无 AE 客户端原样回退，frpc 自动重连自愈。细节与陷阱记录在 `dream-trial-broker/deploy/tunnel/README.md`（已推送 725b426d）。
+
+⚠️ **两个连环坑**：
+
+1. **reload 静默失败**：11-12 把 `limit_req_zone` key 换成 `$onework_remote_login_key` 后，与运行中 master 的旧 key（`$binary_remote_addr`）不一致，reload 一律 emerg 拒绝且错误只在 error.log——`nginx -t` 只做静态解析所以能过。**从 11-12 起所有 reload 都没生效**（按访客 IP 的登录限流一直没上线），这次 `systemctl restart nginx` 才真正加载。
+2. 客户 F12 截图（vendor JS pending 永挂、vendor css 600KB/32s ≈ 19KB/s）坐实裸传+弱网两个叠加因素；gzip 后同链路总量降 3.2 倍，且更小的传输在丢包链路上吞吐超线性改善。
