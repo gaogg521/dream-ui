@@ -323,6 +323,8 @@
     "agentsEmpty": "Henüz dijital çalışan yok — başlamak için bir tane oluşturun.",
     "templatesTitle": "Şablondan oluştur",
     "agentsListTitle": "Dijital çalışanlarım",
+    "tabHint": "Dijital çalışan, size özel AI iş arkadaşınızdır: kendi rolü, becerileri ve araçları vardır, istediğiniz zaman sohbet edebilir, zamanlanmış çalışabilir.",
+    "employeeCount": "Toplam {{total}}",
     "createAgent": "Çalışan oluştur",
     "agentsEmptyHint": "Yukarıdaki bir şablonla başlayın veya \"Çalışan oluştur\"a tıklayın.",
     "scheduled": "Zamanlandı",

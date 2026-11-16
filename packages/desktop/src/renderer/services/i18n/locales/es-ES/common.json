@@ -323,6 +323,8 @@
     "agentsEmpty": "Aún no hay empleados digitales: crea uno para empezar.",
     "templatesTitle": "Crear desde plantilla",
     "agentsListTitle": "Mis empleados digitales",
+    "tabHint": "Un empleado digital es tu propio colega de IA: tiene su rol, habilidades y herramientas, puedes hablar con él cuando quieras y también trabaja de forma programada.",
+    "employeeCount": "{{total}} en total",
     "createAgent": "Crear empleado",
     "agentsEmptyHint": "Empieza con una plantilla de arriba o haz clic en «Crear empleado».",
     "scheduled": "Programado",

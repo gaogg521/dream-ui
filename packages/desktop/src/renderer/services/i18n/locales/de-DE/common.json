@@ -323,6 +323,8 @@
     "agentsEmpty": "Noch keine digitalen Mitarbeiter – erstelle einen, um loszulegen.",
     "templatesTitle": "Aus Vorlage erstellen",
     "agentsListTitle": "Meine digitalen Mitarbeiter",
+    "tabHint": "Ein digitaler Mitarbeiter ist Ihr eigener KI-Kollege: mit eigener Rolle, eigenen Fähigkeiten und Werkzeugen, jederzeit ansprechbar und auf Wunsch zeitgesteuert aktiv.",
+    "employeeCount": "{{total}} insgesamt",
     "createAgent": "Mitarbeiter erstellen",
     "agentsEmptyHint": "Beginne mit einer Vorlage oben oder klicke auf „Mitarbeiter erstellen“.",
     "scheduled": "Geplant",

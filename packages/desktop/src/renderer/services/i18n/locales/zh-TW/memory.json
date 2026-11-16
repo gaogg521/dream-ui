@@ -1,4 +1,15 @@
 {
+  "export": {
+    "button": "匯出",
+    "title": "One Work 記憶匯出",
+    "exportedAt": "匯出時間",
+    "updatedAt": "更新時間",
+    "empty": "沒有可匯出的記憶。",
+    "claudeAuto": "Claude 自動記憶",
+    "saved": "記憶已匯出",
+    "downloaded": "記憶已下載",
+    "failed": "匯出記憶失敗"
+  },
   "tabEnterprise": "企業記憶",
   "entHint": "企業記憶來自專案群組伺服器，可在對話中被自動召回（由下方開關控制）。僅能刪除自己寫入的條目或個人集合中的條目。",
   "entRecallLabel": "在對話中召回我的企業記憶",

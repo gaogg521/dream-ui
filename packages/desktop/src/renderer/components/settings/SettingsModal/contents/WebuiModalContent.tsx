@@ -27,6 +27,7 @@ import { useSettingsViewMode } from '../settingsViewContext';
 import RemoteHero from './webuiTunnel/RemoteHero';
 import TempAccessCard from './webuiTunnel/TempAccessCard';
 import SettingsCard, { SectionLabel } from './webuiTunnel/SettingsCard';
+import { translatePasswordRejection } from '@/renderer/utils/webui/passwordRejection';
 import WebuiTunnelSection from './webuiTunnel/WebuiTunnelSection';
 import TurnPushSection from './webuiTunnel/TurnPushSection';
 import { useWebuiTunnel } from './webuiTunnel/useWebuiTunnel';
@@ -407,20 +408,14 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
       setStatus((prev) => (prev ? { ...prev, initialPassword: undefined } : null));
     } catch (error) {
       console.error('Set new password error:', error);
-      const errorCodeMap: Record<string, string> = {
-        PASSWORD_TOO_SHORT: t('settings.webui.passwordTooShort'),
-        PASSWORD_TOO_LONG: t('settings.webui.passwordTooLong'),
-        PASSWORD_TOO_COMMON: t('settings.webui.passwordTooCommon'),
-      };
       const rawMsg =
         isBackendHttpError(error) && error.backendMessage
           ? error.backendMessage
           : error instanceof Error
             ? error.message
             : '';
-      const codes = rawMsg.split('; ');
-      const translated = codes.map((code) => errorCodeMap[code]).filter(Boolean);
-      Message.error(translated.length > 0 ? translated.join('; ') : rawMsg || t('settings.webui.passwordChangeFailed'));
+      const translated = translatePasswordRejection(rawMsg, t);
+      Message.error(translated || rawMsg || t('settings.webui.passwordChangeFailed'));
     } finally {
       setPasswordLoading(false);
     }
@@ -905,6 +900,9 @@ const WebuiModalContent: React.FC<{ initialTab?: 'webui' | 'channels' }> = ({ in
           >
             <Input.Password placeholder={t('settings.webui.newPasswordPlaceholder')} />
           </Form.Item>
+          <div className='-mt-8px mb-16px text-12px leading-18px text-t-tertiary' data-testid='password-rules'>
+            {t('settings.webui.passwordRules')}
+          </div>
           <Form.Item
             label={t('settings.webui.confirmPassword')}
             field='confirmPassword'

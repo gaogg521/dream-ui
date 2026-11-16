@@ -17,6 +17,7 @@ import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import AgentMemoryTab from './AgentMemoryTab';
 import EngineMemoryTab from './EngineMemoryTab';
 import EnterpriseMemoryTab from './EnterpriseMemoryTab';
+import MemoryExportButton from './MemoryExportButton';
 import styles from './index.module.css';
 
 const MemoryPage: React.FC = () => {
@@ -37,6 +38,7 @@ const MemoryPage: React.FC = () => {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <h2 className={styles.pageTitle}>{t('memory.title')}</h2>
+        <MemoryExportButton />
       </div>
 
       <Tabs activeTab={activeTab} onChange={setActiveTab} style={{ flex: 1 }} lazyload>

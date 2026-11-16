@@ -55,6 +55,7 @@ export function parseScenesFile(text: string): ParsedScenes | null {
         name: scene.name,
         description: scene.description,
         icon: scene.icon,
+        avatarUrl: scene.avatarUrl,
         prompt: scene.prompt,
         intent: scene.intent,
         skillNames: scene.skillNames,

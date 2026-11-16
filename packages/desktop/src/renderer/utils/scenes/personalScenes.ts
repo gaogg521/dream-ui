@@ -15,6 +15,7 @@
  */
 
 import { ConfigStorage } from '@/common/config/storage';
+import { sanitizeAvatarDataUrl } from './avatarImage';
 import {
   SCENE_LIMITS,
   SCENE_PERMISSION_MODES,
@@ -70,6 +71,7 @@ export function normalizePersonalScene(value: unknown): PersonalScene | null {
     name,
     description: text(raw.description, SCENE_LIMITS.description),
     icon: text(raw.icon, 8) || DEFAULT_ICON,
+    ...(sanitizeAvatarDataUrl(raw.avatarUrl) ? { avatarUrl: sanitizeAvatarDataUrl(raw.avatarUrl) } : {}),
     prompt: text(raw.prompt, SCENE_LIMITS.prompt),
     intent: normalizeIntent(raw.intent),
     skillNames: stringList(raw.skillNames),
@@ -96,6 +98,7 @@ export function newPersonalScene(
     name: seed.name ?? '',
     description: seed.description ?? '',
     icon: seed.icon ?? DEFAULT_ICON,
+    ...(seed.avatarUrl ? { avatarUrl: seed.avatarUrl } : {}),
     prompt: seed.prompt ?? '',
     intent: seed.intent ?? emptySceneIntent(),
     skillNames: seed.skillNames ?? [],

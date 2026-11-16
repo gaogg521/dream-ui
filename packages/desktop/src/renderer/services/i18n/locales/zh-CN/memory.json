@@ -1,4 +1,15 @@
 {
+  "export": {
+    "button": "导出",
+    "title": "One Work 记忆导出",
+    "exportedAt": "导出时间",
+    "updatedAt": "更新时间",
+    "empty": "没有可导出的记忆。",
+    "claudeAuto": "Claude 自动记忆",
+    "saved": "记忆已导出",
+    "downloaded": "记忆已下载",
+    "failed": "导出记忆失败"
+  },
   "tabEnterprise": "企业记忆",
   "entHint": "企业记忆来自企业服务器，可在对话中被自动召回（受下方开关控制）。仅可删除自己写入的条目或个人集合中的条目。",
   "entRecallLabel": "在对话中召回我的企业记忆",

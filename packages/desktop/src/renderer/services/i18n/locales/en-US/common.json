@@ -401,6 +401,8 @@
     "agentsEmpty": "No digital employees yet — create one to get started.",
     "templatesTitle": "Create from Template",
     "agentsListTitle": "My Digital Employees",
+    "tabHint": "A digital employee is your own AI colleague: it has its own role, skills and tools, you can chat with it any time, and it can work on a schedule.",
+    "employeeCount": "{{total}} in total",
     "createAgent": "Create Employee",
     "agentsEmptyHint": "Start from a template above, or click \"Create Employee\".",
     "scheduled": "Scheduled",

@@ -1,4 +1,15 @@
 {
+  "export": {
+    "button": "Exporter",
+    "title": "Export de la mémoire One Work",
+    "exportedAt": "Exporté le",
+    "updatedAt": "Mis à jour",
+    "empty": "Aucune mémoire à exporter.",
+    "claudeAuto": "Mémoire automatique de Claude",
+    "saved": "Mémoire exportée",
+    "downloaded": "Mémoire téléchargée",
+    "failed": "Échec de l’export de la mémoire"
+  },
   "tabEnterprise": "Mémoire d'entreprise",
   "entHint": "La mémoire d'entreprise provient du serveur du groupe de projet et peut être rappelée automatiquement dans les conversations (voir le commutateur ci-dessous). Vous pouvez supprimer les éléments que vous avez écrits ainsi que ceux de vos collections personnelles.",
   "entRecallLabel": "Rappeler ma mémoire d'entreprise dans les conversations",

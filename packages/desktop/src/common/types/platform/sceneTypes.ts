@@ -62,6 +62,8 @@ export type PersonalScene = {
   description: string;
   /** One emoji standing in for a picture. */
   icon: string;
+  /** A picture the person uploaded (a small data URL); when present it is shown instead of `icon`'s portrait. */
+  avatarUrl?: string;
   /** Standing context for the conversation: role, tone, what to do first. */
   prompt: string;
   intent: SceneIntent;

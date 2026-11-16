@@ -1,4 +1,15 @@
 {
+  "export": {
+    "button": "Exportieren",
+    "title": "One-Work-Speicherexport",
+    "exportedAt": "Exportiert am",
+    "updatedAt": "Aktualisiert",
+    "empty": "Es gibt keinen Speicher zum Exportieren.",
+    "claudeAuto": "Claude-Auto-Speicher",
+    "saved": "Speicher exportiert",
+    "downloaded": "Speicher heruntergeladen",
+    "failed": "Speicher konnte nicht exportiert werden"
+  },
   "tabEnterprise": "Unternehmensspeicher",
   "entHint": "Der Unternehmensspeicher stammt vom Projektgruppen-Server und kann automatisch in Unterhaltungen einbezogen werden (siehe Schalter unten). Sie können nur Einträge löschen, die Sie selbst verfasst haben, sowie Einträge in Ihren persönlichen Sammlungen.",
   "entRecallLabel": "Meinen Unternehmensspeicher in Unterhaltungen einbeziehen",

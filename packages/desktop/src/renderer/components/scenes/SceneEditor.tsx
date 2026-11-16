@@ -24,8 +24,9 @@ import {
 import { useMcpServers } from '@/renderer/hooks/mcp';
 import { SCENE_ICONS, personalSceneProblems } from '@/renderer/utils/scenes/personalScenes';
 import { ADDITIONAL_SCENE_ICONS, personalSceneAvatarSrc } from '@/renderer/utils/scenes/sceneAvatar';
+import { SCENE_AVATAR_IMAGE_TYPES, encodeSceneAvatarImage } from '@/renderer/utils/scenes/avatarImage';
 import { buildSceneRules } from '@/renderer/utils/scenes/sceneProtocol';
-import { Button, Collapse, Drawer, Input, Select, Switch } from '@arco-design/web-react';
+import { Button, Collapse, Drawer, Input, Message, Select, Switch, Upload } from '@arco-design/web-react';
 import { Delete, Plus } from '@icon-park/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -93,6 +94,7 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ visible, mode, scene, onCance
   const [draft, setDraft] = useState<PersonalScene | null>(scene);
   const [saving, setSaving] = useState(false);
   const [touched, setTouched] = useState(false);
+  const [uploading, setUploading] = useState(false);
   useEffect(() => {
     setDraft(scene);
     setTouched(false);
@@ -134,8 +136,22 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ visible, mode, scene, onCance
 
   if (!draft) return null;
   const problems = personalSceneProblems(draft);
-  const selectedAvatar = personalSceneAvatarSrc(draft.icon);
+  const selectedAvatar = draft.avatarUrl ? undefined : personalSceneAvatarSrc(draft.icon);
+  const previewAvatar = draft.avatarUrl ?? personalSceneAvatarSrc(draft.icon);
   const set = (patch: Partial<PersonalScene>) => setDraft({ ...draft, ...patch });
+
+  // The upload only supplies the file picker; the picture is kept with the draft and saved with the scene.
+  const pickImage = async (file: File): Promise<boolean> => {
+    setUploading(true);
+    try {
+      set({ avatarUrl: await encodeSceneAvatarImage(file) });
+    } catch {
+      Message.error(t('common.failed'));
+    } finally {
+      setUploading(false);
+    }
+    return false;
+  };
   const setIntent = (patch: Partial<SceneIntent>) => setDraft({ ...draft, intent: { ...draft.intent, ...patch } });
 
   const handleSave = async () => {
@@ -177,6 +193,29 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ visible, mode, scene, onCance
     >
       <div className={`flex flex-col gap-18px ${styles.fields}`} data-testid='scene-editor'>
         <Field label={t('common.scenes.editor.icon')}>
+          <div className='flex flex-wrap items-center gap-8px'>
+            {previewAvatar ? (
+              <img src={previewAvatar} alt='' className={styles.avatarPreview} data-testid='scene-avatar-preview' />
+            ) : null}
+            <Upload
+              accept={SCENE_AVATAR_IMAGE_TYPES.join(',')}
+              showUploadList={false}
+              disabled={uploading}
+              beforeUpload={pickImage}
+            >
+              <Button size='small' loading={uploading} data-testid='scene-avatar-upload'>
+                {t('settings.assistantAvatarUploadImage')}
+              </Button>
+            </Upload>
+            <Button
+              size='small'
+              disabled={uploading || !draft.avatarUrl}
+              onClick={() => set({ avatarUrl: undefined })}
+              data-testid='scene-avatar-reset'
+            >
+              {t('common.default')}
+            </Button>
+          </div>
           <div className='flex flex-wrap gap-6px'>
             {[...SCENE_ICONS, ...ADDITIONAL_SCENE_ICONS].map((icon, index) => {
               const avatar = personalSceneAvatarSrc(icon);
@@ -189,7 +228,7 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ visible, mode, scene, onCance
                   type={selected ? 'primary' : 'secondary'}
                   aria-label={label}
                   aria-pressed={selected}
-                  onClick={() => set({ icon })}
+                  onClick={() => set({ icon, avatarUrl: undefined })}
                 >
                   <img src={avatar} alt='' className={styles.avatarPortrait} />
                 </Button>

@@ -83,6 +83,17 @@ function getElectronSystemLanguageHint(): string | null {
   return navigator.language || null;
 }
 
+/**
+ * A plain browser (WebUI) has no Electron-injected language, and on a first visit to an origin
+ * its localStorage is empty too. The saved app language lives behind the login (`/api/settings/client`
+ * answers 401 until then), so the login page itself can only go by the browser's own language —
+ * without this it always rendered English, even for a Chinese browser.
+ */
+function getBrowserLanguageHint(): string | null {
+  if (typeof window === 'undefined' || window.electronAPI) return null;
+  return navigator.languages?.[0] || navigator.language || null;
+}
+
 function getInitialLanguage(): SupportedLanguage {
   const backendStartupFailed =
     typeof window !== 'undefined' && (window as Window & { __backendStartupFailed?: boolean }).__backendStartupFailed;
@@ -92,7 +103,7 @@ function getInitialLanguage(): SupportedLanguage {
   const hint = backendStartupFailed
     ? injectedLanguage || localStorageLanguage || systemLanguage
     : localStorageLanguage || injectedLanguage;
-  return normalizeLanguageCode(hint || DEFAULT_LANGUAGE);
+  return normalizeLanguageCode(hint || getBrowserLanguageHint() || DEFAULT_LANGUAGE);
 }
 
 async function loadLocaleModules(locale: string): Promise<Record<string, unknown>> {

@@ -109,6 +109,8 @@ export type SceneGreeting = {
   description: string;
   /** An emoji for a personal scene; company scenes show the generic mark. */
   icon?: string;
+  /** The picture a person uploaded for their own scene (a small data URL). */
+  avatarUrl?: string;
   /** Skills the scene started the conversation with. */
   skills: string[];
   /** MCP tools the conversation was limited to by name; empty when it was not limited. */
@@ -272,6 +274,7 @@ export function buildSceneConversationRequest(params: {
     name: item.name,
     description: item.description,
     ...(item.icon ? { icon: item.icon } : {}),
+    ...(mine?.avatarUrl ? { avatarUrl: mine.avatarUrl } : {}),
     skills: extra.enabled_skills.map((name) => skills.find((skill) => skill.name === name)?.displayName || name),
     tools: (extra.selected_mcp_server_ids ?? []).flatMap((id) => {
       const name = mcpServers.find((server) => server.id === id)?.name;

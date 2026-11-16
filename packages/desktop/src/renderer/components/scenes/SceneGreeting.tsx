@@ -143,7 +143,7 @@ export const SceneDetails: React.FC<{ greeting: SceneGreetingData }> = ({ greeti
 
 const SceneGreeting: React.FC<{ greeting: SceneGreetingData }> = ({ greeting }) => {
   const { t } = useTranslation();
-  const avatar = greeting.icon ? personalSceneAvatarSrc(greeting.icon) : undefined;
+  const avatar = greeting.avatarUrl ?? (greeting.icon ? personalSceneAvatarSrc(greeting.icon) : undefined);
   return (
     <div className='mx-auto flex max-w-560px flex-col gap-16px px-24px py-32px' data-testid='scene-greeting'>
       <div className='flex items-center gap-14px'>

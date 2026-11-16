@@ -1,4 +1,15 @@
 {
+  "export": {
+    "button": "Dışa aktar",
+    "title": "One Work bellek dışa aktarımı",
+    "exportedAt": "Dışa aktarma zamanı",
+    "updatedAt": "Güncellendi",
+    "empty": "Dışa aktarılacak bellek yok.",
+    "claudeAuto": "Claude otomatik belleği",
+    "saved": "Bellek dışa aktarıldı",
+    "downloaded": "Bellek indirildi",
+    "failed": "Bellek dışa aktarılamadı"
+  },
   "tabEnterprise": "Kurumsal bellek",
   "entHint": "Kurumsal bellek proje grubu sunucusundan gelir ve sohbetlerde otomatik olarak çağrılabilir (aşağıdaki anahtara bakın). Yalnızca kendi yazdığınız öğeleri ve kişisel koleksiyonlarınızdaki öğeleri silebilirsiniz.",
   "entRecallLabel": "Kurumsal belleğimi sohbetlerde çağır",

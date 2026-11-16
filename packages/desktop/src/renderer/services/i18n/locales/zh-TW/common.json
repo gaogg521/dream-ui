@@ -365,6 +365,8 @@
     "agentsEmpty": "還沒有數字員工，先建立一個。",
     "templatesTitle": "從模板建立",
     "agentsListTitle": "我的數字員工",
+    "tabHint": "數位員工是你的專屬 AI 同事：有自己的角色、技能和工具，隨時可以對話，也能依時間自動工作。",
+    "employeeCount": "共 {{total}} 位",
     "createAgent": "建立員工",
     "agentsEmptyHint": "從上方模板開始，或點選「建立員工」。",
     "scheduled": "定時",

@@ -64,7 +64,7 @@ export function personalSceneItem(scene: PersonalScene): SceneItem {
     source: 'mine',
     name: scene.name,
     description: scene.description,
-    imageSrc: personalSceneAvatarSrc(scene.icon),
+    imageSrc: scene.avatarUrl ?? personalSceneAvatarSrc(scene.icon),
     icon: scene.icon,
     resources,
     starters: scene.intent.starters,

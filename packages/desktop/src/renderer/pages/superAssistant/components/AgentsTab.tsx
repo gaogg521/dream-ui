@@ -8,7 +8,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Empty, Input, Pagination, Popconfirm, Tag } from '@arco-design/web-react';
+import { Button, Empty, Input, Pagination, Popconfirm, Tag, Tooltip } from '@arco-design/web-react';
 import { ipcBridge } from '@/common';
 import type { DigitalEmployeeRunRecord } from '@/common/types/employee/employeeTypes';
 import { Communication, Delete, Edit, FileText, Plus, Time } from '@icon-park/react';
@@ -110,17 +110,27 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
   }, [visibleCards]);
 
   return (
-    <div className='flex flex-col gap-16px'>
-      <Card
-        title={t('common.superAssistant.agentsListTitle', { defaultValue: '我的数字员工' })}
-        extra={
-          <Button type='primary' icon={<Plus />} onClick={onCreateAgent}>
+    <div className='flex flex-col gap-16px' data-testid='agents-tab'>
+      {/* Same shape as the scenes tab: one line saying what this is, the add button beside it. */}
+      <div className='flex items-center justify-between gap-12px'>
+        <span className='text-12px text-t-tertiary'>{t('common.superAssistant.tabHint')}</span>
+        <div className='flex shrink-0 items-center gap-12px'>
+          {agents.length > 0 ? (
+            <span className='text-12px text-t-secondary'>
+              {t('common.superAssistant.employeeCount', { total: agents.length })}
+            </span>
+          ) : null}
+          <Button type='primary' icon={<Plus size={14} />} onClick={onCreateAgent} data-testid='employee-new'>
             {t('common.superAssistant.createAgent', { defaultValue: '创建员工' })}
           </Button>
-        }
-      >
+        </div>
+      </div>
+
+      <section className='flex flex-col gap-8px'>
+        <div className='text-13px font-600'>
+          {t('common.superAssistant.agentsListTitle', { defaultValue: '我的数字员工' })}
+        </div>
         <Input.Search
-          className='mb-16px'
           allowClear
           value={search}
           placeholder={t('common.superAssistant.searchEmployees')}
@@ -140,7 +150,7 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
             }
           />
         ) : (
-          <div className='grid gap-12px md:grid-cols-2'>
+          <div className='grid gap-8px md:grid-cols-2'>
             {visibleCards.map((agent) => {
               const ref: AgentCardRef = {
                 agentId: agent.id,
@@ -150,107 +160,131 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
               // A chat binding has no outcome to report; the card shows the last real run.
               const latestRun = (runsByAgent[agent.id] ?? agent.recentRuns).find((run) => run.triggerSource !== 'chat');
               const expertName = resolveEmployeeExpertName(agent, presetAssistants, localeKey);
+              const teamManaged = isTeamDistributed(agent);
               return (
-                <Card key={agent.id} size='small'>
-                  <div className='flex items-center justify-between'>
-                    <div className='flex min-w-0 items-center gap-9px'>
-                      <img
-                        src={resolveEmployeeAvatar(agent)}
-                        alt=''
-                        className='h-42px w-42px shrink-0 rd-10px border border-2 object-cover'
-                      />
-                      <div className='flex min-w-0 flex-wrap items-center gap-6px'>
-                        <span className='text-14px font-500'>{agent.name}</span>
-                        {expertName ? (
-                          <Tag size='small' color='arcoblue'>
-                            {expertName}
-                          </Tag>
-                        ) : null}
-                        <Tag size='small' color='gray'>
-                          {resolveEmployeeBackendLabel(agent, managedAgentRuntimeCatalog, localeKey)}
+                <div
+                  key={agent.id}
+                  data-employee-row={agent.name}
+                  className='flex items-center gap-12px rounded-6px border border-2 bg-2 p-12px'
+                >
+                  <img
+                    src={resolveEmployeeAvatar(agent)}
+                    alt=''
+                    className='h-40px w-40px shrink-0 rd-10px object-cover'
+                  />
+                  <div className='min-w-0 flex-1'>
+                    <div className='flex min-w-0 flex-wrap items-center gap-6px'>
+                      <span className='truncate text-14px font-500'>{agent.name}</span>
+                      {expertName ? (
+                        <Tag size='small' color='arcoblue'>
+                          {expertName}
                         </Tag>
-                        {agent.scheduleEnabled ? (
-                          <Tag size='small' color='blue'>
-                            <Time className='mr-2px' />
-                            {t('common.superAssistant.scheduled', { defaultValue: '定时' })}
-                          </Tag>
-                        ) : null}
-                        {/* Company-distributed employees land in the member's own
-                          list with owner/visibility rewritten to look local, so
-                          without this tag they are indistinguishable from ones
-                          the member built — including the delete button, which
-                          the next sync would undo. Same label the skills list
-                          already uses for team-distributed rows. */}
-                        {isTeamDistributed(agent) ? (
-                          <Tag size='small' color='green'>
-                            {t('common.superAssistant.teamDistributed', { defaultValue: '团队 · 自动' })}
-                          </Tag>
-                        ) : null}
-                      </div>
-                    </div>
-                    {latestRun ? (
-                      <Tag size='small' color={RUN_STATUS_COLOR[latestRun.status] ?? 'default'}>
-                        {t(`common.superAssistant.runStatus.${latestRun.status}`, {
-                          defaultValue: latestRun.status,
-                        })}
+                      ) : null}
+                      <Tag size='small' color='gray'>
+                        {resolveEmployeeBackendLabel(agent, managedAgentRuntimeCatalog, localeKey)}
                       </Tag>
+                      {agent.scheduleEnabled ? (
+                        <Tag size='small' color='blue'>
+                          <Time className='mr-2px' />
+                          {t('common.superAssistant.scheduled', { defaultValue: '定时' })}
+                        </Tag>
+                      ) : null}
+                      {/* Company-distributed employees land in the member's own list with
+                          owner/visibility rewritten to look local, so without this tag they
+                          are indistinguishable from ones the member built, including the
+                          delete action, which the next sync would undo. */}
+                      {teamManaged ? (
+                        <Tag size='small' color='green'>
+                          {t('common.superAssistant.teamDistributed', { defaultValue: '团队 · 自动' })}
+                        </Tag>
+                      ) : null}
+                      {latestRun ? (
+                        <Tag size='small' color={RUN_STATUS_COLOR[latestRun.status] ?? 'default'}>
+                          {t(`common.superAssistant.runStatus.${latestRun.status}`, {
+                            defaultValue: latestRun.status,
+                          })}
+                        </Tag>
+                      ) : null}
+                    </div>
+                    {agent.description ? (
+                      <div className='mt-4px line-clamp-1 text-12px text-t-tertiary'>{agent.description}</div>
+                    ) : null}
+                    {latestRun?.summary ? (
+                      <div className='mt-2px line-clamp-1 text-12px text-t-secondary'>{latestRun.summary}</div>
+                    ) : null}
+                    {teamManaged ? (
+                      <div className='mt-2px line-clamp-1 text-12px text-t-tertiary'>
+                        {t('common.superAssistant.teamManagedHint')}
+                      </div>
                     ) : null}
                   </div>
-                  {agent.description ? (
-                    <div className='mt-4px text-12px text-t-tertiary line-clamp-2'>{agent.description}</div>
-                  ) : null}
-                  {latestRun?.summary ? (
-                    <div className='mt-8px rounded-4px bg-2 p-8px text-12px text-t-secondary line-clamp-3'>
-                      {latestRun.summary}
-                    </div>
-                  ) : null}
-                  <div className='mt-12px flex flex-wrap gap-8px'>
-                    <Button
-                      size='small'
-                      type='primary'
-                      icon={<Communication />}
-                      loading={startingChatId === agent.id}
-                      onClick={() => onStartChat?.(ref)}
-                    >
-                      {t('common.superAssistant.startChat')}
-                    </Button>
-                    <Button size='small' icon={<FileText />} onClick={() => onViewDigitalEmployeeDetail?.(ref)}>
-                      {t('common.superAssistant.detail', { defaultValue: '详情' })}
-                    </Button>
+                  <Button
+                    type='text'
+                    size='small'
+                    icon={<Communication size={14} />}
+                    loading={startingChatId === agent.id}
+                    onClick={() => onStartChat?.(ref)}
+                    data-testid='employee-start'
+                  >
+                    {t('common.superAssistant.startChat')}
+                  </Button>
+                  <div className='flex shrink-0 items-center'>
+                    <Tooltip content={t('common.superAssistant.detail', { defaultValue: '详情' })}>
+                      <Button
+                        type='text'
+                        size='small'
+                        icon={<FileText size={14} />}
+                        aria-label={t('common.superAssistant.detail', { defaultValue: '详情' })}
+                        onClick={() => onViewDigitalEmployeeDetail?.(ref)}
+                      />
+                    </Tooltip>
                     {/* Scheduling is the member's own choice and the team sync leaves it
                         alone, so company employees get it too. */}
-                    <Button size='small' icon={<Time />} onClick={() => onScheduleAgent?.(ref)}>
-                      {t('common.superAssistant.schedule', { defaultValue: '定时' })}
-                    </Button>
-                    {isTeamDistributed(agent) ? null : (
+                    <Tooltip content={t('common.superAssistant.schedule', { defaultValue: '调度与通知' })}>
+                      <Button
+                        type='text'
+                        size='small'
+                        icon={<Time size={14} />}
+                        aria-label={t('common.superAssistant.schedule', { defaultValue: '调度与通知' })}
+                        onClick={() => onScheduleAgent?.(ref)}
+                      />
+                    </Tooltip>
+                    {teamManaged ? null : (
                       <>
-                        <Button size='small' icon={<Edit />} onClick={() => onManageAgent?.(ref)}>
-                          {t('common.superAssistant.manage', { defaultValue: '管理' })}
-                        </Button>
+                        <Tooltip content={t('common.superAssistant.manage', { defaultValue: '管理' })}>
+                          <Button
+                            type='text'
+                            size='small'
+                            icon={<Edit size={14} />}
+                            aria-label={t('common.superAssistant.manage', { defaultValue: '管理' })}
+                            onClick={() => onManageAgent?.(ref)}
+                          />
+                        </Tooltip>
                         <Popconfirm
                           title={t('common.superAssistant.deleteConfirm', {
                             defaultValue: '确定删除该数字员工？',
                           })}
                           onOk={() => onDeleteAgent?.(ref)}
                         >
-                          <Button size='small' icon={<Delete />} status='danger'>
-                            {t('common.superAssistant.delete', { defaultValue: '删除' })}
-                          </Button>
+                          <Button
+                            type='text'
+                            size='small'
+                            status='danger'
+                            icon={<Delete size={14} />}
+                            aria-label={t('common.superAssistant.delete', { defaultValue: '删除' })}
+                          />
                         </Popconfirm>
                       </>
                     )}
                   </div>
-                  {isTeamDistributed(agent) ? (
-                    <div className='mt-8px text-12px text-t-tertiary'>{t('common.superAssistant.teamManagedHint')}</div>
-                  ) : null}
-                </Card>
+                </div>
               );
             })}
           </div>
         )}
         {cards.length > pageSize && (
           <Pagination
-            className='mt-16px'
+            className='mt-8px'
             current={currentPage}
             pageSize={pageSize}
             total={cards.length}
@@ -258,7 +292,7 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
             showTotal
           />
         )}
-      </Card>
+      </section>
     </div>
   );
 };

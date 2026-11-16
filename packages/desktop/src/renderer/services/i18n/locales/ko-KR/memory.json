@@ -1,4 +1,15 @@
 {
+  "export": {
+    "button": "내보내기",
+    "title": "One Work 메모리 내보내기",
+    "exportedAt": "내보낸 시각",
+    "updatedAt": "업데이트",
+    "empty": "내보낼 메모리가 없습니다.",
+    "claudeAuto": "Claude 자동 메모리",
+    "saved": "메모리를 내보냈습니다",
+    "downloaded": "메모리를 다운로드했습니다",
+    "failed": "메모리 내보내기에 실패했습니다"
+  },
   "tabEnterprise": "기업 메모리",
   "entHint": "기업 메모리는 프로젝트 그룹 서버에서 제공되며 대화 중 자동으로 불러올 수 있습니다(아래 스위치로 제어). 직접 작성한 항목과 개인 컬렉션의 항목만 삭제할 수 있습니다.",
   "entRecallLabel": "대화에서 내 기업 메모리 불러오기",

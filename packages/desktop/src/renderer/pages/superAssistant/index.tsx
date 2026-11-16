@@ -17,7 +17,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Message, Spin, Tabs } from '@arco-design/web-react';
+import { Message, Spin, Tabs } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ipcBridge } from '@/common';
@@ -117,13 +117,6 @@ const SuperAssistantPage: React.FC = () => {
     <div className='flex h-full flex-col'>
       <div className='flex items-center justify-between border-b border-2 px-16px py-12px'>
         <div className='text-16px font-600'>{t('common.superAssistant.title', { defaultValue: '数字员工' })}</div>
-        {/* Creating an employee only makes sense on the roster; scenes and the
-            knowledge base have their own add buttons. */}
-        {activeTab === TabKey.AGENTS && (
-          <Button type='primary' onClick={() => setCreateModalVisible(true)}>
-            {t('common.superAssistant.createAgent', { defaultValue: '创建员工' })}
-          </Button>
-        )}
       </div>
       <div className='flex-1 overflow-auto p-16px'>
         {/* The global `.arco-spin` rule is inline-flex + centred (for bare spinners), which

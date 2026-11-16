@@ -323,6 +323,8 @@
     "agentsEmpty": "Aucun employé numérique pour l’instant — créez-en un pour commencer.",
     "templatesTitle": "Créer à partir d’un modèle",
     "agentsListTitle": "Mes employés numériques",
+    "tabHint": "Un employé numérique est votre propre collègue IA : il a son rôle, ses compétences et ses outils, vous pouvez lui parler à tout moment et il peut aussi travailler selon un planning.",
+    "employeeCount": "{{total}} au total",
     "createAgent": "Créer un employé",
     "agentsEmptyHint": "Partez d’un modèle ci-dessus ou cliquez sur « Créer un employé ».",
     "scheduled": "Planifié",

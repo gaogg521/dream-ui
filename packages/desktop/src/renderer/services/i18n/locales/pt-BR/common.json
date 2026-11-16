@@ -323,6 +323,8 @@
     "agentsEmpty": "Ainda não há funcionários digitais — crie um para começar.",
     "templatesTitle": "Criar a partir de modelo",
     "agentsListTitle": "Meus funcionários digitais",
+    "tabHint": "Um funcionário digital é seu colega de IA: tem função, habilidades e ferramentas próprias, você pode conversar com ele quando quiser e ele também trabalha de forma agendada.",
+    "employeeCount": "{{total}} no total",
     "createAgent": "Criar funcionário",
     "agentsEmptyHint": "Comece por um modelo acima ou clique em \"Criar funcionário\".",
     "scheduled": "Agendado",

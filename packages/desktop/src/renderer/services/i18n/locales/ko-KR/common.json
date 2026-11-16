@@ -323,6 +323,8 @@
     "agentsEmpty": "아직 디지털 직원이 없습니다. 하나 만들어 시작하세요.",
     "templatesTitle": "템플릿으로 만들기",
     "agentsListTitle": "내 디지털 직원",
+    "tabHint": "디지털 직원은 나만의 AI 동료입니다. 역할, 스킬, 도구를 갖추고 있어 언제든 대화할 수 있고 일정에 맞춰 자동으로 일합니다.",
+    "employeeCount": "총 {{total}}명",
     "createAgent": "직원 만들기",
     "agentsEmptyHint": "위의 템플릿으로 시작하거나 \"직원 만들기\"를 클릭하세요.",
     "scheduled": "예약됨",

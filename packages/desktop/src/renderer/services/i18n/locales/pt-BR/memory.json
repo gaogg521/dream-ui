@@ -1,4 +1,15 @@
 {
+  "export": {
+    "button": "Exportar",
+    "title": "Exportação de memória do One Work",
+    "exportedAt": "Exportado em",
+    "updatedAt": "Atualizado",
+    "empty": "Não há memória para exportar.",
+    "claudeAuto": "Memória automática do Claude",
+    "saved": "Memória exportada",
+    "downloaded": "Memória baixada",
+    "failed": "Falha ao exportar a memória"
+  },
   "tabEnterprise": "Memória corporativa",
   "entHint": "A memória corporativa vem do servidor do grupo de projeto e pode ser recuperada automaticamente nas conversas (veja a chave abaixo). Você pode excluir os itens que escreveu e os das suas coleções pessoais.",
   "entRecallLabel": "Recuperar minha memória corporativa nas conversas",

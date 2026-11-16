@@ -323,6 +323,8 @@
     "agentsEmpty": "デジタル従業員はまだいません。作成して始めましょう。",
     "templatesTitle": "テンプレートから作成",
     "agentsListTitle": "マイデジタル従業員",
+    "tabHint": "デジタル社員は、あなた専属の AI 同僚です。役割・スキル・ツールを持ち、いつでも会話でき、スケジュールに沿って自動で作業もします。",
+    "employeeCount": "全 {{total}} 名",
     "createAgent": "従業員を作成",
     "agentsEmptyHint": "上のテンプレートから始めるか、「従業員を作成」をクリックしてください。",
     "scheduled": "スケジュール済み",
