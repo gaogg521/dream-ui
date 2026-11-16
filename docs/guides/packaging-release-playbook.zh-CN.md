@@ -1,25 +1,299 @@
-# Windows + Mac 打包与发布踩坑手册（Playbook）
+# One Work 桌面端打包与发布手册（Playbook）
 
-> 可操作的打包发布手册。2026-09-19 按 **最近三次成功发版（3.0.4 / 3.0.5 / 3.0.6）**
-> 重构：第一部分就是现在的标准流程，照着走即可；第二部分是仍然有效的坑的快速索引；
-> 1oneCore / 1oneUI 时代的历史教训压缩成第三部分的一张表，细节在文末的 session 文档里。
+> **怎么读这份文档**
 >
-> **版本坐标（2026-10-24）**：最新已发包 **3.0.14**（钉 dreamcore v0.1.98，全平台
-> Windows + macOS×2 + Linux×2）。S0–S7 流程在 3.0.14 上复跑通过；本版新增的坑
-> 已并入 S0/S2/S4/S5/§2.1/§2.8/§2.9。
->
-> **开局先读最新一篇发版记录**（`dream-en/docs/release-record-<日期>-<版本>.zh-CN.md`）：
-> 打包范围、对象数、tag 惯例会演进——3.0.13 起是全平台五路 + COS 17 对象 + 五份根清单，
-> 按旧记忆的「三路打包」走会漏腿（3.0.14 实际发生，Linux 晚 dispatch 20 分钟）。
->
-> **打 Linux 包 / 在无桌面服务器上跑 `onework --webui` / 单平台覆盖补发：先读 §2.1.2**
-> （headless 启动必须靠命令行参数、CI 的 Code Quality 会拦全平台、新桶 key 取哪一对、同版本覆盖的影响）。
->
-> 权威的"当前发布状态"永远用实时命令查（§3），别信任何文档里写死的时间点快照。
+> - **第一部分**是现行流程，以最近一次完整发版 **3.0.18**（2026-11-13 夜 → 11-14，五个平台一次走完）为案例，
+>   再按平台（Linux / macOS 两个架构 / Windows）分别写「怎么走、注意什么」。**照着第一部分走即可。**
+> - **第二部分（附录 A–D）**是历史经验与踩坑（3.0.4 – 3.0.17 时期提炼），**原文完整保留**，放在最下面查阅。
+>   它的 S0–S7、§2.x 编号沿用原文，正文内部的交叉引用依然有效。
+> - 两部分冲突时**以第一部分为准**；已知的冲突点列在「附录说明」里。
+> - 版本坐标：最新完整发版 **3.0.18**（钉 dreamcore v0.1.104）；2026-11-16 对 Linux 两个包做过一次同版本号覆盖补发（见 §1.4）。
+>   「当前发布状态」永远用实时命令查（附录 D），别信文档里写死的快照。
+> - **开局先读最新一篇发版记录**：`dream-en/docs/release-record-<日期>-<版本>.zh-CN.md`（3.0.18 的是
+>   `release-record-2026-11-14-3.0.18.zh-CN.md`）。打包范围、对象数、惯例会演进，别按记忆里的旧版数走。
 
 ---
 
-## 第一部分：标准流程（3.0.4 → 3.0.5 → 3.0.6 三次成功发版提炼）
+## 第一部分：现行流程（以 3.0.18 为案例）
+
+### 1.1 3.0.18 是怎么发出去的
+
+**版本坐标**
+
+| 项             | 值                                                                  | 备注                                                                                                     |
+| -------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 桌面版本       | **3.0.18**                                                          | 发版提交 `86b2bdc4`，随后 `2411725a` 把更新说明日期对齐到出包日 11-14                                    |
+| dreamcore 钉版 | **v0.1.104**                                                        | 交接时已发布、一次性到位，无追钉；tag 与 dream-core main 零差异                                          |
+| dream-engine   | `16e5aea`                                                           | 由 dream-core 的 `Cargo.lock` 固定，4 条引擎改动全部随包                                                 |
+| 更新范围分界   | 旧桶 3.0.17 的 win exe `Last-Modified` = 11-07 09:47（+8）          | 用安装包的产出时间，**不是** release 提交时间                                                            |
+| 出包           | 五腿一次发齐（11-14 00:04 +8 dispatch），全部一次绿                 | linux-x64 **11.5** / linux-arm64 **17** / windows-x64 **26** / mac-arm64 **23** / mac-x64 **34**（分钟） |
+| COS 对象       | **17 个**：11 个安装包/blockmap + 5 份根清单 + 1 个更新说明 sidecar | 两个桶都传齐                                                                                             |
+| 官网           | 四个版本钉 + 五个尺寸 + changelog 条目                              | 全程收口约 11-14 凌晨 3 点（+8）                                                                         |
+
+**八个阶段与 3.0.18 的实际做法**
+
+| 阶段               | 做什么                                                                                                                           | 3.0.18 的实例 / 判据                                                                                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0 预检            | 四仓本地 = `origin/main`；CI 绿；磁盘余量；**上版时点 = COS `Last-Modified`**；目标版本 semver 必须大于线上版本                  | 预检五腿一次过。详细命令见附录 A 的 S0                                                                                                                          |
+| P1 划界 + 扫漏     | 以 P0 的时点做 `git log --since`，**四仓**全量扫；用户可见的逐条映射进更新记录，可合并、**不许漏**；后端独有的 fix 最容易漏      | dream-ui 16 条用户可见全部映射；core 用 tag 范围、engine 用 `Cargo.lock` 范围复核，与时间扫描零差异。产出 `docs/release-notes/3.0.18.json`（zh/en × 单机/企业） |
+| P2 钉版            | `package.json` 的 `dreamcoreVersion` 指向已发布的 dream-core tag；**验真三件套缺一不算验过**                                     | ① 11 个关键修复 `merge-base --is-ancestor` v0.1.104 ② zip 对 `dreamcore-checksums.txt` 算 SHA-256 ③ 二进制里 grep 生产代码独有文案（5/5）+ 对照串证明手段有效   |
+| P3 发版提交        | `version` + `dreamcoreVersion` + release-notes，一个 `chore(release): <ver>` 提交推 `main`                                       | 直接在 main，不开分支不开 PR，提交信息中文、无 AI 署名                                                                                                          |
+| P4 并行出包        | `build-manual.yml` 一次发齐五个平台，`installers_only=false`，记下每个 run id                                                    | 五腿同时 dispatch。Mac 腿最先发、全程盯                                                                                                                         |
+| P5 产物落地核验    | `download-gh-artifact.sh` 逐平台下载（GitHub digest 校验）→ 各平台自己的验收（见 §1.3）                                          | 五制品全过 digest；六个安装产物 sha512 与清单逐字一致                                                                                                           |
+| P6 传 COS          | `publish-cos-release-asset.sh` 一次写**两个桶**；**安装包先、`latest*.yml` 最后**；别忘更新说明 sidecar                          | 凭据预检提前到上传前做；17 对象逐个传双桶；arm64 的 Mac 清单改名 `latest-arm64-mac.yml`                                                                         |
+| P7 官网切版        | 只在**主工作区**构建 → 和线上逐文件比 sha256 → 部署 → 再比一次 → 读线上 bundle 里的版本钉                                        | 部署前 188 个文件相同、仅 index/updates 两处差异；部署后 193 个文件 0 差异；`win/macArm/macIntel/linux:"3.0.18"` 四钉齐                                         |
+| P8 终验 + 发版记录 | **不看文案看 URL**：两个桶每个对象 HEAD 200 且 `Content-Length` = 本地字节数；根清单两桶都是新版本且与产物逐字节相同；写发版记录 | 两桶 17 对象逐个核对；发版记录落盘 `dream-en/docs/release-record-2026-11-14-3.0.18.zh-CN.md`                                                                    |
+
+> **发版日期 = 出包日期**：出包完成才算发版（3.0.18 的更新说明日期因此从 11-13 改成 11-14）。
+
+### 1.2 跨平台通用红线
+
+**流程与仓库**
+
+- 只在 `main` 上干活，直接提交推送；**提交信息中文**（type 前缀保留英文），**不加任何 AI 署名**；绝不 force push；
+  每次 push 前先 `git fetch`（并行会话也在往 main 推），被拒就 `git pull --rebase`。
+- **发版窗口内不往 dream-core 推 build-relevant 提交**（`crates/`、`Cargo.toml`、`Cargo.lock`、`.cargo/`）——
+  预检是每个平台各自的显式步骤，会把后面几条腿全拦掉（3.0.17 就这么栽过）。被拦就追最新 tag 重钉重验。
+- **不要用 `DREAM_SKIP_PREFLIGHT=1`**，除非已确认被拦的提交与本版无关，并在发版记录里写明。
+- 预检把**已跟踪文件被删除**也算「未提交改动」（3.0.18 交接时 `resources/远程连接.png` 就是这样），
+  而 `README.md` 还在引用它——**这类要用户决定，别自己拍板**；未跟踪文件（`.tmp-*.mjs` 等）预检忽略，别 `git add -A`。
+- 凭据（feishu.txt）绝不进仓库、不贴对话、不写日志。
+
+**出包**
+
+- **五个平台一次发齐**（`platform=macos-arm64 / macos-x64 / windows-x64 / linux-x64 / linux-arm64`），别只发 Mac 等后面补
+  （3.0.14 实际发生过，Linux 晚了 20 分钟）。Mac 腿最先发、全程盯。
+- `installers_only` 必须是 **false**：Mac 自动更新走 `.zip` 而不是 `.dmg`，传 `true` 会在上传前把 zip 和清单删掉。
+- **`build-manual.yml` 先跑 Code Quality（含全量 vitest），红了所有平台全部 skipped、没有产物**。
+  pre-push hook 只跑 `--changed`，所以别处引入的全局断言失败只会在 dispatch 之后才红。dispatch 前先本地把
+  `format:check` / `tsc` / 全局约束类测试跑绿，别为一个格式错烧一轮。
+- 同一提交「一条腿绿、另一条腿红」先怀疑 flake，见 §1.3.1「CI」。
+
+**上传**
+
+- **两个桶都要写**，两套凭据互不通用；`latest*.yml` 在两个桶都对，已装用户才会收到更新。别只传一个桶就切官网。
+- 顺序固定：**安装包先、清单最后**（清单一旦可见，它指向的文件必须已在）。
+- 凭据和上传放在**同一次 Bash 调用**里（`fetch-cos-credentials.js` 只有 env 里已有 `COS_ALLOC_*` 才能换临时凭据）。
+- 验新桶读权限时别带着旧桶的 `AWS_*` 环境变量（3.0.18 就因此虚惊过一次「AccessDenied」，是自己的 own goal）：
+  用 `unset AWS_SESSION_TOKEN` + 显式设新桶 key。
+- **GitHub 托管 runner 往上海 COS 传大文件会卡死**，永远本地 aws-cli（或办公网 runner）；`publish-cos.yml` 的真实上传步骤
+  至今没在真发时跑过、步骤日志 blob 404，3.0.17/3.0.18 都走手动路径（下载 → prepare → publish）。
+
+**官网**
+
+- 只能在**主工作区** `D:\website\1onework` 构建（`npx vite build --outDir <临时目录>`），**不能**用干净 worktree 或某个提交——
+  线上有工作区未提交的内容，部署脚本先清空线上目录再解压；干净 worktree 里 `core.autocrlf=true` 还会把全部文本文件换成 CRLF。
+- 部署前和线上**逐文件比 sha256**，应当只差 `main-*.js` 与引用它的 `index.html`；部署后再比一次应 100% 相同。
+- `DEPLOY_OK` 不代表构建过（`npm run build` 失败时脚本照样推旧 dist）：**必须读线上 `main-*.js` 里的 `win:"<ver>"` 等钉**。
+- `LEGACY_LAST_VERSION` 是「旧桶里最后一个版本」，不是当前版本，**别当版本号改**（3.0.18 保持 3.0.17 未动，所以 3.0.18 的链接自然指新桶）。
+- 官网仓加临时输出目录前**先写 `.gitignore`**：3.0.18 因 `git add -A` 把 `.deploy-tmp-3018`（231 个构建文件）带进了提交，
+  只能不 force、后续提交移除并忽略。
+- `platformVersions` 四个键（win / macArm / macIntel / linux）各自独立，`platformSizes` 五个尺寸与版本是同一个事实，一起改
+  （尺寸 = 实际字节数 ÷ 1048576 取整）。
+
+**遇到这些先停下来问用户，别自己决定**：删除或覆盖线上已有对象/已发布包；预检要求 `DREAM_SKIP_PREFLIGHT`；某个功能要不要写进更新说明
+（3.0.18 的「外网访问隧道」）；企业版要不要同批发（企业版升级是另一条线，见 `dream-en/deploy/OFFLINE-BUNDLE.md`）；某个平台反复失败时
+按「增量收口」处理——其余平台先发，这一条腿写好配方挂起，别为一条腿拖死整场。
+
+### 1.3 分平台指南
+
+五个包的产物与 COS 对象（3.0.18 实测）：
+
+| 平台             | CI 腿（`platform=`） | COS 对象                                               | 根清单                             | 3.0.18 CI 时长（健康基线） |
+| ---------------- | -------------------- | ------------------------------------------------------ | ---------------------------------- | -------------------------- |
+| Linux x64        | `linux-x64`          | `…-linux-amd64.deb`（**amd64，不是 x64**）             | `latest-linux.yml`                 | 11.5 分钟（4–10）          |
+| Linux arm64      | `linux-arm64`        | `…-linux-arm64.deb`                                    | `latest-linux-arm64.yml`           | 17 分钟                    |
+| macOS Apple 芯片 | `macos-arm64`        | `mac-arm64` 的 dmg / dmg.blockmap / zip / zip.blockmap | `latest-arm64-mac.yml`（**改名**） | 23 分钟（12）              |
+| macOS Intel      | `macos-x64`          | `mac-x64` 的 dmg / dmg.blockmap / zip / zip.blockmap   | `latest-mac.yml`                   | 34 分钟（16）              |
+| Windows x64      | `windows-x64`        | `…-win-x64.exe`（**只有 exe，没有 blockmap/zip**）     | `latest.yml`                       | 26 分钟（15）              |
+
+另外每版一个更新说明 sidecar：`releases/<ver>/release-notes.md`（应用的更新弹窗读它，忘了就没有更新说明）。
+
+#### 1.3.1 Linux（x64 + arm64）
+
+**怎么走**
+
+1. 触发：`gh workflow run build-manual.yml -R gaogg521/dream-ui -f platform=linux-x64 -f installers_only=false`（arm64 同理）。
+   下载用 `scripts/download-gh-artifact.sh <owner/repo> <run_id> <artifact名> <目录>`（带 size + sha256 校验，每次从空文件开始），别裸 `gh run download`。
+   CI 产物名 `linux-build-x64-<sha7>` / `linux-build-arm64-<sha7>`，只含 deb + 清单 + `builder-debug.yml`。
+2. 核验：deb 的 sha512 = 清单（`openssl dgst -sha512 -binary` + `base64`）；`dpkg-deb -f <deb> Architecture Version`；
+   `app.asar` 是明文拼接格式，直接 `grep -a` 独有字符串即可；内置 `dreamcore` 的 manifest（`resources/bundled-dreamcore/*/manifest.json`）
+   `sourceType` 必须是 `download`/release、`version` = 本轮钉版。
+3. 上传与官网同 §1.2。Linux 只有 deb，没有 AppImage / rpm，只覆盖 Debian/Ubuntu 系；包名 `1one-claudecode`，装到 `/opt/One Work`，
+   `/usr/bin/onework`。依赖只有 gtk3 / nss / libxss / libsecret 等库，**不依赖桌面环境**。
+
+**无桌面服务器：`onework --webui`**
+
+| 症状                                                                                                                | 病根 / 解法                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 无 DISPLAY 时 `onework --webui` 直接退出，日志 `Missing X server or $DISPLAY` / `The platform failed to initialize` | Chromium 在主进程 JS **之前**就选好 Ozone 平台，`configureChromium.ts` 里 JS 的 `appendSwitch('ozone-platform','headless')` **从来没生效**（实测主进程 JS 先跑、X 报错随后）。只有真实命令行参数管用                                                           |
+| 修复（`57a72542`）                                                                                                  | `utils/headlessRelaunch.ts`：Linux + `--webui`/`--resetpass` + 命令行无 `--ozone-platform` → `app.relaunch(+ --ozone-platform=headless --disable-gpu)` + `app.exit(0)`，放在 `configureAppDataProfile` **之前**（一次性进程不碰 userData）。已带该参数则不重启 |
+| 副作用                                                                                                              | 终端里敲 `onework --webui`，第一个进程立刻退出、真进程在后台起；**systemd 托管请直接写全参数**（`onework --webui --ozone-platform=headless --disable-gpu`，不会触发重启）                                                                                      |
+
+给用户的口径：**有桌面** → 下载 deb，双击（由系统软件安装器安装）或 `sudo apt install ./One-Work-*.deb`，之后从应用菜单启动；
+**无桌面** → 装 deb 后 `onework --webui`（修复发布前的旧包必须写全 `--ozone-platform=headless --disable-gpu`），浏览器访问
+`http://<ip>:25808`（`DREAM_PORT` 可改）。首启没有可见初始密码，用 `onework --resetpass` 或后端 `POST /api/webui/reset-password` 取新密码。
+
+**CI（Linux 腿经常最先暴露的问题，其实对所有平台都适用）**
+
+- Code Quality 红了所有平台全部 skipped。读失败原因：`gh run view <id> --log-failed`，日志里 ANSI 有两种写法（真 ESC 与字面 `^[[`），
+  `sed -E 's/\x1b\[[0-9;]*m//g; s/\^\[\[[0-9;]*m//g'` 两条都要剥，再搜 `FAIL|AssertionError`，别被满屏 warning 淹没。
+- **确定性红**：如 `arcoPaletteVarSyntax`（`text-[rgb(var(--primary-6))]` 这类失效 UnoCSS 写法，3.0.18 实际由手机端底部导航带进来，
+  已改 `rgba(var(--primary-6),1)`）。要修，不能 rerun。
+- **flake**：如 `mermaidBlockPanZoom`、`EnterpriseServerCard`（并发时序）。**同一提交 x64 绿、arm64 红 = 先怀疑 flake**（3.0.18 实际发生）：
+  本地单跑 3 次全过 → `gh run rerun <id> --failed`（只重跑失败 job），别改产品代码、别重新 dispatch 整个 run。
+
+**在 WSL 里验真包（x64）**
+
+1. `dpkg -i`（root）装上后先证明包里有修复：`grep -c <独有字符串> "/opt/One Work/resources/app.asar"`（符号名不可靠，用独有字符串）。
+2. `env -u DISPLAY -u WAYLAND_DISPLAY -u XDG_SESSION_TYPE HOME=<真实目录> DREAM_PORT=<空闲端口> onework --webui &`，
+   轮询 `curl http://127.0.0.1:<port>/` 到 200；再读 `/proc/<pid>/cmdline` 确认被补成 headless、`environ` 里没有显示变量。
+3. 再测一次显式全参数写法，确认不会被重复重启。
+4. 收尾只杀自己那棵：`pkill -x onework`（**不要 `pkill -f`**，它会匹配并杀掉你自己那条 bash 命令行）。
+
+**测试环境的坑**
+
+- WSL 的 `/tmp` 随 VM 关闭清空：把测试 HOME 指到 `/tmp/...` 且目录没了，Electron 报 `Path must be absolute`（`configureAppDataProfile`），不是产品 bug；HOME 放 `/home/<user>/` 下。
+- 该 WSL 里 uid 999 的 `dreamcore` / `dreamcore-admin` 是企业版 QA docker 栈，不是自己起的，别杀。
+- Bash 工具会吞反斜杠：往 JS 里注入含 `\n` 的字符串用 Python + `chr(92)`，别在 heredoc 里写 `\\n`。
+- 后台命令通知里的 `exit code 0` 是外壳的，**必须读 output/log 文件**才知道成没成。
+- 检查 deb 内容的路径含空格（`/opt/One Work/…`），脚本里 `file`/`ls` 一律加引号，别用不带引号的 `$(ls …)`。
+- **x86 开发机无法真机运行 arm64 包**（WSL 里也没有 qemu-user）。arm64 实际只能验到这四层，别在文档/汇报里写成「已真机验证」：
+  ① 下载 sha512 = 清单；② `dpkg-deb -f` 的 `Architecture: arm64`；③ 主程序与内置 `dreamcore` 都是 `ELF … ARM aarch64`、manifest 的 `arch` 为 arm64；
+  ④ `app.asar` 里含修复代码的独有字符串。运行行为靠 x64 同代码的端到端验证外推；要真机验证需要一台 arm64 Linux。
+
+#### 1.3.2 macOS（Apple 芯片 arm64 + Intel x64）
+
+**两条腿的差别**
+
+| 项          | mac-arm64                                                         | mac-x64                                          |
+| ----------- | ----------------------------------------------------------------- | ------------------------------------------------ |
+| runner      | `macos-15`（arm）                                                 | **原生 Intel 的 `macos-15-intel`**，不再交叉构建 |
+| 3.0.18 时长 | 23 分钟（健康基线 12）                                            | 34 分钟（健康基线 16），一次成功                 |
+| 清单文件    | CI 产出 `latest-mac.yml`，**发布时改名为 `latest-arm64-mac.yml`** | `latest-mac.yml`（不改名）                       |
+| Mach-O      | `cputype` = `16777228`                                            | `cputype` = `16777223`                           |
+
+每架构 5 个对象：dmg / dmg.blockmap / zip / zip.blockmap / 清单。改名规则是 electron-updater 按 `${channel}-mac.yml` 拼清单名、
+arm64 的 channel 是 `latest-arm64` 决定的，`prepare-release-assets.sh` 已内置，别手改。
+
+**怎么走**
+
+1. **最先 dispatch、全程盯**（Mac 是唯一会连挂数小时的腿；3.0.14 两次失败都是事后一小时才发现）。`installers_only=false`。
+2. 下载：两架构并行，每个约 600 MB，公司网络对 gh 限速可低到 ~70 KB/s——用 `download-gh-artifact.sh`，按平台**并行**发起，别串行排队。
+3. **落地前必须核验「签名 + 公证」，CI 绿不算**：zip 里要有 `onework.app/Contents/_CodeSignature/CodeResources`（签名）和
+   `onework.app/Contents/CodeResources`（**公证票据**，缺它就是只签名没公证的包，**不许发布**）。Windows 上没法跑 codesign，用存在性核验：
+
+   ```python
+   import zipfile, glob
+   n = zipfile.ZipFile(glob.glob("*.zip")[0]).namelist()
+   print("签名:", any(x.endswith(".app/Contents/_CodeSignature/CodeResources") for x in n))
+   print("公证票据:", any(x.endswith(".app/Contents/CodeResources") for x in n))   # 必须是 True
+   ```
+
+   再读主程序 Mach-O 头的 `cputype`（见上表）确认架构没装反；asar 抽查从 zip 里解 `onework.app/Contents/Resources/app.asar`。
+
+4. 上传顺序：dmg / zip / blockmap 先、`latest*.yml` 最后；两个桶都写。
+
+**注意什么**
+
+| 症状 / 场景                                             | 真因 / 做法                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 两条 Mac 腿 Build 步**秒级 cancelled**                  | GitHub 下线了 `macos-14` 镜像（annotation：`config … is not supported`）。已换 `macos-15`。再遇到秒级失败**先看 annotation**，别猜代码；私有仓的 macOS 10 倍计费拦截也是几秒失败、steps 空，看 check-runs annotations                                                                                            |
+| mac-x64 卡在 `signing file=out/mac/onework.app`，无输出 | **钥匙串自动锁定**（`codesign→…→SSKey::getAcl→mach_msg` 在等无头机永远不会出现的授权弹窗）。已修（`a22c1e34`）：`set-keychain-settings -lut 21600` + 构建期间每 60 秒 unlock + 60 秒有界 warm-up 签名。完整记录见附录 B 的 §2.1.1                                                                                |
+| mac-x64 超过 25 分钟                                    | **3.0.18 订正**：25 分钟是「准备收口」的警戒线，**不是「立刻杀」的信号**。3.0.18 的 mac-x64 在警戒线告警后**未干预、未 rerun**，34 分钟自行完成（公证三连 + 产物票据双核验过）。再现 >25 分钟时先看 Apple 公证排队时长再定性；单次尝试上限 40 分钟，卡死会带 `[wd]` 采样栈诊断失败。**别调大超时、别盲目 rerun** |
+| 构建全绿、产物齐，但 `.app` 里没有公证票据              | `afterSign.js` 在签名校验不过 / Apple 凭据缺失时只打印 `Skipping`。已加闸门（`99bd3bd0`），日志里应依次出现 `[sign-evidence]` 的三连：`properly code signed` → `Starting notarization` → `Notarization completed successfully`；**判据永远是下载产物查 `Contents/CodeResources`**                                |
+| 签名成功但装机报「已损坏」                              | `IDENTITY` secret 只填证书 CN、**不带** `Developer ID Application:` 前缀；签名失败的兜底重试会产出假绿，验收只认三连                                                                                                                                                                                             |
+| 一条 Mac 腿反复失败                                     | **增量收口**：其余平台先发，这一条腿写好配方挂起。先发的批次**不要带那条腿的 `latest*.yml`**（根清单里它停在上一版，已装老用户不会被推一个不存在的包），官网对应的钉也留在上一版；补发时再写它的 `latest*.yml` 并切官网那一个钉（3.0.17 的 Intel Mac 就是这么补发的）                                            |
+| 超时被杀后看「最后 40 行」推算耗时                      | **错的**：转储里所有行的时间戳都是被杀那一刻。用 `gh api …/runs/<id>/jobs` 的时间戳对账                                                                                                                                                                                                                          |
+
+#### 1.3.3 Windows（x64）
+
+**怎么走**
+
+1. **3.0.18 走 CI 的 `windows-x64` 腿**（26 分钟，与另外四腿同时 dispatch）。CI 能出 Windows 包是 3.0.17 起的事——
+   `downloadBuilderToolset` 冷缓存首次下载会先往 stdout 打一行进度再写路径、脚本把整串当路径，本地热缓存永远不显现、CI 上 3/3 同因失败，
+   已修（`7e4208ba`，取 stdout 末行）。**本机出包依然可用**：`cd /d/dream/dream-ui && bun run build-win:x64`（约 20 分钟）。
+2. 产物只有 **`One-Work-<ver>-win-x64.exe` + `latest.yml`**（没有 blockmap / zip：安装包用 zip 载荷，不产 blockmap）。
+   CI 产物名 `windows-build-x64-<sha7>`，下载后放到 `windows-build-x64/` 子目录，否则 `prepare-release-assets.sh` 会报
+   `installer present without yml`（它按 `*/<platform>/*` 找清单，而下载脚本把制品拍平了）。
+3. **验收六件（全过才传）**，命令与背景见附录 A 的 S5：① sha512 与 `latest.yml` 对账（`openssl dgst -sha512 -binary <exe> | openssl base64 -A`）；
+   ② 版本资源 = 新版本；③ ACP 内嵌组件在包里且版本与 dream-core 常量逐字一致（附录 B §2.2，3.0.18 为 `codex-acp/1.1.2` + `claude-agent-acp/0.58.1`）；
+   ④ asar 抽查失效类名 0 处；⑤ 只能在打包版验的项（内置联网搜索可用、`bundled-dreamcore` 的 `sourceType` 是 release 且 `version` = 钉版、
+   内置技能数）；⑥ 「前端读后端返回值决定要不要弹框」的功能必须走真实点击路径。
+4. 上传 `exe`（只进版本目录）→ `latest.yml`（自动镜像到根）→ sidecar，两个桶；官网切 `platformVersions.win` + `platformSizes.windows`。
+
+**注意什么**
+
+| 场景                              | 注意                                                                                                                                                                                                                                                                   |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authenticode                      | **不签，是既定决策**：`NotSigned`、SmartScreen「未知发布者」与所有历史版本一致，是预期状态不是缺陷；发版验收不含 Authenticode，**别再提**                                                                                                                              |
+| 本机出包前                        | 先确认没有 electron / dreamcore 的 dev 进程占文件，**杀按 PID 不按名字**；`out/` 被占（构建 EPERM）时用 Restart Manager 查谁锁着，别凭「有文件监视器」猜；绕开用 `ONE_BUILD_OUT_DIR=<别的目录>`                                                                        |
+| **打包产物验证会碰真实 userData** | 设 `APPDATA` 隔离不了（Electron 走 `SHGetFolderPath`），应用照样打开真实的 `%APPDATA%\One Work`。验证前备份该目录，或接受「就是在生产数据上验」并只做只读观察；**清理只杀自己那棵进程树**（按启动时间认领根 PID），机器上常年有用户自己在跑的实例                      |
+| 后端启动慢                        | 首屏后还要约 40 秒才 `Server listening`，探测太早会看到一串 `ERR_CONNECTION_REFUSED`，是时序不是故障；判据看 `%APPDATA%\One Work\logs\…\*.dreamcore.log`                                                                                                               |
+| 打包版无法用 CDP 驱动 UI          | `app.isPackaged` 下应用调试端口被无条件拒绝（安全设计，别再试）。等效替代：`grep -a` `app.asar` / 包内 dreamcore；真实点击路径只能装到干净机器手动走。`bunx asar extract` 在本机会解包不完整，直接 `grep -a app.asar` 即可                                             |
+| 安装耗时                          | 默认 `useZip: true` + `differentialPackage: false`（x64 静默安装约 109 秒，LZMA 约 238–334 秒）。**量安装耗时必须真装一次**，`7z t` 不落盘、会低估 8–12 倍                                                                                                             |
+| 三个安装目录共用一个 appId        | `…\Programs\1onecode`、`One Work`、`onework` 共用同一个卸载注册表键，前两个是孤儿；`appId: com.huanle.oneone.ai` **冻结，永不改**（改了老用户自动更新全断）。别在扫目录时顺手清注册表（`installer-repair-heal.nsh` 已负责）。用户数据在 `%APPDATA%\One Work`，不受影响 |
+| 预检里的「未提交改动」            | 已跟踪文件被删除也算（见 §1.2）；工作区未跟踪的 `.tmp-*`、`C：Users…release-assets-*` 目录预检忽略，不用清                                                                                                                                                             |
+| `python3`                         | Windows 上是 Store 占位符，静默无输出，用 `python`；这个 shell 的 `ls` 带 `-F`，文件名后会多个 `*`，拼 URL 会得到假 404                                                                                                                                                |
+
+### 1.4 同版本号覆盖补发（3.0.18 的 Linux headless 修复，2026-11-16）
+
+3.0.18 发出后发现 Linux 无桌面启动有 bug，修复后**没有升版本号**，直接重打 linux-x64 / linux-arm64 并覆盖线上两个桶的同名文件。
+这类操作的规矩：
+
+- **先想清楚代价**：同版本号 = 清单 sha512 / 大小变了但版本不变 → **已装用户不会收到更新**，只有新下载的人是新包。要让存量用户拿到修复必须升版本发版。
+- **覆盖前备份**线上旧清单（两个桶、版本目录和根各一份）和旧安装包；`publish-cos-release-asset.sh` 先传安装包、**最后**传清单。
+- 脚本 `set -e`：第一个文件失败就整体停，两个桶都没被改，可安全重跑。
+- **覆盖前先核对新包内置的 dreamcore 版本 = 线上同版本号其他平台/旧包的版本**：若 main 在发版后升过 `dreamcoreVersion`，新包会悄悄带上更新的后端，
+  和线上 Windows/Mac 的同版本号不一致。查法：`dpkg-deb --fsys-tarfile <deb> | tar -x --wildcards './opt/One Work/resources/bundled-dreamcore/*/manifest.json'`
+  读 `version`，与旧 deb 和 `package.json` 的 `dreamcoreVersion` 三者比对（3.0.18 都是 v0.1.104，一致才覆盖）。
+- **别漏另一个架构**：x64 修了 arm64 仍是旧包，要么一起重打，要么明确告知（3.0.18 两个都重打了）。
+- 官网链接 URL 不变、`platformVersions`/`platformSizes` 不用动（大小 ÷ 1048576 取整没变就不用重部署）；终验只看：从公网**重新下载**两个桶里的包，
+  sha512 = 清单 = 新构建，别只看「上传成功」。
+- **新桶 COS 凭据**：静态 key 是 `feishu.txt` 里「用户名 zhaogao」下面那一对 SecretId/SecretKey（末尾第二对）；
+  「OSS存储桶：onework-1521070673」标题下面那一对对新桶是 `InvalidAccessKeyId`。写之前先用该 key `aws s3 ls s3://onework-1521070673/releases/<ver>/` 探一下。
+  旧桶仍走 `fetch-cos-credentials.js --format sh` 换临时凭据。
+
+### 1.5 3.0.18 留下的未决事项（截至 2026-11-16，下版发版前先看一眼）
+
+1. 企业版没随这批发（企业 1.0.17 已于 11-13 发，含 core v0.1.103）；core v0.1.104 里「渠道健康检查返回上游模型列表」属企业侧，随下一轮企业镜像生效。
+2. `publish-cos` workflow 的步骤日志 blob 404 未修，真实上传和回读校验步骤没在真发时跑过，仍走手动路径。
+3. 官网 DNS 仍指旧服务器，新服务器迁移待用户安排。
+4. 已装 3.0.18 的 Linux 用户拿不到 headless 修复（同版本号覆盖，见 §1.4），要等下次升版本发版。
+5. mac-x64 时长 34 分钟超基线一倍但一次成功——下版再现 >25 分钟，先看 Apple 公证排队时长再定性，勿直接判卡死。
+
+---
+
+## 第二部分：历史经验与踩坑（原文完整保留）
+
+> **附录说明**
+>
+> - 下面是 3.0.4 – 3.0.17 时期提炼的手册原文，**一条未删**，只改了三处二级标题的名字（原「第一部分 / 第二部分 / 第三部分」变成附录 A / B / C）。
+>   正文里的 S0–S7、§2.x、「§3」等编号和交叉引用沿用原文，在附录内部依然成立。
+> - Linux 相关的新内容（原 §2.1.2）已并入第一部分 §1.3.1 / §1.4，附录 B 里只留指针。
+> - **与第一部分冲突、以第一部分为准的几处**：
+>   1. 附录 A 的 S4 写「Windows 本机」出包——3.0.17 起 CI 的 `windows-x64` 腿也能出，**3.0.18 就是 CI 出的**（本机仍可用）。
+>   2. 附录 A 的 S4 / 附录 B 的 §2.1 写「任何一条 Mac 腿超过 25 分钟就是卡死」——3.0.18 的 mac-x64 跑了 34 分钟自行完成，
+>      订正为「25 分钟是收口警戒线，不是立刻杀的信号」。
+>   3. 附录 A 的 S4 标题「CI 四路」、S7 的「13 个对象 / 三份根清单」是 3.0.14 以前的口径；3.0.13 起是**全平台五路 + COS 17 对象 + 五份根清单**。
+>   4. 附录 A 标题里「3.0.4 → 3.0.5 → 3.0.6 三次成功发版提炼」是它当年的依据，现行依据是 3.0.18（第一部分）。
+> - 3.0.18 发版前夜的交接话术与「上周（11-01 ~ 11-13）17 个坑」的逐条表格在
+>   [release-handoff-3.0.18-for-glm.zh-CN.md](./release-handoff-3.0.18-for-glm.zh-CN.md)，同样保留。
+
+### 旧文首说明（原文）
+
+> 2026-09-19 按 **最近三次成功发版（3.0.4 / 3.0.5 / 3.0.6）** 重构：第一部分就是当时的标准流程；第二部分是仍然有效的坑的快速索引；
+> 1oneCore / 1oneUI 时代的历史教训压缩成第三部分的一张表，细节在文末的 session 文档里。
+>
+> **版本坐标（2026-10-24）**：最新已发包 **3.0.14**（钉 dreamcore v0.1.98，全平台 Windows + macOS×2 + Linux×2）。S0–S7 流程在 3.0.14 上复跑通过；
+> 本版新增的坑已并入 S0/S2/S4/S5/§2.1/§2.8/§2.9。
+>
+> **开局先读最新一篇发版记录**：打包范围、对象数、tag 惯例会演进——3.0.13 起是全平台五路 + COS 17 对象 + 五份根清单，
+> 按旧记忆的「三路打包」走会漏腿（3.0.14 实际发生，Linux 晚 dispatch 20 分钟）。
+>
+> 权威的"当前发布状态"永远用实时命令查（附录 D），别信任何文档里写死的时间点快照。
+
+## 附录 A：旧版标准流程 S0–S7（3.0.4 → 3.0.14 时期提炼，原文保留）
 
 ### S0. 预检（发版窗口打开前，2 分钟）
 
@@ -199,7 +473,7 @@ one.4 / one.5 / 0.1.72 三版产物集完全一致。**照技能走会在这一�
 ### S4. 全平台并行打包（Windows 本机 + CI 四路：macOS×2 / Linux×2）
 
 ```bash
-# Windows 本机（~20 min；先确认无 electron/dreamcore dev 进程占文件，杀按 PID）
+# Windows 本机（~20 min；先确认无 electron/dreamcore dev 进程占文件，杀按 PID）   ← 3.0.18 订正：也可走 CI 的 windows-x64 腿（26 分钟），见第一部分 §1.3.3
 cd /d/dream/dream-ui && bun run build-win:x64
 
 # Mac CI ×2（~35 min；installers_only=false 是默认，别手滑传 true）
@@ -226,7 +500,7 @@ Mac CI 前本地把四道 gate 跑绿（`bun run format:check` / `bunx tsc --noE
 > - `macos-14` 镜像已被 GitHub 下线，五处 workflow 都换成了 `macos-15`；
 >   **mac-x64 腿跑在原生 Intel 的 `macos-15-intel` 上**（`build-manual.yml` 里的 `os`），不再交叉构建。
 > - 健康基线：mac-arm64 约 12 分钟、mac-x64 约 16 分钟（含公证）、Windows 约 15 分钟、
->   Linux 4~10 分钟。**任何一条 Mac 腿超过 25 分钟就是卡死，别调大超时、别盲目 rerun**，见 §2.1.1。
+>   Linux 4~10 分钟。**任何一条 Mac 腿超过 25 分钟就是卡死，别调大超时、别盲目 rerun**，见 §2.1.1。（**3.0.18 订正**：mac-x64 跑了 34 分钟自行完成；25 分钟是收口警戒线而不是立刻杀的信号，见第一部分 §1.3.2。）
 > - mac-x64 现在是单次尝试、上限 40 分钟（`_build-reusable.yml`），卡死了 40 分钟就带着诊断信息失败。
 > - Windows 腿的 CI 构建 3.0.17 才第一次成功（7za 工具集下载往 stdout 打进度行、污染了路径，
 >   `7e4208ba` 已修）；之前 Windows 一直在本机出包，现在 CI 也能出。
@@ -385,7 +659,7 @@ EOF
 
 ---
 
-## 第二部分：仍然有效的坑（快速索引）
+## 附录 B：仍然有效的坑（快速索引，§2.x）
 
 ### 2.1 Mac CI（build-manual.yml）
 
@@ -472,78 +746,7 @@ mac-x64 的钥匙串准备段（`a22c1e34`）现在做三件事：
 
 ### 2.1.2 Linux（deb）打包、无桌面运行与单平台补发（2026-11-16，3.0.18）
 
-**产物事实**
-
-- 只有 `deb`（`electron-builder.yml` 的 `linux.target`），没有 AppImage / rpm，只覆盖 Debian/Ubuntu 系。
-  包名 `1one-claudecode`，装到 `/opt/One Work`，`/usr/bin/onework`（update-alternatives 链接）。
-  依赖只有 gtk3 / nss / libxss / libsecret 等库，**不依赖桌面环境**。
-- 文件名：x64 是 `One-Work-<ver>-linux-amd64.deb`（**amd64，不是 x64**），arm64 是 `…-linux-arm64.deb`；
-  清单 `latest-linux.yml` / `latest-linux-arm64.yml`。CI 产物名 `linux-build-x64-<sha7>` / `linux-build-arm64-<sha7>`，
-  只含 deb + 清单 + builder-debug.yml（没有 blockmap）。
-- 触发：`gh workflow run build-manual.yml -R gaogg521/dream-ui -f platform=linux-x64|linux-arm64 -f installers_only=false`；
-  下载用 `scripts/download-gh-artifact.sh`（带 size + sha256 校验），别裸 `gh run download`。
-
-**无桌面服务器：`onework --webui`**
-
-| 症状                                                                                                                | 病根 / 解法                                                                                                                                                                                                                                                      |
-| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 无 DISPLAY 时 `onework --webui` 直接退出，日志 `Missing X server or $DISPLAY` / `The platform failed to initialize` | Chromium 在主进程 JS **之前**就选好 Ozone 平台，`configureChromium.ts` 里 JS 的 `appendSwitch('ozone-platform','headless')` **从来没生效**（实测主进程 JS 先跑、X 报错随后）。只有真实命令行参数管用                                                             |
-| 修复（`57a72542`）                                                                                                  | `utils/headlessRelaunch.ts`：Linux + `--webui`/`--resetpass` + 命令行无 `--ozone-platform` → `app.relaunch(+ --ozone-platform=headless --disable-gpu)` + `app.exit(0)`，且放在 `configureAppDataProfile` **之前**（一次性进程不碰 userData）。已带该参数则不重启 |
-| 副作用                                                                                                              | 终端里敲 `onework --webui`，第一个进程立刻退出、真进程在后台起；**systemd 托管请直接写全参数**（`onework --webui --ozone-platform=headless --disable-gpu`，不会触发重启）                                                                                        |
-
-给用户的口径：有桌面 → 下载 deb 双击/`sudo apt install ./One-Work-*.deb` 后从应用菜单启动；无桌面 → 装 deb 后
-`onework --webui`（3.0.18 的**旧包**必须写全 `--ozone-platform=headless --disable-gpu`），浏览器访问
-`http://<ip>:25808`（`DREAM_PORT` 可改）。首启没有可见初始密码，用 `onework --resetpass` 或后端
-`POST /api/webui/reset-password` 取新密码。
-
-**CI：Code Quality 会拦住全部平台的构建**
-
-- `build-manual.yml` 先跑 Code Quality（含**全量** vitest），红了所有平台 Build 全部 skipped、没有产物。
-  pre-push hook 只跑 `--changed`，所以别处引入的全局测试失败（如 `arcoPaletteVarSyntax`：`text-[rgb(var(--primary-6))]`
-  这类失效 UnoCSS 写法）只会在 dispatch 之后才红，白等 5 分钟。**dispatch 前本地先 `bunx vitest run tests/unit/renderer/arcoPaletteVarSyntax.test.ts` 之类
-  扫一遍全局约束测试，或直接本地全量跑**；红了读 `gh run view <id> --log-failed`，先剥 ANSI 再搜 `FAIL|AssertionError`，别被 warning 淹没。
-  注意日志里 ANSI 有两种写法（真 ESC 与字面 `^[[`），`sed -E 's/\x1b\[[0-9;]*m//g; s/\^\[\[[0-9;]*m//g'` 两条都要剥，否则 grep 不到。
-- **同一提交 x64 绿、arm64 红 = 先怀疑 flake**（3.0.18 实际发生：arm64 挂在 `mermaidBlockPanZoom`，同提交 x64 全绿）。
-  判法：本地单跑 3 次全过 → `gh run rerun <id> --failed`（只重跑失败 job），别改产品代码、别重新 dispatch 整个 run。
-  失败的测试若是 `arcoPaletteVarSyntax` 这类确定性断言则是真红，要修。
-
-**同版本号覆盖上线（没升版本，只修包）**
-
-- 同版本号 = 清单 sha512/大小变了但版本不变 → **已装用户不会收到更新**，只有新下载的人是新包。要让存量用户拿到修复必须升版本发版。
-- 覆盖前先备份线上旧清单（两个桶、版本目录和根各一份）和旧 deb；`publish-cos-release-asset.sh` 先传 deb、**最后**传清单。
-- 脚本 `set -e`：第一个文件失败就整体停，两个桶都没被改，可安全重跑。
-- 官网链接 URL 不变、`platformVersions`/`platformSizes` 不用动（大小 ÷ 1048576 取整没变就不用重部署）；
-  只验：线上 `.deb` 重新下载后 sha512 = 清单 = 新构建。
-- 单平台补发别漏另一个架构：x64 修了 arm64 仍是旧包，要么一起重打，要么明确告知（3.0.18 两个架构都重打并覆盖了）。
-- **覆盖前先核对新包内置的 dreamcore 版本 = 线上同版本号其他平台/旧包的版本**：同版本号覆盖时，若 main 在发版后升过 `dreamcoreVersion` 钉版，
-  新包会悄悄带上更新的后端，和线上 Windows/Mac 的同版本号不一致。查法：
-  `dpkg-deb --fsys-tarfile <deb> | tar -x --wildcards './opt/One Work/resources/bundled-dreamcore/*/manifest.json'` 读 `version`，
-  与旧 deb 和 `package.json` 的 `dreamcoreVersion` 三者比对（3.0.18 都是 v0.1.104，一致才覆盖）。
-
-**COS 凭据（新桶）**
-
-- 新桶 `onework-1521070673` 的静态 key 是 `feishu.txt` 里 **「用户名 zhaogao」下面那一对** SecretId/SecretKey（末尾第二对）；
-  「OSS存储桶：onework-1521070673」标题下面那一对会报 `InvalidAccessKeyId`。写之前先用该 key `aws s3 ls s3://onework-1521070673/releases/<ver>/` 探一下。
-  旧桶仍走 `fetch-cos-credentials.js --format sh` 换 STS（见 §2.3）。
-
-**在 WSL 里验真包的套路（x64）**
-
-1. `dpkg -i`（root）装上后先证明包里有修复：`grep -c <独有字符串> "/opt/One Work/resources/app.asar"`（asar 内部是明文，符号名不可靠，用独有字符串）。
-2. `env -u DISPLAY -u WAYLAND_DISPLAY -u XDG_SESSION_TYPE HOME=<真实目录> DREAM_PORT=<空闲端口> onework --webui &`，
-   轮询 `curl http://127.0.0.1:<port>/` 到 200；再读 `/proc/<pid>/cmdline` 确认被补成 headless、`environ` 里没有显示变量。
-3. 再测一次显式全参数写法，确认不会被重复重启。
-4. 收尾只杀自己那棵：`pkill -x onework`（**不要 `pkill -f`**，它会匹配并杀掉你自己那条 bash 命令行）。
-
-**测试环境的坑**
-
-- WSL 的 `/tmp` 随 VM 关闭清空：把测试 HOME 指到 `/tmp/...` 且目录没了，Electron 报 `Path must be absolute`（`configureAppDataProfile`），不是产品 bug；HOME 放 `/home/<user>/` 下。
-- 该 WSL 里 uid 999 的 `dreamcore` / `dreamcore-admin` 是企业版 QA docker 栈，不是自己起的，别杀。
-- Bash 工具会吞反斜杠：往 JS 里注入含 `\n` 的字符串用 Python + `chr(92)`，别在 heredoc 里写 `\\n`。
-- 后台命令通知里的 `exit code 0` 是外壳的，**必须读 output/log 文件**才知道成没成。
-- x86 开发机**无法真机运行 arm64 包**（WSL 里也没有 qemu-user）。3.0.18 arm64 实际只验到这四层，别在文档/汇报里写成「已真机验证」：
-  ① 下载 sha512 = 清单；② `dpkg-deb -f` 的 `Architecture: arm64`；③ 主程序与内置 `dreamcore` 都是 `ELF … ARM aarch64`、manifest 的 `arch` 为 arm64；
-  ④ `app.asar` 里含修复代码的独有字符串。运行行为靠 x64 同代码的端到端验证外推；要真机验证需要一台 arm64 Linux（或装 `qemu-user-static` + arm64 根文件系统）。
-- 检查 deb 内容的路径含空格（`/opt/One Work/…`），脚本里 `file`/`ls` 一律加引号，别用不带引号的 `$(ls …)`。
+内容已并入第一部分：**§1.3.1 Linux**（产物事实、headless 启动、CI、WSL 验真包、测试环境的坑、arm64 只能验到哪一层）和 **§1.4 同版本号覆盖补发**（覆盖的代价、备份、dreamcore 钉版核对、新桶凭据）。
 
 ### 2.2 ACP 内嵌组件 —— 每次发版必查
 
@@ -644,7 +847,7 @@ SmartScreen"未知发布者"，**与线上所有历史版本一致，是预期�
 
 ---
 
-## 第三部分：历史教训（1oneCore / 1oneUI 时代，一句话版）
+## 附录 C：历史教训（1oneCore / 1oneUI 时代，一句话版）
 
 | 事故                       | 一句话教训                                                                                |
 | -------------------------- | ----------------------------------------------------------------------------------------- |
@@ -662,7 +865,9 @@ SmartScreen"未知发布者"，**与线上所有历史版本一致，是预期�
 
 ---
 
-## 实时核实命令
+## 附录 D：实时核实命令与相关文档
+
+### 实时核实命令
 
 ```bash
 gh release view v<core-ver> --repo gaogg521/dream-core --json assets --jq '.assets[].name'
@@ -670,7 +875,7 @@ gh run list --repo gaogg521/dream-ui --workflow=build-manual.yml --limit 4 --jso
 curl https://1onework-1251001122.cos.ap-shanghai.myqcloud.com/releases/latest.yml
 ```
 
-## 相关文档
+### 相关文档
 
 - **3.0.18 交接话术 + 上周（11-01~11-13）踩坑汇总**（给接手发版的 Agent 直接贴）：[`release-handoff-3.0.18-for-glm.zh-CN.md`](release-handoff-3.0.18-for-glm.zh-CN.md)
 - **3.0.14 发版全记录**（mac x64 codesign 连环挂、钉版三连追、多会话并行）：[`dream-en/docs/release-record-2026-10-24-3.0.14.zh-CN.md`](../../../../dream-en/docs/release-record-2026-10-24-3.0.14.zh-CN.md)
