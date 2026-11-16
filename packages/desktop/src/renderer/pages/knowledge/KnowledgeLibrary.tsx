@@ -1,7 +1,7 @@
 import { ipcBridge } from '@/common';
 import { isNativeDialogAvailable } from '@/common/adapter/ipcBridge';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Dropdown, Input, Message, Menu, Select, Table, Tabs, Tag } from '@arco-design/web-react';
+import { Button, Dropdown, Input, Message, Menu, Select, Table, Tabs, Tag, Tooltip } from '@arco-design/web-react';
 import {
   Add,
   BookOpen,
@@ -558,29 +558,34 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
       <main className={`${styles.main} ${documentView ? styles.documentMain : ''}`}>
         {documentView ? (
           <>
-            <Button
-              type='text'
-              className={styles.documentSidebarToggle}
-              onClick={sidebar.toggle}
-              aria-label={label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}
-              aria-expanded={!sidebar.collapsed}
-            >
-              <BookOpen />
-            </Button>
+            <Tooltip content={label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}>
+              <Button
+                type='text'
+                className={styles.documentSidebarToggle}
+                onClick={sidebar.toggle}
+                aria-label={label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}
+                aria-expanded={!sidebar.collapsed}
+              >
+                <BookOpen />
+              </Button>
+            </Tooltip>
             {documentView}
           </>
         ) : (
           <>
             <header className={styles.header}>
               <div className={styles.heading}>
-                <Button
-                  type='text'
-                  className={styles.sidebarToggle}
-                  onClick={sidebar.toggle}
-                  aria-label={label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}
-                  aria-expanded={!sidebar.collapsed}
-                  icon={<BookOpen />}
-                />
+                {/* The directory folds away in a narrow window; without a hint this icon does not say it brings it back. */}
+                <Tooltip content={label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}>
+                  <Button
+                    type='text'
+                    className={styles.sidebarToggle}
+                    onClick={sidebar.toggle}
+                    aria-label={label(sidebar.collapsed ? 'expandSidebar' : 'collapseSidebar')}
+                    aria-expanded={!sidebar.collapsed}
+                    icon={<BookOpen />}
+                  />
+                </Tooltip>
                 <h1>{libraries.find((library) => library.id === libraryId)?.name ?? label(view)}</h1>
               </div>
               <Dropdown droplist={menu} trigger='click'>

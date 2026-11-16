@@ -145,6 +145,20 @@ describe('Knowledge library browsing', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+  it('names the directory toggle on hover, so a folded directory can be found again', async () => {
+    setup(true);
+    const toggle = document.querySelector('header button[aria-expanded]') as HTMLElement;
+    expect(toggle).toBeTruthy();
+    fireEvent.mouseEnter(toggle);
+    const tip = await waitFor(() => {
+      const el = document.querySelector('.arco-tooltip-content');
+      expect(el).toBeTruthy();
+      return el as HTMLElement;
+    });
+    // Open directory -> the hint says it will be collapsed; the same control says "expand" once folded.
+    expect(tip.textContent).toBe('collapseSidebar');
+    expect(toggle.getAttribute('aria-label')).toBe('collapseSidebar');
+  });
   it('shows child folders instead of an empty document table in a parent directory', () => {
     const parent: RagLibraryEntry = {
       id: 'parent',
