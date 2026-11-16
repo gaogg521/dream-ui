@@ -1047,11 +1047,9 @@ try {
   // 6. Prepare hub resources (index.json + extension zips for offline fallback)
   execSync('node scripts/prepareHubResources.js', { stdio: 'inherit', env: process.env });
 
-  // 6b. Prepare frpc (remote-access tunnel client) for the target platform/arch
-  execSync(`node scripts/prepareFrpc.mjs --platform ${process.platform} --arch ${targetArch}`, {
-    stdio: 'inherit',
-    env: process.env,
-  });
+  // frpc (remote access) is intentionally not prepared or packaged here: it is downloaded on
+  // demand after the user agrees. scripts/prepareFrpc.mjs now only feeds dev checkouts and the
+  // hosted copies (see its header).
 
   // 6. 运行 electron-builder 生成分发包（DMG/ZIP/EXE等）
   // Run electron-builder to create distributables (DMG/ZIP/EXE, etc.)

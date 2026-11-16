@@ -19,8 +19,11 @@ export type WebuiTunnelController = {
   /** The user's choice (may be on while the WebUI itself is off: it then starts with the WebUI). */
   enabled: boolean;
   busy: boolean;
-  /** Resolves false when the main process refused or failed. */
-  setEnabled: (next: boolean) => Promise<boolean>;
+  /**
+   * Resolves false when the main process refused or failed. `installConsent` means the user agreed
+   * to download the frpc component, which is not part of the installer.
+   */
+  setEnabled: (next: boolean, installConsent?: boolean) => Promise<boolean>;
   resetAddress: () => Promise<boolean>;
   /** Public origin, only while it is actually reachable. */
   reachableUrl: string | undefined;
@@ -48,12 +51,12 @@ export function useWebuiTunnel(): WebuiTunnelController {
     };
   }, []);
 
-  const setEnabled = useCallback(async (next: boolean): Promise<boolean> => {
+  const setEnabled = useCallback(async (next: boolean, installConsent = false): Promise<boolean> => {
     setBusy(true);
     try {
       await configService.set(DESKTOP_WEBUI_REMOTE_TUNNEL_KEY, next);
       setEnabledState(next);
-      setStatus(await webui.setTunnel.invoke({ enabled: next }));
+      setStatus(await webui.setTunnel.invoke({ enabled: next, installConsent }));
       return true;
     } catch (error) {
       console.error('[WebuiTunnel] toggle failed:', error);

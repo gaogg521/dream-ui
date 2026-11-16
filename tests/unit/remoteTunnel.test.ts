@@ -106,11 +106,22 @@ describe('RemoteTunnel', () => {
   let timers: Array<{ fn: () => void; ms: number }>;
   let registerCalls: number;
 
-  const make = (opts: { frpc?: string | null; failRegister?: boolean } = {}): RemoteTunnel =>
+  let installed: string | null;
+  let installCalls: number;
+
+  const make = (
+    opts: { frpc?: string | null; failRegister?: boolean; installError?: { code: string } } = {}
+  ): RemoteTunnel =>
     new RemoteTunnel({
       dataDir: dir,
       brokerUrl: () => 'https://broker.test/trial-broker/',
-      resolveFrpc: () => (opts.frpc === undefined ? '/bin/frpc' : opts.frpc),
+      resolveFrpc: () => installed ?? (opts.frpc === undefined ? '/bin/frpc' : opts.frpc),
+      installFrpc: async () => {
+        installCalls++;
+        if (opts.installError) throw Object.assign(new Error('install'), opts.installError);
+        installed = '/data/bin/frpc';
+        return installed;
+      },
       relayToken: 'relay-secret',
       spawn: (() => {
         const c = new FakeChild();
@@ -145,6 +156,8 @@ describe('RemoteTunnel', () => {
     statuses = [];
     timers = [];
     registerCalls = 0;
+    installed = null;
+    installCalls = 0;
   });
   afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
 
@@ -218,11 +231,57 @@ describe('RemoteTunnel', () => {
     expect(children).toHaveLength(2);
   });
 
-  it('reports no_binary without trying to register', async () => {
+  it('reports needs_install, without downloading or registering, until the user has agreed', async () => {
     const t = make({ frpc: null });
     await t.start(25808);
-    expect(t.getStatus()).toEqual({ state: 'error', error: 'no_binary' });
+    expect(t.getStatus()).toEqual({ state: 'error', error: 'needs_install', url: undefined });
+    expect(installCalls).toBe(0);
     expect(registerCalls).toBe(0);
+  });
+
+  it('downloads the component once the user has agreed, then registers and launches', async () => {
+    const t = make({ frpc: null });
+    await t.start(25808, { allowInstall: true });
+    expect(installCalls).toBe(1);
+    expect(statuses.map((s) => s.state)).toContain('installing');
+    expect(registerCalls).toBe(1);
+    expect(children).toHaveLength(1);
+    expect(t.getStatus().state).toBe('connecting');
+  });
+
+  it('does not download again when the component is already there', async () => {
+    const t = make();
+    await t.start(25808, { allowInstall: true });
+    expect(installCalls).toBe(0);
+  });
+
+  it.each([
+    ['blocked', 'blocked'],
+    ['download_failed', 'download_failed'],
+    ['something_else', 'download_failed'],
+  ])('maps an install failure %s to %s and neither registers nor retries on its own', async (code, expected) => {
+    const t = make({ frpc: null, installError: { code } });
+    await t.start(25808, { allowInstall: true });
+    expect(t.getStatus()).toMatchObject({ state: 'error', error: expected });
+    expect(registerCalls).toBe(0);
+    expect(timers).toHaveLength(0);
+  });
+
+  it('reports blocked, and stops, when the OS refuses to start frpc', async () => {
+    const t = make();
+    await t.start(25808);
+    children[0].emit('error', Object.assign(new Error('spawn UNKNOWN'), { code: 'UNKNOWN' }));
+    expect(t.getStatus()).toMatchObject({ state: 'error', error: 'blocked' });
+    // A refused start never produces an exit event, and must not be retried in a loop.
+    children[0].emit('exit', 1);
+    expect(timers).toHaveLength(0);
+  });
+
+  it('ignores an error event that is not a refusal to start', async () => {
+    const t = make();
+    await t.start(25808);
+    children[0].emit('error', Object.assign(new Error('write EPIPE'), { code: 'EPIPE' }));
+    expect(t.getStatus().state).toBe('connecting');
   });
 
   it('reports register_failed and retries later when the broker is unreachable', async () => {

@@ -1,6 +1,13 @@
 /**
  * Prepare the pinned frpc binary used by "remote access" (phone -> own desktop).
  *
+ * NOT part of packaging any more: antivirus engines flag every frp build, so the installer no
+ * longer carries it and the app downloads it after the user agrees. This script now serves two
+ * purposes: (1) a dev checkout runs it once so `resources/frpc` is found without a download, and
+ * (2) when bumping VERSION, it produces the raw binaries to host under
+ * `components/frpc/<version>/<platform>-<arch>/` on both COS buckets; the SHA-256 of each raw
+ * binary then goes into remoteTunnel/frpcComponent.ts (FRPC_BINARY_SHA256).
+ *
  * Downloads the official frp release for the target platform, verifies it
  * against the pinned SHA-256, and extracts only `frpc` into
  * resources/frpc/<platform>-<arch>/ . Packaged apps read it from

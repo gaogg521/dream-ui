@@ -212,10 +212,8 @@ extraResources:
       - '!**/managed-resources/acp/**/node_modules/**/*.d.cts'
   - from: resources/hub
     to: hub
-  # frpc for "remote access" (phone -> own desktop), per platform/arch,
-  # prepared by scripts/prepareFrpc.mjs
-  - from: resources/frpc
-    to: frpc
+  # frpc ("remote access") is deliberately NOT packaged: antivirus engines flag it, so the app
+  # downloads it after the user agrees (see remoteTunnel/frpcComponent.ts).
   - from: resources/offline-office
     to: offline-office
 win:

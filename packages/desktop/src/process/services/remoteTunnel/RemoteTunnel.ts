@@ -13,6 +13,7 @@
 import type { ChildProcess, SpawnOptions } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { isBlockedFsError } from './frpcComponent';
 import {
   buildFrpcConfig,
   classifyFrpcLine,
@@ -22,14 +23,26 @@ import {
   type TunnelCredentials,
 } from './frpcConfig';
 
-export type TunnelState = 'off' | 'connecting' | 'connected' | 'error';
+export type TunnelState = 'off' | 'installing' | 'connecting' | 'connected' | 'error';
 
 export type TunnelStatus = {
   state: TunnelState;
   /** Public https origin, present once credentials exist (even while reconnecting). */
   url?: string;
-  /** Short machine-readable reason when `state === 'error'`. */
-  error?: 'no_binary' | 'register_failed' | 'rejected' | 'spawn_failed';
+  /**
+   * Short machine-readable reason when `state === 'error'`:
+   * - `needs_install`: frpc is not on this machine and the user has not agreed to download it yet
+   * - `download_failed`: the download did not deliver a valid binary
+   * - `blocked`: the binary was removed or refused to run (typically antivirus)
+   */
+  error?: 'needs_install' | 'download_failed' | 'blocked' | 'register_failed' | 'rejected' | 'spawn_failed';
+  /** Whether frpc is already on this machine; filled in by the process-wide wrapper, not the supervisor. */
+  componentReady?: boolean;
+};
+
+export type StartOptions = {
+  /** The user agreed to download frpc if it is missing. Without it a missing frpc is only reported. */
+  allowInstall?: boolean;
 };
 
 export type RemoteTunnelDeps = {
@@ -37,6 +50,8 @@ export type RemoteTunnelDeps = {
   dataDir: string;
   brokerUrl: () => string;
   resolveFrpc: () => string | null;
+  /** Download frpc into place. Throws an error carrying `code: 'download_failed' | 'blocked'`. */
+  installFrpc?: () => Promise<string>;
   /** Per-process secret stamped on relayed requests so web-host can trust the visitor's address. */
   relayToken: string;
   spawn: (command: string, args: string[], options: SpawnOptions) => ChildProcess;
@@ -61,6 +76,7 @@ export class RemoteTunnel {
   private restartTimer: unknown = null;
   private reregistered = false;
   private starting: Promise<void> | null = null;
+  private allowInstall = false;
 
   constructor(private readonly deps: RemoteTunnelDeps) {}
 
@@ -69,9 +85,10 @@ export class RemoteTunnel {
   }
 
   /** Start (or restart against a new local port). Resolves once frpc is launched, not once connected. */
-  async start(localPort: number): Promise<void> {
+  async start(localPort: number, options: StartOptions = {}): Promise<void> {
     if (this.wanted && this.localPort === localPort && this.child) return;
     await this.stop();
+    this.allowInstall = options.allowInstall === true;
     this.wanted = true;
     this.localPort = localPort;
     this.attempt = 0;
@@ -108,7 +125,7 @@ export class RemoteTunnel {
     this.creds = null;
     fs.rmSync(path.join(this.deps.dataDir, CREDS_FILE), { force: true });
     this.setStatus({ state: 'off' });
-    if (wasWanted) await this.start(port);
+    if (wasWanted) await this.start(port, { allowInstall: this.allowInstall });
   }
 
   private log(message: string): void {
@@ -152,10 +169,23 @@ export class RemoteTunnel {
 
   private async launch(): Promise<void> {
     if (!this.wanted) return;
-    const frpc = this.deps.resolveFrpc();
+    let frpc = this.deps.resolveFrpc();
     if (!frpc) {
-      this.setStatus({ state: 'error', error: 'no_binary' });
-      return;
+      if (!this.allowInstall || !this.deps.installFrpc) {
+        this.setStatus({ state: 'error', error: 'needs_install', url: this.creds?.publicUrl });
+        return;
+      }
+      this.setStatus({ state: 'installing', url: this.creds?.publicUrl });
+      try {
+        frpc = await this.deps.installFrpc();
+      } catch (error) {
+        this.log(`frpc install failed: ${String(error)}`);
+        const code = (error as { code?: string } | null)?.code;
+        // No automatic retry: another download attempt is something the user asks for.
+        this.setStatus({ state: 'error', error: code === 'blocked' ? 'blocked' : 'download_failed' });
+        return;
+      }
+      if (!this.wanted) return;
     }
     this.setStatus({ state: 'connecting', url: this.creds?.publicUrl });
 
@@ -209,6 +239,14 @@ export class RemoteTunnel {
     child.stderr?.on('data', onData);
     child.on('error', (error) => {
       this.log(`frpc error: ${String(error)}`);
+      // A refused spawn never produces an `exit`, so without this the card would sit on
+      // "connecting" forever while antivirus keeps the process from starting.
+      if (this.child !== child) return;
+      const refused = isBlockedFsError(error) || (error as NodeJS.ErrnoException)?.code === 'ENOENT';
+      if (!refused) return;
+      this.child = null;
+      child.removeAllListeners('exit');
+      this.setStatus({ state: 'error', error: 'blocked', url: this.creds?.publicUrl });
     });
     child.on('exit', (code) => {
       if (this.child !== child) return;
