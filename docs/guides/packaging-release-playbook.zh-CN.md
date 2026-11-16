@@ -12,6 +12,9 @@
 > 打包范围、对象数、tag 惯例会演进——3.0.13 起是全平台五路 + COS 17 对象 + 五份根清单，
 > 按旧记忆的「三路打包」走会漏腿（3.0.14 实际发生，Linux 晚 dispatch 20 分钟）。
 >
+> **打 Linux 包 / 在无桌面服务器上跑 `onework --webui` / 单平台覆盖补发：先读 §2.1.2**
+> （headless 启动必须靠命令行参数、CI 的 Code Quality 会拦全平台、新桶 key 取哪一对、同版本覆盖的影响）。
+>
 > 权威的"当前发布状态"永远用实时命令查（§3），别信任何文档里写死的时间点快照。
 
 ---
@@ -466,6 +469,81 @@ mac-x64 的钥匙串准备段（`a22c1e34`）现在做三件事：
 3. 一次只改一个变量，每次改动都要能在 40 分钟内给出结论；
 4. 旧的 run 取消经常被 runner 拖到 attempt 边界才生效，不要对着运行中的 run 干等日志
    （job 日志在 run 结束后才可读）。
+
+### 2.1.2 Linux（deb）打包、无桌面运行与单平台补发（2026-11-16，3.0.18）
+
+**产物事实**
+
+- 只有 `deb`（`electron-builder.yml` 的 `linux.target`），没有 AppImage / rpm，只覆盖 Debian/Ubuntu 系。
+  包名 `1one-claudecode`，装到 `/opt/One Work`，`/usr/bin/onework`（update-alternatives 链接）。
+  依赖只有 gtk3 / nss / libxss / libsecret 等库，**不依赖桌面环境**。
+- 文件名：x64 是 `One-Work-<ver>-linux-amd64.deb`（**amd64，不是 x64**），arm64 是 `…-linux-arm64.deb`；
+  清单 `latest-linux.yml` / `latest-linux-arm64.yml`。CI 产物名 `linux-build-x64-<sha7>` / `linux-build-arm64-<sha7>`，
+  只含 deb + 清单 + builder-debug.yml（没有 blockmap）。
+- 触发：`gh workflow run build-manual.yml -R gaogg521/dream-ui -f platform=linux-x64|linux-arm64 -f installers_only=false`；
+  下载用 `scripts/download-gh-artifact.sh`（带 size + sha256 校验），别裸 `gh run download`。
+
+**无桌面服务器：`onework --webui`**
+
+| 症状                                                                                                                | 病根 / 解法                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 无 DISPLAY 时 `onework --webui` 直接退出，日志 `Missing X server or $DISPLAY` / `The platform failed to initialize` | Chromium 在主进程 JS **之前**就选好 Ozone 平台，`configureChromium.ts` 里 JS 的 `appendSwitch('ozone-platform','headless')` **从来没生效**（实测主进程 JS 先跑、X 报错随后）。只有真实命令行参数管用                                                             |
+| 修复（`57a72542`）                                                                                                  | `utils/headlessRelaunch.ts`：Linux + `--webui`/`--resetpass` + 命令行无 `--ozone-platform` → `app.relaunch(+ --ozone-platform=headless --disable-gpu)` + `app.exit(0)`，且放在 `configureAppDataProfile` **之前**（一次性进程不碰 userData）。已带该参数则不重启 |
+| 副作用                                                                                                              | 终端里敲 `onework --webui`，第一个进程立刻退出、真进程在后台起；**systemd 托管请直接写全参数**（`onework --webui --ozone-platform=headless --disable-gpu`，不会触发重启）                                                                                        |
+
+给用户的口径：有桌面 → 下载 deb 双击/`sudo apt install ./One-Work-*.deb` 后从应用菜单启动；无桌面 → 装 deb 后
+`onework --webui`（3.0.18 的**旧包**必须写全 `--ozone-platform=headless --disable-gpu`），浏览器访问
+`http://<ip>:25808`（`DREAM_PORT` 可改）。首启没有可见初始密码，用 `onework --resetpass` 或后端
+`POST /api/webui/reset-password` 取新密码。
+
+**CI：Code Quality 会拦住全部平台的构建**
+
+- `build-manual.yml` 先跑 Code Quality（含**全量** vitest），红了所有平台 Build 全部 skipped、没有产物。
+  pre-push hook 只跑 `--changed`，所以别处引入的全局测试失败（如 `arcoPaletteVarSyntax`：`text-[rgb(var(--primary-6))]`
+  这类失效 UnoCSS 写法）只会在 dispatch 之后才红，白等 5 分钟。**dispatch 前本地先 `bunx vitest run tests/unit/renderer/arcoPaletteVarSyntax.test.ts` 之类
+  扫一遍全局约束测试，或直接本地全量跑**；红了读 `gh run view <id> --log-failed`，先剥 ANSI 再搜 `FAIL|AssertionError`，别被 warning 淹没。
+  注意日志里 ANSI 有两种写法（真 ESC 与字面 `^[[`），`sed -E 's/\x1b\[[0-9;]*m//g; s/\^\[\[[0-9;]*m//g'` 两条都要剥，否则 grep 不到。
+- **同一提交 x64 绿、arm64 红 = 先怀疑 flake**（3.0.18 实际发生：arm64 挂在 `mermaidBlockPanZoom`，同提交 x64 全绿）。
+  判法：本地单跑 3 次全过 → `gh run rerun <id> --failed`（只重跑失败 job），别改产品代码、别重新 dispatch 整个 run。
+  失败的测试若是 `arcoPaletteVarSyntax` 这类确定性断言则是真红，要修。
+
+**同版本号覆盖上线（没升版本，只修包）**
+
+- 同版本号 = 清单 sha512/大小变了但版本不变 → **已装用户不会收到更新**，只有新下载的人是新包。要让存量用户拿到修复必须升版本发版。
+- 覆盖前先备份线上旧清单（两个桶、版本目录和根各一份）和旧 deb；`publish-cos-release-asset.sh` 先传 deb、**最后**传清单。
+- 脚本 `set -e`：第一个文件失败就整体停，两个桶都没被改，可安全重跑。
+- 官网链接 URL 不变、`platformVersions`/`platformSizes` 不用动（大小 ÷ 1048576 取整没变就不用重部署）；
+  只验：线上 `.deb` 重新下载后 sha512 = 清单 = 新构建。
+- 单平台补发别漏另一个架构：x64 修了 arm64 仍是旧包，要么一起重打，要么明确告知（3.0.18 两个架构都重打并覆盖了）。
+- **覆盖前先核对新包内置的 dreamcore 版本 = 线上同版本号其他平台/旧包的版本**：同版本号覆盖时，若 main 在发版后升过 `dreamcoreVersion` 钉版，
+  新包会悄悄带上更新的后端，和线上 Windows/Mac 的同版本号不一致。查法：
+  `dpkg-deb --fsys-tarfile <deb> | tar -x --wildcards './opt/One Work/resources/bundled-dreamcore/*/manifest.json'` 读 `version`，
+  与旧 deb 和 `package.json` 的 `dreamcoreVersion` 三者比对（3.0.18 都是 v0.1.104，一致才覆盖）。
+
+**COS 凭据（新桶）**
+
+- 新桶 `onework-1521070673` 的静态 key 是 `feishu.txt` 里 **「用户名 zhaogao」下面那一对** SecretId/SecretKey（末尾第二对）；
+  「OSS存储桶：onework-1521070673」标题下面那一对会报 `InvalidAccessKeyId`。写之前先用该 key `aws s3 ls s3://onework-1521070673/releases/<ver>/` 探一下。
+  旧桶仍走 `fetch-cos-credentials.js --format sh` 换 STS（见 §2.3）。
+
+**在 WSL 里验真包的套路（x64）**
+
+1. `dpkg -i`（root）装上后先证明包里有修复：`grep -c <独有字符串> "/opt/One Work/resources/app.asar"`（asar 内部是明文，符号名不可靠，用独有字符串）。
+2. `env -u DISPLAY -u WAYLAND_DISPLAY -u XDG_SESSION_TYPE HOME=<真实目录> DREAM_PORT=<空闲端口> onework --webui &`，
+   轮询 `curl http://127.0.0.1:<port>/` 到 200；再读 `/proc/<pid>/cmdline` 确认被补成 headless、`environ` 里没有显示变量。
+3. 再测一次显式全参数写法，确认不会被重复重启。
+4. 收尾只杀自己那棵：`pkill -x onework`（**不要 `pkill -f`**，它会匹配并杀掉你自己那条 bash 命令行）。
+
+**测试环境的坑**
+
+- WSL 的 `/tmp` 随 VM 关闭清空：把测试 HOME 指到 `/tmp/...` 且目录没了，Electron 报 `Path must be absolute`（`configureAppDataProfile`），不是产品 bug；HOME 放 `/home/<user>/` 下。
+- 该 WSL 里 uid 999 的 `dreamcore` / `dreamcore-admin` 是企业版 QA docker 栈，不是自己起的，别杀。
+- Bash 工具会吞反斜杠：往 JS 里注入含 `\n` 的字符串用 Python + `chr(92)`，别在 heredoc 里写 `\\n`。
+- 后台命令通知里的 `exit code 0` 是外壳的，**必须读 output/log 文件**才知道成没成。
+- x86 开发机**无法真机运行 arm64 包**（WSL 里也没有 qemu-user）。3.0.18 arm64 实际只验到这四层，别在文档/汇报里写成「已真机验证」：
+  ① 下载 sha512 = 清单；② `dpkg-deb -f` 的 `Architecture: arm64`；③ 主程序与内置 `dreamcore` 都是 `ELF … ARM aarch64`、manifest 的 `arch` 为 arm64；
+  ④ `app.asar` 里含修复代码的独有字符串。运行行为靠 x64 同代码的端到端验证外推；要真机验证需要一台 arm64 Linux（或装 `qemu-user-static` + arm64 根文件系统）。
+- 检查 deb 内容的路径含空格（`/opt/One Work/…`），脚本里 `file`/`ls` 一律加引号，别用不带引号的 `$(ls …)`。
 
 ### 2.2 ACP 内嵌组件 —— 每次发版必查
 
