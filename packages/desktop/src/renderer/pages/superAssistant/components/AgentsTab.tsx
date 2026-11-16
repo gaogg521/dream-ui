@@ -120,7 +120,12 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
               {t('common.superAssistant.employeeCount', { total: agents.length })}
             </span>
           ) : null}
-          <Button type='primary' icon={<Plus size={14} />} onClick={onCreateAgent} data-testid='employee-new'>
+          <Button
+            type='primary'
+            icon={<Plus size={14} fill='currentColor' />}
+            onClick={onCreateAgent}
+            data-testid='employee-new'
+          >
             {t('common.superAssistant.createAgent', { defaultValue: '创建员工' })}
           </Button>
         </div>
@@ -150,7 +155,7 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
             }
           />
         ) : (
-          <div className='grid gap-8px md:grid-cols-2'>
+          <div className='grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-10px'>
             {visibleCards.map((agent) => {
               const ref: AgentCardRef = {
                 agentId: agent.id,
@@ -165,117 +170,127 @@ const AgentsTab: React.FC<AgentsTabProps> = ({
                 <div
                   key={agent.id}
                   data-employee-row={agent.name}
-                  className='flex items-center gap-12px rounded-6px border border-2 bg-2 p-12px'
+                  className='group flex flex-col gap-8px rounded-8px border border-solid border-[var(--color-border-2)] bg-2 p-12px transition-colors hover:border-[rgba(var(--primary-6),0.45)]'
                 >
-                  <img
-                    src={resolveEmployeeAvatar(agent)}
-                    alt=''
-                    className='h-40px w-40px shrink-0 rd-10px object-cover'
-                  />
-                  <div className='min-w-0 flex-1'>
-                    <div className='flex min-w-0 flex-wrap items-center gap-6px'>
-                      <span className='truncate text-14px font-500'>{agent.name}</span>
-                      {expertName ? (
-                        <Tag size='small' color='arcoblue'>
-                          {expertName}
-                        </Tag>
-                      ) : null}
-                      <Tag size='small' color='gray'>
-                        {resolveEmployeeBackendLabel(agent, managedAgentRuntimeCatalog, localeKey)}
-                      </Tag>
-                      {agent.scheduleEnabled ? (
-                        <Tag size='small' color='blue'>
-                          <Time className='mr-2px' />
-                          {t('common.superAssistant.scheduled', { defaultValue: '定时' })}
-                        </Tag>
-                      ) : null}
-                      {/* Company-distributed employees land in the member's own list with
-                          owner/visibility rewritten to look local, so without this tag they
-                          are indistinguishable from ones the member built, including the
-                          delete action, which the next sync would undo. */}
-                      {teamManaged ? (
-                        <Tag size='small' color='green'>
-                          {t('common.superAssistant.teamDistributed', { defaultValue: '团队 · 自动' })}
-                        </Tag>
-                      ) : null}
-                      {latestRun ? (
-                        <Tag size='small' color={RUN_STATUS_COLOR[latestRun.status] ?? 'default'}>
-                          {t(`common.superAssistant.runStatus.${latestRun.status}`, {
-                            defaultValue: latestRun.status,
-                          })}
-                        </Tag>
-                      ) : null}
-                    </div>
-                    {agent.description ? (
-                      <div className='mt-4px line-clamp-1 text-12px text-t-tertiary'>{agent.description}</div>
-                    ) : null}
-                    {latestRun?.summary ? (
-                      <div className='mt-2px line-clamp-1 text-12px text-t-secondary'>{latestRun.summary}</div>
-                    ) : null}
-                    {teamManaged ? (
-                      <div className='mt-2px line-clamp-1 text-12px text-t-tertiary'>
-                        {t('common.superAssistant.teamManagedHint')}
+                  <div className='flex items-start gap-10px'>
+                    <img
+                      src={resolveEmployeeAvatar(agent)}
+                      alt=''
+                      className='h-40px w-40px shrink-0 rd-10px object-cover'
+                    />
+                    <div className='min-w-0 flex-1'>
+                      <div className='flex min-w-0 items-center justify-between gap-8px'>
+                        <span className='truncate text-14px font-600 leading-20px text-t-primary'>{agent.name}</span>
+                        {latestRun ? (
+                          <Tag size='small' color={RUN_STATUS_COLOR[latestRun.status] ?? 'default'}>
+                            {t(`common.superAssistant.runStatus.${latestRun.status}`, {
+                              defaultValue: latestRun.status,
+                            })}
+                          </Tag>
+                        ) : null}
                       </div>
-                    ) : null}
+                      <div className='mt-2px flex flex-wrap items-center gap-4px'>
+                        {expertName ? (
+                          <Tag size='small' color='arcoblue'>
+                            {expertName}
+                          </Tag>
+                        ) : null}
+                        <Tag size='small' color='gray'>
+                          {resolveEmployeeBackendLabel(agent, managedAgentRuntimeCatalog, localeKey)}
+                        </Tag>
+                        {agent.scheduleEnabled ? (
+                          <Tag size='small' color='blue'>
+                            <Time className='mr-2px' />
+                            {t('common.superAssistant.scheduled', { defaultValue: '定时' })}
+                          </Tag>
+                        ) : null}
+                        {/* Company-distributed employees land in the member's own list with
+                            owner/visibility rewritten to look local, so without this tag they
+                            are indistinguishable from ones the member built, including the
+                            delete action, which the next sync would undo. */}
+                        {teamManaged ? (
+                          <Tag size='small' color='green'>
+                            {t('common.superAssistant.teamDistributed', { defaultValue: '团队 · 自动' })}
+                          </Tag>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
-                  <Button
-                    type='text'
-                    size='small'
-                    icon={<Communication size={14} />}
-                    loading={startingChatId === agent.id}
-                    onClick={() => onStartChat?.(ref)}
-                    data-testid='employee-start'
-                  >
-                    {t('common.superAssistant.startChat')}
-                  </Button>
-                  <div className='flex shrink-0 items-center'>
-                    <Tooltip content={t('common.superAssistant.detail', { defaultValue: '详情' })}>
-                      <Button
-                        type='text'
-                        size='small'
-                        icon={<FileText size={14} />}
-                        aria-label={t('common.superAssistant.detail', { defaultValue: '详情' })}
-                        onClick={() => onViewDigitalEmployeeDetail?.(ref)}
-                      />
-                    </Tooltip>
-                    {/* Scheduling is the member's own choice and the team sync leaves it
-                        alone, so company employees get it too. */}
-                    <Tooltip content={t('common.superAssistant.schedule', { defaultValue: '调度与通知' })}>
-                      <Button
-                        type='text'
-                        size='small'
-                        icon={<Time size={14} />}
-                        aria-label={t('common.superAssistant.schedule', { defaultValue: '调度与通知' })}
-                        onClick={() => onScheduleAgent?.(ref)}
-                      />
-                    </Tooltip>
-                    {teamManaged ? null : (
-                      <>
-                        <Tooltip content={t('common.superAssistant.manage', { defaultValue: '管理' })}>
-                          <Button
-                            type='text'
-                            size='small'
-                            icon={<Edit size={14} />}
-                            aria-label={t('common.superAssistant.manage', { defaultValue: '管理' })}
-                            onClick={() => onManageAgent?.(ref)}
-                          />
-                        </Tooltip>
-                        <Popconfirm
-                          title={t('common.superAssistant.deleteConfirm', {
-                            defaultValue: '确定删除该数字员工？',
-                          })}
-                          onOk={() => onDeleteAgent?.(ref)}
-                        >
-                          <Button
-                            type='text'
-                            size='small'
-                            status='danger'
-                            icon={<Delete size={14} />}
-                            aria-label={t('common.superAssistant.delete', { defaultValue: '删除' })}
-                          />
-                        </Popconfirm>
-                      </>
-                    )}
+
+                  {agent.description ? (
+                    <div className='line-clamp-2 text-12px leading-18px text-t-secondary'>{agent.description}</div>
+                  ) : null}
+                  {latestRun?.summary ? (
+                    <div className='line-clamp-2 rounded-6px bg-fill-1 px-8px py-4px text-12px leading-18px text-t-tertiary'>
+                      {latestRun.summary}
+                    </div>
+                  ) : null}
+                  {teamManaged ? (
+                    <div className='line-clamp-1 text-12px text-t-tertiary'>
+                      {t('common.superAssistant.teamManagedHint')}
+                    </div>
+                  ) : null}
+
+                  <div className='mt-auto flex items-center justify-between gap-8px border-0 border-t border-solid border-[var(--color-border-2)] pt-8px'>
+                    <Button
+                      type='primary'
+                      size='small'
+                      icon={<Communication size={14} fill='currentColor' />}
+                      loading={startingChatId === agent.id}
+                      onClick={() => onStartChat?.(ref)}
+                      data-testid='employee-start'
+                    >
+                      {t('common.superAssistant.startChat')}
+                    </Button>
+                    <div className='flex shrink-0 items-center'>
+                      <Tooltip content={t('common.superAssistant.detail', { defaultValue: '详情' })}>
+                        <Button
+                          type='text'
+                          size='small'
+                          icon={<FileText size={15} />}
+                          aria-label={t('common.superAssistant.detail', { defaultValue: '详情' })}
+                          onClick={() => onViewDigitalEmployeeDetail?.(ref)}
+                        />
+                      </Tooltip>
+                      {/* Scheduling is the member's own choice and the team sync leaves it
+                          alone, so company employees get it too. */}
+                      <Tooltip content={t('common.superAssistant.schedule', { defaultValue: '调度与通知' })}>
+                        <Button
+                          type='text'
+                          size='small'
+                          icon={<Time size={15} />}
+                          aria-label={t('common.superAssistant.schedule', { defaultValue: '调度与通知' })}
+                          onClick={() => onScheduleAgent?.(ref)}
+                        />
+                      </Tooltip>
+                      {teamManaged ? null : (
+                        <>
+                          <Tooltip content={t('common.superAssistant.manage', { defaultValue: '管理' })}>
+                            <Button
+                              type='text'
+                              size='small'
+                              icon={<Edit size={15} />}
+                              aria-label={t('common.superAssistant.manage', { defaultValue: '管理' })}
+                              onClick={() => onManageAgent?.(ref)}
+                            />
+                          </Tooltip>
+                          <Popconfirm
+                            title={t('common.superAssistant.deleteConfirm', {
+                              defaultValue: '确定删除该数字员工？',
+                            })}
+                            onOk={() => onDeleteAgent?.(ref)}
+                          >
+                            <Button
+                              type='text'
+                              size='small'
+                              status='danger'
+                              icon={<Delete size={15} />}
+                              aria-label={t('common.superAssistant.delete', { defaultValue: '删除' })}
+                            />
+                          </Popconfirm>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

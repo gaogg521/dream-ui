@@ -45,57 +45,63 @@ const SceneRow: React.FC<{
     <div
       data-scene-row={item.name}
       data-scene-source={item.source}
-      className='flex items-center gap-12px rounded-6px border border-2 bg-2 p-12px'
+      className='flex flex-col gap-8px rounded-8px border border-solid border-[var(--color-border-2)] bg-2 p-12px transition-colors hover:border-[rgba(var(--primary-6),0.45)]'
     >
-      {item.imageSrc ? (
-        <img
-          src={item.imageSrc}
-          alt=''
-          className={`h-40px w-40px shrink-0 rd-10px object-cover ${on ? '' : 'opacity-50'}`}
-        />
-      ) : (
-        <span
-          aria-hidden='true'
-          className={`flex h-40px w-40px shrink-0 items-center justify-center rd-10px bg-fill-2 text-20px ${on ? '' : 'opacity-50'}`}
-        >
-          {item.icon}
-        </span>
-      )}
-      <div className={`min-w-0 flex-1 ${on ? '' : 'opacity-60'}`}>
-        <div className='flex min-w-0 items-center gap-6px'>
-          <span className='truncate text-14px font-500'>{item.name}</span>
-          {asksFirst ? (
-            <Tag size='small' color='arcoblue'>
-              {t('common.scenes.askFirst')}
-            </Tag>
-          ) : null}
-        </div>
-        <div className='mt-2px flex flex-wrap gap-x-10px text-12px text-t-tertiary'>
-          {item.resources.map((summary) => (
-            <span key={summary.resourceType}>
-              {t(`common.scenes.resourceType.${summary.resourceType}`, { defaultValue: summary.resourceType })}{' '}
-              <span className='text-t-secondary'>
-                {summary.includesAll ? t('common.scenes.resourceAll') : summary.count}
+      <div className='flex items-start gap-10px'>
+        {item.imageSrc ? (
+          <img
+            src={item.imageSrc}
+            alt=''
+            className={`h-40px w-40px shrink-0 rd-10px object-cover ${on ? '' : 'opacity-50'}`}
+          />
+        ) : (
+          <span
+            aria-hidden='true'
+            className={`flex h-40px w-40px shrink-0 items-center justify-center rd-10px bg-fill-2 text-20px ${on ? '' : 'opacity-50'}`}
+          >
+            {item.icon}
+          </span>
+        )}
+        <div className={`min-w-0 flex-1 ${on ? '' : 'opacity-60'}`}>
+          <div className='truncate text-14px font-600 leading-20px text-t-primary'>{item.name}</div>
+          <div className='mt-2px flex flex-wrap items-center gap-x-8px gap-y-4px text-12px text-t-tertiary'>
+            {asksFirst ? (
+              <Tag size='small' color='arcoblue'>
+                {t('common.scenes.askFirst')}
+              </Tag>
+            ) : null}
+            {item.resources.map((summary) => (
+              <span key={summary.resourceType}>
+                {t(`common.scenes.resourceType.${summary.resourceType}`, { defaultValue: summary.resourceType })}{' '}
+                <span className='text-t-secondary'>
+                  {summary.includesAll ? t('common.scenes.resourceAll') : summary.count}
+                </span>
               </span>
-            </span>
-          ))}
+            ))}
+          </div>
         </div>
-        {item.description ? (
-          <div className='mt-4px line-clamp-1 text-12px text-t-tertiary'>{item.description}</div>
-        ) : null}
+        <Switch checked={on} aria-label={item.name} onChange={onToggle} />
       </div>
-      <Button
-        type='text'
-        size='small'
-        icon={<Play size={14} />}
-        onClick={() => onStart(item)}
-        data-testid='scene-start'
-        aria-label={`${t('common.scenes.start')} ${item.name}`}
-      >
-        {t('common.scenes.start')}
-      </Button>
-      {actions}
-      <Switch checked={on} aria-label={item.name} onChange={onToggle} />
+
+      {item.description ? (
+        <div className={`line-clamp-2 text-12px leading-18px text-t-secondary ${on ? '' : 'opacity-60'}`}>
+          {item.description}
+        </div>
+      ) : null}
+
+      <div className='mt-auto flex items-center justify-between gap-8px border-0 border-t border-solid border-[var(--color-border-2)] pt-8px'>
+        <Button
+          type='primary'
+          size='small'
+          icon={<Play size={14} fill='currentColor' />}
+          onClick={() => onStart(item)}
+          data-testid='scene-start'
+          aria-label={`${t('common.scenes.start')} ${item.name}`}
+        >
+          {t('common.scenes.start')}
+        </Button>
+        {actions}
+      </div>
     </div>
   );
 };
@@ -241,7 +247,12 @@ const ScenesTab: React.FC = () => {
               {t('common.scenes.enabledCount', { enabled: enabled.length, total: all.length })}
             </span>
           ) : null}
-          <Button type='primary' icon={<Plus size={14} />} onClick={() => setPicking(true)} data-testid='scene-new'>
+          <Button
+            type='primary'
+            icon={<Plus size={14} fill='currentColor' />}
+            onClick={() => setPicking(true)}
+            data-testid='scene-new'
+          >
             {t('common.scenes.newScene')}
           </Button>
         </div>
@@ -280,7 +291,7 @@ const ScenesTab: React.FC = () => {
             {t('common.scenes.emptyMine')}
           </div>
         ) : (
-          <div className='grid gap-12px md:grid-cols-2'>
+          <div className='grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-10px'>
             {mine.map((item) => (
               <SceneRow
                 key={item.key}
@@ -334,7 +345,7 @@ const ScenesTab: React.FC = () => {
               {t('common.scenes.empty')}
             </div>
           ) : (
-            <div className='grid gap-12px md:grid-cols-2'>
+            <div className='grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-10px'>
               {company.map((item) => (
                 <SceneRow
                   key={item.key}
