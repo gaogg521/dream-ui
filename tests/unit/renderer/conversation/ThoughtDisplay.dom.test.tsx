@@ -31,27 +31,29 @@ vi.mock('react-i18next', () => ({
 import ThoughtDisplay from '@/renderer/components/chat/ThoughtDisplay';
 
 const FIXED_NOW = 1_700_000_000_000;
+const THOUGHT = { subject: 'Thinking', description: 'Working it out' };
 
 describe('ThoughtDisplay status text', () => {
-  it('renders custom status text with a spinner while running', () => {
-    render(<ThoughtDisplay running statusText='Processing… 2 queued' />);
+  it('renders custom status text without a spinner or timer, even while running', () => {
+    render(<ThoughtDisplay running statusText='Compacting conversation…' />);
 
-    expect(screen.getByText('Processing… 2 queued')).toBeInTheDocument();
-    expect(screen.getByTestId('spinner')).toBeInTheDocument();
+    expect(screen.getByText('Compacting conversation…')).toBeInTheDocument();
+    expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
+    expect(screen.queryByText(/\ds\)/)).not.toBeInTheDocument();
   });
 
-  it('renders custom status text without a spinner while waiting', () => {
+  it('renders custom status text while waiting', () => {
     render(<ThoughtDisplay statusText='Waiting for this assistant to start…' />);
 
     expect(screen.getByText('Waiting for this assistant to start…')).toBeInTheDocument();
     expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
   });
 
-  it('shows no default "processing" label when running without a status text', () => {
-    render(<ThoughtDisplay running />);
+  it('draws nothing when running without a status text (the running mark lives in the transcript)', () => {
+    const { container } = render(<ThoughtDisplay running />);
 
+    expect(container).toBeEmptyDOMElement();
     expect(screen.queryByText('conversation.chat.processing')).not.toBeInTheDocument();
-    expect(screen.getByTestId('spinner')).toBeInTheDocument();
   });
 });
 
@@ -93,7 +95,7 @@ describe('ThoughtDisplay elapsed timer', () => {
     vi.useFakeTimers();
     vi.setSystemTime(FIXED_NOW);
 
-    render(<ThoughtDisplay running externalElapsedSource startedAtMs={FIXED_NOW - 80_000} statusText='Processing…' />);
+    render(<ThoughtDisplay running externalElapsedSource startedAtMs={FIXED_NOW - 80_000} thought={THOUGHT} />);
 
     expect(screen.getByText(/1m 20s/)).toBeInTheDocument();
   });
@@ -106,7 +108,7 @@ describe('ThoughtDisplay elapsed timer', () => {
       running: true,
       externalElapsedSource: true,
       startedAtMs: FIXED_NOW - 80_000,
-      statusText: 'Processing…',
+      thought: THOUGHT,
     } as const;
     const { unmount } = render(<ThoughtDisplay {...props} />);
     expect(screen.getByText(/1m 20s/)).toBeInTheDocument();
@@ -122,7 +124,7 @@ describe('ThoughtDisplay elapsed timer', () => {
     vi.useFakeTimers();
     vi.setSystemTime(FIXED_NOW);
 
-    render(<ThoughtDisplay running externalElapsedSource startedAtMs={FIXED_NOW - 80_000} statusText='Processing…' />);
+    render(<ThoughtDisplay running externalElapsedSource startedAtMs={FIXED_NOW - 80_000} thought={THOUGHT} />);
     expect(screen.getByText(/1m 20s/)).toBeInTheDocument();
 
     act(() => {
@@ -136,9 +138,9 @@ describe('ThoughtDisplay elapsed timer', () => {
     vi.useFakeTimers();
     vi.setSystemTime(FIXED_NOW);
 
-    render(<ThoughtDisplay running externalElapsedSource startedAtMs={null} statusText='Processing… 2 queued' />);
+    render(<ThoughtDisplay running externalElapsedSource startedAtMs={null} thought={THOUGHT} />);
 
-    expect(screen.getByText('Processing… 2 queued')).toBeInTheDocument();
+    expect(screen.getByText('Thinking')).toBeInTheDocument();
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
     // No elapsed number is shown while the timestamp is invalid.
     expect(screen.queryByText(/\ds\)/)).not.toBeInTheDocument();
@@ -149,12 +151,10 @@ describe('ThoughtDisplay elapsed timer', () => {
     vi.useFakeTimers();
     vi.setSystemTime(FIXED_NOW);
 
-    const { rerender } = render(
-      <ThoughtDisplay running externalElapsedSource startedAtMs={null} statusText='Processing…' />
-    );
+    const { rerender } = render(<ThoughtDisplay running externalElapsedSource startedAtMs={null} thought={THOUGHT} />);
     expect(screen.queryByText(/\d+s/)).not.toBeInTheDocument();
 
-    rerender(<ThoughtDisplay running externalElapsedSource startedAtMs={FIXED_NOW - 3_000} statusText='Processing…' />);
+    rerender(<ThoughtDisplay running externalElapsedSource startedAtMs={FIXED_NOW - 3_000} thought={THOUGHT} />);
 
     expect(screen.getByText(/3s/)).toBeInTheDocument();
   });
@@ -164,11 +164,11 @@ describe('ThoughtDisplay elapsed timer', () => {
     vi.setSystemTime(FIXED_NOW);
 
     const { rerender } = render(
-      <ThoughtDisplay running externalElapsedSource startedAtMs={FIXED_NOW - 80_000} statusText='Processing…' />
+      <ThoughtDisplay running externalElapsedSource startedAtMs={FIXED_NOW - 80_000} thought={THOUGHT} />
     );
     expect(screen.getByText(/1m 20s/)).toBeInTheDocument();
 
-    rerender(<ThoughtDisplay running externalElapsedSource startedAtMs={FIXED_NOW - 2_000} statusText='Processing…' />);
+    rerender(<ThoughtDisplay running externalElapsedSource startedAtMs={FIXED_NOW - 2_000} thought={THOUGHT} />);
 
     expect(screen.getByText(/2s/)).toBeInTheDocument();
     expect(screen.queryByText(/1m 20s/)).not.toBeInTheDocument();
@@ -178,7 +178,7 @@ describe('ThoughtDisplay elapsed timer', () => {
     vi.useFakeTimers();
     vi.setSystemTime(FIXED_NOW);
 
-    render(<ThoughtDisplay running statusText='Processing…' />);
+    render(<ThoughtDisplay running thought={THOUGHT} />);
     expect(screen.getByText(/0s/)).toBeInTheDocument();
 
     act(() => {

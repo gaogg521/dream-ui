@@ -130,23 +130,23 @@ const ThoughtDisplay: React.FC<ThoughtDisplayProps> = ({
     return null;
   }
 
-  // Loading-only mode: running without thought data (used by ACP when thinking is inline)
-  if (!thought?.subject && (running || statusText)) {
+  // Status-only mode: a message with real content (compacting, waiting for approval, a
+  // failed start with a retry). The bare "running" mark — spinner and elapsed time — lives
+  // at the end of the transcript (MessageRunningIndicator), so with nothing to say there
+  // is nothing to draw here.
+  if (!thought?.subject) {
+    if (!statusText) return null;
     return (
       <div
         className='relative z-1 mb--20px pb-30px px-10px py-10px rd-t-20px text-14px lh-20px text-t-primary flex items-center gap-8px'
         style={containerStyle}
       >
-        {running && <Spin size={14} />}
         {/* Left block fills the row and truncates long text (tooltip shows the
             full message); the retry button stays pinned on the right and never
             shrinks, so a long/localized status can't push it out of a narrow
             parallel-view column. */}
         <span className='text-t-secondary min-w-0 flex-1 truncate' title={statusText}>
           {statusText}
-          {showElapsed && (
-            <span className={statusText ? 'ms-8px opacity-60' : 'opacity-60'}>({formatElapsedTime(elapsedTime)})</span>
-          )}
         </span>
         {onRetryStart && (
           <Button className='flex-shrink-0' size='mini' type='text' onClick={onRetryStart}>

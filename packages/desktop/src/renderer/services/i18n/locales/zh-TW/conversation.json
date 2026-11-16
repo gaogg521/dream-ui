@@ -600,7 +600,7 @@
     "preset_registered": "Agent preset registered successfully!"
   },
   "process": {
-    "working": "正在處理…",
+    "working": "工作中",
     "done": "已完成 {{count}} 個步驟",
     "steps": "共 {{count}} 步",
     "viewSteps": "查看步驟"

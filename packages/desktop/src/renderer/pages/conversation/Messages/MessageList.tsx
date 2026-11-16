@@ -49,6 +49,7 @@ import MessageSkillSuggest from './components/MessageSkillSuggest';
 import MessageText from './components/MessageText';
 import MessageThinking from './components/MessageThinking';
 import MessageProcessRun from './components/MessageProcessRun';
+import MessageRunningIndicator from './components/MessageRunningIndicator';
 import { foldProcessRuns, type ProcessRunItem } from './processRuns';
 import type { WriteFileResult } from './types';
 import { useAutoScroll } from './useAutoScroll';
@@ -706,9 +707,16 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
   };
 
   // The run the agent is still adding to: the one at the very end of the transcript.
-  const lastProcessedItemId = processedList.findLast(
+  const lastProcessedItem = processedList.findLast(
     (item) => !('type' in item && (item.type === 'artifact' || item.type === 'media_job'))
-  )?.id;
+  );
+  const lastProcessedItemId = lastProcessedItem?.id;
+  // A live process run already carries its own spinner and elapsed time; every other
+  // transcript tail (streaming text, a finished tool, a bare user message) gets this one.
+  const showRunningIndicator =
+    isProcessing &&
+    Boolean(conversationContext?.conversation_id) &&
+    !(lastProcessedItem && 'type' in lastProcessedItem && lastProcessedItem.type === 'process_run');
 
   const renderItem = (_index: number, item: (typeof processedList)[0]) => {
     const highlighted = matchesTargetMessage(item, highlightedMessageId);
@@ -822,6 +830,12 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
               {processedList.map((item, index) => (
                 <React.Fragment key={getProcessedItemAnchorId(item) || index}>{renderItem(index, item)}</React.Fragment>
               ))}
+              {showRunningIndicator && (
+                <MessageRunningIndicator
+                  conversationId={conversationContext?.conversation_id ?? ''}
+                  rowWidthClass={rowWidthClass}
+                />
+              )}
               <div className='h-20px' />
             </div>
           </div>

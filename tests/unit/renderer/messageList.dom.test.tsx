@@ -125,6 +125,10 @@ vi.mock('@/renderer/pages/conversation/Messages/acp/MessageAcpToolCall', () => (
   ),
 }));
 
+vi.mock('@/renderer/pages/conversation/Messages/components/MessageRunningIndicator', () => ({
+  default: () => <div data-testid='message-running-indicator'>running</div>,
+}));
+
 vi.mock('@/renderer/pages/conversation/Messages/components/MessagePlan', () => ({
   default: () => <div>plan</div>,
 }));
@@ -380,6 +384,20 @@ describe('MessageList', () => {
     expect(screen.getByTestId('msgtext-text-a').getAttribute('data-copy-row')).toBe('true');
     // The in-progress final turn withholds its row until streaming ends.
     expect(screen.getByTestId('msgtext-text-b').getAttribute('data-copy-row')).toBe('false');
+  });
+
+  it('shows the running indicator at the end of the transcript only while the turn is processing', () => {
+    const { unmount } = render(<MessageList />, {
+      wrapper: ({ children }) => <Wrapper>{children}</Wrapper>,
+    });
+    expect(screen.queryByTestId('message-running-indicator')).not.toBeInTheDocument();
+    unmount();
+
+    mockIsProcessing = true;
+    render(<MessageList />, {
+      wrapper: ({ children }) => <Wrapper>{children}</Wrapper>,
+    });
+    expect(screen.getByTestId('message-running-indicator')).toBeInTheDocument();
   });
 
   it('renders the empty slot when there are no messages', () => {
