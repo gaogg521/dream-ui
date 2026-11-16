@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dropdown, Menu } from '@arco-design/web-react';
-import { Earth } from '@icon-park/react';
+import { Translate } from '@icon-park/react';
 import { changeLanguage } from '@/renderer/services/i18n';
 
 /** Language options mirror the settings LanguageSwitcher list. */
@@ -26,7 +26,8 @@ const LANGUAGES: Array<{ value: string; label: string }> = [
 ];
 
 /**
- * Compact language switcher for the titlebar toolbar: a globe icon that opens a
+ * Compact language switcher for the titlebar toolbar: a translate icon (not a
+ * globe, which users mistook for "open in browser") that opens a
  * dropdown of all supported languages, so users can switch without opening
  * Settings. Applies the change on the next frame to avoid the dropdown close
  * animation fighting the re-render (same guard the settings switcher uses).
@@ -59,7 +60,7 @@ const LanguageQuickSwitch: React.FC<{ iconSize: number; strokeWidth: number }> =
   return (
     <Dropdown droplist={droplist} trigger='click' position='br'>
       <button type='button' className='app-titlebar__button' aria-label={label} title={label}>
-        <Earth
+        <Translate
           theme='outline'
           size={iconSize}
           fill='currentColor'

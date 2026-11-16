@@ -143,8 +143,10 @@ const ThoughtDisplay: React.FC<ThoughtDisplayProps> = ({
             shrinks, so a long/localized status can't push it out of a narrow
             parallel-view column. */}
         <span className='text-t-secondary min-w-0 flex-1 truncate' title={statusText}>
-          {statusText ?? t('conversation.chat.processing')}
-          {showElapsed && <span className='ms-8px opacity-60'>({formatElapsedTime(elapsedTime)})</span>}
+          {statusText}
+          {showElapsed && (
+            <span className={statusText ? 'ms-8px opacity-60' : 'opacity-60'}>({formatElapsedTime(elapsedTime)})</span>
+          )}
         </span>
         {onRetryStart && (
           <Button className='flex-shrink-0' size='mini' type='text' onClick={onRetryStart}>

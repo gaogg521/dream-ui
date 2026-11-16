@@ -46,6 +46,13 @@ describe('ThoughtDisplay status text', () => {
     expect(screen.getByText('Waiting for this assistant to start…')).toBeInTheDocument();
     expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
   });
+
+  it('shows no default "processing" label when running without a status text', () => {
+    render(<ThoughtDisplay running />);
+
+    expect(screen.queryByText('conversation.chat.processing')).not.toBeInTheDocument();
+    expect(screen.getByTestId('spinner')).toBeInTheDocument();
+  });
 });
 
 describe('ThoughtDisplay runtime-failed retry layout', () => {
