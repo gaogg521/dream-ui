@@ -13,6 +13,7 @@ function Sample() {
     <div ref={sidebar.ref} {...sidebar.layout} data-testid='layout'>
       <div {...sidebar.separator} aria-label='resize' />
       <button onClick={sidebar.toggle}>toggle</button>
+      {sidebar.drawerOpen ? <div data-testid='scrim' onClick={sidebar.close} /> : null}
     </div>
   );
 }
@@ -63,5 +64,40 @@ describe('knowledge directory layout', () => {
     expect(screen.getByTestId('layout').getAttribute('data-collapsed')).toBe('true');
     act(() => observe?.([{ contentRect: { width: 1200 } }]));
     expect(screen.getByTestId('layout').getAttribute('data-collapsed')).toBe('false');
+  });
+  it('dims the documents while the directory floats over them, and closes on a click or Esc', () => {
+    render(<Sample />);
+    act(() => observe?.([{ contentRect: { width: 900 } }]));
+    expect(screen.queryByTestId('scrim')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(screen.getByTestId('layout').getAttribute('data-collapsed')).toBe('false');
+    fireEvent.click(screen.getByTestId('scrim'));
+    expect(screen.getByTestId('layout').getAttribute('data-collapsed')).toBe('true');
+    expect(screen.queryByTestId('scrim')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(screen.getByTestId('scrim')).toBeTruthy();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.getByTestId('layout').getAttribute('data-collapsed')).toBe('true');
+    expect(screen.queryByTestId('scrim')).toBeNull();
+  });
+  it('shows no scrim and ignores Esc when the directory sits beside the documents', () => {
+    render(<Sample />);
+    act(() => observe?.([{ contentRect: { width: 1400 } }]));
+    expect(screen.getByTestId('layout').getAttribute('data-compact')).toBe('false');
+    expect(screen.getByTestId('layout').getAttribute('data-collapsed')).toBe('false');
+    expect(screen.queryByTestId('scrim')).toBeNull();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.getByTestId('layout').getAttribute('data-collapsed')).toBe('false');
+  });
+  it('stops listening for Esc once the drawer is closed', () => {
+    const remove = vi.spyOn(window, 'removeEventListener');
+    render(<Sample />);
+    act(() => observe?.([{ contentRect: { width: 900 } }]));
+    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(screen.getByTestId('scrim'));
+    expect(remove.mock.calls.some(([type]) => type === 'keydown')).toBe(true);
+    remove.mockRestore();
   });
 });

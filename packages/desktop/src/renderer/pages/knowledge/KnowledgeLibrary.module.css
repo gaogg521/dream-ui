@@ -470,6 +470,17 @@
 .library[data-compact='true'] .resizeHandle {
   display: none;
 }
+.drawerScrim {
+  display: none;
+}
+.library[data-compact='true'] .drawerScrim {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: rgb(0 0 0 / 28%);
+  cursor: pointer;
+}
 .library[data-compact='true'] .sectionTitle {
   display: flex;
 }

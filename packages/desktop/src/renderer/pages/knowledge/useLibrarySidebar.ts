@@ -29,6 +29,16 @@ export function useLibrarySidebar(names: string[]) {
   const compact = container < Math.max(760, (preferred ?? natural) + 680);
   useEffect(() => setOpen(null), [compact]);
   const collapsed = open === null ? compact : !open;
+  // In the overlay layout the directory floats over the documents, so Esc closes it like any drawer.
+  const drawerOpen = compact && !collapsed;
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [drawerOpen]);
   const width = compact
     ? Math.min(preferred ?? natural, container - 48)
     : clampSidebarWidth(preferred ?? natural, container);
@@ -85,6 +95,9 @@ export function useLibrarySidebar(names: string[]) {
     ref,
     separator,
     collapsed,
+    /** The directory is a drawer over the documents (narrow window) and is currently showing. */
+    drawerOpen,
+    close: () => setOpen(false),
     toggle: () => setOpen(collapsed),
     navigate: () => {
       if (compact) setOpen(false);

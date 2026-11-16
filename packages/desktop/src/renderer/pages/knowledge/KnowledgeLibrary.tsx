@@ -539,6 +539,16 @@ const KnowledgeLibrary: React.FC<RagLibraryProps> = ({
           <span>{t('common.knowledgeLibrary.documentCount', { count: rows.length })}</span>
         </div>
       </aside>
+      {sidebar.drawerOpen ? (
+        // The documents behind the floating directory are not clickable while it is open; dimming them
+        // says so, and a click on the dimmed area closes the directory.
+        <div
+          className={styles.drawerScrim}
+          data-testid='library-drawer-scrim'
+          aria-hidden='true'
+          onClick={sidebar.close}
+        />
+      ) : null}
       <div
         className={styles.resizeHandle}
         {...sidebar.separator}
