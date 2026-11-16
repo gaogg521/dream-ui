@@ -10,9 +10,21 @@ import os from 'os';
 import { configureAppDataProfile } from '@/common/platform';
 import { applyGpuRecoveryFlags } from './gpuRecovery';
 import { resolveDevtoolsCdpPort } from './devtoolsCdp';
+import { buildHeadlessRelaunchArgs, needsHeadlessRelaunch } from './headlessRelaunch';
+
+// Linux WebUI / --resetpass on a machine without a display: Chromium has already
+// chosen its Ozone platform by the time this runs, so the switch appended further
+// down is too late. Re-exec once with the real command-line flag and stop here.
+// Must come before configureAppDataProfile so this throwaway process touches no
+// userData. See headlessRelaunch.ts.
+const relaunchingHeadless = needsHeadlessRelaunch(process.platform, process.argv);
+if (relaunchingHeadless) {
+  app.relaunch({ args: buildHeadlessRelaunchArgs(process.argv) });
+  app.exit(0);
+}
 
 // Resolve test/dev/production identity before storage or Chromium opens a profile.
-configureAppDataProfile(app);
+if (!relaunchingHeadless) configureAppDataProfile(app);
 
 // app.disableHardwareAcceleration() must run before app is ready.
 applyGpuRecoveryFlags();
