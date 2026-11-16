@@ -2,7 +2,7 @@
  * Who is really on the other end of a request that reached the WebUI.
  *
  * The socket peer is only the real client for direct (LAN) connections. A
- * request relayed by the remote-access tunnel arrives from `frpc` on
+ * request relayed by the remote-access tunnel arrives from the tunnel client on
  * 127.0.0.1, so every outside visitor would share one address — and with it
  * one login rate-limit bucket: a stranger failing five logins would lock the
  * owner out, and the login page itself with them.
@@ -11,7 +11,7 @@
  * that header is only believable when it provably came through the relay:
  * `X-Real-IP` is client-controlled everywhere else (another tunnel such as a
  * Cloudflare quick tunnel also arrives from loopback and passes it through
- * untouched). So frpc stamps every request with a secret that exists only in
+ * untouched). So the tunnel client stamps every request with a secret that exists only in
  * this process (`x-onework-relay-token`, overwriting anything the visitor
  * sent), and the address is only taken from `X-Real-IP` when that secret
  * matches.
@@ -39,7 +39,7 @@ function secretsMatch(presented: string, expected: string): boolean {
 /**
  * @param peer       socket peer of the connection (already IPv4-normalized)
  * @param headers    request headers, lower-cased names
- * @param relayToken the secret frpc stamps; without one nothing is trusted
+ * @param relayToken the secret the tunnel client stamps; without one nothing is trusted
  */
 export function resolveClientIp(peer: string | undefined, headers: HeaderBag, relayToken?: string): string | undefined {
   if (!relayToken || !peer || !isLoopback(peer)) return peer;

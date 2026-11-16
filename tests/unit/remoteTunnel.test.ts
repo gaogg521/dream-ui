@@ -3,14 +3,14 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  buildFrpcConfig,
-  classifyFrpcLine,
-  parseRegistration,
-  restartDelayMs,
-} from '../../packages/desktop/src/process/services/remoteTunnel/frpcConfig';
+import { reconnectDelayMs } from '../../packages/desktop/src/process/services/remoteTunnel/protocol';
+import { parseRegistration } from '../../packages/desktop/src/process/services/remoteTunnel/tunnelConfig';
 import { RemoteTunnel } from '../../packages/desktop/src/process/services/remoteTunnel/RemoteTunnel';
 import type { TunnelStatus } from '../../packages/desktop/src/process/services/remoteTunnel/RemoteTunnel';
+import type {
+  TunnelClientOptions,
+  TunnelCloseInfo,
+} from '../../packages/desktop/src/process/services/remoteTunnel/tunnelClient';
 
 const registration = {
   subdomain: 'abc123def456',
@@ -44,90 +44,52 @@ describe('parseRegistration', () => {
   });
 });
 
-describe('buildFrpcConfig', () => {
-  const creds = parseRegistration(registration);
-
-  it('publishes exactly one http proxy on the tunnel subdomain, to the local port', () => {
-    const toml = buildFrpcConfig(creds, 25808, 'relay-secret');
-    expect(toml).toContain('serverAddr = "1work.vip"');
-    expect(toml).toContain('transport.protocol = "wss"');
-    expect(toml).toContain('metadatas.secret = "rts_secret"');
-    expect(toml).toContain('loginFailExit = false');
-    expect(toml.match(/\[\[proxies\]\]/g)).toHaveLength(1);
-    expect(toml).toContain('type = "http"');
-    expect(toml).toContain('localIP = "127.0.0.1"');
-    expect(toml).toContain('localPort = 25808');
-    expect(toml).toContain('subdomain = "abc123def456"');
-    expect(toml).toContain('requestHeaders.set."x-onework-relay-token" = "relay-secret"');
-  });
-});
-
-describe('classifyFrpcLine', () => {
-  it('recognizes frpc log lines, ignoring ANSI colors', () => {
-    expect(classifyFrpcLine('\x1b[1;34m2026 [I] [client/control.go:174] [id] [webui] start proxy success\x1b[0m')).toBe(
-      'connected'
-    );
-    expect(classifyFrpcLine('[W] [client/service.go:380] connect to server error: i/o timeout')).toBe('disconnected');
-    expect(classifyFrpcLine('[W] connect to server error: invalid tunnel credentials')).toBe('rejected');
-    expect(classifyFrpcLine('[W] [webui] start error: proxy subdomain does not match tunnel')).toBe('rejected');
-    expect(classifyFrpcLine('[I] try to connect to server...')).toBe('none');
-  });
-
-  it('does not mistake a rejection for a plain disconnect', () => {
-    expect(classifyFrpcLine('connect to server error: invalid tunnel credentials')).not.toBe('disconnected');
-  });
-});
-
-describe('restartDelayMs', () => {
+describe('reconnectDelayMs', () => {
   it('backs off and caps', () => {
-    expect([0, 1, 2, 3, 4, 99].map(restartDelayMs)).toEqual([2000, 5000, 15000, 30000, 30000, 30000]);
+    expect([0, 1, 2, 3, 4, 99].map(reconnectDelayMs)).toEqual([2000, 5000, 15000, 30000, 30000, 30000]);
   });
 });
 
 // --- supervisor ------------------------------------------------------------
 
-class FakeChild extends EventEmitter {
-  stdout = new EventEmitter();
-  stderr = new EventEmitter();
-  killed = false;
-  kill(): boolean {
-    this.killed = true;
-    return true;
+class FakeClient extends EventEmitter {
+  started = false;
+  stopped = false;
+  constructor(readonly options: TunnelClientOptions) {
+    super();
   }
-  say(line: string): void {
-    this.stdout.emit('data', Buffer.from(`${line}\n`));
+  start(): void {
+    this.started = true;
+  }
+  stop(): void {
+    this.stopped = true;
+  }
+  connect(): void {
+    this.emit('connected');
+  }
+  close(info: Partial<TunnelCloseInfo> = {}): void {
+    this.emit('closed', { code: 1006, reason: '', rejected: false, replaced: false, wasConnected: false, ...info });
   }
 }
 
 describe('RemoteTunnel', () => {
   let dir: string;
-  let children: FakeChild[];
+  let clients: FakeClient[];
   let statuses: TunnelStatus[];
   let timers: Array<{ fn: () => void; ms: number }>;
   let registerCalls: number;
+  let clock: number;
 
-  let installed: string | null;
-  let installCalls: number;
-
-  const make = (
-    opts: { frpc?: string | null; failRegister?: boolean; installError?: { code: string } } = {}
-  ): RemoteTunnel =>
+  const make = (opts: { failRegister?: boolean } = {}): RemoteTunnel =>
     new RemoteTunnel({
       dataDir: dir,
       brokerUrl: () => 'https://broker.test/trial-broker/',
-      resolveFrpc: () => installed ?? (opts.frpc === undefined ? '/bin/frpc' : opts.frpc),
-      installFrpc: async () => {
-        installCalls++;
-        if (opts.installError) throw Object.assign(new Error('install'), opts.installError);
-        installed = '/data/bin/frpc';
-        return installed;
-      },
       relayToken: 'relay-secret',
-      spawn: (() => {
-        const c = new FakeChild();
-        children.push(c);
+      createClient: (options) => {
+        const c = new FakeClient(options);
+        clients.push(c);
         return c;
-      }) as never,
+      },
       fetch: (async (url: string) => {
         registerCalls++;
         expect(url).toBe('https://broker.test/trial-broker/v1/remote/register');
@@ -148,16 +110,16 @@ describe('RemoteTunnel', () => {
         return timers.length;
       },
       clearTimer: () => undefined,
+      now: () => clock,
     });
 
   beforeEach(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-test-'));
-    children = [];
+    clients = [];
     statuses = [];
     timers = [];
     registerCalls = 0;
-    installed = null;
-    installCalls = 0;
+    clock = 1_000_000;
   });
   afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
 
@@ -165,15 +127,20 @@ describe('RemoteTunnel', () => {
     const t = make();
     await t.start(25808);
     expect(registerCalls).toBe(1);
-    expect(children).toHaveLength(1);
-    expect(t.getStatus().state).toBe('connecting');
-    expect(t.getStatus().url).toBe('https://abc123def451.r.1work.vip');
+    expect(clients).toHaveLength(1);
+    expect(clients[0].started).toBe(true);
+    expect(clients[0].options).toMatchObject({
+      serverAddr: '1work.vip',
+      serverPort: 443,
+      subdomain: 'abc123def451',
+      secret: 'rts_secret',
+      localPort: 25808,
+      relayToken: 'relay-secret',
+    });
+    expect(t.getStatus()).toEqual({ state: 'connecting', url: 'https://abc123def451.r.1work.vip' });
 
-    children[0].say('[I] [id] [webui] start proxy success');
+    clients[0].connect();
     expect(t.getStatus()).toEqual({ state: 'connected', url: 'https://abc123def451.r.1work.vip' });
-
-    const config = fs.readFileSync(path.join(dir, 'frpc.toml'), 'utf-8');
-    expect(config).toContain('localPort = 25808');
     expect(fs.existsSync(path.join(dir, 'remote-tunnel.json'))).toBe(true);
   });
 
@@ -188,108 +155,113 @@ describe('RemoteTunnel', () => {
     expect(second.getStatus().url).toBe('https://abc123def451.r.1work.vip');
   });
 
-  it('stop removes the config that holds the secret and kills frpc', async () => {
+  it('stop disconnects and leaves no generated config or running client behind', async () => {
     const t = make();
     await t.start(25808);
     await t.stop();
-    expect(children[0].killed).toBe(true);
-    expect(fs.existsSync(path.join(dir, 'frpc.toml'))).toBe(false);
+    expect(clients[0].stopped).toBe(true);
+    // The only file is the 0600 address store; nothing ready-to-run is written next to it.
+    expect(fs.readdirSync(dir)).toEqual(['remote-tunnel.json']);
     expect(t.getStatus().state).toBe('off');
   });
 
-  it('restarts frpc with backoff after an unexpected exit', async () => {
+  it('reconnects with backoff after the connection drops, keeping the address', async () => {
     const t = make();
     await t.start(25808);
-    children[0].emit('exit', 1);
+    clients[0].connect();
+    clients[0].close({ wasConnected: true });
+    expect(t.getStatus().state).toBe('connecting');
     expect(timers.map((x) => x.ms)).toEqual([2000]);
     timers[0].fn();
-    await vi.waitFor(() => expect(children).toHaveLength(2));
-    // The address survives a restart: no second registration.
+    await vi.waitFor(() => expect(clients).toHaveLength(2));
     expect(registerCalls).toBe(1);
+
+    // Keeps failing: delays grow.
+    clients[1].close();
+    clients[1].close(); // duplicate close of a finished client is ignored
+    expect(timers.map((x) => x.ms)).toEqual([2000, 5000]);
   });
 
-  it('does not restart after stop()', async () => {
+  it('resets the backoff only after a connection that stayed up', async () => {
+    const t = make();
+    await t.start(25808);
+    // Flapping connection: connects, dies at once. Delay keeps growing.
+    clients[0].connect();
+    clients[0].close({ wasConnected: true });
+    timers[0].fn();
+    await vi.waitFor(() => expect(clients).toHaveLength(2));
+    clients[1].connect();
+    clients[1].close({ wasConnected: true });
+    expect(timers.map((x) => x.ms)).toEqual([2000, 5000]);
+    timers[1].fn();
+    await vi.waitFor(() => expect(clients).toHaveLength(3));
+
+    // A healthy connection resets it.
+    clients[2].connect();
+    clock += 60_000;
+    clients[2].close({ wasConnected: true });
+    expect(timers.map((x) => x.ms)).toEqual([2000, 5000, 2000]);
+  });
+
+  it('does not reconnect after stop()', async () => {
     const t = make();
     await t.start(25808);
     await t.stop();
-    children[0].emit('exit', 0);
+    clients[0].close();
     expect(timers).toHaveLength(0);
+    expect(t.getStatus().state).toBe('off');
   });
 
-  it('re-registers once when the server rejects the credentials, then gives up', async () => {
+  it('re-registers once when the relay rejects the credentials, then gives up', async () => {
     const t = make();
     await t.start(25808);
-    children[0].say('[W] connect to server error: invalid tunnel credentials');
-    await vi.waitFor(() => expect(children).toHaveLength(2));
-    expect(children[0].killed).toBe(true);
+    clients[0].close({ code: 4401, rejected: true });
+    await vi.waitFor(() => expect(clients).toHaveLength(2));
     expect(registerCalls).toBe(2);
+    expect(clients[1].options.subdomain).toBe('abc123def452');
     expect(t.getStatus().url).toBe('https://abc123def452.r.1work.vip');
 
-    children[1].say('[W] connect to server error: invalid tunnel credentials');
+    clients[1].close({ code: 4401, rejected: true });
     await vi.waitFor(() => expect(t.getStatus()).toMatchObject({ state: 'error', error: 'rejected' }));
     expect(registerCalls).toBe(2);
-    expect(children).toHaveLength(2);
+    expect(clients).toHaveLength(2);
+    // Giving up is final until the user toggles: no retry timer.
+    expect(timers).toHaveLength(0);
   });
 
-  it('reports needs_install, without downloading or registering, until the user has agreed', async () => {
-    const t = make({ frpc: null });
+  it('treats being replaced by another connection as an ordinary drop, not a rejection', async () => {
+    const t = make();
     await t.start(25808);
-    expect(t.getStatus()).toEqual({ state: 'error', error: 'needs_install', url: undefined });
-    expect(installCalls).toBe(0);
-    expect(registerCalls).toBe(0);
-  });
-
-  it('downloads the component once the user has agreed, then registers and launches', async () => {
-    const t = make({ frpc: null });
-    await t.start(25808, { allowInstall: true });
-    expect(installCalls).toBe(1);
-    expect(statuses.map((s) => s.state)).toContain('installing');
+    clients[0].connect();
+    clients[0].close({ code: 4409, replaced: true, wasConnected: true });
+    expect(t.getStatus().state).toBe('connecting');
     expect(registerCalls).toBe(1);
-    expect(children).toHaveLength(1);
-    expect(t.getStatus().state).toBe('connecting');
-  });
-
-  it('does not download again when the component is already there', async () => {
-    const t = make();
-    await t.start(25808, { allowInstall: true });
-    expect(installCalls).toBe(0);
-  });
-
-  it.each([
-    ['blocked', 'blocked'],
-    ['download_failed', 'download_failed'],
-    ['something_else', 'download_failed'],
-  ])('maps an install failure %s to %s and neither registers nor retries on its own', async (code, expected) => {
-    const t = make({ frpc: null, installError: { code } });
-    await t.start(25808, { allowInstall: true });
-    expect(t.getStatus()).toMatchObject({ state: 'error', error: expected });
-    expect(registerCalls).toBe(0);
-    expect(timers).toHaveLength(0);
-  });
-
-  it('reports blocked, and stops, when the OS refuses to start frpc', async () => {
-    const t = make();
-    await t.start(25808);
-    children[0].emit('error', Object.assign(new Error('spawn UNKNOWN'), { code: 'UNKNOWN' }));
-    expect(t.getStatus()).toMatchObject({ state: 'error', error: 'blocked' });
-    // A refused start never produces an exit event, and must not be retried in a loop.
-    children[0].emit('exit', 1);
-    expect(timers).toHaveLength(0);
-  });
-
-  it('ignores an error event that is not a refusal to start', async () => {
-    const t = make();
-    await t.start(25808);
-    children[0].emit('error', Object.assign(new Error('write EPIPE'), { code: 'EPIPE' }));
-    expect(t.getStatus().state).toBe('connecting');
+    expect(timers).toHaveLength(1);
   });
 
   it('reports register_failed and retries later when the broker is unreachable', async () => {
     const t = make({ failRegister: true });
     await t.start(25808);
     expect(t.getStatus()).toMatchObject({ state: 'error', error: 'register_failed' });
-    expect(children).toHaveLength(0);
+    expect(clients).toHaveLength(0);
     expect(timers).toHaveLength(1);
+  });
+
+  it('start() with the same port while running does nothing', async () => {
+    const t = make();
+    await t.start(25808);
+    await t.start(25808);
+    expect(clients).toHaveLength(1);
+    expect(clients[0].stopped).toBe(false);
+  });
+
+  it('start() with a new port reconnects against it', async () => {
+    const t = make();
+    await t.start(25808);
+    await t.start(25809);
+    expect(clients).toHaveLength(2);
+    expect(clients[0].stopped).toBe(true);
+    expect(clients[1].options.localPort).toBe(25809);
   });
 
   it('resetAddress forgets the address and registers a fresh one', async () => {

@@ -188,24 +188,18 @@ let currentHandle: (WebHostHandle & { allowRemote: boolean }) | null = null;
 // stopped and restarted (port / LAN-toggle changes restart it), so the tunnel
 // follows the WebUI instead of silently staying off after such a restart.
 let remoteTunnelWanted = false;
-// The user agreed to download the frpc component. Kept for the session so a WebUI
-// restart (port change, LAN toggle) does not ask again; cleared when the tunnel is
-// switched off, so a later switch-on without the component has to be agreed to anew.
-let remoteTunnelInstallConsent = false;
 
 /**
  * Switch the remote-access tunnel on or off. With the WebUI running it takes
  * effect immediately; otherwise it starts together with the WebUI.
  */
-export async function setDesktopRemoteTunnelWanted(wanted: boolean, installConsent = false): Promise<void> {
+export async function setDesktopRemoteTunnelWanted(wanted: boolean): Promise<void> {
   remoteTunnelWanted = wanted;
   if (!wanted) {
-    remoteTunnelInstallConsent = false;
     await stopRemoteTunnel();
     return;
   }
-  if (installConsent) remoteTunnelInstallConsent = true;
-  if (currentHandle) await startRemoteTunnel(currentHandle.port, { allowInstall: remoteTunnelInstallConsent });
+  if (currentHandle) await startRemoteTunnel(currentHandle.port);
 }
 // First-use plaintext password for the active handle. Set by webui.start IPC
 // handler before startDesktopWebUI() when the backend reports needs_setup=true,
@@ -285,7 +279,7 @@ export async function startDesktopWebUI(opts: { port?: number; allowRemote?: boo
     port: preferredPort,
     allowRemote,
     // Lets the login rate limit tell tunnel visitors apart instead of seeing them all as
-    // frpc on 127.0.0.1 (one stranger's failed logins must not lock the owner out).
+    // the tunnel client on 127.0.0.1 (one stranger's failed logins must not lock the owner out).
     trustedRelayToken: getRelayToken(),
     // Must align with the desktop IPC path's backend dataDir (src/index.ts), otherwise
     // users see divergent SQLite state between desktop app and bundled WebUI.
@@ -306,9 +300,7 @@ export async function startDesktopWebUI(opts: { port?: number; allowRemote?: boo
   if (remoteTunnelWanted) {
     // Do not make enabling the WebUI wait on the network: the tunnel reports
     // its own progress through the status events.
-    void startRemoteTunnel(handle.port, { allowInstall: remoteTunnelInstallConsent }).catch((error) =>
-      console.error('[WebUI] remote tunnel start failed:', error)
-    );
+    void startRemoteTunnel(handle.port).catch((error) => console.error('[WebUI] remote tunnel start failed:', error));
   }
   return toDesktopHandle(handle, allowRemote);
 }

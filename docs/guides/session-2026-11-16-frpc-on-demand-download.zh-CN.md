@@ -1,5 +1,8 @@
 # 2026-11-16 frpc 改为按需下载（安装包不再带 frpc）
 
+> ⚠️ **已被取代（同日）**：frp 已整体换成自研 Node 隧道 + 自研中继，frpc 下载/同意流程、`frpcComponent.ts`、COS 上的 `components/frpc/` 全部删除。
+> 见 [session-2026-11-16-self-built-tunnel](./session-2026-11-16-self-built-tunnel.zh-CN.md)。本文只作为“为什么要自研”的历史记录保留。
+
 ## 起因
 
 「随时随地访问」用内置的 `frpc`（frp 官方客户端）做内网穿透。frp 在主流杀毒软件里有记录

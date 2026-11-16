@@ -79,8 +79,8 @@ async function maybeSeedInitialPassword(): Promise<void> {
 export function initWebuiBridge(): void {
   onTunnelStatusChange((status) => ipcBridge.webui.tunnelChanged.emit(status));
 
-  ipcBridge.webui.setTunnel.provider(async ({ enabled, installConsent }) => {
-    await setDesktopRemoteTunnelWanted(enabled, installConsent === true);
+  ipcBridge.webui.setTunnel.provider(async ({ enabled }) => {
+    await setDesktopRemoteTunnelWanted(enabled);
     return getRemoteTunnelStatus();
   });
 

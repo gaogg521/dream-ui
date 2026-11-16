@@ -26,7 +26,7 @@ export type StaticServerOptions = {
   port?: number;
   allowRemote?: boolean;
   /**
-   * Secret that the remote-access tunnel (frpc) stamps on every request as
+   * Secret that the remote-access tunnel client stamps on every request as
    * `x-onework-relay-token`. Only a request carrying it has its `X-Real-IP`
    * believed as the visitor's address (see `client-ip.ts`).
    */

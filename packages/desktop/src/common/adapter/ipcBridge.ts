@@ -2192,12 +2192,10 @@ export const task = {
 
 /** Outside-the-LAN access (phone -> this desktop) through the One Work relay. */
 export type IWebUITunnel = {
-  state: 'off' | 'installing' | 'connecting' | 'connected' | 'error';
+  state: 'off' | 'connecting' | 'connected' | 'error';
   /** Public https origin; present once an address exists, even while reconnecting. */
   url?: string;
-  error?: 'needs_install' | 'download_failed' | 'blocked' | 'register_failed' | 'rejected' | 'spawn_failed';
-  /** Whether the frpc component is already on this machine (switching on then needs no download consent). */
-  componentReady?: boolean;
+  error?: 'register_failed' | 'rejected';
 };
 
 export interface IWebUIStatus {
@@ -2226,13 +2224,7 @@ export const webui = {
   getStatus: bridge.buildProvider<IWebUIStatus, void>('webui.get-status'),
   start: bridge.buildProvider<IWebUIStartResult, { port?: number; allowRemote?: boolean }>('webui.start'),
   stop: bridge.buildProvider<void, void>('webui.stop'),
-  setTunnel: bridge.buildProvider<
-    IWebUITunnel,
-    {
-      enabled: boolean;
-      /** The user agreed to download the frpc component if it is missing. */ installConsent?: boolean;
-    }
-  >('webui.set-tunnel'),
+  setTunnel: bridge.buildProvider<IWebUITunnel, { enabled: boolean }>('webui.set-tunnel'),
   resetTunnelAddress: bridge.buildProvider<IWebUITunnel, void>('webui.reset-tunnel-address'),
   tunnelChanged: bridge.buildEmitter<IWebUITunnel>('webui.tunnel-changed'),
   statusChanged: bridge.buildEmitter<{

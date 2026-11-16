@@ -3,80 +3,69 @@
  *
  * Remote access ("reach my desktop from my phone, outside the LAN").
  *
- * Registers this install with the broker (stable subdomain + secret, kept in
- * userData), then runs the bundled `frpc` so `https://<subdomain>.r.1work.vip`
- * reaches this machine's own WebUI. frpc is supervised: it is restarted with a
- * backoff when it dies, and a rejection by the server (revoked / unknown
- * tunnel) triggers one fresh registration instead of a retry loop.
+ * Registers this install with the broker (stable subdomain + secret, kept in userData),
+ * then keeps one {@link TunnelClient} connection to the relay alive so
+ * `https://<subdomain>.r.1work.vip` reaches this machine's own WebUI. The tunnel runs
+ * inside this process — there is no helper executable. The supervisor reconnects with a
+ * backoff when the connection drops, and a rejection of the credentials (revoked /
+ * unknown tunnel) triggers one fresh registration instead of a retry loop.
  */
 
-import type { ChildProcess, SpawnOptions } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { isBlockedFsError } from './frpcComponent';
-import {
-  buildFrpcConfig,
-  classifyFrpcLine,
-  isTunnelCredentials,
-  parseRegistration,
-  restartDelayMs,
-  type TunnelCredentials,
-} from './frpcConfig';
+import { reconnectDelayMs } from './protocol';
+import { isTunnelCredentials, parseRegistration, type TunnelCredentials } from './tunnelConfig';
+import { TunnelClient, type TunnelClientOptions, type TunnelCloseInfo } from './tunnelClient';
 
-export type TunnelState = 'off' | 'installing' | 'connecting' | 'connected' | 'error';
+export type TunnelState = 'off' | 'connecting' | 'connected' | 'error';
 
 export type TunnelStatus = {
   state: TunnelState;
   /** Public https origin, present once credentials exist (even while reconnecting). */
   url?: string;
-  /**
-   * Short machine-readable reason when `state === 'error'`:
-   * - `needs_install`: frpc is not on this machine and the user has not agreed to download it yet
-   * - `download_failed`: the download did not deliver a valid binary
-   * - `blocked`: the binary was removed or refused to run (typically antivirus)
-   */
-  error?: 'needs_install' | 'download_failed' | 'blocked' | 'register_failed' | 'rejected' | 'spawn_failed';
-  /** Whether frpc is already on this machine; filled in by the process-wide wrapper, not the supervisor. */
-  componentReady?: boolean;
+  /** Short machine-readable reason when `state === 'error'`. */
+  error?: 'register_failed' | 'rejected';
 };
 
-export type StartOptions = {
-  /** The user agreed to download frpc if it is missing. Without it a missing frpc is only reported. */
-  allowInstall?: boolean;
+/** The part of {@link TunnelClient} the supervisor drives; a seam for tests. */
+export type TunnelClientLike = {
+  start(): void;
+  stop(): void;
+  on(event: 'connected', listener: () => void): unknown;
+  on(event: 'closed', listener: (info: TunnelCloseInfo) => void): unknown;
 };
 
 export type RemoteTunnelDeps = {
-  /** Directory for `remote-tunnel.json` and the generated frpc config. */
+  /** Directory for `remote-tunnel.json`. */
   dataDir: string;
   brokerUrl: () => string;
-  resolveFrpc: () => string | null;
-  /** Download frpc into place. Throws an error carrying `code: 'download_failed' | 'blocked'`. */
-  installFrpc?: () => Promise<string>;
   /** Per-process secret stamped on relayed requests so web-host can trust the visitor's address. */
   relayToken: string;
-  spawn: (command: string, args: string[], options: SpawnOptions) => ChildProcess;
   fetch: typeof fetch;
+  createClient?: (options: TunnelClientOptions) => TunnelClientLike;
   installId?: () => string | undefined;
   onChange: (status: TunnelStatus) => void;
   log?: (message: string) => void;
   setTimer?: (fn: () => void, ms: number) => unknown;
   clearTimer?: (handle: unknown) => void;
+  now?: () => number;
 };
 
 const CREDS_FILE = 'remote-tunnel.json';
-const CONFIG_FILE = 'frpc.toml';
+/** A connection that lasted this long counts as healthy: the backoff and the re-register allowance reset. */
+const STABLE_AFTER_MS = 30_000;
 
 export class RemoteTunnel {
   private status: TunnelStatus = { state: 'off' };
   private creds: TunnelCredentials | null = null;
-  private child: ChildProcess | null = null;
+  private client: TunnelClientLike | null = null;
   private wanted = false;
   private localPort = 0;
   private attempt = 0;
-  private restartTimer: unknown = null;
+  private retryTimer: unknown = null;
   private reregistered = false;
   private starting: Promise<void> | null = null;
-  private allowInstall = false;
+  private connectedAt = 0;
 
   constructor(private readonly deps: RemoteTunnelDeps) {}
 
@@ -84,11 +73,10 @@ export class RemoteTunnel {
     return this.status;
   }
 
-  /** Start (or restart against a new local port). Resolves once frpc is launched, not once connected. */
-  async start(localPort: number, options: StartOptions = {}): Promise<void> {
-    if (this.wanted && this.localPort === localPort && this.child) return;
+  /** Start (or restart against a new local port). Resolves once the first connection attempt is launched. */
+  async start(localPort: number): Promise<void> {
+    if (this.wanted && this.localPort === localPort && (this.client || this.retryTimer !== null)) return;
     await this.stop();
-    this.allowInstall = options.allowInstall === true;
     this.wanted = true;
     this.localPort = localPort;
     this.attempt = 0;
@@ -101,19 +89,14 @@ export class RemoteTunnel {
 
   async stop(): Promise<void> {
     this.wanted = false;
-    if (this.restartTimer !== null) {
-      (this.deps.clearTimer ?? clearTimeout)(this.restartTimer as never);
-      this.restartTimer = null;
+    if (this.retryTimer !== null) {
+      (this.deps.clearTimer ?? clearTimeout)(this.retryTimer as never);
+      this.retryTimer = null;
     }
     if (this.starting) await this.starting.catch((): void => undefined);
-    const child = this.child;
-    this.child = null;
-    if (child) {
-      child.removeAllListeners('exit');
-      child.kill();
-    }
-    // Never leave the secret on disk in a ready-to-run config while off.
-    fs.rmSync(path.join(this.deps.dataDir, CONFIG_FILE), { force: true });
+    const client = this.client;
+    this.client = null;
+    client?.stop();
     this.setStatus({ state: 'off', url: this.creds?.publicUrl });
   }
 
@@ -125,7 +108,7 @@ export class RemoteTunnel {
     this.creds = null;
     fs.rmSync(path.join(this.deps.dataDir, CREDS_FILE), { force: true });
     this.setStatus({ state: 'off' });
-    if (wasWanted) await this.start(port, { allowInstall: this.allowInstall });
+    if (wasWanted) await this.start(port);
   }
 
   private log(message: string): void {
@@ -169,24 +152,6 @@ export class RemoteTunnel {
 
   private async launch(): Promise<void> {
     if (!this.wanted) return;
-    let frpc = this.deps.resolveFrpc();
-    if (!frpc) {
-      if (!this.allowInstall || !this.deps.installFrpc) {
-        this.setStatus({ state: 'error', error: 'needs_install', url: this.creds?.publicUrl });
-        return;
-      }
-      this.setStatus({ state: 'installing', url: this.creds?.publicUrl });
-      try {
-        frpc = await this.deps.installFrpc();
-      } catch (error) {
-        this.log(`frpc install failed: ${String(error)}`);
-        const code = (error as { code?: string } | null)?.code;
-        // No automatic retry: another download attempt is something the user asks for.
-        this.setStatus({ state: 'error', error: code === 'blocked' ? 'blocked' : 'download_failed' });
-        return;
-      }
-      if (!this.wanted) return;
-    }
     this.setStatus({ state: 'connecting', url: this.creds?.publicUrl });
 
     if (!this.creds) this.creds = this.loadCreds();
@@ -195,78 +160,56 @@ export class RemoteTunnel {
         this.creds = await this.register();
       } catch (error) {
         this.log(`registration failed: ${String(error)}`);
+        if (!this.wanted) return;
         this.setStatus({ state: 'error', error: 'register_failed' });
-        this.scheduleRestart();
+        this.scheduleRetry();
         return;
       }
     }
     if (!this.wanted) return;
+    const creds = this.creds;
 
-    const configPath = path.join(this.deps.dataDir, CONFIG_FILE);
-    fs.mkdirSync(this.deps.dataDir, { recursive: true });
-    fs.writeFileSync(configPath, buildFrpcConfig(this.creds, this.localPort, this.deps.relayToken), {
-      encoding: 'utf-8',
-      mode: 0o600,
+    const client = (this.deps.createClient ?? ((o) => new TunnelClient(o)))({
+      serverAddr: creds.serverAddr,
+      serverPort: creds.serverPort,
+      subdomain: creds.subdomain,
+      secret: creds.secret,
+      localPort: this.localPort,
+      relayToken: this.deps.relayToken,
+      log: (message) => this.log(message),
     });
+    this.client = client;
+    this.setStatus({ state: 'connecting', url: creds.publicUrl });
 
-    let child: ChildProcess;
-    try {
-      child = this.deps.spawn(frpc, ['-c', configPath], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
-    } catch (error) {
-      this.log(`spawn failed: ${String(error)}`);
-      this.setStatus({ state: 'error', error: 'spawn_failed', url: this.creds.publicUrl });
-      this.scheduleRestart();
-      return;
-    }
-    this.child = child;
-    this.setStatus({ state: 'connecting', url: this.creds.publicUrl });
-
-    const onData = (chunk: Buffer | string): void => {
-      for (const line of String(chunk).split(/\r?\n/)) {
-        if (!line.trim()) continue;
-        const event = classifyFrpcLine(line);
-        if (event === 'connected') {
-          this.attempt = 0;
-          this.setStatus({ state: 'connected', url: this.creds?.publicUrl });
-        } else if (event === 'disconnected') {
-          this.setStatus({ state: 'connecting', url: this.creds?.publicUrl });
-        } else if (event === 'rejected') {
-          void this.onRejected(child);
-        }
-      }
-    };
-    child.stdout?.on('data', onData);
-    child.stderr?.on('data', onData);
-    child.on('error', (error) => {
-      this.log(`frpc error: ${String(error)}`);
-      // A refused spawn never produces an `exit`, so without this the card would sit on
-      // "connecting" forever while antivirus keeps the process from starting.
-      if (this.child !== child) return;
-      const refused = isBlockedFsError(error) || (error as NodeJS.ErrnoException)?.code === 'ENOENT';
-      if (!refused) return;
-      this.child = null;
-      child.removeAllListeners('exit');
-      this.setStatus({ state: 'error', error: 'blocked', url: this.creds?.publicUrl });
+    client.on('connected', () => {
+      if (this.client !== client) return;
+      this.connectedAt = this.now();
+      this.setStatus({ state: 'connected', url: creds.publicUrl });
     });
-    child.on('exit', (code) => {
-      if (this.child !== child) return;
-      this.child = null;
-      this.log(`frpc exited (code ${code})`);
+    client.on('closed', (info) => {
+      if (this.client !== client) return;
+      this.client = null;
+      this.log(`connection closed (code ${info.code}${info.reason ? `, ${info.reason}` : ''})`);
       if (!this.wanted) return;
-      this.setStatus({ state: 'connecting', url: this.creds?.publicUrl });
-      this.scheduleRestart();
+      if (info.wasConnected && this.now() - this.connectedAt >= STABLE_AFTER_MS) {
+        this.attempt = 0;
+        this.reregistered = false;
+      }
+      if (info.rejected) {
+        void this.onRejected();
+        return;
+      }
+      this.setStatus({ state: 'connecting', url: creds.publicUrl });
+      this.scheduleRetry();
     });
+    client.start();
   }
 
-  /** The server refused our credentials: forget them, register once more, and only then give up. */
-  private async onRejected(child: ChildProcess): Promise<void> {
-    if (this.child !== child) return;
-    this.child = null;
-    child.removeAllListeners('exit');
-    child.kill();
+  /** The relay refused our credentials: forget them, register once more, and only then give up. */
+  private async onRejected(): Promise<void> {
     if (!this.wanted) return;
     if (this.reregistered) {
-      this.setStatus({ state: 'error', error: 'rejected' });
+      this.setStatus({ state: 'error', error: 'rejected', url: this.creds?.publicUrl });
       return;
     }
     this.reregistered = true;
@@ -276,11 +219,15 @@ export class RemoteTunnel {
     await this.launch();
   }
 
-  private scheduleRestart(): void {
-    if (!this.wanted || this.restartTimer !== null) return;
-    const delay = restartDelayMs(this.attempt++);
-    this.restartTimer = (this.deps.setTimer ?? setTimeout)(() => {
-      this.restartTimer = null;
+  private now(): number {
+    return (this.deps.now ?? Date.now)();
+  }
+
+  private scheduleRetry(): void {
+    if (!this.wanted || this.retryTimer !== null) return;
+    const delay = reconnectDelayMs(this.attempt++);
+    this.retryTimer = (this.deps.setTimer ?? setTimeout)(() => {
+      this.retryTimer = null;
       void this.launch();
     }, delay);
   }
