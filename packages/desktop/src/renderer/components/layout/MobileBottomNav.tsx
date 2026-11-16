@@ -77,7 +77,7 @@ const MobileBottomNav: React.FC = () => {
             className={classNames(
               'flex min-w-0 flex-1 flex-col items-center justify-center gap-3px border-none bg-transparent',
               'cursor-pointer pt-6px pb-4px transition-colors',
-              active ? 'text-[rgb(var(--primary-6))]' : 'text-t-tertiary hover:text-t-secondary'
+              active ? 'text-[rgba(var(--primary-6),1)]' : 'text-t-tertiary hover:text-t-secondary'
             )}
           >
             <Icon theme='outline' size='20' fill='currentColor' style={{ lineHeight: 0 }} />
