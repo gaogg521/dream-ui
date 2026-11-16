@@ -98,10 +98,30 @@ dev 客户端用 `DREAM_MULTI_INSTANCE=1 DREAM_DEVTOOLS_CDP_PORT=9230 bun run de
 - 服务器：frps 停用并删除（二进制与配置备份在 `/root/frps-removed-20261116/`），nginx 控制通道改为 `/~!tunnel`，
   备份 `1onework-www.conf.bak-tunnel-relay-20261116`；旧 broker 二进制备份 `dream-trial-broker.bak-20261116-tunnel-relay`。
 - 新桶 `onework-1521070673/components/frpc/`（6 个文件）已删除。
-- ⚠️ **旧桶 `1onework-1251001122/components/frpc/0.72.0/*` 仍在**（公网仍返回 200）：它的凭据来自内网凭据服务
-  （`scripts/fetch-cos-credentials.js`，需要连上内网/aTrust），本次会话连不上，没删成。连上内网后执行
-  `aws s3 rm s3://1onework-1251001122/components/frpc/ --recursive --endpoint-url https://cos.ap-shanghai.myqcloud.com`。
-  客户端已不会访问这条路径，留着只是个会被杀软扫到的公开文件。
+- 旧桶 `1onework-1251001122/components/frpc/` 同日已由验收会话用内网凭据删除（两个桶现在对该路径都返回 404）。
+
+## 独立验收（2026-11-16，由另一个会话在 dev 客户端上对线上做）
+
+不信实现会话的摘要，对提交 `1c9d6596` 与线上服务重新验了一遍，结果：
+
+- 线上 `relay.mjs` 的哈希 = 用仓库源码 `node scripts/buildTunnelRelay.mjs` 重新构建出来的哈希（`845ffa1bf21ad0fe`）；
+  中继 / nginx / broker 三个服务 active，frps 已 inactive。`tsc` 通过，隧道与设置相关 273 个测试通过。
+- 公网首页与本机直连逐字节一致；开启开关**不再弹任何同意框**，直接连上并复用固定地址 `https://kvn18ok6zwhu.r.1work.vip`。
+- **160 MB 大文件**（`dreamcore.exe`）经线上隧道 28.5 s 传完（≈ 5.6 MB/s），SHA-256 与磁盘文件一致。
+- **手机扫码登录全流程**：应用内生成 token → 公网 `/qr-login` → `/api/auth/qr-login` 拿到 `dream-session` cookie。
+- **WebSocket**：带 cookie 对 `/ws` 升级得 101 且 `Sec-WebSocket-Accept` 校验正确；发 Ping 收到 Pong（双向都通）。
+- **伪造头 + 限流**：访客每次换 `X-Real-IP` / `X-Forwarded-For` / 随机 relay token，仍在第 5 次失败后被后端 429、随后 nginx 边缘 429；
+  同一时刻本机直连登录仍是正常的 401，没有被访客的失败次数锁住。
+- **开关**：关闭 → 公网返回 404 +「电脑不在线」说明页、中继在线隧道数 0；再开 → 同一地址恢复。
+  dev 客户端整进程重启后也自动重连（中继在线数回到 1）。
+- 代码、`electron-builder.yml`、`resources/`、用户数据目录、i18n 里已无任何 frp 相关文件或文案（仅历史文档提到）。
+
+踩到的（都不是隧道的 bug）：
+
+- 用 dev 的 vite 去取 57 MB 的转换后 js / 160 MB 文件，会把 vite 压住几分钟，本机和隧道同时超时；dev 下测大响应要选 vite 不转换的原始文件。
+- 经隧道请求 vite 时得到的 502 `RENDERER_DEV_SERVER_UNREACHABLE` 是本机 WebUI 自己返回的，隧道只是原样转发。
+- 连续 5 次错误登录会触发**后端 15 分钟锁定**（`LOGIN_LOCKOUT_MS`），期间同一出口地址的扫码登录也被拒（"Rate limited"）；
+  验收时别拿错误密码反复试，会把自己锁在外面。
 
 ## 已知局限
 
