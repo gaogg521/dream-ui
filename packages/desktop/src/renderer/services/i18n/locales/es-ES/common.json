@@ -235,7 +235,7 @@
     "memory": "Memoria"
   },
   "superAssistant": {
-    "title": "Empleados digitales y escenarios",
+    "title": "Empleados y escenarios",
     "rag": {
       "hybridBadge": "Búsqueda híbrida (semántica + palabras clave)",
       "searchPlaceholderHybrid": "Busca en la base de conocimiento — por significado o por términos exactos, códigos de error, IDs…",

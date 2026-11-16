@@ -235,7 +235,7 @@
     "memory": "Memória"
   },
   "superAssistant": {
-    "title": "Funcionários digitais e cenários",
+    "title": "Funcionários e cenários",
     "rag": {
       "hybridBadge": "Busca híbrida (semântica + palavras-chave)",
       "searchPlaceholderHybrid": "Pesquise a base de conhecimento — por significado ou por termos exatos, códigos de erro, IDs…",

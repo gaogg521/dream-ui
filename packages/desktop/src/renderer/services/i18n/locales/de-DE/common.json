@@ -235,7 +235,7 @@
     "memory": "Speicher"
   },
   "superAssistant": {
-    "title": "Digitale Mitarbeiter und Szenarien",
+    "title": "Mitarbeiter und Szenarien",
     "rag": {
       "hybridBadge": "Hybride Suche (semantisch + Stichwort)",
       "searchPlaceholderHybrid": "Wissensdatenbank durchsuchen — sinngemäß oder mit exakten Begriffen, Fehlercodes, IDs …",

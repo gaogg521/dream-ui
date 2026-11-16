@@ -235,7 +235,7 @@
     "memory": "メモリ"
   },
   "superAssistant": {
-    "title": "デジタル社員とシーン",
+    "title": "社員とシーン",
     "rag": {
       "hybridBadge": "ハイブリッド検索（意味 + キーワード）",
       "searchPlaceholderHybrid": "ナレッジベースを検索 —— 意味でも、エラーコードや ID などの完全一致でも",

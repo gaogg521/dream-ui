@@ -235,7 +235,7 @@
     "memory": "메모리"
   },
   "superAssistant": {
-    "title": "디지털 직원과 장면",
+    "title": "직원과 장면",
     "rag": {
       "hybridBadge": "하이브리드 검색 (의미 + 키워드)",
       "searchPlaceholderHybrid": "지식베이스 검색 —— 의미로도, 오류 코드·ID 같은 정확한 용어로도",

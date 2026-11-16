@@ -235,7 +235,7 @@
     "memory": "Bellek"
   },
   "superAssistant": {
-    "title": "Dijital çalışanlar ve senaryolar",
+    "title": "Çalışanlar ve senaryolar",
     "rag": {
       "hybridBadge": "Hibrit arama (anlam + anahtar kelime)",
       "searchPlaceholderHybrid": "Bilgi tabanında ara — anlamla ya da hata kodu, kimlik gibi tam terimlerle…",

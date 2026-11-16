@@ -235,7 +235,7 @@
     "memory": "記憶管理"
   },
   "superAssistant": {
-    "title": "數位員工與場景",
+    "title": "員工與場景",
     "rag": {
       "hybridBadge": "混合檢索（語意 + 關鍵字）",
       "searchPlaceholderHybrid": "檢索知識庫 —— 可用語意描述，也可直接搜錯誤碼、編號等精確詞",

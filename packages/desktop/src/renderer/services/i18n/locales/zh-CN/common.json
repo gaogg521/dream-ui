@@ -397,7 +397,7 @@
     "workspaceHint": "连接企业、登录身份与项目组协作在这里统一管理。"
   },
   "superAssistant": {
-    "title": "数字员工与场景",
+    "title": "员工与场景",
     "agentsEmpty": "还没有数字员工，先创建一个。",
     "templatesTitle": "从模板创建",
     "agentsListTitle": "我的数字员工",

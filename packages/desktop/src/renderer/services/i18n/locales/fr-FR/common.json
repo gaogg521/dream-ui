@@ -235,7 +235,7 @@
     "memory": "Mémoire"
   },
   "superAssistant": {
-    "title": "Employés numériques et scénarios",
+    "title": "Employés et scénarios",
     "rag": {
       "hybridBadge": "Recherche hybride (sémantique + mots-clés)",
       "searchPlaceholderHybrid": "Rechercher dans la base — par le sens ou par termes exacts, codes d'erreur, identifiants…",
