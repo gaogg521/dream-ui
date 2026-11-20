@@ -64,6 +64,9 @@
 
 - **五个平台一次发齐**（`platform=macos-arm64 / macos-x64 / windows-x64 / linux-x64 / linux-arm64`），别只发 Mac 等后面补
   （3.0.14 实际发生过，Linux 晚了 20 分钟）。Mac 腿最先发、全程盯。
+- **dispatch 前先 `gh release view v<X> --repo gaogg521/dream-core --json assets` 确认六资产已全部发布**（tag 打出来 ≠ 资产发布完，
+  Release 工作流还要十几分钟）。3.0.19 当晚资产没发完就 dispatch，五腿全被预检正确拦下（`release v0.1.106 has no dreamcore-v0.1.106-<target>.tar.gz`），
+  白烧一轮；等资产齐后 rerun 即可（headSha 不变）。Windows 腿另见 §1.6 的 bsdtar 修复。
 - `installers_only` 必须是 **false**：Mac 自动更新走 `.zip` 而不是 `.dmg`，传 `true` 会在上传前把 zip 和清单删掉。
 - **`build-manual.yml` 先跑 Code Quality（含全量 vitest），红了所有平台全部 skipped、没有产物**。
   pre-push hook 只跑 `--changed`，所以别处引入的全局断言失败只会在 dispatch 之后才红。dispatch 前先本地把
@@ -268,6 +271,19 @@ arm64 的 channel 是 `latest-arm64` 决定的，`prepare-release-assets.sh` 已
 3. 官网 DNS 仍指旧服务器，新服务器迁移待用户安排。
 4. 已装 3.0.18 的 Linux 用户拿不到 headless 修复（同版本号覆盖，见 §1.4），要等下次升版本发版。
 5. mac-x64 时长 34 分钟超基线一倍但一次成功——下版再现 >25 分钟，先看 Apple 公证排队时长再定性，勿直接判卡死。
+
+### 1.6 3.0.19 留下的新坑（2026-11-21）
+
+1. **Windows CI 解压 dreamcore 用系统 bsdtar，不再依赖 Expand-Archive**（`84049bbc`）：runner 镜像 PowerShell/.NET 升级后
+   `Expand-Archive` 内部三参 `ExtractToDirectory` 重载解析失败（MethodCountCouldNotFindBest），3.0.19 Windows 腿在
+   下载 dreamcore 后解压即挂。`prepare-dreamcore.js` 的 `extractArchive` 现在 win32 优先 `tar -xf`（Windows 10+ 自带
+   bsdtar 能解 zip，System32\tar.exe；Git Bash 里的 GNU tar 不行，本地测试要用全路径），Expand-Archive 仅作回落。
+2. **官网服务器（work.1oneclaw.com）磁盘会撞满**：3.0.19 部署时 99G/99G 100%，部署 tarball 在 ~99.5% 处两次截断。
+   大头是 `/var/lib/containerd`（64G）：历次企业镜像升级 `docker load` 攒下的旧镜像（10 个 GitLab CE 旧版 + 企业旧镜像）。
+   处置配方：`journalctl --vacuum-size=200M` + `docker image prune -af`（在用容器镜像自动受保护；删的都是 Hub/GHCR
+   可重拉的正本），当晚释放 65.6GB 回到 39%。**每次企业镜像升级后应随手 prune；服务器加磁盘告警仍未做。**
+   另：这台 sshd 会话不稳，跑命令用「单连接单命令」模式（prod_ssh.connect() 每次 connect→一条 exec_command→close）。
+3. dreamcore Release 工作流的资产发布完成（六资产）才是 dispatch 前提，见 §1.2。
 
 ---
 
