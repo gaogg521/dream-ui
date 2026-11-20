@@ -347,8 +347,16 @@ function extractArchive(archivePath, outputDir, platform) {
   ensureDirectory(outputDir);
   if (platform === 'win32' || archivePath.endsWith('.zip')) {
     if (platform === 'win32') {
-      const ps = `Expand-Archive -LiteralPath '${archivePath.replace(/'/g, "''")}' -DestinationPath '${outputDir.replace(/'/g, "''")}' -Force`;
-      execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', ps]);
+      // Windows 自带的 bsdtar（System32\tar.exe）能直接解 zip；Expand-Archive 在
+      // runner 镜像的 PowerShell/.NET 升级后三参重载解析失败（2026-11-21 CI 实测，
+      // MethodCountCouldNotFindBest），不再依赖，仅作回落。
+      try {
+        execFileSync('tar', ['-xf', archivePath, '-C', outputDir]);
+        return;
+      } catch {
+        const ps = `Expand-Archive -LiteralPath '${archivePath.replace(/'/g, "''")}' -DestinationPath '${outputDir.replace(/'/g, "''")}' -Force`;
+        execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', ps]);
+      }
     } else {
       execFileSync('unzip', ['-o', archivePath, '-d', outputDir]);
     }
