@@ -967,6 +967,7 @@ jobs:
             # This list is explicit, so a new artifact type has to be added
             # here or it is dropped between build and release with no error.
             out/*.blockmap
+            out/remote-ui-*.tar.gz
           if-no-files-found: warn
           retention-days: 7
 

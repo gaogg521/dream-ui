@@ -19,6 +19,16 @@ OUTPUT_DIR="${2:-release-assets}"
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
+# Carry the assets extracted from each platform's shipped ASAR with the release.
+while IFS= read -r file; do
+  target="$OUTPUT_DIR/$(basename "$file")"
+  if [ -e "$target" ] && ! cmp -s "$file" "$target"; then
+    echo "::error::Conflicting remote UI build archive: $file" >&2
+    exit 1
+  fi
+  cp "$file" "$target"
+done < <(find "$ARTIFACTS_DIR" -type f -name 'remote-ui-*.tar.gz' | sort)
+
 # ---------------------------------------------------------------------------
 # 1) Copy all distributables (unique file names)
 # ---------------------------------------------------------------------------

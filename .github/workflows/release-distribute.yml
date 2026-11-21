@@ -178,7 +178,8 @@ jobs:
             --pattern "*.msi" \
             --pattern "*.deb" \
             --pattern "*.zip" \
-            --pattern "latest*.yml"
+            --pattern "latest*.yml" \
+            --pattern "remote-ui-*.tar.gz"
           echo "Downloaded files:"
           ls -la dist
 
@@ -254,6 +255,12 @@ jobs:
             done
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
+
+      - name: Deploy packaged remote UI assets to both NGINX servers
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ONEWORK_STATIC_SSH_PRIVATE_KEY: ${{ secrets.ONEWORK_STATIC_SSH_PRIVATE_KEY }}
+        run: python repo/scripts/release/tunnel_assets.py deploy dist "$VERSION"
 
       - name: Upload versioned assets to COS
         # A healthy upload of a few-hundred-MB installer finishes in minutes.

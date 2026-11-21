@@ -11,6 +11,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  readdirSync,
   renameSync,
   rmSync,
   writeFileSync,
@@ -323,6 +324,35 @@ function ensurePlaceholder(relativePath) {
 
 childProcess.execSync = function mockedExecSync(command) {
   const commandText = String(command);
+  if (commandText.includes('electron-builder --config')) {
+    const contents = {
+      'package.json': fs.readFileSync(path.join(process.cwd(), 'package.json')),
+      'out/renderer/assets/index-test.js': Buffer.from('packaged-renderer'),
+      'out/renderer/assets/index-test.css': Buffer.from('body {}'),
+    };
+    const tree = { files: {} };
+    let offset = 0;
+    for (const [name, bytes] of Object.entries(contents)) {
+      const parts = name.split('/');
+      let files = tree.files;
+      for (const part of parts.slice(0, -1)) {
+        files[part] ??= { files: {} };
+        files = files[part].files;
+      }
+      files[parts.at(-1)] = { size: bytes.length, offset: String(offset) };
+      offset += bytes.length;
+    }
+    const header = Buffer.from(JSON.stringify(tree));
+    const paddedSize = Math.ceil(header.length / 4) * 4;
+    const prefix = Buffer.alloc(16);
+    prefix.writeUInt32LE(4, 0);
+    prefix.writeUInt32LE(paddedSize + 8, 4);
+    prefix.writeUInt32LE(paddedSize + 4, 8);
+    prefix.writeUInt32LE(header.length, 12);
+    const packaged = path.join(process.cwd(), 'out/test-unpacked/resources/app.asar');
+    fs.mkdirSync(path.dirname(packaged), { recursive: true });
+    fs.writeFileSync(packaged, Buffer.concat([prefix, header, Buffer.alloc(paddedSize - header.length), ...Object.values(contents)]));
+  }
   if (commandText.includes('electron-vite build')) {
     ensurePlaceholder('out/main/index.js');
     ensurePlaceholder('out/preload/index.js');
@@ -362,6 +392,7 @@ childProcess.execSync = function mockedExecSync(command) {
       });
 
       expect(result.status, result.stderr || result.stdout).toBe(0);
+      expect(readdirSync(outDir).some((name) => name.startsWith('remote-ui-') && name.endsWith('.tar.gz'))).toBe(true);
       expect(readFileSync(resolve(repoRoot, 'resources/windows/support/_sentry-dsn.generated.nsh'), 'utf8')).toBe(
         '!define ONEWORK_SENTRY_DSN ""\n'
       );

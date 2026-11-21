@@ -240,11 +240,15 @@ jobs:
             fi
           fi
 
+      - name: Validate packaged remote UI assets
+        run: python scripts/release/tunnel_assets.py deploy release-assets "$VERSION" --dry-run
+
       - name: Publish to COS (installers first, update manifests last)
         env:
           ONEWORK_COS_ACCESS_KEY_ID: ${{ secrets.ONEWORK_COS_ACCESS_KEY_ID }}
           ONEWORK_COS_SECRET_ACCESS_KEY: ${{ secrets.ONEWORK_COS_SECRET_ACCESS_KEY }}
           COS_PUBLISH_TARGETS: ${{ github.event.inputs.targets == 'both' && 'new,legacy' || github.event.inputs.targets }}
+          ONEWORK_STATIC_SSH_PRIVATE_KEY: ${{ secrets.ONEWORK_STATIC_SSH_PRIVATE_KEY }}
         run: |
           set -euo pipefail
           cd release-assets

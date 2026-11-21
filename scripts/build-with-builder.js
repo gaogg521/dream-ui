@@ -1200,6 +1200,22 @@ try {
     }
   }
 
+  const packagedOutput = process.env.ONE_BUILD_OUT_DIR
+    ? path.resolve(process.env.ONE_BUILD_OUT_DIR)
+    : path.resolve(__dirname, '../out');
+  const assetPackage = spawnSync(
+    process.env.PYTHON || 'python',
+    [
+      path.join(__dirname, 'release/tunnel_assets.py'),
+      'pack-build',
+      packagedOutput,
+      `${process.platform}-${targetArch}`,
+    ],
+    { stdio: 'inherit' }
+  );
+  if (assetPackage.error || assetPackage.status !== 0) {
+    throw new Error(`Remote UI asset packaging failed: ${assetPackage.error?.message || assetPackage.status}`);
+  }
   console.log('✅ Build completed!');
 } catch (error) {
   buildFailed = true;

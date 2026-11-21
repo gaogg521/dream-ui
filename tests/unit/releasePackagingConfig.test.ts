@@ -7,7 +7,10 @@ import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 
 const projectRoot = resolve(__dirname, '../..');
-const itWithBash = spawnSync('bash', ['--version'], { encoding: 'utf8' }).status === 0 ? it : it.skip;
+// WSL bash does not inherit Windows environment variables or native temp paths.
+const bash =
+  process.platform === 'win32' ? resolve(process.env.ProgramFiles || 'C:/Program Files', 'Git/bin/bash.exe') : 'bash';
+const itWithBash = spawnSync(bash, ['--version'], { encoding: 'utf8' }).status === 0 ? it : it.skip;
 
 function readProjectFile(path: string): string {
   return readFileSync(resolve(projectRoot, path), 'utf8');
@@ -188,20 +191,20 @@ describe('release packaging configuration', () => {
       // the CI upload list) made every real release exit non-zero here, and
       // nothing caught it. This is the positive half.
       const tempDir = mkdtempSync(resolve(tmpdir(), 'dream-release-assets-ok-'));
-      const artifactsDir = resolve(tempDir, 'build-artifacts');
-      const outputDir = resolve(tempDir, 'release-assets');
+      const artifactsDir = resolve(tempDir, 'build-artifacts').replace(/\\/g, '/');
+      const outputDir = resolve(tempDir, 'release-assets').replace(/\\/g, '/');
 
       try {
         const env = { ...process.env, MOCK_VERSION: '1.0.0' };
         expect(
-          spawnSync('bash', ['scripts/create-mock-release-artifacts.sh', artifactsDir], {
+          spawnSync(bash, ['scripts/create-mock-release-artifacts.sh', artifactsDir], {
             cwd: projectRoot,
             env,
             encoding: 'utf8',
           }).status
         ).toBe(0);
 
-        const prepareResult = spawnSync('bash', ['scripts/prepare-release-assets.sh', artifactsDir, outputDir], {
+        const prepareResult = spawnSync(bash, ['scripts/prepare-release-assets.sh', artifactsDir, outputDir], {
           cwd: projectRoot,
           env,
           encoding: 'utf8',
@@ -221,12 +224,12 @@ ${prepareResult.stderr}`).not.toContain('::error::');
     'fails release asset preparation when a mac zip is missing',
     () => {
       const tempDir = mkdtempSync(resolve(tmpdir(), 'dream-release-assets-'));
-      const artifactsDir = resolve(tempDir, 'build-artifacts');
-      const outputDir = resolve(tempDir, 'release-assets');
+      const artifactsDir = resolve(tempDir, 'build-artifacts').replace(/\\/g, '/');
+      const outputDir = resolve(tempDir, 'release-assets').replace(/\\/g, '/');
 
       try {
         const env = { ...process.env, MOCK_VERSION: '1.0.0' };
-        const createResult = spawnSync('bash', ['scripts/create-mock-release-artifacts.sh', artifactsDir], {
+        const createResult = spawnSync(bash, ['scripts/create-mock-release-artifacts.sh', artifactsDir], {
           cwd: projectRoot,
           env,
           encoding: 'utf8',
@@ -235,7 +238,7 @@ ${prepareResult.stderr}`).not.toContain('::error::');
 
         rmSync(resolve(artifactsDir, 'macos-build-arm64', 'One-Work-1.0.0-mac-arm64.zip'), { force: true });
 
-        const prepareResult = spawnSync('bash', ['scripts/prepare-release-assets.sh', artifactsDir, outputDir], {
+        const prepareResult = spawnSync(bash, ['scripts/prepare-release-assets.sh', artifactsDir, outputDir], {
           cwd: projectRoot,
           env,
           encoding: 'utf8',

@@ -73,6 +73,14 @@ LEGACY_BUCKET="1onework-1251001122"
 TARGETS="${COS_PUBLISH_TARGETS:-new,legacy}"
 FILENAME=$(basename "$LOCAL_FILE")
 
+# Both local and Actions publishing use this entry point. Never advance an
+# updater manifest until both NGINX servers hold its packaged renderer assets.
+case "$FILENAME" in
+  latest*.yml)
+    "${PYTHON:-python}" "$(dirname "$0")/release/tunnel_assets.py" deploy "$(dirname "$LOCAL_FILE")" "$VERSION"
+    ;;
+esac
+
 aws configure set default.s3.addressing_style virtual
 
 # Run aws against one bucket with exactly that bucket's credentials.

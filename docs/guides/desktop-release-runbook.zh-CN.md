@@ -3,6 +3,26 @@
 > 出安装包前先读这一页。打包脚本开头会自动跑预检（`scripts/preflight-package.js`），
 > 不通过直接中止——但预检只能拦它认识的坑，顺序和原因在这里。
 
+## 远程 WebUI 静态资源随发布自动同步
+
+桌面打包成功后，`scripts/build-with-builder.js` 会从已生成的 `app.asar` 提取 renderer assets，
+在安装包输出目录产生 `remote-ui-<版本>-<平台>-<架构>.tar.gz`，包含逐文件 SHA-256 清单。
+CI 会把该资源包与安装包一起上传为构建产物，`prepare-release-assets.sh` 会把它带入发布目录。
+
+GitHub 的 `Publish Release to COS` 和本地的 `scripts/publish-cos-release-asset.sh`
+都会在更新清单 `latest*.yml` 上传前同步两台 NGINX。版本或文件校验失败、任一节点不可达时，
+更新清单发布会停止，修复后重试原命令即可。已有平台构建缺少资源包时，需用包含此流程的代码重建。
+GitHub Release 的 `Distribute Release Assets` 分发入口也已接入同一同步步骤。
+
+两台入口固定从 `/opt/onework-static/shared/assets/` 读取静态资源，部署只追加，旧版本文件持续保留。
+同名文件内容冲突会阻止部署。缺失文件继续回退桌面隧道。
+GitHub 使用 `ONEWORK_STATIC_SSH_PRIVATE_KEY` secret，本地默认使用 `~/.ssh/onework_static`，
+也可通过 `ONEWORK_STATIC_SSH_KEY` 指定密钥。接收端仅接受专用密钥的资源校验和安装动作。
+
+可用 `python scripts/release/tunnel_assets.py deploy <发布目录> <版本> --dry-run` 验证资源包，
+省略 `--dry-run` 会同步并从两台 NGINX 实际下载关键 JS/CSS 校验内容。
+资源同步成功后仍须用真实公网链接验证登录后操作，境外手机实机也需独立验收。
+
 ## 1. 安装包由哪几部分拼成
 
 | 部分                          | 来源                                                                                    | 会悄悄过期的方式                                                              |
