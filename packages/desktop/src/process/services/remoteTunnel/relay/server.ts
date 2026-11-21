@@ -14,6 +14,7 @@
 
 import http from 'node:http';
 import net from 'node:net';
+import { randomUUID } from 'node:crypto';
 import type { Duplex } from 'node:stream';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { Mux, type MuxStream } from '../mux';
@@ -32,13 +33,18 @@ import {
   type HeadMeta,
 } from '../protocol';
 
-export type VerifyResult = 'ok' | 'rejected' | 'unavailable';
+export type VerifyResult = 'ok' | 'rejected' | 'unavailable' | 'replaced';
 
 export type RelayOptions = {
   /** Parent host of tunnel subdomains, e.g. `r.1work.vip`. */
   subdomainHost: string;
   /** Asks the credential authority (the broker) whether this subdomain/secret pair is live. */
-  verify: (subdomain: string, secret: string, kind: 'login' | 'recheck') => Promise<VerifyResult>;
+  verify: (
+    subdomain: string,
+    secret: string,
+    kind: 'login' | 'recheck',
+    connectionId?: string
+  ) => Promise<VerifyResult>;
   /** HTML served (status 404) when the subdomain has no connected desktop. */
   offlinePage?: string;
   log?: (message: string) => void;
@@ -50,6 +56,8 @@ export type RelayOptions = {
   helloTimeoutMs?: number;
   /** Nothing from the desktop for this long (ping included) closes the tunnel. */
   deadAfterMs?: number;
+  /** Private loopback peer reached through the encrypted inter-node transport. */
+  peer?: { url: string; token: string };
 };
 
 class Session {
@@ -60,7 +68,8 @@ class Session {
     /** Kept in memory only, to re-check revocation; never logged or persisted. */
     readonly secret: string,
     readonly ws: WebSocket,
-    maxStreams: number
+    maxStreams: number,
+    readonly connectionId: string
   ) {
     // The desktop never opens streams, so no `onStream`.
     this.mux = new Mux({
@@ -81,6 +90,7 @@ const STRIP = new Set([
   'forwarded',
   'expect',
   'x-onework-relay-token',
+  'x-onework-peer',
 ]);
 
 const OFFLINE_FALLBACK = '<!doctype html><meta charset="utf-8"><title>Offline</title><p>This computer is offline.';
@@ -98,6 +108,7 @@ export class RelayServer {
   private readonly maxStreams: number;
   private readonly hostPattern: RegExp;
   private pendingHandshakes = 0;
+  private readonly peerSockets = new Set<Duplex>();
 
   constructor(private readonly opts: RelayOptions) {
     this.maxStreams = opts.maxStreams ?? DEFAULT_MAX_STREAMS;
@@ -153,6 +164,7 @@ export class RelayServer {
   }
 
   async close(): Promise<void> {
+    for (const socket of this.peerSockets) socket.destroy();
     for (const t of this.timers) clearInterval(t);
     this.timers = [];
     for (const s of this.sessions.values()) s.ws.close(1001, 'relay shutting down');
@@ -218,10 +230,15 @@ export class RelayServer {
           ws.close(CLOSE_CODE.REJECTED, 'rejected');
           return;
         }
-        const verdict = await this.opts.verify(hello.subdomain, hello.secret, 'login');
+        const connectionId = randomUUID();
+        const verdict = await this.opts.verify(hello.subdomain, hello.secret, 'login', connectionId);
         if (verdict === 'rejected') {
           this.log(`rejected login for ${hello.subdomain}`);
           ws.close(CLOSE_CODE.REJECTED, 'rejected');
+          return;
+        }
+        if (verdict === 'replaced') {
+          ws.close(CLOSE_CODE.REPLACED, 'replaced');
           return;
         }
         if (verdict === 'unavailable') {
@@ -230,7 +247,7 @@ export class RelayServer {
         }
         if (ws.readyState !== ws.OPEN) return;
         const previous = this.sessions.get(hello.subdomain);
-        session = new Session(hello.subdomain, hello.secret, ws, this.maxStreams);
+        session = new Session(hello.subdomain, hello.secret, ws, this.maxStreams, connectionId);
         this.sessions.set(hello.subdomain, session);
         if (previous) {
           this.log(`tunnel ${hello.subdomain} taken over by a new connection`);
@@ -283,11 +300,12 @@ export class RelayServer {
   private async reverifyAll(): Promise<void> {
     await Promise.all(
       Array.from(this.sessions.values(), async (s) => {
-        const verdict = await this.opts.verify(s.subdomain, s.secret, 'recheck');
+        const verdict = await this.opts.verify(s.subdomain, s.secret, 'recheck', s.connectionId);
         if (verdict === 'rejected') {
           this.log(`tunnel ${s.subdomain} revoked`);
           s.ws.close(CLOSE_CODE.REJECTED, 'rejected');
         }
+        if (verdict === 'replaced') s.ws.close(CLOSE_CODE.REPLACED, 'replaced by another region');
       })
     );
   }
@@ -308,12 +326,17 @@ export class RelayServer {
   }
 
   private onVisitorRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
+    if (req.headers['x-onework-peer'] !== undefined && req.headers['x-onework-peer'] !== this.opts.peer?.token) {
+      res.writeHead(403).end('invalid peer');
+      return;
+    }
     const session = this.lookup(req);
     if (session === undefined) {
       res.writeHead(404, { 'content-type': 'text/plain' }).end('not found');
       return;
     }
     if (session === null) {
+      if (this.forwardToPeer(req, res)) return;
       res
         .writeHead(404, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' })
         .end(this.opts.offlinePage ?? OFFLINE_FALLBACK);
@@ -368,8 +391,14 @@ export class RelayServer {
       );
     };
     const session = this.lookup(req);
+    if (req.headers['x-onework-peer'] !== undefined && req.headers['x-onework-peer'] !== this.opts.peer?.token) {
+      return reply('403 Forbidden', 'invalid peer');
+    }
     if (session === undefined) return reply('404 Not Found', 'not found');
-    if (session === null) return reply('404 Not Found', 'offline');
+    if (session === null) {
+      if (this.forwardToPeer(req, socket, head)) return;
+      return reply('404 Not Found', 'offline');
+    }
     const url = req.url ?? '/';
     if (!url.startsWith('/')) return reply('400 Bad Request');
     if (session.mux.activeStreams >= this.maxStreams) return reply('503 Service Unavailable', 'busy');
@@ -419,5 +448,89 @@ export class RelayServer {
     socket.on('close', () => stream.destroy());
     // Unlike a plain request, an upgraded stream stays open for bytes in both directions,
     // so the relay's side is not ended here.
+  }
+
+  /** The authenticated session owns this hostname. Try the other node once if absent here. */
+  private forwardToPeer(req: http.IncomingMessage, target: http.ServerResponse | Duplex, head?: Buffer): boolean {
+    const peer = this.opts.peer;
+    // NGINX clears this private header at public ingress. Only the loopback peer sets it.
+    if (!peer || req.headers['x-onework-peer'] !== undefined) return false;
+    const headers = filterRawHeaders(req.rawHeaders, {
+      drop: new Set([...STRIP, 'x-onework-peer']),
+      keepUpgrade: head !== undefined,
+    });
+    headers.push('X-OneWork-Peer', peer.token, 'X-Real-IP', this.visitorIp(req));
+    const url = new URL(peer.url);
+    const proxy = http.request({
+      hostname: url.hostname,
+      port: url.port,
+      method: req.method,
+      path: req.url,
+      headers,
+      agent: false,
+    });
+    let answered = false;
+    let timer: NodeJS.Timeout | undefined;
+    proxy.once('finish', () => {
+      if (!answered) timer = setTimeout(() => proxy.destroy(new Error('peer response timeout')), 30_000);
+    });
+    const fail = (): void => {
+      clearTimeout(timer);
+      if (target instanceof http.ServerResponse && !target.headersSent) target.writeHead(502).end('peer unavailable');
+      else target.destroy();
+    };
+    proxy.on('error', fail);
+    proxy.on('response', (response) => {
+      answered = true;
+      clearTimeout(timer);
+      if (target instanceof http.ServerResponse) {
+        target.writeHead(response.statusCode ?? 502, filterRawHeaders(response.rawHeaders));
+      } else {
+        const raw = filterRawHeaders(response.rawHeaders);
+        const lines = [`HTTP/1.1 ${response.statusCode} ${response.statusMessage}`];
+        for (let i = 0; i < raw.length; i += 2) lines.push(`${raw[i]}: ${raw[i + 1]}`);
+        lines.push('Connection: close');
+        target.write(lines.join('\r\n') + '\r\n\r\n');
+      }
+      response.on('error', fail);
+      response.pipe(target);
+    });
+    proxy.on('upgrade', (response, socket, rest) => {
+      answered = true;
+      clearTimeout(timer);
+      if (target instanceof http.ServerResponse) {
+        socket.destroy();
+        fail();
+        return;
+      }
+      const raw = filterRawHeaders(response.rawHeaders, { keepUpgrade: true });
+      const lines = [`HTTP/1.1 ${response.statusCode} ${response.statusMessage}`];
+      for (let i = 0; i < raw.length; i += 2) lines.push(`${raw[i]}: ${raw[i + 1]}`);
+      target.write(lines.join('\r\n') + '\r\n\r\n');
+      this.peerSockets.add(socket);
+      socket.on('close', () => {
+        this.peerSockets.delete(socket);
+        target.destroy();
+      });
+      socket.on('error', fail);
+      target.on('close', () => socket.destroy());
+      target.on('error', () => socket.destroy());
+      if (rest.length) target.write(rest);
+      if (head?.length) socket.write(head);
+      socket.pipe(target);
+      target.pipe(socket);
+    });
+    target.on('close', () => {
+      clearTimeout(timer);
+      proxy.destroy();
+    });
+    req.on('error', () => proxy.destroy());
+    proxy.on('close', () => {
+      clearTimeout(timer);
+      if (!answered) fail();
+    });
+    if (head === undefined) req.pipe(proxy);
+    else proxy.end();
+    return true;
   }
 }

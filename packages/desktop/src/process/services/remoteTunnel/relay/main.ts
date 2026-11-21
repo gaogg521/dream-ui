@@ -21,16 +21,28 @@ const brokerUrl = env('RELAY_BROKER_URL', 'http://127.0.0.1:8787').replace(/\/+$
 const bind = env('RELAY_BIND', '127.0.0.1');
 const log = (message: string): void => console.log(`${new Date().toISOString()} ${message}`);
 
-async function verify(subdomain: string, secret: string, kind: 'login' | 'recheck'): Promise<VerifyResult> {
+async function verify(
+  subdomain: string,
+  secret: string,
+  kind: 'login' | 'recheck',
+  connectionId?: string
+): Promise<VerifyResult> {
   try {
     const res = await fetch(`${brokerUrl}/internal/tunnel/verify`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ subdomain, secret, login: kind === 'login' }),
+      body: JSON.stringify({
+        subdomain,
+        secret,
+        login: kind === 'login',
+        relay_connection:
+          process.env.RELAY_NODE_ID && connectionId ? `${process.env.RELAY_NODE_ID}:${connectionId}` : undefined,
+      }),
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return 'unavailable';
-    const body = (await res.json()) as { ok?: unknown };
+    const body = (await res.json()) as { ok?: unknown; replaced?: unknown };
+    if (body.replaced === true) return 'replaced';
     return body.ok === true ? 'ok' : 'rejected';
   } catch (error) {
     log(`broker verify failed: ${String(error)}`);
@@ -48,11 +60,19 @@ if (offlinePath) {
   }
 }
 
+const peerUrl = process.env.RELAY_PEER_URL?.trim();
+const peerToken = process.env.RELAY_PEER_TOKEN?.trim();
+if (peerUrl && (!peerToken || peerToken.length < 32 || new URL(peerUrl).hostname !== '127.0.0.1')) {
+  throw new Error('Relay peer requires a loopback URL and a private token of at least 32 characters');
+}
+
 const relay = new RelayServer({
   subdomainHost: env('RELAY_SUBDOMAIN_HOST', 'r.1work.vip'),
   verify,
   offlinePage,
   log,
+  peer: peerUrl && peerToken ? { url: peerUrl, token: peerToken } : undefined,
+  reverifyIntervalMs: process.env.RELAY_NODE_ID ? 10_000 : undefined,
 });
 
 async function main(): Promise<void> {
