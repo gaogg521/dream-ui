@@ -284,6 +284,14 @@ arm64 的 channel 是 `latest-arm64` 决定的，`prepare-release-assets.sh` 已
    可重拉的正本），当晚释放 65.6GB 回到 39%。**每次企业镜像升级后应随手 prune；服务器加磁盘告警仍未做。**
    另：这台 sshd 会话不稳，跑命令用「单连接单命令」模式（prod_ssh.connect() 每次 connect→一条 exec_command→close）。
 3. dreamcore Release 工作流的资产发布完成（六资产）才是 dispatch 前提，见 §1.2。
+4. **官网域名是分地区解析，`deploy-1onework-www.py` 只更新其中一台**：境外线 `43.163.105.71`（= `OPERONE_DEPLOY_HOST`，
+   脚本目标机）+ 境内线 `62.234.93.202`（SSH 别名 `onework-62`，root + `~/.ssh/onework_62` 密钥）。3.0.19 当晚只部署了 43，
+   国内用户看到 3.0.18 才发现。**每版部署完 43 后，必须把同一份构建同步到 62**：
+   `tar -czf … -C .deploy-tmp-<ver> . && scp … onework-62:/opt/data/1onework-www.tar.gz`，然后在 62 上
+   `rm -rf /opt/website-1onework/* && tar -xzf … -C /opt/website-1onework && chown -R nginx:nginx … && nginx -t && systemctl reload nginx`。
+   **不要在 62 上跑 deploy 脚本**——它找不到 `work.1oneclaw.com` 的 letsencrypt 证书时会重写该机 nginx conf（62 的证书是
+   迁移来的四域名合一证书，conf 是「迁自 43」的手工版）。验收：`curl -sk --resolve work.1oneclaw.com:443:62.234.93.202`
+   看 main chunk hash 与四钉（注意 python urllib 直连 IP 会 TLS SNI 报错，用 curl --resolve）。
 
 ---
 
