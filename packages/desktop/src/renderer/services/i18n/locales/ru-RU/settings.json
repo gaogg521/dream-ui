@@ -1429,6 +1429,7 @@
   "mcpPurposeImage": "Преобразует HTML в изображение.",
   "mcpPurposeSearch": "Ищет подходящие результаты в интернете.",
   "mcpPurposeKnowledge": "Ищет в доступной базе знаний команды.",
+  "mcpToolSearchTeamKnowledge": "Ищет внутренние документы и материалы в доступных вам базах знаний компании или команды.",
   "mcpPurposeFromTools": "Предоставляет следующие инструменты: {{tools}}.",
   "mcpNoDescription": "Нет описания",
   "mcpAuthRequired": "Требуется аутентификация",

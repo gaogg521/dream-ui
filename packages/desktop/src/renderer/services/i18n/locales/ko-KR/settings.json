@@ -1425,6 +1425,7 @@
   "mcpPurposeImage": "HTML을 이미지로 렌더링합니다.",
   "mcpPurposeSearch": "웹에서 관련 결과를 검색합니다.",
   "mcpPurposeKnowledge": "접근 가능한 팀 지식 베이스를 검색합니다.",
+  "mcpToolSearchTeamKnowledge": "접근 권한이 있는 회사 또는 팀의 지식 베이스에서 내부 문서와 자료를 검색합니다.",
   "mcpPurposeFromTools": "다음 도구를 제공합니다: {{tools}}.",
   "mcpNoDescription": "설명 없음",
   "mcpAuthRequired": "인증 필요",

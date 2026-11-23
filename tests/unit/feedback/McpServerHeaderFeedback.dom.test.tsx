@@ -14,12 +14,18 @@ import userEvent from '@testing-library/user-event';
 import { ConfigProvider } from '@arco-design/web-react';
 import { SWRConfig } from 'swr';
 import zhSettings from '@/renderer/services/i18n/locales/zh-CN/settings.json';
+import enSettings from '@/renderer/services/i18n/locales/en-US/settings.json';
 
 let language = 'en';
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) =>
-      language === 'zh-CN' && key === 'settings.mcpPurposeMarket' ? zhSettings.mcpPurposeMarket : key,
+    t: (key: string) => {
+      if (key === 'settings.mcpPurposeMarket' && language === 'zh-CN') return zhSettings.mcpPurposeMarket;
+      if (key === 'settings.mcpToolSearchTeamKnowledge') {
+        return (language === 'zh-CN' ? zhSettings : enSettings).mcpToolSearchTeamKnowledge;
+      }
+      return key;
+    },
     i18n: { language },
   }),
 }));
@@ -170,6 +176,61 @@ it('shows a localized built-in purpose and persists a personal override without 
   await waitFor(() => expect(screen.getByText(zhSettings.mcpPurposeMarket)).toBeInTheDocument());
   expect(stored).toEqual({ other: 'Other server' });
   language = 'en';
+});
+
+it('switches the knowledge search description with the UI language and preserves its tool name', async () => {
+  const { default: ToolsList } = await vi.importActual<
+    typeof import('@/renderer/pages/settings/ToolsSettings/McpServerToolsList')
+  >('@/renderer/pages/settings/ToolsSettings/McpServerToolsList');
+  const tool = { name: 'search_team_knowledge', description: 'Original server description' };
+  const server = { ...buildServer('connected'), name: 'one-team-knowledge', builtin: true, tools: [tool] };
+  language = 'zh-CN';
+  const { rerender } = render(<ToolsList server={server} />);
+  expect(screen.getByText(tool.name)).toHaveAttribute('title', tool.name);
+  expect(screen.getByText(zhSettings.mcpToolSearchTeamKnowledge)).toBeInTheDocument();
+
+  language = 'en';
+  rerender(<ToolsList server={server} />);
+  expect(screen.getByText(tool.name)).toHaveAttribute('title', tool.name);
+  expect(screen.getByText(enSettings.mcpToolSearchTeamKnowledge)).toBeInTheDocument();
+
+  rerender(<ToolsList server={{ ...server, builtin: false }} />);
+  expect(screen.getByText(tool.description)).toBeInTheDocument();
+});
+
+it('keeps the three MCP cards on their original row when the middle one expands', () => {
+  const width = vi
+    .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+    .mockReturnValue(DOMRect.fromRect({ width: 900 }));
+  const servers = ['pdf', 'knowledge', 'browser', 'search'];
+  const layout = (expanded: boolean) => (
+    <ConfigProvider>
+      <McpServerGrid>
+        {servers.map((name) => (
+          <McpServerItem
+            key={name}
+            server={{ ...buildServer('connected'), id: name, name }}
+            isCollapsed={expanded && name === 'knowledge'}
+            onToggleCollapse={() => {}}
+            {...commonProps}
+          />
+        ))}
+      </McpServerGrid>
+    </ConfigProvider>
+  );
+  const card = (name: string) => screen.getByRole('button', { name }).parentElement;
+  try {
+    const { rerender } = render(layout(false));
+    expect(card('knowledge')).toHaveStyle({ gridRow: '1', gridColumn: '2' });
+    rerender(layout(true));
+    expect(card('pdf')).toHaveStyle({ gridRow: '1', gridColumn: '1' });
+    expect(card('knowledge')).toHaveStyle({ gridRow: '1', gridColumn: '2' });
+    expect(card('browser')).toHaveStyle({ gridRow: '1', gridColumn: '3' });
+    expect(screen.getByRole('region', { name: 'knowledge' })).toHaveStyle({ gridRow: '2' });
+    expect(card('search')).toHaveStyle({ gridRow: '3', gridColumn: '1' });
+  } finally {
+    width.mockRestore();
+  }
 });
 
 it('localizes browser tool descriptions while keeping a third-party tool with the same name intact', async () => {

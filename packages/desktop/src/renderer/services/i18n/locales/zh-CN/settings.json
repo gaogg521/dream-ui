@@ -1437,6 +1437,7 @@
   "mcpPurposeImage": "将 HTML 渲染为图片。",
   "mcpPurposeSearch": "搜索互联网并返回相关结果。",
   "mcpPurposeKnowledge": "搜索有权限访问的团队知识库。",
+  "mcpToolSearchTeamKnowledge": "搜索你有权访问的企业或团队知识库，查找内部文档和资料。",
   "mcpPurposeFromTools": "提供这些工具：{{tools}}。",
   "mcpNoDescription": "暂无描述",
   "mcpAuthRequired": "需要身份验证",

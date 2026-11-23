@@ -1437,6 +1437,7 @@
   "mcpPurposeImage": "將 HTML 轉成圖片。",
   "mcpPurposeSearch": "搜尋網路並傳回相關結果。",
   "mcpPurposeKnowledge": "搜尋有權限存取的團隊知識庫。",
+  "mcpToolSearchTeamKnowledge": "搜尋你有權存取的企業或團隊知識庫，查找內部文件和資料。",
   "mcpPurposeFromTools": "提供這些工具：{{tools}}。",
   "mcpNoDescription": "暫無描述",
   "mcpAuthRequired": "需要身份驗證",

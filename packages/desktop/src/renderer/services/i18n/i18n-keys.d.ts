@@ -4127,6 +4127,7 @@ export type I18nKey =
   | 'settings.mcpTestConnectionSuccess'
   | 'settings.mcpTestPassedDisabled'
   | 'settings.mcpTesting'
+  | 'settings.mcpToolSearchTeamKnowledge'
   | 'settings.mcpToolsLoaded'
   | 'settings.mcpToolsLoaded_one'
   | 'settings.mcpToolsLoaded_other'

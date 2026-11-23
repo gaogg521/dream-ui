@@ -1437,6 +1437,7 @@
   "mcpPurposeImage": "Render HTML as an image.",
   "mcpPurposeSearch": "Search the web for relevant results.",
   "mcpPurposeKnowledge": "Search team knowledge you can access.",
+  "mcpToolSearchTeamKnowledge": "Search company or team knowledge bases you can access for internal documents and resources.",
   "mcpPurposeFromTools": "Provides these tools: {{tools}}.",
   "mcpNoDescription": "No description",
   "mcpAuthRequired": "Authentication required",

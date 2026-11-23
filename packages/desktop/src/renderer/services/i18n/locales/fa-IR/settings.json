@@ -1437,6 +1437,7 @@
   "mcpPurposeImage": "HTML را به تصویر تبدیل می‌کند.",
   "mcpPurposeSearch": "نتایج مرتبط را در وب جست‌وجو می‌کند.",
   "mcpPurposeKnowledge": "پایگاه دانش قابل دسترسی تیم را جست‌وجو می‌کند.",
+  "mcpToolSearchTeamKnowledge": "اسناد و منابع داخلی را در پایگاه‌های دانش شرکت یا تیم که به آن‌ها دسترسی دارید جست‌وجو می‌کند.",
   "mcpPurposeFromTools": "این ابزارها را ارائه می‌دهد: {{tools}}.",
   "mcpNoDescription": "بدون توضیحات",
   "mcpAuthRequired": "احراز هویت لازم است",

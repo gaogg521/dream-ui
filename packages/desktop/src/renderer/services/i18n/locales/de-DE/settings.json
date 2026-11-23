@@ -1427,6 +1427,7 @@
   "mcpPurposeImage": "HTML als Bild rendern.",
   "mcpPurposeSearch": "Das Web nach relevanten Ergebnissen durchsuchen.",
   "mcpPurposeKnowledge": "Zugängliches Teamwissen durchsuchen.",
+  "mcpToolSearchTeamKnowledge": "Durchsucht zugängliche Unternehmens- oder Team-Wissensdatenbanken nach internen Dokumenten und Materialien.",
   "mcpPurposeFromTools": "Stellt diese Werkzeuge bereit: {{tools}}.",
   "mcpNoDescription": "Keine Beschreibung",
   "mcpAuthRequired": "Authentifizierung erforderlich",

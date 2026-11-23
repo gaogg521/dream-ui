@@ -1425,6 +1425,7 @@
   "mcpPurposeImage": "HTML を画像に変換します。",
   "mcpPurposeSearch": "ウェブを検索して関連結果を返します。",
   "mcpPurposeKnowledge": "アクセス可能なチームのナレッジを検索します。",
+  "mcpToolSearchTeamKnowledge": "アクセス権のある企業やチームのナレッジベースから、内部文書や資料を検索します。",
   "mcpPurposeFromTools": "次のツールを提供します：{{tools}}。",
   "mcpNoDescription": "説明なし",
   "mcpAuthRequired": "認証が必要です",

@@ -91,7 +91,10 @@ const McpServerToolsList: React.FC<McpServerToolsListProps> = ({ server }) => {
       {server.tools.map((tool) => {
         const localized =
           browser && chinese && Object.hasOwn(localizedCatalog, tool.name) ? localizedCatalog[tool.name] : undefined;
-        const description = localized || tool.description || t('settings.mcpNoDescription');
+        const description =
+          server.builtin && server.name === 'one-team-knowledge' && tool.name === 'search_team_knowledge'
+            ? t('settings.mcpToolSearchTeamKnowledge')
+            : localized || tool.description || t('settings.mcpNoDescription');
         return (
           <div
             key={tool.name}

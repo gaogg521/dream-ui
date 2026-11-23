@@ -1425,6 +1425,7 @@
   "mcpPurposeImage": "Convierte HTML en imágenes.",
   "mcpPurposeSearch": "Busca resultados relevantes en Internet.",
   "mcpPurposeKnowledge": "Busca en el conocimiento del equipo al que tienes acceso.",
+  "mcpToolSearchTeamKnowledge": "Busca documentos y recursos internos en las bases de conocimiento de la empresa o del equipo a las que tienes acceso.",
   "mcpPurposeFromTools": "Proporciona estas herramientas: {{tools}}.",
   "mcpNoDescription": "Sin descripción",
   "mcpAuthRequired": "Autenticación requerida",

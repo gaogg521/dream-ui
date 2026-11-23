@@ -1,8 +1,8 @@
-import { Button, Collapse, Input, Message } from '@arco-design/web-react';
-import { Edit } from '@icon-park/react';
+import { Button, Input, Message } from '@arco-design/web-react';
+import { Down, Edit, Right } from '@icon-park/react';
 import useSWR from 'swr';
 import { getClientBusinessSetting, setClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
-import React, { useRef, useState } from 'react';
+import React, { useId, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getMcpSettingsScope, useMcpSettingsScope } from '@/renderer/hooks/mcp/useMcpServers';
 import { setMcpServersEnabled } from '@/renderer/hooks/mcp/catalog';
@@ -46,19 +46,60 @@ function saveMcpNote(id: string, text: string, scope: string): Promise<Record<st
   return write;
 }
 
+const GRID_GAP = 12;
+const MIN_CARD_WIDTH = 280;
+const cardStyle = {
+  backgroundColor: 'color-mix(in srgb, var(--bg-2) 66%, var(--bg-3))',
+  border: '1px solid color-mix(in srgb, var(--border-base) 64%, transparent)',
+};
+
 export function McpServerGrid({ children }: React.PropsWithChildren) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [columns, setColumns] = useState(1);
+  useLayoutEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const measure = () => {
+      const width = grid.getBoundingClientRect().width;
+      setColumns(Math.max(1, Math.min(3, Math.floor((width + GRID_GAP) / (MIN_CARD_WIDTH + GRID_GAP)))));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, []);
+
+  const items = React.Children.toArray(children);
+  let row = 1;
+  let detailRow = 2;
+  const positionedItems = items.map((item, index) => {
+    if (!React.isValidElement<McpServerItemProps>(item) || item.type !== McpServerItem) return item;
+    const column = (index % columns) + 1;
+    const positioned = React.cloneElement(item, {
+      cardPosition: { gridRow: row, gridColumn: column },
+      detailRow: item.props.isCollapsed ? detailRow++ : undefined,
+    });
+    if (column === columns) {
+      row = detailRow;
+      detailRow = row + 1;
+    }
+    return positioned;
+  });
   return (
     <div
-      className='grid items-start gap-12px'
+      ref={gridRef}
+      className='grid items-start'
       data-testid='mcp-server-grid'
-      style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, max(280px, calc((100% - 24px) / 3))), 1fr))' }}
+      style={{ gap: GRID_GAP, gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
     >
-      {children}
+      {positionedItems}
     </div>
   );
 }
 
 interface McpServerItemProps {
+  cardPosition?: React.CSSProperties;
+  detailRow?: number;
   server: IMcpServer;
   isCollapsed: boolean;
   isTestingConnection: boolean;
@@ -76,6 +117,8 @@ interface McpServerItemProps {
 }
 
 const McpServerItem: React.FC<McpServerItemProps> = ({
+  cardPosition,
+  detailRow,
   server,
   isCollapsed,
   isTestingConnection,
@@ -89,6 +132,7 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
   onOAuthLogin,
   onServerUpdated,
 }) => {
+  const detailsId = useId();
   const { t, i18n } = useTranslation();
   const [savingEnabled, setSavingEnabled] = useState(false);
   const savingRef = useRef(false);
@@ -190,18 +234,25 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
   };
 
   return (
-    <Collapse
-      key={server.id}
-      activeKey={isCollapsed ? ['1'] : []}
-      onChange={onToggleCollapse}
-      className={`min-w-0 overflow-hidden rd-12px [&_.arco-collapse-item-header]:!bg-transparent [&_.arco-collapse-item-header]:!py-10px [&_.arco-collapse-item-content]:!bg-transparent [&_.arco-collapse-item-header-title]:min-w-0 [&_.arco-collapse-item-header-title]:flex-1${isCollapsed ? ' col-span-full' : ''}`}
-      style={{
-        backgroundColor: 'color-mix(in srgb, var(--bg-2) 66%, var(--bg-3))',
-        border: '1px solid color-mix(in srgb, var(--border-base) 64%, transparent)',
-      }}
-    >
-      <Collapse.Item
-        header={
+    <>
+      <div
+        className='flex min-w-0 cursor-pointer items-center gap-4px rd-12px px-12px py-10px'
+        style={{ ...cardStyle, ...cardPosition }}
+        onClick={onToggleCollapse}
+      >
+        <Button
+          size='mini'
+          type='text'
+          icon={isCollapsed ? <Down size={12} /> : <Right size={12} />}
+          aria-label={server.name}
+          aria-expanded={isCollapsed}
+          aria-controls={isCollapsed ? detailsId : undefined}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleCollapse();
+          }}
+        />
+        <div className='min-w-0 flex-1'>
           <McpServerHeader
             server={server}
             purpose={purpose}
@@ -216,16 +267,23 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
             onDeleteServer={onDeleteServer}
             onOAuthLogin={onOAuthLogin}
           />
-        }
-        name='1'
-        className={'[&_div.arco-collapse-item-content-box]:py-3'}
-      >
-        {server.name === WEB_SEARCH_MCP_NAME && (
-          <WebSearchProviderConfig server={server} onServerUpdated={onServerUpdated} />
-        )}
-        <McpServerToolsList server={server} />
-      </Collapse.Item>
-    </Collapse>
+        </div>
+      </div>
+      {isCollapsed && (
+        <section
+          id={detailsId}
+          aria-label={server.name}
+          className='col-span-full min-w-0 rd-12px px-16px py-12px'
+          style={{ ...cardStyle, gridRow: detailRow }}
+        >
+          <div className='mb-8px font-medium text-t-primary'>{server.name}</div>
+          {server.name === WEB_SEARCH_MCP_NAME && (
+            <WebSearchProviderConfig server={server} onServerUpdated={onServerUpdated} />
+          )}
+          <McpServerToolsList server={server} />
+        </section>
+      )}
+    </>
   );
 };
 

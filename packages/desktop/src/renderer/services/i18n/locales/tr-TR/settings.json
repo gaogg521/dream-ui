@@ -1425,6 +1425,7 @@
   "mcpPurposeImage": "HTML içeriğini görsele dönüştürür.",
   "mcpPurposeSearch": "Web’de ilgili sonuçları arar.",
   "mcpPurposeKnowledge": "Erişilebilir ekip bilgi tabanında arama yapar.",
+  "mcpToolSearchTeamKnowledge": "Erişiminiz olan şirket veya ekip bilgi tabanlarında kurum içi belge ve kaynakları arar.",
   "mcpPurposeFromTools": "Şu araçları sağlar: {{tools}}.",
   "mcpNoDescription": "Açıklama yok",
   "mcpAuthRequired": "Kimlik doğrulama gerekli",
