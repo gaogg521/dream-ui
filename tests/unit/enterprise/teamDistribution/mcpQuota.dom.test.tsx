@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock('@/common/adapter/enterpriseMode', () => ({
+  ENTERPRISE_CONNECTION_CHANGED_EVENT: 'enterprise-connection-changed',
+  getEnterpriseConnectionScope: () => (mocks.enterprise ? 'enterprise:test' : 'local'),
   getEnterpriseSession: () => (mocks.enterprise ? {} : null),
   isEnterpriseModeEnabled: () => mocks.enterprise,
 }));
@@ -73,30 +75,22 @@ describe('enterprise-only MCP quota', () => {
     mocks.local.mockResolvedValue([]);
     mocks.company.mockImplementation(async ({ selectedIds }: { selectedIds: string[] }) => ({ selectedIds }));
   });
-  it.each([false, true])('allows 100 locally created MCPs with enterprise=%s', async (enterprise) => {
-    mocks.enterprise = enterprise;
+  it('does not display enterprise limits for a local connection', () => {
+    mocks.enterprise = false;
     render(<McpActivationPanel servers={locals} onChanged={vi.fn()} />);
-    fireEvent.click(screen.getByTestId('select-local-0'));
-    fireEvent.click(screen.getAllByText('settings.mcpSaveSelection')[0]);
-    await waitFor(() => expect(mocks.local).toHaveBeenCalledWith({ ids: locals.map((item) => item.id) }));
-    expect(mocks.warning).not.toHaveBeenCalled();
+    expect(screen.queryByText('settings.mcpQuotaDescription')).toBeNull();
+    expect(mocks.local).not.toHaveBeenCalled();
   });
-  it('retains the active enterprise connector when replacing local selections', async () => {
+
+  it('shows enterprise limits without exposing the old local selection form', async () => {
     mocks.enterprise = true;
-    const company = {
-      id: 'company-active',
-      name: 'Company active',
-      enabled: true,
-      builtin: false,
-      original_json: JSON.stringify({ teamRegistryId: 'remote-id' }),
-    } as IMcpServer;
-    render(<McpActivationPanel servers={[...locals, company]} onChanged={vi.fn()} />);
-    fireEvent.click(screen.getByTestId('select-local-0'));
-    fireEvent.click(screen.getAllByText('settings.mcpSaveSelection')[0]);
-    await waitFor(() =>
-      expect(mocks.local).toHaveBeenCalledWith({ ids: [...locals.map((item) => item.id), 'company-active'] })
-    );
+    render(<McpActivationPanel servers={locals} onChanged={vi.fn()} />);
+    await screen.findByTestId('select-team-0');
+    expect(screen.getByText('settings.mcpQuotaDescription')).toBeTruthy();
+    expect(screen.queryByText('settings.mcpSaveSelection')).toBeNull();
+    expect(mocks.local).not.toHaveBeenCalled();
   });
+
   it('refuses more than ten new enterprise connectors in one save', async () => {
     mocks.enterprise = true;
     render(<McpActivationPanel servers={locals} onChanged={vi.fn()} />);

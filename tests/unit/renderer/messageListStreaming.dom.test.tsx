@@ -121,6 +121,7 @@ vi.mock('@/renderer/pages/conversation/Messages/components/SelectionReplyButton'
 
 vi.mock('@icon-park/react', () => ({
   Down: () => <span>down</span>,
+  Up: () => <span>up</span>,
 }));
 
 function createTextMessage(content: string): IMessageText {

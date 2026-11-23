@@ -11,6 +11,7 @@ vi.mock('@/common', () => ({
   ipcBridge: { onePlatform: { myScenes: { invoke: hooks.myScenes } } },
 }));
 vi.mock('@/common/adapter/enterpriseMode', () => ({
+  getEnterpriseConnectionScope: () => `enterprise:${hooks.userId}`,
   isEnterpriseRemoteActive: () => true,
   getEnterpriseServerUrl: () => 'https://enterprise.test',
   getEnterpriseSession: () => ({ userId: hooks.userId }),
