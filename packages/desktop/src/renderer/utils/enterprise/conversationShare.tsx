@@ -132,13 +132,11 @@ function ShareScopePicker(props: {
 }
 
 const SNAPSHOT_MESSAGE_CAP = 50;
+const NEW_SESSION_TARGET = 'new-session';
 
 /**
- * Personal/all-editions share: forward this conversation's record into
- * another of the user's OWN conversations as a `[[SESSION_SHARE]]` snapshot
- * message. No governance plane involved — the target is picked from the
- * member's history, the send goes through the ordinary local send edge, and
- * the recipient conversation renders it as a styled snapshot card.
+ * Share a personal snapshot as a card in an existing conversation or import
+ * its history into a new conversation owned by the same user.
  *
  * The marker deliberately avoids the `[[DREAM_...]]` prefix: the backend
  * escapes that prefix inside user-sent text, and this block must survive it.
@@ -146,17 +144,14 @@ const SNAPSHOT_MESSAGE_CAP = 50;
 export async function shareConversationToMySession(
   conversation: { id: string; name: string },
   allConversations: Array<{ id: string; name?: string | null; type?: string }>,
-  t: TFunction
+  t: TFunction,
+  onNewSession: (id: string) => void
 ): Promise<'shared' | 'cancelled' | 'unavailable'> {
   const targets = allConversations.filter((entry) => entry.id !== conversation.id);
-  if (!targets.length) {
-    Message.info(t('conversation.sessionShare.noOtherConversation', { defaultValue: '没有其他会话可作为分享目标' }));
-    return 'unavailable';
-  }
 
   let targetId: string | undefined;
   const accepted = await new Promise<boolean>((resolve) => {
-    let selected: string | undefined;
+    let selected = targets.length ? undefined : NEW_SESSION_TARGET;
     Modal.confirm({
       title: t('conversation.sessionShare.pickTitle', {
         defaultValue: '把「{{name}}」分享到哪个会话？',
@@ -164,12 +159,14 @@ export async function shareConversationToMySession(
       }),
       content: (
         <Select
+          defaultValue={selected}
           placeholder={t('conversation.sessionShare.pickPlaceholder', { defaultValue: '选择目标会话' })}
           style={{ width: '100%' }}
           onChange={(value: string) => {
             selected = value;
           }}
         >
+          <Select.Option value={NEW_SESSION_TARGET}>{t('common.knowledgeLibrary.newConversation')}</Select.Option>
           {targets.map((entry) => (
             <Select.Option key={entry.id} value={entry.id}>
               {entry.name || entry.id}
@@ -188,6 +185,15 @@ export async function shareConversationToMySession(
 
   try {
     const messages = (await readLocalSnapshotMessages(conversation.id)).slice(-SNAPSHOT_MESSAGE_CAP);
+    if (targetId === NEW_SESSION_TARGET) {
+      const result = await ipcBridge.conversation.importShared.invoke({
+        name: conversation.name.trim() || t('conversation.welcome.newConversation'),
+        messages,
+      });
+      onNewSession(result.conversationId);
+      Message.success(t('conversation.sessionShare.sent', { defaultValue: '已分享到目标会话' }));
+      return 'shared';
+    }
     const payload = {
       name: conversation.name,
       sharedAt: Date.now(),

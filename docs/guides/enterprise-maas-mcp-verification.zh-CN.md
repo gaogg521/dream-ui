@@ -19,3 +19,9 @@
 - 类型检查通过。
 - 2026-11-23 使用 Windows 开发版及真实企业成员账号连接企业。MAAS 下发的 `glm-flashx-latest`、`deepseek-flash-latest`、`gpt-5-6-luna` 和 `qwen-3.8-max` 返回上游限流。页面展示了失败状态与原始原因，`glm-flashx-latest` 详情显示耗时 110 ms。未出现「保存模型配置失败」。MAAS 探测成功状态仍待上游恢复后实测。
 - 在同一企业登录状态下，通过「工作助手」场景及 `deepseek-v4-flash` 实际执行 `new_page`、`navigate_page` 和 `read_page`，读取 `https://example.com/` 并返回 `Example Domain`。本次实际使用内置浏览器工具。独立的 `one-page-reader` 未被此次会话加载，MAAS 模型与 MCP 的组合仍待实测。
+
+## 分享到新会话
+
+在历史会话菜单中选择「分享到我的会话」，在目标列表中选「新建会话」并确认。客户端复用现有导入接口，复制最近 50 条消息并打开新会话。新会话继续对话前需选择模型。
+
+已在上述 Windows 开发版和真实企业登录状态下操作，确认新会话出现在历史列表，且打开后可看到原验证会话的提问及 `Example Domain` 回复。

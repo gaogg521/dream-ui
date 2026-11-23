@@ -8,6 +8,7 @@ import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useCronJobsMap } from '@/renderer/pages/cron';
 import { useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import { shareConversationToOrg, shareConversationToMySession } from '@renderer/utils/enterprise/conversationShare';
+import { emitter } from '@renderer/utils/emitter';
 import SharedInboxModal from './SharedInboxModal';
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -278,7 +279,15 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
             void shareConversationToOrg({ id: conversation.id, name: conversation.name ?? '' }, t)
         : undefined,
       onShareToSession: (conversation: TChatConversation): void =>
-        void shareConversationToMySession({ id: conversation.id, name: conversation.name ?? '' }, conversations, t),
+        void shareConversationToMySession(
+          { id: conversation.id, name: conversation.name ?? '' },
+          conversations,
+          t,
+          (id) => {
+            emitter.emit('chat.history.refresh');
+            void navigate(`/conversation/${id}`);
+          }
+        ),
     }),
     [
       collapsed,
@@ -305,6 +314,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       resolveConversationName,
       isEnterpriseMember,
       conversations,
+      navigate,
       t,
     ]
   );
