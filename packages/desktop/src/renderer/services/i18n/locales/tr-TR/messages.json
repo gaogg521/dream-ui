@@ -17,6 +17,8 @@
   "downloadSuccess": "İndirme başarılı",
   "downloadFailed": "İndirme başarısız",
   "imageLoadFailed": "Görüntü yüklenemedi",
+  "scrollUp": "Yukarı kaydır",
+  "scrollDown": "Aşağı kaydır",
   "scrollToBottom": "Aşağı kaydır",
   "anchorRail": {
     "label": "Sohbet mesajı bağlantı noktaları",

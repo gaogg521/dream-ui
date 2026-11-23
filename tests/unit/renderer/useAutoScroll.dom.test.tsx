@@ -5,7 +5,7 @@
  */
 
 import type { UIEvent } from 'react';
-import { act, renderHook } from '@testing-library/react';
+import { act, render, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TMessage } from '@/common/chat/chatLib';
 import { useAutoScroll } from '@/renderer/pages/conversation/Messages/useAutoScroll';
@@ -148,6 +148,78 @@ describe('useAutoScroll', () => {
       top: 600,
       behavior: 'auto',
     });
+  });
+
+  it('keeps the visible message in place when a preview narrows the scroller', () => {
+    const scroller = createScroller();
+    const content = createContent();
+    const row = document.createElement('div');
+    content.append(row);
+    let width = 800;
+    let rowStart = 280;
+    Object.defineProperty(scroller, 'clientWidth', { get: () => width });
+    row.getBoundingClientRect = () => new DOMRect(0, rowStart - scroller.scrollTop, width, 100);
+    const { result } = renderHook(() => useAutoScroll({ messages: [createLeftMessage('hello')], itemCount: 1 }));
+    attachElements(result, scroller, content);
+    act(() => {
+      vi.runAllTimers();
+      result.current.handlePointerDown();
+    });
+    fireScroll(result.current.handleScroll, scroller, 300);
+    expect(row.getBoundingClientRect().top).toBe(-20);
+
+    width = 500;
+    rowStart += 180;
+    act(() => {
+      resizeObserverCallback?.([], {} as ResizeObserver);
+      vi.runAllTimers();
+    });
+    expect(scroller.scrollTop).toBe(480);
+    expect(row.getBoundingClientRect().top).toBe(-20);
+  });
+
+  it('keeps the visible Markdown block when earlier paragraphs in the same message wrap', () => {
+    const scroller = createScroller();
+    const content = createContent();
+    const row = document.createElement('div');
+    const host = document.createElement('div');
+    host.className = 'markdown-shadow';
+    const body = document.createElement('div');
+    body.className = 'markdown-shadow-body';
+    const first = document.createElement('p');
+    const second = document.createElement('p');
+    body.append(first, second);
+    host.attachShadow({ mode: 'open' }).append(body);
+    row.append(host);
+    content.append(row);
+    scroller.append(content);
+    const { container } = render(null);
+    container.append(scroller);
+
+    let width = 800;
+    let firstHeight = 270;
+    Object.defineProperty(scroller, 'clientWidth', { get: () => width });
+    const rect = (top: number, height: number) => new DOMRect(0, top - scroller.scrollTop, width, height);
+    row.getBoundingClientRect = body.getBoundingClientRect = () => rect(10, firstHeight + 200);
+    first.getBoundingClientRect = () => rect(10, firstHeight);
+    second.getBoundingClientRect = () => rect(10 + firstHeight, 200);
+
+    const { result } = renderHook(() => useAutoScroll({ messages: [createLeftMessage('hello')], itemCount: 1 }));
+    attachElements(result, scroller, content);
+    act(() => {
+      vi.runAllTimers();
+      result.current.handlePointerDown();
+    });
+    fireScroll(result.current.handleScroll, scroller, 300);
+    expect(second.getBoundingClientRect().top).toBe(-20);
+
+    width = 500;
+    firstHeight += 180;
+    act(() => {
+      resizeObserverCallback?.([], {} as ResizeObserver);
+      vi.runAllTimers();
+    });
+    expect(second.getBoundingClientRect().top).toBe(-20);
   });
 
   it('auto-follows assistant message updates even when resize observer does not fire', () => {

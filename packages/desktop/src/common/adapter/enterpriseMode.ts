@@ -99,6 +99,12 @@ export function isEnterpriseRemoteActive(): boolean {
   return isEnterpriseModeEnabled() && getEnterpriseServerUrl() !== null;
 }
 
+/** An opaque cache/write scope without credentials. */
+export function getEnterpriseConnectionScope(): string {
+  if (!isEnterpriseRemoteActive()) return 'local';
+  return JSON.stringify([getEnterpriseServerUrl(), getEnterpriseSession()?.userId ?? null]);
+}
+
 /** Only transport failures count as offline. Reachable HTTP refusals reset the grace period. */
 export function recordEnterpriseReachability(reachable: boolean, now = Date.now()): boolean {
   if (!isEnterpriseRemoteActive()) return false;

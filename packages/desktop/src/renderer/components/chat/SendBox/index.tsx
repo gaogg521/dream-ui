@@ -226,7 +226,8 @@ const SendBox: React.FC<{
   value?: string;
   onChange?: (value: string) => void;
   onSend: (message: string) => Promise<void | false>;
-  onStop?: () => Promise<void>;
+  onStop?: () => Promise<void | false>;
+  initialSentDraft?: { conversationId: string; text: string };
   disabled?: boolean;
   /**
    * Disables only the send button's click affordance (visual + non-clickable)
@@ -294,6 +295,7 @@ const SendBox: React.FC<{
 }> = ({
   onSend,
   onStop,
+  initialSentDraft,
   prefix,
   className,
   loading,
@@ -349,6 +351,8 @@ const SendBox: React.FC<{
   const measurementCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const mobileUserFocusIntentUntilRef = useRef(0);
   const latestInputRef = useLatestRef(input);
+  const conversationIdRef = useLatestRef(conversationContext?.conversation_id);
+  const sentDraftRef = useRef<{ conversationId?: string; text: string; quote: ReplyQuote | null } | null>(null);
   const setInputRef = useLatestRef(setInput);
   const messageList = useMessageList();
   const [historyNavigationIndex, setHistoryNavigationIndex] = useState<number | null>(null);
@@ -1542,6 +1546,11 @@ const SendBox: React.FC<{
 
     // 立即清空输入框，避免异步 onSend 完成后覆盖用户新输入
     // Clear input immediately to prevent async onSend completion from overwriting new user input
+    const sentDraft =
+      !loading && !isLoading
+        ? { conversationId: conversationContext?.conversation_id, text: input, quote: replyQuote }
+        : null;
+    if (sentDraft) sentDraftRef.current = sentDraft;
     setInput('');
     clearDomSnippets();
     setReplyQuote(null);
@@ -1549,6 +1558,7 @@ const SendBox: React.FC<{
     onSend(finalMessage)
       .then((result) => {
         if (result === false) {
+          if (sentDraftRef.current === sentDraft) sentDraftRef.current = null;
           setInput(finalMessage);
         }
       })
@@ -1558,10 +1568,30 @@ const SendBox: React.FC<{
       });
   };
 
+  useEffect(() => {
+    if (!loading && !isLoading) sentDraftRef.current = null;
+  }, [loading, isLoading]);
+  useEffect(() => {
+    if (initialSentDraft) sentDraftRef.current = { ...initialSentDraft, quote: null };
+  }, [initialSentDraft]);
+
   const stopHandler = async () => {
     if (!onStop) return;
+    const sentDraft = sentDraftRef.current;
     try {
-      await onStop();
+      if ((await onStop()) === false) return;
+      const currentDraft = sentDraftRef.current;
+      if (currentDraft === sentDraft) sentDraftRef.current = null;
+      if (
+        sentDraft &&
+        sentDraft.conversationId === conversationIdRef.current &&
+        !latestInputRef.current &&
+        (!currentDraft || currentDraft === sentDraft)
+      ) {
+        setInputRef.current(sentDraft.text);
+        setReplyQuote(sentDraft.quote);
+        getTextareaElement()?.focus();
+      }
     } finally {
       setIsLoading(false);
     }

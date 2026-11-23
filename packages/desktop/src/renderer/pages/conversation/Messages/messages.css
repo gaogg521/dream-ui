@@ -47,3 +47,36 @@
     line-height: 1.4 !important;
   }
 }
+
+/* Native thumb keeps track clicks and dragging available for long histories. */
+.conversation-scrollbar::-webkit-scrollbar {
+  width: 12px;
+}
+
+.conversation-scrollbar::-webkit-scrollbar-track {
+  margin-block: 16px;
+}
+
+.conversation-scrollbar::-webkit-scrollbar-thumb,
+.conversation-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-text-3);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 6px;
+}
+
+.conversation-scrollbar:hover::-webkit-scrollbar-thumb:hover,
+.conversation-scrollbar:hover::-webkit-scrollbar-thumb:active {
+  background-color: var(--color-text-2);
+}
+
+.conversation-scroll-button.arco-btn {
+  position: absolute;
+  inset-inline-end: -20px;
+  z-index: 1;
+  width: 12px;
+  min-width: 0;
+  height: 16px;
+  padding: 0;
+  color: var(--color-text-3);
+}

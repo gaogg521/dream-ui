@@ -18,6 +18,8 @@
   "downloadSuccess": "Завантаження успішне",
   "downloadFailed": "Не вдалося завантажити",
   "imageLoadFailed": "Не вдалося завантажити зображення",
+  "scrollUp": "Прокрутити вгору",
+  "scrollDown": "Прокрутити вниз",
   "scrollToBottom": "Прокрутити донизу",
   "anchorRail": {
     "label": "Якорі повідомлень розмови",

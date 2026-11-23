@@ -142,6 +142,15 @@ describe('useMcpConnection — ELECTRON-1A1 unmount race', () => {
     addSpy.mockRestore();
   });
 
+  it('explains that refreshing a disabled MCP keeps it off', async () => {
+    vi.mocked(mcpService.testMcpConnection.invoke).mockResolvedValue({ success: true, tools: [] } as never);
+    const success = vi.fn();
+    const message = { warning: vi.fn(), success, error: vi.fn() } as unknown as Parameters<typeof useMcpConnection>[1];
+    const { result } = renderHook(() => useMcpConnection(vi.fn(), message));
+    await act(async () => result.current.handleTestMcpConnection({ ...server, enabled: false }));
+    expect(success).toHaveBeenCalledWith('My Server: settings.mcpTestPassedDisabled');
+  });
+
   it('still shows the success message when the context is alive', async () => {
     vi.mocked(mcpService.testMcpConnection.invoke).mockResolvedValue({ success: true, tools: [] } as never);
     const success = vi.fn();

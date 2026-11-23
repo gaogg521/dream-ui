@@ -6,7 +6,7 @@
 
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { Modal } from '@arco-design/web-react';
+import { Message, Modal } from '@arco-design/web-react';
 import commonZh from '@/renderer/services/i18n/locales/zh-CN/common.json';
 import { SceneDependencyUnavailableError } from '@/renderer/utils/scenes/sceneChat';
 import type { SceneItem } from '@/renderer/utils/scenes/sceneItem';
@@ -27,6 +27,7 @@ const {
   sendMock,
   navigateMock,
   sceneStartMock,
+  sceneEnableMock,
   capturedSceneGridProps,
 } = vi.hoisted(() => ({
   modelSelectionMock: {
@@ -131,6 +132,7 @@ const {
   },
   navigateMock: vi.fn(),
   sceneStartMock: vi.fn(),
+  sceneEnableMock: vi.fn(),
   capturedSceneGridProps: [] as Array<Record<string, unknown>>,
 }));
 
@@ -139,7 +141,8 @@ vi.mock('react-i18next', () => ({
     t: (key: string, options?: { defaultValue?: string; [key: string]: unknown }) => {
       const messages: Record<string, string> = {
         'common.scenes.dependenciesTitle': commonZh.scenes.dependenciesTitle,
-        'common.scenes.disabledTools': commonZh.scenes.disabledTools,
+        'common.scenes.enableAndOpen': commonZh.scenes.enableAndOpen,
+        'common.scenes.enableToolsPrompt': commonZh.scenes.enableToolsPrompt,
         'common.scenes.missingDependencies': commonZh.scenes.missingDependencies,
       };
       return messages[key]?.replace('{{names}}', String(options?.names ?? '')) || options?.defaultValue || key;
@@ -170,6 +173,7 @@ vi.mock('@/renderer/components/scenes/SceneGrid', () => ({
 vi.mock('@/renderer/utils/scenes/sceneChat', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/renderer/utils/scenes/sceneChat')>()),
   startSceneConversation: sceneStartMock,
+  enableSceneTools: sceneEnableMock,
 }));
 
 vi.mock('@/renderer/hooks/mcp/catalog', () => ({
@@ -343,6 +347,7 @@ describe('GuidPage', () => {
     locationMock.state = null;
     capturedSceneGridProps.length = 0;
     sceneStartMock.mockReset();
+    sceneEnableMock.mockReset().mockResolvedValue(undefined);
     modelSelectionMock.current_model = undefined;
     locationMock.key = 'guid-location';
     navigateMock.mockReset();
@@ -389,40 +394,70 @@ describe('GuidPage', () => {
     ];
   });
 
-  it.each(['disabled', 'missing'] as const)(
-    'explains %s scene dependencies and opens the relevant settings page',
-    async (reason) => {
-      modelSelectionMock.current_model = {
-        id: 'provider',
-        use_model: 'model',
-      } as import('@/common/config/storage').TProviderWithModel;
-      sceneStartMock.mockRejectedValue(
-        new SceneDependencyUnavailableError(
-          reason === 'disabled' ? ['one-browser'] : [],
-          [],
-          reason === 'missing' ? ['one-work-assistant'] : []
-        )
-      );
-      render(<GuidPage />);
-      try {
-        await act(async () => {
-          const onOpenScene = capturedSceneGridProps.at(-1)!.onOpenScene as (scene: SceneItem) => Promise<void>;
-          await onOpenScene({} as SceneItem);
-        });
-        const expected =
-          reason === 'disabled'
-            ? '以下工具已关闭：one-browser。请点击“前往设置”，在“设置 → MCP 服务”中启用它们，再返回重新打开场景。'
-            : '以下技能或内置工具未就绪：one-work-assistant。请在“设置 → 我的技能 / MCP 服务”中检查，必要时更新或修复客户端，再重试。';
-        expect(await screen.findByText(expected)).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: 'common.goToSettings' }));
-        await waitFor(() =>
-          expect(navigateMock).toHaveBeenCalledWith(reason === 'disabled' ? '/settings/mcp' : '/settings/skills')
-        );
-      } finally {
-        act(() => Modal.destroyAll());
-      }
+  it.each(['cancel', 'confirm', 'retry'] as const)('handles %s on the scene tool confirmation', async (action) => {
+    modelSelectionMock.current_model = {
+      id: 'provider',
+      use_model: 'model',
+    } as import('@/common/config/storage').TProviderWithModel;
+    const item = {} as SceneItem;
+    sceneStartMock
+      .mockRejectedValueOnce(new SceneDependencyUnavailableError(['one-browser'], [], []))
+      .mockResolvedValueOnce('scene-conversation');
+    const showError = vi.spyOn(Message, 'error').mockImplementation(() => () => {});
+    if (action === 'retry') sceneEnableMock.mockRejectedValueOnce(new Error('offline'));
+    render(<GuidPage />);
+    await act(async () => {
+      await (capturedSceneGridProps.at(-1)!.onOpenScene as (scene: SceneItem) => Promise<void>)(item);
+    });
+
+    expect(
+      await screen.findByText(commonZh.scenes.enableToolsPrompt.replace('{{names}}', 'one-browser'))
+    ).toBeInTheDocument();
+    expect(sceneEnableMock).not.toHaveBeenCalled();
+    if (action === 'cancel') {
+      fireEvent.click(screen.getByRole('button', { name: 'common.cancel' }));
+      expect(sceneEnableMock).not.toHaveBeenCalled();
+      expect(navigateMock).not.toHaveBeenCalled();
+      showError.mockRestore();
+      return;
     }
-  );
+
+    const confirm = () => fireEvent.click(screen.getByRole('button', { name: commonZh.scenes.enableAndOpen }));
+    confirm();
+    if (action === 'retry') {
+      await waitFor(() => expect(screen.getByRole('button', { name: commonZh.scenes.enableAndOpen })).toBeEnabled());
+      expect(sceneStartMock).toHaveBeenCalledTimes(1);
+      expect(showError).toHaveBeenCalledWith('Could not enable the tools. Please try again.');
+      expect(navigateMock).not.toHaveBeenCalled();
+      confirm();
+    }
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/conversation/scene-conversation'));
+    expect(sceneEnableMock).toHaveBeenCalledWith(['one-browser']);
+    expect(sceneStartMock.mock.calls[1][0]).toBe(item);
+    showError.mockRestore();
+  });
+
+  it('keeps settings as a fallback for missing dependencies', async () => {
+    modelSelectionMock.current_model = {
+      id: 'provider',
+      use_model: 'model',
+    } as import('@/common/config/storage').TProviderWithModel;
+    sceneStartMock.mockRejectedValue(new SceneDependencyUnavailableError(['one-browser'], [], ['one-work-assistant']));
+    render(<GuidPage />);
+    try {
+      await act(async () => {
+        await (capturedSceneGridProps.at(-1)!.onOpenScene as (scene: SceneItem) => Promise<void>)({} as SceneItem);
+      });
+      expect(
+        await screen.findByText(commonZh.scenes.missingDependencies.replace('{{names}}', 'one-work-assistant'))
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'common.goToSettings' }));
+      await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/settings/skills'));
+      expect(sceneEnableMock).not.toHaveBeenCalled();
+    } finally {
+      act(() => Modal.destroyAll());
+    }
+  });
 
   it('keeps the existing replace contract for ordinary Guid prefills', () => {
     locationMock.state = { prefillPrompt: 'Replace with this prompt' };

@@ -220,7 +220,9 @@ export const useMcpConnection = (
                     })}`
                   );
                 } else {
-                  message.success(`${server.name}: ${t('settings.mcpTestConnectionSuccess')}`);
+                  message.success(
+                    `${server.name}: ${t(server.enabled === false ? 'settings.mcpTestPassedDisabled' : 'settings.mcpTestConnectionSuccess')}`
+                  );
                 }
               } catch {
                 // ELECTRON-1A1: host component unmounted, Arco message context is gone — drop silently.

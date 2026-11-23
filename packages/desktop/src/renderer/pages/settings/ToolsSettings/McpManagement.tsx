@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { BUILTIN_IMAGE_GEN_ID, BUILTIN_IMAGE_GEN_NAME, type IMcpServer } from '@/common/config/storage';
 import { useMcpConnection, useMcpModal, useMcpOAuth, useMcpServerCRUD, useMcpServers } from '@/renderer/hooks/mcp';
 import AddMcpServerModal from '../components/AddMcpServerModal';
-import McpServerItem from './McpServerItem';
+import McpServerItem, { McpServerGrid } from './McpServerItem';
 
 interface McpManagementProps {
   message: ReturnType<typeof import('@arco-design/web-react').Message.useMessage>[0];
@@ -194,9 +194,9 @@ const McpManagement: React.FC<McpManagementProps> = ({ message }) => {
         }
         name='mcp-servers'
       >
-        <div>
+        <McpServerGrid>
           {visibleMcpServers.length === 0 && extensionMcpServers.length === 0 ? (
-            <div className='py-8 text-center text-t-secondary'>{t('settings.mcpNoServersFound')}</div>
+            <div className='col-span-full py-8 text-center text-t-secondary'>{t('settings.mcpNoServersFound')}</div>
           ) : (
             visibleMcpServers.map((server) => (
               <McpServerItem
@@ -230,7 +230,7 @@ const McpManagement: React.FC<McpManagementProps> = ({ message }) => {
               isReadOnly
             />
           ))}
-        </div>
+        </McpServerGrid>
       </Collapse.Item>
 
       <AddMcpServerModal

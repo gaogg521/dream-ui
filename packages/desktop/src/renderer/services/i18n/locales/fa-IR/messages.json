@@ -17,6 +17,8 @@
   "downloadSuccess": "دانلود موفقیت‌آمیز بود",
   "downloadFailed": "دانلود ناموفق بود",
   "imageLoadFailed": "بارگذاری تصویر ناموفق بود",
+  "scrollUp": "پیمایش به بالا",
+  "scrollDown": "پیمایش به پایین",
   "scrollToBottom": "اسکرول به انتها",
   "anchorRail": {
     "label": "لنگرهای پیام‌های گفتگو",

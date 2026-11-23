@@ -523,7 +523,10 @@
       "image": "Imagens de listas e planos"
     },
     "dependenciesTitle": "Esta cena ainda não pode ser aberta",
-    "disabledTools": "Estas ferramentas estão desativadas: {{names}}. Clique em “Ir para as configurações”, ative-as em Configurações → Serviços MCP e volte para abrir a cena novamente.",
+    "enableToolsTitle": "Ativar as ferramentas da cena?",
+    "enableToolsPrompt": "Esta cena precisa destas ferramentas desativadas: {{names}}. Confirme para ativá-las e abrir a cena.",
+    "enableAndOpen": "Ativar e abrir",
+    "enableToolsFailed": "Não foi possível ativar as ferramentas. Tente novamente.",
     "missingDependencies": "Estas habilidades ou ferramentas integradas estão ausentes ou não estão prontas: {{names}}. Verifique Configurações → Minhas habilidades / Serviços MCP. Atualize ou repare o aplicativo se necessário e tente novamente.",
     "dependenciesUnavailable": "As ferramentas ou habilidades integradas do cenário não estão prontas. Verifique se estão ativadas, atualize o cliente e tente novamente.",
     "openFailed": "Não foi possível abrir uma conversa para este cenário",

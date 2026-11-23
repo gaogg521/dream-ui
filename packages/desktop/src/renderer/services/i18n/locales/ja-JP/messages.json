@@ -17,6 +17,8 @@
   "downloadSuccess": "ダウンロードしました",
   "downloadFailed": "ダウンロードに失敗しました",
   "imageLoadFailed": "画像の読み込みに失敗しました",
+  "scrollUp": "上にスクロール",
+  "scrollDown": "下にスクロール",
   "scrollToBottom": "下にスクロール",
   "anchorRail": {
     "label": "会話メッセージのアンカー",

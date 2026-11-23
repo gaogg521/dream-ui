@@ -5,7 +5,7 @@
  */
 
 import React, { type PropsWithChildren } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IMessageAcpToolCall, IMessageText, IMessageToolGroup, TMessage } from '@/common/chat/chatLib';
 import type { MessageFileChangesProps } from '@/renderer/pages/conversation/Messages/MessageFileChanges';
@@ -17,9 +17,15 @@ import {
 } from '@/renderer/pages/conversation/Messages/hooks';
 import MessageList from '@/renderer/pages/conversation/Messages/MessageList';
 
-const { parseDiffMock, useTeamPermissionMock } = vi.hoisted(() => ({
+const { parseDiffMock, useTeamPermissionMock, loadPreviousMock } = vi.hoisted(() => ({
   parseDiffMock: vi.fn(),
   useTeamPermissionMock: vi.fn(),
+  loadPreviousMock: vi.fn(),
+}));
+
+vi.mock('@/renderer/pages/conversation/Messages/hooks', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/renderer/pages/conversation/Messages/hooks')>()),
+  useLoadPreviousMessagePage: () => loadPreviousMock,
 }));
 
 vi.mock('react-i18next', () => ({
@@ -54,6 +60,7 @@ vi.mock('@/renderer/pages/team/hooks/TeamPermissionContext', () => ({
 
 let mockIsProcessing = false;
 let mockShowScrollButton = false;
+let mockHasScrollOverflow = false;
 const mockScrollToBottom = vi.fn();
 vi.mock('@/renderer/pages/conversation/runtime/useConversationRuntimeView', () => ({
   useConversationRuntimeView: () => ({ isProcessing: mockIsProcessing }),
@@ -71,6 +78,7 @@ vi.mock('@/renderer/pages/conversation/Messages/useAutoScroll', () => ({
     handleWheel: () => {},
     handlePointerDown: () => {},
     showScrollButton: mockShowScrollButton,
+    hasScrollOverflow: mockHasScrollOverflow,
     scrollToBottom: mockScrollToBottom,
     scrollElementIntoView: () => {},
     hideScrollButton: () => {},
@@ -167,6 +175,7 @@ vi.mock('@/renderer/pages/conversation/Messages/components/SelectionReplyButton'
 
 vi.mock('@icon-park/react', () => ({
   Down: () => <span>down</span>,
+  Up: () => <span>down</span>,
 }));
 
 function createTextMessage(): IMessageText {
@@ -242,11 +251,12 @@ function Wrapper({
   children,
   messages = [createTextMessage()],
   loading = false,
-}: PropsWithChildren<{ messages?: TMessage[]; loading?: boolean }>): JSX.Element {
+  hasMoreBefore = false,
+}: PropsWithChildren<{ messages?: TMessage[]; loading?: boolean; hasMoreBefore?: boolean }>): JSX.Element {
   return (
     <MessageListLoadingProvider value={loading}>
       <MessagePaginationProvider
-        value={{ hasMoreBefore: false, hasMoreAfter: false, isLoadingBefore: false, isLoadingAnchor: false }}
+        value={{ hasMoreBefore, hasMoreAfter: false, isLoadingBefore: false, isLoadingAnchor: false }}
       >
         <MessageListProvider value={messages}>{children}</MessageListProvider>
       </MessagePaginationProvider>
@@ -263,7 +273,9 @@ describe('MessageList', () => {
   beforeEach(() => {
     mockIsProcessing = false;
     mockShowScrollButton = false;
+    mockHasScrollOverflow = false;
     mockScrollToBottom.mockReset();
+    loadPreviousMock.mockReset();
     parseDiffMock.mockReset();
     parseDiffMock.mockReturnValue({
       file_name: 'file.ts',
@@ -286,6 +298,42 @@ describe('MessageList', () => {
     const messageRow = screen.getByTestId('message-text-left');
     expect(messageRow.className).toContain('m-t-10px');
     expect(messageRow.className).not.toContain('pt-10px');
+  });
+
+  it('offers labelled step scrolling when the conversation overflows', () => {
+    mockHasScrollOverflow = true;
+    render(<MessageList />, { wrapper: ({ children }) => <Wrapper>{children}</Wrapper> });
+    const scroller = screen.getByTestId('message-list-scroller');
+    scroller.scrollBy = vi.fn();
+
+    fireEvent.click(screen.getByRole('button', { name: 'messages.scrollUp' }));
+    fireEvent.click(screen.getByRole('button', { name: 'messages.scrollDown' }));
+
+    expect(scroller.scrollBy).toHaveBeenNthCalledWith(1, { top: -48 });
+    expect(scroller.scrollBy).toHaveBeenNthCalledWith(2, { top: 48 });
+  });
+
+  it('loads history and restores the reading position once during rapid scrollbar movement', async () => {
+    let finishLoad: (loaded: boolean) => void = () => {};
+    loadPreviousMock.mockReturnValue(
+      new Promise<boolean>((resolve) => {
+        finishLoad = resolve;
+      })
+    );
+    render(<MessageList />, { wrapper: ({ children }) => <Wrapper hasMoreBefore>{children}</Wrapper> });
+    const scroller = screen.getByTestId('message-list-scroller');
+    const content = screen.getByTestId('message-list-content');
+    let contentHeight = 500;
+    Object.defineProperty(content, 'scrollHeight', { get: () => contentHeight });
+
+    scroller.scrollTop = 100;
+    fireEvent.scroll(scroller);
+    fireEvent.scroll(scroller);
+    expect(loadPreviousMock).toHaveBeenCalledTimes(1);
+
+    contentHeight += 300;
+    finishLoad(true);
+    await waitFor(() => expect(scroller.scrollTop).toBe(400));
   });
 
   it('renders a touch-sized, labelled jump-to-latest button when the reader is above the latest turn', () => {

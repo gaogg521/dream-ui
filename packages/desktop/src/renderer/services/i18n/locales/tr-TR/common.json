@@ -523,7 +523,10 @@
       "image": "Kontrol listesi ve plan görselleri"
     },
     "dependenciesTitle": "Bu sahne henüz açılamıyor",
-    "disabledTools": "Şu araçlar kapalı: {{names}}. “Ayarlara git”e tıklayın, Ayarlar → MCP Hizmetleri altında etkinleştirin, ardından dönüp sahneyi yeniden açın.",
+    "enableToolsTitle": "Sahne araçları etkinleştirilsin mi?",
+    "enableToolsPrompt": "Bu sahne şu kapalı araçları gerektiriyor: {{names}}. Araçları etkinleştirip sahneyi açmak için onaylayın.",
+    "enableAndOpen": "Etkinleştir ve aç",
+    "enableToolsFailed": "Araçlar etkinleştirilemedi. Lütfen tekrar deneyin.",
     "missingDependencies": "Şu beceriler veya yerleşik araçlar eksik ya da hazır değil: {{names}}. Ayarlar → Becerilerim / MCP Hizmetleri bölümünü kontrol edin. Gerekirse uygulamayı güncelleyin veya onarın ve yeniden deneyin.",
     "dependenciesUnavailable": "Sahnenin yerleşik araçları veya becerileri hazır değil. Araçların etkin olduğunu kontrol edin, istemciyi güncelleyip yeniden deneyin.",
     "openFailed": "Bu senaryo için sohbet açılamadı",

@@ -21,7 +21,8 @@
  */
 
 import { ipcBridge } from '@/common';
-import { ensureBackendMcpCatalog } from '@/renderer/hooks/mcp/catalog';
+import { getEnterpriseConnectionScope } from '@/common/adapter/enterpriseMode';
+import { ensureBackendMcpCatalog, setMcpServersEnabled } from '@/renderer/hooks/mcp/catalog';
 import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
 import { loadLatestConversationMessages } from '@/renderer/utils/chat/messagePagination';
 import type { TProviderWithModel, IMcpServerTransport, ISessionMcpServer } from '@/common/config/storage';
@@ -45,6 +46,19 @@ export class SceneDependencyUnavailableError extends Error {
   get dependencies(): string[] {
     return [...new Set([...this.disabledTools, ...this.missingTools, ...this.missingSkills])];
   }
+}
+
+/** Enable only the built-in tools listed in the member's confirmation. */
+export async function enableSceneTools(names: readonly string[]): Promise<void> {
+  const scope = getEnterpriseConnectionScope();
+  const { allServers } = await ensureBackendMcpCatalog();
+  if (getEnterpriseConnectionScope() !== scope) throw new Error('MCP_SCOPE_CHANGED');
+  const ids = [...new Set(names)].map((name) => {
+    const server = allServers.find((entry) => entry.builtin && entry.name === name);
+    if (!server?.transport) throw new Error('SCENE_DEPENDENCY_UNAVAILABLE');
+    return server.id;
+  });
+  await setMcpServersEnabled(ids, true);
 }
 
 /** The slice of `ipcBridge.fs.listAvailableSkills` rows this needs. */
@@ -368,11 +382,13 @@ export async function startSceneConversation(
   model: TProviderWithModel,
   workspace?: string
 ): Promise<string | null> {
+  const scope = getEnterpriseConnectionScope();
   // Scene grants are an administrator's dependency selection, not another
   // manual checkbox batch. Materialize them before resolving local IDs.
   if (item.company) {
     await ipcBridge.oneDevops.activateSceneMcp.invoke({ sceneId: item.company.id });
     const { syncTeamMcp } = await import('@/renderer/utils/enterprise/teamSkillSync');
+    if (getEnterpriseConnectionScope() !== scope) return null;
     const synced = await syncTeamMcp();
     if (!synced) return null;
   }
@@ -416,16 +432,17 @@ export async function startSceneConversation(
           .catch((): LocalMcpServer[] => [])
       : Promise.resolve<LocalMcpServer[]>([]),
   ]);
+  if (getEnterpriseConnectionScope() !== scope) return null;
   const request = buildSceneConversationRequest({ item, skills, mcpServers, model, workspace });
   if (item.mine?.builtinMcpNames?.length) {
     const requiredTools = item.mine.builtinMcpNames.map((name) => ({
       name,
       server: mcpServers.find((server) => server.builtin && server.name === name),
     }));
-    const disabledTools = requiredTools.filter(({ server }) => server?.enabled === false).map(({ name }) => name);
-    const missingTools = requiredTools
-      .filter(({ server }) => server?.enabled !== false && !server?.transport)
+    const disabledTools = requiredTools
+      .filter(({ server }) => server?.transport && server.enabled === false)
       .map(({ name }) => name);
+    const missingTools = requiredTools.filter(({ server }) => !server?.transport).map(({ name }) => name);
     const missingSkills = item.mine.skillNames.filter((name) => !skills.some((skill) => skill.name === name));
     if (disabledTools.length || missingTools.length || missingSkills.length)
       throw new SceneDependencyUnavailableError(disabledTools, missingTools, missingSkills);
@@ -436,8 +453,10 @@ export async function startSceneConversation(
   )
     return null;
   const reusable = await findReusableConversation(request);
+  if (getEnterpriseConnectionScope() !== scope) return null;
   if (reusable) return reusable;
   const conversation = await ipcBridge.conversation.create.invoke(request);
+  if (getEnterpriseConnectionScope() !== scope) return null;
   if (conversation?.id)
     writeReusable(request.extra.scene_id, { id: conversation.id, fingerprint: sceneFingerprint(request) });
   return conversation?.id ?? null;

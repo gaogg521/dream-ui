@@ -19,6 +19,8 @@
   "downloadSuccess": "Скачивание успешно",
   "downloadFailed": "Не удалось скачать",
   "imageLoadFailed": "Не удалось загрузить изображение",
+  "scrollUp": "Прокрутить вверх",
+  "scrollDown": "Прокрутить вниз",
   "scrollToBottom": "Прокрутить вниз",
   "anchorRail": {
     "label": "Якоря сообщений диалога",

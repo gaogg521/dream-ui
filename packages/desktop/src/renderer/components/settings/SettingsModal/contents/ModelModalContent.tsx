@@ -2,6 +2,8 @@
  * Copyright 2026 One Work
  */
 
+import { ENTERPRISE_CONNECTION_CHANGED_EVENT, getEnterpriseConnectionScope } from '@/common/adapter/enterpriseMode';
+import { probeModelHealth } from '@/renderer/utils/model/providerHealth';
 import { ipcBridge } from '@/common';
 import type { IProvider } from '@/common/config/storage';
 import ModelKindTag from '@/renderer/components/settings/ModelKindTag';
@@ -24,7 +26,7 @@ import {
   SettingTwo,
   Write,
 } from '@icon-park/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '@/renderer/services/i18n/format';
 import AddModelModal from '@/renderer/pages/settings/components/AddModelModal';
@@ -122,6 +124,22 @@ const ModelModalContent: React.FC = () => {
   const isPageMode = viewMode === 'page';
   const [collapseKey, setCollapseKey] = useState<Record<string, boolean>>({});
   const [healthCheckLoading, setHealthCheckLoading] = useState<Record<string, boolean>>({});
+  const [enterpriseHealth, setEnterpriseHealth] = useState<
+    Record<string, NonNullable<IProvider['model_health']>[string]>
+  >({});
+  const healthScopeRef = useRef(0);
+  useEffect(() => {
+    const reset = () => {
+      healthScopeRef.current += 1;
+      setEnterpriseHealth({});
+      setHealthCheckLoading({});
+    };
+    window.addEventListener(ENTERPRISE_CONNECTION_CHANGED_EVENT, reset);
+    return () => {
+      healthScopeRef.current += 1;
+      window.removeEventListener(ENTERPRISE_CONNECTION_CHANGED_EVENT, reset);
+    };
+  }, []);
   const { data, mutate } = useProvidersQuery();
   const { providers: chatProviders } = useModelProviderList();
   const talkToButler = useTalkToButler();
@@ -234,86 +252,45 @@ const ModelModalContent: React.FC = () => {
     });
   };
 
-  // Execute provider/model health check without creating a conversation.
   const performHealthCheck = async (platform: IProvider, modelName: string) => {
     const loadingKey = `${platform.id}-${modelName}`;
+    const scope = healthScopeRef.current;
+    const connection = getEnterpriseConnectionScope();
+    const isCurrent = () => healthScopeRef.current === scope && getEnterpriseConnectionScope() === connection;
     setHealthCheckLoading((prev) => ({ ...prev, [loadingKey]: true }));
 
-    const startTime = Date.now();
-
     try {
-      const result = await ipcBridge.acpConversation.checkProviderHealth.invoke({
-        provider_id: platform.id,
-        model: modelName,
-      });
-      const latency = result.elapsed_ms || Date.now() - startTime;
-      const success = result.status === 'healthy';
-      const errorMessage = result.message || t('common.unknownError');
-
-      try {
-        // 先获取最新的数据，确保不会覆盖其他并发的更新
-        const latestData = await ipcBridge.mode.listProviders.invoke();
-        const latestPlatform = (latestData || []).find((item) => item.id === platform.id);
-        const model_health = { ...latestPlatform?.model_health };
-        model_health[modelName] = {
-          status: success ? 'healthy' : 'unhealthy',
-          last_check: Date.now(),
-          latency,
-          error: success ? undefined : errorMessage,
-        };
-
-        await ipcBridge.mode.updateProvider.invoke({ id: platform.id, model_health });
-        await mutate();
-        if (success) {
-          Message.success({
-            content: `${platform.name} - ${modelName}: ${t('common.success')} (${latency}ms)`,
-            duration: 3000,
-          });
-        } else {
-          Message.error({
-            content: `${platform.name} - ${modelName}: ${t('common.failed')} - ${errorMessage}`,
-            duration: 5000,
-          });
-        }
-      } catch (saveError) {
-        console.error('Failed to save health check result:', saveError);
-        Message.error({
-          content: t('settings.saveModelConfigFailed'),
-          duration: 3000,
-        });
-      }
-    } catch (error: unknown) {
-      const latency = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      Message.error({
-        content: `${platform.name} - ${modelName}: ${t('common.failed')} - ${errorMessage}`,
-        duration: 5000,
-      });
-
-      try {
-        // 先获取最新的数据，确保不会覆盖其他并发的更新
-        const latestData = await ipcBridge.mode.listProviders.invoke();
-        const latestPlatform = (latestData || []).find((item) => item.id === platform.id);
-        const model_health = { ...latestPlatform?.model_health };
-        model_health[modelName] = {
-          status: 'unhealthy',
-          last_check: Date.now(),
-          latency,
-          error: errorMessage,
-        };
-
-        await ipcBridge.mode.updateProvider.invoke({ id: platform.id, model_health });
-        await mutate();
-      } catch (saveError) {
-        console.error('Failed to save health check result:', saveError);
+      await probeModelHealth(
+        platform,
+        modelName,
+        (health) => {
+          if (platform.managed_by === 'enterprise') {
+            const key = JSON.stringify([platform.id, modelName]);
+            setEnterpriseHealth((prev) => ({ ...prev, [key]: health }));
+          }
+          if (health.status === 'healthy') {
+            message.success(`${platform.name} - ${modelName}: ${t('common.success')} (${health.latency}ms)`);
+          } else {
+            message.error(`${platform.name} - ${modelName}: ${t('common.failed')} - ${health.error}`);
+          }
+        },
+        isCurrent,
+        t('common.unknownError')
+      );
+      if (isCurrent() && platform.managed_by !== 'enterprise') await mutate();
+    } catch (error) {
+      if (isCurrent()) {
+        console.error('Failed to save health check result:', error);
+        message.error(t('settings.saveModelConfigFailed'));
       }
     } finally {
-      setHealthCheckLoading((prev) => ({ ...prev, [loadingKey]: false }));
+      if (isCurrent()) setHealthCheckLoading((prev) => ({ ...prev, [loadingKey]: false }));
     }
   };
 
   const clearAllHealthData = () => {
     if (!data) return;
+    setEnterpriseHealth({});
     // A company-delivered channel is read-only here (the server refuses the write), so it is skipped
     // rather than failing the whole clear.
     const editable = data.filter((platform: IProvider) => platform.managed_by !== 'enterprise');
@@ -479,6 +456,7 @@ const ModelModalContent: React.FC = () => {
             {(data || []).map((platform: IProvider) => {
               const key = platform.id;
               const isExpanded = collapseKey[platform.id] ?? false;
+              const managed = platform.managed_by === 'enterprise';
               return (
                 <div key={key} id={`provider-card-${platform.id}`}>
                   <Collapse
@@ -553,8 +531,10 @@ const ModelModalContent: React.FC = () => {
                               </span>
                               <span className='mx-6px'>|</span>
                               <span
-                                className='cursor-pointer hover:text-t-primary transition-colors'
-                                onClick={() => editModalCtrl.open({ data: platform })}
+                                className={
+                                  managed ? undefined : 'cursor-pointer hover:text-t-primary transition-colors'
+                                }
+                                onClick={managed ? undefined : () => editModalCtrl.open({ data: platform })}
                               >
                                 {t('settings.apiKeyCount')}（{getApiKeyCount(platform.api_key)}）
                               </span>
@@ -567,6 +547,7 @@ const ModelModalContent: React.FC = () => {
                               className='settings-switch-on'
                               size='small'
                               checked={getProviderState(platform).checked}
+                              disabled={managed}
                               onChange={() => toggleProviderEnabled(platform)}
                             />
                             {/* A company-provisioned channel is not this member's
@@ -639,7 +620,9 @@ const ModelModalContent: React.FC = () => {
                         const modelKindLabel = modelKindLabelOf(platform, model);
                         const imageInput = modelSettings?.image_input ?? 'auto';
                         const showOpenAiApiMode = supportsOpenAiApiMode(platform.platform, modelProtocol);
-                        const model_health = platform.model_health?.[model];
+                        const model_health = managed
+                          ? enterpriseHealth[JSON.stringify([platform.id, model])]
+                          : platform.model_health?.[model];
                         const healthStatus = model_health?.status || 'unknown';
                         // Health check probes via a chat completion. Form A/C image and
                         // video models have no chat endpoint at all — probing them always
@@ -695,7 +678,9 @@ const ModelModalContent: React.FC = () => {
                                 <ModelKindTag
                                   {...modelKindLabel}
                                   showUndeclared
-                                  onClick={() => addModelModalCtrl.open({ data: platform, model })}
+                                  onClick={
+                                    managed ? undefined : () => addModelModalCtrl.open({ data: platform, model })
+                                  }
                                 />
                                 <span className='flex-1' />
 
@@ -704,13 +689,17 @@ const ModelModalContent: React.FC = () => {
                                   <Tag
                                     size='small'
                                     color={getProtocolColor(modelProtocol)}
-                                    className='shrink-0 cursor-pointer select-none'
-                                    onClick={() => {
-                                      const nextProtocol = getNextProtocol(modelProtocol);
-                                      const newProtocols = { ...platform.model_protocols };
-                                      newProtocols[model] = nextProtocol;
-                                      updatePlatform({ ...platform, model_protocols: newProtocols }, () => {});
-                                    }}
+                                    className={managed ? 'shrink-0' : 'shrink-0 cursor-pointer select-none'}
+                                    onClick={
+                                      managed
+                                        ? undefined
+                                        : () => {
+                                            const nextProtocol = getNextProtocol(modelProtocol);
+                                            const newProtocols = { ...platform.model_protocols };
+                                            newProtocols[model] = nextProtocol;
+                                            updatePlatform({ ...platform, model_protocols: newProtocols }, () => {});
+                                          }
+                                    }
                                   >
                                     {getProtocolLabel(modelProtocol)}
                                   </Tag>
@@ -753,6 +742,7 @@ const ModelModalContent: React.FC = () => {
                                   className='shrink-0 settings-switch-on'
                                   size='small'
                                   checked={isModelEnabled(platform, model)}
+                                  disabled={managed}
                                   onChange={(checked) => toggleModelEnabled(platform, model, checked)}
                                 />
                               </div>
@@ -762,8 +752,11 @@ const ModelModalContent: React.FC = () => {
                                   <Button
                                     size='mini'
                                     className='!w-28px !h-28px !min-w-28px !bg-[var(--color-bg-1)] text-t-secondary hover:text-t-primary hover:!bg-[var(--fill-0)]'
+                                    disabled={managed}
                                     icon={<SettingTwo theme='outline' size='16' />}
-                                    onClick={() => addModelModalCtrl.open({ data: platform, model })}
+                                    onClick={
+                                      managed ? undefined : () => addModelModalCtrl.open({ data: platform, model })
+                                    }
                                   />
                                 </Tooltip>
 
@@ -782,43 +775,45 @@ const ModelModalContent: React.FC = () => {
                                   </Tooltip>
                                 )}
 
-                                <Popconfirm
-                                  title={t('settings.deleteModelConfirm')}
-                                  onOk={() => {
-                                    const newModels = platform.models.filter((item: string) => item !== model);
-                                    // 同时清理模型相关状态，避免删除后重加模型时复用脏状态
-                                    // Clean all per-model state to avoid stale state on re-add.
-                                    const newProtocols = { ...platform.model_protocols };
-                                    const newModelEnabled = { ...platform.model_enabled };
-                                    const newModelHealth = { ...platform.model_health };
-                                    const newModelSettings = { ...platform.model_settings };
-                                    delete newProtocols[model];
-                                    delete newModelEnabled[model];
-                                    delete newModelHealth[model];
-                                    delete newModelSettings[model];
+                                {!managed && (
+                                  <Popconfirm
+                                    title={t('settings.deleteModelConfirm')}
+                                    onOk={() => {
+                                      const newModels = platform.models.filter((item: string) => item !== model);
+                                      // 同时清理模型相关状态，避免删除后重加模型时复用脏状态
+                                      // Clean all per-model state to avoid stale state on re-add.
+                                      const newProtocols = { ...platform.model_protocols };
+                                      const newModelEnabled = { ...platform.model_enabled };
+                                      const newModelHealth = { ...platform.model_health };
+                                      const newModelSettings = { ...platform.model_settings };
+                                      delete newProtocols[model];
+                                      delete newModelEnabled[model];
+                                      delete newModelHealth[model];
+                                      delete newModelSettings[model];
 
-                                    updatePlatform(
-                                      {
-                                        ...platform,
-                                        models: newModels,
-                                        model_protocols:
-                                          Object.keys(newProtocols).length > 0 ? newProtocols : undefined,
-                                        model_enabled:
-                                          Object.keys(newModelEnabled).length > 0 ? newModelEnabled : undefined,
-                                        model_health:
-                                          Object.keys(newModelHealth).length > 0 ? newModelHealth : undefined,
-                                        model_settings: newModelSettings,
-                                      },
-                                      () => {}
-                                    );
-                                  }}
-                                >
-                                  <Button
-                                    size='mini'
-                                    className='!w-28px !h-28px !min-w-28px !bg-[var(--color-bg-1)] text-t-secondary hover:text-t-primary hover:!bg-[var(--fill-0)]'
-                                    icon={<DeleteFour theme='outline' size='18' strokeWidth={2} />}
-                                  />
-                                </Popconfirm>
+                                      updatePlatform(
+                                        {
+                                          ...platform,
+                                          models: newModels,
+                                          model_protocols:
+                                            Object.keys(newProtocols).length > 0 ? newProtocols : undefined,
+                                          model_enabled:
+                                            Object.keys(newModelEnabled).length > 0 ? newModelEnabled : undefined,
+                                          model_health:
+                                            Object.keys(newModelHealth).length > 0 ? newModelHealth : undefined,
+                                          model_settings: newModelSettings,
+                                        },
+                                        () => {}
+                                      );
+                                    }}
+                                  >
+                                    <Button
+                                      size='mini'
+                                      className='!w-28px !h-28px !min-w-28px !bg-[var(--color-bg-1)] text-t-secondary hover:text-t-primary hover:!bg-[var(--fill-0)]'
+                                      icon={<DeleteFour theme='outline' size='18' strokeWidth={2} />}
+                                    />
+                                  </Popconfirm>
+                                )}
                               </div>
                             </div>
                             {index < arr.length - 1 && <Divider className='!my-0 !border-[var(--color-border-2)]/70' />}

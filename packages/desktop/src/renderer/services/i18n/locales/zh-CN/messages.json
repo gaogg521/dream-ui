@@ -17,6 +17,8 @@
   "downloadSuccess": "下载成功",
   "downloadFailed": "下载失败",
   "imageLoadFailed": "图片加载失败",
+  "scrollUp": "向上滚动",
+  "scrollDown": "向下滚动",
   "scrollToBottom": "滚动到底部",
   "anchorRail": {
     "label": "对话消息锚点",

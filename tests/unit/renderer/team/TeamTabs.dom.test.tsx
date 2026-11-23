@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TeamAssistant } from '@/common/types/team/teamTypes';
 
@@ -41,10 +41,10 @@ const assistants: TeamAssistant[] = [
   },
 ];
 
-const renderTabs = (warmingUp: boolean) =>
+const renderTabs = (warmingUp: boolean, members = assistants) =>
   render(
     <TeamTabsProvider
-      assistants={assistants}
+      assistants={members}
       statusMap={new Map()}
       defaultActiveSlotId='lead-slot'
       team_id='team-1'
@@ -88,6 +88,46 @@ describe('TeamTabs', () => {
 
     fireEvent.mouseEnter(screen.getByTestId('team-tab-lead-slot'));
     expect(screen.queryByTestId('team-tab-drag-lead-slot')).not.toBeInTheDocument();
+  });
+
+  it('converts vertical mouse wheel movement into horizontal scrolling', () => {
+    renderTabs(false);
+    const tab = screen.getByTestId('team-tab-worker-slot');
+    const scroller = tab.parentElement!;
+    const wheel = new WheelEvent('wheel', { deltaY: 80, bubbles: true, cancelable: true });
+
+    fireEvent(tab, wheel);
+
+    expect(scroller.scrollLeft).toBe(80);
+    expect(wheel.defaultPrevented).toBe(true);
+  });
+
+  it('sorts by dragging the member label and leaves the leader first', async () => {
+    renderTabs(false, [
+      ...assistants,
+      { ...assistants[1], slot_id: 'second-worker', conversation_id: 'second-conv', assistant_name: 'Second' },
+    ]);
+    const tabs = screen.getAllByTestId(/^team-tab-(lead-slot|worker-slot|second-worker)$/);
+    tabs.forEach((tab, index) => {
+      tab.getBoundingClientRect = () => new DOMRect(index * 100, 0, 90, 34);
+    });
+    const label = screen.getByTestId('team-tab-name-worker-slot');
+    const pointer = (target: EventTarget, type: string, clientX: number) => {
+      const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX, clientY: 16 });
+      Object.defineProperty(event, 'isPrimary', { value: true });
+      fireEvent(target, event);
+    };
+
+    pointer(label, 'pointerdown', 140);
+    pointer(document, 'pointermove', 155);
+    pointer(document, 'pointermove', 245);
+    await act(async () => pointer(document, 'pointerup', 245));
+
+    expect(screen.getAllByTestId(/^team-tab-(lead-slot|worker-slot|second-worker)$/)).toEqual([
+      tabs[0],
+      tabs[2],
+      tabs[1],
+    ]);
   });
 
   it('does not switch tabs when the drag handle is clicked', () => {

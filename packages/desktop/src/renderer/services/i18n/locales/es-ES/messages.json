@@ -17,6 +17,8 @@
   "downloadSuccess": "Descarga exitosa",
   "downloadFailed": "Error en la descarga",
   "imageLoadFailed": "Error al cargar la imagen",
+  "scrollUp": "Desplazar hacia arriba",
+  "scrollDown": "Desplazar hacia abajo",
   "scrollToBottom": "Ir al final",
   "anchorRail": {
     "label": "Anclas de mensajes de la conversación",

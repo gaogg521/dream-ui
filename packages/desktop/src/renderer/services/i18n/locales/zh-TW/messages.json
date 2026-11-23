@@ -17,6 +17,8 @@
   "downloadSuccess": "下載成功",
   "downloadFailed": "下載失敗",
   "imageLoadFailed": "圖片載入失敗",
+  "scrollUp": "向上捲動",
+  "scrollDown": "向下捲動",
   "scrollToBottom": "滾動到底部",
   "anchorRail": {
     "label": "對話訊息錨點",

@@ -1,30 +1,60 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { ENTERPRISE_CONNECTION_CHANGED_EVENT, getEnterpriseConnectionScope } from '@/common/adapter/enterpriseMode';
 import { ipcBridge } from '@/common';
 import type { IMcpServer } from '@/common/config/storage';
-import { ensureBackendMcpCatalog } from './catalog';
+import { ensureBackendMcpCatalog, subscribeMcpEnabledChanges } from './catalog';
+
+export const getMcpSettingsScope = getEnterpriseConnectionScope;
+
+function subscribeScope(listener: () => void) {
+  window.addEventListener(ENTERPRISE_CONNECTION_CHANGED_EVENT, listener);
+  return () => window.removeEventListener(ENTERPRISE_CONNECTION_CHANGED_EVENT, listener);
+}
+
+export function useMcpSettingsScope(): string {
+  return useSyncExternalStore(subscribeScope, getMcpSettingsScope, () => 'local');
+}
 
 /**
  * MCP server state hook.
  * Combines backend-managed user servers with extension-contributed servers.
  */
 export const useMcpServers = () => {
+  const scope = useMcpSettingsScope();
   const [mcpServers, setMcpServers] = useState<IMcpServer[]>([]);
   const [extensionMcpServers, setExtensionMcpServers] = useState<IMcpServer[]>([]);
   const [isMcpServersLoading, setIsMcpServersLoading] = useState(true);
 
+  useEffect(
+    () =>
+      subscribeMcpEnabledChanges((id, enabled) => {
+        setMcpServers((servers) => servers.map((server) => (server.id === id ? { ...server, enabled } : server)));
+      }),
+    []
+  );
+
   useEffect(() => {
+    let active = true;
+    setMcpServers([]);
+    setIsMcpServersLoading(true);
     void ensureBackendMcpCatalog()
       .then(({ allServers }) => {
-        setMcpServers(allServers);
+        if (active) setMcpServers(allServers);
       })
       .catch((error) => {
         console.error('[useMcpServers] Failed to load MCP catalog:', error);
-        setMcpServers([]);
+        if (active) setMcpServers([]);
       })
       .finally(() => {
-        setIsMcpServersLoading(false);
+        if (active) setIsMcpServersLoading(false);
       });
 
+    return () => {
+      active = false;
+    };
+  }, [scope]);
+
+  useEffect(() => {
     void ipcBridge.extensions.getMcpServers
       .invoke()
       .then((extServers) => {

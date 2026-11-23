@@ -140,6 +140,7 @@ const DreamEngineSendBox: React.FC<{
   teamRuntime?: TeamSendBoxRuntime;
 }> = ({ conversation_id, modelSelection, session_mode, agent_name, teamSendMessage, teamRuntime }) => {
   const [dynamicModes, setDynamicModes] = useState<AgentModeOption[]>([]);
+  const [initialSentDraft, setInitialSentDraft] = useState<{ conversationId: string; text: string }>();
   const [compactingConversation, setCompactingConversation] = useState<string | null>(null);
   const [currentMode, setCurrentMode] = useState<string | undefined>(session_mode);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
@@ -475,6 +476,7 @@ const DreamEngineSendBox: React.FC<{
         const initialRefs: ChatFileRef[] = Array.isArray(initialFiles)
           ? initialFiles.map((f: unknown) => (typeof f === 'string' ? uploadFileRef(f) : f)).filter(isChatFileRef)
           : [];
+        setInitialSentDraft({ conversationId: conversation_id, text: input });
         await executeCommand({ input, files: initialRefs });
       } catch (error) {
         console.error('[DreamEngineSendBox] Failed to send initial message:', error);
@@ -825,7 +827,7 @@ const DreamEngineSendBox: React.FC<{
   );
 
   // Stop conversation handler
-  const handleStop = async (): Promise<void> => {
+  const handleStop = async (): Promise<void | false> => {
     // Best-effort cancel: swallow rejections so they don't bubble up as
     // unhandled rejections. UI state is still reset via finally.
     const turnId = runtimeView.activeTurnId;
@@ -841,6 +843,7 @@ const DreamEngineSendBox: React.FC<{
     } catch (error) {
       console.warn('[DreamEngineSendBox] stop request failed', error);
       runtimeView.resetLocalGate('stop_failed');
+      return false;
     } finally {
       resetState();
       resetActiveExecution('stop');
@@ -916,6 +919,7 @@ const DreamEngineSendBox: React.FC<{
           setAtPath(items);
         }}
         loading={teamRuntime?.loading ?? isBusy}
+        initialSentDraft={initialSentDraft}
         active={teamRuntime?.isActive}
         onFocused={teamRuntime?.onFocus}
         // Media mode does not use the chat model, so a missing one must not

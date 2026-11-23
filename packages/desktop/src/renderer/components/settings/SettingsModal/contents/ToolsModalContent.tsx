@@ -18,7 +18,7 @@ import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import DreamScrollArea from '@/renderer/components/base/DreamScrollArea';
 import TalkToButlerButton from '@/renderer/components/base/TalkToButlerButton';
 import AddMcpServerModal from '@/renderer/pages/settings/components/AddMcpServerModal';
-import McpServerItem from '@/renderer/pages/settings/ToolsSettings/McpServerItem';
+import McpServerItem, { McpServerGrid } from '@/renderer/pages/settings/ToolsSettings/McpServerItem';
 import {
   useMcpServers,
   useMcpConnection,
@@ -328,7 +328,7 @@ const ModalMcpManagementSection: React.FC<{
             className={classNames('max-h-360px', isPageMode && 'max-h-none')}
             disableOverflow={isPageMode}
           >
-            <div className='space-y-12px'>
+            <McpServerGrid>
               {visibleMcpServers.map((server) => (
                 <McpServerItem
                   key={server.id}
@@ -360,7 +360,7 @@ const ModalMcpManagementSection: React.FC<{
                   isReadOnly
                 />
               ))}
-            </div>
+            </McpServerGrid>
           </DreamScrollArea>
         )}
       </div>

@@ -14,7 +14,7 @@ import { iconColors } from '@/renderer/styles/colors';
 import { CHAT_MESSAGE_JUMP_EVENT, type ChatMessageJumpDetail } from '@/renderer/utils/chat/chatMinimapEvents';
 import { collectAiCopyRows, type TurnCopyItem } from '@/renderer/utils/chat/turnCopy';
 import { Button, Image } from '@arco-design/web-react';
-import { Down } from '@icon-park/react';
+import { Down, Up } from '@icon-park/react';
 import MessageAcpPermission from '@renderer/pages/conversation/Messages/acp/MessageAcpPermission';
 import MessageQuestion from './MessageQuestion';
 import MessagePermission from './components/MessagePermission';
@@ -382,6 +382,7 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
   const loadingTargetKeyRef = useRef<string>('');
   const scrollerElementRef = useRef<HTMLDivElement | null>(null);
   const contentElementRef = useRef<HTMLDivElement | null>(null);
+  const pendingHistoryScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Pre-process message list to group tool outputs into summary cards
   const processedList = useMemo(() => {
@@ -556,6 +557,7 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
     handleWheel,
     handlePointerDown,
     showScrollButton,
+    hasScrollOverflow,
     scrollToBottom,
     scrollElementIntoView,
     hideScrollButton,
@@ -584,18 +586,34 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
     (event: React.UIEvent<HTMLDivElement>) => {
       handleScroll(event);
       const scroller = event.currentTarget;
-      if (!pagination.hasMoreBefore || pagination.isLoadingBefore || scroller.scrollTop > 160) {
+      if (
+        !pagination.hasMoreBefore ||
+        pagination.isLoadingBefore ||
+        pendingHistoryScrollRef.current === scroller ||
+        scroller.scrollTop > 160
+      ) {
         return;
       }
 
       const previousHeight = contentElementRef.current?.scrollHeight ?? 0;
-      void loadPreviousMessagePage().then((loaded) => {
-        if (!loaded) return;
-        requestAnimationFrame(() => {
-          const nextHeight = contentElementRef.current?.scrollHeight ?? previousHeight;
-          scroller.scrollTop += nextHeight - previousHeight;
-        });
-      });
+      pendingHistoryScrollRef.current = scroller;
+      const loadAndRestoreScroll = async () => {
+        try {
+          if (!(await loadPreviousMessagePage())) return;
+          await new Promise<void>((resolve) => {
+            requestAnimationFrame(() => {
+              if (scrollerElementRef.current === scroller) {
+                const nextHeight = contentElementRef.current?.scrollHeight ?? previousHeight;
+                scroller.scrollTop += nextHeight - previousHeight;
+              }
+              resolve();
+            });
+          });
+        } finally {
+          if (pendingHistoryScrollRef.current === scroller) pendingHistoryScrollRef.current = null;
+        }
+      };
+      void loadAndRestoreScroll();
     },
     [handleScroll, loadPreviousMessagePage, pagination.hasMoreBefore, pagination.isLoadingBefore]
   );
@@ -699,6 +717,11 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
     processedList,
     scrollElementIntoView,
   ]);
+
+  const scrollHistoryBy = (direction: -1 | 1) => {
+    handlePointerDown();
+    scrollerElementRef.current?.scrollBy({ top: direction * 48 });
+  };
 
   // Click scroll button
   const handleScrollButtonClick = () => {
@@ -811,7 +834,7 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
             data-testid='message-list-scroller'
             // Break out of the parent's 20px horizontal padding so the scrollbar hugs the
             // window edge, while re-applying that padding inside to keep message content inset.
-            className='flex-1 h-full overflow-y-auto pb-10px box-border -mx-20px px-20px'
+            className='conversation-scrollbar flex-1 h-full overflow-y-auto pb-10px box-border -mx-20px px-20px'
             style={{ overflowAnchor: 'none' }}
             onPointerDown={handlePointerDown}
             onScroll={handleMessageListScroll}
@@ -841,6 +864,27 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
           </div>
         </ImagePreviewContext.Provider>
       </Image.PreviewGroup>
+
+      {hasScrollOverflow && (
+        <>
+          <Button
+            type='text'
+            className='conversation-scroll-button top-0'
+            aria-label={t('messages.scrollUp')}
+            onClick={() => scrollHistoryBy(-1)}
+          >
+            <Up size={10} />
+          </Button>
+          <Button
+            type='text'
+            className='conversation-scroll-button bottom-0'
+            aria-label={t('messages.scrollDown')}
+            onClick={() => scrollHistoryBy(1)}
+          >
+            <Down size={10} />
+          </Button>
+        </>
+      )}
 
       {showScrollButton && (
         <>

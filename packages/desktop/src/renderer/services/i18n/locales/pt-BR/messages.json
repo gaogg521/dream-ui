@@ -17,6 +17,8 @@
   "downloadSuccess": "Download bem-sucedido",
   "downloadFailed": "Falha ao baixar",
   "imageLoadFailed": "Falha ao carregar a imagem",
+  "scrollUp": "Rolar para cima",
+  "scrollDown": "Rolar para baixo",
   "scrollToBottom": "Rolar para o final",
   "anchorRail": {
     "label": "Âncoras das mensagens da conversa",

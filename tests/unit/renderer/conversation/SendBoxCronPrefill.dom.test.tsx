@@ -131,6 +131,65 @@ const SendBoxHarness = () => {
   return <SendBox value={value} onChange={setValue} onSend={vi.fn().mockResolvedValue(undefined)} />;
 };
 
+describe('SendBox stopped draft', () => {
+  it('restores the first instruction sent from the new-conversation page', async () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <SendBox
+        value=''
+        loading
+        initialSentDraft={{ conversationId: 'sendbox-prefill-conversation', text: 'First instruction' }}
+        onChange={onChange}
+        onSend={vi.fn()}
+        onStop={vi.fn().mockResolvedValue(undefined)}
+      />
+    );
+
+    await act(async () => fireEvent.click(container.querySelector('.sendbox-stop-button')!));
+    expect(onChange).toHaveBeenCalledWith('First instruction');
+  });
+
+  it.each(['', 'New draft'])(
+    'restores the stopped instruction only when the composer is empty (%s)',
+    async (followup) => {
+      const onStop = vi.fn();
+      const onSend = vi.fn();
+
+      const Harness = () => {
+        const [value, setValue] = useState('Original instruction');
+        const [loading, setLoading] = useState(false);
+        return (
+          <SendBox
+            value={value}
+            onChange={setValue}
+            loading={loading}
+            onSend={async (message) => {
+              onSend(message);
+              setLoading(true);
+            }}
+            onStop={async () => {
+              onStop();
+              setLoading(false);
+            }}
+          />
+        );
+      };
+
+      const { container } = render(<Harness />);
+      fireEvent.click(screen.getByTestId('sendbox-send-btn'));
+      await waitFor(() => expect(onSend).toHaveBeenCalledWith('Original instruction'));
+      const input = screen.getByTestId('sendbox-input');
+      expect(input).toHaveValue('');
+      if (followup) fireEvent.change(input, { target: { value: followup } });
+      const stop = container.querySelector('.sendbox-stop-button');
+      expect(stop).not.toBeNull();
+      await act(async () => fireEvent.click(stop!));
+      expect(onStop).toHaveBeenCalledOnce();
+      expect(input).toHaveValue(followup || 'Original instruction');
+    }
+  );
+});
+
 describe('SendBox scheduled-task prefill', () => {
   it('enables and sends when an attachment is pending without text', async () => {
     const onSend = vi.fn().mockResolvedValue(undefined);

@@ -17,6 +17,8 @@
   "downloadSuccess": "Download successful",
   "downloadFailed": "Failed to download",
   "imageLoadFailed": "Failed to load image",
+  "scrollUp": "Scroll up",
+  "scrollDown": "Scroll down",
   "scrollToBottom": "Scroll to bottom",
   "anchorRail": {
     "label": "Conversation message anchors",

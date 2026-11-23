@@ -17,6 +17,8 @@
   "downloadSuccess": "다운로드 성공",
   "downloadFailed": "다운로드 실패",
   "imageLoadFailed": "이미지 로드 실패",
+  "scrollUp": "위로 스크롤",
+  "scrollDown": "아래로 스크롤",
   "scrollToBottom": "맨 아래로 스크롤",
   "anchorRail": {
     "label": "대화 메시지 앵커",

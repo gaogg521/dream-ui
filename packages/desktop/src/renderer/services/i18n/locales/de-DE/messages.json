@@ -17,6 +17,8 @@
   "downloadSuccess": "Download erfolgreich",
   "downloadFailed": "Download fehlgeschlagen",
   "imageLoadFailed": "Bild konnte nicht geladen werden",
+  "scrollUp": "Nach oben scrollen",
+  "scrollDown": "Nach unten scrollen",
   "scrollToBottom": "Nach unten scrollen",
   "anchorRail": {
     "label": "Anker für Unterhaltungsnachrichten",

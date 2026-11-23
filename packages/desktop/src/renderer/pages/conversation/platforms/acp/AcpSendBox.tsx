@@ -195,6 +195,7 @@ const AcpSendBox: React.FC<{
     [promptCapability, t]
   );
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+  const [initialSentDraft, setInitialSentDraft] = useState<{ conversationId: string; text: string }>();
   const [compactingConversation, setCompactingConversation] = useState<string | null>(null);
   const [currentMode, setCurrentMode] = useState<string | undefined>(session_mode);
   const prepareRuntimeConfig = useCallback(async () => {
@@ -325,6 +326,7 @@ const AcpSendBox: React.FC<{
     markSendFailed,
     checkAndUpdateTitle,
     addOrUpdateMessage: addOrUpdateMessageRef.current,
+    onInitialSend: setInitialSentDraft,
   });
 
   const executeCommand = useCallback(
@@ -794,7 +796,7 @@ Please check your local CLI tool authentication status`,
   );
 
   // Stop conversation handler
-  const handleStop = async (): Promise<void> => {
+  const handleStop = async (): Promise<void | false> => {
     // Cancelling is best-effort: swallow errors (e.g. backend WS not yet
     // connected → 409) so they don't bubble up as unhandled rejections.
     // UI state is still reset via finally.
@@ -811,6 +813,7 @@ Please check your local CLI tool authentication status`,
     } catch (error) {
       console.warn('[AcpSendBox] stop request failed', error);
       runtimeView.resetLocalGate('stop_failed');
+      return false;
     } finally {
       resetState();
       resetActiveExecution('stop');
@@ -893,6 +896,7 @@ Please check your local CLI tool authentication status`,
           setAtPath(items);
         }}
         loading={teamRuntime?.loading ?? isBusy}
+        initialSentDraft={initialSentDraft}
         active={teamRuntime?.isActive}
         onFocused={teamRuntime?.onFocus}
         disabled={false}

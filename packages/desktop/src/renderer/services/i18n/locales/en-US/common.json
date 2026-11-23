@@ -692,7 +692,10 @@
       "image": "Checklist and plan images"
     },
     "dependenciesTitle": "This scene cannot open yet",
-    "disabledTools": "These tools are turned off: {{names}}. Click “Go to Settings”, enable them under Settings → MCP Services, then return and open the scene again.",
+    "enableToolsTitle": "Enable scene tools?",
+    "enableToolsPrompt": "This scene needs these tools, which are turned off: {{names}}. Confirm to enable them and open the scene.",
+    "enableAndOpen": "Enable and open",
+    "enableToolsFailed": "Could not enable the tools. Please try again.",
     "missingDependencies": "These skills or bundled tools are missing or not ready: {{names}}. Check Settings → My Skills / MCP Services. Update or repair the app if needed, then retry.",
     "dependenciesUnavailable": "The scene’s bundled tools or skills are not ready. Check that the tools are enabled and update the client, then retry.",
     "openFailed": "Could not open a conversation for this scene",

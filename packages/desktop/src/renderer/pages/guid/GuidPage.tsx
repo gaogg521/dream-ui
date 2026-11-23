@@ -2,6 +2,11 @@
  * Copyright 2026 One Work
  */
 
+import {
+  getEnterpriseConnectionScope,
+  getEnterpriseSession,
+  isEnterpriseModeEnabled,
+} from '@/common/adapter/enterpriseMode';
 import { ipcBridge } from '@/common';
 import { buildGuidSlashCommands } from '@/common/chat/slash/guidSlashCommands';
 import type { SlashCommandItem } from '@/common/chat/slash/types';
@@ -27,7 +32,11 @@ import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import GuidAuthorTip from './components/GuidAuthorTip';
 import GuidInputCard from './components/GuidInputCard';
 import SceneGrid from '@/renderer/components/scenes/SceneGrid';
-import { SceneDependencyUnavailableError, startSceneConversation } from '@/renderer/utils/scenes/sceneChat';
+import {
+  enableSceneTools,
+  SceneDependencyUnavailableError,
+  startSceneConversation,
+} from '@/renderer/utils/scenes/sceneChat';
 import type { SceneItem } from '@/renderer/utils/scenes/sceneItem';
 import { emitter } from '@/renderer/utils/emitter';
 import GuidModelSelector from './components/GuidModelSelector';
@@ -101,7 +110,12 @@ const GuidPage: React.FC = () => {
   const [guidDisabledBuiltinSkills, setGuidDisabledBuiltinSkills] = useState<string[] | undefined>(undefined);
   const [guidEnabledSkills, setGuidEnabledSkills] = useState<string[] | undefined>(undefined);
   const [availableMcpServers, setAvailableMcpServers] = useState<IMcpServer[]>([]);
-  const [sceneDependencyError, setSceneDependencyError] = useState<SceneDependencyUnavailableError | null>(null);
+  const [sceneDependency, setSceneDependency] = useState<{
+    scene: SceneItem;
+    error: SceneDependencyUnavailableError;
+  } | null>(null);
+  const [enablingSceneTools, setEnablingSceneTools] = useState(false);
+  const enablingSceneToolsRef = useRef(false);
   const [guidSelectedMcpServerIds, setGuidSelectedMcpServerIds] = useState<string[] | undefined>(undefined);
 
   useEffect(() => {
@@ -860,12 +874,15 @@ const GuidPage: React.FC = () => {
       } catch (error) {
         console.error('[GuidPage] Failed to open a scene conversation:', error);
         if (error instanceof SceneDependencyUnavailableError) {
-          setSceneDependencyError(error);
+          setSceneDependency({ scene, error });
           return;
         }
         Message.error(
           t(
-            error instanceof Error && error.message.includes('MCP_LIMIT_EXCEEDED')
+            isEnterpriseModeEnabled() &&
+              getEnterpriseSession() &&
+              error instanceof Error &&
+              error.message.includes('MCP_LIMIT_EXCEEDED')
               ? 'settings.mcpQuotaReplace'
               : error instanceof Error && error.message.includes('SCENE_DEPENDENCY_UNAVAILABLE')
                 ? 'common.scenes.dependenciesUnavailable'
@@ -876,6 +893,39 @@ const GuidPage: React.FC = () => {
     },
     [navigate, sceneModel, guidInput.dir, guidInput.input, displayFilePaths, t]
   );
+
+  const sceneDependencyError = sceneDependency?.error;
+  const hasMissingSceneDependencies = Boolean(
+    sceneDependencyError?.missingTools.length || sceneDependencyError?.missingSkills.length
+  );
+  const canEnableSceneTools = Boolean(sceneDependencyError?.disabledTools.length && !hasMissingSceneDependencies);
+
+  const handleSceneDependencyConfirm = async () => {
+    if (!sceneDependency || enablingSceneToolsRef.current) return;
+    const { scene, error } = sceneDependency;
+    const scope = getEnterpriseConnectionScope();
+    if (!canEnableSceneTools) {
+      setSceneDependency(null);
+      await navigate(error.missingTools.length ? '/settings/mcp' : '/settings/skills');
+      return;
+    }
+
+    enablingSceneToolsRef.current = true;
+    setEnablingSceneTools(true);
+    try {
+      await enableSceneTools(error.disabledTools);
+      setSceneDependency(null);
+      if (getEnterpriseConnectionScope() === scope) await handleOpenScene(scene);
+    } catch (enableError) {
+      console.error('[GuidPage] Failed to enable scene tools:', enableError);
+      Message.error(
+        t('common.scenes.enableToolsFailed', { defaultValue: 'Could not enable the tools. Please try again.' })
+      );
+    } finally {
+      enablingSceneToolsRef.current = false;
+      setEnablingSceneTools(false);
+    }
+  };
 
   // Making a scene happens on the scenes tab, which opens its editor for `new`.
   const handleCreateScene = useCallback(() => {
@@ -888,24 +938,37 @@ const GuidPage: React.FC = () => {
         <Modal
           visible
           maskClosable={false}
-          title={t('common.scenes.dependenciesTitle')}
-          okText={t('common.goToSettings')}
+          title={
+            canEnableSceneTools
+              ? t('common.scenes.enableToolsTitle', { defaultValue: 'Enable scene tools?' })
+              : t('common.scenes.dependenciesTitle')
+          }
+          okText={
+            canEnableSceneTools
+              ? t('common.scenes.enableAndOpen', { defaultValue: 'Enable and open' })
+              : t('common.goToSettings')
+          }
           cancelText={t('common.cancel')}
-          onCancel={() => setSceneDependencyError(null)}
-          onOk={() => {
-            const path =
-              sceneDependencyError.disabledTools.length || sceneDependencyError.missingTools.length
-                ? '/settings/mcp'
-                : '/settings/skills';
-            setSceneDependencyError(null);
-            void navigate(path);
+          confirmLoading={enablingSceneTools}
+          closable={!enablingSceneTools}
+          escToExit={!enablingSceneTools}
+          cancelButtonProps={{ disabled: enablingSceneTools }}
+          onCancel={() => {
+            if (!enablingSceneToolsRef.current) setSceneDependency(null);
           }}
+          onOk={() => void handleSceneDependencyConfirm()}
         >
           <div className='flex flex-col gap-12px'>
-            {sceneDependencyError.disabledTools.length > 0 && (
-              <p>{t('common.scenes.disabledTools', { names: sceneDependencyError.disabledTools.join(', ') })}</p>
+            {canEnableSceneTools && (
+              <p>
+                {t('common.scenes.enableToolsPrompt', {
+                  names: sceneDependencyError.disabledTools.join(', '),
+                  defaultValue:
+                    'This scene needs these tools, which are turned off: {{names}}. Confirm to enable them and open the scene.',
+                })}
+              </p>
             )}
-            {(sceneDependencyError.missingTools.length > 0 || sceneDependencyError.missingSkills.length > 0) && (
+            {hasMissingSceneDependencies && (
               <p>
                 {t('common.scenes.missingDependencies', {
                   names: [...sceneDependencyError.missingTools, ...sceneDependencyError.missingSkills].join(', '),

@@ -6,7 +6,12 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const hooks = vi.hoisted(() => ({ listAvailableSkills: vi.fn(), create: vi.fn(), activate: vi.fn(), sync: vi.fn() }));
+const hooks = vi.hoisted(() => ({
+  listAvailableSkills: vi.fn(),
+  create: vi.fn(),
+  activate: vi.fn(),
+  sync: vi.fn(),
+}));
 
 vi.mock('@/common', () => ({
   ipcBridge: {
@@ -19,6 +24,7 @@ vi.mock('@/common', () => ({
 vi.mock('@/renderer/utils/enterprise/teamSkillSync', () => ({ syncTeamMcp: hooks.sync }));
 
 vi.mock('@/renderer/hooks/mcp/catalog', () => ({
+  setMcpServersEnabled: vi.fn().mockResolvedValue(undefined),
   ensureBackendMcpCatalog: vi.fn(async () => ({
     allServers: [
       { id: 'row_1', name: 'Business', original_json: '{"teamRegistryId":"omcp_1"}' },
@@ -29,6 +35,7 @@ vi.mock('@/renderer/hooks/mcp/catalog', () => ({
 
 import {
   buildSceneConversationRequest,
+  enableSceneTools,
   resolveSceneMcpServerIds,
   resolvePersonalSkillNames,
   resolveSceneSkillNames,
@@ -39,7 +46,8 @@ import {
 import { companySceneItem, personalSceneItem } from '@/renderer/utils/scenes/sceneItem';
 import { newPersonalScene } from '@/renderer/utils/scenes/personalScenes';
 import type { MyScene } from '@/common/types/platform/enterpriseTypes';
-import type { TProviderWithModel } from '@/common/config/storage';
+import { ensureBackendMcpCatalog, setMcpServersEnabled } from '@/renderer/hooks/mcp/catalog';
+import type { IMcpServer, TProviderWithModel } from '@/common/config/storage';
 
 const scene = (patch: Partial<MyScene> = {}): MyScene => ({
   id: 'scene_1',
@@ -336,6 +344,26 @@ describe('buildSceneConversationRequest', () => {
   });
 });
 
+describe('enableSceneTools', () => {
+  it('enables only approved disabled built-ins and leaves unrelated configuration intact', async () => {
+    const builtin = (name: string, enabled: boolean) =>
+      ({ id: name, name, builtin: true, enabled, transport: { type: 'stdio', command: 'fixture' } }) as IMcpServer;
+    const backend = builtin('one-browser', false);
+    const local = builtin('one-page-reader', false);
+    const alreadyEnabled = builtin('one-export-pdf', true);
+    const unrelated = builtin('one-html-render', false);
+    const builtinServers = [local, alreadyEnabled, unrelated];
+    vi.mocked(ensureBackendMcpCatalog).mockResolvedValueOnce({
+      allServers: [backend, ...builtinServers],
+      userServers: [backend],
+      builtinServers,
+    });
+    vi.mocked(setMcpServersEnabled).mockClear();
+    await enableSceneTools([backend.name, local.name, alreadyEnabled.name, backend.name]);
+    expect(setMcpServersEnabled).toHaveBeenCalledExactlyOnceWith([backend.id, local.id, alreadyEnabled.id], true);
+  });
+});
+
 describe('startSceneConversation', () => {
   beforeEach(() => {
     hooks.listAvailableSkills.mockReset().mockResolvedValue(skills);
@@ -360,6 +388,22 @@ describe('startSceneConversation', () => {
   it('does not change selection for personal scenes', async () => {
     await startSceneConversation(personalSceneItem(newPersonalScene()), model);
     expect(hooks.activate).not.toHaveBeenCalled();
+  });
+
+  it('passes canonical MCP names and transport to the session and excludes disabled bundled tools', () => {
+    const item = personalSceneItem(newPersonalScene({ builtinMcpNames: ['one-browser', 'one-page-reader'] }));
+    const transport = { type: 'stdio' as const, command: 'fixture', args: ['browser'] };
+    const request = buildSceneConversationRequest({
+      item,
+      model,
+      skills: [],
+      mcpServers: [
+        { id: 'browser', name: 'one-browser', builtin: true, enabled: true, transport },
+        { id: 'reader', name: 'one-page-reader', builtin: true, enabled: false, transport },
+      ],
+    });
+    expect(request.extra.selected_mcp_server_ids).toEqual(['browser']);
+    expect(request.extra.selected_session_mcp_servers).toEqual([{ id: 'browser', name: 'one-browser', transport }]);
   });
 
   it('explains unavailable bundled dependencies without creating an empty scene or changing enterprise selection', async () => {

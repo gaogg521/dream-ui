@@ -1,4 +1,14 @@
-import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCenter,
+  pointerWithin,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CloseSmall, Drag, Edit, Plus } from '@icon-park/react';
@@ -60,7 +70,7 @@ const TeamTabView: React.FC<TeamTabViewProps> = ({
   // Leader stays fixed at index 0 and never takes part in sorting.
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: slot_id,
-    disabled: isLeader,
+    disabled: { draggable: isLeader, droppable: isLeader },
   });
 
   useEffect(() => {
@@ -123,7 +133,7 @@ const TeamTabView: React.FC<TeamTabViewProps> = ({
         borderColor: isActive ? color : 'transparent',
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.72 : undefined,
+        opacity: isDragging ? 0.35 : undefined,
         zIndex: isDragging ? 1 : undefined,
       }}
       onMouseEnter={() => setHovered(true)}
@@ -158,7 +168,11 @@ const TeamTabView: React.FC<TeamTabViewProps> = ({
           onKeyDown={handleKeyDown}
         />
       ) : (
-        <div className='min-w-0 flex-1 flex items-center gap-4px'>
+        <div
+          {...(isLeader ? undefined : listeners)}
+          className={`min-w-0 flex-1 flex items-center gap-4px ${isLeader ? '' : 'cursor-grab active:cursor-grabbing'}`}
+          onDragStart={(event) => event.preventDefault()}
+        >
           {pendingCount > 0 && (
             <span
               className='shrink-0 text-14px leading-none animate-wiggle'
@@ -257,7 +271,8 @@ const TeamTabs: React.FC<TeamTabsProps> = ({ onTabClick, pendingCounts, warmingU
   const [showRightFade, setShowRightFade] = useState(false);
   // 拖拽进行中：冻结所有胶囊的 hover 增宽（改名/移除按钮），否则拖动经过时
   // 目标胶囊变宽→布局跳→hover 丢失→又变窄，形成闪烁循环。
-  const [dragActive, setDragActive] = useState(false);
+  const [draggedSlotId, setDraggedSlotId] = useState<string | null>(null);
+  const draggedAssistant = assistants.find((assistant) => assistant.slot_id === draggedSlotId);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   // Only teammates are sortable; the leader pill is rendered outside the sortable id list.
   const sortableIds = useMemo(
@@ -278,30 +293,40 @@ const TeamTabs: React.FC<TeamTabsProps> = ({ onTabClick, pendingCounts, warmingU
   useEffect(() => {
     const container = tabsContainerRef.current;
     if (!container) return;
+    const handleWheel = (event: WheelEvent) => {
+      if (event.ctrlKey || event.shiftKey || event.deltaX || !event.deltaY) return;
+      const scale = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? container.clientWidth : 1;
+      const previous = container.scrollLeft;
+      container.scrollLeft += event.deltaY * scale;
+      if (container.scrollLeft !== previous) event.preventDefault();
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
     container.addEventListener('scroll', updateTabOverflow, { passive: true });
     window.addEventListener('resize', updateTabOverflow);
     const observer = new ResizeObserver(updateTabOverflow);
     observer.observe(container);
     updateTabOverflow();
     return () => {
+      container.removeEventListener('wheel', handleWheel);
       container.removeEventListener('scroll', updateTabOverflow);
       window.removeEventListener('resize', updateTabOverflow);
       observer.disconnect();
     };
-  }, [updateTabOverflow]);
+  }, [assistants.length, updateTabOverflow]);
 
-  const handleDragStart = useCallback(() => setDragActive(true), []);
+  const handleDragStart = useCallback(({ active }: DragStartEvent) => setDraggedSlotId(String(active.id)), []);
 
   const handleDragEnd = useCallback(
     ({ active, over }: DragEndEvent) => {
-      setDragActive(false);
+      setDraggedSlotId(null);
       if (!over || active.id === over.id) return;
       reorderAssistants(String(active.id), String(over.id));
     },
     [reorderAssistants]
   );
 
-  const handleDragCancel = useCallback(() => setDragActive(false), []);
+  const handleDragCancel = useCallback(() => setDraggedSlotId(null), []);
 
   if (assistants.length === 0) return null;
 
@@ -314,11 +339,19 @@ const TeamTabs: React.FC<TeamTabsProps> = ({ onTabClick, pendingCounts, warmingU
         {/* 可横向滚动的成员胶囊列表 */}
         <div
           ref={tabsContainerRef}
-          className='flex items-center gap-6px flex-1 min-w-0 overflow-x-auto overflow-y-hidden py-8px px-12px [scrollbar-width:none]'
+          className='flex items-center gap-6px flex-1 min-w-0 overflow-x-auto overflow-y-hidden py-8px px-12px [scrollbar-width:thin]'
         >
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCenter}
+            collisionDetection={(args) => {
+              const pointerTargets = pointerWithin(args);
+              return pointerTargets.length ? pointerTargets : closestCenter(args);
+            }}
+            autoScroll={{
+              canScroll: (element) => element === tabsContainerRef.current,
+              threshold: { x: 0.05, y: 0 },
+              acceleration: 4,
+            }}
             modifiers={[restrictToHorizontalAxis]}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
@@ -341,7 +374,7 @@ const TeamTabs: React.FC<TeamTabsProps> = ({ onTabClick, pendingCounts, warmingU
                     warmupFailed={failedSlotIds?.has(assistant.slot_id) ?? false}
                     color={colorOf(assistant.slot_id)}
                     pendingCount={pendingCounts?.get(assistant.slot_id) ?? 0}
-                    dragActive={dragActive}
+                    dragActive={draggedSlotId !== null}
                     onSwitch={(slot_id) => {
                       switchTab(slot_id);
                       onTabClick?.(slot_id);
@@ -354,6 +387,20 @@ const TeamTabs: React.FC<TeamTabsProps> = ({ onTabClick, pendingCounts, warmingU
                 );
               })}
             </SortableContext>
+            <DragOverlay dropAnimation={null}>
+              {draggedAssistant && (
+                <div className='h-full flex items-center px-10px rounded-999px border border-solid border-[color:var(--border-base)] bg-2 shadow-md'>
+                  <TeamAgentIdentity
+                    assistant_name={draggedAssistant.assistant_name}
+                    assistant_backend={draggedAssistant.assistant_backend}
+                    icon={draggedAssistant.icon}
+                    conversation_id={draggedAssistant.conversation_id}
+                    nameClassName='text-13px font-600'
+                    nameStyle={{ color: colorOf(draggedAssistant.slot_id) }}
+                  />
+                </div>
+              )}
+            </DragOverlay>
           </DndContext>
         </div>
         {/* 两侧渐隐提示「还有更多」，只覆盖滚动区、不盖固定的添加入口 */}

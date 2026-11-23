@@ -1,3 +1,4 @@
+import { getEnterpriseConnectionScope } from '@/common/adapter/enterpriseMode';
 import { mcpService } from '@/common/adapter/ipcBridge';
 import {
   BUILTIN_IMAGE_GEN_LEGACY_NAMES,
@@ -6,7 +7,7 @@ import {
   type IMcpServerTransport,
   type ISessionMcpServer,
 } from '@/common/config/storage';
-import { getClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
+import { getClientBusinessSetting, setClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
 
 type BackendMcpTransport = Exclude<IMcpServerTransport, { type: 'streamable_http' }>;
 
@@ -121,3 +122,71 @@ export const ensureBackendMcpCatalog = async (): Promise<{
     allServers,
   };
 };
+
+type EnabledChangeListener = (id: string, enabled: boolean) => void;
+const enabledChangeListeners = new Set<EnabledChangeListener>();
+
+export function subscribeMcpEnabledChanges(listener: EnabledChangeListener): () => void {
+  enabledChangeListeners.add(listener);
+  return () => {
+    enabledChangeListeners.delete(listener);
+  };
+}
+
+const publishEnabledChange = (id: string, enabled: boolean) => {
+  for (const listener of enabledChangeListeners) listener(id, enabled);
+};
+
+// Serialize updates from switches and scene confirmations in this renderer.
+let enabledStateWrite = Promise.resolve();
+
+export function setMcpServersEnabled(ids: readonly string[], enabled: boolean): Promise<void> {
+  const scope = getEnterpriseConnectionScope();
+  const checkScope = () => {
+    if (getEnterpriseConnectionScope() !== scope) throw new Error('MCP_SCOPE_CHANGED');
+  };
+  const write = enabledStateWrite.then(async () => {
+    if (!ids.length) return;
+    checkScope();
+    const { allServers, userServers } = await ensureBackendMcpCatalog();
+    const backendIds = new Set(userServers.map((server) => server.id));
+    const targets = [...new Set(ids)].map((id) => {
+      const server = allServers.find((entry) => entry.id === id);
+      if (!server?.transport) throw new Error('MCP_SERVER_UNAVAILABLE');
+      return server;
+    });
+    const localIds = new Set<string>();
+
+    for (const server of targets) {
+      checkScope();
+      if (server.enabled === enabled) {
+        publishEnabledChange(server.id, enabled);
+        continue;
+      }
+      if (backendIds.has(server.id)) {
+        const updated = await mcpService.toggleServer.invoke({ id: server.id });
+        checkScope();
+        if (updated?.enabled !== enabled) throw new Error('MCP_ENABLE_STATE_NOT_SAVED');
+        publishEnabledChange(server.id, enabled);
+      } else {
+        localIds.add(server.id);
+      }
+    }
+
+    if (localIds.size === 0) return;
+    checkScope();
+    const config = await getClientBusinessSetting('mcp.config');
+    checkScope();
+    if (!config || config.filter((entry) => entry.builtin && localIds.has(entry.id)).length !== localIds.size) {
+      throw new Error('MCP_SERVER_UNAVAILABLE');
+    }
+    await setClientBusinessSetting(
+      'mcp.config',
+      config.map((entry) => (entry.builtin && localIds.has(entry.id) ? { ...entry, enabled } : entry))
+    );
+    checkScope();
+    for (const id of localIds) publishEnabledChange(id, enabled);
+  });
+  enabledStateWrite = write.catch(() => {});
+  return write;
+}

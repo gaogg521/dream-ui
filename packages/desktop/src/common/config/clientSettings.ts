@@ -12,6 +12,7 @@ export type ImageGenerationModelSetting = TProviderWithModel & {
 export type ClientBusinessSettingMap = {
   'google.config': GoogleClientSetting;
   'mcp.config': IMcpServer[] | undefined;
+  'mcp.notes': Record<string, string> | undefined;
   'tools.imageGenerationModel': ImageGenerationModelSetting | undefined;
   'tools.videoGenerationModel': ImageGenerationModelSetting | undefined;
   /**

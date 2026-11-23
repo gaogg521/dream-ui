@@ -19,6 +19,7 @@ type UseAcpInitialMessageParams = {
   conversation_id: string;
   backend: string;
   setAiProcessing: (value: boolean) => void;
+  onInitialSend?: (draft: { conversationId: string; text: string }) => void;
   resetState: () => void;
   markSendStarted?: () => void;
   markSendAccepted?: (turn_id: string, runtime: TConversationRuntimeSummary, msg_id?: string) => void;
@@ -35,6 +36,7 @@ export const useAcpInitialMessage = ({
   conversation_id,
   backend,
   setAiProcessing,
+  onInitialSend,
   resetState,
   markSendStarted,
   markSendAccepted,
@@ -68,6 +70,7 @@ export const useAcpInitialMessage = ({
               .filter(isChatFileRef)
           : [];
 
+        onInitialSend?.({ conversationId: conversation_id, text: input });
         markSendStarted?.();
         setAiProcessing(true);
 
@@ -142,6 +145,7 @@ export const useAcpInitialMessage = ({
     markSendStarted,
     resetState,
     setAiProcessing,
+    onInitialSend,
     t,
   ]);
 };

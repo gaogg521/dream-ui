@@ -1,6 +1,6 @@
 import type { IMcpServer } from '@/common/config/storage';
-import { Button, Dropdown, Menu, Popover, Tooltip } from '@arco-design/web-react';
-import { Check, CloseSmall, Info, LoadingOne, Refresh, Write, DeleteFour, SettingOne, Login } from '@icon-park/react';
+import { Button, Dropdown, Menu, Popover, Switch } from '@arco-design/web-react';
+import { Check, CloseSmall, Info, LoadingOne, Write, DeleteFour, SettingOne, Login } from '@icon-park/react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { McpOAuthStatus } from '@/renderer/hooks/mcp/useMcpOAuth';
@@ -12,11 +12,14 @@ import { isCompanyMcpServer } from '@/renderer/utils/enterprise/companyMcp';
 
 interface McpServerHeaderProps {
   server: IMcpServer;
+  purpose?: React.ReactNode;
   isTestingConnection: boolean;
   oauthStatus?: McpOAuthStatus;
   isLoggingIn?: boolean;
   /** Extension-contributed servers are read-only */
   isReadOnly?: boolean;
+  savingEnabled?: boolean;
+  onEnabledChange?: (enabled: boolean) => void;
   onTestConnection: (server: IMcpServer) => void;
   onEditServer: (server: IMcpServer) => void;
   onDeleteServer: (serverId: string) => void;
@@ -41,11 +44,11 @@ const getStatusIcon = (
   }
 
   if (last_test_status === 'connected') {
-    return <Check fill={iconColors.success} className='h-[24px] items-center' />;
+    return <Check fill={iconColors.secondary} className='h-[24px] items-center' />;
   }
 
   if (oauthStatus?.isAuthenticated) {
-    return <Check fill={iconColors.success} className='h-[24px] items-center' />;
+    return <Check fill={iconColors.secondary} className='h-[24px] items-center' />;
   }
 
   return <Info theme='outline' fill={iconColors.secondary} className='h-[24px]' />;
@@ -148,10 +151,13 @@ const supportsOAuth = (server: IMcpServer) =>
 
 const McpServerHeader: React.FC<McpServerHeaderProps> = ({
   server,
+  purpose,
   isTestingConnection,
   oauthStatus,
   isLoggingIn,
   isReadOnly,
+  savingEnabled,
+  onEnabledChange,
   onTestConnection,
   onEditServer,
   onDeleteServer,
@@ -167,70 +173,96 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
 
   const isError = server.last_test_status === 'error';
 
+  const status = (
+    <span className='inline-flex shrink-0 items-center text-t-secondary' title={statusText} aria-live='polite'>
+      {statusIcon}
+      <span className='sr-only'>{statusText}</span>
+    </span>
+  );
+
   return (
-    <div className='flex items-center justify-between group'>
-      <div className='flex items-center gap-2'>
-        <span>{server.name}</span>
+    <div className='flex flex-col gap-6px min-w-0'>
+      <div className='flex items-center gap-6px min-w-0'>
+        <span className='min-w-0 truncate font-600 text-t-primary' title={server.name}>
+          {server.name}
+        </span>
         {isCompanyMcpServer(server) ? <CompanyBadge /> : null}
-        {statusPopoverContent ? (
-          <Popover content={statusPopoverContent} trigger='hover' position='top'>
-            <span className='flex items-center cursor-default'>{statusIcon}</span>
-          </Popover>
-        ) : (
-          <Tooltip content={statusText} position='top'>
-            <span className='flex items-center cursor-default'>{statusIcon}</span>
-          </Tooltip>
-        )}
-        {isError && <FeedbackButton module='mcp-tools' />}
-        {!isReadOnly && needsLogin && onOAuthLogin && (
-          <Button
-            size='mini'
-            type='primary'
-            icon={<Login size={'14'} />}
-            title={t('settings.mcpLogin') || 'Login'}
-            loading={isLoggingIn}
-            onClick={() => onOAuthLogin(server)}
-          >
-            {t('settings.mcpLogin') || 'Login'}
-          </Button>
-        )}
-        {!isReadOnly && !needsLogin && (
-          <Button
-            size='mini'
-            icon={<Refresh size={'14'} />}
-            title={t('settings.mcpTestConnection')}
-            loading={isTestingConnection}
-            onClick={() => onTestConnection(server)}
+        <div className='ms-auto flex shrink-0 items-center gap-5px' onClick={(event) => event.stopPropagation()}>
+          <span className='text-12px text-t-secondary'>
+            {t(server.enabled ? 'settings.mcpEnabledLabel' : 'settings.mcpDisabledLabel')}
+          </span>
+          <Switch
+            size='small'
+            aria-label={server.name}
+            checked={server.enabled}
+            disabled={!onEnabledChange || isTestingConnection}
+            loading={savingEnabled}
+            onChange={(checked) => onEnabledChange?.(checked)}
+            style={{ backgroundColor: server.enabled ? 'var(--success)' : 'rgb(var(--gray-6))' }}
           />
-        )}
+        </div>
       </div>
-      {!isReadOnly && (
-        <div className='flex items-center gap-2 invisible group-hover:visible' onClick={(e) => e.stopPropagation()}>
-          {!server.builtin && (
+
+      <div className='flex items-center gap-4px min-w-0'>
+        <div className='min-w-0 flex-1'>{purpose}</div>
+        <div className='flex items-center gap-2px shrink-0' onClick={(event) => event.stopPropagation()}>
+          {statusPopoverContent ? (
+            <Popover content={statusPopoverContent} trigger='hover' position='top'>
+              {status}
+            </Popover>
+          ) : (
+            status
+          )}
+          {isError && <FeedbackButton module='mcp-tools' className='!px-4px [&>span:last-child]:sr-only' />}
+          {!isReadOnly && needsLogin && onOAuthLogin && (
+            <Button
+              size='small'
+              icon={<Login size={14} />}
+              title={t('settings.mcpLogin')}
+              loading={isLoggingIn}
+              onClick={() => onOAuthLogin(server)}
+            >
+              {t('settings.mcpLogin')}
+            </Button>
+          )}
+          {!isReadOnly && !needsLogin && (
+            <Button
+              size='small'
+              type='text'
+              aria-label={t('settings.mcpTestConnection')}
+              title={t('settings.mcpTestConnection')}
+              loading={isTestingConnection}
+              disabled={savingEnabled}
+              onClick={() => onTestConnection(server)}
+            >
+              {t('settings.mcpDetect')}
+            </Button>
+          )}
+          {!isReadOnly && !server.builtin && (
             <Dropdown
-              trigger='hover'
+              trigger='click'
               droplist={
                 <Menu>
                   <Menu.Item key='edit' onClick={() => onEditServer(server)}>
                     <div className='flex items-center gap-2'>
-                      <Write size={'14'} />
+                      <Write size={14} />
                       {t('settings.mcpEditServer')}
                     </div>
                   </Menu.Item>
                   <Menu.Item key='delete' onClick={() => onDeleteServer(server.id)}>
                     <div className='flex items-center gap-2 text-red-500'>
-                      <DeleteFour size={'14'} />
+                      <DeleteFour size={14} />
                       {t('settings.mcpDeleteServer')}
                     </div>
                   </Menu.Item>
                 </Menu>
               }
             >
-              <Button size='mini' icon={<SettingOne size={'14'} />} />
+              <Button size='small' type='text' icon={<SettingOne size={16} />} aria-label={t('settings.mcpSettings')} />
             </Dropdown>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

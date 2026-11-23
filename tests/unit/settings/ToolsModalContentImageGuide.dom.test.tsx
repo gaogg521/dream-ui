@@ -35,6 +35,7 @@ vi.mock('@/renderer/pages/settings/components/AddMcpServerModal', () => ({
 }));
 
 vi.mock('@/renderer/pages/settings/ToolsSettings/McpServerItem', () => ({
+  McpServerGrid: ({ children }: React.PropsWithChildren) => <>{children}</>,
   default: () => null,
 }));
 

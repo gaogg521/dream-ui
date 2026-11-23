@@ -11,7 +11,7 @@ export type TeamSendBoxRuntime = {
   queuedCount: number;
   statusText?: string;
   startedAtMs: number | null;
-  onStop?: () => Promise<void>;
+  onStop?: () => Promise<void | false>;
   onInterruptSend?: (payload: { input: string; files: ChatFileRef[] }) => Promise<void>;
   /**
    * Present only when the slot is in `runtime_failed`; triggers a directed
@@ -39,7 +39,7 @@ type BuildTeamSendRuntimeOptions = {
   slot_id: string;
   runView: TeamRunViewState;
   statusText?: string;
-  onStop?: () => Promise<void>;
+  onStop?: () => Promise<void | false>;
   /**
    * True when the team session was idle-reclaimed (see
    * `TeamRunViewState.sessionStopped`). Stopped is recoverable-and-sendable: the
@@ -143,7 +143,7 @@ export const buildTeamStopHandler = ({
   onStopSucceeded,
   onStopFailed,
   onRunStateStale,
-}: BuildTeamStopHandlerOptions): (() => Promise<void>) => {
+}: BuildTeamStopHandlerOptions): (() => Promise<void | false>) => {
   return async () => {
     const activeRun = runView.activeRun;
     if (!activeRun) return;
@@ -171,10 +171,14 @@ export const buildTeamStopHandler = ({
       console.warn('[TeamChatView] pause slot work failed', error);
       if (isStaleTeamRunPauseError(error)) {
         const reconciled = await onRunStateStale?.();
-        if (!reconciled || reconciled === 'failed') onStopFailed?.();
+        if (!reconciled || reconciled === 'failed') {
+          onStopFailed?.();
+          return false;
+        }
         return;
       }
       onStopFailed?.();
+      return false;
     }
   };
 };
