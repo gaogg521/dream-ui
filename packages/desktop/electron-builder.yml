@@ -215,6 +215,8 @@ extraResources:
   - from: resources/offline-office
     to: offline-office
 win:
+  signtoolOptions:
+    signingHashAlgorithms: [sha256]
   target:
     - nsis
     #    - msi

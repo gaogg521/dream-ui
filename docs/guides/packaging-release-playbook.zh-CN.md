@@ -62,6 +62,9 @@
 
 **出包**
 
+- Windows 正式包从 `main` 运行 Manual Build，保留默认开启的 `sign_windows_release`；正式 tag 构建也会开启。凭证存放在 GitHub Actions Secrets（`SSLTRUS_ACCESS_KEY`、`SSLTRUS_ACCESS_SECRET`），证书编号存放在 Actions Variable（`SSLTRUS_CERT_CODE`）。
+- 构建日志中搜索 `Verified Windows signature and timestamp` 可核对验签。下载后在安装包的「属性 → 数字签名」中确认签名者为「上海言绪科技有限公司」。续期换证时更新签名钩子的预期指纹，并按需要更新签名凭证及证书编号。
+
 - **五个平台一次发齐**（`platform=macos-arm64 / macos-x64 / windows-x64 / linux-x64 / linux-arm64`），别只发 Mac 等后面补
   （3.0.14 实际发生过，Linux 晚了 20 分钟）。Mac 腿最先发、全程盯。
 - **dispatch 前先 `gh release view v<X> --repo gaogg521/dream-core --json assets` 确认六资产已全部发布**（tag 打出来 ≠ 资产发布完，

@@ -61,6 +61,7 @@ jobs:
     if: vars.PUBLISH_RELEASE == 'true' && needs.code-quality.result == 'success' && (github.ref == 'refs/heads/dev' || (startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-dev-')))
     with:
       skip_code_quality: true
+      sign_windows_release: ${{ startsWith(github.ref, 'refs/tags/') }}
       # ⚠️ windows-arm64 是刻意不在这里的。dream-core 的 release 不产
       # aarch64-pc-windows 二进制，它必然卡在 "Prepare dreamcore binary"；
       # 官网也没有 Windows ARM64 下载入口，所以它从来没产出过任何东西——

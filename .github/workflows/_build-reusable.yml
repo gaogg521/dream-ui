@@ -15,6 +15,10 @@ on:
         description: 'Skip code quality checks (faster builds for debugging)'
         type: boolean
         default: false
+      sign_windows_release:
+        description: 'Require sslTrus signing and verification for Windows installers'
+        type: boolean
+        default: false
       append_commit_hash:
         description: 'Append short commit hash to artifact names'
         type: boolean
@@ -423,6 +427,25 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Prepare sslTrus signing CLI
+        if: startsWith(matrix.platform, 'windows') && inputs.sign_windows_release
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $toolDir = Join-Path $env:RUNNER_TEMP 'ssltrus'
+          $archive = Join-Path $env:RUNNER_TEMP 'ssltrus-v1.6.4.zip'
+          $url = 'https://pccs.ssltrus.cn/oss-code-sign-client/13558/cli/signtool-windows-amd64-v1.6.4.zip'
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne '9A00F96B9613C6F98CD6BA5A949E89BD8DAD806957749D200A7237D224BCF361') {
+            throw 'sslTrus CLI archive SHA-256 mismatch'
+          }
+          Expand-Archive -LiteralPath $archive -DestinationPath $toolDir -Force
+          $cli = Join-Path $toolDir 'signtool-windows-amd64.exe'
+          if (-not (Test-Path -LiteralPath $cli -PathType Leaf)) {
+            throw 'sslTrus CLI executable missing from archive'
+          }
+          "SSLTRUS_SIGNTOOL=$cli" >> $env:GITHUB_ENV
+
       - name: Build with electron-builder (Windows)
         if: startsWith(matrix.platform, 'windows')
         id: windows-build
@@ -435,8 +458,12 @@ jobs:
           try {
             Write-Host "Running Windows build command: $Command"
             iex $Command
+            if ($LASTEXITCODE -ne 0) {
+              throw "Windows build exited with code $LASTEXITCODE"
+            }
             Write-Host "Windows build completed successfully"
           } catch {
+            if ($env:ONE_REQUIRE_WINDOWS_SIGNING -eq 'true') { throw }
             $BuildFailed = $true
             Write-Warning "${{ matrix.platform }} build failed but will not block the workflow"
             Write-Host "::notice title=Windows build skipped::${{ matrix.platform }} build failed (see logs above) but workflow is allowed to continue."
@@ -449,6 +476,10 @@ jobs:
           }
         env:
           WINDOWS_BUILD_COMMAND: ${{ matrix.command }}
+          ONE_REQUIRE_WINDOWS_SIGNING: ${{ inputs.sign_windows_release }}
+          SSLTRUS_ACCESS_KEY: ${{ inputs.sign_windows_release && secrets.SSLTRUS_ACCESS_KEY || '' }}
+          SSLTRUS_ACCESS_SECRET: ${{ inputs.sign_windows_release && secrets.SSLTRUS_ACCESS_SECRET || '' }}
+          SSLTRUS_CERT_CODE: ${{ inputs.sign_windows_release && vars.SSLTRUS_CERT_CODE || '' }}
           DREAM_BACKEND_RUN_ID: ${{ inputs.dreamcore_run_id }}
           # Node.js memory limit for vite bundling (prevents OOM during build)
           # Node.js 内存限制，防止 vite 打包时内存不足
@@ -468,17 +499,7 @@ jobs:
           appleId: ${{ secrets.APPLE_ID }}
           appleIdPassword: ${{ secrets.APPLE_ID_PASSWORD }}
           teamId: ${{ secrets.TEAM_ID }}
-          # No signing identity here on purpose. `IDENTITY` is the macOS
-          # Developer ID secret, and this block was copied wholesale from the
-          # macOS step. On Windows `CSC_NAME` becomes `win.certificateSubjectName`,
-          # so electron-builder believed a matching certificate was installed and
-          # invoked signtool — which is why the build log read
-          # "signing with signtool.exe" while the artifact came out NotSigned.
-          # Windows code signing is deliberately not configured for now; leaving
-          # the macOS identity here bought nothing but a misleading log line.
-          # Packaging is unaffected: nothing sets `forceCodeSigning`, and
-          # `signAndEditExecutable` stays on, so rcedit still writes the icon and
-          # version metadata into the exe.
+          # Windows release signing uses the sslTrus hook instead of local certificate discovery.
           CSC_IDENTITY_AUTO_DISCOVERY: false
           # Windows build flags / Windows 构建参数
           MSVS_VERSION: 2022

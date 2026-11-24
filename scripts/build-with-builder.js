@@ -1150,7 +1150,16 @@ try {
   const outDirFlag = process.env.ONE_BUILD_OUT_DIR
     ? ` --config.directories.output="${path.resolve(process.env.ONE_BUILD_OUT_DIR)}"`
     : '';
-  const builderCommand = `bunx electron-builder --config packages/desktop/electron-builder.yml ${builderArgs} ${archFlag} ${nsisInclude} ${publishArg}${outDirFlag}`;
+  const windowsSigning =
+    isWindowsBuild && process.env.ONE_REQUIRE_WINDOWS_SIGNING === 'true' ? require('./release/sign-windows.cjs') : null;
+  let windowsSigningFlags = '';
+  if (windowsSigning) {
+    windowsSigning.checkConfiguration();
+    windowsSigningFlags =
+      ' --config.win.forceCodeSigning=true --config.win.signtoolOptions.sign=./scripts/release/sign-windows.cjs' +
+      ` --config.win.signtoolOptions.publisherName="${windowsSigning.publisher}"`;
+  }
+  const builderCommand = `bunx electron-builder --config packages/desktop/electron-builder.yml ${builderArgs} ${archFlag} ${nsisInclude} ${publishArg}${outDirFlag}${windowsSigningFlags}`;
   try {
     buildWithDmgRetry(builderCommand, targetArch);
   } catch (error) {
@@ -1161,7 +1170,11 @@ try {
       .find((p) => fs.existsSync(p));
     const firstError = formatExecError(error);
     const canRetryWithoutExecutableEdit =
-      process.platform === 'win32' && isWindowsBuild && process.env.CI !== 'true' && Boolean(winExePath);
+      !windowsSigning &&
+      process.platform === 'win32' &&
+      isWindowsBuild &&
+      process.env.CI !== 'true' &&
+      Boolean(winExePath);
 
     if (!canRetryWithoutExecutableEdit) {
       throw error;
@@ -1203,6 +1216,15 @@ try {
   const packagedOutput = process.env.ONE_BUILD_OUT_DIR
     ? path.resolve(process.env.ONE_BUILD_OUT_DIR)
     : path.resolve(__dirname, '../out');
+  if (windowsSigning) {
+    const installers = fs.readdirSync(packagedOutput).filter((name) => /\.(exe|msi)$/i.test(name));
+    if (installers.length === 0) {
+      throw new Error('Windows release build produced no installers to verify');
+    }
+    for (const installer of installers) {
+      windowsSigning.verify(path.join(packagedOutput, installer));
+    }
+  }
   const assetPackage = spawnSync(
     process.env.PYTHON || 'python',
     [

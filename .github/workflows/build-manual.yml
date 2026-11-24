@@ -29,6 +29,10 @@ on:
         required: false
         type: boolean
         default: false
+      sign_windows_release:
+        description: 'Sign Windows packages when the workflow and build source both use main'
+        type: boolean
+        default: true
       dreamcore_run_id:
         description: 'Optional DreamCore Manual Build workflow run id to bundle instead of the pinned release'
         required: false
@@ -62,6 +66,12 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
+      - name: Validate Windows signing source
+        if: inputs.sign_windows_release && (inputs.platform == 'windows-x64' || inputs.platform == 'all') && (github.ref != 'refs/heads/main' || inputs.branch != 'main')
+        run: |
+          echo "::error::Signed manual Windows builds require main for both workflow and source. Disable sign_windows_release for a test build."
+          exit 1
+
       - name: Generate build matrix
         id: set-matrix
         shell: bash
@@ -99,6 +109,7 @@ jobs:
       matrix: ${{ needs.prepare-matrix.outputs.matrix }}
       ref: ${{ inputs.branch }}
       skip_code_quality: ${{ inputs.skip_code_quality }}
+      sign_windows_release: ${{ inputs.sign_windows_release && github.ref == 'refs/heads/main' && inputs.branch == 'main' }}
       dreamcore_run_id: ${{ inputs.dreamcore_run_id }}
       append_commit_hash: true
       upload_installers_only: ${{ inputs.installers_only }}
