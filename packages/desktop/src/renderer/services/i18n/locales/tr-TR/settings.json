@@ -1705,7 +1705,7 @@
   },
   "dingtalk": {
     "clientId": "Client ID",
-    "devConsoleLink": "Egitimi takip et",
+    "devConsoleLink": "DingTalk Developer Console",
     "clientIdDescSuffix": "Client ID almak icin",
     "clientSecret": "Client Secret",
     "clientSecretDescSuffix": "Client Secret almak icin",

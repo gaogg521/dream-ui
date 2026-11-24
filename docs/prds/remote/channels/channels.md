@@ -232,7 +232,7 @@
 2. **必填字段**：
    - Client ID（Input，必填，红色 `*` 标记）
    - Client Secret（Input.Password，必填，红色 `*` 标记）
-3. 右下角有蓝色链接"DingTalk setup guide"，打开 GitHub Wiki 配置指南
+3. Client ID / Client Secret 两行下方各有一个蓝色链接「钉钉开放平台开发者后台」（`settings.dingtalk.devConsoleLink`），打开 `https://open-dev.dingtalk.com`（2026-11-24 更正：此前指向已失效的 `1one.1oneclaw.com`，标签为「跟随教程」）
 4. 点击"Test & Connect"按钮测试连接
 5. 测试成功后自动启用插件
 6. 配对/授权用户管理流程与 Telegram 相同（见 F-WEBUI-13）
@@ -246,7 +246,7 @@
 
 - [ ] Client ID 和 Client Secret 为必填项
 - [ ] Test & Connect 测试成功后自动启用
-- [ ] GitHub Wiki 链接可正常打开
+- [ ] 钉钉开放平台开发者后台链接可正常打开
 - [ ] 配对/授权用户管理功能正常
 
 ---

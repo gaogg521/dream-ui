@@ -1717,7 +1717,7 @@
   },
   "dingtalk": {
     "clientId": "شناسه کلاینت",
-    "devConsoleLink": "آموزش را دنبال کنید",
+    "devConsoleLink": "DingTalk Developer Console",
     "clientIdDescSuffix": "برای دریافت شناسه کلاینت",
     "clientSecret": "رمز کلاینت",
     "clientSecretDescSuffix": "برای دریافت رمز کلاینت",

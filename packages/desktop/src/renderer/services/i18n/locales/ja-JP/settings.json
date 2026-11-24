@@ -1707,7 +1707,7 @@
   },
   "dingtalk": {
     "clientId": "Client ID",
-    "devConsoleLink": "チュートリアルに従う",
+    "devConsoleLink": "DingTalk Developer Console",
     "clientIdDescSuffix": "Client ID を取得",
     "clientSecret": "Client Secret",
     "clientSecretDescSuffix": "Client Secret を取得",

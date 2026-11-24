@@ -1719,7 +1719,7 @@
   },
   "dingtalk": {
     "clientId": "Client ID",
-    "devConsoleLink": "跟隨教程",
+    "devConsoleLink": "釘釘開放平台開發者後台",
     "clientIdDescSuffix": "獲取 Client ID",
     "clientSecret": "Client Secret",
     "clientSecretDescSuffix": "獲取 Client Secret",

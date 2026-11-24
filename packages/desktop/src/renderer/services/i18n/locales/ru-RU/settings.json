@@ -1709,7 +1709,7 @@
   },
   "dingtalk": {
     "clientId": "Client ID",
-    "devConsoleLink": "Следуйте руководству",
+    "devConsoleLink": "DingTalk Developer Console",
     "clientIdDescSuffix": "для получения Client ID",
     "clientSecret": "Client Secret",
     "clientSecretDescSuffix": "для получения Client Secret",

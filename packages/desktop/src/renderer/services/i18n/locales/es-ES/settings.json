@@ -1705,7 +1705,7 @@
   },
   "dingtalk": {
     "clientId": "ID de cliente",
-    "devConsoleLink": "Sigue el tutorial",
+    "devConsoleLink": "DingTalk Developer Console",
     "clientIdDescSuffix": "para obtener tu ID de cliente",
     "clientSecret": "Secreto de cliente",
     "clientSecretDescSuffix": "para obtener el Secreto de cliente",

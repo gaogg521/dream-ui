@@ -39,7 +39,7 @@ interface DingTalkConfigFormProps {
   onStatusChange: (status: IChannelPluginStatus | null) => void;
 }
 
-const DINGTALK_DEV_DOCS_URL = 'https://1one.1oneclaw.com';
+const DINGTALK_DEV_DOCS_URL = 'https://open-dev.dingtalk.com';
 
 const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, modelSelection, onStatusChange }) => {
   const { t, i18n } = useTranslation();
@@ -306,7 +306,7 @@ const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, m
                 openExternalUrl(DINGTALK_DEV_DOCS_URL).catch(console.error);
               }}
             >
-              {t('settings.dingtalk.devConsoleLink', 'DingTalk Open Platform')}
+              {t('settings.dingtalk.devConsoleLink', 'DingTalk Developer Console')}
             </a>{' '}
             {t('settings.dingtalk.clientIdDescSuffix', 'to get your Client ID')}
           </span>
@@ -364,7 +364,7 @@ const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, m
                 openExternalUrl(DINGTALK_DEV_DOCS_URL).catch(console.error);
               }}
             >
-              {t('settings.dingtalk.devConsoleLink', 'DingTalk Open Platform')}
+              {t('settings.dingtalk.devConsoleLink', 'DingTalk Developer Console')}
             </a>{' '}
             {t('settings.dingtalk.clientSecretDescSuffix', 'to get Client Secret')}
           </span>
