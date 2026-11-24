@@ -37,8 +37,45 @@
 | Discord   | Gateway WS                 | `token`                                                    | 文本（群内须 @，私聊直通）   | 编辑原消息                                       | 1000ms |
 | 飞书/Lark | WebSocket（protobuf 帧）   | `app_id` `app_secret` [`encrypt_key` `verification_token`] | 文本/图片/文件/音频          | 更新交互卡片                                     | 500ms  |
 | 钉钉      | Stream 长连接              | `client_id` `client_secret`                                | 文本/图片                    | 卡片流式更新（带按钮=终稿）                      | 500ms  |
-| 微信      | 扫码登录 + 长轮询（ilink） | `account_id` `bot_token`（扫码后后端获得）                 | 文本/语音转文字/媒体项       | **不能编辑**：edit 即新发一条                    | 500ms  |
+| 微信      | 扫码登录 + 长轮询（ilink） | `account_id` `bot_token`（扫码完成事件下发，无手填）       | 文本/语音转文字/媒体项       | **不能编辑**：edit 即新发一条                    | 500ms  |
 | 企业微信  | 智能机器人 WebSocket       | `app_id`=Bot ID，`app_secret`=Secret                       | 文本/语音转文字（单聊+群聊） | **不能编辑**：edit 直接报错；markdown 一次性发送 | 500ms  |
+
+### 1.1 各渠道配置字段（逐项）
+
+核对自各 `*ConfigForm.tsx` 与 en-US 文案。"提交字段"指 `enablePlugin` 时放进 `config.credentials` 的键。
+
+**所有渠道共有**（凭据之后的部分）：
+
+- **助手 Assistant**：这个渠道用哪个助手回复，存为后端规范化的 `assistant_id` 绑定。
+- **默认模型 Default Model**：仅当所选助手是 dream-engine 兼容类型时可选；否则禁用并提示"随 CLI 运行时的模型"。
+- 连接状态、下一步引导（Next Steps）、待批准配对、已授权用户。
+- **手动输入 6 位配对码**的兜底框只有 Telegram、飞书、钉钉、微信、企业微信五个有，**Slack、Discord 没有**。
+- 凭据一旦保存，输入框占位显示 `••••••••••••••••`，不回读明文；已授权用户数 > 0 时凭据框和测试按钮禁用（微信没有输入框，不适用）。
+
+**各渠道独有字段**：
+
+| 渠道      | UI 字段                                  | 必填 | 占位符               | 提交字段                                                                                                        | 界面里的获取说明                                                             | 按钮                                                         |
+| --------- | ---------------------------------------- | ---- | -------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Telegram  | Bot Token（密码框，可切换可见）          | 是   | `123456:ABC-DEF...`  | `token`                                                                                                         | 打开 Telegram，找 @BotFather 发送 `/newbot` 获取                             | Test，成功后自动启用                                         |
+| Slack     | Bot Token                                | 是   | `xoxb-...`           | `token`                                                                                                         | 创建 Slack 应用并安装到工作区，复制 Bot User OAuth Token                     | Test（**只校验 Bot Token**），启用时带两个 token             |
+| Slack     | App-Level Token                          | 是   | `xapp-...`           | `app_token`                                                                                                     | 开启 Socket Mode，生成带 `connections:write` 权限的令牌                      | 同上                                                         |
+| Discord   | Bot Token                                | 是   | `MTAx...`            | `token`                                                                                                         | 创建 Discord 应用、添加 Bot、**开启 MESSAGE CONTENT intent**，复制 Bot Token | Test，成功后自动启用                                         |
+| 飞书/Lark | App ID                                   | 是   | `cli_xxxxxxxxxx`     | `app_id`                                                                                                        | 链接到飞书开放平台文档                                                       | Test & Connect                                               |
+| 飞书/Lark | App Secret                               | 是   | `xxxxxxxxxxxxxxxxxx` | `app_secret`                                                                                                    | 同上                                                                         | 同上                                                         |
+| 飞书/Lark | Encrypt Key（折叠在"显示可选设置"里）    | 否   | —                    | `encrypt_key`                                                                                                   | 事件加密，来自事件订阅设置                                                   | 空值不提交                                                   |
+| 飞书/Lark | Verification Token（同上）               | 否   | —                    | `verification_token`                                                                                            | 事件校验，来自事件订阅设置                                                   | 空值不提交                                                   |
+| 钉钉      | Client ID                                | 是   | `dingxxxxxxxxxx`     | `client_id`                                                                                                     | 链接「DingTalk Open Platform」（⚠️ 见 §12）                                  | Test & Connect                                               |
+| 钉钉      | Client Secret                            | 是   | `xxxxxxxxxxxxxxxxxx` | `client_secret`                                                                                                 | 同上                                                                         | 同上                                                         |
+| 微信      | **无输入框**；「Account ID」行里是扫码区 | —    | —                    | `account_id` + `bot_token`，由扫码完成事件（SSE 或 Electron IPC，载荷 `{accountId, botToken}`）下发后前端再提交 | 提示"请用微信扫描二维码"                                                     | 无 Test；扫码确认即启用；已连接后有 Disconnect               |
+| 企业微信  | Bot ID                                   | 是   | 无                   | `app_id`                                                                                                        | 链接到企业微信开发文档；提示条说明长连接模式无需回调 URL/域名/公网 IP        | **Save & Enable**（无 Test）；已存凭据且两框都留空时按钮禁用 |
+| 企业微信  | Secret                                   | 是   | 无                   | `app_secret`                                                                                                    | 同上                                                                         | 同上                                                         |
+
+几点容易搞错：
+
+- **"测试连接"和"启用"提交的字段形状不一样。** `POST /api/channel/plugins/test` 的请求体是 `{plugin_id, token, extra_config?: {app_id, app_secret}}`，后端按平台再映射成凭据：飞书→`app_id`/`app_secret`（`token` 传空串）；钉钉→`client_id`=`token`、`client_secret`=`extra_config.app_secret`；微信→`bot_token`=`token`、`account_id`=`extra_config.app_id`；其余→`token`（`routes.rs` 约 748–771）。也就是说**钉钉的 Test 把 Client ID 放在 `token` 字段里**，别被字段名误导。飞书的 Test 不带 Encrypt Key / Verification Token。
+- **同一组 `credentials` 键被多个平台复用**：`app_id`/`app_secret` 同时是飞书的 App ID/Secret 和企业微信的 Bot ID/Secret；`token` 是 Telegram/Discord/Slack 的 Bot Token。看键名不能反推是哪个平台。
+- **后端 `PluginConfig.config`（`mode`、`webhook_url`、`rate_limit`、`require_mention`）是预留字段**：前端不设置、插件不读取（非测试代码里只有 `routes.rs` 构造空值的地方），**别在文案里承诺"限速""群聊是否需 @"可配**。Discord 群内必须 @ 是插件里写死的。
+- 扩展渠道的字段不在表里：它们由扩展 manifest 的 `credentialFields` / `configFields` 动态生成，见 PRD 的 F-WEBUI-21。
 
 对"不能编辑"的平台（微信、企业微信），流式回写器会在工具调用前把已累积的助手文本先发出去，否则用户要等到整轮结束才看到东西（`stream_relay.rs` 的 `edit_is_new_send` 判定，只对 Weixin/Wecom 为真）。
 
@@ -232,6 +269,7 @@ IM 用户发消息
 - 员工通知：飞书/钉钉/企业微信/Telegram 的真实附件投递。
 - 渠道配置的企业级安全分发（§9）。
 - 后端 `PluginType` 枚举上 Slack/Discord 的 "Reserved variant for future…" 注释仍是错的（早已实现）。
+- **钉钉表单的文档链接疑似写错**：`DingTalkConfigForm.tsx` 里 `DINGTALK_DEV_DOCS_URL = 'https://1one.1oneclaw.com'`，链接文字却是「DingTalk Open Platform」。它不是钉钉域名（本仓库其他处用的官网是 `work.1oneclaw.com`，这个子域在仓库里只出现这一次）；旧 PRD 写的是"GitHub Wiki 配置指南"。应改成钉钉开放平台或其 Stream 机器人文档的真实地址——**正确 URL 我没能联网核实，所以没有改**。同一份表单里的飞书、企业微信链接分别指向各自官方文档，是对的。
 
 ## 13. 时间线
 
