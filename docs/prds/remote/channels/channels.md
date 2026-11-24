@@ -1,9 +1,13 @@
 # 设置页 → 远程连接 — Channels 渠道接入 (F-CHAN)
 
-> 本文档覆盖「设置 → 远程连接」页面 **Channels Tab** 的全部功能，包括渠道卡片总览、各 IM 渠道配置（Telegram/Lark/DingTalk/WeChat/WeCom）、Agent/模型选择、配对授权通用流程、扩展渠道支持。
+> 本文档覆盖「设置 → 远程连接」页面 **Channels Tab** 的全部功能，包括渠道卡片总览、各 IM 渠道配置（Telegram/Slack/Discord/Lark/DingTalk/WeChat/WeCom）、Agent/模型选择、配对授权通用流程、扩展渠道支持。
 > 基于静态代码分析和动态 UI 验证综合整理。
 >
 > WebUI Tab 相关内容见 [webui.md](../webui/webui.md)。
+>
+> **新读者先看 [ai-primer.zh-CN.md](ai-primer.zh-CN.md)**：代码地图、消息流转、前后端接口对照，以源码为准。
+>
+> **勘误（2026-11-24）**：① 企业微信（F-WEBUI-17）后端已实现，状态已改回 `[已实现]`；② 文中的 `pluginId` 一律以代码为准，即 `telegram`/`slack`/`discord`/`lark`/`dingtalk`/`weixin`/`wecom`（旧文档写的 `*_default` 后缀并不存在）。
 
 ---
 
@@ -14,7 +18,7 @@
 **正常流程**（用户视角）：
 
 1. 用户进入「设置 → 远程连接」页面，切换到 "Channels" Tab（桌面端）；或直接看到 Channels 内容（非桌面端/WebUI 浏览器访问）
-2. 页面顶部显示标题"Channels"、功能描述文本（"Connect Telegram, Lark, and DingTalk to interact with dream-ui from IM apps."），以及 2 步引导提示
+2. 页面顶部显示标题"Channels"、功能描述文本（"Connect Telegram, Lark, DingTalk, and WeChat to interact with One Work from IM apps."，i18n key `webui.featureChannelsDesc`），以及 2 步引导提示
 3. 下方为渠道卡片列表（Arco Design Collapse），每个渠道一张可折叠卡片
 4. 卡片 header 包含：渠道图标/logo、渠道名、描述、连接状态徽标（Connected/未连接）、Switch 启用开关
 5. 默认所有卡片折叠（`collapseKeys` 默认 `true`）；点击卡片 header 展开详细配置面板
@@ -24,13 +28,13 @@
 
 | 顺序 | 渠道          | pluginId                | 状态   |
 | ---- | ------------- | ----------------------- | ------ |
-| 1    | Telegram      | `telegram_default`      | active |
-| 2    | Slack         | `slack_default`         | active |
+| 1    | Telegram      | `telegram`              | active |
+| 2    | Slack         | `slack`                 | active |
 | 3    | Discord       | `discord`               | active |
-| 4    | Lark / Feishu | `lark_default`          | active |
-| 5    | DingTalk      | `dingtalk_default`      | active |
-| 6    | WeChat        | `weixin_default`        | active |
-| 7    | WeCom         | `wecom_default`         | active |
+| 4    | Lark / Feishu | `lark`                  | active |
+| 5    | DingTalk      | `dingtalk`              | active |
+| 6    | WeChat        | `weixin`                | active |
+| 7    | WeCom         | `wecom`                 | active |
 | 8+   | 扩展渠道      | 动态（`extensionMeta`） | active |
 
 **说明**：Discord 已从占位（coming_soon）升级为内置 active 渠道，`comingSoonChannels` 占位列表已随之移除。
@@ -299,15 +303,20 @@ idle → loading_qr → showing_qr → scanned → connected
 
 ---
 
-## (F-WEBUI-17) WeCom 渠道配置（WebSocket 长连接） [未实现]
+## (F-WEBUI-17) WeCom 渠道配置（WebSocket 长连接） [已实现]
 
-> **状态更正（2026-09-18）**：本节原标 `[已实现]`，但后端从来没有实现过 ——
-> 既没有 `PluginType::WeCom` 变体，也没有 `crates/dream-core-channel/src/plugins/wecom/`。
-> 前端是诚实的（渠道列表里企业微信带「即将上线」标记），但后端的内置渠道清单里
-> 曾经有一条 `("wecom", "WeCom")`，于是 `GET /api/channel/settings/wecom` 每次
-> 都返回 `400 Invalid platform: wecom`。那条假条目已删除，并加了
-> `builtin_ids_all_parse_as_a_plugin_type` 断言防止再次漂移。
-> 下面的验收标准描述的是**目标形态**，不是现状。
+> **状态沿革**：
+>
+> - 2026-09-18：当时后端确实没有实现（没有 `PluginType::Wecom`，没有 `plugins/wecom/`），
+>   后端内置渠道清单里的假条目 `("wecom", "WeCom")` 导致 `GET /api/channel/settings/wecom`
+>   返回 `400 Invalid platform: wecom`。假条目已删除，并加了
+>   `builtin_ids_all_parse_as_a_plugin_type` 断言防止再次漂移，本节因此一度改标 `[未实现]`。
+> - 之后 dream-core 补上了真实实现（提交 `ec0f7e5 feat(channel): save WeCom bot adapter…`）：
+>   `PluginType::Wecom`、`crates/dream-core-channel/src/plugins/wecom/`（智能机器人长连接，
+>   `wss://openws.work.weixin.qq.com`，订阅帧 `aibot_subscribe`，协议参考官方 `aibot-node-sdk`）。
+>   前端渠道列表里企业微信已是普通 active 卡片。**本节现状 = 已实现**。
+> - 凭据映射：表单的 Bot ID → `credentials.app_id`，Secret → `credentials.app_secret`
+>   （`WecomConfigForm.tsx`、后端 `plugins/wecom/plugin.rs`）。
 
 **用户故事**：作为用户，我希望通过配置企业微信机器人 ID 和密钥连接 WeCom 渠道，使用 WebSocket 长连接模式无需回调 URL。
 
@@ -328,8 +337,8 @@ idle → loading_qr → showing_qr → scanned → connected
 **异常情况**：
 
 - Bot ID 或 Secret 为空：warning toast "Please enter Bot ID and Secret"，字段标红
-- 启用无凭据（Switch 直接打开）：warning toast "Please save Token and EncodingAESKey first"
-- 保存/启用失败：error toast 显示错误信息
+- 启用无凭据（Switch 直接打开，`pluginStatus.hasToken` 为假）：warning toast "Please save Bot ID and Secret first"（`settings.wecom.configureFirst`）
+- 保存/启用失败：error toast 显示错误信息（`settings.wecom.enableFailed`）
 
 **验收标准**：
 
@@ -464,7 +473,7 @@ idle → loading_qr → showing_qr → scanned → connected
 
 1. 扩展通过 `extensionMeta` 声明 `credentialFields` 和 `configFields`，定义表单字段
 2. 页面加载时，扩展渠道从 `getPluginStatus` 返回的非内置类型中识别
-3. 扩展渠道卡片在 5 个内置渠道之后、coming_soon 渠道之前显示
+3. 扩展渠道卡片排在 7 个内置渠道之后（`coming_soon` 占位已随内置渠道全部落地而移除）
 4. 卡片 header 显示蓝色 "ext" 徽标（`isExtension: true`）
 5. 展开后根据 `extensionMeta` 的字段 schema 动态渲染表单
 
@@ -561,8 +570,8 @@ idle → loading_qr → showing_qr → scanned → connected
 | --- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | 1   | F-WEBUI-13 | Telegram Token 锁定机制依赖 `authorizedUsers.length > 0`，如果后端授权数据丢失但 Token 实际在用中，用户可能误修改 Token 导致断连                    | R2 初稿 |
 | 2   | F-WEBUI-16 | WeChat 扫码登录的 EventSource（WebUI 模式）在组件卸载时关闭，但 Electron IPC 模式中 `weixinLoginStart` 是 await Promise，组件卸载不会取消该 Promise | R2 初稿 |
-| 3   | F-WEBUI-18 | Agent 列表通过 `acpConversation.getAvailableAgents.invoke()` 加载，每个渠道独立调用，无缓存共享（5 个渠道 = 5 次相同 IPC 调用）                     | R2 初稿 |
+| 3   | F-WEBUI-18 | Agent 列表通过 `acpConversation.getAvailableAgents.invoke()` 加载，每个渠道独立调用，无缓存共享（7 个内置渠道 = 7 次相同 IPC 调用）                 | R2 初稿 |
 | 4   | F-WEBUI-19 | `useChannelModelSelection` 恢复保存的 provider 时最多重试 5 次，provider 被删除后静默降级为默认模型，无用户提示                                     | R2 初稿 |
 | 5   | F-WEBUI-20 | 配对请求的 `expiresAt` 由后端生成，UI 显示剩余时间为 `Math.ceil((expiresAt - Date.now()) / 60000)`，无自动倒计时刷新（显示值仅在组件渲染时计算）    | R2 初稿 |
-| 6   | F-WEBUI-17 | WeCom "Save & Enable" 按钮 warning 提示 "Please save Token and EncodingAESKey first" 与实际字段名 (Bot ID / Secret) 不一致                          | R2 初稿 |
+| 6   | F-WEBUI-17 | ~~WeCom warning 文案与字段名不一致~~ **已解决**：现为 "Please save Bot ID and Secret first"（`settings.wecom.configureFirst`）                      | R2 初稿 |
 | 7   | F-WEBUI-21 | 扩展渠道字段值存储在组件 state（`extensionFieldValues`），页面离开后丢失；已启用的扩展字段值不从后端恢复显示                                        | R2 初稿 |
