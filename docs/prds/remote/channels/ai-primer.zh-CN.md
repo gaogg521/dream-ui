@@ -1,148 +1,251 @@
-# 渠道配置（Channels）— 给 AI 的入门指南
+# 渠道配置（Channels）— 现状总览与 AI 入门
 
-> 读者：第一次接触「设置 → 频道/渠道配置」这块的其他 AI。
-> 目的：10 分钟内搞清楚它是什么、代码在哪、数据怎么流、哪些文档已经过期。
-> 写于 2026-11-24，结论均来自对 dream-ui 与 dream-core 源码的直接阅读（文中标了文件位置）。
+> 读者：第一次接触「设置 → 远程连接 → 频道」这块的其他 AI。
+> 更新：2026-11-24 重写（桌面 3.0.19，dreamcore pin `v0.1.106`）。
+> 写法约定：**"已真机验证"只指仓库里有具名证据的项**；找不到记录的写"未找到记录"，不写成"没测过"，也不写成"通过"。本文作者没有重新登录任何平台复测，所有测试结论都来自下文 §2 列出的证据，请以证据为准。
 
 ---
 
-## 1. 这是什么
+## 0. 一页纸结论
 
-用户在「设置 → 频道」页（桌面端是 WebUI / 频道 两个 Tab，截图标题「渠道配置」）把 **IM 机器人**接到 One Work 上。接好之后，用户可以在 Telegram / Slack / Discord / 飞书 / 钉钉 / 微信 / 企业微信里给机器人发消息，由本机的 AI 助手回复。
-
-页面上 7 张可折叠卡片，顺序固定：
-
-| 顺序 | 渠道      | `plugin_id` | 接入方式                    | 凭据                                                        |
-| ---- | --------- | ----------- | --------------------------- | ----------------------------------------------------------- |
-| 1    | Telegram  | `telegram`  | 长轮询                      | Bot Token                                                   |
-| 2    | Slack     | `slack`     | Socket Mode                 | Bot Token（`xoxb-`）+ App-Level Token（`xapp-`）            |
-| 3    | Discord   | `discord`   | Gateway WebSocket           | Bot Token（需开 MESSAGE CONTENT intent）                    |
-| 4    | 飞书/Lark | `lark`      | WebSocket                   | App ID + App Secret（可选 Encrypt Key、Verification Token） |
-| 5    | 钉钉      | `dingtalk`  | Stream 长连接               | Client ID + Client Secret                                   |
-| 6    | 微信      | `weixin`    | 扫码登录（二维码）          | 无需手填，扫码后后端拿 accountId + botToken                 |
-| 7    | 企业微信  | `wecom`     | 智能机器人 WebSocket 长连接 | Bot ID + Secret                                             |
-
-卡片 header 有启用开关；开关 = 启用/停用该渠道。展开卡片后是各渠道自己的配置表单。扩展（extension）还能动态追加渠道卡片，带蓝色 `ext` 角标。
-
-## 2. 文档地图（先读哪个）
-
-| 文档                                              | 位置                                                                                              | 可信度                               |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| 渠道 PRD（10 个功能点 F-WEBUI-12~21）             | `dream-ui/docs/prds/remote/channels/channels.md`                                                  | **大体可信，但有 3 处已过期，见 §8** |
-| 本文                                              | 同目录 `ai-primer.zh-CN.md`                                                                       | 以源码为准                           |
-| 数字员工结果推送（把运行结果发到用户自己的 bot）  | `dream-core/docs/employee-result-notifications.md`                                                | 可信，且比 PRD 新                    |
-| 推送目标选择器的 UI 侧说明                        | `dream-ui/docs/guides/session-2026-10-13-automation-templates-push-and-member-knowledge.zh-CN.md` | 可信                                 |
-| 手机 H5 适配（频道表单 PreferenceRow 抽共享组件） | `dream-ui/docs/guides/session-2026-11-14-webui-mobile-h5.zh-CN.md`                                | 可信                                 |
-
-`channels/` 目录下的 `dingtalk/ exwechat/ lark/ telegram/ tg/ wechat/` 子目录**全是空的**，不要在里面找东西。
-
-## 3. 代码在哪
-
-**前端（dream-ui）**，目录 `packages/desktop/src/renderer/components/settings/SettingsModal/contents/channels/`：
-
-| 文件                                                                | 作用                                                                     |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `ChannelModalContent.tsx`（988 行）                                 | 页面主体：拉全部渠道状态、监听实时事件、组装 7 张卡片、处理开关          |
-| `{Telegram,Slack,Discord,Lark,DingTalk,Weixin,Wecom}ConfigForm.tsx` | 各渠道配置表单（每个 600–800 行，结构高度相似）                          |
-| `PreferenceRow.tsx`                                                 | 表单里「标签+描述+控件」行，桌面横排、手机纵排（7 份重复已抽成共享组件） |
-| `ManualPairingInput.tsx`                                            | 手动输 6 位配对码的兜底输入框（Telegram/Lark/DingTalk/Wecom/Weixin 用）  |
-| `assistantBinding.ts`                                               | 渠道绑定哪个助手的解析逻辑，只信后端规范化过的 `assistant_id`            |
-| `ChannelHeader.tsx` / `ChannelItem.tsx` / `types.ts`                | 卡片外壳；`ChannelConfig.status` 取值 `active \| coming_soon`            |
-
-**后端（dream-core）**，crate `crates/dream-core-channel/src/`（约 1 万行）：
-
-| 文件                                                           | 作用                                                                                                                         |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `plugin.rs`                                                    | `ChannelPlugin` trait：`initialize → start → stop`、`send_message`、`edit_message`、`bot_info`、`status`… 每个 IM 平台实现它 |
-| `plugins/{telegram,lark,dingtalk,wecom,weixin,slack,discord}/` | 各平台实现，由同名 cargo feature 门控；`plugins/mod.rs::create_plugin` 是工厂                                                |
-| `manager.rs`                                                   | `ChannelManager`：启停插件、凭据加密落库、状态广播、启动时 `restore_plugins`                                                 |
-| `routes.rs`                                                    | 全部 HTTP 路由（见 §5）                                                                                                      |
-| `pairing.rs`                                                   | 配对码生成/批准/拒绝/过期清理，并向前端广播事件                                                                              |
-| `action.rs`                                                    | 收到 IM 消息后的总入口：鉴权 → 按钮回调 / 系统命令 / 普通对话                                                                |
-| `session.rs`                                                   | 每个 (用户, chat) 一个会话，保证不同群/私聊上下文隔离                                                                        |
-| `message_service.rs` + `stream_relay.rs` + `orchestrator.rs`   | 把消息交给 AI 会话，并把流式输出节流后回写 IM                                                                                |
-| `channel_settings.rs`                                          | 每个渠道绑定的助手/默认模型，存在 `client_preferences`                                                                       |
-| `push_targets.rs`                                              | `GET /api/channel/push-targets`，给定时任务/数字员工选推送对象                                                               |
-| `plugin_state.rs`                                              | 插件运行态（如微信 context token、轮询游标）的加密持久化                                                                     |
-
-## 4. 一条消息的完整旅程
-
-```
-IM 用户发消息
-  → 平台插件收到（长轮询/WebSocket），转成 UnifiedIncomingMessage，经 mpsc 通道交给 Manager
-  → ActionExecutor.handle_incoming_message                         [action.rs]
-       ├─ 查 (owner, 平台用户ID, 平台类型) 是否已授权
-       │     └─ 未授权 → request_pairing：生成 6 位码(10 分钟有效)，广播 channel.pairingRequested，回复用户配对码
-       ├─ 按钮回调（regenerate / continue）→ 只认「当前会话」，不接受按钮携带的会话ID或提示词
-       ├─ 系统动作：session.new / session.status / help.* / settings.show
-       └─ 普通文本 → SessionManager 取/建会话 → 返回 Dispatched
-  → ChannelOrchestrator：同一会话同时只处理一条（in_flight 占位）
-  → ChannelMessageService 创建/复用 conversation，调用 AI Agent
-  → ChannelStreamRelay 订阅流式事件，按平台节流（默认 500ms）反复 edit_message 回写
-```
+| 渠道      | `plugin_id` | 后端实现                              | 真实平台验证（有证据的部分）                                                                                     | 桌面 UI 入口               |
+| --------- | ----------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| 飞书/Lark | `lark`      | ✅ WebSocket + 交互卡片               | ✅ 真实群/私聊、配对、撤权重配对、模型回复、卡片（继续/重新生成/新会话）；10-11 抓到并修复"平台重投导致重复执行" | 早已开放                   |
+| 微信      | `weixin`    | ✅ 扫码登录 + 长轮询                  | ✅ 用户日常在用；文本/附件回执；**重启后上下文持久化冷重启 3 次通过**                                            | 早已开放                   |
+| 钉钉      | `dingtalk`  | ✅ Stream 长连接 + 卡片               | ✅ 10-16 真实连接+配对；10-30 客户端真实往返（群内 @ 后卡片流式回复）、重启自动重连                              | 早已开放                   |
+| 企业微信  | `wecom`     | ✅ 智能机器人 WebSocket（10-16 实现） | ✅ WebSocket 真实认证（errcode 0）；用户 10-28 亲测消息往返通过；⚠️ 附件下发仅协议模拟                           | **桌面 3.0.15（10-31）起** |
+| Telegram  | `telegram`  | ✅ 长轮询                             | 未找到真实平台验收记录（仅单元/集成测试）                                                                        | 早已开放                   |
+| Slack     | `slack`     | ✅ Socket Mode                        | 未找到真实平台验收记录（仅单元测试）                                                                             | 已开放（版本未核对）       |
+| Discord   | `discord`   | ✅ Gateway                            | 未找到真实平台验收记录（仅单元测试）                                                                             | 已开放（版本未核对）       |
 
 要点：
 
-- **授权靠配对码**，不是靠凭据。凭据只决定 bot 能连上；谁能和 bot 对话要用户在设置页（或手动输入框）点「批准」。
-- 配对码 6 位数字，用 `getrandom` 生成；同一用户再次请求会让旧码过期。
-- 各平台消息长度上限不同（Telegram 4096、飞书/钉钉/Slack 4000、Discord 2000、企业微信 markdown 4096 字节），在 `constants.rs`。
+- **企业微信不是"未实现"**：旧 PRD 一度这么写，那是 09-18 的状态。现在完整可用，但**只收文本/语音转文字、只能一次性发 markdown（不能编辑已发消息）**。
+- **SSO 登录和机器人是两条独立链路**。飞书/钉钉/企业微信各有"登录应用"凭据和"机器人"凭据，互不通用，各自验收（§9）。
+- **渠道配置只在用户自己的客户端本地**，企业服务器不下发（§9）。
+
+## 1. 这是什么
+
+用户在「设置 → 远程连接」把 **IM 机器人**接到 One Work 上，之后在 IM 里给机器人发消息，由本机的 AI 助手回复。页面上 7 张可折叠卡片，顺序固定（与截图一致）：Telegram、Slack、Discord、飞书/Lark、钉钉、微信、企业微信；扩展（extension）还能追加卡片，带蓝色 `ext` 角标。卡片 header 的开关 = 启用/停用该渠道。
+
+各渠道的接入与能力差异（已核对源码）：
+
+| 渠道      | 接入方式                   | 凭据（`credentials.*`）                                    | 收（入站）                   | 回写方式                                         | 节流   |
+| --------- | -------------------------- | ---------------------------------------------------------- | ---------------------------- | ------------------------------------------------ | ------ |
+| Telegram  | 长轮询                     | `token`                                                    | 文本/命令/图片/文档/贴纸     | 编辑原消息                                       | 500ms  |
+| Slack     | Socket Mode                | `token` + `app_token`                                      | 文本                         | 编辑原消息                                       | 1200ms |
+| Discord   | Gateway WS                 | `token`                                                    | 文本（群内须 @，私聊直通）   | 编辑原消息                                       | 1000ms |
+| 飞书/Lark | WebSocket（protobuf 帧）   | `app_id` `app_secret` [`encrypt_key` `verification_token`] | 文本/图片/文件/音频          | 更新交互卡片                                     | 500ms  |
+| 钉钉      | Stream 长连接              | `client_id` `client_secret`                                | 文本/图片                    | 卡片流式更新（带按钮=终稿）                      | 500ms  |
+| 微信      | 扫码登录 + 长轮询（ilink） | `account_id` `bot_token`（扫码后后端获得）                 | 文本/语音转文字/媒体项       | **不能编辑**：edit 即新发一条                    | 500ms  |
+| 企业微信  | 智能机器人 WebSocket       | `app_id`=Bot ID，`app_secret`=Secret                       | 文本/语音转文字（单聊+群聊） | **不能编辑**：edit 直接报错；markdown 一次性发送 | 500ms  |
+
+对"不能编辑"的平台（微信、企业微信），流式回写器会在工具调用前把已累积的助手文本先发出去，否则用户要等到整轮结束才看到东西（`stream_relay.rs` 的 `edit_is_new_send` 判定，只对 Weixin/Wecom 为真）。
+
+单条消息长度上限：Telegram 4096、飞书/钉钉/Slack 4000、Discord 2000、企业微信 markdown 4096 字节（UTF-8 分段，不会截断丢字）。
+
+## 2. 文档与证据地图（先读哪个）
+
+### 当前可信
+
+| 文档                    | 位置                                                                                              | 说明                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **本文**                | `dream-ui/docs/prds/remote/channels/ai-primer.zh-CN.md`                                           | 现状总览                                                                                   |
+| 渠道 PRD                | 同目录 `channels.md`                                                                              | 逐功能点的 UI 行为与验收标准；已更正企业微信/pluginId；**验收清单的 `[ ]` 没勾不代表没做** |
+| 数字员工结果推送        | `dream-core/docs/employee-result-notifications.md`                                                | 机器人如何被下游功能复用                                                                   |
+| 员工通知验收报告        | `D:\dream\outputs\employee-notification-verification-1019.md`                                     | 微信真机附件投递、其余四平台仅协议模拟的边界                                               |
+| 真实平台测试交接        | `dream-en/docs/handoff-2026-10-16-sso-and-bot-real-platform-testing.zh-CN.md`                     | 飞书/钉钉/企微 SSO+机器人逐项状态与证据文件名                                              |
+| 暂停验收交接            | `dream-en/docs/handoff-2026-10-16-sso-bot-paused.zh-CN.md`                                        | 10-16 停在哪、哪些已通过哪些没有                                                           |
+| 钉钉/企微预检与真人验证 | `dream-en/docs/test-report-2026-10-16-dingtalk-wecom-sso-preflight.zh-CN.md`                      | 含 60020、Contact.User.Read 等真实踩坑                                                     |
+| 钉钉/企微协议评估       | `dream-en/docs/test-report-2026-10-11-dingtalk-wecom-protocol-review.zh-CN.md`                    | 对照官方 SDK 的 7 处修复                                                                   |
+| 客户端 IM 验证口径      | `dream-en/docs/console-capabilities-and-laboratory.zh-CN.md`「IM：字段与客户端验证」              | 10-28/10-30 客户端真实往返的最新记录                                                       |
+| 企微 SSO 接入手册       | `dream-en/docs/guide-wecom-sso-setup.zh-CN.md`                                                    | 备案域名、可信 IP 等前置条件                                                               |
+| 手机 H5 适配            | `dream-ui/docs/guides/session-2026-11-14-webui-mobile-h5.zh-CN.md`                                | 频道表单在手机上的堆叠                                                                     |
+| 推送到自己的机器人      | `dream-ui/docs/guides/session-2026-10-13-automation-templates-push-and-member-knowledge.zh-CN.md` | `push_target` 的 UI 侧                                                                     |
+
+### 已过期，别信
+
+- `dream-en` 里 10-11、10-16 两份交接/评估中**"企业微信机器人尚未实现"**的表述：当时属实，10-16 当天已实现（提交 `ec0f7e5`）。
+- 同批文档中"钉钉机器人完整回复未通过"：10-16 暂停时的状态，10-30 已在客户端真实往返通过。
+- 旧 PRD 的 `*_default` 形式 pluginId。
+- `channels/` 目录下 `dingtalk/ exwechat/ lark/ telegram/ tg/ wechat/` 六个子目录**全是空的**。
+
+### 证据文件（只读，别改）
+
+- `D:\dream\scratchpad\license-audit-20261010\`：飞书 IM 读回、撤权、卡片三动作、重投去重的 JSON/PNG。
+- `D:\dream\scratchpad\enterprise-terminal-regression-20261012\`：飞书真实群对话、配对批准、桌面回跳截图。
+- `D:\dream\scratchpad\sso-platform-regression-20261016\`：钉钉/企微 SSO 与企微机器人预检（含 `wecom-bot-preflight.json`、官方 SDK 只读副本）。
+- `D:\dream\outputs\employee-notification-*-1019*`、`weixin-persistence-*-1019*`：微信附件投递、冷重启、备份恢复。
+
+## 3. 代码地图
+
+**前端 dream-ui**：`packages/desktop/src/renderer/components/settings/SettingsModal/contents/channels/`
+
+| 文件                                                                | 作用                                                                             |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `ChannelModalContent.tsx`                                           | 页面主体：拉全部状态、监听事件、组装 7 张卡片、处理开关、`BUILTIN_CHANNEL_TYPES` |
+| `{Telegram,Slack,Discord,Lark,DingTalk,Weixin,Wecom}ConfigForm.tsx` | 各渠道表单（结构高度相似）                                                       |
+| `PreferenceRow.tsx`                                                 | 「标签+描述+控件」行，桌面横排、手机纵排                                         |
+| `ManualPairingInput.tsx`                                            | 手动输 6 位配对码的兜底（事件漏推时用）                                          |
+| `assistantBinding.ts`                                               | 渠道绑定哪个助手；只信后端规范化后的 `assistant_id`                              |
+
+**后端 dream-core**：`crates/dream-core-channel/src/`（约 1 万行）
+
+| 文件                                                     | 作用                                                                                                      |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `plugin.rs` / `plugins/<平台>/`                          | `ChannelPlugin` trait 与七个平台实现，各由同名 cargo feature 门控；`plugins/mod.rs::create_plugin` 是工厂 |
+| `manager.rs`                                             | 启停、凭据加密落库、状态广播、启动 `restore_plugins`；运行时按 (owner, plugin_id) 隔离                    |
+| `routes.rs`                                              | 全部 HTTP 路由                                                                                            |
+| `action.rs`                                              | 入站消息总入口：鉴权→按钮回调→系统动作→普通对话                                                           |
+| `pairing.rs`                                             | 配对码（6 位、10 分钟）、批准/拒绝、过期清理、事件广播                                                    |
+| `session.rs`                                             | 每个 (用户, chat) 一个会话；`claim_delivery` 做投递去重                                                   |
+| `orchestrator.rs` `message_service.rs` `stream_relay.rs` | 把消息交给 AI、串行化同会话回合、节流回写                                                                 |
+| `channel_settings.rs`                                    | 每渠道绑定的助手/默认模型（存 `client_preferences`）                                                      |
+| `push_targets.rs`                                        | `GET /api/channel/push-targets`                                                                           |
+| `plugin_state.rs`                                        | 插件运行态（微信 context token、轮询游标）加密持久化                                                      |
+| `formatter.rs`                                           | 按平台转换文本格式（TG→HTML；飞书/钉钉/企微→markdown；Slack→mrkdwn；微信→纯文本）                         |
+
+测试：`crates/dream-core-channel/tests/`（manager、pairing、session_action、stream_relay、message_service、delivery_receipts 以及每平台 factory 集成），另有各插件内联测试。企业微信内联测试只有 3 个（上传回执、消息归一化、UTF-8 分段）。
+
+## 4. 一条消息的旅程
+
+```
+IM 用户发消息
+  → 平台插件收到，转成 UnifiedIncomingMessage，经 mpsc 交给 Manager
+  → ActionExecutor.handle_incoming_message                         [action.rs]
+       ├─ (owner, 平台用户ID, 平台) 未授权 → 生成 6 位配对码、广播 channel.pairingRequested、给用户回配对提示
+       ├─ 按钮回调：chat.regenerate / chat.continue → 只认"当前会话"，不信按钮携带的会话ID或提示词
+       ├─ 系统动作：session.new / session.status / help.* / settings.show（均由按钮触发）
+       └─ 普通文本 → SessionManager 取/建会话 → Dispatched
+  → ChannelOrchestrator：同一 (owner, session) 同时只处理一条（in_flight 占位）
+  → ChannelMessageService：建/复用 conversation → 校验发送闸门 → 调 AI Agent
+  → ChannelStreamRelay：订阅流式事件，按平台节流回写
+```
+
+可靠性机制（都有迁移/测试，不是口头约定）：
+
+- **投递去重**：`channel_delivery_receipts`（迁移 061，`claim_delivery` 原子占位）。起因是飞书平台超时重投导致同一消息被模型执行两次（见 §6）。
+- **同会话回合串行**：避免同一聊天并发两轮互相覆盖（`c48225b`）。
+- **按钮"重新生成"原地更新同一张卡片**，不再多发一条（`4b56ad2`，`stream_relay_test::regeneration_reuses_card_without_sending_another_message`）。
+- **文本命令**：插件会把 `/xxx` 标成 `Command` 类型，但 `action.rs` 里**没有按 Command 分发的代码**。`/new` 曾在 10-16 被拿来测试，**产品并未确认支持文本命令**；会话控制现在走卡片按钮的 `session.new` 等动作。别在文案里承诺文本命令。
 
 ## 5. 前后端接口对照
 
-前端通过 IPC 桥 `channel.*` 调用，落到 HTTP：
+| 前端 `channel.*`                                                     | HTTP                                                                                            |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `getPluginStatus`                                                    | `GET /api/channel/plugins`                                                                      |
+| `enablePlugin({plugin_id, config})` / `disablePlugin` / `testPlugin` | `POST /api/channel/plugins/{enable,disable,test}`                                               |
+| `getPendingPairings` / `approvePairing` / `rejectPairing`            | `GET /api/channel/pairings`、`POST …/approve`、`POST …/reject`                                  |
+| `getAuthorizedUsers` / `revokeUser`                                  | `GET /api/channel/users`、`POST …/revoke`                                                       |
+| 活动会话                                                             | `GET /api/channel/sessions`                                                                     |
+| 每渠道助手/模型                                                      | `GET /api/channel/settings/{platform}`、default-model 的 PUT、`POST /api/channel/settings/sync` |
+| 推送目标                                                             | `GET /api/channel/push-targets`                                                                 |
+| 微信扫码（浏览器端）                                                 | `GET /api/channel/weixin/login`（SSE）；Electron 走 `electronAPI.weixinLogin*`                  |
 
-| 前端调用                                                  | HTTP                                                                                                 |
-| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `getPluginStatus`                                         | `GET /api/channel/plugins`                                                                           |
-| `enablePlugin({plugin_id, config})`                       | `POST /api/channel/plugins/enable`                                                                   |
-| `disablePlugin`                                           | `POST /api/channel/plugins/disable`                                                                  |
-| `testPlugin`                                              | `POST /api/channel/plugins/test`                                                                     |
-| `getPendingPairings` / `approvePairing` / `rejectPairing` | `GET /api/channel/pairings`、`POST …/approve`、`POST …/reject`                                       |
-| `getAuthorizedUsers` / `revokeUser`                       | `GET /api/channel/users`、`POST …/revoke`                                                            |
-| 活动会话                                                  | `GET /api/channel/sessions`                                                                          |
-| 每渠道助手/模型                                           | `GET /api/channel/settings/{platform}`，以及 default-model 的 PUT，`POST /api/channel/settings/sync` |
-| 推送目标                                                  | `GET /api/channel/push-targets`                                                                      |
-| 微信扫码登录（WebUI 浏览器端）                            | `GET /api/channel/weixin/login`（SSE）；Electron 端走 `electronAPI.weixinLogin*` IPC                 |
+实时事件：`channel.pluginStatusChanged`、`channel.pairingRequested`、`channel.userAuthorized`。
 
-实时事件（WebSocket 推送）：`channel.pluginStatusChanged`、`channel.pairingRequested`、`channel.userAuthorized`。
+## 6. 各平台现状与真机验证记录
 
-## 6. 凭据怎么存、怎么重新启用
+### 飞书/Lark（验证最充分）
 
-- `enablePlugin` 的 `config.credentials` 是统一结构，**不同渠道复用同一组字段名**。已核实的映射：
-  - 企业微信：`app_id` = Bot ID，`app_secret` = Secret（`WecomConfigForm.tsx:181`，后端 `plugins/wecom/plugin.rs:168`）
-  - Telegram/Discord：`token`；Slack：`token` + `app_token`；飞书：`app_id`/`app_secret`/`encrypt_key`/`verification_token`；钉钉：`client_id`/`client_secret`；微信：`account_id` + `bot_token`（见 `PluginCredentials`）
-- 后端把整个 config 序列化后用安装级密钥加密存库（`manager.rs::enable_plugin`），表 `ChannelPluginRow.config`。
-- **重新启用开关发空 config**：后端发现没带新凭据就回落到库里已存的那份（`load_stored_config`）。所以前端用 `pluginStatus.hasToken` 判断「是否已配置过」，而不是看输入框。
-- 授权用户数 > 0 时，前端把凭据输入框和 Test 按钮禁用（防止误改导致已授权用户断连）。提示语：先关闭渠道并删除所有授权用户才能改配置。
+- **真实验收（10-11，证据目录 A/B）**：连接 → 真实群消息 → 收到配对码 → 产品内批准 → 建会话、调模型 → 回复卡片，从飞书侧读回与产品一致；撤销授权后下一条消息重新要求配对且不进模型。10-12/13 补验真实企业模型回复；10-27 私聊→配对→选「1ONE CLI + deepseek-flash-vision-latest」→飞书端实见 `QA1027-OK`。
+- **卡片三动作**：继续 / 重新生成 / 新会话均真实点击验证；重新生成原地更新同一消息（群消息数 30→30），一次点击只新增一次模型执行，按钮为中文。
+- **重投事故（重要）**：真实事件 `0c438ce9…` 的三次投递都因超时失败（约 3.76s），平台随之重投，造成第二次模型执行。修复三层：①ACK 保留关联头、完整拼包再 ACK 并采用 SDK 响应格式（`09b57bb`）；②兼容新版卡片事件信封（`e73992d`）；③持久化收件记录去重（`4b56ad2`）。另有真实 WebSocket 分片回调测试（`d64dda0`）。
+- **未覆盖**：平台重启后重投的**真实平台**补验仍缺（数据库关闭重开/并发测试已过）。
+- 显示名：简繁中文界面叫「飞书/Lark」「飛書/Lark」（`6009eb25`）。
+- 10-27 验证后已把测试用的 Lark 插件恢复为关闭，加密凭据和授权用户保留。
 
-## 7. 各渠道的特别之处
+### 微信（个人微信，非企业微信）
 
-- **Telegram / Discord / Slack**：先点 Test（只校验 Bot Token：`getMe` / `GET /users/@me` / `auth.test`），成功后自动 enable。Slack 的 App-Level Token 只在建立 Socket Mode 时才用，Test 不校验它。
-- **飞书**：必填 App ID/Secret，Encrypt Key 和 Verification Token 默认折叠；用 protobuf 帧的 WebSocket（`plugins/lark/frame.rs`）。
-- **钉钉**：Stream 长连接，不需要回调 URL。
-- **微信**：没有手填凭据，状态机 `idle → loading_qr → showing_qr → scanned → connected`。发消息需要「context token」，微信回复复用收到消息时的 token，所以后端把它**加密持久化**（迁移 063），重启后不必等对方再发一条才能主动推送。
-- **企业微信**：智能机器人**长连接**模式（`wss://openws.work.weixin.qq.com`，订阅帧 `aibot_subscribe`），不需要回调 URL；按钮是「Save & Enable」一步完成，没有 Test。
-- **扩展渠道**：前端按 `extensionMeta.credentialFields / configFields` 动态渲染表单，支持 text/password/select/number/boolean 五种字段；后端 `enable_extension_plugin` 目前**只存元数据，不执行扩展的运行时 JS**。
+- 扫码登录状态机：`idle → loading_qr → showing_qr → scanned → connected`。
+- **context token 是关键**：微信回复必须带收到消息时的 token。曾经只缓存在内存，**重启后主动推送会失败**（实测 `ret=-2 / prepare failed`，收到对方新消息后同一代码恢复）。10-19 已修（`8d53d54`，迁移 063）：token 与轮询游标加密落库、先落库再分发；空游标不会重置已保存位置；落库失败不推进游标。**冷重启 3 次通过**，备份跨机器恢复测试通过（随设置备份一起重加密）。需 dreamcore ≥ `v0.1.91`。
+- **真实投递**：用户确认摘要、`result.md`、`report.csv`、失败任务原因"全部收到，附件可打开"；定时任务也获 `sent` 回执。附件走微信加密 CDN，已用真实 CDN 往返脚本验证。
+- 微信的 `edit_message` 等于重新发一条。
 
-## 8. 已知的文档/代码不一致（学习时别被带偏）
+### 钉钉
 
-以下 1–4 项已于 2026-11-24 在 `channels.md` 中更正，列在这里是因为**旧版文档、旧版本克隆、其他 AI 的缓存里可能还是错的说法**；5 是仍然存在的。
+- 机器人协议层按官方 SDK 修了 3 处：嵌套卡片参数 `cardPrivateData.params.action`、EVENT 与 CALLBACK 两种 ACK 结构、畸形中文报文 panic（另有 SSO 的 authCode 修复，属于登录链路）。
+- 10-16 真实：Stream 连接成功、群消息收到配对提示、管理员批准成功；回复闭环**当时未通过**——先遇到 Provider 空配置，修复后用户收到"仍在生成"。同批代码改为：机器人缺默认模型时返回可操作的配置提示、启动加 120s 超时。
+- **10-30 客户端真实往返**：UI 填 Client ID/Secret →「测试并连接」→ Stream 注册 + WebSocket 连接 → 群内 @ 机器人，收到 AI 助理卡片流式回复；客户端重启后自动重连。
+- **未覆盖**：钉钉卡片继续/重新生成/新会话的真实点击、断线重连与重复投递的真实矩阵。
 
-1. **企业微信已实现。** `channels.md` 的 F-WEBUI-17 曾在 2026-09-18 标为 `[未实现]`（当时确实没有后端），之后 dream-core 加了 `PluginType::Wecom` 和 `plugins/wecom/`（提交 `ec0f7e5 feat(channel): save WeCom bot adapter…`）。已改回 `[已实现]`，附录 C 里「warning 文案与字段名不一致」那条也已解决（现为 `settings.wecom.configureFirst`「Please save Bot ID and Secret first」）。
-2. **`pluginId` 没有 `_default` 后缀。** 旧 PRD 写 `telegram_default`、`wecom_default`，代码里实际是 `telegram`、`wecom`。以 `PluginType` 的 Display（`types.rs`）和前端 `plugin_id: '…'` 为准。
-3. **`PluginType` 枚举上 Slack/Discord 的注释仍写 "Reserved variant for future…"**（`types.rs`，**这条注释未改，仍是错的**）：两者早已有完整实现并编进插件工厂，看注释会误判。
-4. 页面描述文案以 i18n key `webui.featureChannelsDesc` 为准（中文：「连接 Telegram、飞书/Lark、钉钉、微信，在即时通讯软件中与 One Work 交互。」），旧 PRD 写的是 "Telegram, Lark, and DingTalk"。
-5. 部分文档仍称产品为 dream-ui；当前对外品牌名是 **One Work**（来源 `BRAND_DISPLAY_NAME` 常量），新增文案不要写字面量。
+### 企业微信
 
-## 9. 改这块代码前必须知道的规则
+- **实现**：`plugins/wecom/plugin.rs`（499 行），协议参考官方 `aibot-node-sdk`；订阅帧 `aibot_subscribe`，收 `aibot_msg_callback`，发 `aibot_send_msg`（markdown），去重 10 分钟，有限次重连；收到 `disconnected_event` 视为被另一连接顶替而退出。Bot ID/Secret 与 SSO 的 Corp ID/Agent ID **是两套东西**。
+- **能力边界**：入站仅文本与语音转文字（单聊 `single` + 群聊 `group`）；不收图片/文件；无交互卡片；出站 markdown 一次性发送、不可编辑；文件走分块上传 `aibot_upload_media_init/chunk/finish` 再 `msgtype:file` 发送（员工通知用）。
+- **验证**：10-16 用真实 Bot ID/Secret 过 WebSocket 认证（errcode 0）；用户 10-28 在 DEV 亲自实测消息往返通过；UI 在桌面 **3.0.15（10-31）** 起开放（`81ce8d7e`：此前卡片是硬编码 `coming_soon`、字段名还是旧的 Token/EncodingAESKey）。
+- **未覆盖**：文件下发只经协议模拟端验证，真实账号投递未验证；MFA、客户端内免登等是 SSO 的事，与机器人无关。
 
-- **i18n**：任何用户可见文案都要走 i18n key，不要硬编码；流程见 `dream-ui/.claude/skills/i18n/SKILL.md`。
-- **UI 规范**：Arco Design 组件，不用裸 `<button>/<input>`；图标用 `@icon-park/react`；**不要把图标直接塞进 Arco 的 Tooltip/Dropdown**（IconPark 不转发 ref，React 19 下 hover 即整树卸载白屏）。
-- **CSS**：这个项目里 Tailwind 的 `dark:` 变体不生效；没有 box-sizing 重置，`w-full` + `px` 要自己加 `box-border`；色值类名用 `rgba(var(--arco-变量),1)` 形式，`rgb(var(--x)/alpha)` 是死的。新 UI 必须深色模式真机截图。
-- **改后端要发版才进安装包**：安装包里的 dreamcore 是 `package.json` 里 `dreamcoreVersion` 固定的下载版本，不是 dev 本地编的那个。
-- **新平台插件**要同时做：`ChannelPlugin` 实现 + cargo feature + `create_plugin` 分支 + `PluginType` 变体（枚举改名/新增注意 serde alias 兼容）+ 前端 `BUILTIN_CHANNEL_TYPES` 与配置表单 + 卡片排序 + i18n。漏掉任何一处，表现都是「卡片在但点开报 400 Invalid platform」。
-- 验证不要只看测试绿：真机走一遍「填凭据 → 启用 → IM 里发消息 → 拿到配对码 → 批准 → 收到回复」整条链路。
+### Telegram / Slack / Discord
 
-## 10. 一句话总结
+仓库内未找到真实平台验收记录。Slack、Discord 有较多内联单元测试（信封/Gateway 帧解析、去重、@ 提及剥离、速率限制），Telegram 有较完整的回调数据与消息解析测试；**这些不等同于真实账号验收**。
 
-> 渠道 = 「平台插件（Rust，每个 IM 一个）」+「配对码授权」+「按 (用户,chat) 隔离的会话」+「流式回写」。前端只是个按 `plugin_id` 分发的配置面板，真正的逻辑都在 `dream-core-channel`；凭据加密落库，授权靠配对码，推送复用同一套连接。
+## 7. 凭据、授权与持久化
+
+- 凭据统一放 `enablePlugin.config.credentials`（字段名见 §1 表）。后端把整份 config 序列化后用安装级密钥加密存库；状态接口只告诉前端 `hasToken`，不回读明文。
+- **重新启用开关发空 config**：后端回落到库里已存的那份（`load_stored_config`）。所以前端用 `hasToken` 判断"是否配过"，不看输入框。
+- **授权靠配对码，不靠凭据**：凭据只决定 bot 能不能连上；谁能和 bot 对话由用户批准配对决定。配对码 6 位、10 分钟、同用户重发会让旧码作废。
+- 授权用户数 > 0 时前端锁住凭据输入框和 Test 按钮，防止误改后已授权用户断连。
+- 同一平台、同一 owner 只有一条插件记录（行 id 就是 `plugin_id`）。
+- 相关迁移：061 投递收件、062 `cron_jobs.push_target`、063 `assistant_plugin_state`（运行态）。设置备份包含运行态，跨机器恢复时与凭据一起用目标机密钥重加密。
+
+## 8. 机器人被谁复用（下游功能）
+
+- **定时任务推送**（`a607e5b` 等）：任务可指定自己的某个机器人 + 聊天（`push_target`），运行成功后把最终回复发过去，detached 投递、不拖慢任务。`push-targets` 只列"已启用的 bot + 它实际聊过的聊天"（平台只有首条消息后才暴露 chat id）；微信、Telegram 的私聊 id 就是用户 id，所以已授权用户在没聊过时也会被提供（`f443584`）。
+- **数字员工结果通知**（`3d05a56`）：摘要 + `result.md` + 最多 5 个答案里明确链接的工作区内附件（单个 ≤20MiB、合计 ≤40MiB）。支持微信、企业微信、飞书、钉钉、Telegram；Slack/Discord 不在选择范围。投递记录 `one_employee_deliveries`（`sending/sent/failed`），运行 ID 唯一防重，模糊失败不自动重试，整体 120s 上限。**真实平台只验证了微信；其余四个平台的附件上传是协议模拟端验证。**
+- 个人版与企业版客户端都用**本机**的机器人连接，不走企业服务器。
+
+## 9. 与企业版的关系（最容易混淆）
+
+- **两条链路**：飞书/钉钉/企业微信各自有「SSO 登录应用」（后台配、给全公司登录用）和「机器人」（客户端配、给用户自己聊天用）。凭据不通用，验收也分开；"凭据有效"只证明能换 token，不证明回调、权限、可见范围、订阅都对。
+- **渠道配置不下发**：企业服务器上登记的 IM 资产不会下发到客户端，也不会让客户端启动机器人。"成员机器人"页只显示服务器能看见的记录，本机机器人不会自动出现。要统一管理需要渠道配置安全分发 + 指定运行节点 + 会话归属上报，尚未做。
+- **SSO 真人验证里踩过的坑**（调试机器人时也会遇到类似）：
+  - 钉钉：用户资料需个人委托权限 `Contact.User.Read`，URL 的 scope 里要带；回调同时带同值 `code` 与 `authCode` 曾被误判为重复字段。
+  - 企业微信：`60020` 里的 `from ip` 才是平台看到的真实出口（通用查 IP 站可能不同，曾出现两个出口）；网页授权可信域名要求**国内备案**域名并部署校验文件，校验文件 HTTP 200 不代表平台已批准；回调域、可信域名、可信 IP 是三个不同字段。
+  - 飞书：回调域要和实际网关地址一致，开放平台白名单不全会报 `20029`。
+
+## 10. 排错与易错点
+
+1. **配置保存成功 ≠ 验收通过**。凭据检测、连接、配对、收发要分别记录。
+2. **同一个 bot 凭据两个进程同时连会互相抢**：微信是抢轮询，企业微信会收到 `disconnected_event` 被顶下线。做真机验证时 10-19 的做法是先把原 DEV 的 bot 停掉、用拷贝库的实例验证、验完再恢复。
+3. **起用户的真实 DEV 会真的补跑 cron 并推送 IM**。验证前先关掉 `assistant_plugins` 与 `cron_jobs`，用完删副本。
+4. **微信 `ret=-2 / prepare failed`**：多半是缺会话 context token，让对方先发一条消息；dreamcore ≥ `v0.1.91` 重启后不再丢。
+5. **飞书/钉钉回调必须在几秒内 ACK**，超时平台会重投；看到"同一条消息跑了两次模型"先查 `channel_delivery_receipts` 和 ACK 耗时。
+6. 企业微信的 `edit_message` 会直接报错，新增功能时别对它调用"更新消息"；微信的"编辑"是新发一条。
+7. 企业微信 UI 在 3.0.15 之前是 `coming_soon`；旧安装包里没有这个入口是正常的。
+
+## 11. 改这块代码前必须知道的
+
+- **i18n**：用户可见文案一律走 i18n key（13 种语言），见 `dream-ui/.claude/skills/i18n/SKILL.md`。
+- **UI 规范**：Arco 组件，不用裸 `<button>/<input>`；图标用 `@icon-park/react`，**别直接塞进 Arco 的 Tooltip/Dropdown**（不转发 ref，React 19 下 hover 即整树卸载白屏）。
+- **CSS**：本应用 Tailwind `dark:` 变体不生效；无 box-sizing 重置，`w-full`+`px` 要加 `box-border`；色值用 `rgba(var(--arco变量),1)`，`rgb(var(--x)/alpha)` 是死的。新 UI 必须深色模式真机截图。
+- **改后端要发版才进安装包**：安装包里的 dreamcore 是 `dreamcoreVersion` 固定的下载版本，不是 dev 本地编的。
+- **新增平台插件**要同时改：`ChannelPlugin` 实现、cargo feature、`create_plugin` 分支、`PluginType` 变体（注意 serde alias 兼容）、`formatter.rs`、`BUILTIN_CHANNEL_TYPES`、配置表单、卡片排序、i18n。漏一处的典型表现是"卡片在，点开报 400 Invalid platform"。后端有 `builtin_ids_all_parse_as_a_plugin_type` 断言防止清单与枚举漂移。
+- **验证要走真实点击路径**，并按§6 的口径写清哪些是真机、哪些是协议模拟。
+
+## 12. 仍未覆盖 / 待办
+
+- Telegram、Slack、Discord：没有真实平台验收记录。
+- 飞书：平台重启后重投的真实验证。
+- 钉钉：卡片三动作、断线重连、重复投递的真实矩阵。
+- 企业微信：文件下发的真实投递；图片/文件入站与交互卡片（不在当前实现范围）。
+- 员工通知：飞书/钉钉/企业微信/Telegram 的真实附件投递。
+- 渠道配置的企业级安全分发（§9）。
+- 后端 `PluginType` 枚举上 Slack/Discord 的 "Reserved variant for future…" 注释仍是错的（早已实现）。
+
+## 13. 时间线
+
+| 日期  | 事件                                                                                 |
+| ----- | ------------------------------------------------------------------------------------ |
+| 09-18 | 清掉后端清单里没有实现的企业微信假条目；加防漂移断言                                 |
+| 10-11 | 飞书卡片动作、ACK、持久化去重；钉钉 authCode/卡片/ACK 协议修复（企业版 1.0.4 包含）  |
+| 10-13 | 定时任务结果推送到自己的机器人（迁移 062）                                           |
+| 10-16 | 企业微信机器人适配器落地（`ec0f7e5`，dreamcore v0.1.89）；钉钉/企微 SSO 真人扫码通过 |
+| 10-19 | 数字员工结果通知；微信 context 持久化（迁移 063，v0.1.91）；冷重启 ×3                |
+| 10-24 | 配对重复批准时保留过期原因                                                           |
+| 10-27 | 飞书私聊真实往返（QA1027-OK）                                                        |
+| 10-28 | 企业微信 UI 字段修复并开放；用户亲测消息往返通过                                     |
+| 10-30 | 钉钉客户端真实往返、重启自动重连                                                     |
+| 10-31 | 桌面 3.0.15 发布（含企业微信入口）                                                   |
+| 11-14 | 手机 H5 适配（频道表单堆叠）                                                         |
+| 11-24 | 本文重写                                                                             |

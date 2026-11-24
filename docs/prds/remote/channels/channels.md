@@ -5,7 +5,7 @@
 >
 > WebUI Tab 相关内容见 [webui.md](../webui/webui.md)。
 >
-> **新读者先看 [ai-primer.zh-CN.md](ai-primer.zh-CN.md)**：代码地图、消息流转、前后端接口对照，以源码为准。
+> **新读者先看 [ai-primer.zh-CN.md](ai-primer.zh-CN.md)**：各渠道现状、真机验证记录（飞书/微信/钉钉/企业微信）、代码地图，以源码和具名证据为准。本 PRD 侧重逐功能点的 UI 行为；验收清单的 `[ ]` 没勾选不代表没做，不要据此判断状态。
 >
 > **勘误（2026-11-24）**：① 企业微信（F-WEBUI-17）后端已实现，状态已改回 `[已实现]`；② 文中的 `pluginId` 一律以代码为准，即 `telegram`/`slack`/`discord`/`lark`/`dingtalk`/`weixin`/`wecom`（旧文档写的 `*_default` 后缀并不存在）。
 
@@ -314,7 +314,9 @@ idle → loading_qr → showing_qr → scanned → connected
 > - 之后 dream-core 补上了真实实现（提交 `ec0f7e5 feat(channel): save WeCom bot adapter…`）：
 >   `PluginType::Wecom`、`crates/dream-core-channel/src/plugins/wecom/`（智能机器人长连接，
 >   `wss://openws.work.weixin.qq.com`，订阅帧 `aibot_subscribe`，协议参考官方 `aibot-node-sdk`）。
->   前端渠道列表里企业微信已是普通 active 卡片。**本节现状 = 已实现**。
+>   前端渠道列表里企业微信已是普通 active 卡片（UI 在 2026-10-28 的 `81ce8d7e` 开放，随桌面 3.0.15 发布；
+>   此前是硬编码 `coming_soon` 且字段名还是旧的 Token/EncodingAESKey）。**本节现状 = 已实现**。
+>   能力边界：入站仅文本/语音转文字，出站 markdown 一次性发送、不可编辑。真机验证记录见 ai-primer §6。
 > - 凭据映射：表单的 Bot ID → `credentials.app_id`，Secret → `credentials.app_secret`
 >   （`WecomConfigForm.tsx`、后端 `plugins/wecom/plugin.rs`）。
 
