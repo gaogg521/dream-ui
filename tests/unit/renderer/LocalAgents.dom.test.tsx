@@ -292,7 +292,7 @@ describe('LocalAgents', () => {
 
     // Fork points the setup guide at its own site, not upstream's GitHub wiki
     // (LOCAL_AGENT_SETUP_GUIDE_URL in LocalAgents.tsx).
-    expect(openExternalUrl).toHaveBeenCalledWith('https://1one.1oneclaw.com');
+    expect(openExternalUrl).toHaveBeenCalledWith('https://work.1oneclaw.com/docs-install.html');
   });
 
   it('binds assistants to managed agents by agent_id instead of runtime backend', () => {

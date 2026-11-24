@@ -30,7 +30,7 @@ import {
   type AgentAvailabilityFilter,
 } from './agentFilters';
 
-const LOCAL_AGENT_SETUP_GUIDE_URL = 'https://1one.1oneclaw.com';
+const LOCAL_AGENT_SETUP_GUIDE_URL = 'https://work.1oneclaw.com/docs-install.html';
 
 const LocalAgents: React.FC = () => {
   const { t, i18n } = useTranslation();

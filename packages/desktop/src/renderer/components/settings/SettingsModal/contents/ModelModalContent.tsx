@@ -441,7 +441,7 @@ const ModelModalContent: React.FC = () => {
             <p className='text-14px text-t-secondary text-center max-w-400px'>
               {t('settings.needHelpConfigGuide')}
               <a
-                href='https://1one.1oneclaw.com'
+                href='https://work.1oneclaw.com/docs-providers.html'
                 target='_blank'
                 rel='noopener noreferrer'
                 className='text-[rgba(var(--primary-6),1)] hover:text-[rgba(var(--primary-5),1)] underline ms-4px'

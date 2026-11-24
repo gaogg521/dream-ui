@@ -270,7 +270,7 @@ IM 用户发消息
 - 渠道配置的企业级安全分发（§9）。
 - 后端 `PluginType` 枚举上 Slack/Discord 的 "Reserved variant for future…" 注释仍是错的（早已实现）。
 - **已修（2026-11-24）：钉钉表单的链接曾指向一个已失效的域名。** `DingTalkConfigForm.tsx` 的 `DINGTALK_DEV_DOCS_URL` 原为 `https://1one.1oneclaw.com`（解析失败，打不开；中文标签还是「跟随教程」），现改为钉钉官方开发者后台 `https://open-dev.dingtalk.com`（实测跳转到钉钉统一身份认证登录页），标签改为「钉钉开放平台开发者后台」（13 种语言同步；非中文语言沿用飞书那条的做法用英文 "DingTalk Developer Console"），并新增 `tests/unit/renderer/channels/DingTalkConfigForm.dom.test.tsx` 锁住链接与 Test/启用的字段形状。官网 `work.1oneclaw.com` 没有钉钉配置教程（`docs-im-channels.html` 是企业管理员的"IM 管道"治理视图，不是配置教程），所以指向开发者后台与飞书那一行保持一致。
-- **仍未处理：同一个失效域名 `1one.1oneclaw.com` 在代码里还有 4 处**（`ModelModalContent.tsx` 的"模型配置指南"链接、`LocalAgents.tsx` 的本地 Agent 安装指南、`SkillsMarketBanner.tsx` 和 `AgentHubModal.tsx`；后两者在仓库里没有被其他文件引用，疑似无用代码）。它们各自该指向什么是产品决定，`tests/unit/renderer/LocalAgents.dom.test.tsx` 还断言了这个旧地址，所以没有顺手改。注意：我上一版这里曾写"这个子域在仓库里只出现这一次"，那是错的。
+- **同日已修：同一个失效域名 `1one.1oneclaw.com` 在代码里另有 4 处**，现在都指向官网 `work.1oneclaw.com` 的对应文档页（均实测 200）：`ModelModalContent.tsx` 的"配置指南"→ `docs-providers.html`（厂商接入指南）；`LocalAgents.tsx` 的本地 Agent 设置指南 → `docs-install.html`（其中写明本机 Claude Code / Codex CLI 等会自动检测）；`SkillsMarketBanner.tsx` → `docs-content-market.html`（英文 `-en`）；`AgentHubModal.tsx` → `docs-agents.html`。后两者在仓库里没有被其他文件引用，疑似无用代码，只改了地址没删。`LocalAgents.dom.test.tsx` 里断言的旧地址同步更新。剩下两份历史文档（`fork-dev-onboarding`、`session-2026-07-08-assistant-branding`）里的旧官网名是品牌映射记录，保留原样。
 
 ## 13. 时间线
 

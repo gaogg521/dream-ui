@@ -14,7 +14,7 @@ interface AgentHubModalProps {
   onCancel: () => void;
 }
 
-const HUB_REPO_URL = 'https://1one.1oneclaw.com';
+const HUB_REPO_URL = 'https://work.1oneclaw.com/docs-agents.html';
 
 export const AgentHubModal: React.FC<AgentHubModalProps> = ({ visible, onCancel }) => {
   const { t } = useTranslation();

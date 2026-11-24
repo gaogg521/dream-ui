@@ -9,8 +9,8 @@ import { Message, Switch, Tooltip } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const SKILLS_MARKET_DETAILS_ZH = 'https://1one.1oneclaw.com';
-const SKILLS_MARKET_DETAILS_EN = 'https://1one.1oneclaw.com';
+const SKILLS_MARKET_DETAILS_ZH = 'https://work.1oneclaw.com/docs-content-market.html';
+const SKILLS_MARKET_DETAILS_EN = 'https://work.1oneclaw.com/docs-content-market-en.html';
 
 const SkillsMarketBanner: React.FC = () => {
   const { t, i18n } = useTranslation();
