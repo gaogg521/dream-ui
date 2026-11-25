@@ -14,6 +14,7 @@ import {
   MessageListLoadingProvider,
   MessageListProvider,
   MessagePaginationProvider,
+  useMessageList,
   useMessageLstCache,
 } from '@renderer/pages/conversation/Messages/hooks';
 import { usePendingConfirmationsRecovery } from '@renderer/pages/conversation/Messages/usePendingConfirmationsRecovery';
@@ -21,7 +22,36 @@ import HOC from '@renderer/utils/ui/HOC';
 import React, { useMemo } from 'react';
 import type { TeamSendBoxRuntime } from '@/renderer/pages/team/components/teamSendRuntime';
 import DreamEngineSendBox from './DreamEngineSendBox';
+import { stripBackgroundCollaboration } from '@/common/chat/backgroundCollaboration';
+import { TaskChecklist } from '@renderer/pages/conversation/Messages/components/MessagePlan';
 import type { DreamEngineModelSelection } from './useDreamEngineModelSelection';
+
+function BackgroundTaskChecklist() {
+  const messages = useMessageList();
+  const entries = useMemo(() => {
+    const lastUser = messages.findLastIndex((message) => message.type === 'text' && message.position === 'right');
+    const request = messages[lastUser];
+    if (request?.type !== 'text') return [];
+    const content = request.content.content;
+    if (typeof content !== 'string' || stripBackgroundCollaboration(content) === content) return [];
+    const tasksByName = new Map<string, 'failed' | 'completed' | 'in_progress'>();
+    for (const message of messages.slice(lastUser + 1)) {
+      if (message.type !== 'tool_call' || message.content.name?.toLowerCase() !== 'spawn') continue;
+      const { args, input, output, status } = message.content;
+      const tasks: unknown = input?.tasks ?? args?.tasks;
+      if (!Array.isArray(tasks)) continue;
+      for (const task of tasks) {
+        const name = typeof task?.name === 'string' ? task.name.trim() : '';
+        if (!name) continue;
+        const failed = status === 'error' || output?.includes(`## ${name} [ERROR]`);
+        tasksByName.set(name, failed ? 'failed' : status === 'completed' ? 'completed' : 'in_progress');
+      }
+    }
+    return Array.from(tasksByName, ([content, status]) => ({ content, status }));
+  }, [messages]);
+
+  return <TaskChecklist entries={entries} compact />;
+}
 
 const DreamEngineChat: React.FC<{
   conversation_id: string;
@@ -88,7 +118,7 @@ const DreamEngineChat: React.FC<{
           <FlexFullContainer>
             <MessageList className='flex-1' emptySlot={emptySlot} />
           </FlexFullContainer>
-          {taskChecklist}
+          {taskChecklist ?? (!teamRuntime && !teamSendMessage && <BackgroundTaskChecklist />)}
           <DreamEngineSendBox
             conversation_id={conversation_id}
             modelSelection={modelSelection}

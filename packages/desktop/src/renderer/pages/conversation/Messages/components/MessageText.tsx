@@ -2,6 +2,7 @@
  * Copyright 2026 One Work
  */
 
+import { stripBackgroundCollaboration } from '@/common/chat/backgroundCollaboration';
 import type { IMessageText } from '@/common/chat/chatLib';
 import { ALL_FILES_MARKERS } from '@/common/config/constants';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
@@ -193,10 +194,10 @@ const MessageText: React.FC<{
       if (hasSkillSuggest(content)) {
         content = stripSkillSuggest(content);
       }
-      return content;
+      return message.position === 'right' ? stripBackgroundCollaboration(content) : content;
     }
     return content;
-  }, [message.content.content]);
+  }, [message.content.content, message.position]);
 
   const { t } = useTranslation();
   const [showCopyAlert, setShowCopyAlert] = useState(false);

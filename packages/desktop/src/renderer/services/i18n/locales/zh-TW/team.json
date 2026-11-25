@@ -1,7 +1,11 @@
 {
   "autoCollaboration": {
+    "chooseTitle": "選擇協作方式",
+    "startTeam": "啟動團隊模式",
+    "stayHere": "留在目前對話（{{seconds}} 秒）",
+    "chooseDescription": "主代理預設獨立處理，適合並行時再分工。",
     "label": "自動協作",
-    "hint": "送出後在獨立協作會話中執行，可查看成員進度。",
+    "hint": "選擇協作方式",
     "failed": "無法啟動自動協作，請重試。"
   },
   "sider": {

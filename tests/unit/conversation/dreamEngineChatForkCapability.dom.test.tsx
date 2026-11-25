@@ -39,6 +39,7 @@ vi.mock('@renderer/pages/conversation/Messages/hooks', () => {
   const PassThrough: React.FC<{ children?: React.ReactNode }> = ({ children }) => <>{children}</>;
   return {
     __esModule: true,
+    useMessageList: () => [],
     useMessageLstCache: () => {},
     MessageListProvider: PassThrough,
     MessageListLoadingProvider: PassThrough,

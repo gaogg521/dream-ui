@@ -8,7 +8,7 @@ export function TaskChecklist({
   entries,
   compact = false,
 }: {
-  entries: IMessagePlan['content']['entries'];
+  entries: ReadonlyArray<IMessagePlan['content']['entries'][number] | { content: string; status: 'failed' }>;
   compact?: boolean;
 }) {
   const { t } = useTranslation();
@@ -17,7 +17,7 @@ export function TaskChecklist({
   if (!entries.length) return null;
   const completed = entries.filter(({ status }) => status === 'completed').length;
   const canExpand = entries.length > 3;
-  const prioritized = ['in_progress', 'pending', 'completed'].flatMap((status) =>
+  const prioritized = ['in_progress', 'failed', 'pending', 'completed'].flatMap((status) =>
     entries.filter((entry) => entry.status === status)
   );
   const displayed = !canExpand ? entries : prioritized.slice(0, compact || expanded ? 10 : 3);
@@ -43,7 +43,9 @@ export function TaskChecklist({
           >
             {content}
           </span>
-          <span className='shrink-0 text-12px text-t-secondary'>{t(`team.activity.status.${status}`)}</span>
+          <span className='shrink-0 text-12px text-t-secondary'>
+            {status === 'failed' ? t('common.failed', { defaultValue: 'Failed' }) : t(`team.activity.status.${status}`)}
+          </span>
         </li>
       ))}
     </ul>

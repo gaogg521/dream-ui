@@ -1,7 +1,11 @@
 {
   "autoCollaboration": {
+    "chooseTitle": "Choose how to collaborate",
+    "startTeam": "Start team mode",
+    "stayHere": "Stay in this chat ({{seconds}}s)",
+    "chooseDescription": "The lead works solo by default and delegates in parallel when it helps.",
     "label": "Auto collaboration",
-    "hint": "Runs in a separate team session with member progress.",
+    "hint": "Choose how to collaborate",
     "failed": "Could not start auto collaboration. Try again."
   },
   "sider": {

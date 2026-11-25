@@ -1,7 +1,11 @@
 {
   "autoCollaboration": {
+    "chooseTitle": "选择协作方式",
+    "startTeam": "启动团队模式",
+    "stayHere": "留在当前会话（{{seconds}} 秒）",
+    "chooseDescription": "主智能体默认独立处理，适合并行时再分工。",
     "label": "自动协作",
-    "hint": "发送后在独立协作会话中执行，可查看成员进度。",
+    "hint": "选择协作方式",
     "failed": "无法启动自动协作，请重试。"
   },
   "sider": {

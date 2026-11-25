@@ -3,6 +3,7 @@
  */
 
 import { ipcBridge } from '@/common';
+import { withBackgroundCollaboration } from '@/common/chat/backgroundCollaboration';
 import { TEAM_MODE_ENABLED } from '@/common/config/constants';
 import type { IConversationMcpStatus } from '@/common/config/storage';
 import { modelKindLabelOf } from '@/common/utils/modelCapabilities';
@@ -61,7 +62,7 @@ import { localSelectionItems, mergeFileSelectionItems } from '@/renderer/utils/f
 import { collectChatFileRefs, splitChatFileRefs } from '@/renderer/utils/file/messageFiles';
 import { baseName, splitReferenceInputs } from '@/common/media/referenceInputs';
 import type { AgentModeOption } from '@/renderer/utils/model/agentTypes';
-import { Button, Checkbox, Message, Tag } from '@arco-design/web-react';
+import { Button, Checkbox, Message, Modal, Tag } from '@arco-design/web-react';
 import { Brain, Lightning, MagicHat, Peoples, Shield } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -181,6 +182,30 @@ const DreamEngineSendBox: React.FC<{
   const collaborationLaunch = useRef<{ conversationId: string; teamId?: string; starting: boolean } | undefined>(
     undefined
   );
+  const [collaborationSeconds, setCollaborationSeconds] = useState<number | null>(null);
+  const collaborationChoice = useRef<{
+    finish: (choice: 'background' | 'team' | 'cancel') => void;
+  } | null>(null);
+  useEffect(() => () => collaborationChoice.current?.finish('cancel'), [conversation_id]);
+
+  const chooseCollaboration = () =>
+    new Promise<'background' | 'team' | 'cancel'>((resolve) => {
+      const deadline = Date.now() + 5000;
+      setCollaborationSeconds(5);
+      const timer = setInterval(() => {
+        const seconds = Math.ceil((deadline - Date.now()) / 1000);
+        if (seconds <= 0) collaborationChoice.current?.finish('background');
+        else setCollaborationSeconds(seconds);
+      }, 200);
+      collaborationChoice.current = {
+        finish(choice) {
+          clearInterval(timer);
+          collaborationChoice.current = null;
+          setCollaborationSeconds(null);
+          resolve(choice);
+        },
+      };
+    });
   const collaborationAvailable = TEAM_MODE_ENABLED && !teamSendMessage && !teamRuntime && mediaComposer.mode === 'off';
   const collaborationEnabled = collaborationAvailable && collaborationFor === conversation_id;
   // A terminal call held for a company administrator's approval would otherwise
@@ -359,7 +384,7 @@ const DreamEngineSendBox: React.FC<{
   }, [conversation_id, historyConversations, t]);
 
   const executeCommand = useCallback(
-    async ({ input, files }: Pick<ConversationCommandQueueItem, 'input' | 'files'>) => {
+    async ({ input, files }: Pick<ConversationCommandQueueItem, 'input' | 'files'>, background = false) => {
       if (teamPermission) await teamPermission.warmupSession();
       if (!current_model?.use_model) {
         Message.warning(t('conversation.chat.noModelSelected'));
@@ -386,7 +411,7 @@ const DreamEngineSendBox: React.FC<{
         markSendStarted();
         setWaitingResponse(true);
         const res = await ipcBridge.conversation.sendMessage.invoke({
-          input,
+          input: background ? withBackgroundCollaboration(input) : input,
           conversation_id,
           files,
           reply_requested: replyRequested,
@@ -504,7 +529,13 @@ const DreamEngineSendBox: React.FC<{
   // reordered or removed. Queued messages go out one per finished turn; "Send
   // now" on one interjects it (handleSendNowQueued).
   const onSendHandler = async (message: string): Promise<void | false> => {
-    if (collaborationEnabled) {
+    if (collaborationChoice.current) return false;
+    const choice =
+      collaborationEnabled && !isBusy && message.trim() && !message.trimStart().startsWith('/')
+        ? await chooseCollaboration()
+        : undefined;
+    if (choice === 'cancel') return false;
+    if (choice === 'team') {
       const model = current_model?.use_model;
       if (!model || isBusy || !message.trim() || collaborationLaunch.current?.starting) return false;
       const launch =
@@ -600,7 +631,7 @@ const DreamEngineSendBox: React.FC<{
       return;
     }
 
-    await executeCommand({ input: message, files: filesToSend });
+    await executeCommand({ input: message, files: filesToSend }, choice === 'background');
   };
 
   const [interrupting, setInterrupting] = useState(false);
@@ -935,6 +966,41 @@ const DreamEngineSendBox: React.FC<{
 
   return (
     <div className={`${sendBoxWidthClass} flex flex-col mt-auto mb-16px`}>
+      {collaborationSeconds !== null && (
+        <Modal
+          title={
+            <span className='flex items-center gap-8px text-15px font-semibold'>
+              <span className='flex size-28px items-center justify-center rounded-8px bg-2 text-t-secondary'>
+                <Peoples size={16} aria-hidden='true' />
+              </span>
+              {t('team.autoCollaboration.chooseTitle', { defaultValue: 'Choose how to collaborate' })}
+            </span>
+          }
+          visible
+          onCancel={() => collaborationChoice.current?.finish('cancel')}
+          alignCenter
+          style={{ width: 380, maxWidth: 'calc(100vw - 32px)', borderRadius: 16, overflow: 'hidden' }}
+          className='[&_.arco-modal-content]:!px-16px [&_.arco-modal-content]:!pt-12px [&_.arco-modal-content]:!pb-16px'
+          footer={null}
+        >
+          <p className='m-0 text-13px leading-5 text-t-secondary'>
+            {t('team.autoCollaboration.chooseDescription', {
+              defaultValue: 'The lead works solo by default and delegates in parallel when it helps.',
+            })}
+          </p>
+          <div className='mt-12px flex flex-wrap items-center justify-end gap-6px'>
+            <Button type='text' onClick={() => collaborationChoice.current?.finish('team')}>
+              {t('team.autoCollaboration.startTeam', { defaultValue: 'Start team mode' })}
+            </Button>
+            <Button type='primary' shape='round' onClick={() => collaborationChoice.current?.finish('background')}>
+              {t('team.autoCollaboration.stayHere', {
+                defaultValue: 'Stay in this chat ({{seconds}}s)',
+                seconds: collaborationSeconds,
+              })}
+            </Button>
+          </div>
+        </Modal>
+      )}
       <CommandQueuePanel
         items={queuedCommands}
         isMobile={isMobile}
@@ -1063,7 +1129,9 @@ const DreamEngineSendBox: React.FC<{
             {collaborationAvailable && (
               <Button
                 size='mini'
-                type={collaborationEnabled ? 'primary' : 'text'}
+                type='text'
+                shape='round'
+                style={collaborationEnabled ? { backgroundColor: '#17754b', color: '#fff' } : undefined}
                 icon={<Peoples size={14} fill='currentColor' />}
                 aria-pressed={collaborationEnabled}
                 title={t('team.autoCollaboration.hint')}
@@ -1073,9 +1141,6 @@ const DreamEngineSendBox: React.FC<{
               >
                 {t('team.autoCollaboration.label')}
               </Button>
-            )}
-            {collaborationEnabled && (
-              <span className='text-12px text-t-secondary'>{t('team.autoCollaboration.hint')}</span>
             )}
             <SceneStarters conversationId={conversation_id} hasInput={content.length > 0} />
             <EnterpriseSceneContext compact />
