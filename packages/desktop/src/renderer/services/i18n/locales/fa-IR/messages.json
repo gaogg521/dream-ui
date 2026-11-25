@@ -1,4 +1,5 @@
 {
+  "taskPlan": "فهرست کارها",
   "fileChanges": "تغییرات فایل",
   "fileChangesCount": "{{count}} تغییر فایل",
   "fileChangesCount_one": "{{count}} تغییر فایل",

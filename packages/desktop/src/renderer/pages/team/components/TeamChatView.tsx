@@ -19,6 +19,7 @@ import TeamChatEmptyState from './TeamChatEmptyState';
 import { useTeamTabs } from '@/renderer/pages/team/hooks/TeamTabsContext';
 import { readTeamAutoStaffing } from '../autoStaffing/useTeamAutoStaffing';
 import { withAutoStaffingNote } from '../autoStaffing/systemNote';
+import TeamTaskChecklist from './TeamTaskChecklist';
 import { usePresetAssistantInfo } from '@/renderer/hooks/agent/usePresetAssistantInfo';
 import { resolveConversationBackend } from '@/renderer/pages/conversation/utils/conversationAssistantIdentity';
 
@@ -59,6 +60,7 @@ const resolveAssistantDisplayName = (
 /** DreamEngine sub-component manages model selection state without adding a ChatLayout wrapper */
 const DreamEngineTeamChat: React.FC<{
   conversation: DreamEngineConversation;
+  taskChecklist?: React.ReactNode;
   emptySlot?: React.ReactNode;
   assistant_name?: string;
   teamSendMessage?: TeamSendOverride;
@@ -68,6 +70,7 @@ const DreamEngineTeamChat: React.FC<{
   loadedMcpStatuses?: IConversationMcpStatus[];
 }> = ({
   conversation,
+  taskChecklist,
   emptySlot,
   assistant_name,
   teamSendMessage,
@@ -93,6 +96,7 @@ const DreamEngineTeamChat: React.FC<{
       workspace={conversation.extra.workspace}
       modelSelection={modelSelection}
       emptySlot={emptySlot}
+      taskChecklist={taskChecklist}
       agent_name={assistant_name}
       teamSendMessage={teamSendMessage}
       teamRuntime={teamRuntime}
@@ -306,6 +310,7 @@ const TeamChatView: React.FC<TeamChatViewProps> = ({
             key={conversation.id}
             conversation={conversation as DreamEngineConversation}
             emptySlot={emptySlot}
+            taskChecklist={team_id && isLeader ? <TeamTaskChecklist teamId={team_id} /> : undefined}
             assistant_name={resolvedAssistantName}
             teamSendMessage={teamSendMessageOverride}
             teamRuntime={teamRuntime}

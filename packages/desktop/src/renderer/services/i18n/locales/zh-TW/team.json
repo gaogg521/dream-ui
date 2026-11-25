@@ -1,4 +1,9 @@
 {
+  "autoCollaboration": {
+    "label": "自動協作",
+    "hint": "送出後在獨立協作會話中執行，可查看成員進度。",
+    "failed": "無法啟動自動協作，請重試。"
+  },
   "sider": {
     "title": "團隊作戰",
     "createTeam": "New Team",

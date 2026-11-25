@@ -102,6 +102,8 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
     onExport,
     onShare,
     onShareToSession,
+    onOrganize,
+    rowId,
     onTogglePin,
     onToggleManualUnread,
     isManualUnread,
@@ -258,7 +260,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
       position='right'
     >
       <div
-        id={'c-' + conversation.id}
+        id={'c-' + (rowId ?? conversation.id)}
         className={classNames(
           'chat-history__item rd-8px flex items-center group cursor-pointer relative overflow-hidden shrink-0 conversation-item [&.conversation-item+&.conversation-item]:mt-2px min-w-0 transition-colors',
           detailed ? 'h-46px' : 'h-34px',
@@ -467,6 +469,10 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
                       onShareToSession?.(conversation);
                       return;
                     }
+                    if (key === 'organize') {
+                      onOrganize?.(conversation);
+                      return;
+                    }
                     if (key === 'delete') {
                       onDelete(conversation.id);
                     }
@@ -492,6 +498,11 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
                       <span>{t('conversation.history.rename')}</span>
                     </div>
                   </Menu.Item>
+                  {onOrganize && (
+                    <Menu.Item key='organize'>
+                      {t('conversation.history.moveToGroup', { defaultValue: 'Move to group' })}
+                    </Menu.Item>
+                  )}
                   <Menu.Item key='createCronTask'>
                     <div className='flex items-center gap-8px'>
                       <Timer theme='outline' size='14' />

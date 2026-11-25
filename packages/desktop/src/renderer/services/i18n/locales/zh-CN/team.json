@@ -1,4 +1,9 @@
 {
+  "autoCollaboration": {
+    "label": "自动协作",
+    "hint": "发送后在独立协作会话中执行，可查看成员进度。",
+    "failed": "无法启动自动协作，请重试。"
+  },
   "sider": {
     "title": "团队作战",
     "createTeam": "新建团队",

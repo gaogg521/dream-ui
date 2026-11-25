@@ -162,7 +162,9 @@ const GuidWorkspaceFootnote: React.FC<GuidWorkspaceFootnoteProps> = ({
                 onClick={() => handleSelectPath(path)}
               >
                 <FolderIcon size={13} />
-                <span className={styles.wsDropdownItemName}>{name}</span>
+                <span className={styles.wsDropdownItemName} data-han={/\p{Script=Han}/u.test(name) || undefined}>
+                  {name}
+                </span>
                 {isActive && (
                   <svg
                     width='12'
@@ -228,7 +230,12 @@ const GuidWorkspaceFootnote: React.FC<GuidWorkspaceFootnoteProps> = ({
                 onClick={toggleOpen}
               >
                 <FolderIcon size={14} />
-                <span className={styles.workspacePillName}>{workspaceName}</span>
+                <span
+                  className={styles.workspacePillName}
+                  data-han={/\p{Script=Han}/u.test(workspaceName) || undefined}
+                >
+                  {workspaceName}
+                </span>
                 <Down
                   theme='outline'
                   size='12'

@@ -24,6 +24,10 @@
   "add": "Hinzufügen",
   "edit": "Bearbeiten",
   "website": "Website",
+  "quickShare": {
+    "title": "One Work teilen",
+    "description": "Steuere ein KI-Team aus einem Arbeitsbereich.\nKoordiniere Agenten wie Codex und Claude Code in One Work. Lass sie parallel recherchieren, programmieren und Dokumente erstellen. Verbinde MCP-Tools und Teamwissen und automatisiere wiederkehrende Aufgaben."
+  },
   "version": "Version",
   "contact": "Kontakt",
   "github": "Github",

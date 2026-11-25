@@ -2,6 +2,13 @@
  * Copyright 2026 One Work
  */
 
+import { ipcBridge } from '@/common';
+import { addRecentWorkspace } from '@/renderer/components/workspace';
+import {
+  readStoredSiderOrder,
+  reorderSiderIds,
+  writeStoredSiderOrder,
+} from '@renderer/components/layout/Sider/siderOrder';
 import type { TChatConversation } from '@/common/config/storage';
 import DreamModal from '@/renderer/components/base/DreamModal';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
@@ -12,7 +19,7 @@ import { emitter } from '@renderer/utils/emitter';
 import SharedInboxModal from './SharedInboxModal';
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Button, Dropdown, Empty, Input, Menu, Modal, Tooltip } from '@arco-design/web-react';
+import { Button, Dropdown, Empty, Input, Menu, Message, Modal, Select, Tooltip } from '@arco-design/web-react';
 import { Delete, FolderOpen, FullScreen, MoreOne, Plus, Right, ShareOne } from '@icon-park/react';
 import classNames from 'classnames';
 import { useState } from 'react';
@@ -35,6 +42,28 @@ import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useExport } from './hooks/useExport';
 import { useSidebarHistoryPreviewLimit } from './hooks/useSidebarHistoryPreviewLimit';
 import type { ConversationRowProps, WorkspaceGroupedHistoryProps } from './types';
+
+const SIDEBAR_WORKSPACE_FOLDERS_KEY = 'one:sidebar-workspace-folders';
+const HISTORY_GROUPS_KEY = 'one:sidebar-history-groups';
+type HistoryGroup = { id: string; name: string; conversationIds: string[] };
+const NO_GROUP = 'none';
+const NEW_GROUP = 'new';
+
+const readHistoryGroups = (): HistoryGroup[] => {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(HISTORY_GROUPS_KEY) ?? '[]');
+    return Array.isArray(stored)
+      ? stored.filter(
+          (group): group is HistoryGroup =>
+            typeof group?.id === 'string' && typeof group.name === 'string' && Array.isArray(group.conversationIds)
+        )
+      : [];
+  } catch {
+    return [];
+  }
+};
+
+const SIDEBAR_WORKSPACE_ORDER_KEY = 'one:sidebar-workspace-order';
 
 const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
   onSessionClick,
@@ -65,13 +94,136 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     clearManualUnread,
     expandedWorkspaces,
     pinnedConversations,
-    timelineSections,
-    projectGroups,
+    projectGroups: conversationProjects,
     conversationOnlySections,
     handleToggleWorkspace,
     collapsedSections,
     toggleSection,
   } = useConversations();
+
+  const [workspaceFolders, setWorkspaceFolders] = useState(() => readStoredSiderOrder(SIDEBAR_WORKSPACE_FOLDERS_KEY));
+  const [workspaceOrder, setWorkspaceOrder] = useState(() => readStoredSiderOrder(SIDEBAR_WORKSPACE_ORDER_KEY));
+  const projectGroups = useMemo(() => {
+    const byPath = new Map(conversationProjects.map((group) => [group.workspace, group]));
+    for (const workspace of workspaceFolders) {
+      if (!byPath.has(workspace)) {
+        const displayName = workspace.split(/[\\/]/).filter(Boolean).pop() || workspace;
+        byPath.set(workspace, { workspace, displayName, conversations: [] });
+      }
+    }
+    const orderedGroups = workspaceOrder.flatMap((workspace) => {
+      const group = byPath.get(workspace);
+      if (!group) return [];
+      byPath.delete(workspace);
+      return [group];
+    });
+    return [...orderedGroups, ...byPath.values()];
+  }, [conversationProjects, workspaceFolders, workspaceOrder]);
+
+  const updateWorkspaceFolders = (folders: string[]) => {
+    setWorkspaceFolders(folders);
+    writeStoredSiderOrder(SIDEBAR_WORKSPACE_FOLDERS_KEY, folders);
+  };
+
+  const handleAddWorkspace = async () => {
+    try {
+      const [workspace] =
+        (await ipcBridge.dialog.showOpen.invoke({
+          properties: ['openDirectory', 'createDirectory'],
+        })) ?? [];
+      if (!workspace) return;
+      if (!workspaceFolders.includes(workspace)) {
+        updateWorkspaceFolders([...workspaceFolders, workspace]);
+      }
+      addRecentWorkspace(workspace);
+      if (collapsedSections.has('projects')) toggleSection('projects');
+    } catch (error) {
+      console.error('Failed to add workspace folder:', error);
+      Message.error(t('common.saveFailed'));
+    }
+  };
+
+  const moveWorkspace = (index: number, offset: number) => {
+    const target = projectGroups[index + offset];
+    if (!target) return;
+    const order = reorderSiderIds(
+      projectGroups.map((group) => group.workspace),
+      projectGroups[index].workspace,
+      target.workspace
+    );
+    setWorkspaceOrder(order);
+    writeStoredSiderOrder(SIDEBAR_WORKSPACE_ORDER_KEY, order);
+  };
+
+  const [historyGroups, setHistoryGroups] = useState(readHistoryGroups);
+  const [groupDialog, setGroupDialog] = useState<{ conversationId?: string; renameId?: string } | null>(null);
+  const [groupChoice, setGroupChoice] = useState(NEW_GROUP);
+  const [groupName, setGroupName] = useState('');
+  const groupByConversation = useMemo(() => {
+    const groups = new Map<string, string>();
+    for (const group of historyGroups) {
+      for (const conversationId of group.conversationIds) groups.set(conversationId, group.id);
+    }
+    return groups;
+  }, [historyGroups]);
+  const openGroupDialog = useCallback(
+    (conversation?: TChatConversation, group?: HistoryGroup) => {
+      setGroupDialog({ conversationId: conversation?.id, renameId: group?.id });
+      setGroupChoice(
+        conversation
+          ? (groupByConversation.get(conversation.id) ?? (historyGroups.length ? historyGroups[0].id : NEW_GROUP))
+          : NEW_GROUP
+      );
+      setGroupName(group?.name ?? '');
+    },
+    [groupByConversation, historyGroups]
+  );
+
+  const saveHistoryGroups = (nextGroups: HistoryGroup[]) => {
+    try {
+      localStorage.setItem(HISTORY_GROUPS_KEY, JSON.stringify(nextGroups));
+      setHistoryGroups(nextGroups);
+      return true;
+    } catch {
+      Message.error(t('common.saveFailed'));
+      return false;
+    }
+  };
+
+  const groupNameRequired = groupChoice === NEW_GROUP || Boolean(groupDialog?.renameId);
+  const saveGroupDialog = () => {
+    if (!groupDialog || (groupNameRequired && !groupName.trim())) return;
+    const { conversationId, renameId } = groupDialog;
+    let nextGroups = historyGroups;
+    if (renameId) {
+      nextGroups = historyGroups.map((group) => (group.id === renameId ? { ...group, name: groupName.trim() } : group));
+    } else {
+      if (conversationId) {
+        nextGroups = historyGroups.map((group) => ({
+          ...group,
+          conversationIds: group.conversationIds.filter((id) => id !== conversationId),
+        }));
+      }
+      if (groupChoice === NEW_GROUP) {
+        nextGroups = [
+          ...nextGroups,
+          {
+            id: crypto.randomUUID(),
+            name: groupName.trim(),
+            conversationIds: conversationId ? [conversationId] : [],
+          },
+        ];
+      } else if (conversationId) {
+        nextGroups = nextGroups.map((group) =>
+          group.id === groupChoice ? { ...group, conversationIds: [...group.conversationIds, conversationId] } : group
+        );
+      }
+    }
+    if (saveHistoryGroups(nextGroups)) {
+      setGroupDialog(null);
+      if (collapsedSections.has('conversations')) toggleSection('conversations');
+    }
+  };
 
   const loadErrorNotice = listLoadError ? (
     <ListLoadErrorNotice error={listLoadError} onRetry={retryLoadConversations} />
@@ -246,8 +398,9 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
   );
 
   const getConversationRowProps = useCallback(
-    (conversation: TChatConversation): ConversationRowProps => ({
+    (conversation: TChatConversation, rowId = conversation.id): ConversationRowProps => ({
       conversation,
+      rowId,
       isGenerating: isConversationGenerating(conversation.id),
       isWaitingConfirmation: isConversationWaitingConfirmation(conversation.id),
       hasUnread: hasCompletionUnread(conversation.id) || isManualUnread(conversation.id),
@@ -257,17 +410,18 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       batchMode,
       checked: selectedConversationIds.has(conversation.id),
       selected: id === conversation.id,
-      menuVisible: dropdownVisibleId !== null && dropdownVisibleId === conversation.id,
+      menuVisible: dropdownVisibleId !== null && dropdownVisibleId === rowId,
       onToggleChecked: toggleSelectedConversation,
       onConversationClick: handleConversationClick,
-      onOpenMenu: handleOpenMenu,
-      onMenuVisibleChange: handleMenuVisibleChange,
+      onOpenMenu: rowId === conversation.id ? handleOpenMenu : () => handleMenuVisibleChange(rowId, true),
+      onMenuVisibleChange: (_id, visible) => handleMenuVisibleChange(rowId, visible),
       onEditStart: handleEditStart,
       onCreateCronTask: handleCreateCronTask,
       onDelete: handleDeleteClick,
       onTogglePin: handleTogglePin,
       onToggleManualUnread: handleToggleManualUnread,
       onExport: handleExportConversation,
+      onOrganize: openGroupDialog,
       getJobStatus,
       resolveConversationName,
       // Only offer sharing to somebody who has an organization to share with.
@@ -310,6 +464,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       handleTogglePin,
       handleToggleManualUnread,
       handleExportConversation,
+      openGroupDialog,
       getJobStatus,
       resolveConversationName,
       isEnterpriseMember,
@@ -319,8 +474,8 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     ]
   );
 
-  const renderConversation = (conversation: TChatConversation, dimIcon = false) => {
-    const rowProps = getConversationRowProps(conversation);
+  const renderConversation = (conversation: TChatConversation, dimIcon = false, rowId?: string) => {
+    const rowProps = getConversationRowProps(conversation, rowId);
     return <ConversationRow key={conversation.id} {...rowProps} dimIcon={dimIcon} />;
   };
 
@@ -334,7 +489,9 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     const flat: TChatConversation[] = [];
     for (const section of conversationOnlySections) {
       for (const item of section.items) {
-        if (item.type === 'conversation' && item.conversation) flat.push(item.conversation);
+        if (item.type === 'conversation' && item.conversation && !groupByConversation.has(item.conversation.id)) {
+          flat.push(item.conversation);
+        }
       }
     }
     const capped = flat.slice(0, previewLimit);
@@ -343,24 +500,68 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       if (active) capped.push(active);
     }
     return capped;
-  }, [conversationOnlySections, id, previewLimit]);
+  }, [conversationOnlySections, groupByConversation, id, previewLimit]);
 
-  if (timelineSections.length === 0 && pinnedConversations.length === 0) {
-    return (
-      <div className='flex flex-col flex-1 min-h-0 h-full'>
-        <div className={classNames('flex-1 min-h-0 overflow-y-auto', siderStyles.scrollArea)}>
-          {loadErrorNotice ?? (
-            <div className='flex items-center justify-center py-12px'>
-              <Empty description={t('conversation.history.noHistory')} />
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+  const duplicateGroupRowIds = new Set([
+    ...pinnedIds,
+    ...projectGroups.flatMap((group) => group.conversations.map((conversation) => conversation.id)),
+  ]);
+  const historyConversationById = new Map(conversations.map((conversation) => [conversation.id, conversation]));
+  const newGroupLabel = t('conversation.history.newGroup', { defaultValue: 'New group' });
+  const renameGroupLabel = t('conversation.history.renameGroup', { defaultValue: 'Rename group' });
+  const removeGroupLabel = t('conversation.history.removeGroup', { defaultValue: 'Remove group' });
 
   return (
     <>
+      <Modal
+        title={
+          groupDialog?.renameId
+            ? renameGroupLabel
+            : groupDialog?.conversationId
+              ? t('conversation.history.moveToGroup', { defaultValue: 'Move to group' })
+              : newGroupLabel
+        }
+        visible={Boolean(groupDialog)}
+        onCancel={() => setGroupDialog(null)}
+        onOk={saveGroupDialog}
+        okText={t('conversation.history.saveName')}
+        cancelText={t('conversation.history.cancelEdit')}
+        okButtonProps={{ disabled: groupNameRequired && !groupName.trim() }}
+        alignCenter
+      >
+        {groupDialog?.conversationId && (
+          <Select
+            aria-label={t('conversation.history.moveToGroup', { defaultValue: 'Move to group' })}
+            className='w-full'
+            value={groupChoice}
+            onChange={setGroupChoice}
+            options={[
+              ...historyGroups.map((group) => ({ label: group.name, value: group.id })),
+              { label: newGroupLabel, value: NEW_GROUP },
+              ...(groupByConversation.has(groupDialog.conversationId)
+                ? [
+                    {
+                      label: t('conversation.history.ungrouped', { defaultValue: 'No group' }),
+                      value: NO_GROUP,
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        )}
+        {groupNameRequired && (
+          <Input
+            className={groupDialog?.conversationId ? 'mt-12px' : undefined}
+            aria-label={t('conversation.history.groupName', { defaultValue: 'Group name' })}
+            placeholder={t('conversation.history.groupName', { defaultValue: 'Group name' })}
+            value={groupName}
+            onChange={setGroupName}
+            onPressEnter={saveGroupDialog}
+            maxLength={80}
+            autoFocus
+          />
+        )}
+      </Modal>
       <Modal
         title={t('conversation.history.renameTitle')}
         visible={renameModalVisible}
@@ -634,32 +835,62 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
               </div>
             )}
 
-            {projectGroups.length > 0 && (
+            {(!collapsed || projectGroups.length > 0) && (
               <div ref={projectsBlockRef} className='min-w-0'>
                 {!collapsed && (
                   <SectionLabel
                     sectionKey='projects'
                     label={t('conversation.history.projectsSection')}
-                    trailing={renderViewAllButton('projects')}
+                    trailing={
+                      <div className='flex items-center gap-4px'>
+                        <button
+                          type='button'
+                          className='sider-action-btn flex items-center gap-2px h-24px px-4px rd-4px text-12px text-t-primary bg-fill-2'
+                          title={t('conversation.history.addWorkspace', { defaultValue: 'Add workspace' })}
+                          aria-label={t('conversation.history.addWorkspace', { defaultValue: 'Add workspace' })}
+                          onClick={() => void handleAddWorkspace()}
+                        >
+                          <Plus theme='outline' size={14} />
+                          <span>{t('conversation.history.addWorkspace', { defaultValue: 'Add workspace' })}</span>
+                        </button>
+                        {projectGroups.length > 0 && renderViewAllButton('projects')}
+                      </div>
+                    }
                     spaced={pinnedConversations.length > 0}
                   />
                 )}
                 {!collapsedSections.has('projects') &&
-                  projectGroups.map((group) => {
+                  projectGroups.map((group, index) => {
                     const projectMenu = (
                       <Menu
                         onClickMenuItem={(key) => {
-                          if (key === 'remove') {
-                            handleRemoveProject(group.displayName, group.conversations);
+                          if (key === 'up') moveWorkspace(index, -1);
+                          if (key === 'down') moveWorkspace(index, 1);
+                          if (key === 'remove-folder') {
+                            updateWorkspaceFolders(workspaceFolders.filter((path) => path !== group.workspace));
                           }
+                          if (key === 'remove') handleRemoveProject(group.displayName, group.conversations);
                         }}
                       >
-                        <Menu.Item key='remove' className='!text-[rgba(var(--danger-6),1)]'>
-                          <span className='flex items-center gap-8px'>
-                            <Delete theme='outline' size='14' />
-                            {t('conversation.history.removeProject')}
-                          </span>
+                        <Menu.Item key='up' disabled={index === 0}>
+                          {t('conversation.history.moveWorkspaceUp', { defaultValue: 'Move up' })}
                         </Menu.Item>
+                        <Menu.Item key='down' disabled={index === projectGroups.length - 1}>
+                          {t('conversation.history.moveWorkspaceDown', { defaultValue: 'Move down' })}
+                        </Menu.Item>
+                        {workspaceFolders.includes(group.workspace) && (
+                          <Menu.Item key='remove-folder'>
+                            {t('conversation.history.unpinWorkspace', { defaultValue: 'Remove workspace shortcut' })}
+                          </Menu.Item>
+                        )}
+                        {group.conversations.length > 0 && (
+                          <Menu.Item key='remove' className='!text-[rgba(var(--danger-6),1)]'>
+                            <span className='flex items-center gap-8px'>
+                              <Delete theme='outline' size='14' />
+                              {t('conversation.history.removeProject')}
+                            </span>
+                          </Menu.Item>
+                        )}
                       </Menu>
                     );
                     return (
@@ -671,7 +902,10 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
                           stickyHeader
                           stickyTop={0}
                           header={
-                            <span className='text-14px font-[500] truncate flex-1 text-t-primary min-w-0'>
+                            <span
+                              className={classNames('min-w-0 flex-1 truncate', siderStyles.workspaceFolderName)}
+                              data-han={/\p{Script=Han}/u.test(group.displayName) || undefined}
+                            >
                               {group.displayName}
                             </span>
                           }
@@ -688,13 +922,17 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
                                   )}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    void navigate('/guid', { state: { workspace: group.workspace } });
+                                    void navigate('/guid', {
+                                      state: { workspace: group.workspace, resetAssistant: true },
+                                    });
                                   }}
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter' || e.key === ' ') {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      void navigate('/guid', { state: { workspace: group.workspace } });
+                                      void navigate('/guid', {
+                                        state: { workspace: group.workspace, resetAssistant: true },
+                                      });
                                     }
                                   }}
                                 >
@@ -737,13 +975,84 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
               </div>
             )}
 
-            {!collapsed && conversationOnlySections.length > 0 && (
+            {!collapsed && (
               <SectionLabel
                 sectionKey='conversations'
                 label={t('conversation.history.conversationsSection')}
-                trailing={renderViewAllButton('conversations')}
+                trailing={
+                  <div className='flex items-center gap-4px'>
+                    <button
+                      type='button'
+                      className='sider-action-btn flex items-center gap-2px h-24px px-4px rd-4px text-12px text-t-primary bg-fill-2'
+                      title={newGroupLabel}
+                      aria-label={newGroupLabel}
+                      onClick={() => openGroupDialog()}
+                    >
+                      <Plus theme='outline' size={14} />
+                      <span>{newGroupLabel}</span>
+                    </button>
+                    {conversations.length > 0 && renderViewAllButton('conversations')}
+                  </div>
+                }
                 spaced={pinnedConversations.length > 0 || projectGroups.length > 0}
               />
+            )}
+            {!collapsed &&
+              !collapsedSections.has('conversations') &&
+              historyGroups.map((group) => (
+                <WorkspaceCollapse
+                  key={group.id}
+                  expanded={!collapsedSections.has(`history-group:${group.id}`)}
+                  onToggle={() => toggleSection(`history-group:${group.id}`)}
+                  header={
+                    <span
+                      className={classNames('min-w-0 flex-1 truncate', siderStyles.workspaceFolderName)}
+                      data-han={/\p{Script=Han}/u.test(group.name) || undefined}
+                    >
+                      {group.name}
+                    </span>
+                  }
+                  trailing={
+                    <Dropdown
+                      trigger='click'
+                      position='br'
+                      droplist={
+                        <Menu
+                          onClickMenuItem={(key) => {
+                            if (key === 'rename') openGroupDialog(undefined, group);
+                            if (key === 'remove') saveHistoryGroups(historyGroups.filter(({ id }) => id !== group.id));
+                          }}
+                        >
+                          <Menu.Item key='rename'>{renameGroupLabel}</Menu.Item>
+                          <Menu.Item key='remove'>{removeGroupLabel}</Menu.Item>
+                        </Menu>
+                      }
+                    >
+                      <button
+                        type='button'
+                        className='sider-action-btn flex-center size-24px'
+                        aria-label={group.name}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <MoreOne theme='outline' size={14} />
+                      </button>
+                    </Dropdown>
+                  }
+                >
+                  {group.conversationIds.map((id) => {
+                    const conversation = historyConversationById.get(id);
+                    return conversation
+                      ? renderConversation(
+                          conversation,
+                          true,
+                          duplicateGroupRowIds.has(id) ? `history-group:${id}` : id
+                        )
+                      : null;
+                  })}
+                </WorkspaceCollapse>
+              ))}
+            {!collapsed && !loadErrorNotice && conversations.length === 0 && historyGroups.length === 0 && (
+              <Empty description={t('conversation.history.noHistory')} />
             )}
             {visibleHistoryConversations.length > 0 && !collapsedSections.has('conversations') && (
               <div className='min-w-0'>

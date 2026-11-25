@@ -25,6 +25,10 @@
   "add": "Adicionar",
   "edit": "Editar",
   "website": "Site",
+  "quickShare": {
+    "title": "Compartilhar One Work",
+    "description": "Coordene uma equipe de IA em um só lugar.\nOrganize agentes como Codex e Claude Code no One Work para pesquisar, programar e produzir documentos em paralelo. Conecte ferramentas MCP e o conhecimento da equipe e automatize tarefas recorrentes."
+  },
   "version": "Versão",
   "contact": "Contato",
   "github": "Github",

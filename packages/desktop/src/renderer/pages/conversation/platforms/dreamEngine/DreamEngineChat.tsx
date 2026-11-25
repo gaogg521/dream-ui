@@ -30,6 +30,7 @@ const DreamEngineChat: React.FC<{
   session_mode?: string;
   cron_job_id?: string;
   emptySlot?: React.ReactNode;
+  taskChecklist?: React.ReactNode;
   loadedSkills?: string[];
   loadedMcpServers?: string[];
   loadedMcpStatuses?: IConversationMcpStatus[];
@@ -45,6 +46,7 @@ const DreamEngineChat: React.FC<{
   session_mode,
   cron_job_id,
   emptySlot,
+  taskChecklist,
   loadedSkills,
   loadedMcpServers,
   loadedMcpStatuses,
@@ -86,6 +88,7 @@ const DreamEngineChat: React.FC<{
           <FlexFullContainer>
             <MessageList className='flex-1' emptySlot={emptySlot} />
           </FlexFullContainer>
+          {taskChecklist}
           <DreamEngineSendBox
             conversation_id={conversation_id}
             modelSelection={modelSelection}

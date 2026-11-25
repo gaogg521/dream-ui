@@ -3,6 +3,7 @@
  */
 
 import { ipcBridge } from '@/common';
+import { TEAM_MODE_ENABLED } from '@/common/config/constants';
 import type { IConversationMcpStatus } from '@/common/config/storage';
 import { modelKindLabelOf } from '@/common/utils/modelCapabilities';
 import { detectMediaIntent } from '@/common/media/detectMediaIntent';
@@ -61,15 +62,17 @@ import { collectChatFileRefs, splitChatFileRefs } from '@/renderer/utils/file/me
 import { baseName, splitReferenceInputs } from '@/common/media/referenceInputs';
 import type { AgentModeOption } from '@/renderer/utils/model/agentTypes';
 import { Button, Checkbox, Message, Tag } from '@arco-design/web-react';
-import { Brain, Lightning, MagicHat, Shield } from '@icon-park/react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Brain, Lightning, MagicHat, Peoples, Shield } from '@icon-park/react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useManagedAgents } from '@/renderer/hooks/agent/useManagedAgents';
 import { resolveBackendLabel } from '@/renderer/utils/model/backendDisplay';
 import { classifyConversationBusyError } from '../conversationBusyError';
 import { getPolicyDenialMessage } from '../policyDenialError';
 import { useDreamEngineMessage } from './useDreamEngineMessage';
 import type { DreamEngineModelSelection } from './useDreamEngineModelSelection';
+import { collaborationLeaderInput, createCollaborationTeam } from './autoCollaboration';
 
 const configErrorMessageKey = (error: unknown) => {
   const errorKind = classifyConfigSetError(error);
@@ -172,6 +175,14 @@ const DreamEngineSendBox: React.FC<{
       status: 'loaded',
     }));
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const [collaborationFor, setCollaborationFor] = useState<string>();
+  const [startingCollaboration, setStartingCollaboration] = useState(false);
+  const collaborationLaunch = useRef<{ conversationId: string; teamId?: string; starting: boolean } | undefined>(
+    undefined
+  );
+  const collaborationAvailable = TEAM_MODE_ENABLED && !teamSendMessage && !teamRuntime && mediaComposer.mode === 'off';
+  const collaborationEnabled = collaborationAvailable && collaborationFor === conversation_id;
   // A terminal call held for a company administrator's approval would otherwise
   // look like a frozen turn for up to ten minutes.
   const approvalWait = useTerminalApprovalWait(conversation_id);
@@ -493,6 +504,48 @@ const DreamEngineSendBox: React.FC<{
   // reordered or removed. Queued messages go out one per finished turn; "Send
   // now" on one interjects it (handleSendNowQueued).
   const onSendHandler = async (message: string): Promise<void | false> => {
+    if (collaborationEnabled) {
+      const model = current_model?.use_model;
+      if (!model || isBusy || !message.trim() || collaborationLaunch.current?.starting) return false;
+      const launch =
+        collaborationLaunch.current?.conversationId === conversation_id
+          ? collaborationLaunch.current
+          : { conversationId: conversation_id, starting: false };
+      collaborationLaunch.current = launch;
+      launch.starting = true;
+      setStartingCollaboration(true);
+      try {
+        launch.teamId ??= await createCollaborationTeam({
+          name: `${t('team.autoCollaboration.label')} · ${Array.from(message.trim().replace(/\s+/g, ' ')).slice(0, 48).join('')}`,
+          workspace: conversationContext?.workspace ?? '',
+          model,
+          assistantId: conversationContext?.assistantId,
+        });
+        if (currentMode)
+          await ipcBridge.team.setSessionMode.invoke({ team_id: launch.teamId, session_mode: currentMode });
+        const ack = await ipcBridge.team.sendMessage.invoke({
+          team_id: launch.teamId,
+          input: collaborationLeaderInput(message),
+          files: collectChatFileRefs(uploadFile, atPath),
+        });
+        if (!ack?.message_id) throw new Error('Team send returned no message ID');
+        collaborationLaunch.current = undefined;
+        setCollaborationFor(undefined);
+        setContent('');
+        clearFiles();
+        emitter.emit('dream.selected.file.clear');
+        void navigate(`/team/${launch.teamId}`);
+      } catch (error) {
+        console.error('[AutoCollaboration] Could not start team turn', error);
+        Message.error(t('team.autoCollaboration.failed'));
+        return false;
+      } finally {
+        launch.starting = false;
+        setStartingCollaboration(false);
+      }
+      return;
+    }
+
     if (isBusy && mediaComposer.mode === 'off' && !interjectNow) {
       enqueue({ input: message, files: collectChatFileRefs(uploadFile, atPath) });
       clearFiles();
@@ -1007,6 +1060,23 @@ const DreamEngineSendBox: React.FC<{
         }
         contextFooter={
           <>
+            {collaborationAvailable && (
+              <Button
+                size='mini'
+                type={collaborationEnabled ? 'primary' : 'text'}
+                icon={<Peoples size={14} fill='currentColor' />}
+                aria-pressed={collaborationEnabled}
+                title={t('team.autoCollaboration.hint')}
+                loading={startingCollaboration}
+                disabled={isBusy || !current_model?.use_model}
+                onClick={() => setCollaborationFor(collaborationEnabled ? undefined : conversation_id)}
+              >
+                {t('team.autoCollaboration.label')}
+              </Button>
+            )}
+            {collaborationEnabled && (
+              <span className='text-12px text-t-secondary'>{t('team.autoCollaboration.hint')}</span>
+            )}
             <SceneStarters conversationId={conversation_id} hasInput={content.length > 0} />
             <EnterpriseSceneContext compact />
           </>

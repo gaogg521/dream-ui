@@ -25,6 +25,10 @@
   "add": "添加",
   "edit": "编辑",
   "website": "官网",
+  "quickShare": {
+    "title": "分享 One Work",
+    "description": "一个人，也能指挥一支 AI 团队。\n快来跟我一起在 One Work 统一管控 Codex、Claude Code 等智能体，分工并行，从资料检索、代码构建到文档生成一气呵成。接入 MCP 工具与团队知识库，重复性工作交由定时自动化自主落地吧。"
+  },
   "version": "版本号",
   "contact": "联系我们",
   "github": "Github",

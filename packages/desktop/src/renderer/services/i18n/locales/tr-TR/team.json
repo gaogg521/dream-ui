@@ -1,4 +1,9 @@
 {
+  "autoCollaboration": {
+    "label": "Otomatik iş birliği",
+    "hint": "Üye ilerlemesinin görülebildiği ayrı bir ekip oturumunda çalışır.",
+    "failed": "Otomatik iş birliği başlatılamadı."
+  },
   "sider": {
     "title": "Takım Operasyonu",
     "createTeam": "New Team",

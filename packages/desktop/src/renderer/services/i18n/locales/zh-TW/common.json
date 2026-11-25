@@ -25,6 +25,10 @@
   "add": "新增",
   "edit": "編輯",
   "website": "官網",
+  "quickShare": {
+    "title": "分享 One Work",
+    "description": "一個人，也能指揮一支 AI 團隊。\n在 One Work 統一調度 Codex、Claude Code 等代理，讓它們分工並行，從查資料、寫程式到產出文件。串接 MCP 工具與團隊知識庫，將重複工作交給排程自動化。"
+  },
   "version": "版本號",
   "contact": "聯絡我們",
   "github": "Github",

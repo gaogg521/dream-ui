@@ -1,4 +1,9 @@
 {
+  "autoCollaboration": {
+    "label": "Auto collaboration",
+    "hint": "Runs in a separate team session with member progress.",
+    "failed": "Could not start auto collaboration. Try again."
+  },
   "sider": {
     "title": "Team Ops",
     "createTeam": "New Team",

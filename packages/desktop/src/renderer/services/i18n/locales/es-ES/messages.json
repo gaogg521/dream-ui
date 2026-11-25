@@ -1,4 +1,5 @@
 {
+  "taskPlan": "Lista de tareas",
   "fileChanges": "Cambios en archivos",
   "fileChangesCount": "{{count}} cambios en archivos",
   "fileChangesCount_one": "{{count}} cambio en archivos",

@@ -25,6 +25,10 @@
   "add": "Ekle",
   "edit": "Düzenle",
   "website": "Web Sitesi",
+  "quickShare": {
+    "title": "One Work’ü paylaş",
+    "description": "Yapay zekâ ekibini tek çalışma alanından yönet.\nOne Work’te Codex ve Claude Code gibi ajanları koordine ederek araştırma, kodlama ve belge üretimini paralel yürüt. MCP araçlarını ve ekip bilgisini bağla, tekrarlanan işleri zamanlayarak otomatikleştir."
+  },
   "version": "Sürüm",
   "contact": "İletişim",
   "github": "Github",

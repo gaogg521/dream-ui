@@ -25,6 +25,10 @@
   "add": "Add",
   "edit": "Edit",
   "website": "Website",
+  "quickShare": {
+    "title": "Share One Work",
+    "description": "Run an AI team from one workspace.\nCoordinate agents like Codex and Claude Code in One Work. Let them research, write code, and produce documents in parallel. Connect MCP tools and team knowledge, and automate recurring work on a schedule."
+  },
   "version": "Version",
   "contact": "Contact",
   "github": "Github",

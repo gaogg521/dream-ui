@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TChatConversation } from '@/common/config/storage';
@@ -33,8 +33,19 @@ vi.mock('@renderer/utils/enterprise/conversationShare', () => ({
   shareConversationToMySession: vi.fn(),
 }));
 vi.mock('@/renderer/pages/conversation/GroupedHistory/ConversationRow', () => ({
-  default: ({ conversation }: { conversation: TChatConversation }) => (
-    <div data-testid={`row-${conversation.id}`}>{conversation.name}</div>
+  default: ({
+    conversation,
+    onOrganize,
+  }: {
+    conversation: TChatConversation;
+    onOrganize?: (conversation: TChatConversation) => void;
+  }) => (
+    <div data-testid={`row-${conversation.id}`}>
+      {conversation.name}
+      <button type='button' onClick={() => onOrganize?.(conversation)}>
+        Organize {conversation.name}
+      </button>
+    </div>
   ),
 }));
 vi.mock('@/renderer/pages/conversation/GroupedHistory/SortableConversationRow', () => ({
@@ -130,6 +141,7 @@ const precedes = (a: HTMLElement, b: HTMLElement) =>
 
 describe('WorkspaceGroupedHistory section order', () => {
   beforeEach(() => {
+    localStorage.clear();
     state.pinned = [];
     state.collapsedSections = new Set();
   });
@@ -168,5 +180,31 @@ describe('WorkspaceGroupedHistory section order', () => {
 
     expect(precedes(pinnedLabel, pinnedRow)).toBe(true);
     expect(precedes(pinnedRow, projectsLabel)).toBe(true);
+  });
+  it('creates a history group without a workspace and restores it after remounting', async () => {
+    const { unmount } = render(<WorkspaceGroupedHistory />);
+    fireEvent.click(screen.getByRole('button', { name: 'conversation.history.newGroup' }));
+    fireEvent.change(await screen.findByRole('textbox', { name: 'conversation.history.groupName' }), {
+      target: { value: 'Important' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'conversation.history.saveName' }));
+
+    expect(await screen.findByText('Important')).toBeTruthy();
+    unmount();
+    render(<WorkspaceGroupedHistory />);
+    expect(screen.getByText('Important')).toBeTruthy();
+  });
+
+  it('moves a loose conversation into a group and shows it only once', async () => {
+    localStorage.setItem(
+      'one:sidebar-history-groups',
+      JSON.stringify([{ id: 'important', name: 'Important', conversationIds: [] }])
+    );
+    render(<WorkspaceGroupedHistory />);
+    fireEvent.click(screen.getByRole('button', { name: 'Organize Loose conversation' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'conversation.history.saveName' }));
+    expect(JSON.parse(localStorage.getItem('one:sidebar-history-groups')!)[0].conversationIds).toEqual(['loose']);
+    expect(screen.getAllByTestId('row-loose')).toHaveLength(1);
+    expect(precedes(screen.getByText('Important'), screen.getByTestId('row-loose'))).toBe(true);
   });
 });

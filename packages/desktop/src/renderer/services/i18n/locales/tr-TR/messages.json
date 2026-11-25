@@ -1,4 +1,5 @@
 {
+  "taskPlan": "Görev listesi",
   "fileChanges": "Dosya Değişiklikleri",
   "fileChangesCount": "{{count}} Dosya Değişikliği",
   "fileChangesCount_one": "{{count}} Dosya Değişikliği",

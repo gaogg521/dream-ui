@@ -1,4 +1,9 @@
 {
+  "autoCollaboration": {
+    "label": "Colaboração automática",
+    "hint": "A execução ocorre em uma sessão de equipe separada, com o progresso de cada membro.",
+    "failed": "Não foi possível iniciar a colaboração automática."
+  },
   "sider": {
     "title": "Operações de equipe",
     "createTeam": "Nova Equipe",

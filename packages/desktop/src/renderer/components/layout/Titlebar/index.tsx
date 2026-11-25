@@ -10,6 +10,7 @@ import ConversationSearchPopover from '@renderer/pages/conversation/GroupedHisto
 import LanguageQuickSwitch from './LanguageQuickSwitch';
 import MobileConversationBrand from './MobileConversationBrand';
 import NotificationBell from './NotificationBell';
+import QuickShare from './QuickShare';
 import WindowControls from '../WindowControls';
 import { WORKSPACE_STATE_EVENT, dispatchWorkspaceToggleEvent } from '@renderer/utils/workspace/workspaceEvents';
 import type { WorkspaceStateDetail } from '@renderer/utils/workspace/workspaceEvents';
@@ -435,6 +436,7 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
         {IS_DISCONTINUED_BUILD && <MigrationInviteCapsule />}
         {/* Enterprise member inbox (§4.2): self-gates on a live enterprise session. */}
         <NotificationBell iconSize={iconSize} strokeWidth={desktopIconStroke} />
+        {!layout?.isMobile && <QuickShare iconSize={iconSize} strokeWidth={desktopIconStroke} />}
         <button
           type='button'
           className={classNames('app-titlebar__button', layout?.isMobile && 'app-titlebar__button--mobile')}

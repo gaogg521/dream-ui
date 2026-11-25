@@ -51,6 +51,11 @@ const {
 
 const sendWhileBusyRef = vi.hoisted(() => ({ current: undefined as 'interject' | 'queue' | undefined }));
 const compactState = vi.hoisted(() => ({ available: false, usage: false, running: false }));
+vi.mock('react-router-dom', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router-dom')>()),
+  useNavigate: () => vi.fn(),
+}));
+
 vi.mock('@/renderer/hooks/config/useConfig', () => ({
   useConfig: () => [sendWhileBusyRef.current, vi.fn()],
 }));
@@ -294,6 +299,8 @@ vi.mock('@arco-design/web-react', () => ({
 vi.mock('@icon-park/react', () => ({
   Brain: () => null,
   MagicHat: () => null,
+  Peoples: () => null,
+  Lightning: () => null,
   Shield: () => null,
 }));
 vi.mock('react-i18next', () => ({

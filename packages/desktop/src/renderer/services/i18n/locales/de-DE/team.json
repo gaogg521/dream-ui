@@ -1,4 +1,9 @@
 {
+  "autoCollaboration": {
+    "label": "Automatische Zusammenarbeit",
+    "hint": "Läuft in einer separaten Teamsitzung mit Fortschritt pro Mitglied.",
+    "failed": "Automatische Zusammenarbeit konnte nicht gestartet werden."
+  },
   "sider": {
     "title": "Team-Einsatz",
     "createTeam": "Neues Team",

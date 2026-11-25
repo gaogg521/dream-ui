@@ -1,0 +1,121 @@
+.quick-share-dialog.arco-modal {
+  border: 1px solid var(--border-base);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--dialog-fill-0);
+  box-shadow: 0 20px 72px rgb(0 0 0 / 24%);
+}
+
+.quick-share-dialog .arco-modal-header {
+  height: auto;
+  min-height: 64px;
+  padding: 12px 24px;
+  padding-inline-end: 56px;
+  justify-content: flex-start;
+  border-bottom: 0;
+}
+
+.quick-share-dialog .arco-modal-title {
+  text-align: start;
+}
+
+.quick-share-dialog .arco-modal-close-icon {
+  top: 19px;
+  inset-inline-end: 19px;
+}
+
+.quick-share-dialog .arco-modal-content {
+  padding: 0 24px 22px;
+}
+
+.quick-share-dialog__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.quick-share-dialog__intro {
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--brand) 18%, var(--border-base));
+  border-inline-start: 3px solid color-mix(in srgb, var(--brand) 68%, var(--border-base));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--brand-light) 44%, var(--dialog-fill-0));
+}
+
+.quick-share-dialog__headline {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: clamp(18px, 3.6vw, 22px);
+  font-weight: 650;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.quick-share-dialog__details {
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.quick-share-dialog__actions {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.quick-share-dialog__website {
+  display: flex;
+  flex: 1 1 180px;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border-base);
+  border-radius: 9px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.quick-share-dialog__website bdi {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.quick-share-dialog__website > :last-child {
+  margin-inline-start: auto;
+}
+
+.quick-share-dialog__website:hover {
+  border-color: var(--brand);
+  background: var(--bg-2);
+}
+
+.quick-share-dialog__website:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.quick-share-dialog__actions .arco-btn {
+  min-height: 42px;
+  height: auto;
+  border-radius: 9px;
+}
+
+.quick-share-dialog__status {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: end;
+}
+
+.quick-share-dialog__status:empty {
+  margin: 0;
+}

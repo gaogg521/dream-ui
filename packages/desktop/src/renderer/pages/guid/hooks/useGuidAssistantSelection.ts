@@ -97,7 +97,8 @@ export function resolveAssistantSelectionKey(
 function readPersistedGuidAssistantSelectionKey(assistants: Assistant[]): string | undefined {
   const savedKey = configService.get('guid.lastAssistantId');
   const enabledAssistants = assistants.filter(
-    (assistant) => assistant.enabled !== false && assistant.agent_status === 'online'
+    (assistant) =>
+      assistant.source === 'generated' && assistant.enabled !== false && assistant.agent_status === 'online'
   );
   return resolveAssistantSelectionKey(savedKey, enabledAssistants);
 }
@@ -173,7 +174,9 @@ export const useGuidAssistantSelection = ({
     (assistantId: string) => {
       const normalizedId = resolveAssistantSelectionKey(assistantId, assistants) ?? assistantId;
       _setSelectedAssistantId(normalizedId);
-      persistGuidAssistantSelectionKey(normalizedId);
+      if (assistants.some((assistant) => assistant.id === normalizedId && assistant.source === 'generated')) {
+        persistGuidAssistantSelectionKey(normalizedId);
+      }
     },
     [assistants]
   );
@@ -209,8 +212,9 @@ export const useGuidAssistantSelection = ({
       const fallbackId =
         readPersistedGuidAssistantSelectionKey(assistants) ?? pickDefaultAssistantSelectionKey(assistants);
       _setSelectedAssistantId(fallbackId);
+      _setSelectedBackendAgentIdState(assistants.find((assistant) => assistant.id === fallbackId)?.agent_id ?? null);
     }
-  }, [assistants, preselectAssistantId, resetAssistant]);
+  }, [assistants, locationKey, preselectAssistantId, resetAssistant]);
 
   useEffect(() => {
     if (assistants.length === 0) return;

@@ -1,4 +1,5 @@
 {
+  "taskPlan": "Список завдань",
   "fileChanges": "Зміни у файлах",
   "fileChangesCount": "Зміни у файлах: {{count}}",
   "fileChangesCount_one": "Зміни у файлах: {{count}}",

@@ -1,4 +1,5 @@
 {
+  "taskPlan": "任務待辦",
   "fileChanges": "檔案變更",
   "fileChangesCount": "{{count}} 個檔案變更",
   "fileChangesCount_one": "{{count}} 個檔案變更",

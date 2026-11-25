@@ -1,4 +1,9 @@
 {
+  "autoCollaboration": {
+    "label": "自動コラボレーション",
+    "hint": "別のチームセッションで実行し、メンバーの進捗を表示します。",
+    "failed": "自動コラボレーションを開始できませんでした。"
+  },
   "sider": {
     "title": "チーム作戦",
     "createTeam": "New Team",

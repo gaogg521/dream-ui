@@ -24,6 +24,11 @@ import React from 'react';
 
 const { mutateMock } = vi.hoisted(() => ({ mutateMock: vi.fn() }));
 
+vi.mock('react-router-dom', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router-dom')>()),
+  useNavigate: () => vi.fn(),
+}));
+
 vi.mock('@/common', () => ({
   ipcBridge: {
     acpConversation: { sendMessage: { invoke: vi.fn() } },

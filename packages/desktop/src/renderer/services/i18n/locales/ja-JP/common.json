@@ -25,6 +25,10 @@
   "add": "追加",
   "edit": "編集",
   "website": "公式サイト",
+  "quickShare": {
+    "title": "One Work を共有",
+    "description": "ひとつのワークスペースで AI チームを指揮。\nOne Work で Codex や Claude Code などのエージェントをまとめ、調査、コーディング、文書作成を並行して進めます。MCP ツールやチームの知識をつなぎ、繰り返し作業をスケジュールで自動化できます。"
+  },
   "version": "バージョン",
   "contact": "お問い合わせ",
   "github": "Github",

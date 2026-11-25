@@ -65,6 +65,8 @@ GitHub 使用 `ONEWORK_STATIC_SSH_PRIVATE_KEY` secret，本地默认使用 `~/.s
 
 ## 4. 踩过的坑
 
+- **2026-11-25 记忆召回修复待随包交付**。Core 修复 `a6c57dc` 和回归测试 `3f19dd5` 已进入 Core main。本地新版 Core 仅用于开发和本地包验证。正式客户端当前固定 `v0.1.106`。安排正式发布时，先发布包含这两个提交的 Core 构建产物，再更新 `dreamcoreVersion`，并从 Windows 和 macOS 安装包核对内置 Core 版本，验证浏览或只读工具任务不会带入无关记忆。
+
 - **2026-10-08**：提问弹窗的后端转发、侧边栏等待标记修复都在 dream-core main 上，`dreamcoreVersion` 还停在 v0.1.79。dev 里一切正常（dev 用的是本地编的 dreamcore），直接打包会得到「前端有弹窗、后端不发问题」的安装包。预检当场报出 16 个提交。
 - **同日**：合并 release PR 后 Release 工作流没自己跑（tag 不触发）；手动触发后两个 macOS 任务没抢到 runner 被取消，Release 页面只有 Windows/Linux 产物。Mac 包若此时打，`prepareDreamcore` 会在中途下载失败。
 - 2026-10-07（v0.1.78→v0.1.79）：同类问题，bundled 目录里是本地编的二进制，CI 无法复现。

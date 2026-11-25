@@ -197,10 +197,8 @@
   align-items: center;
   gap: 5px;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-3);
-  background: transparent;
-  border: none;
+  background: var(--color-fill-2);
+  border: 1px solid var(--color-border-2);
   padding: 4px 6px;
   border-radius: 6px;
   cursor: pointer;
@@ -212,7 +210,6 @@
 }
 
 .workspaceEmptyBtn:hover {
-  color: var(--color-text-2);
   background: var(--color-fill-3);
 }
 
@@ -232,8 +229,6 @@
   align-items: center;
   gap: 5px;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-2);
   background: transparent;
   border: none;
   padding-block: 4px;
@@ -251,7 +246,6 @@
 
 .workspacePillMain:hover {
   background: var(--color-fill-3);
-  color: var(--color-text-1);
 }
 
 .workspacePillName {
@@ -820,4 +814,26 @@
   .presetAgentTagName {
     max-width: 100px;
   }
+}
+
+.workspaceEmptyBtn,
+.workspacePillMain,
+.wsDropdownItemName {
+  color: #176548;
+  font-weight: 600;
+}
+
+.workspaceEmptyBtn:lang(zh),
+.workspacePillName[data-han='true'] {
+  font-size: 13px;
+}
+
+.wsDropdownItemName[data-han='true'] {
+  font-size: 12px;
+}
+
+:global([data-theme='dark']) .workspaceEmptyBtn,
+:global([data-theme='dark']) .workspacePillMain,
+:global([data-theme='dark']) .wsDropdownItemName {
+  color: #ffc36b;
 }

@@ -310,7 +310,7 @@ class FileServiceClass {
    * managed path.
    */
   async processDroppedFiles(
-    files: FileList,
+    files: FileList | readonly File[],
     conversation_id?: string,
     source: UploadSource = 'sendbox'
   ): Promise<FileMetadata[]> {

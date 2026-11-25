@@ -95,7 +95,7 @@ describe('useGuidAssistantSelection', () => {
     });
   });
 
-  it('restores the last selected guid assistant before falling back to the dream-engine default', async () => {
+  it('ignores a previously saved expert when opening a fresh draft', async () => {
     mockAssistants = [
       assistantFixture({ id: 'bare-dream-engine', runtimeKey: 'dream-engine', source: 'generated', sortOrder: 1 }),
       assistantFixture({ id: 'assistant-claude', runtimeKey: 'claude', source: 'builtin', sortOrder: 2 }),
@@ -111,11 +111,11 @@ describe('useGuidAssistantSelection', () => {
     );
 
     await waitFor(() => {
-      expect(result.current.selectedAssistantId).toBe('assistant-claude');
+      expect(result.current.selectedAssistantId).toBe('bare-dream-engine');
     });
   });
 
-  it('restores the last selected guid assistant when the guid page resets for a new chat', async () => {
+  it('clears the expert when starting a new chat from the same page', async () => {
     mockAssistants = [
       assistantFixture({ id: 'bare-dream-engine', runtimeKey: 'dream-engine', source: 'generated', sortOrder: 1 }),
       assistantFixture({ id: 'assistant-claude', runtimeKey: 'claude', source: 'builtin', sortOrder: 2 }),
@@ -124,19 +124,20 @@ describe('useGuidAssistantSelection', () => {
       key === 'guid.lastAssistantId' ? 'assistant-claude' : undefined
     );
 
-    const { result } = renderHook(() =>
-      useGuidAssistantSelection({
-        resetAssistant: true,
-        locationKey: 'new-chat',
-      })
+    const { result, rerender } = renderHook(
+      ({ resetAssistant, locationKey }) => useGuidAssistantSelection({ resetAssistant, locationKey }),
+      { initialProps: { resetAssistant: false, locationKey: 'original' } }
     );
+    act(() => result.current.setSelectedAssistantId('assistant-claude'));
+    expect(result.current.selectedAssistantId).toBe('assistant-claude');
+    rerender({ resetAssistant: true, locationKey: 'new-chat' });
 
     await waitFor(() => {
-      expect(result.current.selectedAssistantId).toBe('assistant-claude');
+      expect(result.current.selectedAssistantId).toBe('bare-dream-engine');
     });
   });
 
-  it('persists manual guid assistant selections for the next visit', async () => {
+  it('persists only bare CLI selections for the next visit', async () => {
     mockAssistants = [
       assistantFixture({ id: 'bare-dream-engine', runtimeKey: 'dream-engine', source: 'generated', sortOrder: 1 }),
       assistantFixture({ id: 'assistant-claude', runtimeKey: 'claude', source: 'builtin', sortOrder: 2 }),
@@ -156,7 +157,9 @@ describe('useGuidAssistantSelection', () => {
       result.current.setSelectedAssistantId('assistant-claude');
     });
 
-    expect(configSetMock).toHaveBeenCalledWith('guid.lastAssistantId', 'assistant-claude');
+    expect(configSetMock).not.toHaveBeenCalledWith('guid.lastAssistantId', 'assistant-claude');
+    act(() => result.current.setSelectedAssistantId('bare-dream-engine'));
+    expect(configSetMock).toHaveBeenCalledWith('guid.lastAssistantId', 'bare-dream-engine');
   });
 
   it('falls back to the default assistant when the persisted guid assistant no longer exists', async () => {

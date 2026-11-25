@@ -1,4 +1,9 @@
 {
+  "autoCollaboration": {
+    "label": "자동 협업",
+    "hint": "별도의 팀 세션에서 실행되며 구성원별 진행 상황을 볼 수 있습니다.",
+    "failed": "자동 협업을 시작하지 못했습니다."
+  },
   "sider": {
     "title": "팀 작전",
     "createTeam": "New Team",

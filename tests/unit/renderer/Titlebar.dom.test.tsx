@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const navigateMock = vi.fn();
@@ -90,6 +91,9 @@ vi.mock('@icon-park/react', () => ({
   ExpandRight: () => <span>ExpandRight</span>,
   Peoples: () => <span>Peoples</span>,
   Search: () => <span>Search</span>,
+  ShareOne: () => <span>ShareOne</span>,
+  Copy: () => <span aria-hidden='true' />,
+  ArrowRightUp: () => <span aria-hidden='true' />,
 }));
 
 vi.mock('@/renderer/components/layout/WindowControls', () => ({
@@ -114,4 +118,21 @@ describe('Titlebar', () => {
     expect(screen.getByLabelText('Report Issue')).toBeInTheDocument();
     expect(screen.getByLabelText('Search conversations')).toBeInTheDocument();
   });
+});
+
+it('opens the product share dialog and copies the introduction and official website', async () => {
+  const user = userEvent.setup();
+  const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+  try {
+    render(<Titlebar workspaceAvailable={false} />);
+    await user.click(screen.getByRole('button', { name: 'common.quickShare.title' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('common.quickShare.description')).toBeInTheDocument();
+    expect(within(dialog).getByRole('link')).toHaveAttribute('href', 'https://1work.vip/');
+    await user.click(within(dialog).getByRole('button', { name: 'common.copy' }));
+    expect(writeText).toHaveBeenCalledWith('common.quickShare.description\nhttps://1work.vip/');
+    expect(within(dialog).getByRole('status')).toHaveTextContent('common.copySuccess');
+  } finally {
+    writeText.mockRestore();
+  }
 });

@@ -127,3 +127,18 @@
 .knowledgeIcon {
   color: #10b981;
 }
+
+.workspaceFolderName {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #176548;
+}
+
+.workspaceFolderName[data-han='true'] {
+  font-size: 13px;
+}
+
+:global([data-theme='dark']) .workspaceFolderName {
+  color: #ffc36b;
+}

@@ -3,48 +3,8 @@
  */
 
 import type { FileMetadata } from './FileService';
-import { getFileExtension, UPLOAD_ABORTED_ERROR, uploadFileViaHttp } from './FileService';
-import { trackUpload, type UploadSource } from '@/renderer/hooks/file/useUploadState';
-
-/**
- * Upload pasted bytes to the backend via HTTP multipart and return the absolute
- * file path stored on disk. Works the same in Electron and WebUI — the backend
- * is always reached over HTTP (the Electron preload injects `window.__backendPort`
- * so requests land on `http://127.0.0.1:<port>`; WebUI hits same-origin).
- *
- * Returns `null` when the upload is cancelled by the user (via the per-file
- * cancel button or a conversation switch); other errors propagate.
- */
-async function createTempFile(
-  file_name: string,
-  data: Uint8Array,
-  contentType: string,
-  conversation_id?: string,
-  source: UploadSource = 'sendbox'
-): Promise<string | null> {
-  const arrayBuf = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;
-  const blob = new Blob([arrayBuf], { type: contentType });
-  const file = new File([blob], file_name, { type: contentType });
-  const controller = new AbortController();
-  const tracker = trackUpload(file.size, {
-    source,
-    name: file_name,
-    conversationId: conversation_id || undefined,
-    onAbort: () => controller.abort(),
-  });
-  try {
-    return await uploadFileViaHttp(file, conversation_id || '', tracker.onProgress, undefined, {
-      signal: controller.signal,
-    });
-  } catch (error) {
-    if (error instanceof Error && error.message === UPLOAD_ABORTED_ERROR) {
-      return null;
-    }
-    throw error;
-  } finally {
-    tracker.finish();
-  }
-}
+import { FileService, getFileExtension } from './FileService';
+import type { UploadSource } from '@/renderer/hooks/file/useUploadState';
 
 type PasteHandler = (event: React.ClipboardEvent | ClipboardEvent) => Promise<boolean>;
 
@@ -166,194 +126,41 @@ class PasteServiceClass {
     // 立即事件冒泡,避免全局监听器重复处理
     event.stopPropagation();
     const clipboardText = event.clipboardData?.getData('text');
-    const files = event.clipboardData?.files;
-    // If caller passes an empty array, treat it as "allow all file types"
+    // Clipboard FileList access is restricted to the paste event.
+    const files = Array.from(event.clipboardData?.files ?? []);
     const allowAll = !supportedExts || supportedExts.length === 0;
 
-    // 优先检查是否有文件，如果有文件则忽略文本（避免粘贴文件时同时插入文件名）
-    if (files && files.length > 0) {
-      // 处理文件，跳过文本处理
-      const fileList: FileMetadata[] = [];
-      const usedFileNames = new Set<string>();
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const file_path = (file as File & { path?: string }).path;
+    if (files.length > 0) {
+      const attachments: File[] = [];
+      const usedNames = new Set<string>();
+      for (const file of files) {
+        const image = file.type.startsWith('image/');
+        const extension = getFileExtension(file.name) || (image ? getExtensionFromMimeType(file.type) : '');
+        if (!allowAll && !supportedExts.includes(extension)) continue;
 
-        // 检查是否有文件路径 (Electron 环境下 File 对象会有额外的 path 属性)
-
-        if (!file_path && file.type.startsWith('image/')) {
-          // 剪贴板图片，需要检查是否支持该类型
-          const fileExt = getFileExtension(file.name) || getExtensionFromMimeType(file.type);
-
-          if (allowAll || supportedExts.includes(fileExt)) {
-            try {
-              const arrayBuffer = await file.arrayBuffer();
-              const uint8Array = new Uint8Array(arrayBuffer);
-
-              // Generate a concise filename; replace system-generated default names.
-              // 剪贴板里的图片通常叫 `image.png` 这种 MIME 默认名，优先按调用方传入的
-              // imageCounter 递增序号命名（跨多次粘贴保持唯一）；没给 counter 时退回
-              // 到时间戳兜底。
-              const isSystemGenerated = isSystemGeneratedImageName(file.name);
-              let file_name: string;
-              if (!isSystemGenerated && file.name) {
-                file_name = file.name;
-              } else if (imageCounter) {
-                file_name = `image-${imageCounter.next()}${fileExt}`;
-              } else {
-                const now = new Date();
-                const timeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
-                file_name = `pasted_image_${timeStr}${fileExt}`;
-              }
-              // Ensure unique filename within the same paste batch to prevent
-              // collisions when multiple images are pasted simultaneously
-              if (usedFileNames.has(file_name)) {
-                const extIdx = file_name.lastIndexOf('.');
-                const baseName = extIdx > 0 ? file_name.slice(0, extIdx) : file_name;
-                const ext = extIdx > 0 ? file_name.slice(extIdx) : fileExt;
-                let counter = 2;
-                while (usedFileNames.has(`${baseName}_${counter}${ext}`)) {
-                  counter++;
-                }
-                file_name = `${baseName}_${counter}${ext}`;
-              }
-              usedFileNames.add(file_name);
-
-              // 上传到后端并拿回绝对路径（Electron / WebUI 都走 HTTP multipart）
-              const tempPath = await createTempFile(file_name, uint8Array, file.type, conversation_id, source);
-
-              if (tempPath) {
-                fileList.push({
-                  name: file_name,
-                  path: tempPath,
-                  size: file.size,
-                  type: file.type,
-                  lastModified: Date.now(),
-                });
-              }
-            } catch (error) {
-              if (error instanceof Error && error.message === 'FILE_TOO_LARGE') {
-                throw error;
-              }
-              console.error('创建临时文件失败:', error);
-            }
-          } else {
-            // 不支持的文件类型，跳过但不报错（让后续过滤处理）
-            console.warn(`Unsupported image type: ${file.type}, extension: ${fileExt}`);
-          }
-        } else if (file_path) {
-          // 有文件路径的文件（从文件管理器复制/拖拽粘贴的文件）
-          // 检查文件类型是否支持
-          const fileExt = getFileExtension(file.name);
-
-          if (allowAll || supportedExts.includes(fileExt)) {
-            // Upload rather than pass the raw device path: the chat send contract
-            // sends attachments as `upload` refs and the backend rejects any path
-            // outside its managed upload directory. Upload the blob to get a
-            // managed path (createTempFile → /api/fs/upload, temp_dir/dream/...).
-            try {
-              const arrayBuffer = await file.arrayBuffer();
-              const uint8Array = new Uint8Array(arrayBuffer);
-              let file_name = file.name;
-              if (usedFileNames.has(file_name)) {
-                const extIdx = file_name.lastIndexOf('.');
-                const baseName = extIdx > 0 ? file_name.slice(0, extIdx) : file_name;
-                const ext = extIdx > 0 ? file_name.slice(extIdx) : fileExt;
-                let counter = 2;
-                while (usedFileNames.has(`${baseName}_${counter}${ext}`)) {
-                  counter++;
-                }
-                file_name = `${baseName}_${counter}${ext}`;
-              }
-              usedFileNames.add(file_name);
-
-              const tempPath = await createTempFile(
-                file_name,
-                uint8Array,
-                file.type || 'application/octet-stream',
-                conversation_id,
-                source
-              );
-              if (tempPath) {
-                fileList.push({
-                  name: file_name,
-                  path: tempPath,
-                  size: file.size,
-                  type: file.type,
-                  lastModified: Date.now(),
-                });
-              }
-            } catch (error) {
-              if (error instanceof Error && error.message === 'FILE_TOO_LARGE') {
-                throw error;
-              }
-              console.error('上传粘贴文件失败:', error);
-            }
-          } else {
-            // 不支持的文件类型
-            console.warn(`Unsupported file type: ${file.name}, extension: ${fileExt}`);
-          }
-        } else if (!file.type.startsWith('image/')) {
-          // 没有文件路径的非图片文件（从文件管理器复制粘贴的文件）
-          const fileExt = getFileExtension(file.name);
-
-          if (allowAll || supportedExts.includes(fileExt)) {
-            // 对于复制粘贴的文件，我们需要创建临时文件
-            try {
-              const arrayBuffer = await file.arrayBuffer();
-              const uint8Array = new Uint8Array(arrayBuffer);
-
-              // Ensure unique filename within the same paste batch
-              let file_name = file.name;
-              if (usedFileNames.has(file_name)) {
-                const extIdx = file_name.lastIndexOf('.');
-                const baseName = extIdx > 0 ? file_name.slice(0, extIdx) : file_name;
-                const ext = extIdx > 0 ? file_name.slice(extIdx) : fileExt;
-                let counter = 2;
-                while (usedFileNames.has(`${baseName}_${counter}${ext}`)) {
-                  counter++;
-                }
-                file_name = `${baseName}_${counter}${ext}`;
-              }
-              usedFileNames.add(file_name);
-
-              const tempPath = await createTempFile(
-                file_name,
-                uint8Array,
-                file.type || 'application/octet-stream',
-                conversation_id,
-                source
-              );
-              if (tempPath) {
-                fileList.push({
-                  name: file_name,
-                  path: tempPath,
-                  size: file.size,
-                  type: file.type,
-                  lastModified: Date.now(),
-                });
-              }
-            } catch (error) {
-              if (error instanceof Error && error.message === 'FILE_TOO_LARGE') {
-                throw error;
-              }
-              console.error('创建临时文件失败:', error);
-            }
-          } else {
-            console.warn(`Unsupported file type: ${file.name}, extension: ${fileExt}`);
-          }
+        let name = file.name;
+        const localPath =
+          image && (window.electronAPI?.getPathForFile?.(file) || (file as File & { path?: string }).path);
+        if (image && !localPath && isSystemGeneratedImageName(name)) {
+          name = imageCounter ? `image-${imageCounter.next()}${extension}` : `pasted_image_${Date.now()}${extension}`;
         }
+        if (usedNames.has(name)) {
+          const dot = name.lastIndexOf('.');
+          const stem = dot > 0 ? name.slice(0, dot) : name;
+          const suffix = dot > 0 ? name.slice(dot) : extension;
+          let count = 2;
+          while (usedNames.has(`${stem}_${count}${suffix}`)) count++;
+          name = `${stem}_${count}${suffix}`;
+        }
+        usedNames.add(name);
+        attachments.push(name === file.name ? file : new File([file], name, file));
       }
-
-      // 处理完文件后，总是返回 true（阻止文本插入）
-      if (fileList.length > 0) {
-        onFilesAdded(fileList);
-      }
-      return true; // 阻止默认行为，不插入文件名文本
+      const uploaded = await FileService.processDroppedFiles(attachments, conversation_id, source);
+      if (uploaded.length > 0) onFilesAdded(uploaded);
+      return true;
     }
 
-    // 处理纯文本粘贴（只在没有文件时）
-    if (clipboardText && (!files || files.length === 0)) {
+    if (clipboardText) {
       // 在 iOS 上, 让 Safari 自己处理纯文本粘贴, 以避免粘贴菜单/键盘抖动问题
       const isIOS = typeof navigator !== 'undefined' && /iP(hone|ad|od)/.test(navigator.userAgent);
       if (isIOS) {
