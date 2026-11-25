@@ -20,21 +20,24 @@ import {
 import { usePendingConfirmationsRecovery } from '@renderer/pages/conversation/Messages/usePendingConfirmationsRecovery';
 import HOC from '@renderer/utils/ui/HOC';
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TeamSendBoxRuntime } from '@/renderer/pages/team/components/teamSendRuntime';
 import DreamEngineSendBox from './DreamEngineSendBox';
-import { stripBackgroundCollaboration } from '@/common/chat/backgroundCollaboration';
+import { backgroundTaskTitle, stripBackgroundCollaboration } from '@/common/chat/backgroundCollaboration';
 import { TaskChecklist } from '@renderer/pages/conversation/Messages/components/MessagePlan';
 import type { DreamEngineModelSelection } from './useDreamEngineModelSelection';
 
 function BackgroundTaskChecklist() {
   const messages = useMessageList();
+  const { t, i18n } = useTranslation();
+  const locale = i18n?.resolvedLanguage ?? i18n?.language ?? 'zh-CN';
   const entries = useMemo(() => {
     const lastUser = messages.findLastIndex((message) => message.type === 'text' && message.position === 'right');
     const request = messages[lastUser];
     if (request?.type !== 'text') return [];
     const content = request.content.content;
     if (typeof content !== 'string' || stripBackgroundCollaboration(content) === content) return [];
-    const tasksByName = new Map<string, 'failed' | 'completed' | 'in_progress'>();
+    const tasksByName = new Map<string, { title?: string; status: 'failed' | 'completed' | 'in_progress' }>();
     for (const message of messages.slice(lastUser + 1)) {
       if (message.type !== 'tool_call' || message.content.name?.toLowerCase() !== 'spawn') continue;
       const { args, input, output, status } = message.content;
@@ -44,11 +47,17 @@ function BackgroundTaskChecklist() {
         const name = typeof task?.name === 'string' ? task.name.trim() : '';
         if (!name) continue;
         const failed = status === 'error' || output?.includes(`## ${name} [ERROR]`);
-        tasksByName.set(name, failed ? 'failed' : status === 'completed' ? 'completed' : 'in_progress');
+        tasksByName.set(name, {
+          title: backgroundTaskTitle(name, task.prompt, locale) ?? tasksByName.get(name)?.title,
+          status: failed ? 'failed' : status === 'completed' ? 'completed' : 'in_progress',
+        });
       }
     }
-    return Array.from(tasksByName, ([content, status]) => ({ content, status }));
-  }, [messages]);
+    return Array.from(tasksByName.values(), ({ title, status }) => ({
+      content: title ?? t('messages.backgroundTask', { defaultValue: 'Subtask' }),
+      status,
+    }));
+  }, [messages, locale, t]);
 
   return <TaskChecklist entries={entries} compact />;
 }

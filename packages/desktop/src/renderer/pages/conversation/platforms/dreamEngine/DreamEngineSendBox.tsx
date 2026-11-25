@@ -411,7 +411,7 @@ const DreamEngineSendBox: React.FC<{
         markSendStarted();
         setWaitingResponse(true);
         const res = await ipcBridge.conversation.sendMessage.invoke({
-          input: background ? withBackgroundCollaboration(input) : input,
+          input: background ? withBackgroundCollaboration(input, i18n.resolvedLanguage ?? i18n.language) : input,
           conversation_id,
           files,
           reply_requested: replyRequested,
@@ -457,6 +457,7 @@ const DreamEngineSendBox: React.FC<{
       checkAndUpdateTitle,
       conversation_id,
       current_model?.use_model,
+      i18n,
       markSendAccepted,
       markSendFailed,
       markSendStarted,
@@ -1132,7 +1133,8 @@ const DreamEngineSendBox: React.FC<{
                 type='text'
                 shape='round'
                 style={collaborationEnabled ? { backgroundColor: '#17754b', color: '#fff' } : undefined}
-                icon={<Peoples size={14} fill='currentColor' />}
+                className={`!px-6px !text-12px ${collaborationEnabled ? '!text-white' : '!text-t-secondary'}`}
+                icon={<Peoples theme='outline' size='13' fill='currentColor' />}
                 aria-pressed={collaborationEnabled}
                 title={t('team.autoCollaboration.hint')}
                 loading={startingCollaboration}

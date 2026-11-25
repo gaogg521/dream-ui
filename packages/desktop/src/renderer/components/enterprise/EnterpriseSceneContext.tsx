@@ -129,7 +129,7 @@ const EnterpriseSceneContext: React.FC<{ compact?: boolean }> = ({ compact = fal
       <Button
         type='text'
         size='mini'
-        className={compact ? '!px-6px !text-t-tertiary' : '!px-6px !text-t-secondary'}
+        className={compact ? '!px-6px !text-12px !text-t-secondary' : '!px-6px !text-t-secondary'}
         data-testid='enterprise-scene-context'
         icon={<MagicWand theme='outline' size='13' />}
       >

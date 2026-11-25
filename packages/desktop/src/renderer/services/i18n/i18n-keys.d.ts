@@ -2368,6 +2368,7 @@ export type I18nKey =
   | 'messages.availableCommands'
   | 'messages.availableCommands_one'
   | 'messages.availableCommands_other'
+  | 'messages.backgroundTask'
   | 'messages.canceledExecution'
   | 'messages.chooseAction'
   | 'messages.command'

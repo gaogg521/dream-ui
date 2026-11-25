@@ -1,5 +1,6 @@
 {
   "taskPlan": "任务待办",
+  "backgroundTask": "子任务",
   "fileChanges": "文件变更",
   "fileChangesCount": "{{count}} 个文件变更",
   "fileChangesCount_one": "{{count}} 个文件变更",

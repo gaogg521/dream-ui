@@ -23,28 +23,51 @@ export function TaskChecklist({
   const displayed = !canExpand ? entries : prioritized.slice(0, compact || expanded ? 10 : 3);
 
   const rows = (
-    <ul id={listId} className='m-0 max-h-180px list-none overflow-y-auto px-14px pb-10px'>
-      {displayed.map(({ content, status }, index) => (
-        <li key={index} className='flex min-h-30px items-start gap-9px py-4px text-13px leading-5'>
+    <ul
+      id={listId}
+      className={
+        compact
+          ? 'm-0 max-h-320px list-none overflow-y-auto p-0'
+          : 'm-0 max-h-180px list-none overflow-y-auto px-14px pb-10px'
+      }
+    >
+      {displayed.map((entry, index) => (
+        <li
+          key={index}
+          className={`flex min-h-30px items-start gap-9px text-13px leading-5 ${compact ? 'border-0 border-b border-solid border-[var(--border-base)] px-2 py-2 last:border-b-0' : 'py-4px'}`}
+        >
           <span
             aria-hidden='true'
             className={`mt-3px inline-flex size-14px shrink-0 items-center justify-center rounded-full border border-solid ${
-              status === 'completed'
+              entry.status === 'completed'
                 ? 'border-transparent text-[var(--success)]'
-                : status === 'in_progress'
+                : entry.status === 'in_progress'
                   ? 'border-[var(--primary)] bg-[var(--primary)]'
                   : 'border-dashed border-[var(--text-secondary)]'
             }`}
           >
-            {status === 'completed' && <IconCheck />}
+            {entry.status === 'completed' && <IconCheck />}
+          </span>
+          {compact && (
+            <span className='min-w-15px shrink-0 text-11px text-t-secondary tabular-nums'>
+              {entries.indexOf(entry) + 1}.
+            </span>
+          )}
+          <span
+            className={`min-w-0 flex-1 break-words ${compact || entry.status === 'in_progress' ? 'font-medium text-t-primary' : 'text-t-secondary'}`}
+          >
+            {entry.content}
           </span>
           <span
-            className={`min-w-0 flex-1 break-words ${status === 'in_progress' ? 'font-medium text-t-primary' : 'text-t-secondary'}`}
+            className={
+              compact
+                ? 'shrink-0 rounded-full bg-3 px-2 text-11px text-t-secondary'
+                : 'shrink-0 text-12px text-t-secondary'
+            }
           >
-            {content}
-          </span>
-          <span className='shrink-0 text-12px text-t-secondary'>
-            {status === 'failed' ? t('common.failed', { defaultValue: 'Failed' }) : t(`team.activity.status.${status}`)}
+            {entry.status === 'failed'
+              ? t('common.failed', { defaultValue: 'Failed' })
+              : t(`team.activity.status.${entry.status}`)}
           </span>
         </li>
       ))}
@@ -59,7 +82,25 @@ export function TaskChecklist({
           position='top'
           popupVisible={expanded}
           onVisibleChange={setExpanded}
-          content={<div className='w-336px max-w-[calc(100vw-64px)]'>{rows}</div>}
+          content={
+            <div className='w-300px max-w-[calc(100vw-64px)] text-start'>
+              <div className='mb-1 rounded-10px bg-2 p-2.5'>
+                <div className='flex items-center justify-between gap-3 text-12px'>
+                  <span className='font-semibold text-t-primary'>{t('messages.taskPlan')}</span>
+                  <span aria-hidden='true' className='text-t-secondary tabular-nums'>
+                    {completed}/{entries.length}
+                  </span>
+                </div>
+                <div aria-hidden='true' className='mt-2 h-3px overflow-hidden rounded-full bg-3'>
+                  <div
+                    className='h-full rounded-full bg-[var(--success)]'
+                    style={{ width: `${(completed / entries.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+              {rows}
+            </div>
+          }
         >
           <button
             type='button'

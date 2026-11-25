@@ -1,5 +1,6 @@
 {
   "taskPlan": "Task checklist",
+  "backgroundTask": "Subtask",
   "fileChanges": "File Changes",
   "fileChangesCount": "{{count}} File Changes",
   "fileChangesCount_one": "{{count}} File Change",
