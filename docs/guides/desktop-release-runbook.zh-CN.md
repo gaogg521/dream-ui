@@ -65,6 +65,10 @@ GitHub 使用 `ONEWORK_STATIC_SSH_PRIVATE_KEY` secret，本地默认使用 `~/.s
 
 ## 4. 踩过的坑
 
+- **2026-11-26 DEV 误加载旧 Core**。启动日志确认 DEV 使用 `resources/bundled-dreamcore/win32-x64/dreamcore.exe`（11 月 23 日构建），因此交付测试再次带入面试记忆。DEV 的本地 `.env` 已持久设置 `DREAM_BACKEND_BIN=../dream-core/target/debug/dreamcore.exe`。后续重启必须核对日志中的实际启动路径。Core 同时补齐中文「不需要记忆／不要召回记忆」等显式退出召回的指令与回归测试。
+- **下一版打包门禁**。`package.json` 的 `dreamcoreMinimumVersion` 已设为 `v0.1.107`，版本解析会拒绝继续使用 `v0.1.106` 打包。正式发布需发布包含 `a6c57dc`、`3f19dd5`、`ff242bf`、`6a5cf54` 的 Core，再升级 `dreamcoreVersion` 和客户端版本。明确传入 `DREAM_BACKEND_LOCAL_PATH` 或 `DREAM_BACKEND_LOCAL_BUNDLE_DIR` 可用于本地包验证。公开发布仍遵循此前「仅验证本地包，保留正式发布待办」的授权范围。
+- **2026-11-26 真实模型验收**。DEV 新会话 `305cd30c`，模型 `deepseek-flash-vision-latest`。未禁用记忆的普通 Write 交付任务正常生成文件，未出现记忆召回提示；包含 RO3、面试关键词但明确「不需要记忆」的请求也未召回；主动请求「招聘-信息安全岗位面试」记忆时正常召回并回复名称。启动证据 `D:/logs/dev-memory-recall-20261126.log` 确认实际执行 `D:/dream/dream-core/target/debug/dreamcore.exe`。安装包验收仍需在正式 Core 发布和版本固定升级之后进行。
+
 - **2026-11-25 记忆召回修复待随包交付**。Core 修复 `a6c57dc` 和回归测试 `3f19dd5` 已进入 Core main。本地新版 Core 仅用于开发和本地包验证。正式客户端当前固定 `v0.1.106`。安排正式发布时，先发布包含这两个提交的 Core 构建产物，同时确认该 Core 包含 ff242bf，限定资料范围时跳过召回，协作说明不参与匹配，再更新 `dreamcoreVersion`，并从 Windows 和 macOS 安装包核对内置 Core 版本，验证浏览或只读工具任务不会带入无关记忆。
 
 - **2026-10-08**：提问弹窗的后端转发、侧边栏等待标记修复都在 dream-core main 上，`dreamcoreVersion` 还停在 v0.1.79。dev 里一切正常（dev 用的是本地编的 dreamcore），直接打包会得到「前端有弹窗、后端不发问题」的安装包。预检当场报出 16 个提交。

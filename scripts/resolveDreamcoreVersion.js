@@ -15,22 +15,31 @@ const fs = require('fs');
 const path = require('path');
 
 function resolveDreamcoreVersion(projectRoot) {
-  const envOverride = process.env.DREAM_BACKEND_VERSION;
-  if (envOverride && envOverride.trim()) {
-    return envOverride.trim();
-  }
-
+  const pkgPath = path.join(projectRoot, 'package.json');
+  let pkg = {};
   try {
-    const pkgPath = path.join(projectRoot, 'package.json');
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-    if (pkg && typeof pkg.dreamcoreVersion === 'string' && pkg.dreamcoreVersion.trim()) {
-      return pkg.dreamcoreVersion.trim();
-    }
+    pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
   } catch {
-    // fall through
+    // Bootstrap callers may not have a package pin yet.
   }
-
-  return 'latest';
+  const selected = process.env.DREAM_BACKEND_VERSION?.trim() || pkg.dreamcoreVersion?.trim() || 'latest';
+  const minimum = pkg.dreamcoreMinimumVersion;
+  const localBuild = ['DREAM_BACKEND_LOCAL_PATH', 'DREAM_BACKEND_LOCAL_BUNDLE_DIR'].some((key) =>
+    process.env[key]?.trim()
+  );
+  if (minimum && !localBuild) {
+    const parse = (version) => /^v?(\d+)\.(\d+)\.(\d+)$/.exec(version)?.slice(1).map(Number);
+    const actual = parse(selected);
+    const required = parse(minimum);
+    const difference =
+      actual && required && actual.map((part, index) => part - required[index]).find((part) => part !== 0);
+    if (!actual || !required || difference < 0) {
+      throw new Error(
+        `Core ${selected} does not satisfy required ${minimum}. Release and pin the Core memory recall fixes before packaging, or supply an explicitly built local Core for local validation.`
+      );
+    }
+  }
+  return selected;
 }
 
 module.exports = { resolveDreamcoreVersion };
