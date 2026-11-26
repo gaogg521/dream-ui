@@ -26,6 +26,7 @@ import DreamEngineSendBox from './DreamEngineSendBox';
 import { backgroundTaskTitle, stripBackgroundCollaboration } from '@/common/chat/backgroundCollaboration';
 import { TaskChecklist } from '@renderer/pages/conversation/Messages/components/MessagePlan';
 import type { DreamEngineModelSelection } from './useDreamEngineModelSelection';
+import { useDeliveryFolders } from '../../explorer/useDeliveryFolders';
 
 function BackgroundTaskChecklist() {
   const messages = useMessageList();
@@ -96,6 +97,7 @@ const DreamEngineChat: React.FC<{
   forkCapability,
 }) => {
   useMessageLstCache(conversation_id);
+  useDeliveryFolders(conversation_id);
   usePendingConfirmationsRecovery(conversation_id);
   const conversationValue = useMemo<ConversationContextValue>(() => {
     return {
