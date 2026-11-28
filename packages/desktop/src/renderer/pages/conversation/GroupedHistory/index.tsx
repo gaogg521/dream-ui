@@ -49,6 +49,8 @@ type HistoryGroup = { id: string; name: string; conversationIds: string[] };
 const NO_GROUP = 'none';
 const NEW_GROUP = 'new';
 const PROJECT_CHOICE_PREFIX = 'project:';
+const SECTION_ACTION_CLASS =
+  'flex items-center gap-2px h-24px px-4px rd-4px cursor-pointer bg-transparent text-12px text-t-secondary transition-colors hover:bg-hover hover:text-t-primary active:bg-active focus-visible:outline focus-visible:outline-1 focus-visible:outline-primary';
 
 const ProjectDropTarget = ({
   workspace,
@@ -932,12 +934,12 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
                       <div className='flex items-center gap-4px'>
                         <button
                           type='button'
-                          className='sider-action-btn flex items-center gap-2px h-24px px-4px rd-4px text-12px text-t-primary bg-fill-2'
+                          className={SECTION_ACTION_CLASS}
                           title={t('conversation.history.addWorkspace', { defaultValue: 'Add workspace' })}
                           aria-label={t('conversation.history.addWorkspace', { defaultValue: 'Add workspace' })}
                           onClick={() => void handleAddWorkspace()}
                         >
-                          <Plus theme='outline' size={14} />
+                          <Plus theme='outline' size={14} fill='currentColor' />
                           <span>{t('conversation.history.addWorkspace', { defaultValue: 'Add workspace' })}</span>
                         </button>
                         {projectGroups.length > 0 && renderViewAllButton('projects')}
@@ -1072,12 +1074,12 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
                   <div className='flex items-center gap-4px'>
                     <button
                       type='button'
-                      className='sider-action-btn flex items-center gap-2px h-24px px-4px rd-4px text-12px text-t-primary bg-fill-2'
+                      className={SECTION_ACTION_CLASS}
                       title={newGroupLabel}
                       aria-label={newGroupLabel}
                       onClick={() => openGroupDialog()}
                     >
-                      <Plus theme='outline' size={14} />
+                      <Plus theme='outline' size={14} fill='currentColor' />
                       <span>{newGroupLabel}</span>
                     </button>
                     {conversations.length > 0 && renderViewAllButton('conversations')}
