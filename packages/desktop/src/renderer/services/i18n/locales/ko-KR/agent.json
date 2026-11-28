@@ -59,5 +59,17 @@
     "failed": "에이전트 다시 연결에 실패했습니다",
     "initializingTooltip": "에이전트를 초기화하는 중입니다. 완료된 후 다시 연결하세요",
     "processingTooltip": "현재 답변이 완료된 후 다시 연결하세요"
+  },
+  "bridgePrompt": {
+    "title": "{{agent}}의 브리지 모델이 아직 설정되지 않았습니다",
+    "content": "내 모델 \"{{provider}} / {{model}}\"을(를) {{agent}}의 브리지 모델로 설정할까요? 연결에 실패하면 다른 모델을 시도합니다. 본인 계정으로 {{agent}}에 로그인한다면 \"내 계정 사용\"을 선택하세요.",
+    "agree": "동의하고 설정",
+    "useOwnAccount": "내 계정 사용",
+    "addModel": "모델 추가",
+    "noModelClaude": "Claude Code는 Anthropic 프로토콜을 지원하는 모델에서만 동작하며, 해당 모델이 없습니다. 모델을 추가하거나 본인의 Claude 계정을 사용하세요.",
+    "noModelCodex": "아직 사용할 수 있는 모델이 없습니다. 모델을 추가하거나 본인의 Codex 계정을 사용하세요.",
+    "done": "{{agent}}의 브리지 모델을 \"{{provider}} / {{model}}\"(으)로 설정했습니다",
+    "noneReachable": "연결 가능한 모델이 없습니다. 주소와 API 키를 확인한 뒤 {{agent}} 브리지 설정에서 선택하세요.",
+    "saveFailed": "브리지 모델을 저장하지 못했습니다. 잠시 후 다시 시도하세요."
   }
 }

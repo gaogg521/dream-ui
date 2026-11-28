@@ -28,6 +28,11 @@ vi.mock('@/common', () => ({
   },
 }));
 
+const offerBridgeModelMock = vi.hoisted(() => vi.fn(async () => 'unchanged'));
+vi.mock('@/renderer/hooks/agent/bridge/useBridgeModelPrompt', () => ({
+  useBridgeModelPrompt: () => offerBridgeModelMock,
+}));
+
 vi.mock('@/renderer/hooks/media/mediaModeStore', () => ({
   requestMediaMode: (...args: unknown[]) => requestMediaModeMock(...args),
 }));

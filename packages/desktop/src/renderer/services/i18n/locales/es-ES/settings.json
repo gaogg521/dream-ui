@@ -985,7 +985,7 @@
   "deleteInvalidKeys": "Eliminar claves inválidas",
   "testAllKeys": "Probar todas las claves",
   "addModelPlaceholder": "Seleccionar o ingresar ID de modelo",
-  "customModelSupportNote": "Nota: Solo 1ONE CLI admite actualmente modelos personalizados.",
+  "customModelSupportNote": "Nota: los modelos personalizados funcionan con 1ONE CLI, y con Claude Code y Codex tras seleccionarlos en sus ajustes de puente.",
   "addModelHint": "Elige o escribe un ID de modelo y se agregará a este proveedor.",
   "addModelSelectedHint": "Listo para agregar el modelo: {{model}}",
   "currentModelsLabel": "Modelos actuales",
@@ -1066,7 +1066,7 @@
   "skills": "Habilidades",
   "tools": "Herramientas",
   "toolsDescription": "Configura servidores MCP y herramientas integradas como la generación de imágenes. La generación de imágenes solo se puede activar tras configurar un modelo compatible con imágenes en la página de Modelos.",
-  "modelDescription": "Configura proveedores de LLM y claves de API para usar en todos los asistentes. Solo 1ONE CLI admite modelos personalizados; los demás agentes usan sus modelos integrados.",
+  "modelDescription": "Configura proveedores de LLM y claves de API para usar en todos los asistentes. 1ONE CLI los usa directamente, Claude Code y Codex mediante su puente; los demás agentes usan sus modelos integrados.",
   "capabilities": "Capacidades",
   "capabilitiesTab": {
     "skills": "Habilidades",
@@ -1795,7 +1795,7 @@
   "agentManagement": {
     "localAgents": "Agentes locales",
     "remoteAgents": "Agentes remotos",
-    "localAgentsDescription": "Gestiona los agentes de programación con IA disponibles en este dispositivo. 1ONE CLI está integrado y viene con la app, sin instalación; los demás agentes solo se detectan tras instalar su CLI localmente.",
+    "localAgentsDescription": "Gestiona los agentes de programación con IA disponibles en este dispositivo. 1ONE CLI, Claude Code y Codex CLI vienen con la app, sin instalación; Claude Code y Codex CLI necesitan iniciar sesión o configurar un puente de modelo para conversar. Los demás agentes solo se detectan tras instalar su CLI localmente.",
     "localAgentsSetupLink": "Guía de configuración",
     "goToChat": "Iniciar chat",
     "remoteAgentsDescription": "Solo se admiten conexiones remotas de OpenClaw por ahora. Otros agentes están en desarrollo.",

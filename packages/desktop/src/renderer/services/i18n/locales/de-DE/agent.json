@@ -59,5 +59,17 @@
     "failed": "Agent konnte nicht neu verbunden werden",
     "initializingTooltip": "Der Agent wird initialisiert. Verbinden Sie ihn erneut, sobald er bereit ist",
     "processingTooltip": "Warten Sie auf das Ende der aktuellen Antwort, bevor Sie neu verbinden"
+  },
+  "bridgePrompt": {
+    "title": "Noch kein Bridge-Modell für {{agent}} festgelegt",
+    "content": "Soll Ihr eigenes Modell „{{provider}} / {{model}}“ als Bridge-Modell für {{agent}} verwendet werden? Schlägt die Verbindung fehl, wird ein anderes Ihrer Modelle versucht. Wenn Sie sich bei {{agent}} mit Ihrem eigenen Konto anmelden, wählen Sie „Eigenes Konto verwenden“.",
+    "agree": "Zustimmen und einrichten",
+    "useOwnAccount": "Eigenes Konto verwenden",
+    "addModel": "Modell hinzufügen",
+    "noModelClaude": "Claude Code funktioniert nur mit Modellen, die das Anthropic-Protokoll unterstützen; keines wurde gefunden. Fügen Sie eines hinzu oder nutzen Sie Ihr eigenes Claude-Konto.",
+    "noModelCodex": "Sie haben noch kein nutzbares Modell. Fügen Sie eines hinzu oder nutzen Sie Ihr eigenes Codex-Konto.",
+    "done": "{{agent}} verwendet jetzt „{{provider}} / {{model}}“ als Bridge-Modell",
+    "noneReachable": "Keines Ihrer Modelle ist erreichbar. Prüfen Sie Endpunkt und API-Schlüssel und wählen Sie dann eines in den Bridge-Einstellungen von {{agent}}.",
+    "saveFailed": "Das Bridge-Modell konnte nicht gespeichert werden. Bitte versuchen Sie es später erneut."
   }
 }

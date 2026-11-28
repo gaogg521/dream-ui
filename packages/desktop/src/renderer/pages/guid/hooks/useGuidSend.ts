@@ -18,6 +18,7 @@ import { getConversationCreateErrorMessage } from '@/renderer/pages/conversation
 import { requestMediaMode } from '@/renderer/hooks/media/mediaModeStore';
 import { detectMediaIntent } from '@/common/media/detectMediaIntent';
 import { useMediaIntentConfirmation } from '@/renderer/hooks/media/useMediaIntentConfirmation';
+import { useBridgeModelPrompt } from '@/renderer/hooks/agent/bridge/useBridgeModelPrompt';
 
 /** Just the slice of `useMediaComposer` the welcome page needs. */
 export type GuidMediaComposer = {
@@ -126,6 +127,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
   } = deps;
   const sendingRef = useRef(false);
   const confirmMediaIntent = useMediaIntentConfirmation();
+  const offerBridgeModel = useBridgeModelPrompt({ navigate, t });
 
   const handleSend = useCallback(async (): Promise<void | false> => {
     if (!selectedAssistantId) {
@@ -280,10 +282,18 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     // picker contradicted itself (the row promised one model, the session used
     // another). Omit it: no pick means no override, and the agent resolves the
     // model from the user's own config.
+    const bridge = await offerBridgeModel(assistantBackend, {
+      providerId: current_model?.id,
+      model: current_model?.use_model,
+    });
+    if (bridge === 'stop') return false;
+
     const assistantOverrideModel =
       selectedAcpModel || (assistantBackend === 'dream' ? current_model?.use_model : undefined) || undefined;
+    // A model picked from the agent's own list does not exist on a bridge that
+    // was set up a moment ago.
     const assistantOverrides = {
-      model: assistantOverrideModel,
+      model: bridge === 'bridged' ? undefined : assistantOverrideModel,
       permission: selectedMode || undefined,
       thought_level: selectedThoughtLevelValue || undefined,
       skill_ids: enabled_skills_to_send,
@@ -400,6 +410,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     // first render's composer and every send looks like plain chat.
     media,
     confirmMediaIntent,
+    offerBridgeModel,
     input,
     files,
     dir,

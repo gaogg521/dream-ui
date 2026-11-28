@@ -59,5 +59,17 @@
     "failed": "Error al reconectar el agente",
     "initializingTooltip": "El agente se está inicializando. Reconéctalo cuando esté listo",
     "processingTooltip": "Espera a que termine la respuesta actual antes de reconectar"
+  },
+  "bridgePrompt": {
+    "title": "Aún no hay modelo puente para {{agent}}",
+    "content": "¿Usar tu modelo «{{provider}} / {{model}}» como modelo puente de {{agent}}? Si no se puede conectar, se probará otro de tus modelos. Si inicias sesión en {{agent}} con tu propia cuenta, elige «Usar mi cuenta».",
+    "agree": "Aceptar y configurar",
+    "useOwnAccount": "Usar mi cuenta",
+    "addModel": "Añadir un modelo",
+    "noModelClaude": "Claude Code solo funciona con modelos compatibles con el protocolo de Anthropic y no se encontró ninguno. Añade uno o usa tu propia cuenta de Claude.",
+    "noModelCodex": "Todavía no tienes ningún modelo utilizable. Añade uno o usa tu propia cuenta de Codex.",
+    "done": "{{agent}} usa ahora «{{provider}} / {{model}}» como modelo puente",
+    "noneReachable": "No se pudo conectar con ninguno de tus modelos. Revisa la dirección y la clave API y elige uno en los ajustes del puente de {{agent}}.",
+    "saveFailed": "No se pudo guardar el modelo puente. Inténtalo de nuevo más tarde."
   }
 }

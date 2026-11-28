@@ -997,7 +997,7 @@
   "deleteInvalidKeys": "Supprimer les clés invalides",
   "testAllKeys": "Tester toutes les clés",
   "addModelPlaceholder": "Sélectionner ou entrer l'ID du modèle",
-  "customModelSupportNote": "Note : 1ONE CLI et Gemini CLI Agent supportent actuellement les modèles personnalisés.",
+  "customModelSupportNote": "Note : les modèles personnalisés fonctionnent avec 1ONE CLI, ainsi qu’avec Claude Code et Codex une fois choisis dans leurs réglages de passerelle.",
   "addModelHint": "Choisissez ou tapez un ID de modèle et il sera ajouté à ce fournisseur.",
   "addModelSelectedHint": "Prêt à ajouter le modèle : {{model}}",
   "currentModelsLabel": "Modèles actuels",
@@ -1078,7 +1078,7 @@
   "skills": "Compétences",
   "tools": "Outils",
   "toolsDescription": "Configurez les serveurs MCP et les outils intégrés comme la génération d'images. La génération d'images doit être activée après avoir configuré un modèle compatible avec les images sur la page Modèle.",
-  "modelDescription": "Configurez les fournisseurs LLM et les clés API à utiliser dans tous les assistants. Seule 1ONE CLI prend en charge les modèles personnalisés ; d'autres agents utilisent leurs propres modèles intégrés.",
+  "modelDescription": "Configurez les fournisseurs LLM et les clés API à utiliser dans tous les assistants. 1ONE CLI les utilise directement, Claude Code et Codex via leur passerelle ; les autres agents utilisent leurs modèles intégrés.",
   "capabilities": "Capacités",
   "capabilitiesTab": {
     "skills": "Compétences",
@@ -1807,7 +1807,7 @@
   "agentManagement": {
     "localAgents": "Agents locaux",
     "remoteAgents": "Agents distants",
-    "localAgentsDescription": "Gemini CLI est intégré. Les autres agents sont auto-détectés après installation locale.",
+    "localAgentsDescription": "Gérez les agents de programmation IA disponibles sur cet appareil. 1ONE CLI, Claude Code et Codex CLI sont fournis avec l’application, sans installation ; Claude Code et Codex CLI nécessitent leur propre connexion ou une passerelle de modèle pour discuter. Les autres agents ne sont détectés qu’après l’installation locale de leur CLI.",
     "localAgentsSetupLink": "Guide d'installation",
     "goToChat": "Démarrer le chat",
     "remoteAgentsDescription": "Seules les connexions OpenClaw distantes sont supportées pour l'instant. D'autres agents sont en développement.",

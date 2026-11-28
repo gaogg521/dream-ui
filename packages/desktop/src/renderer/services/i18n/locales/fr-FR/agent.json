@@ -59,5 +59,17 @@
     "failed": "Échec de la reconnexion de l'agent",
     "initializingTooltip": "L'agent est en cours d'initialisation. Reconnectez-le lorsqu'il sera prêt",
     "processingTooltip": "Attendez la fin de la réponse en cours avant de reconnecter"
+  },
+  "bridgePrompt": {
+    "title": "Aucun modèle passerelle défini pour {{agent}}",
+    "content": "Utiliser votre modèle « {{provider}} / {{model}} » comme modèle passerelle de {{agent}} ? En cas d’échec de connexion, un autre de vos modèles sera essayé. Si vous vous connectez à {{agent}} avec votre propre compte, choisissez « Utiliser mon compte ».",
+    "agree": "Accepter et configurer",
+    "useOwnAccount": "Utiliser mon compte",
+    "addModel": "Ajouter un modèle",
+    "noModelClaude": "Claude Code ne fonctionne qu’avec des modèles compatibles avec le protocole Anthropic, et aucun n’a été trouvé. Ajoutez-en un ou utilisez votre propre compte Claude.",
+    "noModelCodex": "Vous n’avez pas encore de modèle utilisable. Ajoutez-en un ou utilisez votre propre compte Codex.",
+    "done": "{{agent}} utilise désormais « {{provider}} / {{model}} » comme modèle passerelle",
+    "noneReachable": "Aucun de vos modèles n’est joignable. Vérifiez l’adresse et la clé API, puis choisissez-en un dans les réglages de la passerelle {{agent}}.",
+    "saveFailed": "Impossible d’enregistrer le modèle passerelle. Réessayez plus tard."
   }
 }

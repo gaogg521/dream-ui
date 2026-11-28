@@ -59,5 +59,17 @@
     "failed": "Failed to reconnect agent",
     "initializingTooltip": "The agent is initializing. Reconnect when it is ready",
     "processingTooltip": "Wait for the current reply to finish before reconnecting"
+  },
+  "bridgePrompt": {
+    "title": "No bridge model set for {{agent}} yet",
+    "content": "Use your own model \"{{provider}} / {{model}}\" as the bridge model for {{agent}}? If it cannot connect, another of your models is tried. If you sign in to {{agent}} with your own account, choose \"Use my own account\".",
+    "agree": "Agree and set up",
+    "useOwnAccount": "Use my own account",
+    "addModel": "Add a model",
+    "noModelClaude": "Claude Code only works with models that speak the Anthropic protocol, and none was found. Add one first, or use your own Claude account.",
+    "noModelCodex": "You have no usable model yet. Add one first, or use your own Codex account.",
+    "done": "{{agent}} now uses \"{{provider}} / {{model}}\" as its bridge model",
+    "noneReachable": "None of your models could be reached. Check the endpoint and API key, then choose one in the {{agent}} bridge settings.",
+    "saveFailed": "Could not save the bridge model. Please try again later."
   }
 }

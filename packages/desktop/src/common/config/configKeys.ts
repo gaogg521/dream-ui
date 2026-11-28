@@ -34,6 +34,8 @@ export type ConfigKeyMap = {
   'theme.userThemes': Theme[];
   'workspace.pasteConfirm': boolean | undefined;
   'guid.lastAssistantId': string | undefined;
+  /** Agents whose "use one of your models" offer the user turned down. */
+  'agent.bridgePromptDismissed': { claude?: boolean; codex?: boolean } | undefined;
   /** User-defined order for the enabled assistant picker surfaces. */
   'assistants.enabledOrder': string[] | undefined;
   'upload.saveToWorkspace': boolean | undefined;

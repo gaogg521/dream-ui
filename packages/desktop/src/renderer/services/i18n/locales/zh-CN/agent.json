@@ -59,5 +59,17 @@
     "failed": "代理重连失败",
     "initializingTooltip": "代理正在初始化，请稍后再重连",
     "processingTooltip": "请等当前回复结束后再重连"
+  },
+  "bridgePrompt": {
+    "title": "还没有设置 {{agent}} 的桥接模型",
+    "content": "是否同意把你的自定义模型「{{provider}} / {{model}}」设为 {{agent}} 的桥接模型？连接失败时会自动换用其它自定义模型。如果你使用自己的账号登录 {{agent}}，请选择“使用我自己的账号”。",
+    "agree": "同意并设置",
+    "useOwnAccount": "使用我自己的账号",
+    "addModel": "去添加模型",
+    "noModelClaude": "Claude Code 只能使用支持 Anthropic 协议的模型，目前没有找到。请先添加一个，或使用你自己的 Claude 账号。",
+    "noModelCodex": "目前没有可用的自定义模型。请先添加一个，或使用你自己的 Codex 账号。",
+    "done": "{{agent}} 的桥接模型已设为「{{provider}} / {{model}}」",
+    "noneReachable": "没有找到能连通的自定义模型，请检查模型服务的地址和密钥后在 {{agent}} 桥接设置中选择。",
+    "saveFailed": "桥接模型保存失败，请稍后重试。"
   }
 }

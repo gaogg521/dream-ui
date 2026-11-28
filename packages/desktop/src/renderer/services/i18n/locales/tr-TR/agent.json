@@ -59,5 +59,17 @@
     "failed": "Aracı yeniden bağlanamadı",
     "initializingTooltip": "Aracı başlatılıyor. Hazır olduğunda yeniden bağlanın",
     "processingTooltip": "Yeniden bağlanmadan önce mevcut yanıtın bitmesini bekleyin"
+  },
+  "bridgePrompt": {
+    "title": "{{agent}} için henüz köprü modeli ayarlanmadı",
+    "content": "\"{{provider}} / {{model}}\" modeliniz {{agent}} köprü modeli olarak ayarlansın mı? Bağlantı kurulamazsa başka bir modeliniz denenir. {{agent}} için kendi hesabınızla oturum açıyorsanız \"Kendi hesabımı kullan\" seçeneğini seçin.",
+    "agree": "Onayla ve ayarla",
+    "useOwnAccount": "Kendi hesabımı kullan",
+    "addModel": "Model ekle",
+    "noModelClaude": "Claude Code yalnızca Anthropic protokolünü destekleyen modellerle çalışır ve böyle bir model bulunamadı. Bir model ekleyin veya kendi Claude hesabınızı kullanın.",
+    "noModelCodex": "Henüz kullanılabilir bir modeliniz yok. Bir model ekleyin veya kendi Codex hesabınızı kullanın.",
+    "done": "{{agent}} artık köprü modeli olarak \"{{provider}} / {{model}}\" kullanıyor",
+    "noneReachable": "Modellerinizin hiçbirine ulaşılamadı. Adresi ve API anahtarını kontrol edin, ardından {{agent}} köprü ayarlarından bir model seçin.",
+    "saveFailed": "Köprü modeli kaydedilemedi. Lütfen daha sonra tekrar deneyin."
   }
 }

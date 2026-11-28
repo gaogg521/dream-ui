@@ -997,7 +997,7 @@
   "deleteInvalidKeys": "無効なキーを削除",
   "testAllKeys": "すべてのキーをテスト",
   "addModelPlaceholder": "モデルIDを選択または入力してください",
-  "customModelSupportNote": "注: 現在カスタムモデルをサポートしているのは 1ONE CLI のみです。",
+  "customModelSupportNote": "注: カスタムモデルは 1ONE CLI で利用できます。Claude Code と Codex は各ブリッジ設定で選択すると利用できます。",
   "addModelHint": "モデル ID を選択または入力すると、このプロバイダーの設定に追加されます。",
   "addModelSelectedHint": "追加予定のモデル: {{model}}",
   "currentModelsLabel": "現在のモデル",
@@ -1078,7 +1078,7 @@
   "skills": "スキル",
   "tools": "ツール",
   "toolsDescription": "MCP サーバーと画像生成などの組み込みツールを設定します。画像生成は、モデルページで画像対応モデルを設定した後にのみ有効化できます。",
-  "modelDescription": "すべてのアシスタントで使用する LLM プロバイダーと API キーを設定します。カスタムモデルに対応するのは 1ONE CLI のみで、他のエージェントは各自の組み込みモデルを使用します。",
+  "modelDescription": "すべてのアシスタントで使用する LLM プロバイダーと API キーを設定します。1ONE CLI は直接、Claude Code と Codex はブリッジ経由で使用し、他のエージェントは各自の組み込みモデルを使用します。",
   "capabilities": "能力拡張",
   "capabilitiesTab": {
     "skills": "スキル",
@@ -1797,7 +1797,7 @@
   "agentManagement": {
     "localAgents": "ローカルエージェント",
     "remoteAgents": "リモートエージェント",
-    "localAgentsDescription": "このデバイスで利用できる AI コーディングエージェントを管理します。1ONE CLI は組み込みでアプリに同梱されており、インストール不要です。他のエージェントは対応する CLI をローカルにインストールした後にのみ検出されます。",
+    "localAgentsDescription": "このデバイスで利用できる AI コーディングエージェントを管理します。1ONE CLI、Claude Code、Codex CLI はアプリに同梱されており、インストール不要です。Claude Code と Codex CLI で会話するには、各アカウントへのサインインかモデルブリッジの設定が必要です。他のエージェントは対応する CLI をローカルにインストールした後にのみ検出されます。",
     "localAgentsSetupLink": "セットアップガイド",
     "goToChat": "チャットを開始",
     "remoteAgentsDescription": "現在は OpenClaw のリモート接続のみ対応しています。その他のエージェントは開発中です。",
