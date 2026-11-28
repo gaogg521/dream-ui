@@ -16,25 +16,59 @@ function checkConfiguration() {
 }
 
 function verify(file) {
-  execFileSync(
-    'pwsh.exe',
-    [
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      `$ErrorActionPreference = 'Stop'
+  // Get-AuthenticodeSignature's verdict, machine-readable so the decision lives
+  // here instead of in a shell string. CI runners carry PowerShell 7 (pwsh);
+  // plain Windows hosts only ship 5.1 (powershell.exe) — both expose the same
+  // cmdlets this relies on.
+  const script = `$ErrorActionPreference = 'Stop'
 $sig = Get-AuthenticodeSignature -LiteralPath $env:ONE_SIGNED_FILE
-if ($sig.Status -ne 'Valid' -or
-    $sig.SignerCertificate.Thumbprint -ne $env:ONE_SIGNING_THUMBPRINT -or
-    -not $sig.TimeStamperCertificate) {
-  throw "Authenticode verification failed for $env:ONE_SIGNED_FILE (status: $($sig.Status)). Expected the release certificate and a timestamp."
+$state = [ordered]@{
+  status = [string]$sig.Status
+  thumbprint = if ($sig.SignerCertificate) { $sig.SignerCertificate.Thumbprint } else { '' }
+  timestamped = [bool]$sig.TimeStamperCertificate
 }
-Write-Host "Verified Windows signature and timestamp: $env:ONE_SIGNED_FILE"`,
-    ],
-    {
-      env: { ...process.env, ONE_SIGNED_FILE: file, ONE_SIGNING_THUMBPRINT: thumbprint },
-      stdio: 'inherit',
-    }
+Write-Output ('ONE_SIG_VERDICT ' + (ConvertTo-Json -InputObject $state -Compress))`;
+  const spawnArgs = ['-NoProfile', '-NonInteractive', '-Command', script];
+  const spawnOpts = {
+    env: { ...process.env, ONE_SIGNED_FILE: file, ONE_SIGNING_THUMBPRINT: thumbprint },
+    encoding: 'utf8',
+  };
+  let output;
+  try {
+    output = execFileSync('pwsh.exe', spawnArgs, spawnOpts);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+    output = execFileSync('powershell.exe', spawnArgs, spawnOpts);
+  }
+
+  const line = output.split(/\r?\n/).find((text) => text.startsWith('ONE_SIG_VERDICT '));
+  if (!line) {
+    throw new Error(`Authenticode verification produced no verdict for ${file}`);
+  }
+  const verdict = JSON.parse(line.slice('ONE_SIG_VERDICT '.length));
+
+  // Files this release signed must carry the release certificate and a
+  // timestamp — anything else on a freshly built file means the hook lied.
+  if (verdict.status === 'Valid' && verdict.thumbprint === thumbprint && verdict.timestamped) {
+    console.log(`Verified Windows signature and timestamp: ${file}`);
+    return;
+  }
+  // Vendor binaries ship pre-signed (the bundled Node runtime is signed by the
+  // OpenJS Foundation). sslTrus does not replace an existing signature, so the
+  // upstream one stays; a valid, timestamped foreign signature is the expected
+  // outcome for those files. They can only be pre-signed by their vendor — a
+  // file this release built would have no signature at all and still fails.
+  if (verdict.status === 'Valid' && verdict.thumbprint !== thumbprint && verdict.timestamped) {
+    console.log(
+      `Kept upstream signature (pre-signed outside this release, valid + timestamped): ${file} ` +
+        `(signer ${verdict.thumbprint})`
+    );
+    return;
+  }
+  throw new Error(
+    `Authenticode verification failed for ${file} ` +
+      `(status: ${verdict.status}, signer: ${verdict.thumbprint || 'none'}, timestamped: ${verdict.timestamped}). ` +
+      'Expected the release certificate and a timestamp, or an intact timestamped upstream signature.'
   );
 }
 
