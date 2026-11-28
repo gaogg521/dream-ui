@@ -52,7 +52,8 @@
     "checkReturnedNull": "Update check returned no result. Packaged app or forced dev update config is required.",
     "missingDownloadId": "Missing download ID",
     "prepareInstallTimeout": "Preparing installation timed out. Please try again later.",
-    "prepareInstallFailed": "Preparing installation failed. Please try again later."
+    "prepareInstallFailed": "Preparing installation failed. Please try again later.",
+    "diskSpaceInsufficient": "Not enough disk space to update. Free up at least {{required}} GB, then restart the app and try again."
   },
   "releaseNotesLoading": "Fetching update details...",
   "releaseNotesFailed": "Failed to fetch update details.",

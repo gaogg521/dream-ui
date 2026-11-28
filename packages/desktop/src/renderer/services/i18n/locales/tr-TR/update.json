@@ -52,7 +52,8 @@
     "checkReturnedNull": "Güncelleme kontrolü sonuç döndürmedi. Paketlenmiş uygulama veya zorunlu geliştirme güncelleme yapılandırması gerekir.",
     "missingDownloadId": "İndirme ID eksik",
     "prepareInstallTimeout": "Kurulum hazırlığı zaman aşımına uğradı. Lütfen daha sonra tekrar deneyin.",
-    "prepareInstallFailed": "Kurulum hazırlığı başarısız oldu. Lütfen daha sonra tekrar deneyin."
+    "prepareInstallFailed": "Kurulum hazırlığı başarısız oldu. Lütfen daha sonra tekrar deneyin.",
+    "diskSpaceInsufficient": "Güncelleme için yeterli disk alanı yok. En az {{required}} GB yer açın, ardından uygulamayı yeniden başlatıp tekrar deneyin."
   },
   "releaseNotesLoading": "Güncelleme ayrıntıları alınıyor...",
   "releaseNotesFailed": "Ayrıntılar alınamadı.",

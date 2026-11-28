@@ -460,6 +460,52 @@ describe('AutoUpdaterService', () => {
     });
   });
 
+  it.each([
+    'ditto: /Users/x/Library/Caches/app.ShipIt/update.abc/app.app/Contents/bin: No space left on device',
+    'ENOSPC: no space left on device, write',
+  ])('replaces a disk-full updater error with actionable text: %s', async (raw) => {
+    const statuses: Array<{ status: string; error?: string }> = [];
+    const { autoUpdaterService } = await import('@/process/services/autoUpdaterService');
+    autoUpdaterService.initialize();
+    autoUpdaterService.on('update-status', (status: { status: string; error?: string }) => statuses.push(status));
+
+    getErrorHandler()(new Error(raw));
+
+    await vi.waitFor(() =>
+      expect(statuses.at(-1)).toEqual({ status: 'error', error: 'update.errors.diskSpaceInsufficient' })
+    );
+    expect(statuses.some((status) => status.error === raw)).toBe(false);
+  });
+
+  it('reports disk-full when the macOS native updater cannot unpack the update', async () => {
+    setPlatform('darwin');
+    const statuses: Array<{ status: string; error?: string }> = [];
+    const { autoUpdaterService } = await import('@/process/services/autoUpdaterService');
+    autoUpdaterService.initialize();
+    autoUpdaterService.on('update-status', (status: { status: string; error?: string }) => statuses.push(status));
+    getUpdateDownloadedHandler()({ version: '2.2.0' });
+
+    const installPromise = autoUpdaterService.quitAndInstall();
+    const rejection = expect(installPromise).rejects.toThrow('update.errors.diskSpaceInsufficient');
+    await Promise.resolve();
+    getNativeErrorHandler()(new Error("ditto: x: No space left on device ditto: Couldn't read pkzip signature."));
+
+    await rejection;
+    expect(autoUpdaterMock.quitAndInstall).not.toHaveBeenCalled();
+    expect(statuses.at(-1)).toEqual({ status: 'error', error: 'update.errors.diskSpaceInsufficient' });
+  });
+
+  it('returns the disk-full text when the download runs out of space', async () => {
+    autoUpdaterMock.downloadUpdate.mockRejectedValue(new Error('ENOSPC: no space left on device, write'));
+    const { autoUpdaterService } = await import('@/process/services/autoUpdaterService');
+    autoUpdaterService.initialize();
+
+    await expect(autoUpdaterService.downloadUpdate()).resolves.toEqual({
+      success: false,
+      error: 'update.errors.diskSpaceInsufficient',
+    });
+  });
+
   it('does not quit on macOS when native updater readiness times out', async () => {
     setPlatform('darwin');
     vi.useFakeTimers();

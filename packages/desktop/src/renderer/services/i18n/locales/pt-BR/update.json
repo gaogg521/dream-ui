@@ -52,7 +52,8 @@
     "checkReturnedNull": "A verificação de atualização não retornou resultado. É necessário usar o app empacotado ou forçar a configuração de atualização de desenvolvimento.",
     "missingDownloadId": "ID de download ausente",
     "prepareInstallTimeout": "A preparação da instalação expirou. Tente novamente mais tarde.",
-    "prepareInstallFailed": "Falha ao preparar a instalação. Tente novamente mais tarde."
+    "prepareInstallFailed": "Falha ao preparar a instalação. Tente novamente mais tarde.",
+    "diskSpaceInsufficient": "Espaço em disco insuficiente para atualizar. Libere pelo menos {{required}} GB, reinicie o aplicativo e tente novamente."
   },
   "releaseNotesLoading": "Buscando detalhes da atualização...",
   "releaseNotesFailed": "Falha ao buscar detalhes.",

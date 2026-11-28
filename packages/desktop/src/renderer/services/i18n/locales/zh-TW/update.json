@@ -52,7 +52,8 @@
     "checkReturnedNull": "更新檢查沒有回傳結果，需要打包應用程式或強制啟用開發更新設定。",
     "missingDownloadId": "缺少下載 ID",
     "prepareInstallTimeout": "準備安裝逾時，請稍後重試。",
-    "prepareInstallFailed": "準備安裝失敗，請稍後重試。"
+    "prepareInstallFailed": "準備安裝失敗，請稍後重試。",
+    "diskSpaceInsufficient": "磁碟空間不足，無法完成更新。請清出至少 {{required}} GB 可用空間，然後重新啟動應用程式再試。"
   },
   "releaseNotesLoading": "正在取得更新內容",
   "releaseNotesFailed": "取得失敗，可",

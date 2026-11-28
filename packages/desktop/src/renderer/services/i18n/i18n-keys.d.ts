@@ -5519,6 +5519,7 @@ export type I18nKey =
   | 'update.errors.cdnManifestInvalid'
   | 'update.errors.cdnManifestTimeout'
   | 'update.errors.checkReturnedNull'
+  | 'update.errors.diskSpaceInsufficient'
   | 'update.errors.downloadFailed'
   | 'update.errors.downloadNoBody'
   | 'update.errors.githubApiFailed'

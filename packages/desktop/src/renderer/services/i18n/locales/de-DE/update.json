@@ -52,7 +52,8 @@
     "checkReturnedNull": "Update-Prüfung hat kein Ergebnis zurückgegeben. Verpackte App oder erzwungene Dev-Update-Konfiguration erforderlich.",
     "missingDownloadId": "Download-ID fehlt",
     "prepareInstallTimeout": "Zeitüberschreitung beim Vorbereiten der Installation. Bitte später erneut versuchen.",
-    "prepareInstallFailed": "Vorbereiten der Installation fehlgeschlagen. Bitte später erneut versuchen."
+    "prepareInstallFailed": "Vorbereiten der Installation fehlgeschlagen. Bitte später erneut versuchen.",
+    "diskSpaceInsufficient": "Nicht genügend Speicherplatz für das Update. Geben Sie mindestens {{required}} GB frei, starten Sie die App neu und versuchen Sie es erneut."
   },
   "releaseNotesLoading": "Update-Details werden abgerufen...",
   "releaseNotesFailed": "Update-Details konnten nicht abgerufen werden.",

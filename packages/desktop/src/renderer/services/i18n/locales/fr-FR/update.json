@@ -52,7 +52,8 @@
     "checkReturnedNull": "La vérification de la mise à jour n'a renvoyé aucun résultat. Une application packagée ou une configuration de mise à jour de développement forcée est requise.",
     "missingDownloadId": "ID de téléchargement manquant",
     "prepareInstallTimeout": "Le délai de préparation de l'installation a expiré. Veuillez réessayer plus tard.",
-    "prepareInstallFailed": "La préparation de l'installation a échoué. Veuillez réessayer plus tard."
+    "prepareInstallFailed": "La préparation de l'installation a échoué. Veuillez réessayer plus tard.",
+    "diskSpaceInsufficient": "Espace disque insuffisant pour la mise à jour. Libérez au moins {{required}} Go, redémarrez l’application puis réessayez."
   },
   "releaseNotesLoading": "Récupération des détails de la mise à jour...",
   "releaseNotesFailed": "Échec de la récupération des détails de la mise à jour.",

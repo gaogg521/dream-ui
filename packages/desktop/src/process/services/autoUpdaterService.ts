@@ -28,6 +28,13 @@ const FORCE_DEV_AUTO_UPDATE_ENV = 'DREAM_FORCE_DEV_AUTO_UPDATE';
 const DEBUG_AUTO_UPDATE_CURRENT_VERSION_ENV = 'DREAM_DEBUG_AUTO_UPDATE_CURRENT_VERSION';
 const MAC_NATIVE_INSTALL_READY_TIMEOUT_MS = 60_000;
 
+// libuv reports ENOSPC; Squirrel.Mac relays ditto's plain-text message instead.
+const DISK_FULL_PATTERN = /ENOSPC|No space left on device/i;
+
+// On macOS an update briefly holds the downloaded zip, Squirrel's own copy of it and the
+// unpacked app (about 3 GB for 3.0.20), so ask for some headroom on top of that.
+const UPDATE_REQUIRED_FREE_GB = 5;
+
 /**
  * Returns the appropriate update channel name based on the current platform and architecture.
  * Returns undefined for the default channel (Windows x64 / Linux x64).
@@ -459,11 +466,22 @@ class AutoUpdaterService extends EventEmitter {
       log.error('Auto-updater error:', error);
       this._activeDownloadPromise = null;
       this._activeDownloadCancellationToken = null;
+      if (DISK_FULL_PATTERN.test(error.message)) {
+        void this.describeDiskFullError().then((message) => {
+          this.broadcastStatus({ status: 'error', error: message });
+        });
+        return;
+      }
       this.broadcastStatus({
         status: 'error',
         error: this.describeAutoUpdateError(error),
       });
     });
+  }
+
+  private async describeDiskFullError(): Promise<string> {
+    const { default: i18n } = await import('./i18n');
+    return i18n.t('update.errors.diskSpaceInsufficient', { required: UPDATE_REQUIRED_FREE_GB });
   }
 
   /**
@@ -543,7 +561,9 @@ class AutoUpdaterService extends EventEmitter {
       this.getAutoUpdateDiagnosticOptions()
     );
     const { default: i18n } = await import('./i18n');
-    const userMessage = i18n.t('update.errors.prepareInstallFailed');
+    const userMessage = DISK_FULL_PATTERN.test(message)
+      ? await this.describeDiskFullError()
+      : i18n.t('update.errors.prepareInstallFailed');
     this.broadcastStatus({
       status: 'error',
       error: userMessage,
@@ -856,7 +876,7 @@ class AutoUpdaterService extends EventEmitter {
         log.error('Download update failed:', message);
         return {
           success: false,
-          error: message,
+          error: DISK_FULL_PATTERN.test(message) ? await this.describeDiskFullError() : message,
         };
       }
     };

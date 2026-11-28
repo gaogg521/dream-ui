@@ -52,7 +52,8 @@
     "checkReturnedNull": "更新检查没有返回结果，需要打包应用或强制启用开发更新配置。",
     "missingDownloadId": "缺少下载 ID",
     "prepareInstallTimeout": "准备安装超时，请稍后重试。",
-    "prepareInstallFailed": "准备安装失败，请稍后重试。"
+    "prepareInstallFailed": "准备安装失败，请稍后重试。",
+    "diskSpaceInsufficient": "磁盘空间不足，无法完成更新。请清理出至少 {{required}} GB 可用空间，然后重启应用再试。"
   },
   "releaseNotesLoading": "更新内容获取中",
   "releaseNotesFailed": "获取失败，可",
