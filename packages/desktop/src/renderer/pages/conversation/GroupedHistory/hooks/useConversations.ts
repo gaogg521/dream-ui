@@ -214,6 +214,10 @@ export const useConversations = () => {
     });
   }, []);
 
+  const expandWorkspace = useCallback((workspace: string) => {
+    setExpandedWorkspaces((prev) => (prev.includes(workspace) ? prev : [...prev, workspace]));
+  }, []);
+
   // Codex-style split: project folders (workspaces) on top, free conversations below.
   // Projects section: collect all workspace groups across timeline sections, ordered by recency.
   const projectGroups = useMemo(() => {
@@ -261,6 +265,7 @@ export const useConversations = () => {
     projectGroups,
     conversationOnlySections,
     handleToggleWorkspace,
+    expandWorkspace,
     collapsedSections,
     toggleSection,
   };

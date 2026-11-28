@@ -31,10 +31,10 @@ export const groupConversationsByWorkspace = (
   const withoutWorkspaceConvs: TChatConversation[] = [];
 
   conversations.forEach((conv) => {
-    const workspace = conv.extra?.workspace;
-    const custom_workspace = conv.extra?.custom_workspace;
+    const sidebarProject = conv.extra?.sidebar_project_workspace;
+    const workspace = sidebarProject || (conv.extra?.custom_workspace && conv.extra.workspace);
 
-    if (custom_workspace && workspace) {
+    if (workspace) {
       if (!allWorkspaceGroups.has(workspace)) {
         allWorkspaceGroups.set(workspace, []);
       }

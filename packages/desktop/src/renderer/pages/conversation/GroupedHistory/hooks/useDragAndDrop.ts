@@ -2,8 +2,8 @@
  * Copyright 2026 One Work
  */
 
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import type { CollisionDetection, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { closestCenter, pointerWithin, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { ipcBridge } from '@/common';
 import type { TChatConversation } from '@/common/config/storage';
@@ -23,9 +23,23 @@ type UseDragAndDropParams = {
   pinnedConversations: TChatConversation[];
   batchMode: boolean;
   collapsed: boolean;
+  onMoveToProject: (conversationId: string, workspace: string) => Promise<boolean>;
 };
 
-export const useDragAndDrop = ({ pinnedConversations, batchMode, collapsed }: UseDragAndDropParams) => {
+export const historyCollisionDetection: CollisionDetection = (args) => {
+  const isHistory = args.active.data.current?.type === 'history';
+  const droppableContainers = args.droppableContainers.filter(
+    (container) => (container.data.current?.type === 'project') === isHistory
+  );
+  return (isHistory ? pointerWithin : closestCenter)({ ...args, droppableContainers });
+};
+
+export const useDragAndDrop = ({
+  pinnedConversations,
+  batchMode,
+  collapsed,
+  onMoveToProject,
+}: UseDragAndDropParams) => {
   const layout = useLayoutContext();
   const isMobile = layout?.isMobile ?? false;
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -58,17 +72,13 @@ export const useDragAndDrop = ({ pinnedConversations, batchMode, collapsed }: Us
     }
   }, []);
 
-  const handleDragStart = useCallback(
-    (event: DragStartEvent) => {
-      const id = String(event.active.id);
-      setActiveId(id);
-      isDraggingRef.current = true;
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const id = String(event.active.id);
+    setActiveId(id);
+    isDraggingRef.current = true;
 
-      const conv = pinnedConversations.find((c) => c.id === id);
-      setActiveConversation(conv ?? null);
-    },
-    [pinnedConversations]
-  );
+    setActiveConversation(event.active.data.current?.conversation ?? null);
+  }, []);
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
@@ -78,6 +88,15 @@ export const useDragAndDrop = ({ pinnedConversations, batchMode, collapsed }: Us
       isDraggingRef.current = false;
 
       if (!over || active.id === over.id) return;
+
+      const source = active.data.current;
+      const target = over.data.current;
+      if (source?.type === 'history') {
+        if (target?.type === 'project' && typeof target.workspace === 'string') {
+          await onMoveToProject(source.conversation.id, target.workspace);
+        }
+        return;
+      }
 
       const activeIdStr = String(active.id);
       const overIdStr = String(over.id);
@@ -99,13 +118,13 @@ export const useDragAndDrop = ({ pinnedConversations, batchMode, collapsed }: Us
       const after = newIndex < reordered.length - 1 ? reordered[newIndex + 1].sortOrder : undefined;
       const newSortOrder = computeSortOrder(before, after);
 
-      // Check if reindex needed
-      if (needsReindex(reordered.map((i) => ({ sortOrder: i.id === activeIdStr ? newSortOrder : i.sortOrder })))) {
-        const finalOrder = reordered.map((i) => ({
-          id: i.id,
-          sortOrder: i.id === activeIdStr ? newSortOrder : i.sortOrder,
-        }));
-        const reindexed = reindexSortOrders(finalOrder);
+      // The sidebar sorts persisted ranks before unranked rows, so the first
+      // reorder must persist ranks for the whole list.
+      if (
+        items.some((item) => item.sortOrder === undefined) ||
+        needsReindex(reordered.map((i) => ({ sortOrder: i.id === activeIdStr ? newSortOrder : i.sortOrder })))
+      ) {
+        const reindexed = reindexSortOrders(reordered);
         await Promise.all(reindexed.map((item) => persistSortOrder(item.id, item.sortOrder)));
         emitter.emit('chat.history.refresh');
         return;
@@ -114,7 +133,7 @@ export const useDragAndDrop = ({ pinnedConversations, batchMode, collapsed }: Us
       await persistSortOrder(activeIdStr, newSortOrder);
       emitter.emit('chat.history.refresh');
     },
-    [pinnedConversations, persistSortOrder]
+    [onMoveToProject, pinnedConversations, persistSortOrder]
   );
 
   const handleDragCancel = useCallback(() => {

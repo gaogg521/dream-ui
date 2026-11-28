@@ -204,7 +204,10 @@ interface IChatConversation<T, Extra> {
   desc?: string;
   id: string;
   type: T;
-  extra: Extra;
+  extra: Extra & {
+    /** Sidebar placement. The agent's working directory is stored separately in workspace. */
+    sidebar_project_workspace?: string | null;
+  };
   model: TProviderWithModel;
   status?: TChatConversationStatus | undefined;
   runtime?: TConversationRuntimeSummary;

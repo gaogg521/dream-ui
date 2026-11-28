@@ -25,6 +25,8 @@ interface WorkspaceCollapseProps {
   stickyHeader?: boolean;
   /** 吸顶时距滚动容器顶部的偏移(px)，用于让位给上方常驻的分区标题 */
   stickyTop?: number;
+  headerRef?: React.Ref<HTMLDivElement>;
+  dropHighlighted?: boolean;
 }
 
 /**
@@ -40,6 +42,8 @@ const WorkspaceCollapse: React.FC<WorkspaceCollapseProps> = ({
   trailing,
   stickyHeader = false,
   stickyTop,
+  headerRef,
+  dropHighlighted,
 }) => {
   // 侧栏折叠时，强制展开内容并隐藏头部
   const showContent = siderCollapsed || expanded;
@@ -56,7 +60,11 @@ const WorkspaceCollapse: React.FC<WorkspaceCollapseProps> = ({
           style={stickyEnabled ? { top: stickyTop ?? 0 } : undefined}
         >
           <div
-            className='flex items-center gap-8px h-34px ps-10px pe-8px cursor-pointer hover:bg-fill-3 rd-8px transition-colors min-w-0 group'
+            ref={headerRef}
+            className={classNames(
+              'flex items-center gap-8px h-34px ps-10px pe-8px cursor-pointer hover:bg-fill-3 rd-8px transition-colors min-w-0 group',
+              dropHighlighted && 'bg-fill-3 outline outline-2 outline-offset-[-2px] outline-primary'
+            )}
             onClick={onToggle}
           >
             <span className='size-22px flex items-center justify-center shrink-0 text-t-primary'>

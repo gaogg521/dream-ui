@@ -1,4 +1,5 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TChatConversation } from '@/common/config/storage';
@@ -15,8 +16,27 @@ const pinnedConversation = { id: 'pinned', name: 'Pinned conversation' } as TCha
 const state = vi.hoisted(() => ({
   pinned: [] as unknown[],
   collapsedSections: new Set<string>(),
+  onDragEnd: undefined as ((event: DragEndEvent) => void) | undefined,
+  update: vi.fn(),
+  expandWorkspace: vi.fn(),
+  showError: vi.fn(),
 }));
 
+vi.mock('@dnd-kit/core', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@dnd-kit/core')>();
+  return {
+    ...original,
+    DndContext: (props: React.ComponentProps<typeof original.DndContext>) => {
+      state.onDragEnd = props.onDragEnd;
+      return <original.DndContext {...props} />;
+    },
+  };
+});
+vi.mock('@/common', () => ({ ipcBridge: { conversation: { update: { invoke: state.update } } } }));
+vi.mock('@arco-design/web-react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@arco-design/web-react')>()),
+  Message: { error: state.showError },
+}));
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn(), useParams: () => ({}) }));
 vi.mock('@/renderer/hooks/context/LayoutContext', () => ({ useLayoutContext: () => ({ isMobile: false }) }));
@@ -48,11 +68,6 @@ vi.mock('@/renderer/pages/conversation/GroupedHistory/ConversationRow', () => ({
     </div>
   ),
 }));
-vi.mock('@/renderer/pages/conversation/GroupedHistory/SortableConversationRow', () => ({
-  default: ({ conversation }: { conversation: TChatConversation }) => (
-    <div data-testid={`row-${conversation.id}`}>{conversation.name}</div>
-  ),
-}));
 vi.mock('@/renderer/pages/conversation/GroupedHistory/hooks/useConversations', () => ({
   useConversations: () => ({
     conversations: [projectConversation, looseConversation],
@@ -68,6 +83,7 @@ vi.mock('@/renderer/pages/conversation/GroupedHistory/hooks/useConversations', (
     projectGroups: [{ workspace: '/ws/project', displayName: 'Project A', conversations: [projectConversation] }],
     conversationOnlySections: [{ key: 'today', items: [{ type: 'conversation', conversation: looseConversation }] }],
     handleToggleWorkspace: vi.fn(),
+    expandWorkspace: state.expandWorkspace,
     collapsedSections: state.collapsedSections,
     toggleSection: vi.fn(),
   }),
@@ -124,18 +140,6 @@ vi.mock('@/renderer/pages/conversation/GroupedHistory/hooks/useExport', () => ({
     handleConfirmExport: vi.fn(),
   }),
 }));
-vi.mock('@/renderer/pages/conversation/GroupedHistory/hooks/useDragAndDrop', () => ({
-  useDragAndDrop: () => ({
-    sensors: [],
-    activeId: null,
-    activeConversation: null,
-    handleDragStart: vi.fn(),
-    handleDragEnd: vi.fn(),
-    handleDragCancel: vi.fn(),
-    isDragEnabled: false,
-  }),
-}));
-
 const precedes = (a: HTMLElement, b: HTMLElement) =>
   Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 
@@ -144,8 +148,61 @@ describe('WorkspaceGroupedHistory section order', () => {
     localStorage.clear();
     state.pinned = [];
     state.collapsedSections = new Set();
+    state.update.mockReset().mockResolvedValue(true);
+    state.expandWorkspace.mockClear();
+    state.showError.mockClear();
   });
   afterEach(() => cleanup());
+
+  const dropHistoryConversation = async (workspace?: string) => {
+    const event = {
+      active: { id: 'history:loose', data: { current: { type: 'history', conversation: looseConversation } } },
+      over: workspace ? { id: `project:${workspace}`, data: { current: { type: 'project', workspace } } } : null,
+    } as DragEndEvent;
+    await act(async () => state.onDragEnd?.(event));
+  };
+
+  it('files a conversation under the project folder and opens the destination', async () => {
+    render(<WorkspaceGroupedHistory />);
+    await dropHistoryConversation('/ws/project');
+
+    expect(state.update).toHaveBeenCalledWith({
+      id: 'loose',
+      updates: { extra: { sidebar_project_workspace: '/ws/project' } },
+      merge_extra: true,
+    });
+    expect(state.expandWorkspace).toHaveBeenCalledWith('/ws/project');
+  });
+
+  it('leaves history alone when released outside a project folder', async () => {
+    render(<WorkspaceGroupedHistory />);
+    await dropHistoryConversation();
+    expect(state.update).not.toHaveBeenCalled();
+  });
+
+  it('does not expand the project or hide the row when saving fails', async () => {
+    state.update.mockResolvedValue(false);
+    render(<WorkspaceGroupedHistory />);
+    await dropHistoryConversation('/ws/project');
+    expect(state.expandWorkspace).not.toHaveBeenCalled();
+    expect(screen.getByTestId('row-loose')).toBeTruthy();
+    expect(state.showError).toHaveBeenCalledWith('common.saveFailed');
+  });
+
+  it('keeps the visible order after moving the first unranked pin below the second', async () => {
+    state.pinned = [pinnedConversation, { ...pinnedConversation, id: 'second-pin' }];
+    render(<WorkspaceGroupedHistory />);
+    const event = { active: { id: pinnedConversation.id }, over: { id: 'second-pin' } };
+    const dragEnd = {
+      active: { ...event.active, data: { current: { type: 'conversation' } } },
+      over: { ...event.over, data: { current: { type: 'conversation' } } },
+    } as DragEndEvent;
+    await act(async () => state.onDragEnd?.(dragEnd));
+    expect(state.update.mock.calls.map(([update]) => [update.id, update.updates.extra.sortOrder])).toEqual([
+      ['second-pin', 1000],
+      [pinnedConversation.id, 2000],
+    ]);
+  });
 
   it('puts the history label between the project rows and the loose conversations', () => {
     render(<WorkspaceGroupedHistory />);

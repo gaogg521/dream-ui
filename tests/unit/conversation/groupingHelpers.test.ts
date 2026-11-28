@@ -21,6 +21,21 @@ const conversation = (id: string, extra: TChatConversation['extra'], modified_at
   }) as TChatConversation;
 
 describe('buildGroupedHistory', () => {
+  it('uses the saved sidebar folder without changing the conversation workspace', () => {
+    const moved = conversation(
+      'moved',
+      { backend: 'dreamcore', workspace: '/scratch/session', sidebar_project_workspace: '/repo/one' },
+      100
+    );
+    expect(buildGroupedHistory([moved], t).timelineSections[0]?.items).toEqual([
+      expect.objectContaining({
+        type: 'workspace',
+        workspaceGroup: expect.objectContaining({ workspace: '/repo/one', conversations: [moved] }),
+      }),
+    ]);
+    expect(moved.extra.workspace).toBe('/scratch/session');
+  });
+
   it('keeps scheduled-task conversations in the regular conversation timeline', () => {
     const result = buildGroupedHistory(
       [conversation('cron-conversation', { backend: 'dreamcore', cron_job_id: 'job-1' }, 100)],

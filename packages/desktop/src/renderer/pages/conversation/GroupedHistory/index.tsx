@@ -17,13 +17,13 @@ import { useOrgContext } from '@renderer/pages/enterprise/hooks/useOrgContext';
 import { shareConversationToOrg, shareConversationToMySession } from '@renderer/utils/enterprise/conversationShare';
 import { emitter } from '@renderer/utils/emitter';
 import SharedInboxModal from './SharedInboxModal';
-import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
+import { DndContext, DragOverlay, useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Button, Dropdown, Empty, Input, Menu, Message, Modal, Select, Tooltip } from '@arco-design/web-react';
 import { Delete, FolderOpen, FullScreen, MoreOne, Plus, Right, ShareOne } from '@icon-park/react';
 import classNames from 'classnames';
 import { useState } from 'react';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -33,12 +33,12 @@ import DirectorySelectionModal from '@/renderer/components/settings/DirectorySel
 import ConversationRow from './ConversationRow';
 import ListLoadErrorNotice from './ListLoadErrorNotice';
 import DragOverlayContent from './DragOverlayContent';
-import SortableConversationRow from './SortableConversationRow';
+import SortableConversationRow, { DraggableHistoryRow } from './SortableConversationRow';
 import { useBatchSelection } from './hooks/useBatchSelection';
 import { retryLoadConversations } from './hooks/useConversationListSync';
 import { useConversationActions } from './hooks/useConversationActions';
 import { useConversations } from './hooks/useConversations';
-import { useDragAndDrop } from './hooks/useDragAndDrop';
+import { historyCollisionDetection, useDragAndDrop } from './hooks/useDragAndDrop';
 import { useExport } from './hooks/useExport';
 import { useSidebarHistoryPreviewLimit } from './hooks/useSidebarHistoryPreviewLimit';
 import type { ConversationRowProps, WorkspaceGroupedHistoryProps } from './types';
@@ -48,6 +48,20 @@ const HISTORY_GROUPS_KEY = 'one:sidebar-history-groups';
 type HistoryGroup = { id: string; name: string; conversationIds: string[] };
 const NO_GROUP = 'none';
 const NEW_GROUP = 'new';
+const PROJECT_CHOICE_PREFIX = 'project:';
+
+const ProjectDropTarget = ({
+  workspace,
+  disabled,
+  ...props
+}: React.ComponentProps<typeof WorkspaceCollapse> & { workspace: string; disabled: boolean }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${PROJECT_CHOICE_PREFIX}${workspace}`,
+    data: { type: 'project', workspace },
+    disabled,
+  });
+  return <WorkspaceCollapse {...props} headerRef={setNodeRef} dropHighlighted={isOver} />;
+};
 
 const readHistoryGroups = (): HistoryGroup[] => {
   try {
@@ -97,6 +111,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     projectGroups: conversationProjects,
     conversationOnlySections,
     handleToggleWorkspace,
+    expandWorkspace,
     collapsedSections,
     toggleSection,
   } = useConversations();
@@ -159,6 +174,42 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
   const [groupDialog, setGroupDialog] = useState<{ conversationId?: string; renameId?: string } | null>(null);
   const [groupChoice, setGroupChoice] = useState(NEW_GROUP);
   const [groupName, setGroupName] = useState('');
+  const movingConversations = useRef(new Set<string>());
+  const [savingProjectChoice, setSavingProjectChoice] = useState(false);
+  const moveConversationToProject = useCallback(
+    async (conversationId: string, workspace: string | null) => {
+      if (
+        movingConversations.current.has(conversationId) ||
+        (workspace && !projectGroups.some((project) => project.workspace === workspace))
+      ) {
+        return false;
+      }
+      movingConversations.current.add(conversationId);
+      try {
+        const saved = await ipcBridge.conversation.update.invoke({
+          id: conversationId,
+          updates: { extra: { sidebar_project_workspace: workspace } } as Partial<TChatConversation>,
+          merge_extra: true,
+        });
+        if (!saved) {
+          Message.error(t('common.saveFailed'));
+          return false;
+        }
+        if (workspace) expandWorkspace(workspace);
+        emitter.emit('chat.history.refresh');
+        return true;
+      } catch (error) {
+        console.error('Failed to move conversation to project:', error);
+        Message.error(t('common.saveFailed'));
+        return false;
+      } finally {
+        movingConversations.current.delete(conversationId);
+      }
+    },
+    [expandWorkspace, projectGroups, t]
+  );
+  const dialogProjectWorkspace = conversations.find((conversation) => conversation.id === groupDialog?.conversationId)
+    ?.extra?.sidebar_project_workspace;
   const groupByConversation = useMemo(() => {
     const groups = new Map<string, string>();
     for (const group of historyGroups) {
@@ -171,7 +222,9 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       setGroupDialog({ conversationId: conversation?.id, renameId: group?.id });
       setGroupChoice(
         conversation
-          ? (groupByConversation.get(conversation.id) ?? (historyGroups.length ? historyGroups[0].id : NEW_GROUP))
+          ? conversation.extra?.sidebar_project_workspace
+            ? `${PROJECT_CHOICE_PREFIX}${conversation.extra.sidebar_project_workspace}`
+            : (groupByConversation.get(conversation.id) ?? (historyGroups.length ? historyGroups[0].id : NEW_GROUP))
           : NEW_GROUP
       );
       setGroupName(group?.name ?? '');
@@ -191,9 +244,28 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
   };
 
   const groupNameRequired = groupChoice === NEW_GROUP || Boolean(groupDialog?.renameId);
-  const saveGroupDialog = () => {
+  const saveGroupDialog = async () => {
     if (!groupDialog || (groupNameRequired && !groupName.trim())) return;
     const { conversationId, renameId } = groupDialog;
+    if (conversationId && groupChoice.startsWith(PROJECT_CHOICE_PREFIX)) {
+      setSavingProjectChoice(true);
+      try {
+        if (await moveConversationToProject(conversationId, groupChoice.slice(PROJECT_CHOICE_PREFIX.length))) {
+          setGroupDialog(null);
+        }
+      } finally {
+        setSavingProjectChoice(false);
+      }
+      return;
+    }
+    if (conversationId && dialogProjectWorkspace) {
+      setSavingProjectChoice(true);
+      try {
+        if (!(await moveConversationToProject(conversationId, null))) return;
+      } finally {
+        setSavingProjectChoice(false);
+      }
+    }
     let nextGroups = historyGroups;
     if (renameId) {
       nextGroups = historyGroups.map((group) => (group.id === renameId ? { ...group, name: groupName.trim() } : group));
@@ -380,6 +452,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       pinnedConversations,
       batchMode,
       collapsed,
+      onMoveToProject: moveConversationToProject,
     });
 
   // Fork-lineage badge support: resolve a parent conversation's display name
@@ -474,9 +547,15 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     ]
   );
 
-  const renderConversation = (conversation: TChatConversation, dimIcon = false, rowId?: string) => {
+  const renderConversation = (
+    conversation: TChatConversation,
+    dimIcon = false,
+    rowId?: string,
+    fromHistory = false
+  ) => {
     const rowProps = getConversationRowProps(conversation, rowId);
-    return <ConversationRow key={conversation.id} {...rowProps} dimIcon={dimIcon} />;
+    const Row = fromHistory && isDragEnabled && projectGroups.length > 0 ? DraggableHistoryRow : ConversationRow;
+    return <Row key={conversation.id} {...rowProps} dimIcon={dimIcon} />;
   };
 
   // Collect all sortable IDs for the pinned section
@@ -506,7 +585,11 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     ...pinnedIds,
     ...projectGroups.flatMap((group) => group.conversations.map((conversation) => conversation.id)),
   ]);
-  const historyConversationById = new Map(conversations.map((conversation) => [conversation.id, conversation]));
+  const historyConversationById = new Map(
+    conversations
+      .filter((conversation) => !conversation.extra?.sidebar_project_workspace)
+      .map((conversation) => [conversation.id, conversation])
+  );
   const newGroupLabel = t('conversation.history.newGroup', { defaultValue: 'New group' });
   const renameGroupLabel = t('conversation.history.renameGroup', { defaultValue: 'Rename group' });
   const removeGroupLabel = t('conversation.history.removeGroup', { defaultValue: 'Remove group' });
@@ -526,7 +609,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
         onOk={saveGroupDialog}
         okText={t('conversation.history.saveName')}
         cancelText={t('conversation.history.cancelEdit')}
-        okButtonProps={{ disabled: groupNameRequired && !groupName.trim() }}
+        okButtonProps={{ disabled: groupNameRequired && !groupName.trim(), loading: savingProjectChoice }}
         alignCenter
       >
         {groupDialog?.conversationId && (
@@ -537,8 +620,12 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
             onChange={setGroupChoice}
             options={[
               ...historyGroups.map((group) => ({ label: group.name, value: group.id })),
+              ...projectGroups.map(({ displayName, workspace }) => ({
+                label: `${t('conversation.history.projectsSection')} / ${displayName}`,
+                value: `${PROJECT_CHOICE_PREFIX}${workspace}`,
+              })),
               { label: newGroupLabel, value: NEW_GROUP },
-              ...(groupByConversation.has(groupDialog.conversationId)
+              ...(dialogProjectWorkspace || groupByConversation.has(groupDialog.conversationId)
                 ? [
                     {
                       label: t('conversation.history.ungrouped', { defaultValue: 'No group' }),
@@ -806,7 +893,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
           {loadErrorNotice}
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCenter}
+            collisionDetection={historyCollisionDetection}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
@@ -895,7 +982,9 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
                     );
                     return (
                       <div key={group.workspace} className='min-w-0'>
-                        <WorkspaceCollapse
+                        <ProjectDropTarget
+                          workspace={group.workspace}
+                          disabled={!isDragEnabled}
                           expanded={expandedWorkspaces.includes(group.workspace)}
                           onToggle={() => handleToggleWorkspace(group.workspace)}
                           siderCollapsed={collapsed}
@@ -968,7 +1057,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
                           <div className={classNames('flex flex-col min-w-0', { 'mt-1px': !collapsed })}>
                             {group.conversations.map((conversation) => renderConversation(conversation, true))}
                           </div>
-                        </WorkspaceCollapse>
+                        </ProjectDropTarget>
                       </div>
                     );
                   })}
@@ -1045,7 +1134,8 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
                       ? renderConversation(
                           conversation,
                           true,
-                          duplicateGroupRowIds.has(id) ? `history-group:${id}` : id
+                          duplicateGroupRowIds.has(id) ? `history-group:${id}` : id,
+                          !duplicateGroupRowIds.has(id)
                         )
                       : null;
                   })}
@@ -1056,7 +1146,9 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
             )}
             {visibleHistoryConversations.length > 0 && !collapsedSections.has('conversations') && (
               <div className='min-w-0'>
-                {visibleHistoryConversations.map((conversation) => renderConversation(conversation))}
+                {visibleHistoryConversations.map((conversation) =>
+                  renderConversation(conversation, false, undefined, true)
+                )}
               </div>
             )}
 
