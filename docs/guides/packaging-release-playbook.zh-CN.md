@@ -83,8 +83,10 @@
 - 凭据和上传放在**同一次 Bash 调用**里（`fetch-cos-credentials.js` 只有 env 里已有 `COS_ALLOC_*` 才能换临时凭据）。
 - 验新桶读权限时别带着旧桶的 `AWS_*` 环境变量（3.0.18 就因此虚惊过一次「AccessDenied」，是自己的 own goal）：
   用 `unset AWS_SESSION_TOKEN` + 显式设新桶 key。
-- **GitHub 托管 runner 往上海 COS 传大文件会卡死**，永远本地 aws-cli（或办公网 runner）；`publish-cos.yml` 的真实上传步骤
-  至今没在真发时跑过、步骤日志 blob 404，3.0.17/3.0.18 都走手动路径（下载 → prepare → publish）。
+- **GitHub 托管 runner 往上海 COS 传大文件会卡死**，永远本地 aws-cli。`publish-cos.yml`（办公网自托管 runner）自 11-04 起
+  两次「runner 失联」失败后再没成功过，3.0.17–3.0.20 四版全走手动路径；runner 因长期不上线被 GitHub 自动注销注册
+  （2026-11-28 实测拉起报「runner registration has been deleted」），**该 workflow 与配套的 smoke/probe 已于 3.0.20 当晚删除退役
+  （`8559b0bb` 之后的清理提交），手动路径（下载 → prepare → publish）就是唯一标准路径**。
 
 **官网**
 
@@ -270,7 +272,7 @@ arm64 的 channel 是 `latest-arm64` 决定的，`prepare-release-assets.sh` 已
 ### 1.5 3.0.18 留下的未决事项（截至 2026-11-16，下版发版前先看一眼）
 
 1. 企业版没随这批发（企业 1.0.17 已于 11-13 发，含 core v0.1.103）；core v0.1.104 里「渠道健康检查返回上游模型列表」属企业侧，随下一轮企业镜像生效。
-2. `publish-cos` workflow 的步骤日志 blob 404 未修，真实上传和回读校验步骤没在真发时跑过，仍走手动路径。
+2. ~~`publish-cos` workflow 的步骤日志 blob 404 未修~~（**2026-11-28 已解决——workflow 退役删除**：11-04 起两次 runner 失联后再没成功，四版全走手动路径，runner 注册也被 GitHub 自动注销；手动路径是唯一标准路径，见 §2.3）。
 3. 官网 DNS 仍指旧服务器，新服务器迁移待用户安排。
 4. 已装 3.0.18 的 Linux 用户拿不到 headless 修复（同版本号覆盖，见 §1.4），要等下次升版本发版。
 5. mac-x64 时长 34 分钟超基线一倍但一次成功——下版再现 >25 分钟，先看 Apple 公证排队时长再定性，勿直接判卡死。
@@ -666,15 +668,13 @@ print("公证票据:", any(x.endswith(".app/Contents/CodeResources") for x in n)
 EOF
 ```
 
-**两种发布方式，任选其一**（两个桶都要写，凭据互不通用，见本节「两个桶」）：
+**发布方式（2026-11-28 起只剩一种）**（两个桶都要写，凭据互不通用，见本节「两个桶」）：
 
-1. **`publish-cos.yml`（办公网自托管 runner）**：Actions 里手动触发，填各平台构建的 run id，
-   默认 `dry_run=true` 只演练，确认后取消勾选真跑。runner 在本机，是手动起的、会话结束就掉线，
-   发版前先双击 `D:\actions-runner\run.cmd`。它会下载并校验工件、生成更新说明、先传安装包最后传清单、
-   最后从公网回读核对。**GitHub 托管 runner 往上海 COS 传大文件会卡死**（实测 300MB 超过 10 分钟没传完），
-   所以发布必须在办公网 runner 或本机做，不要放到托管 runner 上。
-2. **本机直接传**：下载工件后逐个 `publish-cos-release-asset.sh`，顺序固定为
-   **dmg / zip / blockmap 先、`latest*.yml` 最后**（清单一旦可见，它指向的文件必须已经在）。
+- **本机直接传**：下载工件后逐个 `publish-cos-release-asset.sh`，顺序固定为
+  **dmg / zip / blockmap 先、`latest*.yml` 最后**（清单一旦可见，它指向的文件必须已经在）。
+  ~~`publish-cos.yml`（办公网自托管 runner）~~已于 3.0.20 当晚退役删除：11-04 起两次「runner 失联」
+  后再没成功过，runner 注册被 GitHub 自动注销，3.0.17–3.0.20 四版全走手动路径（每版 44 对象回读全对）。
+  **GitHub 托管 runner 往上海 COS 传大文件会卡死**（实测 300MB 超过 10 分钟没传完），发布必须在本机做。
 
 **增量补发一条腿（例如 3.0.17 先发四个平台、Intel Mac 后补）：**
 先发的批次里不要带那条腿的 `latest*.yml`（`prepare-release-assets.sh` 对缺失平台自然不生成），
