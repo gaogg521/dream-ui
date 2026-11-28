@@ -237,17 +237,17 @@ arm64 的 channel 是 `latest-arm64` 决定的，`prepare-release-assets.sh` 已
 
 **注意什么**
 
-| 场景                              | 注意                                                                                                                                                                                                                                                                   |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Authenticode                      | **不签，是既定决策**：`NotSigned`、SmartScreen「未知发布者」与所有历史版本一致，是预期状态不是缺陷；发版验收不含 Authenticode，**别再提**                                                                                                                              |
-| 本机出包前                        | 先确认没有 electron / dreamcore 的 dev 进程占文件，**杀按 PID 不按名字**；`out/` 被占（构建 EPERM）时用 Restart Manager 查谁锁着，别凭「有文件监视器」猜；绕开用 `ONE_BUILD_OUT_DIR=<别的目录>`                                                                        |
-| **打包产物验证会碰真实 userData** | 设 `APPDATA` 隔离不了（Electron 走 `SHGetFolderPath`），应用照样打开真实的 `%APPDATA%\One Work`。验证前备份该目录，或接受「就是在生产数据上验」并只做只读观察；**清理只杀自己那棵进程树**（按启动时间认领根 PID），机器上常年有用户自己在跑的实例                      |
-| 后端启动慢                        | 首屏后还要约 40 秒才 `Server listening`，探测太早会看到一串 `ERR_CONNECTION_REFUSED`，是时序不是故障；判据看 `%APPDATA%\One Work\logs\…\*.dreamcore.log`                                                                                                               |
-| 打包版无法用 CDP 驱动 UI          | `app.isPackaged` 下应用调试端口被无条件拒绝（安全设计，别再试）。等效替代：`grep -a` `app.asar` / 包内 dreamcore；真实点击路径只能装到干净机器手动走。`bunx asar extract` 在本机会解包不完整，直接 `grep -a app.asar` 即可                                             |
-| 安装耗时                          | 默认 `useZip: true` + `differentialPackage: false`（x64 静默安装约 109 秒，LZMA 约 238–334 秒）。**量安装耗时必须真装一次**，`7z t` 不落盘、会低估 8–12 倍                                                                                                             |
-| 三个安装目录共用一个 appId        | `…\Programs\1onecode`、`One Work`、`onework` 共用同一个卸载注册表键，前两个是孤儿；`appId: com.huanle.oneone.ai` **冻结，永不改**（改了老用户自动更新全断）。别在扫目录时顺手清注册表（`installer-repair-heal.nsh` 已负责）。用户数据在 `%APPDATA%\One Work`，不受影响 |
-| 预检里的「未提交改动」            | 已跟踪文件被删除也算（见 §1.2）；工作区未跟踪的 `.tmp-*`、`C：Users…release-assets-*` 目录预检忽略，不用清                                                                                                                                                             |
-| `python3`                         | Windows 上是 Store 占位符，静默无输出，用 `python`；这个 shell 的 `ls` 带 `-F`，文件名后会多个 `*`，拼 URL 会得到假 404                                                                                                                                                |
+| 场景                              | 注意                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Authenticode                      | **3.0.20 起正式签名（旧「不签」决策已作废）**：sslTrus 远程签名已接入流水线（见 §1.2 出包节与 §2.6）。验收三件：CI 日志最终安装包有 `Verified Windows signature and timestamp`；下载后 `Get-AuthenticodeSignature` Status=Valid + 签名者 CN=上海言绪科技有限公司 + 指纹 443850A50773F798BFA6436AC8EA12C1C09BF825 + TimeStamperCertificate 在；`latest.yml` sha512 与签名后安装包一致。任一不过就暂停发布报告失败步 |
+| 本机出包前                        | 先确认没有 electron / dreamcore 的 dev 进程占文件，**杀按 PID 不按名字**；`out/` 被占（构建 EPERM）时用 Restart Manager 查谁锁着，别凭「有文件监视器」猜；绕开用 `ONE_BUILD_OUT_DIR=<别的目录>`                                                                                                                                                                                                                    |
+| **打包产物验证会碰真实 userData** | 设 `APPDATA` 隔离不了（Electron 走 `SHGetFolderPath`），应用照样打开真实的 `%APPDATA%\One Work`。验证前备份该目录，或接受「就是在生产数据上验」并只做只读观察；**清理只杀自己那棵进程树**（按启动时间认领根 PID），机器上常年有用户自己在跑的实例                                                                                                                                                                  |
+| 后端启动慢                        | 首屏后还要约 40 秒才 `Server listening`，探测太早会看到一串 `ERR_CONNECTION_REFUSED`，是时序不是故障；判据看 `%APPDATA%\One Work\logs\…\*.dreamcore.log`                                                                                                                                                                                                                                                           |
+| 打包版无法用 CDP 驱动 UI          | `app.isPackaged` 下应用调试端口被无条件拒绝（安全设计，别再试）。等效替代：`grep -a` `app.asar` / 包内 dreamcore；真实点击路径只能装到干净机器手动走。`bunx asar extract` 在本机会解包不完整，直接 `grep -a app.asar` 即可                                                                                                                                                                                         |
+| 安装耗时                          | 默认 `useZip: true` + `differentialPackage: false`（x64 静默安装约 109 秒，LZMA 约 238–334 秒）。**量安装耗时必须真装一次**，`7z t` 不落盘、会低估 8–12 倍                                                                                                                                                                                                                                                         |
+| 三个安装目录共用一个 appId        | `…\Programs\1onecode`、`One Work`、`onework` 共用同一个卸载注册表键，前两个是孤儿；`appId: com.huanle.oneone.ai` **冻结，永不改**（改了老用户自动更新全断）。别在扫目录时顺手清注册表（`installer-repair-heal.nsh` 已负责）。用户数据在 `%APPDATA%\One Work`，不受影响                                                                                                                                             |
+| 预检里的「未提交改动」            | 已跟踪文件被删除也算（见 §1.2）；工作区未跟踪的 `.tmp-*`、`C：Users…release-assets-*` 目录预检忽略，不用清                                                                                                                                                                                                                                                                                                         |
+| `python3`                         | Windows 上是 Store 占位符，静默无输出，用 `python`；这个 shell 的 `ls` 带 `-F`，文件名后会多个 `*`，拼 URL 会得到假 404                                                                                                                                                                                                                                                                                            |
 
 ### 1.4 同版本号覆盖补发（3.0.18 的 Linux headless 修复，2026-11-16）
 
@@ -295,6 +295,24 @@ arm64 的 channel 是 `latest-arm64` 决定的，`prepare-release-assets.sh` 已
    **不要在 62 上跑 deploy 脚本**——它找不到 `work.1oneclaw.com` 的 letsencrypt 证书时会重写该机 nginx conf（62 的证书是
    迁移来的四域名合一证书，conf 是「迁自 43」的手工版）。验收：`curl -sk --resolve work.1oneclaw.com:443:62.234.93.202`
    看 main chunk hash 与四钉（注意 python urllib 直连 IP 会 TLS SNI 报错，用 curl --resolve）。
+
+### 1.7 3.0.20 留下的新坑（2026-11-28）
+
+1. **Main Guard 连红会掩盖后续所有门**：11-23 起 `buildWithBuilder.test.ts` 重复 `readdirSync` 导入让 ESLint 每条 push 必红
+   （20-32 秒即败），CI 从没跑到测试步——签名提交里过期的测试断言因此静默五天没暴露。main 红当天清；lint 红会遮住后面所有门。
+2. **pre-push 是双层闸**：`just push` 配方四闸（format/types/i18n/test 全量）之后，husky 钩子**再跑一遍**四闸
+   （`--changed origin/main` 子集）。package.json 变更会让 changed 子集≈全量，双层合计 ~40 分钟。钩子层假红按既定纪律
+   `bunx vitest run --changed origin/main` 复跑，全绿即重推，不改产品代码。
+3. **Windows 签名首战（详见 §2.6 的放行语义）**：上游预签名的内置二进制（node.exe/codex 系列/claude.exe）会被 sslTrus
+   保留原签名，验签钩子已改为「新构建必须言绪指纹+时间戳、上游带时间戳的合法签名放行并打日志」。验收盯 CI 日志里的
+   `Verified Windows signature and timestamp`（我方文件）与 `Kept upstream signature`（上游文件，各带签名者指纹）。
+4. **remote-ui 资产是新的发布物（`6aea7c0f` 起）**：CI 每平台多产出 `remote-ui-<ver>-<target>.tar.gz`（从发布包 asar 抽取
+   的渲染层静态资产），发布脚本在每份根清单上传前自动执行 preflight→install→双 NGINX HTTP 回读门（62+43 两台，
+   `~/.ssh/onework_static` 专用限权钥匙）。手动补发用 `python scripts/release/tunnel_assets.py deploy <release-assets目录> <ver>`；
+   **该钥匙在 43 侧 root 被强制命令限定为静态资产脚本，通用 SSH 会被拒**——官网部署仍走
+   `python D:\game\scripts\deploy-1onework-www.py`（脚本不在官网仓里，在 D:\game\scripts）。
+5. **凭据解析的 Windows 坑**：feishu.txt 行位解析喂给 Windows Python 时要用 `C:/` 风格路径（`/c/` 会 FileNotFoundError）；
+   编排脚本用 Write 工具直写、路径经 env 传参，别用 sed 内联改写（会吃引号）。
 
 ---
 
@@ -826,10 +844,20 @@ ls -d <包>/resources/bundled-dreamcore/*/managed-resources/acp/*/*/
 
 ### 2.6 Windows 签名 —— 决策已定，不再询问
 
-**现阶段不购买 Authenticode 证书。** 本管线的 Windows 包只带 electron-builder 的
-asar 完整性自签：`Get-AuthenticodeSignature` 显示 `NotSigned`、用户装机见到
-SmartScreen"未知发布者"，**与线上所有历史版本一致，是预期状态不是缺陷**。
-发版验收不含 Authenticode 检查；除非用户主动改变决策，发版流程里不要再提。
+**（3.0.20 起已作废）曾经不购买 Authenticode 证书**——`NotSigned`、SmartScreen
+"未知发布者"曾是所有历史版本的预期状态。2026-11-24 `dac47eff` 接入 sslTrus 远程
+签名后此决策反转：Windows 正式包带 Authenticode 签名与 Sectigo 时间戳（签名者
+上海言绪科技有限公司）。现行验收见 §1.2 出包节与 §1.3.3 表格；签名凭证在
+GitHub Actions Secrets（`SSLTRUS_ACCESS_KEY/SECRET`）、证书编号在 Actions
+Variable（`SSLTRUS_CERT_CODE`），密钥不进仓库/脚本/日志；续期换证时更新
+`scripts/release/sign-windows.cjs` 里的预期指纹。
+
+**上游预签名文件的放行语义（3.0.20 首战实测，`81bbe5df`）**：内置 Node 运行时
+（node.exe=OpenJS）、codex 系列（=OpenAI）、claude.exe（=Anthropic）出厂自带
+Authenticode 签名，sslTrus 不替换已有签名。验签钩子的规则：**本次新构建的文件
+必须言绪指纹+时间戳双全（不然就是钩子谎报）；上游合法且带时间戳的既有签名保留
+放行并打 `Kept upstream signature` 日志**——全新构建的文件不可能带外来签名，
+安装包级验收（言绪+时间戳）不受影响。另外本机无 pwsh 时钩子回落 powershell.exe。
 
 ### 2.7 更新记录生成（S1 两条规矩的落地工具）
 
